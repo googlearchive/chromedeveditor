@@ -3,11 +3,17 @@ chrome.app.runtime.onLaunched.addListener(function(launchData) {
   chrome.storage.local.get('windowMaximized', function(items) {
     var wasMaximized = items['windowMaximized'];
 
+    var screenWidth = screen.availWidth;
+    var screenHeight = screen.availHeight;
+    var width = Math.floor(screenWidth*(7/8));
+    var height = Math.floor(screenHeight*(7/8));
+
     // Open the main window.
     chrome.app.window.create('spark.html', {
-      'id': 'main_editor_window',
-      'bounds': {'width': 1000, 'height': 700 }
-      //'state': (wasMaximized ? 'maximized' : 'normal')
+      id: 'main_editor_window',
+      bounds: { width: width, height: height },
+      minWidth: 600,
+      minHeight: 350
     }, function(createdWindow) {
       // Open any files passed in using the file_handlers mechanism.
 	  if (launchData && launchData.items) {
