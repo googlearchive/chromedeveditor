@@ -92,7 +92,7 @@ void archive(GrinderContext context) {
   Directory distDir = new Directory('dist');
   distDir.createSync();
 
-  // zip spark.zip . -r -x .*
+  // zip spark.zip . -r -q -x .*
   runProcess(context,
       'zip', arguments: ['../dist/spark.zip', '.', '-r', '-q', '-x', '.*'],
       workingDirectory: 'app');

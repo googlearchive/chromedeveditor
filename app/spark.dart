@@ -3,7 +3,6 @@ library spark;
 
 import 'dart:async';
 import 'dart:html';
-import 'dart:js' as jsx;
 
 import 'package:chrome/app.dart' as chrome;
 

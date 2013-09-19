@@ -1,6 +1,8 @@
 # Spark
 
-A Chrome app based development environment
+A Chrome app based development environment.
+
+[![Build Status](https://drone.io/github.com/GoogleChrome/spark/status.png)](https://drone.io/github.com/GoogleChrome/spark/latest)
 
 ### Entry Point
 The main entry point to the chrome app is `app/manifest.json`. It calls defines
