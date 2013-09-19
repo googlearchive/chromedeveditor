@@ -1,0 +1,48 @@
+{
+  "name": "__MSG_app_name__",
+  "description" : "__MSG_app_description__",
+
+  "version": "0.0.1",
+  "minimum_chrome_version": "30",
+  "manifest_version": 2,
+
+  "default_locale": "en",
+
+  "icons": {
+    "128": "images/spark.png"
+  },
+
+  "app": {
+    "background": {
+      "scripts": ["background.js"],
+      "persistent": false
+    }
+  },
+
+  "permissions": [
+    "clipboardRead",
+    "clipboardWrite",
+    { "fileSystem": ["write"] },
+    { "socket" : ["tcp-connect", "tcp-listen", "udp-bind", "udp-send-to"] },
+    "storage",
+    "webview"
+  ],
+
+  "file_handlers": {
+    "text": {
+      "types": [
+        "application/dart",
+        "application/javascript",
+        "text/css",
+        "text/dart",
+        "text/html",
+        "text/javascript",
+        "text/json",
+        "text/xml",
+        "text/yaml"
+      ],
+      "title": "__MSG_app_name__"
+    }
+  }
+
+}
