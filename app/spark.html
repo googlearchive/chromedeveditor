@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title> </title>
+  <!-- link rel="stylesheet" href="bootstrap/css/bootstrap.css" id="bootstrapTheme" -->
+  <link rel="stylesheet" href="spark.css">
+</head>
+
+<body>
+  <header>
+    <!-- div class="navbar">
+      <div class="navbar-inner">
+        <div class="container" id="toolbar">
+          <a class="brand" id="brand"> </a>
+        </div>
+      </div>
+    </div -->
+  </header>
+
+  <!-- div id="container1">
+    <section id="leftNav"></section>
+    <div id="container2">
+      <section id="messageArea"></section>
+
+      <div id="container3">
+        <section id="editorArea"></section>
+        <section id="rightNav"></section>
+      </div>
+
+      <section id="bottomNav"></section>
+    </div>
+  </div -->
+
+  <footer>
+      <!-- div class="navbar">
+        <div class="navbar-inner">
+          <div class="container" id="statusLine"></div>
+        </div>
+      </div -->
+  </footer>
+
+  <script src="packages/ace/src/js/ace.js"></script>
+
+  <!-- This is necessary for both package:js and dart:js. -->
+  <script src="packages/browser/interop.js"></script>
+
+  <!-- This is only used by package:js. We use this via the chrome package, -->
+  <!-- although we'll move to just using dart:js. -->
+  <script src="packages/js/dart_interop.js"></script>
+
+  <!-- this starts the Dart VM in Dartium, and injects spark.dart.js otherwise -->
+  <script src="spark_bootstrap.js" defer></script>
+
+  <script type="application/dart" src="spark.dart" defer></script>
+</body>
+
+</html>
