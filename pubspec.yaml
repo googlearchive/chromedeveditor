@@ -10,6 +10,7 @@ dependencies:
   browser: any
   chrome: any
   compiler_unsupported: any
+  polymer: any
 dev_dependencies:
   args: any
   grinder:
