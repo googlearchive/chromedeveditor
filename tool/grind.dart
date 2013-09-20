@@ -24,25 +24,9 @@ void init(GrinderContext context) {
 
 void packages(GrinderContext context) {
   // copy from ./packages to ./app/packages
-  List<String> packages = [
-      'ace',
-      'analyzer_experimental',
-      'compiler_unsupported',
-      'chrome',
-      'meta',
-      'stack_trace',
-      'browser',
-      'js',
-      'unittest',
-      'logging',
-      'path',
-      'unmodifiable_collection'];
-
-  for (String dirName in packages) {
-    copyDirectory(
-        joinDir(Directory.current, ['packages', dirName]),
-        joinDir(Directory.current, ['app', 'packages', dirName]));
-  }
+  copyDirectory(
+      joinDir(Directory.current, ['packages']),
+      joinDir(Directory.current, ['app', 'packages']));
 }
 
 void compile(GrinderContext context) {
