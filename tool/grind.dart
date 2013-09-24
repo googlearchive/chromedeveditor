@@ -36,7 +36,7 @@ void compile(GrinderContext context) {
 //
 //  if (!output.upToDate(sparkSource)) {
     runProcess(context, 'dart2js', arguments: [
-        'app/spark.dart', '--out=app/spark.dart.js', '--disallow-unsafe-eval']);
+        'app/spark.dart', '--out=app/spark.dart.js']);
 //  }
 }
 
@@ -45,7 +45,7 @@ void analyze(GrinderContext context) {
   runProcess(context, 'dartanalyzer', arguments: ['app/spark_test.dart']);
 }
 
-void changeMode(GrinderContext context, bool testMode) {
+void changeMode(GrinderContext context, bool useTestMode) {
   final testMode = 'src="spark_test.dart';
   final noTestMode = 'src="spark.dart';
 
@@ -53,7 +53,7 @@ void changeMode(GrinderContext context, bool testMode) {
 
   String contents = htmlFile.readAsStringSync();
 
-  if (testMode) {
+  if (useTestMode) {
     if (contents.contains(noTestMode)) {
       contents = contents.replaceAll(noTestMode, testMode);
       htmlFile.writeAsStringSync(contents);

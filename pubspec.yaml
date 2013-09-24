@@ -4,15 +4,13 @@ author: "Chrome Team <apps-dev@chromium.org>"
 homepage: https://github.com/GoogleChrome/spark
 description: A Chrome app based development environment.
 dependencies:
-  ace:
-    git: https://github.com/rmsmith/ace.dart.git
+  ace: any
   analyzer_experimental: any
   browser: any
   chrome: any
   compiler_unsupported: any
+  logging: any
   polymer: any
 dev_dependencies:
-  args: any
-  grinder:
-    git: https://github.com/devoncarew/grinder.dart.git
+  grinder: any
   unittest: any
