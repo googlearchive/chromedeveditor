@@ -2,7 +2,7 @@
 
 A Chrome app based development environment.
 
-[![Build Status](https://drone.io/github.com/GoogleChrome/spark/status.png)](https://drone.io/github.com/GoogleChrome/spark/latest)
+[![Build Status](https://drone.io/github.com/dart-lang/spark/status.png)](https://drone.io/github.com/dart-lang/spark/latest)
 
 ### Entry Point
 The main entry point to the chrome app is `app/manifest.json`. It calls defines
@@ -17,7 +17,11 @@ package dependencies. We then physically copy all the packages into the
 app/packages directory. This is not a normal symlinked pub directory but has the
 same layout as one.
 
-Run `./grind packages` to copy library code from packages/ to app/packages/.
+Run:
+
+    ./grind packages
+
+to copy library code from packages/ to app/packages/.
 
 ### Lib
 All the Dart code for the application (modulo the spark.dart entry point)
@@ -27,7 +31,7 @@ lives in the `app/lib` directory.
 The output from dart2js lives in the app/ directory (`app/spark.dart.js`). To
 re-compile the dart code to javascript, run:
 
-`./grind compile`
+    ./grind compile
 
 ### Tests
 All the tests live in app/test. These are standard dart unit tests. Generally,

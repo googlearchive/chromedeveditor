@@ -9,4 +9,5 @@ dist/
 *.js.map
 *.js.deps
 app/spark.dart.js
+app/spark.dart.precompiled.js
 docs/
