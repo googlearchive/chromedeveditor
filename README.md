@@ -42,10 +42,16 @@ In order to run the tests, we modify the html entry-point slightly to point to
 `app/spark_test.dart`. This source file references the entire spark app as
 well as the unit tests for the app.
 
-Run `./grind mode-test` to switch the app over to including tests, and
-`./grind mode-notest` to switch it back before commit.
+Run
+
+    ./grind mode-test
+
+to switch the app over to including tests, and
+
+    ./grind mode-notest
+
+to switch it back before commit.
 
 Ideally, the application might include it's own tests. There's currently an
 issue with the compiled javascript size if we do that however. It's still a work
-in progress to make it easier to run the tests, and to get them running in a
-continuous integration environment.
+in progress to get the tests running in a continuous integration environment.

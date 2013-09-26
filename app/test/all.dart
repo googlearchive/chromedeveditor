@@ -1,31 +1,66 @@
 
+/**
+ * This library serves to:
+ * * define all tests for the Spark app (defined in [_defineTests])
+ * * log test results to the `'spark.tests'` [Logger] instance
+ * * provide an API to programmatically run all the tests, and asynchronously
+ *   report back on whether the tests passed or failed
+ */
 library spark.tests;
 
-import 'package:unittest/unittest.dart';
+import 'dart:async';
+
+import 'package:logging/logging.dart';
+import 'package:unittest/unittest.dart' as unittest;
 
 import 'utils_test.dart' as utils_test;
 
 bool _testsDefined = false;
 
-void runTests() {
-  if (_testsDefined) {
-    rerunTests();
-  } else {
-    unittestConfiguration = new WorkbenchTestConfiguration();
+Logger logger = new Logger('spark.tests');
 
-    _defineTests();
-    rerunTests();
-  }
-}
+Completer<bool> _completer;
 
+/**
+ * Place all new tests here. This method is only called once; [runTests] can be
+ * called multiple times.
+ */
 void _defineTests() {
-  utils_test.main();
+  unittest.unittestConfiguration = new SparkTestConfiguration();
+  logger.onRecord.listen(_logToStdout);
 
-  _testsDefined = true;
+  utils_test.main();
 }
 
-class WorkbenchTestConfiguration implements Configuration {
-  WorkbenchTestConfiguration();
+/**
+ * Run all the Spark tests and report back when they finish. The returned
+ * [Future] indicates whether the tests had failures or not.
+ */
+Future<bool> runTests() {
+  if (_completer != null) {
+    _completer.completeError('timeout');
+  }
+
+  if (!_testsDefined) {
+    _defineTests();
+    _testsDefined = true;
+  }
+
+  _completer = new Completer();
+
+  unittest.rerunTests();
+
+  return _completer.future;
+}
+
+void _logToStdout(LogRecord record) {
+  print(
+      '[${record.loggerName} '
+      '${record.level.toString().toLowerCase()}] '
+      '${record.message}');
+}
+
+class SparkTestConfiguration implements unittest.Configuration {
 
   bool get autoStart => false;
 
@@ -40,54 +75,56 @@ class WorkbenchTestConfiguration implements Configuration {
   }
 
   void onDone(bool success) {
+    if (_completer != null) {
+      _completer.complete(success);
+      _completer = null;
+    }
+  }
+
+  void onLogMessage(unittest.TestCase testCase, String message) {
+    logger.info(message);
+  }
+
+  void onTestStart(unittest.TestCase testCase) {
 
   }
 
-  void onLogMessage(TestCase testCase, String message) {
-    print(message);
-  }
-
-  void onTestStart(TestCase testCase) {
+  void onTestResultChanged(unittest.TestCase testCase) {
 
   }
 
-  void onTestResultChanged(TestCase testCase) {
-
-  }
-
-  void onTestResult(TestCase testCase) {
+  void onTestResult(unittest.TestCase testCase) {
 
   }
 
   void onSummary(int passed, int failed, int errors,
-                 List<TestCase> results, String uncaughtError) {
-    for (TestCase test in results) {
-      print('${test.result}: ${test.description}');
+      List<unittest.TestCase> results, String uncaughtError) {
+    for (unittest.TestCase test in results) {
+      logger.info('${test.result}: ${test.description}');
 
       if (test.message != '') {
-        print(test.message);
+        logger.warning(test.message);
       }
 
       if (test.stackTrace != null && test.stackTrace != '') {
-        print(indent(test.stackTrace.toString()));
+        logger.warning(indent(test.stackTrace.toString()));
       }
     }
 
     if (passed == 0 && failed == 0 && errors == 0 && uncaughtError == null) {
-      print('No tests found.');
+      logger.warning('No tests found.');
     } else if (failed == 0 && errors == 0 && uncaughtError == null) {
-      print('All $passed tests passed!');
+      logger.info('All $passed tests passed!');
     } else {
       if (uncaughtError != null) {
-        print('Top-level uncaught error: $uncaughtError');
+        logger.severe('Top-level uncaught error: $uncaughtError');
       }
 
-      print('$passed PASSED, $failed FAILED, $errors ERRORS');
+      logger.warning('$passed PASSED, $failed FAILED, $errors ERRORS');
     }
   }
 
   String indent(String str) {
     return str.split("\n").map((line) => "  $line").join("\n");
   }
-
 }
