@@ -23,7 +23,7 @@
     "clipboardRead",
     "clipboardWrite",
     { "fileSystem": ["write"] },
-    { "socket" : ["tcp-connect", "tcp-listen", "udp-bind", "udp-send-to"] },
+    { "socket" : ["tcp-connect", "tcp-listen"] },
     "storage",
     "webview"
   ],
