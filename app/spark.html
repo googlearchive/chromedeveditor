@@ -6,6 +6,15 @@
   <title> </title>
   <!-- link rel="stylesheet" href="bootstrap/css/bootstrap.css" id="bootstrapTheme" -->
   <link rel="stylesheet" href="spark.css">
+  <script src="polymer/polymer.min.js"></script>
+  <!-- <link rel="import" href="polymer/components/sp-button/sp-button.html"> -->
+  <polymer-element name="sp-button" attributes="active">
+    <template>
+      <link rel="stylesheet" href="polymer/components/sp-button/sp-button.css">
+      <button type="button"><content></content></button>
+    </template>
+    <script src="polymer/components/sp-button/sp-button.js"></script>
+  </polymer-element>
 </head>
 
 <body>
@@ -54,6 +63,7 @@
   <script src="spark_bootstrap.js" defer></script>
 
   <script type="application/dart" src="spark.dart" defer></script>
+  <sp-button>I'm a polymer button</sp-button>
 </body>
 
 </html>
