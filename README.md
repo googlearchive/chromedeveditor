@@ -63,5 +63,5 @@ to switch the app over to including tests, and
 to switch it back before commit.
 
 Ideally, the application might include it's own tests. There's currently an
-issue with the compiled javascript size if we do that however. It's still a work
-in progress to get the tests running in a continuous integration environment.
+issue with the compiled javascript size if we do that however. More about the
+testing story [here](https://github.com/dart-lang/spark/wiki/Testing).
