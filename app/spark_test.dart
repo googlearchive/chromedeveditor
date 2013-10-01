@@ -22,7 +22,9 @@ Logger testLogger = new Logger('spark.tests');
 void main() {
   SparkTest app = new SparkTest();
   app.showTestUI();
-  app.connectToListener();
+
+  // Give the app a little bit of time to start up.
+  new Timer(new Duration(seconds: 1), () => app.connectToListener());
 }
 
 /**
@@ -53,7 +55,7 @@ class SparkTest extends spark.Spark {
     tests.runTests().then((bool success) {
       testClient.log('test exit code: ${(success ? 0 : 1)}');
 
-      // TODO: there is an issue in chrome_gen parsing idl dictionaries
+      // TODO(devoncarew): chrome_gen has an issue parsing idl dictionaries
       //chrome_gen.app_window.current().close();
       chrome_gen.app_window.current().proxy.callMethod('close', []);
     });
@@ -69,7 +71,7 @@ class SparkTest extends spark.Spark {
     div.style.bottom = '0px';
     div.style.marginBottom = '0.5em';
     div.style.marginLeft = '0.5em';
-    div.style.background = 'gray';
+    div.style.background = 'green';
     div.style.borderRadius = '4px';
     div.style.opacity = '0.7';
 
@@ -95,6 +97,10 @@ class SparkTest extends spark.Spark {
     testLogger.onRecord.listen((LogRecord record) {
       if (record.level > Level.INFO) {
         div.style.background = 'red';
+      }
+
+      if (status.style.display != 'inline') {
+        status.style.display = 'inline';
       }
 
       status.text =

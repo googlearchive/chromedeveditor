@@ -23,6 +23,7 @@ const _MAC_CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google 
 TestListener testListener;
 Process chromeProcess;
 int exitCode;
+Directory tempDir;
 
 final int TEST_TIMEOUT = 10;
 
@@ -40,33 +41,42 @@ void main() {
 }
 
 String getChromePath() {
-  // TODO: fix for cross platform
-
-  // chromium/Chromium.app/Contents/MacOS/Chromium
-
-  // TODO: check for an env override
-
+  // Check for an env override
   if (Platform.environment.containsKey(_CHROME_PATH_ENV_KEY)) {
+    String envPath = Platform.environment[_CHROME_PATH_ENV_KEY];
 
+    if (!FileSystemEntity.isFile(envPath)) {
+      throw 'File from env ${_CHROME_PATH_ENV_KEY} does not exist or is not a file';
+    }
+
+    return envPath;
   }
 
-  String path = "${sdkDir.path}/../chromium/Chromium.app/Contents/MacOS/Chromium";
+  // Else, look for Dartium
+  final Map m = {
+    "linux": "chrome",
+    "macos": "Chromium.app/Contents/MacOS/Chromium",
+    "windows": "Chromium.exe"
+  };
+
+  String path = "${sdkDir.path}/../chromium/${m[Platform.operatingSystem]}";
 
   if (FileSystemEntity.isFileSync(path)) {
     return new File(path).absolute.path;
+  } else {
+    throw 'unable to locate path to chrome (${path})';
   }
-
-  throw 'unable to locate path to chrome';
 }
 
 void startChrome(String appPath) {
-  // TODO: user-data-dir <temp dir>
+  tempDir = new Directory('').createTempSync();
 
   String path = new Directory(appPath).absolute.path;
 
   List<String> args = [
       '--no-default-browser-check',
       '--no-first-run',
+      '--user-data-dir=${tempDir.path}',
       '--load-and-launch-app=${path}'
   ];
 
@@ -76,7 +86,7 @@ void startChrome(String appPath) {
   }
 
   log("starting chrome...");
-  log("${getChromePath()} ${args.join(' ')}");
+  log("${getChromePath()} ${args.join('\n  ')}");
 
   Process.start(getChromePath(), args, workingDirectory: appPath)
     .then((Process process) {
@@ -99,7 +109,7 @@ void _fatalError(e) {
 
   log(e);
 
-  exit(1);
+  _doExit(1);
 }
 
 void _testsFinished(int inExitCode) {
@@ -113,14 +123,14 @@ void _testsFinished(int inExitCode) {
 
   // Give the chrome process a little time to shut down on its own.
   if (chromeProcess != null) {
-    new Timer(new Duration(seconds: 2), () {
+    new Timer(new Duration(seconds: 1), () {
       if (chromeProcess != null) {
         chromeProcess.kill();
       }
-      exit(exitCode);
+      _doExit(exitCode);
     });
   } else {
-    exit(exitCode);
+    _doExit(exitCode);
   }
 }
 
@@ -129,6 +139,19 @@ void _streamClosed() {
   // this error exit will be ignored. This covers the case where the stream is
   // closed by the test client before we're notified of the test results.
   _testsFinished(1);
+}
+
+void _doExit(int code) {
+  if (tempDir != null) {
+    try {
+      tempDir.deleteSync(recursive: true);
+    } catch (e) {
+      // We don't want issues deleting the temp directory to fail the tests.
+      print(e);
+    }
+  }
+
+  exit(code);
 }
 
 class TestListener {
