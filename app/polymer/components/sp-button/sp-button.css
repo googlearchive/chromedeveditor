@@ -1,0 +1,19 @@
+button {
+  background: #ddd;
+  border: 1px solid #888;
+  border-radius: 5px;
+  display: inline-block;
+  color: black;
+  font-size: 14px;
+  outline: none;
+  padding: 10px;
+  text-decoration: none;
+}
+
+button:hover {
+  background: #eee;
+}
+
+button:active {
+  background: #ccc;
+}
