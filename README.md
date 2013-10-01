@@ -4,11 +4,21 @@ A Chrome app based development environment.
 
 [![Build Status](https://drone.io/github.com/dart-lang/spark/status.png)](https://drone.io/github.com/dart-lang/spark/latest)
 
+### Requirements
+Dart IDE needs to be installed and `dart/dart-sdk/bin` needs to be accessible from `$PATH`.
+You need to enable experimental Web Platform features in Chrome (#enable-experimental-web-platform-features).
+
 ### Entry Point
 The main entry point to the chrome app is `app/manifest.json`. It calls defines
 the background script for the application (`app/background.js`). This script
 gets invoked when the application starts. It open a new window with the contents
 set to the `app/spark.html` file. This file it turn runs `app/spark.dart`.
+
+### Dependencies
+Dependencies need first to be fetched using [pub](http://pub.dartlang.org).
+Run:
+
+    pub install
 
 ### Packages
 Chrome apps do not like symlinks. There's a chrome bug about this, but for now
