@@ -1,8 +1,8 @@
-// Preferences.
 
 library spark.preferences;
 
 import 'dart:async';
+
 import 'package:chrome/app.dart' as chrome;
 
 ChromePreferenceStore chromePrefsLocal = new ChromePreferenceStore(chrome.storage.local);
