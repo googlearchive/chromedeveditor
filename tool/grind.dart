@@ -7,7 +7,6 @@ void main() {
   defineTask('init', taskFunction: init);
   defineTask('packages', taskFunction: packages, depends: ['init']);
   defineTask('analyze', taskFunction: analyze, depends: ['packages']);
-  defineTask('tests', taskFunction: tests, depends: ['packages', 'mode-test']);
   defineTask('compile', taskFunction: compile, depends: ['packages']);
   defineTask('archive', taskFunction: archive, depends: ['compile', 'mode-notest']);
 
@@ -39,6 +38,8 @@ void compile(GrinderContext context) {
     // version (spark.dart.precompiled.js), which is what we actually use.
     runProcess(context, 'dart2js', arguments: [
         'app/spark.dart', '--out=app/spark.dart.js']);
+    int sizeKb = new File('app/spark.dart.precompiled.js').lengthSync() ~/ 1024;
+    context.log('app/spark.dart.precompiled.js is ${sizeKb}kb');
 //  }
 }
 
@@ -68,12 +69,6 @@ void changeMode(GrinderContext context, bool useTestMode) {
   }
 }
 
-void tests(GrinderContext context) {
-  // TODO: run the chrome app, receive test output, fail build if there were
-  // any issues
-
-}
-
 void archive(GrinderContext context) {
   Directory distDir = new Directory('dist');
   distDir.createSync();
@@ -82,4 +77,6 @@ void archive(GrinderContext context) {
   runProcess(context,
       'zip', arguments: ['../dist/spark.zip', '.', '-r', '-q', '-x', '.*'],
       workingDirectory: 'app');
+  int sizeKb = new File('dist/spark.zip').lengthSync() ~/ 1024;
+  context.log('spark.zip is ${sizeKb}kb');
 }
