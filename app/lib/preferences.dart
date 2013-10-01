@@ -5,20 +5,21 @@ import 'dart:async';
 
 import 'package:chrome/app.dart' as chrome;
 
-ChromePreferenceStore chromePrefsLocal = new ChromePreferenceStore(chrome.storage.local);
-ChromePreferenceStore chromePrefsSync = new ChromePreferenceStore(chrome.storage.sync);
 
 /**
  * A persistent preference mechanism.
  */
-class ChromePreferenceStore {
+class PreferenceStore {
+
+  static PreferenceStore createLocal() => new PreferenceStore._(chrome.storage.local);
+  static PreferenceStore createSync() => new PreferenceStore._(chrome.storage.sync);
 
   StreamController<PreferenceEvent> streamController =
       new StreamController<PreferenceEvent>();
 
   chrome.StorageArea _storageArea;
 
-  ChromePreferenceStore(chrome.StorageArea storageArea) {
+  PreferenceStore._(chrome.StorageArea storageArea) {
     this._storageArea = storageArea;
   }
 
@@ -59,7 +60,7 @@ class ChromePreferenceStore {
  * A event class for preference changes.
  */
 class PreferenceEvent {
-  final ChromePreferenceStore store;
+  final PreferenceStore store;
   final String key;
   final String value;
 
