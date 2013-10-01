@@ -18,7 +18,6 @@ import 'dart:io';
 import 'package:grinder/grinder.dart';
 
 const _CHROME_PATH_ENV_KEY = 'CHROME_PATH';
-const _MAC_CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 TestListener testListener;
 Process chromeProcess;
@@ -46,7 +45,7 @@ String getChromePath() {
     String envPath = Platform.environment[_CHROME_PATH_ENV_KEY];
 
     if (!FileSystemEntity.isFile(envPath)) {
-      throw 'File from env ${_CHROME_PATH_ENV_KEY} does not exist or is not a file';
+      throw 'Env ${_CHROME_PATH_ENV_KEY} does not exist: ${envPath}';
     }
 
     return envPath;
