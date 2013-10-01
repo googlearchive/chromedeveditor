@@ -7,7 +7,7 @@ library spark_test;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:chrome/app.dart' as chrome;
+import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:logging/logging.dart';
 
 import 'spark.dart' as spark;
@@ -22,12 +22,9 @@ Logger testLogger = new Logger('spark.tests');
 void main() {
   SparkTest app = new SparkTest();
   app.showTestUI();
-  try {
-    // TODO(devoncarew): this throws a strange JS interop exception right now
-    app.connectToListener();
-  } catch (e) {
-    print(e);
-  }
+
+  // Give the app a little bit of time to start up.
+  new Timer(new Duration(seconds: 1), () => app.connectToListener());
 }
 
 /**
@@ -58,8 +55,9 @@ class SparkTest extends spark.Spark {
     tests.runTests().then((bool success) {
       testClient.log('test exit code: ${(success ? 0 : 1)}');
 
-      // TODO: what I really want here is to programmatically quit the app
-      chrome.app.window.current.close();
+      // TODO(devoncarew): chrome_gen has an issue parsing idl dictionaries
+      //chrome_gen.app_window.current().close();
+      chrome_gen.app_window.current().proxy.callMethod('close', []);
     });
   }
 
@@ -73,7 +71,7 @@ class SparkTest extends spark.Spark {
     div.style.bottom = '0px';
     div.style.marginBottom = '0.5em';
     div.style.marginLeft = '0.5em';
-    div.style.background = 'gray';
+    div.style.background = 'green';
     div.style.borderRadius = '4px';
     div.style.opacity = '0.7';
 
@@ -101,6 +99,10 @@ class SparkTest extends spark.Spark {
         div.style.background = 'red';
       }
 
+      if (status.style.display != 'inline') {
+        status.style.display = 'inline';
+      }
+
       status.text =
           '[${record.loggerName} '
           '${record.level.toString().toLowerCase()}] '
@@ -117,14 +119,14 @@ class SparkTest extends spark.Spark {
 class TestListenerClient {
   static const int DEFAULT_TESTPORT = 5120;
 
-  chrome.TcpClient _tcpClient;
+  chrome_gen.TcpClient _tcpClient;
 
   /**
    * Try to connect to a test listener on the given port, and return a new
    * instance of [TestListenerClient] on success.
    */
   static Future<TestListenerClient> connect([int port = DEFAULT_TESTPORT]) {
-    chrome.TcpClient tcpClient = new chrome.TcpClient('127.0.0.1', port);
+    chrome_gen.TcpClient tcpClient = new chrome_gen.TcpClient('127.0.0.1', port);
 
     return tcpClient.connect().then((bool success) {
       if (success) {
