@@ -10,28 +10,35 @@ import '../lib/preferences.dart';
 main() {
   group('preferences.chrome', () {
     test('writeRead', () {
-
       PreferenceStore localStorage = PreferenceStore.createLocal();
       localStorage.setValue("foo1", "bar1");
 
-      Future future = localStorage.getValue("foo1").then((String val) {
-        expect(val, equals("bar1"));
+      return localStorage.getValue("foo1").then((String val) {
+        expect(val, "bar1");
       });
-
-      expect(future, completes);
-     });
+    });
 
     test('writeReadSync', () {
-
       PreferenceStore syncStorage = PreferenceStore.createSync();
       syncStorage.setValue("foo2", "bar2");
 
-      Future future = syncStorage.getValue("foo2").then((String val) {
-        expect(val, equals("bar2"));
+      return syncStorage.getValue("foo2").then((String val) {
+        expect(val, "bar2");
+      });
+    });
+
+    test('write fires event', () {
+      PreferenceStore storage = PreferenceStore.createLocal();
+
+      Future future = storage.onPreferenceChange.take(1).toList().then((List<PreferenceEvent> events) {
+        PreferenceEvent event = events.single;
+        expect(event.key, "foo1");
+        expect(event.value, "bar");
       });
 
-      expect(future, completes);
-     });
-  });
+      storage.setValue("foo1", "bar");
 
+      return future;
+    });
+  });
 }
