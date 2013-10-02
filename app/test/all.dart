@@ -14,6 +14,7 @@ import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
 import 'utils_test.dart' as utils_test;
+import 'preferences_test.dart' as preferences_test;
 
 bool _testsDefined = false;
 
@@ -30,6 +31,7 @@ void _defineTests() {
   logger.onRecord.listen(_logToStdout);
 
   utils_test.main();
+  preferences_test.main();
 }
 
 /**
