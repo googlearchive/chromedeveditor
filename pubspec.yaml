@@ -8,7 +8,7 @@ dependencies:
   analyzer_experimental: any
   browser: any
   chrome: any
-  chrome_gen: '>=0.0.2'
+  chrome_gen: '>=0.0.3'
   compiler_unsupported: any
   logging: any
   polymer: any

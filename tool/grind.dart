@@ -18,7 +18,7 @@ void main() {
 
 void init(GrinderContext context) {
   PubTools pub = new PubTools();
-  pub.update(context);
+  pub.install(context);
 }
 
 void packages(GrinderContext context) {

@@ -55,9 +55,7 @@ class SparkTest extends spark.Spark {
     tests.runTests().then((bool success) {
       testClient.log('test exit code: ${(success ? 0 : 1)}');
 
-      // TODO(devoncarew): chrome_gen has an issue parsing idl dictionaries
-      //chrome_gen.app_window.current().close();
-      chrome_gen.app_window.current().proxy.callMethod('close', []);
+      chrome_gen.app_window.current().close();
     });
   }
 
