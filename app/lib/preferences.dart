@@ -3,19 +3,19 @@ library spark.preferences;
 
 import 'dart:async';
 
-import 'package:chrome/app.dart' as chrome;
+import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 /**
  * A persistent preference mechanism.
  */
 class PreferenceStore {
-  static PreferenceStore createLocal() => new PreferenceStore._(chrome.storage.local);
-  static PreferenceStore createSync() => new PreferenceStore._(chrome.storage.sync);
+  static PreferenceStore createLocal() => new PreferenceStore._(chrome_gen.storage.local);
+  static PreferenceStore createSync() => new PreferenceStore._(chrome_gen.storage.sync);
 
   StreamController<PreferenceEvent> _streamController =
       new StreamController.broadcast();
 
-  chrome.StorageArea _storageArea;
+  chrome_gen.StorageArea _storageArea;
 
   PreferenceStore._(this._storageArea);
 
@@ -23,7 +23,7 @@ class PreferenceStore {
    * Get the value for the given key. The value is returned as a [Future].
    */
   Future<String> getValue(String key){
-    return _storageArea.get([key]).then((Map<String, String> map) {
+    return _storageArea.get(key).then((Map<String, String> map) {
       return map == null ? null : map[key];
     });
   }
