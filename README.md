@@ -6,8 +6,8 @@ A Chrome app based development environment.
 
 ### Requirements
 Dart IDE needs to be installed and `dart/dart-sdk/bin` needs to be accessible
-from `$PATH`. You need to enable experimental Web Platform features in Chrome
-(`#enable-experimental-web-platform-features`).
+from `$PATH`. You **need** to enable experimental Web Platform features in Chrome.
+From `chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
 ### Entry Point
 The main entry point to the chrome app is `app/manifest.json`. It calls defines
