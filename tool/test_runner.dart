@@ -123,14 +123,11 @@ void _testsFinished(int inExitCode) {
 
   testListener.close();
 
-  // Give the chrome process a little time to shut down on its own.
   if (chromeProcess != null) {
-    new Timer(new Duration(seconds: 1), () {
       if (chromeProcess != null) {
         chromeProcess.kill();
       }
       _doExit(exitCode);
-    });
   } else {
     _doExit(exitCode);
   }
@@ -144,16 +141,18 @@ void _streamClosed() {
 }
 
 void _doExit(int code) {
-  if (tempDir != null) {
-    try {
-      tempDir.deleteSync(recursive: true);
-    } catch (e) {
-      // We don't want issues deleting the temp directory to fail the tests.
-      print(e);
+  // Give the chrome process a little time to shut down on its own.
+  new Timer(new Duration(seconds: 1), () {
+    if (tempDir != null) {
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (e) {
+        // We don't want issues deleting the temp directory to fail the tests.
+        print(e);
+      }
     }
-  }
-
-  exit(code);
+    exit(code);
+  });
 }
 
 class TestListener {
