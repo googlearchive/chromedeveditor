@@ -28,6 +28,8 @@ int exitCode;
 Directory tempDir;
 
 final int TEST_TIMEOUT = 10;
+final int CHROME_SHUTDOWN_TIMEOUT = 1;
+final int EXIT_PROCESS_TIMEOUT = 1;
 
 void main() {
   if (!new Directory('app').existsSync()) {
@@ -124,16 +126,16 @@ void _testsFinished(int inExitCode) {
   testListener.close();
 
   // Give the chrome process a little time to shut down on its own.
-  if (chromeProcess != null) {
-    new Timer(new Duration(seconds: 1), () {
-      if (chromeProcess != null) {
-        chromeProcess.kill();
-      }
+  new Timer(new Duration(seconds: CHROME_SHUTDOWN_TIMEOUT), () {
+    if (chromeProcess != null) {
+        if (chromeProcess != null) {
+          chromeProcess.kill();
+        }
+        _doExit(exitCode);
+    } else {
       _doExit(exitCode);
-    });
-  } else {
-    _doExit(exitCode);
-  }
+    }
+  });
 }
 
 void _streamClosed() {
@@ -144,16 +146,17 @@ void _streamClosed() {
 }
 
 void _doExit(int code) {
-  if (tempDir != null) {
-    try {
-      tempDir.deleteSync(recursive: true);
-    } catch (e) {
-      // We don't want issues deleting the temp directory to fail the tests.
-      print(e);
+  new Timer(new Duration(seconds: EXIT_PROCESS_TIMEOUT), () {
+    if (tempDir != null) {
+      try {
+        tempDir.deleteSync(recursive: true);
+      } catch (e) {
+        // We don't want issues deleting the temp directory to fail the tests.
+        print(e);
+      }
     }
-  }
-
-  exit(code);
+    exit(code);
+  });
 }
 
 class TestListener {
