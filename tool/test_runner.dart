@@ -28,6 +28,8 @@ int exitCode;
 Directory tempDir;
 
 final int TEST_TIMEOUT = 10;
+final int CHROME_SHUTDOWN_TIMEOUT = 1;
+final int EXIT_PROCESS_TIMEOUT = 1;
 
 void main() {
   if (!new Directory('app').existsSync()) {
@@ -123,14 +125,17 @@ void _testsFinished(int inExitCode) {
 
   testListener.close();
 
-  if (chromeProcess != null) {
-      if (chromeProcess != null) {
-        chromeProcess.kill();
-      }
+  // Give the chrome process a little time to shut down on its own.
+  new Timer(new Duration(seconds: CHROME_SHUTDOWN_TIMEOUT), () {
+    if (chromeProcess != null) {
+        if (chromeProcess != null) {
+          chromeProcess.kill();
+        }
+        _doExit(exitCode);
+    } else {
       _doExit(exitCode);
-  } else {
-    _doExit(exitCode);
-  }
+    }
+  });
 }
 
 void _streamClosed() {
@@ -141,8 +146,7 @@ void _streamClosed() {
 }
 
 void _doExit(int code) {
-  // Give the chrome process a little time to shut down on its own.
-  new Timer(new Duration(seconds: 1), () {
+  new Timer(new Duration(seconds: EXIT_PROCESS_TIMEOUT), () {
     if (tempDir != null) {
       try {
         tempDir.deleteSync(recursive: true);
