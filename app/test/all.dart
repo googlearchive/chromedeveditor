@@ -13,8 +13,9 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import 'utils_test.dart' as utils_test;
 import 'preferences_test.dart' as preferences_test;
+import 'server_test.dart' as server_test;
+import 'utils_test.dart' as utils_test;
 
 bool _testsDefined = false;
 
@@ -30,8 +31,9 @@ void _defineTests() {
   unittest.unittestConfiguration = new SparkTestConfiguration();
   logger.onRecord.listen(_logToStdout);
 
-  utils_test.main();
   preferences_test.main();
+  server_test.main();
+  utils_test.main();
 }
 
 /**
@@ -63,18 +65,13 @@ void _logToStdout(LogRecord record) {
 }
 
 class SparkTestConfiguration implements unittest.Configuration {
-
   bool get autoStart => false;
 
   Duration timeout = const Duration(seconds: 5);
 
-  void onInit() {
+  void onInit() => null;
 
-  }
-
-  void onStart() {
-
-  }
+  void onStart() => null;
 
   void onDone(bool success) {
     if (_completer != null) {
@@ -87,17 +84,11 @@ class SparkTestConfiguration implements unittest.Configuration {
     logger.info(message);
   }
 
-  void onTestStart(unittest.TestCase testCase) {
+  void onTestStart(unittest.TestCase testCase) => null;
 
-  }
+  void onTestResultChanged(unittest.TestCase testCase) => null;
 
-  void onTestResultChanged(unittest.TestCase testCase) {
-
-  }
-
-  void onTestResult(unittest.TestCase testCase) {
-
-  }
+  void onTestResult(unittest.TestCase testCase) => null;
 
   void onSummary(int passed, int failed, int errors,
       List<unittest.TestCase> results, String uncaughtError) {
