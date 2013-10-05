@@ -15,6 +15,7 @@ import 'package:unittest/unittest.dart' as unittest;
 
 import 'preferences_test.dart' as preferences_test;
 import 'server_test.dart' as server_test;
+import 'tcp_test.dart' as tcp_test;
 import 'utils_test.dart' as utils_test;
 
 bool _testsDefined = false;
@@ -33,6 +34,7 @@ void _defineTests() {
 
   preferences_test.main();
   server_test.main();
+  tcp_test.main();
   utils_test.main();
 }
 

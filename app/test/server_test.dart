@@ -1,3 +1,6 @@
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 library spark.server_test;
 
@@ -7,34 +10,21 @@ import 'package:unittest/unittest.dart';
 import '../lib/server.dart';
 
 main() {
-  group('TcpServer', () {
-    test('connect disconnect', () {
-      return TcpServer.createSocketServer().then((TcpServer server) {
+  group('PicoServer', () {
+    test('bind and dispose', () {
+      return PicoServer.createServer().then((PicoServer server) {
         expect(server, isNotNull);
-        server.disconnect();
+        server.dispose();
       });
     });
-    test('bind to any port', () {
-      return TcpServer.createSocketServer().then((TcpServer server) {
-        return server.getInfo().then((chrome_gen.SocketInfo info) {
-          print("bound to port ${info.localPort}");
-          print("localAddress = ${info.localAddress}");
-          expect(info.localAddress, isNotNull);
-          expect(info.localPort, greaterThan(0));
-          server.disconnect();
-        });
-      });
+    test('serve request', () {
+      // TODO:
+
     });
-    test('bind to a specific port', () {
-      return TcpServer.createSocketServer(37123).then((TcpServer server) {
-        return server.getInfo().then((chrome_gen.SocketInfo info) {
-          expect(info.localAddress, isNotNull);
-          expect(info.localPort, 37123);
-          server.disconnect();
-        });
-      });
+    test('serve request 404', () {
+      // TODO:
+
     });
   });
-
 
 }

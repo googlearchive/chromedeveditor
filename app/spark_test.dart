@@ -11,6 +11,7 @@ import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:logging/logging.dart';
 
 import 'spark.dart' as spark;
+import 'lib/tcp.dart' as tcp;
 import 'test/all.dart' as tests;
 
 Logger testLogger = new Logger('spark.tests');
@@ -117,22 +118,24 @@ class SparkTest extends spark.Spark {
 class TestListenerClient {
   static const int DEFAULT_TESTPORT = 5120;
 
-  chrome_gen.TcpClient _tcpClient;
+  tcp.TcpClient _tcpClient;
 
   /**
    * Try to connect to a test listener on the given port, and return a new
    * instance of [TestListenerClient] on success.
    */
   static Future<TestListenerClient> connect([int port = DEFAULT_TESTPORT]) {
-    chrome_gen.TcpClient tcpClient = new chrome_gen.TcpClient('127.0.0.1', port);
-
-    return tcpClient.connect().then((bool success) {
-      if (success) {
-        return new TestListenerClient._(tcpClient);
-      } else {
-        throw new Exception('no listener available on port ${port}');
-      }
+    return tcp.TcpClient.createClient(tcp.LOCAL_HOST, port).then((tcp.TcpClient client) {
+      return new TestListenerClient._(client);
     });
+
+//    return tcpClient.connect().then((bool success) {
+//      if (success) {
+//        return new TestListenerClient._(tcpClient);
+//      } else {
+//        throw new Exception('no listener available on port ${port}');
+//      }
+//    });
   }
 
   TestListenerClient._(this._tcpClient);

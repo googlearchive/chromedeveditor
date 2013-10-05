@@ -2,13 +2,16 @@
 import 'dart:io';
 
 import 'package:grinder/grinder.dart';
+import 'package:intl/intl.dart';
+
+final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 void main() {
   defineTask('init', taskFunction: init);
   defineTask('packages', taskFunction: packages, depends: ['init']);
   defineTask('analyze', taskFunction: analyze, depends: ['packages']);
   defineTask('compile', taskFunction: compile, depends: ['packages']);
-  defineTask('archive', taskFunction: archive, depends: ['compile', 'mode-notest']);
+  defineTask('archive', taskFunction: archive, depends: ['compile']);
 
   defineTask('mode-test', taskFunction: (c) => changeMode(c, true));
   defineTask('mode-notest', taskFunction: (c) => changeMode(c, false));
@@ -36,10 +39,9 @@ void compile(GrinderContext context) {
 //  if (!output.upToDate(sparkSource)) {
     // We tell dart2js to compile to spark.dart.js; it also outputs a CSP
     // version (spark.dart.precompiled.js), which is what we actually use.
-    runProcess(context, 'dart2js', arguments: [
-        'app/spark.dart', '--out=app/spark.dart.js']);
-    int sizeKb = new File('app/spark.dart.precompiled.js').lengthSync() ~/ 1024;
-    context.log('app/spark.dart.precompiled.js is ${sizeKb}kb');
+    runProcess(context,'dart2js',
+        arguments: ['--minify', 'app/spark.dart', '--out=app/spark.dart.js']);
+    printSize(context,  new File('app/spark.dart.precompiled.js'));
 //  }
 }
 
@@ -77,6 +79,10 @@ void archive(GrinderContext context) {
   runProcess(context,
       'zip', arguments: ['../dist/spark.zip', '.', '-r', '-q', '-x', '.*'],
       workingDirectory: 'app');
-  int sizeKb = new File('dist/spark.zip').lengthSync() ~/ 1024;
-  context.log('spark.zip is ${sizeKb}kb');
+  printSize(context,  new File('dist/spark.zip'));
+}
+
+void printSize(GrinderContext context, File file) {
+  int sizeKb = file.lengthSync() ~/ 1024;
+  context.log('${file.path} is ${_NF.format(sizeKb)}k');
 }
