@@ -5,8 +5,9 @@ A Chrome app based development environment.
 [![Build Status](https://drone.io/github.com/dart-lang/spark/status.png)](https://drone.io/github.com/dart-lang/spark/latest)
 
 ### Requirements
-Dart IDE needs to be installed and `dart/dart-sdk/bin` needs to be accessible from `$PATH`.
-You need to enable experimental Web Platform features in Chrome (#enable-experimental-web-platform-features).
+Dart IDE needs to be installed and `dart/dart-sdk/bin` needs to be accessible
+from `$PATH`. You **need** to enable experimental Web Platform features in Chrome.
+From `chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
 ### Entry Point
 The main entry point to the chrome app is `app/manifest.json`. It calls defines
@@ -65,3 +66,7 @@ to switch it back before commit.
 Ideally, the application might include it's own tests. There's currently an
 issue with the compiled javascript size if we do that however. More about the
 testing story [here](https://github.com/dart-lang/spark/wiki/Testing).
+
+### Contributing
+Contributions welcome! Please see our
+[contributing](https://github.com/dart-lang/spark/wiki/Contributing) page.
