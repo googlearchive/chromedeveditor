@@ -69,14 +69,16 @@ void _logToStdout(LogRecord record) {
       '${record.message}');
 }
 
-class SparkTestConfiguration implements unittest.Configuration {
+class SparkTestConfiguration extends unittest.Configuration {
+  SparkTestConfiguration(): super.blank();
+
   bool get autoStart => false;
 
-  Duration timeout = const Duration(seconds: 5);
+  Duration get timeout => const Duration(seconds: 5);
 
-  void onInit() => null;
+  void onStart() {
 
-  void onStart() => null;
+  }
 
   void onDone(bool success) {
     if (_completer != null) {
@@ -89,11 +91,15 @@ class SparkTestConfiguration implements unittest.Configuration {
     logger.info(message);
   }
 
-  void onTestStart(unittest.TestCase testCase) => null;
+  void onTestStart(unittest.TestCase test) {
+    logger.info('running ${test.description}');
+  }
 
-  void onTestResultChanged(unittest.TestCase testCase) => null;
-
-  void onTestResult(unittest.TestCase testCase) => null;
+  void onTestResult(unittest.TestCase test) {
+    if (test.result != unittest.PASS) {
+      logger.warning("${test.result} ${test.description}");
+    }
+  }
 
   void onSummary(int passed, int failed, int errors,
       List<unittest.TestCase> results, String uncaughtError) {

@@ -3,7 +3,11 @@
 // license that can be found in the LICENSE file.
 
 /**
- * TODO:
+ * Lightweight implementations of a tcp clients and servers. This library serves
+ * as a higher level abstraction over the `chrome.socket` APIs.
+ *
+ * See: http://developer.chrome.com/apps/socket.html
+ * See: http://dart-gde.github.io/chrome_gen.dart/app/chrome.socket.html
  */
 library spark.tcp;
 
@@ -15,11 +19,11 @@ export 'package:chrome_gen/chrome_app.dart' show SocketInfo;
 const LOCAL_HOST = '127.0.0.1';
 
 // TODO(devoncarew): these classes are fairly generic; explore contributing them
-// to package:chrome_gen, or to a new utility library for chrome functionalty,
-// build on chrome_gen? chrome_util?
+// to package:chrome_gen, or to a new utility library for chrome functionalty
+// built on chrome_gen? chrome_util?
 
 /**
- * TODO:
+ * An [Exception] implementation for socket errors.
  */
 class SocketException implements Exception {
   final String message;
@@ -29,16 +33,17 @@ class SocketException implements Exception {
   String toString() => "SocketException: $message";
 }
 
-// StreamController
+//
 
 /**
  * TODO:
  */
 class TcpClient {
-  String host;
-  int port;
+  final int _socketId;
 
-  int _socketId;
+  StreamController<List<int>> _controller;
+  _SocketEventSink _sink;
+  bool _keepPolling = true;
 
   static Future<TcpClient> createClient(String host, int port) {
     return chrome_gen.socket.create(chrome_gen.SocketType.TCP).then((chrome_gen.CreateInfo createInfo) {
@@ -56,72 +61,79 @@ class TcpClient {
   }
 
   TcpClient._fromSocketId(this._socketId) {
-    chrome_gen.socket.getInfo(_socketId).then((chrome_gen.SocketInfo socketInfo) {
-      // TODO: the host and port info won't be immediately available
-      host = socketInfo.peerAddress;
-      port = socketInfo.peerPort;
-    });
+    _controller = new StreamController(
+        onListen: _pollIncoming, onCancel: _stopPolling);
+    _sink = new _SocketEventSink(this);
   }
+
+  Future<chrome_gen.SocketInfo> getInfo() => chrome_gen.socket.getInfo(_socketId);
+
+  /**
+   * The read [Stream] for incoming data.
+   */
+  Stream<List<int>> get stream => _controller.stream;
+
+  /**
+   * The write [EventSink] for outgoing data.
+   */
+  EventSink<List<int>> get sink => _sink;
+
+  /**
+   * This is a convenience method, fully equivalent to:
+   *
+   *     sink.add(str.codeUnits);
+   *
+   * Note that it does not do UTF8 encoding of the given string. It will
+   * truncate any character that does not fit in 8 bits.
+   */
+  void writeString(String str) => sink.add(str.codeUnits);
 
   void dispose() {
     chrome_gen.socket.disconnect(_socketId);
   }
 
-  Future<chrome_gen.SocketWriteInfo> send(String message) {
-    return chrome_gen.socket.write(
-        _socketId, new chrome_gen.ArrayBuffer.fromString(message));
+  void _pollIncoming() {
+    _keepPolling = true;
+
+    chrome_gen.socket.read(_socketId).then((chrome_gen.SocketReadInfo info) {
+      if (info.resultCode < 0) {
+        // TODO: get the bsd socket codes
+        if (info.resultCode != -15) {
+          _controller.addError(
+              new SocketException("error reading stream: ${info.resultCode}"));
+        }
+        _controller.close();
+      } else {
+        _controller.add(info.data.getBytes());
+
+        if (_keepPolling) {
+          _pollIncoming();
+        }
+      }
+    }).catchError((error) {
+      _controller.addError(
+          new SocketException("error reading stream: ${error}"));
+      _controller.close();
+    });
   }
 
-//  void _setupDataPoll() {
-//    _intervalHandle =
-//        new Timer.periodic(const Duration(milliseconds: 500), _read);
-//  }
-
-//  OnReceived receive; // passed a String
-//  OnReadTcpSocket onRead; // passed a SocketReadInfo
-//
-//  void _read(Timer timer) {
-//    _logger.fine("enter: read()");
-//    Socket.read(_createInfo.socketId).then((SocketReadInfo readInfo) {
-//      if (readInfo == null) {
-//        return;
-//      }
-//
-//      _logger.fine("then: read()");
-//      if (onRead != null) {
-//        onRead(readInfo);
-//      }
-//
-//      if (receive != null) {
-//        // Convert back to string and invoke receive
-//        // Might want to add this kind of method
-//        // onto SocketReadInfo
-//        /*
-//        var blob =
-//            new html.Blob([new html.Uint8Array.fromBuffer(readInfo.data)]);
-//        var fileReader = new html.FileReader();
-//        fileReader.on.load.add((html.Event event) {
-//          _logger.fine("fileReader.result = ${fileReader.result}");
-//          receive(fileReader.result);
-//        });
-//        fileReader.readAsText(blob);
-//        */
-//        _logger.fine(readInfo.data.toString());
-//        var str = new String.fromCharCodes(
-//            new typed_data.Uint8List.view(readInfo.data));
-//        //_logger.fine("receive(str) = ${str}");
-//        receive(str, this);
-//      }
-//    });
-//  }
-
+  void _stopPolling() {
+    _keepPolling = false;
+  }
 }
 
 /**
- * TODO:
+ * A lightweight implementation of a tcp server socket.
+ *
+ * Usage:
+ *  * `TcpServer.createServerSocket()`
+ *  * `onAccept`
+ *  * `dispose()`
  */
 class TcpServer {
-  int _socketId;
+  final int _socketId;
+  final int port;
+
   StreamController<TcpClient> _controller;
 
   static Future<TcpServer> createServerSocket([int port = 0]) {
@@ -133,13 +145,15 @@ class TcpServer {
           chrome_gen.socket.destroy(socketId);
           throw new SocketException('unable to listen on port ${port}: ${result}');
         } else {
-          return new TcpServer._(socketId);
+          return chrome_gen.socket.getInfo(socketId).then((chrome_gen.SocketInfo info) {
+            return new TcpServer._(socketId, info.localPort);
+          });
         }
       });
     });
   }
 
-  TcpServer._(this._socketId) {
+  TcpServer._(this._socketId, this.port) {
     _controller = new StreamController(onListen: _accept);
   }
 
@@ -161,5 +175,29 @@ class TcpServer {
         _controller.close();
       }
     });
+  }
+}
+
+class _SocketEventSink implements EventSink<List<int>> {
+  TcpClient tcpClient;
+
+  _SocketEventSink(this.tcpClient);
+
+  void add(List<int> event) {
+    // TODO(devoncarew): do we need to do anything with the returned
+    // Future<SocketWriteInfo>? Send it to the read stream controller?
+
+    chrome_gen.socket.write(
+        tcpClient._socketId,
+        new chrome_gen.ArrayBuffer.fromBytes(event));
+  }
+
+  void addError(errorEvent) {
+    // TODO(devoncarew): implement this method
+
+  }
+
+  void close() {
+    tcpClient.dispose();
   }
 }

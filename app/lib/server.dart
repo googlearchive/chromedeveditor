@@ -12,7 +12,12 @@ import 'dart:async';
 import 'tcp.dart' as tcp;
 
 /**
- * TODO:
+ * A tiny embedded http server.
+ *
+ * Usage:
+ *  * PicoServer.createServer()
+ *  * TODO: add handlers
+ *  * dispose()
  */
 class PicoServer {
   tcp.TcpServer _server;
@@ -28,13 +33,24 @@ class PicoServer {
   }
 
   PicoServer._(this._server) {
-    // TODO: use onAccept
-
+    _server.onAccept.listen(_serveClient);
   }
+
+  int get port => _server.port;
 
   Future<tcp.SocketInfo> getInfo() => _server.getInfo();
 
   void dispose() {
     _server.dispose();
+  }
+
+  void _serveClient(tcp.TcpClient client) {
+    // TODO: parse and create a HttpRequest object
+
+    // TODO: ask each handler in turn if it wants to handle this request
+
+    // serve back a default 404 response
+    client.writeString('HTTP/1.1 404 Not Found\r\n');
+    client.dispose();
   }
 }

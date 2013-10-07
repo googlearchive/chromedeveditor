@@ -4,26 +4,44 @@
 
 library spark.server_test;
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:unittest/unittest.dart';
 
 import '../lib/server.dart';
+import '../lib/tcp.dart' as tcp;
 
 main() {
   group('PicoServer', () {
-    test('bind and dispose', () {
-      return PicoServer.createServer().then((PicoServer server) {
-        expect(server, isNotNull);
-        server.dispose();
-      });
+    PicoServer server;
+
+    setUp(() {
+      return PicoServer.createServer().then((s) => server = s);
     });
+
+    tearDown(() {
+      server.dispose();
+    });
+
+    test('bind and dispose', () {
+      expect(server, isNotNull);
+    });
+
     test('serve request', () {
       // TODO:
 
     });
-    test('serve request 404', () {
-      // TODO:
 
+    test('serve request 404', () {
+      tcp.TcpClient client;
+
+      return tcp.TcpClient.createClient(tcp.LOCAL_HOST, server.port).then((c) {
+        client = c;
+        client.writeString("HEAD /robots.txt HTTP/1.0\r\n\r\n");
+        return client.stream.first;
+      }).then((List<int> data) {
+        String str = new String.fromCharCodes(data);
+        expect(str, startsWith('HTTP/1.1 404 Not Found\r\n'));
+        client.dispose();
+      });
     });
   });
 
