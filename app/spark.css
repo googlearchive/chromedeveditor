@@ -13,3 +13,11 @@ body {
   overflow: hidden;
   /*background: #2F3129;*/
 }
+
+#editorArea {
+  height: 400px;
+  position: relative;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
