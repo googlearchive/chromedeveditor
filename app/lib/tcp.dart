@@ -33,10 +33,15 @@ class SocketException implements Exception {
   String toString() => "SocketException: $message";
 }
 
-//
-
 /**
- * TODO:
+ * A wrapper around the `chrome.socket` APIs used to read and write data to a
+ * socket.
+ *
+ * Usage:
+ *  * `TcpCLient.createClient()`
+ *  * `stream.listen()`
+ *  * `sink.add(data)`
+ *  * `dispose()`
  */
 class TcpClient {
   final int _socketId;
