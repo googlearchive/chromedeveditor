@@ -10,6 +10,7 @@ import 'dart:html';
 import 'package:chrome/app.dart' as chrome;
 
 import 'lib/ace.dart';
+import 'git.dart';
 import 'lib/utils.dart';
 
 
@@ -22,6 +23,7 @@ class Spark {
   AceEditor editor;
 
   Spark() {
+    var git = new Git();
     document.title = appName;
     print(appName);
 
