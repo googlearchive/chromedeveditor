@@ -10,8 +10,9 @@ class GitResult {
 }
 
 class Git {
-
   static final js.JsObject _jsgit = js.context['GitApi'];
+
+  static bool get available => _jsgit != null;
 
   Git() {
     print('Git Api initialized.');
