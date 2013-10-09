@@ -21,3 +21,21 @@ body {
   background-color: #fff;
 }
 
+#status {
+    border-bottom: 1px solid #CCC;
+    background-color: #EEE;
+}
+
+#path {
+    padding: 5px;
+    color: #777;
+}
+
+#error {
+    padding: 5px;
+    padding-top: 0px;
+    color: #C66;
+}
+
+
+
