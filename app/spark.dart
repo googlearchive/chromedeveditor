@@ -25,7 +25,10 @@ class Spark {
     document.title = appName;
     print(appName);
 
+    query("#newFile").onClick.listen(newFile);
     query("#openFile").onClick.listen(openFile);
+    query("#saveFile").onClick.listen(saveFile);
+    query("#saveAsFile").onClick.listen(saveAsFile);
 
     editor = new AceEditor();
     chrome.app.window.current.onClosed.listen(handleWindowClosed);
@@ -38,13 +41,41 @@ class Spark {
     //print('handleWindowClosed');
   }
 
-  void openFile(_){
+  void newFile(_) {
+    editor.newFile();
+    updatePath();
+  }
+
+  void openFile(_) {
     chrome.fileSystem.chooseEntry(type: 'openWritableFile').then((chrome.FileEntry file) {
       if (file != null) {
         file.readText().then((String contents) {
           editor.setContent(file);
+          updatePath();
         });
       }
     });
+
+  }
+
+  void saveAsFile(_) {
+    //TODO: don't show error message if operation cancelled
+    chrome.fileSystem.chooseEntry(type: 'saveFile').then((chrome.FileEntry file) {
+      editor.saveAs(file);
+      updatePath();
+    }).catchError((_) => updateError('Error on save as'));
+  }
+
+  void saveFile(_) {
+    editor.save();
+  }
+
+  void updateError(String string) {
+    query("#error").innerHtml = string;
+  }
+
+  void updatePath() {
+    print(editor.getPathInfo());
+    query("#path").innerHtml = editor.getPathInfo();
   }
 }
