@@ -41,12 +41,12 @@ class Spark {
     //print('handleWindowClosed');
   }
 
-  void newFile(_){
+  void newFile(_) {
     editor.newFile();
     updatePath();
   }
 
-  void openFile(_){
+  void openFile(_) {
     chrome.fileSystem.chooseEntry(type: 'openWritableFile').then((chrome.FileEntry file) {
       if (file != null) {
         file.readText().then((String contents) {
@@ -58,7 +58,7 @@ class Spark {
 
   }
 
-  void saveAsFile(_){
+  void saveAsFile(_) {
     //TODO: don't show error message if operation cancelled
     chrome.fileSystem.chooseEntry(type: 'saveFile').then((chrome.FileEntry file) {
       editor.saveAs(file);
@@ -66,7 +66,7 @@ class Spark {
     }).catchError((_) => updateError('Error on save as'));
   }
 
-  void saveFile(_){
+  void saveFile(_) {
     editor.save();
   }
 
