@@ -10,15 +10,10 @@
   <title> </title>
   <!-- link rel="stylesheet" href="bootstrap/css/bootstrap.css" id="bootstrapTheme" -->
   <link rel="stylesheet" href="spark.css">
-  <script src="polymer/polymer.min.js"></script>
-  <!-- <link rel="import" href="polymer/components/sp-button/sp-button.html"> -->
-  <polymer-element name="sp-button" attributes="active">
-    <template>
-      <link rel="stylesheet" href="polymer/components/sp-button/sp-button.css">
-      <button type="button"><content></content></button>
-    </template>
-    <script src="polymer/components/sp-button/sp-button.js"></script>
-  </polymer-element>
+  <script src="packages/html_import/html_import.min.js"></script>
+  <script src="packages/polymer/boot.js"></script>
+
+  <link rel="import" href="polymer/components/sp-button/sp-button.html">
 </head>
 
 <body>
