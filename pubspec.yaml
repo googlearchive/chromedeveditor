@@ -13,5 +13,5 @@ dependencies:
   logging: any
   polymer: any
 dev_dependencies:
-  grinder: any
+  grinder: 0.0.6
   unittest: any

@@ -1,3 +1,7 @@
+sp-button {
+  display: inline-block;
+}
+
 button {
   background: #ddd;
   border: 1px solid #888;
