@@ -2,11 +2,11 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:grinder/grinder.dart';
-import 'package:polymer/builder.dart' as cb;
-import 'dart:async';
+import 'package:polymer/builder.dart' as polymer;
 
 void main() {
   defineTask('init', taskFunction: init);
@@ -54,8 +54,8 @@ void packages(GrinderContext context) {
 // without HTML imports.
 Future<bool> asyncPolymerBuild(String entryPoint, String outputDir) {
   var args = ['--out', outputDir, '--deploy'];
-  var options = cb.parseOptions(args);
-  return cb.build(entryPoints: [entryPoint], options: options)
+  var options = polymer.parseOptions(args);
+  return polymer.build(entryPoints: [entryPoint], options: options)
       .then((_) => true);
   print("polymer build done");
 }
@@ -90,6 +90,7 @@ Future compile(GrinderContext context) {
     Directory.current = 'polymer-build';
     dart2JSBuild(context);
     context.log('result has been written to build/polymer-build/web/');
+    Directory.current = '../..';
   })]);
 }
 
