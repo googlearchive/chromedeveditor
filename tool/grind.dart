@@ -39,6 +39,8 @@ void packages(GrinderContext context) {
   copyFile(
       joinFile(Directory.current, ['pubspec.lock']),
       joinDir(Directory.current, ['build']));
+  // Change the name of the folder to web because polymer builder will only
+  // build content from 'web' folder.
   copyDirectory(
       joinDir(Directory.current, ['app']),
       joinDir(Directory.current, ['build', 'web']));
