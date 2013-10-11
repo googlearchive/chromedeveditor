@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
+import 'git_test.dart' as git_test;
 import 'preferences_test.dart' as preferences_test;
 import 'server_test.dart' as server_test;
 import 'tcp_test.dart' as tcp_test;
@@ -35,6 +36,8 @@ void _defineTests() {
   unittest.unittestConfiguration = new SparkTestConfiguration();
   logger.onRecord.listen(_logToStdout);
 
+  git_test.main();
+  utils_test.main();
   preferences_test.main();
   server_test.main();
   tcp_test.main();

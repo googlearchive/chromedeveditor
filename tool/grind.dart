@@ -2,10 +2,12 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
+import 'package:polymer/builder.dart' as polymer;
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
@@ -32,20 +34,68 @@ void packages(GrinderContext context) {
   copyDirectory(
       joinDir(Directory.current, ['packages']),
       joinDir(Directory.current, ['app', 'packages']));
+
+  // Copy files to build directory.
+  copyFile(
+      joinFile(Directory.current, ['pubspec.yaml']),
+      joinDir(Directory.current, ['build']));
+  copyFile(
+      joinFile(Directory.current, ['pubspec.lock']),
+      joinDir(Directory.current, ['build']));
+  // Change the name of the folder to web because polymer builder will only
+  // build content from 'web' folder.
+  copyDirectory(
+      joinDir(Directory.current, ['app']),
+      joinDir(Directory.current, ['build', 'web']));
+  copyDirectory(
+      joinDir(Directory.current, ['packages']),
+      joinDir(Directory.current, ['build', 'packages']));
+  Process.runSync('rm', ['-rf', 'build/web/packages']);
 }
 
-void compile(GrinderContext context) {
-//  // TODO: check outputs
-//  FileSet sparkSource = new FileSet.fromFile(new File('app/spark.dart'));
-//  FileSet output = new FileSet.fromFile(new File('app/spark.dart.js'));
-//
-//  if (!output.upToDate(sparkSource)) {
-    // We tell dart2js to compile to spark.dart.js; it also outputs a CSP
-    // version (spark.dart.precompiled.js), which is what we actually use.
-    runProcess(context,'dart2js',
-        arguments: ['--minify', 'app/spark.dart', '--out=app/spark.dart.js']);
-    printSize(context,  new File('app/spark.dart.precompiled.js'));
-//  }
+// It will output a file web/spark.html_bootstrap.dart and a spark.html
+// without HTML imports.
+Future<bool> asyncPolymerBuild(
+    GrinderContext context, String entryPoint, String outputDir) {
+  var args = ['--out', outputDir, '--deploy'];
+  var options = polymer.parseOptions(args);
+  return polymer.build(entryPoints: [entryPoint], options: options).then((_) {
+    context.log("polymer build done");
+    return true;
+  });
+}
+
+void dart2JSBuild(GrinderContext context) {
+  // We remove the symlink and replace it with a copy.
+  Process.runSync('rm', ['-rf', 'web/packages']);
+  copyDirectory(
+      joinDir(Directory.current, ['packages']),
+      joinDir(Directory.current, ['web', 'packages']));
+
+  // TODO: check outputs
+  // We tell dart2js to compile to spark.dart.js; it also outputs a CSP
+  // version (spark.dart.precompiled.js), which is what we actually use.
+  runProcess(context, 'dart2js', arguments: [
+      'web/spark.html_bootstrap.dart',
+      '--out=web/spark.html_bootstrap.dart.js']);
+
+  // Support for old version of dart2js: they generate precompiled.js file.
+  if (new File('web/precompiled.js').existsSync()) {
+    new File('web/precompiled.js').renameSync(
+        'web/spark.html_bootstrap.dart.precompiled.js');
+  }
+  printSize(context,  new File('web/spark.html_bootstrap.dart.precompiled.js'));
+}
+
+Future compile(GrinderContext context) {
+  Directory.current = 'build';
+  return Future.wait([asyncPolymerBuild(context, 'web/spark.html',
+                                        'polymer-build').then((bool success) {
+    Directory.current = 'polymer-build';
+    dart2JSBuild(context);
+    context.log('result has been written to build/polymer-build/web/');
+    Directory.current = '../..';
+  })]);
 }
 
 void analyze(GrinderContext context) {
