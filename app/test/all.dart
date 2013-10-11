@@ -19,6 +19,7 @@ import 'package:unittest/unittest.dart' as unittest;
 import 'git_test.dart' as git_test;
 import 'utils_test.dart' as utils_test;
 import 'preferences_test.dart' as preferences_test;
+import 'sdk_test.dart' as sdk_test;
 
 bool _testsDefined = false;
 
@@ -37,6 +38,7 @@ void _defineTests() {
   git_test.main();
   utils_test.main();
   preferences_test.main();
+  sdk_test.main();
 }
 
 /**
