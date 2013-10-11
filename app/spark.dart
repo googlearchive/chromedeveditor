@@ -12,18 +12,15 @@ import 'package:chrome/app.dart' as chrome;
 import 'lib/ace.dart';
 import 'lib/utils.dart';
 
-
 void main() {
   Spark spark = new Spark();
 }
 
 class Spark {
-
   AceEditor editor;
 
   Spark() {
     document.title = appName;
-    print(appName);
 
     query("#newFile").onClick.listen(newFile);
     query("#openFile").onClick.listen(openFile);
@@ -37,8 +34,7 @@ class Spark {
   String get appName => i18n('app_name');
 
   void handleWindowClosed(data) {
-    // TODO:
-    //print('handleWindowClosed');
+
   }
 
   void newFile(_) {

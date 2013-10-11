@@ -77,9 +77,9 @@ class GitOptions {
  * library.
  *
  * Example usage:
- *   git.clone(gitOptions)
- *      .then(successCallback)
- *      .catchError((e) => errorCallback(e));
+ *     git.clone(gitOptions)
+ *       .then(successCallback)
+ *       .catchError((e) => errorCallback(e));
  *
  * TODO(grv): Add unittests for the apis.
  *
