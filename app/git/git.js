@@ -419,120 +419,7 @@ var requirejs, require, define;
 
 define("thirdparty/almond", function(){});
 
-define('utils/misc_utils', function(){
-    /* Main object */
-    var utils = {
-
-      // Print an error either to the console if in node, or to div#jsgit-errors
-      // if in the client.
-      handleError: function(message) {
-        if (jsGitInNode) {
-          console.log(message)
-        }
-        else {
-          $('#jsgit-errors').append(message)
-        }
-      },
-
-      // Turn an array of bytes into a String
-      bytesToString: function(bytes) {
-        var result = "";
-        var i;
-        for (i = 0; i < bytes.length; i++) {
-          result = result.concat(String.fromCharCode(bytes[i]));
-        }
-        return result;
-      },
-
-      stringToBytes: function(string) {
-        var bytes = [];
-        var i;
-        for(i = 0; i < string.length; i++) {
-          bytes.push(string.charCodeAt(i) & 0xff);
-        }
-        return bytes;
-      },
-
-      toBinaryString: function(binary) {
-        if (Array.isArray(binary)) {
-          return Git.bytesToString(binary)
-        }
-        else {
-          return binary
-        }
-      },
-
-      // returns the next pkt-line
-      nextPktLine: function(data) {
-        var length = parseInt(data.substring(0, 4), 16);
-        return data.substring(4, length);
-      },
-
-      // zlib files contain a two byte header. (RFC 1950)
-      stripZlibHeader: function(zlib) {
-        return zlib.subarray(2)
-      },
-
-      escapeHTML: function(s) {
-        return s
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-      },
-        convertShaToBytes: function(sha){
-            var bytes = new Uint8Array(sha.length/2);
-            for (var i = 0; i < sha.length; i+=2)
-            {
-                bytes[i/2] = parseInt('0x' + sha.substr(i, 2));
-            }
-            return bytes;
-        },
-        convertBytesToSha : function(bytes){
-            var shaChars = [];
-            for (var i = 0; i < bytes.length; i++){
-                var next = (bytes[i] < 16 ? '0' : '') + bytes[i].toString(16);
-                shaChars.push(next);
-            }
-            return shaChars.join('');
-        },
-        compareShas : function(sha1, sha2){
-            for (var i = 1; i < 20; i++){
-                if (sha1[i] != sha2[i]){
-                    return sha1[i] - sha2[i];
-                }
-            }
-            return 0;
-        },
-        inflate: function(data, expectedLength){
-            var options;
-            if (expectedLength){
-              options = {bufferSize: expectedLength};
-            }
-            var inflate = new Zlib.Inflate(data, options);
-            inflate.verify = true;
-            var out = inflate.decompress();
-            out.compressedLength = inflate.ip;
-            return out;
-        },
-        deflate: function(data){
-            var deflate = new Zlib.Deflate(data);
-            var out = deflate.compress();
-            return out;
-        },
-        trimBuffer: function(data){
-            var buffer = data.buffer;
-            if (data.byteOffset != 0 || data.byteLength != data.buffer.byteLength){
-                buffer = data.buffer.slice(data.byteOffset, data.byteLength + data.byteOffset);
-            }
-            return buffer;
-        }
-    }
-
-    return utils;
-
-});
-
-define('utils/file_utils',['utils/misc_utils'], function(utils){
+define('utils/file_utils',[], function(){
 	Array.prototype.asyncEach = function(func, callback){
 		if (this.length == 0){
 			callback();
@@ -816,7 +703,7 @@ f];else{var p=d[f-3]^d[f-8]^d[f-14]^d[f-16];d[f]=p<<1|p>>>31}p=(n<<5|n>>>27)+o+(
 
 define("thirdparty/2.2.0-sha1", function(){});
 
-define('formats/pack',['objectstore/delta', 'utils/misc_utils', 'utils/file_utils', 'thirdparty/2.2.0-sha1'], function(applyDelta, utils, fileutils) {
+define('formats/pack',['objectstore/delta', 'utils/file_utils', 'thirdparty/2.2.0-sha1'], function(applyDelta, fileutils) {
 
     String.prototype.rjust = function(width, padding) {
         padding = padding || " ";
@@ -1346,7 +1233,7 @@ define('formats/pack',['objectstore/delta', 'utils/misc_utils', 'utils/file_util
     }
     return Pack;
 });
-define('formats/upload_pack_parser',['formats/pack', 'utils/misc_utils'], function(Pack, utils) {
+define('formats/upload_pack_parser',['formats/pack'], function(Pack) {
     var parse = function(arraybuffer, repo, success, progress) {
         var data = new Uint8Array(arraybuffer); //new BinaryFile(binaryString);
         var offset = 0;
@@ -2350,7 +2237,7 @@ define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'f
     }
     return clone;
 });
-define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'], function (fileutils, miscutils, errutils) {
+define('commands/commit',['utils/file_utils', 'utils/errors'], function (fileutils, errutils) {
 
     var walkFiles = function(dir, store, success){
 
@@ -2369,7 +2256,7 @@ define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'
                 if (entry.isDirectory){
                     walkFiles(entry, store, function(sha){
                         if (sha){
-                            treeEntries.push({name: /*'40000 ' + */entry.name, sha: miscutils.convertShaToBytes(sha), isBlob: false});
+                            treeEntries.push({name: /*'40000 ' + */entry.name, sha: utils.convertShaToBytes(sha), isBlob: false});
                         }
                         done();
                     });
@@ -2380,7 +2267,7 @@ define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'
                         var reader = new FileReader();
                         reader.onloadend = function(){
                             store.writeRawObject('blob', new Uint8Array(reader.result), function(sha){
-                                treeEntries.push({name: /*'100644 ' + */entry.name, sha: miscutils.convertShaToBytes(sha), isBlob: true});
+                                treeEntries.push({name: /*'100644 ' + */entry.name, sha: utils.convertShaToBytes(sha), isBlob: true});
                                 done();
                             });
                         }
@@ -2483,7 +2370,7 @@ define('commands/init',[],function(){
     }
     return init;
 });
-define('commands/treemerger',['utils/misc_utils'], function(utils){
+define('commands/treemerger',[], function(){
 
 	var diffTree = function(oldTree, newTree){
 		oldTree.sortEntries();
@@ -3130,7 +3017,7 @@ return r(this._wrapped,this._chain)}});k(["concat","join","slice"],function(a){v
 
 define("thirdparty/underscore-min", function(){});
 
-define('objectstore/objects',['utils/misc_utils', 'thirdparty/underscore-min'], function(utils) {
+define('objectstore/objects',['thirdparty/underscore-min'], function() {
     var map = {
         "commit": 1,
         "tree": 2,
@@ -3289,7 +3176,7 @@ define('objectstore/objects',['utils/misc_utils', 'thirdparty/underscore-min'], 
     }
     return GitObjects;
 });
-define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectstore/objects', 'utils/misc_utils', 'utils/file_utils', 'utils/errors'], function(Pack, PackIndex, GitObjects, utils, fileutils, errutils){
+define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectstore/objects', 'utils/file_utils', 'utils/errors'], function(Pack, PackIndex, GitObjects, fileutils, errutils){
 
 	String.prototype.endsWith = function(suffix){
     	return this.lastIndexOf(suffix) == (this.length - suffix.length);
