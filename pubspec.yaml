@@ -10,10 +10,10 @@ dependencies:
   chrome: any
   chrome_gen: '>=0.0.5'
   compiler_unsupported: any
+  intl: any
   logging: any
   mime: any
   polymer: any
 dev_dependencies:
   grinder: any
-  intl: any
   unittest: any
