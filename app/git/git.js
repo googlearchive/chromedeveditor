@@ -419,10 +419,10 @@ var requirejs, require, define;
 
 define("thirdparty/almond", function(){});
 
-define('utils/misc_utils'], function(){
+define('utils/misc_utils', function(){
     /* Main object */
     var utils = {
-      
+
       // Print an error either to the console if in node, or to div#jsgit-errors
       // if in the client.
       handleError: function(message) {
@@ -433,7 +433,7 @@ define('utils/misc_utils'], function(){
           $('#jsgit-errors').append(message)
         }
       },
-      
+
       // Turn an array of bytes into a String
       bytesToString: function(bytes) {
         var result = "";
@@ -443,16 +443,16 @@ define('utils/misc_utils'], function(){
         }
         return result;
       },
-      
+
       stringToBytes: function(string) {
-        var bytes = []; 
-        var i; 
+        var bytes = [];
+        var i;
         for(i = 0; i < string.length; i++) {
           bytes.push(string.charCodeAt(i) & 0xff);
         }
         return bytes;
       },
-        
+
       toBinaryString: function(binary) {
         if (Array.isArray(binary)) {
           return Git.bytesToString(binary)
@@ -461,18 +461,18 @@ define('utils/misc_utils'], function(){
           return binary
         }
       },
-        
+
       // returns the next pkt-line
       nextPktLine: function(data) {
         var length = parseInt(data.substring(0, 4), 16);
         return data.substring(4, length);
       },
-      
+
       // zlib files contain a two byte header. (RFC 1950)
       stripZlibHeader: function(zlib) {
         return zlib.subarray(2)
       },
-      
+
       escapeHTML: function(s) {
         return s
           .replace(/&/g, '&amp;')
@@ -485,7 +485,7 @@ define('utils/misc_utils'], function(){
             {
                 bytes[i/2] = parseInt('0x' + sha.substr(i, 2));
             }
-            return bytes;   
+            return bytes;
         },
         convertBytesToSha : function(bytes){
             var shaChars = [];
@@ -507,7 +507,7 @@ define('utils/misc_utils'], function(){
             var options;
             if (expectedLength){
               options = {bufferSize: expectedLength};
-            } 
+            }
             var inflate = new Zlib.Inflate(data, options);
             inflate.verify = true;
             var out = inflate.decompress();
@@ -540,34 +540,34 @@ define('utils/file_utils',['utils/misc_utils'], function(utils){
 		}
 		var list = this,
 		    counter = {x:0, end:list.length};
-		
+
 		var finish = function(){
 			counter.x += 1;
 			if (counter.x == counter.end){
 				callback();
 			}
 		}
-		
+
 		for (var i = 0; i < list.length; i++){
 			func.call(list, list[i], finish, i);
 		}
 	}
 
 	var FileUtils = (function(){
-		
+
 		var toArray = function(list) {
 			return Array.prototype.slice.call(list || [], 0);
 		}
-		
+
 		var makeFile = function(root, filename, contents, callback, error){
 			root.getFile(filename, {create:true}, function(fileEntry){
 				fileEntry.createWriter(function(writer){
 					writer.onwriteend = function(){
-						// strange piece of the FileWriter api. Writing to an 
+						// strange piece of the FileWriter api. Writing to an
 						// existing file just overwrites content in place. Still need to truncate
 						// which triggers onwritend event...again. o_O
 						if (writer.position < writer.length){
-							writer.truncate(writer.position);	
+							writer.truncate(writer.position);
 						}
 						else if (callback)
 							callback(fileEntry);
@@ -583,11 +583,11 @@ define('utils/file_utils',['utils/misc_utils'], function(utils){
 				}, error);
 			}, error);
 		}
-		
+
 		var makeDir = function(root, dirname, callback, error){
 			root.getDirectory(dirname, {create:true},callback, error);
 		}
-		
+
 		return {
 			mkdirs : function(root, dirname, callback, error){
 				var pathParts;
@@ -597,7 +597,7 @@ define('utils/file_utils',['utils/misc_utils'], function(utils){
 				else{
 					pathParts = dirname.split('/');
 				}
-				
+
 				var makeDirCallback = function(dir){
 					if (pathParts.length){
 						makeDir(dir, pathParts.shift(), makeDirCallback, error);
@@ -636,7 +636,7 @@ define('utils/file_utils',['utils/misc_utils'], function(utils){
 			ls: function(dir, callback, error){
 				var reader = dir.createReader();
 				var entries = [];
-				
+
 				var readEntries = function() {
 					reader.readEntries (function(results) {
 						if (!results.length) {
@@ -648,7 +648,7 @@ define('utils/file_utils',['utils/misc_utils'], function(utils){
 					}, error);
 				}
 				readEntries();
-				
+
 			},
 			readBlob: function(blob, dataType, callback){
 				var reader = new FileReader();
@@ -663,17 +663,17 @@ define('utils/file_utils',['utils/misc_utils'], function(utils){
 				});
 			},
 			readFile : function(root, file, dataType, callback, error) {
-				
+
 				root.getFile(file, {create:false}, function(fileEntry){
 					FileUtils.readFileEntry(fileEntry, dataType, callback, error);
 				}, error);
 			}
-		
+
 		};
 	}
 	)();
 
-	return FileUtils; 
+	return FileUtils;
 });
 define('commands/object2file',['utils/file_utils'], function(fileutils){
 
@@ -687,7 +687,7 @@ define('commands/object2file',['utils/file_utils'], function(fileutils){
     }
 
     var expandTree = function(dir, store, treeSha, callback){
-        
+
         store._retrieveObject(treeSha, "Tree", function(tree){
             var entries = tree.entries;
             entries.asyncEach(function(entry, done){
@@ -801,7 +801,7 @@ define('objectstore/delta',[],function() {
                 }
             }
             return resultData.buffer;
-            
+
         }
     }());
 
@@ -928,7 +928,7 @@ define('formats/pack',['objectstore/delta', 'utils/misc_utils', 'utils/file_util
                 type: type,
                 offset: objectStartOffset
             }
-           
+
         }
 
         var objectHash = function(type, content) {
@@ -973,7 +973,7 @@ define('formats/pack',['objectstore/delta', 'utils/misc_utils', 'utils/file_util
             return desiredOffset;
         }
 
-        
+
         var expandDeltifiedObject = function(object, callback) {
 
             var doExpand = function(baseObject, deltaObject) {
@@ -1427,7 +1427,7 @@ define('formats/upload_pack_parser',['formats/pack', 'utils/misc_utils'], functi
                     break;
                 case 3:
                     throw (Error("fatal error in packet line"))
-                    break;    
+                    break;
             }
             pktLine = nextPktLine()
         }
@@ -1459,9 +1459,9 @@ define('utils/errors',[],function() {
         FILE_IO_ERROR: 0,
         FILE_IO_ERROR_MSG: 'Unexpected File I/O error',
         // Indicates an unexpected ajax error when trying to make a request
-        AJAX_ERROR: 1, 
+        AJAX_ERROR: 1,
         AJAX_ERROR_MSG: 'Unexpected ajax error',
-        
+
         // trying to clone into a non-empty directory
         CLONE_DIR_NOT_EMPTY: 2,
         CLONE_DIR_NOT_EMPTY_MSG: 'The target directory contains files',
@@ -1497,7 +1497,7 @@ define('utils/errors',[],function() {
         PUSH_NO_REMOTE: 16,
         PUSH_NO_REMOTE_MSG: 'No remote to push to',
 
-        // Need to merge remote changes first. 
+        // Need to merge remote changes first.
         PUSH_NON_FAST_FORWARD: 10,
         PUSH_NON_FAST_FORWARD_MSG: 'The remote repo has new commits on your current branch. You need to merge them first.',
 
@@ -1520,7 +1520,7 @@ define('utils/errors',[],function() {
         UNPACK_ERROR: 202,
         UNPACK_ERROR_MSG: 'The remote git server wasn\'t able to understand the push request.',
 
-        
+
         fileErrorFunc : function(onError){
             if (!onError){
                 return function(){};
@@ -1544,7 +1544,7 @@ define('utils/errors',[],function() {
                 else{
                     httpErr = {type: errors.AJAX_ERROR, url: url, reqType: reqType, statusText: xhr.statusText, status: xhr.status, msg: "Http error with status code: " + xhr.status + ' and status text: "' + xhr.statusText + '"'};
                 }
-                onError(httpErr);  
+                onError(httpErr);
             }
         },
 
@@ -1670,7 +1670,7 @@ define('formats/smart_http_remote',['formats/upload_pack_parser', 'utils/errors'
         }
 
         var pushRequest = function(refPaths, packData) {
-            
+
 
             var pktLine = function(refPath) {
                 return refPath.sha + ' ' + refPath.head + ' ' + refPath.name;
@@ -1747,18 +1747,18 @@ define('formats/smart_http_remote',['formats/upload_pack_parser', 'utils/errors'
                 if (xhr.readyState == 4) {
                     if (xhr.status == 200) {
                         success(xhr.responseText);
-                    } 
-                    else{ 
+                    }
+                    else{
                         var obj = {url: url, type: 'GET'};
-                        ajaxErrorHandler.call(obj, xhr); 
+                        ajaxErrorHandler.call(obj, xhr);
                     }
                 }
             }
-            
+
 
             var xhr2ErrorShim = function(){
                 var obj = {url: url, type: 'POST'};
-                ajaxErrorHandler.call(obj, xhr); 
+                ajaxErrorHandler.call(obj, xhr);
             }
             xhr.onerror = xhr2ErrorShim;
             xhr.onabort = xhr2ErrorShim;
@@ -1868,7 +1868,7 @@ define('formats/smart_http_remote',['formats/upload_pack_parser', 'utils/errors'
             }
             var xhr2ErrorShim = function(){
                 var obj = {url: url, type: 'POST'};
-                ajaxErrorHandler.call(obj, xhr); 
+                ajaxErrorHandler.call(obj, xhr);
             }
 
             xhr.onerror = xhr2ErrorShim;
@@ -1900,7 +1900,7 @@ define('formats/smart_http_remote',['formats/upload_pack_parser', 'utils/errors'
             // 	  callback(objects, packData, common);
             // 	}
             // });
-            // }        
+            // }
             //    },
             //    error: function(xhr, data, e) {
             //      Git.displayError("ERROR Status: " + xhr.status + ", response: " + xhr.responseText)
@@ -1923,10 +1923,10 @@ define('formats/smart_http_remote',['formats/upload_pack_parser', 'utils/errors'
                         else{
                             error({type: errutils.UNPACK_ERROR, msg: errutils.UNPACK_ERROR_MSG});
                         }
-                    } 
-                    else{ 
+                    }
+                    else{
                         var obj = {url: url, type: 'POST'};
-                        ajaxErrorHandler.call(obj, xhr); 
+                        ajaxErrorHandler.call(obj, xhr);
                     }
                 }
             }
@@ -2008,25 +2008,25 @@ define('formats/pack_index',[],function(){
     	// load the index into memory
     	var magicNum = data.getUint32(0, false);
     	var versionNum = data.getUint32(4, false);
-    	
+
     	if (magicNum != 0xff744f63 || versionNum != 2){
     		throw(Error("Bad pack index header. Only version 2 is supported"))
     	}
-    	
+
     	var byteOffset = 8
     	//this.fanOffset = byteOffset;
-    	
+
     	var numObjects = data.getUint32(byteOffset + (255 * 4), false);
-    	
+
     	// skip past fanout table
     	var fanTableLen = 256 * 4;
-    	byteOffset += fanTableLen; 
+    	byteOffset += fanTableLen;
     	var shaTableLen = numObjects * 20;
     	this.shaList = new Uint8Array(buf, byteOffset, shaTableLen);
-    	
+
     	// skip past shas and the CRC vals
     	byteOffset += shaTableLen + (numObjects * 4);
-    	
+
     	this.offsetsOffset = byteOffset;
     	this.numObjects = numObjects;
     }
@@ -2043,24 +2043,24 @@ define('formats/pack_index',[],function(){
     	},
     	_getShaAtIndex : function(index){
     	    var byteOffset = index * 20;
-    	    return this.shaList.subarray(byteOffset, byteOffset + 20); 
+    	    return this.shaList.subarray(byteOffset, byteOffset + 20);
     	},
     	getObjectOffset : function(sha){
     		var fanIndex = sha[0];
-    		
+
     		var sliceStart = fanIndex > 0 ? (this.data.getUint32(8 + ((fanIndex - 1) * 4), false)) : 0;
     		var sliceEnd = this.data.getUint32(8 + (fanIndex * 4), false);
-    		
+
     		if (sliceEnd - sliceStart == 0){
     			return -1;
     		}
-    		
+
     		var index;
     		while (sliceEnd - sliceStart  > 1){
     			var split = sliceStart + Math.floor(((sliceEnd - sliceStart)/2));
-    			
+
     			var mid = this._getShaAtIndex(split);
-    			
+
     			var compare = this._compareShas(sha, mid);
     			if (compare == 0){
     				index = split;
@@ -2073,7 +2073,7 @@ define('formats/pack_index',[],function(){
     				sliceStart = split + 1;
     			}
     		}
-    		// if we've exited the loop without a match, sliceStart should hold the index or it's not here. 
+    		// if we've exited the loop without a match, sliceStart should hold the index or it's not here.
     		if (!index){
     			if (sliceStart < this.numObjects && this._compareShas(sha, this._getShaAtIndex(sliceStart)) == 0){
     				index = sliceStart;
@@ -2082,10 +2082,10 @@ define('formats/pack_index',[],function(){
     				return -1;
     			}
     		}
-    		
-    		var objOffset = this.data.getUint32(this.offsetsOffset + (index * 4), false); 
+
+    		var objOffset = this.data.getUint32(this.offsetsOffset + (index * 4), false);
     		return objOffset;
-    		
+
     	}
     }
     /*
@@ -2128,7 +2128,7 @@ define('formats/pack_index',[],function(){
     PackIndex.writePackIdx = function(objects, packSha){
     	var size = 4 + 4 + (256 * 4) + (objects.length * 20) + (objects.length * 4)  + (objects.length * 4) + (20 * 2);
     	var buf = new ArrayBuffer(size);
-    	
+
     	objects.sort(function(obj1, obj2){
     		for (var i = 0; i < 20; i++){
     			if (obj1.sha[i] != obj2.sha[i]){
@@ -2137,22 +2137,22 @@ define('formats/pack_index',[],function(){
     		}
     		return 0; // shouldn't happen but just in case
     	});
-    	
+
         var data = new DataView(buf);
-        
+
         // magic number
         data.setUint32(0, 0xff744f63, false);
-        
+
         //version number
         data.setUint32(4, 2, false);
-        
+
         // fan table
         var byteOffset = 8, current = 0;
-     
+
         for (var i = 0; i < objects.length; i++){
         	var next = objects[i].sha[0];
         	if (next != current){
-        		
+
         		for (var j = current; j < next; j++){
         			data.setUint32(byteOffset + (j * 4), i, false);
         		}
@@ -2162,33 +2162,33 @@ define('formats/pack_index',[],function(){
         for (var j = current; j < 256; j++){
     		data.setUint32(byteOffset + (j * 4), objects.length, false);
     	}
-        
+
         // list of shas
         byteOffset += (256 * 4);
-        
+
         for (var i = 0; i < objects.length; i++){
         	for (var j = 0; j < 20; j++){
         		data.setUint8(byteOffset++, objects[i].sha[j]);
         	}
         }
-        
+
         // list of crcs
         for (var i = 0; i < objects.length; i++){
         	data.setUint32(byteOffset, objects[i].crc, false);
         	byteOffset += 4;
         }
-        
+
         // list of offsets. Note that I'm not going to bother with large offsets. You shouldn't be loading a packfile >2GB inside a web browser anyway.
         for (var i = 0; i < objects.length; i++){
         	data.setUint32(byteOffset, objects[i].offset, false);
         	byteOffset += 4;
         }
-        
+
         // the pack file sha
         for (var i = 0; i < 20; i++){
         	data.setUint8(byteOffset++, packSha[i]);
         }
-        
+
         // sha for all of the above
         var indexSha = Crypto.SHA1(new Uint8Array(buf, 0, byteOffset), {asBytes:true});
         for (var i = 0; i < 20; i++){
@@ -2196,23 +2196,23 @@ define('formats/pack_index',[],function(){
         }
         return buf;
     }
-      
+
     return PackIndex;
 });
 
 
 define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/file_utils', 'utils/errors', 'utils/progress_chunker'], function(object2file, SmartHttpRemote, PackIndex, Pack, fileutils, errutils, ProgressChunker){
-    
+
     var _createCurrentTreeFromPack = function(dir, store, headSha, callback){
          store._retrieveObject(headSha, "Commit", function(commit){
             var treeSha = commit.tree;
             object2file.expandTree(dir, store, treeSha, callback);
          });
     }
-    
+
     var checkDirectory = function(dir, store, success, error, ferror){
         fileutils.ls(dir, function(entries){
-            
+
             if (entries.length == 0){
                 error({type: errutils.CLONE_DIR_NOT_INTIALIZED, msg: errutils.CLONE_DIR_NOT_INTIALIZED_MSG});
             }
@@ -2251,7 +2251,7 @@ define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'f
     };
 
     var clone = function(options, success, error){
-        
+
         var dir = options.dir,
             store = options.objectStore,
             url = options.url,
@@ -2262,7 +2262,7 @@ define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'f
             username = options.username,
             password = options.password,
             ferror = errutils.fileErrorFunc(error);
-    
+
         var chunker = new ProgressChunker(progress);
         var packProgress = chunker.getChunk(0, .95);
 
@@ -2276,17 +2276,17 @@ define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'f
                 config.shallow = shallow;
             }
             config.remoteHeads = {};
-            
+
             if (localHeadRef)
                 config.remoteHeads[localHeadRef.name] = localHeadRef.sha;
 
-            store.setConfig(config, callback);  
+            store.setConfig(config, callback);
         }
 
-        checkDirectory(dir, store, function(){ 
+        checkDirectory(dir, store, function(){
             mkdirs(dir, ".git", function(gitDir){
                 remote.fetchRefs(function(refs){
-                    
+
                     if (!refs.length){
                         createInitialConfig(null, null, success);
                         return;
@@ -2322,25 +2322,25 @@ define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'f
                         mkfile(gitDir, localHeadRef.name, localHeadRef.sha + '\n', function(){
                             remote.fetchRef([localHeadRef], null, null, depth, null, function(objects, packData, common, shallow){
                                 var packSha = packData.subarray(packData.length - 20);
-                                
+
                                 var packIdxData = PackIndex.writePackIdx(objects, packSha);
-                                
+
                                 // get a view of the sorted shas
                                 var sortedShas = new Uint8Array(packIdxData, 4 + 4 + (256 * 4), objects.length * 20);
                                 packNameSha = Crypto.SHA1(sortedShas);
-                                
+
                                 var packName = 'pack-' + packNameSha;
                                 mkdirs(gitDir, 'objects', function(objectsDir){
                                     mkfile(objectsDir, 'pack/' + packName + '.pack', packData.buffer);
                                     mkfile(objectsDir, 'pack/' + packName + '.idx', packIdxData);
-                                    
+
                                     var packIdx = new PackIndex(packIdxData);
                                     store.loadWith(objectsDir, [{pack: new Pack(packData, self), idx: packIdx}]);
                                     progress({pct: 95, msg: "Building file tree from pack. Be patient..."});
                                     _createCurrentTreeFromPack(dir, store, localHeadRef.sha, function(){
                                         createInitialConfig(shallow, localHeadRef, callback);
                                     });
-                                }, ferror); 
+                                }, ferror);
                             }, null, packProgress);
                         }, ferror);
                     }, ferror);
@@ -2353,7 +2353,7 @@ define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'f
 define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'], function (fileutils, miscutils, errutils) {
 
     var walkFiles = function(dir, store, success){
-               
+
         fileutils.ls(dir, function(entries){
             if (!entries.length){
                 success();
@@ -2373,7 +2373,7 @@ define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'
                         }
                         done();
                     });
-                    
+
                 }
                 else{
                     entry.file(function(file){
@@ -2400,7 +2400,7 @@ define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'
                 });
                 store._writeTree(treeEntries, success);
             })
-        });       
+        });
     }
 
     var checkTreeChanged = function(store, parent, sha, success, error){
@@ -2417,12 +2417,12 @@ define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'
                     success();
                 }
             }, function(){
-                error({type: errutils.OBJECT_STORE_CORRUPTED, msg: errutils.OBJECT_STORE_CORRUPTED_MSG});  
+                error({type: errutils.OBJECT_STORE_CORRUPTED, msg: errutils.OBJECT_STORE_CORRUPTED_MSG});
             })
         }
     }
 
-    var _createCommitFromWorkingTree =  function(options, parent, ref, success, error){ 
+    var _createCommitFromWorkingTree =  function(options, parent, ref, success, error){
 
         var dir = options.dir,
             store = options.objectStore,
@@ -2445,8 +2445,8 @@ define('commands/commit',['utils/file_utils', 'utils/misc_utils', 'utils/errors'
                         commitContent.push('\n');
                     }
                 }
-                    
-                commitContent.push('author ', username, ' <',email, '> ',  dateString,'\n', 
+
+                commitContent.push('author ', username, ' <',email, '> ',  dateString,'\n',
                     'committer ', username,' <', email, '> ', dateString, '\n\n', commitMsg,'\n');
                 store.writeRawObject('commit', commitContent.join(''), function(commitSha){
                     fileutils.mkfile(dir, '.git/' + ref, commitSha + '\n', function(){
@@ -2481,28 +2481,28 @@ define('commands/init',[],function(){
         var objectStore = options.objectStore;
         objectStore.init(success, error);
     }
-    return init; 
+    return init;
 });
 define('commands/treemerger',['utils/misc_utils'], function(utils){
 
 	var diffTree = function(oldTree, newTree){
 		oldTree.sortEntries();
 		newTree.sortEntries();
-		
-		var oldEntries = oldTree.entries, 
+
+		var oldEntries = oldTree.entries,
 			newEntries = newTree.entries;
 		var oldIdx = newIdx = 0;
-		
+
 		var remove = [],
-			add = [], 
+			add = [],
 			merge = [];
-		
-		
-		
+
+
+
 		while (true){
 			var nu = newEntries[newIdx];
 			var old = oldEntries[oldIdx];
-			
+
 			if (!nu){
 				if (!old){
 					break;
@@ -2532,45 +2532,45 @@ define('commands/treemerger',['utils/misc_utils'], function(utils){
 		}
 		return {add:add, remove:remove, merge: merge};
 	};
-	
+
 	 var mergeTrees = function(store, ourTree, baseTree, theirTree, success, error){
-		
-		var finalTree = [], 
+
+		var finalTree = [],
 			next = null;
 			indices = [0,0,0],
 			conflicts = [];
-		
-		
-		
+
+
+
 		// base tree can be null if we're merging a sub tree from ours and theirs with the same name
-		// but it didn't exist in base. 
+		// but it didn't exist in base.
 		if (baseTree == null){
 			baseTree = {entries:[], sortEntries: function(){}};
 		}
-		
+
 		ourTree.sortEntries();
 		theirTree.sortEntries();
 		baseTree.sortEntries();
-		
+
 		var allTrees = [ourTree.entries, baseTree.entries, theirTree.entries];
-		
+
 		while (conflicts.length == 0){
 			next = null;
 			var nextX = 0;
 			for (var x = 0; x < allTrees.length; x++){
 				var treeEntries = allTrees[x];
 				var top = treeEntries[indices[x]];
-				
+
 				if (!next || (top && top.name < next.name)){
 					next = top;
 					nextX = x;
 				}
 			}
-			
+
 			if (!next){
 				break;
 			}
-			
+
 			function shasEqual(sha1, sha2){
 				for (var i = 0; i < sha1.length; i++){
 					if (sha1[i] != sha2[i]){
@@ -2623,37 +2623,37 @@ define('commands/treemerger',['utils/misc_utils'], function(utils){
 					var theirEntry = allTrees[indices[2]];
 					if (next.name == theirEntry.name && !shasEqual(next.sha, theirEntry.sha)){
 						// deleted from ours but changed in theirs. Delete/modify conflict
-						conflicts.push({conflict: true, ours: null, base: next, theirs: theirEntry}); 
+						conflicts.push({conflict: true, ours: null, base: next, theirs: theirEntry});
 					}
 					break;
 				case 2:
 					finalTree.push(next);
 					break;
 			}
-			
+
 			for (var x = 0; x < allTrees.length; x++){
-				var treeEntries = allTrees[x];	
+				var treeEntries = allTrees[x];
 				if (treeEntries[indices[x]].name == next.name){
 					indices[x]++;
 				}
 			}
-			
+
 		}
-		
+
 		if (conflicts.length){
 			error(conflicts);
 		}
-		
+
 		//var mergeBlobs = function(
 		var self = this;
-		
+
 		finalTree.asyncEach(function(item, done, index){
 			if (item.merge){
-				
+
 				var shas = [item.ours.sha, item.base.sha, item.theirs.sha];
 				if (item.ours.isBlob){
 					store._retrieveBlobsAsStrings(shas, function(blobs){
-						var newBlob = Diff.diff3_dig(blobs[0].data, blobs[1].data, blobs[2].data); 
+						var newBlob = Diff.diff3_dig(blobs[0].data, blobs[1].data, blobs[2].data);
 						if (newBlob.conflict){
 							conflicts.push(newBlob);
 							done();
@@ -2661,10 +2661,10 @@ define('commands/treemerger',['utils/misc_utils'], function(utils){
 						else{
 							store.writeRawObject(objectDir, 'blob', newBlob.text, function(sha){
 								finalTree[index].sha = sha;
-								done(); 
+								done();
 							});
 						}
-						
+
 					});
 				}
 				else{
@@ -2680,7 +2680,7 @@ define('commands/treemerger',['utils/misc_utils'], function(utils){
 						});
 					});
 				}
-				
+
 			}
 			else{
 				done();
@@ -2697,13 +2697,13 @@ define('commands/treemerger',['utils/misc_utils'], function(utils){
 				error(conflicts);
 			}
 		});
-		
+
 	}
 	return {
 		mergeTrees : mergeTrees,
 		diffTree : diffTree
 	}
-	
+
 });
 
 define('commands/conditions',['utils/file_utils', 'utils/errors'],function(fileutils, errutils){
@@ -2713,7 +2713,7 @@ define('commands/conditions',['utils/file_utils', 'utils/errors'],function(fileu
         checkForUncommittedChanges : function(dir, store, callback, error){
             var lastUpdate;
             var walkDir = function(dir, callback){
-                
+
                 dir.getMetadata(function(md){
                     if (md.modificationTime > lastUpdate){
                         callback(true);
@@ -2746,7 +2746,7 @@ define('commands/conditions',['utils/file_utils', 'utils/errors'],function(fileu
                                     }
                                     done();
                                 }, done);
-                                
+
                             }
                         },function(){
                             callback(changed);
@@ -2775,10 +2775,10 @@ define('commands/conditions',['utils/file_utils', 'utils/errors'],function(fileu
     return conditions;
 });
 define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands/conditions', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/file_utils', 'utils/errors', 'utils/progress_chunker'], function(treeMerger, object2file, Conditions, SmartHttpRemote, PackIndex, Pack, fileutils, errutils, ProgressChunker){
-    
+
 
     var _updateWorkingTree = function (dir, store, fromTree, toTree, success){
-        
+
         var processOps = function(rootDir, ops, callback){
             ops.remove.asyncEach(function(entry, done){
                 var rm = entry.isBlob ? fileutils.rmFile : fileutils.rmDir;
@@ -2792,13 +2792,13 @@ define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands
                         });
                     }
                     else{
-                        object2file.expandBlob(rootDir, store, entry.name, entry.sha, done); 
+                        object2file.expandBlob(rootDir, store, entry.name, entry.sha, done);
                     }
                 },
                 function(){
                     ops.merge.asyncEach(function(entry, done){
                         if (entry.nu.isBlob){
-                            object2file.expandBlob(rootDir, store, entry.nu.name, entry.nu.sha, done); 
+                            object2file.expandBlob(rootDir, store, entry.nu.name, entry.nu.sha, done);
                         }
                         else{
                             store._retrieveObjectList([entry.old.sha, entry.nu.sha], 'Tree', function(trees){
@@ -2815,14 +2815,14 @@ define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands
                 });
             });
         }
-        
-        
+
+
         var ops = treeMerger.diffTree(fromTree, toTree);
         processOps(dir, ops, success);
-    
+
     };
 
-    
+
 
     var pull = function(options, success, error){
 
@@ -2851,7 +2851,7 @@ define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands
             var url = repoConfig.url;
 
             remote = new SmartHttpRemote(store, "origin", url, username, password, error);
-        
+
             var nonFastForward = function(){
                 error({type: errutils.PULL_NON_FAST_FORWARD, msg: errutils.PULL_NON_FAST_FORWARD_MSG});
             };
@@ -2862,13 +2862,13 @@ define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands
 
             // get the current branch
             fileutils.readFile(dir, '.git/HEAD', 'Text', function(headStr){
-                
+
                 progress({pct: 10, msg: 'Querying remote git server...'});
                 // get rid of the initial 'ref: ' plus newline at end
                 var headRefName = headStr.substring(5).trim();
                 remote.fetchRefs(function(refs){
                     var headSha, branchRef, wantRef;
-                    
+
                     refs.some(function(ref){
                         if (ref.name == headRefName){
                             branchRef = ref;
@@ -2880,34 +2880,34 @@ define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands
                          // see if we know about the branch's head commit if so, we're up to date, if not, request from remote
                         store._retrieveRawObject(branchRef.sha, 'ArrayBuffer', upToDate, function(){
                             wantRef = branchRef;
-                            // Get the sha from the ref name 
+                            // Get the sha from the ref name
                             store._getHeadForRef(branchRef.name, function(sha){
                                 branchRef.localHead = sha;
-                                
+
                                 store._getCommitGraph([sha], 32, function(commits, nextLevel){
                                     remote.fetchRef([wantRef], commits, repoConfig.shallow, null, nextLevel, function(objects, packData, common){
                                         // fast forward merge
                                         if (common.indexOf(wantRef.localHead) != -1){
                                             var packSha = packData.subarray(packData.length - 20);
-                                            
+
                                             var packIdxData = PackIndex.writePackIdx(objects, packSha);
-                                            
+
                                             // get a view of the sorted shas
                                             var sortedShas = new Uint8Array(packIdxData, 4 + 4 + (256 * 4), objects.length * 20);
                                             packNameSha = Crypto.SHA1(sortedShas);
-                                            
+
                                             var packName = 'pack-' + packNameSha;
                                             mkdirs(store.dir, '.git/objects', function(objectsDir){
                                                 store.objectsDir = objectsDir;
                                                 mkfile(objectsDir, 'pack/' + packName + '.pack', packData.buffer);
                                                 mkfile(objectsDir, 'pack/' + packName + '.idx', packIdxData);
-                                                
+
                                                 var packIdx = new PackIndex(packIdxData);
                                                 if (!store.packs){
                                                     store.packs = [];
                                                 }
                                                 store.packs.push({pack: new Pack(packData, store), idx: packIdx});
-                                            
+
                                                 mkfile(store.dir, '.git/' + wantRef.name, wantRef.sha, function(){
                                                     progress({pct: 70, msg: 'Applying fast-forward merge'});
                                                     store._getTreesFromCommits([wantRef.localHead, wantRef.sha], function(trees){
@@ -2917,7 +2917,7 @@ define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands
                                                             store.updateLastChange(repoConfig, success);
                                                         });
                                                     });
-                                                }); 
+                                                });
                                             });
                                         }
                                         else{
@@ -2926,32 +2926,32 @@ define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands
                                             // var shas = [wantRef.localHead, common[i], wantRef.sha]
                                             // store._getTreesFromCommits(shas, function(trees){
                                             //     treeMerger.mergeTrees(store, trees[0], trees[1], trees[2], function(finalTree){
-                                            //         mkfile(store.dir, '.git/' + wantRef.name, sha, done); 
+                                            //         mkfile(store.dir, '.git/' + wantRef.name, sha, done);
                                             //     }, function(e){errors.push(e);done();});
                                             // });
-                                            
+
                                         }
-                                            
-                                        
+
+
                                     }, nonFastForward, fetchProgress);
                                 });
-                                                             
+
                             }, ferror);
-                        }); 
+                        });
                     }
                     else{
                         error({type: errutils.REMOTE_BRANCH_NOT_FOUND, msg: errutils.REMOTE_BRANCH_NOT_FOUND_MSG});
-                    }        
+                    }
                 });
             }, ferror);
         }, error);
-        
+
     }
     return pull;
 });
 define('commands/push',['formats/smart_http_remote', 'formats/pack', 'utils/progress_chunker', 'utils/errors'], function(SmartHttpRemote, Pack, ProgressChunker, errutils){
     var push = function(options, success, error){
-        
+
         var store = options.objectStore,
             username = options.username,
             password = options.password,
@@ -2995,9 +2995,9 @@ define('commands/push',['formats/smart_http_remote', 'formats/pack', 'utils/prog
     return push;
 });
 define('commands/branch',['utils/file_utils', 'utils/errors'], function(fileutils, errutils){
-    
+
     var branchRegex = new RegExp("^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+$");
-    
+
 
 
     var checkBranchName = function(branchName){
@@ -3042,7 +3042,7 @@ define('commands/branch',['utils/file_utils', 'utils/errors'], function(fileutil
     return branch;
 });
 define('commands/checkout',['commands/object2file', 'commands/conditions', 'utils/file_utils', 'utils/errors'], function(object2file, Conditions, fileutils, errutils){
-    
+
     var blowAwayWorkingDir = function(dir, success, error){
         fileutils.ls(dir, function(entries){
             entries.asyncEach(function(entry, done){
@@ -3068,7 +3068,7 @@ define('commands/checkout',['commands/object2file', 'commands/conditions', 'util
             branch = options.branch,
             ferror = errutils.fileErrorFunc(error);
 
-        
+
         store._getHeadForRef('refs/heads/' + branch, function(branchSha){
             store.getHeadSha(function(currentSha){
                 if (currentSha != branchSha){
@@ -3089,7 +3089,7 @@ define('commands/checkout',['commands/object2file', 'commands/conditions', 'util
                     store.setHeadRef('refs/heads/' + branch, success);
                 }
             });
-        }, 
+        },
         function(e){
             if (e.code == FileError.NOT_FOUND_ERR){
                 error({type: errutils.CHECKOUT_BRANCH_NO_EXISTS, msg: CHECKOUT_BRANCH_NO_EXISTS_MSG});
@@ -3098,7 +3098,7 @@ define('commands/checkout',['commands/object2file', 'commands/conditions', 'util
                 ferror(e);
             }
         });
-        
+
     }
     return checkout;
 });
@@ -3357,7 +3357,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 			var commits = [];
 			var thiz = this;
 			var seen = {};
-			
+
 			var walkLevel = function(shas, callback){
 				var nextLevel = [];
 				shas.asyncEach(function(sha, callback){
@@ -3399,8 +3399,8 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 			walkLevel(headShas, callback);
 		},
 		_getCommitsForPush : function(baseRefs, remoteHeads, callback, error){
-			
-			// special case of empty remote. 
+
+			// special case of empty remote.
 			if (baseRefs.length == 1 && baseRefs[0].sha == "0000000000000000000000000000000000000000"){
 				baseRefs[0].name = 'refs/heads/master';
 			}
@@ -3417,7 +3417,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 					}
 				}
 
-				// Didn't find a remote branch for our local so base the commits we 
+				// Didn't find a remote branch for our local so base the commits we
 				// need to push on what we already know about the remote
 				var newBranch = !remoteRef;
 				var remoteShas = {};
@@ -3431,20 +3431,20 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 						remoteShas[remoteSha] = true;
 					}
 				}
-				
+
 				var nonFastForward = function(){
 					error({type: errutils.PUSH_NON_FAST_FORWARD, msg: errutils.PUSH_NON_FAST_FORWARD_MSG});
 				}
 
 				var checkRemoteHead = function(success){
-					// See if the remote head exists in our repo.  
+					// See if the remote head exists in our repo.
 					if (remoteRef.sha != "0000000000000000000000000000000000000000"){
 						self._retrieveObject(remoteRef.sha, 'Commit', success, nonFastForward);
-					}	
+					}
 					else{
 						success();
 					}
-				} 
+				}
 
 
 				checkRemoteHead(function(){
@@ -3456,21 +3456,21 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 						}
 
 						remoteRef.head = sha;
-						
+
 						// case of new branch with no new commits
 						if (newBranch && remoteShas[sha]){
 							callback([], remoteRef);
 							return;
 						}
 
-						// we don't support local merge commits so finding commits to push should be a 
+						// we don't support local merge commits so finding commits to push should be a
 						// matter of looking at a non-branching list of ancestors of the current commit.
 						var commits = [];
 						var getNextCommit = function(sha){
 							self._retrieveObject(sha, 'Commit', function(commit, rawObj){
 								commits.push({commit: commit, raw: rawObj});
 								if (commit.parents.length > 1){
-									// this would mean a local merge commit. It shouldn't happen, 
+									// this would mean a local merge commit. It shouldn't happen,
 									// therefore we've strayed into somewhere we shouldn't be.
 									nonFastForward();
 								}
@@ -3496,7 +3496,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 				});
 
 			});
-			
+
 		},
 		createNewRef : function(refName, sha, success){
 			fileutils.mkfile(this.dir, '.git/' + refName, sha + '\n', success, this.fileError);
@@ -3527,7 +3527,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 					});
 					callback(branches);
 				}, fe);
-			}, 
+			},
 			function(e){
 				if (e.code == FileError.NOT_FOUND_ERR){
 					callback([]);
@@ -3538,9 +3538,9 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 			});
 		},
 		_getHeadForRef : function(name, callback, onerror){
-			fileutils.readFile(this.dir, '.git/' + name, 'Text', function(data){callback(data.substring(0, 40));}, onerror) ;	
+			fileutils.readFile(this.dir, '.git/' + name, 'Text', function(data){callback(data.substring(0, 40));}, onerror) ;
 		},
-		
+
 		_findLooseObject : function(sha, success, error){
 			this.objectsDir.getFile(sha.substring(0,2) + '/' + sha.substring(2), {create:false}, function(fileEntry){
 				success(fileEntry);
@@ -3568,9 +3568,9 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 		     else{
 		     	shaBytes = utils.convertShaToBytes(sha);
 		     }
-		     
-			 
-			 
+
+
+
 			 var thiz = this;
 			 this._findLooseObject(sha, function(fileEntry){
 			 	fileutils.readFileEntry(fileEntry, 'ArrayBuffer', function(buf){
@@ -3600,7 +3600,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 		_retrieveBlobsAsStrings : function(shas, callback){
 			var blobs =new Array(shas.length),
 				self = this;
-				
+
 			shas.asyncEach(function(sha, done, i){
 				self._retrieveRawObject(sha, 'Text', function(object){
 					blobs[i] = new GitObjects.Blob(sha, object.data);
@@ -3614,7 +3614,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 		_retrieveObjectList : function(shas, objType, callback){
 			var objects = new Array(shas.length),
 				self = this;
-				
+
 			shas.asyncEach(function(sha, done, i){
 				self._retrieveObject(sha, objType, function(obj){
 					objects[i] = obj;
@@ -3630,7 +3630,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 			 if (objType == "Commit"){
 			 	dataType = "Text";
 			 }
-			 
+
 			 this._retrieveRawObject(sha, dataType, function(object){
 			 	callback(new GitObjects[objType](sha, object.data), object);
 			 }, error);
@@ -3641,7 +3641,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 			var self = this;
 			this.error = error;
 			this.fileError = errutils.fileErrorFunc(error);
-			
+
 			root.getDirectory('.git', {create:false}, function(gitDir){
 				self.load(success);
 			},
@@ -3664,12 +3664,12 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 			}, this.fileError);
 
 		},
-		
+
 		_getTreesFromCommits : function(shas, callback){
 			var trees = [],
 			    shaIndex = 0,
 				self = this;
-			
+
 			var fillTrees = function(){
 				self._getTreeFromCommitSha(shas[shaIndex++], function(tree){
 					trees.push(tree);
@@ -3693,9 +3693,9 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 			var bb = [];//new BlobBuilder();
 			var size = content.byteLength || content.length || content.size || 0;
 			var header = type + ' ' + String(size) ;
-			
+
 			//var store = header + content;
-			
+
 			bb.push(header);
 			bb.push(new Uint8Array([0]));
 			bb.push(content);
@@ -3709,14 +3709,14 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 					thiz._storeInFile(digest, store, callback);
 				});
 			}
-			
-			fr.readAsArrayBuffer(new Blob(bb));   
+
+			fr.readAsArrayBuffer(new Blob(bb));
 		},
-		
+
 		_storeInFile : function(digest, store, callback){
-			var subDirName = digest.substr(0,2); 	
+			var subDirName = digest.substr(0,2);
 			var objectFileName = digest.substr(2);
-			
+
 			this.objectsDir.getDirectory(subDirName, {create:true}, function(dirEntry){
 				dirEntry.getFile(objectFileName, {create:true}, function(fileEntry){
 					fileEntry.file(function(file){
@@ -3731,9 +3731,9 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 						 	callback(digest);
 						 }
 					}, utils.errorHandler);
-				
+
 				}, utils.errorHandler);
-				
+
 			}, utils.errorHandler);
 		},
 
@@ -3784,7 +3784,7 @@ define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectsto
 				this.getConfig(doUpdate);
 			}
 		}
-		
+
 	}
 
 	return FileObjectStore;
@@ -3905,7 +3905,7 @@ GitLiteWorkerMessages = {
     API_CALL_CHECKOUT: 12,
     API_CALL_BRANCH: 14,
     API_CALL_UNCOMMITTED: 15,
-    API_CALL_CURRENT_BRANCH: 16, 
+    API_CALL_CURRENT_BRANCH: 16,
     API_CALL_LOCAL_BRANCHES: 17,
     API_CALL_REMOTE_BRANCHES: 18,
 
@@ -3916,14 +3916,14 @@ define("workers/worker_messages", function(){});
 
 
 define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pull', 'commands/push', 'commands/branch', 'commands/checkout', 'commands/conditions', 'objectstore/file_repo', 'formats/smart_http_remote', 'utils/errors', 'thirdparty/2.2.0-sha1', 'thirdparty/crc32', "workers/worker_messages"], function(clone, commit, init, pull, push, branch, checkout, Conditions, FileObjectStore, SmartHttpRemote, errutils){
-    
+
     /** @exports GitApi */
     var api = {
 
         /** @desc Indicates an unexpected error in the HTML5 file system. */
         FILE_IO_ERROR: errutils.FILE_IO_ERROR,
         /** @desc Indicates an unexpected ajax error when trying to make a request */
-        AJAX_ERROR: errutils.AJAX_ERROR, 
+        AJAX_ERROR: errutils.AJAX_ERROR,
         /** @desc trying to clone into a non-empty directory */
         CLONE_DIR_NOT_EMPTY: errutils.CLONE_DIR_NOT_EMPTY,
         /** @desc Trying to clone into directory that contains a .git directory that already contains objects */
@@ -3938,8 +3938,8 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
         COMMIT_NO_CHANGES: errutils.COMMIT_NO_CHANGES,
         /** @desc A push was attempted but the remote repo is up to date. */
         PUSH_NO_CHANGES: errutils.PUSH_NO_CHANGES,
-        /** @desc A push was attempted but the remote has new commits that the local repo doesn't know about. 
-         * You would normally do a pull and merge remote changes first. Unfortunately, this isn't possible with this API. 
+        /** @desc A push was attempted but the remote has new commits that the local repo doesn't know about.
+         * You would normally do a pull and merge remote changes first. Unfortunately, this isn't possible with this API.
          * As a workaround, you could create and checkout a new branch and then do a push. */
         PUSH_NON_FAST_FORWARD: errutils.PUSH_NON_FAST_FORWARD,
         /** @desc Indicates an unexpected problem retrieving objects */
@@ -3951,17 +3951,17 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
 
         /** @desc The branch doesn't follow valid git branch naming rules. */
         BRANCH_NAME_NOT_VALID: errutils.BRANCH_NAME_NOT_VALID,
-        /** @desc Trying to push a repo without a valid remote. 
+        /** @desc Trying to push a repo without a valid remote.
          * This can happen if it's a first push to blank repo and a url wasn't specified as one of the options. */
         PUSH_NO_REMOTE: errutils.PUSH_NO_REMOTE,
-        
+
         /**
          * Clones a remote git repo into a local HTML5 DirectoryEntry. It only requests a single branch. This will either
          * be the branch specified or the HEAD at specified url. You can also specify the depth of the clone. It's recommended
-         * that a depth of 1 always be given since the api does not currently give a way 
-         * to access the commit history of a repo.  
-         * 
-         * @param {Object} options 
+         * that a depth of 1 always be given since the api does not currently give a way
+         * to access the commit history of a repo.
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry to clone the repo into
          * @param {String} [options.branch=HEAD] the name of the remote branch to clone.
          * @param {String} options.url the url of the repo to clone from
@@ -3975,26 +3975,26 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
         clone : function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
             objectStore.init(function(){
-                
+
                 clone({
-                        dir: options.dir, 
-                        branch: options.branch, 
-                        objectStore: objectStore, 
-                        url: options.url, 
-                        depth: options.depth, 
+                        dir: options.dir,
+                        branch: options.branch,
+                        objectStore: objectStore,
+                        url: options.url,
+                        depth: options.depth,
                         progress: options.progress,
                         username: options.username,
                         password: options.password
-                    }, 
+                    },
                     success, error);
 
             }, error);
         },
         /**
          * Does a pull from the url the local repo was cloned from. Will only succeed for fast-forward pulls.
-         * If a merge is required, it calls the error callback 
-         * 
-         * @param {Object} options 
+         * If a merge is required, it calls the error callback
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry that contains a local git repo to pull updates into
          * @param {String} [options.username] User name to authenticate with if the repo supports basic auth
          * @param {String} [options.password] password to authenticate with if the repo supports basic auth
@@ -4005,56 +4005,56 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
         pull : function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
             objectStore.init(function(){
-                
+
                 pull({
-                        dir: options.dir, 
+                        dir: options.dir,
                         objectStore: objectStore,
                         username: options.username,
                         password: options.password,
                         progress: options.progress
-                    }, 
+                    },
                     success, error);
 
             }, error);
         },
         /**
          * Looks for changes in the working directory since the last commit and adds them to the local git repo history. Some caveats
-         *  
+         *
          *  <ul>
          *  <li>This is does an implicit "git add" of all changes including previously untracked files.</li>
          *  <li>A Tree created by this command will only have two file modes: 40000 for folders (subtrees) and 100644 for files (blobs).</li>
          *  <li>Ignores any rules in .gitignore</li>
          *  </ul>
          *
-         * @param {Object} options 
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry to look for changes and commit them to the .git subdirectory in the same driectory
-         * @param {String} options.name The name that will appear in the commit log as the name of the author and committer. 
+         * @param {String} options.name The name that will appear in the commit log as the name of the author and committer.
          * @param {String} options.email The email that will appear in the commit log as the email of the author and committer.
          * @param {String} options.commitMsg The message that will appear in the commit log
          * @param {successCallback} success callback that gets notified after the commit is completed successfully.
          * @param {errorCallback} [error] callback that gets notified if there is an error
-         * 
+         *
          */
         commit : function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
             objectStore.init(function(){
-                
+
                 commit({
-                            dir: options.dir, 
-                            username: options.name, 
-                            email: options.email, 
-                            commitMsg: options.commitMsg, 
+                            dir: options.dir,
+                            username: options.name,
+                            email: options.email,
+                            commitMsg: options.commitMsg,
                             objectStore: objectStore
                         }, success, error);
             }, error);
         },
         /**
-         * Pushes local commits to a remote repo. This is usually the remote repo the local repo was cloned from. It can also be 
+         * Pushes local commits to a remote repo. This is usually the remote repo the local repo was cloned from. It can also be
          * the initial push to a blank repo.
-         * 
-         * @param {Object} options 
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry to push changes from
-         * @param {String} [options.url] the remote url to push changes to. This defaults to the url the repo was cloned from. 
+         * @param {String} [options.url] the remote url to push changes to. This defaults to the url the repo was cloned from.
          * @param {String} [options.username] User name to authenticate with if the repo supports basic auth
          * @param {String} [options.password] password to authenticate with if the repo supports basic auth
          * @param {progressCallback} [options.progress] callback that gets notified of progress events.
@@ -4065,25 +4065,25 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
             var objectStore = new FileObjectStore(options.dir);
             objectStore.init(function(){
                 push({
-                        objectStore: objectStore, 
-                        dir: options.dir, 
+                        objectStore: objectStore,
+                        dir: options.dir,
                         url: options.url,
                         username: options.username,
                         password: options.password,
                         progress: options.progress
-                    }, 
+                    },
                     success, error);
             }, error);
         },
         /**
-         * Creates a local branch. You will need to call the checkout api command to check it out. 
-         * 
-         * @param {Object} options 
+         * Creates a local branch. You will need to call the checkout api command to check it out.
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry that contains a local git repo
          * @param {String} options.branch Name of the branch to create
          * @param {successCallback} success callback that gets notified after the push is completed successfully.
          * @param {errorCallback} [error] callback that gets notified if there is an error
-         * 
+         *
          */
         branch: function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
@@ -4097,13 +4097,13 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
 
         },
         /**
-         * Checks out a local branch. 
-         * 
-         * @param {Object} options 
+         * Checks out a local branch.
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry that contains a local git repo
          * @param {String} options.branch Name of the branch to checkout
          * @param {successCallback} success callback that gets notified after the push is completed successfully.
-         * @param {errorCallback} [error] callback that gets notified if there is an error 
+         * @param {errorCallback} [error] callback that gets notified if there is an error
          */
         checkout: function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
@@ -4117,13 +4117,13 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
         },
 
         /**
-         * Looks in the working directory for uncommitted changes. This is faster than attempting a 
+         * Looks in the working directory for uncommitted changes. This is faster than attempting a
          * commit and having it fail.
-         * 
-         * @param {Object} options 
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry that contains a local git repo
          * @param {successCallback} success callback that gets notified after the push is completed successfully.
-         * @param {errorCallback} [error] callback that gets notified if there is an error  
+         * @param {errorCallback} [error] callback that gets notified if there is an error
          */
         checkForUncommittedChanges: function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
@@ -4132,12 +4132,12 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
             }, error);
         },
         /**
-         * Retrieves the name of the currently checked out local branch . 
-         * 
-         * @param {Object} options 
+         * Retrieves the name of the currently checked out local branch .
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry that contains a local git repo
          * @param {successCallback} success callback that gets notified after the push is completed successfully.
-         * @param {errorCallback} [error] callback that gets notified if there is an error  
+         * @param {errorCallback} [error] callback that gets notified if there is an error
          */
         getCurrentBranch : function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
@@ -4149,11 +4149,11 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
         },
         /**
          * Gets a list of all local branches.
-         * 
-         * @param {Object} options 
+         *
+         * @param {Object} options
          * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry that contains a local git repo
          * @param {successCallback} success callback that gets notified after the push is completed successfully.
-         * @param {errorCallback} [error] callback that gets notified if there is an error  
+         * @param {errorCallback} [error] callback that gets notified if there is an error
          */
         getLocalBranches : function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
@@ -4162,14 +4162,14 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
             }, error);
         },
         /**
-         * Gets a list of all remote branches. 
-         * 
-         * @param {Object} options 
+         * Gets a list of all remote branches.
+         *
+         * @param {Object} options
          * @param {String} options.url url of a remote git repo
          * @param {String} [options.username] User name to authenticate with if the repo supports basic auth
          * @param {String} [options.password] password to authenticate with if the repo supports basic auth
          * @param {successCallback} success callback that gets notified after the push is completed successfully.
-         * @param {errorCallback} [error] callback that gets notified if there is an error  
+         * @param {errorCallback} [error] callback that gets notified if there is an error
          */
         getRemoteBranches : function(options, success, error){
             var remote = SmartHttpRemote(null, null, options.url, options.username, options.password, error);
@@ -4185,23 +4185,23 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
         }
 
         /**
-         * error callback that gets notified if there is an error  
+         * error callback that gets notified if there is an error
          * @callback errorCallback
          * @param {Object} err Error data object
          * @param {Number} err.type The type of error. Should be one of the error constants in the api like {@link FILE_IO_ERROR}
-         * @param {String} err.msg An explanation of the error in English. 
+         * @param {String} err.msg An explanation of the error in English.
          */
 
          /**
-         * progress callback that gets notified of the progress of various operaions  
+         * progress callback that gets notified of the progress of various operaions
          * @callback progressCallback
          * @param {Object} progress Progress data object
          * @param {Number} progress.pct a number between 1-100 that indicates the percentage of the operation that is complete.
-         * @param {String} progress.msg An description of the current state of the operation in English. 
+         * @param {String} progress.msg An description of the current state of the operation in English.
          */
 
          /**
-          * success callback that gets notified when an operation completes successfully. 
+          * success callback that gets notified when an operation completes successfully.
           * @callback successCallback
           */
 
