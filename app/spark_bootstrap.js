@@ -2,11 +2,21 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-if (navigator.webkitStartDart) {
-  navigator.webkitStartDart();
-} else {
-  var script = document.createElement('script');
-  // Point the script to the compiled CSP compatible output for Spark.
-  script.src = 'spark.html_bootstrap.dart.precompiled.js';
-  document.body.appendChild(script);
-}
+(function() {
+  if (navigator.webkitStartDart) {
+    navigator.webkitStartDart();
+  } else {
+    var scripts = document.getElementsByTagName("script");
+
+    for (var i = 0; i < scripts.length; ++i) {
+      if (scripts[i].type == "application/dart") {
+        if (scripts[i].src && scripts[i].src != '') {
+          var script = document.createElement('script');
+          script.src = scripts[i].src.replace(/\.dart(?=\?|$)/, '.dart.precompiled.js');
+          document.currentScript = script;
+          scripts[i].parentNode.replaceChild(script, scripts[i]);
+        }
+      }
+    }
+  }
+})();
