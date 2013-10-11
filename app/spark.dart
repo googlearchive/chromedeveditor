@@ -29,6 +29,7 @@ class Spark {
     query("#openFile").onClick.listen(openFile);
     query("#saveFile").onClick.listen(saveFile);
     query("#saveAsFile").onClick.listen(saveAsFile);
+    query("#editorTheme").onChange.listen(setTheme);
 
     editor = new AceEditor();
     chrome.app.window.current.onClosed.listen(handleWindowClosed);
@@ -68,6 +69,10 @@ class Spark {
 
   void saveFile(_) {
     editor.save();
+  }
+
+  void setTheme(_){
+    editor.setTheme((query("#editorTheme") as SelectElement).value);
   }
 
   void updateError(String string) {
