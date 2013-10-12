@@ -49,6 +49,9 @@ void packages(GrinderContext context) {
       joinDir(Directory.current, ['app', 'packages']));
 }
 
+// Prepare the build folder.
+// It will copy all the required source files to build/.
+// It will prepare the directory layout to be compatible with polymer builder.
 void prepareBuild(GrinderContext context) {
   context.log('prepare build');
   // Copy files to build directory.
@@ -81,6 +84,8 @@ Future<bool> asyncPolymerBuild(GrinderContext context,
   print("polymer build done");
 }
 
+// Transpile dart sources to JS.
+// It will create spark.html_bootstrap.dart.precompiled.js.
 void dart2JSBuild(GrinderContext context) {
   // We remove the symlink and replace it with a copy.
   runCommandSync(context, 'rm -rf web/packages');
@@ -144,6 +149,17 @@ void changeMode(GrinderContext context, bool useTestMode) {
   }
 }
 
+// Creates an archive of the Chrome App.
+// - Sources will be compiled in Javascript using "compile" task
+//
+// We'll create an archive using the content of build-chrome-app.
+// - Copy the compiled sources to build/chrome-app/spark
+// - We clean all packages/ folders that have been duplicated into every
+//   folders by the "compile" task
+// - Copy the packages/ directory in build/chrome-app/spark/packages
+// - Remove test
+// - Zip the content of build/chrome-app-spark to dist/spark.zip
+//
 void archive(GrinderContext context) {
   Directory distDir = new Directory('dist');
   distDir.createSync();
@@ -170,23 +186,31 @@ void archive(GrinderContext context) {
   context.log('spark.zip is ${sizeKb}kb');
 }
 
+// Returns the name of the current branch.
 String getBranchName() {
   return getCommandOutput('git branch | grep "*" | sed -e "s/\* //g"');
 }
 
+// Returns the URL of the git repository.
 String getRepositoryUrl() {
   return getCommandOutput('git config remote.origin.url');
 }
 
+// Returns the current revision identifier of the local copy.
 String getCurrentRevision() {
   return getCommandOutput('git rev-parse HEAD | cut -c1-10');
 }
 
+// We can build a real release only if the repository is the original
+// repository of spark and master is the working branch since we need to
+// increase the version and commit it to the repository.
 bool canReleaseFromHere() {
   return (getRepositoryUrl() == 'https://github.com/dart-lang/spark.git') &&
          (getBranchName() == 'master');
 }
 
+// In case, release is performed on a non-releasable branch/repository, we just
+// archive and name the archive with the revision identifier.
 void archiveWithRevision(GrinderContext context) {
   context.log('Performing archive instead.');
   archive(context);
@@ -197,67 +221,73 @@ void archiveWithRevision(GrinderContext context) {
   context.log("Created ${filename}");
 }
 
-Future<String> increaseBuildNumber(GrinderContext context) {
+// Increase the build number in the manifest.json file. Returns the full
+// version.
+String increaseBuildNumber(GrinderContext context) {
   // Tweaking build version in manifest.
   File file = new File('app/manifest.json');
-  Future<String> finishedReading = file.readAsString();
-  return finishedReading.then((String content) {
-    Object manifestDict = JSON.decode(content);
-    String version = manifestDict['version'];
-    RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
-    Iterable<Match> matches = exp.allMatches(version);
-    assert(matches.length > 0);
+  String content = file.readAsStringSync();
+  Object manifestDict = JSON.decode(content);
+  String version = manifestDict['version'];
+  RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
+  Iterable<Match> matches = exp.allMatches(version);
+  assert(matches.length > 0);
 
-    Match m = matches.first;
-    String majorVersion = m.group(1);
-    int buildVersion = int.parse(m.group(2));
-    buildVersion ++;
+  Match m = matches.first;
+  String majorVersion = m.group(1);
+  int buildVersion = int.parse(m.group(2));
+  buildVersion ++;
 
-    version = '${majorVersion}.${buildVersion}';
-    manifestDict['version'] = version;
-    Future<File> finishedWriting =
-        file.writeAsString(JSON.encode(manifestDict));
-    finishedWriting.then((File writtenFile) {
-      // Creating an archive of the Chrome App.
-      context.log('Creating build ${version}');
+  version = '${majorVersion}.${buildVersion}';
+  manifestDict['version'] = version;
+  file.writeAsStringSync(JSON.encode(manifestDict));
 
-      // It needs to be copied to compile result directory.
-      copyFile(
-          joinFile(Directory.current, ['app', 'manifest.json']),
-          joinDir(Directory.current, ['build', 'polymer-build', 'web']));
-    });
-    return version;
-  });
+  // It needs to be copied to compile result directory.
+  copyFile(
+      joinFile(Directory.current, ['app', 'manifest.json']),
+      joinDir(Directory.current, ['build', 'polymer-build', 'web']));
+  return version;
 }
 
-Future release(GrinderContext context) {
-  // If repository is not original repository of Spark and the branch is not 
+// Creates a release build to be uploaded to Chrome Web Store.
+// It will perform the following steps:
+// - Sources will be compiled in Javascript using "compile" task
+// - If the current branch/repo is not releasable, we just create an archive
+//   tagged with a revision number.
+// - Using increaseBuildNumber, for a given revision number a.b.c where a, b
+//   and c are integers, we increase c, the build number and write it to the
+//   manifest.json file.
+// - We duplicate the manifest.json file to build/polymer-build/web since we'll
+//   create the Chrome App from here.
+// - "archive" task will create a spark.zip file in dist/, based on the content
+//   of build/polymer-build/web.
+// - If everything is successful and no exception interrupted the process,
+//   we'll commit the new manifest.json containing the updated version number
+//   to the repository. The developer still needs to push it to the remote
+//   repository.
+// - We eventually rename dist/spark.zip to dist/spark-a.b.c.zip to reflect the
+//   new version number.
+//
+void release(GrinderContext context) {
+  // If repository is not original repository of Spark and the branch is not
+  // master.
   if (!canReleaseFromHere()) {
     archiveWithRevision(context);
     return;
   }
 
-  increaseBuildNumber(context).then((String version) {
-    // Creating an archive of the Chrome App.
-    context.log('Creating build ${version}');
+  String version = increaseBuildNumber(context);
+  // Creating an archive of the Chrome App.
+  context.log('Creating build ${version}');
 
-    // It needs to be copied to compile result directory.
-    copyFile(
-        joinFile(Directory.current, ['app', 'manifest.json']),
-        joinDir(Directory.current, ['build', 'polymer-build', 'web']));
+  archive(context);
 
-    archive(context);
-
-    runCommandSync(
-        context,
-        'git commit -m "Build version ${version}" app/manifest.json');
-    File file = new File('dist/spark.zip');
-    String filename = 'spark-${version}.zip';
-    file.rename('dist/${filename}').then((File file) {
-      context.log('Created ${filename}');
-      context.log('** A commit has been created, you need to push it. ***');
-    });
-    
-    return filename;
-  });
+  runCommandSync(
+    context,
+    'git commit -m "Build version ${version}" app/manifest.json');
+  File file = new File('dist/spark.zip');
+  String filename = 'spark-${version}.zip';
+  file.renameSync('dist/${filename}');
+  context.log('Created ${filename}');
+  context.log('** A commit has been created, you need to push it. ***');
 }
