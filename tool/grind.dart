@@ -194,7 +194,7 @@ void archiveWithRevision(GrinderContext context) {
   String version = getCurrentRevision();
   String filename = 'spark-rev-${version}.zip';
   file.rename('dist/${filename}');
-  context.log("Created {filename}");
+  context.log("Created ${filename}");
 }
 
 Future<String> increaseBuildNumber(GrinderContext context) {
