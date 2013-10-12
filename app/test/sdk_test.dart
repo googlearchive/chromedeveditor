@@ -10,8 +10,40 @@ import '../lib/sdk.dart';
 
 main() {
   group('sdk', () {
+    DartSdk sdk;
+
+    setUp(() {
+      return DartSdk.createSdk().then((result) {
+        sdk = result;
+      });
+    });
+
     test('exists', () {
-      expect(DartSdk.available, true);
+      expect(sdk.available, true);
+    });
+
+    test('has version', () {
+      expect(sdk.version.length, greaterThan(0));
+    });
+
+    test('sdk parent is null', () {
+      expect(sdk.parent, isNull);
+    });
+
+    test('list directory entries', () {
+      return sdk.getChildren().then((List children) {
+        expect(children.length, 2);
+      });
+    });
+
+    test('lib directory parent is sdk', () {
+      expect(sdk.libDirectory.parent, sdk);
+    });
+
+    test('list lib directory entries', () {
+      return sdk.libDirectory.getChildren().then((List children) {
+        expect(children.length, greaterThan(10));
+      });
     });
   });
 }

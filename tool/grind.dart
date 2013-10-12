@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:grinder/grinder.dart';
@@ -12,7 +13,8 @@ void main() {
   defineTask('init', taskFunction: init);
   defineTask('packages', taskFunction: packages, depends: ['init']);
   defineTask('analyze', taskFunction: analyze, depends: ['packages']);
-  defineTask('compile', taskFunction: compile, depends: ['packages']);
+  defineTask('sdk', taskFunction: populateSdk);
+  defineTask('compile', taskFunction: compile, depends: ['packages', 'sdk']);
   defineTask('archive', taskFunction: archive, depends: ['compile', 'mode-notest']);
 
   defineTask('mode-test', taskFunction: (c) => changeMode(c, true));
@@ -120,6 +122,34 @@ void changeMode(GrinderContext context, bool useTestMode) {
   }
 }
 
+/**
+ * Populate an 'app/sdk' directory from the current Dart SDK.
+ */
+void populateSdk(GrinderContext context) {
+  Directory srcSdkDir = sdkDir;
+  Directory destSdkDir = new Directory('app/sdk');
+
+  destSdkDir.createSync();
+
+  File srcVersionFile = joinFile(srcSdkDir, ['version']);
+  File destVersionFile = joinFile(destSdkDir, ['version']);
+
+  FileSet srcVer = new FileSet.fromFile(srcVersionFile);
+  FileSet destVer = new FileSet.fromFile(destVersionFile);
+
+  // check the state of the sdk/version file, to see if things are up-to-date
+  if (!destVer.upToDate(srcVer)) {
+    // copy files over
+    context.log('copying SDK');
+    copyFile(srcVersionFile, destSdkDir);
+    copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']));
+
+    // traverse directories, creating a .files json directory listing
+    context.log('creating SDK directory listings');
+    createDirectoryListings(destSdkDir);
+  }
+}
+
 void archive(GrinderContext context) {
   Directory distDir = new Directory('dist');
   distDir.createSync();
@@ -130,4 +160,24 @@ void archive(GrinderContext context) {
       workingDirectory: 'app');
   int sizeKb = new File('dist/spark.zip').lengthSync() ~/ 1024;
   context.log('spark.zip is ${sizeKb}kb');
+}
+
+void createDirectoryListings(Directory dir) {
+  List<String> files = [];
+
+  dir.listSync(followLinks: false).forEach((FileSystemEntity entity) {
+    String name = fileName(entity);
+
+    if (!name.startsWith('.')) {
+      if (entity is File) {
+        files.add(name);
+      } else {
+        files.add("${name}/");
+        createDirectoryListings(entity);
+      }
+    }
+  });
+
+  File jsonFile = joinFile(dir, ['.files']);
+  jsonFile.writeAsStringSync(JSON.encode(files));
 }
