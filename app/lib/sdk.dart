@@ -2,6 +2,9 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/**
+ * A library to allow access to the Dart SDK.
+ */
 library spark.sdk;
 
 import 'dart:async';
@@ -30,7 +33,7 @@ class DartSdk extends SdkDirectory {
   SdkDirectory _libDirectory;
 
   /**
-   * Return the `sdl/lib` directory.
+   * Return the `sdk/lib` directory.
    */
   SdkDirectory get libDirectory => _libDirectory;
 
@@ -65,15 +68,21 @@ class DartSdk extends SdkDirectory {
  * An abstract SDK entity; the parent class of [SdkFile] and [SdkDirectory].
  */
 abstract class SdkEntity {
-  /// The full path of this entity (`sdk/lib/core/string.dart`).
+  /**
+   * The full path of this entity (`sdk/lib/core/string.dart`).
+   */
   final String path;
 
-  /// The parent of this entity.
+  /**
+   * The parent of this entity.
+   */
   final SdkDirectory parent;
 
   SdkEntity._(this.parent, this.path);
 
-  /// The name of this entity (`string.dart`).
+  /**
+   * The name of this entity (`string.dart`).
+   */
   String get name {
     int index = path.lastIndexOf('/');
     return index == -1 ? path : path.substring(index + 1);
@@ -86,7 +95,9 @@ abstract class SdkEntity {
 class SdkFile extends SdkEntity {
   SdkFile._(SdkDirectory parent, String path): super._(parent, path);
 
-  /// Return the contents of this file.
+  /**
+   * Return the contents of this file.
+   */
   Future<String> getContents() => _getContents(path);
 }
 

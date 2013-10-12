@@ -123,7 +123,7 @@ void changeMode(GrinderContext context, bool useTestMode) {
 }
 
 /**
- * Populate an 'app/sdk' directory from the current Dart SDK.
+ * Populate the 'app/sdk' directory from the current Dart SDK.
  */
 void populateSdk(GrinderContext context) {
   Directory srcSdkDir = sdkDir;
@@ -144,6 +144,12 @@ void populateSdk(GrinderContext context) {
     copyFile(srcVersionFile, destSdkDir);
     copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']));
 
+    // lib/_internal/compiler, dartdoc, and pub are not sdk libraries, but do
+    // take up a lot of space; remove them
+    Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/compiler']);
+    Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/dartdoc']);
+    Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/pub']);
+
     // traverse directories, creating a .files json directory listing
     context.log('creating SDK directory listings');
     createDirectoryListings(destSdkDir);
@@ -162,22 +168,28 @@ void archive(GrinderContext context) {
   context.log('spark.zip is ${sizeKb}kb');
 }
 
+/**
+ * Recursively create `.files` json files in the given directory; these files
+ * serve as directory listings.
+ */
 void createDirectoryListings(Directory dir) {
   List<String> files = [];
 
-  dir.listSync(followLinks: false).forEach((FileSystemEntity entity) {
+  String parentName = fileName(dir);
+
+  for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
     String name = fileName(entity);
 
-    if (!name.startsWith('.')) {
-      if (entity is File) {
-        files.add(name);
-      } else {
-        files.add("${name}/");
-        createDirectoryListings(entity);
-      }
-    }
-  });
+    // ignore hidden files and directories
+    if (name.startsWith('.')) continue;
 
-  File jsonFile = joinFile(dir, ['.files']);
-  jsonFile.writeAsStringSync(JSON.encode(files));
+    if (entity is File) {
+      files.add(name);
+    } else {
+      files.add("${name}/");
+      createDirectoryListings(entity);
+    }
+  };
+
+  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files));
 }
