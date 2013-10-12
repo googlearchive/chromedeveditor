@@ -16,6 +16,11 @@
           document.currentScript = script;
           scripts[i].parentNode.replaceChild(script, scripts[i]);
         }
+      } else if (scripts[i].src.indexOf('.dart.js') == scripts[i].src.length - 8) {
+        var script = document.createElement('script');
+        script.src = scripts[i].src.replace(/\.dart\.js$/, '.dart.precompiled.js');
+        document.currentScript = script;
+        scripts[i].parentNode.replaceChild(script, scripts[i]);
       }
     }
   }
