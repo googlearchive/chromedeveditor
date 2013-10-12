@@ -28,6 +28,7 @@ void main() {
 
   defineTask('analyze', taskFunction: analyze, depends: ['packages']);
   defineTask('compile', taskFunction: compile, depends: ['packages', 'sdk']);
+
   defineTask('archive', taskFunction : archive,
              depends : ['compile', 'mode-notest']);
   defineTask('release', taskFunction : release,
