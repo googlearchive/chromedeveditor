@@ -61,6 +61,10 @@ class DartSdk extends SdkDirectory {
     });
   }
 
+  static Uri getSdkUri() {
+    return Uri.parse(chrome_gen.runtime.getURL('sdk/'));
+  }
+
   DartSdk._({this.version}): super._(null, 'sdk');
 }
 
