@@ -7,19 +7,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:grinder/grinder.dart';
+import 'package:intl/intl.dart';
 import 'package:polymer/builder.dart' as polymer;
 
-bool runCommandSync(GrinderContext context, String command) {
-  var result = Process.runSync('/bin/sh', ['-c', command]);
-  context.log(result.stdout);
-  context.log(result.stderr);
-  return (result.exitCode == 0);
-}
-
-String getCommandOutput(String command) {
-  var result = Process.runSync('/bin/sh', ['-c', command]);
-  return result.stdout.trim();
-}
+final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 void main() {
   defineTask('init', taskFunction: init);
@@ -37,12 +28,41 @@ void main() {
   defineTask('mode-test', taskFunction: (c) => changeMode(c, true));
   defineTask('mode-notest', taskFunction: (c) => changeMode(c, false));
 
+  defineTask('clean', taskFunction: clean);
+
   startGrinder();
+}
+
+bool runCommandSync(GrinderContext context, String command) {
+  var result = Process.runSync('/bin/sh', ['-c', command]);
+  context.log(result.stdout);
+  context.log(result.stderr);
+  return (result.exitCode == 0);
+}
+
+String getCommandOutput(String command) {
+  var result = Process.runSync('/bin/sh', ['-c', command]);
+  return result.stdout.trim();
 }
 
 void init(GrinderContext context) {
   PubTools pub = new PubTools();
   pub.install(context);
+}
+
+void clean(GrinderContext context) {
+  // delete the sdk directory
+  Process.runSync('rm', ['-rf', 'app/sdk/lib']);
+  Process.runSync('rm', ['app/sdk/version']);
+
+  // delete any compiled js output
+  Process.runSync('rm', ['app/*.dart.js']);
+  Process.runSync('rm', ['app/*.dart.precompiled.js']);
+  Process.runSync('rm', ['app/*.js.map']);
+  Process.runSync('rm', ['app/*.js.deps']);
+
+  // TODO: delete the build/ dir?
+
 }
 
 void packages(GrinderContext context) {
@@ -82,9 +102,10 @@ Future<bool> asyncPolymerBuild(GrinderContext context,
                                String outputDir) {
   var args = ['--out', outputDir, '--deploy'];
   var options = polymer.parseOptions(args);
-  return polymer.build(entryPoints: [entryPoint], options: options)
-      .then((_) => true);
-  print("polymer build done");
+  return polymer.build(entryPoints: [entryPoint], options: options).then((_) {
+    context.log("polymer build done");
+    return true;
+  });
 }
 
 // Transpile dart sources to JS.
@@ -96,7 +117,6 @@ void dart2JSBuild(GrinderContext context) {
       joinDir(Directory.current, ['packages']),
       joinDir(Directory.current, ['web', 'packages']));
 
-  // TODO: check outputs
   // We tell dart2js to compile to spark.dart.js; it also outputs a CSP
   // version (spark.dart.precompiled.js), which is what we actually use.
   runProcess(context, 'dart2js', arguments: [
@@ -108,16 +128,15 @@ void dart2JSBuild(GrinderContext context) {
     new File('web/precompiled.js').renameSync(
         'web/spark.html_bootstrap.dart.precompiled.js');
   }
-  int sizeKb = new File('web/spark.html_bootstrap.dart.precompiled.js').lengthSync() ~/ 1024;
-  context.log('spark.html_bootstrap.dart.precompiled.js is ${sizeKb}kb');
+
+  printSize(context,  new File('web/spark.html_bootstrap.dart.precompiled.js'));
 }
 
 Future compile(GrinderContext context) {
   prepareBuild(context);
 
   Directory.current = 'build';
-  return Future.wait([asyncPolymerBuild(context,
-                                        'web/spark.html',
+  return Future.wait([asyncPolymerBuild(context, 'web/spark.html',
                                         'polymer-build').then((bool success) {
     Directory.current = 'polymer-build';
     dart2JSBuild(context);
@@ -185,8 +204,12 @@ void archive(GrinderContext context) {
   Directory.current = 'build/chrome-app/spark';
   runCommandSync(context, 'zip ../../../dist/spark.zip . -qr -x .*');
   Directory.current = '../../..';
-  int sizeKb = new File('dist/spark.zip').lengthSync() ~/ 1024;
-  context.log('spark.zip is ${sizeKb}kb');
+  printSize(context, new File('dist/spark.zip'));
+}
+
+void printSize(GrinderContext context, File file) {
+  int sizeKb = file.lengthSync() ~/ 1024;
+  context.log('${file.path} is ${_NF.format(sizeKb)}k');
 }
 
 // Returns the name of the current branch.
