@@ -17,8 +17,10 @@ import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
 import 'git_test.dart' as git_test;
-import 'utils_test.dart' as utils_test;
 import 'preferences_test.dart' as preferences_test;
+import 'server_test.dart' as server_test;
+import 'tcp_test.dart' as tcp_test;
+import 'utils_test.dart' as utils_test;
 
 bool _testsDefined = false;
 
@@ -37,6 +39,9 @@ void _defineTests() {
   git_test.main();
   utils_test.main();
   preferences_test.main();
+  server_test.main();
+  tcp_test.main();
+  utils_test.main();
 }
 
 /**
@@ -67,15 +72,12 @@ void _logToStdout(LogRecord record) {
       '${record.message}');
 }
 
-class SparkTestConfiguration implements unittest.Configuration {
+class SparkTestConfiguration extends unittest.Configuration {
+  SparkTestConfiguration(): super.blank();
 
   bool get autoStart => false;
 
-  Duration timeout = const Duration(seconds: 5);
-
-  void onInit() {
-
-  }
+  Duration get timeout => const Duration(seconds: 5);
 
   void onStart() {
 
@@ -92,16 +94,14 @@ class SparkTestConfiguration implements unittest.Configuration {
     logger.info(message);
   }
 
-  void onTestStart(unittest.TestCase testCase) {
-
+  void onTestStart(unittest.TestCase test) {
+    logger.info('running ${test.description}');
   }
 
-  void onTestResultChanged(unittest.TestCase testCase) {
-
-  }
-
-  void onTestResult(unittest.TestCase testCase) {
-
+  void onTestResult(unittest.TestCase test) {
+    if (test.result != unittest.PASS) {
+      logger.warning("${test.result} ${test.description}");
+    }
   }
 
   void onSummary(int passed, int failed, int errors,
