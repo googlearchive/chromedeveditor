@@ -7,7 +7,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:grinder/grinder.dart';
+import 'package:intl/intl.dart';
 import 'package:polymer/builder.dart' as polymer;
+
+final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 bool runCommandSync(GrinderContext context, String command) {
   var result = Process.runSync('/bin/sh', ['-c', command]);
@@ -21,11 +24,13 @@ String getCommandOutput(String command) {
   return result.stdout.trim();
 }
 
+
 void main() {
   defineTask('init', taskFunction: init);
   defineTask('packages', taskFunction: packages, depends: ['init']);
   defineTask('analyze', taskFunction: analyze, depends: ['packages']);
   defineTask('compile', taskFunction: compile, depends: ['packages']);
+
   defineTask('archive', taskFunction : archive,
              depends : ['compile', 'mode-notest']);
   defineTask('release', taskFunction : release,
@@ -79,9 +84,10 @@ Future<bool> asyncPolymerBuild(GrinderContext context,
                                String outputDir) {
   var args = ['--out', outputDir, '--deploy'];
   var options = polymer.parseOptions(args);
-  return polymer.build(entryPoints: [entryPoint], options: options)
-      .then((_) => true);
-  print("polymer build done");
+  return polymer.build(entryPoints: [entryPoint], options: options).then((_) {
+    context.log("polymer build done");
+    return true;
+  });
 }
 
 // Transpile dart sources to JS.
@@ -93,7 +99,6 @@ void dart2JSBuild(GrinderContext context) {
       joinDir(Directory.current, ['packages']),
       joinDir(Directory.current, ['web', 'packages']));
 
-  // TODO: check outputs
   // We tell dart2js to compile to spark.dart.js; it also outputs a CSP
   // version (spark.dart.precompiled.js), which is what we actually use.
   runProcess(context, 'dart2js', arguments: [
@@ -105,16 +110,14 @@ void dart2JSBuild(GrinderContext context) {
     new File('web/precompiled.js').renameSync(
         'web/spark.html_bootstrap.dart.precompiled.js');
   }
-  int sizeKb = new File('web/spark.html_bootstrap.dart.precompiled.js').lengthSync() ~/ 1024;
-  context.log('spark.html_bootstrap.dart.precompiled.js is ${sizeKb}kb');
+  printSize(context,  new File('web/spark.html_bootstrap.dart.precompiled.js'));
 }
 
 Future compile(GrinderContext context) {
   prepareBuild(context);
 
   Directory.current = 'build';
-  return Future.wait([asyncPolymerBuild(context,
-                                        'web/spark.html',
+  return Future.wait([asyncPolymerBuild(context, 'web/spark.html',
                                         'polymer-build').then((bool success) {
     Directory.current = 'polymer-build';
     dart2JSBuild(context);
@@ -182,8 +185,12 @@ void archive(GrinderContext context) {
   Directory.current = 'build/chrome-app/spark';
   runCommandSync(context, 'zip ../../../dist/spark.zip . -qr -x .*');
   Directory.current = '../../..';
-  int sizeKb = new File('dist/spark.zip').lengthSync() ~/ 1024;
-  context.log('spark.zip is ${sizeKb}kb');
+  printSize(context, new File('dist/spark.zip'));
+}
+
+void printSize(GrinderContext context, File file) {
+  int sizeKb = file.lengthSync() ~/ 1024;
+  context.log('${file.path} is ${_NF.format(sizeKb)}k');
 }
 
 // Returns the name of the current branch.
@@ -227,7 +234,7 @@ String increaseBuildNumber(GrinderContext context) {
   // Tweaking build version in manifest.
   File file = new File('app/manifest.json');
   String content = file.readAsStringSync();
-  Object manifestDict = JSON.decode(content);
+  var manifestDict = JSON.decode(content);
   String version = manifestDict['version'];
   RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
   Iterable<Match> matches = exp.allMatches(version);
