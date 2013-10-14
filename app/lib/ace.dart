@@ -52,7 +52,6 @@ class AceEditor {
   }
 
   void setTheme(String theme){
-    print(theme);
     _aceEditor.theme = new ace.Theme(theme);
   }
 
