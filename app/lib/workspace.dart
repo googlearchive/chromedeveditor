@@ -91,5 +91,12 @@ class File extends Resource {
 
   File(Container parent, chrome.Entry entry) : super(parent, entry);
 
+  String getContents(){
+    // TODO: read from entry
+  }
+
+  void setContents(String contents){
+    // TODO: set contents of entry
+  }
 }
 
