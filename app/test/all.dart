@@ -117,11 +117,11 @@ class SparkTestConfiguration extends unittest.Configuration {
         String stackTrace = '';
 
         if (test.stackTrace != null && test.stackTrace != '') {
-          stackTrace = '\n' + indent(test.stackTrace.toString().trim());
+          stackTrace = '\n' + indent(test.stackTrace.toString().trim(), '    ');
         }
 
-        logger.warning('${test.result}: ${test.description}');
-        logger.warning(test.message.trim() + stackTrace);
+        logger.warning('${test.result}: ${test.description}\n' +
+            test.message.trim() + stackTrace);
       }
     }
 
@@ -139,7 +139,7 @@ class SparkTestConfiguration extends unittest.Configuration {
     }
   }
 
-  String indent(String str) {
-    return str.split("\n").map((line) => "  $line").join("\n");
+  String indent(String str, [String indent = '  ']) {
+    return str.split("\n").map((line) => "${indent}${line}").join("\n");
   }
 }

@@ -342,7 +342,7 @@ void populateSdk(GrinderContext context) {
 
     // lib/_internal/compiler, dartdoc, and pub are not sdk libraries, but do
     // take up a lot of space; remove them
-    Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/compiler']);
+    //Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/compiler']);
     Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/dartdoc']);
     Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/pub']);
 

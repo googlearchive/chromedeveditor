@@ -10,32 +10,37 @@ import '../lib/compiler.dart';
 
 main() {
   group('compiler', () {
-    test('is available', () {
-      Compiler compiler = new Compiler();
+    Compiler compiler;
 
-      expect(compiler.available, false);
+    setUp(() {
+      return Compiler.createCompiler().then((c) {
+        compiler = c;
+      });
+    });
+
+    tearDown(() {
+      if (compiler != null) compiler.dispose();
+    });
+
+    test('is available', () {
+      expect(compiler, isNotNull);
     });
 
     test('ping compiler isolate', () {
-      Compiler compiler = new Compiler();
-
       return compiler.pingCompiler().then((CompilerResult r) {
         expect(r, isNotNull);
-        expect(r.success, true);
+        expect(r.getSuccess(), true);
       });
     });
 
     test('compile helloworld', () {
-      Compiler compiler = new Compiler();
-
       return compiler.compileString('''
 void main() {
   print('hello');
 }
 ''').then((CompilerResult r) {
-        expect(r, isNotNull);
-        expect(r.success, true);
-        expect(r.warnings.length, 0);
+        expect(r.problems, isEmpty);
+        expect(r.getSuccess(), true);
         expect(r.output.length, greaterThan(1000));
       });
     });
