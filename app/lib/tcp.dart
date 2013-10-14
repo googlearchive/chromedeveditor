@@ -197,7 +197,7 @@ class _SocketEventSink implements EventSink<List<int>> {
         new chrome_gen.ArrayBuffer.fromBytes(event));
   }
 
-  void addError(errorEvent) {
+  void addError(errorEvent, [StackTrace stackTrace]) {
     // TODO(devoncarew): implement this method
 
   }
