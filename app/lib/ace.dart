@@ -17,6 +17,7 @@ class AceEditor {
 
   AceEditor() {
     _aceEditor = ace.edit(query('#editorArea'));
+    _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
   }
 
   String getPathInfo() {
@@ -48,6 +49,10 @@ class AceEditor {
     _file.readText().then((String contents) {
       _setContents(contents, new ace.Mode.forFile(file.name));
     });
+  }
+
+  void setTheme(String theme){
+    _aceEditor.theme = new ace.Theme(theme);
   }
 
   void _setContents(String string, ace.Mode mode) {
