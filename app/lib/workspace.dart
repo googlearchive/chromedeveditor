@@ -1,13 +1,21 @@
-// A resource workspace implementation.
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+/**
+ * A resource workspace implementation.
+ */
 
 library spark.workspace;
+
+import 'dart:async';
 
 import 'preferences.dart';
 
 import 'package:chrome/app.dart' as chrome;
 
 /**
- * The Workspave is a top-level entity that can contain files and folders.
+ * The Workspace is a top-level entity that can contain files and folders.
  * The files that it contains are loose files; they do not have parent folders.
  * The folders it contains are all top-level folders/projects.
  */
@@ -41,6 +49,14 @@ class Workspace implements Container {
 
   List<Resource> getChildren() {
    return _children;
+  }
+
+  List<Project> getProjects(){
+    //TODO: return list of projects in the workspace
+  }
+
+  List<File> getFiles(){
+    //TODO: return list of loose files in the workspace
   }
 
   Folder get topLevelFolder => null;
@@ -91,12 +107,19 @@ class File extends Resource {
 
   File(Container parent, chrome.Entry entry) : super(parent, entry);
 
-  String getContents(){
+  Future<String> getContents(){
     // TODO: read from entry
   }
 
-  void setContents(String contents){
+  Future setContents(String contents){
     // TODO: set contents of entry
   }
+
+}
+
+class Project extends Folder {
+  Project(Container parent, chrome.Entry entry) : super(parent, entry);
+
+  bool get isTopLevel => true;
 }
 
