@@ -18,6 +18,7 @@ import 'package:unittest/unittest.dart' as unittest;
 
 import 'git_test.dart' as git_test;
 import 'preferences_test.dart' as preferences_test;
+import 'sdk_test.dart' as sdk_test;
 import 'server_test.dart' as server_test;
 import 'tcp_test.dart' as tcp_test;
 import 'utils_test.dart' as utils_test;
@@ -39,6 +40,7 @@ void _defineTests() {
   git_test.main();
   utils_test.main();
   preferences_test.main();
+  sdk_test.main();
   server_test.main();
   tcp_test.main();
   utils_test.main();
@@ -107,14 +109,17 @@ class SparkTestConfiguration extends unittest.Configuration {
   void onSummary(int passed, int failed, int errors,
       List<unittest.TestCase> results, String uncaughtError) {
     for (unittest.TestCase test in results) {
-      logger.info('${test.result}: ${test.description}');
+      if (test.result == unittest.PASS) {
+        logger.info('${test.result}: ${test.description}');
+      } else {
+        String stackTrace = '';
 
-      if (test.message != '') {
-        logger.warning(test.message);
-      }
+        if (test.stackTrace != null && test.stackTrace != '') {
+          stackTrace = '\n' + indent(test.stackTrace.toString().trim());
+        }
 
-      if (test.stackTrace != null && test.stackTrace != '') {
-        logger.warning(indent(test.stackTrace.toString()));
+        logger.warning('${test.result}: ${test.description}');
+        logger.warning(test.message.trim() + stackTrace);
       }
     }
 
@@ -127,7 +132,8 @@ class SparkTestConfiguration extends unittest.Configuration {
         logger.severe('Top-level uncaught error: $uncaughtError');
       }
 
-      logger.warning('$passed PASSED, $failed FAILED, $errors ERRORS');
+      logger.warning(
+          '$passed tests passed, $failed failed, and $errors errored.');
     }
   }
 

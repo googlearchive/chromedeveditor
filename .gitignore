@@ -14,3 +14,5 @@ app/spark_test.dart.js
 app/spark_test.dart.precompiled.js
 docs/
 build/
+app/sdk/version
+app/sdk/lib/

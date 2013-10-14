@@ -12,6 +12,27 @@ import 'package:polymer/builder.dart' as polymer;
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
+void main() {
+  defineTask('init', taskFunction: init);
+  defineTask('packages', taskFunction: packages, depends: ['init']);
+  defineTask('sdk', taskFunction: populateSdk);
+
+  defineTask('analyze', taskFunction: analyze, depends: ['packages']);
+  defineTask('compile', taskFunction: compile, depends: ['packages', 'sdk']);
+
+  defineTask('archive', taskFunction : archive,
+             depends : ['compile', 'mode-notest']);
+  defineTask('release', taskFunction : release,
+             depends : ['compile', 'mode-notest']);
+
+  defineTask('mode-test', taskFunction: (c) => changeMode(c, true));
+  defineTask('mode-notest', taskFunction: (c) => changeMode(c, false));
+
+  defineTask('clean', taskFunction: clean);
+
+  startGrinder();
+}
+
 bool runCommandSync(GrinderContext context, String command) {
   var result = Process.runSync('/bin/sh', ['-c', command]);
   context.log(result.stdout);
@@ -24,27 +45,24 @@ String getCommandOutput(String command) {
   return result.stdout.trim();
 }
 
-
-void main() {
-  defineTask('init', taskFunction: init);
-  defineTask('packages', taskFunction: packages, depends: ['init']);
-  defineTask('analyze', taskFunction: analyze, depends: ['packages']);
-  defineTask('compile', taskFunction: compile, depends: ['packages']);
-
-  defineTask('archive', taskFunction : archive,
-             depends : ['compile', 'mode-notest']);
-  defineTask('release', taskFunction : release,
-             depends : ['compile', 'mode-notest']);
-
-  defineTask('mode-test', taskFunction: (c) => changeMode(c, true));
-  defineTask('mode-notest', taskFunction: (c) => changeMode(c, false));
-
-  startGrinder();
-}
-
 void init(GrinderContext context) {
   PubTools pub = new PubTools();
   pub.install(context);
+}
+
+void clean(GrinderContext context) {
+  // delete the sdk directory
+  runCommandSync(context, 'rm -rf app/sdk/lib');
+  runCommandSync(context, 'rm app/sdk/version');
+
+  // delete any compiled js output
+  runCommandSync(context, 'rm app/*.dart.js');
+  runCommandSync(context, 'rm app/*.dart.precompiled.js');
+  runCommandSync(context, 'rm app/*.js.map');
+  runCommandSync(context, 'rm app/*.js.deps');
+
+  // TODO: delete the build/ dir?
+
 }
 
 void packages(GrinderContext context) {
@@ -110,6 +128,7 @@ void dart2JSBuild(GrinderContext context) {
     new File('web/precompiled.js').renameSync(
         'web/spark.html_bootstrap.dart.precompiled.js');
   }
+
   printSize(context,  new File('web/spark.html_bootstrap.dart.precompiled.js'));
 }
 
@@ -297,4 +316,64 @@ void release(GrinderContext context) {
   file.renameSync('dist/${filename}');
   context.log('Created ${filename}');
   context.log('** A commit has been created, you need to push it. ***');
+}
+
+/**
+ * Populate the 'app/sdk' directory from the current Dart SDK.
+ */
+void populateSdk(GrinderContext context) {
+  Directory srcSdkDir = sdkDir;
+  Directory destSdkDir = new Directory('app/sdk');
+
+  destSdkDir.createSync();
+
+  File srcVersionFile = joinFile(srcSdkDir, ['version']);
+  File destVersionFile = joinFile(destSdkDir, ['version']);
+
+  FileSet srcVer = new FileSet.fromFile(srcVersionFile);
+  FileSet destVer = new FileSet.fromFile(destVersionFile);
+
+  // check the state of the sdk/version file, to see if things are up-to-date
+  if (!destVer.upToDate(srcVer)) {
+    // copy files over
+    context.log('copying SDK');
+    copyFile(srcVersionFile, destSdkDir);
+    copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']));
+
+    // lib/_internal/compiler, dartdoc, and pub are not sdk libraries, but do
+    // take up a lot of space; remove them
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/compiler');
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/pub');
+
+    // traverse directories, creating a .files json directory listing
+    context.log('creating SDK directory listings');
+    createDirectoryListings(destSdkDir);
+  }
+}
+
+/**
+ * Recursively create `.files` json files in the given directory; these files
+ * serve as directory listings.
+ */
+void createDirectoryListings(Directory dir) {
+  List<String> files = [];
+
+  String parentName = fileName(dir);
+
+  for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
+    String name = fileName(entity);
+
+    // ignore hidden files and directories
+    if (name.startsWith('.')) continue;
+
+    if (entity is File) {
+      files.add(name);
+    } else {
+      files.add("${name}/");
+      createDirectoryListings(entity);
+    }
+  };
+
+  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files));
 }
