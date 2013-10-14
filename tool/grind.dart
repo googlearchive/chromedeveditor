@@ -52,14 +52,14 @@ void init(GrinderContext context) {
 
 void clean(GrinderContext context) {
   // delete the sdk directory
-  Process.runSync('rm', ['-rf', 'app/sdk/lib']);
-  Process.runSync('rm', ['app/sdk/version']);
+  runCommandSync(context, 'rm -rf app/sdk/lib');
+  runCommandSync(context, 'rm app/sdk/version');
 
   // delete any compiled js output
-  Process.runSync('rm', ['app/*.dart.js']);
-  Process.runSync('rm', ['app/*.dart.precompiled.js']);
-  Process.runSync('rm', ['app/*.js.map']);
-  Process.runSync('rm', ['app/*.js.deps']);
+  runCommandSync(context, 'rm app/*.dart.js');
+  runCommandSync(context, 'rm app/*.dart.precompiled.js');
+  runCommandSync(context, 'rm app/*.js.map');
+  runCommandSync(context, 'rm app/*.js.deps');
 
   // TODO: delete the build/ dir?
 
@@ -342,9 +342,9 @@ void populateSdk(GrinderContext context) {
 
     // lib/_internal/compiler, dartdoc, and pub are not sdk libraries, but do
     // take up a lot of space; remove them
-    Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/compiler']);
-    Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/dartdoc']);
-    Process.runSync('rm', ['-rf', 'app/sdk/lib/_internal/pub']);
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/compiler');
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/pub');
 
     // traverse directories, creating a .files json directory listing
     context.log('creating SDK directory listings');
