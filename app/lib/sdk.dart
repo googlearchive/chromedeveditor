@@ -3,7 +3,14 @@
 // license that can be found in the LICENSE file.
 
 /**
- * A library to allow access to the Dart SDK.
+ * A library to allow access to the Dart SDK. Specifically, this class exposes
+ * the source code for the dart: libraries fro the `dart-sdk/lib` directory.
+ * Having the SDK source is necessary for:
+ *  * dart2js to compile against (otherwise it won't know anything about say
+ *    dart:core String)
+ *  * the analyzer to analyze against, so we can get warnings about incorrect
+ *    API usage
+ *  * the user to navigate to when doing things like exploring the dart apis
  */
 library spark.sdk;
 

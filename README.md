@@ -9,6 +9,11 @@ Dart IDE needs to be installed and `dart/dart-sdk/bin` needs to be accessible
 from `$PATH`. You **need** to enable experimental Web Platform features in Chrome.
 From `chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
+When you initially check the source out, in the Editor, right-click on the `app/sdk`
+directory, and choose "Don't Analyze". This directory will contain the source code
+for the `dart:` libraries. We don't want the Editor to analyze them as this will
+be a significant overhead.
+
 ### Entry Point
 The main entry point to the chrome app is `app/manifest.json`. It calls defines
 the background script for the application (`app/background.js`). This script
@@ -33,6 +38,12 @@ Run:
     ./grind packages
 
 to copy library code from packages/ to app/packages/.
+
+### The Dart SDK
+We copy the `dart:` code from the Dart SDK into the `app/sdk` directory. There
+is a build step for this; run:
+
+    ./grind sdk
 
 ### Lib
 All the Dart code for the application (modulo the spark.dart entry point)
