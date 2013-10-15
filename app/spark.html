@@ -8,10 +8,12 @@
 <head>
   <meta charset="utf-8">
   <title> </title>
+
   <!-- link rel="stylesheet" href="bootstrap/css/bootstrap.css" id="bootstrapTheme" -->
   <link rel="stylesheet" href="spark.css">
+
   <script src="packages/html_import/html_import.min.js"></script>
-  <script src="packages/polymer/boot.js"></script>
+  <script src="fixed_polymer_boot.js"></script>
 
   <link rel="import" href="polymer/components/sp-button/sp-button.html">
 </head>
@@ -21,10 +23,10 @@
   <button id="openFile">Open File...</button>
   <button id="saveFile">Save</button>
   <button id="saveAsFile">Save As...</button>
-  
+
   <label>Theme</label>
   <select id = "editorTheme">
-  	<option value = "ace/theme/ambiance">Ambiance</option>
+    <option value = "ace/theme/ambiance">Ambiance</option>
     <option value = "ace/theme/monokai">Monokai</option>
     <option value = "ace/theme/pastel_on_dark">Pastel on dark</option>
     <option value = "ace/theme/textmate">Textmate</option>
