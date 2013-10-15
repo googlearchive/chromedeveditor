@@ -5,22 +5,19 @@
 /**
  * A resource workspace implementation.
  */
-
 library spark.workspace;
 
 import 'dart:async';
 
-import 'preferences.dart';
-
 import 'package:chrome/app.dart' as chrome;
 
+import 'preferences.dart';
+
 /**
- * The Workspace is a top-level entity that can contain files and folders.
- * The files that it contains are loose files; they do not have parent folders.
- * The folders it contains are all top-level folders/projects.
+ * The Workspace is a top-level entity that can contain files and projects. The
+ * files that it contains are loose files; they do not have parent folders.
  */
 class Workspace implements Container {
-
   Container _parent = null;
   chrome.Entry _entry = null;
 
@@ -51,17 +48,17 @@ class Workspace implements Container {
    return _children;
   }
 
-  List<Project> getProjects(){
-    //TODO: return list of projects in the workspace
+  List<Project> getProjects() {
+    // TODO: return list of projects in the workspace
   }
 
-  List<File> getFiles(){
-    //TODO: return list of loose files in the workspace
+  List<File> getFiles() {
+    // TODO: return list of loose files in the workspace
   }
 
-  Folder get topLevelFolder => null;
+  Project get project => null;
 
-  void save(){
+  void save() {
     // TODO: save workspace information - maybe in preferences?
   }
 }
@@ -71,9 +68,7 @@ abstract class Container extends Resource {
 
   Container(Container parent, chrome.Entry entry) : super(parent, entry);
 
-  List<Resource> getChildren() {
-      return _children;
-  }
+  List<Resource> getChildren() => _children;
 }
 
 abstract class Resource {
@@ -87,39 +82,30 @@ abstract class Resource {
   Container get parent => _parent;
 
   /**
-   * Returns the top-level folder. This can return null for loose files.
+   * Returns the containing [Project]. This can return null for loose files and
+   * for the workspace.
    */
-  Folder get topLevelFolder {}
-
+  Project get project => parent == null ? null : parent.project;
 }
-
 
 class Folder extends Container {
-
   Folder(Container parent, chrome.Entry entry) : super(parent, entry);
-
-  bool get isTopLevel => parent is Workspace;
-
 }
 
-
 class File extends Resource {
-
   File(Container parent, chrome.Entry entry) : super(parent, entry);
 
-  Future<String> getContents(){
+  Future<String> getContents() {
     // TODO: read from entry
   }
 
-  Future setContents(String contents){
+  Future setContents(String contents) {
     // TODO: set contents of entry
   }
-
 }
 
 class Project extends Folder {
   Project(Container parent, chrome.Entry entry) : super(parent, entry);
 
-  bool get isTopLevel => true;
+  Project get project => this;
 }
-
