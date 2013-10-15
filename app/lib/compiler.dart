@@ -10,8 +10,6 @@ library spark.compiler;
 import 'dart:async';
 import 'dart:html' as html;
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
-
 // TODO: I would prefer to use a package: import
 import '../sdk/lib/_internal/compiler/compiler.dart' as compiler;
 export '../sdk/lib/_internal/compiler/compiler.dart' show Diagnostic;
@@ -171,7 +169,7 @@ class _NullSink implements EventSink<String> {
 
   add(String value) { }
 
-  void addError(Object error) { }
+  void addError(Object error, [StackTrace stackTrace]) { }
 
   void close() { }
 
@@ -188,7 +186,7 @@ class _StringSink implements EventSink<String> {
 
   add(String value) => buffer.write(value);
 
-  void addError(Object error) { }
+  void addError(Object error, [StackTrace stackTrace]) { }
 
   void close() { }
 }
