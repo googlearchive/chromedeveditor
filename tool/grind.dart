@@ -15,7 +15,7 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 void main() {
   defineTask('init', taskFunction: init);
   defineTask('packages', taskFunction: packages, depends: ['init']);
-  defineTask('sdk', taskFunction: populateSdk);
+  defineTask('sdk', taskFunction: populateSdk, depends: ['init']);
 
   defineTask('analyze', taskFunction: analyze, depends: ['packages']);
   defineTask('compile', taskFunction: compile, depends: ['packages', 'sdk']);
@@ -46,6 +46,13 @@ String getCommandOutput(String command) {
 }
 
 void init(GrinderContext context) {
+  // check to make sure we can locate the SDK
+  if (sdkDir == null) {
+    context.fail("Unable to locate the Dart SDK\n"
+        "Please set the DART_SDK environment variable to the SDK path.\n"
+        "  e.g.: 'export DART_SDK=your/path/to/dart/dart-sdk'");
+  }
+
   PubTools pub = new PubTools();
   pub.install(context);
 }

@@ -4,7 +4,14 @@
 
 (function() {
   if (navigator.webkitStartDart) {
-    navigator.webkitStartDart();
+    // NOTE: This is already done in polymer/boot.js, and this attempt to
+    // execute it the second time breaks polymer-element instantiations.
+    // This is in a transient state: boot.js is going away soon, and so it
+    // the requirement to run webkitStartDart(). By Dart 1.0 both should be
+    // gone. However, depending on which goes first, this might need to be
+    // uncommented for a brief period.
+    // TODO(sergeygs): Remove this completely after Dart 1.0.
+    // navigator.webkitStartDart();
   } else {
     var scripts = document.getElementsByTagName("script");
 
