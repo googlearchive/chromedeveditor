@@ -419,150 +419,7 @@ var requirejs, require, define;
 
 define("thirdparty/almond", function(){});
 
-define('utils/file_utils',[], function(){
-	Array.prototype.asyncEach = function(func, callback){
-		if (this.length == 0){
-			callback();
-			return;
-		}
-		var list = this,
-		    counter = {x:0, end:list.length};
-
-		var finish = function(){
-			counter.x += 1;
-			if (counter.x == counter.end){
-				callback();
-			}
-		}
-
-		for (var i = 0; i < list.length; i++){
-			func.call(list, list[i], finish, i);
-		}
-	}
-
-	var FileUtils = (function(){
-
-		var toArray = function(list) {
-			return Array.prototype.slice.call(list || [], 0);
-		}
-
-		var makeFile = function(root, filename, contents, callback, error){
-			root.getFile(filename, {create:true}, function(fileEntry){
-				fileEntry.createWriter(function(writer){
-					writer.onwriteend = function(){
-						// strange piece of the FileWriter api. Writing to an
-						// existing file just overwrites content in place. Still need to truncate
-						// which triggers onwritend event...again. o_O
-						if (writer.position < writer.length){
-							writer.truncate(writer.position);
-						}
-						else if (callback)
-							callback(fileEntry);
-
-					}
-					writer.onerror = function(e){
-						throw(e);
-					}
-					if (contents instanceof ArrayBuffer){
-						contents = new Uint8Array(contents);
-					}
-					writer.write(new Blob([contents]));
-				}, error);
-			}, error);
-		}
-
-		var makeDir = function(root, dirname, callback, error){
-			root.getDirectory(dirname, {create:true},callback, error);
-		}
-
-		return {
-			mkdirs : function(root, dirname, callback, error){
-				var pathParts;
-				if (dirname instanceof Array){
-					pathParts = dirname;
-				}
-				else{
-					pathParts = dirname.split('/');
-				}
-
-				var makeDirCallback = function(dir){
-					if (pathParts.length){
-						makeDir(dir, pathParts.shift(), makeDirCallback, error);
-					}
-					else{
-						if (callback)
-							callback(dir);
-					}
-				}
-				makeDirCallback(root);
-			},
-			rmDir : function (root, dirname, callback){
-				root.getDirectory(dirname, {create:true}, function(dirEntry){
-					dirEntry.removeRecursively(callback, utils.errorHandler);
-				});
-			},
-			rmFile : function(root, filename, callback){
-				root.getFile(filename, {create:true}, function(fileEntry){
-					fileEntry.remove(callback, utils.errorHandler);
-				});
-			},
-			mkfile : function(root, filename, contents, callback, error){
-				if (filename.charAt(0) == '/'){
-					filename = filename.substring(1);
-				}
-				var pathParts = filename.split('/');
-				if (pathParts.length > 1){
-					FileUtils.mkdirs(root, pathParts.slice(0, pathParts.length - 1), function(dir){
-						makeFile(dir, pathParts[pathParts.length - 1], contents, callback, error);
-					}, error);
-				}
-				else{
-					makeFile(root, filename, contents, callback, error);
-				}
-			},
-			ls: function(dir, callback, error){
-				var reader = dir.createReader();
-				var entries = [];
-
-				var readEntries = function() {
-					reader.readEntries (function(results) {
-						if (!results.length) {
-							callback(entries);
-						} else {
-							entries = entries.concat(toArray(results));
-							readEntries();
-						}
-					}, error);
-				}
-				readEntries();
-
-			},
-			readBlob: function(blob, dataType, callback){
-				var reader = new FileReader();
-				reader.onloadend = function(e){
-					callback(reader.result);
-				}
-				reader["readAs" + dataType](blob);
-			},
-			readFileEntry : function(fileEntry, dataType, callback){
-				fileEntry.file(function(file){
-					FileUtils.readBlob(file, dataType, callback);
-				});
-			},
-			readFile : function(root, file, dataType, callback, error) {
-
-				root.getFile(file, {create:false}, function(fileEntry){
-					FileUtils.readFileEntry(fileEntry, dataType, callback, error);
-				}, error);
-			}
-
-		};
-	}
-	)();
-
-	return FileUtils;
-});
-define('commands/object2file',['utils/file_utils'], function(fileutils){
+define('commands/object2file',[], function(){
 
     var expandBlob = function(dir, store, name, blobSha, callback){
         var makeFileFactory = function(name){
@@ -703,7 +560,7 @@ f];else{var p=d[f-3]^d[f-8]^d[f-14]^d[f-16];d[f]=p<<1|p>>>31}p=(n<<5|n>>>27)+o+(
 
 define("thirdparty/2.2.0-sha1", function(){});
 
-define('formats/pack',['objectstore/delta', 'utils/file_utils', 'thirdparty/2.2.0-sha1'], function(applyDelta, fileutils) {
+define('formats/pack',['objectstore/delta', 'thirdparty/2.2.0-sha1'], function(applyDelta) {
 
     String.prototype.rjust = function(width, padding) {
         padding = padding || " ";
@@ -2088,7 +1945,7 @@ define('formats/pack_index',[],function(){
 });
 
 
-define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/file_utils', 'utils/errors', 'utils/progress_chunker'], function(object2file, SmartHttpRemote, PackIndex, Pack, fileutils, errutils, ProgressChunker){
+define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/errors', 'utils/progress_chunker'], function(object2file, SmartHttpRemote, PackIndex, Pack, errutils, ProgressChunker){
 
     var _createCurrentTreeFromPack = function(dir, store, headSha, callback){
          store._retrieveObject(headSha, "Commit", function(commit){
@@ -2237,7 +2094,7 @@ define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'f
     }
     return clone;
 });
-define('commands/commit',['utils/file_utils', 'utils/errors'], function (fileutils, errutils) {
+define('commands/commit',['utils/errors'], function (errutils) {
 
     var walkFiles = function(dir, store, success){
 
@@ -2593,7 +2450,7 @@ define('commands/treemerger',[], function(){
 
 });
 
-define('commands/conditions',['utils/file_utils', 'utils/errors'],function(fileutils, errutils){
+define('commands/conditions',['utils/errors'],function(errutils){
 
     var conditions = {
 
@@ -2661,7 +2518,7 @@ define('commands/conditions',['utils/file_utils', 'utils/errors'],function(fileu
     }
     return conditions;
 });
-define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands/conditions', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/file_utils', 'utils/errors', 'utils/progress_chunker'], function(treeMerger, object2file, Conditions, SmartHttpRemote, PackIndex, Pack, fileutils, errutils, ProgressChunker){
+define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands/conditions', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/errors', 'utils/progress_chunker'], function(treeMerger, object2file, Conditions, SmartHttpRemote, PackIndex, Pack, errutils, ProgressChunker){
 
 
     var _updateWorkingTree = function (dir, store, fromTree, toTree, success){
@@ -2881,7 +2738,7 @@ define('commands/push',['formats/smart_http_remote', 'formats/pack', 'utils/prog
     }
     return push;
 });
-define('commands/branch',['utils/file_utils', 'utils/errors'], function(fileutils, errutils){
+define('commands/branch',['utils/errors'], function(errutils){
 
     var branchRegex = new RegExp("^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+$");
 
@@ -2928,7 +2785,7 @@ define('commands/branch',['utils/file_utils', 'utils/errors'], function(fileutil
     }
     return branch;
 });
-define('commands/checkout',['commands/object2file', 'commands/conditions', 'utils/file_utils', 'utils/errors'], function(object2file, Conditions, fileutils, errutils){
+define('commands/checkout',['commands/object2file', 'commands/conditions', 'utils/errors'], function(object2file, Conditions, errutils){
 
     var blowAwayWorkingDir = function(dir, success, error){
         fileutils.ls(dir, function(entries){
@@ -3176,7 +3033,7 @@ define('objectstore/objects',['thirdparty/underscore-min'], function() {
     }
     return GitObjects;
 });
-define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectstore/objects', 'utils/file_utils', 'utils/errors'], function(Pack, PackIndex, GitObjects, fileutils, errutils){
+define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'objectstore/objects', 'utils/errors'], function(Pack, PackIndex, GitObjects, errutils){
 
 	String.prototype.endsWith = function(suffix){
     	return this.lastIndexOf(suffix) == (this.length - suffix.length);
