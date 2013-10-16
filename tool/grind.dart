@@ -14,8 +14,8 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 void main() {
   defineTask('init', taskFunction: init);
-  defineTask('packages', taskFunction: packages, depends: ['init']);
   defineTask('sdk', taskFunction: populateSdk, depends: ['init']);
+  defineTask('packages', taskFunction: packages, depends: ['init', 'sdk']);
 
   defineTask('analyze', taskFunction: analyze, depends: ['packages']);
   defineTask('compile', taskFunction: compile, depends: ['packages', 'sdk']);
@@ -34,9 +34,14 @@ void main() {
 }
 
 bool runCommandSync(GrinderContext context, String command) {
+  context.log(command);
   var result = Process.runSync('/bin/sh', ['-c', command]);
-  context.log(result.stdout);
-  context.log(result.stderr);
+  if (result.stdout.isNotEmpty) {
+    context.log(result.stdout);
+  }
+  if (result.stderr.isNotEmpty) {
+    context.log(result.stderr);
+  }
   return (result.exitCode == 0);
 }
 
@@ -340,17 +345,26 @@ void populateSdk(GrinderContext context) {
   FileSet srcVer = new FileSet.fromFile(srcVersionFile);
   FileSet destVer = new FileSet.fromFile(destVersionFile);
 
+  Directory compilerDir = new Directory('packages/compiler');
+
   // check the state of the sdk/version file, to see if things are up-to-date
-  if (!destVer.upToDate(srcVer)) {
+  if (!destVer.upToDate(srcVer) || !compilerDir.existsSync()) {
     // copy files over
     context.log('copying SDK');
     copyFile(srcVersionFile, destSdkDir);
     copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']));
 
-    // lib/_internal/compiler, dartdoc, and pub are not sdk libraries, but do
-    // take up a lot of space; remove them
-    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
+    // Create a synthetic package:compiler package in the packages directory.
+    compilerDir.createSync();
+
+    runCommandSync(context, 'rm -rf packages/compiler/compiler');
+    runCommandSync(context, 'rm -rf packages/compiler/lib');
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/compiler/samples');
+    runCommandSync(context, 'mv app/sdk/lib/_internal/compiler packages/compiler');
+    runCommandSync(context, 'mv app/sdk/lib/_internal/lib packages/compiler');
+    runCommandSync(context, 'cp app/sdk/lib/_internal/libraries.dart packages/compiler');
     runCommandSync(context, 'rm -rf app/sdk/lib/_internal/pub');
+    runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
 
     // traverse directories, creating a .files json directory listing
     context.log('creating SDK directory listings');
