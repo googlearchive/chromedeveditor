@@ -14,6 +14,8 @@ import 'package:chrome_gen/src/common_exp.dart';
  * */
 class ZlibResult {
 
+
+
   ArrayBuffer buffer;
   int expectedLength;
 
@@ -27,6 +29,8 @@ class ZlibResult {
  *   */
 class Zlib {
 
+  static js.JsObject _zlib = js.context['Zlib'];
+
   /** Inflates a zlib deflated byte stream. */
   static ZlibResult inflate(Uint8List data, int expectedLength) {
 
@@ -34,8 +38,8 @@ class Zlib {
     if (expectedLength != null) {
       options['bufferSize'] = expectedLength;
     }
-    js.JsObject inflate = new js.JsObject(js.context['Zlib']['Inflate'],
-        [Zlib.uint8ListToJs(data), options]);
+    js.JsObject inflate = new js.JsObject(_zlib['Inflate'],
+        [Zlib._uint8ListToJs(data), options]);
     inflate['verify'] = true;
     var buffer = inflate.callMethod('decompress', []);
     ZlibResult result = new ZlibResult(ArrayBuffer.create(buffer));
@@ -46,14 +50,14 @@ class Zlib {
   /** Deflates a byte stream. */
   static ZlibResult deflate(Uint8List data) {
 
-    js.JsObject deflate = new js.JsObject(js.context['Zlib']['Deflate'],
-        [Zlib.uint8ListToJs(data)]);
+    js.JsObject deflate = new js.JsObject(_zlib['Deflate'],
+        [Zlib._uint8ListToJs(data)]);
     var buffer = deflate.callMethod('compress', []);
 
     return new ZlibResult(ArrayBuffer.create(buffer));
   }
 
-  static dynamic uint8ListToJs(Uint8List buffer) {
+  static dynamic _uint8ListToJs(Uint8List buffer) {
     return new js.JsObject(js.context['Uint8Array'],
         [js.jsify(buffer.toList(growable: true))]);
   }
