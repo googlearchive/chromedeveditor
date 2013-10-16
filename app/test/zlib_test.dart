@@ -6,9 +6,10 @@ library zlib_test;
 
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:utf/utf.dart';
+
 
 import 'package:unittest/unittest.dart';
+import 'package:utf/utf.dart';
 
 import '../lib/zlib.dart';
 

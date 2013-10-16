@@ -7,7 +7,7 @@ library git.zlib;
 import 'dart:js' as js;
 import 'dart:typed_data';
 
-import 'package:chrome_gen/src/common_exp.dart';
+import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 
 /**
  * Encapsulates the result returned by js zlib library.
@@ -16,10 +16,10 @@ class ZlibResult {
 
 
 
-  ArrayBuffer buffer;
+  chrome_gen.ArrayBuffer buffer;
   int expectedLength;
 
-  ZlibResult(ArrayBuffer buffer) {
+  ZlibResult(chrome_gen.ArrayBuffer buffer) {
     this.buffer = buffer;
   }
 }
@@ -42,7 +42,7 @@ class Zlib {
         [Zlib._uint8ListToJs(data), options]);
     inflate['verify'] = true;
     var buffer = inflate.callMethod('decompress', []);
-    ZlibResult result = new ZlibResult(ArrayBuffer.create(buffer));
+    ZlibResult result = new ZlibResult(chrome_gen.ArrayBuffer.create(buffer));
     result.expectedLength = inflate['ip'];
     return result;
   }
@@ -54,7 +54,7 @@ class Zlib {
         [Zlib._uint8ListToJs(data)]);
     var buffer = deflate.callMethod('compress', []);
 
-    return new ZlibResult(ArrayBuffer.create(buffer));
+    return new ZlibResult(chrome_gen.ArrayBuffer.create(buffer));
   }
 
   static dynamic _uint8ListToJs(Uint8List buffer) {
