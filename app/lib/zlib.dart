@@ -14,8 +14,6 @@ import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
  * */
 class ZlibResult {
 
-
-
   chrome_gen.ArrayBuffer buffer;
   int expectedLength;
 
