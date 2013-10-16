@@ -9,6 +9,9 @@ import 'dart:typed_data';
 
 import 'package:chrome_gen/src/common_exp.dart';
 
+/**
+ * Encapsulates the result returned by js zlib library.
+ */
 class ZlibResult {
 
   ArrayBuffer buffer;
@@ -19,8 +22,17 @@ class ZlibResult {
   }
 }
 
+/**
+ * Dart Port to the javascript zlib library.
+ *
+ */
 class Zlib {
 
+  /**
+   * Inflates a zlib deflated byte stream.
+   *
+   *
+   */
   static ZlibResult inflate(Uint8List data, int expectedLength) {
 
     Map<String, int> options = new Map<String, int>();
@@ -36,6 +48,10 @@ class Zlib {
     return result;
   }
 
+  /**
+   * Deflates a byte stream.
+   *
+   */
   static ZlibResult deflate(Uint8List data) {
 
     js.JsObject deflate = new js.JsObject(js.context['Zlib']['Deflate'],
