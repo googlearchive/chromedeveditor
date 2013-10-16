@@ -6,8 +6,11 @@ A Chrome app based development environment.
 
 ### Requirements
 Dart IDE needs to be installed and `dart/dart-sdk/bin` needs to be accessible
-from `$PATH`. You **need** to enable experimental Web Platform features in Chrome.
-From `chrome://flags`, enable `#enable-experimental-web-platform-features`.
+from `$PATH`. In addition, you should set a `DART_SDK` environment variable
+and point it to `your/path/to/dart-sdk`.
+
+You **need** to enable experimental Web Platform features in Chrome. From 
+`chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
 When you initially check the source out, in the Editor, right-click on the `app/sdk`
 directory, and choose "Don't Analyze". This directory will contain the source code
