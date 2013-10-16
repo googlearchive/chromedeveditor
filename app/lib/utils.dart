@@ -7,13 +7,13 @@ library spark.utils;
 import 'dart:html';
 import 'dart:web_audio';
 
-import 'package:chrome/app.dart' as chrome;
+import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
 String i18n(String messageId) {
-  return chrome.i18n.getMessage(messageId);
+  return chrome_gen.i18n.getMessage(messageId);
 }
 
 bool isLinux() {

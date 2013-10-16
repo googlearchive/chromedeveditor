@@ -7,7 +7,7 @@ library spark;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:chrome/app.dart' as chrome;
+import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'lib/ace.dart';
 import 'lib/utils.dart';
@@ -29,12 +29,12 @@ class Spark {
     query("#editorTheme").onChange.listen(setTheme);
 
     editor = new AceEditor();
-    chrome.app.window.current.onClosed.listen(handleWindowClosed);
+    chrome_gen.app_window.onClosed.listen(handleWindowClosed);
   }
 
   String get appName => i18n('app_name');
 
-  void handleWindowClosed(data) {
+  void handleWindowClosed(_) {
 
   }
 
@@ -44,12 +44,14 @@ class Spark {
   }
 
   void openFile(_) {
-    chrome.fileSystem.chooseEntry(type: 'openWritableFile').then((chrome.FileEntry file) {
-      if (file != null) {
-        file.readText().then((String contents) {
-          editor.setContent(file);
-          updatePath();
-        });
+    chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
+        type: chrome_gen.ChooseEntryType.OPEN_WRITABLE_FILE);
+    chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
+      chrome_gen.ChromeFileEntry entry = result.entry;
+
+      if (entry != null) {
+        editor.setContent(entry);
+        updatePath();
       }
     });
 
@@ -57,8 +59,12 @@ class Spark {
 
   void saveAsFile(_) {
     //TODO: don't show error message if operation cancelled
-    chrome.fileSystem.chooseEntry(type: 'saveFile').then((chrome.FileEntry file) {
-      editor.saveAs(file);
+    chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
+        type: chrome_gen.ChooseEntryType.SAVE_FILE);
+
+    chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
+      chrome_gen.ChromeFileEntry entry = result.entry;
+      editor.saveAs(entry);
       updatePath();
     }).catchError((_) => updateError('Error on save as'));
   }
