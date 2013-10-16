@@ -2847,7 +2847,7 @@ define('commands/checkout',['commands/object2file', 'commands/conditions', 'util
     return checkout;
 });
 
-define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'utils/file_utils', 'utils/errors'], function(Pack, PackIndex, fileutils, errutils){
+define('objectstore/file_repo',['formats/pack', 'formats/pack_index', 'utils/errors'], function(Pack, PackIndex, errutils){
 
 	String.prototype.endsWith = function(suffix){
     	return this.lastIndexOf(suffix) == (this.length - suffix.length);
