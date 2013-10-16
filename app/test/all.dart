@@ -22,6 +22,7 @@ import 'sdk_test.dart' as sdk_test;
 import 'server_test.dart' as server_test;
 import 'tcp_test.dart' as tcp_test;
 import 'utils_test.dart' as utils_test;
+import 'zlib_test.dart' as zlib_test;
 
 bool _testsDefined = false;
 
@@ -43,6 +44,7 @@ void _defineTests() {
   sdk_test.main();
   server_test.main();
   tcp_test.main();
+  zlib_test.main();
   utils_test.main();
 }
 
