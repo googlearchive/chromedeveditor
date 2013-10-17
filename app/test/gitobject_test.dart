@@ -6,7 +6,7 @@ library gitobject_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/gitobject.dart';
+import '../lib/git_object.dart';
 
 main() {
   group('git.objects', () {

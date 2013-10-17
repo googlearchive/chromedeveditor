@@ -32,7 +32,7 @@ abstract class GitObject {
       case "tag":
         return new TagObject(sha, content);
       default:
-        throw "Unsupported git object type.";
+        throw new ArgumentError("Unsupported git object type.");
     }
   }
 
@@ -42,9 +42,8 @@ abstract class GitObject {
   // byte stream converted to string.
   String _data;
   String _sha;
-  String toString() {
-    return _data;
-  }
+
+  String toString() => _data;
 }
 
 /**
@@ -60,6 +59,25 @@ class TreeEntry {
     this.isBlob = isBlob;
     this.name = nameStr;
     this.sha = sha;
+  }
+}
+
+
+
+/**
+ * Error thrown for a parse failure.
+ */
+class ParseError extends Error {
+  final message;
+
+  /** The [message] describes the parse failure. */
+  ParseError([this.message]);
+
+  String toString() {
+    if (message != null) {
+      return "Parse Error(s): $message";
+    }
+    return "Parse Error(s)";
   }
 }
 
@@ -87,7 +105,7 @@ class TreeObject extends GitObject {
       while (buffer[idx] != 0) {
         if (idx >= buffer.length) {
           //TODO(grv) : better exception handling.
-          throw "Unable to parse git tree object";
+          throw new ParseError("Unable to parse git tree object");
         }
         idx++;
       }
@@ -116,9 +134,7 @@ class BlobObject extends GitObject {
     this._data = data;
   }
 
-  String toString() {
-    return this._data;
-  }
+  String toString() => this._data;
 }
 
 /**
@@ -126,8 +142,8 @@ class BlobObject extends GitObject {
  */
 class Author {
 
-  var name;
-  var email;
+  String name;
+  String email;
   int timestamp;
   DateTime date;
 }
@@ -177,13 +193,13 @@ class CommitObject extends GitObject {
   }
 
   Author _parseAuthor(String input) {
-    var pattern = new RegExp('/^(.*) <(.*)> (\d+) (\+|\-)\d\d\d\d\$/');
-    List<String> match = pattern(input);
+    final RegExp pattern = new RegExp('/^(.*) <(.*)> (\d+) (\+|\-)\d\d\d\d\$/');
+    List<Match> match = pattern.allMatches(input);
 
     Author author = new Author();
-    author.name = match[1];
-    author.email = match[2];
-    author.timestamp = int.parse(match[3]);
+    author.name = match[0].group(0);
+    author.email = match[2].group(0);
+    author.timestamp = int.parse(match[3].group(0));
     author.date = new DateTime.fromMillisecondsSinceEpoch(
         author.timestamp, isUtc:true);
     return author;
@@ -215,6 +231,9 @@ class TagObject extends GitObject {
 class LooseObject {
   int _size;
   String _type;
+
+  // Represents either an ArrayBuffer or a string representation of byte
+  //stream.
   dynamic _data;
 
   // Parses and constructs a loose git object.
