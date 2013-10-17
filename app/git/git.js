@@ -419,42 +419,6 @@ var requirejs, require, define;
 
 define("thirdparty/almond", function(){});
 
-define('commands/object2file',[], function(){
-
-    var expandBlob = function(dir, store, name, blobSha, callback){
-        var makeFileFactory = function(name){
-            return function(blob){
-                fileutils.mkfile(dir, name, blob.data, callback, function(e){console.log(e)});
-            }
-        }
-        store._retrieveObject(blobSha, "Blob", makeFileFactory(name));
-    }
-
-    var expandTree = function(dir, store, treeSha, callback){
-
-        store._retrieveObject(treeSha, "Tree", function(tree){
-            var entries = tree.entries;
-            entries.asyncEach(function(entry, done){
-                if (entry.isBlob){
-                    var name = entry.name;
-                    expandBlob(dir, store, name, entry.sha, done);
-                }
-                else{
-                    var sha = entry.sha;
-                    fileutils.mkdirs(dir, entry.name, function(newDir){
-                        expandTree(newDir, store, sha, done);
-                    });
-                }
-            },callback);
-        });
-    }
-
-    return {
-        expandTree : expandTree,
-        expandBlob : expandBlob
-    }
-
-});
 define('objectstore/delta',[],function() {
     var applyDelta = (function() {
         var matchLength = function(stream) {
@@ -1945,7 +1909,7 @@ define('formats/pack_index',[],function(){
 });
 
 
-define('commands/clone',['commands/object2file', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/errors', 'utils/progress_chunker'], function(object2file, SmartHttpRemote, PackIndex, Pack, errutils, ProgressChunker){
+define('commands/clone',['formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/errors', 'utils/progress_chunker'], function(SmartHttpRemote, PackIndex, Pack, errutils, ProgressChunker){
 
     var _createCurrentTreeFromPack = function(dir, store, headSha, callback){
          store._retrieveObject(headSha, "Commit", function(commit){
@@ -2518,7 +2482,7 @@ define('commands/conditions',['utils/errors'],function(errutils){
     }
     return conditions;
 });
-define('commands/pull',['commands/treemerger', 'commands/object2file', 'commands/conditions', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/errors', 'utils/progress_chunker'], function(treeMerger, object2file, Conditions, SmartHttpRemote, PackIndex, Pack, errutils, ProgressChunker){
+define('commands/pull',['commands/treemerger', 'commands/conditions', 'formats/smart_http_remote', 'formats/pack_index', 'formats/pack', 'utils/errors', 'utils/progress_chunker'], function(treeMerger, Conditions, SmartHttpRemote, PackIndex, Pack, errutils, ProgressChunker){
 
 
     var _updateWorkingTree = function (dir, store, fromTree, toTree, success){
@@ -2785,7 +2749,7 @@ define('commands/branch',['utils/errors'], function(errutils){
     }
     return branch;
 });
-define('commands/checkout',['commands/object2file', 'commands/conditions', 'utils/errors'], function(object2file, Conditions, errutils){
+define('commands/checkout',['commands/conditions', 'utils/errors'], function(Conditions, errutils){
 
     var blowAwayWorkingDir = function(dir, success, error){
         fileutils.ls(dir, function(entries){
