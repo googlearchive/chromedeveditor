@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
+import 'gitobject_test.dart' as gitobject_test;
 import 'git_test.dart' as git_test;
 import 'preferences_test.dart' as preferences_test;
 import 'sdk_test.dart' as sdk_test;
@@ -45,6 +46,7 @@ void _defineTests() {
   server_test.main();
   tcp_test.main();
   zlib_test.main();
+  gitobject_test.main();
   utils_test.main();
 }
 
