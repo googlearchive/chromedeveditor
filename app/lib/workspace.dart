@@ -9,7 +9,7 @@ library spark.workspace;
 
 import 'dart:async';
 
-import 'package:chrome/app.dart' as chrome;
+import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'preferences.dart';
 
@@ -19,7 +19,7 @@ import 'preferences.dart';
  */
 class Workspace implements Container {
   Container _parent = null;
-  chrome.Entry _entry = null;
+  chrome_gen.Entry _entry = null;
 
   List<Resource> _children = [];
   PreferenceStore _store;
@@ -36,7 +36,7 @@ class Workspace implements Container {
     // TODO: initialize workspace with saved info from previous session
   }
 
-  Resource link(chrome.Entry entity) {
+  Resource link(chrome_gen.Entry entity) {
     // TODO: create a resource for the entry and add it to list of children
   }
 
@@ -66,14 +66,14 @@ class Workspace implements Container {
 abstract class Container extends Resource {
   List<Resource> _children;
 
-  Container(Container parent, chrome.Entry entry) : super(parent, entry);
+  Container(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
   List<Resource> getChildren() => _children;
 }
 
 abstract class Resource {
   Container _parent;
-  chrome.Entry _entry;
+  chrome_gen.Entry _entry;
 
   Resource(this._parent, this._entry);
 
@@ -89,11 +89,11 @@ abstract class Resource {
 }
 
 class Folder extends Container {
-  Folder(Container parent, chrome.Entry entry) : super(parent, entry);
+  Folder(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 }
 
 class File extends Resource {
-  File(Container parent, chrome.Entry entry) : super(parent, entry);
+  File(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
   Future<String> getContents() {
     // TODO: read from entry
@@ -105,7 +105,7 @@ class File extends Resource {
 }
 
 class Project extends Folder {
-  Project(Container parent, chrome.Entry entry) : super(parent, entry);
+  Project(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
   Project get project => this;
 }
