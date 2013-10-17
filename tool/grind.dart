@@ -8,7 +8,6 @@ import 'dart:io';
 
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
-import 'package:polymer/builder.dart' as polymer;
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
@@ -33,11 +32,22 @@ void main() {
   startGrinder();
 }
 
-bool runCommandSync(GrinderContext context, String command) {
-  var result = Process.runSync('/bin/sh', ['-c', command]);
-  context.log(result.stdout);
-  context.log(result.stderr);
-  return (result.exitCode == 0);
+void runCommandSync(GrinderContext context, String command, {String cwd}) {
+  context.log(command);
+
+  var result = Process.runSync(
+      '/bin/sh', ['-c', command], workingDirectory: cwd);
+
+  if (result.stdout.isNotEmpty) {
+    context.log(result.stdout);
+  }
+  if (result.stderr.isNotEmpty) {
+    context.log(result.stderr);
+  }
+
+  if (result.exitCode > 0) {
+    context.fail("exit code ${result.exitCode}");
+  }
 }
 
 String getCommandOutput(String command) {
@@ -60,13 +70,13 @@ void init(GrinderContext context) {
 void clean(GrinderContext context) {
   // delete the sdk directory
   runCommandSync(context, 'rm -rf app/sdk/lib');
-  runCommandSync(context, 'rm app/sdk/version');
+  runCommandSync(context, 'rm -f app/sdk/version');
 
   // delete any compiled js output
-  runCommandSync(context, 'rm app/*.dart.js');
-  runCommandSync(context, 'rm app/*.dart.precompiled.js');
-  runCommandSync(context, 'rm app/*.js.map');
-  runCommandSync(context, 'rm app/*.js.deps');
+  runCommandSync(context, 'rm -f app/*.dart.js');
+  runCommandSync(context, 'rm -f app/*.dart.precompiled.js');
+  runCommandSync(context, 'rm -f app/*.js.map');
+  runCommandSync(context, 'rm -f app/*.js.deps');
 
   // TODO: delete the build/ dir?
 
@@ -104,52 +114,45 @@ void prepareBuild(GrinderContext context) {
 
 // It will output a file web/spark.html_bootstrap.dart and a spark.html
 // without HTML imports.
-Future<bool> asyncPolymerBuild(GrinderContext context,
-                               String entryPoint,
-                               String outputDir) {
-  var args = ['--out', outputDir, '--deploy'];
-  var options = polymer.parseOptions(args);
-  return polymer.build(entryPoints: [entryPoint], options: options).then((_) {
-    context.log("polymer build done");
-    return true;
-  });
+void runPolymerBuild(GrinderContext context,
+                     String entryPoint,
+                     String outputDir,
+                     Directory cwd) {
+  Directory saveDir = Directory.current;
+  Directory.current = cwd;
+  // TODO: allow runDartScript() to specify the cwd
+  runDartScript(context, 'packages/polymer/deploy.dart',
+                arguments: ['--out', outputDir],
+                packageRoot: 'packages');
+  Directory.current = saveDir;
 }
 
 // Transpile dart sources to JS.
 // It will create spark.html_bootstrap.dart.precompiled.js.
-void dart2JSBuild(GrinderContext context) {
+void dart2JSBuild(GrinderContext context, Directory buildDir) {
   // We remove the symlink and replace it with a copy.
   runCommandSync(context, 'rm -rf web/packages');
   copyDirectory(
       joinDir(Directory.current, ['packages']),
       joinDir(Directory.current, ['web', 'packages']));
 
+  Directory webDir = joinDir(buildDir, ['web']);
+
   // We tell dart2js to compile to spark.dart.js; it also outputs a CSP
   // version (spark.dart.precompiled.js), which is what we actually use.
-  runProcess(context, 'dart2js', arguments: [
-      'web/spark.html_bootstrap.dart',
-      '--out=web/spark.html_bootstrap.dart.js']);
+  runSdkBinary(context, 'dart2js', arguments: [
+      joinDir(webDir, ['spark.html_bootstrap.dart']).path,
+      '--out=' + joinDir(webDir, ['spark.html_bootstrap.dart.js']).path]);
 
-  // Support for old version of dart2js: they generate precompiled.js file.
-  if (new File('web/precompiled.js').existsSync()) {
-    new File('web/precompiled.js').renameSync(
-        'web/spark.html_bootstrap.dart.precompiled.js');
-  }
-
-  printSize(context,  new File('web/spark.html_bootstrap.dart.precompiled.js'));
+  printSize(context,  joinFile(webDir, ['spark.html_bootstrap.dart.precompiled.js']));
 }
 
 Future compile(GrinderContext context) {
   prepareBuild(context);
-
-  Directory.current = 'build';
-  return Future.wait([asyncPolymerBuild(context, 'web/spark.html',
-                                        'polymer-build').then((bool success) {
-    Directory.current = 'polymer-build';
-    dart2JSBuild(context);
-    context.log('result has been written to build/polymer-build/web/');
-    Directory.current = '../..';
-  })]);
+  runPolymerBuild(context, 'web/spark.html',
+      'polymer-build', new Directory('build'));
+  dart2JSBuild(context, new Directory('build/polymer-build'));
+  context.log('result has been written to build/polymer-build/web/');
 }
 
 void analyze(GrinderContext context) {
@@ -208,9 +211,8 @@ void archive(GrinderContext context) {
   runCommandSync(context, 'rm -rf build/chrome-app/spark/spark_test.dart');
 
   // zip spark.zip . -r -q -x .*
-  Directory.current = 'build/chrome-app/spark';
-  runCommandSync(context, 'zip ../../../dist/spark.zip . -qr -x .*');
-  Directory.current = '../../..';
+  runCommandSync(context, 'zip ../../../dist/spark.zip . -qr -x .*',
+      cwd: 'build/chrome-app/spark');
   printSize(context, new File('dist/spark.zip'));
 }
 
