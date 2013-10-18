@@ -12,10 +12,6 @@
   <!-- link rel="stylesheet" href="bootstrap/css/bootstrap.css" id="bootstrapTheme" -->
   <link rel="stylesheet" href="spark.css">
 
-  <script src="packages/html_import/html_import.min.js"></script>
-  <script src="fixed_polymer_boot.js"></script>
-
-  <link rel="import" href="polymer/components/sp-button/sp-button.html">
   <template id="fileview-filename" >
     <div class="fileview-filename-container" style="height: 20px;">
       <div class="filename" style="position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
@@ -28,10 +24,10 @@
 </head>
 
 <body>
-  <sp-button id="newFile">New File</sp-button>
-  <sp-button id="openFile">Open File...</sp-button>
-  <sp-button id="saveFile">Save</sp-button>
-  <sp-button id="saveAsFile">Save As...</sp-button>
+  <button id="newFile">New File</button>
+  <button id="openFile">Open File...</button>
+  <button id="saveFile">Save</button>
+  <button id="saveAsFile">Save As...</button>
 
   <label>Theme</label>
   <select id = "editorTheme">
@@ -78,7 +74,7 @@
   <!-- this starts the Dart VM in Dartium, and injects spark.dart.js otherwise -->
   <script src="spark_bootstrap.js" defer></script>
 
-  <script type="application/dart" src="spark_test.dart" defer></script>
+  <script type="application/dart" src="spark.dart" defer></script>
 </body>
 
 </html>

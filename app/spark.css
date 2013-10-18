@@ -61,10 +61,6 @@ body {
   opacity: 1.0;
 }
 
-.splitter-handle {
-  position: relative;
-  width: 0;
-  height: 100%;
-  cursor: ew-resize;
-  z-index: 100;
+.ace_gutter-cell {
+  color: #aaa;
 }

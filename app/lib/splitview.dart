@@ -5,6 +5,7 @@
 library spark.splitview;
 
 import 'dart:html';
+import 'html_utils.dart';
 
 // splitview
 // +- .left
@@ -12,27 +13,48 @@ import 'dart:html';
 // +- .right
 
 class SplitView {
+  bool _resizeStarted = false;
+  int _resizeStartX;
+  int _initialPositionX;
+  Element _splitView;
+  Element _splitter;
+  Element _splitterHandle;
+  Element _leftView;
+  Element _rightView;
+  bool _horizontal;
+  int _leftMinSize = 0;
+  int _rightMinSize = 0;
+
   SplitView(Element splitView) {
-    _resizeStarted = false;
-    
     _splitView = splitView;
-    _leftView = splitView.query('left');
-    _rightView = splitView.query('right');
+    _leftView = splitView.query('.left');
+    _rightView = splitView.query('.right');
 
     _horizontal = (getAbsolutePosition(_leftView).x == getAbsolutePosition(_rightView).x);
 
-    _leftMinSize = int.parse(_leftView.getAttribute('left'));
-    _rightMinSize = int.parse(_rightView.getAttribute('right'));
+    String minSizeString = _leftView.getAttribute('minsize');
+    if (minSizeString != null) {
+      _leftMinSize = int.parse(minSizeString);
+    }
+    minSizeString = _leftView.getAttribute('minsize');
+    if (minSizeString != null) {
+      _rightMinSize = int.parse(minSizeString);
+    }
 
     int splitterMargin = 3;
     _splitter = new DivElement();
     _splitter.classes.add('splitter');
     _splitter.style.height = '100%';
     _splitter.style.width = '1px';
+    _splitter.style.position = 'absolute';
     _splitView.children.add(_splitter);
     _splitterHandle = new DivElement();
     _splitterHandle.classes.add('splitter-handle');
-    _splitter.children.add(splitterHandle);
+    _splitterHandle.style.position = 'relative';
+    _splitterHandle.style.height = '100%';
+    _splitterHandle.style.cursor = 'ew-resize';
+    _splitterHandle.style.zIndex = '100';
+    _splitter.children.add(_splitterHandle);
 
     if (_isVertical()) {
       _splitterHandle.style.left = (-splitterMargin).toString() + 'px';
@@ -41,10 +63,13 @@ class SplitView {
       _splitterHandle.style.left = (-splitterMargin).toString() + 'px';
       _splitterHandle.style.width = (splitterMargin * 2).toString() + 'px';
     }
+    
+    _setSplitterPosition(_leftView.clientWidth);
 
     document.onMouseDown.listen(_resizeDownHandler);
     document.onMouseMove.listen(_resizeMoveHandler);
     document.onMouseUp.listen(_resizeUpHandler);
+    print('splitview');
   }
 
   bool _isHorizontal() {
@@ -56,21 +81,20 @@ class SplitView {
   }
 
   void _resizeDownHandler(MouseEvent event) {
-    Element splitter = query('#splitter');
     if (_isHorizontal()) {
       // splitter is horizontal.
-      if (isMouseLocationInElement(event, query('#splitter .splitter-handle'), 0, 0)) {
+      if (isMouseLocationInElement(event, _splitterHandle, 0, 0)) {
         _resizeStarted = true;
       }
     } else {
       // splitter is vertical.
-      if (isMouseLocationInElement(event, query('#splitter .splitter-handle'), 0, 0)) {
+      if (isMouseLocationInElement(event, _splitterHandle, 0, 0)) {
         _resizeStarted = true;
       }
     }
     if (_resizeStarted) {
       _resizeStartX = event.screenX;
-      _initialPositionX = splitter.offsetLeft;
+      _initialPositionX = _splitter.offsetLeft;
     }
   }
 
@@ -99,13 +123,4 @@ class SplitView {
     _rightView.style.left = (position + 1).toString() + 'px';
     _rightView.style.width = 'calc(100% - ' + (position + 1).toString() + 'px)';
   }
-
-  bool _resizeStarted;
-  int _resizeStartX;
-  int _initialPositionX;
-  Element _splitter;
-  Element _splitterHandle;
-  Element _leftView;
-  Element _rightView;
-  bool _horizontal;
 }

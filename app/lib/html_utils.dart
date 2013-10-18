@@ -6,7 +6,7 @@ library spark.utils;
 
 import 'dart:html';
 
-int getAbsolutePosition(Element element) {
+Point getAbsolutePosition(Element element) {
   Point result = new Point();
   while (element != null) {
     result += element.offset.topLeft;
@@ -15,14 +15,14 @@ int getAbsolutePosition(Element element) {
   return result;
 }
 
-int getEventAbsolutePosition(MouseEvent event) {
+Point getEventAbsolutePosition(MouseEvent event) {
   return getAbsolutePosition(event.target) + event.offset;
 }
 
-int isMouseLocationInElement(MouseEvent event,
-                             Element element,
-                             int marginX,
-                             int marginY) {
+bool isMouseLocationInElement(MouseEvent event,
+                              Element element,
+                              int marginX,
+                              int marginY) {
   var rect = element.getBoundingClientRect();
   int width = rect.width + marginX * 2;
   int left = rect.left - marginX;

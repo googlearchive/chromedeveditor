@@ -12,7 +12,7 @@ import 'package:chrome/app.dart' as chrome;
 import 'lib/ace.dart';
 import 'lib/utils.dart';
 import 'lib/file_item_view.dart';
-import 'lib/splitview.dart'
+import 'lib/splitview.dart';
 
 void main() {
   Spark spark = new Spark();
@@ -20,7 +20,7 @@ void main() {
 
 class Spark {
   AceEditor editor;
-  Splitter _splitter;
+  SplitView _splitView;
 
   Spark() {
     document.title = appName;
@@ -29,9 +29,10 @@ class Spark {
     query("#openFile").onClick.listen(openFile);
     query("#saveFile").onClick.listen(saveFile);
     query("#saveAsFile").onClick.listen(saveAsFile);
-    query("#editorTheme").onChange.listen(setTheme);
+    //query("#editorTheme").onChange.listen(setTheme);
 
     editor = new AceEditor();
+    editor.setTheme('ace/theme/textmate');
     chrome.app.window.current.onClosed.listen(handleWindowClosed);
 
     new FileItemView('background.js');
@@ -39,11 +40,10 @@ class Spark {
     new FileItemView('index.js');
     new FileItemView('manifest.json');
     new FileItemView('longlonglong_filename.js');
+    _splitView = new SplitView(query('#splitview'));
   }
 
   String get appName => i18n('app_name');
-  
-  _splitter = new SplitView(query('#splitter'));
 
   /*
   bool _resizeStarted = false;
