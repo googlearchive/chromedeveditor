@@ -7,13 +7,11 @@ library spark.ace;
 import 'dart:html';
 
 import 'package:ace/ace.dart' as ace;
-import 'package:chrome/app.dart' as chrome;
-
+import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 class AceEditor {
-
   ace.Editor _aceEditor;
-  chrome.FileEntry _file;
+  chrome_gen.ChromeFileEntry _file;
 
   AceEditor() {
     _aceEditor = ace.edit(query('#editorArea'));
@@ -27,7 +25,6 @@ class AceEditor {
   }
 
   void newFile() {
-    if (_file != null) _file.release();
     _file = null;
     _setContents('', new ace.Mode('ace/mode/text'));
   }
@@ -39,12 +36,12 @@ class AceEditor {
     }
   }
 
-  void saveAs(chrome.FileEntry file) {
+  void saveAs(chrome_gen.ChromeFileEntry file) {
     _file = file;
     save();
   }
 
-  void setContent(chrome.FileEntry file) {
+  void setContent(chrome_gen.ChromeFileEntry file) {
     _file = file;
     _file.readText().then((String contents) {
       _setContents(contents, new ace.Mode.forFile(file.name));
