@@ -49,6 +49,8 @@ void setup(GrinderContext context) {
   copyDirectory(
       joinDir(Directory.current, ['packages']),
       joinDir(Directory.current, ['app', 'packages']));
+
+  new Directory('build').createSync();
 }
 
 /**
@@ -56,8 +58,11 @@ void setup(GrinderContext context) {
  */
 void deployTest(GrinderContext context) {
   Directory target = new Directory('build/deploy-test');
+
   _polymerDeploy(context, target);
-  _dart2jsCompile(target, 'spark_test.dart');
+
+  _dart2jsCompile(context,
+      joinDir(target, ['out', 'web']), 'spark.html_bootstrap.dart');
 }
 
 /**
@@ -65,8 +70,11 @@ void deployTest(GrinderContext context) {
  */
 void deployNoTest(GrinderContext context) {
   Directory target = new Directory('build/deploy-notest');
+
   _polymerDeploy(context, target);
-  _dart2jsCompile(target, 'spark.dart');
+
+  _dart2jsCompile(context,
+      joinDir(target, ['out', 'web']), 'spark.html_bootstrap.dart');
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -90,8 +98,8 @@ void deployNoTest(GrinderContext context) {
 void release(GrinderContext context) {
   // If repository is not original repository of Spark and the branch is not
   // master.
-  if (!canReleaseFromHere()) {
-    archiveWithRevision(context);
+  if (!_canReleaseFromHere()) {
+    _archiveWithRevision(context);
     return;
   }
 
@@ -125,23 +133,9 @@ void archive(GrinderContext context) {
   Directory distDir = new Directory('dist');
   distDir.createSync();
 
-  // Create a build/chrome-app/spark directory to prepare the content of the
-  // Chrome App.
-  copyDirectory(
-      joinDir(Directory.current, ['build', 'polymer-build', 'web']),
-      joinDir(Directory.current, ['build', 'chrome-app', 'spark']));
-  _runCommandSync(
-      context,
-      'find build/chrome-app/spark -name "packages" -print0 | xargs -0 rm -rf');
-  copyDirectory(
-      joinDir(Directory.current, ['build', 'polymer-build', 'web', 'packages']),
-      joinDir(Directory.current, ['build', 'chrome-app', 'spark', 'packages']));
-  _runCommandSync(context, 'rm -rf build/chrome-app/spark/test');
-  _runCommandSync(context, 'rm -rf build/chrome-app/spark/spark_test.dart');
-
   // zip spark.zip . -r -q -x .*
-  _runCommandSync(context, 'zip ../../../dist/spark.zip . -qr -x .*',
-      cwd: 'build/chrome-app/spark');
+  _runCommandSync(context, 'zip ../../../../dist/spark.zip . -qr -x .*',
+      cwd: 'build/deploy-notest/out/web');
   _printSize(context, new File('dist/spark.zip'));
 }
 
@@ -164,20 +158,43 @@ void clean(GrinderContext context) {
 }
 
 void _polymerDeploy(GrinderContext context, Directory target) {
-  _runCommandSync(context, 'rm -rf ${target}');
+  _runCommandSync(context, 'rm -rf ${target.path}');
   target.createSync();
 
   // copy the app directory to target/web
+  copyFile(new File('pubspec.yaml'), target);
+  copyFile(new File('pubspec.lock'), target);
+  copyDirectory(new Directory('app'), joinDir(target, ['web']));
+  _runCommandSync(context, 'rm -rf ${target.path}/web/packages');
+  _runCommandSync(context, 'ln -s packages ${target.path}');
 
   Directory saveDir = Directory.current;
-  Directory.current = cwd;
+  Directory.current = target;
+
   // TODO: allow runDartScript() to specify the cwd
   runDartScript(context, 'packages/polymer/deploy.dart',
-                arguments: ['--out', outputDir],
                 packageRoot: 'packages');
+
   Directory.current = saveDir;
+}
 
+void _dart2jsCompile(GrinderContext context, Directory target, String filePath) {
+  runSdkBinary(context, 'dart2js', arguments: [
+     joinDir(target, [filePath]).path,
+     '--out=' + joinDir(target, ['${filePath}.js']).path]);
 
+  // clean up unnecessary (and large) files
+  _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js']).path}');
+  _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.deps']).path}');
+  _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.map']).path}');
+
+  // de-symlink the directory
+  _runCommandSync(context, 'rm -rf ${joinDir(target, ['packages']).path}');
+  copyDirectory(
+      joinDir(target, ['..', 'packages']),
+      joinDir(target, ['packages']));
+
+  _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
 }
 
 // Prepare the build folder.
@@ -236,9 +253,9 @@ void dart2JSBuild(GrinderContext context, Directory buildDir) {
       '--out=' + joinDir(webDir, ['spark.html_bootstrap.dart.js']).path]);
 
   // clean up unnecessary (and large) files
-  _runCommandSync(context, 'rm -rf ${joinFile(webDir, ['spark.html_bootstrap.dart.js'])}');
-  _runCommandSync(context, 'rm -rf ${joinFile(webDir, ['spark.html_bootstrap.dart.js.deps'])}');
-  _runCommandSync(context, 'rm -rf ${joinFile(webDir, ['spark.html_bootstrap.dart.js.map'])}');
+  _runCommandSync(context, 'rm -f ${joinFile(webDir, ['spark.html_bootstrap.dart.js']).path}');
+  _runCommandSync(context, 'rm -f ${joinFile(webDir, ['spark.html_bootstrap.dart.js.deps']).path}');
+  _runCommandSync(context, 'rm -f ${joinFile(webDir, ['spark.html_bootstrap.dart.js.map']).path}');
 
   _printSize(context,  joinFile(webDir, ['spark.html_bootstrap.dart.precompiled.js']));
 }
@@ -273,35 +290,35 @@ void _changeMode(GrinderContext context, bool useTestMode) {
 }
 
 // Returns the name of the current branch.
-String getBranchName() {
+String _getBranchName() {
   return _getCommandOutput('git branch | grep "*" | sed -e "s/\* //g"');
 }
 
 // Returns the URL of the git repository.
-String getRepositoryUrl() {
+String _getRepositoryUrl() {
   return _getCommandOutput('git config remote.origin.url');
 }
 
 // Returns the current revision identifier of the local copy.
-String getCurrentRevision() {
+String _getCurrentRevision() {
   return _getCommandOutput('git rev-parse HEAD | cut -c1-10');
 }
 
 // We can build a real release only if the repository is the original
 // repository of spark and master is the working branch since we need to
 // increase the version and commit it to the repository.
-bool canReleaseFromHere() {
-  return (getRepositoryUrl() == 'https://github.com/dart-lang/spark.git') &&
-         (getBranchName() == 'master');
+bool _canReleaseFromHere() {
+  return (_getRepositoryUrl() == 'https://github.com/dart-lang/spark.git') &&
+         (_getBranchName() == 'master');
 }
 
 // In case, release is performed on a non-releasable branch/repository, we just
 // archive and name the archive with the revision identifier.
-void archiveWithRevision(GrinderContext context) {
+void _archiveWithRevision(GrinderContext context) {
   context.log('Performing archive instead.');
   archive(context);
   File file = new File('dist/spark.zip');
-  String version = getCurrentRevision();
+  String version = _getCurrentRevision();
   String filename = 'spark-rev-${version}.zip';
   file.rename('dist/${filename}');
   context.log("Created ${filename}");
