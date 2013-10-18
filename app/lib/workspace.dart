@@ -58,7 +58,7 @@ class Workspace implements Container {
   }
 
   List<File> getFiles() {
-    var list = <File>[];
+    List list = [];
     for (var child in _children) {
       if (child is File) list.add(child);
     }
@@ -66,7 +66,7 @@ class Workspace implements Container {
   }
 
   List<Project> getProjects() {
-    var list = <Project>[];
+    List list = [];
     for (var child in _children) {
       if (child is Project) list.add(child);
     }
@@ -81,7 +81,7 @@ class Workspace implements Container {
 
   Future<Resource> _gatherChildren(Container container) {
     chrome_gen.DirectoryEntry dir = container._entry;
-    List<Future> futures = [];
+    List futures = [];
 
     return dir.createReader().readEntries().then((entries) {
       for (chrome_gen.Entry ent in entries) {
