@@ -16,6 +16,15 @@
   <script src="fixed_polymer_boot.js"></script>
 
   <link rel="import" href="polymer/components/sp-button/sp-button.html">
+  <template id="fileview-filename" >
+    <div class="fileview-filename-container" style="height: 20px;">
+      <div class="filename" style="position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+      </div>
+      <div class="menu" style="position: absolute; right: 0; width: 15px;">
+        &#x25BC;
+      </div>
+    </div>
+  </template>
 </head>
 
 <body>
@@ -37,7 +46,15 @@
       <div id="error"></div>
   </div>
 
-  <div id="editorArea"></div>
+  <div id="splitview" style="width: 100%; height: calc(100% - 50px); position: relative;">
+    <div id="fileViewArea" class="left" style="width: 300px; height: 100%; position: absolute; /*background-color: #aaf;*/ padding-top: 5px;"></div>
+    <!--
+    <div id="splitter" style="width: 1px; /*background-color: #444; */height: 100%; position: absolute; left: 300px; cursor: ew-resize;">
+      <div class="splitter-handle" style="position: relative; width: 0; height: 100%; cursor: ew-resize; z-index: 100;"></div>
+    </div>
+    -->
+    <div id="editorArea" class="right" style="width: calc(100% - 301px); height: 100%; position: absolute; left: 300px; /*background-color: #aaa; */"></div>
+  </div>
 
   <!-- git includes -->
   <script src="git/third_party/zlib_inflate.js"></script>

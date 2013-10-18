@@ -36,5 +36,35 @@ body {
     color: #C66;
 }
 
+.fileview-filename-container {
+  
+}
 
+.fileview-filename-container .filename {
+  display: inline-block;
+}
 
+.fileview-filename-container .menu {
+  opacity: 0.0;
+}
+
+.fileview-filename-container .filename {
+  width: 100%;
+  padding-left: 10px;
+}
+
+.fileview-filename-container:hover .filename {
+  width: calc(100% - 15px);
+}
+
+.fileview-filename-container:hover .menu {
+  opacity: 1.0;
+}
+
+.splitter-handle {
+  position: relative;
+  width: 0;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 100;
+}
