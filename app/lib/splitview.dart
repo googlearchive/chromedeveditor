@@ -45,8 +45,12 @@ class SplitView {
     _leftView = splitView.query('.left');
     _rightView = splitView.query('.right');
 
-    _horizontal = (getAbsolutePosition(_leftView).x == getAbsolutePosition(_rightView).x);
+    // Is the separator horizontal or vertical?
+    // It will depend on the initial layout of the left/right views.
+    _horizontal =
+        (getAbsolutePosition(_leftView).x ==getAbsolutePosition(_rightView).x);
 
+    // Minimum size of the views.
     String minSizeString = _leftView.attributes['min-size'];
     if (minSizeString != null) {
       _leftMinSize = int.parse(minSizeString);
@@ -56,6 +60,7 @@ class SplitView {
       _rightMinSize = int.parse(minSizeString);
     }
 
+    // Separator and drag zone of the separator.
     const int splitterMargin = 3;
     _splitter = new DivElement();
     _splitter.classes.add('splitter');
@@ -82,7 +87,8 @@ class SplitView {
         ..left = (-splitterMargin).toString() + 'px'
         ..width = (splitterMargin * 2).toString() + 'px';
     }
-    
+
+    // Set initial position of the separator.
     _setSplitterPosition(_leftView.clientWidth);
 
     document
@@ -120,8 +126,8 @@ class SplitView {
   void _resizeMoveHandler(MouseEvent event) {
     if (_resizeStarted) {
       int value = _initialPositionX + event.screenX - _resizeStartX;
-      if (value > query('#splitview').clientWidth - _rightMinSize) {
-        value = query('#splitview').clientWidth - _rightMinSize;
+      if (value > _splitView.clientWidth - _rightMinSize) {
+        value = _splitView.clientWidth - _rightMinSize;
       }
       if (value < _leftMinSize) {
         value = _leftMinSize;
@@ -144,7 +150,8 @@ class SplitView {
   void _setSplitterPosition(int position) {
     _leftView.style.width = position.toString() + 'px';
     _splitter.style.left = position.toString() + 'px';
-    _rightView.style.left = (position + 1).toString() + 'px';
-    _rightView.style.width = 'calc(100% - ' + (position + 1).toString() + 'px)';
+    _rightView.style
+      ..left = (position + 1).toString() + 'px'
+      ..width = 'calc(100% - ' + (position + 1).toString() + 'px)';
   }
 }
