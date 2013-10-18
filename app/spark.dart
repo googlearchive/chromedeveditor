@@ -21,6 +21,7 @@ void main() {
 class Spark {
   AceEditor editor;
   SplitView _splitView;
+  List _filesViews;
 
   Spark() {
     document.title = appName;
@@ -35,11 +36,14 @@ class Spark {
     editor.setTheme('ace/theme/textmate');
     chrome.app.window.current.onClosed.listen(handleWindowClosed);
 
-    new FileItemView('background.js');
-    new FileItemView('index.html');
-    new FileItemView('index.js');
-    new FileItemView('manifest.json');
-    new FileItemView('longlonglong_filename.js');
+    // Some dummy files are added in the left panel.
+    _filesViews = new List();
+    _filesViews.add(new FileItemView('background.js'));
+    _filesViews.add(new FileItemView('index.html'));
+    _filesViews.add(new FileItemView('index.js'));
+    _filesViews.add(new FileItemView('manifest.json'));
+    _filesViews.add(new FileItemView('longlonglong_filename.js'));
+
     _splitView = new SplitView(query('#splitview'));
   }
 
