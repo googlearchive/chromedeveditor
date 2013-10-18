@@ -32,11 +32,11 @@ class SplitView {
 
     _horizontal = (getAbsolutePosition(_leftView).x == getAbsolutePosition(_rightView).x);
 
-    String minSizeString = _leftView.getAttribute('minsize');
+    String minSizeString = _leftView.attributes['min-size'];
     if (minSizeString != null) {
       _leftMinSize = int.parse(minSizeString);
     }
-    minSizeString = _leftView.getAttribute('minsize');
+    minSizeString = _leftView.attributes['min-size'];
     if (minSizeString != null) {
       _rightMinSize = int.parse(minSizeString);
     }
@@ -44,31 +44,36 @@ class SplitView {
     int splitterMargin = 3;
     _splitter = new DivElement();
     _splitter.classes.add('splitter');
-    _splitter.style.height = '100%';
-    _splitter.style.width = '1px';
-    _splitter.style.position = 'absolute';
+    _splitter.style
+      ..height = '100%'
+      ..width = '1px'
+      ..position = 'absolute';
     _splitView.children.add(_splitter);
     _splitterHandle = new DivElement();
     _splitterHandle.classes.add('splitter-handle');
-    _splitterHandle.style.position = 'relative';
-    _splitterHandle.style.height = '100%';
-    _splitterHandle.style.cursor = 'ew-resize';
-    _splitterHandle.style.zIndex = '100';
+    _splitterHandle.style
+      ..position = 'relative'
+      ..height = '100%'
+      ..cursor = 'ew-resize'
+      ..zIndex = '100';
     _splitter.children.add(_splitterHandle);
 
     if (_isVertical()) {
-      _splitterHandle.style.left = (-splitterMargin).toString() + 'px';
-      _splitterHandle.style.width = (splitterMargin * 2).toString() + 'px';
+      _splitterHandle.style
+        ..left = (-splitterMargin).toString() + 'px'
+        ..width = (splitterMargin * 2).toString() + 'px';
     } else {
-      _splitterHandle.style.left = (-splitterMargin).toString() + 'px';
-      _splitterHandle.style.width = (splitterMargin * 2).toString() + 'px';
+      _splitterHandle.style
+        ..left = (-splitterMargin).toString() + 'px'
+        ..width = (splitterMargin * 2).toString() + 'px';
     }
     
     _setSplitterPosition(_leftView.clientWidth);
 
-    document.onMouseDown.listen(_resizeDownHandler);
-    document.onMouseMove.listen(_resizeMoveHandler);
-    document.onMouseUp.listen(_resizeUpHandler);
+    document
+      ..onMouseDown.listen(_resizeDownHandler)
+      ..onMouseMove.listen(_resizeMoveHandler)
+      ..onMouseUp.listen(_resizeUpHandler);
     print('splitview');
   }
 

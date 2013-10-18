@@ -64,3 +64,23 @@ body {
 .ace_gutter-cell {
   color: #aaa;
 }
+
+#fileViewArea {
+  height: 100%;
+  padding-top: 5px;
+  position: absolute;
+  width: 300px;
+}
+
+#editorArea {
+  height: 100%;
+  left: 300px;
+  position: absolute;
+  width: calc(100% - 301px);
+}
+
+#splitview {
+  height: calc(100% - 50px);
+  position: relative;  
+  width: 100%;
+}
