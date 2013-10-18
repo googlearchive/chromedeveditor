@@ -36,8 +36,17 @@ class Workspace implements Container {
     // TODO: initialize workspace with saved info from previous session
   }
 
-  Resource link(chrome_gen.Entry entity) {
-    // TODO: create a resource for the entry and add it to list of children
+  Future<Resource> link(chrome_gen.Entry entity) {
+
+    if (entity.isFile) {
+      var resource = new File(this, entity);
+      _children.add(resource);
+      return new Future.value(resource);
+    } else {
+      var project = new Project(this, entity);
+      _children.add(project);
+      return _gatherChildren(project);
+    }
   }
 
   void unlink(Resource resource) {
@@ -48,12 +57,20 @@ class Workspace implements Container {
    return _children;
   }
 
-  List<Project> getProjects() {
-    // TODO: return list of projects in the workspace
+  List<File> getFiles() {
+    List list = [];
+    for (var child in _children) {
+      if (child is File) list.add(child);
+    }
+    return list;
   }
 
-  List<File> getFiles() {
-    // TODO: return list of loose files in the workspace
+  List<Project> getProjects() {
+    List list = [];
+    for (var child in _children) {
+      if (child is Project) list.add(child);
+    }
+    return list;
   }
 
   Project get project => null;
@@ -61,10 +78,29 @@ class Workspace implements Container {
   void save() {
     // TODO: save workspace information - maybe in preferences?
   }
+
+  Future<Resource> _gatherChildren(Container container) {
+    chrome_gen.DirectoryEntry dir = container._entry;
+    List futures = [];
+
+    return dir.createReader().readEntries().then((entries) {
+      for (chrome_gen.Entry ent in entries) {
+        if (ent.isFile) {
+          var file = new File(container, ent);
+          container._children.add(file);
+        } else {
+          var folder = new Folder(container, ent);
+          container._children.add(folder);
+          futures.add(_gatherChildren(folder));
+        }
+      }
+      return Future.wait(futures).then((_) => container);
+    });
+  }
 }
 
 abstract class Container extends Resource {
-  List<Resource> _children;
+  List<Resource> _children = [];
 
   Container(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
@@ -95,13 +131,9 @@ class Folder extends Container {
 class File extends Resource {
   File(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
-  Future<String> getContents() {
-    // TODO: read from entry
-  }
+  Future<String> getContents() => (_entry as chrome_gen.ChromeFileEntry).readText();
 
-  Future setContents(String contents) {
-    // TODO: set contents of entry
-  }
+  Future setContents(String contents) => (_entry as chrome_gen.ChromeFileEntry).writeText(contents);
 }
 
 class Project extends Folder {
