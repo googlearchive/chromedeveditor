@@ -7,24 +7,39 @@ library spark.splitview;
 import 'dart:html';
 import 'html_utils.dart';
 
-// splitview
-// +- .left
-// +- .splitter
-// +- .right
+/**
+ * This class encapsulates a splitview. It's a view with two panels and a
+ * separator that can be moved.
+ */
 
 class SplitView {
+  // When the separator is being moved.
   bool _resizeStarted = false;
   int _resizeStartX;
   int _initialPositionX;
+  // The element containing left and right view.
   Element _splitView;
+  // The separator of between the views.
   Element _splitter;
+  // The element of the area that can be dragged with the mouse to move the
+  // separator.
   Element _splitterHandle;
+  // The left view.
   Element _leftView;
+  // The right view.
   Element _rightView;
+  // Whether the separator is horizontal (or vertical).
   bool _horizontal;
+  // Minimum size of the left view.
   int _leftMinSize = 0;
+  // Minimum size of the right view.
   int _rightMinSize = 0;
 
+  /**
+   * Constructor the the SplitView. The element must contain a left view with
+   * class .left and a right view with class .right.
+   * The separator element will be created.
+   */
   SplitView(Element splitView) {
     _splitView = splitView;
     _leftView = splitView.query('.left');
@@ -36,12 +51,12 @@ class SplitView {
     if (minSizeString != null) {
       _leftMinSize = int.parse(minSizeString);
     }
-    minSizeString = _leftView.attributes['min-size'];
+    minSizeString = _rightView.attributes['min-size'];
     if (minSizeString != null) {
       _rightMinSize = int.parse(minSizeString);
     }
 
-    int splitterMargin = 3;
+    const int splitterMargin = 3;
     _splitter = new DivElement();
     _splitter.classes.add('splitter');
     _splitter.style
@@ -74,11 +89,10 @@ class SplitView {
       ..onMouseDown.listen(_resizeDownHandler)
       ..onMouseMove.listen(_resizeMoveHandler)
       ..onMouseUp.listen(_resizeUpHandler);
-    print('splitview');
   }
 
   bool _isHorizontal() {
-    return _splitter.offsetWidth > _splitter.offsetHeight;
+    return _horizontal;
   }
 
   bool _isVertical() {
@@ -122,6 +136,11 @@ class SplitView {
     }
   }
 
+  /*
+   * Set the new location of the separator. It will also change the size of
+   * the left view and the right view, depending on the location of the
+   * separator.
+   */
   void _setSplitterPosition(int position) {
     _leftView.style.width = position.toString() + 'px';
     _splitter.style.left = position.toString() + 'px';

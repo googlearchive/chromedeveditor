@@ -45,57 +45,6 @@ class Spark {
 
   String get appName => i18n('app_name');
 
-  /*
-  bool _resizeStarted = false;
-  int _resizeStartX;
-  int _initialPositionX;
-  
-  void resizeDownHandler(MouseEvent event) {
-    Element splitter = query('#splitter');
-    if (splitter.offsetWidth > splitter.offsetHeight) {
-      // splitter is horizontal.
-      if (_isMouseLocationInElement(event, query('#splitter .splitter-handle'), 0, 0)) {
-        _resizeStarted = true;
-      }
-    } else {
-      // splitter is vertical.
-      if (_isMouseLocationInElement(event, query('#splitter .splitter-handle'), 0, 0)) {
-        _resizeStarted = true;
-      }
-    }
-    if (_resizeStarted) {
-      _resizeStartX = event.screenX;
-      _initialPositionX = splitter.offsetLeft;
-    }
-  }
-
-  void resizeMoveHandler(MouseEvent event) {
-    if (_resizeStarted) {
-      int value = _initialPositionX + event.screenX - _resizeStartX;
-      if (value > query('#splitview').clientWidth - 200) {
-        value = query('#splitview').clientWidth - 200;
-      }
-      if (value < 100) {
-        value = 100;
-      }
-      setSplitterPosition(value);
-    }
-  }
-
-  void resizeUpHandler(MouseEvent event) {
-    if (_resizeStarted) {
-      _resizeStarted = false;
-    }
-  }
-
-  void setSplitterPosition(int position) {
-    query('#fileViewArea').style.width = position.toString() + 'px';
-    query('#splitter').style.left = position.toString() + 'px';
-    query('#editorArea').style.left = (position + 1).toString() + 'px';
-    query('#editorArea').style.width = 'calc(100% - ' + (position + 1).toString() + 'px)';
-  }
-  */
-
   void handleWindowClosed(data) {
 
   }
