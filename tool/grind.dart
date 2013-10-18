@@ -10,19 +10,22 @@ import 'package:intl/intl.dart';
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
-// TODO: release task
+// TODO: make the deploy-test and deploy tasks incremental
+
+final Directory BUILD_DIR = new Directory('build');
+final Directory DIST_DIR = new Directory('dist');
 
 void main() {
   defineTask('setup', taskFunction: setup);
 
-  defineTask('mode-test', taskFunction: (c) => _changeMode(c, true));
   defineTask('mode-notest', taskFunction: (c) => _changeMode(c, false));
+  defineTask('mode-test', taskFunction: (c) => _changeMode(c, true));
 
+  defineTask('deploy', taskFunction: deploy, depends : ['setup', 'mode-notest']);
   defineTask('deploy-test', taskFunction: deployTest, depends : ['setup', 'mode-test']);
-  defineTask('deploy-notest', taskFunction: deployNoTest, depends : ['setup', 'mode-notest']);
 
-  defineTask('release', taskFunction : release, depends : ['deploy-notest']);
-  defineTask('archive', taskFunction : archive, depends : ['deploy-notest']);
+  defineTask('release', taskFunction : release, depends : ['deploy']);
+  defineTask('archive', taskFunction : archive, depends : ['deploy']);
 
   defineTask('clean', taskFunction: clean);
 
@@ -50,31 +53,36 @@ void setup(GrinderContext context) {
       joinDir(Directory.current, ['packages']),
       joinDir(Directory.current, ['app', 'packages']));
 
-  new Directory('build').createSync();
+  BUILD_DIR.createSync();
+  DIST_DIR.createSync();
 }
 
 /**
- * TODO:
+ * Copy all source to `build/deploy`. Do a polymer deploy to `build/deploy-out`.
+ * This builds the regular (non-test) version of the app.
+ */
+void deploy(GrinderContext context) {
+  Directory sourceDir = joinDir(BUILD_DIR, ['deploy']);
+  Directory destDir = joinDir(BUILD_DIR, ['deploy-out']);
+
+  _polymerDeploy(context, sourceDir, destDir);
+
+  _dart2jsCompile(context,
+      joinDir(destDir, ['web']), 'spark.html_bootstrap.dart');
+}
+
+/**
+ * Copy all source to `build/deploy-test`. Do a polymer deploy to
+ * `build/deploy-test-out`. This builds a test version of the app.
  */
 void deployTest(GrinderContext context) {
-  Directory target = new Directory('build/deploy-test');
+  Directory sourceDir = joinDir(BUILD_DIR, ['deploy-test']);
+  Directory destDir = joinDir(BUILD_DIR, ['deploy-test-out']);
 
-  _polymerDeploy(context, target);
-
-  _dart2jsCompile(context,
-      joinDir(target, ['out', 'web']), 'spark.html_bootstrap.dart');
-}
-
-/**
- * TODO:
- */
-void deployNoTest(GrinderContext context) {
-  Directory target = new Directory('build/deploy-notest');
-
-  _polymerDeploy(context, target);
+  _polymerDeploy(context, sourceDir, destDir);
 
   _dart2jsCompile(context,
-      joinDir(target, ['out', 'web']), 'spark.html_bootstrap.dart');
+      joinDir(destDir, ['web']), 'spark.html_bootstrap.dart');
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -103,7 +111,7 @@ void release(GrinderContext context) {
     return;
   }
 
-  String version = increaseBuildNumber(context);
+  String version = _increaseBuildNumber(context);
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
 
@@ -112,6 +120,7 @@ void release(GrinderContext context) {
   _runCommandSync(
     context,
     'git commit -m "Build version ${version}" app/manifest.json');
+
   File file = new File('dist/spark.zip');
   String filename = 'spark-${version}.zip';
   file.renameSync('dist/${filename}');
@@ -130,17 +139,14 @@ void release(GrinderContext context) {
 // - Remove test
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
 void archive(GrinderContext context) {
-  Directory distDir = new Directory('dist');
-  distDir.createSync();
-
   // zip spark.zip . -r -q -x .*
-  _runCommandSync(context, 'zip ../../../../dist/spark.zip . -qr -x .*',
-      cwd: 'build/deploy-notest/out/web');
+  _runCommandSync(context, 'zip ../../../${DIST_DIR.path}/spark.zip . -qr -x .*',
+      cwd: '${BUILD_DIR.path}/deploy-out/web');
   _printSize(context, new File('dist/spark.zip'));
 }
 
 /**
- * TODO:
+ * Delete all generated artifacts.
  */
 void clean(GrinderContext context) {
   // delete the sdk directory
@@ -157,25 +163,24 @@ void clean(GrinderContext context) {
   _runCommandSync(context, 'rm -rf build');
 }
 
-void _polymerDeploy(GrinderContext context, Directory target) {
-  _runCommandSync(context, 'rm -rf ${target.path}');
-  target.createSync();
+void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
+  _runCommandSync(context, 'rm -rf ${sourceDir.path}');
+  sourceDir.createSync();
+  _runCommandSync(context, 'rm -rf ${destDir.path}');
+  destDir.createSync();
 
   // copy the app directory to target/web
-  copyFile(new File('pubspec.yaml'), target);
-  copyFile(new File('pubspec.lock'), target);
-  copyDirectory(new Directory('app'), joinDir(target, ['web']));
-  _runCommandSync(context, 'rm -rf ${target.path}/web/packages');
-  _runCommandSync(context, 'ln -s packages ${target.path}');
+  copyFile(new File('pubspec.yaml'), sourceDir);
+  copyFile(new File('pubspec.lock'), sourceDir);
+  copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']));
+  _runCommandSync(context, 'rm -rf ${sourceDir.path}/web/packages');
+  Link link = new Link(sourceDir.path + '/packages');
+  link.createSync('../../packages');
 
-  Directory saveDir = Directory.current;
-  Directory.current = target;
-
-  // TODO: allow runDartScript() to specify the cwd
   runDartScript(context, 'packages/polymer/deploy.dart',
-                packageRoot: 'packages');
-
-  Directory.current = saveDir;
+      arguments: ['--out', '../../${destDir.path}'],
+      packageRoot: 'packages',
+      workingDirectory: sourceDir.path);
 }
 
 void _dart2jsCompile(GrinderContext context, Directory target, String filePath) {
@@ -189,83 +194,13 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath) 
   _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.map']).path}');
 
   // de-symlink the directory
-  _runCommandSync(context, 'rm -rf ${joinDir(target, ['packages']).path}');
+  _removePackagesLinks(context, target);
+
   copyDirectory(
       joinDir(target, ['..', 'packages']),
       joinDir(target, ['packages']));
 
   _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
-}
-
-// Prepare the build folder.
-// It will copy all the required source files to build/.
-// It will prepare the directory layout to be compatible with polymer builder.
-void prepareBuild(GrinderContext context) {
-  context.log('prepare build');
-  // Copy files to build directory.
-  copyFile(
-      joinFile(Directory.current, ['pubspec.yaml']),
-      joinDir(Directory.current, ['build']));
-  copyFile(
-      joinFile(Directory.current, ['pubspec.lock']),
-      joinDir(Directory.current, ['build']));
-  // Change the name of the folder to web because polymer builder will only
-  // build content from 'web' folder.
-  copyDirectory(
-      joinDir(Directory.current, ['app']),
-      joinDir(Directory.current, ['build', 'web']));
-  copyDirectory(
-      joinDir(Directory.current, ['packages']),
-      joinDir(Directory.current, ['build', 'packages']));
-  _runCommandSync(context, 'rm -rf build/web/packages');
-}
-
-// It will output a file web/spark.html_bootstrap.dart and a spark.html
-// without HTML imports.
-void runPolymerBuild(GrinderContext context,
-                     String entryPoint,
-                     String outputDir,
-                     Directory cwd) {
-  Directory saveDir = Directory.current;
-  Directory.current = cwd;
-  // TODO: allow runDartScript() to specify the cwd
-  runDartScript(context, 'packages/polymer/deploy.dart',
-                arguments: ['--out', outputDir],
-                packageRoot: 'packages');
-  Directory.current = saveDir;
-}
-
-// Transpile dart sources to JS.
-// It will create spark.html_bootstrap.dart.precompiled.js.
-void dart2JSBuild(GrinderContext context, Directory buildDir) {
-  // We remove the symlink and replace it with a copy.
-  _runCommandSync(context, 'rm -rf web/packages');
-  copyDirectory(
-      joinDir(Directory.current, ['packages']),
-      joinDir(Directory.current, ['web', 'packages']));
-
-  Directory webDir = joinDir(buildDir, ['web']);
-
-  // We tell dart2js to compile to spark.dart.js; it also outputs a CSP
-  // version (spark.dart.precompiled.js), which is what we actually use.
-  runSdkBinary(context, 'dart2js', arguments: [
-      joinDir(webDir, ['spark.html_bootstrap.dart']).path,
-      '--out=' + joinDir(webDir, ['spark.html_bootstrap.dart.js']).path]);
-
-  // clean up unnecessary (and large) files
-  _runCommandSync(context, 'rm -f ${joinFile(webDir, ['spark.html_bootstrap.dart.js']).path}');
-  _runCommandSync(context, 'rm -f ${joinFile(webDir, ['spark.html_bootstrap.dart.js.deps']).path}');
-  _runCommandSync(context, 'rm -f ${joinFile(webDir, ['spark.html_bootstrap.dart.js.map']).path}');
-
-  _printSize(context,  joinFile(webDir, ['spark.html_bootstrap.dart.precompiled.js']));
-}
-
-void compile(GrinderContext context) {
-  prepareBuild(context);
-  runPolymerBuild(context, 'web/spark.html',
-      'polymer-build', new Directory('build'));
-  dart2JSBuild(context, new Directory('build/polymer-build'));
-  context.log('result has been written to build/polymer-build/web/');
 }
 
 void _changeMode(GrinderContext context, bool useTestMode) {
@@ -326,7 +261,7 @@ void _archiveWithRevision(GrinderContext context) {
 
 // Increase the build number in the manifest.json file. Returns the full
 // version.
-String increaseBuildNumber(GrinderContext context) {
+String _increaseBuildNumber(GrinderContext context) {
   // Tweaking build version in manifest.
   File file = new File('app/manifest.json');
   String content = file.readAsStringSync();
@@ -339,17 +274,28 @@ String increaseBuildNumber(GrinderContext context) {
   Match m = matches.first;
   String majorVersion = m.group(1);
   int buildVersion = int.parse(m.group(2));
-  buildVersion ++;
+  buildVersion++;
 
   version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
-  file.writeAsStringSync(JSON.encode(manifestDict));
+  file.writeAsStringSync(new JsonPrinter().print(JSON.encode(manifestDict)));
 
   // It needs to be copied to compile result directory.
   copyFile(
       joinFile(Directory.current, ['app', 'manifest.json']),
-      joinDir(Directory.current, ['build', 'polymer-build', 'web']));
+      joinDir(BUILD_DIR, ['deploy-out', 'web']));
+
   return version;
+}
+
+void _removePackagesLinks(GrinderContext context, Directory target) {
+  target.listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
+    if (entity is Link && fileName(entity) == 'packages') {
+      try { entity.deleteSync(); } catch (_) { }
+    } else if (entity is Directory) {
+      _removePackagesLinks(context, entity);
+    }
+  });
 }
 
 /**
@@ -437,4 +383,51 @@ void _runCommandSync(GrinderContext context, String command, {String cwd}) {
 
 String _getCommandOutput(String command) {
   return Process.runSync('/bin/sh', ['-c', command]).stdout.trim();
+}
+
+/**
+ * Pretty print Json text.
+ */
+class JsonPrinter {
+  String _in = '';
+
+  JsonPrinter();
+
+  String print(String json) {
+    return _print(JSON.decode(json)) + '\n';
+  }
+
+  String _print(var obj) {
+    if (obj is List) {
+      return _printList(obj);
+    } else if (obj is Map) {
+      return _printMap(obj);
+    } else if (obj is String) {
+      return '"${obj}"';
+    } else {
+      return '${obj}';
+    }
+  }
+
+  String _printList(List list) {
+    return "[${_indent}${list.map(_print).join(',${_newLine}')}${_dedent}]";
+  }
+
+  String _printMap(Map map) {
+    return "{${_indent}${map.keys.map((key) {
+      return '"${key}": ${_print(map[key])}';
+    }).join(',${_newLine}')}${_dedent}}";
+  }
+
+  String get _newLine => '\n${_in}';
+
+  String get _indent {
+    _in += '  ';
+    return '\n${_in}';
+  }
+
+  String get _dedent {
+    _in = _in.substring(2);
+    return '\n${_in}';
+  }
 }

@@ -14,5 +14,5 @@ dependencies:
   mime: any
   polymer: any
 dev_dependencies:
-  grinder: 0.0.6
+  grinder: 0.0.7
   unittest: any
