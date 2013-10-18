@@ -11,7 +11,7 @@
     // gone. However, depending on which goes first, this might need to be
     // uncommented for a brief period.
     // TODO(sergeygs): Remove this completely after Dart 1.0.
-    // navigator.webkitStartDart();
+    navigator.webkitStartDart();
   } else {
     var scripts = document.getElementsByTagName("script");
 

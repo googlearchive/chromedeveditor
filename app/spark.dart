@@ -11,6 +11,8 @@ import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'lib/ace.dart';
 import 'lib/utils.dart';
+import 'lib/file_item_view.dart';
+import 'lib/splitview.dart';
 
 void main() {
   Spark spark = new Spark();
@@ -18,6 +20,8 @@ void main() {
 
 class Spark {
   AceEditor editor;
+  SplitView _splitView;
+  List _filesViews;
 
   Spark() {
     document.title = appName;
@@ -29,6 +33,18 @@ class Spark {
     query("#editorTheme").onChange.listen(setTheme);
 
     editor = new AceEditor();
+    editor.setTheme('ace/theme/textmate');
+
+    // Some dummy files are added in the left panel.
+    _filesViews = new List();
+    _filesViews.add(new FileItemView('background.js'));
+    _filesViews.add(new FileItemView('index.html'));
+    _filesViews.add(new FileItemView('index.js'));
+    _filesViews.add(new FileItemView('manifest.json'));
+    _filesViews.add(new FileItemView('longlonglong_filename.js'));
+
+    _splitView = new SplitView(query('#splitview'));
+    
     chrome_gen.app_window.onClosed.listen(handleWindowClosed);
   }
 
