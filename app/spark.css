@@ -84,3 +84,7 @@ body {
   position: relative;  
   width: 100%;
 }
+
+#themeChooser {
+  display: none;
+}

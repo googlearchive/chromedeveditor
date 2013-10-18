@@ -2,14 +2,14 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'dart:html';
-
-library spark.file_item_view;
-
 /**
  * This class encapsulates a file item view in the left panel of the
  * application.
  */
+
+library spark.file_item_view;
+
+import 'dart:html';
 
 class FileItemView {
   Element _element;
