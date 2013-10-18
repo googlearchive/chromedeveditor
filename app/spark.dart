@@ -30,7 +30,7 @@ class Spark {
     query("#openFile").onClick.listen(openFile);
     query("#saveFile").onClick.listen(saveFile);
     query("#saveAsFile").onClick.listen(saveAsFile);
-    //query("#editorTheme").onChange.listen(setTheme);
+    query("#editorTheme").onChange.listen(setTheme);
 
     editor = new AceEditor();
     editor.setTheme('ace/theme/textmate');

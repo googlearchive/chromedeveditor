@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.utils;
+library spark.html_utils;
 
 import 'dart:html';
 
@@ -26,8 +26,8 @@ Point getEventAbsolutePosition(MouseEvent event) {
 }
 
 /**
- * Returns true is the mouse cursor is inside an element.
- * |marginX| and |marginY| will define a vertical and horizontal margin to
+ * Returns true if the mouse cursor is inside an element.
+ * `marginX` and `marginY` will define a vertical and horizontal margin to
  * increase the size of the matching area.
  */
 bool isMouseLocationInElement(MouseEvent event,

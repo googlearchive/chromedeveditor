@@ -4,6 +4,8 @@
 
 import 'dart:html';
 
+library spark.file_item_view;
+
 /**
  * This class encapsulates a file item view in the left panel of the
  * application.
