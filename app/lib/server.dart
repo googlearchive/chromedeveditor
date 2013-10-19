@@ -25,11 +25,12 @@ final intl.DateFormat RFC_1123_DATE_FORMAT =
 /**
  * An embedded http server.
  *
- * Usage:
- *  * `PicoServer.createServer()`
- *  * `addServlet(fooServlet)`
- *  * `addServlet(barServlet)`
- *  * `dispose()`
+ * ## Usage:
+ *
+ *     PicoServer.createServer();
+ *     addServlet(fooServlet);
+ *     addServlet(barServlet);
+ *     dispose();
  */
 class PicoServer {
   tcp.TcpServer _server;

@@ -23,6 +23,7 @@ void main() {
              depends : ['compile', 'mode-notest']);
   defineTask('release', taskFunction : release,
              depends : ['compile', 'mode-notest']);
+  defineTask('docs', taskFunction: docs);
 
   defineTask('mode-test', taskFunction: (c) => changeMode(c, true));
   defineTask('mode-notest', taskFunction: (c) => changeMode(c, false));
@@ -30,6 +31,31 @@ void main() {
   defineTask('clean', taskFunction: clean);
 
   startGrinder();
+}
+
+void docs(GrinderContext context) {
+  FileSet docFiles = new FileSet.fromDir(
+      new Directory('docs'), endsWith: '.html');
+  FileSet sourceFiles = new FileSet.fromDir(
+      new Directory('app'), endsWith: '.dart', recurse: true);
+
+  if (!docFiles.upToDate(sourceFiles)) {
+    // TODO: once more libraries are referenced from spark.dart, we won't need
+    // to explicitly pass them to dartdoc
+    runSdkBinary(context, 'dartdoc',
+        arguments: ['--omit-generation-time',
+                    '--mode', 'static',
+                    '--package-root', 'packages/',
+                    '--include-lib', 'spark,spark.ace,spark.file_item_view,spark.html_utils,spark.split_view,spark.utils,spark.preferences,spark.workspace,spark.sdk',
+                    '--include-lib', 'spark.server,spark.tcp',
+                    '--include-lib', 'git,git.objects,git.zlib',
+                    'app/spark.dart', 'app/lib/preferences.dart', 'app/lib/workspace.dart', 'app/lib/sdk.dart',
+                    'app/lib/server.dart', 'app/lib/tcp.dart',
+                    'app/lib/git.dart', 'app/lib/git_object.dart', 'app/lib/zlib.dart']);
+
+    runCommandSync(context,
+        'zip ../dist/spark-docs.zip . -qr -x .*', cwd: 'docs');
+  }
 }
 
 void runCommandSync(GrinderContext context, String command, {String cwd}) {
