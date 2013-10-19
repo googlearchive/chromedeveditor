@@ -5,6 +5,7 @@
 library spark.ace;
 
 import 'dart:html';
+import 'dart:js' as js;
 
 import 'package:ace/ace.dart' as ace;
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
@@ -12,6 +13,8 @@ import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 class AceEditor {
   ace.Editor _aceEditor;
   chrome_gen.ChromeFileEntry _file;
+
+  static bool get available => js.context['ace'] != null;
 
   AceEditor() {
     _aceEditor = ace.edit(query('#editorArea'));
