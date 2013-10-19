@@ -278,7 +278,7 @@ String _increaseBuildNumber(GrinderContext context) {
 
   version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
-  file.writeAsStringSync(new JsonPrinter().print(JSON.encode(manifestDict)));
+  file.writeAsStringSync(new JsonPrinter().print(manifestDict));
 
   // It needs to be copied to compile result directory.
   copyFile(
@@ -387,14 +387,17 @@ String _getCommandOutput(String command) {
 
 /**
  * Pretty print Json text.
+ *
+ * Usage:
+ *     String str = new JsonPrinter().print(jsonObject);
  */
 class JsonPrinter {
   String _in = '';
 
   JsonPrinter();
 
-  String print(String json) {
-    return _print(JSON.decode(json)) + '\n';
+  String print(dynamic json) {
+    return _print(json) + '\n';
   }
 
   String _print(var obj) {
@@ -410,23 +413,23 @@ class JsonPrinter {
   }
 
   String _printList(List list) {
-    return "[${_indent}${list.map(_print).join(',${_newLine}')}${_dedent}]";
+    return "[${_indent()}${list.map(_print).join(',${_newLine}')}${_unIndent()}]";
   }
 
   String _printMap(Map map) {
-    return "{${_indent}${map.keys.map((key) {
+    return "{${_indent()}${map.keys.map((key) {
       return '"${key}": ${_print(map[key])}';
-    }).join(',${_newLine}')}${_dedent}}";
+    }).join(',${_newLine}')}${_unIndent()}}";
   }
 
   String get _newLine => '\n${_in}';
 
-  String get _indent {
+  String _indent() {
     _in += '  ';
     return '\n${_in}';
   }
 
-  String get _dedent {
+  String _unIndent() {
     _in = _in.substring(2);
     return '\n${_in}';
   }
