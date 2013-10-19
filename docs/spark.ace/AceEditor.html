@@ -1,0 +1,206 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>AceEditor class / spark.ace Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="spark.ace" data-type="AceEditor">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../spark.ace.html">spark.ace</a> &rsaquo; <a href="../spark.ace/AceEditor.html">AceEditor</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><ul class="icon">
+<li><div class="icon-class"></div><strong>AceEditor</strong></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>AceEditor</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<pre class="source">
+class AceEditor {
+ ace.Editor _aceEditor;
+ chrome_gen.ChromeFileEntry _file;
+
+ AceEditor() {
+   _aceEditor = ace.edit(query('#editorArea'));
+   _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
+ }
+
+ String getPathInfo() {
+   // TODO: show full path of file, not just name
+   if (_file != null) return _file.fullPath;
+   return '[new file]';
+ }
+
+ void newFile() {
+   _file = null;
+   _setContents('', new ace.Mode('ace/mode/text'));
+ }
+
+ void save() {
+   if (_file != null){
+     _file.writeText(_aceEditor.value);
+     _aceEditor.focus();
+   }
+ }
+
+ void saveAs(chrome_gen.ChromeFileEntry file) {
+   _file = file;
+   save();
+ }
+
+ void setContent(chrome_gen.ChromeFileEntry file) {
+   _file = file;
+   _file.readText().then((String contents) {
+     _setContents(contents, new ace.Mode.forFile(file.name));
+   });
+ }
+
+ void setTheme(String theme){
+   _aceEditor.theme = new ace.Theme(theme);
+ }
+
+ void _setContents(String string, ace.Mode mode) {
+   _aceEditor.setValue(string, 0);
+   _aceEditor.session.mode = mode;
+   _aceEditor.navigateFileStart();
+   _aceEditor.focus();
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="">
+<button class="show-code">Code</button>
+new <strong>AceEditor</strong>() <a class="anchor-link" href="#"
+              title="Permalink to AceEditor.AceEditor">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Creates a new <a class="crossref" href="../dart_core/Object.html">Object</a> instance.</p>
+<p><a class="crossref" href="../dart_core/Object.html">Object</a> instances have no meaningful state, and are only useful
+through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
+only.</p>
+<div class="docs-inherited-from">docs inherited from Object </div></div>
+<pre class="source">
+AceEditor() {
+ _aceEditor = ace.edit(query('#editorArea'));
+ _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="getPathInfo">
+<button class="show-code">Code</button>
+String <strong>getPathInfo</strong>() <a class="anchor-link" href="#getPathInfo"
+              title="Permalink to AceEditor.getPathInfo">#</a></h4>
+<div class="doc">
+<pre class="source">
+String getPathInfo() {
+ // TODO: show full path of file, not just name
+ if (_file != null) return _file.fullPath;
+ return '[new file]';
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="newFile">
+<button class="show-code">Code</button>
+void <strong>newFile</strong>() <a class="anchor-link" href="#newFile"
+              title="Permalink to AceEditor.newFile">#</a></h4>
+<div class="doc">
+<pre class="source">
+void newFile() {
+ _file = null;
+ _setContents('', new ace.Mode('ace/mode/text'));
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="save">
+<button class="show-code">Code</button>
+void <strong>save</strong>() <a class="anchor-link" href="#save"
+              title="Permalink to AceEditor.save">#</a></h4>
+<div class="doc">
+<pre class="source">
+void save() {
+ if (_file != null){
+   _file.writeText(_aceEditor.value);
+   _aceEditor.focus();
+ }
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="saveAs">
+<button class="show-code">Code</button>
+void <strong>saveAs</strong>(ChromeFileEntry file) <a class="anchor-link" href="#saveAs"
+              title="Permalink to AceEditor.saveAs">#</a></h4>
+<div class="doc">
+<pre class="source">
+void saveAs(chrome_gen.ChromeFileEntry file) {
+ _file = file;
+ save();
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="setContent">
+<button class="show-code">Code</button>
+void <strong>setContent</strong>(ChromeFileEntry file) <a class="anchor-link" href="#setContent"
+              title="Permalink to AceEditor.setContent">#</a></h4>
+<div class="doc">
+<pre class="source">
+void setContent(chrome_gen.ChromeFileEntry file) {
+ _file = file;
+ _file.readText().then((String contents) {
+   _setContents(contents, new ace.Mode.forFile(file.name));
+ });
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="setTheme">
+<button class="show-code">Code</button>
+void <strong>setTheme</strong>(String theme) <a class="anchor-link" href="#setTheme"
+              title="Permalink to AceEditor.setTheme">#</a></h4>
+<div class="doc">
+<pre class="source">
+void setTheme(String theme){
+ _aceEditor.theme = new ace.Theme(theme);
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

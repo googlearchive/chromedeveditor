@@ -1,0 +1,1178 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>HttpHeaders abstract class / spark.server Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="spark.server" data-type="HttpHeaders">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../spark.server.html">spark.server</a> &rsaquo; <a href="../spark.server/HttpHeaders.html">HttpHeaders</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><ul class="icon">
+<li><a href="../spark.server/BytesBuilder.html"><div class="icon-class"></div>BytesBuilder</a></li>
+<li><div class="icon-class"></div><strong>HttpHeaders</strong></li>
+<li><a href="../spark.server/HttpRequest.html"><div class="icon-class"></div>HttpRequest</a></li>
+<li><a href="../spark.server/HttpResponse.html"><div class="icon-class"></div>HttpResponse</a></li>
+<li><a href="../spark.server/HttpStatus.html"><div class="icon-class"></div>HttpStatus</a></li>
+<li><a href="../spark.server/PicoServer.html"><div class="icon-class"></div>PicoServer</a></li>
+<li><a href="../spark.server/PicoServlet.html"><div class="icon-class"></div>PicoServlet</a></li>
+<li><a href="../spark.server/HttpException.html"><div class="icon-exception"></div>HttpException</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>HttpHeaders</strong>
+          abstract class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>Access to the HTTP headers for requests and responses. In some
+situations the headers will be immutable and the mutating methods
+will then throw exceptions.</p>
+<p>For all operations on HTTP headers the header name is
+case-insensitive.</p>
+<pre class="source">
+abstract class HttpHeaders {
+ static const ACCEPT = "accept";
+ static const ACCEPT_CHARSET = "accept-charset";
+ static const ACCEPT_ENCODING = "accept-encoding";
+ static const ACCEPT_LANGUAGE = "accept-language";
+ static const ACCEPT_RANGES = "accept-ranges";
+ static const AGE = "age";
+ static const ALLOW = "allow";
+ static const AUTHORIZATION = "authorization";
+ static const CACHE_CONTROL = "cache-control";
+ static const CONNECTION = "connection";
+ static const CONTENT_ENCODING = "content-encoding";
+ static const CONTENT_LANGUAGE = "content-language";
+ static const CONTENT_LENGTH = "content-length";
+ static const CONTENT_LOCATION = "content-location";
+ static const CONTENT_MD5 = "content-md5";
+ static const CONTENT_RANGE = "content-range";
+ static const CONTENT_TYPE = "content-type";
+ static const DATE = "date";
+ static const ETAG = "etag";
+ static const EXPECT = "expect";
+ static const EXPIRES = "expires";
+ static const FROM = "from";
+ static const HOST = "host";
+ static const IF_MATCH = "if-match";
+ static const IF_MODIFIED_SINCE = "if-modified-since";
+ static const IF_NONE_MATCH = "if-none-match";
+ static const IF_RANGE = "if-range";
+ static const IF_UNMODIFIED_SINCE = "if-unmodified-since";
+ static const LAST_MODIFIED = "last-modified";
+ static const LOCATION = "location";
+ static const MAX_FORWARDS = "max-forwards";
+ static const PRAGMA = "pragma";
+ static const PROXY_AUTHENTICATE = "proxy-authenticate";
+ static const PROXY_AUTHORIZATION = "proxy-authorization";
+ static const RANGE = "range";
+ static const REFERER = "referer";
+ static const RETRY_AFTER = "retry-after";
+ static const SERVER = "server";
+ static const TE = "te";
+ static const TRAILER = "trailer";
+ static const TRANSFER_ENCODING = "transfer-encoding";
+ static const UPGRADE = "upgrade";
+ static const USER_AGENT = "user-agent";
+ static const VARY = "vary";
+ static const VIA = "via";
+ static const WARNING = "warning";
+ static const WWW_AUTHENTICATE = "www-authenticate";
+
+ // Cookie headers from RFC 6265.
+ static const COOKIE = "cookie";
+ static const SET_COOKIE = "set-cookie";
+
+ static const GENERAL_HEADERS = const [CACHE_CONTROL,
+                                       CONNECTION,
+                                       DATE,
+                                       PRAGMA,
+                                       TRAILER,
+                                       TRANSFER_ENCODING,
+                                       UPGRADE,
+                                       VIA,
+                                       WARNING];
+
+ static const ENTITY_HEADERS = const [ALLOW,
+                                      CONTENT_ENCODING,
+                                      CONTENT_LANGUAGE,
+                                      CONTENT_LENGTH,
+                                      CONTENT_LOCATION,
+                                      CONTENT_MD5,
+                                      CONTENT_RANGE,
+                                      CONTENT_TYPE,
+                                      EXPIRES,
+                                      LAST_MODIFIED];
+
+
+ static const RESPONSE_HEADERS = const [ACCEPT_RANGES,
+                                        AGE,
+                                        ETAG,
+                                        LOCATION,
+                                        PROXY_AUTHENTICATE,
+                                        RETRY_AFTER,
+                                        SERVER,
+                                        VARY,
+                                        WWW_AUTHENTICATE];
+
+ static const REQUEST_HEADERS = const [ACCEPT,
+                                       ACCEPT_CHARSET,
+                                       ACCEPT_ENCODING,
+                                       ACCEPT_LANGUAGE,
+                                       AUTHORIZATION,
+                                       EXPECT,
+                                       FROM,
+                                       HOST,
+                                       IF_MATCH,
+                                       IF_MODIFIED_SINCE,
+                                       IF_NONE_MATCH,
+                                       IF_RANGE,
+                                       IF_UNMODIFIED_SINCE,
+                                       MAX_FORWARDS,
+                                       PROXY_AUTHORIZATION,
+                                       RANGE,
+                                       REFERER,
+                                       TE,
+                                       USER_AGENT];
+
+ /**
+  * Returns the list of values for the header named [name]. If there
+  * is no header with the provided name, [:null:] will be returned.
+  */
+ List&lt;String&gt; operator[](String name);
+
+ /**
+  * Convenience method for the value for a single valued header. If
+  * there is no header with the provided name, [:null:] will be
+  * returned. If the header has more than one value an exception is
+  * thrown.
+  */
+ String value(String name);
+
+ /**
+  * Adds a header value. The header named [name] will have the value
+  * [value] added to its list of values. Some headers are single
+  * valued, and for these adding a value will replace the previous
+  * value. If the value is of type DateTime a HTTP date format will be
+  * applied. If the value is a [:List:] each element of the list will
+  * be added separately. For all other types the default [:toString:]
+  * method will be used.
+  */
+ void add(String name, Object value);
+
+ /**
+  * Sets a header. The header named [name] will have all its values
+  * cleared before the value [value] is added as its value.
+  */
+ void set(String name, Object value);
+
+ /**
+  * Removes a specific value for a header name. Some headers have
+  * system supplied values and for these the system supplied values
+  * will still be added to the collection of values for the header.
+  */
+ void remove(String name, Object value);
+
+ /**
+  * Removes all values for the specified header name. Some headers
+  * have system supplied values and for these the system supplied
+  * values will still be added to the collection of values for the
+  * header.
+  */
+ void removeAll(String name);
+
+ /**
+  * Enumerates the headers, applying the function [f] to each
+  * header. The header name passed in [:name:] will be all lower
+  * case.
+  */
+ void forEach(void f(String name, List&lt;String&gt; values));
+
+ /**
+  * Disables folding for the header named [name] when sending the HTTP
+  * header. By default, multiple header values are folded into a
+  * single header line by separating the values with commas. The
+  * 'set-cookie' header has folding disabled by default.
+  */
+ void noFolding(String name);
+
+ /**
+  * Gets and sets the date. The value of this property will
+  * reflect the 'date' header.
+  */
+ DateTime date;
+
+ /**
+  * Gets and sets the expiry date. The value of this property will
+  * reflect the 'expires' header.
+  */
+ DateTime expires;
+
+ /**
+  * Gets and sets the "if-modified-since" date. The value of this property will
+  * reflect the "if-modified-since" header.
+  */
+ DateTime ifModifiedSince;
+
+ /**
+  * Gets and sets the host part of the 'host' header for the
+  * connection.
+  */
+ String host;
+
+ /**
+  * Gets and sets the port part of the 'host' header for the
+  * connection.
+  */
+ int port;
+
+ /**
+  * Gets and sets the content type. Note that the content type in the header
+  * will only be updated if this field is set directly. Mutating the returned
+  * current value will have no effect.
+  */
+ String contentType;
+
+ /**
+  * Gets and sets the content length header value.
+  */
+ int contentLength;
+
+ /**
+  * Gets and sets the persistent connection header value.
+  */
+ bool persistentConnection;
+
+ /**
+  * Gets and sets the chunked transfer encoding header value.
+  */
+ bool chunkedTransferEncoding;
+}
+</pre>
+</div>
+<div>
+<h3>Static Properties</h3>
+<div class="field"><h4 id="ACCEPT">
+<button class="show-code">Code</button>
+const         <strong>ACCEPT</strong> <a class="anchor-link"
+            href="#ACCEPT"
+            title="Permalink to HttpHeaders.ACCEPT">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ACCEPT = "accept"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ACCEPT_CHARSET">
+<button class="show-code">Code</button>
+const         <strong>ACCEPT_CHARSET</strong> <a class="anchor-link"
+            href="#ACCEPT_CHARSET"
+            title="Permalink to HttpHeaders.ACCEPT_CHARSET">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ACCEPT_CHARSET = "accept-charset"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ACCEPT_ENCODING">
+<button class="show-code">Code</button>
+const         <strong>ACCEPT_ENCODING</strong> <a class="anchor-link"
+            href="#ACCEPT_ENCODING"
+            title="Permalink to HttpHeaders.ACCEPT_ENCODING">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ACCEPT_ENCODING = "accept-encoding"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ACCEPT_LANGUAGE">
+<button class="show-code">Code</button>
+const         <strong>ACCEPT_LANGUAGE</strong> <a class="anchor-link"
+            href="#ACCEPT_LANGUAGE"
+            title="Permalink to HttpHeaders.ACCEPT_LANGUAGE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ACCEPT_LANGUAGE = "accept-language"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ACCEPT_RANGES">
+<button class="show-code">Code</button>
+const         <strong>ACCEPT_RANGES</strong> <a class="anchor-link"
+            href="#ACCEPT_RANGES"
+            title="Permalink to HttpHeaders.ACCEPT_RANGES">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ACCEPT_RANGES = "accept-ranges"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="AGE">
+<button class="show-code">Code</button>
+const         <strong>AGE</strong> <a class="anchor-link"
+            href="#AGE"
+            title="Permalink to HttpHeaders.AGE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const AGE = "age"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ALLOW">
+<button class="show-code">Code</button>
+const         <strong>ALLOW</strong> <a class="anchor-link"
+            href="#ALLOW"
+            title="Permalink to HttpHeaders.ALLOW">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ALLOW = "allow"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="AUTHORIZATION">
+<button class="show-code">Code</button>
+const         <strong>AUTHORIZATION</strong> <a class="anchor-link"
+            href="#AUTHORIZATION"
+            title="Permalink to HttpHeaders.AUTHORIZATION">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const AUTHORIZATION = "authorization"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CACHE_CONTROL">
+<button class="show-code">Code</button>
+const         <strong>CACHE_CONTROL</strong> <a class="anchor-link"
+            href="#CACHE_CONTROL"
+            title="Permalink to HttpHeaders.CACHE_CONTROL">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CACHE_CONTROL = "cache-control"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONNECTION">
+<button class="show-code">Code</button>
+const         <strong>CONNECTION</strong> <a class="anchor-link"
+            href="#CONNECTION"
+            title="Permalink to HttpHeaders.CONNECTION">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONNECTION = "connection"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONTENT_ENCODING">
+<button class="show-code">Code</button>
+const         <strong>CONTENT_ENCODING</strong> <a class="anchor-link"
+            href="#CONTENT_ENCODING"
+            title="Permalink to HttpHeaders.CONTENT_ENCODING">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONTENT_ENCODING = "content-encoding"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONTENT_LANGUAGE">
+<button class="show-code">Code</button>
+const         <strong>CONTENT_LANGUAGE</strong> <a class="anchor-link"
+            href="#CONTENT_LANGUAGE"
+            title="Permalink to HttpHeaders.CONTENT_LANGUAGE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONTENT_LANGUAGE = "content-language"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONTENT_LENGTH">
+<button class="show-code">Code</button>
+const         <strong>CONTENT_LENGTH</strong> <a class="anchor-link"
+            href="#CONTENT_LENGTH"
+            title="Permalink to HttpHeaders.CONTENT_LENGTH">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONTENT_LENGTH = "content-length"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONTENT_LOCATION">
+<button class="show-code">Code</button>
+const         <strong>CONTENT_LOCATION</strong> <a class="anchor-link"
+            href="#CONTENT_LOCATION"
+            title="Permalink to HttpHeaders.CONTENT_LOCATION">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONTENT_LOCATION = "content-location"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONTENT_MD5">
+<button class="show-code">Code</button>
+const         <strong>CONTENT_MD5</strong> <a class="anchor-link"
+            href="#CONTENT_MD5"
+            title="Permalink to HttpHeaders.CONTENT_MD5">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONTENT_MD5 = "content-md5"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONTENT_RANGE">
+<button class="show-code">Code</button>
+const         <strong>CONTENT_RANGE</strong> <a class="anchor-link"
+            href="#CONTENT_RANGE"
+            title="Permalink to HttpHeaders.CONTENT_RANGE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONTENT_RANGE = "content-range"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="CONTENT_TYPE">
+<button class="show-code">Code</button>
+const         <strong>CONTENT_TYPE</strong> <a class="anchor-link"
+            href="#CONTENT_TYPE"
+            title="Permalink to HttpHeaders.CONTENT_TYPE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const CONTENT_TYPE = "content-type"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="COOKIE">
+<button class="show-code">Code</button>
+const         <strong>COOKIE</strong> <a class="anchor-link"
+            href="#COOKIE"
+            title="Permalink to HttpHeaders.COOKIE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const COOKIE = "cookie"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="DATE">
+<button class="show-code">Code</button>
+const         <strong>DATE</strong> <a class="anchor-link"
+            href="#DATE"
+            title="Permalink to HttpHeaders.DATE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const DATE = "date"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ENTITY_HEADERS">
+<button class="show-code">Code</button>
+const         <strong>ENTITY_HEADERS</strong> <a class="anchor-link"
+            href="#ENTITY_HEADERS"
+            title="Permalink to HttpHeaders.ENTITY_HEADERS">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ENTITY_HEADERS = const [ALLOW,
+                                    CONTENT_ENCODING,
+                                    CONTENT_LANGUAGE,
+                                    CONTENT_LENGTH,
+                                    CONTENT_LOCATION,
+                                    CONTENT_MD5,
+                                    CONTENT_RANGE,
+                                    CONTENT_TYPE,
+                                    EXPIRES,
+                                    LAST_MODIFIED]
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ETAG">
+<button class="show-code">Code</button>
+const         <strong>ETAG</strong> <a class="anchor-link"
+            href="#ETAG"
+            title="Permalink to HttpHeaders.ETAG">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const ETAG = "etag"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="EXPECT">
+<button class="show-code">Code</button>
+const         <strong>EXPECT</strong> <a class="anchor-link"
+            href="#EXPECT"
+            title="Permalink to HttpHeaders.EXPECT">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const EXPECT = "expect"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="EXPIRES">
+<button class="show-code">Code</button>
+const         <strong>EXPIRES</strong> <a class="anchor-link"
+            href="#EXPIRES"
+            title="Permalink to HttpHeaders.EXPIRES">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const EXPIRES = "expires"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="FROM">
+<button class="show-code">Code</button>
+const         <strong>FROM</strong> <a class="anchor-link"
+            href="#FROM"
+            title="Permalink to HttpHeaders.FROM">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const FROM = "from"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="GENERAL_HEADERS">
+<button class="show-code">Code</button>
+const         <strong>GENERAL_HEADERS</strong> <a class="anchor-link"
+            href="#GENERAL_HEADERS"
+            title="Permalink to HttpHeaders.GENERAL_HEADERS">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const GENERAL_HEADERS = const [CACHE_CONTROL,
+                                     CONNECTION,
+                                     DATE,
+                                     PRAGMA,
+                                     TRAILER,
+                                     TRANSFER_ENCODING,
+                                     UPGRADE,
+                                     VIA,
+                                     WARNING]
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="HOST">
+<button class="show-code">Code</button>
+const         <strong>HOST</strong> <a class="anchor-link"
+            href="#HOST"
+            title="Permalink to HttpHeaders.HOST">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const HOST = "host"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="IF_MATCH">
+<button class="show-code">Code</button>
+const         <strong>IF_MATCH</strong> <a class="anchor-link"
+            href="#IF_MATCH"
+            title="Permalink to HttpHeaders.IF_MATCH">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const IF_MATCH = "if-match"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="IF_MODIFIED_SINCE">
+<button class="show-code">Code</button>
+const         <strong>IF_MODIFIED_SINCE</strong> <a class="anchor-link"
+            href="#IF_MODIFIED_SINCE"
+            title="Permalink to HttpHeaders.IF_MODIFIED_SINCE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const IF_MODIFIED_SINCE = "if-modified-since"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="IF_NONE_MATCH">
+<button class="show-code">Code</button>
+const         <strong>IF_NONE_MATCH</strong> <a class="anchor-link"
+            href="#IF_NONE_MATCH"
+            title="Permalink to HttpHeaders.IF_NONE_MATCH">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const IF_NONE_MATCH = "if-none-match"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="IF_RANGE">
+<button class="show-code">Code</button>
+const         <strong>IF_RANGE</strong> <a class="anchor-link"
+            href="#IF_RANGE"
+            title="Permalink to HttpHeaders.IF_RANGE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const IF_RANGE = "if-range"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="IF_UNMODIFIED_SINCE">
+<button class="show-code">Code</button>
+const         <strong>IF_UNMODIFIED_SINCE</strong> <a class="anchor-link"
+            href="#IF_UNMODIFIED_SINCE"
+            title="Permalink to HttpHeaders.IF_UNMODIFIED_SINCE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const IF_UNMODIFIED_SINCE = "if-unmodified-since"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="LAST_MODIFIED">
+<button class="show-code">Code</button>
+const         <strong>LAST_MODIFIED</strong> <a class="anchor-link"
+            href="#LAST_MODIFIED"
+            title="Permalink to HttpHeaders.LAST_MODIFIED">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const LAST_MODIFIED = "last-modified"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="LOCATION">
+<button class="show-code">Code</button>
+const         <strong>LOCATION</strong> <a class="anchor-link"
+            href="#LOCATION"
+            title="Permalink to HttpHeaders.LOCATION">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const LOCATION = "location"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="MAX_FORWARDS">
+<button class="show-code">Code</button>
+const         <strong>MAX_FORWARDS</strong> <a class="anchor-link"
+            href="#MAX_FORWARDS"
+            title="Permalink to HttpHeaders.MAX_FORWARDS">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const MAX_FORWARDS = "max-forwards"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="PRAGMA">
+<button class="show-code">Code</button>
+const         <strong>PRAGMA</strong> <a class="anchor-link"
+            href="#PRAGMA"
+            title="Permalink to HttpHeaders.PRAGMA">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const PRAGMA = "pragma"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="PROXY_AUTHENTICATE">
+<button class="show-code">Code</button>
+const         <strong>PROXY_AUTHENTICATE</strong> <a class="anchor-link"
+            href="#PROXY_AUTHENTICATE"
+            title="Permalink to HttpHeaders.PROXY_AUTHENTICATE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const PROXY_AUTHENTICATE = "proxy-authenticate"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="PROXY_AUTHORIZATION">
+<button class="show-code">Code</button>
+const         <strong>PROXY_AUTHORIZATION</strong> <a class="anchor-link"
+            href="#PROXY_AUTHORIZATION"
+            title="Permalink to HttpHeaders.PROXY_AUTHORIZATION">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const PROXY_AUTHORIZATION = "proxy-authorization"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="RANGE">
+<button class="show-code">Code</button>
+const         <strong>RANGE</strong> <a class="anchor-link"
+            href="#RANGE"
+            title="Permalink to HttpHeaders.RANGE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const RANGE = "range"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="REFERER">
+<button class="show-code">Code</button>
+const         <strong>REFERER</strong> <a class="anchor-link"
+            href="#REFERER"
+            title="Permalink to HttpHeaders.REFERER">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const REFERER = "referer"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="REQUEST_HEADERS">
+<button class="show-code">Code</button>
+const         <strong>REQUEST_HEADERS</strong> <a class="anchor-link"
+            href="#REQUEST_HEADERS"
+            title="Permalink to HttpHeaders.REQUEST_HEADERS">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const REQUEST_HEADERS = const [ACCEPT,
+                                     ACCEPT_CHARSET,
+                                     ACCEPT_ENCODING,
+                                     ACCEPT_LANGUAGE,
+                                     AUTHORIZATION,
+                                     EXPECT,
+                                     FROM,
+                                     HOST,
+                                     IF_MATCH,
+                                     IF_MODIFIED_SINCE,
+                                     IF_NONE_MATCH,
+                                     IF_RANGE,
+                                     IF_UNMODIFIED_SINCE,
+                                     MAX_FORWARDS,
+                                     PROXY_AUTHORIZATION,
+                                     RANGE,
+                                     REFERER,
+                                     TE,
+                                     USER_AGENT]
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="RESPONSE_HEADERS">
+<button class="show-code">Code</button>
+const         <strong>RESPONSE_HEADERS</strong> <a class="anchor-link"
+            href="#RESPONSE_HEADERS"
+            title="Permalink to HttpHeaders.RESPONSE_HEADERS">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const RESPONSE_HEADERS = const [ACCEPT_RANGES,
+                                      AGE,
+                                      ETAG,
+                                      LOCATION,
+                                      PROXY_AUTHENTICATE,
+                                      RETRY_AFTER,
+                                      SERVER,
+                                      VARY,
+                                      WWW_AUTHENTICATE]
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="RETRY_AFTER">
+<button class="show-code">Code</button>
+const         <strong>RETRY_AFTER</strong> <a class="anchor-link"
+            href="#RETRY_AFTER"
+            title="Permalink to HttpHeaders.RETRY_AFTER">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const RETRY_AFTER = "retry-after"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="SERVER">
+<button class="show-code">Code</button>
+const         <strong>SERVER</strong> <a class="anchor-link"
+            href="#SERVER"
+            title="Permalink to HttpHeaders.SERVER">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const SERVER = "server"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="SET_COOKIE">
+<button class="show-code">Code</button>
+const         <strong>SET_COOKIE</strong> <a class="anchor-link"
+            href="#SET_COOKIE"
+            title="Permalink to HttpHeaders.SET_COOKIE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const SET_COOKIE = "set-cookie"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="TE">
+<button class="show-code">Code</button>
+const         <strong>TE</strong> <a class="anchor-link"
+            href="#TE"
+            title="Permalink to HttpHeaders.TE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const TE = "te"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="TRAILER">
+<button class="show-code">Code</button>
+const         <strong>TRAILER</strong> <a class="anchor-link"
+            href="#TRAILER"
+            title="Permalink to HttpHeaders.TRAILER">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const TRAILER = "trailer"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="TRANSFER_ENCODING">
+<button class="show-code">Code</button>
+const         <strong>TRANSFER_ENCODING</strong> <a class="anchor-link"
+            href="#TRANSFER_ENCODING"
+            title="Permalink to HttpHeaders.TRANSFER_ENCODING">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const TRANSFER_ENCODING = "transfer-encoding"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="UPGRADE">
+<button class="show-code">Code</button>
+const         <strong>UPGRADE</strong> <a class="anchor-link"
+            href="#UPGRADE"
+            title="Permalink to HttpHeaders.UPGRADE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const UPGRADE = "upgrade"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="USER_AGENT">
+<button class="show-code">Code</button>
+const         <strong>USER_AGENT</strong> <a class="anchor-link"
+            href="#USER_AGENT"
+            title="Permalink to HttpHeaders.USER_AGENT">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const USER_AGENT = "user-agent"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="VARY">
+<button class="show-code">Code</button>
+const         <strong>VARY</strong> <a class="anchor-link"
+            href="#VARY"
+            title="Permalink to HttpHeaders.VARY">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const VARY = "vary"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="VIA">
+<button class="show-code">Code</button>
+const         <strong>VIA</strong> <a class="anchor-link"
+            href="#VIA"
+            title="Permalink to HttpHeaders.VIA">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const VIA = "via"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="WARNING">
+<button class="show-code">Code</button>
+const         <strong>WARNING</strong> <a class="anchor-link"
+            href="#WARNING"
+            title="Permalink to HttpHeaders.WARNING">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const WARNING = "warning"
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="WWW_AUTHENTICATE">
+<button class="show-code">Code</button>
+const         <strong>WWW_AUTHENTICATE</strong> <a class="anchor-link"
+            href="#WWW_AUTHENTICATE"
+            title="Permalink to HttpHeaders.WWW_AUTHENTICATE">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static const WWW_AUTHENTICATE = "www-authenticate"
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="chunkedTransferEncoding">
+<button class="show-code">Code</button>
+bool         <strong>chunkedTransferEncoding</strong> <a class="anchor-link"
+            href="#chunkedTransferEncoding"
+            title="Permalink to HttpHeaders.chunkedTransferEncoding">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the chunked transfer encoding header value.</p>
+<pre class="source">
+bool chunkedTransferEncoding
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="contentLength">
+<button class="show-code">Code</button>
+int         <strong>contentLength</strong> <a class="anchor-link"
+            href="#contentLength"
+            title="Permalink to HttpHeaders.contentLength">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the content length header value.</p>
+<pre class="source">
+int contentLength
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="contentType">
+<button class="show-code">Code</button>
+String         <strong>contentType</strong> <a class="anchor-link"
+            href="#contentType"
+            title="Permalink to HttpHeaders.contentType">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the content type. Note that the content type in the header
+will only be updated if this field is set directly. Mutating the returned
+current value will have no effect.</p>
+<pre class="source">
+String contentType
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="date">
+<button class="show-code">Code</button>
+DateTime         <strong>date</strong> <a class="anchor-link"
+            href="#date"
+            title="Permalink to HttpHeaders.date">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the date. The value of this property will
+reflect the 'date' header.</p>
+<pre class="source">
+DateTime date
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="expires">
+<button class="show-code">Code</button>
+DateTime         <strong>expires</strong> <a class="anchor-link"
+            href="#expires"
+            title="Permalink to HttpHeaders.expires">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the expiry date. The value of this property will
+reflect the 'expires' header.</p>
+<pre class="source">
+DateTime expires
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="host">
+<button class="show-code">Code</button>
+String         <strong>host</strong> <a class="anchor-link"
+            href="#host"
+            title="Permalink to HttpHeaders.host">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the host part of the 'host' header for the
+connection.</p>
+<pre class="source">
+String host
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ifModifiedSince">
+<button class="show-code">Code</button>
+DateTime         <strong>ifModifiedSince</strong> <a class="anchor-link"
+            href="#ifModifiedSince"
+            title="Permalink to HttpHeaders.ifModifiedSince">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the "if-modified-since" date. The value of this property will
+reflect the "if-modified-since" header.</p>
+<pre class="source">
+DateTime ifModifiedSince
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="persistentConnection">
+<button class="show-code">Code</button>
+bool         <strong>persistentConnection</strong> <a class="anchor-link"
+            href="#persistentConnection"
+            title="Permalink to HttpHeaders.persistentConnection">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the persistent connection header value.</p>
+<pre class="source">
+bool persistentConnection
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="port">
+<button class="show-code">Code</button>
+int         <strong>port</strong> <a class="anchor-link"
+            href="#port"
+            title="Permalink to HttpHeaders.port">#</a>
+        </h4>
+        <div class="doc">
+<p>Gets and sets the port part of the 'host' header for the
+connection.</p>
+<pre class="source">
+int port
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Operators</h3>
+<div class="method"><h4 id="[]">
+abstract List&lt;String&gt; <strong>operator []</strong>(String name) <a class="anchor-link" href="#[]"
+              title="Permalink to HttpHeaders.operator []">#</a></h4>
+<div class="doc">
+<p>Returns the list of values for the header named 
+<span class="param">name</span>. If there
+is no header with the provided name, <code>null</code> will be returned.</p>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="add">
+abstract void <strong>add</strong>(String name, Object value) <a class="anchor-link" href="#add"
+              title="Permalink to HttpHeaders.add">#</a></h4>
+<div class="doc">
+<p>Adds a header value. The header named 
+<span class="param">name</span> will have the value
+
+<span class="param">value</span> added to its list of values. Some headers are single
+valued, and for these adding a value will replace the previous
+value. If the value is of type DateTime a HTTP date format will be
+applied. If the value is a <code>List</code> each element of the list will
+be added separately. For all other types the default <code>toString</code>
+method will be used.</p>
+</div>
+</div>
+<div class="method"><h4 id="forEach">
+abstract void <strong>forEach</strong>(void f(String name, List&lt;String&gt; values)) <a class="anchor-link" href="#forEach"
+              title="Permalink to HttpHeaders.forEach">#</a></h4>
+<div class="doc">
+<p>Enumerates the headers, applying the function 
+<span class="param">f</span> to each
+header. The header name passed in <code>name</code> will be all lower
+case.</p>
+</div>
+</div>
+<div class="method"><h4 id="noFolding">
+abstract void <strong>noFolding</strong>(String name) <a class="anchor-link" href="#noFolding"
+              title="Permalink to HttpHeaders.noFolding">#</a></h4>
+<div class="doc">
+<p>Disables folding for the header named 
+<span class="param">name</span> when sending the HTTP
+header. By default, multiple header values are folded into a
+single header line by separating the values with commas. The
+'set-cookie' header has folding disabled by default.</p>
+</div>
+</div>
+<div class="method"><h4 id="remove">
+abstract void <strong>remove</strong>(String name, Object value) <a class="anchor-link" href="#remove"
+              title="Permalink to HttpHeaders.remove">#</a></h4>
+<div class="doc">
+<p>Removes a specific value for a header name. Some headers have
+system supplied values and for these the system supplied values
+will still be added to the collection of values for the header.</p>
+</div>
+</div>
+<div class="method"><h4 id="removeAll">
+abstract void <strong>removeAll</strong>(String name) <a class="anchor-link" href="#removeAll"
+              title="Permalink to HttpHeaders.removeAll">#</a></h4>
+<div class="doc">
+<p>Removes all values for the specified header name. Some headers
+have system supplied values and for these the system supplied
+values will still be added to the collection of values for the
+header.</p>
+</div>
+</div>
+<div class="method"><h4 id="set">
+abstract void <strong>set</strong>(String name, Object value) <a class="anchor-link" href="#set"
+              title="Permalink to HttpHeaders.set">#</a></h4>
+<div class="doc">
+<p>Sets a header. The header named 
+<span class="param">name</span> will have all its values
+cleared before the value 
+<span class="param">value</span> is added as its value.</p>
+</div>
+</div>
+<div class="method"><h4 id="value">
+abstract String <strong>value</strong>(String name) <a class="anchor-link" href="#value"
+              title="Permalink to HttpHeaders.value">#</a></h4>
+<div class="doc">
+<p>Convenience method for the value for a single valued header. If
+there is no header with the provided name, <code>null</code> will be
+returned. If the header has more than one value an exception is
+thrown.</p>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

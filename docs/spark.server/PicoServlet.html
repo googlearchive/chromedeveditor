@@ -1,0 +1,90 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>PicoServlet abstract class / spark.server Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="spark.server" data-type="PicoServlet">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../spark.server.html">spark.server</a> &rsaquo; <a href="../spark.server/PicoServlet.html">PicoServlet</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><ul class="icon">
+<li><a href="../spark.server/BytesBuilder.html"><div class="icon-class"></div>BytesBuilder</a></li>
+<li><a href="../spark.server/HttpHeaders.html"><div class="icon-class"></div>HttpHeaders</a></li>
+<li><a href="../spark.server/HttpRequest.html"><div class="icon-class"></div>HttpRequest</a></li>
+<li><a href="../spark.server/HttpResponse.html"><div class="icon-class"></div>HttpResponse</a></li>
+<li><a href="../spark.server/HttpStatus.html"><div class="icon-class"></div>HttpStatus</a></li>
+<li><a href="../spark.server/PicoServer.html"><div class="icon-class"></div>PicoServer</a></li>
+<li><div class="icon-class"></div><strong>PicoServlet</strong></li>
+<li><a href="../spark.server/HttpException.html"><div class="icon-exception"></div>HttpException</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>PicoServlet</strong>
+          abstract class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>One or more <a class="crossref" href="../spark.server/PicoServlet.html">PicoServlet</a>s can be added to a <a class="crossref" href="../spark.server/PicoServer.html">PicoServer</a> in order to handle
+http requests.</p>
+<pre class="source">
+abstract class PicoServlet {
+ /**
+  * Returns whether this servlet can serve the given [HttpRequest].
+  */
+ bool canServe(HttpRequest request) =&gt; true;
+
+ /**
+  * Handle the given [HttpRequest], and return a Future with a [HttpResponse].
+  */
+ Future&lt;HttpResponse&gt; serve(HttpRequest request);
+}
+</pre>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="canServe">
+<button class="show-code">Code</button>
+bool <strong>canServe</strong>(<a href="../spark.server/HttpRequest.html">HttpRequest</a> request) <a class="anchor-link" href="#canServe"
+              title="Permalink to PicoServlet.canServe">#</a></h4>
+<div class="doc">
+<p>Returns whether this servlet can serve the given <a class="crossref" href="../spark.server/HttpRequest.html">HttpRequest</a>.</p>
+<pre class="source">
+bool canServe(HttpRequest request) =&gt; true;
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="serve">
+abstract Future&lt;<a href="../spark.server/HttpResponse.html">HttpResponse</a>&gt; <strong>serve</strong>(<a href="../spark.server/HttpRequest.html">HttpRequest</a> request) <a class="anchor-link" href="#serve"
+              title="Permalink to PicoServlet.serve">#</a></h4>
+<div class="doc">
+<p>Handle the given <a class="crossref" href="../spark.server/HttpRequest.html">HttpRequest</a>, and return a Future with a <a class="crossref" href="../spark.server/HttpResponse.html">HttpResponse</a>.</p>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

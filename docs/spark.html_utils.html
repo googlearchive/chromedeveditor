@@ -1,0 +1,98 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>spark.html_utils Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="favicon.ico">
+        
+        </head>
+        <body data-library="spark.html_utils">
+        <div class="page">
+        <div class="header">
+          <a href="index.html"><div class="logo"></div></a>
+          <a href="index.html">Dart Documentation</a>
+         &rsaquo; <a href="spark.html_utils.html">spark.html_utils</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="git.html">git</a></h2><h2><div class="icon-library"></div><a href="git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><strong>spark.html_utils</strong></h2><h2><div class="icon-library"></div><a href="spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+<h2><strong>spark.html_utils</strong> library</h2>
+<div>
+<h3>Functions</h3>
+<div class="method"><h4 id="isMouseLocationInElement">
+<button class="show-code">Code</button>
+bool <strong>isMouseLocationInElement</strong>(MouseEvent event, Element element, int marginX, int marginY) <a class="anchor-link" href="#isMouseLocationInElement"
+              title="Permalink to isMouseLocationInElement">#</a></h4>
+<div class="doc">
+<p>Returns true if the mouse cursor is inside an element.
+<code>marginX</code> and <code>marginY</code> will define a vertical and horizontal margin to
+increase the size of the matching area.</p>
+<pre class="source">
+bool isMouseLocationInElement(MouseEvent event,
+                             Element element,
+                             int marginX,
+                             int marginY) {
+ var rect = element.getBoundingClientRect();
+ int width = rect.width + marginX * 2;
+ int left = rect.left - marginX;
+ int height = rect.height + marginY * 2;
+ int top = rect.top - marginY;
+ rect = new Rectangle(left, top, width, height);
+
+ var location = getEventAbsolutePosition(event);
+ return rect.containsPoint(location);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getEventAbsolutePosition">
+<button class="show-code">Code</button>
+Point <strong>getEventAbsolutePosition</strong>(MouseEvent event) <a class="anchor-link" href="#getEventAbsolutePosition"
+              title="Permalink to getEventAbsolutePosition">#</a></h4>
+<div class="doc">
+<p>Returns position of the mouse cursor within the page</p>
+<pre class="source">
+Point getEventAbsolutePosition(MouseEvent event) {
+ return getAbsolutePosition(event.target) + event.offset;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getAbsolutePosition">
+<button class="show-code">Code</button>
+Point <strong>getAbsolutePosition</strong>(Element element) <a class="anchor-link" href="#getAbsolutePosition"
+              title="Permalink to getAbsolutePosition">#</a></h4>
+<div class="doc">
+<p> Returns position of the element within the page.</p>
+<pre class="source">
+Point getAbsolutePosition(Element element) {
+ Point result = new Point();
+ while (element != null) {
+   result += element.offset.topLeft;
+   element = element.offsetParent;
+ }
+ return result;
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="client-static.js"></script>
+        </body></html>
+        

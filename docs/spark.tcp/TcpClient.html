@@ -1,0 +1,237 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>TcpClient class / spark.tcp Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="spark.tcp" data-type="TcpClient">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../spark.tcp.html">spark.tcp</a> &rsaquo; <a href="../spark.tcp/TcpClient.html">TcpClient</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><ul class="icon">
+<li><div class="icon-class"></div><strong>TcpClient</strong></li>
+<li><a href="../spark.tcp/TcpServer.html"><div class="icon-class"></div>TcpServer</a></li>
+<li><a href="../spark.tcp/SocketException.html"><div class="icon-exception"></div>SocketException</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>TcpClient</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>A wrapper around the <code>chrome.socket</code> APIs used to read and write data to a
+socket.</p>
+<h2>Usage:</h2>
+<pre><code>TcpCLient.createClient();
+stream.listen();
+sink.add(data);
+dispose();
+</code></pre>
+<pre class="source">
+class TcpClient {
+ final int _socketId;
+
+ StreamController&lt;List&lt;int&gt;&gt; _controller;
+ _SocketEventSink _sink;
+ bool _keepPolling = true;
+
+ static Future&lt;TcpClient&gt; createClient(String host, int port) {
+   return chrome_gen.socket.create(chrome_gen.SocketType.TCP).then((chrome_gen.CreateInfo createInfo) {
+     int socketId = createInfo.socketId;
+
+     return chrome_gen.socket.connect(socketId, host, port).then((int result) {
+       if (result &lt; 0) {
+         chrome_gen.socket.destroy(socketId);
+         throw new SocketException('unable to connect to ${host} ${port}: ${result}');
+       } else {
+         return new TcpClient._fromSocketId(socketId);
+       }
+     });
+   });
+ }
+
+ TcpClient._fromSocketId(this._socketId) {
+   _controller = new StreamController(
+       onListen: _pollIncoming, onCancel: _stopPolling);
+   _sink = new _SocketEventSink(this);
+ }
+
+ Future&lt;chrome_gen.SocketInfo&gt; getInfo() =&gt; chrome_gen.socket.getInfo(_socketId);
+
+ /**
+  * The read [Stream] for incoming data.
+  */
+ Stream&lt;List&lt;int&gt;&gt; get stream =&gt; _controller.stream;
+
+ /**
+  * The write [EventSink] for outgoing data.
+  */
+ EventSink&lt;List&lt;int&gt;&gt; get sink =&gt; _sink;
+
+ /**
+  * This is a convenience method, fully equivalent to:
+  *
+  *     sink.add(str.codeUnits);
+  *
+  * Note that it does not do UTF8 encoding of the given string. It will
+  * truncate any character that does not fit in 8 bits.
+  */
+ void writeString(String str) =&gt; sink.add(str.codeUnits);
+
+ void dispose() {
+   chrome_gen.socket.disconnect(_socketId);
+ }
+
+ void _pollIncoming() {
+   _keepPolling = true;
+
+   chrome_gen.socket.read(_socketId).then((chrome_gen.SocketReadInfo info) {
+     if (info.resultCode &lt; 0) {
+       // TODO: get the bsd socket codes
+       if (info.resultCode != -15) {
+         _controller.addError(
+             new SocketException("error reading stream: ${info.resultCode}"));
+       }
+       _controller.close();
+     } else {
+       _controller.add(info.data.getBytes());
+
+       if (_keepPolling) {
+         _pollIncoming();
+       }
+     }
+   }).catchError((error) {
+     _controller.addError(
+         new SocketException("error reading stream: ${error}"));
+     _controller.close();
+   });
+ }
+
+ void _stopPolling() {
+   _keepPolling = false;
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Static Methods</h3>
+<div class="method"><h4 id="createClient">
+<button class="show-code">Code</button>
+Future&lt;<a href="../spark.tcp/TcpClient.html">TcpClient</a>&gt; <strong>createClient</strong>(String host, int port) <a class="anchor-link" href="#createClient"
+              title="Permalink to TcpClient.createClient">#</a></h4>
+<div class="doc">
+<pre class="source">
+static Future&lt;TcpClient&gt; createClient(String host, int port) {
+ return chrome_gen.socket.create(chrome_gen.SocketType.TCP).then((chrome_gen.CreateInfo createInfo) {
+   int socketId = createInfo.socketId;
+
+   return chrome_gen.socket.connect(socketId, host, port).then((int result) {
+     if (result &lt; 0) {
+       chrome_gen.socket.destroy(socketId);
+       throw new SocketException('unable to connect to ${host} ${port}: ${result}');
+     } else {
+       return new TcpClient._fromSocketId(socketId);
+     }
+   });
+ });
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="sink">
+<button class="show-code">Code</button>
+final EventSink&lt;List&lt;int&gt;&gt;         <strong>sink</strong> <a class="anchor-link"
+            href="#sink"
+            title="Permalink to TcpClient.sink">#</a>
+        </h4>
+        <div class="doc">
+<p>The write <a class="crossref" href="../dart_async/EventSink.html">EventSink</a> for outgoing data.</p>
+<pre class="source">
+EventSink&lt;List&lt;int&gt;&gt; get sink =&gt; _sink;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="stream">
+<button class="show-code">Code</button>
+final Stream&lt;List&lt;int&gt;&gt;         <strong>stream</strong> <a class="anchor-link"
+            href="#stream"
+            title="Permalink to TcpClient.stream">#</a>
+        </h4>
+        <div class="doc">
+<p>The read <a class="crossref" href="../dart_async/Stream.html">Stream</a> for incoming data.</p>
+<pre class="source">
+Stream&lt;List&lt;int&gt;&gt; get stream =&gt; _controller.stream;
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="dispose">
+<button class="show-code">Code</button>
+void <strong>dispose</strong>() <a class="anchor-link" href="#dispose"
+              title="Permalink to TcpClient.dispose">#</a></h4>
+<div class="doc">
+<pre class="source">
+void dispose() {
+ chrome_gen.socket.disconnect(_socketId);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getInfo">
+<button class="show-code">Code</button>
+Future&lt;SocketInfo&gt; <strong>getInfo</strong>() <a class="anchor-link" href="#getInfo"
+              title="Permalink to TcpClient.getInfo">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;chrome_gen.SocketInfo&gt; getInfo() =&gt; chrome_gen.socket.getInfo(_socketId);
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="writeString">
+<button class="show-code">Code</button>
+void <strong>writeString</strong>(String str) <a class="anchor-link" href="#writeString"
+              title="Permalink to TcpClient.writeString">#</a></h4>
+<div class="doc">
+<p>This is a convenience method, fully equivalent to:</p>
+<pre><code>sink.add(str.codeUnits);
+</code></pre>
+<p>Note that it does not do UTF8 encoding of the given string. It will
+truncate any character that does not fit in 8 bits.</p>
+<pre class="source">
+void writeString(String str) =&gt; sink.add(str.codeUnits);
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

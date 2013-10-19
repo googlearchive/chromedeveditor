@@ -1,0 +1,308 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>Workspace class / spark.workspace Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="spark.workspace" data-type="Workspace">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../spark.workspace.html">spark.workspace</a> &rsaquo; <a href="../spark.workspace/Workspace.html">Workspace</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2><ul class="icon">
+<li><a href="../spark.workspace/Container.html"><div class="icon-class"></div>Container</a></li>
+<li><a href="../spark.workspace/File.html"><div class="icon-class"></div>File</a></li>
+<li><a href="../spark.workspace/Folder.html"><div class="icon-class"></div>Folder</a></li>
+<li><a href="../spark.workspace/Project.html"><div class="icon-class"></div>Project</a></li>
+<li><a href="../spark.workspace/Resource.html"><div class="icon-class"></div>Resource</a></li>
+<li><div class="icon-class"></div><strong>Workspace</strong></li>
+</ul>
+</div>
+<div class="content">
+        <h2><strong>Workspace</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>The Workspace is a top-level entity that can contain files and projects. The
+files that it contains are loose files; they do not have parent folders.</p>
+<pre class="source">
+class Workspace implements Container {
+ Container _parent = null;
+ chrome_gen.Entry _entry = null;
+
+ List&lt;Resource&gt; _children = [];
+ PreferenceStore _store;
+
+ Workspace(PreferenceStore preferenceStore) {
+   this._store = preferenceStore;
+ }
+
+ String get name =&gt; null;
+
+ Container get parent =&gt; null;
+
+ Workspace initialize() {
+   // TODO: initialize workspace with saved info from previous session
+ }
+
+ Future&lt;Resource&gt; link(chrome_gen.Entry entity) {
+
+   if (entity.isFile) {
+     var resource = new File(this, entity);
+     _children.add(resource);
+     return new Future.value(resource);
+   } else {
+     var project = new Project(this, entity);
+     _children.add(project);
+     return _gatherChildren(project);
+   }
+ }
+
+ void unlink(Resource resource) {
+   // TODO: remove resource from list of children
+ }
+
+ List&lt;Resource&gt; getChildren() {
+  return _children;
+ }
+
+ List&lt;File&gt; getFiles() {
+   List list = [];
+   for (var child in _children) {
+     if (child is File) list.add(child);
+   }
+   return list;
+ }
+
+ List&lt;Project&gt; getProjects() {
+   List list = [];
+   for (var child in _children) {
+     if (child is Project) list.add(child);
+   }
+   return list;
+ }
+
+ Project get project =&gt; null;
+
+ void save() {
+   // TODO: save workspace information - maybe in preferences?
+ }
+
+ Future&lt;Resource&gt; _gatherChildren(Container container) {
+   chrome_gen.DirectoryEntry dir = container._entry;
+   List futures = [];
+
+   return dir.createReader().readEntries().then((entries) {
+     for (chrome_gen.Entry ent in entries) {
+       if (ent.isFile) {
+         var file = new File(container, ent);
+         container._children.add(file);
+       } else {
+         var folder = new Folder(container, ent);
+         container._children.add(folder);
+         futures.add(_gatherChildren(folder));
+       }
+     }
+     return Future.wait(futures).then((_) =&gt; container);
+   });
+ }
+}
+</pre>
+</div>
+<h3>Implements</h3>
+<p>
+<span class="type-box"><span class="icon-class"></span><a href="../spark.workspace/Container.html">Container</a></span></p>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="">
+<button class="show-code">Code</button>
+new <strong>Workspace</strong>(<a href="../spark.preferences/PreferenceStore.html">PreferenceStore</a> preferenceStore) <a class="anchor-link" href="#"
+              title="Permalink to Workspace.Workspace">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Creates a new <a class="crossref" href="../dart_core/Object.html">Object</a> instance.</p>
+<p><a class="crossref" href="../dart_core/Object.html">Object</a> instances have no meaningful state, and are only useful
+through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
+only.</p>
+<div class="docs-inherited-from">docs inherited from Object </div></div>
+<pre class="source">
+Workspace(PreferenceStore preferenceStore) {
+ this._store = preferenceStore;
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="name">
+<button class="show-code">Code</button>
+final String         <strong>name</strong> <a class="anchor-link"
+            href="#name"
+            title="Permalink to Workspace.name">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String get name =&gt; null;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="parent">
+<button class="show-code">Code</button>
+final <a href="../spark.workspace/Container.html">Container</a>         <strong>parent</strong> <a class="anchor-link"
+            href="#parent"
+            title="Permalink to Workspace.parent">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+Container get parent =&gt; null;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="project">
+<button class="show-code">Code</button>
+final <a href="../spark.workspace/Project.html">Project</a>         <strong>project</strong> <a class="anchor-link"
+            href="#project"
+            title="Permalink to Workspace.project">#</a>
+        </h4>
+        <div class="doc">
+<div class="inherited">
+<p>Returns the containing <a class="crossref" href="../spark.workspace/Project.html">Project</a>. This can return null for loose files and
+for the workspace.</p>
+<div class="docs-inherited-from">docs inherited from <a href="../spark.workspace/Resource.html">Resource</a> </div></div>
+<pre class="source">
+Project get project =&gt; null;
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="getChildren">
+<button class="show-code">Code</button>
+List&lt;<a href="../spark.workspace/Resource.html">Resource</a>&gt; <strong>getChildren</strong>() <a class="anchor-link" href="#getChildren"
+              title="Permalink to Workspace.getChildren">#</a></h4>
+<div class="doc">
+<pre class="source">
+List&lt;Resource&gt; getChildren() {
+return _children;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getFiles">
+<button class="show-code">Code</button>
+List&lt;<a href="../spark.workspace/File.html">File</a>&gt; <strong>getFiles</strong>() <a class="anchor-link" href="#getFiles"
+              title="Permalink to Workspace.getFiles">#</a></h4>
+<div class="doc">
+<pre class="source">
+List&lt;File&gt; getFiles() {
+ List list = [];
+ for (var child in _children) {
+   if (child is File) list.add(child);
+ }
+ return list;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getProjects">
+<button class="show-code">Code</button>
+List&lt;<a href="../spark.workspace/Project.html">Project</a>&gt; <strong>getProjects</strong>() <a class="anchor-link" href="#getProjects"
+              title="Permalink to Workspace.getProjects">#</a></h4>
+<div class="doc">
+<pre class="source">
+List&lt;Project&gt; getProjects() {
+ List list = [];
+ for (var child in _children) {
+   if (child is Project) list.add(child);
+ }
+ return list;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="initialize">
+<button class="show-code">Code</button>
+<a href="../spark.workspace/Workspace.html">Workspace</a> <strong>initialize</strong>() <a class="anchor-link" href="#initialize"
+              title="Permalink to Workspace.initialize">#</a></h4>
+<div class="doc">
+<pre class="source">
+Workspace initialize() {
+ // TODO: initialize workspace with saved info from previous session
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="link">
+<button class="show-code">Code</button>
+Future&lt;<a href="../spark.workspace/Resource.html">Resource</a>&gt; <strong>link</strong>(Entry entity) <a class="anchor-link" href="#link"
+              title="Permalink to Workspace.link">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;Resource&gt; link(chrome_gen.Entry entity) {
+
+ if (entity.isFile) {
+   var resource = new File(this, entity);
+   _children.add(resource);
+   return new Future.value(resource);
+ } else {
+   var project = new Project(this, entity);
+   _children.add(project);
+   return _gatherChildren(project);
+ }
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="save">
+<button class="show-code">Code</button>
+void <strong>save</strong>() <a class="anchor-link" href="#save"
+              title="Permalink to Workspace.save">#</a></h4>
+<div class="doc">
+<pre class="source">
+void save() {
+ // TODO: save workspace information - maybe in preferences?
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="unlink">
+<button class="show-code">Code</button>
+void <strong>unlink</strong>(<a href="../spark.workspace/Resource.html">Resource</a> resource) <a class="anchor-link" href="#unlink"
+              title="Permalink to Workspace.unlink">#</a></h4>
+<div class="doc">
+<pre class="source">
+void unlink(Resource resource) {
+ // TODO: remove resource from list of children
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

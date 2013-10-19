@@ -1,0 +1,260 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>GitOptions class / git Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="git" data-type="GitOptions">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../git.html">git</a> &rsaquo; <a href="../git/GitOptions.html">GitOptions</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><ul class="icon">
+<li><a href="../git/Git.html"><div class="icon-class"></div>Git</a></li>
+<li><div class="icon-class"></div><strong>GitOptions</strong></li>
+<li><a href="../git/GitResult.html"><div class="icon-class"></div>GitResult</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>GitOptions</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>This class encapsulates the various options that can be passed to the git
+api. This class also exposes methods to verify options for different api
+call.</p>
+<p>TODO(grv): Add verifers for api methods.</p>
+<pre class="source">
+class GitOptions {
+
+ // The directory entry where the git checkout resides.
+ DirectoryEntry entry;
+
+ // Optional
+
+ // Remote repository username
+ String username;
+ // Remote repository password
+ String password;
+ // Repository url
+ String repoUrl;
+ // Current branch name
+ String branchName;
+
+ String email;
+ String commitMessage;
+ String name;
+ int depth;
+ Function progressCallback;
+
+ js.JsObject toJsMap() {
+   Map&lt;String, dynamic&gt; options = new Map&lt;String, dynamic&gt;();
+
+   options['dir'] = this.entry;
+   options['username'] = this.username;
+   options['password'] = this.password;
+   options['branch'] = this.branchName;
+   options['email'] = this.email;
+   options['name'] = this.name;
+   options['depth'] = this.depth;
+   options['url'] = this.repoUrl;
+   options['progress'] = this.progressCallback;
+   options['commitMsg'] = this.commitMessage;
+   return js.jsify(options);
+ }
+
+ // TODO(grv): Specialize the verification for different api methods.
+ bool verify() {
+   return this.entry != null;
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="branchName">
+<button class="show-code">Code</button>
+String         <strong>branchName</strong> <a class="anchor-link"
+            href="#branchName"
+            title="Permalink to GitOptions.branchName">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String branchName
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="commitMessage">
+<button class="show-code">Code</button>
+String         <strong>commitMessage</strong> <a class="anchor-link"
+            href="#commitMessage"
+            title="Permalink to GitOptions.commitMessage">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String commitMessage
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="depth">
+<button class="show-code">Code</button>
+int         <strong>depth</strong> <a class="anchor-link"
+            href="#depth"
+            title="Permalink to GitOptions.depth">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+int depth
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="email">
+<button class="show-code">Code</button>
+String         <strong>email</strong> <a class="anchor-link"
+            href="#email"
+            title="Permalink to GitOptions.email">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String email
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="entry">
+<button class="show-code">Code</button>
+DirectoryEntry         <strong>entry</strong> <a class="anchor-link"
+            href="#entry"
+            title="Permalink to GitOptions.entry">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+DirectoryEntry entry
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="name">
+<button class="show-code">Code</button>
+String         <strong>name</strong> <a class="anchor-link"
+            href="#name"
+            title="Permalink to GitOptions.name">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String name
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="password">
+<button class="show-code">Code</button>
+String         <strong>password</strong> <a class="anchor-link"
+            href="#password"
+            title="Permalink to GitOptions.password">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String password
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="progressCallback">
+<button class="show-code">Code</button>
+Function         <strong>progressCallback</strong> <a class="anchor-link"
+            href="#progressCallback"
+            title="Permalink to GitOptions.progressCallback">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+Function progressCallback
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="repoUrl">
+<button class="show-code">Code</button>
+String         <strong>repoUrl</strong> <a class="anchor-link"
+            href="#repoUrl"
+            title="Permalink to GitOptions.repoUrl">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String repoUrl
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="username">
+<button class="show-code">Code</button>
+String         <strong>username</strong> <a class="anchor-link"
+            href="#username"
+            title="Permalink to GitOptions.username">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+String username
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="toJsMap">
+<button class="show-code">Code</button>
+JsObject <strong>toJsMap</strong>() <a class="anchor-link" href="#toJsMap"
+              title="Permalink to GitOptions.toJsMap">#</a></h4>
+<div class="doc">
+<pre class="source">
+js.JsObject toJsMap() {
+ Map&lt;String, dynamic&gt; options = new Map&lt;String, dynamic&gt;();
+
+ options['dir'] = this.entry;
+ options['username'] = this.username;
+ options['password'] = this.password;
+ options['branch'] = this.branchName;
+ options['email'] = this.email;
+ options['name'] = this.name;
+ options['depth'] = this.depth;
+ options['url'] = this.repoUrl;
+ options['progress'] = this.progressCallback;
+ options['commitMsg'] = this.commitMessage;
+ return js.jsify(options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="verify">
+<button class="show-code">Code</button>
+bool <strong>verify</strong>() <a class="anchor-link" href="#verify"
+              title="Permalink to GitOptions.verify">#</a></h4>
+<div class="doc">
+<pre class="source">
+bool verify() {
+ return this.entry != null;
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

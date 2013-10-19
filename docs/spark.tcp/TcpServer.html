@@ -1,0 +1,184 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>TcpServer class / spark.tcp Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="spark.tcp" data-type="TcpServer">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../spark.tcp.html">spark.tcp</a> &rsaquo; <a href="../spark.tcp/TcpServer.html">TcpServer</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><ul class="icon">
+<li><a href="../spark.tcp/TcpClient.html"><div class="icon-class"></div>TcpClient</a></li>
+<li><div class="icon-class"></div><strong>TcpServer</strong></li>
+<li><a href="../spark.tcp/SocketException.html"><div class="icon-exception"></div>SocketException</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>TcpServer</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>A lightweight implementation of a tcp server socket.</p>
+<h2>Usage:</h2>
+<pre><code>TcpServer.createServerSocket();
+onAccept;
+dispose();
+</code></pre>
+<pre class="source">
+class TcpServer {
+ final int _socketId;
+ final int port;
+
+ StreamController&lt;TcpClient&gt; _controller;
+
+ static Future&lt;TcpServer&gt; createServerSocket([int port = 0]) {
+   return chrome_gen.socket.create(chrome_gen.SocketType.TCP).then((chrome_gen.CreateInfo info) {
+     int socketId = info.socketId;
+
+     return chrome_gen.socket.listen(socketId, LOCAL_HOST, port, 5).then((int result) {
+       if (result &lt; 0) {
+         chrome_gen.socket.destroy(socketId);
+         throw new SocketException('unable to listen on port ${port}: ${result}');
+       } else {
+         return chrome_gen.socket.getInfo(socketId).then((chrome_gen.SocketInfo info) {
+           return new TcpServer._(socketId, info.localPort);
+         });
+       }
+     });
+   });
+ }
+
+ TcpServer._(this._socketId, this.port) {
+   _controller = new StreamController(onListen: _accept);
+ }
+
+ Stream&lt;TcpClient&gt; get onAccept =&gt; _controller.stream;
+
+ Future&lt;chrome_gen.SocketInfo&gt; getInfo() =&gt; chrome_gen.socket.getInfo(_socketId);
+
+ void dispose() {
+   chrome_gen.socket.destroy(_socketId);
+ }
+
+ void _accept() {
+   chrome_gen.socket.accept(_socketId).then((chrome_gen.AcceptInfo info) {
+     if (info.resultCode == 0) {
+       _controller.add(new TcpClient._fromSocketId(info.socketId));
+       _accept();
+     } else {
+       _controller.addError(info.resultCode);
+       _controller.close();
+     }
+   });
+ }
+}
+</pre>
+</div>
+<div>
+<h3>Static Methods</h3>
+<div class="method"><h4 id="createServerSocket">
+<button class="show-code">Code</button>
+Future&lt;<a href="../spark.tcp/TcpServer.html">TcpServer</a>&gt; <strong>createServerSocket</strong>([int port = 0]) <a class="anchor-link" href="#createServerSocket"
+              title="Permalink to TcpServer.createServerSocket">#</a></h4>
+<div class="doc">
+<pre class="source">
+static Future&lt;TcpServer&gt; createServerSocket([int port = 0]) {
+ return chrome_gen.socket.create(chrome_gen.SocketType.TCP).then((chrome_gen.CreateInfo info) {
+   int socketId = info.socketId;
+
+   return chrome_gen.socket.listen(socketId, LOCAL_HOST, port, 5).then((int result) {
+     if (result &lt; 0) {
+       chrome_gen.socket.destroy(socketId);
+       throw new SocketException('unable to listen on port ${port}: ${result}');
+     } else {
+       return chrome_gen.socket.getInfo(socketId).then((chrome_gen.SocketInfo info) {
+         return new TcpServer._(socketId, info.localPort);
+       });
+     }
+   });
+ });
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="onAccept">
+<button class="show-code">Code</button>
+final Stream&lt;<a href="../spark.tcp/TcpClient.html">TcpClient</a>&gt;         <strong>onAccept</strong> <a class="anchor-link"
+            href="#onAccept"
+            title="Permalink to TcpServer.onAccept">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+Stream&lt;TcpClient&gt; get onAccept =&gt; _controller.stream;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="port">
+<button class="show-code">Code</button>
+final int         <strong>port</strong> <a class="anchor-link"
+            href="#port"
+            title="Permalink to TcpServer.port">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+final int port
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="dispose">
+<button class="show-code">Code</button>
+void <strong>dispose</strong>() <a class="anchor-link" href="#dispose"
+              title="Permalink to TcpServer.dispose">#</a></h4>
+<div class="doc">
+<pre class="source">
+void dispose() {
+ chrome_gen.socket.destroy(_socketId);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getInfo">
+<button class="show-code">Code</button>
+Future&lt;SocketInfo&gt; <strong>getInfo</strong>() <a class="anchor-link" href="#getInfo"
+              title="Permalink to TcpServer.getInfo">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;chrome_gen.SocketInfo&gt; getInfo() =&gt; chrome_gen.socket.getInfo(_socketId);
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

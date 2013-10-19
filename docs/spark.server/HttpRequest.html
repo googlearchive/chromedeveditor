@@ -1,0 +1,287 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>HttpRequest class / spark.server Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="spark.server" data-type="HttpRequest">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../spark.server.html">spark.server</a> &rsaquo; <a href="../spark.server/HttpRequest.html">HttpRequest</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><ul class="icon">
+<li><a href="../spark.server/BytesBuilder.html"><div class="icon-class"></div>BytesBuilder</a></li>
+<li><a href="../spark.server/HttpHeaders.html"><div class="icon-class"></div>HttpHeaders</a></li>
+<li><div class="icon-class"></div><strong>HttpRequest</strong></li>
+<li><a href="../spark.server/HttpResponse.html"><div class="icon-class"></div>HttpResponse</a></li>
+<li><a href="../spark.server/HttpStatus.html"><div class="icon-class"></div>HttpStatus</a></li>
+<li><a href="../spark.server/PicoServer.html"><div class="icon-class"></div>PicoServer</a></li>
+<li><a href="../spark.server/PicoServlet.html"><div class="icon-class"></div>PicoServlet</a></li>
+<li><a href="../spark.server/HttpException.html"><div class="icon-exception"></div>HttpException</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>HttpRequest</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>An object that contains the content of and information of an HTTP request.</p>
+<pre class="source">
+class HttpRequest {
+ static final HEADER_END = [13, 10, 13, 10];
+
+ static Future&lt;HttpRequest&gt; _parse(tcp.TcpClient client) {
+   Completer&lt;HttpRequest&gt; completer = new Completer();
+
+   List&lt;int&gt; collectedData = [];
+   int statePos = 0;
+
+   StreamSubscription sub;
+
+   // collect all bytes until we receieve \r\n\r\n
+   sub = client.stream.listen((List&lt;int&gt; data) {
+     int i = 0;
+
+     for (; i &lt; data.length; i++) {
+       collectedData.add(data[i]);
+
+       if (data[i] == HEADER_END[statePos]) {
+         statePos++;
+       } else {
+         statePos = 0;
+       }
+
+       if (statePos == HEADER_END.length){
+         sub.cancel();
+
+         List remainingData = (i + 1 &lt; data.length ? data.sublist(i + 1) : []);
+         HttpRequest request = _parseHeader(client, collectedData, remainingData);
+
+         if (request != null) {
+           completer.complete(request);
+         } else {
+           completer.completeError(null);
+         }
+
+         break;
+       }
+     }
+   }, onDone: () =&gt; completer.completeError(null));
+
+   return completer.future;
+ }
+
+ static HttpRequest _parseHeader(tcp.TcpClient client,
+     List&lt;int&gt; headerData, List&lt;int&gt; remainingData) {
+   String header = new String.fromCharCodes(headerData);
+   List&lt;String&gt; lines = header.split('\n').map((s) =&gt; s.trim()).toList();
+
+   if (lines.isEmpty) return null;
+
+   String start = lines.first;
+
+   if (start.isEmpty) return null;
+
+   // GET /index.html HTTP/1.1
+   String method;
+   Uri path;
+   String version = '1.1';
+
+   List strs = start.split(' ');
+
+   if (strs.length &gt; 2) {
+     method = strs[0];
+     path = new Uri(path: strs[1]);
+     version = _parseVersion(strs[2]);
+   }
+
+   _HttpHeaders headers = new _HttpHeaders(version);
+
+   for (String line in lines.skip(1)) {
+     if (line.isEmpty) continue;
+
+     int index = line.indexOf(':');
+
+     if (index == -1) {
+       headers._add(line, '');
+     } else {
+       headers._add(line.substring(0, index), line.substring(index + 1).trim());
+     }
+   }
+
+   return new HttpRequest._(method: method, uri: path, headers: headers);
+ }
+
+ /// 'HTTP/1.1' ==&gt; '1.1'
+ static String _parseVersion(String ver) {
+   int index = ver.indexOf('/');
+
+   return index == -1 ? '1.1' : ver.substring(index + 1);
+ }
+
+ /**
+  * The content length of the request body (read-only).
+  *
+  * If the size of the request body is not known in advance, this value is -1.
+  */
+ int get contentLength =&gt; headers.contentLength;
+
+ /**
+  * The method, such as 'GET' or 'POST', for the request (read-only).
+  */
+ final String method;
+
+ /**
+  * The URI for the request (read-only).
+  *
+  * This provides access to the path, query string, and fragment identifier for
+  * the request.
+  */
+ final Uri uri;
+
+ /**
+  * The request headers (read-only).
+  */
+ final HttpHeaders headers;
+
+ /**
+  * The HTTP protocol version used in the request, either "1.0" or "1.1"
+  * (read-only).
+  */
+ String get protocolVersion =&gt; (headers as _HttpHeaders).protocolVersion;
+
+ HttpRequest._({this.method, this.uri, this.headers});
+
+ String toString() =&gt; '${method} ${uri} ${protocolVersion}';
+}
+</pre>
+</div>
+<div>
+<h3>Static Properties</h3>
+<div class="field"><h4 id="HEADER_END">
+<button class="show-code">Code</button>
+final         <strong>HEADER_END</strong> <a class="anchor-link"
+            href="#HEADER_END"
+            title="Permalink to HttpRequest.HEADER_END">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static final HEADER_END = [13, 10, 13, 10]
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="contentLength">
+<button class="show-code">Code</button>
+final int         <strong>contentLength</strong> <a class="anchor-link"
+            href="#contentLength"
+            title="Permalink to HttpRequest.contentLength">#</a>
+        </h4>
+        <div class="doc">
+<p>The content length of the request body (read-only).</p>
+<p>If the size of the request body is not known in advance, this value is -1.</p>
+<pre class="source">
+int get contentLength =&gt; headers.contentLength;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="headers">
+<button class="show-code">Code</button>
+final <a href="../spark.server/HttpHeaders.html">HttpHeaders</a>         <strong>headers</strong> <a class="anchor-link"
+            href="#headers"
+            title="Permalink to HttpRequest.headers">#</a>
+        </h4>
+        <div class="doc">
+<p>The request headers (read-only).</p>
+<pre class="source">
+final HttpHeaders headers
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="method">
+<button class="show-code">Code</button>
+final String         <strong>method</strong> <a class="anchor-link"
+            href="#method"
+            title="Permalink to HttpRequest.method">#</a>
+        </h4>
+        <div class="doc">
+<p>The method, such as 'GET' or 'POST', for the request (read-only).</p>
+<pre class="source">
+final String method
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="protocolVersion">
+<button class="show-code">Code</button>
+final String         <strong>protocolVersion</strong> <a class="anchor-link"
+            href="#protocolVersion"
+            title="Permalink to HttpRequest.protocolVersion">#</a>
+        </h4>
+        <div class="doc">
+<p>The HTTP protocol version used in the request, either "1.0" or "1.1"
+(read-only).</p>
+<pre class="source">
+String get protocolVersion =&gt; (headers as _HttpHeaders).protocolVersion;
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="uri">
+<button class="show-code">Code</button>
+final Uri         <strong>uri</strong> <a class="anchor-link"
+            href="#uri"
+            title="Permalink to HttpRequest.uri">#</a>
+        </h4>
+        <div class="doc">
+<p>The URI for the request (read-only).</p>
+<p>This provides access to the path, query string, and fragment identifier for
+the request.</p>
+<pre class="source">
+final Uri uri
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="toString">
+<button class="show-code">Code</button>
+String <strong>toString</strong>() <a class="anchor-link" href="#toString"
+              title="Permalink to HttpRequest.toString">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Returns a string representation of this object.</p>
+<div class="docs-inherited-from">docs inherited from Object </div></div>
+<pre class="source">
+String toString() =&gt; '${method} ${uri} ${protocolVersion}';
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

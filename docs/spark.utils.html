@@ -1,0 +1,110 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>spark.utils Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="favicon.ico">
+        
+        </head>
+        <body data-library="spark.utils">
+        <div class="page">
+        <div class="header">
+          <a href="index.html"><div class="logo"></div></a>
+          <a href="index.html">Dart Documentation</a>
+         &rsaquo; <a href="spark.utils.html">spark.utils</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="git.html">git</a></h2><h2><div class="icon-library"></div><a href="git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><strong>spark.utils</strong></h2><h2><div class="icon-library"></div><a href="spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+<h2><strong>spark.utils</strong> library</h2>
+<div>
+<h3>Functions</h3>
+<div class="method"><h4 id="beep">
+<button class="show-code">Code</button>
+void <strong>beep</strong>() <a class="anchor-link" href="#beep"
+              title="Permalink to beep">#</a></h4>
+<div class="doc">
+<pre class="source">
+void beep() {
+ if (_ctx == null) {
+   _ctx = new AudioContext();
+ }
+
+ OscillatorNode osc = _ctx.createOscillator();
+
+ osc.connectNode(_ctx.destination, 0, 0);
+ osc.start(0);
+ osc.stop(_ctx.currentTime + 0.1);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="isWin">
+<button class="show-code">Code</button>
+bool <strong>isWin</strong>() <a class="anchor-link" href="#isWin"
+              title="Permalink to isWin">#</a></h4>
+<div class="doc">
+<pre class="source">
+bool isWin() {
+ return _platform().indexOf('win') != -1;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="isMac">
+<button class="show-code">Code</button>
+bool <strong>isMac</strong>() <a class="anchor-link" href="#isMac"
+              title="Permalink to isMac">#</a></h4>
+<div class="doc">
+<pre class="source">
+bool isMac() {
+ return _platform().indexOf('mac') != -1;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="isLinux">
+<button class="show-code">Code</button>
+bool <strong>isLinux</strong>() <a class="anchor-link" href="#isLinux"
+              title="Permalink to isLinux">#</a></h4>
+<div class="doc">
+<pre class="source">
+bool isLinux() {
+ return _platform().indexOf('linux') != -1;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="i18n">
+<button class="show-code">Code</button>
+String <strong>i18n</strong>(String messageId) <a class="anchor-link" href="#i18n"
+              title="Permalink to i18n">#</a></h4>
+<div class="doc">
+<p>This method is shorthand for <code>chrome.i18n.getMessage</code>.</p>
+<pre class="source">
+String i18n(String messageId) {
+ return chrome_gen.i18n.getMessage(messageId);
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="client-static.js"></script>
+        </body></html>
+        

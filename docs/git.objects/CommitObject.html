@@ -1,0 +1,169 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>CommitObject class / git.objects Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="git.objects" data-type="CommitObject">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../git.objects.html">git.objects</a> &rsaquo; <a href="../git.objects/CommitObject.html">CommitObject</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><ul class="icon">
+<li><a href="../git.objects/Author.html"><div class="icon-class"></div>Author</a></li>
+<li><a href="../git.objects/BlobObject.html"><div class="icon-class"></div>BlobObject</a></li>
+<li><div class="icon-class"></div><strong>CommitObject</strong></li>
+<li><a href="../git.objects/GitObject.html"><div class="icon-class"></div>GitObject</a></li>
+<li><a href="../git.objects/LooseObject.html"><div class="icon-class"></div>LooseObject</a></li>
+<li><a href="../git.objects/TagObject.html"><div class="icon-class"></div>TagObject</a></li>
+<li><a href="../git.objects/TreeEntry.html"><div class="icon-class"></div>TreeEntry</a></li>
+<li><a href="../git.objects/TreeObject.html"><div class="icon-class"></div>TreeObject</a></li>
+<li><a href="../git.objects/ParseError.html"><div class="icon-exception"></div>ParseError</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>CommitObject</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>Represents a git commit object.</p>
+<pre class="source">
+class CommitObject extends GitObject {
+
+ List&lt;String&gt; _parents;
+ Author _author;
+ Author _committer;
+ String _encoding;
+ String _message;
+
+ CommitObject(String sha, String data) {
+   this._type = "commit";
+   this._sha = sha;
+   this._data = data;
+   _parseData();
+ }
+
+
+ // Parses the byte stream and constructs the commit object.
+ void _parseData() {
+   List&lt;String&gt; lines = _data.split("\n");
+   int i = 1;
+   _parents = [];
+   while (lines[i].substring(0,6) == "parent") {
+     _parents.add(lines[i].split(" ")[1]);
+     i++;
+   }
+
+   String authorLine = lines[i].replaceFirst("author", "");
+   _author = _parseAuthor(authorLine);
+
+   var committerLine = lines[i + 1].replaceFirst("committer ", "");
+   _committer = _parseAuthor(committerLine);
+
+   if (lines[i + 2].split(" ")[0] == "encoding") {
+     _encoding = lines[i + 2].split(" ")[1];
+   }
+
+   lines.removeRange(0, i +2);
+
+   _message = lines.join("\n");
+ }
+
+ Author _parseAuthor(String input) {
+   final RegExp pattern = new RegExp('/^(.*) &lt;(.*)&gt; (\d+) (\+|\-)\d\d\d\d\$/');
+   List&lt;Match&gt; match = pattern.allMatches(input);
+
+   Author author = new Author();
+   author.name = match[0].group(0);
+   author.email = match[2].group(0);
+   author.timestamp = int.parse(match[3].group(0));
+   author.date = new DateTime.fromMillisecondsSinceEpoch(
+       author.timestamp, isUtc:true);
+   return author;
+ }
+
+ String toString() {
+   String str = "commit " + _sha + "\n";
+   str += "Author: " + _author.name + " &lt;" + _author.email + "&gt;\n";
+   str += "Date:  " + _author.date.toString() + "\n\n";
+   str += _message;
+   return str;
+ }
+}
+</pre>
+</div>
+<h3>Extends</h3>
+<p>
+<span class="type-box"><span class="icon-class"></span><a href="../git.objects/GitObject.html">GitObject</a></span>&nbsp;&gt;&nbsp;<span class="type-box"><span class="icon-class"></span><strong>CommitObject</strong></span></p>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="">
+<button class="show-code">Code</button>
+new <strong>CommitObject</strong>(String sha, String data) <a class="anchor-link" href="#"
+              title="Permalink to CommitObject.CommitObject">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Creates a new <a class="crossref" href="../dart_core/Object.html">Object</a> instance.</p>
+<p><a class="crossref" href="../dart_core/Object.html">Object</a> instances have no meaningful state, and are only useful
+through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
+only.</p>
+<div class="docs-inherited-from">docs inherited from Object </div></div>
+<pre class="source">
+CommitObject(String sha, String data) {
+ this._type = "commit";
+ this._sha = sha;
+ this._data = data;
+ _parseData();
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="toString">
+<button class="show-code">Code</button>
+String <strong>toString</strong>() <a class="anchor-link" href="#toString"
+              title="Permalink to CommitObject.toString">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Returns a string representation of this object.</p>
+<div class="docs-inherited-from">docs inherited from Object </div></div>
+<pre class="source">
+String toString() {
+ String str = "commit " + _sha + "\n";
+ str += "Author: " + _author.name + " &lt;" + _author.email + "&gt;\n";
+ str += "Date:  " + _author.date.toString() + "\n\n";
+ str += _message;
+ return str;
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

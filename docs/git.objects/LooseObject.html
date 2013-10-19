@@ -1,0 +1,94 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>LooseObject class / git.objects Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="git.objects" data-type="LooseObject">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../git.objects.html">git.objects</a> &rsaquo; <a href="../git.objects/LooseObject.html">LooseObject</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><ul class="icon">
+<li><a href="../git.objects/Author.html"><div class="icon-class"></div>Author</a></li>
+<li><a href="../git.objects/BlobObject.html"><div class="icon-class"></div>BlobObject</a></li>
+<li><a href="../git.objects/CommitObject.html"><div class="icon-class"></div>CommitObject</a></li>
+<li><a href="../git.objects/GitObject.html"><div class="icon-class"></div>GitObject</a></li>
+<li><div class="icon-class"></div><strong>LooseObject</strong></li>
+<li><a href="../git.objects/TagObject.html"><div class="icon-class"></div>TagObject</a></li>
+<li><a href="../git.objects/TreeEntry.html"><div class="icon-class"></div>TreeEntry</a></li>
+<li><a href="../git.objects/TreeObject.html"><div class="icon-class"></div>TreeObject</a></li>
+<li><a href="../git.objects/ParseError.html"><div class="icon-exception"></div>ParseError</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>LooseObject</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>A loose git object.</p>
+<pre class="source">
+class LooseObject {
+ int _size;
+ String _type;
+
+ // Represents either an ArrayBuffer or a string representation of byte
+ //stream.
+ dynamic _data;
+
+ // Parses and constructs a loose git object.
+ void _parse(dynamic buf) {
+   Uint8List data = new Uint8List(buf);
+   String header;
+   int i;
+   if (buf is chrome_gen.ArrayBuffer) {
+     List&lt;String&gt; headChars = [];
+     for (i = 0; i &lt; data.length; ++i) {
+       if (data[i] != 0)
+         headChars.add(UTF8.decode(data[i]));
+         else
+           break;
+     }
+     header = headChars.join(' ');
+
+     this._data = data.sublist(i + 1, data.length);
+   } else {
+     String data = buf;
+     i = data.indexOf('\0)');
+     header = data.substring(0, i);
+     // move past null terminator but keep zlib header
+     this._data = data.substring(i + 1, data.length);
+   }
+   List&lt;String&gt; parts = header.split(' ');
+   this._type = parts[0];
+   this._size = int.parse(parts[1]);
+ }
+}
+</pre>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        

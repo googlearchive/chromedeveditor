@@ -1,0 +1,286 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>Git class / git Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="../styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="../favicon.ico">
+        
+        </head>
+        <body data-library="git" data-type="Git">
+        <div class="page">
+        <div class="header">
+          <a href="../index.html"><div class="logo"></div></a>
+          <a href="../index.html">Dart Documentation</a>
+         &rsaquo; <a href="../git.html">git</a> &rsaquo; <a href="../git/Git.html">Git</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+<h2><div class="icon-library"></div><a href="../git.html">git</a></h2><ul class="icon">
+<li><div class="icon-class"></div><strong>Git</strong></li>
+<li><a href="../git/GitOptions.html"><div class="icon-class"></div>GitOptions</a></li>
+<li><a href="../git/GitResult.html"><div class="icon-class"></div>GitResult</a></li>
+</ul>
+<h2><div class="icon-library"></div><a href="../git.objects.html">git.objects</a></h2><h2><div class="icon-library"></div><a href="../git.zlib.html">git.zlib</a></h2><h2><div class="icon-library"></div><a href="../spark.html">spark</a></h2><h2><div class="icon-library"></div><a href="../spark.ace.html">spark.ace</a></h2><h2><div class="icon-library"></div><a href="../spark.file_item_view.html">spark.file_item_view</a></h2><h2><div class="icon-library"></div><a href="../spark.html_utils.html">spark.html_utils</a></h2><h2><div class="icon-library"></div><a href="../spark.preferences.html">spark.preferences</a></h2><h2><div class="icon-library"></div><a href="../spark.sdk.html">spark.sdk</a></h2><h2><div class="icon-library"></div><a href="../spark.server.html">spark.server</a></h2><h2><div class="icon-library"></div><a href="../spark.tcp.html">spark.tcp</a></h2><h2><div class="icon-library"></div><a href="../spark.utils.html">spark.utils</a></h2><h2><div class="icon-library"></div><a href="../spark.workspace.html">spark.workspace</a></h2></div>
+<div class="content">
+        <h2><strong>Git</strong>
+          class
+        </h2>
+        
+<button id="show-inherited" class="show-inherited">Hide inherited</button>
+<div class="doc">
+<p>This git.dart provides an git api library to perform basic git operations in
+dart. Currently the library is a wrapper on the existing git.js open source
+library.</p>
+<p>Example usage:</p>
+<pre><code>git.clone(gitOptions)
+  .then(successCallback)
+  .catchError((e) =&gt; errorCallback(e));
+</code></pre>
+<p>TODO(grv): Add unittests for the apis.</p>
+<pre class="source">
+class Git {
+
+ static final js.JsObject _jsgit = js.context['GitApi'];
+
+ static bool get available =&gt; _jsgit != null;
+
+ Git() {
+   print('Git Api initialized.');
+ }
+
+ Future&lt;GitResult&gt; clone(GitOptions options) {
+   return _apiCall('clone', options);
+ }
+
+ Future&lt;GitResult&gt; push(GitOptions options) {
+   return _apiCall('push', options);
+ }
+
+ Future&lt;GitResult&gt; pull(GitOptions options) {
+   return _apiCall('pull', options);
+ }
+
+ Future&lt;GitResult&gt; commit(GitOptions options) {
+   return _apiCall('commit', options);
+ }
+
+ Future&lt;GitResult&gt; branch(GitOptions options) {
+   return _apiCall('branch', options);
+ }
+
+ Future&lt;GitResult&gt; checkout(GitOptions options) {
+   return _apiCall('checkout', options);
+ }
+
+ Future&lt;GitResult&gt; checkForUncommittedChanges(GitOptions options) {
+   return _apiCall('checkForUncommittedChanges', options);
+ }
+
+ Future&lt;GitResult&gt; getCurrentBranch(GitOptions options) {
+   return _apiCall('getCurrentBranch', options);
+ }
+
+ Future&lt;GitResult&gt; getLocalBranches(GitOptions options) {
+   return _apiCall('getLocalBranches', options);
+ }
+
+ Future&lt;GitResult&gt; getRemoteBranches(GitOptions options) {
+   return _apiCall('getRemoteBranches', options);
+ }
+
+ Future&lt;GitResult&gt; _apiCall(String functionName, GitOptions options) {
+   Completer&lt;GitResult&gt; completer = new Completer();
+
+   var successCallback = (result) {
+      completer.complete(new GitResult.fromData(result));
+   };
+
+   var errorCallback = (String message) {
+     completer.completeError(message);
+   };
+
+   _jsgit.callMethod(functionName, [options.toJsMap(), successCallback, errorCallback]);
+
+   return completer.future;
+ }
+
+}
+</pre>
+</div>
+<div>
+<h3>Static Properties</h3>
+<div class="field"><h4 id="available">
+<button class="show-code">Code</button>
+final bool         <strong>available</strong> <a class="anchor-link"
+            href="#available"
+            title="Permalink to Git.available">#</a>
+        </h4>
+        <div class="doc">
+<pre class="source">
+static bool get available =&gt; _jsgit != null;
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Constructors</h3>
+<div class="method"><h4 id="">
+<button class="show-code">Code</button>
+new <strong>Git</strong>() <a class="anchor-link" href="#"
+              title="Permalink to Git.Git">#</a></h4>
+<div class="doc">
+<div class="inherited">
+<p>Creates a new <a class="crossref" href="../dart_core/Object.html">Object</a> instance.</p>
+<p><a class="crossref" href="../dart_core/Object.html">Object</a> instances have no meaningful state, and are only useful
+through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
+only.</p>
+<div class="docs-inherited-from">docs inherited from Object </div></div>
+<pre class="source">
+Git() {
+ print('Git Api initialized.');
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Methods</h3>
+<div class="method"><h4 id="branch">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>branch</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#branch"
+              title="Permalink to Git.branch">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; branch(GitOptions options) {
+ return _apiCall('branch', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="checkForUncommittedChanges">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>checkForUncommittedChanges</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#checkForUncommittedChanges"
+              title="Permalink to Git.checkForUncommittedChanges">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; checkForUncommittedChanges(GitOptions options) {
+ return _apiCall('checkForUncommittedChanges', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="checkout">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>checkout</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#checkout"
+              title="Permalink to Git.checkout">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; checkout(GitOptions options) {
+ return _apiCall('checkout', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="clone">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>clone</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#clone"
+              title="Permalink to Git.clone">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; clone(GitOptions options) {
+ return _apiCall('clone', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="commit">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>commit</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#commit"
+              title="Permalink to Git.commit">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; commit(GitOptions options) {
+ return _apiCall('commit', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getCurrentBranch">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>getCurrentBranch</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#getCurrentBranch"
+              title="Permalink to Git.getCurrentBranch">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; getCurrentBranch(GitOptions options) {
+ return _apiCall('getCurrentBranch', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getLocalBranches">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>getLocalBranches</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#getLocalBranches"
+              title="Permalink to Git.getLocalBranches">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; getLocalBranches(GitOptions options) {
+ return _apiCall('getLocalBranches', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="getRemoteBranches">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>getRemoteBranches</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#getRemoteBranches"
+              title="Permalink to Git.getRemoteBranches">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; getRemoteBranches(GitOptions options) {
+ return _apiCall('getRemoteBranches', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="pull">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>pull</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#pull"
+              title="Permalink to Git.pull">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; pull(GitOptions options) {
+ return _apiCall('pull', options);
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="push">
+<button class="show-code">Code</button>
+Future&lt;<a href="../git/GitResult.html">GitResult</a>&gt; <strong>push</strong>(<a href="../git/GitOptions.html">GitOptions</a> options) <a class="anchor-link" href="#push"
+              title="Permalink to Git.push">#</a></h4>
+<div class="doc">
+<pre class="source">
+Future&lt;GitResult&gt; push(GitOptions options) {
+ return _apiCall('push', options);
+}
+</pre>
+</div>
+</div>
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          
+        </div>
+        <script async src="../client-static.js"></script>
+        </body></html>
+        
