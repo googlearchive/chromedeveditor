@@ -7,7 +7,7 @@ dependencies:
   ace: '>=0.0.6+10.7.2013'
   analyzer_experimental: any
   browser: any
-  chrome_gen: 0.0.6
+  chrome_gen: '>=0.0.6'
   compiler_unsupported: any
   intl: any
   logging: any

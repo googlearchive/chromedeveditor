@@ -24,7 +24,7 @@ void main() {
   defineTask('deploy', taskFunction: deploy, depends : ['setup', 'mode-notest']);
   defineTask('deploy-test', taskFunction: deployTest, depends : ['setup', 'mode-test']);
 
-  defineTask('docs', taskFunction: docs);
+  defineTask('docs', taskFunction : docs, depends : ['setup']);
   defineTask('archive', taskFunction : archive, depends : ['deploy']);
   defineTask('release', taskFunction : release, depends : ['deploy']);
 
@@ -33,61 +33,10 @@ void main() {
   startGrinder();
 }
 
-void docs(GrinderContext context) {
-  FileSet docFiles = new FileSet.fromDir(
-      new Directory('docs'), endsWith: '.html');
-  FileSet sourceFiles = new FileSet.fromDir(
-      new Directory('app'), endsWith: '.dart', recurse: true);
-
-  if (!docFiles.upToDate(sourceFiles)) {
-    // TODO: once more libraries are referenced from spark.dart, we won't need
-    // to explicitly pass them to dartdoc
-    runSdkBinary(context, 'dartdoc',
-        arguments: ['--omit-generation-time',
-                    '--mode', 'static',
-                    '--package-root', 'packages/',
-                    '--include-lib', 'spark,spark.ace,spark.file_item_view,spark.html_utils,spark.split_view,spark.utils,spark.preferences,spark.workspace,spark.sdk',
-                    '--include-lib', 'spark.server,spark.tcp',
-                    '--include-lib', 'git,git.objects,git.zlib',
-                    'app/spark.dart', 'app/lib/preferences.dart', 'app/lib/workspace.dart', 'app/lib/sdk.dart',
-                    'app/lib/server.dart', 'app/lib/tcp.dart',
-                    'app/lib/git.dart', 'app/lib/git_object.dart', 'app/lib/zlib.dart']);
-
-    runCommandSync(context,
-        'zip ../dist/spark-docs.zip . -qr -x .*', cwd: 'docs');
-  }
-}
-
-void runCommandSync(GrinderContext context, String command, {String cwd}) {
-  context.log(command);
-
-  var result = Process.runSync(
-      '/bin/sh', ['-c', command], workingDirectory: cwd);
-
-  if (result.stdout.isNotEmpty) {
-    context.log(result.stdout);
-  }
-  if (result.stderr.isNotEmpty) {
-    context.log(result.stderr);
-  }
-
-  if (result.exitCode > 0) {
-    context.fail("exit code ${result.exitCode}");
-  }
-}
-
-String getCommandOutput(String command) {
-  var result = Process.runSync('/bin/sh', ['-c', command]);
-  return result.stdout.trim();
-}
-
-void init(GrinderContext context) {
-=======
 /**
  * Init needed dependencies.
  */
 void setup(GrinderContext context) {
->>>>>>> master
   // check to make sure we can locate the SDK
   if (sdkDir == null) {
     context.fail("Unable to locate the Dart SDK\n"
@@ -195,6 +144,31 @@ void archive(GrinderContext context) {
   _runCommandSync(context, 'zip ../../../${DIST_DIR.path}/spark.zip . -qr -x .*',
       cwd: '${BUILD_DIR.path}/deploy-out/web');
   _printSize(context, new File('dist/spark.zip'));
+}
+
+void docs(GrinderContext context) {
+  FileSet docFiles = new FileSet.fromDir(
+      new Directory('docs'), endsWith: '.html');
+  FileSet sourceFiles = new FileSet.fromDir(
+      new Directory('app'), endsWith: '.dart', recurse: true);
+
+  if (!docFiles.upToDate(sourceFiles)) {
+    // TODO: once more libraries are referenced from spark.dart, we won't need
+    // to explicitly pass them to dartdoc
+    runSdkBinary(context, 'dartdoc',
+        arguments: ['--omit-generation-time',
+                    '--mode', 'static',
+                    '--package-root', 'packages/',
+                    '--include-lib', 'spark,spark.ace,spark.file_item_view,spark.html_utils,spark.split_view,spark.utils,spark.preferences,spark.workspace,spark.sdk',
+                    '--include-lib', 'spark.server,spark.tcp',
+                    '--include-lib', 'git,git.objects,git.zlib',
+                    'app/spark.dart', 'app/lib/preferences.dart', 'app/lib/workspace.dart', 'app/lib/sdk.dart',
+                    'app/lib/server.dart', 'app/lib/tcp.dart',
+                    'app/lib/git.dart', 'app/lib/git_object.dart', 'app/lib/zlib.dart']);
+
+    _runCommandSync(context,
+        'zip ../dist/spark-docs.zip . -qr -x .*', cwd: 'docs');
+  }
 }
 
 /**
