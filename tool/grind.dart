@@ -396,6 +396,10 @@ class JsonPrinter {
 
   JsonPrinter();
 
+  /**
+   * Given a structured, json-like object, print it to a well-formatted, valid
+   * json string.
+   */
   String print(dynamic json) {
     return _print(json) + '\n';
   }
