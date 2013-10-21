@@ -44,70 +44,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>Represents a git commit object.</p>
-<pre class="source">
-class CommitObject extends GitObject {
-
- List&lt;String&gt; _parents;
- Author _author;
- Author _committer;
- String _encoding;
- String _message;
-
- CommitObject(String sha, String data) {
-   this._type = "commit";
-   this._sha = sha;
-   this._data = data;
-   _parseData();
- }
-
-
- // Parses the byte stream and constructs the commit object.
- void _parseData() {
-   List&lt;String&gt; lines = _data.split("\n");
-   int i = 1;
-   _parents = [];
-   while (lines[i].substring(0,6) == "parent") {
-     _parents.add(lines[i].split(" ")[1]);
-     i++;
-   }
-
-   String authorLine = lines[i].replaceFirst("author", "");
-   _author = _parseAuthor(authorLine);
-
-   var committerLine = lines[i + 1].replaceFirst("committer ", "");
-   _committer = _parseAuthor(committerLine);
-
-   if (lines[i + 2].split(" ")[0] == "encoding") {
-     _encoding = lines[i + 2].split(" ")[1];
-   }
-
-   lines.removeRange(0, i +2);
-
-   _message = lines.join("\n");
- }
-
- Author _parseAuthor(String input) {
-   final RegExp pattern = new RegExp('/^(.*) &lt;(.*)&gt; (\d+) (\+|\-)\d\d\d\d\$/');
-   List&lt;Match&gt; match = pattern.allMatches(input);
-
-   Author author = new Author();
-   author.name = match[0].group(0);
-   author.email = match[2].group(0);
-   author.timestamp = int.parse(match[3].group(0));
-   author.date = new DateTime.fromMillisecondsSinceEpoch(
-       author.timestamp, isUtc:true);
-   return author;
- }
-
- String toString() {
-   String str = "commit " + _sha + "\n";
-   str += "Author: " + _author.name + " &lt;" + _author.email + "&gt;\n";
-   str += "Date:  " + _author.date.toString() + "\n\n";
-   str += _message;
-   return str;
- }
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -115,7 +51,6 @@ class CommitObject extends GitObject {
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>CommitObject</strong>(String sha, String data) <a class="anchor-link" href="#"
               title="Permalink to CommitObject.CommitObject">#</a></h4>
 <div class="doc">
@@ -125,36 +60,18 @@ new <strong>CommitObject</strong>(String sha, String data) <a class="anchor-link
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-CommitObject(String sha, String data) {
- this._type = "commit";
- this._sha = sha;
- this._data = data;
- _parseData();
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="toString">
-<button class="show-code">Code</button>
 String <strong>toString</strong>() <a class="anchor-link" href="#toString"
               title="Permalink to CommitObject.toString">#</a></h4>
 <div class="doc">
 <div class="inherited">
 <p>Returns a string representation of this object.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-String toString() {
- String str = "commit " + _sha + "\n";
- str += "Author: " + _author.name + " &lt;" + _author.email + "&gt;\n";
- str += "Date:  " + _author.date.toString() + "\n\n";
- str += _message;
- return str;
-}
-</pre>
 </div>
 </div>
 </div>

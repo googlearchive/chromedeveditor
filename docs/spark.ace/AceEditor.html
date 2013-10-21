@@ -35,63 +35,10 @@
         
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
-<pre class="source">
-class AceEditor {
- ace.Editor _aceEditor;
- chrome_gen.ChromeFileEntry _file;
-
- AceEditor() {
-   _aceEditor = ace.edit(query('#editorArea'));
-   _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
- }
-
- String getPathInfo() {
-   // TODO: show full path of file, not just name
-   if (_file != null) return _file.fullPath;
-   return '[new file]';
- }
-
- void newFile() {
-   _file = null;
-   _setContents('', new ace.Mode('ace/mode/text'));
- }
-
- void save() {
-   if (_file != null){
-     _file.writeText(_aceEditor.value);
-     _aceEditor.focus();
-   }
- }
-
- void saveAs(chrome_gen.ChromeFileEntry file) {
-   _file = file;
-   save();
- }
-
- void setContent(chrome_gen.ChromeFileEntry file) {
-   _file = file;
-   _file.readText().then((String contents) {
-     _setContents(contents, new ace.Mode.forFile(file.name));
-   });
- }
-
- void setTheme(String theme){
-   _aceEditor.theme = new ace.Theme(theme);
- }
-
- void _setContents(String string, ace.Mode mode) {
-   _aceEditor.setValue(string, 0);
-   _aceEditor.session.mode = mode;
-   _aceEditor.navigateFileStart();
-   _aceEditor.focus();
- }
-}
-</pre>
 </div>
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>AceEditor</strong>() <a class="anchor-link" href="#"
               title="Permalink to AceEditor.AceEditor">#</a></h4>
 <div class="doc">
@@ -101,97 +48,45 @@ new <strong>AceEditor</strong>() <a class="anchor-link" href="#"
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-AceEditor() {
- _aceEditor = ace.edit(query('#editorArea'));
- _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="getPathInfo">
-<button class="show-code">Code</button>
 String <strong>getPathInfo</strong>() <a class="anchor-link" href="#getPathInfo"
               title="Permalink to AceEditor.getPathInfo">#</a></h4>
 <div class="doc">
-<pre class="source">
-String getPathInfo() {
- // TODO: show full path of file, not just name
- if (_file != null) return _file.fullPath;
- return '[new file]';
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="newFile">
-<button class="show-code">Code</button>
 void <strong>newFile</strong>() <a class="anchor-link" href="#newFile"
               title="Permalink to AceEditor.newFile">#</a></h4>
 <div class="doc">
-<pre class="source">
-void newFile() {
- _file = null;
- _setContents('', new ace.Mode('ace/mode/text'));
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="save">
-<button class="show-code">Code</button>
 void <strong>save</strong>() <a class="anchor-link" href="#save"
               title="Permalink to AceEditor.save">#</a></h4>
 <div class="doc">
-<pre class="source">
-void save() {
- if (_file != null){
-   _file.writeText(_aceEditor.value);
-   _aceEditor.focus();
- }
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="saveAs">
-<button class="show-code">Code</button>
-void <strong>saveAs</strong>(ChromeFileEntry file) <a class="anchor-link" href="#saveAs"
+void <strong>saveAs</strong>(<a href="../spark.workspace/File.html">File</a> file) <a class="anchor-link" href="#saveAs"
               title="Permalink to AceEditor.saveAs">#</a></h4>
 <div class="doc">
-<pre class="source">
-void saveAs(chrome_gen.ChromeFileEntry file) {
- _file = file;
- save();
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="setContent">
-<button class="show-code">Code</button>
-void <strong>setContent</strong>(ChromeFileEntry file) <a class="anchor-link" href="#setContent"
+void <strong>setContent</strong>(<a href="../spark.workspace/File.html">File</a> file) <a class="anchor-link" href="#setContent"
               title="Permalink to AceEditor.setContent">#</a></h4>
 <div class="doc">
-<pre class="source">
-void setContent(chrome_gen.ChromeFileEntry file) {
- _file = file;
- _file.readText().then((String contents) {
-   _setContents(contents, new ace.Mode.forFile(file.name));
- });
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="setTheme">
-<button class="show-code">Code</button>
 void <strong>setTheme</strong>(String theme) <a class="anchor-link" href="#setTheme"
               title="Permalink to AceEditor.setTheme">#</a></h4>
 <div class="doc">
-<pre class="source">
-void setTheme(String theme){
- _aceEditor.theme = new ace.Theme(theme);
-}
-</pre>
 </div>
 </div>
 </div>

@@ -46,131 +46,50 @@
 end.</p>
 <p>Used to efficiently collect bytes and lists of bytes, using an internal
 buffer. Note that it's optimized for IO, using an initial buffer of 1K bytes.</p>
-<pre class="source">
-class BytesBuilder {
- List&lt;int&gt; _buffer = [];
-
- /**
-  * Construct a new empty [BytesBuilder].
-  */
- BytesBuilder();
-
- /**
-  * Appends [bytes] to the current contents of the builder.
-  *
-  * Each value of [bytes] will be bit-representation truncated to the range
-  * 0 .. 255.
-  */
- void add(List&lt;int&gt; bytes) =&gt; _buffer.addAll(bytes);
-
- /**
-  * Append [byte] to the current contents of the builder.
-  *
-  * The [byte] will be bit-representation truncated to the range 0 .. 255.
-  */
- void addByte(int byte) =&gt; _buffer.add(byte);
-
- /**
-  * Returns the contents of `this` and clears `this`.
-  *
-  * The list returned is a view of the the internal buffer, limited to the
-  * [length].
-  */
- List&lt;int&gt; takeBytes() {
-   List copy = _buffer.sublist(0);
-   _buffer.clear();
-   return copy;
- }
-
- /**
-  * Returns a copy of the current contents of the builder.
-  *
-  * Leaves the contents of the builder intact.
-  */
- List&lt;int&gt; toBytes() =&gt; _buffer.sublist(0);
-
- /**
-  * The number of bytes in the builder.
-  */
- int get length =&gt; _buffer.length;
-
- /**
-  * Returns `true` if the buffer is empty.
-  */
- bool get isEmpty =&gt; _buffer.isEmpty;
-
- /**
-  * Returns `true` if the buffer is empty.
-  */
- bool get isNotEmpty =&gt; _buffer.isNotEmpty;
-
- /**
-  * Clear the contents of the builder.
-  */
- void clear() =&gt; _buffer.clear();
-}
-</pre>
 </div>
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>BytesBuilder</strong>() <a class="anchor-link" href="#"
               title="Permalink to BytesBuilder.BytesBuilder">#</a></h4>
 <div class="doc">
 <p>Construct a new empty <a class="crossref" href="../spark.server/BytesBuilder.html">BytesBuilder</a>.</p>
-<pre class="source">
-BytesBuilder();
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="isEmpty">
-<button class="show-code">Code</button>
 final bool         <strong>isEmpty</strong> <a class="anchor-link"
             href="#isEmpty"
             title="Permalink to BytesBuilder.isEmpty">#</a>
         </h4>
         <div class="doc">
 <p>Returns <code>true</code> if the buffer is empty.</p>
-<pre class="source">
-bool get isEmpty =&gt; _buffer.isEmpty;
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="isNotEmpty">
-<button class="show-code">Code</button>
 final bool         <strong>isNotEmpty</strong> <a class="anchor-link"
             href="#isNotEmpty"
             title="Permalink to BytesBuilder.isNotEmpty">#</a>
         </h4>
         <div class="doc">
 <p>Returns <code>true</code> if the buffer is empty.</p>
-<pre class="source">
-bool get isNotEmpty =&gt; _buffer.isNotEmpty;
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="length">
-<button class="show-code">Code</button>
 final int         <strong>length</strong> <a class="anchor-link"
             href="#length"
             title="Permalink to BytesBuilder.length">#</a>
         </h4>
         <div class="doc">
 <p>The number of bytes in the builder.</p>
-<pre class="source">
-int get length =&gt; _buffer.length;
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="add">
-<button class="show-code">Code</button>
 void <strong>add</strong>(List&lt;int&gt; bytes) <a class="anchor-link" href="#add"
               title="Permalink to BytesBuilder.add">#</a></h4>
 <div class="doc">
@@ -179,13 +98,9 @@ void <strong>add</strong>(List&lt;int&gt; bytes) <a class="anchor-link" href="#a
 <p>Each value of 
 <span class="param">bytes</span> will be bit-representation truncated to the range
 0 .. 255.</p>
-<pre class="source">
-void add(List&lt;int&gt; bytes) =&gt; _buffer.addAll(bytes);
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="addByte">
-<button class="show-code">Code</button>
 void <strong>addByte</strong>(int byte) <a class="anchor-link" href="#addByte"
               title="Permalink to BytesBuilder.addByte">#</a></h4>
 <div class="doc">
@@ -193,49 +108,30 @@ void <strong>addByte</strong>(int byte) <a class="anchor-link" href="#addByte"
 <span class="param">byte</span> to the current contents of the builder.</p>
 <p>The 
 <span class="param">byte</span> will be bit-representation truncated to the range 0 .. 255.</p>
-<pre class="source">
-void addByte(int byte) =&gt; _buffer.add(byte);
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="clear">
-<button class="show-code">Code</button>
 void <strong>clear</strong>() <a class="anchor-link" href="#clear"
               title="Permalink to BytesBuilder.clear">#</a></h4>
 <div class="doc">
 <p>Clear the contents of the builder.</p>
-<pre class="source">
-void clear() =&gt; _buffer.clear();
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="takeBytes">
-<button class="show-code">Code</button>
 List&lt;int&gt; <strong>takeBytes</strong>() <a class="anchor-link" href="#takeBytes"
               title="Permalink to BytesBuilder.takeBytes">#</a></h4>
 <div class="doc">
 <p>Returns the contents of <code>this</code> and clears <code>this</code>.</p>
 <p>The list returned is a view of the the internal buffer, limited to the
 <a class="crossref" href="../spark.server/BytesBuilder.html#length">length</a>.</p>
-<pre class="source">
-List&lt;int&gt; takeBytes() {
- List copy = _buffer.sublist(0);
- _buffer.clear();
- return copy;
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="toBytes">
-<button class="show-code">Code</button>
 List&lt;int&gt; <strong>toBytes</strong>() <a class="anchor-link" href="#toBytes"
               title="Permalink to BytesBuilder.toBytes">#</a></h4>
 <div class="doc">
 <p>Returns a copy of the current contents of the builder.</p>
 <p>Leaves the contents of the builder intact.</p>
-<pre class="source">
-List&lt;int&gt; toBytes() =&gt; _buffer.sublist(0);
-</pre>
 </div>
 </div>
 </div>

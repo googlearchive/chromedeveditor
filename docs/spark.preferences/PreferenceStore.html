@@ -37,137 +37,56 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>A persistent preference mechanism.</p>
-<pre class="source">
-class PreferenceStore {
- static PreferenceStore createLocal() =&gt; new PreferenceStore._(chrome_gen.storage.local);
- static PreferenceStore createSync() =&gt; new PreferenceStore._(chrome_gen.storage.sync);
-
- StreamController&lt;PreferenceEvent&gt; _streamController =
-     new StreamController.broadcast();
-
- chrome_gen.StorageArea _storageArea;
-
- PreferenceStore._(this._storageArea);
-
- /**
-  * Get the value for the given key. The value is returned as a [Future].
-  */
- Future&lt;String&gt; getValue(String key){
-   return _storageArea.get(key).then((Map&lt;String, String&gt; map) {
-     return map == null ? null : map[key];
-   });
- }
-
- /**
-  * Set the value for the given key. The returned [Future] has the same value
-  * as [value] on success.
-  */
- Future&lt;String&gt; setValue(String key, String value) {
-   Map&lt;String, String&gt; map = {key:value};
-
-   return _storageArea.set(map).then((_) {
-     _streamController.add(new PreferenceEvent(this, key, value));
-     return value;
-   });
- }
-
- /**
-  * Flush any unsaved changes to this [PreferenceStore].
-  */
- void flush() {
-   // TODO: implement this if needed or else remove
- }
-
- Stream&lt;PreferenceEvent&gt; get onPreferenceChange =&gt; _streamController.stream;
-}
-</pre>
 </div>
 <div>
 <h3>Static Methods</h3>
 <div class="method"><h4 id="createLocal">
-<button class="show-code">Code</button>
 <a href="../spark.preferences/PreferenceStore.html">PreferenceStore</a> <strong>createLocal</strong>() <a class="anchor-link" href="#createLocal"
               title="Permalink to PreferenceStore.createLocal">#</a></h4>
 <div class="doc">
-<pre class="source">
-static PreferenceStore createLocal() =&gt; new PreferenceStore._(chrome_gen.storage.local);
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="createSync">
-<button class="show-code">Code</button>
 <a href="../spark.preferences/PreferenceStore.html">PreferenceStore</a> <strong>createSync</strong>() <a class="anchor-link" href="#createSync"
               title="Permalink to PreferenceStore.createSync">#</a></h4>
 <div class="doc">
-<pre class="source">
-static PreferenceStore createSync() =&gt; new PreferenceStore._(chrome_gen.storage.sync);
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="onPreferenceChange">
-<button class="show-code">Code</button>
 final Stream&lt;<a href="../spark.preferences/PreferenceEvent.html">PreferenceEvent</a>&gt;         <strong>onPreferenceChange</strong> <a class="anchor-link"
             href="#onPreferenceChange"
             title="Permalink to PreferenceStore.onPreferenceChange">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-Stream&lt;PreferenceEvent&gt; get onPreferenceChange =&gt; _streamController.stream;
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="flush">
-<button class="show-code">Code</button>
 void <strong>flush</strong>() <a class="anchor-link" href="#flush"
               title="Permalink to PreferenceStore.flush">#</a></h4>
 <div class="doc">
 <p>Flush any unsaved changes to this <a class="crossref" href="../spark.preferences/PreferenceStore.html">PreferenceStore</a>.</p>
-<pre class="source">
-void flush() {
- // TODO: implement this if needed or else remove
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="getValue">
-<button class="show-code">Code</button>
 Future&lt;String&gt; <strong>getValue</strong>(String key) <a class="anchor-link" href="#getValue"
               title="Permalink to PreferenceStore.getValue">#</a></h4>
 <div class="doc">
 <p>Get the value for the given key. The value is returned as a <a class="crossref" href="../dart_async/Future.html">Future</a>.</p>
-<pre class="source">
-Future&lt;String&gt; getValue(String key){
- return _storageArea.get(key).then((Map&lt;String, String&gt; map) {
-   return map == null ? null : map[key];
- });
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="setValue">
-<button class="show-code">Code</button>
 Future&lt;String&gt; <strong>setValue</strong>(String key, String value) <a class="anchor-link" href="#setValue"
               title="Permalink to PreferenceStore.setValue">#</a></h4>
 <div class="doc">
 <p>Set the value for the given key. The returned <a class="crossref" href="../dart_async/Future.html">Future</a> has the same value
 as 
 <span class="param">value</span> on success.</p>
-<pre class="source">
-Future&lt;String&gt; setValue(String key, String value) {
- Map&lt;String, String&gt; map = {key:value};
-
- return _storageArea.set(map).then((_) {
-   _streamController.add(new PreferenceEvent(this, key, value));
-   return value;
- });
-}
-</pre>
 </div>
 </div>
 </div>

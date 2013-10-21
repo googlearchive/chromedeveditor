@@ -44,18 +44,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>Represents a git blob object.</p>
-<pre class="source">
-class BlobObject extends GitObject {
-
- BlobObject(String sha, String data) {
-   this._type = "blob";
-   this._sha = sha;
-   this._data = data;
- }
-
- String toString() =&gt; this._data;
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -63,7 +51,6 @@ class BlobObject extends GitObject {
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>BlobObject</strong>(String sha, String data) <a class="anchor-link" href="#"
               title="Permalink to BlobObject.BlobObject">#</a></h4>
 <div class="doc">
@@ -73,29 +60,18 @@ new <strong>BlobObject</strong>(String sha, String data) <a class="anchor-link" 
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-BlobObject(String sha, String data) {
- this._type = "blob";
- this._sha = sha;
- this._data = data;
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="toString">
-<button class="show-code">Code</button>
 String <strong>toString</strong>() <a class="anchor-link" href="#toString"
               title="Permalink to BlobObject.toString">#</a></h4>
 <div class="doc">
 <div class="inherited">
 <p>Returns a string representation of this object.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-String toString() =&gt; this._data;
-</pre>
 </div>
 </div>
 </div>

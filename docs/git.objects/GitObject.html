@@ -45,37 +45,6 @@
 <div class="doc">
 <p>Encapsulates a Gitobject</p>
 <p>TODO(grv): Add unittests.</p>
-<pre class="source">
-abstract class GitObject {
-
- /**
-  * constructs a GitObject of the given type.
-  */
- static GitObject make(String sha, String type, String content) {
-   switch (type) {
-     case "blob":
-       return new BlobObject(sha, content);
-     case "tree":
-       return new TreeObject(sha, content);
-     case "commit":
-       return new CommitObject(sha, content);
-     case "tag":
-       return new TagObject(sha, content);
-     default:
-       throw new ArgumentError("Unsupported git object type.");
-   }
- }
-
- // The type of git object.
- String _type;
-
- // byte stream converted to string.
- String _data;
- String _sha;
-
- String toString() =&gt; _data;
-}
-</pre>
 </div>
 <h3>Subclasses</h3>
 <p>
@@ -83,43 +52,22 @@ abstract class GitObject {
 <div>
 <h3>Static Methods</h3>
 <div class="method"><h4 id="make">
-<button class="show-code">Code</button>
 <a href="../git.objects/GitObject.html">GitObject</a> <strong>make</strong>(String sha, String type, String content) <a class="anchor-link" href="#make"
               title="Permalink to GitObject.make">#</a></h4>
 <div class="doc">
 <p>constructs a GitObject of the given type.</p>
-<pre class="source">
-static GitObject make(String sha, String type, String content) {
- switch (type) {
-   case "blob":
-     return new BlobObject(sha, content);
-   case "tree":
-     return new TreeObject(sha, content);
-   case "commit":
-     return new CommitObject(sha, content);
-   case "tag":
-     return new TagObject(sha, content);
-   default:
-     throw new ArgumentError("Unsupported git object type.");
- }
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="toString">
-<button class="show-code">Code</button>
 String <strong>toString</strong>() <a class="anchor-link" href="#toString"
               title="Permalink to GitObject.toString">#</a></h4>
 <div class="doc">
 <div class="inherited">
 <p>Returns a string representation of this object.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-String toString() =&gt; _data;
-</pre>
 </div>
 </div>
 </div>

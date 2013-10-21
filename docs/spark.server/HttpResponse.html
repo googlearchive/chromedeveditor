@@ -44,115 +44,10 @@
 <div class="doc">
 <p>An <a class="crossref" href="../spark.server/HttpResponse.html">HttpResponse</a> represents the headers and data to be returned to
 a client in response to an HTTP request.</p>
-<pre class="source">
-class HttpResponse {
- /**
-  * Gets and sets the content length of the response. If the size of
-  * the response is not known in advance set the content length to
-  * -1 - which is also the default if not set.
-  */
- int get contentLength =&gt; headers.contentLength;
-
- /**
-  * Gets and sets the status code. Any integer value is accepted. For
-  * the official HTTP status codes use the fields from
-  * [HttpStatus]. If no status code is explicitly set the default
-  * value [HttpStatus.OK] is used.
-  */
- int statusCode;
-
- /**
-  * Gets and sets the reason phrase. If no reason phrase is explicitly
-  * set a default reason phrase is provided.
-  */
- String reasonPhrase;
-
- List&lt;int&gt; _data;
- Stream&lt;List&lt;int&gt;&gt; _streamData;
-
- /**
-  * The response headers.
-  */
- HttpHeaders headers = new _HttpHeaders("1.1");
-
- HttpResponse({this.statusCode, this.reasonPhrase}) {
-   headers.add(HttpHeaders.SERVER, 'Spark');
- }
-
- HttpResponse.ok(): this(statusCode: HttpStatus.OK);
- HttpResponse.notFound(): this(statusCode: HttpStatus.NOT_FOUND);
- HttpResponse.badRequest(): this(statusCode: HttpStatus.BAD_REQUEST);
-
- void setContent(String str) {
-   // TODO(devoncarew): set the charset to UTF-8
-
-   setContentBytes(UTF8.encode(str));
- }
-
- void setContentBytes(List&lt;int&gt; data) {
-   _data = data;
-   headers.contentLength = _data.length;
- }
-
- void setContentStream(Stream&lt;List&lt;int&gt;&gt; streamData) {
-   _streamData = streamData;
-   headers.contentLength = -1;
- }
-
- /**
-  * Set the content type for this response given a file path. This auto-detects
-  * based on the file extension.
-  */
- void setContentTypeFrom(String path) {
-   headers.contentType = mime.lookupMimeType(path);
- }
-
- Future _send(tcp.TcpClient client) {
-   final String eol = '\r\n';
-
-   // send http/1.1 ...
-   client.writeString('HTTP/1.1 ${statusCode} ${_calcPhrase}${eol}');
-
-   // send headers
-   BytesBuilder builder = new BytesBuilder();
-   (headers as _HttpHeaders)._write(builder);
-   client.sink.add(builder.toBytes());
-
-   client.writeString(eol);
-
-   // send data
-   if (_data != null) {
-     client.sink.add(_data);
-     return new Future.value();
-   } else if (_streamData != null) {
-     Completer completer = new Completer();
-
-     _streamData.listen((List&lt;int&gt; bytes) {
-       client.sink.add(bytes);
-     }, onDone: () =&gt; completer.complete());
-
-     return completer.future;
-   } else {
-     return new Future.value();
-   }
- }
-
- String get _calcPhrase {
-   if (reasonPhrase == null) {
-     return HttpStatus.getReasonPhrase(statusCode);
-   } else {
-     return reasonPhrase;
-   }
- }
-
- String toString() =&gt; 'HTTP/1.1 ${statusCode} ${_calcPhrase}';
-}
-</pre>
 </div>
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>HttpResponse</strong>({int statusCode, String reasonPhrase}) <a class="anchor-link" href="#"
               title="Permalink to HttpResponse.HttpResponse">#</a></h4>
 <div class="doc">
@@ -162,48 +57,30 @@ new <strong>HttpResponse</strong>({int statusCode, String reasonPhrase}) <a clas
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-HttpResponse({this.statusCode, this.reasonPhrase}) {
- headers.add(HttpHeaders.SERVER, 'Spark');
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="badRequest">
-<button class="show-code">Code</button>
 new <strong>HttpResponse.badRequest</strong>() <a class="anchor-link" href="#badRequest"
               title="Permalink to HttpResponse.HttpResponse.badRequest">#</a></h4>
 <div class="doc">
-<pre class="source">
-HttpResponse.badRequest(): this(statusCode: HttpStatus.BAD_REQUEST);
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="notFound">
-<button class="show-code">Code</button>
 new <strong>HttpResponse.notFound</strong>() <a class="anchor-link" href="#notFound"
               title="Permalink to HttpResponse.HttpResponse.notFound">#</a></h4>
 <div class="doc">
-<pre class="source">
-HttpResponse.notFound(): this(statusCode: HttpStatus.NOT_FOUND);
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="ok">
-<button class="show-code">Code</button>
 new <strong>HttpResponse.ok</strong>() <a class="anchor-link" href="#ok"
               title="Permalink to HttpResponse.HttpResponse.ok">#</a></h4>
 <div class="doc">
-<pre class="source">
-HttpResponse.ok(): this(statusCode: HttpStatus.OK);
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="contentLength">
-<button class="show-code">Code</button>
 final int         <strong>contentLength</strong> <a class="anchor-link"
             href="#contentLength"
             title="Permalink to HttpResponse.contentLength">#</a>
@@ -212,26 +89,18 @@ final int         <strong>contentLength</strong> <a class="anchor-link"
 <p>Gets and sets the content length of the response. If the size of
 the response is not known in advance set the content length to
 -1 - which is also the default if not set.</p>
-<pre class="source">
-int get contentLength =&gt; headers.contentLength;
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="headers">
-<button class="show-code">Code</button>
 <a href="../spark.server/HttpHeaders.html">HttpHeaders</a>         <strong>headers</strong> <a class="anchor-link"
             href="#headers"
             title="Permalink to HttpResponse.headers">#</a>
         </h4>
         <div class="doc">
 <p>The response headers.</p>
-<pre class="source">
-HttpHeaders headers = new _HttpHeaders("1.1")
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="reasonPhrase">
-<button class="show-code">Code</button>
 String         <strong>reasonPhrase</strong> <a class="anchor-link"
             href="#reasonPhrase"
             title="Permalink to HttpResponse.reasonPhrase">#</a>
@@ -239,13 +108,9 @@ String         <strong>reasonPhrase</strong> <a class="anchor-link"
         <div class="doc">
 <p>Gets and sets the reason phrase. If no reason phrase is explicitly
 set a default reason phrase is provided.</p>
-<pre class="source">
-String reasonPhrase
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="statusCode">
-<button class="show-code">Code</button>
 int         <strong>statusCode</strong> <a class="anchor-link"
             href="#statusCode"
             title="Permalink to HttpResponse.statusCode">#</a>
@@ -255,79 +120,44 @@ int         <strong>statusCode</strong> <a class="anchor-link"
 the official HTTP status codes use the fields from
 <a class="crossref" href="../spark.server/HttpStatus.html">HttpStatus</a>. If no status code is explicitly set the default
 value <a class="crossref" href="../spark.server/HttpStatus.html#OK">HttpStatus.OK</a> is used.</p>
-<pre class="source">
-int statusCode
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="setContent">
-<button class="show-code">Code</button>
 void <strong>setContent</strong>(String str) <a class="anchor-link" href="#setContent"
               title="Permalink to HttpResponse.setContent">#</a></h4>
 <div class="doc">
-<pre class="source">
-void setContent(String str) {
- // TODO(devoncarew): set the charset to UTF-8
-
- setContentBytes(UTF8.encode(str));
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="setContentBytes">
-<button class="show-code">Code</button>
 void <strong>setContentBytes</strong>(List&lt;int&gt; data) <a class="anchor-link" href="#setContentBytes"
               title="Permalink to HttpResponse.setContentBytes">#</a></h4>
 <div class="doc">
-<pre class="source">
-void setContentBytes(List&lt;int&gt; data) {
- _data = data;
- headers.contentLength = _data.length;
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="setContentStream">
-<button class="show-code">Code</button>
 void <strong>setContentStream</strong>(Stream&lt;List&lt;int&gt;&gt; streamData) <a class="anchor-link" href="#setContentStream"
               title="Permalink to HttpResponse.setContentStream">#</a></h4>
 <div class="doc">
-<pre class="source">
-void setContentStream(Stream&lt;List&lt;int&gt;&gt; streamData) {
- _streamData = streamData;
- headers.contentLength = -1;
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="setContentTypeFrom">
-<button class="show-code">Code</button>
 void <strong>setContentTypeFrom</strong>(String path) <a class="anchor-link" href="#setContentTypeFrom"
               title="Permalink to HttpResponse.setContentTypeFrom">#</a></h4>
 <div class="doc">
 <p>Set the content type for this response given a file path. This auto-detects
 based on the file extension.</p>
-<pre class="source">
-void setContentTypeFrom(String path) {
- headers.contentType = mime.lookupMimeType(path);
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="toString">
-<button class="show-code">Code</button>
 String <strong>toString</strong>() <a class="anchor-link" href="#toString"
               title="Permalink to HttpResponse.toString">#</a></h4>
 <div class="doc">
 <div class="inherited">
 <p>Returns a string representation of this object.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-String toString() =&gt; 'HTTP/1.1 ${statusCode} ${_calcPhrase}';
-</pre>
 </div>
 </div>
 </div>

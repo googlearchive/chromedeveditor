@@ -35,97 +35,10 @@
         
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
-<pre class="source">
-class Spark {
- AceEditor editor;
- SplitView _splitView;
- List _filesViews;
-
- Spark() {
-   document.title = appName;
-
-   query("#newFile").onClick.listen(newFile);
-   query("#openFile").onClick.listen(openFile);
-   query("#saveFile").onClick.listen(saveFile);
-   query("#saveAsFile").onClick.listen(saveAsFile);
-   query("#editorTheme").onChange.listen(setTheme);
-
-   editor = new AceEditor();
-   editor.setTheme('ace/theme/textmate');
-
-   // Some dummy files are added in the left panel.
-   _filesViews = new List();
-   _filesViews.add(new FileItemView('background.js'));
-   _filesViews.add(new FileItemView('index.html'));
-   _filesViews.add(new FileItemView('index.js'));
-   _filesViews.add(new FileItemView('manifest.json'));
-   _filesViews.add(new FileItemView('longlonglong_filename.js'));
-
-   _splitView = new SplitView(query('#splitview'));
-   
-   chrome_gen.app_window.onClosed.listen(handleWindowClosed);
- }
-
- String get appName =&gt; i18n('app_name');
-
- void handleWindowClosed(_) {
-
- }
-
- void newFile(_) {
-   editor.newFile();
-   updatePath();
- }
-
- void openFile(_) {
-   chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
-       type: chrome_gen.ChooseEntryType.OPEN_WRITABLE_FILE);
-   chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
-     chrome_gen.ChromeFileEntry entry = result.entry;
-
-     if (entry != null) {
-       editor.setContent(entry);
-       updatePath();
-     }
-   });
-
- }
-
- void saveAsFile(_) {
-   //TODO: don't show error message if operation cancelled
-   chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
-       type: chrome_gen.ChooseEntryType.SAVE_FILE);
-
-   chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
-     chrome_gen.ChromeFileEntry entry = result.entry;
-     editor.saveAs(entry);
-     updatePath();
-   }).catchError((_) =&gt; updateError('Error on save as'));
- }
-
- void saveFile(_) {
-   editor.save();
- }
-
- void setTheme(_){
-   editor.setTheme((query("#editorTheme") as SelectElement).value);
- }
-
- void updateError(String string) {
-   query("#error").innerHtml = string;
- }
-
- void updatePath() {
-   print(editor.getPathInfo());
-   query("#path").innerHtml = editor.getPathInfo();
- }
-}
-</pre>
 </div>
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>Spark</strong>() <a class="anchor-link" href="#"
               title="Permalink to Spark.Spark">#</a></h4>
 <div class="doc">
@@ -135,178 +48,84 @@ new <strong>Spark</strong>() <a class="anchor-link" href="#"
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-Spark() {
- document.title = appName;
-
- query("#newFile").onClick.listen(newFile);
- query("#openFile").onClick.listen(openFile);
- query("#saveFile").onClick.listen(saveFile);
- query("#saveAsFile").onClick.listen(saveAsFile);
- query("#editorTheme").onChange.listen(setTheme);
-
- editor = new AceEditor();
- editor.setTheme('ace/theme/textmate');
-
- // Some dummy files are added in the left panel.
- _filesViews = new List();
- _filesViews.add(new FileItemView('background.js'));
- _filesViews.add(new FileItemView('index.html'));
- _filesViews.add(new FileItemView('index.js'));
- _filesViews.add(new FileItemView('manifest.json'));
- _filesViews.add(new FileItemView('longlonglong_filename.js'));
-
- _splitView = new SplitView(query('#splitview'));
- 
- chrome_gen.app_window.onClosed.listen(handleWindowClosed);
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="appName">
-<button class="show-code">Code</button>
 final String         <strong>appName</strong> <a class="anchor-link"
             href="#appName"
             title="Permalink to Spark.appName">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-String get appName =&gt; i18n('app_name');
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="editor">
-<button class="show-code">Code</button>
 <a href="../spark.ace/AceEditor.html">AceEditor</a>         <strong>editor</strong> <a class="anchor-link"
             href="#editor"
             title="Permalink to Spark.editor">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-AceEditor editor
-</pre>
+</div>
+</div>
+<div class="field"><h4 id="workspace">
+<a href="../spark.workspace/Workspace.html">Workspace</a>         <strong>workspace</strong> <a class="anchor-link"
+            href="#workspace"
+            title="Permalink to Spark.workspace">#</a>
+        </h4>
+        <div class="doc">
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="handleWindowClosed">
-<button class="show-code">Code</button>
 void <strong>handleWindowClosed</strong>(_) <a class="anchor-link" href="#handleWindowClosed"
               title="Permalink to Spark.handleWindowClosed">#</a></h4>
 <div class="doc">
-<pre class="source">
-void handleWindowClosed(_) {
-
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="newFile">
-<button class="show-code">Code</button>
 void <strong>newFile</strong>(_) <a class="anchor-link" href="#newFile"
               title="Permalink to Spark.newFile">#</a></h4>
 <div class="doc">
-<pre class="source">
-void newFile(_) {
- editor.newFile();
- updatePath();
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="openFile">
-<button class="show-code">Code</button>
 void <strong>openFile</strong>(_) <a class="anchor-link" href="#openFile"
               title="Permalink to Spark.openFile">#</a></h4>
 <div class="doc">
-<pre class="source">
-void openFile(_) {
- chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
-     type: chrome_gen.ChooseEntryType.OPEN_WRITABLE_FILE);
- chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
-   chrome_gen.ChromeFileEntry entry = result.entry;
-
-   if (entry != null) {
-     editor.setContent(entry);
-     updatePath();
-   }
- });
-
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="saveAsFile">
-<button class="show-code">Code</button>
 void <strong>saveAsFile</strong>(_) <a class="anchor-link" href="#saveAsFile"
               title="Permalink to Spark.saveAsFile">#</a></h4>
 <div class="doc">
-<pre class="source">
-void saveAsFile(_) {
- //TODO: don't show error message if operation cancelled
- chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
-     type: chrome_gen.ChooseEntryType.SAVE_FILE);
-
- chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
-   chrome_gen.ChromeFileEntry entry = result.entry;
-   editor.saveAs(entry);
-   updatePath();
- }).catchError((_) =&gt; updateError('Error on save as'));
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="saveFile">
-<button class="show-code">Code</button>
 void <strong>saveFile</strong>(_) <a class="anchor-link" href="#saveFile"
               title="Permalink to Spark.saveFile">#</a></h4>
 <div class="doc">
-<pre class="source">
-void saveFile(_) {
- editor.save();
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="setTheme">
-<button class="show-code">Code</button>
 void <strong>setTheme</strong>(_) <a class="anchor-link" href="#setTheme"
               title="Permalink to Spark.setTheme">#</a></h4>
 <div class="doc">
-<pre class="source">
-void setTheme(_){
- editor.setTheme((query("#editorTheme") as SelectElement).value);
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="updateError">
-<button class="show-code">Code</button>
 void <strong>updateError</strong>(String string) <a class="anchor-link" href="#updateError"
               title="Permalink to Spark.updateError">#</a></h4>
 <div class="doc">
-<pre class="source">
-void updateError(String string) {
- query("#error").innerHtml = string;
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="updatePath">
-<button class="show-code">Code</button>
 void <strong>updatePath</strong>() <a class="anchor-link" href="#updatePath"
               title="Permalink to Spark.updatePath">#</a></h4>
 <div class="doc">
-<pre class="source">
-void updatePath() {
- print(editor.getPathInfo());
- query("#path").innerHtml = editor.getPathInfo();
-}
-</pre>
 </div>
 </div>
 </div>

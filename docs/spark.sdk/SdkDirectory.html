@@ -39,62 +39,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>An SDK directory entry.</p>
-<pre class="source">
-class SdkDirectory extends SdkEntity {
- List&lt;SdkEntity&gt; _children;
-
- SdkDirectory._(SdkDirectory parent, String path): super._(parent, path);
-
- /**
-  * Return the given named child of this directory.
-  */
- Future&lt;SdkEntity&gt; getChild(String name) {
-   return getChildren().then((List&lt;SdkEntity&gt; children) {
-     return children.firstWhere(
-         (c) =&gt; c.name == name,
-         orElse: () =&gt; null);
-   });
- }
-
- /**
-  * Return the children of this directory.
-  */
- Future&lt;List&lt;SdkEntity&gt;&gt; getChildren() {
-   if (_children != null) {
-     return new Future.value(_children);
-   } else {
-     Completer completer = new Completer();
-
-     _getContents("${path}/.files").then((String value) {
-       _children = _parseJson(value);
-       completer.complete(_children);
-     }).catchError((_) {
-       _children = new List&lt;SdkEntity&gt;();
-       completer.complete(_children);
-     });
-
-     return completer.future;
-   }
- }
-
- List&lt;SdkEntity&gt; _parseJson(String jsonText) {
-   List&lt;SdkEntity&gt; results = new List&lt;SdkEntity&gt;();
-
-   var values = JSON.decode(jsonText);
-
-   for (String value in values) {
-     if (value.endsWith('/')) {
-       results.add(new SdkDirectory._(this,
-           "${path}/${value.substring(0, value.length - 1)}"));
-     } else {
-       results.add(new SdkFile._(this,"${path}/${value}"));
-     }
-   }
-
-   return results;
- }
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -105,92 +49,47 @@ class SdkDirectory extends SdkEntity {
 <div class="inherited">
 <h3>Properties</h3>
 <div class="field inherited"><h4 id="name">
-<button class="show-code">Code</button>
 final String         <strong>name</strong> <a class="anchor-link"
             href="#name"
             title="Permalink to SdkDirectory.name">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The name of this entity (<code>string.dart</code>).</p>
-<pre class="source">
-String get name {
- int index = path.lastIndexOf('/');
- return index == -1 ? path : path.substring(index + 1);
-}
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="parent">
-<button class="show-code">Code</button>
 final <a href="../spark.sdk/SdkDirectory.html">SdkDirectory</a>         <strong>parent</strong> <a class="anchor-link"
             href="#parent"
             title="Permalink to SdkDirectory.parent">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The parent of this entity.</p>
-<pre class="source">
-final SdkDirectory parent
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="path">
-<button class="show-code">Code</button>
 final String         <strong>path</strong> <a class="anchor-link"
             href="#path"
             title="Permalink to SdkDirectory.path">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The full path of this entity (<code>sdk/lib/core/string.dart</code>).</p>
-<pre class="source">
-final String path
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="getChild">
-<button class="show-code">Code</button>
 Future&lt;<a href="../spark.sdk/SdkEntity.html">SdkEntity</a>&gt; <strong>getChild</strong>(String name) <a class="anchor-link" href="#getChild"
               title="Permalink to SdkDirectory.getChild">#</a></h4>
 <div class="doc">
 <p>Return the given named child of this directory.</p>
-<pre class="source">
-Future&lt;SdkEntity&gt; getChild(String name) {
- return getChildren().then((List&lt;SdkEntity&gt; children) {
-   return children.firstWhere(
-       (c) =&gt; c.name == name,
-       orElse: () =&gt; null);
- });
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="getChildren">
-<button class="show-code">Code</button>
 Future&lt;List&lt;<a href="../spark.sdk/SdkEntity.html">SdkEntity</a>&gt;&gt; <strong>getChildren</strong>() <a class="anchor-link" href="#getChildren"
               title="Permalink to SdkDirectory.getChildren">#</a></h4>
 <div class="doc">
 <p>Return the children of this directory.</p>
-<pre class="source">
-Future&lt;List&lt;SdkEntity&gt;&gt; getChildren() {
- if (_children != null) {
-   return new Future.value(_children);
- } else {
-   Completer completer = new Completer();
-
-   _getContents("${path}/.files").then((String value) {
-     _children = _parseJson(value);
-     completer.complete(_children);
-   }).catchError((_) {
-     _children = new List&lt;SdkEntity&gt;();
-     completer.complete(_children);
-   });
-
-   return completer.future;
- }
-}
-</pre>
 </div>
 </div>
 </div>

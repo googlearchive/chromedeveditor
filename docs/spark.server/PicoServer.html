@@ -49,131 +49,48 @@ addServlet(fooServlet);
 addServlet(barServlet);
 dispose();
 </code></pre>
-<pre class="source">
-class PicoServer {
- tcp.TcpServer _server;
- List&lt;PicoServlet&gt; _servlets = [];
-
- /**
-  * Create an instance of an http server, bound to the given port. If [port] is
-  * `0`, this will bind to any available port.
-  */
- static Future&lt;PicoServer&gt; createServer([int port = 0]) {
-   return tcp.TcpServer.createServerSocket(port).then((tcp.TcpServer server) {
-     return new PicoServer._(server);
-   });
- }
-
- PicoServer._(this._server) {
-   _server.onAccept.listen(_serveClient);
- }
-
- int get port =&gt; _server.port;
-
- void addServlet(PicoServlet servlet) =&gt; _servlets.add(servlet);
-
- Future&lt;tcp.SocketInfo&gt; getInfo() =&gt; _server.getInfo();
-
- void dispose() {
-   _server.dispose();
- }
-
- void _serveClient(tcp.TcpClient client) {
-   HttpRequest._parse(client).then((HttpRequest request) {
-     for (PicoServlet servlet in _servlets) {
-       if (servlet.canServe(request)) {
-         _serve(servlet, client, request);
-         return;
-       }
-     }
-
-     HttpResponse response = new HttpResponse.notFound();
-     response._send(client);
-     client.dispose();
-   }).catchError((e) {
-     HttpResponse response = new HttpResponse.badRequest();
-     response._send(client);
-     client.dispose();
-   });
- }
-
- void _serve(PicoServlet servlet, tcp.TcpClient client, HttpRequest request) {
-   servlet.serve(request).then((HttpResponse response) {
-     response._send(client).then((_) {
-       client.dispose();
-     });
-   });
- }
-}
-</pre>
 </div>
 <div>
 <h3>Static Methods</h3>
 <div class="method"><h4 id="createServer">
-<button class="show-code">Code</button>
 Future&lt;<a href="../spark.server/PicoServer.html">PicoServer</a>&gt; <strong>createServer</strong>([int port = 0]) <a class="anchor-link" href="#createServer"
               title="Permalink to PicoServer.createServer">#</a></h4>
 <div class="doc">
 <p>Create an instance of an http server, bound to the given port. If 
 <span class="param">port</span> is
 <code>0</code>, this will bind to any available port.</p>
-<pre class="source">
-static Future&lt;PicoServer&gt; createServer([int port = 0]) {
- return tcp.TcpServer.createServerSocket(port).then((tcp.TcpServer server) {
-   return new PicoServer._(server);
- });
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="port">
-<button class="show-code">Code</button>
 final int         <strong>port</strong> <a class="anchor-link"
             href="#port"
             title="Permalink to PicoServer.port">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-int get port =&gt; _server.port;
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="addServlet">
-<button class="show-code">Code</button>
 void <strong>addServlet</strong>(<a href="../spark.server/PicoServlet.html">PicoServlet</a> servlet) <a class="anchor-link" href="#addServlet"
               title="Permalink to PicoServer.addServlet">#</a></h4>
 <div class="doc">
-<pre class="source">
-void addServlet(PicoServlet servlet) =&gt; _servlets.add(servlet);
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="dispose">
-<button class="show-code">Code</button>
 void <strong>dispose</strong>() <a class="anchor-link" href="#dispose"
               title="Permalink to PicoServer.dispose">#</a></h4>
 <div class="doc">
-<pre class="source">
-void dispose() {
- _server.dispose();
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="getInfo">
-<button class="show-code">Code</button>
 Future&lt;SocketInfo&gt; <strong>getInfo</strong>() <a class="anchor-link" href="#getInfo"
               title="Permalink to PicoServer.getInfo">#</a></h4>
 <div class="doc">
-<pre class="source">
-Future&lt;tcp.SocketInfo&gt; getInfo() =&gt; _server.getInfo();
-</pre>
 </div>
 </div>
 </div>

@@ -44,46 +44,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>A tree type git object.</p>
-<pre class="source">
-class TreeObject extends GitObject {
-
- List&lt;TreeEntry&gt; entries;
-
- TreeObject(String sha, String data) {
-   this._type = "tree";
-   this._sha = sha;
-   this._data = data;
-   _parse();
- }
-
- // Parses the byte stream and constructs the tree object.
- void _parse() {
-   Uint8List buffer = new Uint8List.fromList(encodeUtf8(_data));
-   List&lt;TreeEntry&gt; treeEntries;
-   int idx = 0;
-   while (idx &lt; buffer.length) {
-     int entryStart = idx;
-     while (buffer[idx] != 0) {
-       if (idx &gt;= buffer.length) {
-         //TODO(grv) : better exception handling.
-         throw new ParseError("Unable to parse git tree object");
-       }
-       idx++;
-     }
-     bool isBlob = buffer[entryStart] == 49; // '1' character
-     String nameStr = UTF8.decode(buffer.sublist(
-         entryStart + (isBlob ? 7: 6), idx++));
-     nameStr = Uri.decodeComponent(HTML_ESCAPE.convert(nameStr));
-     TreeEntry entry = new TreeEntry(isBlob, nameStr, buffer.sublist(idx, idx + 20));
-     treeEntries.add(entry);
-     idx += 20;
-   }
-   this.entries = treeEntries;
-   // Sort tree entries in ascending order.
-   this.entries.sort((TreeEntry a, TreeEntry b) =&gt; a.name.compareTo(b.name));
- }
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -91,7 +51,6 @@ class TreeObject extends GitObject {
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>TreeObject</strong>(String sha, String data) <a class="anchor-link" href="#"
               title="Permalink to TreeObject.TreeObject">#</a></h4>
 <div class="doc">
@@ -101,45 +60,29 @@ new <strong>TreeObject</strong>(String sha, String data) <a class="anchor-link" 
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-TreeObject(String sha, String data) {
- this._type = "tree";
- this._sha = sha;
- this._data = data;
- _parse();
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="entries">
-<button class="show-code">Code</button>
 List&lt;<a href="../git.objects/TreeEntry.html">TreeEntry</a>&gt;         <strong>entries</strong> <a class="anchor-link"
             href="#entries"
             title="Permalink to TreeObject.entries">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-List&lt;TreeEntry&gt; entries
-</pre>
 </div>
 </div>
 </div>
 <div class="inherited">
 <h3>Methods</h3>
 <div class="method inherited"><h4 id="toString">
-<button class="show-code">Code</button>
 String <strong>toString</strong>() <a class="anchor-link" href="#toString"
               title="Permalink to TreeObject.toString">#</a></h4>
 <div class="inherited-from">inherited from <a href="../git.objects/GitObject.html">GitObject</a> </div><div class="doc">
 <div class="inherited">
 <p>Returns a string representation of this object.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-String toString() =&gt; _data;
-</pre>
 </div>
 </div>
 </div>

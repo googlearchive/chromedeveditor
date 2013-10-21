@@ -43,671 +43,352 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>HTTP status codes.</p>
-<pre class="source">
-abstract class HttpStatus {
- static const int CONTINUE = 100;
- static const int SWITCHING_PROTOCOLS = 101;
- static const int OK = 200;
- static const int CREATED = 201;
- static const int ACCEPTED = 202;
- static const int NON_AUTHORITATIVE_INFORMATION = 203;
- static const int NO_CONTENT = 204;
- static const int RESET_CONTENT = 205;
- static const int PARTIAL_CONTENT = 206;
- static const int MULTIPLE_CHOICES = 300;
- static const int MOVED_PERMANENTLY = 301;
- static const int FOUND = 302;
- static const int MOVED_TEMPORARILY = 302; // Common alias for FOUND.
- static const int SEE_OTHER = 303;
- static const int NOT_MODIFIED = 304;
- static const int USE_PROXY = 305;
- static const int TEMPORARY_REDIRECT = 307;
- static const int BAD_REQUEST = 400;
- static const int UNAUTHORIZED = 401;
- static const int PAYMENT_REQUIRED = 402;
- static const int FORBIDDEN = 403;
- static const int NOT_FOUND = 404;
- static const int METHOD_NOT_ALLOWED = 405;
- static const int NOT_ACCEPTABLE = 406;
- static const int PROXY_AUTHENTICATION_REQUIRED = 407;
- static const int REQUEST_TIMEOUT = 408;
- static const int CONFLICT = 409;
- static const int GONE = 410;
- static const int LENGTH_REQUIRED = 411;
- static const int PRECONDITION_FAILED = 412;
- static const int REQUEST_ENTITY_TOO_LARGE = 413;
- static const int REQUEST_URI_TOO_LONG = 414;
- static const int UNSUPPORTED_MEDIA_TYPE = 415;
- static const int REQUESTED_RANGE_NOT_SATISFIABLE = 416;
- static const int EXPECTATION_FAILED = 417;
- static const int INTERNAL_SERVER_ERROR = 500;
- static const int NOT_IMPLEMENTED = 501;
- static const int BAD_GATEWAY = 502;
- static const int SERVICE_UNAVAILABLE = 503;
- static const int GATEWAY_TIMEOUT = 504;
- static const int HTTP_VERSION_NOT_SUPPORTED = 505;
- // Client generated status code.
- static const int NETWORK_CONNECT_TIMEOUT_ERROR = 599;
-
- static String getReasonPhrase(int statusCode) {
-   switch (statusCode) {
-     case HttpStatus.CONTINUE: return "Continue";
-     case HttpStatus.SWITCHING_PROTOCOLS: return "Switching Protocols";
-     case HttpStatus.OK: return "OK";
-     case HttpStatus.CREATED: return "Created";
-     case HttpStatus.ACCEPTED: return "Accepted";
-     case HttpStatus.NON_AUTHORITATIVE_INFORMATION:
-       return "Non-Authoritative Information";
-     case HttpStatus.NO_CONTENT: return "No Content";
-     case HttpStatus.RESET_CONTENT: return "Reset Content";
-     case HttpStatus.PARTIAL_CONTENT: return "Partial Content";
-     case HttpStatus.MULTIPLE_CHOICES: return "Multiple Choices";
-     case HttpStatus.MOVED_PERMANENTLY: return "Moved Permanently";
-     case HttpStatus.FOUND: return "Found";
-     case HttpStatus.SEE_OTHER: return "See Other";
-     case HttpStatus.NOT_MODIFIED: return "Not Modified";
-     case HttpStatus.USE_PROXY: return "Use Proxy";
-     case HttpStatus.TEMPORARY_REDIRECT: return "Temporary Redirect";
-     case HttpStatus.BAD_REQUEST: return "Bad Request";
-     case HttpStatus.UNAUTHORIZED: return "Unauthorized";
-     case HttpStatus.PAYMENT_REQUIRED: return "Payment Required";
-     case HttpStatus.FORBIDDEN: return "Forbidden";
-     case HttpStatus.NOT_FOUND: return "Not Found";
-     case HttpStatus.METHOD_NOT_ALLOWED: return "Method Not Allowed";
-     case HttpStatus.NOT_ACCEPTABLE: return "Not Acceptable";
-     case HttpStatus.PROXY_AUTHENTICATION_REQUIRED:
-       return "Proxy Authentication Required";
-     case HttpStatus.REQUEST_TIMEOUT: return "Request Time-out";
-     case HttpStatus.CONFLICT: return "Conflict";
-     case HttpStatus.GONE: return "Gone";
-     case HttpStatus.LENGTH_REQUIRED: return "Length Required";
-     case HttpStatus.PRECONDITION_FAILED: return "Precondition Failed";
-     case HttpStatus.REQUEST_ENTITY_TOO_LARGE:
-       return "Request Entity Too Large";
-     case HttpStatus.REQUEST_URI_TOO_LONG: return "Request-URI Too Large";
-     case HttpStatus.UNSUPPORTED_MEDIA_TYPE: return "Unsupported Media Type";
-     case HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE:
-       return "Requested range not satisfiable";
-     case HttpStatus.EXPECTATION_FAILED: return "Expectation Failed";
-     case HttpStatus.INTERNAL_SERVER_ERROR: return "Internal Server Error";
-     case HttpStatus.NOT_IMPLEMENTED: return "Not Implemented";
-     case HttpStatus.BAD_GATEWAY: return "Bad Gateway";
-     case HttpStatus.SERVICE_UNAVAILABLE: return "Service Unavailable";
-     case HttpStatus.GATEWAY_TIMEOUT: return "Gateway Time-out";
-     case HttpStatus.HTTP_VERSION_NOT_SUPPORTED:
-       return "Http Version not supported";
-     default: return "Status $statusCode";
-   }
- }
-}
-</pre>
 </div>
 <div>
 <h3>Static Properties</h3>
 <div class="field"><h4 id="ACCEPTED">
-<button class="show-code">Code</button>
 const int         <strong>ACCEPTED</strong> <a class="anchor-link"
             href="#ACCEPTED"
             title="Permalink to HttpStatus.ACCEPTED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int ACCEPTED = 202
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="BAD_GATEWAY">
-<button class="show-code">Code</button>
 const int         <strong>BAD_GATEWAY</strong> <a class="anchor-link"
             href="#BAD_GATEWAY"
             title="Permalink to HttpStatus.BAD_GATEWAY">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int BAD_GATEWAY = 502
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="BAD_REQUEST">
-<button class="show-code">Code</button>
 const int         <strong>BAD_REQUEST</strong> <a class="anchor-link"
             href="#BAD_REQUEST"
             title="Permalink to HttpStatus.BAD_REQUEST">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int BAD_REQUEST = 400
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="CONFLICT">
-<button class="show-code">Code</button>
 const int         <strong>CONFLICT</strong> <a class="anchor-link"
             href="#CONFLICT"
             title="Permalink to HttpStatus.CONFLICT">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int CONFLICT = 409
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="CONTINUE">
-<button class="show-code">Code</button>
 const int         <strong>CONTINUE</strong> <a class="anchor-link"
             href="#CONTINUE"
             title="Permalink to HttpStatus.CONTINUE">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int CONTINUE = 100
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="CREATED">
-<button class="show-code">Code</button>
 const int         <strong>CREATED</strong> <a class="anchor-link"
             href="#CREATED"
             title="Permalink to HttpStatus.CREATED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int CREATED = 201
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="EXPECTATION_FAILED">
-<button class="show-code">Code</button>
 const int         <strong>EXPECTATION_FAILED</strong> <a class="anchor-link"
             href="#EXPECTATION_FAILED"
             title="Permalink to HttpStatus.EXPECTATION_FAILED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int EXPECTATION_FAILED = 417
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="FORBIDDEN">
-<button class="show-code">Code</button>
 const int         <strong>FORBIDDEN</strong> <a class="anchor-link"
             href="#FORBIDDEN"
             title="Permalink to HttpStatus.FORBIDDEN">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int FORBIDDEN = 403
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="FOUND">
-<button class="show-code">Code</button>
 const int         <strong>FOUND</strong> <a class="anchor-link"
             href="#FOUND"
             title="Permalink to HttpStatus.FOUND">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int FOUND = 302
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="GATEWAY_TIMEOUT">
-<button class="show-code">Code</button>
 const int         <strong>GATEWAY_TIMEOUT</strong> <a class="anchor-link"
             href="#GATEWAY_TIMEOUT"
             title="Permalink to HttpStatus.GATEWAY_TIMEOUT">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int GATEWAY_TIMEOUT = 504
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="GONE">
-<button class="show-code">Code</button>
 const int         <strong>GONE</strong> <a class="anchor-link"
             href="#GONE"
             title="Permalink to HttpStatus.GONE">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int GONE = 410
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="HTTP_VERSION_NOT_SUPPORTED">
-<button class="show-code">Code</button>
 const int         <strong>HTTP_VERSION_NOT_SUPPORTED</strong> <a class="anchor-link"
             href="#HTTP_VERSION_NOT_SUPPORTED"
             title="Permalink to HttpStatus.HTTP_VERSION_NOT_SUPPORTED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int HTTP_VERSION_NOT_SUPPORTED = 505
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="INTERNAL_SERVER_ERROR">
-<button class="show-code">Code</button>
 const int         <strong>INTERNAL_SERVER_ERROR</strong> <a class="anchor-link"
             href="#INTERNAL_SERVER_ERROR"
             title="Permalink to HttpStatus.INTERNAL_SERVER_ERROR">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int INTERNAL_SERVER_ERROR = 500
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="LENGTH_REQUIRED">
-<button class="show-code">Code</button>
 const int         <strong>LENGTH_REQUIRED</strong> <a class="anchor-link"
             href="#LENGTH_REQUIRED"
             title="Permalink to HttpStatus.LENGTH_REQUIRED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int LENGTH_REQUIRED = 411
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="METHOD_NOT_ALLOWED">
-<button class="show-code">Code</button>
 const int         <strong>METHOD_NOT_ALLOWED</strong> <a class="anchor-link"
             href="#METHOD_NOT_ALLOWED"
             title="Permalink to HttpStatus.METHOD_NOT_ALLOWED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int METHOD_NOT_ALLOWED = 405
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="MOVED_PERMANENTLY">
-<button class="show-code">Code</button>
 const int         <strong>MOVED_PERMANENTLY</strong> <a class="anchor-link"
             href="#MOVED_PERMANENTLY"
             title="Permalink to HttpStatus.MOVED_PERMANENTLY">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int MOVED_PERMANENTLY = 301
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="MOVED_TEMPORARILY">
-<button class="show-code">Code</button>
 const int         <strong>MOVED_TEMPORARILY</strong> <a class="anchor-link"
             href="#MOVED_TEMPORARILY"
             title="Permalink to HttpStatus.MOVED_TEMPORARILY">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int MOVED_TEMPORARILY = 302
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="MULTIPLE_CHOICES">
-<button class="show-code">Code</button>
 const int         <strong>MULTIPLE_CHOICES</strong> <a class="anchor-link"
             href="#MULTIPLE_CHOICES"
             title="Permalink to HttpStatus.MULTIPLE_CHOICES">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int MULTIPLE_CHOICES = 300
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="NETWORK_CONNECT_TIMEOUT_ERROR">
-<button class="show-code">Code</button>
 const int         <strong>NETWORK_CONNECT_TIMEOUT_ERROR</strong> <a class="anchor-link"
             href="#NETWORK_CONNECT_TIMEOUT_ERROR"
             title="Permalink to HttpStatus.NETWORK_CONNECT_TIMEOUT_ERROR">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int NETWORK_CONNECT_TIMEOUT_ERROR = 599
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="NO_CONTENT">
-<button class="show-code">Code</button>
 const int         <strong>NO_CONTENT</strong> <a class="anchor-link"
             href="#NO_CONTENT"
             title="Permalink to HttpStatus.NO_CONTENT">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int NO_CONTENT = 204
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="NON_AUTHORITATIVE_INFORMATION">
-<button class="show-code">Code</button>
 const int         <strong>NON_AUTHORITATIVE_INFORMATION</strong> <a class="anchor-link"
             href="#NON_AUTHORITATIVE_INFORMATION"
             title="Permalink to HttpStatus.NON_AUTHORITATIVE_INFORMATION">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int NON_AUTHORITATIVE_INFORMATION = 203
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="NOT_ACCEPTABLE">
-<button class="show-code">Code</button>
 const int         <strong>NOT_ACCEPTABLE</strong> <a class="anchor-link"
             href="#NOT_ACCEPTABLE"
             title="Permalink to HttpStatus.NOT_ACCEPTABLE">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int NOT_ACCEPTABLE = 406
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="NOT_FOUND">
-<button class="show-code">Code</button>
 const int         <strong>NOT_FOUND</strong> <a class="anchor-link"
             href="#NOT_FOUND"
             title="Permalink to HttpStatus.NOT_FOUND">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int NOT_FOUND = 404
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="NOT_IMPLEMENTED">
-<button class="show-code">Code</button>
 const int         <strong>NOT_IMPLEMENTED</strong> <a class="anchor-link"
             href="#NOT_IMPLEMENTED"
             title="Permalink to HttpStatus.NOT_IMPLEMENTED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int NOT_IMPLEMENTED = 501
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="NOT_MODIFIED">
-<button class="show-code">Code</button>
 const int         <strong>NOT_MODIFIED</strong> <a class="anchor-link"
             href="#NOT_MODIFIED"
             title="Permalink to HttpStatus.NOT_MODIFIED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int NOT_MODIFIED = 304
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="OK">
-<button class="show-code">Code</button>
 const int         <strong>OK</strong> <a class="anchor-link"
             href="#OK"
             title="Permalink to HttpStatus.OK">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int OK = 200
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="PARTIAL_CONTENT">
-<button class="show-code">Code</button>
 const int         <strong>PARTIAL_CONTENT</strong> <a class="anchor-link"
             href="#PARTIAL_CONTENT"
             title="Permalink to HttpStatus.PARTIAL_CONTENT">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int PARTIAL_CONTENT = 206
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="PAYMENT_REQUIRED">
-<button class="show-code">Code</button>
 const int         <strong>PAYMENT_REQUIRED</strong> <a class="anchor-link"
             href="#PAYMENT_REQUIRED"
             title="Permalink to HttpStatus.PAYMENT_REQUIRED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int PAYMENT_REQUIRED = 402
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="PRECONDITION_FAILED">
-<button class="show-code">Code</button>
 const int         <strong>PRECONDITION_FAILED</strong> <a class="anchor-link"
             href="#PRECONDITION_FAILED"
             title="Permalink to HttpStatus.PRECONDITION_FAILED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int PRECONDITION_FAILED = 412
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="PROXY_AUTHENTICATION_REQUIRED">
-<button class="show-code">Code</button>
 const int         <strong>PROXY_AUTHENTICATION_REQUIRED</strong> <a class="anchor-link"
             href="#PROXY_AUTHENTICATION_REQUIRED"
             title="Permalink to HttpStatus.PROXY_AUTHENTICATION_REQUIRED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int PROXY_AUTHENTICATION_REQUIRED = 407
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="REQUEST_ENTITY_TOO_LARGE">
-<button class="show-code">Code</button>
 const int         <strong>REQUEST_ENTITY_TOO_LARGE</strong> <a class="anchor-link"
             href="#REQUEST_ENTITY_TOO_LARGE"
             title="Permalink to HttpStatus.REQUEST_ENTITY_TOO_LARGE">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int REQUEST_ENTITY_TOO_LARGE = 413
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="REQUEST_TIMEOUT">
-<button class="show-code">Code</button>
 const int         <strong>REQUEST_TIMEOUT</strong> <a class="anchor-link"
             href="#REQUEST_TIMEOUT"
             title="Permalink to HttpStatus.REQUEST_TIMEOUT">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int REQUEST_TIMEOUT = 408
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="REQUEST_URI_TOO_LONG">
-<button class="show-code">Code</button>
 const int         <strong>REQUEST_URI_TOO_LONG</strong> <a class="anchor-link"
             href="#REQUEST_URI_TOO_LONG"
             title="Permalink to HttpStatus.REQUEST_URI_TOO_LONG">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int REQUEST_URI_TOO_LONG = 414
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="REQUESTED_RANGE_NOT_SATISFIABLE">
-<button class="show-code">Code</button>
 const int         <strong>REQUESTED_RANGE_NOT_SATISFIABLE</strong> <a class="anchor-link"
             href="#REQUESTED_RANGE_NOT_SATISFIABLE"
             title="Permalink to HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int REQUESTED_RANGE_NOT_SATISFIABLE = 416
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="RESET_CONTENT">
-<button class="show-code">Code</button>
 const int         <strong>RESET_CONTENT</strong> <a class="anchor-link"
             href="#RESET_CONTENT"
             title="Permalink to HttpStatus.RESET_CONTENT">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int RESET_CONTENT = 205
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="SEE_OTHER">
-<button class="show-code">Code</button>
 const int         <strong>SEE_OTHER</strong> <a class="anchor-link"
             href="#SEE_OTHER"
             title="Permalink to HttpStatus.SEE_OTHER">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int SEE_OTHER = 303
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="SERVICE_UNAVAILABLE">
-<button class="show-code">Code</button>
 const int         <strong>SERVICE_UNAVAILABLE</strong> <a class="anchor-link"
             href="#SERVICE_UNAVAILABLE"
             title="Permalink to HttpStatus.SERVICE_UNAVAILABLE">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int SERVICE_UNAVAILABLE = 503
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="SWITCHING_PROTOCOLS">
-<button class="show-code">Code</button>
 const int         <strong>SWITCHING_PROTOCOLS</strong> <a class="anchor-link"
             href="#SWITCHING_PROTOCOLS"
             title="Permalink to HttpStatus.SWITCHING_PROTOCOLS">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int SWITCHING_PROTOCOLS = 101
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="TEMPORARY_REDIRECT">
-<button class="show-code">Code</button>
 const int         <strong>TEMPORARY_REDIRECT</strong> <a class="anchor-link"
             href="#TEMPORARY_REDIRECT"
             title="Permalink to HttpStatus.TEMPORARY_REDIRECT">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int TEMPORARY_REDIRECT = 307
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="UNAUTHORIZED">
-<button class="show-code">Code</button>
 const int         <strong>UNAUTHORIZED</strong> <a class="anchor-link"
             href="#UNAUTHORIZED"
             title="Permalink to HttpStatus.UNAUTHORIZED">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int UNAUTHORIZED = 401
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="UNSUPPORTED_MEDIA_TYPE">
-<button class="show-code">Code</button>
 const int         <strong>UNSUPPORTED_MEDIA_TYPE</strong> <a class="anchor-link"
             href="#UNSUPPORTED_MEDIA_TYPE"
             title="Permalink to HttpStatus.UNSUPPORTED_MEDIA_TYPE">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int UNSUPPORTED_MEDIA_TYPE = 415
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="USE_PROXY">
-<button class="show-code">Code</button>
 const int         <strong>USE_PROXY</strong> <a class="anchor-link"
             href="#USE_PROXY"
             title="Permalink to HttpStatus.USE_PROXY">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-static const int USE_PROXY = 305
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Static Methods</h3>
 <div class="method"><h4 id="getReasonPhrase">
-<button class="show-code">Code</button>
 String <strong>getReasonPhrase</strong>(int statusCode) <a class="anchor-link" href="#getReasonPhrase"
               title="Permalink to HttpStatus.getReasonPhrase">#</a></h4>
 <div class="doc">
-<pre class="source">
-static String getReasonPhrase(int statusCode) {
- switch (statusCode) {
-   case HttpStatus.CONTINUE: return "Continue";
-   case HttpStatus.SWITCHING_PROTOCOLS: return "Switching Protocols";
-   case HttpStatus.OK: return "OK";
-   case HttpStatus.CREATED: return "Created";
-   case HttpStatus.ACCEPTED: return "Accepted";
-   case HttpStatus.NON_AUTHORITATIVE_INFORMATION:
-     return "Non-Authoritative Information";
-   case HttpStatus.NO_CONTENT: return "No Content";
-   case HttpStatus.RESET_CONTENT: return "Reset Content";
-   case HttpStatus.PARTIAL_CONTENT: return "Partial Content";
-   case HttpStatus.MULTIPLE_CHOICES: return "Multiple Choices";
-   case HttpStatus.MOVED_PERMANENTLY: return "Moved Permanently";
-   case HttpStatus.FOUND: return "Found";
-   case HttpStatus.SEE_OTHER: return "See Other";
-   case HttpStatus.NOT_MODIFIED: return "Not Modified";
-   case HttpStatus.USE_PROXY: return "Use Proxy";
-   case HttpStatus.TEMPORARY_REDIRECT: return "Temporary Redirect";
-   case HttpStatus.BAD_REQUEST: return "Bad Request";
-   case HttpStatus.UNAUTHORIZED: return "Unauthorized";
-   case HttpStatus.PAYMENT_REQUIRED: return "Payment Required";
-   case HttpStatus.FORBIDDEN: return "Forbidden";
-   case HttpStatus.NOT_FOUND: return "Not Found";
-   case HttpStatus.METHOD_NOT_ALLOWED: return "Method Not Allowed";
-   case HttpStatus.NOT_ACCEPTABLE: return "Not Acceptable";
-   case HttpStatus.PROXY_AUTHENTICATION_REQUIRED:
-     return "Proxy Authentication Required";
-   case HttpStatus.REQUEST_TIMEOUT: return "Request Time-out";
-   case HttpStatus.CONFLICT: return "Conflict";
-   case HttpStatus.GONE: return "Gone";
-   case HttpStatus.LENGTH_REQUIRED: return "Length Required";
-   case HttpStatus.PRECONDITION_FAILED: return "Precondition Failed";
-   case HttpStatus.REQUEST_ENTITY_TOO_LARGE:
-     return "Request Entity Too Large";
-   case HttpStatus.REQUEST_URI_TOO_LONG: return "Request-URI Too Large";
-   case HttpStatus.UNSUPPORTED_MEDIA_TYPE: return "Unsupported Media Type";
-   case HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE:
-     return "Requested range not satisfiable";
-   case HttpStatus.EXPECTATION_FAILED: return "Expectation Failed";
-   case HttpStatus.INTERNAL_SERVER_ERROR: return "Internal Server Error";
-   case HttpStatus.NOT_IMPLEMENTED: return "Not Implemented";
-   case HttpStatus.BAD_GATEWAY: return "Bad Gateway";
-   case HttpStatus.SERVICE_UNAVAILABLE: return "Service Unavailable";
-   case HttpStatus.GATEWAY_TIMEOUT: return "Gateway Time-out";
-   case HttpStatus.HTTP_VERSION_NOT_SUPPORTED:
-     return "Http Version not supported";
-   default: return "Status $statusCode";
- }
-}
-</pre>
 </div>
 </div>
 </div>

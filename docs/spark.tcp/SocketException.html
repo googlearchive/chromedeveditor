@@ -38,15 +38,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>An <a class="crossref" href="../dart_core/Exception.html">Exception</a> implementation for socket errors.</p>
-<pre class="source">
-class SocketException implements Exception {
- final String message;
-
- const SocketException([this.message = ""]);
-
- String toString() =&gt; "SocketException: $message";
-}
-</pre>
 </div>
 <h3>Implements</h3>
 <p>
@@ -54,7 +45,6 @@ class SocketException implements Exception {
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 const <strong>SocketException</strong>([String message = ""]) <a class="anchor-link" href="#"
               title="Permalink to SocketException.SocketException">#</a></h4>
 <div class="doc">
@@ -64,40 +54,29 @@ const <strong>SocketException</strong>([String message = ""]) <a class="anchor-l
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-const SocketException([this.message = ""]);
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="message">
-<button class="show-code">Code</button>
 final String         <strong>message</strong> <a class="anchor-link"
             href="#message"
             title="Permalink to SocketException.message">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-final String message
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="toString">
-<button class="show-code">Code</button>
 String <strong>toString</strong>() <a class="anchor-link" href="#toString"
               title="Permalink to SocketException.toString">#</a></h4>
 <div class="doc">
 <div class="inherited">
 <p>Returns a string representation of this object.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-String toString() =&gt; "SocketException: $message";
-</pre>
 </div>
 </div>
 </div>

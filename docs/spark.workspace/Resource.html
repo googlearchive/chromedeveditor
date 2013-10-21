@@ -40,24 +40,6 @@
         
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
-<pre class="source">
-abstract class Resource {
- Container _parent;
- chrome_gen.Entry _entry;
-
- Resource(this._parent, this._entry);
-
- String get name =&gt; _entry.name;
-
- Container get parent =&gt; _parent;
-
- /**
-  * Returns the containing [Project]. This can return null for loose files and
-  * for the workspace.
-  */
- Project get project =&gt; parent == null ? null : parent.project;
-}
-</pre>
 </div>
 <h3>Subclasses</h3>
 <p>
@@ -65,7 +47,6 @@ abstract class Resource {
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>Resource</strong>(<a href="../spark.workspace/Container.html">Container</a> _parent, Entry _entry) <a class="anchor-link" href="#"
               title="Permalink to Resource.Resource">#</a></h4>
 <div class="doc">
@@ -75,40 +56,28 @@ new <strong>Resource</strong>(<a href="../spark.workspace/Container.html">Contai
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-Resource(this._parent, this._entry);
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="name">
-<button class="show-code">Code</button>
 final String         <strong>name</strong> <a class="anchor-link"
             href="#name"
             title="Permalink to Resource.name">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-String get name =&gt; _entry.name;
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="parent">
-<button class="show-code">Code</button>
 final <a href="../spark.workspace/Container.html">Container</a>         <strong>parent</strong> <a class="anchor-link"
             href="#parent"
             title="Permalink to Resource.parent">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-Container get parent =&gt; _parent;
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="project">
-<button class="show-code">Code</button>
 final <a href="../spark.workspace/Project.html">Project</a>         <strong>project</strong> <a class="anchor-link"
             href="#project"
             title="Permalink to Resource.project">#</a>
@@ -116,9 +85,6 @@ final <a href="../spark.workspace/Project.html">Project</a>         <strong>proj
         <div class="doc">
 <p>Returns the containing <a class="crossref" href="../spark.workspace/Project.html">Project</a>. This can return null for loose files and
 for the workspace.</p>
-<pre class="source">
-Project get project =&gt; parent == null ? null : parent.project;
-</pre>
 </div>
 </div>
 </div>

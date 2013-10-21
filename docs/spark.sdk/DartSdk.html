@@ -40,44 +40,6 @@
 <div class="doc">
 <p>This class represents the Dart SDK as build into Spark. It allows you to
 query the SDK version and to get the contents of the included Dart libraries.</p>
-<pre class="source">
-class DartSdk extends SdkDirectory {
- final String version;
-
- SdkDirectory _libDirectory;
-
- /**
-  * Return the `sdk/lib` directory.
-  */
- SdkDirectory get libDirectory =&gt; _libDirectory;
-
- /**
-  * Return whether the Dart SDK is present.
-  */
- bool get available =&gt; libDirectory != null;
-
- /**
-  * Create a return a [DartSdk]. Generally, an application will only have one
-  * of these object's instantiated. They are however relatively lightweight
-  * objects.
-  */
- static Future&lt;DartSdk&gt; createSdk() {
-   DartSdk sdk;
-
-   return _getContents('sdk/version').then((String verContents) {
-     sdk = new DartSdk._(version: verContents.trim());
-     return sdk.getChild('lib');
-   }).then((SdkDirectory dir) {
-     sdk._libDirectory = dir;
-     return sdk;
-   }).catchError((e) {
-     return new DartSdk._(version: '');
-   });
- }
-
- DartSdk._({this.version}): super._(null, 'sdk');
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -85,158 +47,85 @@ class DartSdk extends SdkDirectory {
 <div>
 <h3>Static Methods</h3>
 <div class="method"><h4 id="createSdk">
-<button class="show-code">Code</button>
 Future&lt;<a href="../spark.sdk/DartSdk.html">DartSdk</a>&gt; <strong>createSdk</strong>() <a class="anchor-link" href="#createSdk"
               title="Permalink to DartSdk.createSdk">#</a></h4>
 <div class="doc">
 <p>Create a return a <a class="crossref" href="../spark.sdk/DartSdk.html">DartSdk</a>. Generally, an application will only have one
 of these object's instantiated. They are however relatively lightweight
 objects.</p>
-<pre class="source">
-static Future&lt;DartSdk&gt; createSdk() {
- DartSdk sdk;
-
- return _getContents('sdk/version').then((String verContents) {
-   sdk = new DartSdk._(version: verContents.trim());
-   return sdk.getChild('lib');
- }).then((SdkDirectory dir) {
-   sdk._libDirectory = dir;
-   return sdk;
- }).catchError((e) {
-   return new DartSdk._(version: '');
- });
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="available">
-<button class="show-code">Code</button>
 final bool         <strong>available</strong> <a class="anchor-link"
             href="#available"
             title="Permalink to DartSdk.available">#</a>
         </h4>
         <div class="doc">
 <p>Return whether the Dart SDK is present.</p>
-<pre class="source">
-bool get available =&gt; libDirectory != null;
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="libDirectory">
-<button class="show-code">Code</button>
 final <a href="../spark.sdk/SdkDirectory.html">SdkDirectory</a>         <strong>libDirectory</strong> <a class="anchor-link"
             href="#libDirectory"
             title="Permalink to DartSdk.libDirectory">#</a>
         </h4>
         <div class="doc">
 <p>Return the <code>sdk/lib</code> directory.</p>
-<pre class="source">
-SdkDirectory get libDirectory =&gt; _libDirectory;
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="name">
-<button class="show-code">Code</button>
 final String         <strong>name</strong> <a class="anchor-link"
             href="#name"
             title="Permalink to DartSdk.name">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The name of this entity (<code>string.dart</code>).</p>
-<pre class="source">
-String get name {
- int index = path.lastIndexOf('/');
- return index == -1 ? path : path.substring(index + 1);
-}
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="parent">
-<button class="show-code">Code</button>
 final <a href="../spark.sdk/SdkDirectory.html">SdkDirectory</a>         <strong>parent</strong> <a class="anchor-link"
             href="#parent"
             title="Permalink to DartSdk.parent">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The parent of this entity.</p>
-<pre class="source">
-final SdkDirectory parent
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="path">
-<button class="show-code">Code</button>
 final String         <strong>path</strong> <a class="anchor-link"
             href="#path"
             title="Permalink to DartSdk.path">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The full path of this entity (<code>sdk/lib/core/string.dart</code>).</p>
-<pre class="source">
-final String path
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="version">
-<button class="show-code">Code</button>
 final String         <strong>version</strong> <a class="anchor-link"
             href="#version"
             title="Permalink to DartSdk.version">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-final String version
-</pre>
 </div>
 </div>
 </div>
 <div class="inherited">
 <h3>Methods</h3>
 <div class="method inherited"><h4 id="getChild">
-<button class="show-code">Code</button>
 Future&lt;<a href="../spark.sdk/SdkEntity.html">SdkEntity</a>&gt; <strong>getChild</strong>(String name) <a class="anchor-link" href="#getChild"
               title="Permalink to DartSdk.getChild">#</a></h4>
 <div class="inherited-from">inherited from <a href="../spark.sdk/SdkDirectory.html">SdkDirectory</a> </div><div class="doc">
 <p>Return the given named child of this directory.</p>
-<pre class="source">
-Future&lt;SdkEntity&gt; getChild(String name) {
- return getChildren().then((List&lt;SdkEntity&gt; children) {
-   return children.firstWhere(
-       (c) =&gt; c.name == name,
-       orElse: () =&gt; null);
- });
-}
-</pre>
 </div>
 </div>
 <div class="method inherited"><h4 id="getChildren">
-<button class="show-code">Code</button>
 Future&lt;List&lt;<a href="../spark.sdk/SdkEntity.html">SdkEntity</a>&gt;&gt; <strong>getChildren</strong>() <a class="anchor-link" href="#getChildren"
               title="Permalink to DartSdk.getChildren">#</a></h4>
 <div class="inherited-from">inherited from <a href="../spark.sdk/SdkDirectory.html">SdkDirectory</a> </div><div class="doc">
 <p>Return the children of this directory.</p>
-<pre class="source">
-Future&lt;List&lt;SdkEntity&gt;&gt; getChildren() {
- if (_children != null) {
-   return new Future.value(_children);
- } else {
-   Completer completer = new Completer();
-
-   _getContents("${path}/.files").then((String value) {
-     _children = _parseJson(value);
-     completer.complete(_children);
-   }).catchError((_) {
-     _children = new List&lt;SdkEntity&gt;();
-     completer.complete(_children);
-   });
-
-   return completer.future;
- }
-}
-</pre>
 </div>
 </div>
 </div>

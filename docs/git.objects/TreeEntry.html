@@ -44,25 +44,10 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>Represents an entry in a git TreeObject.</p>
-<pre class="source">
-class TreeEntry {
-
- bool isBlob;
- String name;
- Uint8List sha;
-
- TreeEntry(bool isBlob, String nameStr, Uint8List sha) {
-   this.isBlob = isBlob;
-   this.name = nameStr;
-   this.sha = sha;
- }
-}
-</pre>
 </div>
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>TreeEntry</strong>(bool isBlob, String nameStr, Uint8List sha) <a class="anchor-link" href="#"
               title="Permalink to TreeEntry.TreeEntry">#</a></h4>
 <div class="doc">
@@ -72,52 +57,33 @@ new <strong>TreeEntry</strong>(bool isBlob, String nameStr, Uint8List sha) <a cl
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-TreeEntry(bool isBlob, String nameStr, Uint8List sha) {
- this.isBlob = isBlob;
- this.name = nameStr;
- this.sha = sha;
-}
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="isBlob">
-<button class="show-code">Code</button>
 bool         <strong>isBlob</strong> <a class="anchor-link"
             href="#isBlob"
             title="Permalink to TreeEntry.isBlob">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-bool isBlob
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="name">
-<button class="show-code">Code</button>
 String         <strong>name</strong> <a class="anchor-link"
             href="#name"
             title="Permalink to TreeEntry.name">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-String name
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="sha">
-<button class="show-code">Code</button>
 Uint8List         <strong>sha</strong> <a class="anchor-link"
             href="#sha"
             title="Permalink to TreeEntry.sha">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-Uint8List sha
-</pre>
 </div>
 </div>
 </div>

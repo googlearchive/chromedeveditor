@@ -44,21 +44,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>Error thrown for a parse failure.</p>
-<pre class="source">
-class ParseError extends Error {
- final message;
-
- /** The [message] describes the parse failure. */
- ParseError([this.message]);
-
- String toString() {
-   if (message != null) {
-     return "Parse Error(s): $message";
-   }
-   return "Parse Error(s)";
- }
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -66,63 +51,42 @@ class ParseError extends Error {
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>ParseError</strong>([message]) <a class="anchor-link" href="#"
               title="Permalink to ParseError.ParseError">#</a></h4>
 <div class="doc">
 <p>The 
 <span class="param">message</span> describes the parse failure. </p>
-<pre class="source">
-ParseError([this.message]);
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="message">
-<button class="show-code">Code</button>
 final         <strong>message</strong> <a class="anchor-link"
             href="#message"
             title="Permalink to ParseError.message">#</a>
         </h4>
         <div class="doc">
-<pre class="source">
-final message
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="stackTrace">
-<button class="show-code">Code</button>
 final StackTrace         <strong>stackTrace</strong> <a class="anchor-link"
             href="#stackTrace"
             title="Permalink to ParseError.stackTrace">#</a>
         </h4>
         <div class="inherited-from">inherited from Error </div><div class="doc">
-<pre class="source">
-external StackTrace get stackTrace;
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="toString">
-<button class="show-code">Code</button>
 String <strong>toString</strong>() <a class="anchor-link" href="#toString"
               title="Permalink to ParseError.toString">#</a></h4>
 <div class="doc">
 <div class="inherited">
 <p>Returns a string representation of this object.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-String toString() {
- if (message != null) {
-   return "Parse Error(s): $message";
- }
- return "Parse Error(s)";
-}
-</pre>
 </div>
 </div>
 </div>

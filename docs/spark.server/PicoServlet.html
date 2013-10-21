@@ -44,31 +44,14 @@
 <div class="doc">
 <p>One or more <a class="crossref" href="../spark.server/PicoServlet.html">PicoServlet</a>s can be added to a <a class="crossref" href="../spark.server/PicoServer.html">PicoServer</a> in order to handle
 http requests.</p>
-<pre class="source">
-abstract class PicoServlet {
- /**
-  * Returns whether this servlet can serve the given [HttpRequest].
-  */
- bool canServe(HttpRequest request) =&gt; true;
-
- /**
-  * Handle the given [HttpRequest], and return a Future with a [HttpResponse].
-  */
- Future&lt;HttpResponse&gt; serve(HttpRequest request);
-}
-</pre>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="canServe">
-<button class="show-code">Code</button>
 bool <strong>canServe</strong>(<a href="../spark.server/HttpRequest.html">HttpRequest</a> request) <a class="anchor-link" href="#canServe"
               title="Permalink to PicoServlet.canServe">#</a></h4>
 <div class="doc">
 <p>Returns whether this servlet can serve the given <a class="crossref" href="../spark.server/HttpRequest.html">HttpRequest</a>.</p>
-<pre class="source">
-bool canServe(HttpRequest request) =&gt; true;
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="serve">

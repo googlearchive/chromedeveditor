@@ -30,72 +30,34 @@
 <div>
 <h3>Functions</h3>
 <div class="method"><h4 id="beep">
-<button class="show-code">Code</button>
 void <strong>beep</strong>() <a class="anchor-link" href="#beep"
               title="Permalink to beep">#</a></h4>
 <div class="doc">
-<pre class="source">
-void beep() {
- if (_ctx == null) {
-   _ctx = new AudioContext();
- }
-
- OscillatorNode osc = _ctx.createOscillator();
-
- osc.connectNode(_ctx.destination, 0, 0);
- osc.start(0);
- osc.stop(_ctx.currentTime + 0.1);
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="isWin">
-<button class="show-code">Code</button>
 bool <strong>isWin</strong>() <a class="anchor-link" href="#isWin"
               title="Permalink to isWin">#</a></h4>
 <div class="doc">
-<pre class="source">
-bool isWin() {
- return _platform().indexOf('win') != -1;
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="isMac">
-<button class="show-code">Code</button>
 bool <strong>isMac</strong>() <a class="anchor-link" href="#isMac"
               title="Permalink to isMac">#</a></h4>
 <div class="doc">
-<pre class="source">
-bool isMac() {
- return _platform().indexOf('mac') != -1;
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="isLinux">
-<button class="show-code">Code</button>
 bool <strong>isLinux</strong>() <a class="anchor-link" href="#isLinux"
               title="Permalink to isLinux">#</a></h4>
 <div class="doc">
-<pre class="source">
-bool isLinux() {
- return _platform().indexOf('linux') != -1;
-}
-</pre>
 </div>
 </div>
 <div class="method"><h4 id="i18n">
-<button class="show-code">Code</button>
 String <strong>i18n</strong>(String messageId) <a class="anchor-link" href="#i18n"
               title="Permalink to i18n">#</a></h4>
 <div class="doc">
 <p>This method is shorthand for <code>chrome.i18n.getMessage</code>.</p>
-<pre class="source">
-String i18n(String messageId) {
- return chrome_gen.i18n.getMessage(messageId);
-}
-</pre>
 </div>
 </div>
 </div>

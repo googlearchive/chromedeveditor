@@ -39,29 +39,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>An abstract SDK entity; the parent class of <a class="crossref" href="../spark.sdk/SdkFile.html">SdkFile</a> and <a class="crossref" href="../spark.sdk/SdkDirectory.html">SdkDirectory</a>.</p>
-<pre class="source">
-abstract class SdkEntity {
- /**
-  * The full path of this entity (`sdk/lib/core/string.dart`).
-  */
- final String path;
-
- /**
-  * The parent of this entity.
-  */
- final SdkDirectory parent;
-
- SdkEntity._(this.parent, this.path);
-
- /**
-  * The name of this entity (`string.dart`).
-  */
- String get name {
-   int index = path.lastIndexOf('/');
-   return index == -1 ? path : path.substring(index + 1);
- }
-}
-</pre>
 </div>
 <h3>Subclasses</h3>
 <p>
@@ -69,45 +46,30 @@ abstract class SdkEntity {
 <div>
 <h3>Properties</h3>
 <div class="field"><h4 id="name">
-<button class="show-code">Code</button>
 final String         <strong>name</strong> <a class="anchor-link"
             href="#name"
             title="Permalink to SdkEntity.name">#</a>
         </h4>
         <div class="doc">
 <p>The name of this entity (<code>string.dart</code>).</p>
-<pre class="source">
-String get name {
- int index = path.lastIndexOf('/');
- return index == -1 ? path : path.substring(index + 1);
-}
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="parent">
-<button class="show-code">Code</button>
 final <a href="../spark.sdk/SdkDirectory.html">SdkDirectory</a>         <strong>parent</strong> <a class="anchor-link"
             href="#parent"
             title="Permalink to SdkEntity.parent">#</a>
         </h4>
         <div class="doc">
 <p>The parent of this entity.</p>
-<pre class="source">
-final SdkDirectory parent
-</pre>
 </div>
 </div>
 <div class="field"><h4 id="path">
-<button class="show-code">Code</button>
 final String         <strong>path</strong> <a class="anchor-link"
             href="#path"
             title="Permalink to SdkEntity.path">#</a>
         </h4>
         <div class="doc">
 <p>The full path of this entity (<code>sdk/lib/core/string.dart</code>).</p>
-<pre class="source">
-final String path
-</pre>
 </div>
 </div>
 </div>

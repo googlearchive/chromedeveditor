@@ -158,6 +158,7 @@ void docs(GrinderContext context) {
     runSdkBinary(context, 'dartdoc',
         arguments: ['--omit-generation-time',
                     '--mode', 'static',
+                    '--no-code',
                     '--package-root', 'packages/',
                     '--include-lib', 'spark,spark.ace,spark.file_item_view,spark.html_utils,spark.split_view,spark.utils,spark.preferences,spark.workspace,spark.sdk',
                     '--include-lib', 'spark.server,spark.tcp',

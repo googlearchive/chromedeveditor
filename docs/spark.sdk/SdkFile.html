@@ -39,16 +39,6 @@
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
 <p>An SDK file.</p>
-<pre class="source">
-class SdkFile extends SdkEntity {
- SdkFile._(SdkDirectory parent, String path): super._(parent, path);
-
- /**
-  * Return the contents of this file.
-  */
- Future&lt;String&gt; getContents() =&gt; _getContents(path);
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -56,59 +46,40 @@ class SdkFile extends SdkEntity {
 <div class="inherited">
 <h3>Properties</h3>
 <div class="field inherited"><h4 id="name">
-<button class="show-code">Code</button>
 final String         <strong>name</strong> <a class="anchor-link"
             href="#name"
             title="Permalink to SdkFile.name">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The name of this entity (<code>string.dart</code>).</p>
-<pre class="source">
-String get name {
- int index = path.lastIndexOf('/');
- return index == -1 ? path : path.substring(index + 1);
-}
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="parent">
-<button class="show-code">Code</button>
 final <a href="../spark.sdk/SdkDirectory.html">SdkDirectory</a>         <strong>parent</strong> <a class="anchor-link"
             href="#parent"
             title="Permalink to SdkFile.parent">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The parent of this entity.</p>
-<pre class="source">
-final SdkDirectory parent
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="path">
-<button class="show-code">Code</button>
 final String         <strong>path</strong> <a class="anchor-link"
             href="#path"
             title="Permalink to SdkFile.path">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.sdk/SdkEntity.html">SdkEntity</a> </div><div class="doc">
 <p>The full path of this entity (<code>sdk/lib/core/string.dart</code>).</p>
-<pre class="source">
-final String path
-</pre>
 </div>
 </div>
 </div>
 <div>
 <h3>Methods</h3>
 <div class="method"><h4 id="getContents">
-<button class="show-code">Code</button>
 Future&lt;String&gt; <strong>getContents</strong>() <a class="anchor-link" href="#getContents"
               title="Permalink to SdkFile.getContents">#</a></h4>
 <div class="doc">
 <p>Return the contents of this file.</p>
-<pre class="source">
-Future&lt;String&gt; getContents() =&gt; _getContents(path);
-</pre>
 </div>
 </div>
 </div>

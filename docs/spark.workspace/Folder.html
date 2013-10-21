@@ -40,11 +40,6 @@
         
 <button id="show-inherited" class="show-inherited">Hide inherited</button>
 <div class="doc">
-<pre class="source">
-class Folder extends Container {
- Folder(Container parent, chrome_gen.Entry entry) : super(parent, entry);
-}
-</pre>
 </div>
 <h3>Extends</h3>
 <p>
@@ -55,7 +50,6 @@ class Folder extends Container {
 <div>
 <h3>Constructors</h3>
 <div class="method"><h4 id="">
-<button class="show-code">Code</button>
 new <strong>Folder</strong>(<a href="../spark.workspace/Container.html">Container</a> parent, Entry entry) <a class="anchor-link" href="#"
               title="Permalink to Folder.Folder">#</a></h4>
 <div class="doc">
@@ -65,40 +59,28 @@ new <strong>Folder</strong>(<a href="../spark.workspace/Container.html">Containe
 through their identity. An <a class="crossref" href="../dart_core/Object.html">Object</a> instance is equal to itself
 only.</p>
 <div class="docs-inherited-from">docs inherited from Object </div></div>
-<pre class="source">
-Folder(Container parent, chrome_gen.Entry entry) : super(parent, entry);
-</pre>
 </div>
 </div>
 </div>
 <div class="inherited">
 <h3>Properties</h3>
 <div class="field inherited"><h4 id="name">
-<button class="show-code">Code</button>
 final String         <strong>name</strong> <a class="anchor-link"
             href="#name"
             title="Permalink to Folder.name">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.workspace/Resource.html">Resource</a> </div><div class="doc">
-<pre class="source">
-String get name =&gt; _entry.name;
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="parent">
-<button class="show-code">Code</button>
 final <a href="../spark.workspace/Container.html">Container</a>         <strong>parent</strong> <a class="anchor-link"
             href="#parent"
             title="Permalink to Folder.parent">#</a>
         </h4>
         <div class="inherited-from">inherited from <a href="../spark.workspace/Resource.html">Resource</a> </div><div class="doc">
-<pre class="source">
-Container get parent =&gt; _parent;
-</pre>
 </div>
 </div>
 <div class="field inherited"><h4 id="project">
-<button class="show-code">Code</button>
 final <a href="../spark.workspace/Project.html">Project</a>         <strong>project</strong> <a class="anchor-link"
             href="#project"
             title="Permalink to Folder.project">#</a>
@@ -106,22 +88,15 @@ final <a href="../spark.workspace/Project.html">Project</a>         <strong>proj
         <div class="inherited-from">inherited from <a href="../spark.workspace/Resource.html">Resource</a> </div><div class="doc">
 <p>Returns the containing <a class="crossref" href="../spark.workspace/Project.html">Project</a>. This can return null for loose files and
 for the workspace.</p>
-<pre class="source">
-Project get project =&gt; parent == null ? null : parent.project;
-</pre>
 </div>
 </div>
 </div>
 <div class="inherited">
 <h3>Methods</h3>
 <div class="method inherited"><h4 id="getChildren">
-<button class="show-code">Code</button>
 List&lt;<a href="../spark.workspace/Resource.html">Resource</a>&gt; <strong>getChildren</strong>() <a class="anchor-link" href="#getChildren"
               title="Permalink to Folder.getChildren">#</a></h4>
 <div class="inherited-from">inherited from <a href="../spark.workspace/Container.html">Container</a> </div><div class="doc">
-<pre class="source">
-List&lt;Resource&gt; getChildren() =&gt; _children;
-</pre>
 </div>
 </div>
 </div>
