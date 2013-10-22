@@ -26,11 +26,11 @@ class Spark {
   Spark() {
     document.title = appName;
 
-    query("#newFile").onClick.listen(newFile);
-    query("#openFile").onClick.listen(openFile);
-    query("#saveFile").onClick.listen(saveFile);
-    query("#saveAsFile").onClick.listen(saveAsFile);
-    query("#editorTheme").onChange.listen(setTheme);
+    querySelector("#newFile").onClick.listen(newFile);
+    querySelector("#openFile").onClick.listen(openFile);
+    querySelector("#saveFile").onClick.listen(saveFile);
+    querySelector("#saveAsFile").onClick.listen(saveAsFile);
+    querySelector("#editorTheme").onChange.listen(setTheme);
 
     editor = new AceEditor();
     editor.setTheme('ace/theme/textmate');
@@ -43,8 +43,8 @@ class Spark {
     _filesViews.add(new FileItemView('manifest.json'));
     _filesViews.add(new FileItemView('longlonglong_filename.js'));
 
-    _splitView = new SplitView(query('#splitview'));
-    
+    _splitView = new SplitView(querySelector('#splitview'));
+
     chrome_gen.app_window.onClosed.listen(handleWindowClosed);
   }
 
@@ -90,15 +90,15 @@ class Spark {
   }
 
   void setTheme(_){
-    editor.setTheme((query("#editorTheme") as SelectElement).value);
+    editor.setTheme((querySelector("#editorTheme") as SelectElement).value);
   }
 
   void updateError(String string) {
-    query("#error").innerHtml = string;
+    querySelector("#error").innerHtml = string;
   }
 
   void updatePath() {
     print(editor.getPathInfo());
-    query("#path").innerHtml = editor.getPathInfo();
+    querySelector("#path").innerHtml = editor.getPathInfo();
   }
 }

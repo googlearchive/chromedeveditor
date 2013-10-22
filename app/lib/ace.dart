@@ -14,7 +14,7 @@ class AceEditor {
   chrome_gen.ChromeFileEntry _file;
 
   AceEditor() {
-    _aceEditor = ace.edit(query('#editorArea'));
+    _aceEditor = ace.edit(querySelector('#editorArea'));
     _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
   }
 
