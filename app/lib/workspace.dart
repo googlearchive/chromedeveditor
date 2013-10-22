@@ -55,7 +55,7 @@ class Workspace implements Container {
   }
 
   void unlink(Resource resource) {
-    // TODO: remove resource from list of children anf fire event
+    // TODO: remove resource from list of children and fire event
   }
 
   List<Resource> getChildren() {
