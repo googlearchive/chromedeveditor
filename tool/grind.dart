@@ -156,7 +156,7 @@ void docs(GrinderContext context) {
     // TODO: once more libraries are referenced from spark.dart, we won't need
     // to explicitly pass them to dartdoc
     runSdkBinary(context, 'dartdoc',
-        arguments: ['--omit-generation-time',
+        arguments: ['--omit-generation-time', '--no-code',
                     '--mode', 'static',
                     '--package-root', 'packages/',
                     '--include-lib', 'spark,spark.ace,spark.file_item_view,spark.html_utils,spark.split_view,spark.utils,spark.preferences,spark.workspace,spark.sdk',
