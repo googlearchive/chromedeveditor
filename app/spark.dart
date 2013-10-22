@@ -12,7 +12,9 @@ import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'lib/ace.dart';
 import 'lib/utils.dart';
 import 'lib/file_item_view.dart';
+import 'lib/preferences.dart' as preferences;
 import 'lib/splitview.dart';
+import 'lib/workspace.dart';
 
 void main() {
   Spark spark = new Spark();
@@ -20,6 +22,7 @@ void main() {
 
 class Spark {
   AceEditor editor;
+  Workspace workspace;
   SplitView _splitView;
   List _filesViews;
 
@@ -32,6 +35,7 @@ class Spark {
     querySelector("#saveAsFile").onClick.listen(saveAsFile);
     querySelector("#editorTheme").onChange.listen(setTheme);
 
+    workspace = new Workspace(preferences.PreferenceStore.createLocal());
     editor = new AceEditor();
     editor.setTheme('ace/theme/textmate');
 
@@ -66,22 +70,27 @@ class Spark {
       chrome_gen.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
-        editor.setContent(entry);
-        updatePath();
+        workspace.link(entry).then((file) {
+          editor.setContent(file);
+          updatePath();
+        });
+
       }
     });
 
   }
 
   void saveAsFile(_) {
-    //TODO: don't show error message if operation cancelled
+    // TODO: don't show error message if operation cancelled
     chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
         type: chrome_gen.ChooseEntryType.SAVE_FILE);
 
     chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
       chrome_gen.ChromeFileEntry entry = result.entry;
-      editor.saveAs(entry);
+      workspace.link(entry).then((file) {
+      editor.saveAs(file);
       updatePath();
+      });
     }).catchError((_) => updateError('Error on save as'));
   }
 
@@ -89,7 +98,7 @@ class Spark {
     editor.save();
   }
 
-  void setTheme(_){
+  void setTheme(_) {
     editor.setTheme((querySelector("#editorTheme") as SelectElement).value);
   }
 
