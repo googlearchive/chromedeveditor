@@ -57,6 +57,6 @@ class Zlib {
 
   static dynamic _uint8ListToJs(Uint8List buffer) {
     return new js.JsObject(js.context['Uint8Array'],
-        [js.jsify(buffer.toList(growable: true))]);
+        [new js.JsObject.jsify(buffer.toList(growable: true))]);
   }
 }

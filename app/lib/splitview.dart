@@ -42,8 +42,8 @@ class SplitView {
    */
   SplitView(Element splitView) {
     _splitView = splitView;
-    _leftView = splitView.query('.left');
-    _rightView = splitView.query('.right');
+    _leftView = splitView.querySelector('.left');
+    _rightView = splitView.querySelector('.right');
 
     // Is the separator horizontal or vertical?
     // It will depend on the initial layout of the left/right views.
