@@ -27,6 +27,8 @@ class Workspace implements Container {
   StreamController<ResourceChangeEvent> _streamController =
       new StreamController.broadcast();
 
+  // TODO: perhaps move to returning a constructed Workspace via a static
+  // method that returns a Future? see PicoServer
   Workspace(PreferenceStore preferenceStore) {
     this._store = preferenceStore;
   }
@@ -34,10 +36,6 @@ class Workspace implements Container {
   String get name => null;
 
   Container get parent => null;
-
-  Workspace initialize() {
-    // TODO: initialize workspace with saved info from previous session
-  }
 
   Future<Resource> link(chrome_gen.Entry entity) {
 
@@ -58,32 +56,20 @@ class Workspace implements Container {
     // TODO: remove resource from list of children and fire event
   }
 
-  List<Resource> getChildren() {
-   return _children;
-  }
+  List<Resource> getChildren() =>_children;
 
-  List<File> getFiles() {
-    List list = [];
-    for (var child in _children) {
-      if (child is File) list.add(child);
-    }
-    return list;
-  }
+  List<File> getFiles() => _children.where((c) => c is File).toList();
 
-  List<Project> getProjects() {
-    List list = [];
-    for (var child in _children) {
-      if (child is Project) list.add(child);
-    }
-    return list;
-  }
+  List<Project> getProjects() => _children.where((c) => c is Project).toList();
 
   Stream<ResourceChangeEvent> get onResourceChange => _streamController.stream;
 
   Project get project => null;
 
-  void save() {
+  Future save() {
     // TODO: save workspace information - maybe in preferences?
+
+    return new Future.value();
   }
 
   Future<Resource> _gatherChildren(Container container) {
@@ -151,7 +137,6 @@ class Project extends Folder {
 }
 
 class ResourceEventType {
-
   final String name;
 
   const ResourceEventType._(this.name);
@@ -172,14 +157,12 @@ class ResourceEventType {
   static const ResourceEventType CHANGE = const ResourceEventType._('CHANGE');
 
   String toString() => name;
-
 }
 
 /**
- *  Used to indicate changes to the Workspace.
+ * Used to indicate changes to the Workspace.
  */
 class ResourceChangeEvent {
-
   final ResourceEventType type;
   final Resource resource;
 
