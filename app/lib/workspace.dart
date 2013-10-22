@@ -55,7 +55,7 @@ class Workspace implements Container {
   }
 
   void unlink(Resource resource) {
-    // TODO: remove resource from list of children
+    // TODO: remove resource from list of children anf fire event
   }
 
   List<Resource> getChildren() {
@@ -140,6 +140,7 @@ class File extends Resource {
 
   Future<String> getContents() => (_entry as chrome_gen.ChromeFileEntry).readText();
 
+  // TODO: fire change event
   Future setContents(String contents) => (_entry as chrome_gen.ChromeFileEntry).writeText(contents);
 }
 
