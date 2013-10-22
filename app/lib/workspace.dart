@@ -24,6 +24,9 @@ class Workspace implements Container {
   List<Resource> _children = [];
   PreferenceStore _store;
 
+  StreamController<ResourceChangeEvent> _streamController =
+      new StreamController.broadcast();
+
   Workspace(PreferenceStore preferenceStore) {
     this._store = preferenceStore;
   }
@@ -41,10 +44,12 @@ class Workspace implements Container {
     if (entity.isFile) {
       var resource = new File(this, entity);
       _children.add(resource);
+      _streamController.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
       return new Future.value(resource);
     } else {
       var project = new Project(this, entity);
       _children.add(project);
+      _streamController.add(new ResourceChangeEvent(project, ResourceEventType.ADD));
       return _gatherChildren(project);
     }
   }
@@ -72,6 +77,8 @@ class Workspace implements Container {
     }
     return list;
   }
+
+  Stream<ResourceChangeEvent> get onResourceChange => _streamController.stream;
 
   Project get project => null;
 
@@ -140,4 +147,38 @@ class Project extends Folder {
   Project(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
   Project get project => this;
+}
+
+class ResourceEventType {
+
+  final String name;
+
+  const ResourceEventType(this.name);
+
+  /**
+   * Event type indicates resource has been added to workspace.
+   */
+  static const ResourceEventType ADD = const ResourceEventType('ADD');
+
+  /**
+   * Event type indicates resource has been removed from workspace.
+   */
+  static const ResourceEventType DELETE = const ResourceEventType('DELETE');
+
+  /**
+   * Event type indicates resource has changed.
+   */
+  static const ResourceEventType CHANGE = const ResourceEventType('CHANGE');
+
+}
+
+/**
+ *  Used to indicate changes to the Workspace.
+ */
+class ResourceChangeEvent {
+
+  ResourceEventType type;
+  Resource resource;
+
+  ResourceChangeEvent(this.resource, this.type);
 }

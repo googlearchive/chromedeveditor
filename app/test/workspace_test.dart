@@ -86,22 +86,38 @@ main() {
       });
     });
 
-    test('add file', () {
+    test('add file, check for resource add event', () {
       var workspace = new Workspace(null);
       var fileEntry = new MockFileEntry('test.txt');
+
+      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
+        ResourceChangeEvent event = events.single;
+        expect(event.resource.name, fileEntry.name);
+        expect(event.type, ResourceEventType.ADD);
+      });
+
       workspace.link(fileEntry).then((resource) {
         expect(resource, isNotNull);
         expect(workspace.getChildren().contains(resource), isTrue);
         expect(workspace.getFiles().contains(resource), isTrue);
       });
+
+      return future;
     });
 
-    test('add directory', () {
+    test('add directory, check for resource add event', () {
       var workspace = new Workspace(null);
       var dirEntry = new MockDirectoryEntry('myProject');
       dirEntry._entries = [new MockFileEntry('test.txt'),
                            new MockFileEntry('test.html'),
                            new MockFileEntry('test.dart')];
+
+      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
+        ResourceChangeEvent event = events.single;
+        expect(event.resource.name, dirEntry.name);
+        expect(event.type, ResourceEventType.ADD);
+      });
+
       workspace.link(dirEntry).then((project) {
         expect(project, isNotNull);
         expect(workspace.getChildren().contains(project), isTrue);
@@ -109,9 +125,11 @@ main() {
         var children = (project as Container).getChildren();
         expect(children.length, 3);
       });
+
+      return future;
     });
 
-    test('add directory with folders', () {
+    test('add directory with folders, check for resource add event', () {
       var workspace = new Workspace(null);
       var dirEntry = new MockDirectoryEntry('myDir');
       dirEntry._entries = [new MockFileEntry('test.txt'),
@@ -122,6 +140,12 @@ main() {
                              dirEntry,
                              new MockFileEntry('myApp.dart'),
                              new MockFileEntry('myApp.css')];
+
+      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
+        ResourceChangeEvent event = events.single;
+        expect(event.resource.name, projectDir.name);
+        expect(event.type, ResourceEventType.ADD);
+      });
 
       workspace.link(projectDir).then((project) {
         expect(project, isNotNull);
@@ -135,10 +159,10 @@ main() {
           }
         }
       });
+      return future;
     });
-
-
   });
+
 }
 
 
