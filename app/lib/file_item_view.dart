@@ -13,13 +13,13 @@ import 'dart:html';
 
 class FileItemView {
   Element _element;
-  
+
   FileItemView(String path) {
     // We create an HTML element based on a template.
-    DocumentFragment template = query('#fileview-filename').content;
+    DocumentFragment template = querySelector('#fileview-filename').content;
     _element = template.clone(true);
-    _element.query('.filename').text = path;
+    _element.querySelector('.filename').text = path;
     // We add it to the DOM.
-    query('#fileViewArea').children.add(_element);
+    querySelector('#fileViewArea').children.add(_element);
   }
 }

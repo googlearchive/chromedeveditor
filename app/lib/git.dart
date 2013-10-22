@@ -62,7 +62,7 @@ class GitOptions {
     options['url'] = this.repoUrl;
     options['progress'] = this.progressCallback;
     options['commitMsg'] = this.commitMessage;
-    return js.jsify(options);
+    return new js.JsObject.jsify(options);
   }
 
   // TODO(grv): Specialize the verification for different api methods.
