@@ -12,40 +12,59 @@
   <!-- link rel="stylesheet" href="bootstrap/css/bootstrap.css" id="bootstrapTheme" -->
   <link rel="stylesheet" href="spark.css">
 
-  <script src="packages/html_import/html_import.min.js"></script>
-  <script src="fixed_polymer_boot.js"></script>
-
-  <link rel="import" href="polymer/components/sp-button/sp-button.html">
+  <template id="fileview-filename" >
+    <div class="fileview-filename-container" style="height: 20px;">
+      <div class="filename" style="position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+      </div>
+      <div class="menu" style="position: absolute; right: 0; width: 15px;">
+        &#x25BC;
+      </div>
+    </div>
+  </template>
 </head>
 
 <body>
-  <sp-button id="newFile">New File</sp-button>
-  <sp-button id="openFile">Open File...</sp-button>
-  <sp-button id="saveFile">Save</sp-button>
-  <sp-button id="saveAsFile">Save As...</sp-button>
+  <button id="newFile">New File</button>
+  <button id="openFile">Open File...</button>
+  <button id="saveFile">Save</button>
+  <button id="saveAsFile">Save As...</button>
 
-  <label>Theme</label>
-  <select id = "editorTheme">
-    <option value = "ace/theme/ambiance">Ambiance</option>
-    <option value = "ace/theme/monokai">Monokai</option>
-    <option value = "ace/theme/pastel_on_dark">Pastel on dark</option>
-    <option value = "ace/theme/textmate">Textmate</option>
-  </select>
+  <div id="themeChooser">
+    <label>Theme</label>
+    <select id = "editorTheme">
+      <option value = "ace/theme/ambiance">Ambiance</option>
+      <option value = "ace/theme/monokai">Monokai</option>
+      <option value = "ace/theme/pastel_on_dark">Pastel on dark</option>
+      <option value = "ace/theme/textmate">Textmate</option>
+    </select>
+  </div>
 
   <div id="status">
       <div id="path">[new file]</div>
       <div id="error"></div>
   </div>
 
-  <div id="editorArea"></div>
+  <div id="splitview" style="">
+    <div id="fileViewArea" class="left" min-size="100"></div>
+    <div id="editorArea" class="right" min-size="200"></div>
+  </div>
 
   <!-- git includes -->
   <script src="git/third_party/zlib_inflate.js"></script>
   <script src="git/third_party/zlib_deflate.js"></script>
   <script src="git/third_party/underscore-min.js"></script>
+  <script src="git/third_party/2.2.0-sha1.js"></script>
+  <script src="git/third_party/crc32.js"></script>
   <script src="git/utils/misc_utils.js"></script>
+  <script src="git/objectstore/object_to_file.js"></script>
   <script src="git/objectstore/objects.js"></script>
   <script src="git/utils/file_utils.js"></script>
+  <script src="git/objectstore/delta.js"></script>
+  <script src="git/formats/pack.js"></script>
+  <script src="git/formats/upload_pack_parser.js"></script>
+  <script src="git/formats/pack_index.js"></script>
+  <script src="git/utils/errors.js"></script>
+  <script src="git/objectstore/file_repo.js"></script>
   <script src="git/git.js"></script>
 
   <!-- ace includes -->

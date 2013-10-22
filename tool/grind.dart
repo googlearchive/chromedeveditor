@@ -339,18 +339,26 @@ void _populateSdk(GrinderContext context) {
   FileSet srcVer = new FileSet.fromFile(srcVersionFile);
   FileSet destVer = new FileSet.fromFile(destVersionFile);
 
+  Directory compilerDir = new Directory('packages/compiler');
+
   // check the state of the sdk/version file, to see if things are up-to-date
-  if (!destVer.upToDate(srcVer)) {
+  if (!destVer.upToDate(srcVer) || !compilerDir.existsSync()) {
     // copy files over
     context.log('copying SDK');
     copyFile(srcVersionFile, destSdkDir);
     copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']));
 
-    // lib/_internal/compiler, dartdoc, and pub are not sdk libraries, but do
-    // take up a lot of space; remove them
-    _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/compiler');
-    _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
+    // Create a synthetic package:compiler package in the packages directory.
+    // TODO(devoncarew): this would be much better as a std pub package
+    compilerDir.createSync();
+
+    _runCommandSync(context, 'rm -rf packages/compiler/compiler');
+    _runCommandSync(context, 'rm -rf packages/compiler/lib');
+    _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/compiler/samples');
+    _runCommandSync(context, 'mv app/sdk/lib/_internal/compiler packages/compiler');
+    _runCommandSync(context, 'cp app/sdk/lib/_internal/libraries.dart packages/compiler');
     _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/pub');
+    _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
 
     // traverse directories, creating a .files json directory listing
     context.log('creating SDK directory listings');

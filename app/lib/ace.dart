@@ -5,53 +5,54 @@
 library spark.ace;
 
 import 'dart:html';
+import 'dart:js' as js;
 
 import 'package:ace/ace.dart' as ace;
-import 'package:chrome/app.dart' as chrome;
 
+import 'workspace.dart' as workspace;
 
 class AceEditor {
-
   ace.Editor _aceEditor;
-  chrome.FileEntry _file;
+  workspace.File _file;
+
+  static bool get available => js.context['ace'] != null;
 
   AceEditor() {
-    _aceEditor = ace.edit(query('#editorArea'));
+    _aceEditor = ace.edit(querySelector('#editorArea'));
     _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
   }
 
   String getPathInfo() {
     // TODO: show full path of file, not just name
-    if (_file != null) return _file.fullPath;
+    if (_file != null) return _file.name;
     return '[new file]';
   }
 
   void newFile() {
-    if (_file != null) _file.release();
     _file = null;
     _setContents('', new ace.Mode('ace/mode/text'));
   }
 
   void save() {
-    if (_file != null){
-      _file.writeText(_aceEditor.value);
+    if (_file != null) {
+      _file.setContents(_aceEditor.value);
       _aceEditor.focus();
     }
   }
 
-  void saveAs(chrome.FileEntry file) {
+  void saveAs(workspace.File file) {
     _file = file;
     save();
   }
 
-  void setContent(chrome.FileEntry file) {
+  void setContent(workspace.File file) {
     _file = file;
-    _file.readText().then((String contents) {
-      _setContents(contents, new ace.Mode.forFile(file.name));
+    _file.getContents().then((String contents) {
+      _setContents(contents, new ace.Mode.forFile(_file.name));
     });
   }
 
-  void setTheme(String theme){
+  void setTheme(String theme) {
     _aceEditor.theme = new ace.Theme(theme);
   }
 

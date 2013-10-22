@@ -6,8 +6,10 @@
  * Lightweight implementations of a tcp clients and servers. This library serves
  * as a higher level abstraction over the `chrome.socket` APIs.
  *
- * See: http://developer.chrome.com/apps/socket.html
- * See: http://dart-gde.github.io/chrome_gen.dart/app/chrome.socket.html
+ * See also:
+ *
+ * * [developer.chrome.com/apps/socket.html](http://developer.chrome.com/apps/socket.html)
+ * * [dart-gde.github.io/chrome_gen.dart/app/chrome.socket.html](http://dart-gde.github.io/chrome_gen.dart/app/chrome.socket.html)
  */
 library spark.tcp;
 
@@ -37,11 +39,12 @@ class SocketException implements Exception {
  * A wrapper around the `chrome.socket` APIs used to read and write data to a
  * socket.
  *
- * Usage:
- *  * `TcpCLient.createClient()`
- *  * `stream.listen()`
- *  * `sink.add(data)`
- *  * `dispose()`
+ * ## Usage:
+ *
+ *     TcpCLient.createClient();
+ *     stream.listen();
+ *     sink.add(data);
+ *     dispose();
  */
 class TcpClient {
   final int _socketId;
@@ -130,10 +133,11 @@ class TcpClient {
 /**
  * A lightweight implementation of a tcp server socket.
  *
- * Usage:
- *  * `TcpServer.createServerSocket()`
- *  * `onAccept`
- *  * `dispose()`
+ * ## Usage:
+ *
+ *     TcpServer.createServerSocket();
+ *     onAccept;
+ *     dispose();
  */
 class TcpServer {
   final int _socketId;
