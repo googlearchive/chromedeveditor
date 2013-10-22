@@ -120,22 +120,6 @@ class Spark extends Application {
   }
 }
 
-//"os": {
-//  "type": "string",
-//  "description": "The operating system chrome is running on.",
-//  "enum": ["mac", "win", "android", "cros", "linux", "openbsd"]
-//},
-//"arch": {
-//  "type": "string",
-//  "enum": ["arm", "x86-32", "x86-64"],
-//  "description": "The machine's processor architecture."
-//},
-//"nacl_arch" : {
-//  "description": "The native client architecture. This may be different from arch on some platforms.",
-//  "type": "string",
-//  "enum": ["arm", "x86-32", "x86-64"]
-//}
-
 class PlatformInfo {
   /**
    * The operating system chrome is running on. One of: "mac", "win", "android",

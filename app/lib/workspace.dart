@@ -52,25 +52,11 @@ class Workspace implements Container {
     // TODO: remove resource from list of children
   }
 
-  List<Resource> getChildren() {
-   return _children;
-  }
+  List<Resource> getChildren() =>_children;
 
-  List<File> getFiles() {
-    List list = [];
-    for (var child in _children) {
-      if (child is File) list.add(child);
-    }
-    return list;
-  }
+  List<File> getFiles() => _children.where((c) => c is File).toList();
 
-  List<Project> getProjects() {
-    List list = [];
-    for (var child in _children) {
-      if (child is Project) list.add(child);
-    }
-    return list;
-  }
+  List<Project> getProjects() => _children.where((c) => c is Project).toList();
 
   Project get project => null;
 
