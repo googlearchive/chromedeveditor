@@ -10,6 +10,7 @@ import '../lib/ace.dart';
 
 main() {
   group('ace', () {
+    // This essentially tests that the ace codebase is available.
     test('is available', () {
       expect(AceEditor.available, true);
     });

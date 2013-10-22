@@ -15,7 +15,6 @@ class AceEditor {
   ace.Editor _aceEditor;
   workspace.File _file;
 
-
   static bool get available => js.context['ace'] != null;
 
   AceEditor() {
