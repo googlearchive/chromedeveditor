@@ -11,7 +11,7 @@ import 'dart:async';
 
 /**
  * A representation of an application. An application has a lifecycle and other
- * objects can participate the application's lifecycle state changes.
+ * objects can participate in the application's lifecycle state changes.
  *
  * The lifecycle of an application is:
  *
