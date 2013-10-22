@@ -5,6 +5,7 @@
 library spark.ace;
 
 import 'dart:html';
+import 'dart:js' as js;
 
 import 'package:ace/ace.dart' as ace;
 
@@ -14,6 +15,7 @@ class AceEditor {
   ace.Editor _aceEditor;
   workspace.File _file;
 
+  static bool get available => js.context['ace'] != null;
 
   AceEditor() {
     _aceEditor = ace.edit(querySelector('#editorArea'));
