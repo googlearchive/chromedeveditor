@@ -24,9 +24,11 @@ class Workspace implements Container {
   List<Resource> _children = [];
   PreferenceStore _store;
 
+  StreamController<ResourceChangeEvent> _streamController =
+      new StreamController.broadcast();
+
   // TODO: perhaps move to returning a constructed Workspace via a static
   // method that returns a Future? see PicoServer
-
   Workspace(PreferenceStore preferenceStore) {
     this._store = preferenceStore;
   }
@@ -40,16 +42,18 @@ class Workspace implements Container {
     if (entity.isFile) {
       var resource = new File(this, entity);
       _children.add(resource);
+      _streamController.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
       return new Future.value(resource);
     } else {
       var project = new Project(this, entity);
       _children.add(project);
+      _streamController.add(new ResourceChangeEvent(project, ResourceEventType.ADD));
       return _gatherChildren(project);
     }
   }
 
   void unlink(Resource resource) {
-    // TODO: remove resource from list of children
+    // TODO: remove resource from list of children and fire event
   }
 
   List<Resource> getChildren() =>_children;
@@ -57,6 +61,8 @@ class Workspace implements Container {
   List<File> getFiles() => _children.where((c) => c is File).toList();
 
   List<Project> getProjects() => _children.where((c) => c is Project).toList();
+
+  Stream<ResourceChangeEvent> get onResourceChange => _streamController.stream;
 
   Project get project => null;
 
@@ -120,6 +126,7 @@ class File extends Resource {
 
   Future<String> getContents() => (_entry as chrome_gen.ChromeFileEntry).readText();
 
+  // TODO: fire change event
   Future setContents(String contents) => (_entry as chrome_gen.ChromeFileEntry).writeText(contents);
 }
 
@@ -127,4 +134,37 @@ class Project extends Folder {
   Project(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
   Project get project => this;
+}
+
+class ResourceEventType {
+  final String name;
+
+  const ResourceEventType._(this.name);
+
+  /**
+   * Event type indicates resource has been added to workspace.
+   */
+  static const ResourceEventType ADD = const ResourceEventType._('ADD');
+
+  /**
+   * Event type indicates resource has been removed from workspace.
+   */
+  static const ResourceEventType DELETE = const ResourceEventType._('DELETE');
+
+  /**
+   * Event type indicates resource has changed.
+   */
+  static const ResourceEventType CHANGE = const ResourceEventType._('CHANGE');
+
+  String toString() => name;
+}
+
+/**
+ * Used to indicate changes to the Workspace.
+ */
+class ResourceChangeEvent {
+  final ResourceEventType type;
+  final Resource resource;
+
+  ResourceChangeEvent(this.resource, this.type);
 }
