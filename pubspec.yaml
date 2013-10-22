@@ -8,7 +8,6 @@ dependencies:
   analyzer_experimental: any
   browser: any
   chrome_gen: '>=0.0.6'
-  compiler_unsupported: any
   intl: any
   logging: any
   mime: any

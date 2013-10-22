@@ -18,6 +18,7 @@ import 'package:unittest/unittest.dart' as unittest;
 
 import 'ace_test.dart' as ace_test;
 import 'app_test.dart' as app_test;
+import 'compiler_test.dart' as compiler_test;
 import 'gitobject_test.dart' as gitobject_test;
 import 'git_test.dart' as git_test;
 import 'preferences_test.dart' as preferences_test;
@@ -44,6 +45,7 @@ void _defineTests() {
 
   ace_test.main();
   app_test.main();
+  compiler_test.main();
   git_test.main();
   utils_test.main();
   preferences_test.main();
@@ -125,11 +127,11 @@ class SparkTestConfiguration extends unittest.Configuration {
         String stackTrace = '';
 
         if (test.stackTrace != null && test.stackTrace != '') {
-          stackTrace = '\n' + indent(test.stackTrace.toString().trim());
+          stackTrace = '\n' + indent(test.stackTrace.toString().trim(), '    ');
         }
 
-        logger.warning('${test.result}: ${test.description}');
-        logger.warning(test.message.trim() + stackTrace);
+        logger.warning('${test.result}: ${test.description}\n' +
+            test.message.trim() + stackTrace);
       }
     }
 
@@ -147,7 +149,7 @@ class SparkTestConfiguration extends unittest.Configuration {
     }
   }
 
-  String indent(String str) {
-    return str.split("\n").map((line) => "  $line").join("\n");
+  String indent(String str, [String indent = '  ']) {
+    return str.split("\n").map((line) => "${indent}${line}").join("\n");
   }
 }
