@@ -8,11 +8,13 @@ import 'dart:html';
 import 'dart:js' as js;
 
 import 'package:ace/ace.dart' as ace;
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+
+import 'workspace.dart' as workspace;
 
 class AceEditor {
   ace.Editor _aceEditor;
-  chrome_gen.ChromeFileEntry _file;
+  workspace.File _file;
+
 
   static bool get available => js.context['ace'] != null;
 
@@ -23,7 +25,7 @@ class AceEditor {
 
   String getPathInfo() {
     // TODO: show full path of file, not just name
-    if (_file != null) return _file.fullPath;
+    if (_file != null) return _file.name;
     return '[new file]';
   }
 
@@ -33,25 +35,25 @@ class AceEditor {
   }
 
   void save() {
-    if (_file != null){
-      _file.writeText(_aceEditor.value);
+    if (_file != null) {
+      _file.setContents(_aceEditor.value);
       _aceEditor.focus();
     }
   }
 
-  void saveAs(chrome_gen.ChromeFileEntry file) {
+  void saveAs(workspace.File file) {
     _file = file;
     save();
   }
 
-  void setContent(chrome_gen.ChromeFileEntry file) {
+  void setContent(workspace.File file) {
     _file = file;
-    _file.readText().then((String contents) {
-      _setContents(contents, new ace.Mode.forFile(file.name));
+    _file.getContents().then((String contents) {
+      _setContents(contents, new ace.Mode.forFile(_file.name));
     });
   }
 
-  void setTheme(String theme){
+  void setTheme(String theme) {
     _aceEditor.theme = new ace.Theme(theme);
   }
 

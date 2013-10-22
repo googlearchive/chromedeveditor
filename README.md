@@ -58,6 +58,10 @@ re-compile the dart code to javascript, run:
 
     ./grind compile
 
+### API Documentation
+
+Documentation for the Spark APIs is available [here](http://dart-lang.github.io/spark/docs/spark.html).
+
 ### Tests
 All the tests live in app/test. These are standard dart unit tests. Generally,
 one library under test == 1 test file, and they should all be referenced from

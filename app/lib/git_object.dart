@@ -13,8 +13,8 @@ import 'package:utf/utf.dart';
 
 /**
  * Encapsulates a Gitobject
- * TODO(grv): Add unittests.
  *
+ * TODO(grv): Add unittests.
  **/
 abstract class GitObject {
 
