@@ -153,22 +153,24 @@ class ResourceEventType {
 
   final String name;
 
-  const ResourceEventType(this.name);
+  const ResourceEventType._(this.name);
 
   /**
    * Event type indicates resource has been added to workspace.
    */
-  static const ResourceEventType ADD = const ResourceEventType('ADD');
+  static const ResourceEventType ADD = const ResourceEventType._('ADD');
 
   /**
    * Event type indicates resource has been removed from workspace.
    */
-  static const ResourceEventType DELETE = const ResourceEventType('DELETE');
+  static const ResourceEventType DELETE = const ResourceEventType._('DELETE');
 
   /**
    * Event type indicates resource has changed.
    */
-  static const ResourceEventType CHANGE = const ResourceEventType('CHANGE');
+  static const ResourceEventType CHANGE = const ResourceEventType._('CHANGE');
+
+  String toString() => name;
 
 }
 
@@ -177,8 +179,8 @@ class ResourceEventType {
  */
 class ResourceChangeEvent {
 
-  ResourceEventType type;
-  Resource resource;
+  final ResourceEventType type;
+  final Resource resource;
 
   ResourceChangeEvent(this.resource, this.type);
 }
