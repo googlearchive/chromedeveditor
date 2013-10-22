@@ -17,17 +17,5 @@ main() {
     test('i18n_not_found', () {
       expect(i18n('not_found'), equals(''));
     });
-
-    test('platform', () {
-      expect(isLinux() || isMac() || isWin(), isTrue);
-    });
-
-    test('platform_one_set', () {
-      int platformCount = 0;
-      if (isLinux()) platformCount++;
-      if (isMac()) platformCount++;
-      if (isWin()) platformCount++;
-      expect(platformCount, equals(1));
-    });
   });
 }

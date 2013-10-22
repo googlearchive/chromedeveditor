@@ -14,7 +14,7 @@ import 'dart:html';
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:logging/logging.dart';
 
-import 'spark.dart' as spark;
+import 'spark.dart';
 import 'lib/tcp.dart' as tcp;
 import 'test/all.dart' as tests;
 
@@ -26,16 +26,18 @@ Logger testLogger = new Logger('spark.tests');
  */
 void main() {
   SparkTest app = new SparkTest();
-  app.showTestUI();
 
-  // Give the app a little bit of time to start up.
-  new Timer(new Duration(seconds: 1), () => app.connectToListener());
+  app.start().then((_) {
+    app.showTestUI();
+
+    app.connectToListener();
+  });
 }
 
 /**
  * A custom subclass of Spark with tests built-in.
  */
-class SparkTest extends spark.Spark {
+class SparkTest extends Spark {
   SparkTest() {
     print('Running Spark in test mode');
   }

@@ -24,6 +24,9 @@ class Workspace implements Container {
   List<Resource> _children = [];
   PreferenceStore _store;
 
+  // TODO: perhaps move to returning a constructed Workspace via a static
+  // method that returns a Future? see PicoServer
+
   Workspace(PreferenceStore preferenceStore) {
     this._store = preferenceStore;
   }
@@ -31,10 +34,6 @@ class Workspace implements Container {
   String get name => null;
 
   Container get parent => null;
-
-  Workspace initialize() {
-    // TODO: initialize workspace with saved info from previous session
-  }
 
   Future<Resource> link(chrome_gen.Entry entity) {
 
@@ -75,8 +74,10 @@ class Workspace implements Container {
 
   Project get project => null;
 
-  void save() {
+  Future save() {
     // TODO: save workspace information - maybe in preferences?
+
+    return new Future.value();
   }
 
   Future<Resource> _gatherChildren(Container container) {
