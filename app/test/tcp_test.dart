@@ -114,8 +114,8 @@ main() {
     test('bind to any port', () {
       return tcp.TcpServer.createServerSocket().then((tcp.TcpServer server) {
         return server.getInfo().then((tcp.SocketInfo info) {
-          print("bound to port ${info.localPort}");
-          print("localAddress = ${info.localAddress}");
+          //print("bound to port ${info.localPort}");
+          //print("localAddress = ${info.localAddress}");
           expect(info.localAddress, isNotNull);
           expect(info.localPort, greaterThan(0));
           server.dispose();

@@ -16,7 +16,8 @@ class FileItemView {
 
   FileItemView(String path) {
     // We create an HTML element based on a template.
-    DocumentFragment template = querySelector('#fileview-filename').content;
+    DocumentFragment template =
+        (querySelector('#fileview-filename') as TemplateElement).content;
     _element = template.clone(true);
     _element.querySelector('.filename').text = path;
     // We add it to the DOM.

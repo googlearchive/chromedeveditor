@@ -73,7 +73,7 @@ String getChromePath() {
 }
 
 void startChrome(String appPath) {
-  tempDir = new Directory('').createTempSync();
+  tempDir = Directory.systemTemp.createTempSync('userDataDir-');
 
   String path = new Directory(appPath).absolute.path;
 

@@ -30,6 +30,7 @@
         "tcp-listen"
       ]
     },
+    "syncFileSystem",
     "storage",
     "webview"
   ],
