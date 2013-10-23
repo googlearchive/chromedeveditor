@@ -212,6 +212,8 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
 void _dart2jsCompile(GrinderContext context, Directory target, String filePath) {
   runSdkBinary(context, 'dart2js', arguments: [
      joinDir(target, [filePath]).path,
+     '--package-root=packages',
+     '--suppress-hints', '--suppress-warnings',
      '--out=' + joinDir(target, ['${filePath}.js']).path]);
 
   // clean up unnecessary (and large) files
@@ -223,7 +225,7 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath) 
   _removePackagesLinks(context, target);
 
   copyDirectory(
-      joinDir(target, ['..', 'packages']),
+      joinDir(target, ['..', '..', '..', 'packages']),
       joinDir(target, ['packages']));
 
   _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
