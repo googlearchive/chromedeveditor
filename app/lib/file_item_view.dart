@@ -6,7 +6,6 @@
  * This class encapsulates a file item view in the left panel of the
  * application.
  */
-
 library spark.file_item_view;
 
 import 'dart:html';
@@ -17,7 +16,6 @@ class FileItemView {
   Element _element;
 
   FileItemView(Workspace workspace) {
-
     workspace.onResourceChange.listen((event) {
       _processEvents(event);
     });

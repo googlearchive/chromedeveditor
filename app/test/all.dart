@@ -19,6 +19,7 @@ import 'package:unittest/unittest.dart' as unittest;
 import 'ace_test.dart' as ace_test;
 import 'app_test.dart' as app_test;
 import 'compiler_test.dart' as compiler_test;
+import 'files_test.dart' as files_test;
 import 'gitobject_test.dart' as gitobject_test;
 import 'git_test.dart' as git_test;
 import 'preferences_test.dart' as preferences_test;
@@ -46,6 +47,7 @@ void _defineTests() {
   ace_test.main();
   app_test.main();
   compiler_test.main();
+  files_test.main();
   git_test.main();
   utils_test.main();
   preferences_test.main();
