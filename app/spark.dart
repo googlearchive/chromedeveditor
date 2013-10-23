@@ -26,7 +26,7 @@ class Spark extends Application {
   AceEditor editor;
   Workspace workspace;
   SplitView _splitView;
-  List _filesViews;
+  FileItemView _filesView;
 
   PlatformInfo _platformInfo;
 
@@ -51,14 +51,7 @@ class Spark extends Application {
     editor = new AceEditor();
     editor.setTheme('ace/theme/textmate');
 
-    // Some dummy files are added in the left panel.
-    _filesViews = new List();
-    _filesViews.add(new FileItemView('background.js'));
-    _filesViews.add(new FileItemView('index.html'));
-    _filesViews.add(new FileItemView('index.js'));
-    _filesViews.add(new FileItemView('manifest.json'));
-    _filesViews.add(new FileItemView('longlonglong_filename.js'));
-
+    _filesView = new FileItemView(workspace);
     _splitView = new SplitView(querySelector('#splitview'));
   }
 
@@ -115,7 +108,6 @@ class Spark extends Application {
   }
 
   void updatePath() {
-    print(editor.getPathInfo());
     querySelector("#path").innerHtml = editor.getPathInfo();
   }
 }

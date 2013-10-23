@@ -38,25 +38,14 @@ same layout as one.
 
 Run:
 
-    ./grind packages
+    ./grind setup
 
-to copy library code from packages/ to app/packages/.
-
-### The Dart SDK
-We copy the `dart:` code from the Dart SDK into the `app/sdk` directory. There
-is a build step for this; run:
-
-    ./grind sdk
+to copy library code from packages/ to app/packages/. This step also copies the 
+`dart:` code from the Dart SDK into the `app/sdk` directory.
 
 ### Lib
 All the Dart code for the application (modulo the spark.dart entry point)
 lives in the `app/lib` directory.
-
-### Output
-The output from dart2js lives in the app/ directory (`app/spark.dart.js`). To
-re-compile the dart code to javascript, run:
-
-    ./grind compile
 
 ### API Documentation
 
