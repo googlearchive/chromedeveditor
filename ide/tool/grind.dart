@@ -213,7 +213,8 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath) 
   runSdkBinary(context, 'dart2js', arguments: [
      joinDir(target, [filePath]).path,
      '--package-root=packages',
-     '--suppress-hints', '--suppress-warnings',
+     '--suppress-hints',
+     '--suppress-warnings',
      '--out=' + joinDir(target, ['${filePath}.js']).path]);
 
   // clean up unnecessary (and large) files
