@@ -13,5 +13,6 @@ dependencies:
   mime: any
   polymer: any
 dev_dependencies:
+  args: any
   grinder: 0.0.7
   unittest: any
