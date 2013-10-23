@@ -42,9 +42,6 @@ main() {
         });
       });
     });
-
-    //(_entry as chrome_gen.ChromeFileEntry).readText()
-
   });
 
   group('syncFileSystem', () {
