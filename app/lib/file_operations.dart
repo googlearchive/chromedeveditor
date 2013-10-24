@@ -16,7 +16,6 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
  **/
 abstract class FileOps {
 
-
   static Future<chrome.Entry> createFileWithContent(
       chrome.DirectoryEntry root, String path, content, String type) {
 
