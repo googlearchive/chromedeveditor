@@ -15,14 +15,12 @@ import 'file_operations.dart';
 /**
  * An objectstore for git objects.
  * TODO(grv): Add unittests, add better docs.
- *
  **/
 class ObjectStore {
 
   static final GIT_FOLDER_PATH = '.git/';
   static final GIT_OBJECT_FOLDER_PATH = '.git/objects';
   static final GIT_HEAD_PATH = '.git/HEAD';
-
 
   // The root directory of the git checkout the objectstore represents.
   chrome.DirectoryEntry _rootDir;
@@ -106,7 +104,6 @@ class ObjectStore {
   }
 
   Future<String> getHeadRef() {
-
     Completer<String> completer = new Completer();
     this._rootDir.getFile(GIT_HEAD_PATH).then((chrome.ChromeFileEntry entry) {
       entry.readText().then((String content) {
