@@ -95,7 +95,7 @@ void runApp(String browserPath, String appPath) {
   }
 
   log("starting chrome...");
-  log("${browserPath} ${args.join('\n  ')}");
+  log('"${browserPath}" ${args.join(' ')}');
 
   Process.start(browserPath, args, workingDirectory: appPath)
     .then((Process process) {

@@ -4,7 +4,7 @@ author: Chrome Team <apps-dev@chromium.org>
 description: A Chrome app based development environment.
 homepage: https://github.com/GoogleChrome/spark
 dependencies:
-  ace: '>=0.0.6+10.7.2013'
+  ace: '>=0.0.8'
   analyzer_experimental: any
   browser: any
   chrome_gen: '>=0.0.8'
