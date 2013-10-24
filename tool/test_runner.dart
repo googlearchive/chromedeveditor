@@ -18,9 +18,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:args/args.dart';
 import 'package:grinder/grinder.dart';
-
-const _CHROME_PATH_ENV_KEY = 'CHROME_PATH';
 
 TestListener testListener;
 Process chromeProcess;
@@ -36,43 +35,49 @@ void main() {
     throw 'This script must be run from the root of the project directory.';
   }
 
+  ArgParser parser = _createArgsParser();
+  ArgResults results = parser.parse(new Options().arguments);
+
+  String appPath = null;
+  String browserPath = null;
+
+  if (results['dartium']) {
+    appPath = 'app';
+    browserPath = _dartiumPath();
+  }
+
+  if (results['chrome'] || results['chrome-stable']) {
+    appPath = 'build/deploy-test-out/web';
+    browserPath = _chromeStablePath();
+  }
+
+  if (results['chrome-dev']) {
+    appPath = 'build/deploy-test-out/web';
+    browserPath = _chromeDevPath();
+  }
+
+  if (results['appPath'] != null) {
+    appPath = results['appPath'];
+  }
+
+  if (results['browserPath'] != null) {
+    browserPath = results['browserPath'];
+  }
+
+  if (appPath == null || browserPath == null) {
+    _printUsage(parser);
+    return;
+  }
+
   // start a test listener
   TestListener.create().then((TestListener listener) {
     testListener = listener;
 
-    startChrome('app');
+    runApp(browserPath, appPath);
   }).catchError(_fatalError);
 }
 
-String getChromePath() {
-  // Check for an env override
-  if (Platform.environment.containsKey(_CHROME_PATH_ENV_KEY)) {
-    String envPath = Platform.environment[_CHROME_PATH_ENV_KEY];
-
-    if (!FileSystemEntity.isFile(envPath)) {
-      throw 'Env ${_CHROME_PATH_ENV_KEY} does not exist: ${envPath}';
-    }
-
-    return envPath;
-  }
-
-  // Else, look for Dartium
-  final Map m = {
-    "linux": "chrome",
-    "macos": "Chromium.app/Contents/MacOS/Chromium",
-    "windows": "Chromium.exe"
-  };
-
-  String path = "${sdkDir.path}/../chromium/${m[Platform.operatingSystem]}";
-
-  if (FileSystemEntity.isFileSync(path)) {
-    return new File(path).absolute.path;
-  } else {
-    throw 'unable to locate path to chrome (${path})';
-  }
-}
-
-void startChrome(String appPath) {
+void runApp(String browserPath, String appPath) {
   tempDir = Directory.systemTemp.createTempSync('userDataDir-');
 
   String path = new Directory(appPath).absolute.path;
@@ -90,9 +95,9 @@ void startChrome(String appPath) {
   }
 
   log("starting chrome...");
-  log("${getChromePath()} ${args.join('\n  ')}");
+  log("${browserPath} ${args.join('\n  ')}");
 
-  Process.start(getChromePath(), args, workingDirectory: appPath)
+  Process.start(browserPath, args, workingDirectory: appPath)
     .then((Process process) {
       chromeProcess = process;
 
@@ -105,6 +110,70 @@ void startChrome(String appPath) {
 }
 
 void log(String str) => print("[${str}]");
+
+ArgParser _createArgsParser() {
+  ArgParser parser = new ArgParser();
+  parser.addFlag('dartium',
+      help: 'run in dartium, test the app in app/', negatable: false);
+  parser.addFlag('chrome',
+      help: 'an alias to --chrome-stable', negatable: false);
+  parser.addFlag('chrome-stable',
+      help: 'run in chrome stable, test the app in build/deploy-test-out/web/', negatable: false);
+  parser.addFlag('chrome-dev',
+      help: 'run in chrome dev, test the app in build/deploy-test-out/web/', negatable: false);
+
+  parser.addOption('appPath', help: 'the application path to run');
+  parser.addOption('browserPath', help: 'the path to chrome');
+
+  return parser;
+}
+
+void _printUsage(ArgParser parser) {
+  print('usage: dart ${Platform.script} <options>');
+  print('');
+  print('valid options:');
+  print(parser.getUsage().replaceAll('\n\n', '\n'));
+  print('');
+  print('Generally, you should run this tool with either --dartium or --chrome-*.');
+  print('Optionally, you can specify the browser to run the app in, and the application');
+  print('directory to launch.');
+}
+
+String _dartiumPath() {
+  final Map m = {
+    "linux": "chrome",
+    "macos": "Chromium.app/Contents/MacOS/Chromium",
+    "windows": "Chromium.exe"
+  };
+
+  String path = "${sdkDir.path}/../chromium/${m[Platform.operatingSystem]}";
+
+  if (FileSystemEntity.isFileSync(path)) {
+    return new File(path).absolute.path;
+  } else {
+    throw 'unable to locate Dartium (${path})';
+  }
+}
+
+String _chromeStablePath() {
+  if (Platform.isLinux) {
+    return '/usr/bin/google-chrome';
+  } else if (Platform.isMacOS) {
+    return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  } else {
+    // TODO: locate Chrome on Windows
+    throw 'unable to locate Chrome; ${Platform.operatingSystem} not yet supported';
+  }
+}
+
+String _chromeDevPath() {
+  if (Platform.isLinux) {
+    return '/usr/bin/google-chrome-unstable';
+  } else {
+    // TODO:
+    throw 'unable to locate Chrome dev; ${Platform.operatingSystem} not yet supported';
+  }
+}
 
 void _fatalError(e) {
   if (chromeProcess != null) {
