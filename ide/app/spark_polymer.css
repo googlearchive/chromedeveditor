@@ -86,7 +86,7 @@ body {
 }
 
 #themeChooser {
-  display: none;
+  display: inline-block;
 }
 
 #uiSwitcher {
