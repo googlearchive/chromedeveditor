@@ -46,9 +46,14 @@ void main() {
     browserPath = _dartiumPath();
   }
 
-  if (results['chrome']) {
+  if (results['chrome'] || results['chrome-stable']) {
     appPath = 'build/deploy-test-out/web';
-    browserPath = _chromePath();
+    browserPath = _chromeStablePath();
+  }
+
+  if (results['chrome-dev']) {
+    appPath = 'build/deploy-test-out/web';
+    browserPath = _chromeDevPath();
   }
 
   if (results['appPath'] != null) {
@@ -111,7 +116,11 @@ ArgParser _createArgsParser() {
   parser.addFlag('dartium',
       help: 'run in dartium, test the app in app/', negatable: false);
   parser.addFlag('chrome',
-      help: 'run in chrome, test the app in build/deploy-test-out/web/', negatable: false);
+      help: 'an alias to --chrome-stable', negatable: false);
+  parser.addFlag('chrome-stable',
+      help: 'run in chrome stable, test the app in build/deploy-test-out/web/', negatable: false);
+  parser.addFlag('chrome-dev',
+      help: 'run in chrome dev, test the app in build/deploy-test-out/web/', negatable: false);
 
   parser.addOption('appPath', help: 'the application path to run');
   parser.addOption('browserPath', help: 'the path to chrome');
@@ -125,8 +134,9 @@ void _printUsage(ArgParser parser) {
   print('valid options:');
   print(parser.getUsage().replaceAll('\n\n', '\n'));
   print('');
-  print('Generally, you should run this tool with either --dartium or --chrome. Optionally, you');
-  print('can specify the browser to run the app in, and the application directory to launch.');
+  print('Generally, you should run this tool with either --dartium or --chrome-*.');
+  print('Optionally, you can specify the browser to run the app in, and the application');
+  print('directory to launch.');
 }
 
 String _dartiumPath() {
@@ -141,17 +151,27 @@ String _dartiumPath() {
   if (FileSystemEntity.isFileSync(path)) {
     return new File(path).absolute.path;
   } else {
-    throw 'unable to locate path to chrome (${path})';
+    throw 'unable to locate Dartium (${path})';
   }
 }
 
-String _chromePath() {
+String _chromeStablePath() {
   if (Platform.isLinux) {
     return '/usr/bin/google-chrome';
   } else if (Platform.isMacOS) {
     return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   } else {
-    throw 'unable to locate path to chrome';
+    // TODO: locate Chrome on Windows
+    throw 'unable to locate Chrome; ${Platform.operatingSystem} not yet supported';
+  }
+}
+
+String _chromeDevPath() {
+  if (Platform.isLinux) {
+    return '/usr/bin/google-chrome-unstable';
+  } else {
+    // TODO:
+    throw 'unable to locate Chrome dev; ${Platform.operatingSystem} not yet supported';
   }
 }
 
