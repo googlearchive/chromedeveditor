@@ -2,11 +2,13 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library polymer.sp_button;
+library spark_widgets;
 
 import 'package:polymer/polymer.dart';
 
-@CustomTag('sp-button')
-class SpButton extends PolymerElement {
-  SpButton.created() : super.created();
+@CustomTag('spark-button')
+class SparkButton extends PolymerElement {
+  @observable bool active = false;
+  SparkButton.created() : super.created() {
+  }
 }

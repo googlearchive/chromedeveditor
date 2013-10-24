@@ -1,0 +1,7 @@
+name: spark_widgets
+version: 0.0.1-dev
+author: Chrome Team <apps-dev@chromium.org>
+description: A Chrome app based development environment.
+homepage: https://github.com/GoogleChrome/spark
+dependencies:
+  polymer: any
