@@ -19,15 +19,10 @@ abstract class FileOps {
   static Future<chrome.Entry> createFileWithContent(
       chrome.DirectoryEntry root, String path, content, String type) {
 
-    Completer<chrome.Entry> completer = new Completer();
-
-    root.createFile(path, exclusive: false).then((chrome.ChromeFileEntry entry) {
+    root.createFile(path).then((chrome.ChromeFileEntry entry) {
       //TODO(grv) : implement more general write function.
-      entry.writeText(content).then((chrome.Entry entry) {
-        completer.complete(entry);
-      });
+      return entry.writeText(content).then((_) => entry);
     });
-    return completer.future;
   }
 
   static Future<dynamic> readFile(chrome.DirectoryEntry root, String path,
@@ -48,22 +43,6 @@ abstract class FileOps {
    * Lists the files in a given [root] directory.
    */
   static Future<List<chrome.Entry>> listFiles(chrome.DirectoryEntry root) {
-    Completer completer = new Completer();
-    chrome.DirectoryReader reader = root.createReader();
-    List<chrome.Entry> entries = [];
-    readEntries() {
-      reader.readEntries().then((List<chrome.Entry> results) {
-        if (!results.length){
-          completer.complete(entries);
-        } else {
-          entries.addAll(results);
-          readEntries();
-        }
-      }, onError: (e) {
-        completer.completeError(e);
-      });
-    }
-    readEntries();
-    return completer.future;
+    return root.createReader().readEntries();
   }
 }
