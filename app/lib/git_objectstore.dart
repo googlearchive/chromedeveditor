@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:core';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
-import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 
 import 'file_operations.dart';
 
@@ -29,28 +28,26 @@ class ObjectStore {
   chrome.DirectoryEntry _objectDir;
 
   //TODO(grv) : Expose pack , packIdx as dart and add type here.
-  List<dynamic> _packs;
+  List<dynamic> _packs = [];
 
   ObjectStore(chrome.DirectoryEntry root) {
-    this._rootDir = root;
-    this._packs = [];
+    _rootDir = root;
+
   }
 
-  List<dynamic> haveRefs() => [];
-
   loadWith(chrome.DirectoryEntry objectDir, List<dynamic> packs) {
-    this._objectDir = objectDir;
-    this._packs = packs;
+    _objectDir = objectDir;
+    _packs = packs;
   }
 
   Future load() {
-    chrome.DirectoryEntry rootDir = this._rootDir;
+    chrome.DirectoryEntry rootDir = _rootDir;
     Completer completer = new Completer();
 
     rootDir.createDirectory(GIT_OBJECT_FOLDER_PATH, exclusive: false).then((
         chrome.DirectoryEntry objectsDir) {
 
-      this._objectDir = objectsDir;
+      _objectDir = objectsDir;
 
       objectsDir.createDirectory('pack', exclusive: true).then((
           chrome.DirectoryEntry packDir) {
@@ -83,9 +80,11 @@ class ObjectStore {
         }
         readEntries();
       }, onError: (e) {
+        completer.complete(e);
 
       });
     }, onError: (e) {
+      completer.complete(e);
 
     });
     return completer.future;
@@ -94,18 +93,18 @@ class ObjectStore {
   Future<chrome.FileEntry> createNewRef(String refName, String sha) {
     String path = GIT_FOLDER_PATH + refName;
     String content = sha + '\n';
-    return FileOps.createFileWithContent(this._rootDir, path, content, "Text");
+    return FileOps.createFileWithContent(_rootDir, path, content, "Text");
   }
 
   Future<chrome.FileEntry> setHeadRef(String refName, String sha) {
-    String content = 'ref: ' + refName + '\n';
-    return FileOps.createFileWithContent(this._rootDir, GIT_HEAD_PATH,
+    String content = 'ref: ${refName}\n';
+    return FileOps.createFileWithContent(_rootDir, GIT_HEAD_PATH,
         content, "Text");
   }
 
   Future<String> getHeadRef() {
     Completer<String> completer = new Completer();
-    this._rootDir.getFile(GIT_HEAD_PATH).then((chrome.ChromeFileEntry entry) {
+    _rootDir.getFile(GIT_HEAD_PATH).then((chrome.ChromeFileEntry entry) {
       entry.readText().then((String content) {
         // get rid of the initial 'ref: ' plus newline at end
         String headRefName = content.substring(5).trim();
@@ -118,17 +117,13 @@ class ObjectStore {
   }
 
   Future<String> getHeadSha() {
-    Completer<String> completer = new Completer();
-    this.getHeadRef().then((String headRefName) {
-      return this._getHeadForRef(headRefName);
-    }, onError: (e) {
-      // throw file error;
-    });
+    return getHeadRef().then((String headRefName)
+        => _getHeadForRef(headRefName));
   }
 
   Future<String> getAllHeads() {
     Completer completer = new Completer();
-    this._rootDir.getDirectory('.git/refs/heads').then((
+    _rootDir.getDirectory('.git/refs/heads').then((
         chrome.DirectoryEntry dir) {
       FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
         List<String> branches;
@@ -149,14 +144,8 @@ class ObjectStore {
   }
 
   Future<String> _getHeadForRef(String headRefName) {
-    Completer<String> completer = new Completer();
-    FileOps.readFile(this._rootDir, GIT_FOLDER_PATH + headRefName, "Text")
-      .then((String content) {
-      completer.complete(content.substring(0, 40));
-   }, onError: (e) {
-     // Throw file error.
-   });
-    return completer.future;
+    return FileOps.readFile(_rootDir, GIT_FOLDER_PATH + headRefName, "Text")
+      .then((String content) => content.substring(0, 40));
   }
 
   Future _readPackEntry(chrome.DirectoryEntry packDir,
@@ -166,19 +155,20 @@ class ObjectStore {
     entry.readText().then((String packData) {
       var rootName = entry.name.substring(0, entry.name.lastIndexOf('.pack'));
       FileOps.readFile(packDir, rootName + '.idx', 'ArrayBuffer').then(
-          (chrome_gen.ArrayBuffer idxData) {
+          (chrome.ArrayBuffer idxData) {
             //TODO(grv) : Expose the pack and packIndex class, and pass a pack
             // object.
             //this._packs.add({pack: newPacker(packData, this), idx: new PackIndex(idxData)});
-            this._packs.add("add proper pack class");
+            _packs.add("add proper pack class");
             completer.complete();
 
       }, onError: (e) {
+        completer.complete(e);
 
       });
 
     }, onError: (e) {
-      // Throw error.
+      completer.complete(e);
     });
     return completer.future;
   }
