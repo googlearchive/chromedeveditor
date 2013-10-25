@@ -19,7 +19,7 @@ abstract class FileOps {
   static Future<chrome.Entry> createFileWithContent(
       chrome.DirectoryEntry root, String path, content, String type) {
 
-    root.createFile(path).then((chrome.ChromeFileEntry entry) {
+    return root.createFile(path).then((chrome.ChromeFileEntry entry) {
       //TODO(grv) : implement more general write function.
       return entry.writeText(content).then((_) => entry);
     });
