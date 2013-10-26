@@ -1,0 +1,9 @@
+app/spark.dart.js
+app/spark.dart.precompiled.js
+app/spark_test.dart.js
+app/spark_test.dart.precompiled.js
+build/
+dist/
+docs/
+app/sdk/version
+app/sdk/lib/
