@@ -1,5 +1,6 @@
 # Spark
 
-A Chrome app based development environment with a reusable library of GUI widgets.
+A Chrome app based development environment with a reusable library of GUI widgets. See:
 
-See ide/README.md and widgets/README.md for details on both subcomponents.
+ * [ide/](https://github.com/dart-lang/spark/tree/master/ide) for the development environment source
+ * [widgets/](https://github.com/dart-lang/spark/tree/master/widgets) for the Polymer UI components
