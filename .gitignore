@@ -1,10 +1,9 @@
-pubspec.lock
-*.pem
-packages
 .svn
 .DS_Store
 .buildlog
 .project
+pubspec.lock
+packages
+*.pem
 *.js.map
 *.js.deps
-dist/
