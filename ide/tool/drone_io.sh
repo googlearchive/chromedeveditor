@@ -6,6 +6,6 @@ pub install
 
 # run tests
 ./grind mode-test
-dart tool/test_runner.dart
+dart tool/test_runner.dart --dartium
 
 ./grind archive
