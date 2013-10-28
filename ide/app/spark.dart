@@ -27,7 +27,7 @@ class Spark extends Application {
   Workspace workspace;
 
   PreferenceStore localPrefs;
-  PreferenceStore syncPres;
+  PreferenceStore syncPrefs;
 
   SplitView _splitView;
   FileItemView _filesView;
@@ -38,7 +38,7 @@ class Spark extends Application {
     document.title = appName;
 
     localPrefs = PreferenceStore.createLocal();
-    syncPres = PreferenceStore.createSync();
+    syncPrefs = PreferenceStore.createSync();
 
     addParticipant(new _SparkSetupParticipant(this));
 
@@ -61,7 +61,7 @@ class Spark extends Application {
     _filesView = new FileItemView(workspace);
     _splitView = new SplitView(querySelector('#splitview'));
 
-    syncPres.getValue('aceTheme').then((String value) {
+    syncPrefs.getValue('aceTheme').then((String value) {
       if (value != null) {
         editor.setTheme(value);
         (querySelector("#editorTheme") as SelectElement).value = value;
@@ -114,7 +114,7 @@ class Spark extends Application {
   void _handleThemeEvent(Event e) {
     String aceTheme = (e.target as SelectElement).value;
     editor.setTheme(aceTheme);
-    syncPres.setValue('aceTheme', aceTheme);
+    syncPrefs.setValue('aceTheme', aceTheme);
   }
 
   void updateError(String string) {
