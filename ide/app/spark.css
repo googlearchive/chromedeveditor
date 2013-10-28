@@ -14,26 +14,21 @@ body {
   /*background: #2F3129;*/
 }
 
-#editorArea {
-  height: 400px;
-  position: relative;
-  border: 1px solid #ccc;
-}
-
 #status {
-    border-bottom: 1px solid #CCC;
-    background-color: #EEE;
+  border-bottom: 1px solid #CCC;
 }
 
 #path {
-    padding: 5px;
-    color: #777;
+  padding: 5px;
+  padding-left: 10px;
+  color: #777;
 }
 
 #error {
-    padding: 5px;
-    padding-top: 0px;
-    color: #C66;
+  padding: 5px;
+  padding-top: 0px;
+  color: #C66;
+  float: right;
 }
 
 .fileview-filename-container {
@@ -86,5 +81,9 @@ body {
 }
 
 #themeChooser {
-  display: none;
+  float: right;
+}
+
+#toolbar {
+  
 }

@@ -12,7 +12,7 @@ import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'lib/ace.dart';
 import 'lib/app.dart';
 import 'lib/utils.dart';
-import 'lib/preferences.dart' as preferences;
+import 'lib/preferences.dart';
 import 'lib/ui/widgets/file_item_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart';
@@ -25,6 +25,10 @@ void main() {
 class Spark extends Application {
   AceEditor editor;
   Workspace workspace;
+
+  PreferenceStore localPrefs;
+  PreferenceStore syncPrefs;
+
   SplitView _splitView;
   FileItemView _filesView;
 
@@ -32,6 +36,9 @@ class Spark extends Application {
 
   Spark() {
     document.title = appName;
+
+    localPrefs = PreferenceStore.createLocal();
+    syncPrefs = PreferenceStore.createSync();
 
     addParticipant(new _SparkSetupParticipant(this));
 
@@ -45,14 +52,21 @@ class Spark extends Application {
     querySelector("#openFile").onClick.listen(openFile);
     querySelector("#saveFile").onClick.listen(saveFile);
     querySelector("#saveAsFile").onClick.listen(saveAsFile);
-    querySelector("#editorTheme").onChange.listen(setTheme);
+    querySelector("#editorTheme").onChange.listen(_handleThemeEvent);
 
-    workspace = new Workspace(preferences.PreferenceStore.createLocal());
+    workspace = new Workspace(localPrefs);
+
     editor = new AceEditor();
-    editor.setTheme('ace/theme/textmate');
 
     _filesView = new FileItemView(workspace);
     _splitView = new SplitView(querySelector('#splitview'));
+
+    syncPrefs.getValue('aceTheme').then((String value) {
+      if (value != null) {
+        editor.setTheme(value);
+        (querySelector("#editorTheme") as SelectElement).value = value;
+      }
+    });
   }
 
   String get appName => i18n('app_name');
@@ -61,7 +75,7 @@ class Spark extends Application {
 
   void newFile(_) {
     editor.newFile();
-    updatePath();
+    updatePath('created new file');
   }
 
   void openFile(_) {
@@ -73,12 +87,10 @@ class Spark extends Application {
       if (entry != null) {
         workspace.link(entry).then((file) {
           editor.setContent(file);
-          updatePath();
+          updatePath('opened ${file.name}');
         });
-
       }
     });
-
   }
 
   void saveAsFile(_) {
@@ -89,8 +101,8 @@ class Spark extends Application {
     chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
       chrome_gen.ChromeFileEntry entry = result.entry;
       workspace.link(entry).then((file) {
-      editor.saveAs(file);
-      updatePath();
+        editor.saveAs(file);
+        updatePath('saved ${file.name}');
       });
     }).catchError((_) => updateError('Error on save as'));
   }
@@ -99,16 +111,18 @@ class Spark extends Application {
     editor.save();
   }
 
-  void setTheme(_) {
-    editor.setTheme((querySelector("#editorTheme") as SelectElement).value);
+  void _handleThemeEvent(Event e) {
+    String aceTheme = (e.target as SelectElement).value;
+    editor.setTheme(aceTheme);
+    syncPrefs.setValue('aceTheme', aceTheme);
   }
 
   void updateError(String string) {
     querySelector("#error").innerHtml = string;
   }
 
-  void updatePath() {
-    querySelector("#path").innerHtml = editor.getPathInfo();
+  void updatePath(String text) {
+    querySelector("#path").text = text;
   }
 }
 
