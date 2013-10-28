@@ -88,3 +88,7 @@ body {
 #themeChooser {
   display: none;
 }
+
+#uiSwitcher {
+  float: right;  
+}
