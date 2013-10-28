@@ -12,9 +12,9 @@ import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'lib/ace.dart';
 import 'lib/app.dart';
 import 'lib/utils.dart';
-import 'lib/file_item_view.dart';
 import 'lib/preferences.dart' as preferences;
-import 'lib/splitview.dart';
+import 'lib/ui/widgets/file_item_view.dart';
+import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart';
 
 void main() {
