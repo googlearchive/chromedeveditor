@@ -1,4 +1,4 @@
-name: spark.widgets
+name: spark_widgets
 version: 0.0.1-dev
 author: Chrome Team <apps-dev@chromium.org>
 description: GUI widget library for Spark IDE and applications built with it.
