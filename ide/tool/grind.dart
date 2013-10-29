@@ -70,6 +70,8 @@ void deploy(GrinderContext context) {
 
   _dart2jsCompile(context,
       joinDir(destDir, ['web']), 'spark.html_bootstrap.dart');
+  _dart2jsCompile(context,
+      joinDir(destDir, ['web']), 'spark_polymer.html_bootstrap.dart');
 }
 
 /**
