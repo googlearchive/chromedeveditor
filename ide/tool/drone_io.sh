@@ -6,9 +6,13 @@ sudo start xvfb
 pub install
 ./grind setup          
 
-# run tests
-./grind deploy-test
-dart tool/test_runner.dart --dartium
-
 # build the archive
 ./grind archive
+
+./grind deploy-test
+
+# run tests on dartium
+dart tool/test_runner.dart --dartium
+
+# run tests on chrome
+dart tool/test_runner.dart --chrome
