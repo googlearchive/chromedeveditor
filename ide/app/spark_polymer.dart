@@ -5,8 +5,10 @@
 library spark;
 
 import 'spark.dart';
+import 'package:polymer/polymer.dart';
 
 void main() {
+  initPolymer();
   SparkPolymer spark = new SparkPolymer();
   spark.start();
 }
