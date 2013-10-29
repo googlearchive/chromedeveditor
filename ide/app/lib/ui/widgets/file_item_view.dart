@@ -7,11 +7,11 @@
  * application.
  */
 
-library spark.file_item_view;
+library spark.ui.widgets.file_item_view;
 
 import 'dart:html';
 
-import 'workspace.dart';
+import '../../workspace.dart';
 
 class FileItemView {
   Element _element;
