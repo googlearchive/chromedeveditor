@@ -8,8 +8,10 @@
 library spark.workspace;
 
 import 'dart:async';
+import 'dart:convert' show JSON;
 
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:logging/logging.dart';
 
 import 'preferences.dart';
 
@@ -18,6 +20,8 @@ import 'preferences.dart';
  * files that it contains are loose files; they do not have parent folders.
  */
 class Workspace implements Container {
+
+  Logger workspaceLogger = new Logger('spark.workspace');
   Container _parent = null;
   chrome_gen.Entry _entry = null;
 
@@ -69,22 +73,25 @@ class Workspace implements Container {
   // read the workspace data from storage and restore entries
   Future restore() {
     return _store.getValue('workspace').then((s) {
-        List ids = s.split(' ').where((id) => id.length > 0).toList();
+      try {
+        List ids = JSON.decode(s);
         List futures = [];
         ids.forEach((id) {
           futures.add(chrome_gen.fileSystem.restoreEntry(id).then((entry) => link(entry)));
         });
         return Future.wait(futures).then((_) => new Future.value());
+      } catch (e) {
+        workspaceLogger.log(Level.INFO, 'Exception in workspace restore', e);
+        return new Future.error(e);
+      }
     });
   }
 
   // store info for workspace children
   Future save() {
-    String string = '';
-    _children.forEach((c) {
-      string = '${chrome_gen.fileSystem.retainEntry(c._entry)} $string';
-    });
-    return _store.setValue('workspace', string);
+    List list = [];
+    _children.forEach((c) => list.add(chrome_gen.fileSystem.retainEntry(c._entry)));
+    return _store.setValue('workspace', JSON.encode(list));
   }
 
   Future<Resource> _gatherChildren(Container container) {
