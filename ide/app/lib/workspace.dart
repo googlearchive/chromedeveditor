@@ -66,10 +66,25 @@ class Workspace implements Container {
 
   Project get project => null;
 
-  Future save() {
-    // TODO: save workspace information - maybe in preferences?
+  // read the workspace data from storage and restore entries
+  Future restore() {
+    return _store.getValue('workspace').then((s) {
+        List ids = s.split(' ').where((id) => id.length > 0).toList();
+        List futures = [];
+        ids.forEach((id) {
+          futures.add(chrome_gen.fileSystem.restoreEntry(id).then((entry) => link(entry)));
+        });
+        return Future.wait(futures).then((_) => new Future.value());
+    });
+  }
 
-    return new Future.value();
+  // store info for workspace children
+  Future save() {
+    String string = '';
+    _children.forEach((c) {
+      string = '${chrome_gen.fileSystem.retainEntry(c._entry)} $string';
+    });
+    return _store.setValue('workspace', string);
   }
 
   Future<Resource> _gatherChildren(Container container) {
@@ -110,6 +125,8 @@ abstract class Resource {
 
   Container get parent => _parent;
 
+  String toString() => _entry.toUrl();
+
   /**
    * Returns the containing [Project]. This can return null for loose files and
    * for the workspace.
@@ -134,6 +151,7 @@ class Project extends Folder {
   Project(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
   Project get project => this;
+
 }
 
 class ResourceEventType {

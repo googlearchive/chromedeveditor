@@ -32,6 +32,18 @@ main() {
       });
     });
 
+    test('can retain and restore file', () {
+      return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {
+        return dir.getFile('manifest.json').then((chrome_gen.Entry file) {
+          expect(file, isNotNull);
+          String id = chrome_gen.fileSystem.retainEntry(file);
+          return chrome_gen.fileSystem.restoreEntry(id).then((chrome_gen.Entry restoredFile) {
+            expect(restoredFile, isNotNull);
+            expect(restoredFile.name, 'manifest.json');
+          });
+        });
+      });
+    });
     test('ChromeFileEntry readText()', () {
       return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {
         return dir.getFile('manifest.json').then((chrome_gen.ChromeFileEntry file) {
