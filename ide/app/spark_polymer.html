@@ -7,9 +7,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Spark</title>
-  <link rel="stylesheet" href="spark.css">
-  
+  <title>Spark IDE with Polymer</title>
+
+  <link rel="stylesheet" href="spark_polymer.css">
+
+  <link rel="import" href="packages/spark_widgets/spark-button.html">
+
   <template id="fileview-filename" >
     <div class="fileview-filename-container" style="height: 20px;">
       <div class="filename" style="position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
@@ -22,24 +25,22 @@
 </head>
 
 <body>
-  <div id="toolbar">
-    <button id="newFile">New File</button>
-    <button id="openFile">Open File...</button>
-    <button id="saveFile">Save</button>
-    <button id="saveAsFile">Save As...</button>
+  <spark-button id="newFile">New File</spark-button>
+  <spark-button id="openFile">Open File...</spark-button>
+  <spark-button id="saveFile">Save</spark-button>
+  <spark-button id="saveAsFile">Save As...</spark-button>
 
-    <div id="themeChooser">
-      <label>Theme:</label>
-      <select id="editorTheme">
-        <option value="ace/theme/ambiance">Ambiance</option>
-        <option value="ace/theme/monokai">Monokai</option>
-        <option value="ace/theme/pastel_on_dark">Pastel on dark</option>
-        <option value="ace/theme/textmate">Textmate</option>
-      </select>
-    </div>
+  <div id="themeChooser">
+    <label>Theme</label>
+    <select id = "editorTheme">
+      <option value = "ace/theme/ambiance">Ambiance</option>
+      <option value = "ace/theme/monokai">Monokai</option>
+      <option value = "ace/theme/pastel_on_dark">Pastel on dark</option>
+      <option value = "ace/theme/textmate">Textmate</option>
+    </select>
   </div>
 
-  <a id="uiSwitcher" href="#">POLYMERIZE!</a>
+  <a id="uiSwitcher" href="#">MONOMERIZE!</a>
 
   <div id="status">
       <div id="path">[new file]</div>
@@ -78,7 +79,7 @@
   <!-- this starts the Dart VM in Dartium, and injects spark.dart.js otherwise -->
   <script src="spark_bootstrap.js" defer></script>
 
-  <script type="application/dart" src="spark_test.dart" defer></script>
+  <script type="application/dart" src="spark_polymer.dart" defer></script>
 </body>
 
 </html>
