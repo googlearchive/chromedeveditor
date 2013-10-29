@@ -17,5 +17,18 @@ main() {
     test('i18n_not_found', () {
       expect(i18n('not_found'), equals(''));
     });
+
+    test('stripQuotes1', () {
+      expect(stripQuotes('"a"'), equals('a'));
+    });
+    test('stripQuotes2', () {
+      expect(stripQuotes('""'), equals(''));
+    });
+    test('stripQuotes3', () {
+      expect(stripQuotes(''), equals(''));
+    });
+    test('stripQuotes4', () {
+      expect(stripQuotes('"abc'), equals('"abc'));
+    });
   });
 }

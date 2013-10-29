@@ -5,7 +5,7 @@ description: A Chrome app based development environment.
 homepage: https://github.com/GoogleChrome/spark
 dependencies:
   ace: '>=0.0.8'
-  analyzer_experimental: any
+  analyzer: any
   browser: any
   chrome_gen: '>=0.0.8'
   intl: any

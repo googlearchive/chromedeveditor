@@ -29,8 +29,6 @@ Future<String> _getContents(String path) {
   return html.HttpRequest.getString(chrome_gen.runtime.getURL(path));
 }
 
-// TODO(devoncarew): parse the sdk/lib/_internal/libraries.dart file?
-
 /**
  * This class represents the Dart SDK as build into Spark. It allows you to
  * query the SDK version and to get the contents of the included Dart libraries.

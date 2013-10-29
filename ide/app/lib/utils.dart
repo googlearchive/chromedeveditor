@@ -15,6 +15,25 @@ String i18n(String messageId) {
   return chrome_gen.i18n.getMessage(messageId);
 }
 
+/**
+ * Strip off one set of leading and trailing single or double quotes.
+ */
+String stripQuotes(String str) {
+  if (str.length < 2) {
+    return str;
+  }
+
+  if (str.startsWith("'") && str.endsWith("'")) {
+    return str.substring(1, str.length - 1);
+  }
+
+  if (str.startsWith('"') && str.endsWith('"')) {
+    return str.substring(1, str.length - 1);
+  }
+
+  return str;
+}
+
 AudioContext _ctx;
 
 void beep() {
