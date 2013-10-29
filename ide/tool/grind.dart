@@ -68,10 +68,8 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  _dart2jsCompile(context,
-      joinDir(destDir, ['web']), 'spark.html_bootstrap.dart');
-  _dart2jsCompile(context,
-      joinDir(destDir, ['web']), 'spark_polymer.html_bootstrap.dart');
+  ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
+      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e));
 }
 
 /**
@@ -84,8 +82,8 @@ void deployTest(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  _dart2jsCompile(context,
-      joinDir(destDir, ['web']), 'spark.html_bootstrap.dart');
+  ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
+      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e));
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
