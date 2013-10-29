@@ -125,8 +125,6 @@ abstract class Resource {
 
   Container get parent => _parent;
 
-  String toString() => _entry.toUrl();
-
   /**
    * Returns the containing [Project]. This can return null for loose files and
    * for the workspace.
@@ -151,7 +149,6 @@ class Project extends Folder {
   Project(Container parent, chrome_gen.Entry entry) : super(parent, entry);
 
   Project get project => this;
-
 }
 
 class ResourceEventType {
