@@ -87,3 +87,7 @@ body {
 #toolbar {
   
 }
+
+#uiSwitcher {
+  float: right;  
+}
