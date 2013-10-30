@@ -151,8 +151,8 @@ void release(GrinderContext context) {
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
 void archive(GrinderContext context) {
   // zip spark.zip . -r -q -x .*
-  _runCommandSync(context, 'zip ../../../${DIST_DIR.path}/spark.zip . -qr -x .*',
-      cwd: '${BUILD_DIR.path}/deploy-out/web');
+  _runCommandSync(context, 'zip ../${DIST_DIR.path}/spark.zip . -qr -x .*',
+      cwd: 'app');
   _printSize(context, new File('dist/spark.zip'));
 }
 
