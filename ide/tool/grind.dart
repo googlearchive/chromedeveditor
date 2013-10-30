@@ -27,7 +27,7 @@ void main([List<String> args]) {
 
   defineTask('docs', taskFunction : docs, depends : ['setup']);
   defineTask('archive', taskFunction : archive, depends : ['mode-notest', 'compile']);
-  defineTask('release', taskFunction : release, depends : ['deploy']);
+  defineTask('release', taskFunction : release, depends : ['mode-notest', 'compile']);
 
   defineTask('clean', taskFunction: clean);
 
