@@ -62,7 +62,7 @@ class SparkTest extends Spark {
     tests.runTests().then((bool success) {
       testClient.log('test exit code: ${(success ? 0 : 1)}');
 
-      chrome_gen.app_window.current().close();
+      chrome_gen.app.window.current().close();
     });
   }
 

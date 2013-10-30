@@ -44,7 +44,7 @@ class Spark extends Application {
 
     // TODO: this event is not being fired. A bug with chrome apps? Our js
     // interop layer? chrome_gen?
-    chrome_gen.app_window.onClosed.listen((_) {
+    chrome_gen.app.window.onClosed.listen((_) {
       close();
     });
 
