@@ -15,7 +15,7 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 final Directory BUILD_DIR = new Directory('build');
 final Directory DIST_DIR = new Directory('dist');
 
-void main() {
+void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
 
   defineTask('mode-notest', taskFunction: (c) => _changeMode(c, false));
@@ -31,7 +31,7 @@ void main() {
 
   defineTask('clean', taskFunction: clean);
 
-  startGrinder();
+  startGrinder(args);
 }
 
 /**
@@ -53,7 +53,8 @@ void setup(GrinderContext context) {
   // copy from ./packages to ./app/packages
   copyDirectory(
       joinDir(Directory.current, ['packages']),
-      joinDir(Directory.current, ['app', 'packages']));
+      joinDir(Directory.current, ['app', 'packages']),
+      context);
 
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
@@ -208,7 +209,7 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   // copy the app directory to target/web
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
-  copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']));
+  copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
   _runCommandSync(context, 'rm -rf ${sourceDir.path}/web/packages');
   Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
@@ -239,7 +240,8 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
 
     copyDirectory(
         joinDir(target, ['..', '..', '..', 'packages']),
-        joinDir(target, ['packages']));
+        joinDir(target, ['packages']),
+        context);
   }
 
   _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
@@ -362,7 +364,7 @@ void _populateSdk(GrinderContext context) {
     // copy files over
     context.log('copying SDK');
     copyFile(srcVersionFile, destSdkDir);
-    copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']));
+    copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']), context);
 
     // Create a synthetic package:compiler package in the packages directory.
     // TODO(devoncarew): this would be much better as a std pub package

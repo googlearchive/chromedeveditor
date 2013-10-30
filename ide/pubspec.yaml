@@ -15,5 +15,5 @@ dependencies:
     path: ../widgets
 dev_dependencies:
   args: any
-  grinder: 0.0.7
+  grinder: any
   unittest: any
