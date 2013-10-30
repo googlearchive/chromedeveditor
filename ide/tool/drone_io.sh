@@ -15,4 +15,4 @@ pub install
 dart tool/test_runner.dart --dartium
 
 # run tests on chrome
-dart tool/test_runner.dart --chrome
+#dart tool/test_runner.dart --chrome
