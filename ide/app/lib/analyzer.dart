@@ -18,6 +18,7 @@ import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
@@ -151,6 +152,77 @@ class ChromeDartSdk extends DartSdk {
 //    }
 //  }
 //}
+
+class SdkSource implements Source {
+  final String _contents;
+  final String fullName;
+  final int modificationStamp;
+
+  SdkSource(this._contents, this.fullName)
+      : modificationStamp = new DateTime.now().millisecondsSinceEpoch;
+
+  bool operator==(Object object) {
+    if (object is StringSource) {
+      StringSource ssObject = object;
+      return ssObject._contents == _contents && ssObject.fullName == fullName;
+    }
+    return false;
+  }
+
+  bool exists() => true;
+
+  void getContents(Source_ContentReceiver receiver) =>
+      receiver.accept2(_contents, modificationStamp);
+
+  String get encoding => throw new UnsupportedError("StringSource doesn't support "
+      "encoding.");
+
+  String get shortName => fullName;
+
+  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
+      "uriKind.");
+
+  int get hashCode => _contents.hashCode ^ fullName.hashCode;
+
+  bool get isInSystemLibrary => false;
+
+  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
+      "StringSource doesn't support resolveRelative.");
+}
+
+class FileSource implements Source {
+  final chrome.FileEntry file;
+
+  FileSource(this.file);
+
+  bool operator==(Object object) {
+    if (object is StringSource) {
+      StringSource ssObject = object;
+      return ssObject._contents == _contents && ssObject.fullName == fullName;
+    }
+    return false;
+  }
+
+  bool exists() => true;
+
+  void getContents(Source_ContentReceiver receiver) =>
+      receiver.accept2(_contents, modificationStamp);
+
+  String get encoding => throw new UnsupportedError("StringSource doesn't support "
+      "encoding.");
+
+  String get shortName => fullName;
+
+  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
+      "uriKind.");
+
+  int get hashCode => _contents.hashCode ^ fullName.hashCode;
+
+  bool get isInSystemLibrary => false;
+
+  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
+      "StringSource doesn't support resolveRelative.");
+}
 
 class NullAnalysisErrorListener implements AnalysisErrorListener {
   bool foundError = false;
