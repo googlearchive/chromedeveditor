@@ -21,11 +21,12 @@ void main() {
   defineTask('mode-notest', taskFunction: (c) => _changeMode(c, false));
   defineTask('mode-test', taskFunction: (c) => _changeMode(c, true));
 
+  defineTask('compile', taskFunction: compile, depends : ['setup']);
   defineTask('deploy', taskFunction: deploy, depends : ['setup', 'mode-notest']);
   defineTask('deploy-test', taskFunction: deployTest, depends : ['setup', 'mode-test']);
 
   defineTask('docs', taskFunction : docs, depends : ['setup']);
-  defineTask('archive', taskFunction : archive, depends : ['deploy']);
+  defineTask('archive', taskFunction : archive, depends : ['mode-notest', 'compile']);
   defineTask('release', taskFunction : release, depends : ['deploy']);
 
   defineTask('clean', taskFunction: clean);
@@ -59,6 +60,15 @@ void setup(GrinderContext context) {
 }
 
 /**
+ * Compile the two Spark entry-points.
+ */
+void compile(GrinderContext context) {
+  _dart2jsCompile(context, new Directory('app'), 'spark.dart');
+  context.log('');
+  _dart2jsCompile(context, new Directory('app'), 'spark_test.dart');
+}
+
+/**
  * Copy all source to `build/deploy`. Do a polymer deploy to `build/deploy-out`.
  * This builds the regular (non-test) version of the app.
  */
@@ -68,8 +78,8 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  _dart2jsCompile(context,
-      joinDir(destDir, ['web']), 'spark.html_bootstrap.dart');
+  ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
+      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e, true));
 }
 
 /**
@@ -82,8 +92,8 @@ void deployTest(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  _dart2jsCompile(context,
-      joinDir(destDir, ['web']), 'spark.html_bootstrap.dart');
+  ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
+      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e, true));
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -141,8 +151,8 @@ void release(GrinderContext context) {
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
 void archive(GrinderContext context) {
   // zip spark.zip . -r -q -x .*
-  _runCommandSync(context, 'zip ../../../${DIST_DIR.path}/spark.zip . -qr -x .*',
-      cwd: '${BUILD_DIR.path}/deploy-out/web');
+  _runCommandSync(context, 'zip ../${DIST_DIR.path}/spark.zip . -qr -x .*',
+      cwd: 'app');
   _printSize(context, new File('dist/spark.zip'));
 }
 
@@ -209,7 +219,8 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
       workingDirectory: sourceDir.path);
 }
 
-void _dart2jsCompile(GrinderContext context, Directory target, String filePath) {
+void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
+                     [bool removeSymlinks = false]) {
   runSdkBinary(context, 'dart2js', arguments: [
      joinDir(target, [filePath]).path,
      '--package-root=packages',
@@ -222,12 +233,14 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath) 
   _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.deps']).path}');
   _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.map']).path}');
 
-  // de-symlink the directory
-  _removePackagesLinks(context, target);
+  if (removeSymlinks) {
+    // de-symlink the directory
+    _removePackagesLinks(context, target);
 
-  copyDirectory(
-      joinDir(target, ['..', '..', '..', 'packages']),
-      joinDir(target, ['packages']));
+    copyDirectory(
+        joinDir(target, ['..', '..', '..', 'packages']),
+        joinDir(target, ['packages']));
+  }
 
   _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
 }

@@ -11,7 +11,8 @@ dependencies:
   intl: any
   logging: any
   mime: any
-  polymer: any
+  spark_widgets:
+    path: ../widgets
 dev_dependencies:
   args: any
   grinder: 0.0.7

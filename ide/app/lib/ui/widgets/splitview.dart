@@ -2,10 +2,10 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.splitview;
+library spark.ui.widgets.splitview;
 
 import 'dart:html';
-import 'html_utils.dart';
+import '../utils/html_utils.dart';
 
 /**
  * This class encapsulates a splitview. It's a view with two panels and a

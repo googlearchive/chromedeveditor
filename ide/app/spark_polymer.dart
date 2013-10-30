@@ -2,13 +2,18 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark_widgets.button;
+library spark;
 
+import 'spark.dart';
 import 'package:polymer/polymer.dart';
 
-@CustomTag('spark-button')
-class SparkButton extends PolymerElement {
-  @observable bool active = false;
-  SparkButton.created() : super.created() {
+void main() {
+  initPolymer();
+  SparkPolymer spark = new SparkPolymer();
+  spark.start();
+}
+
+class SparkPolymer extends Spark {
+  SparkPolymer(): super() {
   }
 }
