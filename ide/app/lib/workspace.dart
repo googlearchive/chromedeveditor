@@ -73,13 +73,13 @@ class Workspace implements Container {
   // read the workspace data from storage and restore entries
   Future restore() {
     return _store.getValue('workspace').then((s) {
+      if (s == null) return null;
+
       try {
-        List ids = JSON.decode(s);
-        List futures = [];
-        ids.forEach((id) {
-          futures.add(chrome_gen.fileSystem.restoreEntry(id).then((entry) => link(entry)));
+        List<String> ids = JSON.decode(s);
+        return Future.forEach(ids, (id) {
+          return chrome_gen.fileSystem.restoreEntry(id).then((entry) => link(entry));
         });
-        return Future.wait(futures).then((_) => new Future.value());
       } catch (e) {
         workspaceLogger.log(Level.INFO, 'Exception in workspace restore', e);
         return new Future.error(e);

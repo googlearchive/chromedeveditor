@@ -9,7 +9,6 @@ library spark.analyzer;
 
 import 'dart:async';
 
-import 'package:analyzer/src/string_source.dart';
 import 'package:analyzer/src/generated/ast.dart';
 import 'package:analyzer/src/generated/engine.dart';
 import 'package:analyzer/src/generated/error.dart';
@@ -24,63 +23,86 @@ export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
 
 import 'sdk.dart' as spark;
-import 'utils.dart';
 
 // TODO: investigate web workers and isolates
 
-String analysisLiteralToString(StringLiteral literal) {
-  if (literal is SimpleStringLiteral) {
-    return stripQuotes(literal.value);
-  } else {
-    return literal.toString();
+Completer<ChromeDartSdk> _sdkCompleter;
+
+/**
+ * Create and return a ChromeDartSdk asynchronously.
+ */
+Future<ChromeDartSdk> createSdk() {
+  if (_sdkCompleter != null) {
+    return _sdkCompleter.future;
   }
+
+  _sdkCompleter = new Completer();
+
+  spark.DartSdk.createSdk().then((spark.DartSdk sdk) {
+    ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
+    chromeSdk._parseLibraries().then((_) => _sdkCompleter.complete(chromeSdk));
+  });
+
+  return _sdkCompleter.future;
 }
 
-//Future<AnalysisResult> analysisParseString(String contents, [chrome.FileEntry file]) {
-//  Completer completer = new Completer();
-//
-//  AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
-//
-////  context.sourceFactory = new SourceFactory.con2(
-////      [new DartUriResolver(dartSdk)]);
-//
-//  CompilationUnit unit;
-//
-//  try {
-//    unit = context.parseCompilationUnit(
-//        new AnalysisStringSource(context, contents, file));
-//  } catch (e) {
-//    unit = new CompilationUnit();
+/**
+ * Given a string representing Dart source, return a result comsisting of an AST
+ * and a list of errors.
+ */
+Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
+    {bool performResolution: true}) {
+  Completer completer = new Completer();
+
+  //AnalysisEngine.instance.createAnalysisContext();
+  AnalysisContext context = new AnalysisContextImpl();
+
+  context.sourceFactory = new SourceFactory.con2([new DartUriResolver(sdk)]);
+
+  CompilationUnit unit;
+  StringSource source = new StringSource(contents, '<StringSource>');
+
+  try {
+    unit = context.parseCompilationUnit(source);
+  } catch (e) {
+    unit = new CompilationUnit();
+  }
+
+  if (performResolution) {
+    context.computeErrors(source);
+  }
+
+  AnalyzerResult result = new AnalyzerResult(unit, context.getErrors(source));
+
+  completer.complete(result);
+
+  return completer.future;
+}
+
+//String literalToString(StringLiteral literal) {
+//  if (literal is SimpleStringLiteral) {
+//    return stripQuotes(literal.value);
+//  } else {
+//    return literal.toString();
 //  }
-//
-//  AnalysisResult result = new AnalysisResult(unit);
-//
-//  completer.complete(result);
-//
-//  return completer.future;
 //}
 
-// TODO:
-// we have a string based source
-// will need:
-//   - an sdk based source
-//   - a DOM file based source
+/**
+ * A tuple of an AST and a list of errors.
+ */
+class AnalyzerResult {
+  final CompilationUnit ast;
+  final AnalysisErrorInfo errorInfo;
+
+  AnalyzerResult(this.ast, this.errorInfo);
+
+  List<AnalysisError> get errors => errorInfo.errors;
+}
 
 /**
  * A Spark and Chrome Apps specific implementation of the [DartSdk] class.
  */
 class ChromeDartSdk extends DartSdk {
-
-  /**
-   * Create and return a ChromeDartSdk asynchronously.
-   */
-  static Future<ChromeDartSdk> createSdk() {
-    return spark.DartSdk.createSdk().then((spark.DartSdk sdk) {
-      ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
-      return chromeSdk._parseLibraries().then((_) => chromeSdk);
-    });
-  }
-
   final AnalysisContext context;
 
   spark.DartSdk _sdk;
@@ -89,21 +111,21 @@ class ChromeDartSdk extends DartSdk {
   ChromeDartSdk._(this._sdk): context = new AnalysisContextImpl();
 
   Source fromEncoding(ContentCache contentCache, UriKind kind, Uri uri) {
-    // TODO: implement this method
+    // TODO: implement
 
+    throw new UnimplementedError('fromEncoding');
   }
 
   SdkLibrary getSdkLibrary(String dartUri) => _libraryMap.getLibrary(dartUri);
 
+  /**
+   * Return the source representing the library with the given `dart:` URI, or
+   * `null` if the given URI does not denote a library in this SDK.
+   */
   Source mapDartUri(String dartUri) {
-    // TODO: implement
+    SdkLibrary library = getSdkLibrary(dartUri);
 
-//    SdkLibrary library = getSdkLibrary(dartUri);
-//    if (library == null) {
-//      return null;
-//    } else {
-//      library
-//    }
+    return library == null ? null : new SdkSource(_sdk, library.path);
   }
 
   List<SdkLibrary> get sdkLibraries => _libraryMap.sdkLibraries;
@@ -138,57 +160,95 @@ class ChromeDartSdk extends DartSdk {
   }
 }
 
-//class AnalysisResult {
-//  CompilationUnit ast;
-//
-//  AnalysisResult(this.ast);
-//
-//  List<AnalysisError> get errors {
-//    if (ast != null) {
-//      // TODO:
-//      return ast.errors;
-//    } else {
-//      return [];
-//    }
-//  }
-//}
 
-//class SdkSource implements Source {
-//  final String _contents;
-//  final String fullName;
-//  final int modificationStamp;
-//
-//  SdkSource(this._contents, this.fullName)
-//      : modificationStamp = new DateTime.now().millisecondsSinceEpoch;
-//
-//  bool operator==(Object object) {
-//    if (object is StringSource) {
-//      StringSource ssObject = object;
-//      return ssObject._contents == _contents && ssObject.fullName == fullName;
-//    }
-//    return false;
-//  }
-//
-//  bool exists() => true;
-//
-//  void getContents(Source_ContentReceiver receiver) =>
-//      receiver.accept2(_contents, modificationStamp);
-//
-//  String get encoding => throw new UnsupportedError("StringSource doesn't support "
-//      "encoding.");
-//
-//  String get shortName => fullName;
-//
-//  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
-//      "uriKind.");
-//
-//  int get hashCode => _contents.hashCode ^ fullName.hashCode;
-//
-//  bool get isInSystemLibrary => false;
-//
-//  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
-//      "StringSource doesn't support resolveRelative.");
-//}
+/// An implementation of [Source] that's based on an in-memory Dart string.
+class StringSource implements Source {
+  final String _contents;
+  final String fullName;
+  final int modificationStamp;
+
+  StringSource(this._contents, this.fullName)
+      : modificationStamp = new DateTime.now().millisecondsSinceEpoch;
+
+  bool operator==(Object object) {
+    if (object is StringSource) {
+      StringSource ssObject = object;
+      return ssObject._contents == _contents && ssObject.fullName == fullName;
+    }
+    return false;
+  }
+
+  bool exists() => true;
+
+  void getContents(Source_ContentReceiver receiver) =>
+      receiver.accept2(_contents, modificationStamp);
+
+  String get encoding => 'UTF-8';
+
+  String get shortName => fullName;
+
+  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
+      "uriKind.");
+
+  int get hashCode => _contents.hashCode ^ fullName.hashCode;
+
+  bool get isInSystemLibrary => false;
+
+  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
+      "StringSource doesn't support resolveRelative.");
+}
+
+class SdkSource implements Source {
+  final String fullName;
+  final spark.DartSdk _sdk;
+
+  SdkSource(this._sdk, this.fullName);
+
+  bool operator==(Object object) {
+    if (object is SdkSource) {
+      return object.fullName == fullName;
+    } else {
+      return false;
+    }
+  }
+
+  bool exists() => true;
+
+  void getContents(Source_ContentReceiver receiver) {
+    // TODO: an unglamorous hack for now
+    String cachedSource = _sdk.getCachedSource(fullName);
+
+    if (cachedSource != null) {
+      receiver.accept2(cachedSource, modificationStamp);
+    } else {
+      throw new UnimplementedError('getContents');
+    }
+  }
+
+  String get encoding => 'UTF-8';
+
+  String get shortName {
+    int index = fullName.lastIndexOf('/');
+    return index == -1 ? fullName : fullName.substring(index + 1);
+  }
+
+  UriKind get uriKind => UriKind.DART_URI;
+
+  int get hashCode => fullName.hashCode;
+
+  bool get isInSystemLibrary => true;
+
+  Source resolveRelative(Uri relativeUri) {
+    String path = fullName.substring(0, fullName.lastIndexOf('/') + 1) + relativeUri.path;
+
+    return new SdkSource(_sdk, path);
+  }
+
+  // TODO: will this work as a modification stamp for sdk sources?
+  int get modificationStamp => 0;
+
+  String toString() => fullName;
+}
 
 class FileSource implements Source {
   final chrome.ChromeFileEntry file;
@@ -207,7 +267,7 @@ class FileSource implements Source {
   bool exists() {
     // TODO:
 
-    throw new UnimplementedError('exists');
+     throw new UnimplementedError('exists');
   }
 
   void getContents(Source_ContentReceiver receiver) {
@@ -243,6 +303,8 @@ class FileSource implements Source {
 
     throw new UnimplementedError('modificationStamp');
   }
+
+  String toString() => fullName;
 }
 
 class NullAnalysisErrorListener implements AnalysisErrorListener {

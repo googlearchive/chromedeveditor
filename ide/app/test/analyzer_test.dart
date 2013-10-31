@@ -11,7 +11,7 @@ import '../lib/analyzer.dart';
 main() {
   group('analyzer.', () {
     test('ChromeDartSdk exists', () {
-      return ChromeDartSdk.createSdk().then((sdk) {
+      return createSdk().then((ChromeDartSdk sdk) {
         expect(sdk, isNotNull);
         expect(sdk.sdkVersion.length, greaterThan(0));
 
@@ -29,6 +29,66 @@ main() {
         // TODO: test mapDartUri
 
       });
+    });
+
+    test('analyze string, no resolution', () {
+      return createSdk().then((ChromeDartSdk sdk) {
+        return analyzeString(sdk, "void main() {\n print('hello world');\n}",
+            performResolution: false).then((AnalyzerResult result) {
+          expect(result, isNotNull);
+          expect(result.ast, isNotNull);
+          expect(result.ast.declarations.length, greaterThan(0));
+          CompilationUnitMember decl = result.ast.declarations.first;
+          expect(decl is FunctionDeclaration, true);
+          expect((decl as FunctionDeclaration).name.toString(), 'main');
+          expect(result.errors, isEmpty);
+        });
+      });
+    });
+
+    test('analyze string, no resolution, syntax errors', () {
+      return createSdk().then((ChromeDartSdk sdk) {
+        return analyzeString(sdk, "void main() {\n print('hello world') \n}",
+            performResolution: false).then((AnalyzerResult result) {
+          expect(result.ast.declarations.length, greaterThan(0));
+          CompilationUnitMember decl = result.ast.declarations.first;
+          expect(decl is FunctionDeclaration, true);
+          expect((decl as FunctionDeclaration).name.toString(), 'main');
+          expect(result.errors.length, greaterThan(0));
+        });
+      });
+    });
+
+    test('analyze string', () {
+      return createSdk().then((ChromeDartSdk sdk) {
+        return analyzeString(sdk, "void main() {\n print('hello world');\n}").then((AnalyzerResult result) {
+          expect(result, isNotNull);
+          expect(result.ast, isNotNull);
+          expect(result.ast.declarations.length, greaterThan(0));
+          CompilationUnitMember decl = result.ast.declarations.first;
+          expect(decl is FunctionDeclaration, true);
+          expect((decl as FunctionDeclaration).name.toString(), 'main');
+          expect(result.errors, isEmpty);
+        });
+      });
+    });
+
+    test('analyze string with errors', () {
+      return createSdk().then((ChromeDartSdk sdk) {
+        return analyzeString(sdk, "void main() {\n println('hello world');\n}").then((AnalyzerResult result) {
+          expect(result.ast, isNotNull);
+          expect(result.ast.declarations.length, greaterThan(0));
+          CompilationUnitMember decl = result.ast.declarations.first;
+          expect(decl is FunctionDeclaration, true);
+          expect((decl as FunctionDeclaration).name.toString(), 'main');
+          expect(result.errors.length, greaterThan(0));
+        });
+      });
+    });
+
+    test('analyze string with dart: imports', () {
+      // TODO:
+
     });
   });
 }
