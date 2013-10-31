@@ -30,13 +30,13 @@ final int TEST_TIMEOUT = 10;
 final int CHROME_SHUTDOWN_TIMEOUT = 1;
 final int EXIT_PROCESS_TIMEOUT = 1;
 
-void main() {
+void main([List<String> args = const []]) {
   if (!new Directory('app').existsSync()) {
     throw 'This script must be run from the root of the project directory.';
   }
 
   ArgParser parser = _createArgsParser();
-  ArgResults results = parser.parse(new Options().arguments);
+  ArgResults results = parser.parse(args);
 
   String appPath = null;
   String browserPath = null;
