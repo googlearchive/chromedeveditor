@@ -153,75 +153,96 @@ class ChromeDartSdk extends DartSdk {
 //  }
 //}
 
-class SdkSource implements Source {
-  final String _contents;
-  final String fullName;
-  final int modificationStamp;
-
-  SdkSource(this._contents, this.fullName)
-      : modificationStamp = new DateTime.now().millisecondsSinceEpoch;
-
-  bool operator==(Object object) {
-    if (object is StringSource) {
-      StringSource ssObject = object;
-      return ssObject._contents == _contents && ssObject.fullName == fullName;
-    }
-    return false;
-  }
-
-  bool exists() => true;
-
-  void getContents(Source_ContentReceiver receiver) =>
-      receiver.accept2(_contents, modificationStamp);
-
-  String get encoding => throw new UnsupportedError("StringSource doesn't support "
-      "encoding.");
-
-  String get shortName => fullName;
-
-  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
-      "uriKind.");
-
-  int get hashCode => _contents.hashCode ^ fullName.hashCode;
-
-  bool get isInSystemLibrary => false;
-
-  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
-      "StringSource doesn't support resolveRelative.");
-}
+//class SdkSource implements Source {
+//  final String _contents;
+//  final String fullName;
+//  final int modificationStamp;
+//
+//  SdkSource(this._contents, this.fullName)
+//      : modificationStamp = new DateTime.now().millisecondsSinceEpoch;
+//
+//  bool operator==(Object object) {
+//    if (object is StringSource) {
+//      StringSource ssObject = object;
+//      return ssObject._contents == _contents && ssObject.fullName == fullName;
+//    }
+//    return false;
+//  }
+//
+//  bool exists() => true;
+//
+//  void getContents(Source_ContentReceiver receiver) =>
+//      receiver.accept2(_contents, modificationStamp);
+//
+//  String get encoding => throw new UnsupportedError("StringSource doesn't support "
+//      "encoding.");
+//
+//  String get shortName => fullName;
+//
+//  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
+//      "uriKind.");
+//
+//  int get hashCode => _contents.hashCode ^ fullName.hashCode;
+//
+//  bool get isInSystemLibrary => false;
+//
+//  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
+//      "StringSource doesn't support resolveRelative.");
+//}
 
 class FileSource implements Source {
-  final chrome.FileEntry file;
+  final chrome.ChromeFileEntry file;
 
   FileSource(this.file);
 
   bool operator==(Object object) {
-    if (object is StringSource) {
-      StringSource ssObject = object;
-      return ssObject._contents == _contents && ssObject.fullName == fullName;
+    if (object is FileSource) {
+      FileSource ssObject = object;
+      return ssObject.fullName == fullName;
+    } else {
+      return false;
     }
-    return false;
   }
 
-  bool exists() => true;
+  bool exists() {
+    // TODO:
 
-  void getContents(Source_ContentReceiver receiver) =>
-      receiver.accept2(_contents, modificationStamp);
+    throw new UnimplementedError('exists');
+  }
 
-  String get encoding => throw new UnsupportedError("StringSource doesn't support "
-      "encoding.");
+  void getContents(Source_ContentReceiver receiver) {
+    // TODO:
 
-  String get shortName => fullName;
+    throw new UnimplementedError('getContents');
+  }
 
-  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
-      "uriKind.");
+  String get encoding {
+    // TODO:
 
-  int get hashCode => _contents.hashCode ^ fullName.hashCode;
+    throw new UnimplementedError('encoding');
+  }
+
+  String get shortName => file.name;
+
+  String get fullName => file.fullPath;
+
+  UriKind get uriKind => UriKind.FILE_URI;
+
+  int get hashCode => fullName.hashCode;
 
   bool get isInSystemLibrary => false;
 
-  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
-      "StringSource doesn't support resolveRelative.");
+  Source resolveRelative(Uri relativeUri) {
+    // TODO:
+
+    throw new UnimplementedError('resolveRelative');
+  }
+
+  int get modificationStamp {
+    // TODO:
+
+    throw new UnimplementedError('modificationStamp');
+  }
 }
 
 class NullAnalysisErrorListener implements AnalysisErrorListener {
