@@ -7,7 +7,7 @@ dependencies:
   ace: '>=0.0.8'
   analyzer: any
   browser: any
-  chrome_gen: '>=0.0.8'
+  chrome_gen: '>=0.1.0'
   intl: any
   logging: any
   mime: any
@@ -15,5 +15,5 @@ dependencies:
     path: ../widgets
 dev_dependencies:
   args: any
-  grinder: 0.0.7
+  grinder: any
   unittest: any

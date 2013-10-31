@@ -15,22 +15,23 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 final Directory BUILD_DIR = new Directory('build');
 final Directory DIST_DIR = new Directory('dist');
 
-void main() {
+void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
 
   defineTask('mode-notest', taskFunction: (c) => _changeMode(c, false));
   defineTask('mode-test', taskFunction: (c) => _changeMode(c, true));
 
+  defineTask('compile', taskFunction: compile, depends : ['setup']);
   defineTask('deploy', taskFunction: deploy, depends : ['setup', 'mode-notest']);
   defineTask('deploy-test', taskFunction: deployTest, depends : ['setup', 'mode-test']);
 
   defineTask('docs', taskFunction : docs, depends : ['setup']);
-  defineTask('archive', taskFunction : archive, depends : ['deploy']);
-  defineTask('release', taskFunction : release, depends : ['deploy']);
+  defineTask('archive', taskFunction : archive, depends : ['mode-notest', 'compile']);
+  defineTask('release', taskFunction : release, depends : ['mode-notest', 'compile']);
 
   defineTask('clean', taskFunction: clean);
 
-  startGrinder();
+  startGrinder(args);
 }
 
 /**
@@ -52,10 +53,20 @@ void setup(GrinderContext context) {
   // copy from ./packages to ./app/packages
   copyDirectory(
       joinDir(Directory.current, ['packages']),
-      joinDir(Directory.current, ['app', 'packages']));
+      joinDir(Directory.current, ['app', 'packages']),
+      context);
 
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
+}
+
+/**
+ * Compile the two Spark entry-points.
+ */
+void compile(GrinderContext context) {
+  _dart2jsCompile(context, new Directory('app'), 'spark.dart');
+  context.log('');
+  _dart2jsCompile(context, new Directory('app'), 'spark_test.dart');
 }
 
 /**
@@ -69,7 +80,7 @@ void deploy(GrinderContext context) {
   _polymerDeploy(context, sourceDir, destDir);
 
   ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
-      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e));
+      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e, true));
 }
 
 /**
@@ -83,7 +94,7 @@ void deployTest(GrinderContext context) {
   _polymerDeploy(context, sourceDir, destDir);
 
   ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
-      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e));
+      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e, true));
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -141,8 +152,8 @@ void release(GrinderContext context) {
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
 void archive(GrinderContext context) {
   // zip spark.zip . -r -q -x .*
-  _runCommandSync(context, 'zip ../../../${DIST_DIR.path}/spark.zip . -qr -x .*',
-      cwd: '${BUILD_DIR.path}/deploy-out/web');
+  _runCommandSync(context, 'zip ../${DIST_DIR.path}/spark.zip . -qr -x .*',
+      cwd: 'app');
   _printSize(context, new File('dist/spark.zip'));
 }
 
@@ -198,7 +209,7 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   // copy the app directory to target/web
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
-  copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']));
+  copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
   _runCommandSync(context, 'rm -rf ${sourceDir.path}/web/packages');
   Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
@@ -209,7 +220,8 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
       workingDirectory: sourceDir.path);
 }
 
-void _dart2jsCompile(GrinderContext context, Directory target, String filePath) {
+void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
+                     [bool removeSymlinks = false]) {
   runSdkBinary(context, 'dart2js', arguments: [
      joinDir(target, [filePath]).path,
      '--package-root=packages',
@@ -222,12 +234,15 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath) 
   _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.deps']).path}');
   _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.map']).path}');
 
-  // de-symlink the directory
-  _removePackagesLinks(context, target);
+  if (removeSymlinks) {
+    // de-symlink the directory
+    _removePackagesLinks(context, target);
 
-  copyDirectory(
-      joinDir(target, ['..', '..', '..', 'packages']),
-      joinDir(target, ['packages']));
+    copyDirectory(
+        joinDir(target, ['..', '..', '..', 'packages']),
+        joinDir(target, ['packages']),
+        context);
+  }
 
   _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
 }
@@ -349,7 +364,7 @@ void _populateSdk(GrinderContext context) {
     // copy files over
     context.log('copying SDK');
     copyFile(srcVersionFile, destSdkDir);
-    copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']));
+    copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']), context);
 
     // Create a synthetic package:compiler package in the packages directory.
     // TODO(devoncarew): this would be much better as a std pub package

@@ -44,7 +44,7 @@ class Spark extends Application {
 
     // TODO: this event is not being fired. A bug with chrome apps? Our js
     // interop layer? chrome_gen?
-    chrome_gen.app_window.onClosed.listen((_) {
+    chrome_gen.app.window.onClosed.listen((_) {
       close();
     });
 
@@ -88,6 +88,7 @@ class Spark extends Application {
         workspace.link(entry).then((file) {
           editor.setContent(file);
           updatePath('opened ${file.name}');
+          workspace.save();
         });
       }
     });
@@ -103,6 +104,7 @@ class Spark extends Application {
       workspace.link(entry).then((file) {
         editor.saveAs(file);
         updatePath('saved ${file.name}');
+        workspace.save();
       });
     }).catchError((_) => updateError('Error on save as'));
   }
@@ -158,15 +160,12 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     // get platform info
     return chrome_gen.runtime.getPlatformInfo().then((Map m) {
       spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
-
-      // TODO: do any async tasks necessary to create / init the workspace?
-
+      spark.workspace.restore();
     });
   }
 
   Future applicationClosed(Application application) {
     // TODO: flush out any preference info or workspace state?
 
-    return spark.workspace.save();
   }
 }

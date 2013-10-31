@@ -5,8 +5,11 @@
 (function() {
   if (navigator.webkitStartDart) {
     // TODO(sergeygs): Remove this completely after Dart 1.0.
+    // This is unnecessary for upcoming releses of Dartium.
     navigator.webkitStartDart();
-  } else {
+  }
+
+  if (navigator.userAgent.indexOf('(Dart)') === -1) {
     var scripts = document.getElementsByTagName("script");
 
     for (var i = 0; i < scripts.length; ++i) {

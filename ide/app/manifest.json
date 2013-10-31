@@ -1,8 +1,8 @@
 {
   "name": "__MSG_app_name__",
   "description": "__MSG_app_description__",
-  "version": "0.0.3",
-  "minimum_chrome_version": "30",
+  "version": "0.0.5",
+  "minimum_chrome_version": "31",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
@@ -21,7 +21,8 @@
     "clipboardWrite",
     {
       "fileSystem": [
-        "write"
+        "write",
+        "retainEntries"
       ]
     },
     {

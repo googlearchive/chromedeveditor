@@ -47,22 +47,24 @@ void main() {
   }
 
   if (results['chrome'] || results['chrome-stable']) {
-    appPath = 'build/deploy-test-out/web';
+    appPath = 'app';
+    //appPath = 'build/deploy-test-out/web';
     browserPath = _chromeStablePath();
   }
 
   if (results['chrome-dev']) {
-    appPath = 'build/deploy-test-out/web';
+    appPath = 'app';
+    //appPath = 'build/deploy-test-out/web';
     browserPath = _chromeDevPath();
   }
 
-  if (results['appPath'] != null) {
-    appPath = results['appPath'];
-  }
-
-  if (results['browserPath'] != null) {
-    browserPath = results['browserPath'];
-  }
+//  if (results['appPath'] != null) {
+//    appPath = results['appPath'];
+//  }
+//
+//  if (results['browserPath'] != null) {
+//    browserPath = results['browserPath'];
+//  }
 
   if (appPath == null || browserPath == null) {
     _printUsage(parser);
@@ -122,8 +124,8 @@ ArgParser _createArgsParser() {
   parser.addFlag('chrome-dev',
       help: 'run in chrome dev, test the app in build/deploy-test-out/web/', negatable: false);
 
-  parser.addOption('appPath', help: 'the application path to run');
-  parser.addOption('browserPath', help: 'the path to chrome');
+//  parser.addOption('appPath', help: 'the application path to run');
+//  parser.addOption('browserPath', help: 'the path to chrome');
 
   return parser;
 }
