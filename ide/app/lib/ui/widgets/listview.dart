@@ -49,7 +49,7 @@ class ListView {
       ..height = '100%';
     _element.children.add(_container);
     _selection = new HashSet();
-    _cells = new List();
+    _cells = [];
     _selectedRow = -1;
     reloadData();
   }
@@ -88,7 +88,7 @@ class ListView {
     // Fix selection if needed.
     if (_selectedRow >= count) {
       _selectedRow = -1;
-      List<int> itemsToRemove = new List();
+      List<int> itemsToRemove = [];
       _selection.forEach((rowIndex) {
         if (rowIndex > count) {
           itemsToRemove.add(rowIndex);
@@ -136,9 +136,7 @@ class ListView {
     _delegate.listViewSelectedChanged(this, _selection.toList());
   }
   
-  List<int> get selection {
-    return _selection.toList();
-  }
+  List<int> get selection => _selection.toList();
   
   set selection(List<int> selection) {
     _removeCurrentSelectionHighlight();

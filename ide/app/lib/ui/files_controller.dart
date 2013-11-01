@@ -26,7 +26,7 @@ class FilesController implements ListViewDelegate {
   FilesController(Workspace workspace, FilesControllerDelegate delegate) {
     _workspace = workspace;
     _delegate = delegate;
-    _files = new List();
+    _files = [];
     _listView = new ListView(querySelector('#fileViewArea'), this);
     
     _workspace.onResourceChange.listen((event) {
