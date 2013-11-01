@@ -141,9 +141,12 @@ class ListView {
   }
   
   set selection(List<int> selection) {
+    _removeCurrentSelectionHighlight();
+    _selection.clear();
     selection.forEach((rowIndex) {
       _selection.add(rowIndex);
     });
+    _addCurrentSelectionHighlight();
   }
   
   /**

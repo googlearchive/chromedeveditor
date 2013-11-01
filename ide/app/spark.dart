@@ -87,8 +87,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          editor.setContent(file);
-          updatePath('opened ${file.name}');
+          _filesController.selectLastFile();
           workspace.save();
         });
       }

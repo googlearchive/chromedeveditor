@@ -33,6 +33,11 @@ class FilesController implements ListViewDelegate {
       _processEvents(event);
     });
   }
+  
+  void selectLastFile() {
+    _listView.selection = [_files.length - 1];
+    _delegate.openInEditor(_files.last);
+  }
 
   /*
    * Implementation of the [ListViewDelegate] interface.
