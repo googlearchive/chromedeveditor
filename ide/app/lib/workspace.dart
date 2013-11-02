@@ -78,7 +78,9 @@ class Workspace implements Container {
       try {
         List<String> ids = JSON.decode(s);
         return Future.forEach(ids, (id) {
-          return chrome_gen.fileSystem.restoreEntry(id).then((entry) => link(entry));
+          return chrome_gen.fileSystem.restoreEntry(id)
+              .then((entry) => link(entry))
+              .catchError((_) => null);
         });
       } catch (e) {
         workspaceLogger.log(Level.INFO, 'Exception in workspace restore', e);
