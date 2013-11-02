@@ -160,8 +160,9 @@ class ChromeDartSdk extends DartSdk {
   }
 }
 
-
-/// An implementation of [Source] that's based on an in-memory Dart string.
+/**
+ * An implementation of [Source] that's based on an in-memory Dart string.
+ */
 class StringSource implements Source {
   final String _contents;
   final String fullName;
@@ -198,6 +199,9 @@ class StringSource implements Source {
       "StringSource doesn't support resolveRelative.");
 }
 
+/**
+ * A [Source] implementation based of a file in the SDK.
+ */
 class SdkSource implements Source {
   final String fullName;
   final spark.DartSdk _sdk;
@@ -250,6 +254,9 @@ class SdkSource implements Source {
   String toString() => fullName;
 }
 
+/**
+ * A [Source] implementation based on HTML FileEntrys.
+ */
 class FileSource implements Source {
   final chrome.ChromeFileEntry file;
 
