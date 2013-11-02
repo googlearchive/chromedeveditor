@@ -254,7 +254,7 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
 
 void _changeMode(GrinderContext context, bool useTestMode) {
   File configFile = joinFile(Directory.current, ['app', 'app.json']);
-  configFile.writeAsStringSync('{"test-mode":${useTestMode.toString()}}');
+  configFile.writeAsStringSync('{"test-mode":${useTestMode}}');
 }
 
 // Returns the name of the current branch.
