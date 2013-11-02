@@ -168,7 +168,8 @@ class Tracker extends _ProxyHolder {
 
   /**
    * Sends an Exception hit to Google Analytics. [description] is the exception
-   * description, and [fatal] indicates whether the exception was fatal.
+   * description (up to 100 chars), and [fatal] indicates whether the exception
+   * was fatal.
    */
   void sendException([String description, bool fatal]) {
     _proxy.callMethod('sendException', [description, fatal]);
@@ -180,6 +181,22 @@ class Tracker extends _ProxyHolder {
    */
   void sendSocial(String network, String action, String target) {
     _proxy.callMethod('sendSocial', [network, action, target]);
+  }
+
+  /**
+   * Sends timing data. [category] specifies the event category. [value] is the
+   * number of milliseconds in elapsed time to report to Google Analytics. (e.g.
+   * 20). [timingVar] is a string to identify the variable being recorded. (e.g.
+   * JavaScript Load). [label] is a string that can be used to add flexibility
+   * in visualizing user timings in the reports. (e.g. Google CDN).
+   */
+  void sendTiming(String category, int value, [String timingVar, String label]) {
+    Map m = {'timingCategory': category, 'timingValue': value};
+
+    if (timingVar != null) m['timingVar'] = timingVar;
+    if (label != null) m['timingLabel'] = label;
+
+    send('timing', m);
   }
 
   /**

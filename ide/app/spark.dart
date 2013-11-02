@@ -10,7 +10,6 @@ import 'dart:html';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
-import 'lib/analytics.dart' as analytics;
 import 'lib/ace.dart';
 import 'lib/app.dart';
 import 'lib/utils.dart';
@@ -50,7 +49,7 @@ void main() {
        * available.
        */
       SparkTest app = new SparkTest();
-      
+
       app.start().then((_) {
         app.showTestUI();
 
@@ -78,19 +77,8 @@ class Spark extends Application implements FilesControllerDelegate {
 
   PlatformInfo _platformInfo;
 
-  analytics.Tracker tracker;
-
   Spark() {
     document.title = appName;
-
-    // DevxTesting
-    // UA-22951168-2
-
-    analytics.getService('DevxTesting').then((analytics.GoogleAnalytics service) {
-      tracker = service.getTracker('UA-22951168-2');
-
-      tracker.sendAppView('MainScreen');
-    });
 
     localPrefs = PreferenceStore.createLocal();
     syncPrefs = PreferenceStore.createSync();
@@ -141,7 +129,6 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          tracker.sendAppView('Editor');
           _filesController.selectLastFile();
           workspace.save();
         });

@@ -16,18 +16,18 @@ main() {
       expect(analytics.available, true);
     });
 
+    // Ensure that the analytics methods work reasonably well and don't throw.
+    // Use a fake app name and tracking id (UA-xxx).
     test('create service, create tracker', () {
       return analytics.getService('SparkTest').then((analytics.GoogleAnalytics service) {
         expect(service, isNotNull);
         expect(service.getConfig(), isNotNull);
-        // just assert that we can call isTrackingPermitted
+        // just assert that we can call isTrackingPermitted()
         expect(service.getConfig().isTrackingPermitted(), isNotNull);
-
         analytics.Tracker tracker = service.getTracker('UA-0');
         expect(tracker, isNotNull);
-
         // assert that we can call sendAppView
-        tracker.sendAppView('TestingPage');
+        tracker.sendAppView('/testing');
       });
     });
 
