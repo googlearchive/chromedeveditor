@@ -92,14 +92,6 @@ EditorWindow.prototype.onCreated_ = function(win) {
 
 // A listener called after the DOM has been constructed for the content window.
 EditorWindow.prototype.onLoad_ = function() {
-  // Find an optional link to switch between UIs and attach the parent's app
-  // UI-switching listener to it.
-  var uiSwitcher =
-      this.window.contentWindow.document.getElementById('uiSwitcher');
-  if (uiSwitcher) {
-    uiSwitcher.onclick = this.app_.switchUi.bind(this.app_);
-  }
-
   chrome.contextMenus.create({
     title: "Switch UI",
     id: 'switch_ui',
