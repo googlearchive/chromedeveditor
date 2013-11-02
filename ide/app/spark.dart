@@ -25,31 +25,20 @@ import 'spark_test.dart';
  * If app.json does not exit, it returns true.
  */
 Future<bool> isTestMode() {
-  var completer = new Completer();
-  HttpRequest request = new HttpRequest();
-  request.onReadyStateChange.listen((_) {
-    if (request.readyState == HttpRequest.DONE) {
-      bool result = true;
-      if (request.status == 200 || request.status == 0) {
-        try {
-          Map info = JSON.decode(request.responseText);
-          result = info['test-mode'];
-        } catch(exception, stackTrace) {
-          // If JSON is invalid, assume test mode.
-          result = true;
-        }
-      } else {
-        // If file does not exist, assume test mode.
-        result = true;
-      }
-      return completer.complete(result);
-    }
-  });
-
   String url = chrome_gen.runtime.getURL('app.json');
-  request.open("GET", url);
-  request.send();
-  return completer.future;
+  return HttpRequest.getString(url).then((String contents) {
+    bool result = true;
+    try {
+      Map info = JSON.decode(contents);
+      result = info['test-mode'];
+    } catch(exception, stackTrace) {
+      // If JSON is invalid, assume test mode.
+      result = true;
+    }
+    return result;
+  }).catchError((e) {
+    return true;
+  });
 }
 
 void main() {
