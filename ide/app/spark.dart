@@ -5,6 +5,7 @@
 library spark;
 
 import 'dart:async';
+import 'dart:convert' show JSON;
 import 'dart:html';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
@@ -18,10 +19,51 @@ import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart';
+import 'spark_test.dart';
+
+/**
+ * Returns true if app.json contains a test-mode entry set to true.
+ * If app.json does not exit, it returns true.
+ */
+Future<bool> isTestMode() {
+  String url = chrome_gen.runtime.getURL('app.json');
+  return HttpRequest.getString(url).then((String contents) {
+    bool result = true;
+    try {
+      Map info = JSON.decode(contents);
+      result = info['test-mode'];
+    } catch(exception, stackTrace) {
+      // If JSON is invalid, assume test mode.
+      result = true;
+    }
+    return result;
+  }).catchError((e) {
+    return true;
+  });
+}
 
 void main() {
-  Spark spark = new Spark();
-  spark.start();
+  isTestMode().then((testMode) {
+    if (testMode) {
+      /*
+       * Start the app, show the test UI, and connect to a test server if one is
+       * available.
+       */
+      SparkTest app = new SparkTest();
+      
+      app.start().then((_) {
+        app.showTestUI();
+
+        app.connectToListener();
+      });
+    } else {
+      /*
+       * Start the app in normal mode.
+       */
+      Spark spark = new Spark();
+      spark.start();
+    }
+  });
 }
 
 class Spark extends Application implements FilesControllerDelegate {
@@ -183,7 +225,15 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     // get platform info
     return chrome_gen.runtime.getPlatformInfo().then((Map m) {
       spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
-      spark.workspace.restore();
+      spark.workspace.restore().then((value) {
+        if (spark.workspace.getFiles().length == 0) {
+          // No files, just focus the editor.
+          spark.editor.focus();
+        } else {
+          // Select the first file.
+          spark._filesController.selectFirstFile();
+        }
+      });
     });
   }
 

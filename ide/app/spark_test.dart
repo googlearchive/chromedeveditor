@@ -21,20 +21,6 @@ import 'test/all.dart' as tests;
 Logger testLogger = new Logger('spark.tests');
 
 /**
- * Start the app, show the test UI, and connect to a test server if one is
- * available.
- */
-void main() {
-  SparkTest app = new SparkTest();
-
-  app.start().then((_) {
-    app.showTestUI();
-
-    app.connectToListener();
-  });
-}
-
-/**
  * A custom subclass of Spark with tests built-in.
  */
 class SparkTest extends Spark {
