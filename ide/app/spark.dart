@@ -14,7 +14,8 @@ import 'lib/ace.dart';
 import 'lib/app.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart';
-import 'lib/ui/widgets/file_item_view.dart';
+import 'lib/ui/files_controller.dart';
+import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart';
 
@@ -23,7 +24,7 @@ void main() {
   spark.start();
 }
 
-class Spark extends Application {
+class Spark extends Application implements FilesControllerDelegate {
   AceEditor editor;
   Workspace workspace;
 
@@ -31,7 +32,7 @@ class Spark extends Application {
   PreferenceStore syncPrefs;
 
   SplitView _splitView;
-  FileItemView _filesView;
+  FilesController _filesController;
 
   PlatformInfo _platformInfo;
 
@@ -70,8 +71,8 @@ class Spark extends Application {
 
     editor = new AceEditor();
 
-    _filesView = new FileItemView(workspace);
     _splitView = new SplitView(querySelector('#splitview'));
+    _filesController = new FilesController(workspace, this);
 
     syncPrefs.getValue('aceTheme').then((String value) {
       if (value != null) {
@@ -98,9 +99,8 @@ class Spark extends Application {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          editor.setContent(file);
-          updatePath('opened ${file.name}');
           tracker.sendAppView('Editor');
+          _filesController.selectLastFile();
           workspace.save();
         });
       }
@@ -138,6 +138,16 @@ class Spark extends Application {
 
   void updatePath(String text) {
     querySelector("#path").text = text;
+  }
+
+  /*
+   * Implementation of FilesControllerDelegate interface.
+   */
+
+  void openInEditor(Resource file) {
+    print('open in editor: ${file.name}');
+    editor.setContent(file);
+    updatePath('saved ${file.name}');
   }
 }
 

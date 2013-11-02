@@ -138,6 +138,11 @@ void release(GrinderContext context) {
   file.renameSync('dist/${filename}');
   context.log('Created ${filename}');
   context.log('** A commit has been created, you need to push it. ***');
+  print('Do you want to push to the remote git repository now? (y/n [n])');
+  var line = stdin.readLineSync();
+  if (line.trim() == 'y') {
+    _runCommandSync(context, 'git push origin master');
+  }
 }
 
 // Creates an archive of the Chrome App.

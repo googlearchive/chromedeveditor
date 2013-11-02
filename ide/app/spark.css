@@ -11,7 +11,6 @@ body {
   margin: 0px;
   padding: 0px;
   overflow: hidden;
-  /*background: #2F3129;*/
 }
 
 #status {
@@ -62,7 +61,6 @@ body {
 
 #fileViewArea {
   height: 100%;
-  padding-top: 5px;
   position: absolute;
   width: 300px;
 }
@@ -80,12 +78,16 @@ body {
   width: 100%;
 }
 
+#splitview .splitter {
+  background-color: #ddd;
+}
+
 #themeChooser {
   float: right;
 }
 
 #toolbar {
-  
+  border-top: 1px solid #ddd;
 }
 
 #uiSwitcher {

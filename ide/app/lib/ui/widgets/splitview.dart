@@ -105,6 +105,9 @@ class SplitView {
     return !_isHorizontal();
   }
 
+  /**
+   * Event handler for mouse button down.
+   */
   void _resizeDownHandler(MouseEvent event) {
     if (_isHorizontal()) {
       // splitter is horizontal.
@@ -123,6 +126,9 @@ class SplitView {
     }
   }
 
+  /**
+   * Event handler for mouse move.
+   */
   void _resizeMoveHandler(MouseEvent event) {
     if (_resizeStarted) {
       int value = _initialPositionX + event.screenX - _resizeStartX;
@@ -136,6 +142,9 @@ class SplitView {
     }
   }
 
+  /**
+   * Event handler for mouse button up.
+   */
   void _resizeUpHandler(MouseEvent event) {
     if (_resizeStarted) {
       _resizeStarted = false;

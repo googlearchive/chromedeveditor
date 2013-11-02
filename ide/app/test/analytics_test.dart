@@ -15,5 +15,21 @@ main() {
     test('is available', () {
       expect(analytics.available, true);
     });
+
+    test('create service, create tracker', () {
+      return analytics.getService('SparkTest').then((analytics.GoogleAnalytics service) {
+        expect(service, isNotNull);
+        expect(service.getConfig(), isNotNull);
+        // just assert that we can call isTrackingPermitted
+        expect(service.getConfig().isTrackingPermitted(), isNotNull);
+
+        analytics.Tracker tracker = service.getTracker('UA-0');
+        expect(tracker, isNotNull);
+
+        // assert that we can call sendAppView
+        tracker.sendAppView('TestingPage');
+      });
+    });
+
   });
 }

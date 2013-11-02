@@ -28,10 +28,9 @@ Future<GoogleAnalytics> getService(String appName) {
   }
 
   GoogleAnalytics service = new GoogleAnalytics._(
-      _analytics.callMethod('getService', [appName]));
+      _analytics.callMethod('getService', [appName]), appName);
   _serviceMap[appName] = service;
-  /*return*/ service._init();
-  return new Future.value(service);
+  return service._init();
 }
 
 /**
@@ -46,10 +45,12 @@ void resetForTesting() {
  * instance of this can be obtained using [getService].
  */
 class GoogleAnalytics extends _ProxyHolder {
+  final String appName;
+
   Config _config;
   Map<String, Tracker> _trackers = {};
 
-  GoogleAnalytics._(JsObject _proxy): super(_proxy);
+  GoogleAnalytics._(JsObject _proxy, this.appName): super(_proxy);
 
   /**
    * Provides read/write access to the runtime configuration information used by
@@ -64,11 +65,13 @@ class GoogleAnalytics extends _ProxyHolder {
   Tracker getTracker(String trackingId) {
     if (_trackers[trackingId] == null) {
       var result = _proxy.callMethod('getTracker', [trackingId]);
-      _trackers[trackingId] = new Tracker._(result, this);
+      _trackers[trackingId] = new Tracker._(result, this, trackingId);
     }
 
     return _trackers[trackingId];
   }
+
+  String toString() => '[GoogleAnalytics ${appName}';
 
   Future<GoogleAnalytics> _init() {
     if (_config != null) return new Future.value(this);
@@ -139,8 +142,9 @@ class Config extends _ProxyHolder {
  */
 class Tracker extends _ProxyHolder {
   final GoogleAnalytics service;
+  final String trackingId;
 
-  Tracker._(JsObject _proxy, this.service): super(_proxy);
+  Tracker._(JsObject _proxy, this.service, this.trackingId): super(_proxy);
 
   /**
    * Sends an AppView hit to Google Analytics. [description] is a unique
@@ -204,6 +208,8 @@ class Tracker extends _ProxyHolder {
       _proxy.callMethod('send', [hitType, new JsObject.jsify(extraParams)]);
     }
   }
+
+  String toString() => '[Tracker ${trackingId}';
 }
 
 abstract class _ProxyHolder {
