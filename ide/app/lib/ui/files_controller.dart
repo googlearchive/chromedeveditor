@@ -35,16 +35,18 @@ class FilesController implements ListViewDelegate {
   }
   
   void selectLastFile() {
-    if (_files.length == 0)
+    if (_files.isEmpty) {
       return;
+    }
 
     _listView.selection = [_files.length - 1];
     _delegate.openInEditor(_files.last);
   }
   
   void selectFirstFile() {
-    if (_files.length == 0)
+    if (_files.isEmpty) {
       return;
+    }
 
     _listView.selection = [0];
     _delegate.openInEditor(_files.last);
@@ -67,8 +69,9 @@ class FilesController implements ListViewDelegate {
   }
 
   void listViewSelectedChanged(ListView view, List<int> rowIndexes) {
-    if (rowIndexes.length == 0)
+    if (rowIndexes.isEmpty) {
       return;
+    }
     
     _delegate.openInEditor(_files[rowIndexes[0]]);
   }
