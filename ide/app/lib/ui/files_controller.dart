@@ -35,7 +35,18 @@ class FilesController implements ListViewDelegate {
   }
   
   void selectLastFile() {
+    if (_files.length == 0)
+      return;
+
     _listView.selection = [_files.length - 1];
+    _delegate.openInEditor(_files.last);
+  }
+  
+  void selectFirstFile() {
+    if (_files.length == 0)
+      return;
+
+    _listView.selection = [0];
     _delegate.openInEditor(_files.last);
   }
 
