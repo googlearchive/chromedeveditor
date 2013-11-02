@@ -62,4 +62,8 @@ class AceEditor {
     _aceEditor.navigateFileStart();
     _aceEditor.focus();
   }
+  
+  void focus() {
+    _aceEditor.focus();
+  }
 }

@@ -170,7 +170,15 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     // get platform info
     return chrome_gen.runtime.getPlatformInfo().then((Map m) {
       spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
-      spark.workspace.restore();
+      spark.workspace.restore().then((value) {
+        if (spark.workspace.getFiles().length == 0) {
+          // No files, just focus the editor.
+          spark.editor.focus();
+        } else {
+          // Select the first file.
+          spark._filesController.selectFirstFile();
+        }
+      });
     });
   }
 

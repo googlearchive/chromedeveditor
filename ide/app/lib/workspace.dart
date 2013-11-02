@@ -77,7 +77,9 @@ class Workspace implements Container {
         List ids = JSON.decode(s);
         List futures = [];
         ids.forEach((id) {
-          futures.add(chrome_gen.fileSystem.restoreEntry(id).then((entry) => link(entry)));
+          futures.add(chrome_gen.fileSystem.restoreEntry(id)
+              .catchError((e, stackTrace) => null)
+              .then((entry) => entry != null ? link(entry) : null));
         });
         return Future.wait(futures).then((_) => new Future.value());
       } catch (e) {
