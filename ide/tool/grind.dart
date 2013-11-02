@@ -253,24 +253,8 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
 }
 
 void _changeMode(GrinderContext context, bool useTestMode) {
-  final testMode = 'src="spark_test.dart';
-  final noTestMode = 'src="spark.dart';
-
-  File htmlFile = joinFile(Directory.current, ['app', 'spark.html']);
-
-  String contents = htmlFile.readAsStringSync();
-
-  if (useTestMode) {
-    if (contents.contains(noTestMode)) {
-      contents = contents.replaceAll(noTestMode, testMode);
-      htmlFile.writeAsStringSync(contents);
-    }
-  } else {
-    if (contents.contains(testMode)) {
-      contents = contents.replaceAll(testMode, noTestMode);
-      htmlFile.writeAsStringSync(contents);
-    }
-  }
+  File configFile = joinFile(Directory.current, ['app', 'app.json']);
+  configFile.writeAsStringSync('{"test-mode":${useTestMode.toString()}}');
 }
 
 // Returns the name of the current branch.
