@@ -38,7 +38,7 @@ App.prototype.updateSettings = function(changedSettings) {
 };
 
 App.prototype.launch = function(skin_opt) {
-  if (skin_opt) {
+  if (skin_opt !== undefined) {
     this.updateSettings({ skin: skin_opt });
   }
 
@@ -99,11 +99,21 @@ EditorWindow.prototype.onLoad_ = function() {
   if (uiSwitcher) {
     uiSwitcher.onclick = this.app_.switchUi.bind(this.app_);
   }
+
+  chrome.contextMenus.create({
+    title: "Switch UI",
+    id: 'switch_ui',
+    contexts: [ 'all' ]
+  });
+  chrome.contextMenus.onClicked.addListener(function(info) {
+    theApp.switchUi();
+  });
 }
 
-// Destroy the window.
+// Destroy the window, if any.
 EditorWindow.prototype.destroy = function() {
-  this.window.close();
+  if (this.window)
+    this.window.close();
 }
 
 // Create a new app window and restore settings/state.
