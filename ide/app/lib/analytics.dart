@@ -3,10 +3,18 @@
 // license that can be found in the LICENSE file.
 
 /**
- * A library to use Google Analytics from Chrome Apps. This is essentially a
- * wrapper around the
+ * A library to use Google Analytics with Chrome Apps. This is a wrapper around
+ * the
  * [chrome-platform-analytics](https://github.com/GoogleChrome/chrome-platform-analytics/wiki).
  * JavaScript library.
+ *
+ * Example use:
+ *     Tracker tracker;
+ *
+ *     getService('MyFooApp').then((service) {
+ *       tracker = service.getTracker('UA-xxx-1');
+ *       tracker.sendAppView('/main');
+ *     });
  */
 library spark.analytics;
 
