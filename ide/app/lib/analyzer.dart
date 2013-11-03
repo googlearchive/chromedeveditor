@@ -49,11 +49,15 @@ Future<ChromeDartSdk> createSdk() {
 /**
  * Given a string representing Dart source, return a result comsisting of an AST
  * and a list of errors.
+ *
+ * The API for this method is asynchronous; the actual implementation is
+ * synchronous. In the future both API and implementation will be asynchronous.
  */
 Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
     {bool performResolution: true}) {
   Completer completer = new Completer();
 
+  // TODO: clean this up
   //AnalysisEngine.instance.createAnalysisContext();
   AnalysisContext context = new AnalysisContextImpl();
 
@@ -78,14 +82,6 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
 
   return completer.future;
 }
-
-//String literalToString(StringLiteral literal) {
-//  if (literal is SimpleStringLiteral) {
-//    return stripQuotes(literal.value);
-//  } else {
-//    return literal.toString();
-//  }
-//}
 
 /**
  * A tuple of an AST and a list of errors.
@@ -163,7 +159,7 @@ class ChromeDartSdk extends DartSdk {
 /**
  * An implementation of [Source] that's based on an in-memory Dart string.
  */
-class StringSource implements Source {
+class StringSource extends Source {
   final String _contents;
   final String fullName;
   final int modificationStamp;
@@ -202,7 +198,7 @@ class StringSource implements Source {
 /**
  * A [Source] implementation based of a file in the SDK.
  */
-class SdkSource implements Source {
+class SdkSource extends Source {
   final String fullName;
   final spark.DartSdk _sdk;
 
@@ -232,6 +228,7 @@ class SdkSource implements Source {
   String get encoding => 'UTF-8';
 
   String get shortName {
+    // TODO: create a utility method
     int index = fullName.lastIndexOf('/');
     return index == -1 ? fullName : fullName.substring(index + 1);
   }
@@ -243,6 +240,7 @@ class SdkSource implements Source {
   bool get isInSystemLibrary => true;
 
   Source resolveRelative(Uri relativeUri) {
+    // TODO: create a utility method
     String path = fullName.substring(0, fullName.lastIndexOf('/') + 1) + relativeUri.path;
 
     return new SdkSource(_sdk, path);
@@ -257,7 +255,7 @@ class SdkSource implements Source {
 /**
  * A [Source] implementation based on HTML FileEntrys.
  */
-class FileSource implements Source {
+class FileSource extends Source {
   final chrome.ChromeFileEntry file;
 
   FileSource(this.file);
