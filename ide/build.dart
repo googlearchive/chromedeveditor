@@ -10,8 +10,7 @@ void main() {
         'update', taskFunction: update))
     ..addTask(new grind.GrinderTask(
         'lint', taskFunction: lint, depends: ['update']))
-    ..start(['update', 'lint']);
-  exitCode = 1;
+    ..start(['lint']);
 }
 
 void update(context) {
