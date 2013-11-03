@@ -98,8 +98,8 @@ EditorWindow.prototype.onLoad_ = function() {
     contexts: [ 'all' ]
   });
   chrome.contextMenus.onClicked.addListener(function(info) {
-    theApp.switchUi();
-  });
+    this.app_.switchUi();
+  }.bind(this));
 }
 
 // Destroy the window, if any.
