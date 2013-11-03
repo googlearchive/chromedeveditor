@@ -104,8 +104,9 @@ EditorWindow.prototype.onLoad_ = function() {
 
 // Destroy the window, if any.
 EditorWindow.prototype.destroy = function() {
-  if (this.window)
+  if (this.window) {
     this.window.close();
+  }
 }
 
 // Create a new app window and restore settings/state.
