@@ -31,14 +31,16 @@ class SparkPolymer extends Spark {
   SparkPolymer() : super();
 
   @override
-  void setupEditorThemes(String theme) {
-    final int selected = (theme != null) ? _themes.indexOf(theme) : 0;
+  void setupEditorThemes() {
+    syncPrefs.getValue('aceTheme').then((String theme) {
+      final int selected = (theme != null) ? _themes.indexOf(theme) : 0;
 
-    (querySelector("#themeChooser") as dynamic)
-      ..items = _themes.map(_beautifyThemeName)
-      ..selected = selected
-      ..onClick.listen(_switchTheme);
-    _switchTheme();
+      (querySelector("#themeChooser") as dynamic)
+        ..items = _themes.map(_beautifyThemeName)
+        ..selected = selected
+        ..onClick.listen(_switchTheme);
+      _switchTheme();
+    });
   }
 
   void _switchTheme([_]) {

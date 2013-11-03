@@ -49,7 +49,7 @@ void main() {
        * available.
        */
       SparkTest app = new SparkTest();
-      
+
       app.start().then((_) {
         app.showTestUI();
 
@@ -99,7 +99,7 @@ class Spark extends Application implements FilesControllerDelegate {
     _filesController = new FilesController(workspace, this);
 
     setupFileActions();
-    syncPrefs.getValue('aceTheme').then(setupEditorThemes);
+    setupEditorThemes();
   }
 
   void setupFileActions() {
@@ -109,12 +109,14 @@ class Spark extends Application implements FilesControllerDelegate {
     querySelector("#saveAsFile").onClick.listen(saveAsFile);
   }
 
-  void setupEditorThemes(String theme) {
-    if (theme != null) {
-      editor.setTheme(theme);
-      (querySelector("#editorTheme") as SelectElement).value = theme;
-    }
-    querySelector("#editorTheme").onChange.listen(_handleThemeEvent);
+  void setupEditorThemes() {
+    syncPrefs.getValue('aceTheme').then((String theme) {
+      if (theme != null) {
+        editor.setTheme(theme);
+        (querySelector("#editorTheme") as SelectElement).value = theme;
+      }
+      querySelector("#editorTheme").onChange.listen(_handleThemeEvent);
+    });
   }
 
   String get appName => i18n('app_name');
@@ -173,11 +175,11 @@ class Spark extends Application implements FilesControllerDelegate {
   void updatePath(String text) {
     querySelector("#path").text = text;
   }
-  
+
   /*
    * Implementation of FilesControllerDelegate interface.
    */
-  
+
   void openInEditor(Resource file) {
     print('open in editor: ${file.name}');
     editor.setContent(file);
