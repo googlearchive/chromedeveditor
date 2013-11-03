@@ -245,9 +245,9 @@ class LooseObject {
       List<String> headChars = [];
       for (i = 0; i < data.length; ++i) {
         if (data[i] != 0)
-          headChars.add(UTF8.decode(data[i]));
-          else
-            break;
+          headChars.add(UTF8.decode([data[i]]));
+        else
+          break;
       }
       header = headChars.join(' ');
 
