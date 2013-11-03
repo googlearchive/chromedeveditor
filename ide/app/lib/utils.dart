@@ -15,6 +15,10 @@ String i18n(String messageId) {
   return chrome_gen.i18n.getMessage(messageId);
 }
 
+String capitalize(String s) {
+  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
+}
+
 AudioContext _ctx;
 
 void beep() {

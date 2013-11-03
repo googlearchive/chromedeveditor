@@ -9,15 +9,12 @@ import 'package:polymer/polymer.dart' as polymer;
 import 'package:ace/ace.dart' as ace;
 
 import 'spark.dart';
+import 'lib/utils.dart' as utils;
 
 void main() {
   polymer.initPolymer();
   SparkPolymer spark = new SparkPolymer();
   spark.start();
-}
-
-String _capitalizeString(String s) {
-  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
 }
 
 class SparkPolymer extends Spark {
@@ -54,6 +51,6 @@ class SparkPolymer extends Spark {
   }
 
   String _beautifyThemeName(String themeName) {
-    return _capitalizeString(themeName).replaceAll('_', ' ');
+    return utils.capitalize(themeName).replaceAll('_', ' ');
   }
 }
