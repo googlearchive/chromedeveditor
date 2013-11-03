@@ -17,7 +17,7 @@ void main() {
 }
 
 String _capitalizeString(String s) {
-  return s[0].toUpperCase() + s.substring(1);
+  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
 }
 
 class SparkPolymer extends Spark {
@@ -35,7 +35,7 @@ class SparkPolymer extends Spark {
     syncPrefs.getValue('aceTheme').then((String theme) {
       final int selected = (theme != null) ? _themes.indexOf(theme) : 0;
 
-      (querySelector("#themeChooser") as dynamic)
+      (querySelector('#themeChooser') as dynamic)
         ..items = _themes.map(_beautifyThemeName)
         ..selected = selected
         ..onClick.listen(_switchTheme);
@@ -45,7 +45,7 @@ class SparkPolymer extends Spark {
 
   void _switchTheme([_]) {
     int selected =
-        (querySelector("#themeChooser") as dynamic).selected;
+        (querySelector('#themeChooser') as dynamic).selected;
     if (selected == -1)
       selected = 0;
     final String themePath = new ace.Theme.named(_themes[selected]).path;
