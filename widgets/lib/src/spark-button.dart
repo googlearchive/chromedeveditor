@@ -4,11 +4,12 @@
 
 library spark_widgets.button;
 
+import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 @CustomTag('spark-button')
-class SparkButton extends PolymerElement {
+class SparkButton extends HtmlElement with Polymer, Observable {
   @observable bool active = false;
-  SparkButton.created() : super.created() {
-  }
+
+  SparkButton.created() : super.created();
 }
