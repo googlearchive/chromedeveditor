@@ -15,25 +15,6 @@ String i18n(String messageId) {
   return chrome_gen.i18n.getMessage(messageId);
 }
 
-/**
- * Strip off one set of leading and trailing single or double quotes.
- */
-String stripQuotes(String str) {
-  if (str.length < 2) {
-    return str;
-  }
-
-  if (str.startsWith("'") && str.endsWith("'")) {
-    return str.substring(1, str.length - 1);
-  }
-
-  if (str.startsWith('"') && str.endsWith('"')) {
-    return str.substring(1, str.length - 1);
-  }
-
-  return str;
-}
-
 String capitalize(String s) {
   return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
 }
@@ -50,4 +31,20 @@ void beep() {
   osc.connectNode(_ctx.destination, 0, 0);
   osc.start(0);
   osc.stop(_ctx.currentTime + 0.1);
+}
+
+/**
+ * Returns the path before the last separtor.
+ */
+String dirName(String path) {
+  int index = path.lastIndexOf('/');
+  return index == -1 ? '' : path.substring(0, index);
+}
+
+/**
+ * Returns the path after the last separtor.
+ */
+String baseName(String path) {
+  int index = path.lastIndexOf('/');
+  return index == -1 ? path : path.substring(index + 1);
 }

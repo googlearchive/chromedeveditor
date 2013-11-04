@@ -94,7 +94,8 @@ class DartSdk extends SdkDirectory {
       return libDirectory.getChild(dirName).then((SdkDirectory dir) {
         return dir.getChildren().then((List<SdkEntity> children) {
           return Future.forEach(children, (child) {
-            return html.HttpRequest.getString(getSdkLocationUri().resolve('lib/${dirName}/${child.name}').path).then((contents) {
+            return html.HttpRequest.getString(getSdkLocationUri().resolve(
+                'lib/${dirName}/${child.name}').path).then((contents) {
               _coreSource['${dirName}/${child.name}'] = contents;
             });
           });

@@ -37,10 +37,10 @@ main() {
             performResolution: false).then((AnalyzerResult result) {
           expect(result, isNotNull);
           expect(result.ast, isNotNull);
-          expect(result.ast.declarations.length, greaterThan(0));
+          expect(result.ast.declarations.length, 1);
           CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl is FunctionDeclaration, true);
-          expect((decl as FunctionDeclaration).name.toString(), 'main');
+          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+          expect((decl as FunctionDeclaration).name.name, 'main');
           expect(result.errors, isEmpty);
         });
       });
@@ -50,10 +50,10 @@ main() {
       return createSdk().then((ChromeDartSdk sdk) {
         return analyzeString(sdk, "void main() {\n print('hello world') \n}",
             performResolution: false).then((AnalyzerResult result) {
-          expect(result.ast.declarations.length, greaterThan(0));
+          expect(result.ast.declarations.length, 1);
           CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl is FunctionDeclaration, true);
-          expect((decl as FunctionDeclaration).name.toString(), 'main');
+          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+          expect((decl as FunctionDeclaration).name.name, 'main');
           expect(result.errors.length, greaterThan(0));
         });
       });
@@ -61,27 +61,30 @@ main() {
 
     test('analyze string', () {
       return createSdk().then((ChromeDartSdk sdk) {
-        return analyzeString(sdk, "void main() {\n print('hello world');\n}").then((AnalyzerResult result) {
+        return analyzeString(sdk, "void main() {\n print('hello world');\n}",
+            performResolution: true).then((AnalyzerResult result) {
           expect(result, isNotNull);
           expect(result.ast, isNotNull);
-          expect(result.ast.declarations.length, greaterThan(0));
+          expect(result.ast.declarations.length, 1);
           CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl is FunctionDeclaration, true);
-          expect((decl as FunctionDeclaration).name.toString(), 'main');
+          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+          expect((decl as FunctionDeclaration).name.name, 'main');
           expect(result.errors, isEmpty);
+          expect((decl as FunctionDeclaration).element, isNotNull);
         });
       });
     });
 
     test('analyze string with errors', () {
       return createSdk().then((ChromeDartSdk sdk) {
-        return analyzeString(sdk, "void main() {\n println('hello world');\n}").then((AnalyzerResult result) {
+        return analyzeString(sdk, "void main() {\n printfoo('hello world');\n}",
+            performResolution: true).then((AnalyzerResult result) {
           expect(result.ast, isNotNull);
-          expect(result.ast.declarations.length, greaterThan(0));
+          expect(result.ast.declarations.length, 1);
           CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl is FunctionDeclaration, true);
-          expect((decl as FunctionDeclaration).name.toString(), 'main');
-          expect(result.errors.length, greaterThan(0));
+          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+          expect((decl as FunctionDeclaration).name.name, 'main');
+          expect(result.errors.length, 1);
         });
       });
     });

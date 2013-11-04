@@ -23,6 +23,7 @@ export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
 
 import 'sdk.dart' as spark;
+import 'utils.dart';
 
 // TODO: investigate web workers and isolates
 
@@ -47,7 +48,7 @@ Future<ChromeDartSdk> createSdk() {
 }
 
 /**
- * Given a string representing Dart source, return a result comsisting of an AST
+ * Given a string representing Dart source, return a result consisting of an AST
  * and a list of errors.
  *
  * The API for this method is asynchronous; the actual implementation is
@@ -57,8 +58,8 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
     {bool performResolution: true}) {
   Completer completer = new Completer();
 
-  // TODO: clean this up
-  //AnalysisEngine.instance.createAnalysisContext();
+  // TODO: move over to using this factory method - it will share SDK contexts.
+  //AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
   AnalysisContext context = new AnalysisContextImpl();
 
   context.sourceFactory = new SourceFactory.con2([new DartUriResolver(sdk)]);
@@ -74,6 +75,8 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
 
   if (performResolution) {
     context.computeErrors(source);
+    // Generally, we won't be resolving string fragments.
+    unit = context.resolveCompilationUnit(source, context.getLibraryElement(source));
   }
 
   AnalyzerResult result = new AnalyzerResult(unit, context.getErrors(source));
@@ -104,11 +107,13 @@ class ChromeDartSdk extends DartSdk {
   spark.DartSdk _sdk;
   LibraryMap _libraryMap;
 
-  ChromeDartSdk._(this._sdk): context = new AnalysisContextImpl();
+  ChromeDartSdk._(this._sdk): context = new AnalysisContextImpl() {
+    // TODO: this will also need a dart: uri resolver
+    context.sourceFactory = new SourceFactory.con2([]);
+  }
 
   Source fromEncoding(ContentCache contentCache, UriKind kind, Uri uri) {
-    // TODO: implement
-
+    // TODO:
     throw new UnimplementedError('fromEncoding');
   }
 
@@ -142,8 +147,7 @@ class ChromeDartSdk extends DartSdk {
   }
 
   LibraryMap _parseLibrariesMap(String contents) {
-    List<bool> foundError = [false];
-    NullAnalysisErrorListener errorListener = new NullAnalysisErrorListener();
+    SimpleAnalysisErrorListener errorListener = new SimpleAnalysisErrorListener();
     Source source = new StringSource(contents, 'lib/_internal/libraries.dart');
     Scanner scanner = new Scanner(source, new CharSequenceReader(new CharSequence(contents)), errorListener);
     Parser parser = new Parser(source, errorListener);
@@ -169,10 +173,10 @@ class StringSource extends Source {
 
   bool operator==(Object object) {
     if (object is StringSource) {
-      StringSource ssObject = object;
-      return ssObject._contents == _contents && ssObject.fullName == fullName;
+      return object._contents == _contents && object.fullName == fullName;
+    } else {
+      return false;
     }
-    return false;
   }
 
   bool exists() => true;
@@ -184,8 +188,8 @@ class StringSource extends Source {
 
   String get shortName => fullName;
 
-  UriKind get uriKind => throw new UnsupportedError("StringSource doesn't support "
-      "uriKind.");
+  UriKind get uriKind => throw new UnsupportedError(
+      "StringSource doesn't support uriKind.");
 
   int get hashCode => _contents.hashCode ^ fullName.hashCode;
 
@@ -199,8 +203,8 @@ class StringSource extends Source {
  * A [Source] implementation based of a file in the SDK.
  */
 class SdkSource extends Source {
-  final String fullName;
   final spark.DartSdk _sdk;
+  final String fullName;
 
   SdkSource(this._sdk, this.fullName);
 
@@ -227,11 +231,7 @@ class SdkSource extends Source {
 
   String get encoding => 'UTF-8';
 
-  String get shortName {
-    // TODO: create a utility method
-    int index = fullName.lastIndexOf('/');
-    return index == -1 ? fullName : fullName.substring(index + 1);
-  }
+  String get shortName => baseName(fullName);
 
   UriKind get uriKind => UriKind.DART_URI;
 
@@ -240,13 +240,9 @@ class SdkSource extends Source {
   bool get isInSystemLibrary => true;
 
   Source resolveRelative(Uri relativeUri) {
-    // TODO: create a utility method
-    String path = fullName.substring(0, fullName.lastIndexOf('/') + 1) + relativeUri.path;
-
-    return new SdkSource(_sdk, path);
+    return new SdkSource(_sdk, '${dirName(fullName)}/${relativeUri.path}');
   }
 
-  // TODO: will this work as a modification stamp for sdk sources?
   int get modificationStamp => 0;
 
   String toString() => fullName;
@@ -262,8 +258,7 @@ class FileSource extends Source {
 
   bool operator==(Object object) {
     if (object is FileSource) {
-      FileSource ssObject = object;
-      return ssObject.fullName == fullName;
+      return object.fullName == fullName;
     } else {
       return false;
     }
@@ -271,19 +266,16 @@ class FileSource extends Source {
 
   bool exists() {
     // TODO:
-
      throw new UnimplementedError('exists');
   }
 
   void getContents(Source_ContentReceiver receiver) {
     // TODO:
-
     throw new UnimplementedError('getContents');
   }
 
   String get encoding {
     // TODO:
-
     throw new UnimplementedError('encoding');
   }
 
@@ -299,29 +291,29 @@ class FileSource extends Source {
 
   Source resolveRelative(Uri relativeUri) {
     // TODO:
-
     throw new UnimplementedError('resolveRelative');
   }
 
   int get modificationStamp {
     // TODO:
-
     throw new UnimplementedError('modificationStamp');
   }
 
   String toString() => fullName;
 }
 
-class NullAnalysisErrorListener implements AnalysisErrorListener {
+class SimpleAnalysisErrorListener implements AnalysisErrorListener {
   bool foundError = false;
 
-  NullAnalysisErrorListener();
+  SimpleAnalysisErrorListener();
 
   void onError(AnalysisError error) {
     foundError = true;
   }
 }
 
+// TODO: remove this copy when the analyzer's version is able to be used
+// (dartbug.com/14791)
 class SdkLibrariesReader_LibraryBuilder extends RecursiveASTVisitor<Object> {
   /**
    * The prefix added to the name of a library to form the URI used in code to reference the
@@ -372,7 +364,7 @@ class SdkLibrariesReader_LibraryBuilder extends RecursiveASTVisitor<Object> {
     Expression value = node.value;
     if (value is InstanceCreationExpression) {
       SdkLibraryImpl library = new SdkLibraryImpl(libraryName);
-      List<Expression> arguments = (value).argumentList.arguments;
+      List<Expression> arguments = value.argumentList.arguments;
       for (Expression argument in arguments) {
         if (argument is SimpleStringLiteral) {
           library.path = argument.value;
@@ -380,11 +372,11 @@ class SdkLibrariesReader_LibraryBuilder extends RecursiveASTVisitor<Object> {
           String name = argument.name.label.name;
           Expression expression = argument.expression;
           if (name == _CATEGORY) {
-            library.category = ((expression as SimpleStringLiteral)).value;
+            library.category = (expression as SimpleStringLiteral).value;
           } else if (name == _IMPLEMENTATION) {
-            library.implementation = ((expression as BooleanLiteral)).value;
+            library.implementation = (expression as BooleanLiteral).value;
           } else if (name == _DOCUMENTED) {
-            library.documented = ((expression as BooleanLiteral)).value;
+            library.documented = (expression as BooleanLiteral).value;
           } else if (name == _PLATFORMS) {
             if (expression is SimpleIdentifier) {
               String identifier = expression.name;

@@ -50,16 +50,15 @@ void _defineTests() {
   app_test.main();
   compiler_test.main();
   files_test.main();
+  gitobject_test.main();
   git_test.main();
-  utils_test.main();
   preferences_test.main();
   sdk_test.main();
   server_test.main();
   tcp_test.main();
-  zlib_test.main();
-  gitobject_test.main();
   utils_test.main();
   workspace_test.main();
+  zlib_test.main();
 }
 
 /**
