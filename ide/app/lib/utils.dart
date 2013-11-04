@@ -34,6 +34,10 @@ String stripQuotes(String str) {
   return str;
 }
 
+String capitalize(String s) {
+  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
+}
+
 AudioContext _ctx;
 
 void beep() {

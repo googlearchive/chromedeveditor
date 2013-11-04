@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="spark_polymer.css">
 
   <link rel="import" href="packages/spark_widgets/spark-button.html">
+  <link rel="import" href="packages/spark_widgets/spark-select.html">
 
   <template id="fileview-filename" >
     <div class="fileview-filename-container" style="height: 20px;">
@@ -25,23 +26,18 @@
 </head>
 
 <body>
-  <spark-button id="newFile">New File</spark-button>
-  <spark-button id="openFile">Open File...</spark-button>
-  <spark-button id="saveFile">Save</spark-button>
-  <spark-button id="saveAsFile">Save As...</spark-button>
-
-  <div id="themeChooser">
-    <label>Theme</label>
-    <select id = "editorTheme">
-      <option value = "ace/theme/ambiance">Ambiance</option>
-      <option value = "ace/theme/monokai">Monokai</option>
-      <option value = "ace/theme/pastel_on_dark">Pastel on dark</option>
-      <option value = "ace/theme/textmate">Textmate</option>
-    </select>
+  <div id="toolbar">
+    <spark-button id="newFile">New File</spark-button>
+    <spark-button id="openFile">Open File...</spark-button>
+    <spark-button id="saveFile">Save</spark-button>
+    <spark-button id="saveAsFile">Save As...</spark-button>
+    <spark-select id="themeChooser" text_color="white"
+                                    color="black"
+                                    hover_color="gray">
+      Theme
+    </spark-select>
   </div>
-
-  <a id="uiSwitcher" href="#">MONOMERIZE!</a>
-
+  
   <div id="status">
       <div id="path">[new file]</div>
       <div id="error"></div>
