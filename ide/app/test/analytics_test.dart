@@ -30,6 +30,5 @@ main() {
         tracker.sendAppView('/testing');
       });
     });
-
   });
 }

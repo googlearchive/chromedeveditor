@@ -34,7 +34,8 @@
     },
     "syncFileSystem",
     "storage",
-    "webview"
+    "webview",
+    "contextMenus"
   ],
   "file_handlers": {
     "text": {

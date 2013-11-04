@@ -91,12 +91,6 @@ class Spark extends Application implements FilesControllerDelegate {
       close();
     });
 
-    querySelector("#newFile").onClick.listen(newFile);
-    querySelector("#openFile").onClick.listen(openFile);
-    querySelector("#saveFile").onClick.listen(saveFile);
-    querySelector("#saveAsFile").onClick.listen(saveAsFile);
-    querySelector("#editorTheme").onChange.listen(_handleThemeEvent);
-
     workspace = new Workspace(localPrefs);
 
     editor = new AceEditor();
@@ -104,11 +98,24 @@ class Spark extends Application implements FilesControllerDelegate {
     _splitView = new SplitView(querySelector('#splitview'));
     _filesController = new FilesController(workspace, this);
 
-    syncPrefs.getValue('aceTheme').then((String value) {
-      if (value != null) {
-        editor.setTheme(value);
-        (querySelector("#editorTheme") as SelectElement).value = value;
+    setupFileActions();
+    setupEditorThemes();
+  }
+
+  void setupFileActions() {
+    querySelector("#newFile").onClick.listen(newFile);
+    querySelector("#openFile").onClick.listen(openFile);
+    querySelector("#saveFile").onClick.listen(saveFile);
+    querySelector("#saveAsFile").onClick.listen(saveAsFile);
+  }
+
+  void setupEditorThemes() {
+    syncPrefs.getValue('aceTheme').then((String theme) {
+      if (theme != null) {
+        editor.setTheme(theme);
+        (querySelector("#editorTheme") as SelectElement).value = theme;
       }
+      querySelector("#editorTheme").onChange.listen(_handleThemeEvent);
     });
   }
 

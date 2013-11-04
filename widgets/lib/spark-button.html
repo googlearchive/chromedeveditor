@@ -15,7 +15,7 @@
         color: black;
         font-size: 14px;
         outline: none;
-        padding: 10px;
+        padding: 5px;
         text-decoration: none;
       }
       button:hover {
@@ -26,6 +26,8 @@
       }
     </style>
 
+    <!-- Handle "active" properly, possibly using 'template if'.
+         Setting 'disabled' attribute here somehow doesn't work. -->
     <button type="button"><content></content></button>
   </template>
 

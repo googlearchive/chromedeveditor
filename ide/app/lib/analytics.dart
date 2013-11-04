@@ -9,6 +9,7 @@
  * JavaScript library.
  *
  * Example use:
+ *
  *     Tracker tracker;
  *
  *     getService('MyFooApp').then((service) {
@@ -152,7 +153,7 @@ class Config extends _ProxyHolder {
  *
  * For analytics hittypes that are not supported by a named method clients can
  * call send with param/value Object describing the hit. Obtain a instance using
- * the [Service.getTracker].
+ * the [GoogleAnalytics.getTracker].
  */
 class Tracker extends _ProxyHolder {
   final GoogleAnalytics service;

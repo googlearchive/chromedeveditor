@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<polymer-element 
+    name="spark-select"
+    attributes="items selected text_color color hover_color">
+  <template>
+    <style>
+      select {
+        border: 1px solid #888;
+        border-radius: 5px;
+        display: inline-block;
+        color: {{text_color}};
+        background: {{color}};
+        font-size: 14px;
+        outline: none;
+        padding: 5px;
+        text-decoration: none;
+      }
+      select:hover {
+        background: {{hover_color}};
+      }
+    </style>
+        
+    <label><content></content></label>
+    <select selectedIndex={{selected}}>
+      <template repeat="{{item in items}}">
+        <option>{{item}}</option>
+      </template>
+    </select>
+  </template>
+   
+  <script type="application/dart" src="src/spark-select.dart"></script>
+</polymer-element>
