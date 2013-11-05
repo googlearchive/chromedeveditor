@@ -121,7 +121,7 @@ class SplitView {
       }
     }
     if (_resizeStarted) {
-      _resizeStartX = event.screenX;
+      _resizeStartX = event.screen.x;
       _initialPositionX = _splitter.offsetLeft;
     }
   }
@@ -131,7 +131,7 @@ class SplitView {
    */
   void _resizeMoveHandler(MouseEvent event) {
     if (_resizeStarted) {
-      int value = _initialPositionX + event.screenX - _resizeStartX;
+      int value = _initialPositionX + event.screen.y - _resizeStartX;
       if (value > _splitView.clientWidth - _rightMinSize) {
         value = _splitView.clientWidth - _rightMinSize;
       }

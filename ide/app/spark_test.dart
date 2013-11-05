@@ -11,7 +11,7 @@ library spark_test;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import 'spark.dart';
@@ -24,6 +24,9 @@ Logger testLogger = new Logger('spark.tests');
  * A custom subclass of Spark with tests built-in.
  */
 class SparkTest extends Spark {
+  DivElement _testDiv;
+  SpanElement _status;
+
   SparkTest() {
     print('Running Spark in test mode');
   }
@@ -39,16 +42,13 @@ class SparkTest extends Spark {
     print('Connected to test listener on port ${testClient.port}');
 
     testLogger.onRecord.listen((LogRecord record) {
-      testClient.log(
-          '[${record.loggerName} '
-          '${record.level.toString().toLowerCase()}] '
-          '${record.message}');
+      testClient.log(record.toString());
     });
 
     tests.runTests().then((bool success) {
       testClient.log('test exit code: ${(success ? 0 : 1)}');
 
-      chrome_gen.app.window.current().close();
+      chrome.app.window.current().close();
     });
   }
 
@@ -56,51 +56,48 @@ class SparkTest extends Spark {
    * Display a UI to drive unit tests. This floats over the window's content.
    */
   void showTestUI() {
-    DivElement div = new DivElement();
-    div.style.zIndex = '100';
-    div.style.position = 'fixed';
-    div.style.bottom = '0px';
-    div.style.marginBottom = '0.5em';
-    div.style.marginLeft = '0.5em';
-    div.style.background = 'green';
-    div.style.borderRadius = '4px';
-    div.style.opacity = '0.7';
-
-    ButtonElement button = new ButtonElement();
-    button.text = "Run Tests";
-    div.nodes.add(button);
-
-    SpanElement status = new SpanElement();
-    status.style.marginRight = '0.5em';
-    status.style.display = 'none';
-    div.nodes.add(status);
-
-    button.onClick.listen((e) {
-      div.style.background = 'green';
-      status.style.display = 'inline';
-      status.text = '';
-      button.disabled = true;
-      tests.runTests().then((bool success) {
-        button.disabled = false;
-      });
+    chrome.contextMenus.create({
+      'title': "Spark: Run Tests",
+      'id': 'run_tests',
+      'contexts': [ 'all' ]
     });
+
+    chrome.contextMenus.onClicked.listen((chrome.OnClickedEvent e) {
+      if (e.info.menuItemId == 'run_tests') {
+        _runTests();
+      }
+    });
+
+    _testDiv = new DivElement();
+    _testDiv.style.zIndex = '100';
+    _testDiv.style.position = 'fixed';
+    _testDiv.style.bottom = '0px';
+    _testDiv.style.marginBottom = '0.5em';
+    _testDiv.style.marginLeft = '0.5em';
+    _testDiv.style.background = 'green';
+    _testDiv.style.borderRadius = '2px';
+    _testDiv.style.opacity = '0.8';
+    _testDiv.style.display = 'none';
+
+    _status = new SpanElement();
+    _status.style.margin = '0.5em';
+    _testDiv.nodes.add(_status);
 
     testLogger.onRecord.listen((LogRecord record) {
       if (record.level > Level.INFO) {
-        div.style.background = 'red';
+        _testDiv.style.background = 'red';
       }
-
-      if (status.style.display != 'inline') {
-        status.style.display = 'inline';
-      }
-
-      status.text =
-          '[${record.loggerName} '
-          '${record.level.toString().toLowerCase()}] '
-          '${record.message}';
+      _status.text = record.toString();
     });
 
-    document.body.nodes.add(div);
+    document.body.nodes.add(_testDiv);
+  }
+
+  void _runTests() {
+    _testDiv.style.display = 'inline';
+    _testDiv.style.background = 'green';
+    _status.text = '';
+    tests.runTests();
   }
 }
 
