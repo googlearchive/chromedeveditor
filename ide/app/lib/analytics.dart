@@ -5,7 +5,7 @@
 /**
  * A library to use Google Analytics with Chrome Apps. This is a wrapper around
  * the
- * [chrome-platform-analytics](https://github.com/GoogleChrome/chrome-platform-analytics/wiki).
+ * [chrome-platform-analytics](https://github.com/GoogleChrome/chrome-platform-analytics).
  * JavaScript library.
  *
  * Example use:
@@ -35,7 +35,7 @@ bool get available => _analytics != null;
  * Returns a service instance for the named Chrome Platform App. Generally
  * you'll only ever want to call this with a single name that identifies the
  * host Chrome Platform App/Extension or extension using the library. This name
- * is used to scoped hits to your app on Google Analytics.
+ * is used to scope hits to your app on Google Analytics.
  */
 Future<GoogleAnalytics> getService(String appName) {
   if (_serviceMap[appName] != null) {
@@ -166,7 +166,7 @@ class Tracker extends _ProxyHolder {
    * description of the "screen" (or "place, or "view") within your application.
    * This is should more specific than your app name, but generally not include
    * any runtime data. In most cases all "screens" should be known at the time
-   * the app is build. Examples: "MainScreen" or "SettingsView".
+   * the app is built. Examples: "MainScreen" or "SettingsView".
    */
   void sendAppView(String description) {
     _proxy.callMethod('sendAppView', [description]);
@@ -174,8 +174,8 @@ class Tracker extends _ProxyHolder {
 
   /**
    * Sends an Event hit to Google Analytics. [category] specifies the event
-   * category. [action] specifies the event action/ [value] specifies the event
-   * value; values must be non-negative.
+   * category. [action] specifies the event action, [label] specifies the event
+   * label, and [value] specifies the event value. Values must be non-negative.
    */
   void sendEvent(String category, String action, [String label, String value]) {
     _proxy.callMethod('sendEvent', [category, action, label, value]);
@@ -185,6 +185,9 @@ class Tracker extends _ProxyHolder {
    * Sends an Exception hit to Google Analytics. [description] is the exception
    * description (up to 100 chars), and [fatal] indicates whether the exception
    * was fatal.
+   *
+   * *Warning:* Do not send the exception message to Google Analytics as it
+   * may contain personally identifiable information.
    */
   void sendException([String description, bool fatal]) {
     _proxy.callMethod('sendException', [description, fatal]);
