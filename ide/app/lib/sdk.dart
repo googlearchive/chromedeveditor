@@ -29,8 +29,6 @@ Future<String> _getContents(String path) {
   return html.HttpRequest.getString(chrome_gen.runtime.getURL(path));
 }
 
-// TODO(devoncarew): parse the sdk/lib/_internal/libraries.dart file?
-
 /**
  * This class represents the Dart SDK as build into Spark. It allows you to
  * query the SDK version and to get the contents of the included Dart libraries.
@@ -39,16 +37,7 @@ class DartSdk extends SdkDirectory {
   final String version;
 
   SdkDirectory _libDirectory;
-
-  /**
-   * Return the `sdk/lib` directory.
-   */
-  SdkDirectory get libDirectory => _libDirectory;
-
-  /**
-   * Return whether the Dart SDK is present.
-   */
-  bool get available => libDirectory != null;
+  Map<String, String> _coreSource;
 
   /**
    * Create a return a [DartSdk]. Generally, an application will only have one
@@ -63,6 +52,8 @@ class DartSdk extends SdkDirectory {
       return sdk.getChild('lib');
     }).then((SdkDirectory dir) {
       sdk._libDirectory = dir;
+      return sdk._cacheCoreSource();
+    }).then((_) {
       return sdk;
     }).catchError((e) {
       return new DartSdk._(version: '');
@@ -72,11 +63,46 @@ class DartSdk extends SdkDirectory {
   /**
    * Return the location of the SDK, as a [Uri].
    */
-  Uri getSdkLocationUri() {
+  static Uri getSdkLocationUri() {
     return Uri.parse(chrome_gen.runtime.getURL('sdk/'));
   }
 
   DartSdk._({this.version}): super._(null, 'sdk');
+
+  /**
+   * Return the `sdk/lib` directory.
+   */
+  SdkDirectory get libDirectory => _libDirectory;
+
+  /**
+   * Return whether the Dart SDK is present.
+   */
+  bool get available => libDirectory != null;
+
+  /**
+   * This temporary method will exists only as long as it takes to figure out a
+   * good sync/async story with running the analyzer.
+   */
+  String getCachedSource(String path) => _coreSource[path];
+
+  Future _cacheCoreSource() {
+    _coreSource = {};
+
+    List dirs = ['core', 'collection', '_collection_dev', 'math', 'convert', 'async'];
+
+    return Future.forEach(dirs, (dirName) {
+      return libDirectory.getChild(dirName).then((SdkDirectory dir) {
+        return dir.getChildren().then((List<SdkEntity> children) {
+          return Future.forEach(children, (child) {
+            return html.HttpRequest.getString(getSdkLocationUri().resolve(
+                'lib/${dirName}/${child.name}').path).then((contents) {
+              _coreSource['${dirName}/${child.name}'] = contents;
+            });
+          });
+        });
+      });
+    });
+  }
 }
 
 /**
@@ -102,6 +128,8 @@ abstract class SdkEntity {
     int index = path.lastIndexOf('/');
     return index == -1 ? path : path.substring(index + 1);
   }
+
+  String toString() => name;
 }
 
 /**

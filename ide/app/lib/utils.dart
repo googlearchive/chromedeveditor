@@ -32,3 +32,19 @@ void beep() {
   osc.start(0);
   osc.stop(_ctx.currentTime + 0.1);
 }
+
+/**
+ * Returns the path before the last separtor.
+ */
+String dirName(String path) {
+  int index = path.lastIndexOf('/');
+  return index == -1 ? '' : path.substring(0, index);
+}
+
+/**
+ * Returns the path after the last separtor.
+ */
+String baseName(String path) {
+  int index = path.lastIndexOf('/');
+  return index == -1 ? path : path.substring(index + 1);
+}
