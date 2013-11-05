@@ -5,7 +5,6 @@
 /**
  * This class implements the controller for the list of files.
  */
-
 library spark.ui.widgets.files_controller;
 
 import 'dart:html';
@@ -22,18 +21,18 @@ class FilesController implements ListViewDelegate {
   Workspace _workspace;
   List<Resource> _files;
   FilesControllerDelegate _delegate;
-  
+
   FilesController(Workspace workspace, FilesControllerDelegate delegate) {
     _workspace = workspace;
     _delegate = delegate;
     _files = [];
     _listView = new ListView(querySelector('#fileViewArea'), this);
-    
+
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
     });
   }
-  
+
   void selectLastFile() {
     if (_files.isEmpty) {
       return;
@@ -42,7 +41,7 @@ class FilesController implements ListViewDelegate {
     _listView.selection = [_files.length - 1];
     _delegate.openInEditor(_files.last);
   }
-  
+
   void selectFirstFile() {
     if (_files.isEmpty) {
       return;
@@ -72,12 +71,12 @@ class FilesController implements ListViewDelegate {
     if (rowIndexes.isEmpty) {
       return;
     }
-    
+
     _delegate.openInEditor(_files[rowIndexes[0]]);
   }
 
   void listViewDoubleClicked(ListView view, List<int> rowIndexes) {
-    
+
   }
 
   /**

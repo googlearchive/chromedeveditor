@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
 
+import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'lib/ace.dart';
@@ -44,10 +45,8 @@ Future<bool> isTestMode() {
 void main() {
   isTestMode().then((testMode) {
     if (testMode) {
-      /*
-       * Start the app, show the test UI, and connect to a test server if one is
-       * available.
-       */
+      // Start the app, show the test UI, and connect to a test server if one is
+      // available.
       SparkTest app = new SparkTest();
 
       app.start().then((_) {
@@ -56,9 +55,7 @@ void main() {
         app.connectToListener();
       });
     } else {
-      /*
-       * Start the app in normal mode.
-       */
+      // Start the app in normal mode.
       Spark spark = new Spark();
       spark.start();
     }
@@ -100,7 +97,17 @@ class Spark extends Application implements FilesControllerDelegate {
 
     setupFileActions();
     setupEditorThemes();
+
+    bootjack.Bootjack.useDefault();
+
+    buildMenu();
   }
+
+  String get appName => i18n('app_name');
+
+  String get appVersion => chrome_gen.runtime.getManifest()['version'];
+
+  PlatformInfo get platformInfo => _platformInfo;
 
   void setupFileActions() {
     querySelector("#newFile").onClick.listen(newFile);
@@ -119,13 +126,9 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
-  String get appName => i18n('app_name');
-
-  PlatformInfo get platformInfo => _platformInfo;
-
   void newFile(_) {
     editor.newFile();
-    updatePath('created new file');
+    showStatus('created new file');
   }
 
   void openFile(_) {
@@ -140,11 +143,10 @@ class Spark extends Application implements FilesControllerDelegate {
           workspace.save();
         });
       }
-    });
+    }).catchError((e) => null);
   }
 
   void saveAsFile(_) {
-    // TODO: don't show error message if operation cancelled
     chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
         type: chrome_gen.ChooseEntryType.SAVE_FILE);
 
@@ -152,14 +154,25 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome_gen.ChromeFileEntry entry = result.entry;
       workspace.link(entry).then((file) {
         editor.saveAs(file);
-        updatePath('saved ${file.name}');
+        showStatus('saved ${file.name}');
         workspace.save();
       });
-    }).catchError((_) => updateError('Error on save as'));
+    }).catchError((e) => null);
   }
 
   void saveFile(_) {
     editor.save();
+  }
+
+  void buildMenu() {
+    UListElement ul = querySelector('#hotdogMenu ul');
+
+    // TODO: add a theme changer?
+
+    //ul.children.add(_createLIElement(null));
+
+    ul.children.add(_createLIElement('Check for updates...', _handleUpdateCheck));
+    ul.children.add(_createLIElement('About Spark', _handleAbout));
   }
 
   void _handleThemeEvent(Event e) {
@@ -168,22 +181,52 @@ class Spark extends Application implements FilesControllerDelegate {
     syncPrefs.setValue('aceTheme', aceTheme);
   }
 
-  void updateError(String string) {
-    querySelector("#error").innerHtml = string;
+  void showStatus(String text, {bool error: false}) {
+    Element element = querySelector("#status");
+    element.text = text;
+    element.classes.toggle('error', error);
   }
 
-  void updatePath(String text) {
-    querySelector("#path").text = text;
-  }
-
-  /*
-   * Implementation of FilesControllerDelegate interface.
-   */
-
+  // Implementation of FilesControllerDelegate interface.
   void openInEditor(Resource file) {
-    print('open in editor: ${file.name}');
     editor.setContent(file);
-    updatePath('saved ${file.name}');
+    showStatus('saved ${file.name}');
+  }
+
+  void _handleUpdateCheck() {
+    showStatus("Checking for updates...");
+
+    chrome_gen.runtime.requestUpdateCheck().then((chrome_gen.RequestUpdateCheckResult result) {
+      if (result.status == 'update_available') {
+        // result.details['version']
+        showStatus("An update is available.");
+      } else {
+        showStatus("Application is up to date.");
+      }
+    }).catchError((_) => showStatus(''));
+  }
+
+  void _handleAbout() {
+    // TODO: show a dialog
+    showStatus("${appName} version ${appVersion}");
+  }
+
+  LIElement _createLIElement(String title, [Function onClick]) {
+    LIElement li = new LIElement();
+
+    if (title == null) {
+      li.classes.add('divider');
+    } else {
+      AnchorElement a = new AnchorElement();
+      a.text = title;
+      li.children.add(a);
+    }
+
+    if (onClick != null) {
+      li.onClick.listen((_) => onClick());
+    }
+
+    return li;
   }
 }
 

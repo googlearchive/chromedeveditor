@@ -8,8 +8,12 @@
 <head>
   <meta charset="utf-8">
   <title>Spark</title>
-  <link rel="stylesheet" href="spark.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link rel="stylesheet" href="packages/bootjack/css/bootstrap.css">
+  <link rel="stylesheet" href="packages/bootjack/css/bootstrap-theme.css">
+  <link rel="stylesheet" href="spark.css">
+
   <template id="fileview-filename" >
     <div class="fileview-filename-container" style="height: 20px;">
       <div class="filename" style="position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
@@ -23,11 +27,13 @@
 
 <body>
   <div id="toolbar">
-    <button class="btn btn-default" id="newFile">New File</button>
-    <button class="btn btn-default" id="openFile">Open File...</button>
-    <button class="btn btn-default" id="saveFile">Save</button>
-    <button class="btn btn-default" id="saveAsFile">Save As...</button>
+    <button type="button" class="btn btn-primary btn-sm" id="newFile">New File</button>
+    <button type="button" class="btn btn-default btn-sm" id="openFile">Open File...</button>
+    <button type="button" class="btn btn-default btn-sm" id="saveFile">Save</button>
+    <button type="button" class="btn btn-default btn-sm" id="saveAsFile">Save As...</button>
 
+	  <span id="status"></span>
+  
     <div id="themeChooser">
       <label>Theme:</label>
       <select id="editorTheme">
@@ -37,11 +43,14 @@
         <option value="ace/theme/textmate">Textmate</option>
       </select>
     </div>
-  </div>
-
-  <div id="status">
-      <div id="path">[new file]</div>
-      <div id="error"></div>
+    
+    <div id="hotdogMenu" class="btn-group">
+      <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+        Settings <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu pull-right">
+      </ul>
+    </div>
   </div>
 
   <div id="splitview" style="">

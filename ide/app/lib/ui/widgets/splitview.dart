@@ -131,7 +131,7 @@ class SplitView {
    */
   void _resizeMoveHandler(MouseEvent event) {
     if (_resizeStarted) {
-      int value = _initialPositionX + event.screen.y - _resizeStartX;
+      int value = _initialPositionX + event.screen.x - _resizeStartX;
       if (value > _splitView.clientWidth - _rightMinSize) {
         value = _splitView.clientWidth - _rightMinSize;
       }

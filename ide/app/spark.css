@@ -14,20 +14,11 @@ body {
 }
 
 #status {
-  border-bottom: 1px solid #CCC;
+  
 }
 
-#path {
-  padding: 5px;
-  padding-left: 10px;
-  color: #777;
-}
-
-#error {
-  padding: 5px;
-  padding-top: 0px;
+#status.error {
   color: #C66;
-  float: right;
 }
 
 .fileview-filename-container {
@@ -63,6 +54,7 @@ body {
   height: 100%;
   position: absolute;
   width: 300px;
+  border-top: 1px solid #CCC;
 }
 
 #editorArea {
@@ -72,8 +64,10 @@ body {
   width: calc(100% - 301px);
 }
 
+/** TODO: flexbox works well for complex, full-screen layouts */
+
 #splitview {
-  height: calc(100% - 50px);
+	height: calc(100% - 38px);
   position: relative;  
   width: 100%;
 }
@@ -84,12 +78,13 @@ body {
 
 #themeChooser {
   float: right;
+  display: none;
 }
 
 #toolbar {
-  border-top: 1px solid #ddd;
+  margin: 4px;
 }
 
-#uiSwitcher {
+#hotdogMenu {
   float: right;  
 }
