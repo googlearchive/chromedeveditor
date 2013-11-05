@@ -63,7 +63,7 @@ class Compiler {
     CompilerResult result = new CompilerResult._();
     DateTime startTime = new DateTime.now();
 
-    return compiler.compile(provider.inputUri, _sdk.getSdkLocationUri(), null,
+    return compiler.compile(provider.inputUri, DartSdk.getSdkLocationUri(), null,
         provider.inputProvider,
         result._diagnosticHandler,
         [],
