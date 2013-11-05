@@ -9,7 +9,7 @@
   <meta charset="utf-8">
   <title>Spark</title>
   <link rel="stylesheet" href="spark.css">
-  
+  <link rel="stylesheet" href="packages/bootjack/css/bootstrap.css">
   <template id="fileview-filename" >
     <div class="fileview-filename-container" style="height: 20px;">
       <div class="filename" style="position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
@@ -23,10 +23,10 @@
 
 <body>
   <div id="toolbar">
-    <button id="newFile">New File</button>
-    <button id="openFile">Open File...</button>
-    <button id="saveFile">Save</button>
-    <button id="saveAsFile">Save As...</button>
+    <button class="btn btn-default" id="newFile">New File</button>
+    <button class="btn btn-default" id="openFile">Open File...</button>
+    <button class="btn btn-default" id="saveFile">Save</button>
+    <button class="btn btn-default" id="saveAsFile">Save As...</button>
 
     <div id="themeChooser">
       <label>Theme:</label>
@@ -66,6 +66,7 @@
   <script src="git/utils/errors.js"></script>
   <script src="git/objectstore/file_repo.js"></script>
   <script src="git/git.js"></script>
+
 
   <!-- ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
