@@ -27,28 +27,22 @@
 
 <body>
   <div id="toolbar">
-    <button type="button" class="btn btn-primary btn-sm" id="newFile">New File</button>
-    <button type="button" class="btn btn-default btn-sm" id="openFile">Open File...</button>
-    <button type="button" class="btn btn-default btn-sm" id="saveFile">Save</button>
-    <button type="button" class="btn btn-default btn-sm" id="saveAsFile">Save As...</button>
+    <button type="button" class="btn btn-primary" id="newFile">New File</button>
+    <button type="button" class="btn btn-default" id="openFile">Open File...</button>
+    <button type="button" class="btn btn-default" id="saveFile">Save</button>
+    <button type="button" class="btn btn-default" id="saveAsFile">Save As...</button>
 
 	  <span id="status"></span>
   
-    <div id="themeChooser">
-      <label>Theme:</label>
-      <select id="editorTheme">
-        <option value="ace/theme/ambiance">Ambiance</option>
-        <option value="ace/theme/monokai">Monokai</option>
-        <option value="ace/theme/pastel_on_dark">Pastel on dark</option>
-        <option value="ace/theme/textmate">Textmate</option>
-      </select>
-    </div>
-    
     <div id="hotdogMenu" class="btn-group">
-      <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown">
+      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
         Settings <span class="caret"></span>
       </button>
       <ul class="dropdown-menu pull-right">
+        <li class="disabled"><a>Change Theme &nbsp;
+          <button type="button" id="themeLeft"><strong>-</strong></button>
+          <button type="button" id="themeRight"><strong>+</strong></button></a>
+        </li>
       </ul>
     </div>
   </div>
@@ -58,6 +52,27 @@
     <div id="editorArea" class="right" min-size="200"></div>
   </div>
 
+  <!-- about dialog -->
+  <div class="modal fade" id="aboutDialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Spark</h4>
+        </div>
+        <div class="modal-body">
+          <ul>
+            <li>A Chrome Apps based development environment</li>
+            <li>Version <span id="aboutVersion"></span></li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+    
   <!-- git includes -->
   <script src="git/third_party/zlib_inflate.js"></script>
   <script src="git/third_party/zlib_deflate.js"></script>

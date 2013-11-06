@@ -82,8 +82,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     addParticipant(new _SparkSetupParticipant(this));
 
-    // TODO: this event is not being fired. A bug with chrome apps? Our js
-    // interop layer? chrome_gen?
+    // TODO: this event is not being fired. A bug with chrome apps / Dartium?
     chrome_gen.app.window.onClosed.listen((_) {
       close();
     });
@@ -118,17 +117,14 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void setupEditorThemes() {
     syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null) {
-        editor.setTheme(theme);
-        (querySelector("#editorTheme") as SelectElement).value = theme;
+      if (theme != null && AceEditor.THEMES.contains(theme)) {
+        editor.theme = theme;
       }
-      querySelector("#editorTheme").onChange.listen(_handleThemeEvent);
     });
   }
 
   void newFile(_) {
     editor.newFile();
-    showStatus('created new file');
   }
 
   void openFile(_) {
@@ -154,7 +150,6 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome_gen.ChromeFileEntry entry = result.entry;
       workspace.link(entry).then((file) {
         editor.saveAs(file);
-        showStatus('saved ${file.name}');
         workspace.save();
       });
     }).catchError((e) => null);
@@ -167,18 +162,20 @@ class Spark extends Application implements FilesControllerDelegate {
   void buildMenu() {
     UListElement ul = querySelector('#hotdogMenu ul');
 
-    // TODO: add a theme changer?
+    querySelector('#themeLeft').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: true);
+    });
 
-    //ul.children.add(_createLIElement(null));
+    querySelector('#themeRight').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: false);
+    });
+
+    ul.children.add(_createLIElement(null));
 
     ul.children.add(_createLIElement('Check for updates...', _handleUpdateCheck));
     ul.children.add(_createLIElement('About Spark', _handleAbout));
-  }
-
-  void _handleThemeEvent(Event e) {
-    String aceTheme = (e.target as SelectElement).value;
-    editor.setTheme(aceTheme);
-    syncPrefs.setValue('aceTheme', aceTheme);
   }
 
   void showStatus(String text, {bool error: false}) {
@@ -190,7 +187,14 @@ class Spark extends Application implements FilesControllerDelegate {
   // Implementation of FilesControllerDelegate interface.
   void openInEditor(Resource file) {
     editor.setContent(file);
-    showStatus('saved ${file.name}');
+  }
+
+  void _handleChangeTheme({bool themeLeft: true}) {
+    int index = AceEditor.THEMES.indexOf(editor.theme);
+    index = (index + (themeLeft ? -1 : 1)) % AceEditor.THEMES.length;
+    String themeName = AceEditor.THEMES[index];
+    editor.theme = themeName;
+    syncPrefs.setValue('aceTheme', themeName);
   }
 
   void _handleUpdateCheck() {
@@ -207,8 +211,9 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void _handleAbout() {
-    // TODO: show a dialog
-    showStatus("${appName} version ${appVersion}");
+    bootjack.Modal modal = bootjack.Modal.wire(querySelector('#aboutDialog'));
+    modal.element.querySelector('#aboutVersion').text = appVersion;
+    modal.show();
   }
 
   LIElement _createLIElement(String title, [Function onClick]) {

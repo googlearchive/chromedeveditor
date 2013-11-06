@@ -12,6 +12,8 @@ import 'package:ace/ace.dart' as ace;
 import 'workspace.dart' as workspace;
 
 class AceEditor {
+  static final THEMES = ['ambiance', 'monokai', 'pastel_on_dark', 'textmate'];
+
   ace.Editor _aceEditor;
   workspace.File _file;
 
@@ -21,6 +23,15 @@ class AceEditor {
     _aceEditor = ace.edit(querySelector('#editorArea'));
     _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
   }
+
+  String get theme => _aceEditor.theme.name;
+
+  set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
+
+  void setTheme(String theme) {
+    _aceEditor.theme = new ace.Theme(theme);
+  }
+
 
   String getPathInfo() {
     // TODO: show full path of file, not just name
@@ -52,17 +63,13 @@ class AceEditor {
     });
   }
 
-  void setTheme(String theme) {
-    _aceEditor.theme = new ace.Theme(theme);
-  }
-
   void _setContents(String string, ace.Mode mode) {
     _aceEditor.setValue(string, 0);
     _aceEditor.session.mode = mode;
     _aceEditor.navigateFileStart();
     _aceEditor.focus();
   }
-  
+
   void focus() {
     _aceEditor.focus();
   }
