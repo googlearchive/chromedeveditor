@@ -54,7 +54,7 @@ body {
   height: 100%;
   position: absolute;
   width: 300px;
-  border-top: 1px solid #CCC;
+  border-top: 1px solid white;
 }
 
 #editorArea {
@@ -75,7 +75,9 @@ body {
 }
 
 #toolbar {
-  margin: 4px;
+  padding: 4px;
+	border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
 }
 
 #hotdogMenu {
