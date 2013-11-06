@@ -97,6 +97,7 @@ class Spark extends Application implements FilesControllerDelegate {
     setupFileActions();
     setupEditorThemes();
 
+    // Init the bootjack library (a wrapper around bootstrap).
     bootjack.Bootjack.useDefault();
 
     buildMenu();

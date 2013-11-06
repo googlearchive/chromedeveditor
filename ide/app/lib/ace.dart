@@ -32,7 +32,6 @@ class AceEditor {
     _aceEditor.theme = new ace.Theme(theme);
   }
 
-
   String getPathInfo() {
     // TODO: show full path of file, not just name
     if (_file != null) return _file.name;

@@ -64,8 +64,6 @@ body {
   width: calc(100% - 301px);
 }
 
-/** TODO: flexbox works well for complex, full-screen layouts */
-
 #splitview {
 	height: calc(100% - 38px);
   position: relative;  
