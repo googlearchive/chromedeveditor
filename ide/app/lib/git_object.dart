@@ -246,8 +246,8 @@ class LooseObject {
       for (i = 0; i < data.length; ++i) {
         if (data[i] != 0)
           headChars.add(UTF8.decode([data[i]]));
-          else
-            break;
+        else
+          break;
       }
       header = headChars.join(' ');
 
