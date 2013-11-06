@@ -6,7 +6,8 @@
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
-    "128": "images/spark.png"
+    "16": "images/spark16.png",
+    "128": "images/spark128.png"
   },
   "app": {
     "background": {
