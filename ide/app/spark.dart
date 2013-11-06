@@ -174,7 +174,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     ul.children.add(_createLIElement(null));
 
-    ul.children.add(_createLIElement('Check for updates...', _handleUpdateCheck));
+    ul.children.add(_createLIElement('Check For Updates…', _handleUpdateCheck));
     ul.children.add(_createLIElement('About Spark', _handleAbout));
   }
 
