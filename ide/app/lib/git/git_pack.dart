@@ -13,7 +13,7 @@ import 'dart:typed_data';
 import 'package:crc32/crc32.dart' as crc;
 
 import 'git_objectstore.dart';
-import '../zlib.dart';
+import 'zlib.dart';
 
 /**
  * Encapsulates a git pack object.
@@ -44,7 +44,7 @@ class PackObjectHeader {
   int size;
   int type;
   int offset;
-  
+
   PackObjectHeader(int size, int type, int offset) {
     this.size = size;
     this.type = type;
@@ -57,25 +57,25 @@ class PackObjectHeader {
  * TODO(grv) : add unittests.
  */
 class Pack {
-  
+
   Uint8List data;
   int _offset = 0;
   ObjectStore _store;
   List<PackObject> objects;
- 
+
   Pack(Uint8List data, ObjectStore store) {
     this.data = data;
     //this._store = store;
   }
-  
+
   Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
-  
+
   Uint8List _rest() => data.sublist(_offset);
-  
+
   void _advance(int length) {
     _offset += length;
   }
-   
+
   void _matchPrefix() {
     if (UTF8.decode(_peek(4)) == 'PACK') {
       _advance(4);
@@ -84,7 +84,7 @@ class Pack {
       throw "Couldn't match PACK";
     }
   }
-  
+
   /**
    * Parses and returns number of git objects from a pack object.
    */
@@ -97,26 +97,26 @@ class Pack {
     _advance(4);
     return num;
   }
-  
+
   PackObjectHeader _getObjectHeader() {
     int objectStartoffset = _offset;
     int headByte = data[_offset++];
     int type = (0x70 & headByte) >> 4;
     bool needMore = (0x80 & headByte) > 0;
-    
+
     int size = (headByte & 0xf);
     int bitsToShift = 4;
-    
+
     while (needMore) {
       headByte = data[_offset++];
       needMore = (0x80 & headByte) > 0;
       size |= ((headByte & 0x7f) << bitsToShift);
       bitsToShift += 7;
     }
-    
+
     return new PackObjectHeader(size, type, objectStartoffset);
   }
-  
+
   /**
    * Returns a SHA1 hash of given byete stream.
    */
@@ -124,8 +124,8 @@ class Pack {
     //TODO(grv) : to be implemented.
     throw "to be implemented.";
   }
-  
-  
+
+
   String _padString(String str, int width, String padding) {
     String result = str;
     for (int i = 0; i < width - str.length; ++i) {
@@ -133,57 +133,57 @@ class Pack {
     }
     return result;
   }
-  
+
   void _matchVersion(int expectedVersion) {
     int version = _peek(4)[3];
     _advance(4);
     if (version != expectedVersion) {
       // TODO(grv) : throw custom exception.
-      String msg = 
+      String msg =
           "expected packfile version ${expectedVersion} but got ${version}";
           throw msg;
     }
   }
-  
+
   int findDeltaBaseOffset(PackObjectHeader header) {
     List<String> offsetBytes = [];
     bool needMore = false;
-    
+
     do {
       String hintAndOffsetBits = _padString(
           _peek(1)[0].toRadixString(2), 8, '0');
       needMore = (hintAndOffsetBits.substring(1,8) == '1');
       offsetBytes.add(hintAndOffsetBits.substring(1, 8));
-      _advance(1);  
+      _advance(1);
     } while(needMore);
-    
+
     String longOffsetString = offsetBytes.reduce((String memo,
         String el) => memo + el);
-    
+
     int offsetDelta = int.parse(longOffsetString, radix: 2);
-    
+
     for (int i = 1; i < offsetBytes.length - 1; ++i) {
       offsetDelta += pow(2, 7 * i);
     }
-    
+
     return header.offset - offsetDelta;
   }
-  
-  
+
+
   ByteBuffer applyDelta(Uint8List baseObjBytes, Uint8List deltaObjBytes) {
     // TODO(grv) : implement.
     throw "to be implemented.";
-    
+
   }
-  
+
   String objectHash(int type, ByteBuffer data) {
     // TODO(grv) : implement.
     throw "to be implmented.";
   }
- 
+
   Future expandDeltifiedObject(PackObject object) {
     Completer completer = new Completer();
-    
+
     PackObject doExpand(PackObject baseObj, PackObject deltaObj) {
       deltaObj.type = baseObj.type;
       deltaObj.data = applyDelta(new Uint8List.view(baseObj.data),
@@ -191,7 +191,7 @@ class Pack {
       deltaObj.sha = objectHash(deltaObj.type, deltaObj.data);
       return deltaObj;
     }
-    
+
     if (object.type == PackedTypes.OFS_DELTA) {
       PackObject baseObj = _matchObjectAtOffset(object.desiredOffset);
       switch (baseObj.type){
@@ -201,7 +201,7 @@ class Pack {
               PackObject expandedObject) => doExpand(expandedObject, object));
         default:
           completer.complete(doExpand(baseObj, object));
-      } 
+      }
     } else {
       // TODO(grv) : desing object class.
       /*_store.retrieveRawObject(object.baseSha, 'ArrayBuffer').then((baseObj) {
@@ -210,17 +210,17 @@ class Pack {
     }
     return completer.future;
   }
-  
+
   ZlibResult _uncompressObject(int objOffset, int uncompressedLength) =>
       Zlib.inflate(data.sublist(objOffset), uncompressedLength);
-  
+
   PackObject _matchObjectData(PackObjectHeader header) {
-    
+
     PackObject object = new PackObject();
-    
+
     object.offset = header.offset;
     object.type = header.type;
-    
+
     switch (header.type) {
       case PackedTypes.OFS_DELTA:
         object.desiredOffset = findDeltaBaseOffset(header);
@@ -235,36 +235,36 @@ class Pack {
       default:
         break;
     }
-    
+
     ZlibResult objData = _uncompressObject(_offset, header.size);
     object.data = new Uint8List.fromList(objData.buffer.getBytes()).buffer;
-    
+
     _advance(objData.expectedLength);
     return object;
   }
-  
+
   PackObject _matchObjectAtOffset(int startOffset) {
     _offset = startOffset;
     return _matchObjectData(_getObjectHeader());
   }
-  
+
   // TODO(grv) : add progress.
   Future parseAll() {
     Completer completer = new Completer();
-    
+
     try {
       int numObjects;
       List<PackObject> deferredObjects = [];
       List<PackObject> objects = [];
-      
+
       _matchPrefix();
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
-      
+
       for (int i = 0; i < numObjects; ++i) {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = crc.CRC32.compute(data.sublist(object.offset, _offset));
-        
+
         // hold on to the data for delta style objects.
         switch (object.type) {
           case PackedTypes.OFS_DELTA:
@@ -277,27 +277,27 @@ class Pack {
             // TODO(grv) : add progress.
             break;
         }
-        
+
         objects.add(object);
-        
+
       }
-      
+
       return Future.forEach(deferredObjects, (PackObject obj) {
         return expandDeltifiedObject(obj).then((PackObject deltifiedObj) {
           deltifiedObj.data = null;
-          // TODO(grv) : add progress.    
-        });       
-      });          
+          // TODO(grv) : add progress.
+        });
+      });
     } catch (e) {
       // TODO(grv) : throw custom error.
       throw e;
     }
     return completer.future;
   }
-  
+
   Future buildPack(commits, repo) {
    // TODO(grv) : implement
-    
+
     throw "to be implemented";
   }
 
