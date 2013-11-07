@@ -12,8 +12,8 @@ import 'dart:typed_data';
 
 import 'package:crc32/crc32.dart' as crc;
 
-//import 'git_objectstore.dart';
-import 'zlib.dart';
+import 'git_objectstore.dart';
+import '../zlib.dart';
 
 /**
  * Encapsulates a git pack object.
@@ -60,10 +60,10 @@ class Pack {
   
   Uint8List data;
   int _offset = 0;
-  //ObjectStore _store;
+  ObjectStore _store;
   List<PackObject> objects;
  
-  Pack(Uint8List data, /*ObjectStore*/ store) {
+  Pack(Uint8List data, ObjectStore store) {
     this.data = data;
     //this._store = store;
   }
