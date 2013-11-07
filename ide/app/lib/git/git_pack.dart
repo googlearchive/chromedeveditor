@@ -13,7 +13,7 @@ import 'dart:typed_data';
 import 'package:crc32/crc32.dart' as crc;
 
 //import 'git_objectstore.dart';
-import 'zlib.dart';
+import '../zlib.dart';
 
 /**
  * Encapsulates a git pack object.
