@@ -394,7 +394,9 @@ void _createDirectoryListings(Directory dir) {
     }
   };
 
-  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files));
+  files.sort();
+
+  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files) + '\n');
 }
 
 void _printSize(GrinderContext context, File file) {
