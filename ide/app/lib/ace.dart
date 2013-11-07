@@ -20,7 +20,9 @@ class AceEditor {
   static bool get available => js.context['ace'] != null;
 
   AceEditor() {
-    _aceEditor = ace.edit(querySelector('#editorArea'));
+    var editorContainer = querySelector('#editorArea');
+    editorContainer.onScroll.listen(_resizedHandler);
+    _aceEditor = ace.edit(editorContainer);
     _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
   }
 
@@ -71,5 +73,9 @@ class AceEditor {
 
   void focus() {
     _aceEditor.focus();
+  }
+
+  void _resizedHandler(Event event) {
+    _aceEditor.resize(false);
   }
 }

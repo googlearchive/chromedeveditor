@@ -3,14 +3,19 @@
 /* license that can be found in the LICENSE file. */
 
 html {
-  height: 100%;
 }
 
 body {
-  height: 100%;
   margin: 0px;
   padding: 0px;
   overflow: hidden;
+  display: flex;
+  flex-flow: column;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 #status {
@@ -51,27 +56,45 @@ body {
 }
 
 #fileViewArea {
-  height: 100%;
-  position: absolute;
   width: 300px;
   border-top: 1px solid white;
+  display: flex;
+  flex-flow: column;
+}
+
+#fileViewArea .listview-container {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: scroll;
+  position: relative;
 }
 
 #editorArea {
-  height: 100%;
-  left: 300px;
-  position: absolute;
-  width: calc(100% - 301px);
+  flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 
 #splitview {
-	height: calc(100% - 38px);
-  position: relative;  
-  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-flow: row;
 }
 
 #splitview .splitter {
   background-color: #ddd;
+  width: 1px;
+  position: relative;
+}
+
+#splitview .splitter-handle {
+  position: absolute;
+  cursor: ew-resize;
+  left: -2px;
+  right: -2px;
+  top: -2px;
+  bottom: -2px;
+  z-index: 100;
 }
 
 #toolbar {

@@ -15,8 +15,8 @@ import '../utils/html_utils.dart';
 class SplitView {
   // When the separator is being moved.
   bool _resizeStarted = false;
-  int _resizeStartX;
-  int _initialPositionX;
+  int _resizeStart;
+  int _initialPosition;
   // The element containing left and right view.
   Element _splitView;
   // The separator of between the views.
@@ -44,11 +44,13 @@ class SplitView {
     _splitView = splitView;
     _leftView = splitView.querySelector('.left');
     _rightView = splitView.querySelector('.right');
+    _splitter = splitView.querySelector('.splitter');
+    _splitterHandle = _splitter.querySelector('.splitter-handle');
 
     // Is the separator horizontal or vertical?
     // It will depend on the initial layout of the left/right views.
     _horizontal =
-        (getAbsolutePosition(_leftView).x ==getAbsolutePosition(_rightView).x);
+        (getAbsolutePosition(_leftView).x == getAbsolutePosition(_rightView).x);
 
     // Minimum size of the views.
     String minSizeString = _leftView.attributes['min-size'];
@@ -59,37 +61,6 @@ class SplitView {
     if (minSizeString != null) {
       _rightMinSize = int.parse(minSizeString);
     }
-
-    // Separator and drag zone of the separator.
-    const int splitterMargin = 3;
-    _splitter = new DivElement();
-    _splitter.classes.add('splitter');
-    _splitter.style
-      ..height = '100%'
-      ..width = '1px'
-      ..position = 'absolute';
-    _splitView.children.add(_splitter);
-    _splitterHandle = new DivElement();
-    _splitterHandle.classes.add('splitter-handle');
-    _splitterHandle.style
-      ..position = 'relative'
-      ..height = '100%'
-      ..cursor = 'ew-resize'
-      ..zIndex = '100';
-    _splitter.children.add(_splitterHandle);
-
-    if (_isVertical()) {
-      _splitterHandle.style
-        ..left = (-splitterMargin).toString() + 'px'
-        ..width = (splitterMargin * 2).toString() + 'px';
-    } else {
-      _splitterHandle.style
-        ..left = (-splitterMargin).toString() + 'px'
-        ..width = (splitterMargin * 2).toString() + 'px';
-    }
-
-    // Set initial position of the separator.
-    _setSplitterPosition(_leftView.clientWidth);
 
     document
       ..onMouseDown.listen(_resizeDownHandler)
@@ -109,20 +80,16 @@ class SplitView {
    * Event handler for mouse button down.
    */
   void _resizeDownHandler(MouseEvent event) {
-    if (_isHorizontal()) {
-      // splitter is horizontal.
-      if (isMouseLocationInElement(event, _splitterHandle, 0, 0)) {
-        _resizeStarted = true;
+    // splitter is vertical.
+    if (event.button == 0 && event.target == _splitterHandle) {
+      _resizeStarted = true;
+      if (_isVertical()) {
+        _resizeStart = event.screen.x;
+        _initialPosition = _leftView.offsetWidth;
+      } else {
+        _resizeStartY = event.screen.y;
+        _initialPosition = _leftView.offsetHeight;
       }
-    } else {
-      // splitter is vertical.
-      if (isMouseLocationInElement(event, _splitterHandle, 0, 0)) {
-        _resizeStarted = true;
-      }
-    }
-    if (_resizeStarted) {
-      _resizeStartX = event.screen.x;
-      _initialPositionX = _splitter.offsetLeft;
     }
   }
 
@@ -131,7 +98,8 @@ class SplitView {
    */
   void _resizeMoveHandler(MouseEvent event) {
     if (_resizeStarted) {
-      int value = _initialPositionX + event.screen.x - _resizeStartX;
+      int value = _initialPosition + event.screen.x - _resizeStart;
+
       if (value > _splitView.clientWidth - _rightMinSize) {
         value = _splitView.clientWidth - _rightMinSize;
       }
@@ -151,16 +119,27 @@ class SplitView {
     }
   }
 
+  int _getSplitterPosition() {
+    if (_isVertical()) {
+      return int.parse(_leftView.style.width);
+    } else {
+      return int.parse(_leftView.style.height);
+    }
+  }
+
   /*
    * Set the new location of the separator. It will also change the size of
    * the left view and the right view, depending on the location of the
    * separator.
    */
   void _setSplitterPosition(int position) {
-    _leftView.style.width = position.toString() + 'px';
-    _splitter.style.left = position.toString() + 'px';
-    _rightView.style
-      ..left = (position + 1).toString() + 'px'
-      ..width = 'calc(100% - ' + (position + 1).toString() + 'px)';
+    if (_isVertical()) {
+      _leftView.style.width = position.toString() + 'px';
+    } else {
+      _leftView.style.height = position.toString() + 'px';
+    }
+    _rightView.dispatchEvent(new Event('scroll'));
+    _rightView.style.width = 'auto';
+    _rightView.style.height = 'auto';
   }
 }
