@@ -11,6 +11,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crc32/crc32.dart' as crc;
+import 'package:crypto/crypto.dart' as crypto;
+import 'package:utf/utf.dart';
 
 import 'git_objectstore.dart';
 import 'zlib.dart';
@@ -19,7 +21,7 @@ import 'zlib.dart';
  * Encapsulates a git pack object.
  */
 class PackObject {
-  String sha;
+  List<int> sha;
   String baseSha;
   int crc;
   int offset;
@@ -35,6 +37,32 @@ class PackedTypes {
   static const TAG = 4;
   static const OFS_DELTA = 6;
   static const REF_DELTA = 7;
+  
+  static String getTypeString(int type) {
+    switch(type) {
+      case COMMIT:
+        return "commit";
+        break;
+      case TREE:
+        return "tree";
+        break;
+      case BLOB:
+        return "blob";
+        break;
+      case TAG:
+        return "tag";
+        break;
+      case OFS_DELTA:
+        return "ofs_delta";
+        break;
+      case REF_DELTA:
+        return "ref_delta";
+        break;
+      default:
+        throw "unsupported pack type.";
+        break;
+    }
+  }
 }
 
 /**
@@ -121,8 +149,18 @@ class Pack {
    * Returns a SHA1 hash of given byete stream.
    */
   List<int> getObjectHash(int type, ByteBuffer content) {
-    //TODO(grv) : to be implemented.
-    throw "to be implemented.";
+    Uint8List contentData = new Uint8List.view(content);
+    List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
+        + "${contentData.elementSizeInBytes}\0");
+    Uint8List fullContent = 
+        new Uint8List(header.length + contentData.length);
+    
+    fullContent.setAll(0, header);
+    fullContent.setAll(header.length, contentData);
+
+    crypto.SHA1 sha1 = new crypto.SHA1();
+    sha1.newInstance().add(fullContent);
+    return sha1.close();
   }
 
 
@@ -152,7 +190,7 @@ class Pack {
     do {
       String hintAndOffsetBits = _padString(
           _peek(1)[0].toRadixString(2), 8, '0');
-      needMore = (hintAndOffsetBits.substring(1,8) == '1');
+      needMore = (hintAndOffsetBits[0] == '1');
       offsetBytes.add(hintAndOffsetBits.substring(1, 8));
       _advance(1);
     } while(needMore);
@@ -160,9 +198,10 @@ class Pack {
     String longOffsetString = offsetBytes.reduce((String memo,
         String el) => memo + el);
 
+
     int offsetDelta = int.parse(longOffsetString, radix: 2);
 
-    for (int i = 1; i < offsetBytes.length - 1; ++i) {
+    for (int i = 1; i < offsetBytes.length; ++i) {
       offsetDelta += pow(2, 7 * i);
     }
 
@@ -176,11 +215,6 @@ class Pack {
 
   }
 
-  String objectHash(int type, ByteBuffer data) {
-    // TODO(grv) : implement.
-    throw "to be implmented.";
-  }
-
   Future expandDeltifiedObject(PackObject object) {
     Completer completer = new Completer();
 
@@ -188,7 +222,7 @@ class Pack {
       deltaObj.type = baseObj.type;
       deltaObj.data = applyDelta(new Uint8List.view(baseObj.data),
           new Uint8List.view(deltaObj.data));
-      deltaObj.sha = objectHash(deltaObj.type, deltaObj.data);
+      deltaObj.sha = getObjectHash(deltaObj.type, deltaObj.data);
       return deltaObj;
     }
 
@@ -260,10 +294,11 @@ class Pack {
       _matchPrefix();
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
-
+      
       for (int i = 0; i < numObjects; ++i) {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = crc.CRC32.compute(data.sublist(object.offset, _offset));
+
 
         // hold on to the data for delta style objects.
         switch (object.type) {
@@ -272,14 +307,12 @@ class Pack {
             deferredObjects.add(object);
             break;
           default:
-            object.sha = objectHash(object.type, object.data);
+            object.sha = getObjectHash(object.type, object.data);
             object.data = null;
             // TODO(grv) : add progress.
             break;
         }
-
         objects.add(object);
-
       }
 
       return Future.forEach(deferredObjects, (PackObject obj) {

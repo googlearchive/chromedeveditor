@@ -95,11 +95,11 @@ class PackIndex {
     _numObjects = numObjects;    
   }
   
-  int _compareShas(String sha1, String sha2) {
+  int _compareShas(List<int> sha1, List<int> sha2) {
     // assume first byte has been matched in the fan out table.
     for (var i =1; i < 20; ++i) {
       if (sha1[i] != sha2[i]) {
-        return sha1.codeUnitAt(i) - sha2.codeUnitAt(i);
+        return sha1[i] - sha2[i];
       }
     }
     return 0;
@@ -110,8 +110,8 @@ class PackIndex {
     return _shaList.sublist(byteOffset, byteOffset + 20);
   }
   
-  int getObjectOffset(String sha) {
-    int fanIndex = sha.codeUnitAt(0);
+  int getObjectOffset(List<int> sha) {
+    int fanIndex = sha[0];
     
     int sliceStart = fanIndex > 0 ? (_data.getUint32(8 +
         (fanIndex - 1) * 4)) : 0;
@@ -150,7 +150,7 @@ class PackIndex {
   /**
    * Creates a pack file index and returns the bytestream.
    */
-  Uint8List writePackIndex(List<PackObject> objects, String packSha) {
+  Uint8List writePackIndex(List<PackObject> objects, List<int> packSha) {
     int size = 4 + 4 + (256 * 4) + (objects.length * 20) + (objects.length * 4)
         + (objects.length * 4) + (20 * 2);
     
@@ -176,7 +176,7 @@ class PackIndex {
     int current = 0;
     
     for (int i = 0; i < objects.length; ++i) {
-      int next = objects[i].sha.codeUnitAt(0);
+      int next = objects[i].sha[0];
       if (next != current) {
         for (int j = current; j < next; ++j) {
           data.setUint32(byteOffset + (j * 4), i);
@@ -193,7 +193,7 @@ class PackIndex {
     // Write list of shas.
     objects.forEach((PackObject obj) {
       for (int j = 0; j < 20; ++j) {
-        data.setUint8(byteOffset++, obj.sha.codeUnitAt(j));
+        data.setUint8(byteOffset++, obj.sha[j]);
       }
     });
     
@@ -212,7 +212,7 @@ class PackIndex {
     
     // Write pack file sha.
     for (int i = 0; i < 20; ++i) {
-      data.setUint8(byteOffset++, packSha.codeUnitAt(i));
+      data.setUint8(byteOffset++, packSha[i]);
     }
     
     // Write sha for all of the above.
