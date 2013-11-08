@@ -18,6 +18,7 @@ import 'package:unittest/unittest.dart' as unittest;
 
 import 'ace_test.dart' as ace_test;
 import 'analytics_test.dart' as analytics_test;
+import 'analyzer_test.dart' as analyzer_test;
 import 'app_test.dart' as app_test;
 import 'compiler_test.dart' as compiler_test;
 import 'files_test.dart' as files_test;
@@ -47,19 +48,19 @@ void _defineTests() {
 
   ace_test.main();
   analytics_test.main();
+  analyzer_test.main();
   app_test.main();
   compiler_test.main();
   files_test.main();
+  gitobject_test.main();
   git_test.main();
-  utils_test.main();
   preferences_test.main();
   sdk_test.main();
   server_test.main();
   tcp_test.main();
-  zlib_test.main();
-  gitobject_test.main();
   utils_test.main();
   workspace_test.main();
+  zlib_test.main();
 }
 
 /**

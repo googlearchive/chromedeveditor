@@ -65,8 +65,6 @@ void setup(GrinderContext context) {
  */
 void compile(GrinderContext context) {
   _dart2jsCompile(context, new Directory('app'), 'spark.dart');
-  context.log('');
-  _dart2jsCompile(context, new Directory('app'), 'spark_test.dart');
 }
 
 /**
@@ -396,7 +394,9 @@ void _createDirectoryListings(Directory dir) {
     }
   };
 
-  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files));
+  files.sort();
+
+  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files) + '\n');
 }
 
 void _printSize(GrinderContext context, File file) {

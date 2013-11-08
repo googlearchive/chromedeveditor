@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
 
+import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'lib/ace.dart';
@@ -44,10 +45,8 @@ Future<bool> isTestMode() {
 void main() {
   isTestMode().then((testMode) {
     if (testMode) {
-      /*
-       * Start the app, show the test UI, and connect to a test server if one is
-       * available.
-       */
+      // Start the app, show the test UI, and connect to a test server if one is
+      // available.
       SparkTest app = new SparkTest();
 
       app.start().then((_) {
@@ -56,9 +55,7 @@ void main() {
         app.connectToListener();
       });
     } else {
-      /*
-       * Start the app in normal mode.
-       */
+      // Start the app in normal mode.
       Spark spark = new Spark();
       spark.start();
     }
@@ -85,8 +82,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     addParticipant(new _SparkSetupParticipant(this));
 
-    // TODO: this event is not being fired. A bug with chrome apps? Our js
-    // interop layer? chrome_gen?
+    // TODO: this event is not being fired. A bug with chrome apps / Dartium?
     chrome_gen.app.window.onClosed.listen((_) {
       close();
     });
@@ -100,7 +96,18 @@ class Spark extends Application implements FilesControllerDelegate {
 
     setupFileActions();
     setupEditorThemes();
+
+    // Init the bootjack library (a wrapper around bootstrap).
+    bootjack.Bootjack.useDefault();
+
+    buildMenu();
   }
+
+  String get appName => i18n('app_name');
+
+  String get appVersion => chrome_gen.runtime.getManifest()['version'];
+
+  PlatformInfo get platformInfo => _platformInfo;
 
   void setupFileActions() {
     querySelector("#newFile").onClick.listen(newFile);
@@ -111,21 +118,14 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void setupEditorThemes() {
     syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null) {
-        editor.setTheme(theme);
-        (querySelector("#editorTheme") as SelectElement).value = theme;
+      if (theme != null && AceEditor.THEMES.contains(theme)) {
+        editor.theme = theme;
       }
-      querySelector("#editorTheme").onChange.listen(_handleThemeEvent);
     });
   }
 
-  String get appName => i18n('app_name');
-
-  PlatformInfo get platformInfo => _platformInfo;
-
   void newFile(_) {
     editor.newFile();
-    updatePath('created new file');
   }
 
   void openFile(_) {
@@ -140,11 +140,10 @@ class Spark extends Application implements FilesControllerDelegate {
           workspace.save();
         });
       }
-    });
+    }).catchError((e) => null);
   }
 
   void saveAsFile(_) {
-    // TODO: don't show error message if operation cancelled
     chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
         type: chrome_gen.ChooseEntryType.SAVE_FILE);
 
@@ -152,38 +151,88 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome_gen.ChromeFileEntry entry = result.entry;
       workspace.link(entry).then((file) {
         editor.saveAs(file);
-        updatePath('saved ${file.name}');
         workspace.save();
       });
-    }).catchError((_) => updateError('Error on save as'));
+    }).catchError((e) => null);
   }
 
   void saveFile(_) {
     editor.save();
   }
 
-  void _handleThemeEvent(Event e) {
-    String aceTheme = (e.target as SelectElement).value;
-    editor.setTheme(aceTheme);
-    syncPrefs.setValue('aceTheme', aceTheme);
+  void buildMenu() {
+    UListElement ul = querySelector('#hotdogMenu ul');
+
+    querySelector('#themeLeft').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: true);
+    });
+
+    querySelector('#themeRight').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: false);
+    });
+
+    ul.children.add(_createLIElement(null));
+
+    ul.children.add(_createLIElement('Check For Updates…', _handleUpdateCheck));
+    ul.children.add(_createLIElement('About Spark', _handleAbout));
   }
 
-  void updateError(String string) {
-    querySelector("#error").innerHtml = string;
+  void showStatus(String text, {bool error: false}) {
+    Element element = querySelector("#status");
+    element.text = text;
+    element.classes.toggle('error', error);
   }
 
-  void updatePath(String text) {
-    querySelector("#path").text = text;
-  }
-
-  /*
-   * Implementation of FilesControllerDelegate interface.
-   */
-
+  // Implementation of FilesControllerDelegate interface.
   void openInEditor(Resource file) {
-    print('open in editor: ${file.name}');
     editor.setContent(file);
-    updatePath('saved ${file.name}');
+  }
+
+  void _handleChangeTheme({bool themeLeft: true}) {
+    int index = AceEditor.THEMES.indexOf(editor.theme);
+    index = (index + (themeLeft ? -1 : 1)) % AceEditor.THEMES.length;
+    String themeName = AceEditor.THEMES[index];
+    editor.theme = themeName;
+    syncPrefs.setValue('aceTheme', themeName);
+  }
+
+  void _handleUpdateCheck() {
+    showStatus("Checking for updates...");
+
+    chrome_gen.runtime.requestUpdateCheck().then((chrome_gen.RequestUpdateCheckResult result) {
+      if (result.status == 'update_available') {
+        // result.details['version']
+        showStatus("An update is available.");
+      } else {
+        showStatus("Application is up to date.");
+      }
+    }).catchError((_) => showStatus(''));
+  }
+
+  void _handleAbout() {
+    bootjack.Modal modal = bootjack.Modal.wire(querySelector('#aboutDialog'));
+    modal.element.querySelector('#aboutVersion').text = appVersion;
+    modal.show();
+  }
+
+  LIElement _createLIElement(String title, [Function onClick]) {
+    LIElement li = new LIElement();
+
+    if (title == null) {
+      li.classes.add('divider');
+    } else {
+      AnchorElement a = new AnchorElement();
+      a.text = title;
+      li.children.add(a);
+    }
+
+    if (onClick != null) {
+      li.onClick.listen((_) => onClick());
+    }
+
+    return li;
   }
 }
 

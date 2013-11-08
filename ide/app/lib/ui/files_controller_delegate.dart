@@ -6,6 +6,7 @@
  * This class is the list of callbacks methods needed for
  * `FilesControllerDelegate`.
  */
+library spark.ui.widgets.files_controller_delegate;
 
 import '../workspace.dart';
 

@@ -10,12 +10,24 @@ import '../lib/utils.dart';
 
 main() {
   group('utils', () {
-    test('i18n_found', () {
-      expect(i18n('app_name'), equals('Spark'));
+    test('i18n found', () {
+      expect(i18n('app_name'), 'Spark');
     });
 
-    test('i18n_not_found', () {
-      expect(i18n('not_found'), equals(''));
+    test('i18n not found', () {
+      expect(i18n('not_found'), '');
+    });
+
+    test('baseName', () {
+      expect(baseName('foo'), 'foo');
+      expect(baseName('foo/bar'), 'bar');
+      expect(baseName('foo/bar/baz'), 'baz');
+    });
+
+    test('dirName', () {
+      expect(dirName('foo'), '');
+      expect(dirName('foo/bar'), 'foo');
+      expect(dirName('foo/bar/baz'), 'foo/bar');
     });
   });
 }

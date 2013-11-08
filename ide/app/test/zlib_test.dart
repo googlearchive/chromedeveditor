@@ -7,11 +7,10 @@ library zlib_test;
 import 'dart:convert';
 import 'dart:typed_data';
 
-
 import 'package:unittest/unittest.dart';
 import 'package:utf/utf.dart';
 
-import '../lib/zlib.dart';
+import '../lib/git/zlib.dart';
 
 final String ZLIB_INPUT_STRING = "This is a test.";
 final String ZLIB_DEFLATE_OUTPUT =
