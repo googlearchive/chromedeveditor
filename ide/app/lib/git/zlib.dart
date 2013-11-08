@@ -4,6 +4,8 @@
 
 library git.zlib;
 
+import 'dart:html';
+
 import 'dart:js' as js;
 import 'dart:typed_data';
 
