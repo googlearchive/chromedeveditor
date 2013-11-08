@@ -135,7 +135,7 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome_gen.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
-        workspace.link(entry).then((file) {
+        workspace.link(entry, false).then((file) {
           _filesController.selectLastFile();
           workspace.save();
         });
@@ -149,7 +149,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
       chrome_gen.ChromeFileEntry entry = result.entry;
-      workspace.link(entry).then((file) {
+      workspace.link(entry, false).then((file) {
         editor.saveAs(file);
         workspace.save();
       });
