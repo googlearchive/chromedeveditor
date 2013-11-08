@@ -18,7 +18,6 @@ import 'widgets/treeview_delegate.dart';
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
-  //ListView _listView;
   TreeView _treeView;
   Workspace _workspace;
   List<Resource> _files;
@@ -55,7 +54,7 @@ class FilesController implements TreeViewDelegate {
     _delegate.openInEditor(_files.first);
   }
 
-  // TreeViewDelegate
+  // Implementation of [TreeViewDelegate] interface.
 
   bool treeViewHasChildren(TreeView view, String nodeUID) {
     if (nodeUID == null) {
@@ -85,9 +84,7 @@ class FilesController implements TreeViewDelegate {
     return new FileItemCell(_filesMap[nodeUID].name);
   }
 
-  int treeViewHeightForNode(TreeView view, String nodeUID) {
-    return 20;
-  }
+  int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUIDs) {
     if (nodeUIDs.isEmpty) {
@@ -98,6 +95,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs) {
+    // Do nothing.
   }
 
   /**

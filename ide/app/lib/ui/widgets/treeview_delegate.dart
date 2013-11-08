@@ -5,14 +5,13 @@
 library spark.ui.widgets.treeview_delegate;
 
 import 'treeview.dart';
-import 'listview_delegate.dart';
 import 'listview_cell.dart';
 
 /**
  * This class is the list of callbacks methods needed for `TreeView`.
  */
 
-abstract class TreeViewDelegate extends ListViewDelegate {
+abstract class TreeViewDelegate {
   /**
     * Returns the UID string for the n-th children of a node given by
     * UID (`nodeUID`). `nodeUID` is null for the root node.

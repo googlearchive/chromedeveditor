@@ -31,13 +31,17 @@ body {
 
 .fileview-filename-container .menu {
   opacity: 0.0;
-  position: absolute; right: 0; width: 15px;
+  position: absolute;
+  right: 0;
+  width: 15px;
 }
 
 .fileview-filename-container .filename {
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   width: 100%;
-  /*padding-left: 10px;*/
-  position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
 }
 
 .fileview-filename-container:hover .filename {
