@@ -10,7 +10,7 @@ import 'dart:html';
  *  Returns position of the element within the page.
  */
 Point getAbsolutePosition(Element element) {
-  Point result = new Point();
+  Point result = new Point(0, 0);
   while (element != null) {
     result += element.offset.topLeft;
     element = element.offsetParent;
