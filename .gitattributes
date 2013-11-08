@@ -1,0 +1,8 @@
+# Line endings
+
+* text=auto
+*.dart text
+*.js text
+*.html
+*.png binary
+*.jpg binary
