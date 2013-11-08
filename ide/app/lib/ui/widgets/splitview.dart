@@ -44,8 +44,15 @@ class SplitView {
     _splitView = splitView;
     _leftView = splitView.querySelector('.left');
     _rightView = splitView.querySelector('.right');
-    _splitter = splitView.querySelector('.splitter');
-    _splitterHandle = _splitter.querySelector('.splitter-handle');
+
+    _splitter = new DivElement();
+    _splitter.classes.add('.splitter');
+
+    _splitterHandle = new DivElement();
+    _splitterHandle.classes.add('.splitter-handle');
+    _splitter.children.add(_splitterHandle);
+
+    _splitView.children.insert(1, _splitter);
 
     // Is the separator horizontal or vertical?
     // It will depend on the initial layout of the left/right views.
@@ -87,7 +94,7 @@ class SplitView {
         _resizeStart = event.screen.x;
         _initialPosition = _leftView.offsetWidth;
       } else {
-        _resizeStartY = event.screen.y;
+        _resizeStart = event.screen.y;
         _initialPosition = _leftView.offsetHeight;
       }
     }
@@ -116,14 +123,6 @@ class SplitView {
   void _resizeUpHandler(MouseEvent event) {
     if (_resizeStarted) {
       _resizeStarted = false;
-    }
-  }
-
-  int _getSplitterPosition() {
-    if (_isVertical()) {
-      return int.parse(_leftView.style.width);
-    } else {
-      return int.parse(_leftView.style.height);
     }
   }
 
