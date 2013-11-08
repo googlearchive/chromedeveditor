@@ -83,3 +83,7 @@ body {
 #hotdogMenu {
   float: right;  
 }
+
+#hotdogMenu li {
+	min-width: 16em;
+}

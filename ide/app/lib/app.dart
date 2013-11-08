@@ -21,6 +21,8 @@ abstract class Application {
   LifecycleState _state;
   List<LifecycleParticipant> _participants = [];
 
+  Future _closing;
+
   Application();
 
   /**
@@ -65,11 +67,15 @@ abstract class Application {
    * can be used to determine when the application has completed closing.
    */
   Future close() {
+    if (_closing != null) return _closing;
+
     // transition to CLOSING
-    return _transition(LifecycleState.CLOSING, _participants.toList()).then((_) {
+    _closing = _transition(LifecycleState.CLOSING, _participants.toList()).then((_) {
       // transition to CLOSED
       return _transition(LifecycleState.CLOSED, _participants.toList());
     });
+
+    return _closing;
   }
 
   Future _transition(final LifecycleState newState,
