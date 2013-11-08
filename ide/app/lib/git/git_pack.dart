@@ -294,7 +294,7 @@ class Pack {
       _matchPrefix();
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
-      
+
       for (int i = 0; i < numObjects; ++i) {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = crc.CRC32.compute(data.sublist(object.offset, _offset));
