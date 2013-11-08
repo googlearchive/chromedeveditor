@@ -11,7 +11,7 @@ import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 
 /**
  * Encapsulates the result returned by js zlib library.
- * */
+ */
 class ZlibResult {
 
   chrome_gen.ArrayBuffer buffer;
@@ -23,8 +23,8 @@ class ZlibResult {
 }
 
 /**
- *  Dart Port to the javascript zlib library.
- *   */
+ * Dart port of the javascript zlib library.
+ */
 class Zlib {
 
   static js.JsObject _zlib = js.context['Zlib'];
@@ -45,7 +45,9 @@ class Zlib {
     return result;
   }
 
-  /** Deflates a byte stream. */
+  /**
+   * Deflates a byte stream.
+   */
   static ZlibResult deflate(Uint8List data) {
 
     js.JsObject deflate = new js.JsObject(_zlib['Deflate'],

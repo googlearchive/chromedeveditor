@@ -5,7 +5,6 @@
 /**
  * This class implements the controller for the list of files.
  */
-
 library spark.ui.widgets.files_controller;
 
 import 'dart:html';
@@ -56,34 +55,6 @@ class FilesController implements TreeViewDelegate {
     _delegate.openInEditor(_files.first);
   }
 
-  /*
-   * Implementation of the [ListViewDelegate] interface.
-   */
-
-  int listViewNumberOfRows(ListView view) {
-    return _files.length;
-  }
-
-  ListViewCell listViewCellForRow(ListView view, int rowIndex) {
-    return new FileItemCell(_files[rowIndex].name);
-  }
-
-  int listViewHeightForRow(ListView view, int rowIndex) {
-    return 20;
-  }
-
-  void listViewSelectedChanged(ListView view, List<int> rowIndexes) {
-    if (rowIndexes.isEmpty) {
-      return;
-    }
-
-    _delegate.openInEditor(_files[rowIndexes[0]]);
-  }
-
-  void listViewDoubleClicked(ListView view, List<int> rowIndexes) {
-
-  }
-
   // TreeViewDelegate
 
   bool treeViewHasChildren(TreeView view, String nodeUID) {
@@ -127,7 +98,6 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs) {
-
   }
 
   /**
