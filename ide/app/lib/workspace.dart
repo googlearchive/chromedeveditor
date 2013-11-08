@@ -24,6 +24,7 @@ class Workspace implements Container {
   Logger workspaceLogger = new Logger('spark.workspace');
   Container _parent = null;
   chrome_gen.Entry _entry = null;
+  bool _syncable = false;
 
   List<Resource> _children = [];
   PreferenceStore _store;
@@ -41,18 +42,18 @@ class Workspace implements Container {
 
   Container get parent => null;
 
-  Future<Resource> link(chrome_gen.Entry entity) {
+  Future<Resource> link(chrome_gen.Entry entity, bool syncable) {
 
     if (entity.isFile) {
-      var resource = new File(this, entity);
+      var resource = new File(this, entity, syncable);
       _children.add(resource);
       _streamController.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
       return new Future.value(resource);
     } else {
-      var project = new Project(this, entity);
+      var project = new Project(this, entity, syncable);
       _children.add(project);
       _streamController.add(new ResourceChangeEvent(project, ResourceEventType.ADD));
-      return _gatherChildren(project);
+      return _gatherChildren(project, syncable);
     }
   }
 
@@ -79,7 +80,7 @@ class Workspace implements Container {
         List<String> ids = JSON.decode(s);
         return Future.forEach(ids, (id) {
           return chrome_gen.fileSystem.restoreEntry(id)
-              .then((entry) => link(entry))
+              .then((entry) => link(entry, false))
               .catchError((_) => null);
         });
       } catch (e) {
@@ -92,23 +93,26 @@ class Workspace implements Container {
   // store info for workspace children
   Future save() {
     List list = [];
-    _children.forEach((c) => list.add(chrome_gen.fileSystem.retainEntry(c._entry)));
+    _children.forEach((c) {
+      if (!c._syncable) list.add(chrome_gen.fileSystem.retainEntry(c._entry));
+    });
+
     return _store.setValue('workspace', JSON.encode(list));
   }
 
-  Future<Resource> _gatherChildren(Container container) {
+  Future<Resource> _gatherChildren(Container container, bool syncable) {
     chrome_gen.DirectoryEntry dir = container._entry;
     List futures = [];
 
     return dir.createReader().readEntries().then((entries) {
       for (chrome_gen.Entry ent in entries) {
         if (ent.isFile) {
-          var file = new File(container, ent);
+          var file = new File(container, ent, syncable);
           container._children.add(file);
         } else {
-          var folder = new Folder(container, ent);
+          var folder = new Folder(container, ent, syncable);
           container._children.add(folder);
-          futures.add(_gatherChildren(folder));
+          futures.add(_gatherChildren(folder, syncable));
         }
       }
       return Future.wait(futures).then((_) => container);
@@ -119,7 +123,7 @@ class Workspace implements Container {
 abstract class Container extends Resource {
   List<Resource> _children = [];
 
-  Container(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  Container(Container parent, chrome_gen.Entry entry, bool syncable) : super(parent, entry, syncable);
 
   List<Resource> getChildren() => _children;
 }
@@ -127,8 +131,9 @@ abstract class Container extends Resource {
 abstract class Resource {
   Container _parent;
   chrome_gen.Entry _entry;
+  bool _syncable;
 
-  Resource(this._parent, this._entry);
+  Resource(this._parent, this._entry, this._syncable);
 
   String get name => _entry.name;
 
@@ -142,11 +147,11 @@ abstract class Resource {
 }
 
 class Folder extends Container {
-  Folder(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  Folder(Container parent, chrome_gen.Entry entry, bool syncable) : super(parent, entry, syncable);
 }
 
 class File extends Resource {
-  File(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  File(Container parent, chrome_gen.Entry entry, bool syncable) : super(parent, entry, syncable);
 
   Future<String> getContents() => (_entry as chrome_gen.ChromeFileEntry).readText();
 
@@ -155,7 +160,7 @@ class File extends Resource {
 }
 
 class Project extends Folder {
-  Project(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  Project(Container parent, chrome_gen.Entry entry, bool syncable) : super(parent, entry, syncable);
 
   Project get project => this;
 }

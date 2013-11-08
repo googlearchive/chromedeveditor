@@ -79,7 +79,7 @@ main() {
       var workspace = new Workspace(null);
       var fileEntry = new MockFileEntry('test.txt');
       fileEntry._contents = _FILETEXT;
-      var fileResource = new File(workspace, fileEntry);
+      var fileResource = new File(workspace, fileEntry, false);
       expect(fileResource.name, fileEntry.name);
       fileResource.getContents().then((string) {
         expect(string, _FILETEXT);
@@ -96,7 +96,7 @@ main() {
         expect(event.type, ResourceEventType.ADD);
       });
 
-      workspace.link(fileEntry).then((resource) {
+      workspace.link(fileEntry, false).then((resource) {
         expect(resource, isNotNull);
         expect(workspace.getChildren().contains(resource), isTrue);
         expect(workspace.getFiles().contains(resource), isTrue);
@@ -118,7 +118,7 @@ main() {
         expect(event.type, ResourceEventType.ADD);
       });
 
-      workspace.link(dirEntry).then((project) {
+      workspace.link(dirEntry, false).then((project) {
         expect(project, isNotNull);
         expect(workspace.getChildren().contains(project), isTrue);
         expect(workspace.getProjects().contains(project), isTrue);
@@ -147,7 +147,7 @@ main() {
         expect(event.type, ResourceEventType.ADD);
       });
 
-      workspace.link(projectDir).then((project) {
+      workspace.link(projectDir, false).then((project) {
         expect(project, isNotNull);
         expect(workspace.getChildren().contains(project), isTrue);
         expect(workspace.getProjects().contains(project), isTrue);
