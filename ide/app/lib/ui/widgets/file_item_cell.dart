@@ -14,6 +14,7 @@ import 'listview_cell.dart';
 
 class FileItemCell implements ListViewCell {
   Element _element;
+  Element _container;
   bool _highlighted;
 
   FileItemCell(String name) {
@@ -24,22 +25,28 @@ class FileItemCell implements ListViewCell {
     _element.children.add(element);
     _element.querySelector('.filename').text = name;
   }
-  
+
   Element get element {
     return _element;
   }
-  
+
   set element(Element element) {
     _element = element;
   }
-  
+
   set highlighted(value) {
-    _highlighted = true;
-    _element.querySelector('.fileview-filename-container').style.backgroundColor =
-        value ? '#ddf' : 'rgba(0, 0, 0, 0)';
+    _highlighted = value;
   }
-  
+
   bool get highlighted {
     return _highlighted;
+  }
+
+  Element get container {
+    return _container;
+  }
+
+  set container(Element container) {
+    _container = container;
   }
 }

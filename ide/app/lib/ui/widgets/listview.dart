@@ -12,6 +12,7 @@ import 'dart:collection';
 import 'dart:html';
 
 import 'listview_cell.dart';
+import 'listview_row.dart';
 import 'listview_delegate.dart';
 
 class ListView {
@@ -28,9 +29,9 @@ class ListView {
   // In case of multiple selection using shift, it's the starting row index.
   // -1 is used when there's not starting row.
   int _selectedRow;
-  // Stores all the cells of the ListView.
-  List<ListViewCell> _cells;
-  
+  // Stores info about the cells of the ListView.
+  List<ListViewRow> _rows;
+
   /**
    * Constructor of a `ListView`.
    * `element` is the container of the list.
@@ -49,8 +50,13 @@ class ListView {
       ..height = '100%';
     _element.children.add(_container);
     _selection = new HashSet();
-    _cells = [];
+    _rows = [];
     _selectedRow = -1;
+    _container.onClick.listen((event) {
+      _removeCurrentSelectionHighlight();
+      _selection.clear();
+      _delegate.listViewSelectedChanged(this, _selection.toList());
+    });
     reloadData();
   }
 
@@ -59,45 +65,51 @@ class ListView {
    * by the delegate changed.
    */
   void reloadData() {
-    _cells.clear();
+    _rows.clear();
     _container.children.clear();
     int count = _delegate.listViewNumberOfRows(this);
     int y = 0;
     for(int i = 0 ; i < count ; i ++) {
       int cellHeight = _delegate.listViewHeightForRow(this, i);
-      ListViewCell cell = _delegate.listViewCellForRow(this, i);
-      Element item = new DivElement();
-      item.children.add(cell.element);
-      item.style
+      ListViewRow row = new ListViewRow();
+      row.cell = _delegate.listViewCellForRow(this, i);
+      row.container = new DivElement();
+      row.container.children.add(row.cell.element);
+      row.container.style
         ..width = '100%'
         ..height = cellHeight.toString() + 'px'
         ..position = 'absolute'
         ..top = y.toString() + 'px';
       // Set events callback.
-      item.onClick.listen((event) {
+      row.container.onClick.listen((event) {
         _onClicked(i, event);
+        event.stopPropagation();
       });
-      item.onDoubleClick.listen((event) {
+      row.container.onDoubleClick.listen((event) {
         _onDoubleClicked(i, event);
+        event.stopPropagation();
       });
       y += cellHeight;
-      _cells.add(cell);
-      _container.children.add(item);
+      _rows.add(row);
+      _container.children.add(row.container);
     }
     _container.clientHeight;
     // Fix selection if needed.
     if (_selectedRow >= count) {
       _selectedRow = -1;
-      List<int> itemsToRemove = [];
-      _selection.forEach((rowIndex) {
-        if (rowIndex > count) {
-          itemsToRemove.add(rowIndex);
-        }
-      });
-      itemsToRemove.forEach((rowIndex) {
-        _selection.remove(rowIndex);
-      });
     }
+    List<int> itemsToRemove = [];
+    List<int> selectionList = _selection.toList();
+    selectionList.sort();
+    selectionList.reversed.forEach((rowIndex) {
+      if (rowIndex >= count) {
+        itemsToRemove.add(rowIndex);
+      }
+    });
+    itemsToRemove.forEach((rowIndex) {
+      _selection.remove(rowIndex);
+    });
+    _addCurrentSelectionHighlight();
   }
 
   /**
@@ -135,9 +147,9 @@ class ListView {
     _addCurrentSelectionHighlight();
     _delegate.listViewSelectedChanged(this, _selection.toList());
   }
-  
+
   List<int> get selection => _selection.toList();
-  
+
   set selection(List<int> selection) {
     _removeCurrentSelectionHighlight();
     _selection.clear();
@@ -146,7 +158,7 @@ class ListView {
     });
     _addCurrentSelectionHighlight();
   }
-  
+
   /**
    * Callback on a double click.
    */
@@ -159,7 +171,8 @@ class ListView {
    */
   void _removeCurrentSelectionHighlight() {
     _selection.forEach((rowIndex) {
-      _cells[rowIndex].highlighted = false;
+      _rows[rowIndex].cell.highlighted = false;
+      _rows[rowIndex].container.style.backgroundColor =  'rgba(0, 0, 0, 0)';
     });
   }
 
@@ -168,7 +181,8 @@ class ListView {
    */
   void _addCurrentSelectionHighlight() {
     _selection.forEach((rowIndex) {
-      _cells[rowIndex].highlighted = true;
+      _rows[rowIndex].cell.highlighted = true;
+      _rows[rowIndex].container.style.backgroundColor = '#ddf';
     });
   }
 }
