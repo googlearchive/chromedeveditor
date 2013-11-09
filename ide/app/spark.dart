@@ -45,7 +45,6 @@ Future<bool> isTestMode() {
 
 void main() {
   isTestMode().then((testMode) {
-    // Start the app in normal mode.
     Spark spark = new Spark(testMode);
     spark.start();
   });
