@@ -88,7 +88,7 @@ class Spark extends Application implements FilesControllerDelegate {
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
       tracker = service.getTracker(_ANALYTICS_ID);
-      tracker.sendAppView('/');
+      tracker.sendAppView('main', newSession: true);
     });
 
     addParticipant(new _SparkSetupParticipant(this));
