@@ -17,6 +17,7 @@
     }
   },
   "permissions": [
+    "https://www.google-analytics.com/",
     "clipboardRead",
     "clipboardWrite",
     {
