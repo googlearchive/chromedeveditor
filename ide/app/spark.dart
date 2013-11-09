@@ -64,6 +64,7 @@ void main() {
 }
 
 class Spark extends Application implements FilesControllerDelegate {
+  // The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   AceEditor editor;
@@ -85,10 +86,8 @@ class Spark extends Application implements FilesControllerDelegate {
     syncPrefs = PreferenceStore.createSync();
 
     analytics.getService('Spark').then((service) {
-      // Init the analytics tracker with our application ID.
+      // Init the analytics tracker and send a page view for the main page.
       tracker = service.getTracker(_ANALYTICS_ID);
-
-      // Send a page view for the main app page.
       tracker.sendAppView('/');
     });
 
