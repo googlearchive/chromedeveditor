@@ -19,14 +19,19 @@ final String PACK_INDEX_FILE_PATH = 'test/data/pack-_index_test.idx';
 main() {
   group('git.pack', () {
     test('parsePack', () {
-      chrome_gen.runtime.getPackageDirectoryEntry().then(
+      return chrome_gen.runtime.getPackageDirectoryEntry().then(
           (chrome_gen.DirectoryEntry dir) {
-        dir.getFile(PACK_FILE_PATH).then(
+        return dir.getFile(PACK_FILE_PATH).then(
             (chrome_gen.ChromeFileEntry entry) {
-          entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
+          return entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
             Uint8List data = new Uint8List.fromList(binaryData.getBytes());
             Pack pack = new Pack(data, null);
-            pack.parseAll();
+            return pack.parseAll().then((_) {
+              // TODO: this fails in applyDelta() - not yet implemented
+
+              // TODO: add more expects for the pack state?
+              expect(pack.objects.length, greaterThan(0));
+            });
           });
         });
       });
