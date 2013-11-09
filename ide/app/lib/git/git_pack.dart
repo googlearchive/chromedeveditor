@@ -89,7 +89,7 @@ class Pack {
   Uint8List data;
   int _offset = 0;
   ObjectStore _store;
-  List<PackObject> objects;
+  List<PackObject> objects = [];
 
   Pack(Uint8List data, ObjectStore store) {
     this.data = data;
@@ -289,7 +289,6 @@ class Pack {
     try {
       int numObjects;
       List<PackObject> deferredObjects = [];
-      List<PackObject> objects = [];
 
       _matchPrefix();
       _matchVersion(2);

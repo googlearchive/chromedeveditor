@@ -30,7 +30,7 @@ main() {
               // TODO: this fails in applyDelta() - not yet implemented
 
               // TODO: add more expects for the pack state?
-              expect(pack.objects.length, greaterThan(0));
+              expect(pack.objects.length, 15);
             }, onError: (e) {
               // TODO(grv) : catch custom exceptions, and fail the test.
             });
