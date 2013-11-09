@@ -86,7 +86,7 @@ class GoogleAnalytics extends _ProxyHolder {
     return _trackers[trackingId];
   }
 
-  String toString() => '[GoogleAnalytics ${appName}';
+  String toString() => 'GoogleAnalytics ${appName}';
 
   Future<GoogleAnalytics> _init() {
     if (_config != null) return new Future.value(this);
@@ -244,7 +244,7 @@ class Tracker extends _ProxyHolder {
     }
   }
 
-  String toString() => '[Tracker ${trackingId}';
+  String toString() => 'Tracker ${trackingId}';
 }
 
 abstract class _ProxyHolder {
