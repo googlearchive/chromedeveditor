@@ -27,12 +27,9 @@ main() {
             Uint8List data = new Uint8List.fromList(binaryData.getBytes());
             Pack pack = new Pack(data, null);
             return pack.parseAll().then((_) {
-              // TODO: this fails in applyDelta() - not yet implemented
 
               // TODO: add more expects for the pack state?
               expect(pack.objects.length, 15);
-            }, onError: (e) {
-              // TODO(grv) : catch custom exceptions, and fail the test.
             });
           });
         });

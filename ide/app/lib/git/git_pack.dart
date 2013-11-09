@@ -208,13 +208,6 @@ class Pack {
     return header.offset - offsetDelta;
   }
 
-
-  ByteBuffer applyDelta(Uint8List baseObjBytes, Uint8List deltaObjBytes) {
-    // TODO(grv) : implement.
-    throw "to be implemented.";
-
-  }
-
   Future expandDeltifiedObject(PackObject object) {
     Completer completer = new Completer();
 
@@ -325,6 +318,110 @@ class Pack {
       throw e;
     }
     return completer.future;
+  }
+  
+  ByteBuffer applyDelta(Uint8List baseData, Uint8List deltaData) {
+    int matchLength(DeltaDataStream stream) {
+      Uint8List data = stream.data;
+      int offset = stream.offset;
+      int result = 0;
+      int currentShift = 0;
+      int byte = 128;
+      int maskedByte;
+      int shiftedByte;
+      
+      while ((byte & 128) != 0) {
+        byte = data[offset++];
+        maskedByte = (byte & 0x7f);
+        shiftedByte = (maskedByte << currentShift);
+        result += shiftedByte;
+        currentShift += 7; 
+      }
+      
+      stream.offset = offset;
+      return result;  
+    }
+    
+    DeltaDataStream stream = new DeltaDataStream(deltaData, 0);
+    
+    int baseLength = matchLength(stream);
+    if (baseLength != baseData.length) {
+      // TODO throw better exception.
+      throw "Delta Error: base length not equal to length of given base data";
+    }
+    
+    int resultLength = matchLength(stream);
+    Uint8List resultData = new Uint8List(resultLength);
+    int resultOffset = 0;
+    
+    int copyOffset;
+    int copyLength;
+    int opcode;
+    int copyFromResult;
+    while (stream.offset < stream.data.length) {
+      opcode = stream.data[stream.offset];
+      stream.offset++;
+      copyOffset = 0;
+      copyLength = 0;
+      if (opcode == 0) {
+        throw "Don't know what to do with a delta opcode 0";
+      } else if ((opcode & 0x80) != 0) {
+        int value;
+        int shift = 0;
+        for (int i = 0; i < 4; ++i) {
+          if ((opcode & 0x01) != 0) {
+            value = stream.data[stream.offset];
+            stream.offset++;
+            copyOffset += (value << shift);
+          }
+          
+          opcode >>= 1;
+          shift +=8;
+        }
+        
+        shift = 0;
+        for (int i = 0; i < 2; ++i) {
+          if ((opcode & 0x01) != 0) {
+            value = stream.data[stream.offset];
+            stream.offset++;
+            copyLength += (value << shift);
+          }
+          opcode >>= 1;
+          shift +=8;
+        }
+        
+        if (copyLength == 0) {
+          copyLength = (1<<16);
+        }
+        
+        // TODO(grv) : check if this is a version 2 packfile and apply
+        // copyFromResult if so.
+        copyFromResult = (opcode & 0x01);
+        Uint8List sublist = baseData.sublist(copyOffset, copyOffset + copyLength);
+        resultData.setAll(resultOffset, sublist);
+        resultOffset += sublist.length;
+      } else if ((opcode & 0x80) == 0) {
+        Uint8List sublist = stream.data.sublist(stream.offset,
+            stream.offset + opcode);
+        resultData.setAll(resultOffset, sublist);
+        resultOffset += sublist.length;
+        stream.offset += opcode;
+      }
+    }
+    
+    return resultData.buffer;
+  }
+}
+
+/**
+ * Defines a delta data object.
+ */
+class DeltaDataStream {
+  Uint8List data;
+  int offset;
+  DeltaDataStream(Uint8List data, int offset) {
+    this.data = data;
+    this.offset = offset;
   }
 
   Future buildPack(commits, repo) {
