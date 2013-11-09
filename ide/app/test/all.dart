@@ -46,8 +46,7 @@ void _defineTests() {
   unittest.unittestConfiguration = new SparkTestConfiguration();
   logger.onRecord.listen(_logToStdout);
 
-  gitpack_test.main();
-  /*ace_test.main();
+  ace_test.main();
   analyzer_test.main();
   app_test.main();
   compiler_test.main();
@@ -61,7 +60,7 @@ void _defineTests() {
   tcp_test.main();
   utils_test.main();
   workspace_test.main();
-  zlib_test.main();*/
+  zlib_test.main();
 }
 
 /**
