@@ -31,6 +31,8 @@ main() {
 
               // TODO: add more expects for the pack state?
               expect(pack.objects.length, greaterThan(0));
+            }, onError: (e) {
+              // TODO(grv) : catch custom exceptions, and fail the test.
             });
           });
         });
