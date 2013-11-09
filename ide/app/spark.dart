@@ -103,6 +103,9 @@ class Spark extends Application implements FilesControllerDelegate {
     editor = new AceEditor();
 
     _splitView = new SplitView(querySelector('#splitview'));
+    _splitView.onResized.listen((_) {
+      editor.resize();
+    });
     _filesController = new FilesController(workspace, this);
 
     setupFileActions();

@@ -56,17 +56,18 @@ body {
 }
 
 #fileViewArea {
-  width: 300px;
   border-top: 1px solid white;
-  display: flex;
-  flex-flow: column;
+  position: relative;
 }
 
 #fileViewArea .listview-container {
-  flex: 1;
   overflow-x: auto;
   overflow-y: scroll;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 #editorArea {
@@ -75,26 +76,46 @@ body {
   position: relative;
 }
 
-#splitview {
+.splitview-horizontal {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+}
+
+.splitview-vertical {
   flex: 1;
   display: flex;
   flex-flow: row;
 }
 
-#splitview .splitter {
+.splitter {
   background-color: #ddd;
-  width: 1px;
   position: relative;
 }
 
-#splitview .splitter-handle {
+.splitview-horizontal > .splitter {
+  height: 2px;
+}
+
+.splitview-vertical > .splitter {
+  width: 2px;
+}
+
+.splitter-handle {
   position: absolute;
-  cursor: ew-resize;
   left: -2px;
   right: -2px;
   top: -2px;
   bottom: -2px;
   z-index: 100;
+}
+
+.splitview-vertical > .splitter > .splitter-handle {
+  cursor: ew-resize;
+}
+
+.splitview-horizontal > .splitter > .splitter-handle {
+  cursor: ns-resize;
 }
 
 #toolbar {
