@@ -168,8 +168,12 @@ class Tracker extends _ProxyHolder {
    * any runtime data. In most cases all "screens" should be known at the time
    * the app is built. Examples: "MainScreen" or "SettingsView".
    */
-  void sendAppView(String description) {
-    _proxy.callMethod('sendAppView', [description]);
+  void sendAppView(String description, {bool newSession: false}) {
+    if (newSession) {
+      send('appView', {'description': description, 'sessionControl': 'new'});
+    } else {
+      _proxy.callMethod('sendAppView', [description]);
+    }
   }
 
   /**
