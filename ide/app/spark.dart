@@ -15,11 +15,12 @@ import 'lib/ace.dart';
 import 'lib/app.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart';
+import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart';
-import 'spark_test.dart';
+import 'test/all.dart' as all_tests;
 
 /**
  * Returns true if app.json contains a test-mode entry set to true.
@@ -44,25 +45,14 @@ Future<bool> isTestMode() {
 
 void main() {
   isTestMode().then((testMode) {
-    if (testMode) {
-      // Start the app, show the test UI, and connect to a test server if one is
-      // available.
-      SparkTest app = new SparkTest();
-
-      app.start().then((_) {
-        app.showTestUI();
-
-        app.connectToListener();
-      });
-    } else {
-      // Start the app in normal mode.
-      Spark spark = new Spark();
-      spark.start();
-    }
+    // Start the app in normal mode.
+    Spark spark = new Spark(testMode);
+    spark.start();
   });
 }
 
 class Spark extends Application implements FilesControllerDelegate {
+  final bool developerMode;
   AceEditor editor;
   Workspace workspace;
 
@@ -71,10 +61,10 @@ class Spark extends Application implements FilesControllerDelegate {
 
   SplitView _splitView;
   FilesController _filesController;
-
   PlatformInfo _platformInfo;
+  TestDriver _testDriver;
 
-  Spark() {
+  Spark(this.developerMode) {
     document.title = appName;
 
     localPrefs = PreferenceStore.createLocal();
@@ -173,8 +163,13 @@ class Spark extends Application implements FilesControllerDelegate {
       _handleChangeTheme(themeLeft: false);
     });
 
-    ul.children.add(_createLIElement(null));
+    if (developerMode) {
+      ul.children.add(_createLIElement(null));
+      ul.children.add(
+          _createLIElement('Run Tests', () => _testDriver.runTests()));
+    }
 
+    ul.children.add(_createLIElement(null));
     ul.children.add(_createLIElement('Check For Updates…', _handleUpdateCheck));
     ul.children.add(_createLIElement('About Spark', _handleAbout));
   }
@@ -278,6 +273,13 @@ class _SparkSetupParticipant extends LifecycleParticipant {
         }
       });
     });
+  }
+
+  Future applicationStarted(Application application) {
+    if (spark.developerMode) {
+      spark._testDriver = new TestDriver(
+          all_tests.defineTests, connectToTestListener: true);
+    }
   }
 
   Future applicationClosed(Application application) {
