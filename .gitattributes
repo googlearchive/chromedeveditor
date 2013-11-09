@@ -1,0 +1,8 @@
+# Line endings: enforce LF in GitHub, convert to native on checkout.
+
+* text=auto
+*.dart text
+*.js text
+*.html
+*.png binary
+*.jpg binary
