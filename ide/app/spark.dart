@@ -13,6 +13,7 @@ import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
+import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart';
@@ -64,8 +65,12 @@ void main() {
 }
 
 class Spark extends Application implements FilesControllerDelegate {
+  // The Google Analytics app ID for Spark.
+  static final _ANALYTICS_ID = 'UA-45578231-1';
+
   AceEditor editor;
   Workspace workspace;
+  analytics.Tracker tracker;
 
   PreferenceStore localPrefs;
   PreferenceStore syncPrefs;
@@ -84,6 +89,12 @@ class Spark extends Application implements FilesControllerDelegate {
     syncPrefs = PreferenceStore.createSync();
 
     actionManager = new ActionManager();
+
+    analytics.getService('Spark').then((service) {
+      // Init the analytics tracker and send a page view for the main page.
+      tracker = service.getTracker(_ANALYTICS_ID);
+      tracker.sendAppView('main', newSession: true);
+    });
 
     addParticipant(new _SparkSetupParticipant(this));
 
@@ -108,7 +119,7 @@ class Spark extends Application implements FilesControllerDelegate {
     createActions();
     buildMenu();
 
-    document.onKeyDown.listen(actionManager.handleKeyEvent);
+    actionManager.registerKeyListener();
   }
 
   String get appName => i18n('app_name');
@@ -143,7 +154,7 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome_gen.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
-        workspace.link(entry).then((file) {
+        workspace.link(entry, false).then((file) {
           _filesController.selectLastFile();
           workspace.save();
         });
@@ -157,7 +168,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
       chrome_gen.ChromeFileEntry entry = result.entry;
-      workspace.link(entry).then((file) {
+      workspace.link(entry, false).then((file) {
         editor.saveAs(file);
         workspace.save();
       });

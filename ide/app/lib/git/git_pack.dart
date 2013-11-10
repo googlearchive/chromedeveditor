@@ -11,6 +11,8 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crc32/crc32.dart' as crc;
+import 'package:crypto/crypto.dart' as crypto;
+import 'package:utf/utf.dart';
 
 import 'git_objectstore.dart';
 import 'zlib.dart';
@@ -19,7 +21,7 @@ import 'zlib.dart';
  * Encapsulates a git pack object.
  */
 class PackObject {
-  String sha;
+  List<int> sha;
   String baseSha;
   int crc;
   int offset;
@@ -35,6 +37,32 @@ class PackedTypes {
   static const TAG = 4;
   static const OFS_DELTA = 6;
   static const REF_DELTA = 7;
+  
+  static String getTypeString(int type) {
+    switch(type) {
+      case COMMIT:
+        return "commit";
+        break;
+      case TREE:
+        return "tree";
+        break;
+      case BLOB:
+        return "blob";
+        break;
+      case TAG:
+        return "tag";
+        break;
+      case OFS_DELTA:
+        return "ofs_delta";
+        break;
+      case REF_DELTA:
+        return "ref_delta";
+        break;
+      default:
+        throw "unsupported pack type.";
+        break;
+    }
+  }
 }
 
 /**
@@ -61,7 +89,7 @@ class Pack {
   Uint8List data;
   int _offset = 0;
   ObjectStore _store;
-  List<PackObject> objects;
+  List<PackObject> objects = [];
 
   Pack(Uint8List data, ObjectStore store) {
     this.data = data;
@@ -121,8 +149,18 @@ class Pack {
    * Returns a SHA1 hash of given byete stream.
    */
   List<int> getObjectHash(int type, ByteBuffer content) {
-    //TODO(grv) : to be implemented.
-    throw "to be implemented.";
+    Uint8List contentData = new Uint8List.view(content);
+    List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
+        + "${contentData.elementSizeInBytes}\0");
+    Uint8List fullContent = 
+        new Uint8List(header.length + contentData.length);
+    
+    fullContent.setAll(0, header);
+    fullContent.setAll(header.length, contentData);
+
+    crypto.SHA1 sha1 = new crypto.SHA1();
+    sha1.newInstance().add(fullContent);
+    return sha1.close();
   }
 
 
@@ -152,7 +190,7 @@ class Pack {
     do {
       String hintAndOffsetBits = _padString(
           _peek(1)[0].toRadixString(2), 8, '0');
-      needMore = (hintAndOffsetBits.substring(1,8) == '1');
+      needMore = (hintAndOffsetBits[0] == '1');
       offsetBytes.add(hintAndOffsetBits.substring(1, 8));
       _advance(1);
     } while(needMore);
@@ -160,25 +198,14 @@ class Pack {
     String longOffsetString = offsetBytes.reduce((String memo,
         String el) => memo + el);
 
+
     int offsetDelta = int.parse(longOffsetString, radix: 2);
 
-    for (int i = 1; i < offsetBytes.length - 1; ++i) {
+    for (int i = 1; i < offsetBytes.length; ++i) {
       offsetDelta += pow(2, 7 * i);
     }
 
     return header.offset - offsetDelta;
-  }
-
-
-  ByteBuffer applyDelta(Uint8List baseObjBytes, Uint8List deltaObjBytes) {
-    // TODO(grv) : implement.
-    throw "to be implemented.";
-
-  }
-
-  String objectHash(int type, ByteBuffer data) {
-    // TODO(grv) : implement.
-    throw "to be implmented.";
   }
 
   Future expandDeltifiedObject(PackObject object) {
@@ -188,7 +215,7 @@ class Pack {
       deltaObj.type = baseObj.type;
       deltaObj.data = applyDelta(new Uint8List.view(baseObj.data),
           new Uint8List.view(deltaObj.data));
-      deltaObj.sha = objectHash(deltaObj.type, deltaObj.data);
+      deltaObj.sha = getObjectHash(deltaObj.type, deltaObj.data);
       return deltaObj;
     }
 
@@ -255,7 +282,6 @@ class Pack {
     try {
       int numObjects;
       List<PackObject> deferredObjects = [];
-      List<PackObject> objects = [];
 
       _matchPrefix();
       _matchVersion(2);
@@ -265,6 +291,7 @@ class Pack {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = crc.CRC32.compute(data.sublist(object.offset, _offset));
 
+
         // hold on to the data for delta style objects.
         switch (object.type) {
           case PackedTypes.OFS_DELTA:
@@ -272,14 +299,12 @@ class Pack {
             deferredObjects.add(object);
             break;
           default:
-            object.sha = objectHash(object.type, object.data);
+            object.sha = getObjectHash(object.type, object.data);
             object.data = null;
             // TODO(grv) : add progress.
             break;
         }
-
         objects.add(object);
-
       }
 
       return Future.forEach(deferredObjects, (PackObject obj) {
@@ -293,6 +318,110 @@ class Pack {
       throw e;
     }
     return completer.future;
+  }
+  
+  ByteBuffer applyDelta(Uint8List baseData, Uint8List deltaData) {
+    int matchLength(DeltaDataStream stream) {
+      Uint8List data = stream.data;
+      int offset = stream.offset;
+      int result = 0;
+      int currentShift = 0;
+      int byte = 128;
+      int maskedByte;
+      int shiftedByte;
+      
+      while ((byte & 128) != 0) {
+        byte = data[offset++];
+        maskedByte = (byte & 0x7f);
+        shiftedByte = (maskedByte << currentShift);
+        result += shiftedByte;
+        currentShift += 7; 
+      }
+      
+      stream.offset = offset;
+      return result;  
+    }
+    
+    DeltaDataStream stream = new DeltaDataStream(deltaData, 0);
+    
+    int baseLength = matchLength(stream);
+    if (baseLength != baseData.length) {
+      // TODO throw better exception.
+      throw "Delta Error: base length not equal to length of given base data";
+    }
+    
+    int resultLength = matchLength(stream);
+    Uint8List resultData = new Uint8List(resultLength);
+    int resultOffset = 0;
+    
+    int copyOffset;
+    int copyLength;
+    int opcode;
+    int copyFromResult;
+    while (stream.offset < stream.data.length) {
+      opcode = stream.data[stream.offset];
+      stream.offset++;
+      copyOffset = 0;
+      copyLength = 0;
+      if (opcode == 0) {
+        throw "Don't know what to do with a delta opcode 0";
+      } else if ((opcode & 0x80) != 0) {
+        int value;
+        int shift = 0;
+        for (int i = 0; i < 4; ++i) {
+          if ((opcode & 0x01) != 0) {
+            value = stream.data[stream.offset];
+            stream.offset++;
+            copyOffset += (value << shift);
+          }
+          
+          opcode >>= 1;
+          shift +=8;
+        }
+        
+        shift = 0;
+        for (int i = 0; i < 2; ++i) {
+          if ((opcode & 0x01) != 0) {
+            value = stream.data[stream.offset];
+            stream.offset++;
+            copyLength += (value << shift);
+          }
+          opcode >>= 1;
+          shift +=8;
+        }
+        
+        if (copyLength == 0) {
+          copyLength = (1<<16);
+        }
+        
+        // TODO(grv) : check if this is a version 2 packfile and apply
+        // copyFromResult if so.
+        copyFromResult = (opcode & 0x01);
+        Uint8List sublist = baseData.sublist(copyOffset, copyOffset + copyLength);
+        resultData.setAll(resultOffset, sublist);
+        resultOffset += sublist.length;
+      } else if ((opcode & 0x80) == 0) {
+        Uint8List sublist = stream.data.sublist(stream.offset,
+            stream.offset + opcode);
+        resultData.setAll(resultOffset, sublist);
+        resultOffset += sublist.length;
+        stream.offset += opcode;
+      }
+    }
+    
+    return resultData.buffer;
+  }
+}
+
+/**
+ * Defines a delta data object.
+ */
+class DeltaDataStream {
+  Uint8List data;
+  int offset;
+  DeltaDataStream(Uint8List data, int offset) {
+    this.data = data;
+    this.offset = offset;
   }
 
   Future buildPack(commits, repo) {

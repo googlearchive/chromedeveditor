@@ -3,29 +3,40 @@
 // license that can be found in the LICENSE file.
 
 /**
- * TODO:
+ * This library defines action and key binding related classes.
  */
 library spark.actions;
 
 import 'dart:async';
 import 'dart:html';
 
-// TODO: add some tests
-
 /**
- * TODO:
+ * The ActionManager class is used to manage a set of actions.
  */
 class ActionManager {
   Map<String, Action> _actionMap = {};
 
-  ActionManager();
-
-  void registerAction(Action action) {
-    _actionMap[action.id] = action;
+  /**
+   * Register this [ActionManager] as a key event listener for the global
+   * [document].
+   */
+  void registerKeyListener() {
+    document.onKeyDown.listen(handleKeyEvent);
   }
 
+  /**
+   * Register a new [Action] with this [ActionManager].
+   */
+  Action registerAction(Action action) => _actionMap[action.id] = action;
+
+  /**
+   * Return the [Action] with the given ID.
+   */
   Action getAction(String id) => _actionMap[id];
 
+  /**
+   * Return an [Iterable] of all the registered [Actions]s.
+   */
   Iterable<Action> getActions() => _actionMap.values;
 
   void handleKeyEvent(KeyEvent event) {
@@ -45,6 +56,9 @@ class ActionManager {
   }
 }
 
+/**
+ * A [Map] to convert from the textual description of a key to its key code.
+ */
 Map<String, int> _bindingMap = {
   "META": KeyCode.META,
   "CTRL": _isMac() ? KeyCode.META : KeyCode.CTRL,
@@ -69,12 +83,19 @@ Map<String, int> _bindingMap = {
 };
 
 /**
- * TODO:
+ * This class represents a key and a set of key modifiers.
  */
 class KeyBinding {
   Set<int> modifiers = new Set();
   int keyCode;
 
+  /**
+   * Create a new [KeyBinding] using the given textual description. Some
+   * examples of key binding text are `ctrl-shift-f4`, and `ctrl-o`, and
+   * `alt-f1`.
+   *
+   * Valid key modifiers are `meta`, `ctrl`, `macctrl`, `alt`, and `shift`.
+   */
   KeyBinding(String str) {
     List<String> codes = str.toUpperCase().split('-');
 
@@ -85,6 +106,9 @@ class KeyBinding {
     keyCode = _codeFor(codes[codes.length - 1]);
   }
 
+  /**
+   * Returns whether this binding matches the given key event.
+   */
   bool matches(KeyEvent event) {
     if (event.keyCode != keyCode) {
       return false;
@@ -109,8 +133,12 @@ class KeyBinding {
     return true;
   }
 
+  /**
+   * Returns a user-consumable description of this key binding. Examples are
+   * `Shift+O` and `Ctrl+Shift+F4`.
+   */
   String getDescription() {
-    List<String> desc = new List<String>();
+    List<String> desc = [];
 
     if (modifiers.contains(KeyCode.CTRL)) {
       desc.add(_descriptionOf(KeyCode.CTRL));
@@ -156,52 +184,76 @@ class KeyBinding {
 
     for (String key in _bindingMap.keys) {
       if (code == _bindingMap[key]) {
-        return key; //toTitleCase(key);
+        return _toTitleCase(key);
       }
     }
 
     return new String.fromCharCode(code);
   }
+
+  String toString() => getDescription();
 }
 
 /**
- * TODO:
+ * An abstract representation of an action. Actions have:
+ *
+ *  * names
+ *  * ids
+ *  * key-bindings
+ *  * enablement states
+ *
+ * They can be listened to in order to know when their enablement state changes.
  */
 abstract class Action {
   StreamController<Action> _controller = new StreamController.broadcast();
 
   String id;
   String name;
-  bool _enabled = true;
-
   KeyBinding binding;
+
+  bool _enabled = true;
 
   Action(this.id, this.name);
 
+  /**
+   * Set a default (cross-platform) binding.
+   */
   void defaultBinding(String str) {
     if (binding == null) {
       binding = new KeyBinding(str);
     }
   }
 
+  /**
+   * Set a Linux (and Linux-OS like) specific binding.
+   */
   void linuxBinding(String str) {
     if (_isLinuxLike()) {
       binding = new KeyBinding(str);
     }
   }
 
+  /**
+   * Set a Mac specific binding.
+   */
   void macBinding(String str) {
     if (_isMac()) {
       binding = new KeyBinding(str);
     }
   }
 
+  /**
+   * Set a Windows specific binding.
+   */
   void winBinding(String str) {
     if (_isWin()) {
       binding = new KeyBinding(str);
     }
   }
 
+  /**
+   * Run this action.
+   */
   void invoke();
 
   bool get enabled => _enabled;
@@ -209,7 +261,6 @@ abstract class Action {
   set enabled(bool value) {
     if (_enabled != value) {
       _enabled = value;
-
       _controller.add(this);
     }
   }
@@ -237,4 +288,12 @@ bool _isLinuxLike() => !_isMac() && !_isWin();
 String _platform() {
   String str = window.navigator.platform;
   return (str != null) ? str.toLowerCase() : '';
+}
+
+String _toTitleCase(String str) {
+  if (str.length < 2) {
+    return str.toUpperCase();
+  } else {
+    return '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}';
+  }
 }

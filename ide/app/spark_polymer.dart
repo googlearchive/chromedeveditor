@@ -40,6 +40,11 @@ class SparkPolymer extends Spark {
     });
   }
 
+  @override
+  void buildMenu() {
+    // Nothing here yet.
+  }
+
   void _switchTheme([_]) {
     int selected =
         (querySelector('#themeChooser') as dynamic).selected;

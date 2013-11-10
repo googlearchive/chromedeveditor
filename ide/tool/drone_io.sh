@@ -9,7 +9,10 @@ pub install
 # build the archive
 ./grind archive
 
-./grind deploy-test
+# disable polymer deploy on drone.io for now
+#./grind deploy-test
+
+./grind mode-test
 
 # run tests on dartium
 dart tool/test_runner.dart --dartium
