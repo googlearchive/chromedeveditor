@@ -1,5 +1,5 @@
 {
-  "name": "__MSG_app_name__",
+  "name": "__MSG_app_name__", 
   "description": "__MSG_app_description__",
   "version": "0.0.9",
   "minimum_chrome_version": "31",
