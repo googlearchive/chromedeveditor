@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library workspace_test;
+library spark.workspace_test;
 
 import 'dart:async';
 
@@ -18,9 +18,7 @@ class MockFileEntry implements chrome_gen.ChromeFileEntry {
   String _name;
   String _contents;
 
-  MockFileEntry(String name) {
-    _name = name;
-  }
+  MockFileEntry(this._name, [this._contents]);
 
   String get name => _name;
 
@@ -32,9 +30,7 @@ class MockFileEntry implements chrome_gen.ChromeFileEntry {
 
   Future<String> readText() => new Future.value(_contents);
 
-  noSuchMethod(Invocation msg) {
-    super.noSuchMethod(msg);
-  }
+  noSuchMethod(Invocation msg) => super.noSuchMethod(msg);
 }
 
 class MockDirectoryEntry implements chrome_gen.DirectoryEntry {
@@ -54,11 +50,9 @@ class MockDirectoryEntry implements chrome_gen.DirectoryEntry {
 
   bool get isFile => false;
 
- MockDirectoryReader createReader() => new MockDirectoryReader(_entries);
+  MockDirectoryReader createReader() => new MockDirectoryReader(_entries);
 
- noSuchMethod(Invocation msg) {
-   super.noSuchMethod(msg);
- }
+  noSuchMethod(Invocation msg) => super.noSuchMethod(msg);
 }
 
 class MockDirectoryReader implements chrome_gen.DirectoryReader {
@@ -81,8 +75,22 @@ main() {
       fileEntry._contents = _FILETEXT;
       var fileResource = new File(workspace, fileEntry, false);
       expect(fileResource.name, fileEntry.name);
+      expect(fileResource.path, '/test.txt');
       fileResource.getContents().then((string) {
         expect(string, _FILETEXT);
+      });
+    });
+
+    test('restore entry', () {
+      var workspace = new Workspace(null);
+      var fileEntry = new MockFileEntry('test.txt', _FILETEXT);
+      return workspace.link(fileEntry, false).then((Resource resource) {
+        expect(resource.name, fileEntry.name);
+        String token = resource.persistToToken();
+        var restoredResource = workspace.restoreResource(token);
+        expect(restoredResource, isNotNull);
+        expect(restoredResource.name, resource.name);
+        expect(restoredResource.path, resource.path);
       });
     });
 
@@ -164,5 +172,3 @@ main() {
   });
 
 }
-
-
