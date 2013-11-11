@@ -72,4 +72,8 @@ class AceEditor {
   void focus() {
     _aceEditor.focus();
   }
+
+  void resize() {
+    _aceEditor.resize(false);
+  }
 }

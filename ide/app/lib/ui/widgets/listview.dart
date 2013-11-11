@@ -30,7 +30,7 @@ class ListView {
   int _selectedRow;
   // Stores all the cells of the ListView.
   List<ListViewCell> _cells;
-  
+
   /**
    * Constructor of a `ListView`.
    * `element` is the container of the list.
@@ -41,12 +41,7 @@ class ListView {
     _element = element;
     _delegate = delegate;
     _container = new DivElement();
-    _container.style
-      ..width = '100%'
-      ..position = 'relative'
-      ..overflowX = 'hidden'
-      ..overflowY = 'scroll'
-      ..height = '100%';
+    _container.classes.add('listview-container');
     _element.children.add(_container);
     _selection = new HashSet();
     _cells = [];
@@ -135,9 +130,9 @@ class ListView {
     _addCurrentSelectionHighlight();
     _delegate.listViewSelectedChanged(this, _selection.toList());
   }
-  
+
   List<int> get selection => _selection.toList();
-  
+
   set selection(List<int> selection) {
     _removeCurrentSelectionHighlight();
     _selection.clear();
@@ -146,7 +141,7 @@ class ListView {
     });
     _addCurrentSelectionHighlight();
   }
-  
+
   /**
    * Callback on a double click.
    */
