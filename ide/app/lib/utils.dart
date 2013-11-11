@@ -6,13 +6,13 @@ library spark.utils;
 
 import 'dart:web_audio';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
 String i18n(String messageId) {
-  return chrome_gen.i18n.getMessage(messageId);
+  return chrome.i18n.getMessage(messageId);
 }
 
 String capitalize(String s) {
@@ -38,7 +38,7 @@ void beep() {
  */
 String dirName(String path) {
   int index = path.lastIndexOf('/');
-  return index == -1 ? '' : path.substring(0, index);
+  return index == -1 ? null : path.substring(0, index);
 }
 
 /**
