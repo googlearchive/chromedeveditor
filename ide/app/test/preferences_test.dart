@@ -6,6 +6,7 @@ library preferences_test;
 
 import 'dart:async';
 
+//import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import '../lib/preferences.dart';
@@ -13,35 +14,53 @@ import '../lib/preferences.dart';
 main() {
   group('preferences.chrome', () {
     test('writeRead', () {
-      PreferenceStore localStorage = PreferenceStore.createLocal();
-      localStorage.setValue("foo1", "bar1");
-
-      return localStorage.getValue("foo1").then((String val) {
+      localStore.setValue("foo1", "bar1");
+      return localStore.getValue("foo1").then((String val) {
+        expect(localStore.isDirty, true);
         expect(val, "bar1");
       });
     });
 
     test('writeReadSync', () {
-      PreferenceStore syncStorage = PreferenceStore.createSync();
-      syncStorage.setValue("foo2", "bar2");
-
-      return syncStorage.getValue("foo2").then((String val) {
+      syncStore.setValue("foo2", "bar2");
+      return syncStore.getValue("foo2").then((String val) {
         expect(val, "bar2");
       });
     });
 
     test('write fires event', () {
-      PreferenceStore storage = PreferenceStore.createLocal();
-
-      Future future = storage.onPreferenceChange.take(1).toList().then((List<PreferenceEvent> events) {
+      Future future = localStore.onPreferenceChange.take(1).toList().then((List<PreferenceEvent> events) {
         PreferenceEvent event = events.single;
         expect(event.key, "foo1");
         expect(event.value, "bar");
       });
 
-      storage.setValue("foo1", "bar");
+      localStore.setValue("foo1", "bar");
 
       return future;
+    });
+
+//    // TODO: we are not getting change events
+//    test('mutation fires events', () {
+//      Future future = localStore.onPreferenceChange.first.then((PreferenceEvent event) {
+//        expect(event.key, "bar");
+//        expect(event.value, "baz");
+//      });
+//
+//      chrome.storage.local.set({'bar': 'baz'});
+//
+//      return future;
+//    });
+
+    test('map store gets dirty', () {
+      MapPreferencesStore mapStore = new MapPreferencesStore();
+      expect(mapStore.isDirty, false);
+      return mapStore.setValue('foo', 'bar').then((_) {
+        expect(mapStore.isDirty, true);
+        return mapStore.getValue('foo').then((value) {
+          expect(value, 'bar');
+        });
+      });
     });
   });
 }

@@ -15,7 +15,7 @@ import 'lib/ace.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/utils.dart';
-import 'lib/preferences.dart';
+import 'lib/preferences.dart' as preferences;
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
@@ -71,8 +71,8 @@ class Spark extends Application implements FilesControllerDelegate {
   Workspace workspace;
   analytics.Tracker tracker;
 
-  PreferenceStore localPrefs;
-  PreferenceStore syncPrefs;
+  preferences.PreferenceStore localPrefs;
+  preferences.PreferenceStore syncPrefs;
 
   SplitView _splitView;
   FilesController _filesController;
@@ -82,8 +82,8 @@ class Spark extends Application implements FilesControllerDelegate {
   Spark() {
     document.title = appName;
 
-    localPrefs = PreferenceStore.createLocal();
-    syncPrefs = PreferenceStore.createSync();
+    localPrefs = preferences.localStore;
+    syncPrefs = preferences.syncStore;
 
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
