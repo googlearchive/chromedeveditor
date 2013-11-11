@@ -42,12 +42,7 @@ class ListView {
     _element = element;
     _delegate = delegate;
     _container = new DivElement();
-    _container.style
-      ..width = '100%'
-      ..position = 'relative'
-      ..overflowX = 'hidden'
-      ..overflowY = 'scroll'
-      ..height = '100%';
+    _container.classes.add('listview-container');
     _element.children.add(_container);
     _selection = new HashSet();
     _rows = [];
