@@ -25,7 +25,7 @@ main() {
     });
 
     test('dirName', () {
-      expect(dirName('foo'), '');
+      expect(dirName('foo'), null);
       expect(dirName('foo/bar'), 'foo');
       expect(dirName('foo/bar/baz'), 'foo/bar');
     });
