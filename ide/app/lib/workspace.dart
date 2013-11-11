@@ -10,7 +10,7 @@ library spark.workspace;
 import 'dart:async';
 import 'dart:convert' show JSON;
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import 'preferences.dart';
@@ -21,43 +21,77 @@ import 'preferences.dart';
  */
 class Workspace implements Container {
 
-  Logger workspaceLogger = new Logger('spark.workspace');
+  Logger _logger = new Logger('spark.workspace');
   Container _parent = null;
-  chrome_gen.Entry _entry = null;
+  chrome.Entry _entry = null;
+  bool _syncable = false;
 
   List<Resource> _children = [];
   PreferenceStore _store;
 
-  StreamController<ResourceChangeEvent> _streamController =
+  StreamController<ResourceChangeEvent> _controller =
       new StreamController.broadcast();
 
   // TODO: perhaps move to returning a constructed Workspace via a static
   // method that returns a Future? see PicoServer
-  Workspace(PreferenceStore preferenceStore) {
-    this._store = preferenceStore;
-  }
+  Workspace(this._store);
 
   String get name => null;
+  String get path => '';
+  bool get isTopLevel => false;
+  String persistToToken() => path;
 
   Container get parent => null;
+  Project get project => null;
+  Workspace get workspace => this;
 
-  Future<Resource> link(chrome_gen.Entry entity) {
-
+  Future<Resource> link(chrome.Entry entity, bool syncable) {
     if (entity.isFile) {
-      var resource = new File(this, entity);
+      var resource = new File(this, entity, syncable);
       _children.add(resource);
-      _streamController.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
+      _controller.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
       return new Future.value(resource);
     } else {
-      var project = new Project(this, entity);
+      var project = new Project(this, entity, syncable);
       _children.add(project);
-      _streamController.add(new ResourceChangeEvent(project, ResourceEventType.ADD));
-      return _gatherChildren(project);
+      _controller.add(new ResourceChangeEvent(project, ResourceEventType.ADD));
+      return _gatherChildren(project, syncable);
     }
   }
 
-  void unlink(Resource resource) {
-    // TODO: remove resource from list of children and fire event
+  Future unlink(Resource resource) {
+    if (!_children.contains(resource)) {
+      throw new ArgumentError('${resource} is not a top level entity');
+    }
+
+    _children.remove(resource);
+    _controller.add(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+
+    return new Future.value();
+  }
+
+  Resource getChild(String name) {
+    for (Resource resource in getChildren()) {
+      if (resource.name == name) {
+        return resource;
+      }
+    }
+
+    return null;
+  }
+
+  Resource getChildPath(String childPath) {
+    int index = childPath.indexOf('/');
+    if (index == -1) {
+      return getChild(childPath);
+    } else {
+      Resource child = getChild(childPath.substring(0, index));
+      if (child is Container) {
+        return child.getChildPath(childPath.substring(index + 1));
+      } else {
+        return null;
+      }
+    }
   }
 
   List<Resource> getChildren() =>_children;
@@ -66,9 +100,7 @@ class Workspace implements Container {
 
   List<Project> getProjects() => _children.where((c) => c is Project).toList();
 
-  Stream<ResourceChangeEvent> get onResourceChange => _streamController.stream;
-
-  Project get project => null;
+  Stream<ResourceChangeEvent> get onResourceChange => _controller.stream;
 
   // read the workspace data from storage and restore entries
   Future restore() {
@@ -78,12 +110,12 @@ class Workspace implements Container {
       try {
         List<String> ids = JSON.decode(s);
         return Future.forEach(ids, (id) {
-          return chrome_gen.fileSystem.restoreEntry(id)
-              .then((entry) => link(entry))
+          return chrome.fileSystem.restoreEntry(id)
+              .then((entry) => link(entry, false))
               .catchError((_) => null);
         });
       } catch (e) {
-        workspaceLogger.log(Level.INFO, 'Exception in workspace restore', e);
+        _logger.log(Level.INFO, 'Exception in workspace restore', e);
         return new Future.error(e);
       }
     });
@@ -92,23 +124,33 @@ class Workspace implements Container {
   // store info for workspace children
   Future save() {
     List list = [];
-    _children.forEach((c) => list.add(chrome_gen.fileSystem.retainEntry(c._entry)));
+    _children.forEach((c) {
+      if (!c._syncable) list.add(chrome.fileSystem.retainEntry(c._entry));
+    });
+
     return _store.setValue('workspace', JSON.encode(list));
   }
 
-  Future<Resource> _gatherChildren(Container container) {
-    chrome_gen.DirectoryEntry dir = container._entry;
+  Resource restoreResource(String token) {
+    if (token == '') return this;
+    if (!token.startsWith('/')) return null;
+
+    return getChildPath(token.substring(1));
+  }
+
+  Future<Resource> _gatherChildren(Container container, bool syncable) {
+    chrome.DirectoryEntry dir = container._entry;
     List futures = [];
 
     return dir.createReader().readEntries().then((entries) {
-      for (chrome_gen.Entry ent in entries) {
+      for (chrome.Entry ent in entries) {
         if (ent.isFile) {
-          var file = new File(container, ent);
+          var file = new File(container, ent, syncable);
           container._children.add(file);
         } else {
-          var folder = new Folder(container, ent);
+          var folder = new Folder(container, ent, syncable);
           container._children.add(folder);
-          futures.add(_gatherChildren(folder));
+          futures.add(_gatherChildren(folder, syncable));
         }
       }
       return Future.wait(futures).then((_) => container);
@@ -119,18 +161,57 @@ class Workspace implements Container {
 abstract class Container extends Resource {
   List<Resource> _children = [];
 
-  Container(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  Container(Container parent, chrome.Entry entry, bool syncable) : super(parent, entry, syncable);
+
+  Resource getChild(String name) {
+    for (Resource resource in getChildren()) {
+      if (resource.name == name) {
+        return resource;
+      }
+    }
+
+    return null;
+  }
+
+  Resource getChildPath(String childPath) {
+    int index = childPath.indexOf('/');
+    if (index == -1) {
+      return getChild(childPath);
+    } else {
+      Resource child = getChild(childPath.substring(0, index));
+      if (child is Container) {
+        return child.getChildPath(childPath.substring(index + 1));
+      } else {
+        return null;
+      }
+    }
+  }
 
   List<Resource> getChildren() => _children;
 }
 
 abstract class Resource {
   Container _parent;
-  chrome_gen.Entry _entry;
+  chrome.Entry _entry;
+  bool _syncable;
 
-  Resource(this._parent, this._entry);
+  Resource(this._parent, this._entry, this._syncable);
 
   String get name => _entry.name;
+
+  /**
+   * Return the path to this element from the workspace. Paths are not
+   * guarenteed to be unique.
+   */
+  String get path => '${parent.path}/${name}';
+
+  bool get isTopLevel => _parent is Workspace;
+
+  /**
+   * Return a token that can be later used to deserialize this [Resource]. This
+   * is an opaque token.
+   */
+  String persistToToken() => path;
 
   Container get parent => _parent;
 
@@ -140,24 +221,29 @@ abstract class Resource {
    * Returns the containing [Project]. This can return null for loose files and
    * for the workspace.
    */
-  Project get project => parent == null ? null : parent.project;
+  Project get project => parent is Project ? parent : parent.project;
+
+  Workspace get workspace => parent.workspace;
 }
 
 class Folder extends Container {
-  Folder(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  Folder(Container parent, chrome.Entry entry, bool syncable):
+    super(parent, entry, syncable);
 }
 
 class File extends Resource {
-  File(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  File(Container parent, chrome.Entry entry, bool syncable):
+    super(parent, entry, syncable);
 
-  Future<String> getContents() => (_entry as chrome_gen.ChromeFileEntry).readText();
+  Future<String> getContents() => (_entry as chrome.ChromeFileEntry).readText();
 
   // TODO: fire change event
-  Future setContents(String contents) => (_entry as chrome_gen.ChromeFileEntry).writeText(contents);
+  Future setContents(String contents) => (_entry as chrome.ChromeFileEntry).writeText(contents);
 }
 
 class Project extends Folder {
-  Project(Container parent, chrome_gen.Entry entry) : super(parent, entry);
+  Project(Container parent, chrome.Entry entry, bool syncable):
+    super(parent, entry, syncable);
 
   Project get project => this;
 }

@@ -89,3 +89,13 @@ body {
 #hotdogMenu {
   float: right;  
 }
+
+#hotdogMenu li {
+	min-width: 16em;
+}
+
+/* bootstrap overrides */
+
+#toolbar .btn {
+  padding: 2px 8px 2px 8px ;
+}
