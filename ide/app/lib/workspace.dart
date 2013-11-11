@@ -215,6 +215,8 @@ abstract class Resource {
 
   Container get parent => _parent;
 
+  String get fullPath => _entry.fullPath;
+  
   /**
    * Returns the containing [Project]. This can return null for loose files and
    * for the workspace.
