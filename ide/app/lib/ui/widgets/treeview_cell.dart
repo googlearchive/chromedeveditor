@@ -84,20 +84,14 @@ class TreeViewCell implements ListViewCell {
     }
   }
 
-  Element get element {
-    return _element;
-  }
+  Element get element => _element;
 
-  set element(Element element) {
-    _element = element;
-  }
+  set element(Element element) => _element = element;
+
+  bool get highlighted => _highlighted;
 
   set highlighted(value) {
     _highlighted = value;
     _embeddedCell.highlighted = value;
-  }
-
-  bool get highlighted {
-    return _highlighted;
   }
 }

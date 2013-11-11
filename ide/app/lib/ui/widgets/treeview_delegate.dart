@@ -8,7 +8,7 @@ import 'treeview.dart';
 import 'listview_cell.dart';
 
 /**
- * This class is the list of callbacks methods needed for `TreeView`.
+ * This class is the list of callbacks methods needed for [TreeView].
  */
 
 abstract class TreeViewDelegate {

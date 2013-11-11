@@ -6,14 +6,11 @@ library spark.ui.widgets.treeview_row;
 
 class TreeViewRow {
   // UID of the node.
-  String nodeUID = null;
+  String nodeUID;
   // Expanded state of the node.
   bool expanded = false;
   // Indentation level of the node.
   int level = 0;
 
-  TreeViewRow(String aNodeUID) {
-    nodeUID = aNodeUID;
-    expanded = true;
-  }
+  TreeViewRow(this.nodeUID);
 }

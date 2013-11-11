@@ -26,27 +26,15 @@ class FileItemCell implements ListViewCell {
     _element.querySelector('.filename').text = name;
   }
 
-  Element get element {
-    return _element;
-  }
+  Element get element => _element;
 
-  set element(Element element) {
-    _element = element;
-  }
+  set element(Element element) => _element = element;
 
-  set highlighted(value) {
-    _highlighted = value;
-  }
+  bool get highlighted => _highlighted;
 
-  bool get highlighted {
-    return _highlighted;
-  }
+  set highlighted(value) => _highlighted = value;
 
-  Element get container {
-    return _container;
-  }
+  Element get container => _container;
 
-  set container(Element container) {
-    _container = container;
-  }
+  set container(Element container) => _container = container;
 }
