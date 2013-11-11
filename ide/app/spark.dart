@@ -330,6 +330,9 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   }
 }
 
+/**
+ * The abstract parent class of Spark related actions.
+ */
 abstract class SparkAction extends Action {
   Spark spark;
 
@@ -341,10 +344,7 @@ class FileNewAction extends SparkAction {
     defaultBinding("ctrl-n");
   }
 
-  void invoke() {
-    // TODO:
-    spark.newFile(null);
-  }
+  void invoke() => spark.newFile(null);
 }
 
 class FileOpenAction extends SparkAction {
@@ -352,10 +352,7 @@ class FileOpenAction extends SparkAction {
     defaultBinding("ctrl-o");
   }
 
-  void invoke() {
-    // TODO:
-    spark.openFile(null);
-  }
+  void invoke() => spark.openFile(null);
 }
 
 class FileSaveAction extends SparkAction {
@@ -363,10 +360,7 @@ class FileSaveAction extends SparkAction {
     defaultBinding("ctrl-s");
   }
 
-  void invoke() {
-    // TODO:
-    spark.saveFile(null);
-  }
+  void invoke() => spark.saveFile(null);
 }
 
 class FileExitAction extends SparkAction {
