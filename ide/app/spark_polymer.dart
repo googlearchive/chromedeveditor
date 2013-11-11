@@ -13,12 +13,14 @@ import 'lib/utils.dart' as utils;
 
 void main() {
   polymer.initPolymer();
-  SparkPolymer spark = new SparkPolymer();
+
+  // TODO: hard-code developer mode to true for now.
+  SparkPolymer spark = new SparkPolymer(true);
   spark.start();
 }
 
 class SparkPolymer extends Spark {
-  SparkPolymer() : super();
+  SparkPolymer(bool developerMode) : super(developerMode);
 
   @override
   void setupEditorThemes() {
