@@ -12,6 +12,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'lib/ace.dart';
+import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart';
@@ -52,8 +53,13 @@ void main() {
 
 class Spark extends Application implements FilesControllerDelegate {
   final bool developerMode;
+
+  // The Google Analytics app ID for Spark.
+  static final _ANALYTICS_ID = 'UA-45578231-1';
+
   AceEditor editor;
   Workspace workspace;
+  analytics.Tracker tracker;
 
   PreferenceStore localPrefs;
   PreferenceStore syncPrefs;
@@ -68,6 +74,12 @@ class Spark extends Application implements FilesControllerDelegate {
 
     localPrefs = PreferenceStore.createLocal();
     syncPrefs = PreferenceStore.createSync();
+
+    analytics.getService('Spark').then((service) {
+      // Init the analytics tracker and send a page view for the main page.
+      tracker = service.getTracker(_ANALYTICS_ID);
+      tracker.sendAppView('main', newSession: true);
+    });
 
     addParticipant(new _SparkSetupParticipant(this));
 
