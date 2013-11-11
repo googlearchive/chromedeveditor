@@ -12,6 +12,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 
 import 'lib/ace.dart';
+import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/utils.dart';
@@ -64,6 +65,8 @@ class Spark extends Application implements FilesControllerDelegate {
   PreferenceStore localPrefs;
   PreferenceStore syncPrefs;
 
+  ActionManager actionManager;
+
   SplitView _splitView;
   FilesController _filesController;
   PlatformInfo _platformInfo;
@@ -74,6 +77,8 @@ class Spark extends Application implements FilesControllerDelegate {
 
     localPrefs = PreferenceStore.createLocal();
     syncPrefs = PreferenceStore.createSync();
+
+    actionManager = new ActionManager();
 
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
@@ -101,7 +106,10 @@ class Spark extends Application implements FilesControllerDelegate {
     // Init the bootjack library (a wrapper around bootstrap).
     bootjack.Bootjack.useDefault();
 
+    createActions();
     buildMenu();
+
+    actionManager.registerKeyListener();
   }
 
   String get appName => i18n('app_name');
@@ -161,14 +169,24 @@ class Spark extends Application implements FilesControllerDelegate {
     editor.save();
   }
 
+  void createActions() {
+    actionManager.registerAction(new FileNewAction(this));
+    actionManager.registerAction(new FileOpenAction(this));
+    actionManager.registerAction(new FileSaveAction(this));
+    actionManager.registerAction(new FileExitAction(this));
+  }
+
   void buildMenu() {
     UListElement ul = querySelector('#hotdogMenu ul');
+
+    ul.children.insert(0, _createLIElement(null));
+    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
+    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
 
     querySelector('#themeLeft').onClick.listen((e) {
       e.stopPropagation();
       _handleChangeTheme(themeLeft: true);
     });
-
     querySelector('#themeRight').onClick.listen((e) {
       e.stopPropagation();
       _handleChangeTheme(themeLeft: false);
@@ -240,6 +258,21 @@ class Spark extends Application implements FilesControllerDelegate {
 
     return li;
   }
+
+  LIElement _createMenuItem(Action action) {
+    LIElement li = new LIElement();
+
+    AnchorElement a = new AnchorElement();
+    a.text = action.name;
+    SpanElement span = new SpanElement();
+    span.text = action.getBindingDescription();
+    span.classes.add('pull-right');
+    a.children.add(span);
+    li.children.add(a);
+    li.onClick.listen((_) => action.invoke());
+
+    return li;
+  }
 }
 
 class PlatformInfo {
@@ -296,5 +329,51 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   Future applicationClosed(Application application) {
     // TODO: flush out any preference info or workspace state?
 
+  }
+}
+
+/**
+ * The abstract parent class of Spark related actions.
+ */
+abstract class SparkAction extends Action {
+  Spark spark;
+
+  SparkAction(this.spark, String id, String name) : super(id, name);
+}
+
+class FileNewAction extends SparkAction {
+  FileNewAction(Spark spark) : super(spark, "file-new", "New") {
+    defaultBinding("ctrl-n");
+  }
+
+  void invoke() => spark.newFile(null);
+}
+
+class FileOpenAction extends SparkAction {
+  FileOpenAction(Spark spark) : super(spark, "file-open", "Open...") {
+    defaultBinding("ctrl-o");
+  }
+
+  void invoke() => spark.openFile(null);
+}
+
+class FileSaveAction extends SparkAction {
+  FileSaveAction(Spark spark) : super(spark, "file-save", "Save") {
+    defaultBinding("ctrl-s");
+  }
+
+  void invoke() => spark.saveFile(null);
+}
+
+class FileExitAction extends SparkAction {
+  FileExitAction(Spark spark) : super(spark, "file-exit", "Quit") {
+    macBinding("ctrl-q");
+    winBinding("ctrl-shift-f4");
+  }
+
+  void invoke() {
+    spark.close().then((_) {
+      chrome_gen.app.window.current().close();
+    });
   }
 }

@@ -8,6 +8,7 @@
 library spark.all_tests;
 
 import 'ace_test.dart' as ace_test;
+import 'actions_test.dart' as actions_test;
 import 'analytics_test.dart' as analytics_test;
 import 'analyzer_test.dart' as analyzer_test;
 import 'app_test.dart' as app_test;
@@ -29,6 +30,7 @@ import 'zlib_test.dart' as zlib_test;
  */
 void defineTests() {
   ace_test.main();
+  actions_test.main();
   analytics_test.main();
   analyzer_test.main();
   app_test.main();
