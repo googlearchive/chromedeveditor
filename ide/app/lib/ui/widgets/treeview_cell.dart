@@ -76,7 +76,7 @@ class TreeViewCell implements ListViewCell {
         // Wait for animation to finished before effectively changing the
         // expanded state.
         _animating = true;
-        new Timer(new Duration(milliseconds: ANIMATION_SPEED), () {
+        arrow.on['transitionend'].listen((event) {
           _animating = false;
           treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
         });
