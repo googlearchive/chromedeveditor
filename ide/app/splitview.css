@@ -1,0 +1,37 @@
+.splitview-horizontal {
+  flex: 1;
+  display: flex;
+  flex-flow: column;
+}
+
+.splitview-vertical {
+  flex: 1;
+  display: flex;
+  flex-flow: row;
+}
+
+.splitter {
+  background-color: #ddd;
+  position: relative;
+}
+
+.splitview-horizontal > .splitter {
+  height: 2px;
+}
+
+.splitview-vertical > .splitter {
+  width: 2px;
+}
+
+.splitter-handle {
+  position: absolute;
+  z-index: 100;
+}
+
+.splitview-vertical > .splitter > .splitter-handle {
+  cursor: ew-resize;
+}
+
+.splitview-horizontal > .splitter > .splitter-handle {
+  cursor: ns-resize;
+}

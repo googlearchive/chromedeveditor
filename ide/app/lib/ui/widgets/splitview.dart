@@ -15,6 +15,9 @@ class SplitView {
   /// The default initial position of the splitter.
   static const int DEFAULT_INITIAL_POSITION = 300;
 
+  /// The default margin of the splitter handle.
+  static const int DEFAULT_SPLITTER_MARGIN = 2;
+
   /// Whether the separator is horizontal or vertical.
   bool _horizontal;
 
@@ -46,6 +49,9 @@ class SplitView {
   /// The second view.
   Element _viewB;
 
+  /// Margin of the splitter handle.
+  int _splitMargin;
+
   /// Stream controller for resize event.
   StreamController<int> _onResizedContoller =
       new StreamController<int>.broadcast();
@@ -63,19 +69,24 @@ class SplitView {
    */
   SplitView(Element this._splitView, {
       bool horizontal: false,
-      int position: DEFAULT_INITIAL_POSITION}) {
+      int position: DEFAULT_INITIAL_POSITION,
+      int splitMargin: DEFAULT_SPLITTER_MARGIN}) {
 
     _viewA = _splitView.children[0];
     _viewB = _splitView.children[1];
 
     _splitterHandle = new DivElement();
-    _splitterHandle.classes.add('splitter-handle');
+    _splitterHandle..classes.add('splitter-handle');
 
     _splitter = new DivElement()
         ..classes.add('splitter')
         ..children.add(_splitterHandle);
 
     _splitView.children.insert(1, _splitter);
+
+    this.horizontal = horizontal;
+    this.position = position;
+    this.splitMargin = splitMargin;
 
     // Minimum size of the views.
     String minSizeString = _viewA.attributes['min-size'];
@@ -87,9 +98,6 @@ class SplitView {
     if (minSizeString != null) {
       minSizeB = int.parse(minSizeString);
     }
-
-    this.horizontal = horizontal;
-    this.position = position;
 
     document.onMouseDown.listen(_resizeDownHandler);
   }
@@ -146,6 +154,15 @@ class SplitView {
     }
     // File on resize event.
     _onResizedContoller.add(position);
+  }
+
+  int get splitMargin => _splitMargin;
+  void set splitMargin(int splitMargin) {
+    _splitMargin = splitMargin;
+    _splitterHandle..style.top = '-${splitMargin}px'
+                   ..style.left = '-${splitMargin}px'
+                   ..style.right = '-${splitMargin}px'
+                   ..style.bottom = '-${splitMargin}px';
   }
 
   /// Get effective coordinate of a mouse event according to the split
