@@ -81,6 +81,10 @@ class MapPreferencesStore implements PreferenceStore {
 
 /**
  * A [PreferenceStore] implementation based on `chrome.storage`.
+ *
+ * This preferences implementation will automatically flush any dirty changes
+ * out to `chrome.storage` every 6 seconds. That frequency will ensure that we
+ * do not exceed the rate limit imposed by `chrome.storage.sync`.
  */
 class _ChromePreferenceStore implements PreferenceStore {
   Map _map = {};
@@ -150,7 +154,8 @@ class _ChromePreferenceStore implements PreferenceStore {
 
   void _startTimer() {
     if (_timer == null) {
-      _timer = new Timer(new Duration(minutes: 1), flush);
+      // Flush dirty preferences every 6 seconds.
+      _timer = new Timer(new Duration(seconds: 6), flush);
     }
   }
 }
