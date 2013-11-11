@@ -58,6 +58,7 @@ body {
 #fileViewArea {
   border-top: 1px solid white;
   position: relative;
+  width: 300px;
 }
 
 #fileViewArea .listview-container {

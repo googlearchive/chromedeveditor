@@ -16,11 +16,11 @@
 }
 
 .splitview-horizontal > .splitter {
-  height: 2px;
+  height: 1px;
 }
 
 .splitview-vertical > .splitter {
-  width: 2px;
+  width: 1px;
 }
 
 .splitter-handle {

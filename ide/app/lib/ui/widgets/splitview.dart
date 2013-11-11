@@ -12,9 +12,6 @@ import 'dart:async';
  * separator that can be moved.
  */
 class SplitView {
-  /// The default initial position of the splitter.
-  static const int DEFAULT_INITIAL_POSITION = 300;
-
   /// The default margin of the splitter handle.
   static const int DEFAULT_SPLITTER_MARGIN = 2;
 
@@ -69,7 +66,7 @@ class SplitView {
    */
   SplitView(Element this._splitView, {
       bool horizontal: false,
-      int position: DEFAULT_INITIAL_POSITION,
+      int position: null,
       int splitMargin: DEFAULT_SPLITTER_MARGIN}) {
 
     _viewA = _splitView.children[0];
@@ -85,7 +82,11 @@ class SplitView {
     _splitView.children.insert(1, _splitter);
 
     this.horizontal = horizontal;
-    this.position = position;
+    if (position == null) {
+      this.position = horizontal ? _viewA.clientHeight : _viewA.clientWidth;
+    } else {
+      this.position = position;
+    }
     this.splitMargin = splitMargin;
 
     // Minimum size of the views.
