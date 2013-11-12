@@ -82,7 +82,7 @@ class FilesController implements TreeViewDelegate {
 
   List<Resource> getSelection() {
     List resources = [];
-    _treeView.selection.forEach((index) {
+    _treeView.listView.selection.forEach((index) {
         resources.add(_files[index]);
      });
     return resources;
