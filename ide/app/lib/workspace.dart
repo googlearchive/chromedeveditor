@@ -41,6 +41,7 @@ class Workspace implements Container {
   bool get isTopLevel => false;
   String persistToToken() => path;
 
+  Future remove() => null;
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
@@ -69,6 +70,12 @@ class Workspace implements Container {
 
     return new Future.value();
   }
+
+  Future delete(Resource resource) {
+    return resource.remove().then((_) => unlink(resource));
+  }
+
+  Future close(Resource resource) => unlink(resource);
 
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
@@ -214,6 +221,8 @@ abstract class Resource {
   String persistToToken() => path;
 
   Container get parent => _parent;
+
+  Future remove() => _entry.remove();
 
   /**
    * Returns the containing [Project]. This can return null for loose files and

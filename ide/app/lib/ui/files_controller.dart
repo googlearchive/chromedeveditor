@@ -67,6 +67,15 @@ class FilesController implements ListViewDelegate {
     return 20;
   }
 
+  List<Resource> getSelection() {
+    List resources = [];
+    _listView.selection.forEach((index) {
+        resources.add(_files[index]);
+     });
+    return resources;
+  }
+
+
   void listViewSelectedChanged(ListView view, List<int> rowIndexes) {
     if (rowIndexes.isEmpty) {
       return;
@@ -86,6 +95,12 @@ class FilesController implements ListViewDelegate {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
       _files.add(event.resource);
+      _listView.reloadData();
+    }
+    if (event.type == ResourceEventType.DELETE) {
+      _files.remove(event.resource);
+      // TODO: make a more informed selection, maybe before the delete?
+      selectLastFile();
       _listView.reloadData();
     }
   }
