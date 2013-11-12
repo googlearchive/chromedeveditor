@@ -57,13 +57,12 @@ main() {
   group('git.packIndex', () {
     test('packIndexParse', () {
       return initPack().then((Pack pack) {
-        initPackIndex().then((PackIndex packIdx) {
+        return initPackIndex().then((PackIndex packIdx) {
           pack.objects.forEach((PackObject obj) {
             // asserts the object found by index has correct offset.
             expect(obj.offset,packIdx.getObjectOffset(obj.sha));
           });
-          return new Future.value();
-        });   
+        });
       });
     });
   });
