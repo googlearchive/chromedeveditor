@@ -94,15 +94,10 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     workspace = new Workspace(localPrefs);
-
     editor = new AceEditor();
-
-    _splitView = new SplitView(querySelector('#splitview'));
-    _splitView.onResized.listen((_) {
-      editor.resize();
-    });
     _filesController = new FilesController(workspace, this);
 
+    setupSplitView();
     setupFileActions();
     setupEditorThemes();
 
@@ -120,6 +115,22 @@ class Spark extends Application implements FilesControllerDelegate {
   String get appVersion => chrome_gen.runtime.getManifest()['version'];
 
   PlatformInfo get platformInfo => _platformInfo;
+
+  void setupSplitView() {
+    _splitView = new SplitView(querySelector('#splitview'));
+    _splitView.onResized.listen((_) {
+      editor.resize();
+      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
+    });
+    syncPrefs.getValue('splitViewPosition').then((String position) {
+      if (position != null) {
+        int value = int.parse(position, onError: (_) => 0);
+        if (value != 0) {
+          _splitView.position = value;
+        }
+      }
+    });
+  }
 
   void setupFileActions() {
     querySelector("#newFile").onClick.listen(newFile);
