@@ -15,8 +15,6 @@ import 'ace.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 
-// TODO: make sure we're saving and restoring the selection pos
-
 // TODO: write a test for file change events
 
 // TODO: make sure we're firing change events
@@ -33,17 +31,22 @@ class EditorManager {
   StreamController<File> _streamController = new StreamController.broadcast();
 
   EditorManager(this._workspace, this._aceEditor, this._prefs) {
-    _prefs.getValue('editorStates').then((String data) {
-      if (data != null) {
-        for (Map m in JSON.decode(data)) {
-          _EditorState state = new _EditorState.fromMap(this, _workspace, m);
+    _workspace.whenAvailable().then((_) {
+      _prefs.getValue('editorStates').then((String data) {
+        if (data != null) {
+          for (Map m in JSON.decode(data)) {
+            _EditorState state = new _EditorState.fromMap(this, _workspace, m);
 
-          if (state != null) {
-            _editorStates.add(state);
+            if (state != null) {
+              _editorStates.add(state);
+            }
           }
         }
-      }
+      });
     });
+
+    // TODO: remove
+    onFileChange.listen(print);
   }
 
   File get currentFile => _currentState != null ? _currentState.file : null;
