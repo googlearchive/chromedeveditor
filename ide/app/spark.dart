@@ -292,9 +292,6 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void _startTrackingExceptions() {
-    // TODO: handle uncaught exceptions
-    //Zone.ROOT.handleUncaughtError();
-
     // Handle logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
       if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
@@ -308,6 +305,9 @@ class Spark extends Application implements FilesControllerDelegate {
         tracker.sendException(description);
       }
     });
+
+    // TODO: currently, there's no way in Dart to handle uncaught exceptions
+
   }
 }
 
