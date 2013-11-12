@@ -14,9 +14,9 @@ import 'git_pack.dart';
 
 /**
  * This class partially parses the data contained in a pack-*.idx file, and
- *  provides access to the offsets of the objects the packfile and the crc 
+ *  provides access to the offsets of the objects the packfile and the crc
  *  checksums of the objects.
- *  
+ *
  * = Version 2 pack-*.idx files support packs larger than 4 GiB, and
  *  have some other reorganizations.  They have the format:
  *
@@ -52,49 +52,47 @@ import 'git_pack.dart';
  *    corresponding packfile.
  *
  *    20-byte SHA1-checksum of all of the above.
- *    
- * TODO(grv) : add unittests.
  */
 
 class PackIndex {
-  
+
   static final int PACK_IDX_SIGNATURE = 0xff744f63;
   static final int PACK_VERSION = 2;
   static final int FAN_TABLE_LENGTH = 256 * 4;
-  
+
   ByteData _data;
   Uint8List _shaList;
   int _numObjects;
   int _offsetsOffset;
-  
+
   PackIndex(ByteBuffer buffer) {
-    
+
     _data = new ByteData.view(buffer);
-    
+
     // load the index into memory
     int signature = _data.getUint32(0);
     int version = _data.getUint32(4);
-    
+
     if (signature != PACK_IDX_SIGNATURE || version != PACK_VERSION) {
       //TODO throw a better error.
       throw "Bad pack index header. Only version 2 is supported.";
     }
-    
+
     int byteOffset = 8;
     int numObjects = _data.getUint32(byteOffset + (255 * 4));
-    
+
     // skip past fanout table.
     byteOffset += FAN_TABLE_LENGTH;
     int shaTableLen = numObjects * 20;
     _shaList = new Uint8List.view(buffer, byteOffset, shaTableLen);
-    
+
     // skip past shas and the CRC vals.
     byteOffset += shaTableLen + (numObjects * 4);
-    
+
     _offsetsOffset = byteOffset;
-    _numObjects = numObjects;    
+    _numObjects = numObjects;
   }
-  
+
   int _compareShas(List<int> sha1, List<int> sha2) {
     // assume first byte has been matched in the fan out table.
     for (var i =1; i < 20; ++i) {
@@ -104,32 +102,32 @@ class PackIndex {
     }
     return 0;
   }
-  
+
   Uint8List _getShaAtIndex(int index) {
     int byteOffset = index * 20;
     return _shaList.sublist(byteOffset, byteOffset + 20);
   }
-  
+
   int getObjectOffset(List<int> sha) {
     int fanIndex = sha[0];
-    
+
     int sliceStart = fanIndex > 0 ? (_data.getUint32(8 +
         (fanIndex - 1) * 4)) : 0;
     int sliceEnd = _data.getUint32(8 + (fanIndex * 4));
-    
+
     if (sliceEnd - sliceStart == 0) {
       return -1;
     }
-    
+
     int index;
     while (sliceEnd >= sliceStart) {
-   
+
       int split = sliceStart + ((sliceEnd - sliceStart) / 2).floor();
-      
-      dynamic mid = _getShaAtIndex(split);
-      
+
+      List<int> mid = _getShaAtIndex(split);
+
       int compare = _compareShas(sha, mid);
-      
+
       if (compare == 0) {
         index = split;
         break;
@@ -139,42 +137,42 @@ class PackIndex {
         sliceStart = split + 1;
       }
     }
-    
+
     if (index == null) {
       return -1;
     }
-    
+
     return _data.getUint32(_offsetsOffset + (index * 4));
   }
-  
+
   /**
    * Creates a pack file index and returns the bytestream.
    */
   Uint8List writePackIndex(List<PackObject> objects, List<int> packSha) {
     int size = 4 + 4 + (256 * 4) + (objects.length * 20) + (objects.length * 4)
         + (objects.length * 4) + (20 * 2);
-    
+
     Uint8List byteList = new Uint8List(size);
-    
+
     objects.sort((obj1, obj2) {
       for (int i = 0; i < 20; ++i) {
         if (obj1.sha[i] != obj2.sha[i]) {
-          return obj1.sha.codeUnitAt(i) - obj2.sha.codeUnitAt(i);
+          return obj1.sha[i] - obj2.sha[i];
         }
       }
       // Should never reach here.
-      return 0; 
+      return 0;
     });
-    
+
     ByteData data = new ByteData.view(byteList.buffer);
-    
+
     data.setUint32(0, PACK_IDX_SIGNATURE);
     data.setUint32(4, PACK_VERSION);
-    
+
     // fan table
     int byteOffset = 8;
     int current = 0;
-    
+
     for (int i = 0; i < objects.length; ++i) {
       int next = objects[i].sha[0];
       if (next != current) {
@@ -187,43 +185,43 @@ class PackIndex {
     for (int j = current; j < 256; ++j) {
       data.setUint32(byteOffset + (j * 4), objects.length);
     }
-    
+
     byteOffset += (256 * 4);
-    
+
     // Write list of shas.
     objects.forEach((PackObject obj) {
       for (int j = 0; j < 20; ++j) {
         data.setUint8(byteOffset++, obj.sha[j]);
       }
     });
-    
+
     // Write list of crcs.
     objects.forEach((PackObject obj) {
       data.setUint32(byteOffset, obj.crc);
       byteOffset +=4;
     });
-  
+
     // Write list of offsets. Only upto 32 bit long offsets are supported.
     // TODO(grv) : add support for longer offsets(maybe).
     objects.forEach((PackObject obj) {
       data.setUint32(byteOffset, obj.offset);
       byteOffset += 4;
     });
-    
+
     // Write pack file sha.
     for (int i = 0; i < 20; ++i) {
       data.setUint8(byteOffset++, packSha[i]);
     }
-    
+
     // Write sha for all of the above.
     crypto.SHA1 sha1 = new crypto.SHA1();
     sha1.newInstance().add(byteList.getRange(0, byteOffset).toList());
     List<int> indexSha = sha1.close();
-    
+
     indexSha.forEach((int byte) {
       data.setUint8(byteOffset, byte);
     });
-    
-    return byteList;    
-  } 
+
+    return byteList;
+  }
 }
