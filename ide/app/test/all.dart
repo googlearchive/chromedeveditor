@@ -15,6 +15,7 @@ import 'app_test.dart' as app_test;
 import 'compiler_test.dart' as compiler_test;
 import 'files_test.dart' as files_test;
 import 'git_object_test.dart' as git_object_test;
+import 'git_objectstore_test.dart' as git_objectstore_test;
 import 'git_pack_test.dart' as git_pack_test;
 import 'git_pack_index_test.dart' as git_pack_index_test;
 import 'git_test.dart' as git_test;
@@ -38,6 +39,7 @@ void defineTests() {
   compiler_test.main();
   files_test.main();
   git_object_test.main();
+  git_objectstore_test.main();
   git_pack_test.main();
   git_pack_index_test.main();
   git_test.main();

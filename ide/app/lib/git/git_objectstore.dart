@@ -45,8 +45,8 @@ class PackEntry {
 class ObjectStore {
 
   static final GIT_FOLDER_PATH = '.git/';
-  static final GIT_OBJECT_FOLDER_PATH = '.git/objects';
-  static final GIT_HEAD_PATH = '.git/HEAD';
+  static final OBJECT_FOLDER_PATH = 'objects';
+  static final HEAD_PATH = 'HEAD';
   static final HEAD_MASTER_REF_PATH = 'refs/head/master';
   static final HEAD_MASTER_SHA = '0000000000000000000000000000000000000000';
 
@@ -55,6 +55,9 @@ class ObjectStore {
 
   // The root directory of the objects the objectstore represnts.
   chrome.DirectoryEntry _objectDir;
+
+  // Git directory path.
+  String gitPath = '.git/';
 
   //TODO(grv) : Expose pack , packIdx as dart and add type here.
   List<PackEntry> _packs = [];
@@ -69,7 +72,7 @@ class ObjectStore {
   }
 
   Future load() {
-    return _rootDir.createDirectory(GIT_OBJECT_FOLDER_PATH).then((
+    return _rootDir.createDirectory(gitPath + OBJECT_FOLDER_PATH).then((
         chrome.DirectoryEntry objectsDir) {
       _objectDir = objectsDir;
 
@@ -94,12 +97,12 @@ class ObjectStore {
 
   Future<chrome.FileEntry> setHeadRef(String refName, String sha) {
     String content = 'ref: ${refName}\n';
-    return FileOps.createFileWithContent(_rootDir, GIT_HEAD_PATH,
+    return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
         content, "Text");
   }
 
   Future<String> getHeadRef() {
-    return _rootDir.getFile(GIT_HEAD_PATH).then((chrome.ChromeFileEntry entry) {
+    return _rootDir.getFile(gitPath + HEAD_PATH).then((chrome.ChromeFileEntry entry) {
       entry.readText().then((String content) {
         Completer completer = new Completer();
         // get rid of the initial 'ref: ' plus newline at end.
@@ -392,9 +395,9 @@ class ObjectStore {
   }
 
   Future _init() {
-    return _rootDir.createDirectory(GIT_OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
+    return _rootDir.createDirectory(gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
       _objectDir = objectDir;
-      return FileOps.createFileWithContent(objectDir, GIT_HEAD_PATH,
+      return FileOps.createFileWithContent(objectDir, gitPath +HEAD_PATH,
           'ref: refs/heads/master\n', 'Text').then((entry) => entry, onError: (e) {
             // throw file error
           });
