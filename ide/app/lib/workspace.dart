@@ -41,7 +41,7 @@ class Workspace implements Container {
   bool get isTopLevel => false;
   String persistToToken() => path;
 
-  // TODO: can we remove this? Should users migrate to path or token/
+  // TODO: we should migrarte users to path or perhaps persistToToken()
   String get fullPath => '';
 
   Container get parent => null;
