@@ -8,9 +8,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'dart:html';
+import 'dart:js';
 import 'dart:typed_data';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:crypto/crypto.dart' as crypto;
 
 import 'file_operations.dart';
 import 'git_object.dart';
@@ -59,7 +61,6 @@ class ObjectStore {
   // Git directory path.
   String gitPath = '.git/';
 
-  //TODO(grv) : Expose pack , packIdx as dart and add type here.
   List<PackEntry> _packs = [];
 
   ObjectStore(chrome.DirectoryEntry root) {
@@ -420,8 +421,38 @@ class ObjectStore {
     }).then((_) => trees);
   }
 
-  Future writeRawObject(String type, String content) {
-    //TODO to be implemented.
+  Future writeRawObject(String type, Uint8List content) {
+
+    Completer completer = new Completer();
+    List<dynamic> blobParts = [];
+
+    String header = 'type ${content.length}' ;
+
+    blobParts.add(header);
+    blobParts.add(new Uint8List.fromList([0]));
+    blobParts.add(content);
+
+    var reader = new JsObject(context['FileReader']);
+
+    reader['onloadend'] = (var event) {
+      chrome.ArrayBuffer buffer = reader['result'];
+      crypto.SHA1 sha1 = new crypto.SHA1();
+      Uint8List data = new Uint8List.fromList(buffer.getBytes());
+      sha1.add(data);
+      List<int> digest = sha1.close();
+      return _findPackedObject(digest).then((_) {
+        completer.complete(digest);
+      }, onError: (e) {
+        return _storeInFile(shaBytesToString(digest), data);
+      });
+    };
+
+    reader['onerror'] = (var domError) {
+      completer.completeError(domError);
+    };
+
+    reader.callMethod('readAsArrayBuffer', [new Blob(blobParts)]);
+    return completer.future;
   }
 
   Future _storeInFile(String digest, Uint8List store) {
