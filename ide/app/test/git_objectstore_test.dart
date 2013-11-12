@@ -11,18 +11,12 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/git/git_objectstore.dart';
 
-final String GIT_ROOT_DIRECTORY_PATH = 'test';
+final String GIT_ROOT_DIRECTORY_PATH = 'test/data';
 
 Future getGitDirectory() {
   return chrome_gen.runtime.getPackageDirectoryEntry().then(
       (chrome_gen.DirectoryEntry dir) {
-    return dir.createReader().readEntries().then((List entries) {
-      chrome_gen.DirectoryEntry dir = entries.firstWhere(
-          (e) => e.fullPath == '/crxfs/test');
-      return dir.createReader().readEntries().then((List entries) {
-        return entries.firstWhere((e) => e.fullPath == '/crxfs/test/data');
-      });
-    });
+    return dir.getDirectory(GIT_ROOT_DIRECTORY_PATH);
   });
 }
 
