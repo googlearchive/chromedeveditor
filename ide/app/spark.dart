@@ -17,7 +17,7 @@ import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/utils.dart';
-import 'lib/preferences.dart';
+import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
@@ -63,8 +63,8 @@ class Spark extends Application implements FilesControllerDelegate {
   Workspace workspace;
   analytics.Tracker tracker = new analytics.NullTracker();
 
-  PreferenceStore localPrefs;
-  PreferenceStore syncPrefs;
+  preferences.PreferenceStore localPrefs;
+  preferences.PreferenceStore syncPrefs;
 
   ActionManager actionManager;
 
@@ -76,8 +76,8 @@ class Spark extends Application implements FilesControllerDelegate {
   Spark(this.developerMode) {
     document.title = appName;
 
-    localPrefs = PreferenceStore.createLocal();
-    syncPrefs = PreferenceStore.createSync();
+    localPrefs = preferences.localStore;
+    syncPrefs = preferences.syncStore;
 
     actionManager = new ActionManager();
 
