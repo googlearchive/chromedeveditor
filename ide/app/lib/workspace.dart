@@ -42,6 +42,9 @@ class Workspace implements Container {
   String persistToToken() => path;
 
   Future remove() => null;
+  // TODO: we should migrarte users to path or perhaps persistToToken()
+  String get fullPath => '';
+
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
@@ -223,6 +226,9 @@ abstract class Resource {
   Container get parent => _parent;
 
   Future remove() => _entry.remove();
+
+  String get fullPath => _entry.fullPath;
+
 
   /**
    * Returns the containing [Project]. This can return null for loose files and

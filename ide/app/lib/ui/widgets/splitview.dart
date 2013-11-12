@@ -5,162 +5,198 @@
 library spark.ui.widgets.splitview;
 
 import 'dart:html';
-import '../utils/html_utils.dart';
+import 'dart:async';
 
 /**
  * This class encapsulates a splitview. It's a view with two panels and a
  * separator that can be moved.
  */
-
 class SplitView {
-  // When the separator is being moved.
-  bool _resizeStarted = false;
-  int _resizeStartX;
-  int _initialPositionX;
-  // The element containing left and right view.
-  Element _splitView;
-  // The separator of between the views.
-  Element _splitter;
-  // The element of the area that can be dragged with the mouse to move the
-  // separator.
-  Element _splitterHandle;
-  // The left view.
-  Element _leftView;
-  // The right view.
-  Element _rightView;
-  // Whether the separator is horizontal (or vertical).
+  /// The default margin of the splitter handle.
+  static const int DEFAULT_SPLITTER_MARGIN = 2;
+
+  /// Whether the separator is horizontal or vertical.
   bool _horizontal;
-  // Minimum size of the left view.
-  int _leftMinSize = 0;
-  // Minimum size of the right view.
-  int _rightMinSize = 0;
+
+  /// Minimum size of the first view.
+  int _minSizeA = 0;
+
+  /// Minimum size of the second view.
+  int _minSizeB = 0;
+
+  /// Current position of the splitter.
+  int _position;
+
+  /// When the separator is being moved.
+  int _initialPosition;
+
+  /// The element containing two sub views.
+  Element _splitView;
+
+  /// The separator of between the views.
+  Element _splitter;
+
+  /// The element of the area that can be dragged with the mouse to move the
+  /// separator. It is invisible and a little bit wider than [_splitter].
+  Element _splitterHandle;
+
+  /// The first view.
+  Element _viewA;
+
+  /// The second view.
+  Element _viewB;
+
+  /// Margin of the splitter handle.
+  int _splitMargin;
+
+  /// Stream controller for resize event.
+  StreamController<int> _onResizedContoller =
+      new StreamController<int>.broadcast();
+
+  /// The subscription of the mouse move event when dragging.
+  StreamSubscription<MouseEvent> _onMouseMoveSubscription;
+
+  /// The subscription of the mouse up event when dragging.
+  StreamSubscription<MouseEvent> _onMouseUpSubscription;
 
   /**
-   * Constructor the the SplitView. The element must contain a left view with
-   * class .left and a right view with class .right.
-   * The separator element will be created.
+   * Constructor the the SplitView. The element must contain exactly two
+   * elements.
+   * The separator element will be injected.
    */
-  SplitView(Element splitView) {
-    _splitView = splitView;
-    _leftView = splitView.querySelector('.left');
-    _rightView = splitView.querySelector('.right');
+  SplitView(Element this._splitView, {
+      bool horizontal: false,
+      int position: null,
+      int splitMargin: DEFAULT_SPLITTER_MARGIN}) {
 
-    // Is the separator horizontal or vertical?
-    // It will depend on the initial layout of the left/right views.
-    _horizontal =
-        (getAbsolutePosition(_leftView).x ==getAbsolutePosition(_rightView).x);
+    _viewA = _splitView.children[0];
+    _viewB = _splitView.children[1];
+
+    _splitterHandle = new DivElement();
+    _splitterHandle..classes.add('splitter-handle');
+
+    _splitter = new DivElement()
+        ..classes.add('splitter')
+        ..children.add(_splitterHandle);
+
+    _splitView.children.insert(1, _splitter);
+
+    this.horizontal = horizontal;
+    if (position == null) {
+      this.position = horizontal ? _viewA.clientHeight : _viewA.clientWidth;
+    } else {
+      this.position = position;
+    }
+    this.splitMargin = splitMargin;
 
     // Minimum size of the views.
-    String minSizeString = _leftView.attributes['min-size'];
+    String minSizeString = _viewA.attributes['min-size'];
     if (minSizeString != null) {
-      _leftMinSize = int.parse(minSizeString);
-    }
-    minSizeString = _rightView.attributes['min-size'];
-    if (minSizeString != null) {
-      _rightMinSize = int.parse(minSizeString);
+      minSizeA = int.parse(minSizeString);
     }
 
-    // Separator and drag zone of the separator.
-    const int splitterMargin = 3;
-    _splitter = new DivElement();
-    _splitter.classes.add('splitter');
-    _splitter.style
-      ..height = '100%'
-      ..width = '1px'
-      ..position = 'absolute';
-    _splitView.children.add(_splitter);
-    _splitterHandle = new DivElement();
-    _splitterHandle.classes.add('splitter-handle');
-    _splitterHandle.style
-      ..position = 'relative'
-      ..height = '100%'
-      ..cursor = 'ew-resize'
-      ..zIndex = '100';
-    _splitter.children.add(_splitterHandle);
+    minSizeString = _viewB.attributes['min-size'];
+    if (minSizeString != null) {
+      minSizeB = int.parse(minSizeString);
+    }
 
-    if (_isVertical()) {
-      _splitterHandle.style
-        ..left = (-splitterMargin).toString() + 'px'
-        ..width = (splitterMargin * 2).toString() + 'px';
+    document.onMouseDown.listen(_resizeDownHandler);
+  }
+
+  /// OnResized event.
+  Stream<int> get onResized => _onResizedContoller.stream;
+
+  /// Gets/sets whether the splitview splits horizontally.
+  bool get horizontal => _horizontal;
+  void set horizontal(bool horizontal) {
+    if (_horizontal != horizontal) {
+      _horizontal = horizontal;
+      _splitView.classes.toggle('splitview-horizontal', horizontal);
+      _splitView.classes.toggle('splitview-vertical', !horizontal);
+      // Refresh the position.
+      position = position;
+    }
+  }
+
+  /// Gets/sets whether the splitview splits vertically.
+  bool get vertical => !horizontal;
+  set vertical(bool vertical) {
+    horizontal = !vertical;
+  }
+
+  /// Gets/sets minimum sized of the first sub-view.
+  int get minSizeA => _minSizeA;
+  void set minSizeA(int minSizeA) {
+    if (horizontal) {
+      _viewA.style.minHeight = '${minSizeA}px';
     } else {
-      _splitterHandle.style
-        ..left = (-splitterMargin).toString() + 'px'
-        ..width = (splitterMargin * 2).toString() + 'px';
+      _viewA.style.minWidth = '${minSizeA}px';
     }
-
-    // Set initial position of the separator.
-    _setSplitterPosition(_leftView.clientWidth);
-
-    document
-      ..onMouseDown.listen(_resizeDownHandler)
-      ..onMouseMove.listen(_resizeMoveHandler)
-      ..onMouseUp.listen(_resizeUpHandler);
   }
 
-  bool _isHorizontal() {
-    return _horizontal;
+  /// Gets/sets minimum sized of the second sub-view.
+  int get minSizeB => _minSizeB;
+  void set minSizeB(int minSizeB) {
+    if (horizontal) {
+      _viewB.style.minHeight = '${minSizeB}px';
+    } else {
+      _viewB.style.minWidth = '${minSizeB}px';
+    }
   }
 
-  bool _isVertical() {
-    return !_isHorizontal();
+  /// Gets/sets the current position of the splitter.
+  int get position => _position;
+  void set position(int position) {
+    _position = position;
+    if (horizontal) {
+      _viewA.style.height = '${position}px';
+    } else {
+      _viewA.style.width = '${position}px';
+    }
+    // File on resize event.
+    _onResizedContoller.add(position);
   }
 
-  /**
-   * Event handler for mouse button down.
-   */
+  int get splitMargin => _splitMargin;
+  void set splitMargin(int splitMargin) {
+    _splitMargin = splitMargin;
+    _splitterHandle..style.top = '-${splitMargin}px'
+                   ..style.left = '-${splitMargin}px'
+                   ..style.right = '-${splitMargin}px'
+                   ..style.bottom = '-${splitMargin}px';
+  }
+
+  /// Get effective coordinate of a mouse event according to the split
+  /// direction.
+  int _getOffsetFromEvent(MouseEvent event) =>
+      horizontal ? event.screen.y : event.screen.x;
+
+  /// Event handler for mouse button down.
   void _resizeDownHandler(MouseEvent event) {
-    if (_isHorizontal()) {
-      // splitter is horizontal.
-      if (isMouseLocationInElement(event, _splitterHandle, 0, 0)) {
-        _resizeStarted = true;
-      }
-    } else {
-      // splitter is vertical.
-      if (isMouseLocationInElement(event, _splitterHandle, 0, 0)) {
-        _resizeStarted = true;
-      }
-    }
-    if (_resizeStarted) {
-      _resizeStartX = event.screen.x;
-      _initialPositionX = _splitter.offsetLeft;
+    if (event.button == 0 && event.target == _splitterHandle) {
+      _initialPosition = position - _getOffsetFromEvent(event);
+
+      _onMouseMoveSubscription =
+          document.onMouseMove.listen(_resizeMoveHandler);
+      _onMouseUpSubscription = document.onMouseUp.listen(_resizeUpHandler);
+
+      event.stopPropagation();
+      event.preventDefault();
     }
   }
 
-  /**
-   * Event handler for mouse move.
-   */
+  /// Event handler for mouse move.
   void _resizeMoveHandler(MouseEvent event) {
-    if (_resizeStarted) {
-      int value = _initialPositionX + event.screen.x - _resizeStartX;
-      if (value > _splitView.clientWidth - _rightMinSize) {
-        value = _splitView.clientWidth - _rightMinSize;
-      }
-      if (value < _leftMinSize) {
-        value = _leftMinSize;
-      }
-      _setSplitterPosition(value);
-    }
+    position = _initialPosition + _getOffsetFromEvent(event);
+    event.stopPropagation();
+    event.preventDefault();
   }
 
-  /**
-   * Event handler for mouse button up.
-   */
+  /// Event handler for mouse button up.
   void _resizeUpHandler(MouseEvent event) {
-    if (_resizeStarted) {
-      _resizeStarted = false;
-    }
-  }
-
-  /*
-   * Set the new location of the separator. It will also change the size of
-   * the left view and the right view, depending on the location of the
-   * separator.
-   */
-  void _setSplitterPosition(int position) {
-    _leftView.style.width = position.toString() + 'px';
-    _splitter.style.left = position.toString() + 'px';
-    _rightView.style
-      ..left = (position + 1).toString() + 'px'
-      ..width = 'calc(100% - ' + (position + 1).toString() + 'px)';
+    _onMouseMoveSubscription.cancel();
+    _onMouseMoveSubscription = null;
+    _onMouseUpSubscription.cancel();
+    _onMouseUpSubscription = null;
   }
 }

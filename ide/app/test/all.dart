@@ -16,6 +16,7 @@ import 'compiler_test.dart' as compiler_test;
 import 'files_test.dart' as files_test;
 import 'git_object_test.dart' as git_object_test;
 import 'git_pack_test.dart' as git_pack_test;
+import 'git_pack_index_test.dart' as git_pack_index_test;
 import 'git_test.dart' as git_test;
 import 'preferences_test.dart' as preferences_test;
 import 'sdk_test.dart' as sdk_test;
@@ -38,6 +39,7 @@ void defineTests() {
   files_test.main();
   git_object_test.main();
   git_pack_test.main();
+  git_pack_index_test.main();
   git_test.main();
   preferences_test.main();
   sdk_test.main();

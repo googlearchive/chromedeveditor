@@ -12,13 +12,14 @@ import 'dart:html';
 
 abstract class ListViewCell {
   /**
-   * HTML Element used to display an item of the list. 
+   * HTML Element used to display an item of the list.
    * read-only
    */
   Element element;
-  
+
   /**
    * Set highlighted to true to highlight the selection of this cell.
+   * Override the setter to reflect highlighted state.
    */
   bool highlighted;
 }
