@@ -125,16 +125,14 @@ main() {
         expect(resource, isNotNull);
         expect(workspace.getChildren().contains(resource), isTrue);
         expect(workspace.getFiles().contains(resource), isTrue);
-        workspace.delete(resource);
+        workspace.deleteResource(resource);
       });
 
-      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
-        ResourceChangeEvent event = events.single;
+      return workspace.onResourceChange.first.then((ResourceChangeEvent event) {
         expect(event.resource.name, fileEntry.name);
         expect(event.type, ResourceEventType.DELETE);
       });
 
-      return future;
     });
 
     test('add directory, check for resource add event', () {
