@@ -15,6 +15,9 @@ import 'package:logging/logging.dart';
 
 import 'preferences.dart';
 
+StreamController<ResourceChangeEvent> _controller =
+    new StreamController.broadcast();
+
 /**
  * The Workspace is a top-level entity that can contain files and projects. The
  * files that it contains are loose files; they do not have parent folders.
@@ -29,8 +32,6 @@ class Workspace implements Container {
   List<Resource> _children = [];
   PreferenceStore _store;
 
-  StreamController<ResourceChangeEvent> _controller =
-      new StreamController.broadcast();
 
   // TODO: perhaps move to returning a constructed Workspace via a static
   // method that returns a Future? see PicoServer
@@ -41,7 +42,7 @@ class Workspace implements Container {
   bool get isTopLevel => false;
   String persistToToken() => path;
 
-  Future remove() => null;
+  Future delete() => null;
   // TODO: we should migrarte users to path or perhaps persistToToken()
   String get fullPath => '';
 
@@ -74,8 +75,12 @@ class Workspace implements Container {
     return new Future.value();
   }
 
-  Future delete(Resource resource) {
-    return resource.remove().then((_) => unlink(resource));
+  Future remove(Resource resource) {
+    return unlink(resource);
+  }
+
+  Future deleteResource(Resource resource) {
+   return resource.delete();
   }
 
   Future close(Resource resource) => unlink(resource);
@@ -197,6 +202,12 @@ abstract class Container extends Resource {
     }
   }
 
+  Future remove(Resource resource) {
+    _children.remove(resource);
+    _controller.add(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+    return new Future.value();
+  }
+
   List<Resource> getChildren() => _children;
 }
 
@@ -225,7 +236,9 @@ abstract class Resource {
 
   Container get parent => _parent;
 
-  Future remove() => _entry.remove();
+  Future delete() =>
+    _entry.remove().then((_) => _parent.remove(this));
+
 
   String get fullPath => _entry.fullPath;
 

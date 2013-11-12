@@ -168,8 +168,13 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void deleteFile(_) {
     // TODO: handle multiple selection
-    Resource resource = _filesController.getSelection().first;
-    workspace.delete(resource);
+    Resource resource;
+    try {
+      resource = _filesController.getSelection().first;
+    } on StateError catch (ex) {
+
+    }
+    if (resource != null) workspace.deleteResource(resource);
   }
 
   void saveAsFile(_) {
