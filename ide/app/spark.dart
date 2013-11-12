@@ -9,12 +9,13 @@ import 'dart:convert' show JSON;
 import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/editors.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart';
 import 'lib/tests.dart';
@@ -29,7 +30,7 @@ import 'test/all.dart' as all_tests;
  * If app.json does not exit, it returns true.
  */
 Future<bool> isTestMode() {
-  String url = chrome_gen.runtime.getURL('app.json');
+  String url = chrome.runtime.getURL('app.json');
   return HttpRequest.getString(url).then((String contents) {
     bool result = true;
     try {
@@ -60,6 +61,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   AceEditor editor;
   Workspace workspace;
+  EditorManager editorManager;
   analytics.Tracker tracker;
 
   PreferenceStore localPrefs;
@@ -89,13 +91,14 @@ class Spark extends Application implements FilesControllerDelegate {
     addParticipant(new _SparkSetupParticipant(this));
 
     // TODO: this event is not being fired. A bug with chrome apps / Dartium?
-    chrome_gen.app.window.onClosed.listen((_) {
+    chrome.app.window.onClosed.listen((_) {
       close();
     });
 
     workspace = new Workspace(localPrefs);
 
     editor = new AceEditor();
+    editorManager = new EditorManager(workspace, editor, localPrefs);
 
     _splitView = new SplitView(querySelector('#splitview'));
     _filesController = new FilesController(workspace, this);
@@ -114,15 +117,15 @@ class Spark extends Application implements FilesControllerDelegate {
 
   String get appName => i18n('app_name');
 
-  String get appVersion => chrome_gen.runtime.getManifest()['version'];
+  String get appVersion => chrome.runtime.getManifest()['version'];
 
   PlatformInfo get platformInfo => _platformInfo;
 
   void setupFileActions() {
-    querySelector("#newFile").onClick.listen(newFile);
-    querySelector("#openFile").onClick.listen(openFile);
-    querySelector("#saveFile").onClick.listen(saveFile);
-    querySelector("#saveAsFile").onClick.listen(saveAsFile);
+    querySelector("#newFile").onClick.listen(
+        (_) => actionManager.getAction('file-new').invoke());
+    querySelector("#openFile").onClick.listen(
+        (_) => actionManager.getAction('file-open').invoke());
   }
 
   void setupEditorThemes() {
@@ -133,15 +136,17 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
-  void newFile(_) {
-    editor.newFile();
+  void newFile() {
+    // TODO:
+    print('implement newFile()');
+    //editor.newFile();
   }
 
-  void openFile(_) {
-    chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
-        type: chrome_gen.ChooseEntryType.OPEN_WRITABLE_FILE);
-    chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
-      chrome_gen.ChromeFileEntry entry = result.entry;
+  void openFile() {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
+      chrome.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
         workspace.link(entry, false).then((file) {
@@ -152,22 +157,18 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
-  void saveAsFile(_) {
-    chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
-        type: chrome_gen.ChooseEntryType.SAVE_FILE);
-
-    chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
-      chrome_gen.ChromeFileEntry entry = result.entry;
-      workspace.link(entry, false).then((file) {
-        editor.saveAs(file);
-        workspace.save();
-      });
-    }).catchError((e) => null);
-  }
-
-  void saveFile(_) {
-    editor.save();
-  }
+//  void saveAsFile(_) {
+//    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+//        type: chrome.ChooseEntryType.SAVE_FILE);
+//
+//    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
+//      chrome.ChromeFileEntry entry = result.entry;
+//      workspace.link(entry, false).then((file) {
+//        editor.saveAs(file);
+//        workspace.save();
+//      });
+//    }).catchError((e) => null);
+//  }
 
   void createActions() {
     actionManager.registerAction(new FileNewAction(this));
@@ -210,9 +211,7 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void openInEditor(Resource file) {
-    editor.setContent(file);
-  }
+  void openInEditor(Resource file) => editorManager.select(file);
 
   void _handleChangeTheme({bool themeLeft: true}) {
     int index = AceEditor.THEMES.indexOf(editor.theme);
@@ -225,7 +224,7 @@ class Spark extends Application implements FilesControllerDelegate {
   void _handleUpdateCheck() {
     showStatus("Checking for updates...");
 
-    chrome_gen.runtime.requestUpdateCheck().then((chrome_gen.RequestUpdateCheckResult result) {
+    chrome.runtime.requestUpdateCheck().then((chrome.RequestUpdateCheckResult result) {
       if (result.status == 'update_available') {
         // result.details['version']
         showStatus("An update is available.");
@@ -305,7 +304,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
   Future applicationStarting(Application application) {
     // get platform info
-    return chrome_gen.runtime.getPlatformInfo().then((Map m) {
+    return chrome.runtime.getPlatformInfo().then((Map m) {
       spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
       spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
@@ -329,6 +328,10 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   Future applicationClosed(Application application) {
     // TODO: flush out any preference info or workspace state?
 
+    spark.editorManager.persistState();
+
+    spark.localPrefs.flush();
+    spark.syncPrefs.flush();
   }
 }
 
@@ -346,7 +349,7 @@ class FileNewAction extends SparkAction {
     defaultBinding("ctrl-n");
   }
 
-  void invoke() => spark.newFile(null);
+  void invoke() => spark.newFile();
 }
 
 class FileOpenAction extends SparkAction {
@@ -354,7 +357,7 @@ class FileOpenAction extends SparkAction {
     defaultBinding("ctrl-o");
   }
 
-  void invoke() => spark.openFile(null);
+  void invoke() => spark.openFile();
 }
 
 class FileSaveAction extends SparkAction {
@@ -362,7 +365,7 @@ class FileSaveAction extends SparkAction {
     defaultBinding("ctrl-s");
   }
 
-  void invoke() => spark.saveFile(null);
+  void invoke() => spark.editorManager.saveAll();
 }
 
 class FileExitAction extends SparkAction {
@@ -373,7 +376,7 @@ class FileExitAction extends SparkAction {
 
   void invoke() {
     spark.close().then((_) {
-      chrome_gen.app.window.current().close();
+      chrome.app.window.current().close();
     });
   }
 }

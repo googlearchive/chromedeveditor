@@ -15,6 +15,12 @@ import 'ace.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 
+// TODO: make sure we're saving and restoring the selection pos
+
+// TODO: write a test for file change events
+
+// TODO: make sure we're firing change events
+
 /**
  * Manage a list of open editors.
  */
@@ -30,13 +36,19 @@ class EditorManager {
     _prefs.getValue('editorStates').then((String data) {
       if (data != null) {
         for (Map m in JSON.decode(data)) {
-          _editorStates.add(new _EditorState.fromMap(_workspace, m));
+          _EditorState state = new _EditorState.fromMap(this, _workspace, m);
+
+          if (state != null) {
+            _editorStates.add(state);
+          }
         }
       }
     });
   }
 
   File get currentFile => _currentState != null ? _currentState.file : null;
+
+  Iterable<File> get files => _editorStates.map((s) => s.file);
 
   Stream<File> get onFileChange => _streamController.stream;
 
@@ -46,21 +58,16 @@ class EditorManager {
     _EditorState state = _getStateFor(file);
 
     if (state == null) {
-      state = new _EditorState.fromFile(file);
+      state = new _EditorState.fromFile(this, file);
       _editorStates.add(state);
     }
 
     _showState(state);
   }
 
-  void save() {
-    // TODO: I'm not sure we need this method -
-    if (_currentState != null) {
-      _currentState.file.setContents(_currentState.session.value);
-      _currentState.dirty = false;
-    }
-  }
+  void saveAll() => _saveAll();
 
+  // TODO: check if a save is necessary before closing
   void close(File file) {
     _EditorState state = _getStateFor(file);
 
@@ -82,7 +89,7 @@ class EditorManager {
   }
 
   void persistState() {
-    var stateData = _editorStates.map((state) => state.toMap());
+    var stateData = _editorStates.map((state) => state.toMap()).toList();
     _prefs.setValue('editorStates', JSON.encode(stateData));
   }
 
@@ -95,6 +102,8 @@ class EditorManager {
 
     return null;
   }
+
+  // TODO: figure out the difference between _showState and _switchState
 
   void _showState(_EditorState state) {
     _currentState = state;
@@ -117,21 +126,70 @@ class EditorManager {
       _currentState = state;
       _streamController.add(currentFile);
       _aceEditor.switchTo(state == null ? null : state.session);
+
+      persistState();
     }
+  }
+
+  Timer _timer;
+
+  void _startSaveTimer() {
+    if (_timer != null) _timer.cancel();
+
+    _timer = new Timer(new Duration(seconds: 2), () => _saveAll());
+  }
+
+  void _saveAll() {
+    if (_timer != null) {
+      _timer.cancel();
+      _timer = null;
+    }
+
+    // TODO: start a workspace change event; this might modify multiple files
+    _editorStates.forEach((e) => e.save());
+    // TODO: end the workspace change event
   }
 }
 
 class _EditorState {
+  EditorManager manager;
   File file;
   EditSession session;
+
   int scrollTop = 0;
-  bool dirty = false;
+  bool _dirty = false;
 
-  _EditorState.fromFile(this.file);
+  _EditorState.fromFile(this.manager, this.file);
 
-  _EditorState.fromMap(Workspace workspace, Map m) {
-    file = workspace.restoreFromToken(m['file']);
-    scrollTop = m['scrollTop'];
+  factory _EditorState.fromMap(EditorManager manager, Workspace workspace, Map m) {
+    File f = workspace.restoreResource(m['file']);
+
+    if (f == null) {
+      return null;
+    } else {
+      _EditorState state = new _EditorState.fromFile(manager, f);
+      state.scrollTop = m['scrollTop'];
+      return state;
+    }
+  }
+
+  bool get dirty => _dirty;
+
+  set dirty(bool value) {
+    if (_dirty != value) {
+      _dirty = value;
+
+      if (_dirty) {
+        manager._startSaveTimer();
+      }
+    }
+  }
+
+  void save() {
+    if (dirty) {
+      file.setContents(session.value);
+      dirty = false;
+    }
   }
 
   Map toMap() {
