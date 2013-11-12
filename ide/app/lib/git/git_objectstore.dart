@@ -421,12 +421,19 @@ class ObjectStore {
     }).then((_) => trees);
   }
 
-  Future writeRawObject(String type, Uint8List content) {
+  Future writeRawObject(String type, content) {
 
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
 
-    String header = 'type ${content.length}' ;
+    int size = 0;
+    if (content is Uint8List) {
+      size = content.length;
+    } else if (content is Blob) {
+     size = content.size;
+    }
+
+    String header = 'type ${size}' ;
 
     blobParts.add(header);
     blobParts.add(new Uint8List.fromList([0]));
@@ -489,8 +496,14 @@ class ObjectStore {
   }
 
   Future _writeTree(List treeEntries) {
-    //TODO to be implemented.
+    List blobParts = [];
+    treeEntries.forEach((tree) {
+      blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);
+      blobParts.add(new Uint8List.fromList([0]));
+      blobParts.add(tree.sha);
+    });
 
+    return writeRawObject('tree', new Blob(blobParts));
   }
 
   Future getConfig() {
