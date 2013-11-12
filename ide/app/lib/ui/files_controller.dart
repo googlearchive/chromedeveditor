@@ -13,20 +13,23 @@ import 'files_controller_delegate.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview.dart';
 import 'widgets/listview_cell.dart';
-import 'widgets/listview_delegate.dart';
+import 'widgets/treeview.dart';
+import 'widgets/treeview_delegate.dart';
 import '../workspace.dart';
 
-class FilesController implements ListViewDelegate {
-  ListView _listView;
+class FilesController implements TreeViewDelegate {
+  TreeView _treeView;
   Workspace _workspace;
   List<Resource> _files;
   FilesControllerDelegate _delegate;
+  Map<String, Resource> _filesMap;
 
   FilesController(Workspace workspace, FilesControllerDelegate delegate) {
     _workspace = workspace;
     _delegate = delegate;
     _files = [];
-    _listView = new ListView(querySelector('#fileViewArea'), this);
+    _filesMap = {};
+    _treeView = new TreeView(querySelector('#fileViewArea'), this);
 
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
@@ -38,7 +41,7 @@ class FilesController implements ListViewDelegate {
       return;
     }
 
-    _listView.selection = [_files.length - 1];
+    _treeView.listView.selection = [_files.length - 1];
     _delegate.openInEditor(_files.last);
   }
 
@@ -47,36 +50,52 @@ class FilesController implements ListViewDelegate {
       return;
     }
 
-    _listView.selection = [0];
-    _delegate.openInEditor(_files.last);
+    _treeView.listView.selection = [0];
+    _delegate.openInEditor(_files.first);
   }
 
-  /*
-   * Implementation of the [ListViewDelegate] interface.
-   */
+  // Implementation of [TreeViewDelegate] interface.
 
-  int listViewNumberOfRows(ListView view) {
-    return _files.length;
+  bool treeViewHasChildren(TreeView view, String nodeUID) {
+    if (nodeUID == null) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
-  ListViewCell listViewCellForRow(ListView view, int rowIndex) {
-    return new FileItemCell(_files[rowIndex].name);
+  int treeViewNumberOfChildren(TreeView view, String nodeUID) {
+    if (nodeUID == null) {
+      return _files.length;
+    } else {
+      return 0;
+    }
   }
 
-  int listViewHeightForRow(ListView view, int rowIndex) {
-    return 20;
+  String treeViewChild(TreeView view, String nodeUID, int childIndex) {
+    if (nodeUID == null) {
+      return _files[childIndex].fullPath;
+    } else {
+      return null;
+    }
   }
 
-  void listViewSelectedChanged(ListView view, List<int> rowIndexes) {
-    if (rowIndexes.isEmpty) {
+  ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
+    return new FileItemCell(_filesMap[nodeUID].name);
+  }
+
+  int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
+
+  void treeViewSelectedChanged(TreeView view, List<String> nodeUIDs) {
+    if (nodeUIDs.isEmpty) {
       return;
     }
 
-    _delegate.openInEditor(_files[rowIndexes[0]]);
+    _delegate.openInEditor(_filesMap[nodeUIDs[0]]);
   }
 
-  void listViewDoubleClicked(ListView view, List<int> rowIndexes) {
-
+  void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs) {
+    // Do nothing.
   }
 
   /**
@@ -86,7 +105,8 @@ class FilesController implements ListViewDelegate {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
       _files.add(event.resource);
-      _listView.reloadData();
+      _filesMap[event.resource.fullPath] = event.resource;
+      _treeView.reloadData();
     }
   }
 }

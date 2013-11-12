@@ -17,7 +17,7 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editors.dart';
 import 'lib/utils.dart';
-import 'lib/preferences.dart';
+import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
@@ -64,8 +64,8 @@ class Spark extends Application implements FilesControllerDelegate {
   EditorManager editorManager;
   analytics.Tracker tracker;
 
-  PreferenceStore localPrefs;
-  PreferenceStore syncPrefs;
+  preferences.PreferenceStore localPrefs;
+  preferences.PreferenceStore syncPrefs;
 
   ActionManager actionManager;
 
@@ -77,8 +77,8 @@ class Spark extends Application implements FilesControllerDelegate {
   Spark(this.developerMode) {
     document.title = appName;
 
-    localPrefs = PreferenceStore.createLocal();
-    syncPrefs = PreferenceStore.createSync();
+    localPrefs = preferences.localStore;
+    syncPrefs = preferences.syncStore;
 
     actionManager = new ActionManager();
 
@@ -96,13 +96,12 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     workspace = new Workspace(localPrefs);
-
     editor = new AceEditor();
     editorManager = new EditorManager(workspace, editor, localPrefs);
 
-    _splitView = new SplitView(querySelector('#splitview'));
     _filesController = new FilesController(workspace, this);
 
+    setupSplitView();
     setupFileActions();
     setupEditorThemes();
 
@@ -120,6 +119,22 @@ class Spark extends Application implements FilesControllerDelegate {
   String get appVersion => chrome.runtime.getManifest()['version'];
 
   PlatformInfo get platformInfo => _platformInfo;
+
+  void setupSplitView() {
+    _splitView = new SplitView(querySelector('#splitview'));
+    _splitView.onResized.listen((_) {
+      editor.resize();
+      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
+    });
+    syncPrefs.getValue('splitViewPosition').then((String position) {
+      if (position != null) {
+        int value = int.parse(position, onError: (_) => 0);
+        if (value != 0) {
+          _splitView.position = value;
+        }
+      }
+    });
+  }
 
   void setupFileActions() {
     querySelector("#newFile").onClick.listen(

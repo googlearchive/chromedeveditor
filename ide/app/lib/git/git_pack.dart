@@ -149,9 +149,12 @@ class Pack {
    * Returns a SHA1 hash of given byete stream.
    */
   List<int> getObjectHash(int type, ByteBuffer content) {
+
     Uint8List contentData = new Uint8List.view(content);
+
     List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
-        + "${contentData.elementSizeInBytes}\0");
+        + " ${contentData.length}\u0000");
+ 
     Uint8List fullContent = 
         new Uint8List(header.length + contentData.length);
     
@@ -159,7 +162,7 @@ class Pack {
     fullContent.setAll(header.length, contentData);
 
     crypto.SHA1 sha1 = new crypto.SHA1();
-    sha1.newInstance().add(fullContent);
+    sha1.add(fullContent);
     return sha1.close();
   }
 

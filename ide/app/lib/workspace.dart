@@ -35,7 +35,7 @@ class Workspace implements Container {
 
   // TODO: perhaps move to returning a constructed Workspace via a static
   // method that returns a Future? see PicoServer
-  Workspace(this._store);
+  Workspace([this._store]);
 
   Future<Workspace> whenAvailable() => _whenAvailable.future;
 
@@ -220,6 +220,8 @@ abstract class Resource {
 
   Container get parent => _parent;
 
+  String get fullPath => _entry.fullPath;
+
   /**
    * Returns the containing [Project]. This can return null for loose files and
    * for the workspace.
@@ -227,6 +229,8 @@ abstract class Resource {
   Project get project => parent is Project ? parent : parent.project;
 
   Workspace get workspace => parent.workspace;
+
+  String toString() => '${this.runtimeType} ${name}';
 }
 
 class Folder extends Container {

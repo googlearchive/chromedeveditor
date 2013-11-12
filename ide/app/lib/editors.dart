@@ -15,10 +15,6 @@ import 'ace.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 
-// TODO: write a test for file change events
-
-// TODO: make sure we're firing change events
-
 /**
  * Manage a list of open editors.
  */
@@ -28,7 +24,7 @@ class EditorManager {
   PreferenceStore _prefs;
   List<_EditorState> _editorStates = [];
   _EditorState _currentState;
-  StreamController<File> _streamController = new StreamController.broadcast();
+  StreamController<File> _selectedController = new StreamController.broadcast();
 
   EditorManager(this._workspace, this._aceEditor, this._prefs) {
     _workspace.whenAvailable().then((_) {
@@ -44,16 +40,13 @@ class EditorManager {
         }
       });
     });
-
-    // TODO: remove
-    onFileChange.listen(print);
   }
 
   File get currentFile => _currentState != null ? _currentState.file : null;
 
   Iterable<File> get files => _editorStates.map((s) => s.file);
 
-  Stream<File> get onFileChange => _streamController.stream;
+  Stream<File> get onSelectedChange => _selectedController.stream;
 
   bool get dirty => _currentState == null ? false : _currentState.dirty;
 
@@ -65,18 +58,21 @@ class EditorManager {
       _editorStates.add(state);
     }
 
-    _showState(state);
+    _switchState(state);
   }
 
   void saveAll() => _saveAll();
 
-  // TODO: check if a save is necessary before closing
   void close(File file) {
     _EditorState state = _getStateFor(file);
 
     if (state != null) {
       int index = _editorStates.indexOf(state);
       _editorStates.remove(state);
+
+      if (state.dirty) {
+        state.save();
+      }
 
       if (_currentState == state) {
         // Switch to the next editor.
@@ -106,31 +102,19 @@ class EditorManager {
     return null;
   }
 
-  // TODO: figure out the difference between _showState and _switchState
-
-  void _showState(_EditorState state) {
-    _currentState = state;
-
-    if (state != null) {
-      if (state.session != null) {
-        _aceEditor.switchTo(state.session);
-      } else {
-        state.realize().then((_) {
-          _aceEditor.switchTo(state.session);
-        });
-      }
-    } else {
-      _switchState(state);
-    }
-  }
-
   void _switchState(_EditorState state) {
     if (_currentState != state) {
-      _currentState = state;
-      _streamController.add(currentFile);
-      _aceEditor.switchTo(state == null ? null : state.session);
+      if (state != null && !state.isRealized) {
+        state.realize().then((_) {
+          _switchState(state);
+        });
+      } else {
+        _currentState = state;
+        _selectedController.add(currentFile);
+        _aceEditor.switchTo(state == null ? null : state.session);
 
-      persistState();
+        persistState();
+      }
     }
   }
 
@@ -154,6 +138,9 @@ class EditorManager {
   }
 }
 
+/**
+ * This class tracks the state associated with each open editor.
+ */
 class _EditorState {
   EditorManager manager;
   File file;
@@ -188,6 +175,8 @@ class _EditorState {
     }
   }
 
+  bool get isRealized => session != null;
+
   void save() {
     if (dirty) {
       file.setContents(session.value);
@@ -204,7 +193,7 @@ class _EditorState {
 
   Future<_EditorState> realize() {
     return file.getContents().then((text) {
-      session = AceEditor.createEditSession(text, file.name);
+      session = manager._aceEditor.createEditSession(text, file.name);
       session.scrollTop = scrollTop;
       session.onChange.listen((delta) => dirty = true);
       return this;
