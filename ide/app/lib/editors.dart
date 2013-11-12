@@ -14,29 +14,45 @@ import 'dart:convert' show JSON;
 import 'ace.dart';
 import 'preferences.dart';
 import 'workspace.dart';
+import 'ui/widgets/tabview.dart';
 
 /**
  * Manage a list of open editors.
  */
 class EditorManager {
-  Workspace _workspace;
-  AceEditor _aceEditor;
-  PreferenceStore _prefs;
-  List<_EditorState> _editorStates = [];
-  _EditorState _currentState;
-  StreamController<File> _selectedController = new StreamController.broadcast();
+  final Workspace _workspace;
+  final AceEditor _aceEditor;
 
-  EditorManager(this._workspace, this._aceEditor, this._prefs) {
+  // TODO(ikarienator): When we reverse the responsibility of state
+  // serialization, abstract opened file collection and move _tabView to
+  // higher level (potentially in [Spark] class).
+  final TabView _tabView;
+  final PreferenceStore _prefs;
+
+  final List<_EditorState> _editorStates = [];
+  _EditorState _currentState;
+
+  final StreamController<File> _selectedController =
+      new StreamController.broadcast();
+
+  EditorManager(this._workspace, this._tabView, this._aceEditor, this._prefs) {
     _workspace.whenAvailable().then((_) {
       _prefs.getValue('editorStates').then((String data) {
         if (data != null) {
           for (Map m in JSON.decode(data)) {
-            _EditorState state = new _EditorState.fromMap(this, _workspace, m);
-
-            if (state != null) {
-              _editorStates.add(state);
-            }
+            File f = _workspace.restoreResource(m['file']);
+            openOrSelect(f, switching: false);
           }
+          _prefs.getValue('lastSelectedEditor').then((String data) {
+            if (_editorStates.isEmpty) return;
+            int index = data == null ? 0 : JSON.decode(data);
+            if (index != null && index >= 0)
+              _switchState(_editorStates[index]);
+          });
+
+          _tabView.onSelected.listen((tab) {
+            _switchState(_editorStates.firstWhere((state) => state.tab == tab));
+          });
         }
       });
     });
@@ -50,19 +66,42 @@ class EditorManager {
 
   bool get dirty => _currentState == null ? false : _currentState.dirty;
 
+  void _insertState(_EditorState state) {
+    _editorStates.add(state);
+    _tabView.add(state.tab);
+    if (_tabView.tabs.length > 1) {
+      _tabView.tabs.forEach((tab) { tab.closable = true; });
+    }
+  }
+
+  void _removeState(_EditorState state) {
+    _editorStates.remove(state);
+    _tabView.remove(state.tab, switchTab: false);
+
+    if (_tabView.tabs.length == 1) {
+      _tabView.tabs[0].closable = false;
+    }
+  }
+
   /**
    * This will open the given [File]. If this file is already open, it will
    * instead be made the active editor.
    */
-  void openOrSelect(File file) {
+  void openOrSelect(File file, {switching: true}) {
+    if (file == null) return;
     _EditorState state = _getStateFor(file);
 
     if (state == null) {
       state = new _EditorState.fromFile(this, file);
-      _editorStates.add(state);
+      _insertState(state);
     }
 
-    _switchState(state);
+    if (switching)
+      _switchState(state);
+  }
+
+  bool isFileOpend(File file) {
+    return _getStateFor(file) != null;
   }
 
   void saveAll() => _saveAll();
@@ -72,7 +111,7 @@ class EditorManager {
 
     if (state != null) {
       int index = _editorStates.indexOf(state);
-      _editorStates.remove(state);
+      _removeState(state);
 
       if (state.dirty) {
         state.save();
@@ -88,12 +127,16 @@ class EditorManager {
           _switchState(_editorStates[index - 1]);
         }
       }
+
+      persistState();
     }
   }
 
   void persistState() {
     var stateData = _editorStates.map((state) => state.toMap()).toList();
     _prefs.setValue('editorStates', JSON.encode(stateData));
+    _prefs.setValue('lastSelectedEditor', JSON.encode(
+        _editorStates.indexOf(_currentState)));
   }
 
   _EditorState _getStateFor(File file) {
@@ -114,11 +157,16 @@ class EditorManager {
         });
       } else {
         _currentState = state;
+        _prefs.setValue('lastSelectedEditor', JSON.encode(
+            _editorStates.indexOf(_currentState)));
         _selectedController.add(currentFile);
         _aceEditor.switchTo(state == null ? null : state.session);
 
         persistState();
       }
+
+      if (state != null)
+        _tabView.selectedTab = state.tab;
     }
   }
 
@@ -149,13 +197,23 @@ class _EditorState {
   EditorManager manager;
   File file;
   EditSession session;
+  Tab tab;
 
   int scrollTop = 0;
   bool _dirty = false;
 
-  _EditorState.fromFile(this.manager, this.file);
+  _EditorState.fromFile(this.manager, this.file) {
+    tab = new Tab(
+        manager._tabView,
+        manager._aceEditor.parentElement,
+        closable: false);
+    tab.label = file.name + (_dirty ? '*' : '');
+    tab.onClose.listen((tab) { manager.close(file); });
+  }
 
-  factory _EditorState.fromMap(EditorManager manager, Workspace workspace, Map m) {
+  factory _EditorState.fromMap(EditorManager manager,
+                               Workspace workspace,
+                               Map m) {
     File f = workspace.restoreResource(m['file']);
 
     if (f == null) {
@@ -172,7 +230,7 @@ class _EditorState {
   set dirty(bool value) {
     if (_dirty != value) {
       _dirty = value;
-
+      tab.label = file.name + (_dirty ? '*' : '');
       if (_dirty) {
         manager._startSaveTimer();
       }

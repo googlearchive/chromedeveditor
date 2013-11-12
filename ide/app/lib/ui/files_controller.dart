@@ -36,6 +36,18 @@ class FilesController implements TreeViewDelegate {
     });
   }
 
+  void selectFile(Resource file) {
+    if (_files.isEmpty) {
+      return;
+    }
+    int index = _files.indexOf(file);
+    if (index >= 0 &&
+        _treeView.listView.selection.length == 1 &&
+        _treeView.listView.selection.first == index) return;
+    _treeView.listView.selection = [index];
+    _delegate.openInEditor(file);
+  }
+
   void selectLastFile() {
     if (_files.isEmpty) {
       return;

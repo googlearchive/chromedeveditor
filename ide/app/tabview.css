@@ -1,0 +1,126 @@
+.tabview-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  flex-flow: column;
+  background: #EEE;
+}
+
+
+.tabview-tabbar {
+  display: flex;
+  position: relative;
+  border-bottom: 1px solid #CCC;
+  margin-bottom: 3px;
+  overflow: visible;
+  background: white;
+  -webkit-user-select: none;
+}
+
+.tabview-tabbar-scroller {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  margin: -1px;
+  z-index: 100;
+}
+
+.tabview-tabbar-scrollable {
+  position: relative;
+  overflow: visible;
+  display: block;
+  white-space: nowrap;
+  min-height: 25px;
+}
+
+.tabview-tablabel {
+  font-family: sans-serif;
+  font-size: 85%;
+  box-sizing: border-box;
+  display: inline-flex;
+  border: 1px solid transparent;
+  border-bottom: none;
+  margin-top: 4px;
+  margin-right: 4px;
+  padding: 2px 10px 2px 10px;
+  border-radius: 5px 5px 0 0;
+  z-index: 100;
+  -webkit-user-select: none;
+  cursor: pointer;
+  vertical-align: bottom;
+  align-items: center;
+}
+
+.tabview-tablabel:first-child {
+  margin-left: 15px;
+}
+
+.tabview-tablabel:last-child {
+  margin-right: 15px;
+}
+
+.tabview-tablabel-active {
+  position: relative;
+  padding-bottom: 1px;
+  margin-top: 5px;
+  margin-bottom: -1px;
+  border: 1px solid #CCC;
+  border-bottom: 1px solid white;
+  background: -webkit-linear-gradient(bottom, #EEE, white);
+}
+
+.tabview-tablabel:hover .tabview-tablabel-caption {
+  text-decoration: underline;
+}
+
+.tabview-tablabel-caption {
+  max-width: 150px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.tabview-tablabel-closebutton {
+  margin-left: 6px;
+  margin-top: -1px;
+  margin-right: -2px;
+  color: white;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+  opacity: 0;
+  display: none;
+}
+
+.tabview-tablabel-closable .tabview-tablabel-closebutton {
+  display: block;
+}
+.tabview-tablabel-active .tabview-tablabel-closebutton {
+  opacity: 1;
+}
+
+.tabview-tablabel:hover .tabview-tablabel-closebutton {
+  opacity: 1;
+}
+
+.tabview-tablabel-closebutton:hover {
+  color: #960;
+}
+
+.tabview-workspace {
+  flex: 1;
+  background: white;
+  position: relative;
+  border-top: 1px solid #CCC;
+  display: flex;
+}
+
+.tabview-tabcomponent {
+  flex: 1;
+  display: none;
+}
+
+.tabview-tabcomponent-active {
+  display: block;
+}

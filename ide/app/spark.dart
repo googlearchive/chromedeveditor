@@ -23,6 +23,7 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
+import 'lib/ui/widgets/tabview.dart';
 import 'lib/workspace.dart';
 import 'test/all.dart' as all_tests;
 
@@ -63,6 +64,7 @@ class Spark extends Application implements FilesControllerDelegate {
   AceEditor editor;
   Workspace workspace;
   EditorManager editorManager;
+  TabView editorArea;
   analytics.Tracker tracker = new analytics.NullTracker();
 
   preferences.PreferenceStore localPrefs;
@@ -98,8 +100,14 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     workspace = new Workspace(localPrefs);
-    editor = new AceEditor();
-    editorManager = new EditorManager(workspace, editor, localPrefs);
+
+    editorArea = new TabView(document.getElementById('editorArea'));
+    editor = new AceEditor(new DivElement());
+    editorManager =
+        new EditorManager(workspace, editorArea, editor, localPrefs);
+    editorManager.onSelectedChange.listen((file) {
+      _filesController.selectFile(file);
+    });
 
     _filesController = new FilesController(workspace, this);
 
@@ -346,9 +354,6 @@ class _SparkSetupParticipant extends LifecycleParticipant {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
           spark.editor.focus();
-        } else {
-          // Select the first file.
-          spark._filesController.selectFirstFile();
         }
       });
     });
