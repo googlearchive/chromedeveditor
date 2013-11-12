@@ -41,6 +41,9 @@ class Workspace implements Container {
   bool get isTopLevel => false;
   String persistToToken() => path;
 
+  // TODO: can we remove this? Should users migrate to path or token/
+  String get fullPath => '';
+
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
@@ -216,7 +219,7 @@ abstract class Resource {
   Container get parent => _parent;
 
   String get fullPath => _entry.fullPath;
-  
+
   /**
    * Returns the containing [Project]. This can return null for loose files and
    * for the workspace.
