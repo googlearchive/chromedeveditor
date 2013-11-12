@@ -31,6 +31,8 @@ Map<String, GoogleAnalytics> _serviceMap = {};
  */
 bool get available => _analytics != null;
 
+final int MAX_EXCEPTION_LENGTH = 100;
+
 /**
  * Returns a service instance for the named Chrome Platform App. Generally
  * you'll only ever want to call this with a single name that identifies the
@@ -252,7 +254,67 @@ class Tracker extends _ProxyHolder {
 }
 
 abstract class _ProxyHolder {
-  JsObject _proxy;
+  final JsObject _proxy;
 
   _ProxyHolder(this._proxy);
 }
+
+/* The following classes are not part of the chrome-platform-analytics library. */
+
+/**
+ * A no-op implementation of a [Tracker]. This can be used to entirely disable
+ * analytics without having to do null checks in every place where a [Tracker]
+ * is used.
+ */
+class NullTracker implements Tracker {
+  final JsObject _proxy = null;
+  GoogleAnalytics _service;
+
+  NullTracker() {
+    _service = new _NullGoogleAnalytics(this);
+  }
+
+  String get trackingId => 'UA-xxx-1';
+  GoogleAnalytics get service => _service;
+
+  void send(String hitType, [Map<String, dynamic> extraParams]) { }
+  void sendAppView(String description, {bool newSession: false}) { }
+  void sendEvent(String category, String action, [String label, String value]) { }
+  void sendException([String description, bool fatal]) { }
+  void sendSocial(String network, String action, String target) { }
+  void sendTiming(String category, int value, [String timingVar, String label]) { }
+  void set(String param, value) { }
+}
+
+class _NullGoogleAnalytics implements GoogleAnalytics {
+  final JsObject _proxy = null;
+  final Tracker _tracker;
+  Config _config;
+
+  _NullGoogleAnalytics(this._tracker) {
+    _config = new _NullConfig(this);
+  }
+
+  String get appName => '';
+
+  Config getConfig() => _config;
+  Tracker getTracker(String trackingId) => _tracker;
+
+  Future<GoogleAnalytics> _init() => new Future.value(this);
+  Map<String, Tracker> get _trackers => null;
+  void set _trackers(Map<String, Tracker> __trackers) { }
+}
+
+class _NullConfig implements Config {
+  final JsObject _proxy = null;
+  final GoogleAnalytics _service;
+
+  _NullConfig(this._service);
+
+  GoogleAnalytics get service => _service;
+
+  bool isTrackingPermitted() => false;
+  void setSampleRate(int sampleRate) { }
+  void setTrackingPermitted(bool permitted) { }
+}
+
