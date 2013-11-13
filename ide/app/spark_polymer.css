@@ -2,4 +2,78 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-@import url("spark.css");
+/* Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0px;
+  padding: 0px;
+  overflow: hidden;
+}
+
+#status {
+  vertical-align: bottom;
+}
+
+#status.error {
+  color: #C66;
+}
+
+.fileview-filename-container {
+  
+}
+
+.fileview-filename-container .filename {
+  display: inline-block;
+}
+
+.fileview-filename-container .menu {
+  opacity: 0.0;
+}
+
+.fileview-filename-container .filename {
+  width: 100%;
+  padding-left: 10px;
+}
+
+.fileview-filename-container:hover .filename {
+  width: calc(100% - 15px);
+}
+
+.fileview-filename-container:hover .menu {
+  opacity: 1.0;
+}
+
+.ace_gutter-cell {
+  color: #aaa;
+}
+
+#fileViewArea {
+  height: 100%;
+  width: 300px;
+  border-top: 1px solid white;
+}
+
+#editorArea {
+  height: 100%;
+  /*left: 350px;
+  position: absolute;*/
+  flex: 1;
+  /*width: calc(100% - 351px);*/
+}
+
+#toolbar {
+  padding: 4px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+#hotdogMenu {
+  float: right;  
+}

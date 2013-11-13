@@ -95,9 +95,14 @@ class Spark extends Application implements FilesControllerDelegate {
 
     workspace = new Workspace(localPrefs);
     editor = new AceEditor();
+<<<<<<< HEAD
     _filesController = new FilesController(workspace, this);
 
     setupSplitView();
+=======
+
+    setupViews();
+>>>>>>> 9c9576b... First commit for spark-splitter: still not-working
     setupFileActions();
     setupEditorThemes();
 
@@ -116,6 +121,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   PlatformInfo get platformInfo => _platformInfo;
 
+<<<<<<< HEAD
   void setupSplitView() {
     _splitView = new SplitView(querySelector('#splitview'));
     _splitView.onResized.listen((_) {
@@ -130,6 +136,10 @@ class Spark extends Application implements FilesControllerDelegate {
         }
       }
     });
+=======
+  void setupViews() {
+    _splitView = new SplitView(querySelector('#splitview'));
+>>>>>>> 9c9576b... First commit for spark-splitter: still not-working
   }
 
   void setupFileActions() {
@@ -137,6 +147,7 @@ class Spark extends Application implements FilesControllerDelegate {
     querySelector("#openFile").onClick.listen(openFile);
     querySelector("#saveFile").onClick.listen(saveFile);
     querySelector("#saveAsFile").onClick.listen(saveAsFile);
+    _filesController = new FilesController(workspace, this);
   }
 
   void setupEditorThemes() {
