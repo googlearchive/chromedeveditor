@@ -2,6 +2,8 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+/* @import url("packages/polymer_elements/polymer_flex_layout/polymer_flex_layout.css") */
+
 html {
 }
 
@@ -89,16 +91,10 @@ body {
   border-bottom: 1px solid #ddd;
 }
 
-#hotdogMenu {
-  float: right;  
-}
+.container {
+  width: 100%;
+  height: 100%;
 
-#hotdogMenu li {
-	min-width: 16em;
-}
-
-/* bootstrap overrides */
-
-#toolbar .btn {
-  padding: 2px 8px 2px 8px ;
+.container div {
+  overflow: hidden;
 }

@@ -27,12 +27,15 @@
   </template>
 </head>
 
-<body>
+<body class="polymer-ui-body-text">
   <div id="toolbar">
     <spark-button id="newFile">New File</spark-button>
     <spark-button id="openFile">Open File...</spark-button>
     <spark-button id="saveFile">Save</spark-button>
     <spark-button id="saveAsFile">Save As...</spark-button>
+
+    <span id="status"></span>
+
     <spark-select id="themeChooser" text_color="white"
                                     color="black"
                                     hover_color="gray">
@@ -40,12 +43,7 @@
     </spark-select>
   </div>
   
-  <div id="status">
-      <div id="path">[new file]</div>
-      <div id="error"></div>
-  </div>
-
-  <div id="splitview">
+  <div id="splitview" class="container flexbox">
     <div id="fileViewArea" min-size="100"></div>
     <spark-splitter direction="left"></spark-splitter>
     <div id="editorArea" min-size="200"></div>
