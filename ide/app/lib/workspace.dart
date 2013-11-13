@@ -44,6 +44,9 @@ class Workspace implements Container {
   bool get isTopLevel => false;
   String persistToToken() => path;
 
+  // TODO: we should migrarte users to path or perhaps persistToToken()
+  String get fullPath => '';
+
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
