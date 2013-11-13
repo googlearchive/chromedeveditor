@@ -10,6 +10,7 @@ import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:logging/logging.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -62,7 +63,7 @@ class Spark extends Application implements FilesControllerDelegate {
   AceEditor editor;
   Workspace workspace;
   EditorManager editorManager;
-  analytics.Tracker tracker;
+  analytics.Tracker tracker = new analytics.NullTracker();
 
   preferences.PreferenceStore localPrefs;
   preferences.PreferenceStore syncPrefs;
@@ -85,7 +86,8 @@ class Spark extends Application implements FilesControllerDelegate {
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
       tracker = service.getTracker(_ANALYTICS_ID);
-      tracker.sendAppView('main', newSession: true);
+      tracker.sendAppView('main');
+      _startTrackingExceptions();
     });
 
     addParticipant(new _SparkSetupParticipant(this));
@@ -153,8 +155,8 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void newFile() {
     // TODO:
+
     print('implement newFile()');
-    //editor.newFile();
   }
 
   void openFile() {
@@ -172,19 +174,30 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
+  void deleteFile(_) {
+    // TODO: handle multiple selection
+    var sel = _filesController.getSelection();
+    if (sel.isNotEmpty) {
+      sel.first.delete();
+    }
+  }
+
   void createActions() {
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
   }
 
   void buildMenu() {
     UListElement ul = querySelector('#hotdogMenu ul');
 
     ul.children.insert(0, _createLIElement(null));
+    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-delete')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
+
 
     querySelector('#themeLeft').onClick.listen((e) {
       e.stopPropagation();
@@ -274,6 +287,27 @@ class Spark extends Application implements FilesControllerDelegate {
 
     return li;
   }
+
+  void _startTrackingExceptions() {
+    // Handle logged exceptions.
+    Logger.root.onRecord.listen((LogRecord r) {
+      if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
+        // We don't log the error object because of PII concerns.
+        // TODO: we need to add a test to verify this
+        String error = r.error != null ? r.error.runtimeType.toString() : r.message;
+        String desc = '${error}\n${minimizeStackTrace(r.stackTrace)}'.trim();
+
+        if (desc.length > analytics.MAX_EXCEPTION_LENGTH) {
+          desc = '${desc.substring(0, analytics.MAX_EXCEPTION_LENGTH - 1)}~';
+        }
+
+        tracker.sendException(desc);
+      }
+    });
+
+    // TODO: currently, there's no way in Dart to handle uncaught exceptions
+
+  }
 }
 
 class PlatformInfo {
@@ -344,6 +378,15 @@ abstract class SparkAction extends Action {
   Spark spark;
 
   SparkAction(this.spark, String id, String name) : super(id, name);
+
+  void invoke() {
+    // Send an action event with the 'main' event category.
+    spark.tracker.sendEvent('main', id);
+
+    _invoke();
+  }
+
+  void _invoke();
 }
 
 class FileNewAction extends SparkAction {
@@ -351,7 +394,7 @@ class FileNewAction extends SparkAction {
     defaultBinding("ctrl-n");
   }
 
-  void invoke() => spark.newFile();
+  void _invoke() => spark.newFile();
 }
 
 class FileOpenAction extends SparkAction {
@@ -359,7 +402,7 @@ class FileOpenAction extends SparkAction {
     defaultBinding("ctrl-o");
   }
 
-  void invoke() => spark.openFile();
+  void _invoke() => spark.openFile();
 }
 
 class FileSaveAction extends SparkAction {
@@ -367,7 +410,13 @@ class FileSaveAction extends SparkAction {
     defaultBinding("ctrl-s");
   }
 
-  void invoke() => spark.editorManager.saveAll();
+  void _invoke() => spark.editorManager.saveAll();
+}
+
+class FileDeleteAction extends SparkAction {
+  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
+
+  void _invoke() => spark.deleteFile(null);
 }
 
 class FileExitAction extends SparkAction {
@@ -376,7 +425,7 @@ class FileExitAction extends SparkAction {
     winBinding("ctrl-shift-f4");
   }
 
-  void invoke() {
+  void _invoke() {
     spark.close().then((_) {
       chrome.app.window.current().close();
     });

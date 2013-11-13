@@ -44,6 +44,8 @@ class Workspace implements Container {
   bool get isTopLevel => false;
   String persistToToken() => path;
 
+  Future delete() => null;
+
   // TODO: we should migrarte users to path or perhaps persistToToken()
   String get fullPath => '';
 
@@ -69,12 +71,11 @@ class Workspace implements Container {
     if (!_children.contains(resource)) {
       throw new ArgumentError('${resource} is not a top level entity');
     }
-
-    _children.remove(resource);
-    _controller.add(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
-
+    _removeChild(resource);
     return new Future.value();
   }
+
+  Future close(Resource resource) => unlink(resource);
 
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
@@ -107,6 +108,8 @@ class Workspace implements Container {
   List<Project> getProjects() => _children.where((c) => c is Project).toList();
 
   Stream<ResourceChangeEvent> get onResourceChange => _controller.stream;
+
+  void _fireEvent(ResourceChangeEvent event) => _controller.add(event);
 
   // read the workspace data from storage and restore entries
   Future restore() {
@@ -164,6 +167,11 @@ class Workspace implements Container {
       return Future.wait(futures).then((_) => container);
     });
   }
+
+ void _removeChild(Resource resource) {
+   _children.remove(resource);
+   _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+  }
 }
 
 abstract class Container extends Resource {
@@ -195,6 +203,13 @@ abstract class Container extends Resource {
     }
   }
 
+  void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
+
+  void _removeChild(Resource resource) {
+    _children.remove(resource);
+    _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+  }
+
   List<Resource> getChildren() => _children;
 }
 
@@ -222,6 +237,8 @@ abstract class Resource {
   String persistToToken() => path;
 
   Container get parent => _parent;
+
+  Future delete() => _entry.remove().then((_) => _parent._removeChild(this));
 
   String get fullPath => _entry.fullPath;
 
