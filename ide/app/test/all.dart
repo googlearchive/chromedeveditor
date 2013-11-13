@@ -19,6 +19,7 @@ import 'git_objectstore_test.dart' as git_objectstore_test;
 import 'git_pack_test.dart' as git_pack_test;
 import 'git_pack_index_test.dart' as git_pack_index_test;
 import 'git_test.dart' as git_test;
+import 'git_utils_test.dart' as git_utils_test;
 import 'preferences_test.dart' as preferences_test;
 import 'sdk_test.dart' as sdk_test;
 import 'server_test.dart' as server_test;
@@ -43,6 +44,7 @@ void defineTests() {
   git_pack_test.main();
   git_pack_index_test.main();
   git_test.main();
+  git_utils_test.main();
   preferences_test.main();
   sdk_test.main();
   server_test.main();

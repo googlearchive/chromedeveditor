@@ -31,9 +31,20 @@ class GitRef {
   String sha;
   String name;
 
-  GitRef(String sha, String name) {
-    this.name = name;
-    this.sha = sha;
+  GitRef(this.sha, this.name);
+}
+
+class GitConfig {
+  Map<String, dynamic> m;
+
+  dynamic _jsonObject;
+
+  GitConfig(String configStr) {
+    _jsonObject = JSON.decode(configStr);
+  }
+
+  String toJsonString() {
+    return JSON.encode(m);
   }
 }
 
@@ -169,6 +180,7 @@ class ObjectStore {
       int offset = _packs[i].packIdx.getObjectOffset(shaBytes);
 
       if (offset != -1) {
+        // TODO create a custom return object and return.
         //completer.complete(offset, _packs[i].pack);
       }
     }
@@ -178,17 +190,10 @@ class ObjectStore {
   }
 
   Future _retrieveObject(String sha, String objType) {
-    String dataType = "ArrayBuffer";
-    if (objType == "Commit") {
-      dataType = "Text";
-    }
+    String dataType = (objType == "Commit" ? "Text" : "ArrayBuffer");
 
-    Completer completer = new Completer();
-    retrieveRawObject(sha, dataType).then((LooseObject object) {
-      completer.complete(GitObject.make(sha, objType, object.data));
-    });
-
-    return completer.future;
+    return retrieveRawObject(sha, dataType).then(
+        (LooseObject object) => GitObject.make(sha, objType, object.data));
   }
 
   Future retrieveRawObject(dynamic sha, String dataType) {
@@ -241,10 +246,7 @@ class ObjectStore {
 
       return Future.forEach(shas, (String sha) {
         Completer completer = new Completer();
-        if (seen[sha]) {
-          completer.complete();
-          return completer.future;
-        }
+        if (seen[sha]) return null;
 
         seen[sha] = true;
 
@@ -261,8 +263,7 @@ class ObjectStore {
             commits.insert(0, commitObj);
           }
 
-          completer.complete();
-          return completer.future;
+          return null;
       }).then((_) {
 
         if (commits.length >= limit || nextLevel.length == 0) {
@@ -276,7 +277,26 @@ class ObjectStore {
     return walkLevel(headShas).then((_) => commits);
   }
 
-  Future_getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
+
+  _nonFastForward() {
+    //TODO throw some error.
+  }
+
+  Future<CommitObject> _checkRemoteHead(GitRef remoteRef) {
+    // Check if the remote head exists in the local repo.
+    if (remoteRef.sha != HEAD_MASTER_SHA) {
+      return _retrieveObject(remoteRef.sha, 'Commit').then((obj) => obj,
+          onError: (e) {
+            //TODO support non-fast forward.
+            _nonFastForward();
+            throw(e);
+      });
+    }
+    return null;
+  }
+
+
+  Future _getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
     // special case of empty remote.
     if (baseRefs.length == 1 && baseRefs[0].sha == HEAD_MASTER_SHA) {
       baseRefs[0].name = HEAD_MASTER_REF_PATH;
@@ -284,7 +304,7 @@ class ObjectStore {
 
     // find the remote branch corresponding to the local one.
     GitRef remoteRef, headRef;
-    getHeadRef().then((String headRefName) {
+    return getHeadRef().then((String headRefName) {
       remoteRef = baseRefs.firstWhere((GitRef ref) => ref.name == headRefName);
       Map<String, bool> remoteShas;
       // Didn't find a remote branch for the local branch.
@@ -293,38 +313,13 @@ class ObjectStore {
         remoteRef.sha = HEAD_MASTER_SHA;
 
         remoteHeads.forEach((String headName, String sha) {
-        remoteShas[sha] = true;
+          remoteShas[sha] = true;
         });
       }
 
-      nonFastForward() {
-        //TODO throw some error.
-      }
-
-      Future checkRemoteHead() {
-
-        Completer completer = new Completer();
-
-        // Check if the remote head exists in the local repo.
-        if (remoteRef.sha != HEAD_MASTER_SHA) {
-          return _retrieveObject(remoteRef.sha, 'Commit').then((obj) => obj,
-              onError: (e) {
-            //TODO support non-fast forward.
-            nonFastForward();
-            completer.completeError(e);
-          });
-        }
-        completer.complete();
-        return completer.future;
-      }
-
-
-      checkRemoteHead().then((_) {
-
+      return _checkRemoteHead(remoteRef).then((_) {
         return _getHeadForRef(headRefName).then((String sha) {
-
           if (sha == remoteRef.sha) {
-
           // no changes to push.
             return new Future.value();
           }
@@ -336,41 +331,45 @@ class ObjectStore {
 
           // At present local merge commits are not supported. Thus, look for
           // non-brancing list of ancestors of the current commit.
-          var commits = [];
-          Future getNextCommit(String sha) {
+          return _getCommits(remoteRef, remoteShas, sha);
 
-            //TODO return retrieveObject result
-            return _retrieveObject(sha, 'Commit').then((CommitObject commitObj) {
-              var rawObj;
-              Completer completer = new Completer();
-              commits.add({"commit": commitObj, "raw": rawObj});
-              if (commitObj.parents.length > 1) {
-                // this means a local merge commit.
-                nonFastForward();
-                completer.completeError("");
-              } else if(commitObj.parents.length == 0 ||
-                commitObj.parents[0] == remoteRef.sha || remoteShas[commitObj.parents[0]]) {
-                // callback commits, remoteRef;
-                completer.complete();
-              } else {
-                return getNextCommit(commitObj.parents[0]);
-              }
-
-              return completer.future;
-
-            }, onError: (e) {
-              nonFastForward();
-            });
-          }
-          return getNextCommit(sha);
         }, onError: (e) {
-
-        // no commits to push.
-
+          // no commits to push.
+          // TODO throw error.
         });
       });
     });
-    return;
+  }
+
+  Future _getCommits(GitRef remoteRef, Map<String, bool> remoteShas,
+      String sha) {
+    var commits = [];
+    Future getNextCommit(String sha) {
+
+      //TODO return retrieveObject result
+      return _retrieveObject(sha, 'Commit').then((CommitObject commitObj) {
+        var rawObj;
+        Completer completer = new Completer();
+        commits.add({"commit": commitObj, "raw": rawObj});
+        if (commitObj.parents.length > 1) {
+          // this means a local merge commit.
+          _nonFastForward();
+          completer.completeError("");
+        } else if(commitObj.parents.length == 0 ||
+            commitObj.parents[0] == remoteRef.sha || remoteShas[commitObj.parents[0]]) {
+          //TODO callback commits, remoteRef;
+          completer.complete();
+        } else {
+          return getNextCommit(commitObj.parents[0]);
+        }
+
+        return completer.future;
+
+      }, onError: (e) {
+        _nonFastForward();
+      });
+    }
+    return getNextCommit(sha);
   }
 
   Future _retrieveObjectBlobsAsString(List<String> shas) {
@@ -388,10 +387,10 @@ class ObjectStore {
   }
 
   Future init() {
-    _rootDir.getDirectory('.git').then((chrome.DirectoryEntry gitDir) {
+    return _rootDir.getDirectory('.git').then((chrome.DirectoryEntry gitDir) {
       return load();
     }, onError: (e) {
-      // handle error
+      //TODO handle error
     });
   }
 
@@ -400,16 +399,17 @@ class ObjectStore {
       _objectDir = objectDir;
       return FileOps.createFileWithContent(objectDir, gitPath +HEAD_PATH,
           'ref: refs/heads/master\n', 'Text').then((entry) => entry, onError: (e) {
-            // throw file error
+            //TODO throw file error
           });
     }, onError: (e) {
-      // throw file error;
+      //TODO throw file error;
     });
   }
 
   Future _getTreeFromCommitSha(String sha) {
     return _retrieveObject(sha, 'Commit').then((CommitObject commit) {
-      _retrieveObject(commit.treeSha, 'Tree').then((rawObject) => rawObject);
+     return  _retrieveObject(commit.treeSha, 'Tree').then(
+         (rawObject) => rawObject);
     });
   }
 
@@ -470,11 +470,11 @@ class ObjectStore {
         (chrome.DirectoryEntry dirEntry) {
       return dirEntry.createDirectory(objectFileName).then(
           (chrome.FileEntry fileEntry) {
-        fileEntry.file().then((File file) {
+        return fileEntry.file().then((File file) {
           Completer completer = new Completer();
           if (file.size == 0) {
             chrome.ArrayBuffer content = Zlib.deflate(store).buffer;
-            fileEntry.createWriter().then((fileWriter) {
+            return fileEntry.createWriter().then((fileWriter) {
               fileWriter.write(new Blob([content]));
               completer.complete(digest);
             }, onError: (e) {
@@ -483,7 +483,7 @@ class ObjectStore {
           } else {
             completer.complete(digest);
           }
-          completer.future;
+          return completer.future;
         }, onError: (e) {
 
         });
@@ -506,26 +506,28 @@ class ObjectStore {
     return writeRawObject('tree', new Blob(blobParts));
   }
 
-  Future getConfig() {
+  Future<GitConfig> getConfig() {
     return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
-        (String configStr) => JSON.decode(configStr), onError: (e) {
+        (String configStr)  => new GitConfig(configStr),
+      onError: (e) {
       //TODO handle errors.
-    });
+      });
   }
 
-  Future setConfig(config) {
-    String configStr = JSON.encode(config);
-    return FileOps.createFileWithContent(_rootDir, '.git/config.json', configStr, 'Text');
+  Future<Entry> setConfig(GitConfig config) {
+    String configStr = config.toJsonString();
+    return FileOps.createFileWithContent(_rootDir, '.git/config.json',
+        configStr, 'Text');
   }
 
-  Future updateLastChange(config) {
-    doUpdate(config) {
-      config.time = new DateTime.now();
+  Future<Entry> updateLastChange(GitConfig config) {
+    Future<Entry> doUpdate(GitConfig config) {
+      config.m['time'] = new DateTime.now();
       return setConfig(config);
     }
-    if (config) {
+    if (config != null) {
       return doUpdate(config);
     }
-    return this.getConfig().then((config) => doUpdate(config));
+    return this.getConfig().then((GitConfig config) => doUpdate(config));
   }
 }
