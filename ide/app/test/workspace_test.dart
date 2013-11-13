@@ -125,7 +125,7 @@ main() {
         expect(resource, isNotNull);
         expect(workspace.getChildren().contains(resource), isTrue);
         expect(workspace.getFiles().contains(resource), isTrue);
-        workspace.deleteResource(resource);
+        resource.delete();
       });
 
       return workspace.onResourceChange.first.then((ResourceChangeEvent event) {
