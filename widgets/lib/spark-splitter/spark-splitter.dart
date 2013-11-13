@@ -23,27 +23,31 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   int _size;
 
   SparkSplitter.created() : super.created() {
-    _directionChanged();
+    onDragStart.listen(dragStart);
+    onDrag.listen(drag);
+    onDragEnd.listen(dragEnd);
+
+    directionChanged();
   }
 
-  void _directionChanged() {
+  void directionChanged() {
     _isNext = direction == 'right' || direction == 'down';
     _horizontal = direction == 'up' || direction == 'down';
     _dimension = _horizontal ? _DIM_HEIGHT : _DIM_WIDTH;
-    _update();
+    update();
   }
 
-  void _update() {
+  void update() {
     _target = _isNext ? nextElementSibling : previousElementSibling;
     classes.toggle('horizontal', _horizontal);
   }
 
-  int _getTargetDimension() {
+  int getTargetDimension() {
     final style = _target.getComputedStyle();
     return int.parse((_dimension == _DIM_HEIGHT) ? style.height : style.width);
   }
 
-  void _setTargetDimension(int dimension) {
+  void setTargetDimension(int dimension) {
     final dim = '${dimension}px';
     if (_dimension == _DIM_HEIGHT) {
       _target.style.height = dim;
@@ -52,20 +56,20 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
     }
   }
 
-  void trackStart(e) {
-    _update();
+  void dragStart(MouseEvent e) {
+    update();
     classes.add('active');
-    _size = _getTargetDimension();
+    _size = getTargetDimension();
   }
 
-  void track(e) {
+  void drag(MouseEvent e) {
     if (!locked) {
-      final dim = e[_horizontal ? 'dy' : 'dx'];
-      _setTargetDimension(_size + (_isNext ? -dim : dim));
+      final delta = _horizontal ? e.movement.y : e.movement.x;
+      setTargetDimension(_size + (_isNext ? -delta : delta));
     }
   }
 
-  void trackEnd() {
+  void dragEnd(MouseEvent e) {
     classes.remove('active');
   }
 }
