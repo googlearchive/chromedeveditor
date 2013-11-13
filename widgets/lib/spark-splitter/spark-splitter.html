@@ -7,11 +7,11 @@
 <polymer-element name="spark-splitter" attributes="direction locked">
   <template>
     <style>
-      :host {
+      @host {
         * {
           display: block;
           width: 10px;
-          background: #efefef url(handle.png) no-repeat center;
+          background: #efefef url(packages/spark_widgets/spark-splitter/handle.png) no-repeat center;
           box-shadow: inset 0 0 2px 1px #ccc;
           opacity: 0.9;
           cursor: col-resize;
@@ -21,7 +21,7 @@
           width: auto;
           height: 10px;
           cursor: row-resize;
-          background-image: url(handle_horiz.png);
+          background-image: url(packages/spark_widgets/spark-splitter/handle_horiz.png);
         }
 
         :hover, .active {
