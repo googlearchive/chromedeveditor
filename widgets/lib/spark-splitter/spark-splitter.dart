@@ -20,12 +20,17 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   bool _isNext;
   bool _horizontal;
   int _dimension;
-  int _size;
+  bool _isDragged = false;
 
   SparkSplitter.created() : super.created() {
-    onDragStart.listen(dragStart);
-    onDrag.listen(drag);
-    onDragEnd.listen(dragEnd);
+    onMouseDown.listen(dragStart);
+    onMouseMove.listen(drag);
+    onMouseUp.listen(dragEnd);
+    // TODO(sergeygs): Switch to using onDrag* instead of onMouse* once support
+    // has been added to Polymer Dart.
+    //onDragStart.listen(dragStart);
+    //onDrag.listen(drag);
+    //onDragEnd.listen(dragEnd);
 
     directionChanged();
   }
@@ -44,7 +49,9 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
 
   int getTargetDimension() {
     final style = _target.getComputedStyle();
-    return int.parse((_dimension == _DIM_HEIGHT) ? style.height : style.width);
+    final dimStr = (_dimension == _DIM_HEIGHT) ? style.height : style.width;
+    final dim = int.parse(dimStr.replaceFirst('px', ''));
+    return dim;
   }
 
   void setTargetDimension(int dimension) {
@@ -59,17 +66,20 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   void dragStart(MouseEvent e) {
     update();
     classes.add('active');
-    _size = getTargetDimension();
+    _isDragged = true;
   }
 
   void drag(MouseEvent e) {
-    if (!locked) {
-      final delta = _horizontal ? e.movement.y : e.movement.x;
-      setTargetDimension(_size + (_isNext ? -delta : delta));
+    if (_isDragged && !locked) {
+      final int delta = _horizontal ? e.movement.y : e.movement.x;
+      if (delta != null) {
+        setTargetDimension(getTargetDimension() + (_isNext ? -delta : delta));
+      }
     }
   }
 
   void dragEnd(MouseEvent e) {
     classes.remove('active');
+    _isDragged = false;
   }
 }
