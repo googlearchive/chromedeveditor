@@ -2,19 +2,20 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-/* Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details. */
-/* All rights reserved.  Use of this source code is governed by a BSD-style */
-/* license that can be found in the LICENSE file. */
-
 html {
-  height: 100%;
 }
 
 body {
-  height: 100%;
   margin: 0px;
   padding: 0px;
   overflow: hidden;
+  display: flex;
+  flex-flow: column;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 #status {
@@ -35,11 +36,17 @@ body {
 
 .fileview-filename-container .menu {
   opacity: 0.0;
+  position: absolute;
+  right: 0;
+  width: 15px;
 }
 
 .fileview-filename-container .filename {
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   width: 100%;
-  padding-left: 10px;
 }
 
 .fileview-filename-container:hover .filename {
@@ -55,17 +62,25 @@ body {
 }
 
 #fileViewArea {
-  height: 100%;
-  width: 300px;
   border-top: 1px solid white;
+  position: relative;
+  width: 300px;
+}
+
+#fileViewArea .listview-container {
+  overflow-x: auto;
+  overflow-y: scroll;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 #editorArea {
-  height: 100%;
-  /*left: 350px;
-  position: absolute;*/
   flex: 1;
-  /*width: calc(100% - 351px);*/
+  overflow: hidden;
+  position: relative;
 }
 
 #toolbar {
@@ -76,4 +91,14 @@ body {
 
 #hotdogMenu {
   float: right;  
+}
+
+#hotdogMenu li {
+	min-width: 16em;
+}
+
+/* bootstrap overrides */
+
+#toolbar .btn {
+  padding: 2px 8px 2px 8px ;
 }

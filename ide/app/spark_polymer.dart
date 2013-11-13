@@ -23,7 +23,7 @@ class SparkPolymer extends Spark {
   SparkPolymer(bool developerMode) : super(developerMode);
 
   @override
-  void setupViews() {}
+  void setupSplitView() {}
 
   @override
   void setupEditorThemes() {
