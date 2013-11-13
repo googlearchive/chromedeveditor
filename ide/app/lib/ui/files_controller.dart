@@ -80,6 +80,14 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
+  List<Resource> getSelection() {
+    List resources = [];
+    _treeView.listView.selection.forEach((index) {
+        resources.add(_files[index]);
+     });
+    return resources;
+  }
+
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     return new FileItemCell(_filesMap[nodeUID].name);
   }
@@ -106,6 +114,12 @@ class FilesController implements TreeViewDelegate {
     if (event.type == ResourceEventType.ADD) {
       _files.add(event.resource);
       _filesMap[event.resource.fullPath] = event.resource;
+      _treeView.reloadData();
+    }
+    if (event.type == ResourceEventType.DELETE) {
+      _files.remove(event.resource);
+      // TODO: make a more informed selection, maybe before the delete?
+      selectLastFile();
       _treeView.reloadData();
     }
   }

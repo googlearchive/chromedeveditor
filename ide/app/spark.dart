@@ -168,6 +168,14 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
+  void deleteFile(_) {
+    // TODO: handle multiple selection
+    var sel = _filesController.getSelection();
+    if (sel.isNotEmpty) {
+     sel.first.delete();
+    }
+  }
+
   void saveAsFile(_) {
     chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
         type: chrome_gen.ChooseEntryType.SAVE_FILE);
@@ -190,14 +198,17 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
   }
 
   void buildMenu() {
     UListElement ul = querySelector('#hotdogMenu ul');
 
     ul.children.insert(0, _createLIElement(null));
+    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-delete')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
+
 
     querySelector('#themeLeft').onClick.listen((e) {
       e.stopPropagation();
@@ -409,6 +420,12 @@ class FileSaveAction extends SparkAction {
   }
 
   void _invoke() => spark.saveFile(null);
+}
+
+class FileDeleteAction extends SparkAction {
+  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
+
+  void invoke() => spark.deleteFile(null);
 }
 
 class FileExitAction extends SparkAction {
