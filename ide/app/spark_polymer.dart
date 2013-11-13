@@ -23,7 +23,10 @@ class SparkPolymer extends Spark {
   SparkPolymer(bool developerMode) : super(developerMode);
 
   @override
-  void setupSplitView() {}
+  void setupSplitView() {
+    // We're using a Polymer-based splitview, so disable the default
+    // by overriding this method to be empty.
+  }
 
   @override
   void setupEditorThemes() {
