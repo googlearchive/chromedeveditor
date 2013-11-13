@@ -50,7 +50,11 @@ class EditorManager {
 
   bool get dirty => _currentState == null ? false : _currentState.dirty;
 
-  void select(File file) {
+  /**
+   * This will open the given [File]. If this file is already open, it will
+   * instead be made the active editor.
+   */
+  void openOrSelect(File file) {
     _EditorState state = _getStateFor(file);
 
     if (state == null) {
@@ -104,8 +108,8 @@ class EditorManager {
 
   void _switchState(_EditorState state) {
     if (_currentState != state) {
-      if (state != null && !state.isRealized) {
-        state.realize().then((_) {
+      if (state != null && !state.hasSession) {
+        state.createSession().then((_) {
           _switchState(state);
         });
       } else {
@@ -175,7 +179,7 @@ class _EditorState {
     }
   }
 
-  bool get isRealized => session != null;
+  bool get hasSession => session != null;
 
   void save() {
     if (dirty) {
@@ -184,6 +188,10 @@ class _EditorState {
     }
   }
 
+  /**
+   * Return a [Map] representing the persistable state of this editor. This map
+   * can later be passed into [_EditorState.fromMap] to restore the state.
+   */
   Map toMap() {
     Map m = {};
     m['file'] = file.persistToToken();
@@ -191,12 +199,16 @@ class _EditorState {
     return m;
   }
 
-  Future<_EditorState> realize() {
-    return file.getContents().then((text) {
-      session = manager._aceEditor.createEditSession(text, file.name);
-      session.scrollTop = scrollTop;
-      session.onChange.listen((delta) => dirty = true);
-      return this;
-    });
+  Future<_EditorState> createSession() {
+    if (hasSession) {
+      return new Future.value(this);
+    } else {
+      return file.getContents().then((text) {
+        session = manager._aceEditor.createEditSession(text, file.name);
+        session.scrollTop = scrollTop;
+        session.onChange.listen((delta) => dirty = true);
+        return this;
+      });
+    }
   }
 }

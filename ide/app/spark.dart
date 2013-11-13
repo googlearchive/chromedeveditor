@@ -172,19 +172,6 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
-//  void saveAsFile(_) {
-//    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-//        type: chrome.ChooseEntryType.SAVE_FILE);
-//
-//    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
-//      chrome.ChromeFileEntry entry = result.entry;
-//      workspace.link(entry, false).then((file) {
-//        editor.saveAs(file);
-//        workspace.save();
-//      });
-//    }).catchError((e) => null);
-//  }
-
   void createActions() {
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
@@ -226,7 +213,7 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void openInEditor(Resource file) => editorManager.select(file);
+  void openInEditor(Resource file) => editorManager.openOrSelect(file);
 
   void _handleChangeTheme({bool themeLeft: true}) {
     int index = AceEditor.THEMES.indexOf(editor.theme);

@@ -31,7 +31,7 @@ main() {
         completer.complete();
       });
 
-      manager.select(fileResource);
+      manager.openOrSelect(fileResource);
       return completer.future;
     });
   });
