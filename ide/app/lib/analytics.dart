@@ -170,12 +170,8 @@ class Tracker extends _ProxyHolder {
    * any runtime data. In most cases all "screens" should be known at the time
    * the app is built. Examples: "MainScreen" or "SettingsView".
    */
-  void sendAppView(String description, {bool newSession: false}) {
-    if (newSession) {
-      send('appView', {'description': description, 'sessionControl': 'new'});
-    } else {
-      _proxy.callMethod('sendAppView', [description]);
-    }
+  void sendAppView(String description) {
+    _proxy.callMethod('sendAppView', [description]);
   }
 
   /**
@@ -278,7 +274,7 @@ class NullTracker implements Tracker {
   GoogleAnalytics get service => _service;
 
   void send(String hitType, [Map<String, dynamic> extraParams]) { }
-  void sendAppView(String description, {bool newSession: false}) { }
+  void sendAppView(String description) { }
   void sendEvent(String category, String action, [String label, String value]) { }
   void sendException([String description, bool fatal]) { }
   void sendSocial(String network, String action, String target) { }
