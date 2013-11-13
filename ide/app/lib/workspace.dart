@@ -28,13 +28,16 @@ class Workspace implements Container {
 
   List<Resource> _children = [];
   PreferenceStore _store;
+  Completer<Workspace> _whenAvailable = new Completer();
 
   StreamController<ResourceChangeEvent> _controller =
       new StreamController.broadcast();
 
   // TODO: perhaps move to returning a constructed Workspace via a static
   // method that returns a Future? see PicoServer
-  Workspace(this._store);
+  Workspace([this._store]);
+
+  Future<Workspace> whenAvailable() => _whenAvailable.future;
 
   String get name => null;
   String get path => '';
@@ -110,21 +113,23 @@ class Workspace implements Container {
 
   // read the workspace data from storage and restore entries
   Future restore() {
-    return _store.getValue('workspace').then((s) {
+    _store.getValue('workspace').then((s) {
       if (s == null) return null;
 
       try {
         List<String> ids = JSON.decode(s);
-        return Future.forEach(ids, (id) {
+        Future.forEach(ids, (id) {
           return chrome.fileSystem.restoreEntry(id)
               .then((entry) => link(entry, false))
               .catchError((_) => null);
-        });
+        }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
         _logger.log(Level.INFO, 'Exception in workspace restore', e);
-        return new Future.error(e);
+        _whenAvailable.complete(this);
       }
     });
+
+    return whenAvailable();
   }
 
   // store info for workspace children
@@ -233,12 +238,9 @@ abstract class Resource {
 
   Container get parent => _parent;
 
-  Future delete() =>
-    _entry.remove().then((_) => _parent._removeChild(this));
-
+  Future delete() => _entry.remove().then((_) => _parent._removeChild(this));
 
   String get fullPath => _entry.fullPath;
-
 
   /**
    * Returns the containing [Project]. This can return null for loose files and
@@ -247,6 +249,8 @@ abstract class Resource {
   Project get project => parent is Project ? parent : parent.project;
 
   Workspace get workspace => parent.workspace;
+
+  String toString() => '${this.runtimeType} ${name}';
 }
 
 class Folder extends Container {

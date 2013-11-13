@@ -13,6 +13,7 @@ import 'analytics_test.dart' as analytics_test;
 import 'analyzer_test.dart' as analyzer_test;
 import 'app_test.dart' as app_test;
 import 'compiler_test.dart' as compiler_test;
+import 'editors_test.dart' as editors_test;
 import 'files_test.dart' as files_test;
 import 'git_object_test.dart' as git_object_test;
 import 'git_pack_test.dart' as git_pack_test;
@@ -36,6 +37,7 @@ void defineTests() {
   analyzer_test.main();
   app_test.main();
   compiler_test.main();
+  editors_test.main();
   files_test.main();
   git_object_test.main();
   git_pack_test.main();

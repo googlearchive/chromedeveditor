@@ -96,12 +96,11 @@ class _ChromePreferenceStore implements PreferenceStore {
     chrome.storage.onChanged.listen((chrome.StorageOnChangedEvent event) {
       if (event.areaName == name) {
         for (String key in event.changes.keys) {
-          chrome.StorageChange change = event.changes[key];
+          Map changeMap = event.changes[key];
 
           // We only understand strings.
-          if (change.newValue is String || change.newValue == null) {
-            _controller.add(new PreferenceEvent(this, key, change.newValue));
-          }
+          var change = changeMap['newValue'].toString();
+          _controller.add(new PreferenceEvent(this, key, change));
         }
       }
     });
