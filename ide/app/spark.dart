@@ -81,7 +81,6 @@ class Spark extends Application implements FilesControllerDelegate {
 
     actionManager = new ActionManager();
 
-    // TODO: Eventually, move to only enabling the tracker if !developerMode.
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
       tracker = service.getTracker(_ANALYTICS_ID);
@@ -295,14 +294,16 @@ class Spark extends Application implements FilesControllerDelegate {
     // Handle logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
       if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
-        // We have a message, an error object, and a stacktrace; we can't log
-        // the error object because of PII concerns.
+        // We don't log the error object because of PII concerns.
+        // TODO: we need to add a test to verify this
         String error = r.error != null ? r.error.runtimeType.toString() : r.message;
-        String description = '${error}\n${minimizeStackTrace(r.stackTrace)}'.trim();
-        if (description.length > analytics.MAX_EXCEPTION_LENGTH) {
-          description = description.substring(0, analytics.MAX_EXCEPTION_LENGTH);
+        String desc = '${error}\n${minimizeStackTrace(r.stackTrace)}'.trim();
+        
+        if (desc.length > analytics.MAX_EXCEPTION_LENGTH) {
+          desc = '${desc.substring(0, analytics.MAX_EXCEPTION_LENGTH - 1)}~';
         }
-        tracker.sendException(description);
+        
+        tracker.sendException(desc);
       }
     });
 

@@ -50,8 +50,9 @@ String baseName(String path) {
 }
 
 /**
- * Returns a minimal textual description of the stack trace. This converts
- * something like:
+ * Returns a minimal textual description of the stack trace. I.e., instead of a
+ * stack trace several thousand chars long, this trie to return one that can
+ * meaningfully fit into several hundred chars. So, it converts something like:
  *
  *     "#0      newFile (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart:157:7)\n"
  *
