@@ -5,6 +5,7 @@
 library spark_widgets.splitter;
 
 import 'dart:html';
+import 'dart:async';
 import 'package:polymer/polymer.dart';
 
 @CustomTag('spark-splitter')
@@ -20,17 +21,14 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   bool _isNext;
   bool _horizontal;
   int _dimension;
-  bool _isDragged = false;
+  StreamSubscription<MouseEvent> _dragSubscr;
+  StreamSubscription<MouseEvent> _dragEndSubscr;
 
   SparkSplitter.created() : super.created() {
     onMouseDown.listen(dragStart);
-    onMouseMove.listen(drag);
-    onMouseUp.listen(dragEnd);
     // TODO(sergeygs): Switch to using onDrag* instead of onMouse* once support
-    // has been added to Polymer Dart.
+    // onDrag* are fixed (as of 2013-11-13 they don't work).
     //onDragStart.listen(dragStart);
-    //onDrag.listen(drag);
-    //onDragEnd.listen(dragEnd);
 
     directionChanged();
   }
@@ -64,13 +62,17 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   }
 
   void dragStart(MouseEvent e) {
+    print("dragStart");
     update();
     classes.add('active');
-    _isDragged = true;
+    if (!locked) {
+      _dragSubscr = onMouseMove.listen(drag);
+      _dragEndSubscr = onMouseUp.listen(dragEnd);
+    }
   }
 
   void drag(MouseEvent e) {
-    if (_isDragged && !locked) {
+    if (!locked) {
       final int delta = _horizontal ? e.movement.y : e.movement.x;
       if (delta != null) {
         setTargetDimension(getTargetDimension() + (_isNext ? -delta : delta));
@@ -79,7 +81,9 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   }
 
   void dragEnd(MouseEvent e) {
+    print("dragEnd");
+    _dragSubscr.cancel();
+    _dragSubscr.cancel();
     classes.remove('active');
-    _isDragged = false;
   }
 }
