@@ -4,6 +4,7 @@
 
 library spark.utils;
 
+import 'dart:html' show document;
 import 'dart:web_audio';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
@@ -50,6 +51,14 @@ String baseName(String path) {
 }
 
 /**
+ * Return whether the current runtime is dart2js (vs Dartium).
+ */
+bool isDart2js() {
+  return document.getElementsByTagName("script").where(
+      (s) => s.src.endsWith(".precompiled.js")).isNotEmpty;
+}
+
+/**
  * Returns a minimal textual description of the stack trace. I.e., instead of a
  * stack trace several thousand chars long, this trie to return one that can
  * meaningfully fit into several hundred chars. So, it converts something like:
@@ -85,42 +94,63 @@ String minimizeStackTrace(StackTrace st) {
   return lines.join('\n');
 }
 
+// A sample stack trace from Dartium:
 //#0      main.<anonymous closure>.<anonymous closure> (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/test/utils_test.dart:35:9)
 //#1      _run.<anonymous closure> (package:unittest/src/test_case.dart:110:30)
 //#2      _Future._propagateToListeners.<anonymous closure> (dart:async/future_impl.dart:453)
 //#3      _rootRun (dart:async/zone.dart:683)
 //#4      _RootZone.run (dart:async/zone.dart:823)
 //#5      _Future._propagateToListeners (dart:async/future_impl.dart:445)
-//#6      _Future._complete (dart:async/future_impl.dart:303)
-//#7      _Future._asyncComplete.<anonymous closure> (dart:async/future_impl.dart:354)
-//#8      _asyncRunCallback (dart:async/schedule_microtask.dart:18)
-//#9      _handleMutation (file:///Volumes/data/b/build/slave/dartium-mac-full-dev/build/src/dart/tools/dom/src/native_DOMImplementation.dart:612)
+
+// match #, nums, ws, non-ws, 1 space, (, non-ws, )
+final RegExp DARTIUM_REGEX = new RegExp(r'#\d+\s+([\S ]+) \((\S+)\)');
+
+// A sample stack trace from dart2js/chrome:
+//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 2646:13    Object.wrapException
+//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 105756:13  DefaultFailureHandler.fail$1
+//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 105201:20  Object.expect
+//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 125728:9   main__closure11.call$0
+
+// match non-ws, 1 space, num, :, num, ws, non-ws
+final RegExp DART2JS_REGEX = new RegExp(r'(\S+) (\d+:\d+)\s+(\S+)');
 
 String  _minimizeLine(String line) {
-  final String CHROME_EX = 'chrome-extension://';
+  // Try and match a dartium stack trace first.
+  Match match = DARTIUM_REGEX.firstMatch(line);
 
-  // match #, nums, ws, non-ws, ws, (, sdfsfsdf, )
-  RegExp regex = new RegExp(r'#\d+\s+([\S ]+) \((\S+)\)');
-
-  Match match = regex.firstMatch(line);
-
-  if (match == null) {
-    return line;
-  } else {
+  if (match != null) {
     String method = match.group(1);
     method = method.replaceAll('<anonymous closure>', '<anon>');
-
-    String location = match.group(2);
-
-    // Strip off a leading chrome-extension://sdfsdfsdfsdf/...
-    if (location.startsWith(CHROME_EX)) {
-      location = location.substring(CHROME_EX.length);
-      int index = location.indexOf('/');
-      if (index != -1) {
-        location = location.substring(index + 1);
-      }
-    }
-
+    String location = _removeExtPrefix(match.group(2));
     return '${method} ${location}';
   }
+
+  // Then try a dart2js stack trace.
+  match = DART2JS_REGEX.firstMatch(line);
+
+  if (match != null) {
+    String location = _removeExtPrefix(match.group(1));
+    String line = match.group(2);
+    String method = match.group(3);
+    return '${method} ${location}:${line}';
+  }
+
+  return line;
+}
+
+/**
+ * Strip off a leading chrome-extension://sdfsdfsdfsdf/...
+ */
+String _removeExtPrefix(String str) {
+  final String CHROME_EX = 'chrome-extension://';
+
+  if (str.startsWith(CHROME_EX)) {
+    str = str.substring(CHROME_EX.length);
+    int index = str.indexOf('/');
+    if (index != -1) {
+      str = str.substring(index + 1);
+    }
+  }
+
+  return str;
 }

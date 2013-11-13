@@ -1,6 +1,8 @@
 # install zip and start a virtual frame buffer
-sudo apt-get -y -q install zip
-sudo start xvfb
+if [ "$DRONE" = "true" ]; then
+  sudo apt-get -y -q install zip
+  sudo start xvfb
+fi
 
 # setup the build environment
 pub install
@@ -18,4 +20,4 @@ pub install
 dart tool/test_runner.dart --dartium
 
 # run tests on chrome
-#dart tool/test_runner.dart --chrome
+dart tool/test_runner.dart --chrome
