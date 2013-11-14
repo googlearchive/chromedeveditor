@@ -15,8 +15,10 @@ class TabBeforeCloseEvent {
 }
 
 class Tab {
+  /// Parent [TabView]
   final TabView tabView;
   final Element component;
+
   DivElement _label;
   DivElement _labelCaption;
   DivElement _closeButton;
@@ -156,11 +158,11 @@ class TabView {
   set showLabelBar(bool showLabelBar) =>
       _tabBar.classes.toggle('tabview-tabbar-hidden', !showLabelBar);
 
-  Tab add(Tab tab) {
+  Tab add(Tab tab, {bool switchesTab: true}) {
     tabs.add(tab);
     _tabViewWorkspace.children.add(tab.component);
     _tabBarScrollable.children.add(tab._label);
-    if (_selectedTab == null) {
+    if (switchesTab) {
       selectedTab = tab;
     }
     return tab;
@@ -178,20 +180,20 @@ class TabView {
       }
   }
 
-  void remove(Tab tab, {switchTab: true}) {
-    if (tab._label.parent == null) return;
+  bool remove(Tab tab, {bool switchesTab: true}) {
+    if (tab._label.parent == null) return false;
     var beforeCloseEvent = new TabBeforeCloseEvent(tab);
     _onBeforeCloseStreamController.add(beforeCloseEvent);
-    if (beforeCloseEvent._canceled) return;
+    if (beforeCloseEvent._canceled) return false;
     tab.component.remove();
     tab._cleanup();
     int index = tabs.indexOf(tab);
     tabs.removeAt(index);
 
     if (selectedTab == tab) {
-      if (switchTab && tabs.length > index) {
+      if (switchesTab && tabs.length > index) {
         selectedTab = tabs[index];
-      } else if (switchTab && tabs.length > 0) {
+      } else if (switchesTab && tabs.length > 0) {
         selectedTab = tabs.last;
       } else {
         _selectedTab = null;
@@ -205,6 +207,7 @@ class TabView {
     }
 
     _onCloseStreamController.add(tab);
+    return true;
   }
 
   void gotoPreviousTab() {

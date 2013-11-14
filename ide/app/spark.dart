@@ -16,6 +16,7 @@ import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
@@ -23,7 +24,6 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
-import 'lib/ui/widgets/tabview.dart';
 import 'lib/workspace.dart';
 import 'test/all.dart' as all_tests;
 
@@ -64,7 +64,7 @@ class Spark extends Application implements FilesControllerDelegate {
   AceEditor editor;
   Workspace workspace;
   EditorManager editorManager;
-  TabView editorArea;
+  EditorArea editorArea;
   analytics.Tracker tracker = new analytics.NullTracker();
 
   preferences.PreferenceStore localPrefs;
@@ -101,15 +101,30 @@ class Spark extends Application implements FilesControllerDelegate {
 
     workspace = new Workspace(localPrefs);
 
-    editorArea = new TabView(document.getElementById('editorArea'));
     editor = new AceEditor(new DivElement());
-    editorManager =
-        new EditorManager(workspace, editorArea, editor, localPrefs);
-    editorManager.onSelectedChange.listen((file) {
-      _filesController.selectFile(file);
+    editorManager = new EditorManager(workspace, editor, localPrefs);
+    editorManager.loaded.then((_) {
+      List<Resource> files = editorManager.files.toList();
+      editorManager.files.forEach((file) {
+        editorArea.selectFile(file, forceOpen: true, switchesTab: false);
+      });
+      localPrefs.getValue('lastSelectedEditor').then((String data) {
+        if (editorArea.tabs.isEmpty) return;
+        int index = data == null ? 0 : JSON.decode(data);
+        if (index != null && index >= 0 && index < editorArea.tabs.length)
+          editorArea.tabs[index].select();
+      });
     });
 
+    editorArea = new EditorArea(document.getElementById('editorArea'),
+                                editorManager);
+    editorArea.onSelected.listen((EditorTab tab) {
+      _filesController.selectFile(tab.file);
+      localPrefs.setValue('lastSelectedEditor',
+          JSON.encode(editorArea.tabs.indexOf(editorArea.selectedTab)));
+    });
     _filesController = new FilesController(workspace, this);
+    _filesController.openOnSelection = false;
 
     setupSplitView();
     setupFileActions();
@@ -175,7 +190,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry, false).then((file) {
-          _filesController.selectLastFile();
+          editorArea.selectFile(file, switchesTab: true);
           workspace.save();
         });
       }
@@ -234,9 +249,10 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void selectInEditor(Resource file, {forceOpen: false}) {
-    if (forceOpen || editorManager.isFileOpend(file))
-      editorManager.openOrSelect(file);
+  void selectInEditor(Resource file, {bool forceOpen: false}) {
+    if (forceOpen || editorManager.isFileOpend(file)) {
+      editorArea.selectFile(file, forceOpen: forceOpen);
+    }
   }
 
   void _handleChangeTheme({bool themeLeft: true}) {

@@ -1,0 +1,101 @@
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+/**
+ * A library to manage the list of open editors, and persist their state (like
+ * their selection and scroll position) across sessions.
+ */
+library spark.editorarea;
+
+import 'dart:html';
+import 'ace.dart';
+import 'editors.dart';
+import 'ui/widgets/tabview.dart';
+import 'workspace.dart';
+
+class EditorTab extends Tab {
+  final Resource file;
+  final AceEditor editor;
+  EditorTab(EditorArea parent, AceEditor editor, this.file)
+      : editor = editor,  // FIXME(ikarienator): cannot use this.editor style.
+        super(parent, editor.parentElement) {
+    label = file.name;
+  }
+}
+
+/**
+ * Manage a list of open editors.
+ */
+class EditorArea extends TabView {
+  final EditorProvider editorProvider;
+  final Map<Resource, EditorTab> _tabOfFile = {};
+
+  EditorArea(Element parentElement, this.editorProvider)
+      : super(parentElement) {
+    this.editorProvider.onDirtyFlagChanged.listen(_handleDirtyFlagChanged);
+    onSelected.listen((EditorTab tab) {
+      editorProvider.selectFileForEditor(tab.editor, tab.file);
+    });
+    onClose.listen((EditorTab tab) {
+      closeFile(tab.file);
+    });
+    showLabelBar = false;
+  }
+
+  // TabView
+  Tab add(EditorTab tab, {bool switchesTab: true}) {
+    _tabOfFile[tab.file] = tab;
+    showLabelBar = _tabOfFile.length > 1;
+    return super.add(tab, switchesTab: switchesTab);
+  }
+
+  // TabView
+  bool remove(EditorTab tab, {bool switchesTab: true}) {
+    if (super.remove(tab, switchesTab: switchesTab)) {
+      _tabOfFile.remove(tab.file);
+      showLabelBar = _tabOfFile.length > 1;
+      return true;
+    }
+    return false;
+  }
+
+  /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
+  /// [selectFile] will be called instead. Otherwise the editor provide is
+  /// requested to switch the file to the editor in case the editor is shared.
+  void selectFile(Resource file,
+                {bool forceOpen: false, bool switchesTab: true}) {
+    if (!_tabOfFile.containsKey(file)) {
+      if (forceOpen) {
+        AceEditor editor = editorProvider.createEditorForFile(file);
+        var tab = new EditorTab(this, editor, file);
+        add(tab, switchesTab: switchesTab);
+      } else {
+        return;
+      }
+    }
+
+    EditorTab tab = _tabOfFile[file];
+    editorProvider.selectFileForEditor(tab.editor, file);
+    if (switchesTab)
+      tab.select();
+  }
+
+  /// Closes the tab.
+  void closeFile(Resource file) {
+    if (_tabOfFile.containsKey(file)) {
+      EditorTab tab = _tabOfFile[file];
+      remove(tab);
+      tab.close();
+      editorProvider.close(file);
+    }
+  }
+
+  /// Append '*' to the end of file name is the file is dirty.
+  void _handleDirtyFlagChanged(DirtyFlagChangedEvent event) {
+    if (_tabOfFile.containsKey(event.file)) {
+      _tabOfFile[event.file].label = event.file.name +
+          (event.dirty ? '*' : '');
+    }
+  }
+}

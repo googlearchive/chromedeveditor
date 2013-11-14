@@ -14,28 +14,41 @@ import 'dart:convert' show JSON;
 import 'ace.dart';
 import 'preferences.dart';
 import 'workspace.dart';
-import 'ui/widgets/tabview.dart';
+
+class DirtyFlagChangedEvent {
+  final File file;
+  final bool dirty;
+  DirtyFlagChangedEvent(this.file, this.dirty);
+}
+
+abstract class EditorProvider {
+  AceEditor createEditorForFile(Resource file);
+  void selectFileForEditor(AceEditor editor, Resource file);
+  void close(Resource file);
+  Stream<DirtyFlagChangedEvent> get onDirtyFlagChanged;
+}
+
 
 /**
  * Manage a list of open editors.
  */
-class EditorManager {
+class EditorManager implements EditorProvider {
   final Workspace _workspace;
   final AceEditor _aceEditor;
 
-  // TODO(ikarienator): When we reverse the responsibility of state
-  // serialization, abstract opened file collection and move _tabView to
-  // higher level (potentially in [Spark] class).
-  final TabView _tabView;
   final PreferenceStore _prefs;
 
   final List<_EditorState> _editorStates = [];
+
+  final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
 
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
+  final StreamController<DirtyFlagChangedEvent> _dirtyFlagChangedController =
+      new StreamController.broadcast();
 
-  EditorManager(this._workspace, this._tabView, this._aceEditor, this._prefs) {
+  EditorManager(this._workspace, this._aceEditor, this._prefs) {
     _workspace.whenAvailable().then((_) {
       _prefs.getValue('editorStates').then((String data) {
         if (data != null) {
@@ -43,20 +56,7 @@ class EditorManager {
             File f = _workspace.restoreResource(m['file']);
             openOrSelect(f, switching: false);
           }
-
-          _prefs.getValue('lastSelectedEditor').then((String data) {
-            if (_editorStates.isEmpty) return;
-            int index = data == null ? 0 : JSON.decode(data);
-            if (index != null && index >= 0)
-              _switchState(_editorStates[index]);
-
-            _tabView.onSelected.listen((tab) {
-              _switchState(
-                  _editorStates.firstWhere((state) => state.tab == tab));
-            });
-
-            _tabView.showLabelBar = _editorStates.length > 1;
-          });
+          _loadedCompleter.complete(true);
         }
       });
     });
@@ -65,6 +65,7 @@ class EditorManager {
   File get currentFile => _currentState != null ? _currentState.file : null;
 
   Iterable<File> get files => _editorStates.map((s) => s.file);
+  Future<bool> get loaded => _loadedCompleter.future;
 
   Stream<File> get onSelectedChange => _selectedController.stream;
 
@@ -72,21 +73,10 @@ class EditorManager {
 
   void _insertState(_EditorState state) {
     _editorStates.add(state);
-    _tabView.add(state.tab);
-    if (_tabView.tabs.length > 1) {
-      _tabView.tabs.forEach((tab) { tab.closable = true; });
-      _tabView.showLabelBar = true;
-    }
   }
 
   void _removeState(_EditorState state) {
     _editorStates.remove(state);
-    _tabView.remove(state.tab, switchTab: false);
-
-    if (_tabView.tabs.length == 1) {
-      _tabView.tabs[0].closable = false;
-      _tabView.showLabelBar = false;
-    }
   }
 
   /**
@@ -141,8 +131,6 @@ class EditorManager {
   void persistState() {
     var stateData = _editorStates.map((state) => state.toMap()).toList();
     _prefs.setValue('editorStates', JSON.encode(stateData));
-    _prefs.setValue('lastSelectedEditor', JSON.encode(
-        _editorStates.indexOf(_currentState)));
   }
 
   _EditorState _getStateFor(File file) {
@@ -168,9 +156,6 @@ class EditorManager {
 
         persistState();
       }
-
-      if (state != null)
-        _tabView.selectedTab = state.tab;
     }
   }
 
@@ -192,6 +177,20 @@ class EditorManager {
     _editorStates.forEach((e) => e.save());
     // TODO: end the workspace change event
   }
+
+  // EditorProvider
+  AceEditor createEditorForFile(Resource file) {
+    openOrSelect(file);
+    return _aceEditor;
+  }
+
+  void selectFileForEditor(AceEditor editor, Resource file) {
+    _EditorState state = _getStateFor(file);
+    _switchState(state);
+  }
+
+  Stream<DirtyFlagChangedEvent> get onDirtyFlagChanged =>
+      _dirtyFlagChangedController.stream;
 }
 
 /**
@@ -201,19 +200,11 @@ class _EditorState {
   EditorManager manager;
   File file;
   EditSession session;
-  Tab tab;
 
   int scrollTop = 0;
   bool _dirty = false;
 
-  _EditorState.fromFile(this.manager, this.file) {
-    tab = new Tab(
-        manager._tabView,
-        manager._aceEditor.parentElement,
-        closable: false);
-    tab.label = file.name + (_dirty ? '*' : '');
-    tab.onClose.listen((tab) { manager.close(file); });
-  }
+  _EditorState.fromFile(this.manager, this.file);
 
   factory _EditorState.fromMap(EditorManager manager,
                                Workspace workspace,
@@ -234,10 +225,11 @@ class _EditorState {
   set dirty(bool value) {
     if (_dirty != value) {
       _dirty = value;
-      tab.label = file.name + (_dirty ? '*' : '');
       if (_dirty) {
         manager._startSaveTimer();
       }
+      manager._dirtyFlagChangedController.add(
+          new DirtyFlagChangedEvent(file, value));
     }
   }
 
