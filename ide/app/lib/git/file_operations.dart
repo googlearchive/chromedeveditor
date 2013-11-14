@@ -23,7 +23,7 @@ abstract class FileOps {
     return root.createFile(path).then((chrome.ChromeFileEntry entry) {
       if (type == 'Text') {
         return entry.writeText(content).then((_) => entry);
-      } else if (type == 'Blob') {
+      } else if (type == 'blob') {
         return entry.writeBytes(content).then((_) => entry);
       } else {
         throw new UnsupportedError(

@@ -11,15 +11,8 @@ import 'dart:typed_data';
 import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 import 'package:utf/utf.dart';
 
-/**
- *
- */
-abstract class ObjectTypes {
-  static const String BLOB = "blob";
-  static const String TREE = "tree";
-  static const String COMMIT = "commit";
-  static const String TAG = "tag";
-}
+import 'git_object_utils.dart';
+
 
 /**
  * Encapsulates a Gitobject

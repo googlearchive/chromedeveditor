@@ -16,6 +16,7 @@ import 'package:crypto/crypto.dart' as crypto;
 
 import 'file_operations.dart';
 import 'git_object.dart';
+import 'git_object_utils.dart';
 import 'git_pack.dart';
 import 'git_pack_index.dart';
 import 'git_utils.dart';
@@ -190,7 +191,7 @@ class ObjectStore {
   }
 
   Future<GitObject> retrieveObject(String sha, String objType) {
-    String dataType = (objType == "Commit" ? "Text" : "ArrayBuffer");
+    String dataType = (objType == ObjectTypes.COMMIT ? "Text" : "ArrayBuffer");
 
     return retrieveRawObject(sha, dataType).then(
         (LooseObject object) => GitObject.make(sha, objType, object.data));
@@ -250,7 +251,7 @@ class ObjectStore {
 
         seen[sha] = true;
 
-        return retrieveObject(sha, 'Commit').then((CommitObject commitObj) {
+        return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commitObj) {
           nextLevel.addAll(commitObj.parents);
           int i = commits.length - 1;
           for (; i >= 0; i--) {
@@ -285,7 +286,7 @@ class ObjectStore {
   Future<CommitObject> _checkRemoteHead(GitRef remoteRef) {
     // Check if the remote head exists in the local repo.
     if (remoteRef.sha != HEAD_MASTER_SHA) {
-      return retrieveObject(remoteRef.sha, 'Commit').then((obj) => obj,
+      return retrieveObject(remoteRef.sha, ObjectTypes.COMMIT).then((obj) => obj,
           onError: (e) {
             //TODO support non-fast forward.
             _nonFastForward();
@@ -347,10 +348,10 @@ class ObjectStore {
     Future getNextCommit(String sha) {
 
       //TODO return retrieveObject result
-      return retrieveObject(sha, 'Commit').then((CommitObject commitObj) {
+      return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commitObj) {
         var rawObj;
         Completer completer = new Completer();
-        commits.add({"commit": commitObj, "raw": rawObj});
+        commits.add({ObjectTypes.COMMIT: commitObj, "raw": rawObj});
         if (commitObj.parents.length > 1) {
           // this means a local merge commit.
           _nonFastForward();
@@ -407,8 +408,8 @@ class ObjectStore {
   }
 
   Future _getTreeFromCommitSha(String sha) {
-    return retrieveObject(sha, 'Commit').then((CommitObject commit) {
-     return  retrieveObject(commit.treeSha, 'Tree').then(
+    return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commit) {
+     return  retrieveObject(commit.treeSha, ObjectTypes.TREE).then(
          (rawObject) => rawObject);
     });
   }
@@ -503,7 +504,7 @@ class ObjectStore {
       blobParts.add(tree.sha);
     });
 
-    return writeRawObject('tree', new Blob(blobParts));
+    return writeRawObject(ObjectTypes.TREE, new Blob(blobParts));
   }
 
   Future<GitConfig> getConfig() {

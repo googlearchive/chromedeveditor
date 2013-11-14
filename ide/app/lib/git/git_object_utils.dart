@@ -15,17 +15,27 @@ import 'git_objectstore.dart';
 import 'git_utils.dart';
 
 /**
+ *
+ */
+abstract class ObjectTypes {
+  static const String BLOB = "blob";
+  static const String TREE = "tree";
+  static const String COMMIT = "commit";
+  static const String TAG = "tag";
+}
+
+/**
  * Utilities function for git objects.
  * TODO(grv) : Add unittests.
  */
 abstract class ObjectUtils {
   /**
-   * Expands a git blob object into a file and writes ond disc.
+   * Expands a git blob object into a file and writes on disc.
    */
   static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir, ObjectStore store,
       String fileName, String blobSha) {
-    return store.retrieveObject(blobSha, "Blob").then((BlobObject blob) {
-      return FileOps.createFileWithContent(dir, fileName, blob.data, "Blob");
+    return store.retrieveObject(blobSha, ObjectTypes.BLOB).then((BlobObject blob) {
+      return FileOps.createFileWithContent(dir, fileName, blob.data, ObjectTypes.BLOB);
     });
   }
 
