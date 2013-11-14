@@ -1,12 +1,12 @@
 .splitview-horizontal {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-flow: column;
 }
 
 .splitview-vertical {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-flow: row;
 }
 

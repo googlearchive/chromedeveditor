@@ -1,57 +1,57 @@
 .tabview-container {
-  position: absolute;
-  top: 0;
-  left: 0;
+  background: #EEE;
   bottom: 0;
-  right: 0;
   display: flex;
   flex-flow: column;
-  background: #EEE;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 
 .tabview-tabbar {
-  display: flex;
-  position: relative;
+  background: white;
   border-bottom: 1px solid #CCC;
+  display: flex;
   margin-bottom: 3px;
   overflow: visible;
-  background: white;
+  position: relative;
   -webkit-user-select: none;
 }
 
 .tabview-tabbar-scroller {
   flex: 1;
-  position: relative;
-  overflow: hidden;
   margin: -1px;
+  overflow: hidden;
+  position: relative;
   z-index: 100;
 }
 
 .tabview-tabbar-scrollable {
-  position: relative;
-  overflow: visible;
   display: block;
-  white-space: nowrap;
   min-height: 25px;
+  overflow: visible;
+  position: relative;
+  white-space: nowrap;
 }
 
 .tabview-tablabel {
-  font-family: sans-serif;
-  font-size: 85%;
-  box-sizing: border-box;
-  display: inline-flex;
+  align-items: center;
   border: 1px solid transparent;
   border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: sans-serif;
+  font-size: 85%;
   margin-top: 4px;
   margin-right: 4px;
   padding: 2px 10px 2px 10px;
-  border-radius: 5px 5px 0 0;
-  z-index: 100;
   -webkit-user-select: none;
-  cursor: pointer;
   vertical-align: bottom;
-  align-items: center;
+  z-index: 100;
 }
 
 .tabview-tablabel:first-child {
@@ -63,13 +63,13 @@
 }
 
 .tabview-tablabel-active {
-  position: relative;
-  padding-bottom: 1px;
-  margin-top: 5px;
-  margin-bottom: -1px;
+  background: -webkit-linear-gradient(bottom, #EEE, white);
   border: 1px solid #CCC;
   border-bottom: 1px solid white;
-  background: -webkit-linear-gradient(bottom, #EEE, white);
+  margin-top: 5px;
+  margin-bottom: -1px;
+  padding-bottom: 1px;
+  position: relative;
 }
 
 .tabview-tablabel:hover .tabview-tablabel-caption {
@@ -78,19 +78,19 @@
 
 .tabview-tablabel-caption {
   max-width: 150px;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tabview-tablabel-closebutton {
-  margin-left: 6px;
-  margin-top: -1px;
-  margin-right: -2px;
   color: white;
-  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
-  opacity: 0;
   display: none;
+  margin-left: 6px;
+  margin-right: -2px;
+  margin-top: -1px;
+  opacity: 0;
+  text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
 }
 
 .tabview-tablabel-closable .tabview-tablabel-closebutton {
@@ -109,11 +109,11 @@
 }
 
 .tabview-workspace {
-  flex: 1;
   background: white;
-  position: relative;
   border-top: 1px solid #CCC;
   display: flex;
+  flex: 1;
+  position: relative;
 }
 
 .tabview-tabcomponent {
