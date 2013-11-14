@@ -3,8 +3,8 @@
 // license that can be found in the LICENSE file.
 
 /**
- * A library to manage the list of open editors, and persist their state (like
- * their selection and scroll position) across sessions.
+ * A TabView associated with opened documents. It sends request to an
+ * [EditorProvider] to create/refresh editors.
  */
 library spark.editorarea;
 

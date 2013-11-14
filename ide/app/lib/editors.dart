@@ -21,6 +21,10 @@ class DirtyFlagChangedEvent {
   DirtyFlagChangedEvent(this.file, this.dirty);
 }
 
+/**
+ * Classes implement this interface provides/refreshes editors for [Resource]s.
+ * TODO(ikarienator): Abstract [AceEditor] so we can support more editor types.
+ */
 abstract class EditorProvider {
   AceEditor createEditorForFile(Resource file);
   void selectFileForEditor(AceEditor editor, Resource file);
