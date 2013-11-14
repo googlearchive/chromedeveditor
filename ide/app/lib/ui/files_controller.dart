@@ -24,6 +24,8 @@ class FilesController implements TreeViewDelegate {
   FilesControllerDelegate _delegate;
   Map<String, Resource> _filesMap;
 
+  bool openOnSelection = true;
+
   FilesController(Workspace workspace, FilesControllerDelegate delegate) {
     _workspace = workspace;
     _delegate = delegate;
@@ -36,7 +38,7 @@ class FilesController implements TreeViewDelegate {
     });
   }
 
-  void selectFile(Resource file) {
+  void selectFile(Resource file, {bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;
     }
@@ -45,25 +47,25 @@ class FilesController implements TreeViewDelegate {
         _treeView.listView.selection.length == 1 &&
         _treeView.listView.selection.first == index) return;
     _treeView.listView.selection = [index];
-    _delegate.openInEditor(file);
+    _delegate.selectInEditor(file, forceOpen: forceOpen);
   }
 
-  void selectLastFile() {
+  void selectLastFile({bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;
     }
 
     _treeView.listView.selection = [_files.length - 1];
-    _delegate.openInEditor(_files.last);
+    _delegate.selectInEditor(_files.last, forceOpen: forceOpen);
   }
 
-  void selectFirstFile() {
+  void selectFirstFile({bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;
     }
 
     _treeView.listView.selection = [0];
-    _delegate.openInEditor(_files.first);
+    _delegate.selectInEditor(_files.first, forceOpen: forceOpen);
   }
 
   // Implementation of [TreeViewDelegate] interface.
@@ -111,11 +113,15 @@ class FilesController implements TreeViewDelegate {
       return;
     }
 
-    _delegate.openInEditor(_filesMap[nodeUIDs[0]]);
+    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: openOnSelection);
   }
 
   void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs) {
-    // Do nothing.
+    if (nodeUIDs.isEmpty) {
+      return;
+    }
+
+    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true);
   }
 
   /**

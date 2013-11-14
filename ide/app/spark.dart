@@ -234,7 +234,10 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void openInEditor(Resource file) => editorManager.openOrSelect(file);
+  void selectInEditor(Resource file, {forceOpen: false}) {
+    if (forceOpen || editorManager.isFileOpend(file))
+      editorManager.openOrSelect(file);
+  }
 
   void _handleChangeTheme({bool themeLeft: true}) {
     int index = AceEditor.THEMES.indexOf(editor.theme);

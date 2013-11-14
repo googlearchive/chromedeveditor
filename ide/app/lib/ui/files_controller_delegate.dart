@@ -15,5 +15,5 @@ abstract class FilesControllerDelegate {
    * The implementation of this method should open the given file in an
    * editor.
    */
-  void openInEditor(File file);
+  void selectInEditor(File file, {bool forceOpen: false});
 }
