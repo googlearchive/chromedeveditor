@@ -31,8 +31,11 @@ import 'zlib.dart';
 class GitRef {
   String sha;
   String name;
+  String type;
+  dynamic remote;
 
-  GitRef(this.sha, this.name);
+  GitRef(this.sha, this.name, [this.type, this.remote]);
+
 }
 
 class GitConfig {
@@ -237,7 +240,7 @@ class ObjectStore {
   }
 
 
-  Future _getCommitGraph(List<String> headShas, int limit) {
+  Future getCommitGraph(List<String> headShas, int limit) {
     List<CommitObject> commits = [];
     Map<String, bool> seen = {};
 
