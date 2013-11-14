@@ -82,10 +82,10 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
 
     if (!locked) {
       _cacheTargetSize();
-      // NOTE: unlike onMouseDown, listen to onMouseMove and onMouseDown for
-      // the entire document; otherwise, once/if the cursor leaves the doundary
+      // NOTE: unlike onMouseDown, listen to onMouseMove and onMouseUp for
+      // the entire document; otherwise, once/if the cursor leaves the boundary
       // of our element, the events will stop firing, leaving us in permanent
-      // dragging state.
+      // "sticky" dragging state.
       _dragSubscr = document.onMouseMove.listen(drag);
       _dragEndSubscr = document.onMouseUp.listen(dragEnd);
     }
@@ -102,8 +102,8 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   /// When dragging stops, unsubscribe from monitoring dragging events except
   /// the starting one.
   void dragEnd(MouseEvent e) {
-    // Do this regardless of [locked], just to be sure.
     assert(_dragSubscr != null && _dragEndSubscr != null);
+    // Do this regardless of [locked], just to be sure.
     _dragSubscr.cancel();
     _dragSubscr = null;
     _dragEndSubscr.cancel();
