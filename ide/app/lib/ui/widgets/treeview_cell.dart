@@ -48,7 +48,7 @@ class TreeViewCell implements ListViewCell {
     _embeddedCellContainer = new DivElement();
     int margin = (_row.level * 10);
     _embeddedCellContainer.classes.add('treeviewcell-content');
-    _embeddedCellContainer.style.left = (margin + 20).toString() + 'px';
+    _embeddedCellContainer.style.left = '${margin + 20}px';
     int offsetX = margin + 30;
     _embeddedCellContainer.style.width = 'calc(100% - ${offsetX}px)';
     _embeddedCellContainer.children.add(_embeddedCell.element);
@@ -59,7 +59,7 @@ class TreeViewCell implements ListViewCell {
 
     _dragOverlay = new DivElement();
     _dragOverlay.classes.add('treeviewcell-dragoverlay');
-    _dragOverlay.style.left = (margin + 15).toString() + 'px';
+    _dragOverlay.style.left = '${margin + 15}px';
     offsetX = margin + 20;
     _dragOverlay.style.width = 'calc(100% - ${offsetX}px)';
     _element.children.add(_dragOverlay);
@@ -68,7 +68,7 @@ class TreeViewCell implements ListViewCell {
       // Adds an arrow in front the cell.
       _arrow = new DivElement();
       _arrow.classes.add('treeviewcell-disclosure');
-      _arrow.style.left = margin.toString() + 'px';
+      _arrow.style.left = '${margin}px';
       _arrow.appendHtml('&#9654;');
       _applyExpanded(_row.expanded);
       _element.children.add(_arrow);
