@@ -149,16 +149,19 @@ class EditorManager implements EditorProvider {
 
   void _switchState(_EditorState state) {
     if (_currentState != state) {
-      if (state != null && !state.hasSession) {
-        state.createSession().then((_) {
-          _switchState(state);
-        });
+      _currentState = state;
+      _selectedController.add(currentFile);
+      if (state == null) {
+          _aceEditor.switchTo(null);
+          persistState();
       } else {
-        _currentState = state;
-        _selectedController.add(currentFile);
-        _aceEditor.switchTo(state == null ? null : state.session);
-
-        persistState();
+        state.withSession().then((state) {
+          // Test if other state have been set before this state is appiled.
+          if (state != _currentState) return;
+          _selectedController.add(currentFile);
+          _aceEditor.switchTo(state.session);
+          persistState();
+        });
       }
     }
   }
@@ -257,7 +260,7 @@ class _EditorState {
     return m;
   }
 
-  Future<_EditorState> createSession() {
+  Future<_EditorState> withSession() {
     if (hasSession) {
       return new Future.value(this);
     } else {
