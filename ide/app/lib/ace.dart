@@ -33,6 +33,9 @@ class AceEditor {
   AceEditor(this.parentElement) {
     _aceEditor = ace.edit(parentElement);
     _aceEditor.readOnly = true;
+
+    // Fallback
+    theme = THEMES[0];
   }
 
   String get theme => _aceEditor.theme.name;
