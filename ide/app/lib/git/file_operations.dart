@@ -21,8 +21,14 @@ abstract class FileOps {
       chrome.DirectoryEntry root, String path, content, String type) {
 
     return root.createFile(path).then((chrome.ChromeFileEntry entry) {
-      //TODO(grv) : implement more general write function.
-      return entry.writeText(content).then((_) => entry);
+      if (type == 'Text') {
+        return entry.writeText(content).then((_) => entry);
+      } else if (type == 'blob') {
+        return entry.writeBytes(content).then((_) => entry);
+      } else {
+        throw new UnsupportedError(
+            "Writing of content type:${type} is not supported.");
+      }
     });
   }
 

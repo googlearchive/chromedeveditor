@@ -1,6 +1,8 @@
 # install zip and start a virtual frame buffer
-sudo apt-get -y -q install zip
-sudo start xvfb
+if [ "$DRONE" = "true" ]; then
+  sudo apt-get -y -q install zip
+  sudo start xvfb
+fi
 
 # setup the build environment
 pub install
