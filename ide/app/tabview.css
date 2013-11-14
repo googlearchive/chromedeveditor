@@ -20,6 +20,10 @@
   -webkit-user-select: none;
 }
 
+.tabview-tabbar.tabview-tabbar-hidden {
+  display: none;
+}
+
 .tabview-tabbar-scroller {
   flex: 1;
   margin: -1px;

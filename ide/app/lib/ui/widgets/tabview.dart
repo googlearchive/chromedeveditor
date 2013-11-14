@@ -152,6 +152,10 @@ class TabView {
     _onSelectedStreamController.add(tab);
   }
 
+  bool get showLabelBar => !_tabBar.classes.contains('tabview-tabbar-hidden');
+  set showLabelBar(bool showLabelBar) =>
+      _tabBar.classes.toggle('tabview-tabbar-hidden', !showLabelBar);
+
   Tab add(Tab tab) {
     tabs.add(tab);
     _tabViewWorkspace.children.add(tab.component);

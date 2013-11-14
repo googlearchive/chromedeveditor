@@ -54,6 +54,8 @@ class EditorManager {
               _switchState(
                   _editorStates.firstWhere((state) => state.tab == tab));
             });
+
+            _tabView.showLabelBar = _editorStates.length > 1;
           });
         }
       });
@@ -73,6 +75,7 @@ class EditorManager {
     _tabView.add(state.tab);
     if (_tabView.tabs.length > 1) {
       _tabView.tabs.forEach((tab) { tab.closable = true; });
+      _tabView.showLabelBar = true;
     }
   }
 
@@ -82,6 +85,7 @@ class EditorManager {
 
     if (_tabView.tabs.length == 1) {
       _tabView.tabs[0].closable = false;
+      _tabView.showLabelBar = false;
     }
   }
 
