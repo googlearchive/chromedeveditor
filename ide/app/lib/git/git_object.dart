@@ -12,6 +12,16 @@ import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 import 'package:utf/utf.dart';
 
 /**
+ *
+ */
+abstract class ObjectTypes {
+  static const String BLOB = "blob";
+  static const String TREE = "tree";
+  static const String COMMIT = "commit";
+  static const String TAG = "tag";
+}
+
+/**
  * Encapsulates a Gitobject
  *
  * TODO(grv): Add unittests.
@@ -23,13 +33,13 @@ abstract class GitObject {
    */
   static GitObject make(String sha, String type, String content) {
     switch (type) {
-      case "blob":
+      case ObjectTypes.BLOB:
         return new BlobObject(sha, content);
-      case "tree":
+      case ObjectTypes.TREE:
         return new TreeObject(sha, content);
-      case "commit":
+      case ObjectTypes.COMMIT:
         return new CommitObject(sha, content);
-      case "tag":
+      case ObjectTypes.TAG:
         return new TagObject(sha, content);
       default:
         throw new ArgumentError("Unsupported git object type.");
@@ -39,11 +49,10 @@ abstract class GitObject {
   // The type of git object.
   String _type;
 
-  // byte stream converted to string.
-  String _data;
+  dynamic data;
   String _sha;
 
-  String toString() => _data;
+  String toString() => data.toString();
 }
 
 /**
@@ -89,15 +98,15 @@ class TreeObject extends GitObject {
   List<TreeEntry> entries;
 
   TreeObject(String sha, String data) {
-    this._type = "tree";
+    this._type = ObjectTypes.TREE;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
     _parse();
   }
 
   // Parses the byte stream and constructs the tree object.
   void _parse() {
-    Uint8List buffer = new Uint8List.fromList(encodeUtf8(_data));
+    Uint8List buffer = new Uint8List.fromList(encodeUtf8(data));
     List<TreeEntry> treeEntries;
     int idx = 0;
     while (idx < buffer.length) {
@@ -129,12 +138,10 @@ class TreeObject extends GitObject {
 class BlobObject extends GitObject {
 
   BlobObject(String sha, String data) {
-    this._type = "blob";
+    this._type = ObjectTypes.BLOB;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
   }
-
-  String toString() => this._data;
 }
 
 /**
@@ -161,16 +168,16 @@ class CommitObject extends GitObject {
   String treeSha;
 
   CommitObject(String sha, String data) {
-    this._type = "commit";
+    this._type = ObjectTypes.COMMIT;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
     _parseData();
   }
 
 
   // Parses the byte stream and constructs the commit object.
   void _parseData() {
-    List<String> lines = _data.split("\n");
+    List<String> lines = data.split("\n");
     this.treeSha = lines[0].split(" ")[1];
 
     int i = 1;
@@ -222,9 +229,9 @@ class CommitObject extends GitObject {
  */
 class TagObject extends GitObject {
   TagObject(String sha, String data) {
-    this._type ="tag";
+    this._type = ObjectTypes.TAG;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
   }
 }
 
