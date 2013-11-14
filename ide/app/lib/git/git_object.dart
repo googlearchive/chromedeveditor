@@ -11,6 +11,9 @@ import 'dart:typed_data';
 import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 import 'package:utf/utf.dart';
 
+import 'git_object_utils.dart';
+
+
 /**
  * Encapsulates a Gitobject
  *
@@ -23,13 +26,13 @@ abstract class GitObject {
    */
   static GitObject make(String sha, String type, String content) {
     switch (type) {
-      case "blob":
+      case ObjectTypes.BLOB:
         return new BlobObject(sha, content);
-      case "tree":
+      case ObjectTypes.TREE:
         return new TreeObject(sha, content);
-      case "commit":
+      case ObjectTypes.COMMIT:
         return new CommitObject(sha, content);
-      case "tag":
+      case ObjectTypes.TAG:
         return new TagObject(sha, content);
       default:
         throw new ArgumentError("Unsupported git object type.");
@@ -39,11 +42,10 @@ abstract class GitObject {
   // The type of git object.
   String _type;
 
-  // byte stream converted to string.
-  String _data;
+  dynamic data;
   String _sha;
 
-  String toString() => _data;
+  String toString() => data.toString();
 }
 
 /**
@@ -89,15 +91,15 @@ class TreeObject extends GitObject {
   List<TreeEntry> entries;
 
   TreeObject(String sha, String data) {
-    this._type = "tree";
+    this._type = ObjectTypes.TREE;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
     _parse();
   }
 
   // Parses the byte stream and constructs the tree object.
   void _parse() {
-    Uint8List buffer = new Uint8List.fromList(encodeUtf8(_data));
+    Uint8List buffer = new Uint8List.fromList(encodeUtf8(data));
     List<TreeEntry> treeEntries;
     int idx = 0;
     while (idx < buffer.length) {
@@ -129,12 +131,10 @@ class TreeObject extends GitObject {
 class BlobObject extends GitObject {
 
   BlobObject(String sha, String data) {
-    this._type = "blob";
+    this._type = ObjectTypes.BLOB;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
   }
-
-  String toString() => this._data;
 }
 
 /**
@@ -153,35 +153,38 @@ class Author {
  */
 class CommitObject extends GitObject {
 
-  List<String> _parents;
-  Author _author;
-  Author _committer;
+  List<String> parents;
+  Author author;
+  Author committer;
   String _encoding;
   String _message;
+  String treeSha;
 
   CommitObject(String sha, String data) {
-    this._type = "commit";
+    this._type = ObjectTypes.COMMIT;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
     _parseData();
   }
 
 
   // Parses the byte stream and constructs the commit object.
   void _parseData() {
-    List<String> lines = _data.split("\n");
+    List<String> lines = data.split("\n");
+    this.treeSha = lines[0].split(" ")[1];
+
     int i = 1;
-    _parents = [];
+    parents = [];
     while (lines[i].substring(0,6) == "parent") {
-      _parents.add(lines[i].split(" ")[1]);
+      parents.add(lines[i].split(" ")[1]);
       i++;
     }
 
     String authorLine = lines[i].replaceFirst("author", "");
-    _author = _parseAuthor(authorLine);
+    author = _parseAuthor(authorLine);
 
     var committerLine = lines[i + 1].replaceFirst("committer ", "");
-    _committer = _parseAuthor(committerLine);
+    committer = _parseAuthor(committerLine);
 
     if (lines[i + 2].split(" ")[0] == "encoding") {
       _encoding = lines[i + 2].split(" ")[1];
@@ -207,8 +210,8 @@ class CommitObject extends GitObject {
 
   String toString() {
     String str = "commit " + _sha + "\n";
-    str += "Author: " + _author.name + " <" + _author.email + ">\n";
-    str += "Date:  " + _author.date.toString() + "\n\n";
+    str += "Author: " + author.name + " <" + author.email + ">\n";
+    str += "Date:  " + author.date.toString() + "\n\n";
     str += _message;
     return str;
   }
@@ -219,9 +222,9 @@ class CommitObject extends GitObject {
  */
 class TagObject extends GitObject {
   TagObject(String sha, String data) {
-    this._type ="tag";
+    this._type = ObjectTypes.TAG;
     this._sha = sha;
-    this._data = data;
+    this.data = data;
   }
 }
 
@@ -234,10 +237,14 @@ class LooseObject {
 
   // Represents either an ArrayBuffer or a string representation of byte
   //stream.
-  dynamic _data;
+  dynamic data;
+
+  LooseObject(buf) {
+    _parse(buf);
+  }
 
   // Parses and constructs a loose git object.
-  void _parse(dynamic buf) {
+  void _parse(buf) {
     Uint8List data = new Uint8List(buf);
     String header;
     int i;
@@ -251,13 +258,13 @@ class LooseObject {
       }
       header = headChars.join(' ');
 
-      this._data = data.sublist(i + 1, data.length);
+      this.data = data.sublist(i + 1, data.length);
     } else {
       String data = buf;
       i = data.indexOf('\0)');
       header = data.substring(0, i);
       // move past null terminator but keep zlib header
-      this._data = data.substring(i + 1, data.length);
+      this.data = data.substring(i + 1, data.length);
     }
     List<String> parts = header.split(' ');
     this._type = parts[0];
