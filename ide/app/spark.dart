@@ -108,11 +108,18 @@ class Spark extends Application implements FilesControllerDelegate {
       editorManager.files.forEach((file) {
         editorArea.selectFile(file, forceOpen: true, switchesTab: false);
       });
-      localPrefs.getValue('lastSelectedEditor').then((String data) {
+      localPrefs.getValue('lastFileSelection').then((String filePath) {
         if (editorArea.tabs.isEmpty) return;
-        int index = data == null ? 0 : JSON.decode(data);
-        if (index != null && index >= 0 && index < editorArea.tabs.length)
-          editorArea.tabs[index].select();
+        if (filePath == null) {
+          editorArea.tabs[0].select();
+          return;
+        }
+        Resource resource = workspace.restoreResource(filePath);
+        if (resource == null) {
+          editorArea.tabs[0].select();
+          return;
+        }
+        editorArea.selectFile(resource, switchesTab: true);
       });
     });
 
@@ -121,8 +128,7 @@ class Spark extends Application implements FilesControllerDelegate {
                                 allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
       _filesController.selectFile(tab.file);
-      localPrefs.setValue('lastSelectedEditor',
-          JSON.encode(editorArea.tabs.indexOf(editorArea.selectedTab)));
+      localPrefs.setValue('lastFileSelection', tab.file.fullPath);
     });
     _filesController = new FilesController(workspace, this);
     _filesController.openOnSelection = false;
