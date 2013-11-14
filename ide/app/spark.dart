@@ -190,7 +190,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry, false).then((file) {
-          editorArea.selectFile(file, switchesTab: true);
+          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
           workspace.save();
         });
       }
