@@ -21,7 +21,7 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
-import 'lib/workspace.dart';
+import 'lib/workspace.dart' as wkspace;
 import 'test/all.dart' as all_tests;
 
 /**
@@ -59,7 +59,7 @@ class Spark extends Application implements FilesControllerDelegate {
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   AceEditor editor;
-  Workspace workspace;
+  wkspace.Workspace workspace;
   analytics.Tracker tracker;
 
   preferences.PreferenceStore localPrefs;
@@ -93,7 +93,7 @@ class Spark extends Application implements FilesControllerDelegate {
       close();
     });
 
-    workspace = new Workspace(localPrefs);
+    workspace = new wkspace.Workspace(localPrefs);
     editor = new AceEditor();
     _filesController = new FilesController(workspace, this);
 
@@ -166,6 +166,21 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
+  void openProject(_) {
+    chrome_gen.ChooseEntryOptions options = new chrome_gen.ChooseEntryOptions(
+        type: chrome_gen.ChooseEntryType.OPEN_DIRECTORY);
+    chrome_gen.fileSystem.chooseEntry(options).then((chrome_gen.ChooseEntryResult result) {
+      chrome_gen.ChromeFileEntry entry = result.entry;
+
+      if (entry != null) {
+        workspace.link(entry, false).then((file) {
+          _filesController.selectLastFile();
+          workspace.save();
+        });
+      }
+    }).catchError((e) => null);
+  }
+
   void deleteFile(_) {
     // TODO: handle multiple selection
     var sel = _filesController.getSelection();
@@ -197,12 +212,14 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new ProjectOpenAction(this));
   }
 
   void buildMenu() {
     UListElement ul = querySelector('#hotdogMenu ul');
 
     ul.children.insert(0, _createLIElement(null));
+    ul.children.insert(0, _createMenuItem(actionManager.getAction('project-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-delete')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
@@ -235,8 +252,8 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void openInEditor(Resource file) {
-    editor.setContent(file);
+  void openInEditor(wkspace.Resource file) {
+    if (file is wkspace.File) editor.setContent(file);
   }
 
   void _handleChangeTheme({bool themeLeft: true}) {
@@ -407,4 +424,10 @@ class FileExitAction extends SparkAction {
       chrome_gen.app.window.current().close();
     });
   }
+}
+
+class ProjectOpenAction extends SparkAction {
+  ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
+
+  void invoke() => spark.openProject(null);
 }

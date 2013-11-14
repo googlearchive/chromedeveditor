@@ -118,7 +118,6 @@ class TreeView implements ListViewDelegate {
       // Save expanded state.
       _rows.forEach((TreeViewRow row) {
         if (row.expanded) {
-          print('expanded ${row.nodeUID}');
           _expandedState.add(row.nodeUID);
         }
       });

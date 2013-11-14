@@ -59,8 +59,10 @@ class Workspace implements Container {
     } else {
       var project = new Project(this, entity, syncable);
       _children.add(project);
-      _controller.add(new ResourceChangeEvent(project, ResourceEventType.ADD));
-      return _gatherChildren(project, syncable);
+      return _gatherChildren(project, syncable).then((container){
+        _controller.add(new ResourceChangeEvent(container, ResourceEventType.ADD));
+        return container;
+      });
     }
   }
 
@@ -233,9 +235,11 @@ abstract class Resource {
 
   Container get parent => _parent;
 
-  Future delete() =>
-    _entry.remove().then((_) => _parent._removeChild(this));
+  Future delete() {
+    if (_entry.isFile) return _entry.remove().then((_) => _parent._removeChild(this));
 
+    return (_entry as chrome.DirectoryEntry).removeRecursively().then((_) => _parent._removeChild(this));
+  }
 
   String get fullPath => _entry.fullPath;
 
