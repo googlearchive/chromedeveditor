@@ -61,7 +61,7 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return true;
     } else {
-      return true;
+      return false;
     }
   }
 
@@ -112,7 +112,8 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer) {
-    print(dataTransfer.files);
+    // TODO(dvh): Import to the workspace the files referenced by
+    // dataTransfer.files
   }
 
   /**
