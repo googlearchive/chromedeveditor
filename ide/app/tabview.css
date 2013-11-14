@@ -14,10 +14,21 @@
   background: white;
   border-bottom: 1px solid #CCC;
   display: flex;
-  margin-bottom: 3px;
   overflow: visible;
+  padding-bottom: 3px;
   position: relative;
   -webkit-user-select: none;
+}
+
+.tabview-tabbar:after {
+  background: #EEE;
+  border-top: 1px solid #CCC;
+  bottom: 0;
+  content: '';
+  height: 3px;
+  left: 0;
+  position: absolute;
+  right: 0;
 }
 
 .tabview-tabbar.tabview-tabbar-hidden {
@@ -114,7 +125,6 @@
 
 .tabview-workspace {
   background: white;
-  border-top: 1px solid #CCC;
   display: flex;
   flex: 1;
   position: relative;

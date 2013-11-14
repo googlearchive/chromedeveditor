@@ -117,7 +117,8 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     editorArea = new EditorArea(document.getElementById('editorArea'),
-                                editorManager);
+                                editorManager,
+                                allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
       _filesController.selectFile(tab.file);
       localPrefs.setValue('lastSelectedEditor',

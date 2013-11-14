@@ -30,8 +30,11 @@ class EditorTab extends Tab {
 class EditorArea extends TabView {
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
+  bool _allowsLabelBar = true;
 
-  EditorArea(Element parentElement, this.editorProvider)
+  EditorArea(Element parentElement,
+             this.editorProvider,
+             {allowsLabelBar: true})
       : super(parentElement) {
     this.editorProvider.onDirtyFlagChanged.listen(_handleDirtyFlagChanged);
     onSelected.listen((EditorTab tab) {
@@ -40,13 +43,20 @@ class EditorArea extends TabView {
     onClose.listen((EditorTab tab) {
       closeFile(tab.file);
     });
+    this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
+  }
+
+  bool get allowsLabelBar => _allowsLabelBar;
+  set allowsLabelBar(bool value) {
+    _allowsLabelBar = value;
+    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
   }
 
   // TabView
   Tab add(EditorTab tab, {bool switchesTab: true}) {
     _tabOfFile[tab.file] = tab;
-    showLabelBar = _tabOfFile.length > 1;
+    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
     return super.add(tab, switchesTab: switchesTab);
   }
 
@@ -54,7 +64,7 @@ class EditorArea extends TabView {
   bool remove(EditorTab tab, {bool switchesTab: true}) {
     if (super.remove(tab, switchesTab: switchesTab)) {
       _tabOfFile.remove(tab.file);
-      showLabelBar = _tabOfFile.length > 1;
+      showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
       return true;
     }
     return false;
