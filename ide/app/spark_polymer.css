@@ -2,7 +2,7 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-/* @import url("packages/polymer_elements/polymer_flex_layout/polymer_flex_layout.css") */
+@import url("packages/polymer_elements/polymer_flex_layout/polymer_flex_layout.css");
 
 html {
 }
@@ -94,6 +94,7 @@ body {
 .container {
   width: 100%;
   height: 100%;
+}
 
 .container div {
   overflow: hidden;
