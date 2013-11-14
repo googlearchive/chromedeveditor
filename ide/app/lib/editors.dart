@@ -43,15 +43,17 @@ class EditorManager {
             File f = _workspace.restoreResource(m['file']);
             openOrSelect(f, switching: false);
           }
+
           _prefs.getValue('lastSelectedEditor').then((String data) {
             if (_editorStates.isEmpty) return;
             int index = data == null ? 0 : JSON.decode(data);
             if (index != null && index >= 0)
               _switchState(_editorStates[index]);
-          });
 
-          _tabView.onSelected.listen((tab) {
-            _switchState(_editorStates.firstWhere((state) => state.tab == tab));
+            _tabView.onSelected.listen((tab) {
+              _switchState(
+                  _editorStates.firstWhere((state) => state.tab == tab));
+            });
           });
         }
       });
@@ -157,8 +159,6 @@ class EditorManager {
         });
       } else {
         _currentState = state;
-        _prefs.setValue('lastSelectedEditor', JSON.encode(
-            _editorStates.indexOf(_currentState)));
         _selectedController.add(currentFile);
         _aceEditor.switchTo(state == null ? null : state.session);
 
