@@ -30,6 +30,7 @@ class FilesController implements TreeViewDelegate {
     _files = [];
     _filesMap = {};
     _treeView = new TreeView(querySelector('#fileViewArea'), this);
+    _treeView.dropEnabled = true;
 
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
@@ -60,7 +61,7 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return true;
     } else {
-      return false;
+      return true;
     }
   }
 
@@ -74,7 +75,7 @@ class FilesController implements TreeViewDelegate {
 
   String treeViewChild(TreeView view, String nodeUID, int childIndex) {
     if (nodeUID == null) {
-      return _files[childIndex].fullPath;
+      return _files[childIndex].path;
     } else {
       return null;
     }
@@ -98,6 +99,14 @@ class FilesController implements TreeViewDelegate {
     // Do nothing.
   }
 
+  String treeViewDropEffect(TreeView view) {
+    return 'copy';
+  }
+
+  void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer) {
+    print(dataTransfer.files);
+  }
+
   /**
    * Event handler for workspace events.
    */
@@ -105,7 +114,7 @@ class FilesController implements TreeViewDelegate {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
       _files.add(event.resource);
-      _filesMap[event.resource.fullPath] = event.resource;
+      _filesMap[event.resource.path] = event.resource;
       _treeView.reloadData();
     }
   }

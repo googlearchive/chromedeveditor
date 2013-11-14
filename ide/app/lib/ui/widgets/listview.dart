@@ -8,6 +8,7 @@
 
 library spark.ui.widgets.listview;
 
+import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
 
@@ -18,6 +19,9 @@ import 'listview_delegate.dart';
 class ListView {
   // The HTML element containing the list of items.
   Element _element;
+  // HTML element to show the highlight when we drag an item over the
+  // `ListView`.
+  DivElement _dragoverVisual;
   // A container for the items will be created by the `ListView` implementation.
   DivElement _container;
   // Implements the callbacks required for the `ListView`.
@@ -31,6 +35,24 @@ class ListView {
   int _selectedRow;
   // Stores info about the cells of the ListView.
   List<ListViewRow> _rows;
+  // Whether dropping items on the listView is allowed.
+  bool _dropEnabled;
+  // dragenter event listener.
+  StreamSubscription<MouseEvent> _dragEnterSubscription;
+  // dragleave event listener.
+  StreamSubscription<MouseEvent> _dragLeaveSubscription;
+  // dragover event listener.
+  StreamSubscription<MouseEvent> _dragOverSubscription;
+  // drop event listener.
+  StreamSubscription<MouseEvent> _dropSubscription;
+  // Counter for the dragenter/dragleave events to workaround the behavior of
+  // drag and drop. See `dropEnabled` setter for more information.
+  int _draggingCount;
+  // True if the mouse entered the listview while dragging an item.
+  bool _draggingOver;
+  // True if any cell is highlighted when dragging an item on it.
+  // In this case, we don't want to highlight the whole list.
+  bool _cellHighlightedOnDragover;
 
   /**
    * Constructor of a `ListView`.
@@ -41,9 +63,13 @@ class ListView {
   ListView(Element element, ListViewDelegate delegate) {
     _element = element;
     _delegate = delegate;
+    _dragoverVisual = new DivElement();
+    _dragoverVisual.classes.add('listview-dragover');
     _container = new DivElement();
     _container.classes.add('listview-container');
+    _dropEnabled = false;
     _element.children.add(_container);
+    _element.children.add(_dragoverVisual);
     _selection = new HashSet();
     _rows = [];
     _selectedRow = -1;
@@ -52,6 +78,9 @@ class ListView {
       _selection.clear();
       _delegate.listViewSelectedChanged(this, _selection.toList());
     });
+    _draggingCount = 0;
+    _draggingOver = false;
+    _cellHighlightedOnDragover = false;
     reloadData();
   }
 
@@ -167,7 +196,7 @@ class ListView {
   void _removeCurrentSelectionHighlight() {
     _selection.forEach((rowIndex) {
       _rows[rowIndex].cell.highlighted = false;
-      _rows[rowIndex].container.style.backgroundColor =  'rgba(0, 0, 0, 0)';
+      _rows[rowIndex].container.classes.remove('listview-cell-highlighted');
     });
   }
 
@@ -177,7 +206,85 @@ class ListView {
   void _addCurrentSelectionHighlight() {
     _selection.forEach((rowIndex) {
       _rows[rowIndex].cell.highlighted = true;
-      _rows[rowIndex].container.style.backgroundColor = '#ddf';
+      _rows[rowIndex].container.classes.add('listview-cell-highlighted');
     });
   }
+
+  void set dropEnabled(bool enabled) {
+    if (_dropEnabled == enabled)
+      return;
+
+    _dropEnabled = enabled;
+    if (_dropEnabled) {
+      _dragEnterSubscription = _container.onDragEnter.listen((event) {
+        // Ignore when we get additional dragenter events when children are
+        // entered/left.
+        _draggingCount ++;
+        if (_draggingCount == 1) {
+          event.stopPropagation();
+          event.preventDefault();
+          String effect = _delegate.listViewDropEffect(this);
+          if (effect == null) {
+            return;
+          }
+          _draggingOver = true;
+          _updateDraggingVisual();
+          event.dataTransfer.dropEffect = effect;
+          _delegate.listViewDragEnter(this);
+        }
+      });
+      _dragLeaveSubscription = _container.onDragLeave.listen((event) {
+        // Ignore when we get additional dragleave events when children are
+        // entered/left.
+        _draggingCount --;
+        if (_draggingCount == 0) {
+          event.stopPropagation();
+          event.preventDefault();
+          _draggingOver = false;
+          _updateDraggingVisual();
+          _delegate.listViewDragLeave(this);
+        }
+      });
+      _dragOverSubscription = _container.onDragOver.listen((event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _delegate.listViewDragOver(this, event);
+      });
+      _dropSubscription = _container.onDrop.listen((event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _draggingOver = false;
+        _updateDraggingVisual();
+        int dropRowIndex = -1;
+        _delegate.listViewDrop(this, dropRowIndex, event.dataTransfer);
+      });
+    } else {
+      _dragEnterSubscription.cancel();
+      _dragEnterSubscription = null;
+      _dragLeaveSubscription.cancel();
+      _dragLeaveSubscription = null;
+      _dragOverSubscription.cancel();
+      _dragOverSubscription = null;
+      _dropSubscription.cancel();
+      _dropSubscription = null;
+    }
+  }
+
+  bool get cellHighlightedOnDragOver => _cellHighlightedOnDragover;
+
+  void set cellHighlightedOnDragOver(bool cellHighlightedOnDragOver) {
+    _cellHighlightedOnDragover = cellHighlightedOnDragOver;
+    _updateDraggingVisual();
+  }
+
+  void _updateDraggingVisual() {
+    // We highlight is dragging is over the list and no cells is highlighted.
+    if (_draggingOver && !_cellHighlightedOnDragover) {
+      _dragoverVisual.classes.add('listview-dragover-active');
+    } else {
+      _dragoverVisual.classes.remove('listview-dragover-active');
+    }
+  }
+
+  bool get dropEnabled => _dropEnabled;
 }

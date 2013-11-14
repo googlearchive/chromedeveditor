@@ -32,6 +32,7 @@ class TreeView implements ListViewDelegate {
   Map<String, TreeViewRow> _rowsMap;
   // Saved expanded state of the nodes when reloading the content of the tree.
   HashSet<String> _expandedState;
+  TreeViewCell _currentDragOverCell;
 
   /**
    * Constructor of a `TreeView`.
@@ -118,7 +119,6 @@ class TreeView implements ListViewDelegate {
       // Save expanded state.
       _rows.forEach((TreeViewRow row) {
         if (row.expanded) {
-          print('expanded ${row.nodeUID}');
           _expandedState.add(row.nodeUID);
         }
       });
@@ -163,9 +163,7 @@ class TreeView implements ListViewDelegate {
     return _rows.length;
   }
 
-  /**
-   * Embed the cell returned by the delegate into a `TreeViewCell`.
-   */
+  // Embed the cell returned by the delegate into a `TreeViewCell`.
   ListViewCell listViewCellForRow(ListView view, int rowIndex) {
     ListViewCell cell = _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUID);
     bool hasChildren = _delegate.treeViewHasChildren(this, _rows[rowIndex].nodeUID);
@@ -196,5 +194,66 @@ class TreeView implements ListViewDelegate {
     _delegate.treeViewDoubleClicked(this, _rowIndexesToNodeUIDs(rowIndexes));
   }
 
+  String listViewDropEffect(ListView view) {
+    return _delegate.treeViewDropEffect(this);
+  }
+
+  void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {
+    String nodeUID = null;
+    if (rowIndex != -1) {
+      nodeUID = _rowIndexesToNodeUIDs([rowIndex])[0];
+    }
+    _delegate.treeViewDrop(this, nodeUID, dataTransfer);
+  }
+
+  void listViewDragOver(ListView view, MouseEvent event) {
+    Element element = event.target;
+    // Lookup for the treeviewcell HTML element.
+    Element targetCell = null;
+    while (element != null) {
+      if (element.classes.contains('treeviewcell')) {
+        targetCell = element;
+      }
+      element = element.parent;
+    }
+
+    // Finds the corresponding TreeViewCell.
+    TreeViewCell cell = null;
+    if (targetCell != null) {
+      cell = TreeViewCell.TreeViewCellForElement(targetCell);
+      // And if it's accepting drop ...
+      if (!cell.acceptDrop)
+        cell = null;
+    }
+    // Shows an overlay on the cell.
+    if (_currentDragOverCell != cell) {
+      if (_currentDragOverCell != null) {
+        _currentDragOverCell.dragOverlayVisible = false;
+      }
+      if (cell != null) {
+        cell.dragOverlayVisible = true;
+      }
+      _currentDragOverCell = cell;
+    }
+  }
+
+  void listViewDragEnter(ListView view) {
+    // Do nothing
+  }
+
+  void listViewDragLeave(ListView view) {
+    // Unhighlight the current cell.
+    if (_currentDragOverCell != null) {
+      _currentDragOverCell.dragOverlayVisible = false;
+      _currentDragOverCell = null;
+    }
+  }
+
   ListView get listView => _listView;
+
+  void set dropEnabled(bool enabled) {
+    _listView.dropEnabled = enabled;
+  }
+
+  bool get dropEnabled => _listView.dropEnabled;
 }

@@ -16,6 +16,7 @@ class FileItemCell implements ListViewCell {
   Element _element;
   Element _container;
   bool _highlighted;
+  bool acceptDrop;
 
   FileItemCell(String name) {
     DocumentFragment template =
@@ -24,6 +25,7 @@ class FileItemCell implements ListViewCell {
     _element = new DivElement();
     _element.children.add(element);
     _element.querySelector('.filename').text = name;
+    acceptDrop = false;
   }
 
   Element get element => _element;
@@ -32,7 +34,7 @@ class FileItemCell implements ListViewCell {
 
   bool get highlighted => _highlighted;
 
-  set highlighted(value) => _highlighted = value;
+  set highlighted(bool value) => _highlighted = value;
 
   Element get container => _container;
 

@@ -22,4 +22,10 @@ abstract class ListViewCell {
    * Override the setter to reflect highlighted state.
    */
   bool highlighted;
+
+  /**
+   * Set acceptDrop to true to notify the ListView that the cell is accepting
+   * dropping items on it.
+   */
+  bool acceptDrop;
 }
