@@ -2,20 +2,17 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-html {
-}
-
 body {
-  margin: 0px;
-  padding: 0px;
-  overflow: hidden;
+  bottom: 0;
   display: flex;
   flex-flow: column;
-  position: absolute;
-  top: 0;
-  bottom: 0;
   left: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: absolute;
   right: 0;
+  top: 0;
 }
 
 #status {
@@ -67,22 +64,22 @@ body {
 }
 
 #fileViewArea .listview-container {
+  bottom: 0;
+  left: 0;
   overflow-x: auto;
   overflow-y: scroll;
   position: absolute;
-  top: 0;
-  left: 0;
   right: 0;
-  bottom: 0;
+  top: 0;
 }
 
 #fileViewArea .listview-dragover {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   bottom: 0;
+  left: 0;
   pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 #fileViewArea .listview-dragover.listview-dragover-active {
@@ -96,9 +93,9 @@ body {
 }
 
 #toolbar {
-  padding: 4px;
 	border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
+  padding: 4px;
 }
 
 #hotdogMenu {
