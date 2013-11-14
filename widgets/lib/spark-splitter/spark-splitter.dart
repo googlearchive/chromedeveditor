@@ -11,79 +11,104 @@ import 'package:polymer/polymer.dart';
 @CustomTag('spark-splitter')
 class SparkSplitter extends HtmlElement with Polymer, Observable {
   /// Possible values are "left", "right", "up" and "down".
+  /// The direction specifies:
+  /// 1) whether the split is horizontal or vertical;
+  /// 2) which sibling's size will be changed when the splitter is dragged; the
+  ///    other sibling is expected to auto-adjust, e.g. using flexbox.
   @observable String direction = 'left';
   /// Locks the split bar so it can't be dragged.
   @observable bool locked = false;
 
-  static const _DIM_HEIGHT = 0, _DIM_WIDTH = 1;
+  /// Whether the split view is horizontal or vertical.
+  bool _isHorizontal;
 
+  /// The target sibling whose size will be changed when the splitter is
+  /// dragged. The other sibling is expected to auto-adjust, e.g. using flexbox.
   HtmlElement _target;
-  bool _isNext;
-  bool _horizontal;
-  int _dimension;
+  bool _isTargetNextSibling;
+  /// Cached size of the target.
+  int _targetSize;
+
+  /// A regular expression to get the integer part of the target's computed size.
+  // NOTE: returned target sizes look like "953px" while the mouse is within the
+  // app's window, but once it leaves the window, they start looking like
+  // "953.0165948px".
+  static final _sizeRe = new RegExp("([0-9]+)(\.[0-9]+)?px");
+
+  /// Temporary subsciptions to event streams, active only during dragging.
   StreamSubscription<MouseEvent> _dragSubscr;
   StreamSubscription<MouseEvent> _dragEndSubscr;
 
+  /// Constructor.
   SparkSplitter.created() : super.created() {
-    onMouseDown.listen(dragStart);
     // TODO(sergeygs): Switch to using onDrag* instead of onMouse* once support
     // onDrag* are fixed (as of 2013-11-13 they don't work).
-    //onDragStart.listen(dragStart);
-
+    onMouseDown.listen(dragStart);
     directionChanged();
   }
 
+  /// Triggered when [direction] is externally changed.
+  // NOTE: The name must be exactly like this -- do not change.
   void directionChanged() {
-    _isNext = direction == 'right' || direction == 'down';
-    _horizontal = direction == 'up' || direction == 'down';
-    _dimension = _horizontal ? _DIM_HEIGHT : _DIM_WIDTH;
-    update();
+    _isHorizontal = direction == 'up' || direction == 'down';
+    _isTargetNextSibling = direction == 'right' || direction == 'down';
+    _target = _isTargetNextSibling ? nextElementSibling : previousElementSibling;
+    classes.toggle('horizontal', _isHorizontal);
   }
 
-  void update() {
-    _target = _isNext ? nextElementSibling : previousElementSibling;
-    classes.toggle('horizontal', _horizontal);
-  }
-
-  int getTargetDimension() {
+  /// Cache the current size of the target.
+  void _cacheTargetSize() {
     final style = _target.getComputedStyle();
-    final dimStr = (_dimension == _DIM_HEIGHT) ? style.height : style.width;
-    final dim = int.parse(dimStr.replaceFirst('px', ''));
-    return dim;
+    final sizeStr = _isHorizontal ? style.height : style.width;
+    _targetSize = int.parse(_sizeRe.firstMatch(sizeStr).group(1));
   }
 
-  void setTargetDimension(int dimension) {
-    final dim = '${dimension}px';
-    if (_dimension == _DIM_HEIGHT) {
-      _target.style.height = dim;
+  /// Update the cached and the actual size of the target.
+  void _updateTargetSize(int delta) {
+    _targetSize += (_isTargetNextSibling ? -delta : delta);
+    final sizeStr = '${_targetSize}px';
+    if (_isHorizontal) {
+      _target.style.height = sizeStr;
     } else {
-      _target.style.width = dim;
+      _target.style.width = sizeStr;
     }
   }
 
+  /// When dragging starts, cache the target's size and temporarily subscribe
+  /// to necessary events to track dragging.
   void dragStart(MouseEvent e) {
-    print("dragStart");
-    update();
+    // Make active regardless of [locked], to appear responsive.
     classes.add('active');
+
     if (!locked) {
-      _dragSubscr = onMouseMove.listen(drag);
-      _dragEndSubscr = onMouseUp.listen(dragEnd);
+      _cacheTargetSize();
+      // NOTE: unlike onMouseDown, listen to onMouseMove and onMouseDown for
+      // the entire document; otherwise, once/if the cursor leaves the doundary
+      // of our element, the events will stop firing, leaving us in permanent
+      // dragging state.
+      _dragSubscr = document.onMouseMove.listen(drag);
+      _dragEndSubscr = document.onMouseUp.listen(dragEnd);
     }
   }
 
+  /// While dragging, update the target's size based on the mouse movement.
   void drag(MouseEvent e) {
+    // Recheck [locked], in case it's been changed externally.
     if (!locked) {
-      final int delta = _horizontal ? e.movement.y : e.movement.x;
-      if (delta != null) {
-        setTargetDimension(getTargetDimension() + (_isNext ? -delta : delta));
-      }
+      _updateTargetSize(_isHorizontal ? e.movement.y : e.movement.x);
     }
   }
 
+  /// When dragging stops, unsubscribe from monitoring dragging events except
+  /// the starting one.
   void dragEnd(MouseEvent e) {
-    print("dragEnd");
+    // Do this regardless of [locked], just to be sure.
+    assert(_dragSubscr != null && _dragEndSubscr != null);
     _dragSubscr.cancel();
-    _dragSubscr.cancel();
+    _dragSubscr = null;
+    _dragEndSubscr.cancel();
+    _dragEndSubscr = null;
+
     classes.remove('active');
   }
 }
