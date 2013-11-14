@@ -8,96 +8,149 @@
  */
 library spark.editorarea;
 
-import 'dart:html';
-import 'ace.dart';
+import 'dart:async';
+import 'dart:html' show DivElement, Element;
 
-import 'editors.dart';
+import 'editors/editor.dart';
 import 'ui/widgets/tabview.dart';
 import 'workspace.dart';
+import 'preferences.dart';
 
 class EditorTab extends Tab {
-  final Resource file;
-  final AceEditor editor;
-  EditorTab(EditorArea parent, AceEditor editor, this.file)
-      : editor = editor,  // FIXME(ikarienator): cannot use this.editor style.
-        super(parent, editor.parentElement) {
+  final EditorSession session;
+
+  EditorTab(EditorArea parent, this.session): super(parent) {
     label = file.name;
+    page = createLoadingPlaceHolder();
   }
+
+  File get file => session.file;
+
+  void activate() {
+    session.loadFile().then((_) {
+      session.editor.session = session;
+      page = session.editor.rootElement;
+      session.editor.resize();
+    });
+    super.activate();
+  }
+
+  static DivElement createLoadingPlaceHolder() =>
+    // TODO(ikarienator): a beautiful loading indicator.
+    new DivElement()..classes.add('editor-tab-loader-placeholder');
 }
 
 /**
  * Manage a list of open editors.
  */
 class EditorArea extends TabView {
-  final EditorProvider editorProvider;
-  final Map<Resource, EditorTab> _tabOfFile = {};
+  final EditorSessionManager sessionManager;
+  final PreferenceStore prefStore;
+  final Map<EditorSession, EditorTab> _tabOfSession = {};
   bool _allowsLabelBar = true;
 
   EditorArea(Element parentElement,
-             this.editorProvider,
-             {allowsLabelBar: true})
-      : super(parentElement) {
-    onSelected.listen((EditorTab tab) {
-      editorProvider.selectFileForEditor(tab.editor, tab.file);
-    });
-    onClose.listen((EditorTab tab) {
-      closeFile(tab.file);
-    });
+             this.sessionManager,
+             this.prefStore,
+             {allowsLabelBar: true}) : super(parentElement) {
+    _restoreSession();
+
+    onSelected.listen((EditorTab tab) => tab.select());
+    onClose.listen((EditorTab tab) => closeFile(tab.file));
+
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
+  }
+
+  void _restoreSession() {
+    sessionManager.available.then((_) {
+      sessionManager.sessions.forEach((EditorSession session) {
+        getTabForSession(session, switchesTab: false);
+      });
+
+      prefStore.getValue('lastFileSelection').then((filePath) {
+        if (tabs.isEmpty) return;
+        if (filePath == null) {
+          tabs[0].select();
+          return;
+        }
+        File file = sessionManager.files.firstWhere(
+            (file) => file.path == filePath,
+            orElse: () => null);
+
+        if (file == null) {
+          tabs[0].select();
+          return;
+        }
+
+        selectFile(file, switchesTab: true);
+      });
+    });
   }
 
   bool get allowsLabelBar => _allowsLabelBar;
   set allowsLabelBar(bool value) {
     _allowsLabelBar = value;
-    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
+    showLabelBar = _allowsLabelBar && _tabOfSession.length > 1;
+  }
+
+  Tab getTabForSession(EditorSession session, {bool switchesTab: true}) {
+    if (!_tabOfSession.containsKey(session)) {
+      var tab = new EditorTab(this, session);
+      add(tab, switchesTab: switchesTab);
+    }
+    return _tabOfSession[session];
   }
 
   // TabView
   Tab add(EditorTab tab, {bool switchesTab: true}) {
-    _tabOfFile[tab.file] = tab;
-    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
+    _tabOfSession[tab.session] = tab;
+    showLabelBar = _allowsLabelBar && _tabOfSession.length > 1;
+    sessionManager.add(tab.session);
     return super.add(tab, switchesTab: switchesTab);
   }
 
   // TabView
   bool remove(EditorTab tab, {bool switchesTab: true}) {
     if (super.remove(tab, switchesTab: switchesTab)) {
-      _tabOfFile.remove(tab.file);
-      showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
+      _tabOfSession.remove(tab.session);
+      showLabelBar = _allowsLabelBar && _tabOfSession.length > 1;
+      sessionManager.remove(tab.session);
       return true;
     }
     return false;
   }
 
+  @override
+  void set selectedTab(EditorTab tab) {
+    prefStore.setValue('lastFileSelection', tab.file.path);
+    super.selectedTab = tab;
+  }
+
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
   /// [selectFile] will be called instead. Otherwise the editor provide is
   /// requested to switch the file to the editor in case the editor is shared.
-  void selectFile(Resource file,
-                {bool forceOpen: false, bool switchesTab: true}) {
-    if (!_tabOfFile.containsKey(file)) {
+  void selectFile(File file,
+                  {bool forceOpen: false, bool switchesTab: true}) {
+    var session = sessionManager.provider.getEditorSessionForFile(file);
+    if (!_tabOfSession.containsKey(session)) {
       if (forceOpen) {
-        AceEditor editor = editorProvider.createEditorForFile(file);
-        var tab = new EditorTab(this, editor, file);
-        add(tab, switchesTab: switchesTab);
+        _tabOfSession[session] = getTabForSession(session);
       } else {
         return;
       }
     }
 
-    EditorTab tab = _tabOfFile[file];
-    editorProvider.selectFileForEditor(tab.editor, file);
     if (switchesTab)
-      tab.select();
+      selectedTab = _tabOfSession[session];
   }
 
   /// Closes the tab.
-  void closeFile(Resource file) {
-    if (_tabOfFile.containsKey(file)) {
-      EditorTab tab = _tabOfFile[file];
+  void closeFile(File file) {
+    var session = sessionManager.provider.getEditorSessionForFile(file);
+    if (_tabOfSession.containsKey(session)) {
+      EditorTab tab = _tabOfSession[session];
       remove(tab);
-      tab.close();
-      editorProvider.close(file);
     }
   }
 }
