@@ -53,14 +53,11 @@ String baseName(String path) {
 /**
  * Return whether the current runtime is dart2js (vs Dartium).
  */
-bool isDart2js() {
-  return document.getElementsByTagName("script").where(
-      (s) => s.src.endsWith(".precompiled.js")).isNotEmpty;
-}
+bool isDart2js() => identical(1, 1.0);
 
 /**
  * Returns a minimal textual description of the stack trace. I.e., instead of a
- * stack trace several thousand chars long, this trie to return one that can
+ * stack trace several thousand chars long, this tries to return one that can
  * meaningfully fit into several hundred chars. So, it converts something like:
  *
  *     "#0      newFile (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart:157:7)\n"
@@ -102,17 +99,18 @@ String minimizeStackTrace(StackTrace st) {
 //#4      _RootZone.run (dart:async/zone.dart:823)
 //#5      _Future._propagateToListeners (dart:async/future_impl.dart:445)
 
-// match #, nums, ws, non-ws, 1 space, (, non-ws, )
+// Matches any string like "#, nums, ws, non-ws, 1 space, (non-ws)".
 final RegExp DARTIUM_REGEX = new RegExp(r'#\d+\s+([\S ]+) \((\S+)\)');
 
 // A sample stack trace from dart2js/chrome:
-//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 2646:13    Object.wrapException
-//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 105756:13  DefaultFailureHandler.fail$1
-//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 105201:20  Object.expect
-//    chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js 125728:9   main__closure11.call$0
+//  at Object.wrapException (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:2646:13)
+//  at UnknownJavaScriptObject.Interceptor.noSuchMethod$1 (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:442:13)
+//  at UnknownJavaScriptObject.Object.$index (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:20740:17)
+//  at Object.J.$index$asx (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:157983:41)
+//  at Object.CrEntry_CrEntry$fromProxy (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:7029:14)
 
-// match non-ws, 1 space, num, :, num, ws, non-ws
-final RegExp DART2JS_REGEX = new RegExp(r'(\S+) (\d+:\d+)\s+(\S+)');
+// Matches any string line "ws, at, 1 space, non-ws, 1 space, (, non-ws, )".
+final RegExp DART2JS_REGEX = new RegExp(r'\s+at (\S+) \((\S+)\)');
 
 String  _minimizeLine(String line) {
   // Try and match a dartium stack trace first.
@@ -129,10 +127,9 @@ String  _minimizeLine(String line) {
   match = DART2JS_REGEX.firstMatch(line);
 
   if (match != null) {
-    String location = _removeExtPrefix(match.group(1));
-    String line = match.group(2);
-    String method = match.group(3);
-    return '${method} ${location}:${line}';
+    String method = match.group(1);
+    String location = _removeExtPrefix(match.group(2));
+    return '${method} ${location}';
   }
 
   return line;
@@ -142,15 +139,5 @@ String  _minimizeLine(String line) {
  * Strip off a leading chrome-extension://sdfsdfsdfsdf/...
  */
 String _removeExtPrefix(String str) {
-  final String CHROME_EX = 'chrome-extension://';
-
-  if (str.startsWith(CHROME_EX)) {
-    str = str.substring(CHROME_EX.length);
-    int index = str.indexOf('/');
-    if (index != -1) {
-      str = str.substring(index + 1);
-    }
-  }
-
-  return str;
+  return str.replaceFirst(new RegExp("chrome-extension://[a-z0-9]+/"), "");
 }

@@ -30,6 +30,20 @@ main() {
       expect(dirName('foo/bar/baz'), 'foo/bar');
     });
 
+    test('dartium stack trace', () {
+      final line = '#0      main.foo (chrome-extension://ldgidbpjc/test/utils_test.dart:35:9)';
+      Match match = DARTIUM_REGEX.firstMatch(line);
+      expect(match.group(1), 'main.foo');
+      expect(match.group(2), 'chrome-extension://ldgidbpjc/test/utils_test.dart:35:9');
+    });
+
+    test('dart2js stack trace', () {
+      final line = '  at Object.wrapException (chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13)';
+      Match match = DART2JS_REGEX.firstMatch(line);
+      expect(match.group(1), 'Object.wrapException');
+      expect(match.group(2), 'chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13');
+    });
+
     test('minimizeStackTrace', () {
       // TODO: this fails under dart2js
       if (isDart2js()) return;
@@ -37,12 +51,7 @@ main() {
       try {
         throw new ArgumentError('happy message');;
       } catch (e, st) {
-        print('original trace');
-        print(st.toString());
         String description = minimizeStackTrace(st);
-        print('description');
-        print(description);
-
         expect(description.contains('chrome-extension:'), false);
         expect(description.contains('('), false);
         expect(description.startsWith('#'), false);
