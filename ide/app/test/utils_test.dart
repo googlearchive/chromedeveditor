@@ -29,5 +29,17 @@ main() {
       expect(dirName('foo/bar'), 'foo');
       expect(dirName('foo/bar/baz'), 'foo/bar');
     });
+
+    test('minimizeStackTrace', () {
+      try {
+        throw new ArgumentError('happy message');;
+      } catch (e, st) {
+        String description = minimizeStackTrace(st);
+
+        expect(description.contains('chrome-extension:'), false);
+        expect(description.contains('('), false);
+        expect(description.startsWith('#'), false);
+      }
+    });
   });
 }

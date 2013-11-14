@@ -6,6 +6,7 @@ library git.file_operations;
 
 import 'dart:async';
 import 'dart:core';
+import 'dart:js';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
@@ -44,5 +45,23 @@ abstract class FileOps {
    */
   static Future<List<chrome.Entry>> listFiles(chrome.DirectoryEntry root) {
     return root.createReader().readEntries();
+  }
+
+  /**
+   * Reads a given [blob] as text.
+   */
+  static Future<String> readBlob(chrome.Blob blob) {
+    Completer completer = new Completer();
+    var reader = new JsObject(context['FileReader']);
+    reader['onload'] = (var event) {
+      completer.complete(reader['result']);
+    };
+
+    reader['onerror'] = (var domError) {
+      completer.completeError(domError);
+    };
+
+    reader.callMethod('readAsText', [blob]);
+    return completer.future;
   }
 }

@@ -4,6 +4,8 @@
 
 library spark.ace_test;
 
+import 'dart:async';
+
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
@@ -15,4 +17,31 @@ main() {
       expect(AceEditor.available, true);
     });
   });
+}
+
+class MockAceEditor implements AceEditor {
+  MockAceEditor();
+
+  EditSession createEditSession(String text, String fileName) {
+    return new MockEditSession(fileName);
+  }
+
+  void focus() { }
+  void resize() { }
+  void setTheme(String theme) { }
+  void switchTo(EditSession session) { }
+  set theme(String value) { }
+  String get theme => null;
+}
+
+class MockEditSession implements EditSession {
+  final String name;
+  int scrollTop;
+  StreamController _changeController = new StreamController.broadcast();
+
+  MockEditSession(this.name);
+
+  Stream get onChange => _changeController.stream;
+
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

@@ -6,14 +6,14 @@ library spark.workspace_test;
 
 import 'dart:async';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import '../lib/workspace.dart';
 
 const _FILETEXT = 'This is sample text for mock file entry.';
 
-class MockFileEntry implements chrome_gen.ChromeFileEntry {
+class MockFileEntry implements chrome.ChromeFileEntry {
 
   String _name;
   String _contents;
@@ -28,15 +28,17 @@ class MockFileEntry implements chrome_gen.ChromeFileEntry {
 
   bool get isFile => true;
 
+  Future remove() => new Future.value();
+
   Future<String> readText() => new Future.value(_contents);
 
   noSuchMethod(Invocation msg) => super.noSuchMethod(msg);
 }
 
-class MockDirectoryEntry implements chrome_gen.DirectoryEntry {
+class MockDirectoryEntry implements chrome.DirectoryEntry {
 
   String _name;
-  List<chrome_gen.Entry> _entries = [];
+  List<chrome.Entry> _entries = [];
 
   MockDirectoryEntry(String name) {
     _name = name;
@@ -55,15 +57,15 @@ class MockDirectoryEntry implements chrome_gen.DirectoryEntry {
   noSuchMethod(Invocation msg) => super.noSuchMethod(msg);
 }
 
-class MockDirectoryReader implements chrome_gen.DirectoryReader {
+class MockDirectoryReader implements chrome.DirectoryReader {
 
-  List<chrome_gen.Entry> _entries = [];
+  List<chrome.Entry> _entries = [];
 
-  MockDirectoryReader(List<chrome_gen.Entry> entries) {
+  MockDirectoryReader(List<chrome.Entry> entries) {
     _entries = entries;
   }
 
-  Future<List<chrome_gen.Entry>> readEntries() => new Future.value(_entries);
+  Future<List<chrome.Entry>> readEntries() => new Future.value(_entries);
 }
 
 main() {
@@ -111,6 +113,26 @@ main() {
       });
 
       return future;
+    });
+
+    test('delete file, check for resource delete event', () {
+      var workspace = new Workspace(null);
+      var fileEntry = new MockFileEntry('test.txt');
+      var resource;
+
+      workspace.link(fileEntry, false).then((res) {
+        resource = res;
+        expect(resource, isNotNull);
+        expect(workspace.getChildren().contains(resource), isTrue);
+        expect(workspace.getFiles().contains(resource), isTrue);
+        resource.delete();
+      });
+
+      return workspace.onResourceChange.first.then((ResourceChangeEvent event) {
+        expect(event.resource.name, fileEntry.name);
+        expect(event.type, ResourceEventType.DELETE);
+      });
+
     });
 
     test('add directory, check for resource add event', () {

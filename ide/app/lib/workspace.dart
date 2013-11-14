@@ -28,18 +28,23 @@ class Workspace implements Container {
 
   List<Resource> _children = [];
   PreferenceStore _store;
+  Completer<Workspace> _whenAvailable = new Completer();
 
   StreamController<ResourceChangeEvent> _controller =
       new StreamController.broadcast();
 
   // TODO: perhaps move to returning a constructed Workspace via a static
   // method that returns a Future? see PicoServer
-  Workspace(this._store);
+  Workspace([this._store]);
+
+  Future<Workspace> whenAvailable() => _whenAvailable.future;
 
   String get name => null;
   String get path => '';
   bool get isTopLevel => false;
   String persistToToken() => path;
+
+  Future delete() => null;
 
   // TODO: we should migrarte users to path or perhaps persistToToken()
   String get fullPath => '';
@@ -66,12 +71,11 @@ class Workspace implements Container {
     if (!_children.contains(resource)) {
       throw new ArgumentError('${resource} is not a top level entity');
     }
-
-    _children.remove(resource);
-    _controller.add(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
-
+    _removeChild(resource);
     return new Future.value();
   }
+
+  Future close(Resource resource) => unlink(resource);
 
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
@@ -105,23 +109,27 @@ class Workspace implements Container {
 
   Stream<ResourceChangeEvent> get onResourceChange => _controller.stream;
 
+  void _fireEvent(ResourceChangeEvent event) => _controller.add(event);
+
   // read the workspace data from storage and restore entries
   Future restore() {
-    return _store.getValue('workspace').then((s) {
+    _store.getValue('workspace').then((s) {
       if (s == null) return null;
 
       try {
         List<String> ids = JSON.decode(s);
-        return Future.forEach(ids, (id) {
+        Future.forEach(ids, (id) {
           return chrome.fileSystem.restoreEntry(id)
               .then((entry) => link(entry, false))
               .catchError((_) => null);
-        });
+        }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
         _logger.log(Level.INFO, 'Exception in workspace restore', e);
-        return new Future.error(e);
+        _whenAvailable.complete(this);
       }
     });
+
+    return whenAvailable();
   }
 
   // store info for workspace children
@@ -159,6 +167,11 @@ class Workspace implements Container {
       return Future.wait(futures).then((_) => container);
     });
   }
+
+ void _removeChild(Resource resource) {
+   _children.remove(resource);
+   _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+  }
 }
 
 abstract class Container extends Resource {
@@ -190,6 +203,13 @@ abstract class Container extends Resource {
     }
   }
 
+  void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
+
+  void _removeChild(Resource resource) {
+    _children.remove(resource);
+    _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+  }
+
   List<Resource> getChildren() => _children;
 }
 
@@ -218,6 +238,8 @@ abstract class Resource {
 
   Container get parent => _parent;
 
+  Future delete() => _entry.remove().then((_) => _parent._removeChild(this));
+
   String get fullPath => _entry.fullPath;
 
   /**
@@ -227,6 +249,8 @@ abstract class Resource {
   Project get project => parent is Project ? parent : parent.project;
 
   Workspace get workspace => parent.workspace;
+
+  String toString() => '${this.runtimeType} ${name}';
 }
 
 class Folder extends Container {
