@@ -153,11 +153,12 @@ class Author {
  */
 class CommitObject extends GitObject {
 
-  List<String> _parents;
-  Author _author;
-  Author _committer;
+  List<String> parents;
+  Author author;
+  Author committer;
   String _encoding;
   String _message;
+  String treeSha;
 
   CommitObject(String sha, String data) {
     this._type = "commit";
@@ -170,18 +171,20 @@ class CommitObject extends GitObject {
   // Parses the byte stream and constructs the commit object.
   void _parseData() {
     List<String> lines = _data.split("\n");
+    this.treeSha = lines[0].split(" ")[1];
+
     int i = 1;
-    _parents = [];
+    parents = [];
     while (lines[i].substring(0,6) == "parent") {
-      _parents.add(lines[i].split(" ")[1]);
+      parents.add(lines[i].split(" ")[1]);
       i++;
     }
 
     String authorLine = lines[i].replaceFirst("author", "");
-    _author = _parseAuthor(authorLine);
+    author = _parseAuthor(authorLine);
 
     var committerLine = lines[i + 1].replaceFirst("committer ", "");
-    _committer = _parseAuthor(committerLine);
+    committer = _parseAuthor(committerLine);
 
     if (lines[i + 2].split(" ")[0] == "encoding") {
       _encoding = lines[i + 2].split(" ")[1];
@@ -207,8 +210,8 @@ class CommitObject extends GitObject {
 
   String toString() {
     String str = "commit " + _sha + "\n";
-    str += "Author: " + _author.name + " <" + _author.email + ">\n";
-    str += "Date:  " + _author.date.toString() + "\n\n";
+    str += "Author: " + author.name + " <" + author.email + ">\n";
+    str += "Date:  " + author.date.toString() + "\n\n";
     str += _message;
     return str;
   }
@@ -234,10 +237,14 @@ class LooseObject {
 
   // Represents either an ArrayBuffer or a string representation of byte
   //stream.
-  dynamic _data;
+  dynamic data;
+
+  LooseObject(buf) {
+    _parse(buf);
+  }
 
   // Parses and constructs a loose git object.
-  void _parse(dynamic buf) {
+  void _parse(buf) {
     Uint8List data = new Uint8List(buf);
     String header;
     int i;
@@ -251,13 +258,13 @@ class LooseObject {
       }
       header = headChars.join(' ');
 
-      this._data = data.sublist(i + 1, data.length);
+      this.data = data.sublist(i + 1, data.length);
     } else {
       String data = buf;
       i = data.indexOf('\0)');
       header = data.substring(0, i);
       // move past null terminator but keep zlib header
-      this._data = data.substring(i + 1, data.length);
+      this.data = data.substring(i + 1, data.length);
     }
     List<String> parts = header.split(' ');
     this._type = parts[0];

@@ -2,6 +2,9 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/**
+ * An entrypoint to the [ace.dart](https://github.com/rmsmith/ace.dart) package.
+ */
 library spark.ace;
 
 import 'dart:html';
@@ -11,6 +14,11 @@ import 'package:ace/ace.dart' as ace;
 
 import 'workspace.dart' as workspace;
 
+export 'package:ace/ace.dart' show EditSession;
+
+/**
+ * A wrapper around an Ace editor instance.
+ */
 class AceEditor {
   static final THEMES = ['ambiance', 'monokai', 'pastel_on_dark', 'textmate'];
 
@@ -21,59 +29,36 @@ class AceEditor {
 
   AceEditor() {
     _aceEditor = ace.edit(querySelector('#editorArea'));
-    _aceEditor.theme = new ace.Theme('ace/theme/ambiance');
+    _aceEditor.readOnly = true;
   }
 
   String get theme => _aceEditor.theme.name;
 
   set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
 
+  // TODO: only used by the polymer version
   void setTheme(String theme) {
     _aceEditor.theme = new ace.Theme(theme);
   }
 
-  String getPathInfo() {
-    // TODO: show full path of file, not just name
-    if (_file != null) return _file.name;
-    return '[new file]';
+  void focus() => _aceEditor.focus();
+
+  void resize() => _aceEditor.resize(false);
+
+  ace.EditSession createEditSession(String text, String fileName) {
+    return ace.createEditSession(text, new ace.Mode.forFile(fileName));
   }
 
-  void newFile() {
-    _file = null;
-    _setContents('', new ace.Mode('ace/mode/text'));
-  }
+  void switchTo(ace.EditSession session) {
+    if (session == null) {
+      _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
+      _aceEditor.readOnly = true;
+    } else {
+      _aceEditor.session = session;
 
-  void save() {
-    if (_file != null) {
-      _file.setContents(_aceEditor.value);
-      _aceEditor.focus();
+      if (_aceEditor.readOnly) {
+        _aceEditor.readOnly = false;
+      }
     }
-  }
-
-  void saveAs(workspace.File file) {
-    _file = file;
-    save();
-  }
-
-  void setContent(workspace.File file) {
-    _file = file;
-    _file.getContents().then((String contents) {
-      _setContents(contents, new ace.Mode.forFile(_file.name));
-    });
-  }
-
-  void _setContents(String string, ace.Mode mode) {
-    _aceEditor.setValue(string, 0);
-    _aceEditor.session.mode = mode;
-    _aceEditor.navigateFileStart();
-    _aceEditor.focus();
-  }
-
-  void focus() {
-    _aceEditor.focus();
-  }
-
-  void resize() {
-    _aceEditor.resize(false);
   }
 }
