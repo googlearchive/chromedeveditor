@@ -52,7 +52,10 @@ class AceEditor {
   void resize() => _aceEditor.resize(false);
 
   ace.EditSession createEditSession(String text, String fileName) {
-    return ace.createEditSession(text, new ace.Mode.forFile(fileName));
+    ace.EditSession session = ace.createEditSession(
+        text, new ace.Mode.forFile(fileName));
+    session.useWorker = false;
+    return session;
   }
 
   void switchTo(ace.EditSession session) {
