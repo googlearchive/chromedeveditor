@@ -2,4 +2,100 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-@import url("spark.css");
+@import url("packages/polymer_elements/polymer_flex_layout/polymer_flex_layout.css");
+
+html {
+}
+
+body {
+  margin: 0px;
+  padding: 0px;
+  overflow: hidden;
+  display: flex;
+  flex-flow: column;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+#status {
+  vertical-align: bottom;
+}
+
+#status.error {
+  color: #C66;
+}
+
+.fileview-filename-container {
+  
+}
+
+.fileview-filename-container .filename {
+  display: inline-block;
+}
+
+.fileview-filename-container .menu {
+  opacity: 0.0;
+  position: absolute;
+  right: 0;
+  width: 15px;
+}
+
+.fileview-filename-container .filename {
+  overflow: hidden;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.fileview-filename-container:hover .filename {
+  width: calc(100% - 15px);
+}
+
+.fileview-filename-container:hover .menu {
+  opacity: 1.0;
+}
+
+.ace_gutter-cell {
+  color: #aaa;
+}
+
+#fileViewArea {
+  border-top: 1px solid white;
+  position: relative;
+  width: 300px;
+}
+
+#fileViewArea .listview-container {
+  overflow-x: auto;
+  overflow-y: scroll;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+#editorArea {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+#toolbar {
+  padding: 4px;
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+.container {
+  width: 100%;
+  height: 100%;
+}
+
+.container div {
+  overflow: hidden;
+}

@@ -7,6 +7,8 @@ library spark.files_test;
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:unittest/unittest.dart';
 
+import 'files_mock.dart';
+
 main() {
   group('files', () {
     test('package directory available', () {
@@ -64,4 +66,37 @@ main() {
 //      });
     });
   });
+
+  group('mockFileSystem', () {
+    test('create file', () {
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('foo.txt');
+      expect(fs.getEntry('foo.txt'), isNotNull);
+      expect(fs.getEntry('foo.txt').name, 'foo.txt');
+    });
+
+    test('file contents', () {
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('foo.txt', contents: 'bar baz');
+      ChromeFileEntry entry = fs.getEntry('foo.txt');
+      expect(entry, isNotNull);
+      expect(entry.name, 'foo.txt');
+      return entry.readText().then((text) {
+        expect(text, 'bar baz');
+      });
+    });
+
+    test('create dir', () {
+      MockFileSystem fs = new MockFileSystem();
+      fs.createDirectory('bar');
+      fs.createFile('/baz/foo.txt');
+
+      expect(fs.getEntry('bar'), isNotNull);
+      expect(fs.getEntry('bar'), new isInstanceOf<DirectoryEntry>('DirectoryEntry'));
+
+      expect(fs.getEntry('baz'), isNotNull);
+      expect(fs.getEntry('baz'), new isInstanceOf<DirectoryEntry>('DirectoryEntry'));
+    });
+  });
+
 }

@@ -16,6 +16,7 @@ import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
@@ -63,6 +64,7 @@ class Spark extends Application implements FilesControllerDelegate {
   AceEditor editor;
   Workspace workspace;
   EditorManager editorManager;
+  EditorArea editorArea;
   analytics.Tracker tracker = new analytics.NullTracker();
 
   preferences.PreferenceStore localPrefs;
@@ -98,10 +100,38 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     workspace = new Workspace(localPrefs);
-    editor = new AceEditor();
-    editorManager = new EditorManager(workspace, editor, localPrefs);
 
+    editor = new AceEditor(new DivElement());
+    editorManager = new EditorManager(workspace, editor, localPrefs);
+    editorManager.loaded.then((_) {
+      List<Resource> files = editorManager.files.toList();
+      editorManager.files.forEach((file) {
+        editorArea.selectFile(file, forceOpen: true, switchesTab: false);
+      });
+      localPrefs.getValue('lastFileSelection').then((String filePath) {
+        if (editorArea.tabs.isEmpty) return;
+        if (filePath == null) {
+          editorArea.tabs[0].select();
+          return;
+        }
+        Resource resource = workspace.restoreResource(filePath);
+        if (resource == null) {
+          editorArea.tabs[0].select();
+          return;
+        }
+        editorArea.selectFile(resource, switchesTab: true);
+      });
+    });
+
+    editorArea = new EditorArea(document.getElementById('editorArea'),
+                                editorManager,
+                                allowsLabelBar: true);
+    editorArea.onSelected.listen((EditorTab tab) {
+      _filesController.selectFile(tab.file);
+      localPrefs.setValue('lastFileSelection', tab.file.fullPath);
+    });
     _filesController = new FilesController(workspace, this);
+    _filesController.openOnSelection = false;
 
     setupSplitView();
     setupFileActions();
@@ -167,7 +197,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry, false).then((file) {
-          _filesController.selectLastFile();
+          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
           workspace.save();
         });
       }
@@ -226,7 +256,11 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void openInEditor(Resource file) => editorManager.openOrSelect(file);
+  void selectInEditor(Resource file, {bool forceOpen: false}) {
+    if (forceOpen || editorManager.isFileOpend(file)) {
+      editorArea.selectFile(file, forceOpen: forceOpen);
+    }
+  }
 
   void _handleChangeTheme({bool themeLeft: true}) {
     int index = AceEditor.THEMES.indexOf(editor.theme);
@@ -346,9 +380,6 @@ class _SparkSetupParticipant extends LifecycleParticipant {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
           spark.editor.focus();
-        } else {
-          // Select the first file.
-          spark._filesController.selectFirstFile();
         }
       });
     });

@@ -11,8 +11,9 @@
 
   <link rel="stylesheet" href="spark_polymer.css">
 
-  <link rel="import" href="packages/spark_widgets/spark-button.html">
-  <link rel="import" href="packages/spark_widgets/spark-select.html">
+  <link rel="import" href="packages/spark_widgets/spark-button/spark-button.html">
+  <link rel="import" href="packages/spark_widgets/spark-select/spark-select.html">
+  <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
 
   <template id="fileview-filename" >
     <div class="fileview-filename-container" style="height: 20px;">
@@ -25,10 +26,13 @@
   </template>
 </head>
 
-<body>
+<body class="polymer-ui-body-text">
   <div id="toolbar">
     <spark-button id="newFile">New File</spark-button>
     <spark-button id="openFile">Open File...</spark-button>
+
+    <span id="status"></span>
+
     <spark-select id="themeChooser" text_color="white"
                                     color="black"
                                     hover_color="gray">
@@ -36,14 +40,10 @@
     </spark-select>
   </div>
   
-  <div id="status">
-      <div id="path">[new file]</div>
-      <div id="error"></div>
-  </div>
-
-  <div id="splitview" style="">
-    <div id="fileViewArea" class="left" min-size="100"></div>
-    <div id="editorArea" class="right" min-size="200"></div>
+  <div id="splitview" class="container flexbox">
+    <div id="fileViewArea" min-size="100"></div>
+    <spark-splitter direction="left"></spark-splitter>
+    <div id="editorArea" min-size="200"></div>
   </div>
 
   <!-- analytics includes -->

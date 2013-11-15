@@ -15,28 +15,52 @@ import 'ace.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 
+class DirtyFlagChangedEvent {
+  final File file;
+  final bool dirty;
+  DirtyFlagChangedEvent(this.file, this.dirty);
+}
+
+/**
+ * Classes implement this interface provides/refreshes editors for [Resource]s.
+ * TODO(ikarienator): Abstract [AceEditor] so we can support more editor types.
+ */
+abstract class EditorProvider {
+  AceEditor createEditorForFile(Resource file);
+  void selectFileForEditor(AceEditor editor, Resource file);
+  void close(Resource file);
+  Stream<DirtyFlagChangedEvent> get onDirtyFlagChanged;
+}
+
+
 /**
  * Manage a list of open editors.
  */
-class EditorManager {
-  Workspace _workspace;
-  AceEditor _aceEditor;
-  PreferenceStore _prefs;
-  List<_EditorState> _editorStates = [];
+class EditorManager implements EditorProvider {
+  final Workspace _workspace;
+  final AceEditor _aceEditor;
+
+  final PreferenceStore _prefs;
+
+  final List<_EditorState> _editorStates = [];
+
+  final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
-  StreamController<File> _selectedController = new StreamController.broadcast();
+
+  final StreamController<File> _selectedController =
+      new StreamController.broadcast();
+  final StreamController<DirtyFlagChangedEvent> _dirtyFlagChangedController =
+      new StreamController.broadcast();
 
   EditorManager(this._workspace, this._aceEditor, this._prefs) {
     _workspace.whenAvailable().then((_) {
       _prefs.getValue('editorStates').then((String data) {
         if (data != null) {
           for (Map m in JSON.decode(data)) {
-            _EditorState state = new _EditorState.fromMap(this, _workspace, m);
-
-            if (state != null) {
-              _editorStates.add(state);
-            }
+            File f = _workspace.restoreResource(m['file']);
+            openOrSelect(f, switching: false);
           }
+          _loadedCompleter.complete(true);
         }
       });
     });
@@ -45,25 +69,34 @@ class EditorManager {
   File get currentFile => _currentState != null ? _currentState.file : null;
 
   Iterable<File> get files => _editorStates.map((s) => s.file);
+  Future<bool> get loaded => _loadedCompleter.future;
 
   Stream<File> get onSelectedChange => _selectedController.stream;
 
   bool get dirty => _currentState == null ? false : _currentState.dirty;
 
+  void _insertState(_EditorState state) => _editorStates.add(state);
+
+  bool _removeState(_EditorState state) => _editorStates.remove(state);
+
   /**
    * This will open the given [File]. If this file is already open, it will
    * instead be made the active editor.
    */
-  void openOrSelect(File file) {
+  void openOrSelect(File file, {switching: true}) {
+    if (file == null) return;
     _EditorState state = _getStateFor(file);
 
     if (state == null) {
       state = new _EditorState.fromFile(this, file);
-      _editorStates.add(state);
+      _insertState(state);
     }
 
-    _switchState(state);
+    if (switching)
+      _switchState(state);
   }
+
+  bool isFileOpend(File file) => _getStateFor(file) != null;
 
   void saveAll() => _saveAll();
 
@@ -72,7 +105,7 @@ class EditorManager {
 
     if (state != null) {
       int index = _editorStates.indexOf(state);
-      _editorStates.remove(state);
+      _removeState(state);
 
       if (state.dirty) {
         state.save();
@@ -88,6 +121,8 @@ class EditorManager {
           _switchState(_editorStates[index - 1]);
         }
       }
+
+      persistState();
     }
   }
 
@@ -108,16 +143,19 @@ class EditorManager {
 
   void _switchState(_EditorState state) {
     if (_currentState != state) {
-      if (state != null && !state.hasSession) {
-        state.createSession().then((_) {
-          _switchState(state);
-        });
+      _currentState = state;
+      _selectedController.add(currentFile);
+      if (state == null) {
+          _aceEditor.switchTo(null);
+          persistState();
       } else {
-        _currentState = state;
-        _selectedController.add(currentFile);
-        _aceEditor.switchTo(state == null ? null : state.session);
-
-        persistState();
+        state.withSession().then((state) {
+          // Test if other state have been set before this state is appiled.
+          if (state != _currentState) return;
+          _selectedController.add(currentFile);
+          _aceEditor.switchTo(state.session);
+          persistState();
+        });
       }
     }
   }
@@ -140,6 +178,20 @@ class EditorManager {
     _editorStates.forEach((e) => e.save());
     // TODO: end the workspace change event
   }
+
+  // EditorProvider
+  AceEditor createEditorForFile(Resource file) {
+    openOrSelect(file);
+    return _aceEditor;
+  }
+
+  void selectFileForEditor(AceEditor editor, Resource file) {
+    _EditorState state = _getStateFor(file);
+    _switchState(state);
+  }
+
+  Stream<DirtyFlagChangedEvent> get onDirtyFlagChanged =>
+      _dirtyFlagChangedController.stream;
 }
 
 /**
@@ -155,7 +207,9 @@ class _EditorState {
 
   _EditorState.fromFile(this.manager, this.file);
 
-  factory _EditorState.fromMap(EditorManager manager, Workspace workspace, Map m) {
+  factory _EditorState.fromMap(EditorManager manager,
+                               Workspace workspace,
+                               Map m) {
     File f = workspace.restoreResource(m['file']);
 
     if (f == null) {
@@ -172,10 +226,11 @@ class _EditorState {
   set dirty(bool value) {
     if (_dirty != value) {
       _dirty = value;
-
       if (_dirty) {
         manager._startSaveTimer();
       }
+      manager._dirtyFlagChangedController.add(
+          new DirtyFlagChangedEvent(file, value));
     }
   }
 
@@ -199,7 +254,7 @@ class _EditorState {
     return m;
   }
 
-  Future<_EditorState> createSession() {
+  Future<_EditorState> withSession() {
     if (hasSession) {
       return new Future.value(this);
     } else {
