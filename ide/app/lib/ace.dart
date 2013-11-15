@@ -22,14 +22,20 @@ export 'package:ace/ace.dart' show EditSession;
 class AceEditor {
   static final THEMES = ['ambiance', 'monokai', 'pastel_on_dark', 'textmate'];
 
+  /// The element to put the editor in.
+  final Element parentElement;
+
   ace.Editor _aceEditor;
   workspace.File _file;
 
   static bool get available => js.context['ace'] != null;
 
-  AceEditor() {
-    _aceEditor = ace.edit(querySelector('#editorArea'));
+  AceEditor(this.parentElement) {
+    _aceEditor = ace.edit(parentElement);
     _aceEditor.readOnly = true;
+
+    // Fallback
+    theme = THEMES[0];
   }
 
   String get theme => _aceEditor.theme.name;
