@@ -54,6 +54,7 @@ class AceEditor {
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
+    // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
     return session;
   }
