@@ -89,9 +89,9 @@ class FilesController implements TreeViewDelegate {
 
   String treeViewChild(TreeView view, String nodeUID, int childIndex) {
     if (nodeUID == null) {
-      return _files[childIndex].fullPath;
+      return _files[childIndex].path;
     } else {
-      return (_filesMap[nodeUID] as Container).getChildren()[childIndex].fullPath;
+      return (_filesMap[nodeUID] as Container).getChildren()[childIndex].path;
     }
   }
 
@@ -147,7 +147,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _recursiveAddResource(Resource resource) {
-    _filesMap[resource.fullPath] = resource;
+    _filesMap[resource.path] = resource;
     if (resource is Container) {
       resource.getChildren().forEach((child) {
         _recursiveAddResource(child);
@@ -156,7 +156,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _recursiveRemoveResource(Resource resource) {
-    _filesMap.remove(resource.fullPath);
+    _filesMap.remove(resource.path);
     if (resource is Container) {
       resource.getChildren().forEach((child) {
         _recursiveRemoveResource(child);
