@@ -10,6 +10,7 @@ library spark.editorarea;
 
 import 'dart:html';
 import 'ace.dart';
+
 import 'editors.dart';
 import 'ui/widgets/tabview.dart';
 import 'workspace.dart';
@@ -36,7 +37,6 @@ class EditorArea extends TabView {
              this.editorProvider,
              {allowsLabelBar: true})
       : super(parentElement) {
-    this.editorProvider.onDirtyFlagChanged.listen(_handleDirtyFlagChanged);
     onSelected.listen((EditorTab tab) {
       editorProvider.selectFileForEditor(tab.editor, tab.file);
     });
@@ -98,14 +98,6 @@ class EditorArea extends TabView {
       remove(tab);
       tab.close();
       editorProvider.close(file);
-    }
-  }
-
-  /// Append '*' to the end of file name is the file is dirty.
-  void _handleDirtyFlagChanged(DirtyFlagChangedEvent event) {
-    if (_tabOfFile.containsKey(event.file)) {
-      _tabOfFile[event.file].label = event.file.name +
-          (event.dirty ? '*' : '');
     }
   }
 }

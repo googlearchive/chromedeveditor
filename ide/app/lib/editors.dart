@@ -75,13 +75,9 @@ class EditorManager implements EditorProvider {
 
   bool get dirty => _currentState == null ? false : _currentState.dirty;
 
-  void _insertState(_EditorState state) {
-    _editorStates.add(state);
-  }
+  void _insertState(_EditorState state) => _editorStates.add(state);
 
-  void _removeState(_EditorState state) {
-    _editorStates.remove(state);
-  }
+  bool _removeState(_EditorState state) => _editorStates.remove(state);
 
   /**
    * This will open the given [File]. If this file is already open, it will
@@ -100,9 +96,7 @@ class EditorManager implements EditorProvider {
       _switchState(state);
   }
 
-  bool isFileOpend(File file) {
-    return _getStateFor(file) != null;
-  }
+  bool isFileOpend(File file) => _getStateFor(file) != null;
 
   void saveAll() => _saveAll();
 

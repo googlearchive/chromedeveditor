@@ -67,13 +67,9 @@ class Tab {
   Stream<Tab> get onSelected =>
       tabView._onSelectedStreamController.stream.where((t) => t == this);
 
-  void select() {
-    tabView.selectedTab = this;
-  }
+  select() => tabView.selectedTab = this;
 
-  void close() {
-    tabView.remove(this);
-  }
+  bool close() => tabView.remove(this);
 
   void _cleanup() {
     component.remove();
