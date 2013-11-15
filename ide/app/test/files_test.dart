@@ -97,6 +97,30 @@ main() {
       expect(fs.getEntry('baz'), isNotNull);
       expect(fs.getEntry('baz'), new isInstanceOf<DirectoryEntry>('DirectoryEntry'));
     });
+
+    test('write to files', () {
+      final CONTENTS = 'foo bar';
+      MockFileSystem fs = new MockFileSystem();
+      return fs.root.createFile('foo.txt').then((ChromeFileEntry file) {
+        return file.writeText(CONTENTS).then((_) {
+          return file.readText().then((contents) {
+            expect(contents, CONTENTS);
+          });
+        });
+      });
+    });
+
+    test('create files', () {
+      MockFileSystem fs = new MockFileSystem();
+      return fs.root.createFile('a.txt', exclusive: true).then((_) {
+        expect(fs.root.createFile('a.txt', exclusive: true), throws);
+      });
+    });
+
+    test('create directories', () {
+
+    });
+
   });
 
 }
