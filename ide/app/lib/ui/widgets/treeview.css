@@ -22,3 +22,7 @@
   transition: -webkit-transform 250ms;
   width: 15px;
 }
+
+.treeviewcell-disclosed {
+  -webkit-transform: rotate(90deg);
+}

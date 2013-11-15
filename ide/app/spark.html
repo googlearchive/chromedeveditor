@@ -12,18 +12,28 @@
 
   <link rel="stylesheet" href="packages/bootjack/css/bootstrap.css">
   <link rel="stylesheet" href="packages/bootjack/css/bootstrap-theme.css">
-  <link rel="stylesheet" href="splitview.css">
+  <link rel="stylesheet" href="lib/ui/widgets/splitview.css">
+  <link rel="stylesheet" href="lib/ui/widgets/listview.css">
+  <link rel="stylesheet" href="lib/ui/widgets/treeview.css">
   <link rel="stylesheet" href="spark.css">
-  <link rel="stylesheet" href="listview.css">
-  <link rel="stylesheet" href="treeview.css">
 
-  <template id="fileview-filename" >
+  <!-- template for FileItemCell -->
+  <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
       <div class="filename">
       </div>
       <div class="menu">
         &#x25BC;
       </div>
+    </div>
+  </template>
+
+  <!-- template for TreeViewCell -->
+  <template id="treeview-cell-template" >
+    <div class="treeviewcell">
+      <div class="treeviewcell-content"></div>
+      <div class="treeviewcell-dragoverlay"></div>
+      <div class="treeviewcell-disclosure">&#9654;</div>
     </div>
   </template>
 </head>

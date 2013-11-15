@@ -15,6 +15,7 @@ import 'dart:html';
 import 'listview_cell.dart';
 import 'listview_row.dart';
 import 'listview_delegate.dart';
+import '../utils/html_utils.dart';
 
 class ListView {
   // The HTML element containing the list of items.
@@ -221,8 +222,7 @@ class ListView {
         // entered/left.
         _draggingCount ++;
         if (_draggingCount == 1) {
-          event.stopPropagation();
-          event.preventDefault();
+          cancelEvent(event);
           String effect = _delegate.listViewDropEffect(this);
           if (effect == null) {
             return;
@@ -238,21 +238,18 @@ class ListView {
         // entered/left.
         _draggingCount --;
         if (_draggingCount == 0) {
-          event.stopPropagation();
-          event.preventDefault();
+          cancelEvent(event);
           _draggingOver = false;
           _updateDraggingVisual();
           _delegate.listViewDragLeave(this);
         }
       });
       _dragOverSubscription = _container.onDragOver.listen((event) {
-        event.stopPropagation();
-        event.preventDefault();
+        cancelEvent(event);
         _delegate.listViewDragOver(this, event);
       });
       _dropSubscription = _container.onDrop.listen((event) {
-        event.stopPropagation();
-        event.preventDefault();
+        cancelEvent(event);
         _draggingOver = false;
         _updateDraggingVisual();
         int dropRowIndex = -1;

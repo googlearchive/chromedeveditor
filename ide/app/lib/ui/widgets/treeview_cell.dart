@@ -40,12 +40,14 @@ class TreeViewCell implements ListViewCell {
     return treeViewCellExpando[element];
   }
 
-  TreeViewCell(TreeView treeView, ListViewCell embeddedCell, TreeViewRow row,
+  TreeViewCell(this._treeView, this._embeddedCell, this._row,
                bool hasChildren) {
-    _treeView = treeView;
-    _row = row;
-    _embeddedCell = embeddedCell;
-    _embeddedCellContainer = new DivElement();
+    DocumentFragment template =
+        (querySelector('#treeview-cell-template') as TemplateElement).content;
+    Element templateClone = template.clone(true);
+    _element = templateClone.querySelector('.treeviewcell');
+
+    _embeddedCellContainer = _element.querySelector('.treeviewcell-content');
     int margin = (_row.level * 10);
     _embeddedCellContainer.classes.add('treeviewcell-content');
     _embeddedCellContainer.style.left = '${margin + 20}px';
@@ -53,48 +55,40 @@ class TreeViewCell implements ListViewCell {
     _embeddedCellContainer.style.width = 'calc(100% - ${offsetX}px)';
     _embeddedCellContainer.children.add(_embeddedCell.element);
 
-    _element = new DivElement();
-    _element.classes.add('treeviewcell');
-    _element.children.add(_embeddedCellContainer);
-
-    _dragOverlay = new DivElement();
-    _dragOverlay.classes.add('treeviewcell-dragoverlay');
+    _dragOverlay = _element.querySelector('.treeviewcell-dragoverlay');
     _dragOverlay.style.left = '${margin + 15}px';
     offsetX = margin + 20;
     _dragOverlay.style.width = 'calc(100% - ${offsetX}px)';
-    _element.children.add(_dragOverlay);
 
-    if (hasChildren) {
-      // Adds an arrow in front the cell.
-      _arrow = new DivElement();
-      _arrow.classes.add('treeviewcell-disclosure');
-      _arrow.style.left = '${margin}px';
-      _arrow.appendHtml('&#9654;');
-      _applyExpanded(_row.expanded);
-      _element.children.add(_arrow);
-
-      // Click handler for the arrow: toggle expanded state of the node.
-      _arrow.onClick.listen((event) {
-        event.stopPropagation();
-
-        // Don't change the expanded state if it's already animating to change
-        // the expanded state.
-        if (_animating) {
-          return;
-        }
-
-        // Change visual appearance.
-        _applyExpanded(!_row.expanded);
-
-        // Wait for animation to finished before effectively changing the
-        // expanded state.
-        _animating = true;
-        _arrow.on['transitionend'].listen((event) {
-          _animating = false;
-          treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
-        });
-      });
+    // Adds an arrow in front the cell.
+    _arrow = _element.querySelector('.treeviewcell-disclosure');
+    _arrow.style.left = '${margin}px';
+    _applyExpanded(_row.expanded);
+    if (!hasChildren) {
+      _arrow.style.visibility = 'hidden';
     }
+
+    // Click handler for the arrow: toggle expanded state of the node.
+    _arrow.onClick.listen((event) {
+      event.stopPropagation();
+
+      // Don't change the expanded state if it's already animating to change
+      // the expanded state.
+      if (_animating) {
+        return;
+      }
+
+      // Change visual appearance.
+      _applyExpanded(!_row.expanded);
+
+      // Wait for animation to finished before effectively changing the
+      // expanded state.
+      _animating = true;
+      _arrow.on['transitionend'].listen((event) {
+        _animating = false;
+        _treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
+      });
+    });
 
     _animating = false;
     treeViewCellExpando[_element] = this;
@@ -128,7 +122,11 @@ class TreeViewCell implements ListViewCell {
   // Change visual appearance of the disclosure arrow, depending whether the
   // node is expanded or not.
   void _applyExpanded(bool expanded) {
-    _arrow.style.transform = expanded ? 'rotate(90deg)' : 'rotate(0deg)';
+    if (expanded) {
+      _arrow.classes.add('treeviewcell-disclosed');
+    } else {
+      _arrow.classes.remove('treeviewcell-disclosed');
+    }
   }
 
   bool get acceptDrop => _embeddedCell.acceptDrop;
