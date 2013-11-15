@@ -5,3 +5,4 @@ description: GUI widget library for Spark IDE and applications built with it.
 homepage: https://github.com/GoogleChrome/spark
 dependencies:
   polymer: any
+  polymer_elements: any

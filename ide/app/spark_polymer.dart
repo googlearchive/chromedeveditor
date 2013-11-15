@@ -23,6 +23,12 @@ class SparkPolymer extends Spark {
   SparkPolymer(bool developerMode) : super(developerMode);
 
   @override
+  void setupSplitView() {
+    // We're using a Polymer-based splitview, so disable the default
+    // by overriding this method to be empty.
+  }
+
+  @override
   void setupEditorThemes() {
     syncPrefs.getValue('aceTheme').then((String theme) {
       final selected = (theme != null) ? AceEditor.THEMES.indexOf(theme) : 0;
@@ -37,7 +43,7 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    // Nothing here yet.
+    // TODO: Implement this.
   }
 
   void _switchTheme([_]) {
