@@ -5,6 +5,7 @@
 library spark.ace_test;
 
 import 'dart:async';
+import 'dart:html';
 
 import 'package:unittest/unittest.dart';
 
@@ -20,6 +21,9 @@ main() {
 }
 
 class MockAceEditor implements AceEditor {
+  /// The element to put the editor in.
+  final Element parentElement = null;
+
   MockAceEditor();
 
   EditSession createEditSession(String text, String fileName) {

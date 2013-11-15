@@ -6,75 +6,20 @@ library spark.workspace_test;
 
 import 'dart:async';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
+import 'files_mock.dart';
 import '../lib/workspace.dart';
 
 const _FILETEXT = 'This is sample text for mock file entry.';
-
-class MockFileEntry implements chrome.ChromeFileEntry {
-
-  String _name;
-  String _contents;
-
-  MockFileEntry(this._name, [this._contents]);
-
-  String get name => _name;
-
-  String get fullPath => _name;
-
-  bool get isDirectory => false;
-
-  bool get isFile => true;
-
-  Future remove() => new Future.value();
-
-  Future<String> readText() => new Future.value(_contents);
-
-  noSuchMethod(Invocation msg) => super.noSuchMethod(msg);
-}
-
-class MockDirectoryEntry implements chrome.DirectoryEntry {
-
-  String _name;
-  List<chrome.Entry> _entries = [];
-
-  MockDirectoryEntry(String name) {
-    _name = name;
-  }
-
-  String get name => _name;
-
-  String get fullPath => _name;
-
-  bool get isDirectory => true;
-
-  bool get isFile => false;
-
-  MockDirectoryReader createReader() => new MockDirectoryReader(_entries);
-
-  noSuchMethod(Invocation msg) => super.noSuchMethod(msg);
-}
-
-class MockDirectoryReader implements chrome.DirectoryReader {
-
-  List<chrome.Entry> _entries = [];
-
-  MockDirectoryReader(List<chrome.Entry> entries) {
-    _entries = entries;
-  }
-
-  Future<List<chrome.Entry>> readEntries() => new Future.value(_entries);
-}
 
 main() {
   group('workspace', () {
 
     test('create file and check contents', () {
-      var workspace = new Workspace(null);
-      var fileEntry = new MockFileEntry('test.txt');
-      fileEntry._contents = _FILETEXT;
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
       var fileResource = new File(workspace, fileEntry, false);
       expect(fileResource.name, fileEntry.name);
       expect(fileResource.path, '/test.txt');
@@ -84,8 +29,9 @@ main() {
     });
 
     test('restore entry', () {
-      var workspace = new Workspace(null);
-      var fileEntry = new MockFileEntry('test.txt', _FILETEXT);
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
       return workspace.link(fileEntry, false).then((Resource resource) {
         expect(resource.name, fileEntry.name);
         String token = resource.persistToToken();
@@ -97,8 +43,9 @@ main() {
     });
 
     test('add file, check for resource add event', () {
-      var workspace = new Workspace(null);
-      var fileEntry = new MockFileEntry('test.txt');
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var fileEntry = fs.createFile('test.txt');
 
       Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
         ResourceChangeEvent event = events.single;
@@ -116,8 +63,9 @@ main() {
     });
 
     test('delete file, check for resource delete event', () {
-      var workspace = new Workspace(null);
-      var fileEntry = new MockFileEntry('test.txt');
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var fileEntry = fs.createFile('test.txt');
       var resource;
 
       workspace.link(fileEntry, false).then((res) {
@@ -136,11 +84,12 @@ main() {
     });
 
     test('add directory, check for resource add event', () {
-      var workspace = new Workspace(null);
-      var dirEntry = new MockDirectoryEntry('myProject');
-      dirEntry._entries = [new MockFileEntry('test.txt'),
-                           new MockFileEntry('test.html'),
-                           new MockFileEntry('test.dart')];
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('/myProject/test.txt');
+      fs.createFile('/myProject/test.html');
+      fs.createFile('/myProject/test.dart');
+      var dirEntry = fs.getEntry('myProject');
 
       Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
         ResourceChangeEvent event = events.single;
@@ -160,16 +109,16 @@ main() {
     });
 
     test('add directory with folders, check for resource add event', () {
-      var workspace = new Workspace(null);
-      var dirEntry = new MockDirectoryEntry('myDir');
-      dirEntry._entries = [new MockFileEntry('test.txt'),
-                           new MockFileEntry('test.html'),
-                           new MockFileEntry('test.dart')];
-      var projectDir = new MockDirectoryEntry('myProject');
-      projectDir._entries = [new MockFileEntry('index.html'),
-                             dirEntry,
-                             new MockFileEntry('myApp.dart'),
-                             new MockFileEntry('myApp.css')];
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/index.html');
+      fs.createFile('/myProject/myApp.dart');
+      fs.createFile('/myProject/myApp.css');
+      var dirEntry = fs.createDirectory('/myProject/myDir');
+      fs.createFile('/myProject/myDir/test.txt');
+      fs.createFile('/myProject/myDir/test.html');
+      fs.createFile('/myProject/myDir/test.dart');
 
       Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
         ResourceChangeEvent event = events.single;
@@ -192,5 +141,4 @@ main() {
       return future;
     });
   });
-
 }
