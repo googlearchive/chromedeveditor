@@ -43,11 +43,7 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
-    int index = _files.indexOf(file);
-    if (index >= 0 &&
-        _treeView.listView.selection.length == 1 &&
-        _treeView.listView.selection.first == index) return;
-    _treeView.listView.selection = [index];
+    _treeView.selection = [file.path];
     _delegate.selectInEditor(file, forceOpen: forceOpen);
   }
 
@@ -55,18 +51,14 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
-
-    _treeView.listView.selection = [_files.length - 1];
-    _delegate.selectInEditor(_files.last, forceOpen: forceOpen);
+    selectFile(_files.last, forceOpen: forceOpen);
   }
 
   void selectFirstFile({bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;
     }
-
-    _treeView.listView.selection = [0];
-    _delegate.selectInEditor(_files.first, forceOpen: forceOpen);
+    selectFile(_files[0], forceOpen: forceOpen);
   }
 
   // Implementation of [TreeViewDelegate] interface.
