@@ -36,8 +36,8 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   static final _sizeRe = new RegExp("([0-9]+)(\.[0-9]+)?px");
 
   /// Temporary subsciptions to event streams, active only during dragging.
-  StreamSubscription<MouseEvent> _dragSubscr;
-  StreamSubscription<MouseEvent> _dragEndSubscr;
+  StreamSubscription<MouseEvent> _trackSubscr;
+  StreamSubscription<MouseEvent> _trackEndSubscr;
 
   /// Constructor.
   SparkSplitter.created() : super.created() {
@@ -47,7 +47,7 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
     // anything. But if the switch is made, "draggable" for the element should
     // be set as well.
     // See bug https://code.google.com/p/chromium/issues/detail?id=264983.
-    onMouseDown.listen(dragStart);
+    onMouseDown.listen(trackStart);
     directionChanged();
   }
 
@@ -80,7 +80,7 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
 
   /// When dragging starts, cache the target's size and temporarily subscribe
   /// to necessary events to track dragging.
-  void dragStart(MouseEvent e) {
+  void trackStart(MouseEvent e) {
     // Make active regardless of [locked], to appear responsive.
     classes.add('active');
 
@@ -90,13 +90,13 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
       // the entire document; otherwise, once/if the cursor leaves the boundary
       // of our element, the events will stop firing, leaving us in a permanent
       // "sticky" dragging state.
-      _dragSubscr = document.onMouseMove.listen(drag);
-      _dragEndSubscr = document.onMouseUp.listen(dragEnd);
+      _trackSubscr = document.onMouseMove.listen(track);
+      _trackEndSubscr = document.onMouseUp.listen(trackEnd);
     }
   }
 
   /// While dragging, update the target's size based on the mouse movement.
-  void drag(MouseEvent e) {
+  void track(MouseEvent e) {
     // Recheck [locked], in case it's been changed externally in mid-flight.
     if (!locked) {
       _updateTargetSize(_isHorizontal ? e.movement.y : e.movement.x);
@@ -105,16 +105,16 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
 
   /// When dragging stops, unsubscribe from monitoring dragging events except
   /// the starting one.
-  void dragEnd(MouseEvent e) {
-    assert(_dragSubscr != null && _dragEndSubscr != null);
+  void trackEnd(MouseEvent e) {
+    assert(_trackSubscr != null && _trackEndSubscr != null);
     // Do this regardless of [locked]. The only case [locked] can be true here
     // is when it's been changed externally in mid-flight. If it's already true
     // when onMouseDown is fired, these subsciptions (and this event handler!)
     // are not activated in the first place.
-    _dragSubscr.cancel();
-    _dragSubscr = null;
-    _dragEndSubscr.cancel();
-    _dragEndSubscr = null;
+    _trackSubscr.cancel();
+    _trackSubscr = null;
+    _trackEndSubscr.cancel();
+    _trackEndSubscr = null;
 
     classes.remove('active');
   }
