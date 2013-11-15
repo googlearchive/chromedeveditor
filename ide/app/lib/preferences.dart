@@ -18,12 +18,14 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 /**
  * A PreferenceStore backed by `chome.storage.local`.
  */
-PreferenceStore localStore = new _ChromePreferenceStore(chrome.storage.local, 'local');
+PreferenceStore localStore = new _ChromePreferenceStore(
+    chrome.storage.local, 'local', new Duration(seconds: 2));
 
 /**
  * A PreferenceStore backed by `chome.storage.sync`.
  */
-PreferenceStore syncStore = new _ChromePreferenceStore(chrome.storage.sync, 'sync');
+PreferenceStore syncStore = new _ChromePreferenceStore(
+    chrome.storage.sync, 'sync', new Duration(seconds: 6));
 
 /**
  * A persistent preference mechanism.
@@ -83,16 +85,16 @@ class MapPreferencesStore implements PreferenceStore {
  * A [PreferenceStore] implementation based on `chrome.storage`.
  *
  * This preferences implementation will automatically flush any dirty changes
- * out to `chrome.storage` every 6 seconds. That frequency will ensure that we
- * do not exceed the rate limit imposed by `chrome.storage.sync`.
+ * out to `chrome.storage` periodically.
  */
 class _ChromePreferenceStore implements PreferenceStore {
+  chrome.StorageArea _storageArea;
+  Duration _flushInterval;
   Map _map = {};
   StreamController<PreferenceEvent> _controller = new StreamController.broadcast();
-  chrome.StorageArea _storageArea;
   Timer _timer;
 
-  _ChromePreferenceStore(this._storageArea, String name) {
+  _ChromePreferenceStore(this._storageArea, String name, this._flushInterval) {
     chrome.storage.onChanged.listen((chrome.StorageOnChangedEvent event) {
       if (event.areaName == name) {
         for (String key in event.changes.keys) {
@@ -152,9 +154,9 @@ class _ChromePreferenceStore implements PreferenceStore {
   Stream<PreferenceEvent> get onPreferenceChange => _controller.stream;
 
   void _startTimer() {
+    // Flush dirty preferences periodically.
     if (_timer == null) {
-      // Flush dirty preferences every 6 seconds.
-      _timer = new Timer(new Duration(seconds: 6), flush);
+      _timer = new Timer(_flushInterval, flush);
     }
   }
 }

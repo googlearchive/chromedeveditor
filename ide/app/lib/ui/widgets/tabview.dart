@@ -21,7 +21,7 @@ class Tab {
 
   DivElement _label;
   DivElement _labelCaption;
-  DivElement _closeButton;
+  ButtonElement _closeButton;
 
   Tab(this.tabView, this.component, {closable: true}) {
     this.component.classes.add('tabview-tabcomponent');
@@ -35,8 +35,10 @@ class Tab {
 
     _labelCaption = new DivElement()..classes.add('tabview-tablabel-caption');
 
-    _closeButton = new DivElement()
-        ..classes.add('tabview-tablabel-closebutton');
+    _closeButton = new ButtonElement()
+        ..classes.add('tabview-tablabel-closebutton')
+        ..classes.add('close')
+        ..type = 'button';
     _closeButton.appendHtml('&times;');
     _closeButton.onClick.listen((e) {
       tabView.remove(this);
