@@ -8,6 +8,7 @@ import 'dart:html';
 import 'dart:async';
 import 'package:polymer/polymer.dart';
 
+/// Implements the spark-splitter custom Polymer element.
 @CustomTag('spark-splitter')
 class SparkSplitter extends HtmlElement with Polymer, Observable {
   /// Possible values are "left", "right", "up" and "down".
@@ -25,14 +26,16 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   /// The target sibling whose size will be changed when the splitter is
   /// dragged. The other sibling is expected to auto-adjust, e.g. using flexbox.
   HtmlElement _target;
+  /// Whether [_target] should be the next or the previous sibling of
+  /// the splitter (as determined by [direction], e.g. "left" vs. "right").
   bool _isTargetNextSibling;
-  /// Cached size of the target.
+  /// Cached size of [_target] for the period of dragging.
   int _targetSize;
 
-  /// A regular expression to get the integer part of the target's computed size.
-  // NOTE: returned target sizes look like "953px" while the mouse is within the
-  // app's window, but once it leaves the window, they start looking like
-  // "953.0165948px".
+  /// A regexp to get the integer part of the target's computed size.
+  // NOTE: returned target sizes look like "953px" most of the time,
+  // but sometimes they start looking like "953.0165948px" (e.g. when the
+  // splitter is dragged to the edge of the app's window).
   static final _sizeRe = new RegExp("([0-9]+)(\.[0-9]+)?px");
 
   /// Temporary subsciptions to event streams, active only during dragging.
@@ -56,7 +59,8 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
   void directionChanged() {
     _isHorizontal = direction == 'up' || direction == 'down';
     _isTargetNextSibling = direction == 'right' || direction == 'down';
-    _target = _isTargetNextSibling ? nextElementSibling : previousElementSibling;
+    _target =
+        _isTargetNextSibling ? nextElementSibling : previousElementSibling;
     classes.toggle('horizontal', _isHorizontal);
   }
 
@@ -115,6 +119,9 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
     _trackSubscr = null;
     _trackEndSubscr.cancel();
     _trackEndSubscr = null;
+
+    // Prevent possible wrong use of the cached value.
+    _targetSize = null;
 
     classes.remove('active');
   }
