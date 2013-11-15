@@ -66,10 +66,9 @@ class FilesController implements TreeViewDelegate {
   int treeViewNumberOfChildren(TreeView view, String nodeUID) {
     if (nodeUID == null) {
       return _files.length;
+    } else if (_filesMap[nodeUID] is Container) {
+      return (_filesMap[nodeUID] as Container).getChildren().length;
     } else {
-      if (_filesMap[nodeUID] is Container) {
-        return (_filesMap[nodeUID] as Container).getChildren().length;
-      }
       return 0;
     }
   }
@@ -116,25 +115,34 @@ class FilesController implements TreeViewDelegate {
     if (event.type == ResourceEventType.ADD) {
       var resource = event.resource;
       _files.add(resource);
-      _filesMap[resource.fullPath] = resource;
-      if (resource is Container) {
-         resource.getChildren().forEach((child) {
-         _filesMap[child.fullPath] = child;
-        });
-      }
+      _recursiveAddResource(resource);
       _treeView.reloadData();
     }
     if (event.type == ResourceEventType.DELETE) {
       var resource = event.resource;
-      _files.remove(event.resource);
-      if (resource is Container) {
-        resource.getChildren().forEach((child) {
-          _filesMap[child.fullPath] = child;
-        });
-      }
+      _files.remove(resource);
+      _recursiveRemoveResource(resource);
       // TODO: make a more informed selection, maybe before the delete?
       selectLastFile();
       _treeView.reloadData();
+    }
+  }
+
+  void _recursiveAddResource(Resource resource) {
+    _filesMap[resource.fullPath] = resource;
+    if (resource is Container) {
+      resource.getChildren().forEach((child) {
+        _recursiveAddResource(child);
+      });
+    }
+  }
+
+  void _recursiveRemoveResource(Resource resource) {
+    _filesMap.remove(resource.fullPath);
+    if (resource is Container) {
+      resource.getChildren().forEach((child) {
+        _recursiveRemoveResource(child);
+      });
     }
   }
 }
