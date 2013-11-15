@@ -71,14 +71,21 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
           <h4 class="modal-title">Spark</h4>
         </div>
         <div class="modal-body">
-          <ul>
-            <li>A Chrome Apps based development environment</li>
-            <li>Version <span id="aboutVersion"></span></li>
-          </ul>
+          <dl>
+            <dt>A Chrome Apps based development environment</dt>
+            <dd>version <span id="aboutVersion"></span></dd>
+          </dl>
+          <div class="checkbox">
+				    <label>
+				      <input type="checkbox" id="analyticsOptOut">
+				        Allow Spark to collect anonymous usage statistics
+				      </input>
+				    </label>
+				  </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
@@ -111,10 +118,10 @@
   <!-- ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
 
-  <!-- This is necessary for both package:js and dart:js. -->
+  <!-- this is necessary for dart:js -->
   <script src="packages/browser/interop.js"></script>
 
-  <!-- this starts the Dart VM in Dartium, and injects spark.dart.js otherwise -->
+  <!-- this injects spark.dart.precompiled.js in a JS context -->
   <script src="spark_bootstrap.js" defer></script>
 
   <script type="application/dart" src="spark.dart" defer></script>
