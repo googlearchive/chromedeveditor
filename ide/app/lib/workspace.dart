@@ -46,9 +46,6 @@ class Workspace implements Container {
 
   Future delete() => null;
 
-  // TODO: we should migrarte users to path or perhaps persistToToken()
-  String get fullPath => '';
-
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
@@ -245,8 +242,6 @@ abstract class Resource {
 
     return (_entry as chrome.DirectoryEntry).removeRecursively().then((_) => _parent._removeChild(this));
   }
-
-  String get fullPath => _entry.fullPath;
 
   /**
    * Returns the containing [Project]. This can return null for loose files and

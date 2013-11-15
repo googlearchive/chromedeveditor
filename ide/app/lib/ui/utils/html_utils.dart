@@ -44,3 +44,11 @@ bool isMouseLocationInElement(MouseEvent event,
   var location = getEventAbsolutePosition(event);
   return rect.containsPoint(location);
 }
+
+/**
+ * Cancel the given event by stopping propagation and preventing default action.
+ */
+void cancelEvent(Event event) {
+  event.stopPropagation();
+  event.preventDefault();
+}

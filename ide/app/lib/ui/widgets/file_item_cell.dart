@@ -16,14 +16,15 @@ class FileItemCell implements ListViewCell {
   Element _element;
   Element _container;
   bool _highlighted;
+  bool acceptDrop;
 
   FileItemCell(String name) {
     DocumentFragment template =
-        (querySelector('#fileview-filename') as TemplateElement).content;
-    Element element = template.clone(true);
-    _element = new DivElement();
-    _element.children.add(element);
+        (querySelector('#fileview-filename-template') as TemplateElement).content;
+    Element templateClone = template.clone(true);
+    _element = templateClone.querySelector('.fileview-filename-container');
     _element.querySelector('.filename').text = name;
+    acceptDrop = false;
   }
 
   Element get element => _element;
@@ -32,7 +33,7 @@ class FileItemCell implements ListViewCell {
 
   bool get highlighted => _highlighted;
 
-  set highlighted(value) => _highlighted = value;
+  set highlighted(bool value) => _highlighted = value;
 
   Element get container => _container;
 

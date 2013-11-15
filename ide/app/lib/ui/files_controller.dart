@@ -31,7 +31,9 @@ class FilesController implements TreeViewDelegate {
     _delegate = delegate;
     _files = [];
     _filesMap = {};
+
     _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
+    _treeView.dropEnabled = true;
 
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
@@ -42,11 +44,7 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
-    int index = _files.indexOf(file);
-    if (index >= 0 &&
-        _treeView.listView.selection.length == 1 &&
-        _treeView.listView.selection.first == index) return;
-    _treeView.listView.selection = [index];
+    _treeView.selection = [file.path];
     _delegate.selectInEditor(file, forceOpen: forceOpen);
   }
 
@@ -54,17 +52,14 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
-
-    _treeView.listView.selection = [_files.length - 1];
-    _delegate.selectInEditor(_files.last, forceOpen: forceOpen);
+    selectFile(_files.last, forceOpen: forceOpen);
   }
 
   void selectFirstFile({bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;
     }
-    _treeView.listView.selection = [0];
-    _delegate.selectInEditor(_files.first, forceOpen: forceOpen);
+    selectFile(_files[0], forceOpen: forceOpen);
   }
 
   // Implementation of [TreeViewDelegate] interface.
@@ -125,12 +120,22 @@ class FilesController implements TreeViewDelegate {
     _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true);
   }
 
+  String treeViewDropEffect(TreeView view) {
+    return 'copy';
+  }
+
+  void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
+    // TODO(dvh): Import to the workspace the files referenced by
+    // dataTransfer.files
+  }
+
   /**
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
+
       var resource = event.resource;
       _files.add(resource);
       _recursiveAddResource(resource);
