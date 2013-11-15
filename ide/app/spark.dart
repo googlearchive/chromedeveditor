@@ -23,7 +23,7 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
-import 'lib/workspace.dart' as wkspace;
+import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
 /**
@@ -61,7 +61,7 @@ class Spark extends Application implements FilesControllerDelegate {
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   AceEditor editor;
-  wkspace.Workspace workspace;
+  ws.Workspace workspace;
   EditorManager editorManager;
   analytics.Tracker tracker = new analytics.NullTracker();
 
@@ -97,7 +97,7 @@ class Spark extends Application implements FilesControllerDelegate {
       close();
     });
 
-    workspace = new wkspace.Workspace(localPrefs);
+    workspace = new ws.Workspace(localPrefs);
     editor = new AceEditor();
     editorManager = new EditorManager(workspace, editor, localPrefs);
 
@@ -244,8 +244,8 @@ class Spark extends Application implements FilesControllerDelegate {
 
   // Implementation of FilesControllerDelegate interface.
 
-  void openInEditor(wkspace.Resource file) {
-    if (file is wkspace.File) editorManager.openOrSelect(file);
+  void openInEditor(ws.Resource file) {
+    if (file is ws.File) editorManager.openOrSelect(file);
   }
 
   void _handleChangeTheme({bool themeLeft: true}) {
