@@ -151,7 +151,16 @@ class TreeView implements ListViewDelegate {
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
 
   set selection(List<String> selection) {
-    // TODO(dvh): implement selection.
+    HashSet<String> selectionSet = new HashSet.from(selection);
+    int idx = 0;
+    List<int> listSelection = [];
+    _rows.forEach((TreeViewRow row) {
+      if (selectionSet.contains(row.nodeUID)) {
+        listSelection.add(idx);
+      }
+      idx ++;
+    });
+    _listView.selection = listSelection;
   }
 
   // ListViewDelegate implementation.
