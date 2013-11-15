@@ -59,8 +59,7 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return true;
     } else {
-      if (_filesMap[nodeUID] is Container) return true;
-      return false;
+      return (_filesMap[nodeUID] is Container);
     }
   }
 
