@@ -118,9 +118,10 @@ main() {
     });
 
     test('create directories', () {
-
+      MockFileSystem fs = new MockFileSystem();
+      return fs.root.createDirectory('abc', exclusive: true).then((_) {
+        expect(fs.root.createDirectory('abc', exclusive: true), throws);
+      });
     });
-
   });
-
 }
