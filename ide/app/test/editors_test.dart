@@ -10,7 +10,6 @@ import 'package:unittest/unittest.dart';
 import 'ace_test.dart';
 import 'files_mock.dart';
 import '../lib/ace.dart';
-import '../lib/editors.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
@@ -20,7 +19,7 @@ main() {
       Workspace workspace = new Workspace();
       AceEditor editor = new MockAceEditor();
       PreferenceStore store = new MapPreferencesStore();
-      EditorManager manager = new EditorManager(workspace, editor, store);
+      AceEditorManager manager = new AceEditorManager(workspace, editor, store);
 
       MockFileSystem fs = new MockFileSystem();
 
