@@ -129,11 +129,17 @@
   position: relative;
 }
 
-.tabview-tabcomponent {
-  flex: 1;
+.tabview-page-container {
   display: none;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
 }
 
-.tabview-tabcomponent-active {
-  display: block;
+.tabview-page-container-active {
+  display: flex;
+}
+
+.tabview-page-container > * {
+  flex: 1;
 }
