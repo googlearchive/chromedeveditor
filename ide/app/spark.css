@@ -67,7 +67,7 @@ body {
   bottom: 0;
   left: 0;
   overflow-x: auto;
-  overflow-y: scroll;
+  overflow-y: auto;
   position: absolute;
   right: 0;
   top: 0;

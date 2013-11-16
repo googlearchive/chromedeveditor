@@ -158,7 +158,11 @@ class KeyBinding {
 
     desc.add(_descriptionOf(keyCode));
 
-    return desc.join('+');
+    if (_isMac() && modifiers.length == 1 && modifiers.first == KeyCode.META) {
+      return desc.join();
+    } else {
+      return desc.join('+');
+    }
   }
 
   int _codeFor(String str) {
@@ -170,12 +174,12 @@ class KeyBinding {
   }
 
   String _descriptionOf(int code) {
-    if (_isMac() && code == KeyCode.META) {
-      return "Cmd";
-    }
-
     if (code == KeyCode.META) {
-      return "Meta";
+      if (_isMac()) {
+        return '⌘'; // "Cmd";
+      } else {
+        return "Meta";
+      }
     }
 
     if (code == KeyCode.CTRL) {

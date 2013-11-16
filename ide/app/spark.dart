@@ -76,6 +76,7 @@ class Spark extends Application implements FilesControllerDelegate {
   FilesController _filesController;
   PlatformInfo _platformInfo;
   TestDriver _testDriver;
+  bootjack.Modal _aboutBox;
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -245,7 +246,6 @@ class Spark extends Application implements FilesControllerDelegate {
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
 
-
     querySelector('#themeLeft').onClick.listen((e) {
       e.stopPropagation();
       _handleChangeTheme(themeLeft: true);
@@ -262,7 +262,6 @@ class Spark extends Application implements FilesControllerDelegate {
     }
 
     ul.children.add(_createLIElement(null));
-    ul.children.add(_createLIElement('Check For Updates…', _handleUpdateCheck));
     ul.children.add(_createLIElement('About Spark', _handleAbout));
   }
 
@@ -288,23 +287,20 @@ class Spark extends Application implements FilesControllerDelegate {
     syncPrefs.setValue('aceTheme', themeName);
   }
 
-  void _handleUpdateCheck() {
-    showStatus("Checking for updates...");
-
-    chrome.runtime.requestUpdateCheck().then((chrome.RequestUpdateCheckResult result) {
-      if (result.status == 'update_available') {
-        // result.details['version']
-        showStatus("An update is available.");
-      } else {
-        showStatus("Application is up to date.");
-      }
-    }).catchError((_) => showStatus(''));
-  }
-
   void _handleAbout() {
-    bootjack.Modal modal = bootjack.Modal.wire(querySelector('#aboutDialog'));
-    modal.element.querySelector('#aboutVersion').text = appVersion;
-    modal.show();
+    if (_aboutBox == null) {
+      _aboutBox = bootjack.Modal.wire(querySelector('#aboutDialog'));
+
+      var checkbox = _aboutBox.element.querySelector('#analyticsCheck');
+      checkbox.checked = tracker.service.getConfig().isTrackingPermitted();
+      checkbox.onChange.listen((e) {
+        tracker.service.getConfig().setTrackingPermitted(checkbox.checked);
+      });
+
+      _aboutBox.element.querySelector('#aboutVersion').text = appVersion;
+    }
+
+    _aboutBox.show();
   }
 
   LIElement _createLIElement(String title, [Function onClick]) {
