@@ -77,7 +77,7 @@
 .tabview-tablabel-active {
   background: -webkit-linear-gradient(bottom, #EEE, white);
   border: 1px solid #CCC;
-  border-bottom: 1px solid white;
+  border-bottom: 1px solid #EEE;
   margin-top: 5px;
   margin-bottom: 0;
   padding-bottom: 1px;
@@ -129,11 +129,29 @@
   position: relative;
 }
 
-.tabview-tabcomponent {
+.tabview-page-container {
   flex: 1;
   display: none;
+  overflow: hidden;
 }
 
-.tabview-tabcomponent-active {
-  display: block;
+.tabview-page-container-active {
+  display: flex;
+}
+
+.tabview-page-container > * {
+  flex: 1;
+}
+
+.editor-tab-loader-placeholder {
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+}
+
+.editor-tab-loader-placeholder:before {
+  content: 'Loading...';
+  font-family: sans-serif;
+  font-size: 40px;
+  text-align: center;
 }

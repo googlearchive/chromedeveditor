@@ -8,7 +8,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart' as polymer;
 
 import 'spark.dart';
-import 'lib/ace.dart';
+import 'lib/editors/ace.dart';
 import 'lib/utils.dart' as utils;
 
 void main() {
@@ -52,7 +52,7 @@ class SparkPolymer extends Spark {
     if (selected == -1)
       selected = 0;
     final String themeName = AceEditor.THEMES[selected];
-    editor.theme = themeName;
+    aceEditorProvider.editor.theme = themeName;
     syncPrefs.setValue('aceTheme', themeName);
   }
 

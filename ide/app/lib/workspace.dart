@@ -264,6 +264,7 @@ class File extends Resource {
     super(parent, entry, syncable);
 
   Future<String> getContents() => (_entry as chrome.ChromeFileEntry).readText();
+  Future<chrome.ArrayBuffer> getBytes() => (_entry as chrome.ChromeFileEntry).readBytes();
 
   // TODO: fire change event
   Future setContents(String contents) => (_entry as chrome.ChromeFileEntry).writeText(contents);
