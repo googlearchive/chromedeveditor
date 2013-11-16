@@ -9,8 +9,8 @@ import 'package:unittest/unittest.dart';
 
 import 'ace_test.dart';
 import 'files_mock.dart';
-import '../lib/ace.dart';
-import '../lib/editors.dart';
+import '../lib/editors/ace.dart';
+import '../lib/editors/editor.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
@@ -20,7 +20,8 @@ main() {
       Workspace workspace = new Workspace();
       AceEditor editor = new MockAceEditor();
       PreferenceStore store = new MapPreferencesStore();
-      EditorManager manager = new EditorManager(workspace, editor, store);
+      EditorProvider provider = new AceEditorProvider();
+      EditorSessionManager manager = new EditorSessionManager(workspace, store, provider);
 
       MockFileSystem fs = new MockFileSystem();
 
@@ -28,12 +29,13 @@ main() {
       File fileResource = new File(workspace, fileEntry, false);
 
       Completer completer = new Completer();
-      manager.onSelectedChange.first.then((f) {
-        expect(f.name, fileResource.name);
-        completer.complete();
-      });
-
-      manager.openOrSelect(fileResource);
+      EditorSession session = provider.getEditorSessionForFile(fileResource);
+      expect(session.file, fileResource);
+      expect(provider.getEditorSessionForFile(fileResource), session);
+      expect(manager.isFileOpened(fileResource), false);
+      manager.add(session);
+      expect(manager.isFileOpened(fileResource), true);
+      completer.complete();
       return completer.future;
     });
   });

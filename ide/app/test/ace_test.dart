@@ -8,8 +8,10 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:unittest/unittest.dart';
+import 'package:ace/ace.dart' as ace;
 
-import '../lib/ace.dart';
+import '../lib/editors/ace.dart';
+import '../lib/editors/editor.dart';
 
 main() {
   group('ace', () {
@@ -22,23 +24,29 @@ main() {
 
 class MockAceEditor implements AceEditor {
   /// The element to put the editor in.
-  final Element parentElement = null;
+  final Element rootElement = null;
+  EditorSession _session;
 
   MockAceEditor();
-
-  EditSession createEditSession(String text, String fileName) {
-    return new MockEditSession(fileName);
-  }
 
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }
-  void switchTo(EditSession session) { }
+
+  bool get readOnly => false;
+  set readOnly(bool value) => false;
+
+  EditorSession get session => _session;
+  set session(EditorSession value) => _session = value;
+
   set theme(String value) { }
   String get theme => null;
+
+  ace.EditSession createEditSession(String text, String fileName) =>
+      ace.createEditSession(text, new ace.Mode.forFile(fileName));
 }
 
-class MockEditSession implements EditSession {
+class MockEditSession implements ace.EditSession {
   final String name;
   int scrollTop;
   StreamController _changeController = new StreamController.broadcast();
