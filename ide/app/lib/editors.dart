@@ -15,12 +15,6 @@ import 'ace.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 
-class DirtyFlagChangedEvent {
-  final File file;
-  final bool dirty;
-  DirtyFlagChangedEvent(this.file, this.dirty);
-}
-
 /**
  * Classes implement this interface provides/refreshes editors for [Resource]s.
  * TODO(ikarienator): Abstract [AceEditor] so we can support more editor types.
@@ -29,7 +23,6 @@ abstract class EditorProvider {
   AceEditor createEditorForFile(Resource file);
   void selectFileForEditor(AceEditor editor, Resource file);
   void close(Resource file);
-  Stream<DirtyFlagChangedEvent> get onDirtyFlagChanged;
 }
 
 
@@ -48,8 +41,6 @@ class EditorManager implements EditorProvider {
   _EditorState _currentState;
 
   final StreamController<File> _selectedController =
-      new StreamController.broadcast();
-  final StreamController<DirtyFlagChangedEvent> _dirtyFlagChangedController =
       new StreamController.broadcast();
 
   EditorManager(this._workspace, this._aceEditor, this._prefs) {
@@ -189,9 +180,6 @@ class EditorManager implements EditorProvider {
     _EditorState state = _getStateFor(file);
     _switchState(state);
   }
-
-  Stream<DirtyFlagChangedEvent> get onDirtyFlagChanged =>
-      _dirtyFlagChangedController.stream;
 }
 
 /**
@@ -229,8 +217,6 @@ class _EditorState {
       if (_dirty) {
         manager._startSaveTimer();
       }
-      manager._dirtyFlagChangedController.add(
-          new DirtyFlagChangedEvent(file, value));
     }
   }
 
