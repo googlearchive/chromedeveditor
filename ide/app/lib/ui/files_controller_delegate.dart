@@ -8,6 +8,7 @@
  */
 library spark.ui.widgets.files_controller_delegate;
 
+import '../actions.dart';
 import '../workspace.dart';
 
 abstract class FilesControllerDelegate {
@@ -16,4 +17,9 @@ abstract class FilesControllerDelegate {
    * editor.
    */
   void selectInEditor(File file, {bool forceOpen: false});
+
+  /**
+   * TODO:
+   */
+  List<ContextAction> getActionsFor(Resource resource);
 }

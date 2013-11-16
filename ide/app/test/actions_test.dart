@@ -55,6 +55,26 @@ main() {
       action.enabled = false;
       manager.handleKeyEvent(event);
       expect(action.wasCalled, false);
+
+      expect(manager.getContextActions('foo'), isEmpty);
+    });
+
+    test('context', () {
+      ActionManager manager = new ActionManager();
+      manager.registerAction(new MockContextAction('foo', 'one'));
+      manager.registerAction(new MockContextAction('bar', 'two'));
+      manager.registerAction(new MockContextAction('baz', 'one'));
+
+      expect(manager.getContextActions(123), isEmpty);
+
+      List actions = manager.getContextActions('string');
+      expect(actions.length, 3);
+      expect(actions[0].id, 'foo');
+      expect(actions[1].id, 'baz');
+      expect(actions[2].id, 'bar');
+      expect(actions[0].category, 'one');
+      expect(actions[1].category, 'one');
+      expect(actions[2].category, 'two');
     });
   });
 }
@@ -66,5 +86,15 @@ class MockAction extends Action {
     defaultBinding('alt-o');
   }
 
-  invoke() => wasCalled = true;
+  invoke([Object context]) => wasCalled = true;
+}
+
+class MockContextAction extends ContextAction {
+  final String category;
+
+  MockContextAction(String name, this.category): super(name, name);
+
+  void invoke([Object context]) { }
+
+  bool appliesTo(Object object) => object is String;
 }

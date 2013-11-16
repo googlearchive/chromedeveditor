@@ -10,11 +10,13 @@ library spark.ui.widgets.files_controller;
 import 'dart:html' as html;
 
 import 'files_controller_delegate.dart';
+import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
+import '../actions.dart';
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
@@ -99,7 +101,10 @@ class FilesController implements TreeViewDelegate {
   }
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
-    return new FileItemCell(_filesMap[nodeUID].name);
+    FileItemCell cell = new FileItemCell(_filesMap[nodeUID].name);
+    cell.element.onContextMenu.listen((e) => _handleContextMenu(e, _filesMap[nodeUID]));
+    cell.menuElement.onClick.listen((e) => _handleMenuClick(cell, _filesMap[nodeUID]));
+    return cell;
   }
 
   int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
@@ -167,5 +172,22 @@ class FilesController implements TreeViewDelegate {
         _recursiveRemoveResource(child);
       });
     }
+  }
+
+  void _handleContextMenu(html.Event e, Resource resource) {
+    // TODO: show the context menu
+
+    cancelEvent(e);
+  }
+
+  void _handleMenuClick(FileItemCell cell, Resource resource) {
+    List<ContextAction> actions = _delegate.getActionsFor(resource);
+
+    // TODO: show the context menu
+
+//    html.Element element = createContextMenu(actions, showAccelerators: false);
+//    cell.menuElement.children.add(element);
+//    bootjack.Dropdown dropdown = bootjack.Dropdown.wire(element);
+//    dropdown.toggle();
   }
 }
