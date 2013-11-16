@@ -23,17 +23,14 @@ Element createMenuSeparator() => new LIElement()..classes.add('divider');
 Element createMenuItem(Action action, {bool showAccelerator: true}) {
   LIElement li = new LIElement();
 
-  AnchorElement a = new AnchorElement();
-  a.text = action.name;
-
-  if (!action.enabled) {
-    a.classes.add('disabled');
-  }
+  AnchorElement a = new AnchorElement()
+      ..text = action.name
+      ..classes.toggle('disabled', !action.enabled);
 
   if (showAccelerator) {
-    SpanElement span = new SpanElement();
-    span.text = action.getBindingDescription();
-    span.classes.add('pull-right');
+    SpanElement span = new SpanElement()
+        ..text = action.getBindingDescription()
+        ..classes.add('pull-right');
     a.children.add(span);
   }
 
@@ -55,11 +52,8 @@ Element createContextMenu(List<Action> actions,
 
   UListElement ul = new UListElement()
       ..classes.add('dropdown-menu')
+      ..classes.toggle('pull-right', pullRight)
       ..attributes['role'] = 'menu';
-
-  if (pullRight) {
-    ul.classes.add('pull-right');
-  }
 
   String category = null;
 
@@ -383,8 +377,7 @@ abstract class Action {
 
 /**
  * An [Action] subclass that can indicate whether it applies in certain
- * contexts. This can be useful when determining which actions to show on a
- * context menu for a file. See also [Action.getContextMenu].
+ * contexts. See also [Action.getContextMenu].
  */
 abstract class ContextAction extends Action {
   ContextAction(String id, String name): super(id, name);

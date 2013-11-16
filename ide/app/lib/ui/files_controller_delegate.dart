@@ -13,13 +13,13 @@ import '../workspace.dart';
 
 abstract class FilesControllerDelegate {
   /**
-   * The implementation of this method should open the given file in an
-   * editor.
+   * The implementation of this method should open the given file in an editor.
    */
   void selectInEditor(File file, {bool forceOpen: false});
 
   /**
-   * TODO:
+   * Returns the list of actions that apply in the context of the given
+   * [resource].
    */
   List<ContextAction> getActionsFor(Resource resource);
 }
