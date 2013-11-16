@@ -19,6 +19,7 @@ import 'lib/editorarea.dart';
 import 'lib/editors/ace.dart';
 import 'lib/editors/editor.dart';
 import 'lib/editors/editorregistry.dart';
+import 'lib/editors/image.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
@@ -163,7 +164,11 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void registerFileTypes() {
-    // TODO(ikarienator): fill in the blank.
+    var imageRegExp =
+        new RegExp('\.(jpe?g|png|gif|bmp|tiff)\$', caseSensitive: false);
+    _editorRegistry.registerProvider(
+        imageRegExp,
+        new ImageEditorProvider(_editorSessionManager));
   }
 
   void setupSplitView() {
