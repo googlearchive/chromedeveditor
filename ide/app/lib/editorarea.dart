@@ -20,7 +20,7 @@ class EditorTab extends Tab {
   final AceEditor editor;
   EditorTab(EditorArea parent, AceEditor editor, this.file)
       : editor = editor,  // FIXME(ikarienator): cannot use this.editor style.
-        super(parent, editor.parentElement) {
+        super(parent, page: editor.parentElement) {
     label = file.name;
   }
 }
