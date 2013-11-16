@@ -291,7 +291,7 @@ class Spark extends Application implements FilesControllerDelegate {
     if (_aboutBox == null) {
       _aboutBox = bootjack.Modal.wire(querySelector('#aboutDialog'));
 
-      var checkbox = _aboutBox.element.querySelector('#analyticsOptOut');
+      var checkbox = _aboutBox.element.querySelector('#analyticsCheck');
       checkbox.checked = tracker.service.getConfig().isTrackingPermitted();
       checkbox.onChange.listen((e) {
         tracker.service.getConfig().setTrackingPermitted(checkbox.checked);
