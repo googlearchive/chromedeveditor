@@ -1,3 +1,6 @@
+var error = function() {
+};
+
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         //Allow using this built library as an AMD module
@@ -537,6 +540,7 @@ define('formats/smart_http_remote',['utils/progress_chunker'], function(Progress
                 str += "0000"
                 str += "0009done\n"
             }
+            console.log(str);
             return str
         }
 
@@ -586,6 +590,7 @@ define('formats/smart_http_remote',['utils/progress_chunker'], function(Progress
             var remote = this,
                 uri = this.makeUri('/info/refs', {service: "git-upload-pack"});
             doGet(uri, function(data) {
+            console.log('doing get');
                 var discInfo = parseDiscovery(data)
                 var i, ref
                 for (i = 0; i < discInfo.refs.length; i++) {
@@ -615,6 +620,7 @@ define('formats/smart_http_remote',['utils/progress_chunker'], function(Progress
         }
 
         this.fetchRef = function(wantRefs, haveRefs, shallow, depth, moreHaves, callback, noCommon, progress) {
+        console.log('fetching refs');
             var url = this.makeUri('/git-upload-pack')
             var body = refWantRequest(wantRefs, haveRefs, shallow, depth);
             var thisRemote = this
@@ -1742,11 +1748,12 @@ GitLiteWorkerMessages = {
 };
 define("workers/worker_messages", function(){});
 
-
 define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pull', 'commands/push', 'commands/branch', 'commands/checkout', 'commands/conditions', 'formats/smart_http_remote', "workers/worker_messages"], function(clone, commit, init, pull, push, branch, checkout, Conditions, SmartHttpRemote){
 
     /** @exports GitApi */
     var api = {
+
+
 
         /** @desc Indicates an unexpected error in the HTML5 file system. */
         FILE_IO_ERROR: errutils.FILE_IO_ERROR,
@@ -1803,7 +1810,6 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
         clone : function(options, success, error){
             var objectStore = new FileObjectStore(options.dir);
             objectStore.init(function(){
-
                 clone({
                         dir: options.dir,
                         branch: options.branch,
@@ -1818,6 +1824,27 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
 
             }, error);
         },
+
+      getFs: function(success) {
+
+
+      return window.webkitRequestFileSystem(window.TEMPORARY, 1024 * 1024 * 1024, function(fs) {
+      fs.root.getDirectory('3s4s', {create:true}, function(dir) {
+      /*var options = {
+      dir: dir,
+      url: 'https://github.com/gaurave/trep.git'
+      };
+      console.log(options);
+         api.clone(options, function() {
+         console.log('wuppy');
+         }, function() {});*/
+      });
+
+        console.log(fs);
+        success(fs);
+      });
+    },
+
         /**
          * Does a pull from the url the local repo was cloned from. Will only succeed for fast-forward pulls.
          * If a merge is required, it calls the error callback

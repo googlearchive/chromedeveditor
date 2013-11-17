@@ -25,7 +25,7 @@ main() {
           return entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
             Uint8List data = new Uint8List.fromList(binaryData.getBytes());
             Pack pack = new Pack(data, null);
-            return pack.parseAll().then((_) {
+            return pack.parseAll(null).then((_) {
 
               // TODO: add more expects for the pack state?
               expect(pack.objects.length, 15);

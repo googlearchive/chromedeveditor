@@ -19,6 +19,7 @@
   },
   "permissions": [
     "https://www.google-analytics.com/",
+    "https://github.com/*",
     "clipboardRead",
     "clipboardWrite",
     {

@@ -355,12 +355,12 @@ var FileObjectStore = (function() {
                 self.load(success);
             },
             function(e){
-                if (e.code == FileError.NOT_FOUND_ERR){
+               // if (e.code == FileError.NOT_FOUND_ERR){
                     self._init(success);
-                }
-                else{
-                    self.fileError(e);
-                }
+                //}
+               // else{
+                 //   self.fileError(e);
+                //}
             });
         },
 
@@ -369,6 +369,7 @@ var FileObjectStore = (function() {
             var self = this;
             fileutils.mkdirs(root, '.git/objects', function(objectsDir){
                 self.objectsDir = objectsDir;
+                console.log('holy cow');
                 fileutils.mkfile(root, '.git/HEAD', 'ref: refs/heads/master\n', success, self.fileError);
             }, this.fileError);
 

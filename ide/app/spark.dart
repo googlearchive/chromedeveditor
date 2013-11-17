@@ -7,10 +7,13 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
+import 'dart:js' as js;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
+
+import 'package:chrome_gen/src/files.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -25,6 +28,13 @@ import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart';
 import 'test/all.dart' as all_tests;
+
+import 'lib/git/commands/clone.dart';
+import 'lib/git/git_objectstore.dart';
+
+import 'lib/git/file_operations.dart';
+
+import 'dart:js' ;
 
 /**
  * Returns true if app.json contains a test-mode entry set to true.
@@ -47,7 +57,37 @@ Future<bool> isTestMode() {
   });
 }
 
+gitSuccess(js.JsObject fs) {
+
+  CrFileSystem cfs = new CrFileSystem.fromProxy(fs);
+  cfs.root.createDirectory('sparktest').then((chrome.DirectoryEntry dir) {
+    GitOptions options = new GitOptions();
+    options.root = dir;
+    options.url = 'https://github.com/gaurave/spark-t.git';
+    options.store = new ObjectStore(dir);
+    Clone clone = new Clone(options);
+    options.store.init().then((_) {
+      clone.clone().then((_) {
+        FileOps.listFiles(dir).then((entries) {
+          entries.forEach((e) {
+            FileOps.listFiles(dir).then((ent) {
+              window.console.log(ent);
+            });
+          });
+          window.console.log(entries);
+        });
+      });
+    });
+  });
+}
+
+gitTest() {
+  js.JsObject git = js.context['GitApi'];
+  js.JsObject fs = git.callMethod('getFs', [gitSuccess]);
+}
+
 void main() {
+  gitTest();
   isTestMode().then((testMode) {
     Spark spark = new Spark(testMode);
     spark.start();

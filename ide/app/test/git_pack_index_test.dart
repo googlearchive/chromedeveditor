@@ -27,7 +27,7 @@ Future<Pack> initPack() {
       return entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
         Uint8List data = new Uint8List.fromList(binaryData.getBytes());
         Pack pack = new Pack(data, null);
-        return pack.parseAll().then((_) {
+        return pack.parseAll(null).then((_) {
           return new Future.value(pack);
         });
       });

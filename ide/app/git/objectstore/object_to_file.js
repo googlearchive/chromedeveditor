@@ -16,12 +16,12 @@ var object2file = {
             entries.asyncEach(function(entry, done){
                 if (entry.isBlob){
                     var name = entry.name;
-                    expandBlob(dir, store, name, entry.sha, done);
+                    object2file.expandBlob(dir, store, name, entry.sha, done);
                 }
                 else{
                     var sha = entry.sha;
                     fileutils.mkdirs(dir, entry.name, function(newDir){
-                        expandTree(newDir, store, sha, done);
+                        object2file.expandTree(newDir, store, sha, done);
                     });
                 }
             },callback);

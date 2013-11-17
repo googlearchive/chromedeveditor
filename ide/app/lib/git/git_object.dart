@@ -9,7 +9,7 @@ import 'dart:core';
 import 'dart:typed_data';
 
 import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
-import 'package:utf/utf.dart';
+
 
 import 'git_object_utils.dart';
 
@@ -24,18 +24,19 @@ abstract class GitObject {
   /**
    * constructs a GitObject of the given type.
    */
-  static GitObject make(String sha, String type, String content) {
+  static GitObject make(String sha, String type, content) {
     switch (type) {
       case ObjectTypes.BLOB:
         return new BlobObject(sha, content);
       case ObjectTypes.TREE:
+      case "Tree":
         return new TreeObject(sha, content);
       case ObjectTypes.COMMIT:
         return new CommitObject(sha, content);
       case ObjectTypes.TAG:
         return new TagObject(sha, content);
       default:
-        throw new ArgumentError("Unsupported git object type.");
+        throw new ArgumentError("Unsupported git object type: ${type}");
     }
   }
 
@@ -90,7 +91,7 @@ class TreeObject extends GitObject {
 
   List<TreeEntry> entries;
 
-  TreeObject(String sha, String data) {
+  TreeObject(String sha, Uint8List data) {
     this._type = ObjectTypes.TREE;
     this._sha = sha;
     this.data = data;
@@ -99,8 +100,8 @@ class TreeObject extends GitObject {
 
   // Parses the byte stream and constructs the tree object.
   void _parse() {
-    Uint8List buffer = new Uint8List.fromList(encodeUtf8(data));
-    List<TreeEntry> treeEntries;
+    Uint8List buffer = data;
+    List<TreeEntry> treeEntries = [];
     int idx = 0;
     while (idx < buffer.length) {
       int entryStart = idx;
@@ -160,10 +161,10 @@ class CommitObject extends GitObject {
   String _message;
   String treeSha;
 
-  CommitObject(String sha, String data) {
+  CommitObject(String sha, Uint8List data) {
     this._type = ObjectTypes.COMMIT;
     this._sha = sha;
-    this.data = data;
+    this.data = UTF8.decode(data);
     _parseData();
   }
 
@@ -196,13 +197,14 @@ class CommitObject extends GitObject {
   }
 
   Author _parseAuthor(String input) {
-    final RegExp pattern = new RegExp('/^(.*) <(.*)> (\d+) (\+|\-)\d\d\d\d\$/');
-    List<Match> match = pattern.allMatches(input);
+
+    final RegExp pattern = new RegExp(r'(.*) <(.*)> (\d+) (\+|\-)\d\d\d\d');
+    List<Match> match = pattern.allMatches(input).toList();
 
     Author author = new Author();
-    author.name = match[0].group(0);
-    author.email = match[2].group(0);
-    author.timestamp = int.parse(match[3].group(0));
+    author.name = match[0].group(1);
+    author.email = match[0].group(2);
+    author.timestamp = int.parse(match[0].group(3));
     author.date = new DateTime.fromMillisecondsSinceEpoch(
         author.timestamp, isUtc:true);
     return author;
