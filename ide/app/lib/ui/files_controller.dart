@@ -24,8 +24,6 @@ class FilesController implements TreeViewDelegate {
   FilesControllerDelegate _delegate;
   Map<String, Resource> _filesMap;
 
-  bool openOnSelection = true;
-
   FilesController(Workspace workspace, FilesControllerDelegate delegate) {
     _workspace = workspace;
     _delegate = delegate;
@@ -109,20 +107,23 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
 
-  void treeViewSelectedChanged(TreeView view, List<String> nodeUIDs) {
+  void treeViewSelectedChanged(TreeView view,
+                               List<String> nodeUIDs,
+                               Event event) {
     if (nodeUIDs.isEmpty) {
       return;
     }
 
-    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: openOnSelection);
+    bool altKeyPressed = ((event as MouseEvent).altKey);
+    // If alt key is pressed, it will open a new tab.
+    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true,
+        replaceCurrent: !altKeyPressed);
   }
 
-  void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs) {
-    if (nodeUIDs.isEmpty) {
-      return;
-    }
-
-    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true);
+  void treeViewDoubleClicked(TreeView view,
+                             List<String> nodeUIDs,
+                             Event event) {
+    // Do nothing.
   }
 
   String treeViewDropEffect(TreeView view) {

@@ -131,7 +131,6 @@ class Spark extends Application implements FilesControllerDelegate {
       localPrefs.setValue('lastFileSelection', tab.file.path);
     });
     _filesController = new FilesController(workspace, this);
-    _filesController.openOnSelection = false;
 
     setupSplitView();
     setupFileActions();
@@ -256,9 +255,11 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void selectInEditor(Resource file, {bool forceOpen: false}) {
-    if (forceOpen || editorManager.isFileOpend(file)) {
-      editorArea.selectFile(file, forceOpen: forceOpen);
+  void selectInEditor(Resource file,
+                      {bool forceOpen: false, bool replaceCurrent: true}) {
+    if (forceOpen || editorManager.isFileOpened(file)) {
+      editorArea.selectFile(file, forceOpen: forceOpen,
+          replaceCurrent: replaceCurrent);
     }
   }
 

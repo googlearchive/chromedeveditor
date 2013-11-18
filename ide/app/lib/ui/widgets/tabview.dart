@@ -164,6 +164,22 @@ class TabView {
     return tab;
   }
 
+  Tab replace(Tab tabToReplace, Tab tab, {bool switchesTab: true}) {
+    if (tabToReplace == null) {
+      add(tab, switchesTab: switchesTab);
+    } else {
+      int index = tabs.indexOf(tabToReplace);
+      remove(tabToReplace);
+      tabs.insert(index, tab);
+      _tabViewWorkspace.children.insert(index, tab.component);
+      _tabBarScrollable.children.insert(index, tab._label);
+      if (switchesTab) {
+        selectedTab = tab;
+      }
+    }
+    return tab;
+  }
+
   void scrollIntoView(Tab tab) {
     var label = tab._label;
     var scroller = _tabBarScroller;

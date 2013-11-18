@@ -145,7 +145,9 @@ class TreeView implements ListViewDelegate {
   void setNodeExpanded(String nodeUID, bool expanded) {
     _rowsMap[nodeUID].expanded = expanded;
     reloadData();
-    _delegate.treeViewSelectedChanged(this, _rowIndexesToNodeUIDs(_listView.selection));
+    _delegate.treeViewSelectedChanged(this,
+        _rowIndexesToNodeUIDs(_listView.selection),
+        null);
   }
 
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
@@ -186,12 +188,20 @@ class TreeView implements ListViewDelegate {
     return result;
   }
 
-  void listViewSelectedChanged(ListView view, List<int> rowIndexes) {
-    _delegate.treeViewSelectedChanged(this, _rowIndexesToNodeUIDs(rowIndexes));
+  void listViewSelectedChanged(ListView view,
+                               List<int> rowIndexes,
+                               Event event) {
+    _delegate.treeViewSelectedChanged(this,
+        _rowIndexesToNodeUIDs(rowIndexes),
+        event);
   }
 
-  void listViewDoubleClicked(ListView view, List<int> rowIndexes) {
-    _delegate.treeViewDoubleClicked(this, _rowIndexesToNodeUIDs(rowIndexes));
+  void listViewDoubleClicked(ListView view,
+                             List<int> rowIndexes,
+                             Event event) {
+    _delegate.treeViewDoubleClicked(this,
+        _rowIndexesToNodeUIDs(rowIndexes),
+        event);
   }
 
   String listViewDropEffect(ListView view) {
