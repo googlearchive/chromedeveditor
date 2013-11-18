@@ -50,17 +50,25 @@ class Workspace implements Container {
   Project get project => null;
   Workspace get workspace => this;
 
-  Future<Resource> link(chrome.Entry entity, bool syncable) {
+  Future<Resource> link(chrome.Entry entity, {bool syncable: false}) {
+    return _link(entity, syncable: syncable, fireEvent: true);
+  }
+
+  Future<Resource> _link(chrome.Entry entity, {bool syncable: false, bool fireEvent: true}) {
     if (entity.isFile) {
       var resource = new File(this, entity, syncable);
       _children.add(resource);
-      _controller.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
+      if (fireEvent) {
+        _controller.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
+      }
       return new Future.value(resource);
     } else {
       var project = new Project(this, entity, syncable);
       _children.add(project);
-      return _gatherChildren(project, syncable).then((container){
-        _controller.add(new ResourceChangeEvent(container, ResourceEventType.ADD));
+      return _gatherChildren(project, syncable).then((container) {
+        if (fireEvent) {
+          _controller.add(new ResourceChangeEvent(container, ResourceEventType.ADD));
+        }
         return container;
       });
     }
@@ -119,7 +127,7 @@ class Workspace implements Container {
         List<String> ids = JSON.decode(s);
         Future.forEach(ids, (id) {
           return chrome.fileSystem.restoreEntry(id)
-              .then((entry) => link(entry, false))
+              .then((entry) => _link(entry, fireEvent: false))
               .catchError((_) => null);
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
@@ -265,8 +273,11 @@ class File extends Resource {
 
   Future<String> getContents() => (_entry as chrome.ChromeFileEntry).readText();
 
-  // TODO: fire change event
-  Future setContents(String contents) => (_entry as chrome.ChromeFileEntry).writeText(contents);
+  Future setContents(String contents) {
+    (_entry as chrome.ChromeFileEntry).writeText(contents).then((_) {
+      workspace._fireEvent(new ResourceChangeEvent(this, ResourceEventType.CHANGE));
+    });
+  }
 }
 
 class Project extends Folder {
