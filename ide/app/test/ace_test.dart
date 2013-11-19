@@ -7,6 +7,7 @@ library spark.ace_test;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:ace/ace.dart' show EditSession;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
@@ -22,8 +23,7 @@ main() {
 
 class MockAceEditor implements AceEditor {
   /// The element to put the editor in.
-  final Element parentElement = null;
-
+  final Element rootElement = null;
   MockAceEditor();
 
   EditSession createEditSession(String text, String fileName) {
@@ -33,7 +33,7 @@ class MockAceEditor implements AceEditor {
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }
-  void switchTo(EditSession session) { }
+  AceEditorState state;
   set theme(String value) { }
   String get theme => null;
 }

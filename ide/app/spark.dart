@@ -17,7 +17,6 @@ import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
-import 'lib/editors.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
@@ -63,7 +62,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   AceEditor editor;
   ws.Workspace workspace;
-  EditorManager editorManager;
+  AceEditorManager editorManager;
   EditorArea editorArea;
   analytics.Tracker tracker = new analytics.NullTracker();
 
@@ -103,7 +102,7 @@ class Spark extends Application implements FilesControllerDelegate {
     workspace = new ws.Workspace(localPrefs);
     editor = new AceEditor(new DivElement());
 
-    editorManager = new EditorManager(workspace, editor, localPrefs);
+    editorManager = new AceEditorManager(workspace, editor, localPrefs);
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
