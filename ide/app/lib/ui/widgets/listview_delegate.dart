@@ -40,14 +40,16 @@ abstract class ListViewDelegate {
    * index `rowIndex` is clicked.
    * `view` is the list the callback is called from.
    */
-  void listViewSelectedChanged(ListView view, List<int> rowIndexes);
+  void listViewSelectedChanged(ListView view,
+                               List<int> rowIndexes,
+                               Event event);
 
   /**
    * The implementation of this method will be run when the cell at the given
    * index `rowIndex` is double-clicked.
    * `view` is the list the callback is called from.
    */
-  void listViewDoubleClicked(ListView view, List<int> rowIndexes);
+  void listViewDoubleClicked(ListView view, List<int> rowIndexes, Event event);
 
   /**
    * This method is called on dragenter.

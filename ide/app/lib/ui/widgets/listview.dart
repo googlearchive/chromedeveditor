@@ -77,7 +77,7 @@ class ListView {
     _container.onClick.listen((event) {
       _removeCurrentSelectionHighlight();
       _selection.clear();
-      _delegate.listViewSelectedChanged(this, _selection.toList());
+      _delegate.listViewSelectedChanged(this, _selection.toList(), event);
     });
     _draggingCount = 0;
     _draggingOver = false;
@@ -170,7 +170,7 @@ class ListView {
       _selection.add(rowIndex);
     }
     _addCurrentSelectionHighlight();
-    _delegate.listViewSelectedChanged(this, _selection.toList());
+    _delegate.listViewSelectedChanged(this, _selection.toList(), event);
   }
 
   List<int> get selection => _selection.toList();
@@ -188,7 +188,7 @@ class ListView {
    * Callback on a double click.
    */
   void _onDoubleClicked(int rowIndex, Event event) {
-    _delegate.listViewDoubleClicked(this, _selection.toList());
+    _delegate.listViewDoubleClicked(this, _selection.toList(), event);
   }
 
   /**

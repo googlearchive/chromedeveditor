@@ -20,7 +20,7 @@ Element createMenuSeparator() => new LIElement()..classes.add('divider');
  * action's name, keybinding, and disablement state. Selecting the menu item
  * will call the action's `invoke()` method.
  */
-Element createMenuItem(Action action, {bool showAccelerator: true}) {
+Element createMenuItem(Action action, {Object context, bool showAccelerator: true}) {
   LIElement li = new LIElement();
 
   AnchorElement a = new AnchorElement()
@@ -35,7 +35,7 @@ Element createMenuItem(Action action, {bool showAccelerator: true}) {
   }
 
   li.children.add(a);
-  li.onClick.listen((_) => action.invoke());
+  li.onClick.listen((_) => action.invoke(context));
 
   return li;
 }
@@ -44,8 +44,8 @@ Element createMenuItem(Action action, {bool showAccelerator: true}) {
  * Given a list of actions (possibly from [ActionManager.getContextActions])
  * return a menu element representing those actions.
  */
-Element createContextMenu(List<Action> actions,
-                   {bool showAccelerators: true, bool pullRight: false}) {
+Element createContextMenu(List<Action> actions, Object context,
+                          {bool pullRight: false}) {
 //  <div class="dropdown">
 //    <ul class="dropdown-menu" role="menu">
 //      ...
@@ -65,7 +65,8 @@ Element createContextMenu(List<Action> actions,
       category = action.category;
     }
 
-    ul.children.add(createMenuItem(action, showAccelerator: showAccelerators));
+    ul.children.add(
+        createMenuItem(action, context: context, showAccelerator: false));
   }
 
   return ul;

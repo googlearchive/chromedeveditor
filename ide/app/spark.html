@@ -10,12 +10,6 @@
   <title>Spark</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="packages/bootjack/css/bootstrap.css">
-  <link rel="stylesheet" href="packages/bootjack/css/bootstrap-theme.css">
-  <link rel="stylesheet" href="lib/ui/widgets/splitview.css">
-  <link rel="stylesheet" href="lib/ui/widgets/listview.css">
-  <link rel="stylesheet" href="lib/ui/widgets/treeview.css">
-  <link rel="stylesheet" href="lib/ui/widgets/tabview.css">
   <link rel="stylesheet" href="spark.css">
 
   <!-- template for FileItemCell -->
@@ -23,8 +17,12 @@
     <div class="fileview-filename-container">
       <div class="filename">
       </div>
-      <div class="menu">
-        <span class="caret"></span>
+      <div class="dropdown container">
+	      <div class="menu pull-right">
+				  <button class="dropdown-toggle" type="button" data-toggle="dropdown">
+				    <span class="caret"></span>
+				  </button>
+	      </div>
       </div>
     </div>
   </template>

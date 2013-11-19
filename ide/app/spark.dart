@@ -131,7 +131,6 @@ class Spark extends Application implements FilesControllerDelegate {
       localPrefs.setValue('lastFileSelection', tab.file.path);
     });
     _filesController = new FilesController(workspace, this);
-    _filesController.openOnSelection = false;
 
     setupSplitView();
     setupFileActions();
@@ -192,7 +191,7 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
-        workspace.link(entry, false).then((file) {
+        workspace.link(entry).then((file) {
           editorArea.selectFile(file, forceOpen: true, switchesTab: true);
           workspace.save();
         });
@@ -207,7 +206,7 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
-        workspace.link(entry, false).then((file) {
+        workspace.link(entry).then((file) {
           _filesController.selectLastFile();
           workspace.save();
         });
@@ -272,9 +271,11 @@ class Spark extends Application implements FilesControllerDelegate {
 
   // Implementation of FilesControllerDelegate interface.
 
-  void selectInEditor(ws.Resource file, {bool forceOpen: false}) {
-    if (forceOpen || editorManager.isFileOpend(file)) {
-      editorArea.selectFile(file, forceOpen: forceOpen);
+  void selectInEditor(ws.File file,
+                      {bool forceOpen: false, bool replaceCurrent: true}) {
+    if (forceOpen || editorManager.isFileOpened(file)) {
+      editorArea.selectFile(file, forceOpen: forceOpen,
+          replaceCurrent: replaceCurrent);
     }
   }
 
@@ -428,11 +429,11 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
   void _invoke([ws.Resource resource]) {
     if (resource == null) {
-      spark.deleteFile();
+      //spark.deleteFile();
     } else {
-      // TODO: ask the user first?
+      // TODO: ask the user first
       //resource.delete();
-      spark.notImplemented('delete file');
+      spark.notImplemented('delete file: ${resource.path}');
       print('deleting ${resource.path}');
     }
   }
