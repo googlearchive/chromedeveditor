@@ -133,8 +133,8 @@ class TreeView implements ListViewDelegate {
     _rows.forEach((TreeViewRow row) {
       if (savedSelection.contains(row.nodeUID)) {
         restoredSelection.add(idx);
-        idx++;
       }
+      idx++;
     });
     _listView.selection = restoredSelection;
   }
@@ -143,11 +143,25 @@ class TreeView implements ListViewDelegate {
    * Sets expanded state of a node.
    */
   void setNodeExpanded(String nodeUID, bool expanded) {
+    HashSet<String> previousSelection = new HashSet.from(selection);
     _rowsMap[nodeUID].expanded = expanded;
     reloadData();
-    _delegate.treeViewSelectedChanged(this,
-        _rowIndexesToNodeUIDs(_listView.selection),
-        null);
+    HashSet<String> currentSelection = new HashSet.from(selection);
+
+    // Testing previousSelection == currentSelection won't behaves as expected
+    // then, we're testing if the set are the same using intersection.
+    bool changed = false;
+    if (previousSelection.length != currentSelection.length) {
+      changed = true;
+    }
+    if (previousSelection.length != previousSelection.intersection(currentSelection).length) {
+      changed = true;
+    }
+    if (changed) {
+      _delegate.treeViewSelectedChanged(this,
+          _rowIndexesToNodeUIDs(_listView.selection),
+          null);
+    }
   }
 
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
