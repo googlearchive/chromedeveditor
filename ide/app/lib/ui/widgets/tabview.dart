@@ -17,15 +17,14 @@ class TabBeforeCloseEvent {
 class Tab {
   /// Parent [TabView]
   final TabView tabView;
-  final Element component;
+  Element _page;
 
   DivElement _label;
   DivElement _labelCaption;
-  DivElement _closeButton;
+  ButtonElement _closeButton;
+  DivElement _pageContainer;
 
-  Tab(this.tabView, this.component, {closable: true}) {
-    this.component.classes.add('tabview-tabcomponent');
-
+  Tab(this.tabView, {Element page: null, bool closable: true}) {
     _label = new DivElement()..classes.add('tabview-tablabel');
     _label.onClick.listen((e) {
       select();
@@ -35,8 +34,10 @@ class Tab {
 
     _labelCaption = new DivElement()..classes.add('tabview-tablabel-caption');
 
-    _closeButton = new DivElement()
-        ..classes.add('tabview-tablabel-closebutton');
+    _closeButton = new ButtonElement()
+        ..classes.add('tabview-tablabel-closebutton')
+        ..classes.add('close')
+        ..type = 'button';
     _closeButton.appendHtml('&times;');
     _closeButton.onClick.listen((e) {
       tabView.remove(this);
@@ -44,8 +45,10 @@ class Tab {
       e.preventDefault();
     });
     _label.children.addAll([_labelCaption, _closeButton]);
+    _pageContainer = new DivElement()..classes.add('tabview-page-container');
 
     this.closable = closable;
+    this.page = page;
   }
 
   String get label => _labelCaption.innerHtml;
@@ -67,12 +70,37 @@ class Tab {
   Stream<Tab> get onSelected =>
       tabView._onSelectedStreamController.stream.where((t) => t == this);
 
+  Element get page => _page;
+  set page(Element value)  {
+    if (value == _page) return;
+    if (_page != null) _page.remove();
+    _page = value;
+    if (value != null) _pageContainer.append(value);
+  }
+
+  void deactivate() {
+    _pageContainer.classes.remove('tabview-page-container-active');
+    _label.classes.remove('tabview-tablabel-active');
+  }
+
+  void activate() {
+    validatePage();
+    _pageContainer.classes.add('tabview-page-container-active');
+    _label.classes.add('tabview-tablabel-active');
+    tabView.scrollIntoView(this);
+  }
+
   select() => tabView.selectedTab = this;
 
   bool close() => tabView.remove(this);
 
+  void validatePage() {
+    if (_page != null && _page.parent != _pageContainer)
+      _pageContainer.append(_page);
+  }
+
   void _cleanup() {
-    component.remove();
+    _pageContainer.remove();
     _label.remove();
   }
 }
@@ -122,7 +150,7 @@ class TabView {
     parentElement.children.add(_tabViewContainer);
 
     originalElements.forEach((Element element){
-      Tab tab = add(new Tab(this, element));
+      Tab tab = add(new Tab(this, page: element));
       if (element.attributes['data-title'] != null) {
         tab.label = element.attributes['data-title'];
       }
@@ -132,21 +160,9 @@ class TabView {
   Tab get selectedTab => _selectedTab;
   void set selectedTab(Tab tab) {
     if (_selectedTab == tab) return;
-    if (_selectedTab != null) {
-      _selectedTab.component.classes.remove('tabview-tabcomponent-active');
-      _selectedTab._label.classes.remove('tabview-tablabel-active');
-    }
+    if (_selectedTab != null) _selectedTab.deactivate();
     _selectedTab = tab;
-    if (tab != null) {
-      if (tab.component.parent != _tabViewContainer) {
-        // This may be due to removing of shared tab.
-        _tabViewWorkspace.children.add(tab.component);
-      }
-      tab.component.classes.add('tabview-tabcomponent-active');
-      tab._label.classes.add('tabview-tablabel-active');
-      scrollIntoView(tab);
-    }
-
+    if (tab != null) tab.activate();
     _onSelectedStreamController.add(tab);
   }
 
@@ -156,7 +172,7 @@ class TabView {
 
   Tab add(Tab tab, {bool switchesTab: true}) {
     tabs.add(tab);
-    _tabViewWorkspace.children.add(tab.component);
+    _tabViewWorkspace.children.add(tab._pageContainer);
     _tabBarScrollable.children.add(tab._label);
     if (switchesTab) {
       selectedTab = tab;
@@ -171,7 +187,7 @@ class TabView {
       int index = tabs.indexOf(tabToReplace);
       remove(tabToReplace);
       tabs.insert(index, tab);
-      _tabViewWorkspace.children.insert(index, tab.component);
+      _tabViewWorkspace.children.insert(index, tab._pageContainer);
       _tabBarScrollable.children.insert(index, tab._label);
       if (switchesTab) {
         selectedTab = tab;
@@ -197,7 +213,7 @@ class TabView {
     var beforeCloseEvent = new TabBeforeCloseEvent(tab);
     _onBeforeCloseStreamController.add(beforeCloseEvent);
     if (beforeCloseEvent._canceled) return false;
-    tab.component.remove();
+
     tab._cleanup();
     int index = tabs.indexOf(tab);
     tabs.removeAt(index);
@@ -212,11 +228,7 @@ class TabView {
       }
     }
 
-    if (_selectedTab != null &&
-        _selectedTab.component.parent != _tabViewContainer) {
-      // This may be due to removing of shared tab.
-      _tabViewWorkspace.children.add(tab.component);
-    }
+    if (_selectedTab != null) _selectedTab.validatePage();
 
     _onCloseStreamController.add(tab);
     return true;

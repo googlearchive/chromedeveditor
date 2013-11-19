@@ -24,7 +24,7 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
-import 'lib/workspace.dart';
+import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
 /**
@@ -62,7 +62,7 @@ class Spark extends Application implements FilesControllerDelegate {
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   AceEditor editor;
-  Workspace workspace;
+  ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
   analytics.Tracker tracker = new analytics.NullTracker();
@@ -76,6 +76,7 @@ class Spark extends Application implements FilesControllerDelegate {
   FilesController _filesController;
   PlatformInfo _platformInfo;
   TestDriver _testDriver;
+  bootjack.Modal _aboutBox;
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -99,12 +100,12 @@ class Spark extends Application implements FilesControllerDelegate {
       close();
     });
 
-    workspace = new Workspace(localPrefs);
-
+    workspace = new ws.Workspace(localPrefs);
     editor = new AceEditor(new DivElement());
+
     editorManager = new EditorManager(workspace, editor, localPrefs);
     editorManager.loaded.then((_) {
-      List<Resource> files = editorManager.files.toList();
+      List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
         editorArea.selectFile(file, forceOpen: true, switchesTab: false);
       });
@@ -114,7 +115,7 @@ class Spark extends Application implements FilesControllerDelegate {
           editorArea.tabs[0].select();
           return;
         }
-        Resource resource = workspace.restoreResource(filePath);
+        ws.Resource resource = workspace.restoreResource(filePath);
         if (resource == null) {
           editorArea.tabs[0].select();
           return;
@@ -203,6 +204,21 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
+  void openProject(_) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
+      chrome.ChromeFileEntry entry = result.entry;
+
+      if (entry != null) {
+        workspace.link(entry, false).then((file) {
+          _filesController.selectLastFile();
+          workspace.save();
+        });
+      }
+    }).catchError((e) => null);
+  }
+
   void deleteFile(_) {
     // TODO: handle multiple selection
     var sel = _filesController.getSelection();
@@ -217,16 +233,17 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new ProjectOpenAction(this));
   }
 
   void buildMenu() {
     UListElement ul = querySelector('#hotdogMenu ul');
 
     ul.children.insert(0, _createLIElement(null));
+    ul.children.insert(0, _createMenuItem(actionManager.getAction('project-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-delete')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
-
 
     querySelector('#themeLeft').onClick.listen((e) {
       e.stopPropagation();
@@ -244,7 +261,6 @@ class Spark extends Application implements FilesControllerDelegate {
     }
 
     ul.children.add(_createLIElement(null));
-    ul.children.add(_createLIElement('Check For Updates…', _handleUpdateCheck));
     ul.children.add(_createLIElement('About Spark', _handleAbout));
   }
 
@@ -254,8 +270,7 @@ class Spark extends Application implements FilesControllerDelegate {
     element.classes.toggle('error', error);
   }
 
-  // Implementation of FilesControllerDelegate interface.
-  void selectInEditor(Resource file,
+  void selectInEditor(ws.Resource file,
                       {bool forceOpen: false, bool replaceCurrent: true}) {
     if (forceOpen || editorManager.isFileOpened(file)) {
       editorArea.selectFile(file, forceOpen: forceOpen,
@@ -271,23 +286,20 @@ class Spark extends Application implements FilesControllerDelegate {
     syncPrefs.setValue('aceTheme', themeName);
   }
 
-  void _handleUpdateCheck() {
-    showStatus("Checking for updates...");
-
-    chrome.runtime.requestUpdateCheck().then((chrome.RequestUpdateCheckResult result) {
-      if (result.status == 'update_available') {
-        // result.details['version']
-        showStatus("An update is available.");
-      } else {
-        showStatus("Application is up to date.");
-      }
-    }).catchError((_) => showStatus(''));
-  }
-
   void _handleAbout() {
-    bootjack.Modal modal = bootjack.Modal.wire(querySelector('#aboutDialog'));
-    modal.element.querySelector('#aboutVersion').text = appVersion;
-    modal.show();
+    if (_aboutBox == null) {
+      _aboutBox = bootjack.Modal.wire(querySelector('#aboutDialog'));
+
+      var checkbox = _aboutBox.element.querySelector('#analyticsCheck');
+      checkbox.checked = tracker.service.getConfig().isTrackingPermitted();
+      checkbox.onChange.listen((e) {
+        tracker.service.getConfig().setTrackingPermitted(checkbox.checked);
+      });
+
+      _aboutBox.element.querySelector('#aboutVersion').text = appVersion;
+    }
+
+    _aboutBox.show();
   }
 
   LIElement _createLIElement(String title, [Function onClick]) {
@@ -462,4 +474,10 @@ class FileExitAction extends SparkAction {
       chrome.app.window.current().close();
     });
   }
+}
+
+class ProjectOpenAction extends SparkAction {
+  ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
+
+  void _invoke() => spark.openProject(null);
 }

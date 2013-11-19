@@ -7,7 +7,7 @@
  */
 library spark.ui.widgets.files_controller;
 
-import 'dart:html';
+import 'dart:html' as html;
 
 import 'files_controller_delegate.dart';
 import 'widgets/file_item_cell.dart';
@@ -29,7 +29,8 @@ class FilesController implements TreeViewDelegate {
     _delegate = delegate;
     _files = [];
     _filesMap = {};
-    _treeView = new TreeView(querySelector('#fileViewArea'), this);
+
+    _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
     _treeView.dropEnabled = true;
 
     _workspace.onResourceChange.listen((event) {
@@ -41,11 +42,7 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
-    int index = _files.indexOf(file);
-    if (index >= 0 &&
-        _treeView.listView.selection.length == 1 &&
-        _treeView.listView.selection.first == index) return;
-    _treeView.listView.selection = [index];
+    _treeView.selection = [file.path];
     _delegate.selectInEditor(file, forceOpen: forceOpen);
   }
 
@@ -53,18 +50,14 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
-
-    _treeView.listView.selection = [_files.length - 1];
-    _delegate.selectInEditor(_files.last, forceOpen: forceOpen);
+    selectFile(_files.last, forceOpen: forceOpen);
   }
 
   void selectFirstFile({bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;
     }
-
-    _treeView.listView.selection = [0];
-    _delegate.selectInEditor(_files.first, forceOpen: forceOpen);
+    selectFile(_files[0], forceOpen: forceOpen);
   }
 
   // Implementation of [TreeViewDelegate] interface.
@@ -73,13 +66,15 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return true;
     } else {
-      return false;
+      return (_filesMap[nodeUID] is Container);
     }
   }
 
   int treeViewNumberOfChildren(TreeView view, String nodeUID) {
     if (nodeUID == null) {
       return _files.length;
+    } else if (_filesMap[nodeUID] is Container) {
+      return (_filesMap[nodeUID] as Container).getChildren().length;
     } else {
       return 0;
     }
@@ -89,7 +84,7 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return _files[childIndex].path;
     } else {
-      return null;
+      return (_filesMap[nodeUID] as Container).getChildren()[childIndex].path;
     }
   }
 
@@ -109,12 +104,12 @@ class FilesController implements TreeViewDelegate {
 
   void treeViewSelectedChanged(TreeView view,
                                List<String> nodeUIDs,
-                               Event event) {
+                               html.Event event) {
     if (nodeUIDs.isEmpty) {
       return;
     }
 
-    bool altKeyPressed = ((event as MouseEvent).altKey);
+    bool altKeyPressed = ((event as html.MouseEvent).altKey);
     // If alt key is pressed, it will open a new tab.
     _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true,
         replaceCurrent: !altKeyPressed);
@@ -122,7 +117,7 @@ class FilesController implements TreeViewDelegate {
 
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUIDs,
-                             Event event) {
+                             html.Event event) {
     // Do nothing.
   }
 
@@ -130,7 +125,7 @@ class FilesController implements TreeViewDelegate {
     return 'copy';
   }
 
-  void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer) {
+  void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     // TODO(dvh): Import to the workspace the files referenced by
     // dataTransfer.files
   }
@@ -141,15 +136,37 @@ class FilesController implements TreeViewDelegate {
   void _processEvents(ResourceChangeEvent event) {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
-      _files.add(event.resource);
-      _filesMap[event.resource.path] = event.resource;
+
+      var resource = event.resource;
+      _files.add(resource);
+      _recursiveAddResource(resource);
       _treeView.reloadData();
     }
     if (event.type == ResourceEventType.DELETE) {
-      _files.remove(event.resource);
+      var resource = event.resource;
+      _files.remove(resource);
+      _recursiveRemoveResource(resource);
       // TODO: make a more informed selection, maybe before the delete?
       selectLastFile();
       _treeView.reloadData();
+    }
+  }
+
+  void _recursiveAddResource(Resource resource) {
+    _filesMap[resource.path] = resource;
+    if (resource is Container) {
+      resource.getChildren().forEach((child) {
+        _recursiveAddResource(child);
+      });
+    }
+  }
+
+  void _recursiveRemoveResource(Resource resource) {
+    _filesMap.remove(resource.path);
+    if (resource is Container) {
+      resource.getChildren().forEach((child) {
+        _recursiveRemoveResource(child);
+      });
     }
   }
 }

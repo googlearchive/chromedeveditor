@@ -3,12 +3,6 @@
 // license that can be found in the LICENSE file.
 
 (function() {
-  if (navigator.webkitStartDart) {
-    // TODO(sergeygs): Remove this completely after Dart 1.0.
-    // This is unnecessary for upcoming releses of Dartium.
-    navigator.webkitStartDart();
-  }
-
   if (navigator.userAgent.indexOf('(Dart)') === -1) {
     var scripts = document.getElementsByTagName("script");
 
