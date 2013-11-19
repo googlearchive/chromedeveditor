@@ -90,17 +90,14 @@ class EditorArea extends TabView {
       return;
     }
 
-    if (!replaceCurrent) {
-      if (forceOpen) {
-        AceEditor editor = editorProvider.createEditorForFile(file);
-        var tab = new EditorTab(this, editor, file);
-        add(tab, switchesTab: switchesTab);
-      }
-    } else {
-      Tab previousSelectedTab = selectedTab;
+    if (forceOpen || replaceCurrent) {
       AceEditor editor = editorProvider.createEditorForFile(file);
       var tab = new EditorTab(this, editor, file);
-      replace(previousSelectedTab, tab, switchesTab: switchesTab);
+      if (replaceCurrent) {
+        replace(selectedTab, tab, switchesTab: switchesTab);
+      } else {
+        add(tab, switchesTab: switchesTab);
+      }
     }
   }
 
