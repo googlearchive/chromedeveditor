@@ -60,6 +60,12 @@ class EditorArea extends TabView {
     return super.add(tab, switchesTab: switchesTab);
   }
 
+  Tab replace(EditorTab tabToReplace, EditorTab tab, {bool switchesTab: true}) {
+    _tabOfFile[tab.file] = tab;
+    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
+    return super.replace(tabToReplace, tab, switchesTab: switchesTab);
+  }
+
   // TabView
   bool remove(EditorTab tab, {bool switchesTab: true}) {
     if (super.remove(tab, switchesTab: switchesTab)) {
@@ -74,21 +80,26 @@ class EditorArea extends TabView {
   /// [selectFile] will be called instead. Otherwise the editor provide is
   /// requested to switch the file to the editor in case the editor is shared.
   void selectFile(Resource file,
-                {bool forceOpen: false, bool switchesTab: true}) {
-    if (!_tabOfFile.containsKey(file)) {
-      if (forceOpen) {
-        AceEditor editor = editorProvider.createEditorForFile(file);
-        var tab = new EditorTab(this, editor, file);
-        add(tab, switchesTab: switchesTab);
-      } else {
-        return;
+                {bool forceOpen: false, bool switchesTab: true,
+                 bool replaceCurrent: true}) {
+    if (_tabOfFile.containsKey(file)) {
+      EditorTab tab = _tabOfFile[file];
+      editorProvider.selectFileForEditor(tab.editor, file);
+      if (switchesTab) {
+        tab.select();
       }
+      return;
     }
 
-    EditorTab tab = _tabOfFile[file];
-    editorProvider.selectFileForEditor(tab.editor, file);
-    if (switchesTab)
-      tab.select();
+    if (forceOpen || replaceCurrent) {
+      AceEditor editor = editorProvider.createEditorForFile(file);
+      var tab = new EditorTab(this, editor, file);
+      if (replaceCurrent) {
+        replace(selectedTab, tab, switchesTab: switchesTab);
+      } else {
+        add(tab, switchesTab: switchesTab);
+      }
+    }
   }
 
   /// Closes the tab.
