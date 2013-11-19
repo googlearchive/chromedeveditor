@@ -46,10 +46,6 @@ Element createMenuItem(Action action, {Object context, bool showAccelerator: tru
  */
 Element createContextMenu(List<Action> actions, Object context,
                           {bool pullRight: false}) {
-//  <div class="dropdown">
-//    <ul class="dropdown-menu" role="menu">
-//      ...
-
   UListElement ul = new UListElement()
       ..classes.add('dropdown-menu')
       ..classes.toggle('pull-right', pullRight)

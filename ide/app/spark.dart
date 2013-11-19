@@ -462,7 +462,6 @@ class ProjectOpenAction extends SparkAction {
   void _invoke([Object context]) => spark.openProject();
 }
 
-
 class AboutSparkAction extends SparkAction {
   bootjack.Modal _aboutBox;
 
