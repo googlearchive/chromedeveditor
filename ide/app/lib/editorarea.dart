@@ -81,12 +81,13 @@ class EditorArea extends TabView {
   /// requested to switch the file to the editor in case the editor is shared.
   void selectFile(Resource file,
                 {bool forceOpen: false, bool switchesTab: true,
-                 bool replaceCurrent:true}) {
+                 bool replaceCurrent: true}) {
     if (_tabOfFile.containsKey(file)) {
       EditorTab tab = _tabOfFile[file];
       editorProvider.selectFileForEditor(tab.editor, file);
-      if (switchesTab)
+      if (switchesTab) {
         tab.select();
+      }
       return;
     }
 
