@@ -35,6 +35,10 @@ class FilesController implements TreeViewDelegate {
     _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
     _treeView.dropEnabled = true;
 
+    _workspace.whenAvailable().then((_) {
+      _addAllFiles();
+    });
+
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
     });
@@ -45,7 +49,9 @@ class FilesController implements TreeViewDelegate {
       return;
     }
     _treeView.selection = [file.path];
-    _delegate.selectInEditor(file, forceOpen: forceOpen);
+    if (file is File) {
+      _delegate.selectInEditor(file, forceOpen: forceOpen);
+    }
   }
 
   void selectLastFile({bool forceOpen: false}) {
@@ -109,7 +115,11 @@ class FilesController implements TreeViewDelegate {
       return;
     }
 
-    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: openOnSelection);
+    Resource resource = _filesMap[nodeUIDs.first];
+
+    if (resource != null) {
+      _delegate.selectInEditor(resource, forceOpen: openOnSelection);
+    }
   }
 
   void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs) {
@@ -117,7 +127,14 @@ class FilesController implements TreeViewDelegate {
       return;
     }
 
-    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true);
+    Resource resource = _filesMap[nodeUIDs.first];
+
+    if (resource is File) {
+      _delegate.selectInEditor(resource, forceOpen: true);
+    } else {
+      // TODO: expand/collapse folder
+
+    }
   }
 
   String treeViewDropEffect(TreeView view) {
@@ -127,6 +144,15 @@ class FilesController implements TreeViewDelegate {
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     // TODO(dvh): Import to the workspace the files referenced by
     // dataTransfer.files
+  }
+
+  void _addAllFiles() {
+    for (Resource resource in _workspace.getChildren()) {
+      _files.add(resource);
+      _recursiveAddResource(resource);
+    }
+
+    _treeView.reloadData();
   }
 
   /**

@@ -32,7 +32,7 @@ main() {
       var workspace = new Workspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
-      return workspace.link(fileEntry, false).then((Resource resource) {
+      return workspace.link(fileEntry).then((Resource resource) {
         expect(resource.name, fileEntry.name);
         String token = resource.persistToToken();
         var restoredResource = workspace.restoreResource(token);
@@ -53,7 +53,7 @@ main() {
         expect(event.type, ResourceEventType.ADD);
       });
 
-      workspace.link(fileEntry, false).then((resource) {
+      workspace.link(fileEntry).then((resource) {
         expect(resource, isNotNull);
         expect(workspace.getChildren().contains(resource), isTrue);
         expect(workspace.getFiles().contains(resource), isTrue);
@@ -68,7 +68,7 @@ main() {
       var fileEntry = fs.createFile('test.txt');
       var resource;
 
-      workspace.link(fileEntry, false).then((res) {
+      workspace.link(fileEntry).then((res) {
         resource = res;
         expect(resource, isNotNull);
         expect(workspace.getChildren().contains(resource), isTrue);
@@ -97,7 +97,7 @@ main() {
         expect(event.type, ResourceEventType.ADD);
       });
 
-      workspace.link(dirEntry, false).then((project) {
+      workspace.link(dirEntry).then((project) {
         expect(project, isNotNull);
         expect(workspace.getChildren().contains(project), isTrue);
         expect(workspace.getProjects().contains(project), isTrue);
@@ -126,7 +126,7 @@ main() {
         expect(event.type, ResourceEventType.ADD);
       });
 
-      workspace.link(projectDir, false).then((project) {
+      workspace.link(projectDir).then((project) {
         expect(project, isNotNull);
         expect(workspace.getChildren().contains(project), isTrue);
         expect(workspace.getProjects().contains(project), isTrue);

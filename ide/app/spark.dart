@@ -197,7 +197,7 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
-        workspace.link(entry, false).then((file) {
+        workspace.link(entry).then((file) {
           editorArea.selectFile(file, forceOpen: true, switchesTab: true);
           workspace.save();
         });
@@ -212,7 +212,7 @@ class Spark extends Application implements FilesControllerDelegate {
       chrome.ChromeFileEntry entry = result.entry;
 
       if (entry != null) {
-        workspace.link(entry, false).then((file) {
+        workspace.link(entry).then((file) {
           _filesController.selectLastFile();
           workspace.save();
         });
@@ -273,7 +273,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   // Implementation of FilesControllerDelegate interface.
 
-  void selectInEditor(ws.Resource file, {bool forceOpen: false}) {
+  void selectInEditor(ws.File file, {bool forceOpen: false}) {
     if (forceOpen || editorManager.isFileOpend(file)) {
       editorArea.selectFile(file, forceOpen: forceOpen);
     }
