@@ -117,7 +117,10 @@ class FilesController implements TreeViewDelegate {
 
     Resource resource = _filesMap[nodeUIDs.first];
     if (resource is File) {
-      bool altKeyPressed = ((event as html.MouseEvent).altKey);
+      bool altKeyPressed = false;
+      if (event != null) {
+        altKeyPressed = ((event as html.MouseEvent).altKey);
+      }
       // If alt key is pressed, it will open a new tab.
       _delegate.selectInEditor(resource, forceOpen: true,
           replaceCurrent: !altKeyPressed);
