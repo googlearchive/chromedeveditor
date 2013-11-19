@@ -4,7 +4,6 @@
 
 library spark.utils;
 
-import 'dart:html' show document;
 import 'dart:web_audio';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;

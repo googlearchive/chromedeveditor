@@ -33,6 +33,10 @@ class FilesController implements TreeViewDelegate {
     _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
     _treeView.dropEnabled = true;
 
+    _workspace.whenAvailable().then((_) {
+      _addAllFiles();
+    });
+
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
     });
@@ -43,7 +47,9 @@ class FilesController implements TreeViewDelegate {
       return;
     }
     _treeView.selection = [file.path];
-    _delegate.selectInEditor(file, forceOpen: forceOpen);
+    if (file is File) {
+      _delegate.selectInEditor(file, forceOpen: forceOpen);
+    }
   }
 
   void selectLastFile({bool forceOpen: false}) {
@@ -109,10 +115,13 @@ class FilesController implements TreeViewDelegate {
       return;
     }
 
-    bool altKeyPressed = ((event as html.MouseEvent).altKey);
-    // If alt key is pressed, it will open a new tab.
-    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true,
-        replaceCurrent: !altKeyPressed);
+    Resource resource = _filesMap[nodeUIDs.first];
+    if (resource is File) {
+      bool altKeyPressed = ((event as html.MouseEvent).altKey);
+      // If alt key is pressed, it will open a new tab.
+      _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true,
+          replaceCurrent: !altKeyPressed);
+    }
   }
 
   void treeViewDoubleClicked(TreeView view,
@@ -128,6 +137,15 @@ class FilesController implements TreeViewDelegate {
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     // TODO(dvh): Import to the workspace the files referenced by
     // dataTransfer.files
+  }
+
+  void _addAllFiles() {
+    for (Resource resource in _workspace.getChildren()) {
+      _files.add(resource);
+      _recursiveAddResource(resource);
+    }
+
+    _treeView.reloadData();
   }
 
   /**
