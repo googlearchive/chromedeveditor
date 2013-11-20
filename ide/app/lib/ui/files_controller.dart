@@ -108,8 +108,7 @@ class FilesController implements TreeViewDelegate {
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     FileItemCell cell = new FileItemCell(_filesMap[nodeUID].name);
-//    cell.element.onContextMenu.listen(
-//        (e) => _handleContextMenu(cell, _filesMap[nodeUID], e));
+    // TODO: add an onContextMenu listening, call _handleContextMenu().
     cell.menuElement.onClick.listen(
         (e) => _handleMenuClick(cell, _filesMap[nodeUID], e));
     return cell;

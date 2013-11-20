@@ -1,7 +1,3 @@
 .listview-cell-highlighted {
   background-color: #ddf;
 }
-
-div.listview-container div:hover {
-  background-color: #f7f7ff;
-}

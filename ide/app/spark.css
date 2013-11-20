@@ -52,6 +52,10 @@ body {
   vertical-align: super;  
 }
 
+.fileview-filename-container .dropdown-menu {
+	min-width: 120px;
+}
+
 .fileview-filename-container .filename {
   overflow: hidden;
   position: absolute;
@@ -61,7 +65,7 @@ body {
 }
 
 .fileview-filename-container:hover .filename {
-  width: 100%;
+  width: calc(100% - 26px);
 }
 
 .fileview-filename-container:hover .menu button {
