@@ -218,6 +218,8 @@ class ObjectStore {
           var buff;
           completer.complete(new LooseObject(buff));
         } else {
+          // TODO: it looks like this is creating a blob with some data, and
+          // then reading the data?
           return FileOps.readBlob(new Blob(inflated.getBytes())).then((String data) {
             completer.complete(new LooseObject(data));
           });

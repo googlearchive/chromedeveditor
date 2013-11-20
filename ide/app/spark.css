@@ -2,6 +2,14 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+
+@import url("packages/bootjack/css/bootstrap.css");
+@import url("packages/bootjack/css/bootstrap-theme.css");
+@import url("lib/ui/widgets/splitview.css");
+@import url("lib/ui/widgets/listview.css");
+@import url("lib/ui/widgets/treeview.css");
+@import url("lib/ui/widgets/tabview.css");
+  
 body {
   bottom: 0;
   display: flex;
@@ -31,11 +39,21 @@ body {
   display: inline-block;
 }
 
-.fileview-filename-container .menu {
-  opacity: 0.0;
-  position: absolute;
-  right: 0;
-  width: 15px;
+.fileview-filename-container .menu button {
+  opacity: 0;
+  margin-right: -15px;
+}
+
+.fileview-filename-container .dropdown-toggle {
+  height: 20px;
+}
+
+.fileview-filename-container .dropdown-toggle .caret {
+  vertical-align: super;  
+}
+
+.fileview-filename-container .dropdown-menu {
+	min-width: 120px;
 }
 
 .fileview-filename-container .filename {
@@ -47,10 +65,10 @@ body {
 }
 
 .fileview-filename-container:hover .filename {
-  width: calc(100% - 15px);
+  width: calc(100% - 26px);
 }
 
-.fileview-filename-container:hover .menu {
+.fileview-filename-container:hover .menu button {
   opacity: 1.0;
 }
 

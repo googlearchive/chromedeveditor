@@ -8,12 +8,19 @@
  */
 library spark.ui.widgets.files_controller_delegate;
 
+import '../actions.dart';
 import '../workspace.dart';
 
 abstract class FilesControllerDelegate {
   /**
-   * The implementation of this method should open the given file in an
-   * editor.
+   * The implementation of this method should open the given file in an editor.
    */
-  void selectInEditor(File file, {bool forceOpen: false});
+  void selectInEditor(File file,
+                      {bool forceOpen: false, bool replaceCurrent: true});
+
+  /**
+   * Returns the list of actions that apply in the context of the given
+   * [resource].
+   */
+  List<ContextAction> getActionsFor(Resource resource);
 }

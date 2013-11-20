@@ -9,12 +9,16 @@ library spark.ui.widgets.files_controller;
 
 import 'dart:html' as html;
 
+import 'package:bootjack/bootjack.dart' as bootjack;
+
 import 'files_controller_delegate.dart';
+import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
+import '../actions.dart';
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
@@ -24,8 +28,6 @@ class FilesController implements TreeViewDelegate {
   FilesControllerDelegate _delegate;
   Map<String, Resource> _filesMap;
 
-  bool openOnSelection = true;
-
   FilesController(Workspace workspace, FilesControllerDelegate delegate) {
     _workspace = workspace;
     _delegate = delegate;
@@ -34,6 +36,10 @@ class FilesController implements TreeViewDelegate {
 
     _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
     _treeView.dropEnabled = true;
+
+    _workspace.whenAvailable().then((_) {
+      _addAllFiles();
+    });
 
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
@@ -45,7 +51,9 @@ class FilesController implements TreeViewDelegate {
       return;
     }
     _treeView.selection = [file.path];
-    _delegate.selectInEditor(file, forceOpen: forceOpen);
+    if (file is File) {
+      _delegate.selectInEditor(file, forceOpen: forceOpen);
+    }
   }
 
   void selectLastFile({bool forceOpen: false}) {
@@ -99,25 +107,38 @@ class FilesController implements TreeViewDelegate {
   }
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
-    return new FileItemCell(_filesMap[nodeUID].name);
+    FileItemCell cell = new FileItemCell(_filesMap[nodeUID].name);
+    // TODO: add an onContextMenu listening, call _handleContextMenu().
+    cell.menuElement.onClick.listen(
+        (e) => _handleMenuClick(cell, _filesMap[nodeUID], e));
+    return cell;
   }
 
   int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
 
-  void treeViewSelectedChanged(TreeView view, List<String> nodeUIDs) {
+  void treeViewSelectedChanged(TreeView view,
+                               List<String> nodeUIDs,
+                               html.Event event) {
     if (nodeUIDs.isEmpty) {
       return;
     }
 
-    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: openOnSelection);
+    Resource resource = _filesMap[nodeUIDs.first];
+    if (resource is File) {
+      bool altKeyPressed = false;
+      if (event != null) {
+        altKeyPressed = ((event as html.MouseEvent).altKey);
+      }
+      // If alt key is pressed, it will open a new tab.
+      _delegate.selectInEditor(resource, forceOpen: true,
+          replaceCurrent: !altKeyPressed);
+    }
   }
 
-  void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs) {
-    if (nodeUIDs.isEmpty) {
-      return;
-    }
-
-    _delegate.selectInEditor(_filesMap[nodeUIDs[0]], forceOpen: true);
+  void treeViewDoubleClicked(TreeView view,
+                             List<String> nodeUIDs,
+                             html.Event event) {
+    // Do nothing.
   }
 
   String treeViewDropEffect(TreeView view) {
@@ -127,6 +148,15 @@ class FilesController implements TreeViewDelegate {
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     // TODO(dvh): Import to the workspace the files referenced by
     // dataTransfer.files
+  }
+
+  void _addAllFiles() {
+    for (Resource resource in _workspace.getChildren()) {
+      _files.add(resource);
+      _recursiveAddResource(resource);
+    }
+
+    _treeView.reloadData();
   }
 
   /**
@@ -167,5 +197,35 @@ class FilesController implements TreeViewDelegate {
         _recursiveRemoveResource(child);
       });
     }
+  }
+
+  void _handleContextMenu(FileItemCell cell, Resource resource, html.Event e) {
+    cancelEvent(e);
+
+    _treeView.selection = [resource.path];
+
+    _showMenu(cell, resource);
+  }
+
+  void _handleMenuClick(FileItemCell cell, Resource resource, html.Event e) {
+    cancelEvent(e);
+    _showMenu(cell, resource);
+  }
+
+  void _showMenu(FileItemCell cell, Resource resource) {
+    // delete any existing menus
+    cell.menuElement.children.removeWhere((c) => c.classes.contains('dropdown-menu'));
+
+    // get all applicable actions
+    List<ContextAction> actions = _delegate.getActionsFor(resource);
+
+    // create and show the menu
+    html.Element menuElement = createContextMenu(actions, resource);
+    cell.menuElement.children.add(menuElement);
+    bootjack.Dropdown dropdown = bootjack.Dropdown.wire(menuElement);
+    menuElement.onMouseLeave.listen((_) {
+      cell.menuElement.children.remove(menuElement);
+    });
+    dropdown.toggle();
   }
 }

@@ -87,7 +87,7 @@ class EditorManager implements EditorProvider {
       _switchState(state);
   }
 
-  bool isFileOpend(File file) => _getStateFor(file) != null;
+  bool isFileOpened(File file) => _getStateFor(file) != null;
 
   void saveAll() => _saveAll();
 

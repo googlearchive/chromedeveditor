@@ -10,6 +10,7 @@ library spark.files_mock;
 import 'dart:async';
 
 import 'package:chrome_gen/chrome_app.dart';
+import 'package:mime/mime.dart' as mime;
 
 import '../lib/utils.dart';
 
@@ -80,6 +81,7 @@ abstract class _MockEntry implements Entry {
   final String name;
 
   _MockDirectoryEntry _parent;
+  DateTime _modificationTime = new DateTime.now();
 
   _MockEntry(this._parent, this.name);
 
@@ -92,10 +94,7 @@ abstract class _MockEntry implements Entry {
     throw new UnimplementedError('Entry.copyTo()');
   }
 
-  // TODO:
-  Future<Metadata> getMetadata() {
-    throw new UnimplementedError('Entry.getMetadata()');
-  }
+  Future<Metadata> getMetadata() => new Future.value(new _MockMetadata(this));
 
   Future<Entry> getParent() => new Future.value(_isRoot ? this : _parent);
 
@@ -109,10 +108,17 @@ abstract class _MockEntry implements Entry {
   bool get _isRoot => filesystem.root == this;
 
   Entry _getChild(String name);
+
+  _touch() => _modificationTime = new DateTime.now();
+
+  String get _path => _parent == null ? '/${name}' : '${_parent._path}/${name}';
+
+  int get _size;
 }
 
 class _MockFileEntry extends _MockEntry implements FileEntry, ChromeFileEntry {
   String _contents;
+  List<int> _byteContents;
 
   _MockFileEntry(DirectoryEntry parent, String name): super(parent, name);
 
@@ -126,33 +132,51 @@ class _MockFileEntry extends _MockEntry implements FileEntry, ChromeFileEntry {
     throw new UnimplementedError('FileEntry.createWriter()');
   }
 
-  // TDOO:
-  Future<File> file() {
-    throw new UnimplementedError('FileEntry.file()');
-  }
+  Future<File> file() => new Future.value(new _MockFile(this));
 
   // ChromeFileEntry specific methods
 
-  // TDOO:
   Future<ArrayBuffer> readBytes() {
-    throw new UnimplementedError('FileEntry.readBytes()');
+    if (_byteContents != null) {
+      return new Future.value(new ArrayBuffer.fromBytes(_byteContents));
+    } else if (_contents != null) {
+      return new Future.value(new ArrayBuffer.fromString(_contents));
+    } else {
+      return new Future.value(new ArrayBuffer());
+    }
   }
 
   Future<String> readText() {
-    return _contents == null ? new Future.value('') : new Future.value(_contents);
+    if (_contents != null) {
+      return new Future.value(_contents);
+    } else if (_byteContents != null) {
+      return new Future.value(new String.fromCharCodes(_byteContents));
+    } else {
+      return new Future.value('');
+    }
   }
 
-  // TDOO:
   Future writeBytes(ArrayBuffer data) {
-    throw new UnimplementedError('FileEntry.writeBytes()');
+    _byteContents = data.getBytes();
+    _contents = null;
+    _touch();
+    return new Future.value();
   }
 
-  // TDOO:
   Future writeText(String text) {
-    throw new UnimplementedError('FileEntry.writeText()');
+    _contents = text;
+    _byteContents = null;
+    _touch();
+    return new Future.value();
   }
 
   Entry _getChild(String name) => null;
+
+  int get _size {
+    if (_contents != null) return _contents.length;
+    if (_byteContents != null) return _byteContents.length;
+    return 0;
+  }
 
   dynamic get jsProxy => null;
   dynamic toJs() => null;
@@ -176,40 +200,55 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
 
   Future _remove(Entry e) {
     _children.remove(e);
+    _touch();
     return new Future.value();
   }
 
-  // TDOO:
   Future<Entry> createDirectory(String path, {bool exclusive: false}) {
-    throw new UnimplementedError('DirectoryEntry.createDirectory()');
+    if (_getChild(path) != null && exclusive) {
+      return new Future.error('directory already exists');
+    } else {
+      return new Future.value(_createDirectory(path));
+    }
   }
 
-  // TDOO:
   Future<Entry> createFile(String path, {bool exclusive: false}) {
-    throw new UnimplementedError('DirectoryEntry.createFile()');
+    if (_getChild(path) != null && exclusive) {
+      return new Future.error('file already exists');
+    } else {
+      return new Future.value(_createFile(path));
+    }
   }
 
-  // TDOO:
   DirectoryReader createReader() => new _MockDirectoryReader(this);
 
-  // TDOO:
   Future<Entry> getDirectory(String path) {
-    throw new UnimplementedError('DirectoryEntry.getDirectory()');
+    Entry entry = _getChild(path);
+
+    if (entry is! DirectoryEntry) {
+      return new Future.error("directory doesn't exist");
+    } else {
+      return new Future.value(_createFile(path));
+    }
   }
 
-  // TDOO:
   Future<Entry> getFile(String path) {
-    throw new UnimplementedError('DirectoryEntry.getFile()');
+    Entry entry = _getChild(path);
+
+    if (entry is! FileEntry) {
+      return new Future.error("file doesn't exist");
+    } else {
+      return new Future.value(_createFile(path));
+    }
   }
 
-  // TDOO:
-  Future removeRecursively() {
-    throw new UnimplementedError('DirectoryEntry.removeRecursively()');
-  }
+  Future removeRecursively() => _parent._remove(this);
 
   FileEntry _createFile(String name, {String contents}) {
     _MockFileEntry entry = _getChild(name);
     if (entry != null) return entry;
+
+    _touch();
 
     entry = new _MockFileEntry(this, name);
     _children.add(entry);
@@ -223,6 +262,8 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
     _MockDirectoryEntry entry = _getChild(name);
     if (entry != null) return entry;
 
+    _touch();
+
     entry = new _MockDirectoryEntry(this, name);
     _children.add(entry);
     return entry;
@@ -235,6 +276,8 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
 
     return null;
   }
+
+  int get _size => 0;
 }
 
 class _RootDirectoryEntry extends _MockDirectoryEntry {
@@ -249,4 +292,44 @@ class _MockDirectoryReader implements DirectoryReader {
   _MockDirectoryReader(this.dir);
 
   Future<List<Entry>> readEntries() => new Future.value(dir._children);
+}
+
+class _MockMetadata implements Metadata {
+  final _MockEntry entry;
+
+  _MockMetadata(this.entry);
+
+  DateTime get modificationTime => entry._modificationTime;
+
+  int get size => entry._size;
+}
+
+abstract class _MockBlob implements Blob {
+  int get size;
+  Blob slice([int start, int end, String contentType]);
+  String get type;
+}
+
+class _MockFile extends _MockBlob implements File {
+  final _MockEntry entry;
+
+  _MockFile(this.entry);
+
+  DateTime get lastModifiedDate => entry._modificationTime;
+
+  String get name => entry.name;
+
+  String get relativePath => entry._path;
+
+  int get size => entry._size;
+
+  // TODO:
+  Blob slice([int start, int end, String contentType]) {
+    throw new UnimplementedError('Blob.slice()');
+  }
+
+  String get type {
+    String _type = mime.lookupMimeType(name);
+    return _type == null ? '' : _type;
+  }
 }

@@ -21,8 +21,7 @@ export 'package:ace/ace.dart' show EditSession;
  * A wrapper around an Ace editor instance.
  */
 class AceEditor {
-  static final KEY_BINDINGS =
-      [null, ace.KeyboardHandler.EMACS, ace.KeyboardHandler.VIM];
+  static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
   static final THEMES = ['ambiance', 'monokai', 'pastel_on_dark', 'textmate'];
 
   /// The element to put the editor in.
@@ -53,12 +52,8 @@ class AceEditor {
   }
 
   void setKeyBinding(String name) {
-    if (name == null) {
-      _aceEditor.keyBinding.keyboardHandler = null;
-    } else {
-      var handler = new ace.KeyboardHandler.named(name);
-      handler.onLoad.then((_) => _aceEditor.keyBinding.keyboardHandler = handler);
-    }
+    var handler = new ace.KeyboardHandler.named(name);
+    handler.onLoad.then((_) => _aceEditor.keyBinding.keyboardHandler = handler);
   }
 
   void focus() => _aceEditor.focus();
