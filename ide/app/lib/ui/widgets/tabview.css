@@ -68,6 +68,11 @@
   z-index: 100;
 }
 
+.tabview-tablabel:hover {
+  border: 1px solid #CCC;
+  padding-bottom: 1px;
+}
+
 .tabview-tablabel:first-child {
   margin-left: 15px;
 }
@@ -84,6 +89,10 @@
   margin-bottom: 0;
   padding-bottom: 1px;
   position: relative;
+}
+
+.tabview-tablabel-active:hover {
+  background: -webkit-linear-gradient(bottom, #DDD, white);
 }
 
 .tabview-tablabel:hover .tabview-tablabel-caption {
