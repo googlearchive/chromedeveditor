@@ -44,7 +44,7 @@ Element createMenuItem(Action action, {Object context, bool showAccelerator: tru
  * Given a list of actions (possibly from [ActionManager.getContextActions])
  * return a menu element representing those actions.
  */
-Element createContextMenu(List<Action> actions, Object context,
+Element createContextMenu(List<ContextAction> actions, Object context,
                           {bool pullRight: false}) {
   UListElement ul = new UListElement()
       ..classes.add('dropdown-menu')
@@ -53,13 +53,11 @@ Element createContextMenu(List<Action> actions, Object context,
 
   String category = null;
 
-  for (Action action in actions) {
-    if (action is ContextAction) {
-      if (category != null && action.category != category) {
-        ul.children.add(createMenuSeparator());
-      }
-      category = action.category;
+  for (ContextAction action in actions) {
+    if (category != null && action.category != category) {
+      ul.children.add(createMenuSeparator());
     }
+    category = action.category;
 
     ul.children.add(
         createMenuItem(action, context: context, showAccelerator: false));
