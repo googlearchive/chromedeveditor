@@ -17,8 +17,12 @@
     <div class="fileview-filename-container">
       <div class="filename">
       </div>
-      <div class="menu">
-        &#x25BC;
+      <div class="dropdown container">
+	      <div class="menu pull-right">
+				  <button class="dropdown-toggle" type="button" data-toggle="dropdown">
+				    <span class="caret"></span>
+				  </button>
+	      </div>
       </div>
     </div>
   </template>
@@ -45,7 +49,7 @@
         Menu <span class="caret"></span>
       </button>
       <ul class="dropdown-menu pull-right">
-        <li class="disabled"><a>Change Theme &nbsp;
+        <li class="disabled" id="themeControl"><a>Change Theme &nbsp;
           <span class="pull-right">
 	          <button type="button" id="themeLeft"><strong>-</strong></button>
 	          <button type="button" id="themeRight"><strong>+</strong></button>
