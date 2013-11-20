@@ -9,12 +9,16 @@ library spark.ui.widgets.files_controller;
 
 import 'dart:html' as html;
 
+import 'package:bootjack/bootjack.dart' as bootjack;
+
 import 'files_controller_delegate.dart';
+import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
+import '../actions.dart';
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
@@ -103,7 +107,11 @@ class FilesController implements TreeViewDelegate {
   }
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
-    return new FileItemCell(_filesMap[nodeUID].name);
+    FileItemCell cell = new FileItemCell(_filesMap[nodeUID].name);
+    // TODO: add an onContextMenu listening, call _handleContextMenu().
+    cell.menuElement.onClick.listen(
+        (e) => _handleMenuClick(cell, _filesMap[nodeUID], e));
+    return cell;
   }
 
   int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
@@ -189,5 +197,35 @@ class FilesController implements TreeViewDelegate {
         _recursiveRemoveResource(child);
       });
     }
+  }
+
+  void _handleContextMenu(FileItemCell cell, Resource resource, html.Event e) {
+    cancelEvent(e);
+
+    _treeView.selection = [resource.path];
+
+    _showMenu(cell, resource);
+  }
+
+  void _handleMenuClick(FileItemCell cell, Resource resource, html.Event e) {
+    cancelEvent(e);
+    _showMenu(cell, resource);
+  }
+
+  void _showMenu(FileItemCell cell, Resource resource) {
+    // delete any existing menus
+    cell.menuElement.children.removeWhere((c) => c.classes.contains('dropdown-menu'));
+
+    // get all applicable actions
+    List<ContextAction> actions = _delegate.getActionsFor(resource);
+
+    // create and show the menu
+    html.Element menuElement = createContextMenu(actions, resource);
+    cell.menuElement.children.add(menuElement);
+    bootjack.Dropdown dropdown = bootjack.Dropdown.wire(menuElement);
+    menuElement.onMouseLeave.listen((_) {
+      cell.menuElement.children.remove(menuElement);
+    });
+    dropdown.toggle();
   }
 }

@@ -38,4 +38,6 @@ class FileItemCell implements ListViewCell {
   Element get container => _container;
 
   set container(Element container) => _container = container;
+
+  Element get menuElement => _element.querySelector('.menu');
 }
