@@ -82,8 +82,6 @@ class Workspace implements Container {
     return new Future.value();
   }
 
-  Future close(Resource resource) => unlink(resource);
-
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
       if (resource.name == name) {
@@ -179,6 +177,8 @@ class Workspace implements Container {
    _children.remove(resource);
    _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
   }
+
+ Future close() => new Future.value();
 }
 
 abstract class Container extends Resource {
@@ -249,6 +249,11 @@ abstract class Resource {
     if (_entry.isFile) return _entry.remove().then((_) => _parent._removeChild(this));
 
     return (_entry as chrome.DirectoryEntry).removeRecursively().then((_) => _parent._removeChild(this));
+  }
+
+  Future close() {
+    _parent._removeChild(this);
+    return new Future.value();
   }
 
   /**

@@ -227,12 +227,20 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
+  void closeFile() {
+    var sel = _filesController.getSelection();
+    if (sel.isNotEmpty) {
+      sel.forEach((ws.Resource resource) => resource.close());
+    }
+  }
+
   void createActions() {
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new ProjectOpenAction(this));
   }
 
@@ -241,6 +249,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     ul.children.insert(0, _createLIElement(null));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('project-open')));
+    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-close')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-delete')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
     ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
@@ -463,6 +472,12 @@ class FileDeleteAction extends SparkAction {
   FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
 
   void _invoke() => spark.deleteFile(null);
+}
+
+class FileCloseAction extends SparkAction {
+  FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
+
+  void _invoke() => spark.closeFile();
 }
 
 class FileExitAction extends SparkAction {
