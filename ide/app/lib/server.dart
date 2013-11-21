@@ -1174,4 +1174,3 @@ class BytesBuilder {
    */
   void clear() => _buffer.clear();
 }
-

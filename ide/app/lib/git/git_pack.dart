@@ -37,7 +37,7 @@ class PackedTypes {
   static const TAG = 4;
   static const OFS_DELTA = 6;
   static const REF_DELTA = 7;
-  
+
   static String getTypeString(int type) {
     switch(type) {
       case COMMIT:
@@ -154,10 +154,10 @@ class Pack {
 
     List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
         + " ${contentData.length}\u0000");
- 
+
     Uint8List fullContent = 
         new Uint8List(header.length + contentData.length);
-    
+
     fullContent.setAll(0, header);
     fullContent.setAll(header.length, contentData);
 
@@ -322,7 +322,7 @@ class Pack {
     }
     return completer.future;
   }
-  
+
   ByteBuffer applyDelta(Uint8List baseData, Uint8List deltaData) {
     int matchLength(DeltaDataStream stream) {
       Uint8List data = stream.data;
@@ -332,7 +332,7 @@ class Pack {
       int byte = 128;
       int maskedByte;
       int shiftedByte;
-      
+
       while ((byte & 128) != 0) {
         byte = data[offset++];
         maskedByte = (byte & 0x7f);
@@ -340,23 +340,23 @@ class Pack {
         result += shiftedByte;
         currentShift += 7; 
       }
-      
+
       stream.offset = offset;
       return result;  
     }
-    
+
     DeltaDataStream stream = new DeltaDataStream(deltaData, 0);
-    
+
     int baseLength = matchLength(stream);
     if (baseLength != baseData.length) {
       // TODO throw better exception.
       throw "Delta Error: base length not equal to length of given base data";
     }
-    
+
     int resultLength = matchLength(stream);
     Uint8List resultData = new Uint8List(resultLength);
     int resultOffset = 0;
-    
+
     int copyOffset;
     int copyLength;
     int opcode;
@@ -377,11 +377,11 @@ class Pack {
             stream.offset++;
             copyOffset += (value << shift);
           }
-          
+
           opcode >>= 1;
           shift +=8;
         }
-        
+
         shift = 0;
         for (int i = 0; i < 2; ++i) {
           if ((opcode & 0x01) != 0) {
@@ -392,11 +392,11 @@ class Pack {
           opcode >>= 1;
           shift +=8;
         }
-        
+
         if (copyLength == 0) {
           copyLength = (1<<16);
         }
-        
+
         // TODO(grv) : check if this is a version 2 packfile and apply
         // copyFromResult if so.
         copyFromResult = (opcode & 0x01);
@@ -411,7 +411,7 @@ class Pack {
         stream.offset += opcode;
       }
     }
-    
+
     return resultData.buffer;
   }
 }
