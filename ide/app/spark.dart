@@ -227,8 +227,10 @@ class Spark extends Application implements FilesControllerDelegate {
     var sel = _filesController.getSelection();
     if (sel.isNotEmpty) {
       sel.forEach((ws.Resource resource) {
-        _closeOpenEditor(resource);
-        futures.add(resource.close());
+        if (resource.isTopLevel) {
+          _closeOpenEditor(resource);
+          futures.add(resource.close());
+        }
       });
     }
     Future.wait(futures).then((_) => workspace.save());
@@ -477,7 +479,7 @@ class FileCloseAction extends SparkAction implements ContextAction {
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => object is ws.Resource;
+  bool appliesTo(Object object) => object is ws.Resource && object.isTopLevel;
 }
 
 class FileExitAction extends SparkAction {
