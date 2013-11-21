@@ -56,7 +56,7 @@ abstract class FileOps {
   /**
    * Reads a given [blob] as text.
    */
-  static Future<String> readBlob(chrome.Blob blob) {
+  static Future<String> readBlob(chrome.Blob blob, String type) {
     Completer completer = new Completer();
     var reader = new JsObject(context['FileReader']);
     reader['onload'] = (var event) {
@@ -67,7 +67,8 @@ abstract class FileOps {
       completer.completeError(domError);
     };
 
-    reader.callMethod('readAsText', [blob]);
+
+    reader.callMethod('readAs${type}', [blob]);
     return completer.future;
   }
 }
