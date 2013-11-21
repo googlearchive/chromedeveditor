@@ -240,6 +240,9 @@ class TreeView implements ListViewDelegate {
   void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {
     String encodedSelection = dataTransfer.getData('application/x-spark-treeview');
     if (encodedSelection != null) {
+      // Inner drag&dropping.
+      // TODO(dvh): we need to make sure it's the same instance of the
+      // TreeView.
       List<String> dragSelection = JSON.decode(encodedSelection);
       String nodeUID = null;
       if (_currentDragOverCell != null) {
@@ -247,6 +250,7 @@ class TreeView implements ListViewDelegate {
       }
       _delegate.treeViewDropCells(this, dragSelection, nodeUID);
     } else {
+      // Dropping from somewhere else.
       String nodeUID = null;
       if (rowIndex != -1) {
         nodeUID = _rowIndexesToNodeUIDs([rowIndex])[0];
