@@ -83,14 +83,7 @@ class Spark extends Application implements FilesControllerDelegate {
     localPrefs = preferences.localStore;
     syncPrefs = preferences.syncStore;
 
-    actionManager = new ActionManager();
-
-    analytics.getService('Spark').then((service) {
-      // Init the analytics tracker and send a page view for the main page.
-      tracker = service.getTracker(_ANALYTICS_ID);
-      tracker.sendAppView('main');
-      _startTrackingExceptions();
-    });
+    initAnalytics();
 
     addParticipant(new _SparkSetupParticipant(this));
 
@@ -99,9 +92,69 @@ class Spark extends Application implements FilesControllerDelegate {
       close();
     });
 
-    workspace = new ws.Workspace(localPrefs);
-    editor = new AceEditor(new DivElement());
+    initWorkspace();
+    initEditor();
+    initEditorManager();
+    initEditorArea();
+    initEditorThemes();
+    initFilesController();
 
+    // Init the bootjack library (a wrapper around bootstrap).
+    bootjack.Bootjack.useDefault();
+
+    createActions();
+    initToolbar();
+    initSplitView();
+  }
+
+  String get appName => i18n('app_name');
+
+  String get appVersion => chrome.runtime.getManifest()['version'];
+
+  PlatformInfo get platformInfo => _platformInfo;
+
+  void initAnalytics() {
+    analytics.getService('Spark').then((service) {
+      // Init the analytics tracker and send a page view for the main page.
+      tracker = service.getTracker(_ANALYTICS_ID);
+      tracker.sendAppView('main');
+      _startTrackingExceptions();
+    });
+  }
+
+  void initSplitView() {
+    _splitView = new SplitView(querySelector('#splitview'));
+    _splitView.onResized.listen((_) {
+      editor.resize();
+      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
+    });
+    syncPrefs.getValue('splitViewPosition').then((String position) {
+      if (position != null) {
+        int value = int.parse(position, onError: (_) => 0);
+        if (value != 0) {
+          _splitView.position = value;
+        }
+      }
+    });
+  }
+
+  void initWorkspace() {
+    workspace = new ws.Workspace(localPrefs);
+  }
+
+  void initEditorThemes() {
+    syncPrefs.getValue('aceTheme').then((String theme) {
+      if (theme != null && AceEditor.THEMES.contains(theme)) {
+        editor.theme = theme;
+      }
+    });
+  }
+
+  void initEditor() {
+    editor = new AceEditor(new DivElement());
+  }
+
+  void initEditorManager() {
     editorManager = new EditorManager(workspace, editor, localPrefs);
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
@@ -122,64 +175,21 @@ class Spark extends Application implements FilesControllerDelegate {
         editorArea.selectFile(resource, switchesTab: true);
       });
     });
+  }
 
+  void initEditorArea() {
+    editor = new AceEditor(new DivElement());
     editorArea = new EditorArea(document.getElementById('editorArea'),
-                                editorManager,
-                                allowsLabelBar: true);
+        editorManager,
+        allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
       _filesController.selectFile(tab.file);
       localPrefs.setValue('lastFileSelection', tab.file.path);
     });
+  }
+
+  void initFilesController() {
     _filesController = new FilesController(workspace, this);
-
-    setupSplitView();
-    setupFileActions();
-    setupEditorThemes();
-
-    // Init the bootjack library (a wrapper around bootstrap).
-    bootjack.Bootjack.useDefault();
-
-    createActions();
-    buildMenu();
-
-    actionManager.registerKeyListener();
-  }
-
-  String get appName => i18n('app_name');
-
-  String get appVersion => chrome.runtime.getManifest()['version'];
-
-  PlatformInfo get platformInfo => _platformInfo;
-
-  void setupSplitView() {
-    _splitView = new SplitView(querySelector('#splitview'));
-    _splitView.onResized.listen((_) {
-      editor.resize();
-      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
-    });
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          _splitView.position = value;
-        }
-      }
-    });
-  }
-
-  void setupFileActions() {
-    querySelector("#newFile").onClick.listen(
-        (_) => actionManager.getAction('file-new').invoke());
-    querySelector("#openFile").onClick.listen(
-        (_) => actionManager.getAction('file-open').invoke());
-  }
-
-  void setupEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null && AceEditor.THEMES.contains(theme)) {
-        editor.theme = theme;
-      }
-    });
   }
 
   void newFile() => notImplemented('Spark.newFile()');
@@ -243,6 +253,7 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void createActions() {
+    actionManager = new ActionManager();
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
@@ -252,6 +263,16 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new ProjectOpenAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
+    actionManager.registerKeyListener();
+  }
+
+  void initToolbar() {
+    querySelector("#newFile").onClick.listen(
+        (_) => actionManager.getAction('file-new').invoke());
+    querySelector("#openFile").onClick.listen(
+        (_) => actionManager.getAction('file-open').invoke());
+
+    buildMenu();
   }
 
   void buildMenu() {
