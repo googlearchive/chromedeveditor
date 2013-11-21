@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="spark_polymer.css">
 
   <link rel="import" href="packages/spark_widgets/spark-button/spark-button.html">
+  <link rel="import" href="packages/spark_widgets/spark-toolbar/spark-toolbar.html">
   <link rel="import" href="packages/spark_widgets/spark-select/spark-select.html">
   <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
 
@@ -27,8 +28,11 @@
 </head>
 
 <body class="polymer-ui-body-text">
-  <div id="toolbar">
+  <spark-toolbar>
+    <spark-icon id="newFile" src="add.png"></spark-icon>
+<!--
     <spark-button id="newFile">New File</spark-button>
+-->
     <spark-button id="openFile">Open File...</spark-button>
 
     <span id="status"></span>
@@ -38,7 +42,7 @@
                                     hover_color="gray">
       Theme
     </spark-select>
-  </div>
+  </spark-toolbar>
   
   <div id="splitview" class="container flexbox">
     <div id="fileViewArea" min-size="100"></div>
