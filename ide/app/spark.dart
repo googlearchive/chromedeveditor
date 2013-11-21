@@ -222,12 +222,33 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
+  void closeFile() {
+    List futures = [];
+    var sel = _filesController.getSelection();
+    if (sel.isNotEmpty) {
+      sel.forEach((ws.Resource resource) {
+        if (resource.isTopLevel) {
+          _closeOpenEditor(resource);
+          futures.add(resource.close());
+        }
+      });
+    }
+    Future.wait(futures).then((_) => workspace.save());
+  }
+
+  void _closeOpenEditor(ws.Resource resource) {
+    if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
+      editorManager.close(resource);
+    }
+  }
+
   void createActions() {
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new ProjectOpenAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
@@ -240,6 +261,7 @@ class Spark extends Application implements FilesControllerDelegate {
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('project-open')));
     ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
     ul.children.add(createMenuSeparator());
 
     // theme control
@@ -441,6 +463,23 @@ class FileDeleteAction extends SparkAction implements ContextAction {
   String get category => 'resource';
 
   bool appliesTo(Object object) => object is ws.Resource;
+}
+
+class FileCloseAction extends SparkAction implements ContextAction {
+  FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
+
+  void _invoke([ws.Resource resource]) {
+    if (resource != null) {
+      spark._closeOpenEditor(resource);
+      resource.close().then((_) => spark.workspace.save());
+    } else {
+      spark.closeFile();
+    }
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => object is ws.Resource && object.isTopLevel;
 }
 
 class FileExitAction extends SparkAction {
