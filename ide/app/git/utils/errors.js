@@ -66,79 +66,79 @@ var errutils = {
 
 
   fileErrorFunc : function(onError){
-      if (!onError){
-    return function(){};
-      }
-      return function(e) {
-    var msg = errors.getFileErrorMsg(e);
-    onError({type : errors.FILE_IO_ERROR, msg: msg, fe: e.code});
-      }
+    if (!onError){
+  return function(){};
+    }
+    return function(e) {
+  var msg = errors.getFileErrorMsg(e);
+  onError({type : errors.FILE_IO_ERROR, msg: msg, fe: e.code});
+    }
   },
 
   ajaxErrorFunc : function(onError){
-      return function(xhr){
-    var url = this.url,
-        reqType = this.type;
+    return function(xhr){
+  var url = this.url,
+    reqType = this.type;
 
-    var httpErr;
-    if (xhr.status == 401){
-        var auth = xhr.getResponseHeader('WWW-Authenticate');
-        httpErr = {type: errors.HTTP_AUTH_ERROR, msg: errors.HTTP_AUTH_ERROR_MSG, auth: auth};
+  var httpErr;
+  if (xhr.status == 401){
+    var auth = xhr.getResponseHeader('WWW-Authenticate');
+    httpErr = {type: errors.HTTP_AUTH_ERROR, msg: errors.HTTP_AUTH_ERROR_MSG, auth: auth};
+  }
+  else{
+    httpErr = {type: errors.AJAX_ERROR, url: url, reqType: reqType, statusText: xhr.statusText, status: xhr.status, msg: "Http error with status code: " + xhr.status + ' and status text: "' + xhr.statusText + '"'};
+  }
+  onError(httpErr);
     }
-    else{
-        httpErr = {type: errors.AJAX_ERROR, url: url, reqType: reqType, statusText: xhr.statusText, status: xhr.status, msg: "Http error with status code: " + xhr.status + ' and status text: "' + xhr.statusText + '"'};
-    }
-    onError(httpErr);
-      }
   },
 
   getFileErrorMsg: function(e) {
-      var msg = '';
+    var msg = '';
 
-      switch (e.code) {
+  switch (e.code) {
     case FileError.QUOTA_EXCEEDED_ERR:
-        msg = 'QUOTA_EXCEEDED_ERR';
-        break;
+      msg = 'QUOTA_EXCEEDED_ERR';
+      break;
     case FileError.NOT_FOUND_ERR:
-        msg = 'NOT_FOUND_ERR';
-        break;
+      msg = 'NOT_FOUND_ERR';
+      break;
     case FileError.SECURITY_ERR:
-        msg = 'SECURITY_ERR';
-        break;
+      msg = 'SECURITY_ERR';
+      break;
     case FileError.INVALID_MODIFICATION_ERR:
-        msg = 'INVALID_MODIFICATION_ERR';
-        break;
+      msg = 'INVALID_MODIFICATION_ERR';
+      break;
     case FileError.INVALID_STATE_ERR:
-        msg = 'INVALID_STATE_ERR';
-        break;
+      msg = 'INVALID_STATE_ERR';
+      break;
     case FileError.ABORT_ERR:
-        msg = 'ABORT_ERR';
-        break;
+      msg = 'ABORT_ERR';
+      break;
     case FileError.ENCODING_ERR:
-        msg = 'ENCODING_ERR';
-        break;
+      msg = 'ENCODING_ERR';
+      break;
     case FileError.NOT_READABLE_ERR:
-        msg = 'NOT_READABLE_ERR';
-        break;
+      msg = 'NOT_READABLE_ERR';
+      break;
     case FileError.NO_MODIFICATION_ALLOWED_ERR:
-        msg = 'NO_MODIFICATION_ALLOWED_ERR';
-        break;
+      msg = 'NO_MODIFICATION_ALLOWED_ERR';
+      break;
     case FileError.PATH_EXISTS_ERR:
-        msg = 'PATH_EXISTS_ERR';
-        break;
+      msg = 'PATH_EXISTS_ERR';
+      break;
     case FileError.SYNTAX_ERR:
-        msg = 'SYNTAX_ERR';
-        break;
+      msg = 'SYNTAX_ERR';
+      break;
     case FileError.TYPE_MISMATCH_ERR:
-        msg = 'TYPE_MISMATCH_ERR';
-        break;
+      msg = 'TYPE_MISMATCH_ERR';
+      break;
     default:
-        msg = 'Unknown Error ' + e.code;
-        break;
-      };
+      msg = 'Unknown Error ' + e.code;
+      break;
+    };
   },
   errorHandler: function(e) {
-      msg = utils.getFileErrorMsg(e);
-      console.log('Error: ' + msg);
+    msg = utils.getFileErrorMsg(e);
+    console.log('Error: ' + msg);
   }
 };
