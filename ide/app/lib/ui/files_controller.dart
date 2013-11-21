@@ -10,6 +10,7 @@ library spark.ui.widgets.files_controller;
 import 'dart:html' as html;
 
 import 'files_controller_delegate.dart';
+import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview.dart';
 import 'widgets/listview_cell.dart';
@@ -32,6 +33,7 @@ class FilesController implements TreeViewDelegate {
 
     _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
     _treeView.dropEnabled = true;
+    _treeView.draggingEnabled = true;
 
     _workspace.whenAvailable().then((_) {
       _addAllFiles();
@@ -103,7 +105,12 @@ class FilesController implements TreeViewDelegate {
   }
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
-    return new FileItemCell(_filesMap[nodeUID].name);
+    Resource resource = _filesMap[nodeUID];
+    ListViewCell item = new FileItemCell(resource.name);
+    if (resource is Folder) {
+      item.acceptDrop = true;
+    }
+    return item;
   }
 
   int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
@@ -140,6 +147,141 @@ class FilesController implements TreeViewDelegate {
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     // TODO(dvh): Import to the workspace the files referenced by
     // dataTransfer.files
+  }
+
+  void treeViewDropCells(TreeView view,
+                         List<String> nodesUIDs,
+                         String targetNodeUID) {
+    // TODO(dvh): Move files designated by `nodesUIDs` to the folder
+    // designated by `targetNodeUID`.
+  }
+
+  TreeViewDragImage treeViewDragImage(TreeView view,
+                                      List<String> nodesUIDs,
+                                      html.MouseEvent event) {
+    if (nodesUIDs.length == 0) {
+      return null;
+    }
+
+    // The generated image will show a stack of files. The first file will be
+    // on the top of it.
+    //
+    // placeholderCount is the number of files other than the first file that
+    // will be shown in the stack.
+    // The number of files will also be shown in a badge if there's more than
+    // one file.
+    int placeholderCount = nodesUIDs.length - 1;
+
+    // We will shows 4 placeholders maximum.
+    if (placeholderCount >= 4) {
+      placeholderCount = 4;
+    }
+
+    // Font for the filenames in the stack.
+    final String fontName = '15px Helvetica';
+    // Font for the counter.
+    final String counterFontName = '12px Helvetica';
+    // Basic height of an item in the stack.
+    final int stackItemHeight = 30;
+    // Stack item radius.
+    final int stackItemRadius = 15;
+    // Additional space for shadow.
+    final int additionalShadowSpace = 10;
+    // Space between stack and counter.
+    final int stackCounterSpace = 5;
+    // Stack item interspace.
+    final int stackItemInterspace = 3;
+    // Text padding in the stack item.
+    final int stackItemPadding = 10;
+    // Counter padding.
+    final int counterPadding = 10;
+    // Counter height.
+    final int counterHeight = 20;
+    // Stack item text vertical position
+    final int stackItemTextPosition = 20;
+    // Counter text vertical position
+    final int counterTextPosition = 15;
+
+    html.CanvasElement canvas = new html.CanvasElement();
+
+    // Measure text size.
+    html.CanvasRenderingContext2D context = canvas.getContext("2d");
+    context.font = fontName;
+    Resource resource = _filesMap[nodesUIDs.first];
+    html.TextMetrics metrics = context.measureText(resource.name);
+    int width = metrics.width.toInt();
+    context.font = counterFontName;
+    String counterString = '${nodesUIDs.length}';
+    metrics = context.measureText(counterString);
+    int counterWidth = metrics.width.toInt();
+
+    // Set canvas size.
+    int globalHeight = stackItemHeight + placeholderCount *
+        stackItemInterspace + additionalShadowSpace;
+    canvas.width = width + stackItemPadding * 2 + placeholderCount *
+        stackItemInterspace + stackCounterSpace + counterWidth +
+        counterPadding * 2 + additionalShadowSpace;
+    canvas.height = globalHeight;
+
+    context = canvas.getContext("2d");
+
+    // Set shadows.
+    context.shadowBlur = 5;
+    context.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 1;
+
+    // Draws items of the stack.
+    context.setFillColorRgb(255, 255, 255, 1);
+    context.setStrokeColorRgb(128, 128, 128, 1);
+    context.lineWidth = 1;
+    for(int i = placeholderCount ; i >= 0 ; i --) {
+      html.Rectangle rect = new html.Rectangle(0.5 + i * stackItemInterspace,
+          0.5 + i * stackItemInterspace,
+          width + stackItemPadding * 2,
+          stackItemHeight);
+      roundRect(context,
+          rect,
+          radius: stackItemRadius,
+          fill: true,
+          stroke: true);
+    }
+
+    // No shadows.
+    context.shadowBlur = 0;
+    context.shadowColor = 'rgba(0, 0, 0, 0)';
+    context.shadowOffsetX = 0;
+    context.shadowOffsetY = 0;
+
+    // Draw text in the stack item.
+    context.font = fontName;
+    context.setFillColorRgb(0, 0, 0, 1);
+    context.fillText(resource.name, stackItemPadding, stackItemTextPosition);
+
+    if (placeholderCount > 0) {
+      // Draw counter bezel.
+      context.lineWidth = 3;
+      context.setFillColorRgb(128, 128, 255, 1);
+      html.Rectangle rect = new html.Rectangle(width + stackItemPadding * 2 +
+          stackCounterSpace + placeholderCount * 2,
+          (globalHeight - additionalShadowSpace - counterHeight) / 2,
+          counterWidth + counterPadding * 2,
+          counterHeight);
+      roundRect(context, rect, radius: 10, fill: true, stroke: false);
+
+      // Draw text of counter.
+      context.font = counterFontName;
+      context.setFillColorRgb(255, 255, 255, 1);
+      context.fillText(counterString,
+          width + stackItemPadding * 2 + stackCounterSpace + placeholderCount *
+          2 + counterPadding,
+          (globalHeight - additionalShadowSpace - counterHeight) / 2 +
+          counterTextPosition);
+    }
+
+    html.ImageElement img = new html.ImageElement();
+    img.src = canvas.toDataUrl();
+    return new TreeViewDragImage(img, event.offset.x, event.offset.y);
   }
 
   void _addAllFiles() {

@@ -250,6 +250,7 @@ class ListView {
       });
       _dropSubscription = _container.onDrop.listen((event) {
         cancelEvent(event);
+        _draggingCount = 0;
         _draggingOver = false;
         _updateDraggingVisual();
         int dropRowIndex = -1;
