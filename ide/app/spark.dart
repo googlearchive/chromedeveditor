@@ -99,8 +99,7 @@ class Spark extends Application implements FilesControllerDelegate {
     initEditorThemes();
     initFilesController();
 
-    // Init the bootjack library (a wrapper around bootstrap).
-    bootjack.Bootjack.useDefault();
+    initLookAndFeel();
 
     createActions();
     initToolbar();
@@ -113,6 +112,10 @@ class Spark extends Application implements FilesControllerDelegate {
 
   PlatformInfo get platformInfo => _platformInfo;
 
+  //
+  // Parts of ctor:
+  //
+
   void initAnalytics() {
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
@@ -122,32 +125,8 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
-  void initSplitView() {
-    _splitView = new SplitView(querySelector('#splitview'));
-    _splitView.onResized.listen((_) {
-      editor.resize();
-      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
-    });
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          _splitView.position = value;
-        }
-      }
-    });
-  }
-
   void initWorkspace() {
     workspace = new ws.Workspace(localPrefs);
-  }
-
-  void initEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null && AceEditor.THEMES.contains(theme)) {
-        editor.theme = theme;
-      }
-    });
   }
 
   void initEditor() {
@@ -188,10 +167,96 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
+  void initEditorThemes() {
+    syncPrefs.getValue('aceTheme').then((String theme) {
+      if (theme != null && AceEditor.THEMES.contains(theme)) {
+        editor.theme = theme;
+      }
+    });
+  }
+
   void initFilesController() {
     _filesController = new FilesController(workspace, this);
   }
 
+  void initLookAndFeel() {
+    // Init the Bootjack library (a wrapper around Bootstrap).
+    bootjack.Bootjack.useDefault();
+  }
+
+  void initSplitView() {
+    _splitView = new SplitView(querySelector('#splitview'));
+    _splitView.onResized.listen((_) {
+      editor.resize();
+      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
+    });
+    syncPrefs.getValue('splitViewPosition').then((String position) {
+      if (position != null) {
+        int value = int.parse(position, onError: (_) => 0);
+        if (value != 0) {
+          _splitView.position = value;
+        }
+      }
+    });
+  }
+
+  void createActions() {
+    actionManager = new ActionManager();
+    actionManager.registerAction(new FileNewAction(this));
+    actionManager.registerAction(new FileOpenAction(this));
+    actionManager.registerAction(new FileSaveAction(this));
+    actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new ProjectOpenAction(this));
+    actionManager.registerAction(new RunTestsAction(this));
+    actionManager.registerAction(new AboutSparkAction(this));
+    actionManager.registerKeyListener();
+  }
+
+  void initToolbar() {
+    querySelector("#newFile").onClick.listen(
+        (_) => actionManager.getAction('file-new').invoke());
+    querySelector("#openFile").onClick.listen(
+        (_) => actionManager.getAction('file-open').invoke());
+
+    buildMenu();
+  }
+
+  void buildMenu() {
+    UListElement ul = querySelector('#hotdogMenu ul');
+
+    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
+    ul.children.add(createMenuSeparator());
+
+    // theme control
+    Element theme = ul.querySelector('#themeControl');
+    ul.children.remove(theme);
+    ul.children.add(theme);
+    querySelector('#themeLeft').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: true);
+    });
+    querySelector('#themeRight').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: false);
+    });
+
+    if (developerMode) {
+      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
+    }
+
+    ul.children.add(createMenuSeparator());
+    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
+  }
+
+  //
+  // - End parts of ctor.
+  //
   void newFile() => notImplemented('Spark.newFile()');
 
   void openFile() {
@@ -250,60 +315,6 @@ class Spark extends Application implements FilesControllerDelegate {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorManager.close(resource);
     }
-  }
-
-  void createActions() {
-    actionManager = new ActionManager();
-    actionManager.registerAction(new FileNewAction(this));
-    actionManager.registerAction(new FileOpenAction(this));
-    actionManager.registerAction(new FileSaveAction(this));
-    actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
-    actionManager.registerAction(new FileCloseAction(this));
-    actionManager.registerAction(new ProjectOpenAction(this));
-    actionManager.registerAction(new RunTestsAction(this));
-    actionManager.registerAction(new AboutSparkAction(this));
-    actionManager.registerKeyListener();
-  }
-
-  void initToolbar() {
-    querySelector("#newFile").onClick.listen(
-        (_) => actionManager.getAction('file-new').invoke());
-    querySelector("#openFile").onClick.listen(
-        (_) => actionManager.getAction('file-open').invoke());
-
-    buildMenu();
-  }
-
-  void buildMenu() {
-    UListElement ul = querySelector('#hotdogMenu ul');
-
-    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
-    ul.children.add(createMenuSeparator());
-
-    // theme control
-    Element theme = ul.querySelector('#themeControl');
-    ul.children.remove(theme);
-    ul.children.add(theme);
-    querySelector('#themeLeft').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: true);
-    });
-    querySelector('#themeRight').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: false);
-    });
-
-    if (developerMode) {
-      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-    }
-
-    ul.children.add(createMenuSeparator());
-    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
 
   void showStatus(String text, {bool error: false}) {
