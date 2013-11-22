@@ -201,8 +201,8 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new ProjectOpenAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
