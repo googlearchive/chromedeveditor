@@ -278,10 +278,9 @@ class TreeView implements ListViewDelegate {
     TreeViewCell cell = null;
     if (targetCell != null) {
       cell = TreeViewCell.TreeViewCellForElement(targetCell);
-      if (cell != null) {
-        // And if it's accepting drop ...
-        if (!cell.acceptDrop)
-          cell = null;
+      // And if it's accepting drop ...
+      if (cell != null && !cell.acceptDrop) {
+        cell = null;
       }
     }
     // Shows an overlay on the cell.
