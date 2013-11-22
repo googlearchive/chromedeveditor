@@ -155,7 +155,7 @@ class Pack {
     List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
         + " ${contentData.length}\u0000");
 
-    Uint8List fullContent = 
+    Uint8List fullContent =
         new Uint8List(header.length + contentData.length);
 
     fullContent.setAll(0, header);
@@ -273,13 +273,28 @@ class Pack {
     return object;
   }
 
+  Future<PackObject> matchAndExpandObjectAtOffset(int startOffset,
+      String dataType) {
+    PackObject object = _matchObjectAtOffset(startOffset);
+
+    switch (object.type) {
+      case PackedTypes.OFS_DELTA:
+      case PackedTypes.REF_DELTA:
+        return expandDeltifiedObject(object);
+        break;
+      default:
+        return new Future.value(object);
+        break;
+    }
+  }
+
   PackObject _matchObjectAtOffset(int startOffset) {
     _offset = startOffset;
     return _matchObjectData(_getObjectHeader());
   }
 
   // TODO(grv) : add progress.
-  Future parseAll() {
+  Future parseAll(progress) {
     Completer completer = new Completer();
 
     try {
@@ -293,7 +308,6 @@ class Pack {
       for (int i = 0; i < numObjects; ++i) {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = crc.CRC32.compute(data.sublist(object.offset, _offset));
-
 
         // hold on to the data for delta style objects.
         switch (object.type) {
@@ -338,11 +352,11 @@ class Pack {
         maskedByte = (byte & 0x7f);
         shiftedByte = (maskedByte << currentShift);
         result += shiftedByte;
-        currentShift += 7; 
+        currentShift += 7;
       }
 
       stream.offset = offset;
-      return result;  
+      return result;
     }
 
     DeltaDataStream stream = new DeltaDataStream(deltaData, 0);
