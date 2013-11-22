@@ -68,8 +68,8 @@ class PackEntry {
 }
 
 class FindPackedObjectResult {
-  int offset;
   Pack pack;
+  int offset;
   FindPackedObjectResult(this.pack, this.offset);
 }
 

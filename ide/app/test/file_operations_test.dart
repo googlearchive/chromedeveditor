@@ -18,7 +18,7 @@ const String FILE_CONTENT = 'This is a test file content.';
 const String BLOB_STRING_1 = 'First part of the blob.';
 const String BLOB_STRING_2 = 'Second part of the blob';
 
-main() {
+defineTests() {
   group('git.file_operations', () {
     test('Create a folder whose parent does not exist.', () {
       MockFileSystem fs = new MockFileSystem();

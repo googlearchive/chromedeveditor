@@ -42,7 +42,7 @@ void defineTests() {
   app_test.main();
   compiler_test.main();
   editors_test.main();
-  file_operations_test.main();
+  file_operations_test.defineTests();
   files_test.main();
   git_object_test.main();
   git_objectstore_test.main();
