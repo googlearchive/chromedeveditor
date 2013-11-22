@@ -5,6 +5,8 @@
 library spark_polymer;
 
 import 'dart:html';
+
+import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 import 'spark.dart';
@@ -48,15 +50,16 @@ class SparkPolymer extends Spark {
 
   @override
   void initEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      final selected = (theme != null) ? AceEditor.THEMES.indexOf(theme) : 0;
+    super.initEditorThemes();
+//    syncPrefs.getValue('aceTheme').then((String theme) {
+//      final selected = (theme != null) ? AceEditor.THEMES.indexOf(theme) : 0;
 
-      (querySelector('#themeChooser') as dynamic)
-        ..items = AceEditor.THEMES.map(_beautifyThemeName)
-        ..selected = selected
-        ..onClick.listen(_switchTheme);
-      _switchTheme();
-    });
+//      (querySelector('#themeChooser') as dynamic)
+//        ..items = AceEditor.THEMES.map(_beautifyThemeName)
+//        ..selected = selected
+//        ..onClick.listen(_switchTheme);
+//      _switchTheme();
+//    });
   }
 
   @override
@@ -64,8 +67,8 @@ class SparkPolymer extends Spark {
 
   @override
   void initLookAndFeel() {
-//    // Init the Bootjack library (a wrapper around Bootstrap).
-//    bootjack.Bootjack.useDefault();
+    // Init the Bootjack library (a wrapper around Bootstrap).
+    bootjack.Bootjack.useDefault();
   }
 
   @override
@@ -75,37 +78,7 @@ class SparkPolymer extends Spark {
   void initToolbar() => super.initToolbar();
 
   @override
-  void buildMenu() {
-    // TODO: Implement this.
-//    UListElement ul = querySelector('#hotdogMenu ul');
-//
-//    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
-//    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-//    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
-//    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
-//    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
-//    ul.children.add(createMenuSeparator());
-//
-//    // theme control
-//    Element theme = ul.querySelector('#themeControl');
-//    ul.children.remove(theme);
-//    ul.children.add(theme);
-//    querySelector('#themeLeft').onClick.listen((e) {
-//      e.stopPropagation();
-//      _handleChangeTheme(themeLeft: true);
-//    });
-//    querySelector('#themeRight').onClick.listen((e) {
-//      e.stopPropagation();
-//      _handleChangeTheme(themeLeft: false);
-//    });
-//
-//    if (developerMode) {
-//      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-//    }
-//
-//    ul.children.add(createMenuSeparator());
-//    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
-  }
+  void buildMenu() => super.buildMenu();
 
   //
   // - End parts of the parent's ctor.
