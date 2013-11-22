@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark;
+library spark_polymer;
 
 import 'dart:html';
 import 'package:polymer/polymer.dart' as polymer;
@@ -22,14 +22,32 @@ void main() {
 class SparkPolymer extends Spark {
   SparkPolymer(bool developerMode) : super(developerMode);
 
+  //
+  // Override some parts of the parent's ctor:
+  //
+
   @override
-  void setupSplitView() {
-    // We're using a Polymer-based splitview, so disable the default
-    // by overriding this method to be empty.
+  void initAnalytics() => super.initAnalytics();
+
+  @override
+  void initWorkspace() => super.initWorkspace();
+
+  @override
+  void initEditor() => super.initEditor();
+
+  @override
+  void initEditorManager() => super.initEditorManager();
+
+  @override
+  void initEditorArea() => super.initEditorArea();
+
+  @override
+  void initSplitView() {
+    // We're using a Polymer-based splitview, so disable the default.
   }
 
   @override
-  void setupEditorThemes() {
+  void initEditorThemes() {
     syncPrefs.getValue('aceTheme').then((String theme) {
       final selected = (theme != null) ? AceEditor.THEMES.indexOf(theme) : 0;
 
@@ -42,9 +60,56 @@ class SparkPolymer extends Spark {
   }
 
   @override
+  void initFilesController() => super.initFilesController();
+
+  @override
+  void initLookAndFeel() {
+//    // Init the Bootjack library (a wrapper around Bootstrap).
+//    bootjack.Bootjack.useDefault();
+  }
+
+  @override
+  void createActions() => super.createActions();
+
+  @override
+  void initToolbar() => super.initToolbar();
+
+  @override
   void buildMenu() {
     // TODO: Implement this.
+//    UListElement ul = querySelector('#hotdogMenu ul');
+//
+//    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
+//    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
+//    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
+//    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+//    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
+//    ul.children.add(createMenuSeparator());
+//
+//    // theme control
+//    Element theme = ul.querySelector('#themeControl');
+//    ul.children.remove(theme);
+//    ul.children.add(theme);
+//    querySelector('#themeLeft').onClick.listen((e) {
+//      e.stopPropagation();
+//      _handleChangeTheme(themeLeft: true);
+//    });
+//    querySelector('#themeRight').onClick.listen((e) {
+//      e.stopPropagation();
+//      _handleChangeTheme(themeLeft: false);
+//    });
+//
+//    if (developerMode) {
+//      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
+//    }
+//
+//    ul.children.add(createMenuSeparator());
+//    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
+
+  //
+  // - End parts of the parent's ctor.
+  //
 
   void _switchTheme([_]) {
     int selected =
