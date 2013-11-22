@@ -29,6 +29,9 @@ class SparkPolymer extends Spark {
   //
 
   @override
+  String get appName => super.appName + "Polymer";
+
+  @override
   void initAnalytics() => super.initAnalytics();
 
   @override
