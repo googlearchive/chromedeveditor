@@ -10,6 +10,7 @@ library spark.ui.widgets.treeview;
 
 import 'dart:collection';
 import 'dart:html';
+import 'dart:convert' show JSON;
 
 import 'treeview_cell.dart';
 import 'treeview_row.dart';
@@ -17,6 +18,15 @@ import 'listview.dart';
 import 'listview_cell.dart';
 import 'listview_delegate.dart';
 import 'treeview_delegate.dart';
+
+class TreeViewDragImage {
+  ImageElement image;
+  Point location;
+
+  TreeViewDragImage(this.image, int x, int y) {
+    location = new Point(x, y);
+  }
+}
 
 class TreeView implements ListViewDelegate {
   // ListView that's used to helps implementing the TreeView.
@@ -32,7 +42,10 @@ class TreeView implements ListViewDelegate {
   Map<String, TreeViewRow> _rowsMap;
   // Saved expanded state of the nodes when reloading the content of the tree.
   HashSet<String> _expandedState;
+  // When dragging over a cell the tree view, it's the highlighted cell.
   TreeViewCell _currentDragOverCell;
+  // Whether the user can drag a cell.
+  bool draggingEnabled = false;
 
   /**
    * Constructor of a `TreeView`.
@@ -47,17 +60,6 @@ class TreeView implements ListViewDelegate {
     _rowsMap = null;
     reloadData();
   }
-
-  /**
-   * This method can be called to refresh the content when the data provided
-   * by the delegate changed.
-   */
-  void reloadData() {
-    _refreshRows();
-    _listView.reloadData();
-  }
-
-  // Populate _rows.
 
   /**
    * Fills _rows and _rowsMap using the callbacks of the delegate.
@@ -101,10 +103,10 @@ class TreeView implements ListViewDelegate {
   }
 
   /**
-   * Refresh the content of the tree and keep nodes expanded and restore
-   * selection properly.
+   * This method can be called to refresh the content when the data provided
+   * by the delegate changed.
    */
-  void _refreshRows() {
+  void reloadData() {
     // Save selection
     Set<String> savedSelection = new HashSet();
     _listView.selection.forEach((rowIndex) {
@@ -126,6 +128,7 @@ class TreeView implements ListViewDelegate {
 
     _fillRows();
     _expandedState.clear();
+    _listView.reloadData();
 
     // Restore selection
     List<int> restoredSelection = [];
@@ -190,9 +193,12 @@ class TreeView implements ListViewDelegate {
 
   // Embed the cell returned by the delegate into a `TreeViewCell`.
   ListViewCell listViewCellForRow(ListView view, int rowIndex) {
-    ListViewCell cell = _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUID);
-    bool hasChildren = _delegate.treeViewHasChildren(this, _rows[rowIndex].nodeUID);
-    TreeViewCell treeCell = new TreeViewCell(this, cell, _rows[rowIndex], hasChildren);
+    ListViewCell cell =
+        _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUID);
+    bool hasChildren =
+        _delegate.treeViewHasChildren(this, _rows[rowIndex].nodeUID);
+    TreeViewCell treeCell = new TreeViewCell(this, cell, _rows[rowIndex],
+        hasChildren, draggingEnabled);
     return treeCell;
   }
 
@@ -232,11 +238,29 @@ class TreeView implements ListViewDelegate {
   }
 
   void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {
-    String nodeUID = null;
-    if (rowIndex != -1) {
-      nodeUID = _rowIndexesToNodeUIDs([rowIndex])[0];
+    String encodedSelection = dataTransfer.getData('application/x-spark-treeview');
+    if (encodedSelection != null) {
+      // Inner drag&dropping.
+      // TODO(dvh): we need to make sure it's the same instance of the
+      // TreeView.
+      List<String> dragSelection = JSON.decode(encodedSelection);
+      String nodeUID = null;
+      if (_currentDragOverCell != null) {
+        nodeUID = _currentDragOverCell.nodeUID;
+      }
+      _delegate.treeViewDropCells(this, dragSelection, nodeUID);
+    } else {
+      // Dropping from somewhere else.
+      String nodeUID = null;
+      if (rowIndex != -1) {
+        nodeUID = _rowIndexesToNodeUIDs([rowIndex])[0];
+      }
+      if (_currentDragOverCell != null) {
+        _currentDragOverCell.dragOverlayVisible = false;
+        _currentDragOverCell = null;
+      }
+      _delegate.treeViewDrop(this, nodeUID, dataTransfer);
     }
-    _delegate.treeViewDrop(this, nodeUID, dataTransfer);
   }
 
   void listViewDragOver(ListView view, MouseEvent event) {
@@ -255,8 +279,9 @@ class TreeView implements ListViewDelegate {
     if (targetCell != null) {
       cell = TreeViewCell.TreeViewCellForElement(targetCell);
       // And if it's accepting drop ...
-      if (!cell.acceptDrop)
+      if (cell != null && !cell.acceptDrop) {
         cell = null;
+      }
     }
     // Shows an overlay on the cell.
     if (_currentDragOverCell != cell) {
@@ -289,4 +314,24 @@ class TreeView implements ListViewDelegate {
   }
 
   bool get dropEnabled => _listView.dropEnabled;
+
+  /**
+   *  Make sure the given node is selected.
+   *  Note: it's a private method for TreeViewCell.
+   */
+  void privateCheckSelectNode(String nodeUID) {
+    List<String> currentSelection = selection;
+    if (currentSelection.contains(nodeUID)) {
+      return;
+    }
+    selection = [nodeUID];
+  }
+
+  /**
+   *  This method returns a drag image and location for the current selection.
+   *  Note: it's a private method for TreeViewCell.
+   */
+  TreeViewDragImage privateDragImage(MouseEvent event) {
+    return _delegate.treeViewDragImage(this, selection, event);
+  }
 }
