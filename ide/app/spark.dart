@@ -83,14 +83,7 @@ class Spark extends Application implements FilesControllerDelegate {
     localPrefs = preferences.localStore;
     syncPrefs = preferences.syncStore;
 
-    actionManager = new ActionManager();
-
-    analytics.getService('Spark').then((service) {
-      // Init the analytics tracker and send a page view for the main page.
-      tracker = service.getTracker(_ANALYTICS_ID);
-      tracker.sendAppView('main');
-      _startTrackingExceptions();
-    });
+    initAnalytics();
 
     addParticipant(new _SparkSetupParticipant(this));
 
@@ -99,9 +92,48 @@ class Spark extends Application implements FilesControllerDelegate {
       close();
     });
 
-    workspace = new ws.Workspace(localPrefs);
-    editor = new AceEditor(new DivElement());
+    initWorkspace();
+    initEditor();
+    initEditorManager();
+    initEditorArea();
+    initEditorThemes();
+    initFilesController();
 
+    initLookAndFeel();
+
+    createActions();
+    initToolbar();
+    initSplitView();
+  }
+
+  String get appName => i18n('app_name');
+
+  String get appVersion => chrome.runtime.getManifest()['version'];
+
+  PlatformInfo get platformInfo => _platformInfo;
+
+  //
+  // Parts of ctor:
+  //
+
+  void initAnalytics() {
+    analytics.getService('Spark').then((service) {
+      // Init the analytics tracker and send a page view for the main page.
+      tracker = service.getTracker(_ANALYTICS_ID);
+      tracker.sendAppView('main');
+      _startTrackingExceptions();
+    });
+  }
+
+  void initWorkspace() {
+    workspace = new ws.Workspace(localPrefs);
+  }
+
+  void initEditor() {
+    editor = new AceEditor(new DivElement());
+  }
+
+  void initEditorManager() {
     editorManager = new EditorManager(workspace, editor, localPrefs);
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
@@ -122,36 +154,37 @@ class Spark extends Application implements FilesControllerDelegate {
         editorArea.selectFile(resource, switchesTab: true);
       });
     });
+  }
 
+  void initEditorArea() {
+    editor = new AceEditor(new DivElement());
     editorArea = new EditorArea(document.getElementById('editorArea'),
-                                editorManager,
-                                allowsLabelBar: true);
+        editorManager,
+        allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
       _filesController.selectFile(tab.file);
       localPrefs.setValue('lastFileSelection', tab.file.path);
     });
-    _filesController = new FilesController(workspace, this);
-
-    setupSplitView();
-    setupFileActions();
-    setupEditorThemes();
-
-    // Init the bootjack library (a wrapper around bootstrap).
-    bootjack.Bootjack.useDefault();
-
-    createActions();
-    buildMenu();
-
-    actionManager.registerKeyListener();
   }
 
-  String get appName => i18n('app_name');
+  void initEditorThemes() {
+    syncPrefs.getValue('aceTheme').then((String theme) {
+      if (theme != null && AceEditor.THEMES.contains(theme)) {
+        editor.theme = theme;
+      }
+    });
+  }
 
-  String get appVersion => chrome.runtime.getManifest()['version'];
+  void initFilesController() {
+    _filesController = new FilesController(workspace, this);
+  }
 
-  PlatformInfo get platformInfo => _platformInfo;
+  void initLookAndFeel() {
+    // Init the Bootjack library (a wrapper around Bootstrap).
+    bootjack.Bootjack.useDefault();
+  }
 
-  void setupSplitView() {
+  void initSplitView() {
     _splitView = new SplitView(querySelector('#splitview'));
     _splitView.onResized.listen((_) {
       editor.resize();
@@ -167,21 +200,63 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
-  void setupFileActions() {
+  void createActions() {
+    actionManager = new ActionManager();
+    actionManager.registerAction(new FileNewAction(this));
+    actionManager.registerAction(new FileOpenAction(this));
+    actionManager.registerAction(new FileSaveAction(this));
+    actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new ProjectOpenAction(this));
+    actionManager.registerAction(new RunTestsAction(this));
+    actionManager.registerAction(new AboutSparkAction(this));
+    actionManager.registerKeyListener();
+  }
+
+  void initToolbar() {
     querySelector("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new').invoke());
     querySelector("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
+
+    buildMenu();
   }
 
-  void setupEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null && AceEditor.THEMES.contains(theme)) {
-        editor.theme = theme;
-      }
+  void buildMenu() {
+    UListElement ul = querySelector('#hotdogMenu ul');
+
+    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
+    ul.children.add(createMenuSeparator());
+
+    // theme control
+    Element theme = ul.querySelector('#themeControl');
+    ul.children.remove(theme);
+    ul.children.add(theme);
+    querySelector('#themeLeft').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: true);
     });
+    querySelector('#themeRight').onClick.listen((e) {
+      e.stopPropagation();
+      _handleChangeTheme(themeLeft: false);
+    });
+
+    if (developerMode) {
+      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
+    }
+
+    ul.children.add(createMenuSeparator());
+    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
 
+  //
+  // - End parts of ctor.
+  //
   void newFile() => notImplemented('Spark.newFile()');
 
   void openFile() {
@@ -240,49 +315,6 @@ class Spark extends Application implements FilesControllerDelegate {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorManager.close(resource);
     }
-  }
-
-  void createActions() {
-    actionManager.registerAction(new FileNewAction(this));
-    actionManager.registerAction(new FileOpenAction(this));
-    actionManager.registerAction(new FileSaveAction(this));
-    actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
-    actionManager.registerAction(new FileCloseAction(this));
-    actionManager.registerAction(new ProjectOpenAction(this));
-    actionManager.registerAction(new RunTestsAction(this));
-    actionManager.registerAction(new AboutSparkAction(this));
-  }
-
-  void buildMenu() {
-    UListElement ul = querySelector('#hotdogMenu ul');
-
-    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
-    ul.children.add(createMenuSeparator());
-
-    // theme control
-    Element theme = ul.querySelector('#themeControl');
-    ul.children.remove(theme);
-    ul.children.add(theme);
-    querySelector('#themeLeft').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: true);
-    });
-    querySelector('#themeRight').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: false);
-    });
-
-    if (developerMode) {
-      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-    }
-
-    ul.children.add(createMenuSeparator());
-    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
 
   void showStatus(String text, {bool error: false}) {
