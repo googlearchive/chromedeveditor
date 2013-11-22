@@ -75,7 +75,7 @@ class FindPackedObjectResult {
 
 class ObjectStore {
 
-  static final GIT_FOLDER_PATH = '.git/';
+  static final GIT_FOLDER_PATH = '.git';
   static final OBJECT_FOLDER_PATH = 'objects';
   static final HEAD_PATH = 'HEAD';
   static final HEAD_MASTER_REF_PATH = 'refs/head/master';
@@ -102,17 +102,19 @@ class ObjectStore {
   }
 
   Future load() {
-    return _rootDir.createDirectory(gitPath + OBJECT_FOLDER_PATH).then((
-        chrome.DirectoryEntry objectsDir) {
-      objectDir = objectsDir;
+    return _rootDir.createDirectory(GIT_FOLDER_PATH).then((gitDir) {
+      return gitDir.createDirectory(OBJECT_FOLDER_PATH).then((objectsDir) {
 
-      return objectsDir.createDirectory('pack', exclusive: true).then((
-          chrome.DirectoryEntry packDir) {
-        return FileOps.listFiles(packDir).then((List<chrome.Entry> entries) {
-          Iterable<chrome.Entry> packEntries = entries.where((e) => e.name.endsWith('.pack'));
+        objectDir = objectsDir;
+        return objectsDir.createDirectory('pack').then((
+            chrome.DirectoryEntry packDir) {
+          return FileOps.listFiles(packDir).then((List<chrome.Entry> entries) {
+            Iterable<chrome.Entry> packEntries = entries.where((e)
+                => e.name.endsWith('.pack'));
 
-          return Future.forEach(packEntries, (chrome.Entry entry) {
-            _readPackEntry(packDir, entry);
+            return Future.forEach(packEntries, (chrome.Entry entry) {
+              _readPackEntry(packDir, entry);
+            });
           });
         });
       });
@@ -133,11 +135,10 @@ class ObjectStore {
 
   Future<String> getHeadRef() {
     return _rootDir.getFile(gitPath + HEAD_PATH).then((chrome.ChromeFileEntry entry) {
-      entry.readText().then((String content) {
-        Completer completer = new Completer();
+      return entry.readBytes().then((chrome.ArrayBuffer buffer) {
+        String content = UTF8.decode(buffer.getBytes());
         // get rid of the initial 'ref: ' plus newline at end.
-        String headRefname = content.substring(5).trim();
-        completer.complete(headRefname);
+        return content.substring(5).trim();
       });
     });
   }
@@ -162,7 +163,7 @@ class ObjectStore {
   }
 
   Future<String> _getHeadForRef(String headRefName) {
-    return FileOps.readFile(_rootDir, GIT_FOLDER_PATH + headRefName, "Text")
+    return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
       .then((String content) => content.substring(0, 40));
   }
 
@@ -257,7 +258,7 @@ class ObjectStore {
 
 
     Future walkLevel(List<String> shas) {
-      List<String> nextLevel;
+      List<String> nextLevel = [];
 
       return Future.forEach(shas, (String sha) {
         Completer completer = new Completer();
