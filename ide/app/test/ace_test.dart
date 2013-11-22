@@ -11,7 +11,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
 
-main() {
+defineTests() {
   group('ace', () {
     // This essentially tests that the ace codebase is available.
     test('is available', () {
