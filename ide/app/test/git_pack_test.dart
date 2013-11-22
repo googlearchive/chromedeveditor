@@ -15,7 +15,7 @@ final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack-_index_test.idx';
 
 
-main() {
+defineTests() {
   group('git.pack', () {
     test('parsePack', () {
       return chrome_gen.runtime.getPackageDirectoryEntry().then(

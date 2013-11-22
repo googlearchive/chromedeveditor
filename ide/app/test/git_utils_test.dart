@@ -12,7 +12,7 @@ final String SHA_STRING_TEST = "6a21325b42661e4ae5bc659a1cb66a21938d784f";
 final List<int> SHA_BYTES_TEST =
     [106,33,50,91,66,102,30,74,229,188,101,154,28,182,106,33,147,141,120,79];
 
-main() {
+defineTests() {
   group('git_utils', () {
     test('shaToBytes', () {
       expect(shaToBytes(SHA_STRING_TEST), SHA_BYTES_TEST);

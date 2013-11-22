@@ -13,7 +13,7 @@ import '../lib/workspace.dart';
 
 const _FILETEXT = 'This is sample text for mock file entry.';
 
-main() {
+defineTests() {
   group('workspace', () {
 
     test('create file and check contents', () {

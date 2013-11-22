@@ -8,7 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/compiler.dart';
 
-main() {
+defineTests() {
   group('compiler', () {
     Compiler compiler;
 
