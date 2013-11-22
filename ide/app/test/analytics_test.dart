@@ -8,7 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/analytics.dart' as analytics;
 
-main() {
+defineTests() {
   group('analytics', () {
     // This essentially tests whether the google-analytics-bundle.js codebase is
     // available.

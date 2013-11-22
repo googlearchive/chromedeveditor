@@ -14,7 +14,7 @@ import '../lib/editors.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
-main() {
+defineTests() {
   group('editors', () {
     test('general test', () {
       Workspace workspace = new Workspace();

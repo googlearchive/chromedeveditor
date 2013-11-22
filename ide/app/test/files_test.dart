@@ -9,7 +9,7 @@ import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 
-main() {
+defineTests() {
   group('files', () {
     test('package directory available', () {
       return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {

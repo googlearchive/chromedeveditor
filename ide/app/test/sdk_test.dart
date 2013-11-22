@@ -8,7 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/sdk.dart';
 
-main() {
+defineTests() {
   group('sdk', () {
     DartSdk sdk;
 

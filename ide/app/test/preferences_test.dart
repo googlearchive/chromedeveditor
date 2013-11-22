@@ -11,7 +11,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/preferences.dart';
 
-main() {
+defineTests() {
   group('preferences.chrome', () {
     test('writeRead', () {
       localStore.setValue("foo1", "bar1");
