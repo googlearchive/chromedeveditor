@@ -9,8 +9,6 @@ import 'dart:core';
 import 'dart:js';
 import 'dart:typed_data';
 
-import 'dart:html';
-
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 /**
