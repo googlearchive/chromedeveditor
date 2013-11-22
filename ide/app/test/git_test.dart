@@ -8,7 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/git/git.dart';
 
-main() {
+defineTests() {
   group('git', () {
     test('is available', () {
       expect(Git.available, true);

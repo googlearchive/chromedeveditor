@@ -66,7 +66,22 @@ abstract class TreeViewDelegate {
 
   /**
    * This method is called when the dragged item is actually dropped on the
-   * list or on a specific node in the treeview.
+   * tree or on a specific node in the treeview.
    */
   void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer);
+
+  /**
+   * This method is called when a selection of the TreeView is actually dropped
+   * on the tree or on a specific node of the treeview.
+   */
+  void treeViewDropCells(TreeView view,
+                         List<String> nodesUIDs,
+                         String targetNodeUID);
+
+  /**
+   * This method provides a drag image and location for the given nodes UIDs.
+   */
+  TreeViewDragImage treeViewDragImage(TreeView view,
+                                      List<String> nodesUIDs,
+                                      MouseEvent event);
 }

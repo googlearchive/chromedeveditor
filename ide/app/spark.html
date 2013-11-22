@@ -18,11 +18,11 @@
       <div class="filename">
       </div>
       <div class="dropdown container">
-	      <div class="menu pull-right">
-				  <button class="dropdown-toggle" type="button" data-toggle="dropdown">
-				    <span class="caret"></span>
-				  </button>
-	      </div>
+        <div class="menu pull-right">
+          <button class="dropdown-toggle" type="button" data-toggle="dropdown">
+            <span class="caret"></span>
+          </button>
+        </div>
       </div>
     </div>
   </template>
@@ -42,8 +42,8 @@
     <button type="button" class="btn btn-primary" id="newFile">New File</button>
     <button type="button" class="btn btn-default" id="openFile">Open File...</button>
 
-	  <span id="status"></span>
-  
+    <span id="status"></span>
+
     <div id="hotdogMenu" class="btn-group">
       <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
         Menu <span class="caret"></span>
@@ -51,8 +51,8 @@
       <ul class="dropdown-menu pull-right">
         <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
           <span class="pull-right">
-	          <button type="button" id="themeLeft"><strong>-</strong></button>
-	          <button type="button" id="themeRight"><strong>+</strong></button>
+            <button type="button" id="themeLeft"><strong>-</strong></button>
+            <button type="button" id="themeRight"><strong>+</strong></button>
           </span></a>
         </li>
         <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
@@ -69,6 +69,22 @@
     <div id="fileViewArea" min-size="100"></div>
     <div id="editorArea" min-size="200"></div>
   </div>
+  
+  <!-- file delete dialog -->
+    <div id="deleteDialog" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <p id="message"></p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button id="deleteOkButton" class="btn btn-primary" data-dismiss="modal">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
 
   <!-- about dialog -->
   <div class="modal fade" id="aboutDialog">
@@ -84,12 +100,12 @@
             <dd>version <span id="aboutVersion"></span></dd>
           </dl>
           <div class="checkbox">
-				    <label>
-				      <input type="checkbox" id="analyticsCheck">
-				        Allow Spark to collect anonymous usage statistics
-				      </input>
-				    </label>
-				  </div>
+            <label>
+              <input type="checkbox" id="analyticsCheck">
+                Allow Spark to collect anonymous usage statistics
+              </input>
+            </label>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>

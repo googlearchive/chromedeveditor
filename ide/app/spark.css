@@ -9,7 +9,7 @@
 @import url("lib/ui/widgets/listview.css");
 @import url("lib/ui/widgets/treeview.css");
 @import url("lib/ui/widgets/tabview.css");
-  
+
 body {
   bottom: 0;
   display: flex;
@@ -32,7 +32,7 @@ body {
 }
 
 .fileview-filename-container {
-  
+
 }
 
 .fileview-filename-container .filename {
@@ -53,7 +53,7 @@ body {
 }
 
 .fileview-filename-container .dropdown-menu {
-	min-width: 120px;
+  min-width: 120px;
 }
 
 .fileview-filename-container .filename {
@@ -111,7 +111,7 @@ body {
 }
 
 #toolbar {
-	border-top: 1px solid #ddd;
+  border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
   padding: 4px;
 }
@@ -121,7 +121,7 @@ body {
 }
 
 #hotdogMenu li {
-	min-width: 16em;
+  min-width: 16em;
 }
 
 /* bootstrap overrides */

@@ -13,7 +13,7 @@ import '../lib/app.dart';
 // TODO: test that adding a participant after start() has been called, calls
 // the lifecycle methods of that participant.
 
-main() {
+defineTests() {
   group('app', () {
     test('application fires start events', () {
       TestApplication app = new TestApplication();
