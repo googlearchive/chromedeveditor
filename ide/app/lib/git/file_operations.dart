@@ -125,7 +125,7 @@ abstract class FileOps {
   static Future<chrome.DirectoryEntry> copyDirectory(chrome.DirectoryEntry src,
       chrome.DirectoryEntry dst) {
     return listFiles(src).then((List<chrome.Entry> entries) {
-      return Future.forEach((entries), (chrome.Entry entry) {
+      return Future.forEach(entries, (chrome.Entry entry) {
         if (entry.isFile) {
           return (entry as chrome.ChromeFileEntry).readBytes().then((content) {
             return createFileWithContent(dst, entry.name, content,

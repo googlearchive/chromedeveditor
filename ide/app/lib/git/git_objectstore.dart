@@ -138,8 +138,7 @@ class ObjectStore {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
         String content = UTF8.decode(buffer.getBytes());
         // get rid of the initial 'ref: ' plus newline at end.
-        String headRefName = content.substring(5).trim();
-        return headRefName;
+        return content.substring(5).trim();
       });
     });
   }

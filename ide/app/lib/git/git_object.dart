@@ -197,6 +197,7 @@ class CommitObject extends GitObject {
 
   Author _parseAuthor(String input) {
 
+    // Regex " AuthorName <Email>  timestamp timeOffset"
     final RegExp pattern = new RegExp(r' (.*) <(.*)> (\d+) (\+|\-)\d\d\d\d');
     List<Match> match = pattern.allMatches(input).toList();
 
