@@ -162,7 +162,11 @@ class ListView {
     } else if ((event as MouseEvent).metaKey || (event as MouseEvent).ctrlKey) {
       // Click while holding Ctrl (Mac/Linux) or Command (for Mac).
       _selectedRow = rowIndex;
-      _selection.add(rowIndex);
+      if (_selection.contains(rowIndex)) {
+        _selection.remove(rowIndex);
+      } else {
+        _selection.add(rowIndex);
+      }
     } else {
       // Click without any modifiers.
       _selectedRow = rowIndex;
