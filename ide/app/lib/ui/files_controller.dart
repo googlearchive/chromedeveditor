@@ -44,6 +44,10 @@ class FilesController implements TreeViewDelegate {
     });
   }
 
+  bool isFileSelected(Resource file) {
+    return _treeView.selection.contains(file.path);
+  }
+
   void selectFile(Resource file, {bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;

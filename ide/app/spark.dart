@@ -128,7 +128,11 @@ class Spark extends Application implements FilesControllerDelegate {
                                 editorManager,
                                 allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
-      _filesController.selectFile(tab.file);
+      // We don't change the selection when the file was already selected
+      // otherwise, it would break multi-selection (#260).
+      if (!_filesController.isFileSelected(tab.file)) {
+        _filesController.selectFile(tab.file);
+      }
       localPrefs.setValue('lastFileSelection', tab.file.path);
     });
     _filesController = new FilesController(workspace, this);
