@@ -132,12 +132,16 @@ class Clone {
 
   Future _something(chrome.DirectoryEntry gitDir, GitRef localHeadRef,
       HttpFetcher fetcher) {
+    window.console.log('inside something.');
     return FileOps.createFileWithContent(gitDir, "HEAD",
         "ref: ${localHeadRef.name}\n", "Text").then((_) {
       return FileOps.createFileWithContent(gitDir, localHeadRef.name,
           localHeadRef.sha, "Text").then((_) {
+            window.console.log('before fetch');
         return fetcher.fetchRef([localHeadRef], null, null, _options.depth,
             null, nopFunction, nopFunction).then((PackParseResult result) {
+              window.console.log('fetch complete');
+              window.console.log(result);
           Uint8List packData = result.data;
           List<int> packSha = packData.sublist(packData.length - 20);
           Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
@@ -153,10 +157,14 @@ class Clone {
           String packName = 'pack-${packNameSha}';
           return gitDir.createDirectory('objects').then(
               (chrome.DirectoryEntry objectsDir) {
+                window.console.log('before pack files');
             return _createPackFiles(objectsDir, packName, packData,
                 packIdxData).then((_) {
               PackIndex packIdx = new PackIndex(packIdxData.buffer);
               Pack pack = new Pack(packData, _options.store);
+              window.console.log(packData.length);
+              window.console.log('just before load');
+              return null;
               _options.store.loadWith(objectsDir, [new PackEntry(pack,
                   packIdx)]);
               //TODO add progress

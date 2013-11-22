@@ -6,6 +6,7 @@ library git.file_operations;
 
 import 'dart:async';
 import 'dart:core';
+import 'dart:html';
 import 'dart:js';
 import 'dart:typed_data';
 
@@ -60,6 +61,8 @@ abstract class FileOps {
             content = new chrome.ArrayBuffer.fromBytes(content.toList());
           }
           return entry.writeBytes(content).then((_) => entry);
+        } else if (content is chrome.ArrayBuffer) {
+          return entry.writeBytes(content).then((_) => entry);
         } else {
           throw new UnsupportedError(
               "Writing of content type:${type} is not supported.");
@@ -105,16 +108,29 @@ abstract class FileOps {
    */
   static Future readBlob(chrome.Blob blob, String type) {
     Completer completer = new Completer();
-    var reader = new JsObject(context['FileReader']);
-    reader['onload'] = (var event) {
-      completer.complete(reader['result']);
-    };
+    FileReader reader = new FileReader();
 
-    reader['onerror'] = (var domError) {
-      completer.completeError(domError);
-    };
+    reader.onLoadEnd.listen((e) {
+      if (type =='ArrayBuffer') {
+        completer.complete(new chrome.ArrayBuffer.fromProxy(reader.result));
+      } else {
+        completer.complete(reader.result);
+      }
+    });
 
-    reader.callMethod('readAs' + type, [blob]);
+    reader.onError.listen((domError) {
+      completer.complete(domError);
+    });
+
+    if (type == 'ArrayBuffer') {
+      reader.readAsArrayBuffer(blob);
+    } else if (type == 'Text') {
+      reader.readAsText(blob);
+    } else {
+      throw "Unsupported ${type} to read.";
+
+    }
+
     return completer.future;
   }
 }

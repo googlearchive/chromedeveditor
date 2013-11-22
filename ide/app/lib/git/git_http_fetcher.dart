@@ -109,6 +109,8 @@ class HttpFetcher {
     xhr.setRequestHeader('Content-Type', 'application/x-git-upload-pack-request');
 
     xhr.onLoad.listen((event) {
+      window.console.log('inside onload');
+      //window.console.log(xhr.response.toString().length);
       ByteBuffer buffer = xhr.response;
       if (haveRefs != null) {
         Uint8List data = new Uint8List.view(buffer, 4, 3);

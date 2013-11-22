@@ -23,8 +23,7 @@ defineTests() {
         return dir.getFile(PACK_FILE_PATH).then(
             (chrome_gen.ChromeFileEntry entry) {
           return entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
-            Uint8List data = new Uint8List.fromList(binaryData.getBytes());
-            Pack pack = new Pack(data, null);
+            Pack pack = new Pack(binaryData, null);
             return pack.parseAll(null).then((_) {
 
               // TODO: add more expects for the pack state?
