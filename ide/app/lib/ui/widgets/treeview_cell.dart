@@ -6,6 +6,7 @@ library spark.ui.widgets.treeview_cell;
 
 import 'dart:html';
 import 'dart:async';
+import 'dart:convert' show JSON;
 
 import 'listview_cell.dart';
 import 'treeview.dart';
@@ -41,7 +42,7 @@ class TreeViewCell implements ListViewCell {
   }
 
   TreeViewCell(this._treeView, this._embeddedCell, this._row,
-               bool hasChildren) {
+               bool hasChildren, bool draggable) {
     DocumentFragment template =
         (querySelector('#treeview-cell-template') as TemplateElement).content;
     Element templateClone = template.clone(true);
@@ -53,6 +54,9 @@ class TreeViewCell implements ListViewCell {
     _embeddedCellContainer.style.left = '${margin + 20}px';
     int offsetX = margin + 20;
     _embeddedCellContainer.style.width = 'calc(100% - ${offsetX}px)';
+    if (draggable) {
+      _embeddedCellContainer.setAttribute('draggable', 'true');
+    }
     _embeddedCellContainer.children.add(_embeddedCell.element);
 
     _dragOverlay = _element.querySelector('.treeviewcell-dragoverlay');
@@ -88,6 +92,18 @@ class TreeViewCell implements ListViewCell {
         _animating = false;
         _treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
       });
+    });
+
+    _embeddedCellContainer.onDragStart.listen((event) {
+      _treeView.privateCheckSelectNode(_row.nodeUID);
+      // Dragged data.
+      event.dataTransfer.setData('application/x-spark-treeview',
+          JSON.encode(_treeView.selection));
+      TreeViewDragImage imageInfo = _treeView.privateDragImage(event);
+      if (imageInfo != null) {
+        event.dataTransfer.setDragImage(imageInfo.image,
+            imageInfo.location.x, imageInfo.location.y);
+      }
     });
 
     _animating = false;

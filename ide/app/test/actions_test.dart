@@ -11,7 +11,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/actions.dart';
 
-main() {
+defineTests() {
   group('actions', () {
     test('KeyBinding 1', () {
       KeyBinding binding = new KeyBinding('alt-o');

@@ -8,7 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/git/git_object.dart';
 
-main() {
+defineTests() {
   group('git.objects', () {
     test('createObject', () {
       String sha = "shastring";

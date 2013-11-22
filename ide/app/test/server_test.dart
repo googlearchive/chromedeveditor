@@ -22,7 +22,7 @@ import '../lib/tcp.dart' as tcp;
 // TODO(devoncarew): test serving a stream response (contentLength == -1)
 
 
-main() {
+defineTests() {
   group('PicoServer', () {
     PicoServer server;
 

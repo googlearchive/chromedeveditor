@@ -14,6 +14,7 @@ import 'analyzer_test.dart' as analyzer_test;
 import 'app_test.dart' as app_test;
 import 'compiler_test.dart' as compiler_test;
 import 'editors_test.dart' as editors_test;
+import 'file_operations_test.dart' as file_operations_test;
 import 'files_test.dart' as files_test;
 import 'git_object_test.dart' as git_object_test;
 import 'git_objectstore_test.dart' as git_objectstore_test;
@@ -33,25 +34,27 @@ import 'zlib_test.dart' as zlib_test;
  * Place all new tests here.
  */
 void defineTests() {
-  ace_test.main();
-  actions_test.main();
-  analytics_test.main();
-  analyzer_test.main();
-  app_test.main();
-  compiler_test.main();
-  editors_test.main();
-  files_test.main();
-  git_object_test.main();
-  git_objectstore_test.main();
-  git_pack_test.main();
-  git_pack_index_test.main();
-  git_test.main();
-  git_utils_test.main();
-  preferences_test.main();
-  sdk_test.main();
-  server_test.main();
-  tcp_test.main();
-  utils_test.main();
-  workspace_test.main();
-  zlib_test.main();
+
+  ace_test.defineTests();
+  actions_test.defineTests();
+  analytics_test.defineTests();
+  analyzer_test.defineTests();
+  app_test.defineTests();
+  compiler_test.defineTests();
+  editors_test.defineTests();
+  file_operations_test.defineTests();
+  files_test.defineTests();
+  git_object_test.defineTests();
+  git_objectstore_test.defineTests();
+  git_pack_test.defineTests();
+  git_pack_index_test.defineTests();
+  git_test.defineTests();
+  git_utils_test.defineTests();
+  preferences_test.defineTests();
+  sdk_test.defineTests();
+  server_test.defineTests();
+  tcp_test.defineTests();
+  utils_test.defineTests();
+  workspace_test.defineTests();
+  zlib_test.defineTests();
 }
