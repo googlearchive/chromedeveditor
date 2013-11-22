@@ -14,7 +14,7 @@ import 'package:crc32/crc32.dart' as crc;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
 
-import 'git_objectstore.dart';
+import 'objectstore.dart';
 import 'zlib.dart';
 
 /**
@@ -91,9 +91,9 @@ class Pack {
   ObjectStore _store;
   List<PackObject> objects = [];
 
-  Pack(Uint8List data, ObjectStore store) {
+  Pack(Uint8List data, store) {
     this.data = data;
-    //this._store = store;
+    this._store = store;
   }
 
   Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
