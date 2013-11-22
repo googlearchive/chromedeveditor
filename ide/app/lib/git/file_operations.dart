@@ -9,8 +9,6 @@ import 'dart:core';
 import 'dart:js';
 import 'dart:typed_data';
 
-import 'dart:html';
-
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 /**
@@ -83,7 +81,6 @@ abstract class FileOps {
 
   static Future<dynamic> readFile(chrome.DirectoryEntry root, String path,
       String type) {
-    window.console.log(path);
     return root.getFile(path).then((chrome.ChromeFileEntry entry) {
 
       if (type == 'Text') {

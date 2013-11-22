@@ -6,12 +6,11 @@ library spark.git_objectstore_test;
 
 import 'dart:async';
 
-import 'dart:html';
-
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import '../lib/git/file_operations.dart';
+import '../lib/git/git_object.dart';
 import '../lib/git/git_objectstore.dart';
 import 'files_mock.dart';
 
@@ -43,14 +42,22 @@ defineTests() {
 
   group('git.objectstore', () {
     MockFileSystem fs = new MockFileSystem();
-    test('load', () {
+    test('Load and init store from git test directory.', () {
       return initStore(fs).then((ObjectStore store) {
         return store.getHeadRef().then((ref) {
           expect(ref, 'refs/heads/master');
           return store.getHeadSha().then((sha) {
             expect(sha, 'dc85576bd94bdcaff1bd60b0fb4cd032c8fa2c54');
-            return store.getCommitGraph([sha], 32).then((commits) {
-              window.console.log(commits);
+            return store.getCommitGraph([sha], 32).then(
+                (List<CommitObject> commits) {
+                  expect(commits.length, 5);
+                  expect(commits[0].treeSha,
+                      "85933892cd114abc0c2a4b7b3a25cddc471cd09d");
+                  expect(commits[1].author.name, 'Gaurav Agarwal');
+                  expect(commits[2].committer.email, 'grv@chromium.org');
+                  expect(commits[3].parents[0],
+                      "b37cdb5d6021562511df7602d164a2a0dc9ae2f8");
+                  expect(commits[4].parents.length, 0);
             });
           });
         });

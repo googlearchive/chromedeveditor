@@ -259,7 +259,7 @@ class ObjectStore {
 
 
     Future walkLevel(List<String> shas) {
-      List<String> nextLevel;
+      List<String> nextLevel = [];
 
       return Future.forEach(shas, (String sha) {
         Completer completer = new Completer();
