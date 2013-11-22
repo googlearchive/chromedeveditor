@@ -444,7 +444,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
   FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete") {
     _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));
-    _deleteDialog.element.querySelector("#okButton").onClick.listen((_) {
+    _deleteDialog.element.querySelector("#deleteOkButton").onClick.listen((_) {
       _deleteResource();
     });
   }
