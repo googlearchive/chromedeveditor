@@ -35,6 +35,8 @@ import 'zlib_test.dart' as zlib_test;
  */
 void defineTests() {
 
+  git_objectstore_test.defineTests();
+  return;
   ace_test.defineTests();
   actions_test.defineTests();
   analytics_test.defineTests();
