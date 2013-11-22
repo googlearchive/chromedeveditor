@@ -53,7 +53,7 @@ String shaToString(List<int> sha) {
   return UTF8.decode(sha);
 }
 
-main() {
+defineTests() {
   group('git.packIndex', () {
     test('packIndexParse', () {
       return initPack().then((Pack pack) {

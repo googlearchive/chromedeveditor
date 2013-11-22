@@ -18,17 +18,36 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
  **/
 abstract class FileOps {
 
+  /**
+   * Creates directories recursively in a given [path]. The immediate parent
+   * of the path may or may nor exist.
+   */
   static Future<chrome.DirectoryEntry> createDirectoryRecursive(
       chrome.DirectoryEntry dir, String path) {
+
+    if (path[path.length - 1] == '/') {
+      path = path.substring(0, path.length -1);
+    }
+
     List<String> pathParts = path.split("/");
     int i = 0;
-    return dir.createDirectory(pathParts[i]).then((chrome.DirectoryEntry dir) {
-      i++;
-      if (i == pathParts.length) return dir;
-      return dir.createDirectory(pathParts[i]);
-    });
+
+    createDirectories(chrome.DirectoryEntry dir) {
+      return dir.createDirectory(pathParts[i]).then(
+          (chrome.DirectoryEntry dir) {
+        i++;
+        if (i == pathParts.length) return dir;
+
+        return createDirectories(dir);
+      });
+    }
+    return createDirectories(dir);
   }
 
+  /**
+   * Creates a file with a given [content] and [type]. Creates parent
+   * directories if the immediate parent is absent.
+   */
   static Future<chrome.Entry> createFileWithContent(
       chrome.DirectoryEntry root, String path, content, String type) {
 
@@ -82,7 +101,7 @@ abstract class FileOps {
   }
 
   /**
-   * Reads a given [blob] as type.
+   * Reads a given [blob] as a given [type].
    */
   static Future readBlob(chrome.Blob blob, String type) {
     Completer completer = new Completer();
@@ -96,24 +115,6 @@ abstract class FileOps {
     };
 
     reader.callMethod('readAs' + type, [blob]);
-    return completer.future;
-  }
-
-  /**
-   * Reads a given [blob] as BinaryData.
-   */
-  static Future<String> readBlobAsArrayBuffer(chrome.Blob blob) {
-    Completer completer = new Completer();
-    var reader = new JsObject(context['FileReader']);
-    reader['onload'] = (var event) {
-      completer.complete(reader['result']);
-    };
-
-    reader['onerror'] = (var domError) {
-      completer.completeError(domError);
-    };
-
-    reader.callMethod('readAsText', [blob]);
     return completer.future;
   }
 }

@@ -11,6 +11,62 @@ import 'dart:async';
 import 'dart:html';
 
 /**
+ * Create a blank, separator menu item.
+ */
+Element createMenuSeparator() => new LIElement()..classes.add('divider');
+
+/**
+ * Create a menu item from the given action. The menu item will have the
+ * action's name, keybinding, and disablement state. Selecting the menu item
+ * will call the action's `invoke()` method.
+ */
+Element createMenuItem(Action action, {Object context, bool showAccelerator: true}) {
+  LIElement li = new LIElement();
+
+  AnchorElement a = new AnchorElement()
+      ..text = action.name
+      ..classes.toggle('disabled', !action.enabled);
+
+  if (showAccelerator) {
+    SpanElement span = new SpanElement()
+        ..text = action.getBindingDescription()
+        ..classes.add('pull-right');
+    a.children.add(span);
+  }
+
+  li.children.add(a);
+  li.onClick.listen((_) => action.invoke(context));
+
+  return li;
+}
+
+/**
+ * Given a list of actions (possibly from [ActionManager.getContextActions])
+ * return a menu element representing those actions.
+ */
+Element createContextMenu(List<ContextAction> actions, Object context,
+                          {bool pullRight: false}) {
+  UListElement ul = new UListElement()
+      ..classes.add('dropdown-menu')
+      ..classes.toggle('pull-right', pullRight)
+      ..attributes['role'] = 'menu';
+
+  String category = null;
+
+  for (ContextAction action in actions) {
+    if (category != null && action.category != category) {
+      ul.children.add(createMenuSeparator());
+    }
+    category = action.category;
+
+    ul.children.add(
+        createMenuItem(action, context: context, showAccelerator: false));
+  }
+
+  return ul;
+}
+
+/**
  * The ActionManager class is used to manage a set of actions.
  */
 class ActionManager {
@@ -45,7 +101,7 @@ class ActionManager {
     }
 
     for (Action action in getActions()) {
-      if (action.matches(event)) {
+      if (action.matchesEvent(event)) {
         event.preventDefault();
 
         if (action.enabled) {
@@ -53,6 +109,33 @@ class ActionManager {
         }
       }
     }
+  }
+
+  /**
+   * Return a list of all context menu actions that apply to the given [object].
+   * The list is returned in the order that the context menu actions were
+   * defined, with a stable sort by action category. So, all actions in the
+   * same category ('resource', 'transfer', ...) will be grouped together.
+   */
+  List<ContextAction> getContextActions(Object object) {
+    List list = [];
+
+    for (Action action in getActions()) {
+      if (action is ContextAction && action.appliesTo(object)) {
+        list.add(action);
+      }
+    }
+
+    List sorted = [];
+
+    // Sort the actions by category; keep the categories in their original order.
+    while (list.isNotEmpty) {
+      String category = list.first.category;
+      sorted.addAll(list.where((a) => a.category == category));
+      list.removeWhere((a) => a.category == category);
+    }
+
+    return sorted;
   }
 }
 
@@ -158,7 +241,11 @@ class KeyBinding {
 
     desc.add(_descriptionOf(keyCode));
 
-    return desc.join('+');
+    if (_isMac() && modifiers.length == 1 && modifiers.first == KeyCode.META) {
+      return desc.join();
+    } else {
+      return desc.join('+');
+    }
   }
 
   int _codeFor(String str) {
@@ -170,12 +257,12 @@ class KeyBinding {
   }
 
   String _descriptionOf(int code) {
-    if (_isMac() && code == KeyCode.META) {
-      return "Cmd";
-    }
-
     if (code == KeyCode.META) {
-      return "Meta";
+      if (_isMac()) {
+        return '⌘'; // "Cmd";
+      } else {
+        return "Meta";
+      }
     }
 
     if (code == KeyCode.CTRL) {
@@ -252,9 +339,11 @@ abstract class Action {
   }
 
   /**
-   * Run this action.
+   * Run this action. An optional [context] paramater is passed in for some
+   * action invocations. This is used in the case of context menu invocations;
+   * [context] will be the object to act on.
    */
-  void invoke();
+  void invoke([Object context]);
 
   bool get enabled => _enabled;
 
@@ -265,7 +354,7 @@ abstract class Action {
     }
   }
 
-  bool matches(KeyEvent event) {
+  bool matchesEvent(KeyEvent event) {
     return binding == null ? false : binding.matches(event);
   }
 
@@ -279,6 +368,29 @@ abstract class Action {
   }
 
   String toString() => 'Action: ${name}';
+}
+
+/**
+ * An [Action] subclass that can indicate whether it applies in certain
+ * contexts. See also [Action.getContextMenu].
+ */
+abstract class ContextAction extends Action {
+  ContextAction(String id, String name): super(id, name);
+
+  /**
+   * The logical category for the context action. This is used to group like
+   * actions together, and provide visual separtion between other categories.
+   * Example categories are `resource` and `transfer`.
+   */
+  String get category;
+
+  /**
+   * Returns whether this action applies to the given context object. This
+   * generally means whether the action can act on the object in general. So
+   * an action may report that it can act on the given object, even if in a
+   * particular circumstance the action is disabled.
+   */
+  bool appliesTo(Object object);
 }
 
 bool _isMac() => _platform().indexOf('mac') != -1;

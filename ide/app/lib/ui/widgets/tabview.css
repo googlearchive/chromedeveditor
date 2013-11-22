@@ -1,0 +1,158 @@
+.tabview-container {
+  background: #EEE;
+  bottom: 0;
+  display: flex;
+  flex-flow: column;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.tabview-tabbar {
+  background: white;
+  border-bottom: 1px solid #CCC;
+  display: flex;
+  overflow: visible;
+  padding-bottom: 3px;
+  position: relative;
+  -webkit-user-select: none;
+}
+
+.tabview-tabbar:after {
+  background: #EEE;
+  border-top: 1px solid #CCC;
+  bottom: 0;
+  content: '';
+  height: 3px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.tabview-tabbar.tabview-tabbar-hidden {
+  display: none;
+}
+
+.tabview-tabbar-scroller {
+  flex: 1;
+  margin: -1px;
+  overflow: hidden;
+  position: relative;
+  z-index: 100;
+}
+
+.tabview-tabbar-scrollable {
+  display: block;
+  min-height: 25px;
+  overflow: visible;
+  position: relative;
+  white-space: nowrap;
+}
+
+.tabview-tablabel {
+  -webkit-user-select: none;
+  align-items: center;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-flex;
+  margin-top: 4px;
+  margin-right: 4px;
+  padding: 2px 16px 2px 10px;
+  position: relative;
+  vertical-align: bottom;
+  width: 150px;
+  z-index: 100;
+}
+
+.tabview-tablabel:hover {
+  border: 1px solid #CCC;
+  padding-bottom: 1px;
+}
+
+.tabview-tablabel:first-child {
+  margin-left: 15px;
+}
+
+.tabview-tablabel:last-child {
+  margin-right: 15px;
+}
+
+.tabview-tablabel-active {
+  background: -webkit-linear-gradient(bottom, #EEE, white);
+  border: 1px solid #CCC;
+  border-bottom: 1px solid #EEE;
+  margin-top: 5px;
+  margin-bottom: 0;
+  padding-bottom: 1px;
+  position: relative;
+}
+
+.tabview-tablabel-active:hover {
+  background: -webkit-linear-gradient(bottom, #DDD, white);
+}
+
+.tabview-tablabel:hover .tabview-tablabel-caption {
+
+}
+
+.tabview-tablabel-caption {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabview-tablabel-closebutton {
+  opacity: 0;
+  display: none;
+  opacity: 0;
+  position: absolute;
+  top: 1px;
+  right: 6px;
+  font-size: 18px;
+}
+
+.tabview-tablabel-closable .tabview-tablabel-closebutton {
+  display: block;
+}
+
+.tabview-tablabel-active .tabview-tablabel-closebutton {
+  opacity: 0.2;
+}
+
+.tabview-tablabel:hover .tabview-tablabel-closebutton {
+  opacity: 0.2;
+}
+
+.tabview-tablabel-closebutton:hover {
+  opacity: 0.4;
+}
+.tabview-tablabel:hover .tabview-tablabel-closebutton:hover {
+  opacity: 0.4;
+}
+
+.tabview-workspace {
+  background: white;
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.tabview-page-container {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.tabview-page-container-active {
+  display: flex;
+}
+
+.tabview-page-container > * {
+  flex: 1;
+}

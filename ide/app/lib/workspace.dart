@@ -46,24 +46,31 @@ class Workspace implements Container {
 
   Future delete() => null;
 
-  // TODO: we should migrarte users to path or perhaps persistToToken()
-  String get fullPath => '';
-
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
 
-  Future<Resource> link(chrome.Entry entity, bool syncable) {
+  Future<Resource> link(chrome.Entry entity, {bool syncable: false}) {
+    return _link(entity, syncable: syncable, fireEvent: true);
+  }
+
+  Future<Resource> _link(chrome.Entry entity, {bool syncable: false, bool fireEvent: true}) {
     if (entity.isFile) {
       var resource = new File(this, entity, syncable);
       _children.add(resource);
-      _controller.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
+      if (fireEvent) {
+        _controller.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
+      }
       return new Future.value(resource);
     } else {
       var project = new Project(this, entity, syncable);
       _children.add(project);
-      _controller.add(new ResourceChangeEvent(project, ResourceEventType.ADD));
-      return _gatherChildren(project, syncable);
+      return _gatherChildren(project, syncable).then((container) {
+        if (fireEvent) {
+          _controller.add(new ResourceChangeEvent(container, ResourceEventType.ADD));
+        }
+        return container;
+      });
     }
   }
 
@@ -74,8 +81,6 @@ class Workspace implements Container {
     _removeChild(resource);
     return new Future.value();
   }
-
-  Future close(Resource resource) => unlink(resource);
 
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
@@ -120,7 +125,7 @@ class Workspace implements Container {
         List<String> ids = JSON.decode(s);
         Future.forEach(ids, (id) {
           return chrome.fileSystem.restoreEntry(id)
-              .then((entry) => link(entry, false))
+              .then((entry) => _link(entry, fireEvent: false))
               .catchError((_) => null);
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
@@ -172,6 +177,8 @@ class Workspace implements Container {
    _children.remove(resource);
    _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
   }
+
+ Future close() => new Future.value();
 }
 
 abstract class Container extends Resource {
@@ -238,9 +245,16 @@ abstract class Resource {
 
   Container get parent => _parent;
 
-  Future delete() => _entry.remove().then((_) => _parent._removeChild(this));
+  Future delete() {
+    if (_entry.isFile) return _entry.remove().then((_) => _parent._removeChild(this));
 
-  String get fullPath => _entry.fullPath;
+    return (_entry as chrome.DirectoryEntry).removeRecursively().then((_) => _parent._removeChild(this));
+  }
+
+  Future close() {
+    _parent._removeChild(this);
+    return new Future.value();
+  }
 
   /**
    * Returns the containing [Project]. This can return null for loose files and
@@ -264,8 +278,11 @@ class File extends Resource {
 
   Future<String> getContents() => (_entry as chrome.ChromeFileEntry).readText();
 
-  // TODO: fire change event
-  Future setContents(String contents) => (_entry as chrome.ChromeFileEntry).writeText(contents);
+  Future setContents(String contents) {
+    (_entry as chrome.ChromeFileEntry).writeText(contents).then((_) {
+      workspace._fireEvent(new ResourceChangeEvent(this, ResourceEventType.CHANGE));
+    });
+  }
 }
 
 class Project extends Folder {

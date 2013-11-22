@@ -54,8 +54,9 @@ class GitConfig {
     }
   }
 
-  String toJsonString() {
-    //return JSON.encode(m);
+  String toString() {
+    //TODO return Json Object string.
+    return "";
   }
 }
 
@@ -67,8 +68,8 @@ class PackEntry {
 }
 
 class FindPackedObjectResult {
-  int offset;
   Pack pack;
+  int offset;
   FindPackedObjectResult(this.pack, this.offset);
 }
 
@@ -537,7 +538,7 @@ class ObjectStore {
   }
 
   Future<Entry> setConfig(GitConfig config) {
-    String configStr = config.toJsonString();
+    String configStr = config.toString();
     return FileOps.createFileWithContent(_rootDir, '.git/config.json',
         configStr, 'Text');
   }

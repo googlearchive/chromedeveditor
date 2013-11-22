@@ -19,6 +19,7 @@ import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
@@ -26,7 +27,7 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
-import 'lib/workspace.dart';
+import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
 import 'lib/git/commands/clone.dart';
@@ -101,8 +102,9 @@ class Spark extends Application implements FilesControllerDelegate {
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   AceEditor editor;
-  Workspace workspace;
+  ws.Workspace workspace;
   EditorManager editorManager;
+  EditorArea editorArea;
   analytics.Tracker tracker = new analytics.NullTracker();
 
   preferences.PreferenceStore localPrefs;
@@ -121,14 +123,7 @@ class Spark extends Application implements FilesControllerDelegate {
     localPrefs = preferences.localStore;
     syncPrefs = preferences.syncStore;
 
-    actionManager = new ActionManager();
-
-    analytics.getService('Spark').then((service) {
-      // Init the analytics tracker and send a page view for the main page.
-      tracker = service.getTracker(_ANALYTICS_ID);
-      tracker.sendAppView('main');
-      _startTrackingExceptions();
-    });
+    initAnalytics();
 
     addParticipant(new _SparkSetupParticipant(this));
 
@@ -137,23 +132,18 @@ class Spark extends Application implements FilesControllerDelegate {
       close();
     });
 
-    workspace = new Workspace(localPrefs);
-    editor = new AceEditor();
-    editorManager = new EditorManager(workspace, editor, localPrefs);
+    initWorkspace();
+    initEditor();
+    initEditorManager();
+    initEditorArea();
+    initEditorThemes();
+    initFilesController();
 
-    _filesController = new FilesController(workspace, this);
-
-    setupSplitView();
-    setupFileActions();
-    setupEditorThemes();
-
-    // Init the bootjack library (a wrapper around bootstrap).
-    bootjack.Bootjack.useDefault();
+    initLookAndFeel();
 
     createActions();
-    buildMenu();
-
-    actionManager.registerKeyListener();
+    initToolbar();
+    initSplitView();
   }
 
   String get appName => i18n('app_name');
@@ -162,7 +152,79 @@ class Spark extends Application implements FilesControllerDelegate {
 
   PlatformInfo get platformInfo => _platformInfo;
 
-  void setupSplitView() {
+  //
+  // Parts of ctor:
+  //
+
+  void initAnalytics() {
+    analytics.getService('Spark').then((service) {
+      // Init the analytics tracker and send a page view for the main page.
+      tracker = service.getTracker(_ANALYTICS_ID);
+      tracker.sendAppView('main');
+      _startTrackingExceptions();
+    });
+  }
+
+  void initWorkspace() {
+    workspace = new ws.Workspace(localPrefs);
+  }
+
+  void initEditor() {
+    editor = new AceEditor(new DivElement());
+  }
+
+  void initEditorManager() {
+    editorManager = new EditorManager(workspace, editor, localPrefs);
+    editorManager.loaded.then((_) {
+      List<ws.Resource> files = editorManager.files.toList();
+      editorManager.files.forEach((file) {
+        editorArea.selectFile(file, forceOpen: true, switchesTab: false);
+      });
+      localPrefs.getValue('lastFileSelection').then((String filePath) {
+        if (editorArea.tabs.isEmpty) return;
+        if (filePath == null) {
+          editorArea.tabs[0].select();
+          return;
+        }
+        ws.Resource resource = workspace.restoreResource(filePath);
+        if (resource == null) {
+          editorArea.tabs[0].select();
+          return;
+        }
+        editorArea.selectFile(resource, switchesTab: true);
+      });
+    });
+  }
+
+  void initEditorArea() {
+    editor = new AceEditor(new DivElement());
+    editorArea = new EditorArea(document.getElementById('editorArea'),
+        editorManager,
+        allowsLabelBar: true);
+    editorArea.onSelected.listen((EditorTab tab) {
+      _filesController.selectFile(tab.file);
+      localPrefs.setValue('lastFileSelection', tab.file.path);
+    });
+  }
+
+  void initEditorThemes() {
+    syncPrefs.getValue('aceTheme').then((String theme) {
+      if (theme != null && AceEditor.THEMES.contains(theme)) {
+        editor.theme = theme;
+      }
+    });
+  }
+
+  void initFilesController() {
+    _filesController = new FilesController(workspace, this);
+  }
+
+  void initLookAndFeel() {
+    // Init the Bootjack library (a wrapper around Bootstrap).
+    bootjack.Bootjack.useDefault();
+  }
+
+  void initSplitView() {
     _splitView = new SplitView(querySelector('#splitview'));
     _splitView.onResized.listen((_) {
       editor.resize();
@@ -178,67 +240,43 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
-  void setupFileActions() {
-    querySelector("#newFile").onClick.listen(
-        (_) => actionManager.getAction('file-new').invoke());
-    querySelector("#openFile").onClick.listen(
-        (_) => actionManager.getAction('file-open').invoke());
-  }
-
-  void setupEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null && AceEditor.THEMES.contains(theme)) {
-        editor.theme = theme;
-      }
-    });
-  }
-
-  void newFile() {
-    // TODO:
-
-    print('implement newFile()');
-  }
-
-  void openFile() {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
-      chrome.ChromeFileEntry entry = result.entry;
-
-      if (entry != null) {
-        workspace.link(entry, false).then((file) {
-          _filesController.selectLastFile();
-          workspace.save();
-        });
-      }
-    }).catchError((e) => null);
-  }
-
-  void deleteFile(_) {
-    // TODO: handle multiple selection
-    var sel = _filesController.getSelection();
-    if (sel.isNotEmpty) {
-      sel.first.delete();
-    }
-  }
-
   void createActions() {
+    actionManager = new ActionManager();
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new ProjectOpenAction(this));
+    actionManager.registerAction(new RunTestsAction(this));
+    actionManager.registerAction(new AboutSparkAction(this));
+    actionManager.registerKeyListener();
+  }
+
+  void initToolbar() {
+    querySelector("#newFile").onClick.listen(
+        (_) => actionManager.getAction('file-new').invoke());
+    querySelector("#openFile").onClick.listen(
+        (_) => actionManager.getAction('file-open').invoke());
+
+    buildMenu();
   }
 
   void buildMenu() {
     UListElement ul = querySelector('#hotdogMenu ul');
 
-    ul.children.insert(0, _createLIElement(null));
-    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-delete')));
-    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-open')));
-    ul.children.insert(0, _createMenuItem(actionManager.getAction('file-new')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
+    ul.children.add(createMenuSeparator());
 
-
+    // theme control
+    Element theme = ul.querySelector('#themeControl');
+    ul.children.remove(theme);
+    ul.children.add(theme);
     querySelector('#themeLeft').onClick.listen((e) {
       e.stopPropagation();
       _handleChangeTheme(themeLeft: true);
@@ -249,14 +287,74 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     if (developerMode) {
-      ul.children.add(_createLIElement(null));
-      ul.children.add(
-          _createLIElement('Run Tests', () => _testDriver.runTests()));
+      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
     }
 
-    ul.children.add(_createLIElement(null));
-    ul.children.add(_createLIElement('Check For Updates…', _handleUpdateCheck));
-    ul.children.add(_createLIElement('About Spark', _handleAbout));
+    ul.children.add(createMenuSeparator());
+    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
+  }
+
+  //
+  // - End parts of ctor.
+  //
+  void newFile() => notImplemented('Spark.newFile()');
+
+  void openFile() {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
+      chrome.ChromeFileEntry entry = result.entry;
+
+      if (entry != null) {
+        workspace.link(entry).then((file) {
+          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
+          workspace.save();
+        });
+      }
+    }).catchError((e) => null);
+  }
+
+  void openProject() {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
+      chrome.ChromeFileEntry entry = result.entry;
+
+      if (entry != null) {
+        workspace.link(entry).then((file) {
+          _filesController.selectLastFile();
+          workspace.save();
+        });
+      }
+    }).catchError((e) => null);
+  }
+
+  void deleteFile() {
+    // TODO: handle multiple selection
+    var sel = _filesController.getSelection();
+    if (sel.isNotEmpty) {
+      sel.first.delete();
+    }
+  }
+
+  void closeFile() {
+    List futures = [];
+    var sel = _filesController.getSelection();
+    if (sel.isNotEmpty) {
+      sel.forEach((ws.Resource resource) {
+        if (resource.isTopLevel) {
+          _closeOpenEditor(resource);
+          futures.add(resource.close());
+        }
+      });
+    }
+    Future.wait(futures).then((_) => workspace.save());
+  }
+
+  void _closeOpenEditor(ws.Resource resource) {
+    if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
+      editorManager.close(resource);
+    }
   }
 
   void showStatus(String text, {bool error: false}) {
@@ -266,7 +364,20 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   // Implementation of FilesControllerDelegate interface.
-  void openInEditor(Resource file) => editorManager.openOrSelect(file);
+
+  void selectInEditor(ws.File file,
+                      {bool forceOpen: false, bool replaceCurrent: true}) {
+    if (forceOpen || editorManager.isFileOpened(file)) {
+      editorArea.selectFile(file, forceOpen: forceOpen,
+          replaceCurrent: replaceCurrent);
+    }
+  }
+
+  List<ContextAction> getActionsFor(ws.Resource resource) {
+    return actionManager.getContextActions(resource);
+  }
+
+  void notImplemented(String str) => showStatus("Not implemented: ${str}");
 
   void _handleChangeTheme({bool themeLeft: true}) {
     int index = AceEditor.THEMES.indexOf(editor.theme);
@@ -274,58 +385,6 @@ class Spark extends Application implements FilesControllerDelegate {
     String themeName = AceEditor.THEMES[index];
     editor.theme = themeName;
     syncPrefs.setValue('aceTheme', themeName);
-  }
-
-  void _handleUpdateCheck() {
-    showStatus("Checking for updates...");
-
-    chrome.runtime.requestUpdateCheck().then((chrome.RequestUpdateCheckResult result) {
-      if (result.status == 'update_available') {
-        // result.details['version']
-        showStatus("An update is available.");
-      } else {
-        showStatus("Application is up to date.");
-      }
-    }).catchError((_) => showStatus(''));
-  }
-
-  void _handleAbout() {
-    bootjack.Modal modal = bootjack.Modal.wire(querySelector('#aboutDialog'));
-    modal.element.querySelector('#aboutVersion').text = appVersion;
-    modal.show();
-  }
-
-  LIElement _createLIElement(String title, [Function onClick]) {
-    LIElement li = new LIElement();
-
-    if (title == null) {
-      li.classes.add('divider');
-    } else {
-      AnchorElement a = new AnchorElement();
-      a.text = title;
-      li.children.add(a);
-    }
-
-    if (onClick != null) {
-      li.onClick.listen((_) => onClick());
-    }
-
-    return li;
-  }
-
-  LIElement _createMenuItem(Action action) {
-    LIElement li = new LIElement();
-
-    AnchorElement a = new AnchorElement();
-    a.text = action.name;
-    SpanElement span = new SpanElement();
-    span.text = action.getBindingDescription();
-    span.classes.add('pull-right');
-    a.children.add(span);
-    li.children.add(a);
-    li.onClick.listen((_) => action.invoke());
-
-    return li;
   }
 
   void _startTrackingExceptions() {
@@ -386,9 +445,6 @@ class _SparkSetupParticipant extends LifecycleParticipant {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
           spark.editor.focus();
-        } else {
-          // Select the first file.
-          spark._filesController.selectFirstFile();
         }
       });
     });
@@ -402,8 +458,6 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   }
 
   Future applicationClosed(Application application) {
-    // TODO: flush out any preference info or workspace state?
-
     spark.editorManager.persistState();
 
     spark.localPrefs.flush();
@@ -419,30 +473,41 @@ abstract class SparkAction extends Action {
 
   SparkAction(this.spark, String id, String name) : super(id, name);
 
-  void invoke() {
+  void invoke([Object context]) {
     // Send an action event with the 'main' event category.
     spark.tracker.sendEvent('main', id);
 
-    _invoke();
+    _invoke(context);
   }
 
-  void _invoke();
+  void _invoke([Object context]);
 }
 
-class FileNewAction extends SparkAction {
-  FileNewAction(Spark spark) : super(spark, "file-new", "New") {
+class FileNewAction extends SparkAction implements ContextAction {
+  FileNewAction(Spark spark) : super(spark, "file-new", "New File") {
     defaultBinding("ctrl-n");
   }
 
-  void _invoke() => spark.newFile();
+  void _invoke([ws.Folder folder]) {
+    if (folder == null) {
+      spark.newFile();
+    } else {
+      // TODO: create a new file in the given folder
+      spark.notImplemented('new file');
+    }
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => object is ws.Folder;
 }
 
 class FileOpenAction extends SparkAction {
-  FileOpenAction(Spark spark) : super(spark, "file-open", "Open...") {
+  FileOpenAction(Spark spark) : super(spark, "file-open", "Open File...") {
     defaultBinding("ctrl-o");
   }
 
-  void _invoke() => spark.openFile();
+  void _invoke([Object context]) => spark.openFile();
 }
 
 class FileSaveAction extends SparkAction {
@@ -450,13 +515,43 @@ class FileSaveAction extends SparkAction {
     defaultBinding("ctrl-s");
   }
 
-  void _invoke() => spark.editorManager.saveAll();
+  void _invoke([Object context]) => spark.editorManager.saveAll();
 }
 
-class FileDeleteAction extends SparkAction {
+class FileDeleteAction extends SparkAction implements ContextAction {
   FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
 
-  void _invoke() => spark.deleteFile(null);
+  void _invoke([ws.Resource resource]) {
+    if (resource == null) {
+      //spark.deleteFile();
+    } else {
+      // TODO: ask the user first
+      //resource.delete();
+      spark.notImplemented('delete file: ${resource.path}');
+      print('deleting ${resource.path}');
+    }
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => object is ws.Resource;
+}
+
+class FileCloseAction extends SparkAction implements ContextAction {
+  FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
+
+  void _invoke([ws.Resource resource]) {
+    if (resource != null) {
+      spark._closeOpenEditor(resource);
+      resource.close().then((_) => spark.workspace.save());
+    } else {
+      spark.closeFile();
+    }
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => object is ws.Resource && object.isTopLevel;
 }
 
 class FileExitAction extends SparkAction {
@@ -465,9 +560,43 @@ class FileExitAction extends SparkAction {
     winBinding("ctrl-shift-f4");
   }
 
-  void _invoke() {
+  void _invoke([Object context]) {
     spark.close().then((_) {
       chrome.app.window.current().close();
     });
   }
+}
+
+class ProjectOpenAction extends SparkAction {
+  ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
+
+  void _invoke([Object context]) => spark.openProject();
+}
+
+class AboutSparkAction extends SparkAction {
+  bootjack.Modal _aboutBox;
+
+  AboutSparkAction(Spark spark) : super(spark, "help-about", "About Spark");
+
+  void _invoke([Object context]) {
+    if (_aboutBox == null) {
+      _aboutBox = bootjack.Modal.wire(querySelector('#aboutDialog'));
+
+      var checkbox = _aboutBox.element.querySelector('#analyticsCheck');
+      checkbox.checked = spark.tracker.service.getConfig().isTrackingPermitted();
+      checkbox.onChange.listen((e) {
+        spark.tracker.service.getConfig().setTrackingPermitted(checkbox.checked);
+      });
+
+      _aboutBox.element.querySelector('#aboutVersion').text = spark.appVersion;
+    }
+
+    _aboutBox.show();
+  }
+}
+
+class RunTestsAction extends SparkAction {
+  RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests");
+
+  _invoke([Object context]) => spark._testDriver.runTests();
 }

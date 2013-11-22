@@ -7,14 +7,14 @@ library spark.editors_test;
 import 'dart:async';
 import 'package:unittest/unittest.dart';
 
+import 'ace_test.dart';
+import 'files_mock.dart';
 import '../lib/ace.dart';
 import '../lib/editors.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
-import 'ace_test.dart';
-import 'workspace_test.dart';
 
-main() {
+defineTests() {
   group('editors', () {
     test('general test', () {
       Workspace workspace = new Workspace();
@@ -22,7 +22,9 @@ main() {
       PreferenceStore store = new MapPreferencesStore();
       EditorManager manager = new EditorManager(workspace, editor, store);
 
-      MockFileEntry fileEntry = new MockFileEntry('test.txt', 'foobar');
+      MockFileSystem fs = new MockFileSystem();
+
+      FileEntry fileEntry = fs.createFile('test.txt', contents: 'foobar');
       File fileResource = new File(workspace, fileEntry, false);
 
       Completer completer = new Completer();

@@ -5,12 +5,13 @@
 library spark.ace_test;
 
 import 'dart:async';
+import 'dart:html';
 
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
 
-main() {
+defineTests() {
   group('ace', () {
     // This essentially tests that the ace codebase is available.
     test('is available', () {
@@ -20,6 +21,9 @@ main() {
 }
 
 class MockAceEditor implements AceEditor {
+  /// The element to put the editor in.
+  final Element parentElement = null;
+
   MockAceEditor();
 
   EditSession createEditSession(String text, String fileName) {

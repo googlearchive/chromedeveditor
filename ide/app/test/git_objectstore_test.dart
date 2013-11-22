@@ -20,7 +20,7 @@ Future getGitDirectory() {
   });
 }
 
-main() {
+defineTests() {
   group('git.objectstore', () {
     test('load', () {
       return getGitDirectory().then((chrome_gen.DirectoryEntry root) {
