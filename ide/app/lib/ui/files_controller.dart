@@ -166,6 +166,37 @@ class FilesController implements TreeViewDelegate {
     // designated by `targetNodeUID`.
   }
 
+  /*
+   * Drawing the drag image.
+   */
+
+  // Constants to draw the drag image.
+
+  // Font for the filenames in the stack.
+  final String stackItemFontName = '15px Helvetica';
+  // Font for the counter.
+  final String counterFontName = '12px Helvetica';
+  // Basic height of an item in the stack.
+  final int stackItemHeight = 30;
+  // Stack item radius.
+  final int stackItemRadius = 15;
+  // Additional space for shadow.
+  final int additionalShadowSpace = 10;
+  // Space between stack and counter.
+  final int stackCounterSpace = 5;
+  // Stack item interspace.
+  final int stackItemInterspace = 3;
+  // Text padding in the stack item.
+  final int stackItemPadding = 10;
+  // Counter padding.
+  final int counterPadding = 10;
+  // Counter height.
+  final int counterHeight = 20;
+  // Stack item text vertical position
+  final int stackItemTextPosition = 20;
+  // Counter text vertical position
+  final int counterTextPosition = 15;
+
   TreeViewDragImage treeViewDragImage(TreeView view,
                                       List<String> nodesUIDs,
                                       html.MouseEvent event) {
@@ -187,59 +218,76 @@ class FilesController implements TreeViewDelegate {
       placeholderCount = 4;
     }
 
-    // Font for the filenames in the stack.
-    final String fontName = '15px Helvetica';
-    // Font for the counter.
-    final String counterFontName = '12px Helvetica';
-    // Basic height of an item in the stack.
-    final int stackItemHeight = 30;
-    // Stack item radius.
-    final int stackItemRadius = 15;
-    // Additional space for shadow.
-    final int additionalShadowSpace = 10;
-    // Space between stack and counter.
-    final int stackCounterSpace = 5;
-    // Stack item interspace.
-    final int stackItemInterspace = 3;
-    // Text padding in the stack item.
-    final int stackItemPadding = 10;
-    // Counter padding.
-    final int counterPadding = 10;
-    // Counter height.
-    final int counterHeight = 20;
-    // Stack item text vertical position
-    final int stackItemTextPosition = 20;
-    // Counter text vertical position
-    final int counterTextPosition = 15;
-
     html.CanvasElement canvas = new html.CanvasElement();
 
     // Measure text size.
     html.CanvasRenderingContext2D context = canvas.getContext("2d");
-    context.font = fontName;
     Resource resource = _filesMap[nodesUIDs.first];
-    html.TextMetrics metrics = context.measureText(resource.name);
-    int width = metrics.width.toInt();
-    context.font = counterFontName;
+    int stackLabelWidth = _getTextWidth(context, stackItemFontName, resource.name);
     String counterString = '${nodesUIDs.length}';
-    metrics = context.measureText(counterString);
-    int counterWidth = metrics.width.toInt();
+    int counterWidth =
+        _getTextWidth(context, counterFontName, counterString);
 
     // Set canvas size.
     int globalHeight = stackItemHeight + placeholderCount *
         stackItemInterspace + additionalShadowSpace;
-    canvas.width = width + stackItemPadding * 2 + placeholderCount *
+    canvas.width = stackLabelWidth + stackItemPadding * 2 + placeholderCount *
         stackItemInterspace + stackCounterSpace + counterWidth +
         counterPadding * 2 + additionalShadowSpace;
     canvas.height = globalHeight;
 
     context = canvas.getContext("2d");
 
+    _drawStack(context, placeholderCount, stackLabelWidth, resource.name);
+    if (placeholderCount > 0) {
+      int x = stackLabelWidth + stackItemPadding * 2 + stackCounterSpace +
+          placeholderCount * 2;
+      int y = (globalHeight - additionalShadowSpace - counterHeight) ~/ 2;
+      _drawCounter(context, x, y, counterWidth, counterString);
+    }
+
+    html.ImageElement img = new html.ImageElement();
+    img.src = canvas.toDataUrl();
+    return new TreeViewDragImage(img, event.offset.x, event.offset.y);
+  }
+
+  /**
+   * Returns width of a text in pixels.
+   */
+  int _getTextWidth(html.CanvasRenderingContext2D context,
+                    String fontName,
+                    String text) {
+    context.font = fontName;
+    html.TextMetrics metrics = context.measureText(text);
+    return metrics.width.toInt();
+  }
+
+  /**
+   * Set the rendering shadow on the given context.
+   */
+  void _setShadow(html.CanvasRenderingContext2D context,
+                  int blurSize,
+                  String color,
+                  int offsetX,
+                  int offsetY) {
+    context.shadowBlur = blurSize;
+    context.shadowColor = color;
+    context.shadowOffsetX = offsetX;
+    context.shadowOffsetY = offsetY;
+  }
+
+  /**
+   * Draw the stack.
+   * `placeholderCount` is the number of items in the stack.
+   * `stackLabelWidth` is the width of the text of the first stack item.
+   * `stackLabel` is the string to show for the first stack item.
+   */
+  void _drawStack(html.CanvasRenderingContext2D context,
+                  int placeholderCount,
+                  int stackLabelWidth,
+                  String stackLabel) {
     // Set shadows.
-    context.shadowBlur = 5;
-    context.shadowColor = 'rgba(0, 0, 0, 0.3)';
-    context.shadowOffsetX = 0;
-    context.shadowOffsetY = 1;
+    _setShadow(context, 5, 'rgba(0, 0, 0, 0.3)', 0, 1);
 
     // Draws items of the stack.
     context.setFillColorRgb(255, 255, 255, 1);
@@ -248,7 +296,7 @@ class FilesController implements TreeViewDelegate {
     for(int i = placeholderCount ; i >= 0 ; i --) {
       html.Rectangle rect = new html.Rectangle(0.5 + i * stackItemInterspace,
           0.5 + i * stackItemInterspace,
-          width + stackItemPadding * 2,
+          stackLabelWidth + stackItemPadding * 2,
           stackItemHeight);
       roundRect(context,
           rect,
@@ -258,40 +306,38 @@ class FilesController implements TreeViewDelegate {
     }
 
     // No shadows.
-    context.shadowBlur = 0;
-    context.shadowColor = 'rgba(0, 0, 0, 0)';
-    context.shadowOffsetX = 0;
-    context.shadowOffsetY = 0;
+    _setShadow(context, 0, 'rgba(0, 0, 0, 0)', 0, 0);
 
     // Draw text in the stack item.
-    context.font = fontName;
+    context.font = stackItemFontName;
     context.setFillColorRgb(0, 0, 0, 1);
-    context.fillText(resource.name, stackItemPadding, stackItemTextPosition);
+    context.fillText(stackLabel, stackItemPadding, stackItemTextPosition);
+  }
 
-    if (placeholderCount > 0) {
-      // Draw counter bezel.
-      context.lineWidth = 3;
-      context.setFillColorRgb(128, 128, 255, 1);
-      html.Rectangle rect = new html.Rectangle(width + stackItemPadding * 2 +
-          stackCounterSpace + placeholderCount * 2,
-          (globalHeight - additionalShadowSpace - counterHeight) / 2,
-          counterWidth + counterPadding * 2,
-          counterHeight);
-      roundRect(context, rect, radius: 10, fill: true, stroke: false);
+  /**
+   * Draw the counter and its bezel.
+   *
+   */
+  void _drawCounter(html.CanvasRenderingContext2D context,
+                    int x,
+                    int y,
+                    int counterWidth,
+                    String counterString) {
+    // Draw counter bezel.
+    context.lineWidth = 3;
+    context.setFillColorRgb(128, 128, 255, 1);
+    html.Rectangle rect = new html.Rectangle(x,
+        y,
+        counterWidth + counterPadding * 2,
+        counterHeight);
+    roundRect(context, rect, radius: 10, fill: true, stroke: false);
 
-      // Draw text of counter.
-      context.font = counterFontName;
-      context.setFillColorRgb(255, 255, 255, 1);
-      context.fillText(counterString,
-          width + stackItemPadding * 2 + stackCounterSpace + placeholderCount *
-          2 + counterPadding,
-          (globalHeight - additionalShadowSpace - counterHeight) / 2 +
-          counterTextPosition);
-    }
-
-    html.ImageElement img = new html.ImageElement();
-    img.src = canvas.toDataUrl();
-    return new TreeViewDragImage(img, event.offset.x, event.offset.y);
+    // Draw text of counter.
+    context.font = counterFontName;
+    context.setFillColorRgb(255, 255, 255, 1);
+    context.fillText(counterString,
+        x + counterPadding,
+        y + counterTextPosition);
   }
 
   void _addAllFiles() {
