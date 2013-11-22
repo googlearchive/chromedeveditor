@@ -14,6 +14,7 @@ import 'analyzer_test.dart' as analyzer_test;
 import 'app_test.dart' as app_test;
 import 'compiler_test.dart' as compiler_test;
 import 'editors_test.dart' as editors_test;
+import 'file_operations_test.dart' as file_operations_test;
 import 'files_test.dart' as files_test;
 import 'git_object_test.dart' as git_object_test;
 import 'git_objectstore_test.dart' as git_objectstore_test;
@@ -33,6 +34,7 @@ import 'zlib_test.dart' as zlib_test;
  * Place all new tests here.
  */
 void defineTests() {
+
   ace_test.main();
   actions_test.main();
   analytics_test.main();
@@ -40,6 +42,7 @@ void defineTests() {
   app_test.main();
   compiler_test.main();
   editors_test.main();
+  file_operations_test.main();
   files_test.main();
   git_object_test.main();
   git_objectstore_test.main();
