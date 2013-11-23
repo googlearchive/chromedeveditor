@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 
-import 'git_object_utils.dart';
+import 'object_utils.dart';
 
 
 /**

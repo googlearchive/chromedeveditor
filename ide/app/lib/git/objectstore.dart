@@ -15,11 +15,11 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'file_operations.dart';
-import 'git_object.dart';
-import 'git_object_utils.dart';
-import 'git_pack.dart';
-import 'git_pack_index.dart';
-import 'git_utils.dart';
+import 'object.dart';
+import 'object_utils.dart';
+import 'pack.dart';
+import 'pack_index.dart';
+import 'utils.dart';
 
 import 'zlib.dart';
 
