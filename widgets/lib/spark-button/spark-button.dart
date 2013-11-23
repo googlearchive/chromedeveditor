@@ -9,7 +9,21 @@ import 'package:polymer/polymer.dart';
 
 @CustomTag('spark-button')
 class SparkButton extends HtmlElement with Polymer, Observable {
+  @observable bool primary = false;
   @observable bool active = false;
+  @observable String btnClass = "btn btn-default";
 
   SparkButton.created() : super.created();
+
+  @override
+  bool get applyAuthorStyles => true;
+
+  void primaryChanged() {
+    if (primary) {
+      btnClass = "btn btn-primary";
+    } else {
+      btnClass = "btn btn-default";
+    }
+  }
+
 }
