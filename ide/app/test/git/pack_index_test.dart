@@ -11,8 +11,8 @@ import 'dart:convert';
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:unittest/unittest.dart';
 
-import '../lib/git/pack.dart';
-import '../lib/git/pack_index.dart';
+import '../../lib/git/pack.dart';
+import '../../lib/git/pack_index.dart';
 
 final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack_index_test.idx';

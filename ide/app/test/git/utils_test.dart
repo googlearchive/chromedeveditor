@@ -6,7 +6,7 @@ library spark.git_utils_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/git/utils.dart';
+import '../../lib/git/utils.dart';
 
 final String SHA_STRING_TEST = "6a21325b42661e4ae5bc659a1cb66a21938d784f";
 final List<int> SHA_BYTES_TEST =

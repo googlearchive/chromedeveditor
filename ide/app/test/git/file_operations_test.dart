@@ -11,8 +11,8 @@ import 'dart:typed_data';
 
 import 'package:unittest/unittest.dart';
 
-import 'files_mock.dart';
-import '../lib/git/file_operations.dart';
+import '../files_mock.dart';
+import '../../lib/git/file_operations.dart';
 
 const String FILE_CONTENT = 'This is a test file content.';
 const String BLOB_STRING_1 = 'First part of the blob.';
