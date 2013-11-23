@@ -12,7 +12,8 @@ import 'dart:typed_data';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
-import 'git_objectstore.dart';
+import 'objectstore.dart';
+import 'upload_pack_parser.dart';
 
 final int COMMIT_LIMIT = 32;
 
