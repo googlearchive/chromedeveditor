@@ -18,7 +18,7 @@ class _SocketException extends TypeMatcher {
   bool matches(item, Map matchState) => item is tcp.SocketException;
 }
 
-main() {
+defineTests() {
   EchoServer echoServer = new EchoServer();
 
   group('tcp.TcpClient', () {

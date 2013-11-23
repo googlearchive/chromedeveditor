@@ -3,5 +3,9 @@ version: 0.0.1-dev
 author: Chrome Team <apps-dev@chromium.org>
 description: GUI widget library for Spark IDE and applications built with it.
 homepage: https://github.com/GoogleChrome/spark
+environment:
+  sdk: ">=1.0.0 <2.0.0"
 dependencies:
   polymer: any
+  polymer_elements:
+    git: https://github.com/ErikGrimes/polymer_elements

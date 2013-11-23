@@ -2,20 +2,25 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-html {
-}
+
+@import url("packages/bootjack/css/bootstrap.css");
+@import url("packages/bootjack/css/bootstrap-theme.css");
+@import url("lib/ui/widgets/splitview.css");
+@import url("lib/ui/widgets/listview.css");
+@import url("lib/ui/widgets/treeview.css");
+@import url("lib/ui/widgets/tabview.css");
 
 body {
-  margin: 0px;
-  padding: 0px;
-  overflow: hidden;
+  bottom: 0;
   display: flex;
   flex-flow: column;
-  position: absolute;
-  top: 0;
-  bottom: 0;
   left: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: absolute;
   right: 0;
+  top: 0;
 }
 
 #status {
@@ -27,18 +32,28 @@ body {
 }
 
 .fileview-filename-container {
-  
+
 }
 
 .fileview-filename-container .filename {
   display: inline-block;
 }
 
-.fileview-filename-container .menu {
-  opacity: 0.0;
-  position: absolute;
-  right: 0;
-  width: 15px;
+.fileview-filename-container .menu button {
+  opacity: 0;
+  margin-right: -15px;
+}
+
+.fileview-filename-container .dropdown-toggle {
+  height: 20px;
+}
+
+.fileview-filename-container .dropdown-toggle .caret {
+  vertical-align: super;  
+}
+
+.fileview-filename-container .dropdown-menu {
+  min-width: 120px;
 }
 
 .fileview-filename-container .filename {
@@ -50,10 +65,10 @@ body {
 }
 
 .fileview-filename-container:hover .filename {
-  width: calc(100% - 15px);
+  width: calc(100% - 26px);
 }
 
-.fileview-filename-container:hover .menu {
+.fileview-filename-container:hover .menu button {
   opacity: 1.0;
 }
 
@@ -62,19 +77,31 @@ body {
 }
 
 #fileViewArea {
-  border-top: 1px solid white;
   position: relative;
   width: 300px;
 }
 
 #fileViewArea .listview-container {
-  overflow-x: auto;
-  overflow-y: scroll;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
   bottom: 0;
+  left: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+#fileViewArea .listview-dragover {
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+#fileViewArea .listview-dragover.listview-dragover-active {
+  border: 2px solid #aaf;
 }
 
 #editorArea {
@@ -84,9 +111,9 @@ body {
 }
 
 #toolbar {
-  padding: 4px;
-	border-top: 1px solid #ddd;
+  border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
+  padding: 4px;
 }
 
 #hotdogMenu {
@@ -94,7 +121,7 @@ body {
 }
 
 #hotdogMenu li {
-	min-width: 16em;
+  min-width: 16em;
 }
 
 /* bootstrap overrides */

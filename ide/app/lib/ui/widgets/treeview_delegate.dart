@@ -4,6 +4,8 @@
 
 library spark.ui.widgets.treeview_delegate;
 
+import 'dart:html';
+
 import 'treeview.dart';
 import 'listview_cell.dart';
 
@@ -43,11 +45,43 @@ abstract class TreeViewDelegate {
    * The implementation of this method will be run when the given node is
    * clicked.
    */
-  void treeViewSelectedChanged(TreeView view, List<String> nodeUIDs);
+  void treeViewSelectedChanged(TreeView view,
+                               List<String> nodeUIDs,
+                               Event event);
 
   /**
-   * The implementation of this method will be run when the give node is
-   * double-clicked.
+   * This method will be called when the give node is double-clicked.
    */
-  void treeViewDoubleClicked(TreeView view, List<String> nodeUIDs);
+  void treeViewDoubleClicked(TreeView view,
+                             List<String> nodeUIDs,
+                             Event event);
+
+  /**
+   * This method is called on dragenter.
+   * Return 'copy', 'move', 'link' or 'none'.
+   * It will adjust the visual of the mouse cursor when the item is
+   * dragged over the treeview.
+   */
+  String treeViewDropEffect(TreeView view);
+
+  /**
+   * This method is called when the dragged item is actually dropped on the
+   * tree or on a specific node in the treeview.
+   */
+  void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer);
+
+  /**
+   * This method is called when a selection of the TreeView is actually dropped
+   * on the tree or on a specific node of the treeview.
+   */
+  void treeViewDropCells(TreeView view,
+                         List<String> nodesUIDs,
+                         String targetNodeUID);
+
+  /**
+   * This method provides a drag image and location for the given nodes UIDs.
+   */
+  TreeViewDragImage treeViewDragImage(TreeView view,
+                                      List<String> nodesUIDs,
+                                      MouseEvent event);
 }

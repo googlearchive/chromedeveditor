@@ -9,13 +9,13 @@ import 'dart:typed_data';
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:unittest/unittest.dart';
 
-import '../lib/git/git_pack.dart';
+import '../lib/git/pack.dart';
 
 final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack-_index_test.idx';
 
 
-main() {
+defineTests() {
   group('git.pack', () {
     test('parsePack', () {
       return chrome_gen.runtime.getPackageDirectoryEntry().then(
@@ -25,7 +25,7 @@ main() {
           return entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
             Uint8List data = new Uint8List.fromList(binaryData.getBytes());
             Pack pack = new Pack(data, null);
-            return pack.parseAll().then((_) {
+            return pack.parseAll(null).then((_) {
 
               // TODO: add more expects for the pack state?
               expect(pack.objects.length, 15);

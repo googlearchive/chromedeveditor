@@ -15,11 +15,11 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'file_operations.dart';
-import 'git_object.dart';
-import 'git_object_utils.dart';
-import 'git_pack.dart';
-import 'git_pack_index.dart';
-import 'git_utils.dart';
+import 'object.dart';
+import 'object_utils.dart';
+import 'pack.dart';
+import 'pack_index.dart';
+import 'utils.dart';
 
 import 'zlib.dart';
 
@@ -39,16 +39,24 @@ class GitRef {
 }
 
 class GitConfig {
-  Map<String, dynamic> m;
+
+  String url;
+  bool shallow;
+  Map<String, String> remoteHeads = {};
+  DateTime time;
 
   dynamic _jsonObject;
 
-  GitConfig(String configStr) {
-    _jsonObject = JSON.decode(configStr);
+
+  GitConfig([String configStr]) {
+    if (configStr != null) {
+      _jsonObject = JSON.decode(configStr);
+    }
   }
 
-  String toJsonString() {
-    return JSON.encode(m);
+  String toString() {
+    //TODO return Json Object string.
+    return "";
   }
 }
 
@@ -59,9 +67,15 @@ class PackEntry {
   PackEntry(this.pack, this.packIdx);
 }
 
+class FindPackedObjectResult {
+  Pack pack;
+  int offset;
+  FindPackedObjectResult(this.pack, this.offset);
+}
+
 class ObjectStore {
 
-  static final GIT_FOLDER_PATH = '.git/';
+  static final GIT_FOLDER_PATH = '.git';
   static final OBJECT_FOLDER_PATH = 'objects';
   static final HEAD_PATH = 'HEAD';
   static final HEAD_MASTER_REF_PATH = 'refs/head/master';
@@ -71,7 +85,7 @@ class ObjectStore {
   chrome.DirectoryEntry _rootDir;
 
   // The root directory of the objects the objectstore represnts.
-  chrome.DirectoryEntry _objectDir;
+  chrome.DirectoryEntry objectDir;
 
   // Git directory path.
   String gitPath = '.git/';
@@ -83,22 +97,24 @@ class ObjectStore {
   }
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
-    _objectDir = objectDir;
+    this.objectDir = objectDir;
     _packs = packs;
   }
 
   Future load() {
-    return _rootDir.createDirectory(gitPath + OBJECT_FOLDER_PATH).then((
-        chrome.DirectoryEntry objectsDir) {
-      _objectDir = objectsDir;
+    return _rootDir.createDirectory(GIT_FOLDER_PATH).then((gitDir) {
+      return gitDir.createDirectory(OBJECT_FOLDER_PATH).then((objectsDir) {
 
-      return objectsDir.createDirectory('pack', exclusive: true).then((
-          chrome.DirectoryEntry packDir) {
-        return FileOps.listFiles(packDir).then((List<chrome.Entry> entries) {
-          Iterable<chrome.Entry> packEntries = entries.where((e) => e.name.endsWith('.pack'));
+        objectDir = objectsDir;
+        return objectsDir.createDirectory('pack').then((
+            chrome.DirectoryEntry packDir) {
+          return FileOps.listFiles(packDir).then((List<chrome.Entry> entries) {
+            Iterable<chrome.Entry> packEntries = entries.where((e)
+                => e.name.endsWith('.pack'));
 
-          return Future.forEach(packEntries, (chrome.Entry entry) {
-            _readPackEntry(packDir, entry);
+            return Future.forEach(packEntries, (chrome.Entry entry) {
+              _readPackEntry(packDir, entry);
+            });
           });
         });
       });
@@ -119,11 +135,10 @@ class ObjectStore {
 
   Future<String> getHeadRef() {
     return _rootDir.getFile(gitPath + HEAD_PATH).then((chrome.ChromeFileEntry entry) {
-      entry.readText().then((String content) {
-        Completer completer = new Completer();
+      return entry.readBytes().then((chrome.ArrayBuffer buffer) {
+        String content = UTF8.decode(buffer.getBytes());
         // get rid of the initial 'ref: ' plus newline at end.
-        String headRefname = content.substring(5).trim();
-        completer.complete(headRefname);
+        return content.substring(5).trim();
       });
     });
   }
@@ -148,7 +163,7 @@ class ObjectStore {
   }
 
   Future<String> _getHeadForRef(String headRefName) {
-    return FileOps.readFile(_rootDir, GIT_FOLDER_PATH + headRefName, "Text")
+    return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
       .then((String content) => content.substring(0, 40));
   }
 
@@ -169,11 +184,10 @@ class ObjectStore {
     });
   }
 
-  Future<chrome.FileEntry> _findLooseObject(String sha) {
-    return _objectDir.getFile(sha.substring(0, 2) + '/' + sha.substring(2));
-  }
+  Future<chrome.FileEntry> _findLooseObject(String sha) => objectDir.getFile(
+      sha.substring(0, 2) + '/' + sha.substring(2));
 
-  Future _findPackedObject(Uint8List shaBytes) {
+  Future<FindPackedObjectResult> _findPackedObject(Uint8List shaBytes) {
     Completer completer = new Completer();
 
     _packs.forEach((PackEntry packEntry) {
@@ -184,8 +198,7 @@ class ObjectStore {
       int offset = _packs[i].packIdx.getObjectOffset(shaBytes);
 
       if (offset != -1) {
-        // TODO create a custom return object and return.
-        //completer.complete(offset, _packs[i].pack);
+        completer.complete(new FindPackedObjectResult(_packs[i].pack, offset));
       }
     }
 
@@ -221,18 +234,17 @@ class ObjectStore {
           var buff;
           completer.complete(new LooseObject(buff));
         } else {
-          return FileOps.readBlob(new Blob(inflated.getBytes())).then((String data) {
+          return FileOps.readBlob(new Blob(inflated.getBytes()), 'Text').then(
+              ( data) {
             completer.complete(new LooseObject(data));
           });
         }
       });
     }, onError:(e){
-      this._findPackedObject(shaBytes).then((x) {
+      return this._findPackedObject(shaBytes).then(
+          (FindPackedObjectResult obj) {
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
-        //TODO do something with pack
-        //pack.matchAndExpandObjectAtOffset(offset, dataType, function(object){
-          //callback(object);
-        //});
+        return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType);
       }, onError: (e) {
         throw "Can't find object with SHA " + sha;
       });
@@ -246,7 +258,7 @@ class ObjectStore {
 
 
     Future walkLevel(List<String> shas) {
-      List<String> nextLevel;
+      List<String> nextLevel = [];
 
       return Future.forEach(shas, (String sha) {
         Completer completer = new Completer();
@@ -393,20 +405,27 @@ class ObjectStore {
   Future init() {
     return _rootDir.getDirectory('.git').then((chrome.DirectoryEntry gitDir) {
       return load();
-    }, onError: (e) {
-      //TODO handle error
+    }, onError: (FileError e) {
+      if (e.code == FileError.NOT_FOUND_ERR) {
+        return _init();
+      } else {
+        throw e;
+      }
     });
   }
 
   Future _init() {
-    return _rootDir.createDirectory(gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
-      _objectDir = objectDir;
-      return FileOps.createFileWithContent(objectDir, gitPath +HEAD_PATH,
-          'ref: refs/heads/master\n', 'Text').then((entry) => entry, onError: (e) {
-            //TODO throw file error
+    return FileOps.createDirectoryRecursive(_rootDir,
+        gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
+      this.objectDir = objectDir;
+      return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
+          'ref: refs/heads/master\n', 'Text').then((entry) => entry,
+          onError: (e) {
+            print(e);
+            throw e;
           });
     }, onError: (e) {
-      //TODO throw file error;
+      throw e;
     });
   }
 
@@ -470,7 +489,7 @@ class ObjectStore {
     String subDirName = digest.substring(0,2);
     String objectFileName = digest.substring(2);
 
-    return _objectDir.createDirectory(subDirName).then(
+    return objectDir.createDirectory(subDirName).then(
         (chrome.DirectoryEntry dirEntry) {
       return dirEntry.createDirectory(objectFileName).then(
           (chrome.FileEntry fileEntry) {
@@ -519,14 +538,14 @@ class ObjectStore {
   }
 
   Future<Entry> setConfig(GitConfig config) {
-    String configStr = config.toJsonString();
+    String configStr = config.toString();
     return FileOps.createFileWithContent(_rootDir, '.git/config.json',
         configStr, 'Text');
   }
 
   Future<Entry> updateLastChange(GitConfig config) {
     Future<Entry> doUpdate(GitConfig config) {
-      config.m['time'] = new DateTime.now();
+      config.time = new DateTime.now();
       return setConfig(config);
     }
     if (config != null) {
