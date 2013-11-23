@@ -14,7 +14,6 @@ import 'file_operations.dart';
 import 'objectstore.dart';
 import 'pack.dart';
 
-
 class PktLine {
   int offset;
   int length;
@@ -125,8 +124,8 @@ class UploadPackParser {
   }
 
   String _getPktLine(PktLine pktLine) {
-    String pktString =
-    UTF8.decode(data.sublist(pktLine.offset, pktLine.offset + pktLine.length));
+    String pktString =UTF8.decode(data.sublist(pktLine.offset,
+        pktLine.offset + pktLine.length));
     return pktString;
   }
 
