@@ -67,6 +67,8 @@ class DartSdk extends SdkDirectory {
     return Uri.parse(chrome_gen.runtime.getURL('sdk/'));
   }
 
+  DartSdk get sdk => this;
+
   DartSdk._({this.version}): super._(null, 'sdk');
 
   /**
@@ -88,20 +90,22 @@ class DartSdk extends SdkDirectory {
   Future _cacheCoreSource() {
     _coreSource = {};
 
-    List dirs = ['core', 'collection', '_collection_dev', 'math', 'convert', 'async'];
+    return new Future.value();
 
-    return Future.forEach(dirs, (dirName) {
-      return libDirectory.getChild(dirName).then((SdkDirectory dir) {
-        return dir.getChildren().then((List<SdkEntity> children) {
-          return Future.forEach(children, (child) {
-            return html.HttpRequest.getString(getSdkLocationUri().resolve(
-                'lib/${dirName}/${child.name}').path).then((contents) {
-              _coreSource['${dirName}/${child.name}'] = contents;
-            });
-          });
-        });
-      });
-    });
+//    List dirs = ['core', 'collection', '_collection_dev', 'math', 'convert', 'async'];
+//
+//    return Future.forEach(dirs, (dirName) {
+//      return libDirectory.getChild(dirName).then((SdkDirectory dir) {
+//        return dir.getChildren().then((List<SdkEntity> children) {
+//          return Future.forEach(children, (child) {
+//            return html.HttpRequest.getString(getSdkLocationUri().resolve(
+//                'lib/${dirName}/${child.name}').path).then((contents) {
+//              _coreSource['${dirName}/${child.name}'] = contents;
+//            });
+//          });
+//        });
+//      });
+//    });
   }
 }
 
@@ -118,6 +122,8 @@ abstract class SdkEntity {
    * The parent of this entity.
    */
   final SdkDirectory parent;
+
+  DartSdk get sdk => parent.sdk;
 
   SdkEntity._(this.parent, this.path);
 

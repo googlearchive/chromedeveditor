@@ -192,6 +192,7 @@ void clean(GrinderContext context) {
   // delete the sdk directory
   _runCommandSync(context, 'rm -rf app/sdk/lib');
   _runCommandSync(context, 'rm -f app/sdk/version');
+  _runCommandSync(context, 'rm -f app/sdk/dart-sdk-lib.fil');
 
   // delete any compiled js output
   _runCommandSync(context, 'rm -f app/*.dart.js');
@@ -340,14 +341,17 @@ void _populateSdk(GrinderContext context) {
 
   File srcVersionFile = joinFile(srcSdkDir, ['version']);
   File destVersionFile = joinFile(destSdkDir, ['version']);
+  File destArchiveFile = joinFile(destSdkDir, ['dart-sdk-lib.fil']);
 
   FileSet srcVer = new FileSet.fromFile(srcVersionFile);
   FileSet destVer = new FileSet.fromFile(destVersionFile);
+  FileSet destArchive = new FileSet.fromFile(destArchiveFile);
 
   Directory compilerDir = new Directory('packages/compiler');
 
   // check the state of the sdk/version file, to see if things are up-to-date
-  if (!destVer.upToDate(srcVer) || !compilerDir.existsSync()) {
+  if (!destVer.upToDate(srcVer) || !destArchive.upToDate(srcVer)
+      || !compilerDir.existsSync()) {
     // copy files over
     context.log('copying SDK');
     copyFile(srcVersionFile, destSdkDir);
@@ -365,38 +369,42 @@ void _populateSdk(GrinderContext context) {
     _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/pub');
     _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
 
-    // traverse directories, creating a .files json directory listing
-    context.log('creating SDK directory listings');
-    _createDirectoryListings(destSdkDir);
+    context.log('creating SDK archive');
+
+    _createSdkArchive(joinDir(destSdkDir, ['lib']), destArchiveFile);
+    _runCommandSync(context, 'rm -rf ${joinDir(destSdkDir, ['lib']).path}');
   }
 }
 
 /**
- * Recursively create `.files` json files in the given directory; these files
- * serve as directory listings.
+ * Create an archived version of the Dart SDK.
  */
-void _createDirectoryListings(Directory dir) {
-  List<String> files = [];
+void _createSdkArchive(Directory srcDir, File destFile) {
+  List files = srcDir.listSync(recursive: true, followLinks: false);
+  files = files.where((f) => f is File).toList();
 
-  String parentName = fileName(dir);
+  BytesBuilder bb = new BytesBuilder();
 
-  for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
-    String name = fileName(entity);
+  _writeInt(bb, files.length);
 
-    // ignore hidden files and directories
-    if (name.startsWith('.')) continue;
+  String pathPrefix = srcDir.path + '/';
 
-    if (entity is File) {
-      files.add(name);
-    } else {
-      files.add("${name}/");
-      _createDirectoryListings(entity);
-    }
-  };
+  for (File file in files) {
+    String path = file.path.substring(pathPrefix.length);
+    bb.add(UTF8.encoder.convert(path));
+    bb.addByte(0);
+    _writeInt(bb, file.lengthSync());
+  }
 
-  files.sort();
+  for (File file in files) {
+    bb.add(file.readAsBytesSync());
+  }
 
-  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files) + '\n');
+  destFile.writeAsBytesSync(bb.toBytes());
+}
+
+void _writeInt(BytesBuilder bb, int val) {
+  bb.add([val >> 24, val >> 16, val >> 8, val]);
 }
 
 void _printSize(GrinderContext context, File file) {
