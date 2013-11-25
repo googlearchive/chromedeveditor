@@ -10,6 +10,9 @@ import 'dart:core';
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'dart:html';
+
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:crc32/crc32.dart' as crc;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
@@ -91,8 +94,14 @@ class Pack {
   ObjectStore _store;
   List<PackObject> objects = [];
 
-  Pack(Uint8List data, store) {
-    this.data = data;
+  Pack(dynamic data, ObjectStore store) {
+    if (data is Uint8List) {
+      this.data = data;
+    } else if (data is chrome.ArrayBuffer){
+      this.data = new Uint8List.fromList(data.getBytes());
+    } else {
+      throw "unsupported data format";
+    }
     this._store = store;
   }
 
@@ -246,6 +255,7 @@ class Pack {
 
   PackObject _matchObjectData(PackObjectHeader header) {
 
+    window.console.log('inside match');
     PackObject object = new PackObject();
 
     object.offset = header.offset;
@@ -266,8 +276,10 @@ class Pack {
         break;
     }
 
+    window.console.log('before compress.');
     ZlibResult objData = _uncompressObject(_offset, header.size);
     object.data = new Uint8List.fromList(objData.buffer.getBytes()).buffer;
+    window.console.log('after compress.');
 
     _advance(objData.expectedLength);
     return object;
@@ -305,6 +317,7 @@ class Pack {
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
+      window.console.log(numObjects);
       for (int i = 0; i < numObjects; ++i) {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = crc.CRC32.compute(data.sublist(object.offset, _offset));

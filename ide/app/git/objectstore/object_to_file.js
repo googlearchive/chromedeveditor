@@ -11,6 +11,24 @@ var object2file = {
 
   expandTree: function(dir, store, treeSha, callback) {
 
+        store._retrieveObject(treeSha, "Tree", function(tree){
+            var entries = tree.entries;
+            entries.asyncEach(function(entry, done){
+                if (entry.isBlob){
+                    var name = entry.name;
+                    object2file.expandBlob(dir, store, name, entry.sha, done);
+                }
+                else{
+                    var sha = entry.sha;
+                    fileutils.mkdirs(dir, entry.name, function(newDir){
+                        object2file.expandTree(newDir, store, sha, done);
+                    });
+                }
+            },callback);
+        });
+    }
+};
+
     store._retrieveObject(treeSha, "Tree", function(tree){
       var entries = tree.entries;
       entries.asyncEach(function(entry, done){
@@ -28,3 +46,4 @@ var object2file = {
     });
   }
 };
+

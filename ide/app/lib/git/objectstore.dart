@@ -173,8 +173,7 @@ class ObjectStore {
       return FileOps.readFile(packDir, entry.name.substring(0,
           entry.name.lastIndexOf('.pack')) + '.idx', 'ArrayBuffer').then(
           (chrome.ArrayBuffer idxData) {
-            Pack pack = new Pack(new Uint8List.fromList(
-                packData.getBytes()), this);
+            Pack pack = new Pack(packData, this);
 
             PackIndex packIdx = new PackIndex(new Uint8List.fromList(
                 idxData.getBytes()).buffer);
@@ -235,7 +234,7 @@ class ObjectStore {
           completer.complete(new LooseObject(buff));
         } else {
           return FileOps.readBlob(new Blob(inflated.getBytes()), 'Text').then(
-              ( data) {
+              (data) {
             completer.complete(new LooseObject(data));
           });
         }
@@ -406,6 +405,7 @@ class ObjectStore {
     return _rootDir.getDirectory('.git').then((chrome.DirectoryEntry gitDir) {
       return load();
     }, onError: (FileError e) {
+      return _init();
       if (e.code == FileError.NOT_FOUND_ERR) {
         return _init();
       } else {

@@ -155,6 +155,85 @@ var FileObjectStore = (function() {
           }
         }
 
+             this._retrieveRawObject(sha, dataType, function(object){
+                 callback(new GitObjects[objType](sha, object.data), object);
+             }, error);
+        },
+
+        init : function(success, error){
+            var root = this.dir;
+            var self = this;
+            this.error = error;
+            this.fileError = errutils.fileErrorFunc(error);
+
+            root.getDirectory('.git', {create:false}, function(gitDir){
+                self.load(success);
+            },
+            function(e){
+               // if (e.code == FileError.NOT_FOUND_ERR){
+                    self._init(success);
+                //}
+               // else{
+                 //   self.fileError(e);
+                //}
+            });
+        },
+
+        _init : function(success){
+            var root = this.dir;
+            var self = this;
+            fileutils.mkdirs(root, '.git/objects', function(objectsDir){
+                self.objectsDir = objectsDir;
+                console.log('holy cow');
+                fileutils.mkfile(root, '.git/HEAD', 'ref: refs/heads/master\n', success, self.fileError);
+            }, this.fileError);
+
+        },
+
+        _getTreesFromCommits : function(shas, callback){
+            var trees = [],
+                shaIndex = 0,
+                self = this;
+
+            var fillTrees = function(){
+                self._getTreeFromCommitSha(shas[shaIndex++], function(tree){
+                    trees.push(tree);
+                    if (shaIndex >= shas.length){
+                        callback(trees);
+                    }
+                    else{
+                        fillTrees();
+                    }
+                });
+            }
+            fillTrees();
+        },
+        _getTreeFromCommitSha : function(sha, callback){
+            var self = this;
+            this._retrieveObject(sha, 'Commit', function(commit){
+                self._retrieveObject(commit.tree, 'Tree', callback);
+            });
+        },
+        writeRawObject : function(type, content, callback){
+            var bb = [];//new BlobBuilder();
+            var size = content.byteLength || content.length || content.size || 0;
+            var header = type + ' ' + String(size) ;
+
+            //var store = header + content;
+
+            bb.push(header);
+            bb.push(new Uint8Array([0]));
+            bb.push(content);
+            var thiz = this;
+            var fr = new FileReader();
+            fr.onloadend = function(e){
+                var buf = fr.result;
+                var store = new Uint8Array(buf);
+                var digest = Crypto.SHA1(store);
+                thiz._findPackedObject(utils.convertShaToBytes(digest), function(){callback(digest);}, function(){
+                    thiz._storeInFile(digest, store, callback);
+                });
+            }
 
         checkRemoteHead(function(){
           self._getHeadForRef(headRef, function(sha){

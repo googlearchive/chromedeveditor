@@ -1,3 +1,6 @@
+var error = function() {
+};
+
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     //Allow using this built library as an AMD module
@@ -651,25 +654,6 @@ define('formats/smart_http_remote',['utils/progress_chunker'], function(Progress
             if (callback) {
               callback(objects, packData, common, shallow);
             }
-          }, packProgress);
-          // var packWorker = new Worker(workerUrl);
-          // packWorker.onmessage = function(evt){
-          //   var msg = evt.data;
-          //   if (msg.type == GitLiteWorkerMessages.FINISHED && callback){
-          //     packWorker.terminate();
-          //     callback(msg.objects, new Uint8Array(msg.data), msg.common);
-          //   }
-          //   else if (msg.type == GitLiteWorkerMessages.RETRIEVE_OBJECT){
-          //     store._retrieveRawObject(msg.sha, "ArrayBuffer", function(baseObject){
-          //       packWorker.postMessage({type: GitLiteWorkerMessages.OBJECT_RETRIEVED, id: msg.id, object: baseObject}, [baseObject.data]);
-          //       var x = 0;
-          //     });
-          //   }
-          //   else if (progress && msg.type == GitLiteWorkerMessages.PROGRESS){
-          //     progress(msg);
-          //   }
-          // }
-          // packWorker.postMessage({type: GitLiteWorkerMessages.START, data:binaryData}, [binaryData]);
         }
       }
       if (receiveProgress){
@@ -810,12 +794,14 @@ define('formats/smart_http_remote',['utils/progress_chunker'], function(Progress
       return _(this.refs).values()
     }
 
+
     this.getRef = function(name) {
       return this.refs[this.name + "/" + name]
     }
   }
   return SmartHttpRemote;
 });
+
 
 define('commands/clone',['formats/smart_http_remote', 'utils/progress_chunker'], function(SmartHttpRemote, ProgressChunker){
 
@@ -1742,82 +1728,107 @@ GitLiteWorkerMessages = {
 };
 define("workers/worker_messages", function(){});
 
-
 define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pull', 'commands/push', 'commands/branch', 'commands/checkout', 'commands/conditions', 'formats/smart_http_remote', "workers/worker_messages"], function(clone, commit, init, pull, push, branch, checkout, Conditions, SmartHttpRemote){
 
-  /** @exports GitApi */
-  var api = {
+    /** @exports GitApi */
+    var api = {
 
-    /** @desc Indicates an unexpected error in the HTML5 file system. */
-    FILE_IO_ERROR: errutils.FILE_IO_ERROR,
-    /** @desc Indicates an unexpected ajax error when trying to make a request */
-    AJAX_ERROR: errutils.AJAX_ERROR,
-    /** @desc trying to clone into a non-empty directory */
-    CLONE_DIR_NOT_EMPTY: errutils.CLONE_DIR_NOT_EMPTY,
-    /** @desc Trying to clone into directory that contains a .git directory that already contains objects */
-    CLONE_GIT_DIR_IN_USE: errutils.CLONE_GIT_DIR_IN_USE,
-    /** @desc No branch found with the name given.  */
-    REMOTE_BRANCH_NOT_FOUND: errutils.REMOTE_BRANCH_NOT_FOUND,
-    /** @desc A pull was attempted that would require a non-fast-forward. The API only supports fast forward merging at the moment. */
-    PULL_NON_FAST_FORWARD: errutils.PULL_NON_FAST_FORWARD,
-    /** @desc A pull was attempted but the local git repo is up to date */
-    PULL_UP_TO_DATE: errutils.PULL_UP_TO_DATE,
-    /** @desc A commit was attempted but the local git repo has no new changes to commit */
-    COMMIT_NO_CHANGES: errutils.COMMIT_NO_CHANGES,
-    /** @desc A push was attempted but the remote repo is up to date. */
-    PUSH_NO_CHANGES: errutils.PUSH_NO_CHANGES,
-    /** @desc A push was attempted but the remote has new commits that the local repo doesn't know about.
-     * You would normally do a pull and merge remote changes first. Unfortunately, this isn't possible with this API.
-     * As a workaround, you could create and checkout a new branch and then do a push. */
-    PUSH_NON_FAST_FORWARD: errutils.PUSH_NON_FAST_FORWARD,
-    /** @desc Indicates an unexpected problem retrieving objects */
-    OBJECT_STORE_CORRUPTED: errutils.OBJECT_STORE_CORRUPTED,
-    /** @desc A pull was attempted with uncommitted changed in the working copy */
-    UNCOMMITTED_CHANGES: errutils.UNCOMMITTED_CHANGES,
-    /** @desc 401 when attempting to make a request. */
-    HTTP_AUTH_ERROR: errutils.HTTP_AUTH_ERROR,
+
+
+        /** @desc Indicates an unexpected error in the HTML5 file system. */
+        FILE_IO_ERROR: errutils.FILE_IO_ERROR,
+        /** @desc Indicates an unexpected ajax error when trying to make a request */
+        AJAX_ERROR: errutils.AJAX_ERROR,
+        /** @desc trying to clone into a non-empty directory */
+        CLONE_DIR_NOT_EMPTY: errutils.CLONE_DIR_NOT_EMPTY,
+        /** @desc Trying to clone into directory that contains a .git directory that already contains objects */
+        CLONE_GIT_DIR_IN_USE: errutils.CLONE_GIT_DIR_IN_USE,
+        /** @desc No branch found with the name given.  */
+        REMOTE_BRANCH_NOT_FOUND: errutils.REMOTE_BRANCH_NOT_FOUND,
+        /** @desc A pull was attempted that would require a non-fast-forward. The API only supports fast forward merging at the moment. */
+        PULL_NON_FAST_FORWARD: errutils.PULL_NON_FAST_FORWARD,
+        /** @desc A pull was attempted but the local git repo is up to date */
+        PULL_UP_TO_DATE: errutils.PULL_UP_TO_DATE,
+        /** @desc A commit was attempted but the local git repo has no new changes to commit */
+        COMMIT_NO_CHANGES: errutils.COMMIT_NO_CHANGES,
+        /** @desc A push was attempted but the remote repo is up to date. */
+        PUSH_NO_CHANGES: errutils.PUSH_NO_CHANGES,
+        /** @desc A push was attempted but the remote has new commits that the local repo doesn't know about.
+         * You would normally do a pull and merge remote changes first. Unfortunately, this isn't possible with this API.
+         * As a workaround, you could create and checkout a new branch and then do a push. */
+        PUSH_NON_FAST_FORWARD: errutils.PUSH_NON_FAST_FORWARD,
+        /** @desc Indicates an unexpected problem retrieving objects */
+        OBJECT_STORE_CORRUPTED: errutils.OBJECT_STORE_CORRUPTED,
+        /** @desc A pull was attempted with uncommitted changed in the working copy */
+        UNCOMMITTED_CHANGES: errutils.UNCOMMITTED_CHANGES,
+        /** @desc 401 when attempting to make a request. */
+        HTTP_AUTH_ERROR: errutils.HTTP_AUTH_ERROR,
+
+        /** @desc The branch doesn't follow valid git branch naming rules. */
+        BRANCH_NAME_NOT_VALID: errutils.BRANCH_NAME_NOT_VALID,
+        /** @desc Trying to push a repo without a valid remote.
+         * This can happen if it's a first push to blank repo and a url wasn't specified as one of the options. */
+        PUSH_NO_REMOTE: errutils.PUSH_NO_REMOTE,
+
+        /**
+         * Clones a remote git repo into a local HTML5 DirectoryEntry. It only requests a single branch. This will either
+         * be the branch specified or the HEAD at specified url. You can also specify the depth of the clone. It's recommended
+         * that a depth of 1 always be given since the api does not currently give a way
+         * to access the commit history of a repo.
+         *
+         * @param {Object} options
+         * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry to clone the repo into
+         * @param {String} [options.branch=HEAD] the name of the remote branch to clone.
+         * @param {String} options.url the url of the repo to clone from
+         * @param {Number} [options.depth] the depth of the clone. Equivalent to the --depth option from git-clone
+         * @param {String} [options.username] User name to authenticate with if the repo supports basic auth
+         * @param {String} [options.password] password to authenticate with if the repo supports basic auth
+         * @param {progressCallback} [options.progress] callback that gets notified of progress events.
+         * @param {successCallback} success callback that gets notified after the clone is completed successfully
+         * @param {errorCallback} [error] callback that gets notified if there is an error
+         */
+        clone : function(options, success, error){
+            var objectStore = new FileObjectStore(options.dir);
+            objectStore.init(function(){
+                clone({
+                        dir: options.dir,
+                        branch: options.branch,
+                        objectStore: objectStore,
+                        url: options.url,
+                        depth: options.depth,
+                        progress: options.progress,
+                        username: options.username,
+                        password: options.password
+                    },
+                    success, error);
+
+            }, error);
+        },
+
+      getFs: function(success) {
+
+
+      return window.webkitRequestFileSystem(window.TEMPORARY, 1024 * 1024 * 1024, function(fs) {
+      fs.root.getDirectory('3s4s', {create:true}, function(dir) {
+      /*var options = {
+      dir: dir,
+      url: 'https://github.com/gaurave/trep.git'
+      };
+      console.log(options);
+         api.clone(options, function() {
+         console.log('wuppy');
+         }, function() {});*/
+      });
+
+        console.log(fs);
+        success(fs);
+      });
+    },
+
 
     /** @desc The branch doesn't follow valid git branch naming rules. */
     BRANCH_NAME_NOT_VALID: errutils.BRANCH_NAME_NOT_VALID,
-    /** @desc Trying to push a repo without a valid remote.
-     * This can happen if it's a first push to blank repo and a url wasn't specified as one of the options. */
-    PUSH_NO_REMOTE: errutils.PUSH_NO_REMOTE,
 
-    /**
-     * Clones a remote git repo into a local HTML5 DirectoryEntry. It only requests a single branch. This will either
-     * be the branch specified or the HEAD at specified url. You can also specify the depth of the clone. It's recommended
-     * that a depth of 1 always be given since the api does not currently give a way
-     * to access the commit history of a repo.
-     *
-     * @param {Object} options
-     * @param {DirectoryEntry} options.dir an HTML5 DirectoryEntry to clone the repo into
-     * @param {String} [options.branch=HEAD] the name of the remote branch to clone.
-     * @param {String} options.url the url of the repo to clone from
-     * @param {Number} [options.depth] the depth of the clone. Equivalent to the --depth option from git-clone
-     * @param {String} [options.username] User name to authenticate with if the repo supports basic auth
-     * @param {String} [options.password] password to authenticate with if the repo supports basic auth
-     * @param {progressCallback} [options.progress] callback that gets notified of progress events.
-     * @param {successCallback} success callback that gets notified after the clone is completed successfully
-     * @param {errorCallback} [error] callback that gets notified if there is an error
-     */
-    clone : function(options, success, error){
-      var objectStore = new FileObjectStore(options.dir);
-      objectStore.init(function(){
-
-        clone({
-            dir: options.dir,
-            branch: options.branch,
-            objectStore: objectStore,
-            url: options.url,
-            depth: options.depth,
-            progress: options.progress,
-            username: options.username,
-            password: options.password
-          },
-          success, error);
-
-      }, error);
-    },
     /**
      * Does a pull from the url the local repo was cloned from. Will only succeed for fast-forward pulls.
      * If a merge is required, it calls the error callback

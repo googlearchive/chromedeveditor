@@ -7,10 +7,13 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
+import 'dart:js' as js;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
+
+import 'package:chrome_gen/src/files.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -26,6 +29,11 @@ import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
+
+import 'lib/git/commands/clone.dart';
+import 'lib/git/objectstore.dart';
+
+import 'lib/git/file_operations.dart';
 
 /**
  * Returns true if app.json contains a test-mode entry set to true.
@@ -46,6 +54,43 @@ Future<bool> isTestMode() {
   }).catchError((e) {
     return true;
   });
+}
+
+
+
+ gitTest(String projectName, String url, Spark spark) {
+  gitSuccess(js.JsObject fs) {
+
+    CrFileSystem cfs = new CrFileSystem.fromProxy(fs);
+    cfs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+      GitOptions options = new GitOptions();
+      options.root = dir;
+      options.url = url;
+      options.store = new ObjectStore(dir);
+      Clone clone = new Clone(options);
+      options.store.init().then((_) {
+        clone.clone().then((_) {
+
+
+            spark.workspace.link(dir).then((file) {
+              spark._filesController.selectLastFile();
+              spark.workspace.save();
+            });
+
+          FileOps.listFiles(dir).then((entries) {
+            entries.forEach((e) {
+              FileOps.listFiles(dir).then((ent) {
+                window.console.log(ent);
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+
+  js.JsObject git = js.context['GitApi'];
+  js.JsObject fs = git.callMethod('getFs', [gitSuccess]);
 }
 
 void main() {
@@ -212,6 +257,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new ProjectOpenAction(this));
+    actionManager.registerAction(new GitProjectAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
     actionManager.registerKeyListener();
@@ -232,6 +278,7 @@ class Spark extends Application implements FilesControllerDelegate {
     ul.children.add(createMenuItem(actionManager.getAction('file-new')));
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('project-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('git-project')));
     ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
     ul.children.add(createMenuItem(actionManager.getAction('file-close')));
     ul.children.add(createMenuSeparator());
@@ -547,6 +594,29 @@ class ProjectOpenAction extends SparkAction {
   ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
 
   void _invoke([Object context]) => spark.openProject();
+}
+
+class GitProjectAction extends SparkAction {
+  bootjack.Modal _gitCloneBox;
+
+  GitProjectAction(Spark spark) : super(spark, "git-project", "Git Project");
+  void _invoke([Object context]) {
+    if (_gitCloneBox == null) {
+      _gitCloneBox = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
+
+      var submit = _gitCloneBox.element.querySelector("#git-create-button");
+      submit.onClick.listen((e) {
+        window.console.log(_gitCloneBox.element.querySelector('#git-project-name').value);
+        String projectName = _gitCloneBox.element.querySelector('#git-project-name').value;
+        String repoUrl = _gitCloneBox.element.querySelector('#git-repo-url').value;
+        gitTest(projectName, repoUrl, spark);
+        _gitCloneBox.hide();
+      });
+    }
+
+    _gitCloneBox.show();
+  }
+
 }
 
 class AboutSparkAction extends SparkAction {

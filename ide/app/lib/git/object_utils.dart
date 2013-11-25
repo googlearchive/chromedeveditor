@@ -13,6 +13,9 @@ import 'file_operations.dart';
 import 'object.dart';
 import 'objectstore.dart';
 import 'utils.dart';
+import 'dart:html';
+import 'dart:convert';
+
 
 /**
  *
@@ -35,6 +38,7 @@ abstract class ObjectUtils {
   static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir, ObjectStore store,
       String fileName, String blobSha) {
     return store.retrieveObject(blobSha, ObjectTypes.BLOB).then((BlobObject blob) {
+      window.console.log(UTF8.decode(blob.data));
       return FileOps.createFileWithContent(dir, fileName, blob.data, ObjectTypes.BLOB);
     });
   }
