@@ -84,16 +84,17 @@ abstract class FileOps {
 
   static Future<dynamic> readFile(chrome.DirectoryEntry root, String path,
       String type) {
-    Completer<String> completer = new Completer();
-    root.getFile(path).then((chrome.ChromeFileEntry entry) {
-      //TODO(grv): Implement a general read function, supporting different
-      // formats.
-      entry.readText().then((String content){
-        completer.complete(content);
-      });
+    return root.getFile(path).then((chrome.ChromeFileEntry entry) {
 
+      if (type == 'Text') {
+        return entry.readText();
+      } else if (type == 'ArrayBuffer') {
+        return entry.readBytes();
+      } else {
+        throw new UnsupportedError(
+            "Reading of content type:${type} is not supported.");
+      }
     });
-    return completer.future;
   }
 
   /**
@@ -132,5 +133,27 @@ abstract class FileOps {
     }
 
     return completer.future;
+  }
+
+  /**
+   * Copy contents of a [src] directory into a [dst] directory recursively.
+   */
+  static Future<chrome.DirectoryEntry> copyDirectory(chrome.DirectoryEntry src,
+      chrome.DirectoryEntry dst) {
+    return listFiles(src).then((List<chrome.Entry> entries) {
+      return Future.forEach(entries, (chrome.Entry entry) {
+        if (entry.isFile) {
+          return (entry as chrome.ChromeFileEntry).readBytes().then((content) {
+            return createFileWithContent(dst, entry.name, content,
+                'blob');
+          });
+        } else {
+          return dst.createDirectory(entry.name).then(
+              (chrome.DirectoryEntry dir) {
+            return copyDirectory(entry, dir);
+          });
+        }
+      }).then((_) => dst);
+    });
   }
 }

@@ -164,6 +164,10 @@ class Workspace implements Container {
           var file = new File(container, ent, syncable);
           container._children.add(file);
         } else {
+          // We don't want to show .git folders to the user.
+          if (ent.name == '.git') {
+            continue;
+          }
           var folder = new Folder(container, ent, syncable);
           container._children.add(folder);
           futures.add(_gatherChildren(folder, syncable));

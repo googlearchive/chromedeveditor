@@ -54,6 +54,9 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
     directionChanged();
   }
 
+  @override
+  bool get applyAuthorStyles => true;
+
   /// Triggered when [direction] is externally changed.
   // NOTE: The name must be exactly like this -- do not change.
   void directionChanged() {

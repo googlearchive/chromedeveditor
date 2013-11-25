@@ -14,7 +14,6 @@ import 'file_operations.dart';
 import 'objectstore.dart';
 import 'pack.dart';
 
-
 class PktLine {
   int offset;
   int length;
@@ -39,12 +38,9 @@ class UploadPackParser {
   var remoteLines = null;
   Uint8List data;
 
-  String _getPktLine(PktLine pktLine) {
-    String pktString =
-    UTF8.decode(data.sublist(pktLine.offset, pktLine.offset + pktLine.length));
-    return pktString;
-  }
-
+  /**
+   * Parses a git http smart protcol request result.
+   */
   Future parse(ByteBuffer buffer, ObjectStore store, progress) {
     data = new Uint8List.view(buffer);
 
@@ -102,10 +98,7 @@ class UploadPackParser {
     Blob packDataBlob = new Blob(packDataLines);
 
     return FileOps.readBlob(packDataBlob, "ArrayBuffer").then((data) {
-      window.console.log(data);
       Pack pack = new Pack(data, store);
-      window.console.log('comes before pack parsing');
-      //window.console.log(data.length);
       return pack.parseAll(progress).then((_) {;
         objects = pack.objects;
         return new PackParseResult(pack.objects, pack.data, shallow, common);
@@ -128,6 +121,12 @@ class UploadPackParser {
       _advance(length - 4);
     }
     return pktLine;
+  }
+
+  String _getPktLine(PktLine pktLine) {
+    String pktString =UTF8.decode(data.sublist(pktLine.offset,
+        pktLine.offset + pktLine.length));
+    return pktString;
   }
 
   _peek(length) => data.sublist(_offset, _offset + length);

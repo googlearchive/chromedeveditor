@@ -10,11 +10,12 @@ import 'dart:core';
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 import 'file_operations.dart';
-import 'git_object.dart';
-import 'git_objectstore.dart';
-import 'git_utils.dart';
+import 'object.dart';
+import 'objectstore.dart';
+import 'utils.dart';
 import 'dart:html';
 import 'dart:convert';
+
 
 /**
  *

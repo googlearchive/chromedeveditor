@@ -10,8 +10,7 @@ import 'dart:typed_data';
 
 import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 
-
-import 'git_object_utils.dart';
+import 'object_utils.dart';
 
 
 /**
@@ -198,7 +197,8 @@ class CommitObject extends GitObject {
 
   Author _parseAuthor(String input) {
 
-    final RegExp pattern = new RegExp(r'(.*) <(.*)> (\d+) (\+|\-)\d\d\d\d');
+    // Regex " AuthorName <Email>  timestamp timeOffset"
+    final RegExp pattern = new RegExp(r' (.*) <(.*)> (\d+) (\+|\-)\d\d\d\d');
     List<Match> match = pattern.allMatches(input).toList();
 
     Author author = new Author();

@@ -18,4 +18,7 @@ class SparkSelect extends HtmlElement with Polymer, Observable {
 
   SparkSelect.created() : super.created() {
   }
+
+  @override
+  bool get applyAuthorStyles => true;
 }

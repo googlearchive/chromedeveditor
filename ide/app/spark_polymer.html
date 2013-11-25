@@ -8,6 +8,7 @@
 <head>
   <meta charset="utf-8">
   <title>Spark IDE with Polymer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="spark_polymer.css">
 
@@ -15,36 +16,86 @@
   <link rel="import" href="packages/spark_widgets/spark-select/spark-select.html">
   <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
 
-  <template id="fileview-filename" >
-    <div class="fileview-filename-container" style="height: 20px;">
-      <div class="filename" style="position: absolute; text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+  <!-- template for FileItemCell -->
+  <template id="fileview-filename-template" >
+    <div class="fileview-filename-container">
+      <div class="filename">
       </div>
-      <div class="menu" style="position: absolute; right: 0; width: 15px;">
-        &#x25BC;
+      <div class="dropdown container">
+        <div class="menu pull-right">
+          <button class="dropdown-toggle" type="button" data-toggle="dropdown">
+            <span class="caret"></span>
+          </button>
+        </div>
       </div>
+    </div>
+  </template>
+
+  <!-- template for TreeViewCell -->
+  <template id="treeview-cell-template" >
+    <div class="treeviewcell">
+      <div class="treeviewcell-content"></div>
+      <div class="treeviewcell-dragoverlay"></div>
+      <div class="treeviewcell-disclosure">&#9654;</div>
     </div>
   </template>
 </head>
 
-<body class="polymer-ui-body-text">
+<body>
   <div id="toolbar">
-    <spark-button id="newFile">New File</spark-button>
+    <spark-button id="newFile" primary="true">New File</spark-button>
     <spark-button id="openFile">Open File...</spark-button>
 
     <span id="status"></span>
-
-    <spark-select id="themeChooser" text_color="white"
-                                    color="black"
-                                    hover_color="gray">
-      Theme
-    </spark-select>
+  
+    <div id="hotdogMenu" class="btn-group">
+      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+        Menu <span class="caret"></span>
+      </button>
+      <ul class="dropdown-menu pull-right">
+        <li class="disabled" id="themeControl"><a>Change Theme &nbsp;
+          <span class="pull-right">
+            <spark-button id="themeLeft"><strong>-</strong></spark-button>
+            <spark-button id="themeRight"><strong>+</strong></spark-button>
+          </span></a>
+        </li>
+      </ul>
+    </div>
   </div>
-
-  <div id="splitview" class="container flexbox">
+  
+  <div id="splitview" class="flexbox">
     <div id="fileViewArea" min-size="100"></div>
     <spark-splitter direction="left"></spark-splitter>
     <div id="editorArea" min-size="200"></div>
   </div>
+  
+  <!-- about dialog -->
+  <div class="modal fade" id="aboutDialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Spark</h4>
+        </div>
+        <div class="modal-body">
+          <dl>
+            <dt>A Chrome Apps based development environment</dt>
+            <dd>version <span id="aboutVersion"></span></dd>
+          </dl>
+          <div class="checkbox">
+            <label>
+              <input type="checkbox" id="analyticsCheck">
+              Allow Spark to collect anonymous usage statistics
+				      </input>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
 
   <!-- analytics includes -->
   <script src="analytics/google-analytics-bundle.js"></script>
@@ -70,10 +121,10 @@
   <!-- ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
 
-  <!-- This is necessary for both package:js and dart:js. -->
+  <!-- this is necessary for dart:js -->
   <script src="packages/browser/interop.js"></script>
 
-  <!-- this starts the Dart VM in Dartium, and injects spark.dart.js otherwise -->
+  <!-- this injects spark.dart.precompiled.js in a JS context -->
   <script src="spark_bootstrap.js" defer></script>
 
   <script type="application/dart" src="spark_polymer.dart" defer></script>

@@ -31,11 +31,9 @@ import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
 import 'lib/git/commands/clone.dart';
-import 'lib/git/git_objectstore.dart';
+import 'lib/git/objectstore.dart';
 
 import 'lib/git/file_operations.dart';
-
-import 'dart:js' ;
 
 /**
  * Returns true if app.json contains a test-mode entry set to true.
@@ -204,12 +202,15 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initEditorArea() {
-    editor = new AceEditor(new DivElement());
     editorArea = new EditorArea(document.getElementById('editorArea'),
         editorManager,
         allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
-      _filesController.selectFile(tab.file);
+      // We don't change the selection when the file was already selected
+      // otherwise, it would break multi-selection (#260).
+      if (!_filesController.isFileSelected(tab.file)) {
+        _filesController.selectFile(tab.file);
+      }
       localPrefs.setValue('lastFileSelection', tab.file.path);
     });
   }
@@ -336,14 +337,6 @@ class Spark extends Application implements FilesControllerDelegate {
         });
       }
     }).catchError((e) => null);
-  }
-
-  void deleteFile() {
-    // TODO: handle multiple selection
-    var sel = _filesController.getSelection();
-    if (sel.isNotEmpty) {
-      sel.first.delete();
-    }
   }
 
   void closeFile() {
@@ -528,17 +521,38 @@ class FileSaveAction extends SparkAction {
 }
 
 class FileDeleteAction extends SparkAction implements ContextAction {
-  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
+  bootjack.Modal _deleteDialog;
+  ws.Resource _resource;
+
+  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete") {
+    _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));
+    _deleteDialog.element.querySelector("#deleteOkButton").onClick.listen((_) {
+      _deleteResource();
+    });
+  }
 
   void _invoke([ws.Resource resource]) {
     if (resource == null) {
-      //spark.deleteFile();
+      var sel = spark._filesController.getSelection();
+      // TODO: handle multiple selection
+      if (sel.isNotEmpty) {
+        _resource = sel.first;
+        _setMessageAndShow();
+      }
     } else {
-      // TODO: ask the user first
-      //resource.delete();
-      spark.notImplemented('delete file: ${resource.path}');
-      print('deleting ${resource.path}');
+      _resource = resource;
+      _setMessageAndShow();
     }
+  }
+
+  void _setMessageAndShow() {
+    _deleteDialog.element.querySelector("#message").text =
+        "Are you sure you want to delete '${_resource.name}' from the file system?";
+    _deleteDialog.show();
+  }
+
+  void _deleteResource() {
+    _resource.delete();
   }
 
   String get category => 'resource';

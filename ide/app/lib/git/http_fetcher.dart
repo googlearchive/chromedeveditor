@@ -12,8 +12,8 @@ import 'dart:typed_data';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
-import 'git_objectstore.dart';
-import 'git_upload_pack_parser.dart';
+import 'objectstore.dart';
+import 'upload_pack_parser.dart';
 
 final int COMMIT_LIMIT = 32;
 
@@ -44,7 +44,7 @@ class HttpFetcher {
 
   Map<String, GitRef> refs = {};
 
-  HttpFetcher(this.store, this.name, this.repoUrl,[this.username,
+  HttpFetcher(this.store, this.name, this.repoUrl, [this.username,
       this.password]) {
     url = _getUrl(repoUrl);
     urlOptions = _queryParams(repoUrl);
@@ -159,9 +159,8 @@ class HttpFetcher {
    */
   Map<String, String> _queryParams(String uri) {
     List<String> parts = uri.split('?');
-    if (parts.length < 2) {
-      return {};
-    }
+    if (parts.length < 2) return {};
+
     String queryString = parts[1];
 
     List<String> paramStrings = queryString.split("&");

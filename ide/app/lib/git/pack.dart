@@ -17,7 +17,7 @@ import 'package:crc32/crc32.dart' as crc;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
 
-import 'git_objectstore.dart';
+import 'objectstore.dart';
 import 'zlib.dart';
 
 /**
@@ -98,10 +98,8 @@ class Pack {
     if (data is Uint8List) {
       this.data = data;
     } else if (data is chrome.ArrayBuffer){
-      window.console.log(data);
       this.data = new Uint8List.fromList(data.getBytes());
     } else {
-      window.console.log(data);
       throw "unsupported data format";
     }
     this._store = store;
