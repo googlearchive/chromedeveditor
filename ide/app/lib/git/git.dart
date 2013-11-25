@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:html';
 import 'dart:js' as js;
 
+import 'objectstore.dart';
+
 /**
  * The class encapsulates the result returned by the git api.
  *
@@ -42,6 +44,9 @@ class GitOptions {
   String repoUrl;
   // Current branch name
   String branchName;
+
+  // Git objectstore.
+  ObjectStore store;
 
   String email;
   String commitMessage;

@@ -145,7 +145,7 @@ class ObjectStore {
 
   Future<String> getHeadSha() {
     return getHeadRef().then((String headRefName)
-        => _getHeadForRef(headRefName));
+        => getHeadForRef(headRefName));
   }
 
   Future<String> getAllHeads() {
@@ -162,7 +162,7 @@ class ObjectStore {
     });
   }
 
-  Future<String> _getHeadForRef(String headRefName) {
+  Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
       .then((String content) => content.substring(0, 40));
   }
@@ -334,7 +334,7 @@ class ObjectStore {
       }
 
       return _checkRemoteHead(remoteRef).then((_) {
-        return _getHeadForRef(headRefName).then((String sha) {
+        return getHeadForRef(headRefName).then((String sha) {
           if (sha == remoteRef.sha) {
           // no changes to push.
             return new Future.value();
