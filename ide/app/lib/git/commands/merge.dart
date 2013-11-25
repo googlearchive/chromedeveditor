@@ -5,13 +5,33 @@
 library git.commands.checkout;
 
 import 'dart:async';
+import 'dart:typed_data';
 
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
+import '../utils.dart';
 
+class MergeItem {
+  TreeEntry ours;
+  TreeEntry base;
+  TreeEntry theirs;
+  bool isConflict;
+
+  MergeItem(this.ours, this.base, this.theirs, [this.isConflict = false]);
+}
+
+class TreeDiffResult {
+  List<TreeEntry> adds;
+  List<TreeEntry> removes;
+  List merges;
+  TreeDiffResult(this.adds, this.removes, this.merges);
+}
+
+/**
+ * TODO(grv) add unittests.
+ */
 class Merge {
-
 
   shasEqual(List<int> sha1, List<int> sha2) {
     for (var i = 0; i < sha1.length; ++i) {
@@ -20,7 +40,11 @@ class Merge {
     return true;
   }
 
-  _diffTree(TreeObject oldTree, TreeObject newTree) {
+  dynamic _diff3(blob1, blob2, blob3) {
+    return new Uint8List(0);
+  }
+
+  static diffTree(TreeObject oldTree, TreeObject newTree) {
     oldTree.sortEntries();
     newTree.sortEntries();
 
@@ -61,15 +85,16 @@ class Merge {
         newIdx++;
       }
     }
-    return {'add': adds, 'remove': removes, 'merge': merges};
+    return new TreeDiffResult(adds, removes, merges);
   }
 
   Future mergeTrees(ObjectStore store, TreeObject ourTree, TreeObject baseTree,
       TreeObject theirTree) {
-    List finalTree = [];
+    List<TreeEntry> finalTree = [];
+    List merges = [];
     var next = null;
     List indices = [0,0,0];
-    List conflicts = [];
+    List<MergeItem> conflicts = [];
 
     // base tree can be null if we're merging a sub tree from ours and theirs
     // with the same name but it didn't exist in base.
@@ -85,12 +110,13 @@ class Merge {
     List<List<TreeEntry>> allTrees = [ourTree.entries, baseTree.entries,
         theirTree.entries];
 
-    while (conflicts.length == 0) {
+    while (true) {
       TreeEntry next = null;
       int nextX = 0;
       for (int i = 0; i < allTrees.length; ++i) {
         List treeEntries = allTrees[i];
-        TreeEntry top = treeEntries[indices[i]];
+        TreeEntry top = (indices[i] < treeEntries.length) ?
+            treeEntries[indices[i]] : null;
 
         if (next == null || (top && top.name.compareTo(next.name) < 0)) {
           next = top;
@@ -109,21 +135,20 @@ class Merge {
               if (baseEntry.name != next.name) {
                 baseEntry = new TreeEntry(null, null, false);
                 if (next.isBlob) {
-                  conflicts.add({'conflicts': true, 'ours': next, 'base': null,
-                    'theirs': theirEntry});
+                  conflicts.add( new MergeItem(next, null, theirEntry, true));
                   break;
                 }
               }
-              if (next.isBlob == theirEntry.isBlob && (baseEntry.isBlob == next.isBlob)) {
+              if (next.isBlob == theirEntry.isBlob && (baseEntry.isBlob
+                  == next.isBlob)) {
                 if (shasEqual(next.sha, baseEntry.sha)) {
                   finalTree.add(theirEntry);
                 } else {
-                  finalTree.add({'merge': true, 'ours': next,
-                    'base': baseEntry, 'theirs': theirEntry});
+                  merges.add(new MergeItem(next, baseEntry, theirEntry));
                 }
               } else {
-                conflicts.add({'conflict': true, 'ours': next,
-                  'base': baseEntry, 'theirs': theirEntry});
+                conflicts.add(new MergeItem(next, baseEntry, theirEntry,
+                    true));
               }
             } else {
               finalTree.add(next);
@@ -132,8 +157,7 @@ class Merge {
             if (!shasEqual(baseEntry.sha, next.sha)) {
               // deleted from theirs but changed in ours. Delete/modfify
               // conflict.
-              conflicts.add({'conflict': true, 'ours': next, 'base': baseEntry,
-                'theirs' : null});
+              conflicts.add(new MergeItem(next, baseEntry, null, true));
             }
           } else {
             finalTree.add(next);
@@ -145,8 +169,7 @@ class Merge {
           if (next.name == theirEntry.name && !shasEqual(next.sha,
               theirEntry.sha)) {
             // deleted from ours but changed in theirs. Delete/modify conflict.
-            conflicts.add({'conflict': true, 'ours': null, 'base': next,
-              'theirs': theirEntry});
+            conflicts.add(new MergeItem(null, next, theirEntry, true));
           }
           break;
 
@@ -157,7 +180,8 @@ class Merge {
 
       for (int i = 0; i < allTrees.length; ++i) {
         List treeEntries = allTrees[i];
-        if (treeEntries[indices[i]].name == next.name) {
+        if (indices[i] < treeEntries.length && treeEntries[indices[i]].name
+            == next.name) {
           indices[i]++;
         }
       }
@@ -168,21 +192,19 @@ class Merge {
       throw "unable to merge. Conflicts.";
     }
 
-    return Future.forEach(finalTree, (item) {
-      var item;
-      var index;
-      if (item.merge) {
-        List<String> shas = [item.ours.sha, item.base.sha, item.theirs.sha];
+    return Future.forEach(merges, (MergeItem item) {
+      List<String> shas = [item.ours.sha, item.base.sha, item.theirs.sha];
         if (item.ours.isBlob) {
           return store.retrieveObjectBlobsAsString(shas).then(
               (List<LooseObject> blobs) {
-            var newBlob ;//= Diff.diff3_dig(blobs[0].data, blobs[1].data, blobs[2].data);
+            var newBlob = _diff3(blobs[0].data, blobs[1].data, blobs[2].data);
             if (newBlob.conflict) {
               conflicts.add(newBlob);
               return null;
             } else {
               return store.writeRawObject('blob', '').then((String sha) {
-                finalTree[index].sha = sha;
+                item.ours.sha = shaToBytes(sha);
+                finalTree.add(item.ours);
                 return null;
               });
             }
@@ -192,18 +214,15 @@ class Merge {
               (List<TreeObject> trees) {
             return mergeTrees(store, trees[0], trees[1], trees[2]).then(
                 (String mergedSha) {
-              finalTree[index] = item.ours;
-              item.ours.sha = mergedSha;
+              item.ours.sha = shaToBytes(mergedSha);
+              finalTree.add(item.ours);
               return null;
-            }, onError: (newConflicts) {
+            }, onError: (List<MergeItem> newConflicts) {
               conflicts.addAll(newConflicts);
               return null;
             });
           });
         }
-      } else {
-        return null;
-      }
     }).then((_) {
       if (conflicts.isEmpty) {
         return store.writeTree(finalTree);
