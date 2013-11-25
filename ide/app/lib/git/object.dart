@@ -53,15 +53,11 @@ abstract class GitObject {
  */
 class TreeEntry {
 
-  bool isBlob;
   String name;
   Uint8List sha;
+  bool isBlob;
 
-  TreeEntry(bool isBlob, String nameStr, Uint8List sha) {
-    this.isBlob = isBlob;
-    this.name = nameStr;
-    this.sha = sha;
-  }
+  TreeEntry(this.name, this.sha, this.isBlob);
 }
 
 
@@ -115,7 +111,7 @@ class TreeObject extends GitObject {
       String nameStr = UTF8.decode(buffer.sublist(
           entryStart + (isBlob ? 7: 6), idx++));
       nameStr = Uri.decodeComponent(HTML_ESCAPE.convert(nameStr));
-      TreeEntry entry = new TreeEntry(isBlob, nameStr, buffer.sublist(idx, idx + 20));
+      TreeEntry entry = new TreeEntry(nameStr, buffer.sublist(idx, idx + 20), isBlob);
       treeEntries.add(entry);
       idx += 20;
     }

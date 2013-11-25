@@ -519,7 +519,7 @@ class ObjectStore {
     });
   }
 
-  Future _writeTree(List treeEntries) {
+  Future writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((tree) {
       blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);
