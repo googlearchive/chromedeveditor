@@ -428,6 +428,12 @@ class Pack {
 
     return resultData.buffer;
   }
+
+  static Future buildPack(commits, repo) {
+   // TODO(grv) : implement
+
+    throw "to be implemented";
+  }
 }
 
 /**
@@ -441,10 +447,5 @@ class DeltaDataStream {
     this.offset = offset;
   }
 
-  Future buildPack(commits, repo) {
-   // TODO(grv) : implement
-
-    throw "to be implemented";
-  }
 
 }

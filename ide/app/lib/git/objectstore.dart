@@ -32,6 +32,7 @@ class GitRef {
   String sha;
   String name;
   String type;
+  String head;
   dynamic remote;
 
   GitRef(this.sha, this.name, [this.type, this.remote]);
@@ -312,7 +313,7 @@ class ObjectStore {
   }
 
 
-  Future _getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
+  Future getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
     // special case of empty remote.
     if (baseRefs.length == 1 && baseRefs[0].sha == HEAD_MASTER_SHA) {
       baseRefs[0].name = HEAD_MASTER_REF_PATH;
@@ -340,7 +341,7 @@ class ObjectStore {
             return new Future.value();
           }
 
-          //remoteRef.head = sha;
+          remoteRef.head = sha;
           remoteRef.sha = sha;
 
          //TODO handle case of new branch with no commits.
