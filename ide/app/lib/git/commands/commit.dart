@@ -61,7 +61,7 @@ class Commit {
     });
   }
 
-  Future checkTreeChangd(ObjectStore store, String parent, String sha) {
+  Future checkTreeChanged(ObjectStore store, String parent, String sha) {
     if (parent.isEmpty) {
       return null;
     } else {
@@ -88,7 +88,7 @@ class Commit {
     String commitMsg = options.commitMessage;
 
     return walkFiles(dir, store).then((String sha) {
-      return checkTreeChangd(store, parent, sha).then((_) {
+      return checkTreeChanged(store, parent, sha).then((_) {
         DateTime now = new DateTime.now();
         String dateString = (now.millisecond / 1000).floor()
             .toString();

@@ -389,14 +389,14 @@ class ObjectStore {
     return getNextCommit(sha);
   }
 
-  Future _retrieveObjectBlobsAsString(List<String> shas) {
+  Future retrieveObjectBlobsAsString(List<String> shas) {
     List blobs;
     return Future.forEach(shas, (String sha) {
       retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
     }).then((_) => blobs);
   }
 
-  Future _retrieveObjectList(List<String> shas, String objType) {
+  Future retrieveObjectList(List<String> shas, String objType) {
     List objects = [];
     return Future.forEach(shas, (sha) {
       return retrieveObject(sha, objType).then((object) => objects.add(object));
@@ -430,18 +430,19 @@ class ObjectStore {
     });
   }
 
-  Future _getTreeFromCommitSha(String sha) {
+  Future<TreeObject> _getTreeFromCommitSha(String sha) {
     return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commit) {
      return  retrieveObject(commit.treeSha, ObjectTypes.TREE).then(
          (rawObject) => rawObject);
     });
   }
 
-  Future _getTreesWithCommits(List<String> shas) {
-    List trees = [];
+  Future<List<TreeObject>> _getTreesFromCommits(List<String> shas) {
+    List<TreeObject> trees = [];
 
-    return Future.forEach(shas, (sha) {
-      return _getTreeFromCommitSha(sha).then((tree) => trees.add(tree));
+    return Future.forEach(shas, (String sha) {
+      return _getTreeFromCommitSha(sha).then((TreeObject tree) => trees.add(
+          tree));
     }).then((_) => trees);
   }
 

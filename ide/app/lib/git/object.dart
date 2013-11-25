@@ -86,7 +86,7 @@ class TreeObject extends GitObject {
 
   List<TreeEntry> entries;
 
-  TreeObject(String sha, Uint8List data) {
+  TreeObject([String sha, Uint8List data]) {
     this._type = ObjectTypes.TREE;
     this._sha = sha;
     this.data = data;
