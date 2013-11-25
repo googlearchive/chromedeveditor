@@ -93,6 +93,10 @@ class TreeObject extends GitObject {
     _parse();
   }
 
+  sortEntries() {
+    //TODO implement.
+  }
+
   // Parses the byte stream and constructs the tree object.
   void _parse() {
     Uint8List buffer = data;

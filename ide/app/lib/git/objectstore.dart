@@ -446,7 +446,7 @@ class ObjectStore {
     }).then((_) => trees);
   }
 
-  Future writeRawObject(String type, content) {
+  Future<String> writeRawObject(String type, content) {
 
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
@@ -487,7 +487,7 @@ class ObjectStore {
     return completer.future;
   }
 
-  Future _storeInFile(String digest, Uint8List store) {
+  Future<String> _storeInFile(String digest, Uint8List store) {
     String subDirName = digest.substring(0,2);
     String objectFileName = digest.substring(2);
 
@@ -520,7 +520,10 @@ class ObjectStore {
     });
   }
 
-  Future writeTree(List treeEntries) {
+  /**
+   * Writes a given tree onto disk, and returns the treeSha.
+   */
+  Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((tree) {
       blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);
