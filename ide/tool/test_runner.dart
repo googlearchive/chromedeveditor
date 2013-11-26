@@ -171,7 +171,13 @@ String _chromeStablePath() {
   } else if (Platform.isMacOS) {
     return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   } else {
-    return r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe";
+    List paths = [r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"];
+
+    for (String path in paths) {
+      if (new File(path).existsSync()) {
+        return path;
+      }
+    }
   }
 }
 
