@@ -292,21 +292,9 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
-  void closeFile() {
-    List futures = [];
-    var sel = _filesController.getSelection();
-    if (sel.isNotEmpty) {
-      sel.forEach((ws.Resource resource) {
-        if (resource.isTopLevel) {
-          _closeOpenEditor(resource);
-          futures.add(resource.close());
-        }
-      });
-    }
-    Future.wait(futures).then((_) => workspace.save());
-  }
+  List<ws.Resource> _getSelection() => _filesController.getSelection();
 
-  void _closeOpenEditor(ws.Resource resource) {
+   void _closeOpenEditor(ws.Resource resource) {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorManager.close(resource);
     }
@@ -328,8 +316,8 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
-  List<ContextAction> getActionsFor(ws.Resource resource) {
-    return actionManager.getContextActions(resource);
+  List<ContextAction> getActionsFor(List<ws.Resource> resources) {
+    return actionManager.getContextActions(resources);
   }
 
   void notImplemented(String str) => showStatus("Not implemented: ${str}");
@@ -436,6 +424,64 @@ abstract class SparkAction extends Action {
   }
 
   void _invoke([Object context]);
+
+  /**
+   * Returns true if `object` is a list and all items are [Resource].
+   */
+  bool _isResourceList(Object object) {
+    if (!object is List) {
+      return false;
+    }
+    List items = object as List;
+    bool result = true;
+    items.forEach((Object item) {
+      if (!(item is ws.Resource)) {
+        result = false;
+      }
+    });
+    return result;
+  }
+
+  /**
+   * Returns true if `object` is a list with a single item and this item is a
+   * [Resource].
+   */
+  bool _isSingleResource(Object object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List<ws.Resource>;
+    return resources.length == 1;
+  }
+
+  /**
+   * Returns true if `object` is a list with a single item and this item is a
+   * [Folder].
+   */
+  bool _isSingleFolder(Object object) {
+    if (!_isSingleResource(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    return (object as List).first is ws.Folder;
+  }
+
+  /**
+   * Returns true if `object` is a list of top-level [Resource].
+   */
+  bool _isTopLevel(Object object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    bool result = true;
+    resources.forEach((ws.Resource resource) {
+      if (!resource.isTopLevel) {
+        result = false;
+      }
+    });
+    return result;
+  }
 }
 
 class FileNewAction extends SparkAction implements ContextAction {
@@ -443,10 +489,11 @@ class FileNewAction extends SparkAction implements ContextAction {
     defaultBinding("ctrl-n");
   }
 
-  void _invoke([ws.Folder folder]) {
-    if (folder == null) {
+  void _invoke([List<ws.Folder> folders]) {
+    if (folders == null) {
       spark.newFile();
     } else {
+      ws.Folder folder = folders.first;
       // TODO: create a new file in the given folder
       spark.notImplemented('new file');
     }
@@ -454,7 +501,7 @@ class FileNewAction extends SparkAction implements ContextAction {
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => object is ws.Folder;
+  bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
 class FileOpenAction extends SparkAction {
@@ -475,7 +522,7 @@ class FileSaveAction extends SparkAction {
 
 class FileDeleteAction extends SparkAction implements ContextAction {
   bootjack.Modal _deleteDialog;
-  ws.Resource _resource;
+  List<ws.Resource> _resources;
 
   FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete") {
     _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));
@@ -484,50 +531,57 @@ class FileDeleteAction extends SparkAction implements ContextAction {
     });
   }
 
-  void _invoke([ws.Resource resource]) {
-    if (resource == null) {
+  void _invoke([List<ws.Resource> resources]) {
+    if (resources == null) {
       var sel = spark._filesController.getSelection();
-      // TODO: handle multiple selection
       if (sel.isNotEmpty) {
-        _resource = sel.first;
+        _resources = sel;
         _setMessageAndShow();
       }
     } else {
-      _resource = resource;
+      _resources = resources;
       _setMessageAndShow();
     }
   }
 
   void _setMessageAndShow() {
-    _deleteDialog.element.querySelector("#message").text =
-        "Are you sure you want to delete '${_resource.name}' from the file system?";
+    if (_resources.length == 1) {
+      _deleteDialog.element.querySelector("#message").text =
+          "Are you sure you want to delete '${_resources.first.name}' from the file system?";
+    } else {
+      _deleteDialog.element.querySelector("#message").text =
+          "Are you sure you want to delete '${_resources.length}' files from the file system?";
+    }
     _deleteDialog.show();
   }
 
   void _deleteResource() {
-    _resource.delete();
+    _resources.forEach((ws.Resource resource) {
+      resource.delete();
+    });
   }
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => object is ws.Resource;
+  bool appliesTo(Object object) => _isResourceList(object);
 }
 
 class FileCloseAction extends SparkAction implements ContextAction {
   FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
 
-  void _invoke([ws.Resource resource]) {
-    if (resource != null) {
-      spark._closeOpenEditor(resource);
-      resource.close().then((_) => spark.workspace.save());
-    } else {
-      spark.closeFile();
+  void _invoke([List<ws.Resource> resources]) {
+    if (resources == null) {
+      resources = spark._getSelection();
     }
+    Future.forEach(resources, (ws.Resource resource) {
+      spark._closeOpenEditor(resource);
+      return resource.close();
+    }).then((_) => spark.workspace.save());
   }
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => object is ws.Resource && object.isTopLevel;
+  bool appliesTo(Object object) => _isTopLevel(object);
 }
 
 class FileExitAction extends SparkAction {
