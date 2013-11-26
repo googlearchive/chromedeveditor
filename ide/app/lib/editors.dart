@@ -21,9 +21,9 @@ import 'workspace.dart';
  * TODO(ikarienator): Abstract [AceEditor] so we can support more editor types.
  */
 abstract class EditorProvider {
-  AceEditor createEditorForFile(Resource file);
-  void selectFileForEditor(AceEditor editor, Resource file);
-  void close(Resource file);
+  Editor createEditorForFile(File file);
+  void selectFileForEditor(Editor editor, File file);
+  void close(File file);
 }
 
 abstract class Editor {
@@ -175,12 +175,12 @@ class EditorManager implements EditorProvider {
   }
 
   // EditorProvider
-  AceEditor createEditorForFile(Resource file) {
+  Editor createEditorForFile(File file) {
     openOrSelect(file);
     return _aceContainer;
   }
 
-  void selectFileForEditor(AceEditor editor, Resource file) {
+  void selectFileForEditor(Editor editor, File file) {
     _EditorState state = _getStateFor(file);
     _switchState(state);
   }

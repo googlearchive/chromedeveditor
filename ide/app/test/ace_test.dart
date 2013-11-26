@@ -36,6 +36,8 @@ class MockAceContainer implements AceContainer {
   void switchTo(EditSession session) { }
   set theme(String value) { }
   String get theme => null;
+  Future<String> getKeyBinding() => new Future.value(null);
+  void setKeyBinding(String name) { }
 }
 
 class MockAceEditor implements AceEditor {

@@ -7,6 +7,7 @@
  */
 library spark.ace;
 
+import 'dart:async';
 import 'dart:html';
 import 'dart:js' as js;
 
@@ -21,6 +22,7 @@ export 'package:ace/ace.dart' show EditSession;
  * A wrapper around an Ace editor instance.
  */
 class AceContainer {
+  static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
   // 2 light themes, 4 dark ones.
   static final THEMES = [
       'textmate', 'tomorrow',
@@ -54,9 +56,16 @@ class AceContainer {
 
   set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
 
-  // TODO: only used by the polymer version
-  void setTheme(String theme) {
-    _aceEditor.theme = new ace.Theme(theme);
+  Future<String> getKeyBinding() {
+    var handler = _aceEditor.keyBinding.keyboardHandler;
+    return handler.onLoad.then((_) {
+      return KEY_BINDINGS.contains(handler.name) ? handler.name : null;
+    });
+  }
+
+  void setKeyBinding(String name) {
+    var handler = new ace.KeyboardHandler.named(name);
+    handler.onLoad.then((_) => _aceEditor.keyBinding.keyboardHandler = handler);
   }
 
   void focus() => _aceEditor.focus();

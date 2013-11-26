@@ -9,7 +9,6 @@
 library spark.editorarea;
 
 import 'dart:html';
-import 'ace.dart';
 
 import 'editors.dart';
 import 'ui/widgets/tabview.dart';
@@ -17,9 +16,9 @@ import 'workspace.dart';
 
 class EditorTab extends Tab {
   final Resource file;
-  final AceEditor editor;
+  final Editor editor;
 
-  EditorTab(EditorArea parent, AceEditor editor, this.file)
+  EditorTab(EditorArea parent, Editor editor, this.file)
       : editor = editor,  // FIXME(ikarienator): cannot use this.editor style.
         super(parent, page: editor.parentElement) {
     label = file.name;
@@ -93,7 +92,7 @@ class EditorArea extends TabView {
     }
 
     if (forceOpen || replaceCurrent) {
-      AceEditor editor = editorProvider.createEditorForFile(file);
+      Editor editor = editorProvider.createEditorForFile(file);
       var tab = new EditorTab(this, editor, file);
       if (replaceCurrent) {
         replace(selectedTab, tab, switchesTab: switchesTab);
