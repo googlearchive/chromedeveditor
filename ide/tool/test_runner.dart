@@ -32,7 +32,13 @@ final int EXIT_PROCESS_TIMEOUT = 1;
 
 void main([List<String> args = const []]) {
   if (!new Directory('app').existsSync()) {
-    throw 'This script must be run from the root of the project directory.';
+    print('This script must be run from the root of the project directory.');
+    exit(1);
+  }
+
+  if (!_canLocateSdk()) {
+    print('Unable to locate the Dart SDK; please set the DART_SDK env variable');
+    exit(1);
   }
 
   ArgParser parser = _createArgsParser();
@@ -228,6 +234,12 @@ void _doExit(int code) {
     }
     exit(code);
   });
+}
+
+bool _canLocateSdk() {
+  Directory dir = sdkDir;
+
+  return dir != null && dir.existsSync() && joinDir(dir, ['bin']).existsSync();
 }
 
 class TestListener {

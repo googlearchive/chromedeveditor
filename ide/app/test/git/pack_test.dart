@@ -9,7 +9,7 @@ import 'dart:typed_data';
 import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
 import 'package:unittest/unittest.dart';
 
-import '../lib/git/git_pack.dart';
+import '../../lib/git/pack.dart';
 
 final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack-_index_test.idx';

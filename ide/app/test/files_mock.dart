@@ -8,6 +8,7 @@
 library spark.files_mock;
 
 import 'dart:async';
+import 'dart:html';
 
 import 'package:chrome_gen/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
@@ -233,12 +234,19 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
   }
 
   Future<Entry> getFile(String path) {
-    Entry entry = _getChild(path);
+
+    List<String> pathParts = path.split('/');
+    Entry entry = _getChild(pathParts[0]);
+    int i = 1;
+
+    while (entry != null && entry.isDirectory && i < pathParts.length) {
+      entry = (entry as _MockDirectoryEntry)._getChild(pathParts[i++]);
+    }
 
     if (entry is! FileEntry) {
       return new Future.error("file doesn't exist");
     } else {
-      return new Future.value(_createFile(path));
+      return new Future.value(entry);
     }
   }
 

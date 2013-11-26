@@ -157,7 +157,6 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initEditorArea() {
-    editor = new AceEditor(new DivElement());
     editorArea = new EditorArea(document.getElementById('editorArea'),
         editorManager,
         allowsLabelBar: true);
