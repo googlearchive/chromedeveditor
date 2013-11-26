@@ -15,18 +15,14 @@ import '../git.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
+import 'conditions.dart';
 
 class Checkout {
-
-  Future<GitConfig> checkForUncommittedChanges(chrome.DirectoryEntry dir,
-      ObjectStore store) {
-    return null;
-  }
 
   /**
    * Clears the git working directory.
    */
-  Future _cleanWorkingDir(chrome.DirectoryEntry root) {
+  static Future _cleanWorkingDir(chrome.DirectoryEntry root) {
     return FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
       return Future.forEach(entries, (chrome.DirectoryEntry entry) {
         if (entry.isDirectory) {
@@ -45,7 +41,7 @@ class Checkout {
   /**
    * Switches the workspace to a given git branch.
    */
-  Future checkout(GitOptions options) {
+  static Future checkout(GitOptions options) {
     chrome.DirectoryEntry root = options.root;
     ObjectStore store = options.store;
     String branch = options.branchName;
@@ -54,7 +50,7 @@ class Checkout {
         (String branchSha) {
       return store.getHeadSha().then((String currentSha) {
         if (currentSha != branchSha) {
-          return checkForUncommittedChanges(root, store).then(
+          return Conditions.checkForUncommittedChanges(root, store).then(
               (GitConfig config) {
             return _cleanWorkingDir(root).then((_) {
               return store.retrieveObject(branchSha, ObjectTypes.COMMIT).then(

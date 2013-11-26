@@ -12,7 +12,7 @@ import '../objectstore.dart';
 
 class Branch {
 
-  bool _verifyBranchName(String name) {
+  static bool _verifyBranchName(String name) {
     var length = name.length;
     var branchRegex = new RegExp(
         "^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+\$");
@@ -29,7 +29,7 @@ class Branch {
   /**
    * Creates a new branch. Throws error if the branch already exist.
    */
-  Future branch(GitOptions options) {
+  static Future branch(GitOptions options) {
     ObjectStore store = options.store;
     String branchName = options.branchName;
 

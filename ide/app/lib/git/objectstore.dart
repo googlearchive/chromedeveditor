@@ -33,6 +33,7 @@ class GitRef {
   String name;
   String type;
   String head;
+  String localHead;
   dynamic remote;
 
   GitRef(this.sha, this.name, [this.type, this.remote]);
@@ -42,7 +43,7 @@ class GitRef {
 class GitConfig {
 
   String url;
-  bool shallow;
+  String shallow;
   Map<String, String> remoteHeads = {};
   DateTime time;
 
@@ -74,6 +75,12 @@ class FindPackedObjectResult {
   FindPackedObjectResult(this.pack, this.offset);
 }
 
+class CommitGraph {
+  List<CommitObject> commits;
+  List<String> nextLevel;
+  CommitGraph(this.commits, this.nextLevel);
+}
+
 class ObjectStore {
 
   static final GIT_FOLDER_PATH = '.git';
@@ -91,7 +98,7 @@ class ObjectStore {
   // Git directory path.
   String gitPath = '.git/';
 
-  List<PackEntry> _packs = [];
+  List<PackEntry> packs = [];
 
   ObjectStore(chrome.DirectoryEntry root) {
     _rootDir = root;
@@ -99,7 +106,7 @@ class ObjectStore {
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
     this.objectDir = objectDir;
-    _packs = packs;
+    packs = packs;
   }
 
   Future load() {
@@ -179,7 +186,7 @@ class ObjectStore {
 
             PackIndex packIdx = new PackIndex(new Uint8List.fromList(
                 idxData.getBytes()).buffer);
-            _packs.add(new PackEntry(pack, packIdx));
+            packs.add(new PackEntry(pack, packIdx));
             return new Future.value();
       });
     });
@@ -191,15 +198,15 @@ class ObjectStore {
   Future<FindPackedObjectResult> _findPackedObject(Uint8List shaBytes) {
     Completer completer = new Completer();
 
-    _packs.forEach((PackEntry packEntry) {
+    packs.forEach((PackEntry packEntry) {
       int offset = packEntry.packIdx.getObjectOffset(shaBytes);
 
     });
-    for (var i = 0; i < _packs.length; ++i) {
-      int offset = _packs[i].packIdx.getObjectOffset(shaBytes);
+    for (var i = 0; i < packs.length; ++i) {
+      int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
       if (offset != -1) {
-        completer.complete(new FindPackedObjectResult(_packs[i].pack, offset));
+        completer.complete(new FindPackedObjectResult(packs[i].pack, offset));
       }
     }
 
@@ -253,12 +260,12 @@ class ObjectStore {
   }
 
 
-  Future getCommitGraph(List<String> headShas, int limit) {
+  Future<CommitGraph> getCommitGraph(List<String> headShas, int limit) {
     List<CommitObject> commits = [];
     Map<String, bool> seen = {};
 
 
-    Future walkLevel(List<String> shas) {
+    Future<CommitGraph> walkLevel(List<String> shas) {
       List<String> nextLevel = [];
 
       return Future.forEach(shas, (String sha) {
@@ -284,7 +291,7 @@ class ObjectStore {
       }).then((_) {
 
         if (commits.length >= limit || nextLevel.length == 0) {
-          return new Future.value();
+          return new Future.value(new CommitGraph(commits, nextLevel));
         } else {
           return walkLevel(nextLevel);
         }
@@ -437,7 +444,7 @@ class ObjectStore {
     });
   }
 
-  Future<List<TreeObject>> _getTreesFromCommits(List<String> shas) {
+  Future<List<TreeObject>> getTreesFromCommits(List<String> shas) {
     List<TreeObject> trees = [];
 
     return Future.forEach(shas, (String sha) {

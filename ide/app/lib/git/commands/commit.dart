@@ -18,7 +18,8 @@ import '../utils.dart';
 
 class Commit {
 
-  Future<String> walkFiles(chrome.DirectoryEntry root, ObjectStore store) {
+  static Future<String> walkFiles(chrome.DirectoryEntry root,
+      ObjectStore store) {
     return FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
       if (entries.isEmpty) {
         return null;
@@ -61,7 +62,8 @@ class Commit {
     });
   }
 
-  Future checkTreeChanged(ObjectStore store, String parent, String sha) {
+  static Future checkTreeChanged(ObjectStore store, String parent,
+      String sha) {
     if (parent.isEmpty) {
       return null;
     } else {
@@ -79,7 +81,7 @@ class Commit {
     }
   }
 
-  Future _createCommitFromWorkingTree(GitOptions options, String parent,
+  static Future _createCommitFromWorkingTree(GitOptions options, String parent,
       String refName) {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
@@ -128,7 +130,7 @@ class Commit {
     });
   }
 
-  Future commit(GitOptions options) {
+  static Future commit(GitOptions options) {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
 
