@@ -10,6 +10,7 @@ import 'dart:html';
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/workspace.dart' as workspace;
 
 defineTests() {
   group('ace', () {
@@ -42,10 +43,11 @@ class MockAceContainer implements AceContainer {
 
 class MockAceEditor implements AceEditor {
   AceContainer aceContainer;
+  workspace.File file;
 
   MockAceEditor([this.aceContainer]);
 
-  Element get parentElement => aceContainer.parentElement;
+  Element get element => aceContainer.parentElement;
 }
 
 class MockEditSession implements EditSession {

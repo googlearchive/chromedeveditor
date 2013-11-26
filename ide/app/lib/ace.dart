@@ -8,7 +8,7 @@
 library spark.ace;
 
 import 'dart:async';
-import 'dart:html';
+import 'dart:html' as html show Element;
 import 'dart:js' as js;
 
 import 'package:ace/ace.dart' as ace;
@@ -17,6 +17,16 @@ import 'workspace.dart' as workspace;
 import 'editors.dart';
 
 export 'package:ace/ace.dart' show EditSession;
+
+class AceEditor extends Editor {
+  final AceContainer aceContainer;
+
+  workspace.File file;
+
+  html.Element get element => aceContainer.parentElement;
+
+  AceEditor(this.aceContainer);
+}
 
 /**
  * A wrapper around an Ace editor instance.
@@ -32,7 +42,7 @@ class AceContainer {
   /**
    * The container for the Ace editor.
    */
-  final Element parentElement;
+  final html.Element parentElement;
 
   ace.Editor _aceEditor;
   workspace.File _file;
@@ -43,10 +53,10 @@ class AceContainer {
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;
-    _aceEditor.readOnly = true;
     _aceEditor.printMarginColumn = 80;
     //_aceEditor.renderer.showGutter = false;
     _aceEditor.setOption('scrollPastEnd', true);
+    _aceEditor.readOnly = true;
 
     // Fallback
     theme = THEMES[0];
@@ -92,13 +102,4 @@ class AceContainer {
       }
     }
   }
-}
-
-class AceEditor extends Editor {
-  final AceContainer aceContainer;
-
-  Element get parentElement => aceContainer.parentElement;
-
-  AceEditor(this.aceContainer);
-
 }

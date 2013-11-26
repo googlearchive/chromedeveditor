@@ -12,7 +12,7 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' as html show Element;
 
-import 'ace.dart';
+import 'ace.dart' as ace;
 import 'preferences.dart';
 import 'workspace.dart';
 
@@ -26,8 +26,17 @@ abstract class EditorProvider {
   void close(File file);
 }
 
+/**
+ * An abstract Editor class. It knows:
+ *
+ *  * the main DOM element it's associated with
+ *  * the File it's editing
+ *
+ * In the future, it will know how to save and restore its session state.
+ */
 abstract class Editor {
-  html.Element get parentElement;
+  html.Element get element;
+  File get file;
 }
 
 /**
@@ -35,11 +44,10 @@ abstract class Editor {
  */
 class EditorManager implements EditorProvider {
   final Workspace _workspace;
-  final AceContainer _aceContainer;
-
+  final ace.AceContainer _aceContainer;
   final PreferenceStore _prefs;
-
   final List<_EditorState> _editorStates = [];
+  final Map<File, Editor> _editorMap = {};
 
   final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
@@ -52,8 +60,10 @@ class EditorManager implements EditorProvider {
       _prefs.getValue('editorStates').then((String data) {
         if (data != null) {
           for (Map m in JSON.decode(data)) {
-            File f = _workspace.restoreResource(m['file']);
-            openOrSelect(f, switching: false);
+            _editorStates.add(new _EditorState.fromMap(this, _workspace, m));
+          }
+          for (_EditorState state in _editorStates) {
+            openOrSelect(state.file, switching: false);
           }
           _loadedCompleter.complete(true);
         }
@@ -176,13 +186,19 @@ class EditorManager implements EditorProvider {
 
   // EditorProvider
   Editor createEditorForFile(File file) {
+    ace.AceEditor editor =
+        _editorMap[file] != null ? _editorMap[file] : new ace.AceEditor(_aceContainer);
+    _editorMap[file] = editor;
     openOrSelect(file);
-    return _aceContainer;
+    editor.file = file;
+    return editor;
   }
 
   void selectFileForEditor(Editor editor, File file) {
     _EditorState state = _getStateFor(file);
     _switchState(state);
+    _editorMap[file] = editor;
+    (editor as ace.AceEditor).file = file;
   }
 }
 
@@ -192,16 +208,15 @@ class EditorManager implements EditorProvider {
 class _EditorState {
   EditorManager manager;
   File file;
-  EditSession session;
+  ace.EditSession session;
 
   int scrollTop = 0;
   bool _dirty = false;
 
   _EditorState.fromFile(this.manager, this.file);
 
-  factory _EditorState.fromMap(EditorManager manager,
-                               Workspace workspace,
-                               Map m) {
+  factory _EditorState.fromMap(
+      EditorManager manager, Workspace workspace, Map m) {
     File f = workspace.restoreResource(m['file']);
 
     if (f == null) {
