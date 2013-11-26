@@ -226,7 +226,6 @@ class Spark extends Application implements FilesControllerDelegate {
 
     ul.children.add(createMenuItem(actionManager.getAction('file-new')));
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-
     ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
     ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
     ul.children.add(createMenuItem(actionManager.getAction('file-close')));
