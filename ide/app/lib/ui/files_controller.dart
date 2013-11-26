@@ -162,8 +162,9 @@ class FilesController implements TreeViewDelegate {
   void treeViewDropCells(TreeView view,
                          List<String> nodesUIDs,
                          String targetNodeUID) {
-    // TODO(dvh): Move files designated by `nodesUIDs` to the folder
-    // designated by `targetNodeUID`.
+
+    Resource parent = _filesMap[targetNodeUID];
+    _workspace.moveTo(nodesUIDs.map((f) => _filesMap[f]).toList(), parent);
   }
 
   /*
@@ -355,18 +356,26 @@ class FilesController implements TreeViewDelegate {
   void _processEvents(ResourceChangeEvent event) {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
-
       var resource = event.resource;
       _files.add(resource);
       _recursiveAddResource(resource);
       _treeView.reloadData();
     }
     if (event.type == ResourceEventType.DELETE) {
+      print("delete event");
       var resource = event.resource;
       _files.remove(resource);
       _recursiveRemoveResource(resource);
       // TODO: make a more informed selection, maybe before the delete?
       selectLastFile();
+ //     _treeView.reloadData();
+    }
+    if (event.type == ResourceEventType.CHANGE) {
+      print("change event");
+      var resource = event.resource;
+      resource.getChildren().forEach((child) {
+        _recursiveAddResource(child);
+      });
       _treeView.reloadData();
     }
   }

@@ -82,6 +82,35 @@ class Workspace implements Container {
     return new Future.value();
   }
 
+  Future moveTo(List<Resource> resources, Container container) {
+    var syncable = container._syncable;
+    List futures = [];
+    for (Resource resource in resources) {
+      chrome.Entry entry = resource._entry;
+      return entry.moveTo(container._entry).then((newEntry) {
+        resource.close();
+        if (newEntry.isFile) {
+          var file = new File(container, (newEntry as chrome.ChromeFileEntry), syncable);
+          container._children.add(file);
+        } else {
+          var folder = new Folder(container, newEntry, syncable);
+          futures.add(_gatherChildren(folder, syncable));
+          container._children.add(folder);
+        }
+        return Future.wait(futures).then((_) {
+      _controller.add(new ResourceChangeEvent(container, ResourceEventType.CHANGE));
+      return new Future.value();
+    });
+      });
+
+    }
+//    return Future.wait(futures).then((_) {
+//      _controller.add(new ResourceChangeEvent(container, ResourceEventType.CHANGE));
+//      return new Future.value();
+//    });
+  //  return new Future.value();
+  }
+
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
       if (resource.name == name) {
@@ -179,6 +208,8 @@ class Workspace implements Container {
   }
 
  Future close() => new Future.value();
+
+
 }
 
 abstract class Container extends Resource {
@@ -218,6 +249,7 @@ abstract class Container extends Resource {
   }
 
   List<Resource> getChildren() => _children;
+
 }
 
 abstract class Resource {
@@ -270,6 +302,8 @@ abstract class Resource {
 class Folder extends Container {
   Folder(Container parent, chrome.Entry entry, bool syncable):
     super(parent, entry, syncable);
+
+
 }
 
 class File extends Resource {
