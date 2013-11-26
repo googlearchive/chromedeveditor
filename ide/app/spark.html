@@ -17,13 +17,9 @@
     <div class="fileview-filename-container">
       <div class="filename">
       </div>
-      <div class="dropdown container">
-        <div class="menu pull-right">
-          <button class="dropdown-toggle" type="button" data-toggle="dropdown">
-            <span class="caret"></span>
-          </button>
-        </div>
-      </div>
+      <a href="#" class="menu">
+        <span class="caret"></span>
+      </a>
     </div>
   </template>
 
@@ -49,10 +45,16 @@
         Menu <span class="caret"></span>
       </button>
       <ul class="dropdown-menu pull-right">
-        <li class="disabled" id="themeControl"><a>Change Theme &nbsp;
+        <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
           <span class="pull-right">
             <button type="button" id="themeLeft"><strong>-</strong></button>
             <button type="button" id="themeRight"><strong>+</strong></button>
+          </span></a>
+        </li>
+        <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
+          <span class="pull-right">
+            <button type="button" id="keysLeft"><strong>-</strong></button>
+            <button type="button" id="keysRight"><strong>+</strong></button>
           </span></a>
         </li>
       </ul>
@@ -62,6 +64,13 @@
   <div id="splitview">
     <div id="fileViewArea" min-size="100"></div>
     <div id="editorArea" min-size="200"></div>
+  </div>
+  
+  <!--  file context menu -->
+  <div id="file-item-context-menu" class="dropdown">
+    <div class="backdrop"></div>
+    <ul class="dropdown-menu" role="menu">
+    </ul>
   </div>
   
   <!-- file delete dialog -->
@@ -78,7 +87,6 @@
         </div>
       </div>
     </div>
-  
 
   <!-- about dialog -->
   <div class="modal fade" id="aboutDialog">

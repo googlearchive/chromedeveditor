@@ -22,5 +22,5 @@ abstract class FilesControllerDelegate {
    * Returns the list of actions that apply in the context of the given
    * [resource].
    */
-  List<ContextAction> getActionsFor(Resource resource);
+  List<ContextAction> getActionsFor(List<Resource> resources);
 }
