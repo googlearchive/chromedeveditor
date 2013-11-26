@@ -13,6 +13,7 @@ Point getAbsolutePosition(Element element) {
   Point result = new Point(0, 0);
   while (element != null) {
     result += element.offset.topLeft;
+    result -= new Point(element.scrollLeft, element.scrollTop);
     element = element.offsetParent;
   }
   return result;

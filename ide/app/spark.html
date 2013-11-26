@@ -17,13 +17,9 @@
     <div class="fileview-filename-container">
       <div class="filename">
       </div>
-      <div class="dropdown container">
-        <div class="menu pull-right">
-          <button class="dropdown-toggle" type="button" data-toggle="dropdown">
-            <span class="caret"></span>
-          </button>
-        </div>
-      </div>
+      <a href="#" class="menu">
+        <span class="caret"></span>
+      </a>
     </div>
   </template>
 
@@ -64,6 +60,13 @@
     <div id="editorArea" min-size="200"></div>
   </div>
   
+  <!--  file context menu -->
+  <div id="file-item-context-menu" class="dropdown">
+    <div class="backdrop"></div>
+    <ul class="dropdown-menu" role="menu">
+    </ul>
+  </div>
+  
   <!-- file delete dialog -->
     <div id="deleteDialog" class="modal fade">
       <div class="modal-dialog">
@@ -78,7 +81,6 @@
         </div>
       </div>
     </div>
-  
 
   <!-- about dialog -->
   <div class="modal fade" id="aboutDialog">
