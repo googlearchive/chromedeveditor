@@ -85,30 +85,27 @@ class Workspace implements Container {
   Future moveTo(List<Resource> resources, Container container) {
     var syncable = container._syncable;
     List futures = [];
-    for (Resource resource in resources) {
-      chrome.Entry entry = resource._entry;
-      return entry.moveTo(container._entry).then((newEntry) {
-        resource.close();
-        if (newEntry.isFile) {
-          var file = new File(container, (newEntry as chrome.ChromeFileEntry), syncable);
-          container._children.add(file);
-        } else {
-          var folder = new Folder(container, newEntry, syncable);
-          futures.add(_gatherChildren(folder, syncable));
-          container._children.add(folder);
-        }
-        return Future.wait(futures).then((_) {
+    resources.forEach((resource) => futures.add(_moveTo(resource, container, syncable)));
+    return Future.wait(futures).then((_) {
       _controller.add(new ResourceChangeEvent(container, ResourceEventType.CHANGE));
       return new Future.value();
     });
-      });
+  }
 
-    }
-//    return Future.wait(futures).then((_) {
-//      _controller.add(new ResourceChangeEvent(container, ResourceEventType.CHANGE));
-//      return new Future.value();
-//    });
-  //  return new Future.value();
+  Future _moveTo(Resource resource, Container container, bool syncable) {
+    chrome.Entry entry = resource._entry;
+    return entry.moveTo(container._entry).then((newEntry) {
+      resource.close(refresh: false);
+      if (newEntry.isFile) {
+        var file = new File(container, (newEntry as chrome.ChromeFileEntry), syncable);
+        container._children.add(file);
+        return new Future.value();
+      } else {
+        var folder = new Folder(container, newEntry, syncable);
+        container._children.add(folder);
+        return (_gatherChildren(folder, syncable));
+      }
+    });
   }
 
   Resource getChild(String name) {
@@ -117,7 +114,6 @@ class Workspace implements Container {
         return resource;
       }
     }
-
     return null;
   }
 
@@ -206,12 +202,12 @@ class Workspace implements Container {
     });
   }
 
- void _removeChild(Resource resource) {
+ void _removeChild(Resource resource, {bool refresh: true}) {
    _children.remove(resource);
-   _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+   _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE, refresh: refresh));
   }
 
- Future close() => new Future.value();
+ Future close({bool refresh: true}) => new Future.value();
 
 
 }
@@ -247,9 +243,9 @@ abstract class Container extends Resource {
 
   void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
 
-  void _removeChild(Resource resource) {
+  void _removeChild(Resource resource, {bool refresh: true}) {
     _children.remove(resource);
-    _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
+    _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE, refresh: refresh));
   }
 
   List<Resource> getChildren() => _children;
@@ -287,8 +283,8 @@ abstract class Resource {
     return (_entry as chrome.DirectoryEntry).removeRecursively().then((_) => _parent._removeChild(this));
   }
 
-  Future close() {
-    _parent._removeChild(this);
+  Future close({bool refresh: true}) {
+    _parent._removeChild(this, refresh: refresh);
     return new Future.value();
   }
 
@@ -359,6 +355,7 @@ class ResourceEventType {
 class ResourceChangeEvent {
   final ResourceEventType type;
   final Resource resource;
+  final bool refresh;
 
-  ResourceChangeEvent(this.resource, this.type);
+  ResourceChangeEvent(this.resource, this.type, {this.refresh: true});
 }

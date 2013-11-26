@@ -362,16 +362,16 @@ class FilesController implements TreeViewDelegate {
       _treeView.reloadData();
     }
     if (event.type == ResourceEventType.DELETE) {
-      print("delete event");
       var resource = event.resource;
       _files.remove(resource);
       _recursiveRemoveResource(resource);
       // TODO: make a more informed selection, maybe before the delete?
-      selectLastFile();
- //     _treeView.reloadData();
+      if (event.refresh) {
+        selectLastFile();
+        _treeView.reloadData();
+      }
     }
     if (event.type == ResourceEventType.CHANGE) {
-      print("change event");
       var resource = event.resource;
       resource.getChildren().forEach((child) {
         _recursiveAddResource(child);
