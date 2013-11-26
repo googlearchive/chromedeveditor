@@ -19,9 +19,9 @@ class SparkSplitter extends Widget {
   /// 1) whether the split is horizontal or vertical;
   /// 2) which sibling will be continuously auto-resized when the splitter is
   ///    dragged.
-  @observable String direction = 'left';
+  @published String direction = 'left';
   /// Locks the split bar so it can't be dragged.
-  @observable bool locked = false;
+  @published bool locked = false;
 
   /// Whether the split view is horizontal or vertical.
   bool _isHorizontal;

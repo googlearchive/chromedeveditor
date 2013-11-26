@@ -4,8 +4,6 @@
 
 library spark_widgets.button;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 
 import '../src/widget.dart';
@@ -14,12 +12,13 @@ import '../src/widget.dart';
 class SparkButton extends Widget {
   @published bool primary = false;
   @published bool active = false;
-  @observable String get btnClasses =>
-      "$_C_BUTTON ${primary ? _C_PRIMARY : _C_DEFAULT}";
 
-  static const _C_BUTTON = "btn";
-  static const _C_DEFAULT = "btn-default";
-  static const _C_PRIMARY = "btn-primary";
+  @observable String get btnClasses =>
+      "$CSS_BUTTON ${primary ? CSS_PRIMARY : CSS_DEFAULT}";
+
+  static const CSS_BUTTON = "btn";
+  static const CSS_DEFAULT = "btn-default";
+  static const CSS_PRIMARY = "btn-primary";
 
   SparkButton.created() : super.created();
 }

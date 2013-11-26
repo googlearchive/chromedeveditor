@@ -4,11 +4,9 @@
 
 library spark_widgets;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 
-class Widget extends HtmlElement with Polymer, Observable {
+class Widget extends PolymerElement {
   Widget.created() : super.created() {
   }
 
