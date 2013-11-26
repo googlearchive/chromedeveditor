@@ -369,6 +369,8 @@ class FilesController implements TreeViewDelegate {
 
     }
     if (event.type == ResourceEventType.CHANGE) {
+      // refresh the container that has changed.
+      // remove all old paths and add anew.
       var resource = event.resource;
       var keys = _filesMap.keys.toList();
       keys.forEach((key) {
