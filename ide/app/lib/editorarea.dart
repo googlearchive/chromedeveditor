@@ -18,6 +18,7 @@ import 'workspace.dart';
 class EditorTab extends Tab {
   final Resource file;
   final AceEditor editor;
+
   EditorTab(EditorArea parent, AceEditor editor, this.file)
       : editor = editor,  // FIXME(ikarienator): cannot use this.editor style.
         super(parent, page: editor.parentElement) {

@@ -61,7 +61,7 @@ class Spark extends Application implements FilesControllerDelegate {
   // The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
-  AceEditor editor;
+  AceContainer aceManager;
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
@@ -130,11 +130,11 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initEditor() {
-    editor = new AceEditor(new DivElement());
+    aceManager = new AceContainer(new DivElement());
   }
 
   void initEditorManager() {
-    editorManager = new EditorManager(workspace, editor, localPrefs);
+    editorManager = new EditorManager(workspace, aceManager, localPrefs);
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
@@ -172,8 +172,8 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void initEditorThemes() {
     syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null && AceEditor.THEMES.contains(theme)) {
-        editor.theme = theme;
+      if (theme != null && AceContainer.THEMES.contains(theme)) {
+        aceManager.theme = theme;
       }
     });
   }
@@ -190,7 +190,7 @@ class Spark extends Application implements FilesControllerDelegate {
   void initSplitView() {
     _splitView = new SplitView(querySelector('#splitview'));
     _splitView.onResized.listen((_) {
-      editor.resize();
+      aceManager.resize();
       syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
     });
     syncPrefs.getValue('splitViewPosition').then((String position) {
@@ -323,10 +323,10 @@ class Spark extends Application implements FilesControllerDelegate {
   void notImplemented(String str) => showStatus("Not implemented: ${str}");
 
   void _handleChangeTheme({bool themeLeft: true}) {
-    int index = AceEditor.THEMES.indexOf(editor.theme);
-    index = (index + (themeLeft ? -1 : 1)) % AceEditor.THEMES.length;
-    String themeName = AceEditor.THEMES[index];
-    editor.theme = themeName;
+    int index = AceContainer.THEMES.indexOf(aceManager.theme);
+    index = (index + (themeLeft ? -1 : 1)) % AceContainer.THEMES.length;
+    String themeName = AceContainer.THEMES[index];
+    aceManager.theme = themeName;
     syncPrefs.setValue('aceTheme', themeName);
   }
 
@@ -387,7 +387,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
       spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
-          spark.editor.focus();
+          spark.aceManager.focus();
         }
       });
     });

@@ -88,12 +88,12 @@ class SparkPolymer extends Spark {
   //
 
   void _switchTheme([_]) {
-    int selected =
-        (querySelector('#themeChooser') as dynamic).selected;
-    if (selected == -1)
+    int selected = (querySelector('#themeChooser') as dynamic).selected;
+    if (selected == -1) {
       selected = 0;
-    final String themeName = AceEditor.THEMES[selected];
-    editor.theme = themeName;
+    }
+    final String themeName = AceContainer.THEMES[selected];
+    aceManager.theme = themeName;
     syncPrefs.setValue('aceTheme', themeName);
   }
 

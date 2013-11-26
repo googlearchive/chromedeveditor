@@ -13,16 +13,23 @@ import 'dart:js' as js;
 import 'package:ace/ace.dart' as ace;
 
 import 'workspace.dart' as workspace;
+import 'editors.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
 /**
  * A wrapper around an Ace editor instance.
  */
-class AceEditor {
-  static final THEMES = ['ambiance', 'monokai', 'pastel_on_dark', 'textmate'];
+class AceContainer {
+  // 2 light themes, 4 dark ones.
+  static final THEMES = [
+      'textmate', 'tomorrow',
+      'tomorrow_night', 'monokai', 'idle_fingers', 'pastel_on_dark'
+  ];
 
-  /// The element to put the editor in.
+  /**
+   * The container for the Ace editor.
+   */
   final Element parentElement;
 
   ace.Editor _aceEditor;
@@ -30,9 +37,14 @@ class AceEditor {
 
   static bool get available => js.context['ace'] != null;
 
-  AceEditor(this.parentElement) {
+  AceContainer(this.parentElement) {
     _aceEditor = ace.edit(parentElement);
+    _aceEditor.renderer.fixedWidthGutter = true;
+    _aceEditor.highlightActiveLine = false;
     _aceEditor.readOnly = true;
+    _aceEditor.printMarginColumn = 80;
+    //_aceEditor.renderer.showGutter = false;
+    _aceEditor.setOption('scrollPastEnd', true);
 
     // Fallback
     theme = THEMES[0];
@@ -71,4 +83,13 @@ class AceEditor {
       }
     }
   }
+}
+
+class AceEditor extends Editor {
+  final AceContainer aceContainer;
+
+  Element get parentElement => aceContainer.parentElement;
+
+  AceEditor(this.aceContainer);
+
 }

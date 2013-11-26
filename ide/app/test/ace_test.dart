@@ -15,16 +15,16 @@ defineTests() {
   group('ace', () {
     // This essentially tests that the ace codebase is available.
     test('is available', () {
-      expect(AceEditor.available, true);
+      expect(AceContainer.available, true);
     });
   });
 }
 
-class MockAceEditor implements AceEditor {
+class MockAceContainer implements AceContainer {
   /// The element to put the editor in.
   final Element parentElement = null;
 
-  MockAceEditor();
+  MockAceContainer();
 
   EditSession createEditSession(String text, String fileName) {
     return new MockEditSession(fileName);
@@ -36,6 +36,14 @@ class MockAceEditor implements AceEditor {
   void switchTo(EditSession session) { }
   set theme(String value) { }
   String get theme => null;
+}
+
+class MockAceEditor implements AceEditor {
+  AceContainer aceContainer;
+
+  MockAceEditor([this.aceContainer]);
+
+  Element get parentElement => aceContainer.parentElement;
 }
 
 class MockEditSession implements EditSession {

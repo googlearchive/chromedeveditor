@@ -10,6 +10,7 @@ library spark.editors;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
+import 'dart:html' as html show Element;
 
 import 'ace.dart';
 import 'preferences.dart';
@@ -25,13 +26,16 @@ abstract class EditorProvider {
   void close(Resource file);
 }
 
+abstract class Editor {
+  html.Element get parentElement;
+}
 
 /**
  * Manage a list of open editors.
  */
 class EditorManager implements EditorProvider {
   final Workspace _workspace;
-  final AceEditor _aceEditor;
+  final AceContainer _aceContainer;
 
   final PreferenceStore _prefs;
 
@@ -43,7 +47,7 @@ class EditorManager implements EditorProvider {
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
-  EditorManager(this._workspace, this._aceEditor, this._prefs) {
+  EditorManager(this._workspace, this._aceContainer, this._prefs) {
     _workspace.whenAvailable().then((_) {
       _prefs.getValue('editorStates').then((String data) {
         if (data != null) {
@@ -137,14 +141,14 @@ class EditorManager implements EditorProvider {
       _currentState = state;
       _selectedController.add(currentFile);
       if (state == null) {
-          _aceEditor.switchTo(null);
+        _aceContainer.switchTo(null);
           persistState();
       } else {
         state.withSession().then((state) {
           // Test if other state have been set before this state is appiled.
           if (state != _currentState) return;
           _selectedController.add(currentFile);
-          _aceEditor.switchTo(state.session);
+          _aceContainer.switchTo(state.session);
           persistState();
         });
       }
@@ -173,7 +177,7 @@ class EditorManager implements EditorProvider {
   // EditorProvider
   AceEditor createEditorForFile(Resource file) {
     openOrSelect(file);
-    return _aceEditor;
+    return _aceContainer;
   }
 
   void selectFileForEditor(AceEditor editor, Resource file) {
@@ -245,7 +249,7 @@ class _EditorState {
       return new Future.value(this);
     } else {
       return file.getContents().then((text) {
-        session = manager._aceEditor.createEditSession(text, file.name);
+        session = manager._aceContainer.createEditSession(text, file.name);
         session.scrollTop = scrollTop;
         session.onChange.listen((delta) => dirty = true);
         return this;
