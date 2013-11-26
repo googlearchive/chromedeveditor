@@ -211,7 +211,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileCloseAction(this));
-    actionManager.registerAction(new ProjectOpenAction(this));
+    actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
     actionManager.registerKeyListener();
@@ -231,7 +231,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     ul.children.add(createMenuItem(actionManager.getAction('file-new')));
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
     ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
     ul.children.add(createMenuItem(actionManager.getAction('file-close')));
     ul.children.add(createMenuSeparator());
@@ -277,7 +277,7 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
-  void openProject() {
+  void openFolder() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_DIRECTORY);
     chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
@@ -543,10 +543,10 @@ class FileExitAction extends SparkAction {
   }
 }
 
-class ProjectOpenAction extends SparkAction {
-  ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
+class FolderOpenAction extends SparkAction {
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder...");
 
-  void _invoke([Object context]) => spark.openProject();
+  void _invoke([Object context]) => spark.openFolder();
 }
 
 class AboutSparkAction extends SparkAction {
