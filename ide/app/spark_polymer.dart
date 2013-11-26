@@ -52,20 +52,6 @@ class SparkPolymer extends Spark {
   }
 
   @override
-  void initEditorThemes() {
-    super.initEditorThemes();
-//    syncPrefs.getValue('aceTheme').then((String theme) {
-//      final selected = (theme != null) ? AceEditor.THEMES.indexOf(theme) : 0;
-
-//      (querySelector('#themeChooser') as dynamic)
-//        ..items = AceEditor.THEMES.map(_beautifyThemeName)
-//        ..selected = selected
-//        ..onClick.listen(_switchTheme);
-//      _switchTheme();
-//    });
-  }
-
-  @override
   void initFilesController() => super.initFilesController();
 
   @override
