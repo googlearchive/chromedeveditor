@@ -8,7 +8,7 @@ dependencies:
   analyzer: any
   bootjack: any
   browser: any
-  chrome_gen: 0.3.0
+  chrome_gen: '>=0.3.0'
   crc32: 0.1.3
   crypto: any
   intl: any

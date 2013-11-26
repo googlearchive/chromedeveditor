@@ -82,20 +82,28 @@ class Workspace implements Container {
     return new Future.value();
   }
 
+  /**
+   * Moves all the [Resource] resources in the [List] to the given [Container] container.
+   * Fires a [ResourceChangeEvent] event of type change [ResourceEventType.CHANGE]
+   * after the moves are completed.
+   */
   Future moveTo(List<Resource> resources, Container container) {
     var syncable = container._syncable;
     List futures = [];
     resources.forEach((resource) => futures.add(_moveTo(resource, container, syncable)));
     return Future.wait(futures).then((_) {
-      _controller.add(new ResourceChangeEvent(container, ResourceEventType.CHANGE));
+      _controller.add(new ResourceChangeEvent(container.project, ResourceEventType.CHANGE));
       return new Future.value();
     });
   }
 
+  // Removes the given resource from parent, moves to the specifed container, and
+  // adds it to the container's children.
+  // syncable indicated whether the entry is in the sync file sytem.
   Future _moveTo(Resource resource, Container container, bool syncable) {
     chrome.Entry entry = resource._entry;
     return entry.moveTo(container._entry).then((newEntry) {
-      resource.close(refresh: false);
+      resource.close(fireEvent: false);
       if (newEntry.isFile) {
         var file = new File(container, (newEntry as chrome.ChromeFileEntry), syncable);
         container._children.add(file);
@@ -202,13 +210,12 @@ class Workspace implements Container {
     });
   }
 
- void _removeChild(Resource resource, {bool refresh: true}) {
+ void _removeChild(Resource resource, {bool fireEvent: true}) {
    _children.remove(resource);
-   _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE, refresh: refresh));
+   if (fireEvent) _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
   }
 
- Future close({bool refresh: true}) => new Future.value();
-
+ Future close({bool fireEvent: true}) => new Future.value();
 
 }
 
@@ -243,9 +250,9 @@ abstract class Container extends Resource {
 
   void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
 
-  void _removeChild(Resource resource, {bool refresh: true}) {
+  void _removeChild(Resource resource, {bool fireEvent: true}) {
     _children.remove(resource);
-    _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE, refresh: refresh));
+    if (fireEvent) _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
   }
 
   List<Resource> getChildren() => _children;
@@ -283,8 +290,8 @@ abstract class Resource {
     return (_entry as chrome.DirectoryEntry).removeRecursively().then((_) => _parent._removeChild(this));
   }
 
-  Future close({bool refresh: true}) {
-    _parent._removeChild(this, refresh: refresh);
+  Future close({bool fireEvent: true}) {
+    _parent._removeChild(this, fireEvent: fireEvent);
     return new Future.value();
   }
 
@@ -355,7 +362,6 @@ class ResourceEventType {
 class ResourceChangeEvent {
   final ResourceEventType type;
   final Resource resource;
-  final bool refresh;
 
-  ResourceChangeEvent(this.resource, this.type, {this.refresh: true});
+  ResourceChangeEvent(this.resource, this.type);
 }
