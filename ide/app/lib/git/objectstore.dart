@@ -32,6 +32,7 @@ class GitRef {
   String sha;
   String name;
   String type;
+  String head;
   dynamic remote;
 
   GitRef(this.sha, this.name, [this.type, this.remote]);
@@ -145,7 +146,7 @@ class ObjectStore {
 
   Future<String> getHeadSha() {
     return getHeadRef().then((String headRefName)
-        => _getHeadForRef(headRefName));
+        => getHeadForRef(headRefName));
   }
 
   Future<String> getAllHeads() {
@@ -162,7 +163,7 @@ class ObjectStore {
     });
   }
 
-  Future<String> _getHeadForRef(String headRefName) {
+  Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
       .then((String content) => content.substring(0, 40));
   }
@@ -312,7 +313,7 @@ class ObjectStore {
   }
 
 
-  Future _getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
+  Future getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
     // special case of empty remote.
     if (baseRefs.length == 1 && baseRefs[0].sha == HEAD_MASTER_SHA) {
       baseRefs[0].name = HEAD_MASTER_REF_PATH;
@@ -334,13 +335,13 @@ class ObjectStore {
       }
 
       return _checkRemoteHead(remoteRef).then((_) {
-        return _getHeadForRef(headRefName).then((String sha) {
+        return getHeadForRef(headRefName).then((String sha) {
           if (sha == remoteRef.sha) {
           // no changes to push.
             return new Future.value();
           }
 
-          //remoteRef.head = sha;
+          remoteRef.head = sha;
           remoteRef.sha = sha;
 
          //TODO handle case of new branch with no commits.
@@ -388,14 +389,14 @@ class ObjectStore {
     return getNextCommit(sha);
   }
 
-  Future _retrieveObjectBlobsAsString(List<String> shas) {
+  Future retrieveObjectBlobsAsString(List<String> shas) {
     List blobs;
     return Future.forEach(shas, (String sha) {
       retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
     }).then((_) => blobs);
   }
 
-  Future _retrieveObjectList(List<String> shas, String objType) {
+  Future retrieveObjectList(List<String> shas, String objType) {
     List objects = [];
     return Future.forEach(shas, (sha) {
       return retrieveObject(sha, objType).then((object) => objects.add(object));
@@ -429,22 +430,23 @@ class ObjectStore {
     });
   }
 
-  Future _getTreeFromCommitSha(String sha) {
+  Future<TreeObject> _getTreeFromCommitSha(String sha) {
     return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commit) {
      return  retrieveObject(commit.treeSha, ObjectTypes.TREE).then(
          (rawObject) => rawObject);
     });
   }
 
-  Future _getTreesWithCommits(List<String> shas) {
-    List trees = [];
+  Future<List<TreeObject>> _getTreesFromCommits(List<String> shas) {
+    List<TreeObject> trees = [];
 
-    return Future.forEach(shas, (sha) {
-      return _getTreeFromCommitSha(sha).then((tree) => trees.add(tree));
+    return Future.forEach(shas, (String sha) {
+      return _getTreeFromCommitSha(sha).then((TreeObject tree) => trees.add(
+          tree));
     }).then((_) => trees);
   }
 
-  Future writeRawObject(String type, content) {
+  Future<String> writeRawObject(String type, content) {
 
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
@@ -485,7 +487,7 @@ class ObjectStore {
     return completer.future;
   }
 
-  Future _storeInFile(String digest, Uint8List store) {
+  Future<String> _storeInFile(String digest, Uint8List store) {
     String subDirName = digest.substring(0,2);
     String objectFileName = digest.substring(2);
 
@@ -518,7 +520,10 @@ class ObjectStore {
     });
   }
 
-  Future _writeTree(List treeEntries) {
+  /**
+   * Writes a given tree onto disk, and returns the treeSha.
+   */
+  Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((tree) {
       blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);

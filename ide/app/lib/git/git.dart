@@ -8,6 +8,8 @@ import 'dart:async';
 import 'dart:html';
 import 'dart:js' as js;
 
+import 'objectstore.dart';
+
 /**
  * The class encapsulates the result returned by the git api.
  *
@@ -30,7 +32,7 @@ class GitResult {
 class GitOptions {
 
   // The directory entry where the git checkout resides.
-  DirectoryEntry entry;
+  DirectoryEntry root;
 
   // Optional
 
@@ -43,6 +45,9 @@ class GitOptions {
   // Current branch name
   String branchName;
 
+  // Git objectstore.
+  ObjectStore store;
+
   String email;
   String commitMessage;
   String name;
@@ -52,7 +57,7 @@ class GitOptions {
   js.JsObject toJsMap() {
     Map<String, dynamic> options = new Map<String, dynamic>();
 
-    options['dir'] = this.entry;
+    options['dir'] = this.root;
     options['username'] = this.username;
     options['password'] = this.password;
     options['branch'] = this.branchName;
@@ -67,7 +72,7 @@ class GitOptions {
 
   // TODO(grv): Specialize the verification for different api methods.
   bool verify() {
-    return this.entry != null;
+    return this.root != null;
   }
 }
 
