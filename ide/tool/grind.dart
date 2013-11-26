@@ -51,10 +51,7 @@ void setup(GrinderContext context) {
   _populateSdk(context);
 
   // copy from ./packages to ./app/packages
-  copyDirectory(
-      joinDir(Directory.current, ['packages']),
-      joinDir(Directory.current, ['app', 'packages']),
-      context);
+  copyDirectory(getDir('packages'), getDir('app/packages'), context);
 
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
@@ -154,10 +151,26 @@ void release(GrinderContext context) {
 // - Remove test
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
 void archive(GrinderContext context) {
-  // zip spark.zip . -r -q -x .*
-  _runCommandSync(context, 'zip ../${DIST_DIR.path}/spark.zip . -qr -x .*',
-      cwd: 'app');
-  _printSize(context, new File('dist/spark.zip'));
+  if (Platform.isWindows) {
+    _delete('dist/spark.zip');
+
+    // 7z a -r ..\dist\spark.zip .
+    runProcess(
+        context,
+        '7z',
+        arguments: ['a', '-r', '../${DIST_DIR.path}/spark.zip', '.'],
+        workingDirectory: 'app',
+        quiet: true);
+  } else {
+    // zip spark.zip . -r -q -x .*
+    runProcess(
+        context,
+        'zip',
+        arguments: ['../${DIST_DIR.path}/spark.zip', '.', '-qr', '-x', '.*'],
+        workingDirectory: 'app');
+  }
+
+  _printSize(context, getFile('dist/spark.zip'));
 }
 
 void docs(GrinderContext context) {
@@ -190,30 +203,34 @@ void docs(GrinderContext context) {
  */
 void clean(GrinderContext context) {
   // delete the sdk directory
-  _runCommandSync(context, 'rm -rf app/sdk/lib');
-  _runCommandSync(context, 'rm -f app/sdk/version');
+  getDir('app/sdk/lib').deleteSync(recursive: true);
+  getFile('app/sdk/version').deleteSync();
 
   // delete any compiled js output
-  _runCommandSync(context, 'rm -f app/*.dart.js');
-  _runCommandSync(context, 'rm -f app/*.dart.precompiled.js');
-  _runCommandSync(context, 'rm -f app/*.js.map');
-  _runCommandSync(context, 'rm -f app/*.js.deps');
+  for (FileSystemEntity entity in getDir('app').listSync()) {
+    if (entity is File) {
+      String ext = fileExt(entity);
+
+      if (ext == 'js.map' || ext == 'js.deps' ||
+          ext == 'dart.js' || ext == 'dart.precompiled.js') {
+        entity.deleteSync();
+      }
+    }
+  }
 
   // delete the build/ dir
-  _runCommandSync(context, 'rm -rf build');
+  getDir('build').deleteSync(recursive: true);
 }
 
 void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
-  _runCommandSync(context, 'rm -rf ${sourceDir.path}');
-  sourceDir.createSync();
-  _runCommandSync(context, 'rm -rf ${destDir.path}');
-  destDir.createSync();
+  deleteEntity(getDir('${sourceDir.path}'), context);
+  deleteEntity(getDir('${destDir.path}'), context);
 
   // copy the app directory to target/web
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
   copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
-  _runCommandSync(context, 'rm -rf ${sourceDir.path}/web/packages');
+  deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
   Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
 
@@ -233,9 +250,9 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
      '--out=' + joinDir(target, ['${filePath}.js']).path]);
 
   // clean up unnecessary (and large) files
-  _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js']).path}');
-  _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.deps']).path}');
-  _runCommandSync(context, 'rm -f ${joinFile(target, ['${filePath}.js.map']).path}');
+  deleteEntity(joinFile(target, ['${filePath}.js']), context);
+  deleteEntity(joinFile(target, ['${filePath}.js.deps']), context);
+  deleteEntity(joinFile(target, ['${filePath}.js.map']), context);
 
   if (removeSymlinks) {
     // de-symlink the directory
@@ -357,13 +374,15 @@ void _populateSdk(GrinderContext context) {
     // TODO(devoncarew): this would be much better as a std pub package
     compilerDir.createSync();
 
-    _runCommandSync(context, 'rm -rf packages/compiler/compiler');
-    _runCommandSync(context, 'rm -rf packages/compiler/lib');
-    _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/compiler/samples');
-    _runCommandSync(context, 'mv app/sdk/lib/_internal/compiler packages/compiler');
-    _runCommandSync(context, 'cp app/sdk/lib/_internal/libraries.dart packages/compiler');
-    _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/pub');
-    _runCommandSync(context, 'rm -rf app/sdk/lib/_internal/dartdoc');
+    _delete('packages/compiler/compiler', context);
+    _delete('packages/compiler/compiler', context);
+    _delete('packages/compiler/lib', context);
+    _delete('app/sdk/lib/_internal/compiler/samples', context);
+    copyDirectory(getDir('app/sdk/lib/_internal/compiler'), getDir('packages/compiler/compiler'), context);
+    _delete('app/sdk/lib/_internal/compiler', context);
+    copyFile(getFile('app/sdk/lib/_internal/libraries.dart'), getDir('packages/compiler'), context);
+    _delete('app/sdk/lib/_internal/pub', context);
+    _delete('app/sdk/lib/_internal/dartdoc', context);
 
     // traverse directories, creating a .files json directory listing
     context.log('creating SDK directory listings');
@@ -402,6 +421,16 @@ void _createDirectoryListings(Directory dir) {
 void _printSize(GrinderContext context, File file) {
   int sizeKb = file.lengthSync() ~/ 1024;
   context.log('${file.path} is ${_NF.format(sizeKb)}k');
+}
+
+void _delete(String path, [GrinderContext context]) {
+  path = path.replaceAll('/', Platform.pathSeparator);
+
+  if (FileSystemEntity.isFileSync(path)) {
+    deleteEntity(getFile(path), context);
+  } else {
+    deleteEntity(getDir(path), context);
+  }
 }
 
 void _runCommandSync(GrinderContext context, String command, {String cwd}) {

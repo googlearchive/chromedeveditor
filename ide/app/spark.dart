@@ -7,6 +7,7 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
+import 'dart:math' as math;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
@@ -96,7 +97,6 @@ class Spark extends Application implements FilesControllerDelegate {
     initEditor();
     initEditorManager();
     initEditorArea();
-    initEditorThemes();
     initFilesController();
 
     initLookAndFeel();
@@ -170,14 +170,6 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
-  void initEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null && AceEditor.THEMES.contains(theme)) {
-        editor.theme = theme;
-      }
-    });
-  }
-
   void initFilesController() {
     _filesController = new FilesController(workspace, this);
   }
@@ -209,9 +201,9 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileCloseAction(this));
-    actionManager.registerAction(new ProjectOpenAction(this));
+    actionManager.registerAction(new FolderOpenAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
     actionManager.registerKeyListener();
@@ -227,29 +219,35 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void buildMenu() {
+    ThemeManager themeManager = new ThemeManager(editor, syncPrefs);
+    KeyBindingManager keysManager = new KeyBindingManager(editor, syncPrefs);
+
     UListElement ul = querySelector('#hotdogMenu ul');
 
     ul.children.add(createMenuItem(actionManager.getAction('file-new')));
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('project-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+    ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
     ul.children.add(createMenuItem(actionManager.getAction('file-close')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+
     ul.children.add(createMenuSeparator());
 
     // theme control
-    Element theme = ul.querySelector('#themeControl');
+    Element theme = ul.querySelector('#changeTheme');
     ul.children.remove(theme);
     ul.children.add(theme);
-    querySelector('#themeLeft').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: true);
-    });
-    querySelector('#themeRight').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: false);
-    });
+    querySelector('#themeLeft').onClick.listen((e) => themeManager.dec(e));
+    querySelector('#themeRight').onClick.listen((e) => themeManager.inc(e));
+
+    // key binding control
+    Element keys = ul.querySelector('#changeKeys');
+    ul.children.remove(keys);
+    ul.children.add(keys);
+    querySelector('#keysLeft').onClick.listen((e) => keysManager.dec(e));
+    querySelector('#keysRight').onClick.listen((e) => keysManager.inc(e));
 
     if (developerMode) {
+      ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
     }
 
@@ -260,6 +258,7 @@ class Spark extends Application implements FilesControllerDelegate {
   //
   // - End parts of ctor.
   //
+
   void newFile() => notImplemented('Spark.newFile()');
 
   void openFile() {
@@ -277,7 +276,7 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
-  void openProject() {
+  void openFolder() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_DIRECTORY);
     chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
@@ -292,21 +291,9 @@ class Spark extends Application implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
-  void closeFile() {
-    List futures = [];
-    var sel = _filesController.getSelection();
-    if (sel.isNotEmpty) {
-      sel.forEach((ws.Resource resource) {
-        if (resource.isTopLevel) {
-          _closeOpenEditor(resource);
-          futures.add(resource.close());
-        }
-      });
-    }
-    Future.wait(futures).then((_) => workspace.save());
-  }
+  List<ws.Resource> _getSelection() => _filesController.getSelection();
 
-  void _closeOpenEditor(ws.Resource resource) {
+   void _closeOpenEditor(ws.Resource resource) {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorManager.close(resource);
     }
@@ -328,19 +315,11 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
-  List<ContextAction> getActionsFor(ws.Resource resource) {
-    return actionManager.getContextActions(resource);
+  List<ContextAction> getActionsFor(List<ws.Resource> resources) {
+    return actionManager.getContextActions(resources);
   }
 
   void notImplemented(String str) => showStatus("Not implemented: ${str}");
-
-  void _handleChangeTheme({bool themeLeft: true}) {
-    int index = AceEditor.THEMES.indexOf(editor.theme);
-    index = (index + (themeLeft ? -1 : 1)) % AceEditor.THEMES.length;
-    String themeName = AceEditor.THEMES[index];
-    editor.theme = themeName;
-    syncPrefs.setValue('aceTheme', themeName);
-  }
 
   void _startTrackingExceptions() {
     // Handle logged exceptions.
@@ -420,6 +399,88 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   }
 }
 
+class ThemeManager {
+  AceEditor editor;
+  preferences.PreferenceStore prefs;
+  Element _label;
+
+  ThemeManager(this.editor, this.prefs) {
+    _label = querySelector('#changeTheme a span');
+    prefs.getValue('aceTheme').then((String value) {
+      if (value != null) {
+        editor.theme = value;
+        _updateName(value);
+      } else {
+        _updateName(editor.theme);
+      }
+    });
+  }
+
+  void inc(Event e) {
+   e.stopPropagation();
+    _changeTheme(1);
+  }
+
+  void dec(Event e) {
+    e.stopPropagation();
+    _changeTheme(-1);
+  }
+
+  void _changeTheme(int direction) {
+    int index = AceEditor.THEMES.indexOf(editor.theme);
+    index = (index + direction) % AceEditor.THEMES.length;
+    String newTheme = AceEditor.THEMES[index];
+    prefs.setValue('aceTheme', newTheme);
+    _updateName(newTheme);
+    editor.theme = newTheme;
+  }
+
+  void _updateName(String name) {
+    _label.text = capitalize(name.replaceAll('_', ' '));
+  }
+}
+
+class KeyBindingManager {
+  AceEditor editor;
+  preferences.PreferenceStore prefs;
+  Element _label;
+
+  KeyBindingManager(this.editor, this.prefs) {
+    _label = querySelector('#changeKeys a span');
+    prefs.getValue('keyBinding').then((String value) {
+      if (value != null) {
+        editor.setKeyBinding(value);
+      }
+      _updateName(value);
+    });
+  }
+
+  void inc(Event e) {
+    e.stopPropagation();
+    _changeBinding(1);
+  }
+
+  void dec(Event e) {
+    e.stopPropagation();
+    _changeBinding(-1);
+  }
+
+  void _changeBinding(int direction) {
+    editor.getKeyBinding().then((String name) {
+      int index = math.max(AceEditor.KEY_BINDINGS.indexOf(name), 0);
+      index = (index + direction) % AceEditor.KEY_BINDINGS.length;
+      String newBinding = AceEditor.KEY_BINDINGS[index];
+      prefs.setValue('keyBinding', newBinding);
+      _updateName(newBinding);
+      editor.setKeyBinding(newBinding);
+    });
+  }
+
+  void _updateName(String name) {
+    _label.text = name == null ? 'Spark Default' : capitalize(name);
+  }
+}
+
 /**
  * The abstract parent class of Spark related actions.
  */
@@ -436,6 +497,64 @@ abstract class SparkAction extends Action {
   }
 
   void _invoke([Object context]);
+
+  /**
+   * Returns true if `object` is a list and all items are [Resource].
+   */
+  bool _isResourceList(Object object) {
+    if (object is! List) {
+      return false;
+    }
+    List items = object as List;
+    bool result = true;
+    items.forEach((Object item) {
+      if (item is! ws.Resource) {
+        result = false;
+      }
+    });
+    return result;
+  }
+
+  /**
+   * Returns true if `object` is a list with a single item and this item is a
+   * [Resource].
+   */
+  bool _isSingleResource(Object object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List<ws.Resource>;
+    return resources.length == 1;
+  }
+
+  /**
+   * Returns true if `object` is a list with a single item and this item is a
+   * [Folder].
+   */
+  bool _isSingleFolder(Object object) {
+    if (!_isSingleResource(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    return (object as List).first is ws.Folder;
+  }
+
+  /**
+   * Returns true if `object` is a list of top-level [Resource].
+   */
+  bool _isTopLevel(Object object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    bool result = true;
+    resources.forEach((ws.Resource resource) {
+      if (!resource.isTopLevel) {
+        result = false;
+      }
+    });
+    return result;
+  }
 }
 
 class FileNewAction extends SparkAction implements ContextAction {
@@ -443,10 +562,11 @@ class FileNewAction extends SparkAction implements ContextAction {
     defaultBinding("ctrl-n");
   }
 
-  void _invoke([ws.Folder folder]) {
-    if (folder == null) {
+  void _invoke([List<ws.Folder> folders]) {
+    if (folders == null) {
       spark.newFile();
     } else {
+      ws.Folder folder = folders.first;
       // TODO: create a new file in the given folder
       spark.notImplemented('new file');
     }
@@ -454,7 +574,7 @@ class FileNewAction extends SparkAction implements ContextAction {
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => object is ws.Folder;
+  bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
 class FileOpenAction extends SparkAction {
@@ -475,7 +595,7 @@ class FileSaveAction extends SparkAction {
 
 class FileDeleteAction extends SparkAction implements ContextAction {
   bootjack.Modal _deleteDialog;
-  ws.Resource _resource;
+  List<ws.Resource> _resources;
 
   FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete") {
     _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));
@@ -484,50 +604,57 @@ class FileDeleteAction extends SparkAction implements ContextAction {
     });
   }
 
-  void _invoke([ws.Resource resource]) {
-    if (resource == null) {
+  void _invoke([List<ws.Resource> resources]) {
+    if (resources == null) {
       var sel = spark._filesController.getSelection();
-      // TODO: handle multiple selection
       if (sel.isNotEmpty) {
-        _resource = sel.first;
+        _resources = sel;
         _setMessageAndShow();
       }
     } else {
-      _resource = resource;
+      _resources = resources;
       _setMessageAndShow();
     }
   }
 
   void _setMessageAndShow() {
-    _deleteDialog.element.querySelector("#message").text =
-        "Are you sure you want to delete '${_resource.name}' from the file system?";
+    if (_resources.length == 1) {
+      _deleteDialog.element.querySelector("#message").text =
+          "Are you sure you want to delete '${_resources.first.name}' from the file system?";
+    } else {
+      _deleteDialog.element.querySelector("#message").text =
+          "Are you sure you want to delete '${_resources.length}' files from the file system?";
+    }
     _deleteDialog.show();
   }
 
   void _deleteResource() {
-    _resource.delete();
+    _resources.forEach((ws.Resource resource) {
+      resource.delete();
+    });
   }
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => object is ws.Resource;
+  bool appliesTo(Object object) => _isResourceList(object);
 }
 
 class FileCloseAction extends SparkAction implements ContextAction {
   FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
 
-  void _invoke([ws.Resource resource]) {
-    if (resource != null) {
-      spark._closeOpenEditor(resource);
-      resource.close().then((_) => spark.workspace.save());
-    } else {
-      spark.closeFile();
+  void _invoke([List<ws.Resource> resources]) {
+    if (resources == null) {
+      resources = spark._getSelection();
     }
+    Future.forEach(resources, (ws.Resource resource) {
+      spark._closeOpenEditor(resource);
+      return resource.close();
+    }).then((_) => spark.workspace.save());
   }
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => object is ws.Resource && object.isTopLevel;
+  bool appliesTo(Object object) => _isTopLevel(object);
 }
 
 class FileExitAction extends SparkAction {
@@ -543,10 +670,10 @@ class FileExitAction extends SparkAction {
   }
 }
 
-class ProjectOpenAction extends SparkAction {
-  ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
+class FolderOpenAction extends SparkAction {
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder...");
 
-  void _invoke([Object context]) => spark.openProject();
+  void _invoke([Object context]) => spark.openFolder();
 }
 
 class AboutSparkAction extends SparkAction {
