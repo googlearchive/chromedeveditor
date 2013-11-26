@@ -282,6 +282,8 @@ class File extends Resource {
 
   Future<String> getContents() => (_entry as chrome.ChromeFileEntry).readText();
 
+  Future<chrome.ArrayBuffer> getBytes() => (_entry as chrome.ChromeFileEntry).readBytes();
+
   Future setContents(String contents) {
     (_entry as chrome.ChromeFileEntry).writeText(contents).then((_) {
       workspace._fireEvent(new ResourceChangeEvent(this, ResourceEventType.CHANGE));

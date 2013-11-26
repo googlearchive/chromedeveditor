@@ -13,15 +13,33 @@ import 'ace.dart';
 
 import 'editors.dart';
 import 'ui/widgets/tabview.dart';
+import 'ui/widgets/imageviewer.dart';
 import 'workspace.dart';
 
 class EditorTab extends Tab {
   final Resource file;
-  final AceEditor editor;
-  EditorTab(EditorArea parent, AceEditor editor, this.file)
-      : editor = editor,  // FIXME(ikarienator): cannot use this.editor style.
-        super(parent, page: editor.parentElement) {
+  EditorTab(EditorArea parent, this.file) : super(parent) {
     label = file.name;
+  }
+}
+
+class AceEditorTab extends EditorTab {
+  final AceEditor editor;
+  AceEditorTab(EditorArea parent, this.editor, Resource file)
+    : super(parent, file) {
+    label = file.name;
+    page = editor.parentElement;
+  }
+}
+
+
+class ImageViewerTab extends EditorTab {
+  final ImageViewer imageViewer;
+  ImageViewerTab(EditorArea parent, this.imageViewer, Resource file)
+    : super(parent, file) {
+    label = file.name;
+    page = imageViewer.rootElement;
+    imageViewer.loadFile();
   }
 }
 
@@ -30,7 +48,10 @@ class EditorTab extends Tab {
  */
 class EditorArea extends TabView {
   final EditorProvider editorProvider;
-  final Map<Resource, EditorTab> _tabOfFile = {};
+  final Map<Resource, Tab> _tabOfFile = {};
+  static final RegExp _imageFileType =
+      new RegExp(r'\.(jpe?g|png|gif|bmp|tiff)$', caseSensitive: false);
+
   bool _allowsLabelBar = true;
 
   EditorArea(Element parentElement,
@@ -38,7 +59,8 @@ class EditorArea extends TabView {
              {allowsLabelBar: true})
       : super(parentElement) {
     onSelected.listen((EditorTab tab) {
-      editorProvider.selectFileForEditor(tab.editor, tab.file);
+      if (tab is AceEditorTab)
+        editorProvider.selectFileForEditor(tab.editor, tab.file);
     });
     onClose.listen((EditorTab tab) {
       closeFile(tab.file);
@@ -84,7 +106,8 @@ class EditorArea extends TabView {
                  bool replaceCurrent: true}) {
     if (_tabOfFile.containsKey(file)) {
       EditorTab tab = _tabOfFile[file];
-      editorProvider.selectFileForEditor(tab.editor, file);
+      if (tab is AceEditorTab)
+        editorProvider.selectFileForEditor(tab.editor, file);
       if (switchesTab) {
         tab.select();
       }
@@ -92,8 +115,14 @@ class EditorArea extends TabView {
     }
 
     if (forceOpen || replaceCurrent) {
-      AceEditor editor = editorProvider.createEditorForFile(file);
-      var tab = new EditorTab(this, editor, file);
+      EditorTab tab;
+      if (_imageFileType.hasMatch(file.name)) {
+        ImageViewer viewer = new ImageViewer(file);
+        tab = new ImageViewerTab(this, viewer, file);
+      } else {
+        AceEditor editor = editorProvider.createEditorForFile(file);
+        tab = new AceEditorTab(this, editor, file);
+      }
       if (replaceCurrent) {
         replace(selectedTab, tab, switchesTab: switchesTab);
       } else {
