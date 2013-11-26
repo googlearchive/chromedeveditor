@@ -7,6 +7,7 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
+import 'dart:math' as math;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
@@ -96,7 +97,6 @@ class Spark extends Application implements FilesControllerDelegate {
     initEditor();
     initEditorManager();
     initEditorArea();
-    initEditorThemes();
     initFilesController();
 
     initLookAndFeel();
@@ -170,14 +170,6 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
-  void initEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      if (theme != null && AceEditor.THEMES.contains(theme)) {
-        editor.theme = theme;
-      }
-    });
-  }
-
   void initFilesController() {
     _filesController = new FilesController(workspace, this);
   }
@@ -209,8 +201,8 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new ProjectOpenAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
@@ -227,29 +219,35 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void buildMenu() {
+    ThemeManager themeManager = new ThemeManager(editor, syncPrefs);
+    KeyBindingManager keysManager = new KeyBindingManager(editor, syncPrefs);
+
     UListElement ul = querySelector('#hotdogMenu ul');
 
     ul.children.add(createMenuItem(actionManager.getAction('file-new')));
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('project-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
     ul.children.add(createMenuItem(actionManager.getAction('file-close')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+
     ul.children.add(createMenuSeparator());
 
     // theme control
-    Element theme = ul.querySelector('#themeControl');
+    Element theme = ul.querySelector('#changeTheme');
     ul.children.remove(theme);
     ul.children.add(theme);
-    querySelector('#themeLeft').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: true);
-    });
-    querySelector('#themeRight').onClick.listen((e) {
-      e.stopPropagation();
-      _handleChangeTheme(themeLeft: false);
-    });
+    querySelector('#themeLeft').onClick.listen((e) => themeManager.dec(e));
+    querySelector('#themeRight').onClick.listen((e) => themeManager.inc(e));
+
+    // key binding control
+    Element keys = ul.querySelector('#changeKeys');
+    ul.children.remove(keys);
+    ul.children.add(keys);
+    querySelector('#keysLeft').onClick.listen((e) => keysManager.dec(e));
+    querySelector('#keysRight').onClick.listen((e) => keysManager.inc(e));
 
     if (developerMode) {
+      ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
     }
 
@@ -260,6 +258,7 @@ class Spark extends Application implements FilesControllerDelegate {
   //
   // - End parts of ctor.
   //
+
   void newFile() => notImplemented('Spark.newFile()');
 
   void openFile() {
@@ -321,14 +320,6 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void notImplemented(String str) => showStatus("Not implemented: ${str}");
-
-  void _handleChangeTheme({bool themeLeft: true}) {
-    int index = AceEditor.THEMES.indexOf(editor.theme);
-    index = (index + (themeLeft ? -1 : 1)) % AceEditor.THEMES.length;
-    String themeName = AceEditor.THEMES[index];
-    editor.theme = themeName;
-    syncPrefs.setValue('aceTheme', themeName);
-  }
 
   void _startTrackingExceptions() {
     // Handle logged exceptions.
@@ -405,6 +396,88 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
+  }
+}
+
+class ThemeManager {
+  AceEditor editor;
+  preferences.PreferenceStore prefs;
+  Element _label;
+
+  ThemeManager(this.editor, this.prefs) {
+    _label = querySelector('#changeTheme a span');
+    prefs.getValue('aceTheme').then((String value) {
+      if (value != null) {
+        editor.theme = value;
+        _updateName(value);
+      } else {
+        _updateName(editor.theme);
+      }
+    });
+  }
+
+  void inc(Event e) {
+   e.stopPropagation();
+    _changeTheme(1);
+  }
+
+  void dec(Event e) {
+    e.stopPropagation();
+    _changeTheme(-1);
+  }
+
+  void _changeTheme(int direction) {
+    int index = AceEditor.THEMES.indexOf(editor.theme);
+    index = (index + direction) % AceEditor.THEMES.length;
+    String newTheme = AceEditor.THEMES[index];
+    prefs.setValue('aceTheme', newTheme);
+    _updateName(newTheme);
+    editor.theme = newTheme;
+  }
+
+  void _updateName(String name) {
+    _label.text = capitalize(name.replaceAll('_', ' '));
+  }
+}
+
+class KeyBindingManager {
+  AceEditor editor;
+  preferences.PreferenceStore prefs;
+  Element _label;
+
+  KeyBindingManager(this.editor, this.prefs) {
+    _label = querySelector('#changeKeys a span');
+    prefs.getValue('keyBinding').then((String value) {
+      if (value != null) {
+        editor.setKeyBinding(value);
+      }
+      _updateName(value);
+    });
+  }
+
+  void inc(Event e) {
+    e.stopPropagation();
+    _changeBinding(1);
+  }
+
+  void dec(Event e) {
+    e.stopPropagation();
+    _changeBinding(-1);
+  }
+
+  void _changeBinding(int direction) {
+    editor.getKeyBinding().then((String name) {
+      int index = math.max(AceEditor.KEY_BINDINGS.indexOf(name), 0);
+      index = (index + direction) % AceEditor.KEY_BINDINGS.length;
+      String newBinding = AceEditor.KEY_BINDINGS[index];
+      prefs.setValue('keyBinding', newBinding);
+      _updateName(newBinding);
+      editor.setKeyBinding(newBinding);
+    });
+  }
+
+  void _updateName(String name) {
+    _label.text = name == null ? 'Spark Default' : capitalize(name);
   }
 }
 
