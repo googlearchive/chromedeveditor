@@ -50,7 +50,17 @@ Element createContextMenu(List<ContextAction> actions, Object context,
       ..classes.add('dropdown-menu')
       ..classes.toggle('pull-right', pullRight)
       ..attributes['role'] = 'menu';
+  fillContextMenu(ul, actions, context);
+  return ul;
+}
 
+/**
+ * Given a list of actions (possibly from [ActionManager.getContextActions])
+ * fill a menu element with items representing those actions.
+ */
+void fillContextMenu(UListElement ul,
+                     List<ContextAction> actions,
+                     Object context) {
   String category = null;
 
   for (ContextAction action in actions) {
@@ -62,8 +72,6 @@ Element createContextMenu(List<ContextAction> actions, Object context,
     ul.children.add(
         createMenuItem(action, context: context, showAccelerator: false));
   }
-
-  return ul;
 }
 
 /**
