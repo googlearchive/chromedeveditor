@@ -502,13 +502,13 @@ abstract class SparkAction extends Action {
    * Returns true if `object` is a list and all items are [Resource].
    */
   bool _isResourceList(Object object) {
-    if (!object is List) {
+    if (object is! List) {
       return false;
     }
     List items = object as List;
     bool result = true;
     items.forEach((Object item) {
-      if (!(item is ws.Resource)) {
+      if (item is! ws.Resource) {
         result = false;
       }
     });
