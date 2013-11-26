@@ -8,3 +8,4 @@ dist/
 docs/
 app/sdk/version
 app/sdk/lib/
+.settings/
