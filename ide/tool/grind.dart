@@ -230,7 +230,6 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
   copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
-  //_runCommandSync(context, 'rm -rf ${sourceDir.path}/web/packages');
   deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
   Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
