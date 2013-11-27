@@ -51,8 +51,11 @@ body {
 }
 
 .fileview-filename-container .filename {
+  font-family: Helvetica, Sans-serif;
+  font-size: 13px;
   overflow: hidden;
   position: absolute;
+  top: 1px;
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
@@ -110,12 +113,27 @@ body {
   padding: 4px;
 }
 
+#toolbar button {
+  outline: none;
+}
+
 #hotdogMenu {
   float: right;  
 }
 
 #hotdogMenu li {
   min-width: 16em;
+}
+
+#hotdogMenu .main-menu-button {
+  background-image: url(images/menu.png);
+  background-position: -1px -2px;
+  height: 26px;
+  width: 26px;
+}
+
+#hotdogMenu .main-menu-button:focus {
+  background-color: white;
 }
 
 #file-item-context-menu {
