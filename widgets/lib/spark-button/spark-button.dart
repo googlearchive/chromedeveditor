@@ -1,5 +1,5 @@
 // Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
-// All rights reserved. Use of this source code is governed by a BSD-style
+// All rights reserved. Use of this source code is governed by a BSDstyle
 // license that can be found in the LICENSE file.
 
 library spark_widgets.button;
@@ -10,15 +10,17 @@ import '../src/widget.dart';
 
 @CustomTag('spark-button')
 class SparkButton extends Widget {
-  @published bool primary = false;
-  @published bool active = false;
-
-  @observable String get btnClasses =>
-      "$CSS_BUTTON ${primary ? CSS_PRIMARY : CSS_DEFAULT}";
-
-  static const CSS_BUTTON = "btn";
-  static const CSS_DEFAULT = "btn-default";
-  static const CSS_PRIMARY = "btn-primary";
+  @observable bool primary = false;
+  @observable bool active = false;
+  @observable String btnClass = "btn btn-default";
 
   SparkButton.created() : super.created();
+
+  void primaryChanged() {
+    if (primary) {
+      btnClass = "btn btn-primary";
+    } else {
+      btnClass = "btn btn-default";
+    }
+  }
 }
