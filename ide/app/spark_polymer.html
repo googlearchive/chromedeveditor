@@ -16,6 +16,8 @@
   <link rel="import" href="packages/spark_widgets/spark-select/spark-select.html">
   <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
 
+  <link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html">
+
   <!-- template for FileItemCell -->
   <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
@@ -69,11 +71,11 @@
     </div>
   </div>
   
-  <div id="splitview" class="flexbox">
+  <polymer-flex-panel id="splitview">
     <div id="fileViewArea" min-size="100"></div>
     <spark-splitter direction="left"></spark-splitter>
     <div id="editorArea" min-size="200"></div>
-  </div>
+  </polymer-flex-panel>
   
   <!-- file delete dialog -->
   <div id="deleteDialog" class="modal fade">
