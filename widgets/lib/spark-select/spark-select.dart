@@ -4,21 +4,17 @@
 
 library spark_widgets.select;
 
-import 'dart:html';
 import 'package:polymer/polymer.dart';
 
+import '../src/widget.dart';
+
 @CustomTag('spark-select')
-class SparkSelect extends HtmlElement with Polymer, Observable {
+class SparkSelect extends Widget {
   @published List items = [];
   @published int selected = 0;
-
   @published String text_color = 'black';
   @published String color = 'white';
   @published String hover_color = 'white';
 
-  SparkSelect.created() : super.created() {
-  }
-
-  @override
-  bool get applyAuthorStyles => true;
+  SparkSelect.created() : super.created();
 }

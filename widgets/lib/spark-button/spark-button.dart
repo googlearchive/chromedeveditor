@@ -4,19 +4,17 @@
 
 library spark_widgets.button;
 
-import 'dart:html';
 import 'package:polymer/polymer.dart';
 
+import '../src/widget.dart';
+
 @CustomTag('spark-button')
-class SparkButton extends HtmlElement with Polymer, Observable {
+class SparkButton extends Widget {
   @observable bool primary = false;
   @observable bool active = false;
   @observable String btnClass = "btn btn-default";
 
   SparkButton.created() : super.created();
-
-  @override
-  bool get applyAuthorStyles => true;
 
   void primaryChanged() {
     if (primary) {
@@ -25,5 +23,4 @@ class SparkButton extends HtmlElement with Polymer, Observable {
       btnClass = "btn btn-default";
     }
   }
-
 }
