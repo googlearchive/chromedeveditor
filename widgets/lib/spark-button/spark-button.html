@@ -6,6 +6,8 @@
 
 <polymer-element name="spark-button" attributes="primary active">
   <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="spark-button.css" -->
     <style>
       button {
         padding: 2px 8px 2px 8px;
@@ -14,7 +16,7 @@
     
     <!-- Handle "active" properly, possibly using 'template if'.
          Setting 'disabled' attribute here somehow doesn't work. -->
-    <button type="button" class={{btnClass}}>
+    <button type="button" class={{btnClasses}}>
       <content></content>
     </button>
   </template>
