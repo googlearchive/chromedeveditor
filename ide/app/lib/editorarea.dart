@@ -22,15 +22,25 @@ abstract class EditorTab extends Tab {
   EditorTab(EditorArea parent, this.file) : super(parent) {
     label = file.name;
   }
+
+  void resize();
 }
 
 /// An [EditorTab] that contains an [AceEditor].
 class AceEditorTab extends EditorTab {
   final AceEditor editor;
-  AceEditorTab(EditorArea parent, this.editor, Resource file)
+  final EditorProvider provider;
+  AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.parentElement;
   }
+
+  void activate() {
+    provider.selectFileForEditor(editor, file);
+    super.activate();
+  }
+
+  void resize() => editor.resize();
 }
 
 /// An [EditorTab] that contains an [ImageViewerTab].
@@ -40,6 +50,8 @@ class ImageViewerTab extends EditorTab {
     : super(parent, file) {
     page = imageViewer.rootElement;
   }
+
+  void resize() => imageViewer.layout();
 }
 
 /**
@@ -57,10 +69,6 @@ class EditorArea extends TabView {
              this.editorProvider,
              {allowsLabelBar: true})
       : super(parentElement) {
-    onSelected.listen((EditorTab tab) {
-      if (tab is AceEditorTab)
-        editorProvider.selectFileForEditor(tab.editor, tab.file);
-    });
     onClose.listen((EditorTab tab) {
       closeFile(tab.file);
     });
@@ -101,11 +109,7 @@ class EditorArea extends TabView {
   /// Inform the editor area to layout it self according to the new size.
   void resize() {
     if (selectedTab != null) {
-      if (selectedTab is ImageViewerTab) {
-        (selectedTab as ImageViewerTab).imageViewer.layout();
-      } else if (selectedTab is AceEditorTab) {
-        (selectedTab as AceEditorTab).editor.resize();
-      }
+      (selectedTab as EditorTab).resize();
     }
   }
 
@@ -117,8 +121,6 @@ class EditorArea extends TabView {
                  bool replaceCurrent: true}) {
     if (_tabOfFile.containsKey(file)) {
       EditorTab tab = _tabOfFile[file];
-      if (tab is AceEditorTab)
-        editorProvider.selectFileForEditor(tab.editor, file);
       if (switchesTab) tab.select();
       return;
     }
@@ -130,7 +132,7 @@ class EditorArea extends TabView {
         tab = new ImageViewerTab(this, viewer, file);
       } else {
         AceEditor editor = editorProvider.createEditorForFile(file);
-        tab = new AceEditorTab(this, editor, file);
+        tab = new AceEditorTab(this, editorProvider, editor, file);
       }
       if (replaceCurrent) {
         replace(selectedTab, tab, switchesTab: switchesTab);

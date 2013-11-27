@@ -12,7 +12,7 @@ import 'dart:html' as html;
 import 'dart:math' as math;
 import 'package:crypto/crypto.dart' show CryptoUtils;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
-
+import '../utils/html_utils.dart';
 import '../../workspace.dart';
 
 /**
@@ -69,9 +69,9 @@ class ImageViewer {
     image.onLoad.listen((_) {
       image.title = '${file.name}. <ALT + Scroll> to zoom.';
       // Initial scale to "fill" the image to the viewport.
-      _scale = math.min(
+      _scale = math.max(1.0, math.min(
           width / image.naturalWidth,
-          height / image.naturalHeight);
+          height / image.naturalHeight));
       layout();
     });
     file.getBytes().then((chrome.ArrayBuffer content) {
@@ -155,9 +155,9 @@ class ImageViewer {
 
   void _handleMouseWheel(html.WheelEvent e) {
     // Scroll when alt key is pressed.
-    if (!e.altKey)
-      return;
+    if (!e.altKey) return;
 
+    _updateOffset();
     double factor = math.pow(2.0, -e.deltaY * SCROLLING_ZOOM_FACTOR);
     html.Point position = _getEventPosition(e);
 
@@ -171,8 +171,7 @@ class ImageViewer {
     _dy -= position.y * factor;
 
     layout();
-    e.preventDefault();
-    e.stopPropagation();
+    cancelEvent(e);
   }
 
   /// Get the cursor position of the event and map it to the virtual coordinate.
