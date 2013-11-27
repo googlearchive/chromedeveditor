@@ -7,6 +7,7 @@
 @import url("lib/ui/widgets/listview.css");
 @import url("lib/ui/widgets/treeview.css");
 @import url("lib/ui/widgets/tabview.css");
+@import url("lib/ui/widgets/imageviewer.css");
   
 body {
   bottom: 0;
