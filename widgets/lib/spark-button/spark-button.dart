@@ -13,9 +13,8 @@ class SparkButton extends Widget {
   @published bool primary = false;
   @published bool active = false;
 
-  @observable String get btnClasses {
-    return "$CSS_BUTTON ${primary ? CSS_PRIMARY : CSS_DEFAULT}";
-  }
+  @observable String get btnClasses =>
+      joinClasses([CSS_BUTTON, primary ? CSS_PRIMARY : CSS_DEFAULT]);
 
   static const CSS_BUTTON = "btn";
   static const CSS_DEFAULT = "btn-default";

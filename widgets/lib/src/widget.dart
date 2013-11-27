@@ -15,4 +15,6 @@ class Widget extends PolymerElement {
 
   @override
   bool get applyAuthorStyles => true;
+
+  String joinClasses(List<String> cls) => cls.join(" ");
 }
