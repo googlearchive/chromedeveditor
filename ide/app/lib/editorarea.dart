@@ -16,41 +16,40 @@ import 'ui/widgets/tabview.dart';
 import 'ui/widgets/imageviewer.dart';
 import 'workspace.dart';
 
-class EditorTab extends Tab {
+/// A tab associated with a file.
+abstract class EditorTab extends Tab {
   final Resource file;
   EditorTab(EditorArea parent, this.file) : super(parent) {
     label = file.name;
   }
 }
 
+/// An [EditorTab] that contains an [AceEditor].
 class AceEditorTab extends EditorTab {
   final AceEditor editor;
   AceEditorTab(EditorArea parent, this.editor, Resource file)
     : super(parent, file) {
-    label = file.name;
     page = editor.parentElement;
   }
 }
 
-
+/// An [EditorTab] that contains an [ImageViewerTab].
 class ImageViewerTab extends EditorTab {
   final ImageViewer imageViewer;
   ImageViewerTab(EditorArea parent, this.imageViewer, Resource file)
     : super(parent, file) {
-    label = file.name;
     page = imageViewer.rootElement;
-    imageViewer.loadFile();
   }
 }
 
 /**
- * Manage a list of open editors.
+ * Manages a list of open editors.
  */
 class EditorArea extends TabView {
   final EditorProvider editorProvider;
-  final Map<Resource, Tab> _tabOfFile = {};
+  final Map<Resource, EditorTab> _tabOfFile = {};
   static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif|bmp|tiff)$', caseSensitive: false);
+      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
 
   bool _allowsLabelBar = true;
 
@@ -82,6 +81,7 @@ class EditorArea extends TabView {
     return super.add(tab, switchesTab: switchesTab);
   }
 
+  // TabView
   Tab replace(EditorTab tabToReplace, EditorTab tab, {bool switchesTab: true}) {
     _tabOfFile[tab.file] = tab;
     showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
@@ -98,6 +98,17 @@ class EditorArea extends TabView {
     return false;
   }
 
+  /// Inform the editor area to layout it self according to the new size.
+  void resize() {
+    if (selectedTab != null) {
+      if (selectedTab is ImageViewerTab) {
+        (selectedTab as ImageViewerTab).imageViewer.layout();
+      } else if (selectedTab is AceEditorTab) {
+        (selectedTab as AceEditorTab).editor.resize();
+      }
+    }
+  }
+
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
   /// [selectFile] will be called instead. Otherwise the editor provide is
   /// requested to switch the file to the editor in case the editor is shared.
@@ -108,9 +119,7 @@ class EditorArea extends TabView {
       EditorTab tab = _tabOfFile[file];
       if (tab is AceEditorTab)
         editorProvider.selectFileForEditor(tab.editor, file);
-      if (switchesTab) {
-        tab.select();
-      }
+      if (switchesTab) tab.select();
       return;
     }
 
