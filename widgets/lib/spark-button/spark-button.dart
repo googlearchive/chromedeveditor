@@ -10,17 +10,19 @@ import '../src/widget.dart';
 
 @CustomTag('spark-button')
 class SparkButton extends Widget {
-  @observable bool primary = false;
-  @observable bool active = false;
-  @observable String btnClass = "btn btn-default";
+  @published bool primary = false;
+  @published bool active = true;
+
+  @observable String get btnClasses {
+    return
+        CSS_BUTTON + " " +
+        (primary ? CSS_PRIMARY : CSS_DEFAULT) + " " +
+        (active ? "" : Widget.CSS_DISABLED);
+  }
+
+  static const CSS_BUTTON = "btn";
+  static const CSS_DEFAULT = "btn-default";
+  static const CSS_PRIMARY = "btn-primary";
 
   SparkButton.created() : super.created();
-
-  void primaryChanged() {
-    if (primary) {
-      btnClass = "btn btn-primary";
-    } else {
-      btnClass = "btn btn-default";
-    }
-  }
 }

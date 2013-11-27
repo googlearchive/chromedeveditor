@@ -7,6 +7,9 @@ library spark_widgets;
 import 'package:polymer/polymer.dart';
 
 class Widget extends PolymerElement {
+  static const CSS_ENABLED = "enabled";
+  static const CSS_DISABLED = "disabled";
+
   Widget.created() : super.created() {
   }
 
