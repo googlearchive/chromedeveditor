@@ -69,7 +69,7 @@ class ImageViewer {
   void _constrain() {
     if (_imageWidth < _width) {
       double left = _width / 2 - _imageWidth / 2 + _dx;
-      double right = _width / 2 - _imageWidth / 2 + _dx;
+      double right = _width / 2 + _imageWidth / 2 + _dx;
       if (left < 0) {
         _dx -= left;
       } else if (right > _width) {
@@ -89,7 +89,7 @@ class ImageViewer {
 
     if (_imageHeight < _height) {
       double top = _height / 2 - _imageHeight / 2 + _dy;
-      double bottom = _height / 2 - _imageHeight / 2 + _dy;
+      double bottom = _height / 2 + _imageHeight / 2 + _dy;
       if (top < 0) {
         _dy -= top;
       } else if (bottom > _height) {
@@ -115,11 +115,13 @@ class ImageViewer {
     double left = _width / 2 - _imageWidth / 2 + _dx;
     double top = _height / 2 - _imageHeight / 2 + _dy;
 
-    if (_imageWidth > _width)
+    if (_imageWidth > _width) {
       _dx = -rootElement.scrollLeft - _width / 2 + _imageWidth / 2;
+    }
 
-    if (_imageWidth > _width)
+    if (_imageHeight > _height) {
       _dy = -rootElement.scrollTop - _height / 2 + _imageHeight / 2;
+    }
   }
 
   void resize() {
