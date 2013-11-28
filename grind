@@ -1,2 +1,0 @@
-#!/bin/bash
-dart tool/grind.dart $@

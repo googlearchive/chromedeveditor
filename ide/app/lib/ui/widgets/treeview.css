@@ -1,0 +1,28 @@
+.treeviewcell-dragoverlay {
+  border: 2px solid #aaf;
+  border-radius: 10px;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  top: 0px;
+}
+
+.treeviewcell-content {
+  position: absolute;
+  top: 0px;
+}
+
+.treeviewcell-disclosure {
+  font-size: 10px;
+  height: 15px;
+  position: absolute;
+  text-align: center;
+  top: calc((100% - 15px) / 2);
+  transition: -webkit-transform 250ms;
+  width: 15px;
+}
+
+.treeviewcell-disclosed {
+  -webkit-transform: rotate(90deg);
+}
