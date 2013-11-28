@@ -12,6 +12,7 @@ import 'dart:html' as html;
 import 'dart:math' as math;
 import 'package:crypto/crypto.dart' show CryptoUtils;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:mime/mime.dart' as mime;
 import '../utils/html_utils.dart';
 import '../../workspace.dart';
 
@@ -20,136 +21,134 @@ import '../../workspace.dart';
  */
 class ImageViewer {
   /// The image element
-  final html.ImageElement image = new html.ImageElement();
+  final html.ImageElement _image = new html.ImageElement();
 
   /// The root element to put the editor in.
   final html.Element rootElement = new html.DivElement();
 
   /// Associated file.
-  final File file;
+  final File _file;
 
   double _scale = 1.0;
-  double _dx = 0.0, _dy = 0.0;
+  double _minScale = 1.0;
+  double _maxScale = 1.0;
+  double _dx = 0.0;
+  double _dy = 0.0;
 
   /// Scrolling zoom factor. Reciprocal to the units of wheel to zoom the
   /// of a factor of two.
   static const double SCROLLING_ZOOM_FACTOR = 0.001;
 
-  ImageViewer(this.file) {
-    image.draggable = false;
+  ImageViewer(this._file) {
+    _image.draggable = false;
+    html.window.onResize.listen((_) => resize());
     rootElement.classes.add('imageeditor-root');
-    rootElement.append(image);
+    rootElement.append(_image);
     rootElement.onMouseWheel.listen(_handleMouseWheel);
     rootElement.onScroll.listen((_) => _updateOffset());
     _loadFile();
   }
 
-  /// Mime type of the file (according to its file name).
-  String get mime {
-    int dotIndex = file.name.lastIndexOf('.');
-    if (dotIndex < 1) return null;
-    String ext = file.name.substring(dotIndex + 1);
-    if (ext.length < 3) return null;
-    ext = ext.toLowerCase();
-    switch(ext) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg';
-      case 'gif':
-        return 'image/gif';
-      case 'png':
-        return 'image/png';
-      default:
-        return null;
-    }
-  }
-
   _loadFile() {
-    image.title = 'Loading ${file.name}...';
-    image.onLoad.listen((_) {
-      image.title = '${file.name}. <ALT + Scroll> to zoom.';
-      // Initial scale to "fill" the image to the viewport.
-      _scale = math.max(1.0, math.min(
-          width / image.naturalWidth,
-          height / image.naturalHeight));
-      layout();
-    });
-    file.getBytes().then((chrome.ArrayBuffer content) {
+    _image.onLoad.listen((_) => resize());
+    _file.getBytes().then((chrome.ArrayBuffer content) {
       String base64 = CryptoUtils.bytesToBase64(content.getBytes());
-      image.src = 'data:${mime};base64,$base64';
+      String mimeType = mime.lookupMimeType(_file.name);
+      _image.src = 'data:${mimeType};base64,$base64';
     });
   }
 
-  double get width => rootElement.clientWidth.toDouble();
-  double get height => rootElement.clientHeight.toDouble();
-  double get imageWidth => image.naturalWidth * _scale;
-  double get imageHeight => image.naturalHeight * _scale;
+  double get _width => rootElement.clientWidth.toDouble();
+  double get _height => rootElement.clientHeight.toDouble();
+  double get _imageWidth => _image.naturalWidth * _scale;
+  double get _imageHeight => _image.naturalHeight * _scale;
 
   /// Constrain the position of the image. If the image can be show totally from
   /// one direction, it should be centered from that direction; otherwise no
   /// whitespace should be shown.
-  void constrain() {
-    if (imageWidth < width) {
-      double left = width / 2 - imageWidth / 2 + _dx;
-      double right = width / 2 - imageWidth / 2 + _dx;
+  void _constrain() {
+    if (_imageWidth < _width) {
+      double left = _width / 2 - _imageWidth / 2 + _dx;
+      double right = _width / 2 + _imageWidth / 2 + _dx;
       if (left < 0) {
         _dx -= left;
-      } else if (right > width) {
-        _dx -= right - width;
+      } else if (right > _width) {
+        _dx -= right - _width;
       } else {
         _dx = 0.0;
       }
     } else {
-      double maxDx = (imageWidth - width) / 2;
-      if (_dx > maxDx) _dx = maxDx;
-      else if (_dx < -maxDx) _dx = -maxDx;
+      double maxDx = (_imageWidth - _width) / 2;
+      if (_dx > maxDx) {
+        _dx = maxDx;
+      }
+      else if (_dx < -maxDx) {
+        _dx = -maxDx;
+      }
     }
 
-    if (imageHeight < height) {
-      double top = height / 2 - imageHeight / 2 + _dy;
-      double bottom = height / 2 - imageHeight / 2 + _dy;
+    if (_imageHeight < _height) {
+      double top = _height / 2 - _imageHeight / 2 + _dy;
+      double bottom = _height / 2 + _imageHeight / 2 + _dy;
       if (top < 0) {
         _dy -= top;
-      } else if (bottom > height) {
-        _dy -= bottom - height;
+      } else if (bottom > _height) {
+        _dy -= bottom - _height;
       } else {
         _dy = 0.0;
       }
     } else {
-      double maxDy = (imageHeight - height) / 2;
-      if (_dy > maxDy) _dy = maxDy;
-      else if (_dy < -maxDy) _dy = -maxDy;
+      double maxDy = (_imageHeight - _height) / 2;
+      if (_dy > maxDy) {
+        _dy = maxDy;
+      }
+      else if (_dy < -maxDy) {
+        _dy = -maxDy;
+      }
     }
   }
 
   /// Update the offset([_dx] and [_dy]) according to the scrolling.
   void _updateOffset() {
-    constrain();
+    _constrain();
 
-    double left = width / 2 - imageWidth / 2 + _dx;
-    double top = height / 2 - imageHeight / 2 + _dy;
+    double left = _width / 2 - _imageWidth / 2 + _dx;
+    double top = _height / 2 - _imageHeight / 2 + _dy;
 
-    if (imageWidth > width)
-      _dx = -rootElement.scrollLeft - width / 2 + imageWidth / 2;
+    if (_imageWidth > _width) {
+      _dx = -rootElement.scrollLeft - _width / 2 + _imageWidth / 2;
+    }
 
-    if (imageWidth > width)
-      _dy = -rootElement.scrollTop - height / 2 + imageHeight / 2;
+    if (_imageHeight > _height) {
+      _dy = -rootElement.scrollTop - _height / 2 + _imageHeight / 2;
+    }
+  }
+
+  void resize() {
+    // Initial scale to "fill" the image to the viewport.
+    _maxScale = math.min(
+        _width / _image.naturalWidth,
+        _height / _image.naturalHeight);
+    _scale = math.min(1.0, _maxScale);
+    _minScale = _scale;
+    _maxScale *= 5.0;
+    _layout();
   }
 
   /// Layout the image according to the offset and scale.
-  void layout() {
-    constrain();
+  void _layout() {
+    _constrain();
 
-    double left = width / 2 - imageWidth / 2 + _dx;
-    double top = height / 2 - imageHeight / 2 + _dy;
+    double left = _width / 2 - _imageWidth / 2 + _dx;
+    double top = _height / 2 - _imageHeight / 2 + _dy;
 
-    image.style.width = '${imageWidth.round()}px';
-    image.style.height = '${imageHeight.round()}px';
+    _image.style.width = '${_imageWidth.round()}px';
+    _image.style.height = '${_imageHeight.round()}px';
 
-    image.style.left = '${math.max(0, left.round())}px';
+    _image.style.left = '${math.max(0, left.round())}px';
     rootElement.scrollLeft = math.max(0, -left.round());
 
-    image.style.top = '${math.max(0, top.round())}px';
+    _image.style.top = '${math.max(0, top.round())}px';
     rootElement.scrollTop = math.max(0, -top.round());
   }
 
@@ -163,14 +162,22 @@ class ImageViewer {
 
     // Scale the image arround the cursor.
     double scale = _scale;
+    _scale *= factor;
+    if (_scale < _minScale) {
+      _scale = _minScale;
+    }
+    if (_scale > _maxScale) {
+      _scale = _maxScale;
+    }
+    factor = _scale / scale;
+
     _dx *= factor;
     _dy *= factor;
-    _scale *= factor;
     factor -= 1.0;
     _dx -= position.x * factor;
     _dy -= position.y * factor;
 
-    layout();
+    _layout();
     cancelEvent(e);
   }
 
