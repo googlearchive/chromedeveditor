@@ -12,6 +12,7 @@ import 'dart:html' as html;
 import 'dart:math' as math;
 import 'package:crypto/crypto.dart' show CryptoUtils;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:mime/mime.dart' as mime;
 import '../utils/html_utils.dart';
 import '../../workspace.dart';
 
@@ -40,9 +41,7 @@ class ImageViewer {
 
   ImageViewer(this._file) {
     _image.draggable = false;
-    html.window.onResize.listen((_) {
-      resize();
-    });
+    html.window.onResize.listen((_) => resize());
     rootElement.classes.add('imageeditor-root');
     rootElement.append(_image);
     rootElement.onMouseWheel.listen(_handleMouseWheel);
@@ -50,33 +49,12 @@ class ImageViewer {
     _loadFile();
   }
 
-  /// Mime type of the file (according to its file name).
-  String get _mime {
-    int dotIndex = _file.name.lastIndexOf('.');
-    if (dotIndex < 1) return null;
-    String ext = _file.name.substring(dotIndex + 1);
-    if (ext.length < 3) return null;
-    ext = ext.toLowerCase();
-    switch(ext) {
-      case 'jpg':
-      case 'jpeg':
-        return 'image/jpeg';
-      case 'gif':
-        return 'image/gif';
-      case 'png':
-        return 'image/png';
-      default:
-        return null;
-    }
-  }
-
   _loadFile() {
-    _image.onLoad.listen((_) {
-      resize();
-    });
+    _image.onLoad.listen((_) => resize());
     _file.getBytes().then((chrome.ArrayBuffer content) {
       String base64 = CryptoUtils.bytesToBase64(content.getBytes());
-      _image.src = 'data:${_mime};base64,$base64';
+      String mimeType = mime.lookupMimeType(_file.name);
+      _image.src = 'data:${mimeType};base64,$base64';
     });
   }
 
@@ -101,8 +79,12 @@ class ImageViewer {
       }
     } else {
       double maxDx = (_imageWidth - _width) / 2;
-      if (_dx > maxDx) _dx = maxDx;
-      else if (_dx < -maxDx) _dx = -maxDx;
+      if (_dx > maxDx) {
+        _dx = maxDx;
+      }
+      else if (_dx < -maxDx) {
+        _dx = -maxDx;
+      }
     }
 
     if (_imageHeight < _height) {
@@ -117,8 +99,12 @@ class ImageViewer {
       }
     } else {
       double maxDy = (_imageHeight - _height) / 2;
-      if (_dy > maxDy) _dy = maxDy;
-      else if (_dy < -maxDy) _dy = -maxDy;
+      if (_dy > maxDy) {
+        _dy = maxDy;
+      }
+      else if (_dy < -maxDy) {
+        _dy = -maxDy;
+      }
     }
   }
 
