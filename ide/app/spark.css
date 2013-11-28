@@ -131,7 +131,7 @@ body {
 }
 
 #hotdogMenu .main-menu-button img {
-  -webkit-transform: translate(-1px, -2px);
+  margin: -2px 0 0 -1px;
 }
 
 #hotdogMenu .main-menu-button:focus {
