@@ -51,7 +51,7 @@ class ImageViewerTab extends EditorTab {
     page = imageViewer.rootElement;
   }
 
-  void resize() => imageViewer.layout();
+  void resize() => imageViewer.resize();
 }
 
 /**
