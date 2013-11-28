@@ -68,6 +68,17 @@ class AceEditor {
     return session;
   }
 
+  Point get cursorPosition {
+    ace.Point cursorPosition = _aceEditor.cursorPosition;
+    return new Point(cursorPosition.column, cursorPosition.row);
+  }
+
+  void set cursorPosition(Point position) {
+    _aceEditor.navigateTo(position.y, position.x);
+  }
+
+  ace.EditSession get currentSession => _aceEditor.session;
+
   void switchTo(ace.EditSession session) {
     if (session == null) {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
