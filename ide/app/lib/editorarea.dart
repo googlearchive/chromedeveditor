@@ -9,7 +9,6 @@
 library spark.editorarea;
 
 import 'dart:html';
-import 'ace.dart';
 
 import 'editors.dart';
 import 'ui/widgets/tabview.dart';
@@ -28,11 +27,11 @@ abstract class EditorTab extends Tab {
 
 /// An [EditorTab] that contains an [AceEditor].
 class AceEditorTab extends EditorTab {
-  final AceEditor editor;
+  final Editor editor;
   final EditorProvider provider;
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
-    page = editor.parentElement;
+    page = editor.element;
   }
 
   void activate() {
@@ -131,7 +130,7 @@ class EditorArea extends TabView {
         ImageViewer viewer = new ImageViewer(file);
         tab = new ImageViewerTab(this, viewer, file);
       } else {
-        AceEditor editor = editorProvider.createEditorForFile(file);
+        Editor editor = editorProvider.createEditorForFile(file);
         tab = new AceEditorTab(this, editorProvider, editor, file);
       }
       if (replaceCurrent) {
