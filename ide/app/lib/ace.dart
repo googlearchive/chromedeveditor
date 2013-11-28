@@ -26,6 +26,8 @@ class AceEditor extends Editor {
   html.Element get element => aceContainer.parentElement;
 
   AceEditor(this.aceContainer);
+
+  void resize() => aceContainer.resize();
 }
 
 /**

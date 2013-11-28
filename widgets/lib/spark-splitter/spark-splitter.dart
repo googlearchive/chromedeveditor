@@ -6,19 +6,22 @@ library spark_widgets.splitter;
 
 import 'dart:html';
 import 'dart:async';
+
 import 'package:polymer/polymer.dart';
+
+import '../src/widget.dart';
 
 /// Implements the spark-splitter custom Polymer element.
 @CustomTag('spark-splitter')
-class SparkSplitter extends HtmlElement with Polymer, Observable {
+class SparkSplitter extends Widget {
   /// Possible values are "left", "right", "up" and "down".
   /// The direction specifies:
   /// 1) whether the split is horizontal or vertical;
   /// 2) which sibling will be continuously auto-resized when the splitter is
   ///    dragged.
-  @observable String direction = 'left';
+  @published String direction = 'left';
   /// Locks the split bar so it can't be dragged.
-  @observable bool locked = false;
+  @published bool locked = false;
 
   /// Whether the split view is horizontal or vertical.
   bool _isHorizontal;
@@ -53,9 +56,6 @@ class SparkSplitter extends HtmlElement with Polymer, Observable {
     onMouseDown.listen(trackStart);
     directionChanged();
   }
-
-  @override
-  bool get applyAuthorStyles => true;
 
   /// Triggered when [direction] is externally changed.
   // NOTE: The name must be exactly like this -- do not change.

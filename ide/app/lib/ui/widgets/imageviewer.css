@@ -1,0 +1,10 @@
+.imageeditor-root {
+  background: gray;
+  overflow: auto;
+  position: relative;
+}
+
+.imageeditor-root > img {
+  background: white;
+  position: absolute;
+}

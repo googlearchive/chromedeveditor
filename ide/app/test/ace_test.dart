@@ -48,6 +48,8 @@ class MockAceEditor implements AceEditor {
   MockAceEditor([this.aceContainer]);
 
   Element get element => aceContainer.parentElement;
+
+  void resize() { }
 }
 
 class MockEditSession implements EditSession {
