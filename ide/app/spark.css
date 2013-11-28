@@ -127,10 +127,12 @@ body {
 }
 
 #hotdogMenu .main-menu-button {
-  background-image: url(images/menu.png);
-  background-position: -1px -2px;
   height: 26px;
   width: 26px;
+}
+
+#hotdogMenu .main-menu-button img {
+  margin: -2px 0 0 -1px;
 }
 
 #hotdogMenu .main-menu-button:focus {
@@ -161,5 +163,9 @@ body {
 /* bootstrap overrides */
 
 #toolbar .btn {
-  padding: 2px 8px 2px 8px ;
+  padding: 2px 8px 2px 8px;
+}
+
+#hotdogMenu .main-menu-button {
+  padding: 0;
 }
