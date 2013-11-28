@@ -154,13 +154,18 @@ void archive(GrinderContext context) {
   if (Platform.isWindows) {
     _delete('dist/spark.zip');
 
-    // 7z a -r ..\dist\spark.zip .
-    runProcess(
-        context,
-        '7z',
-        arguments: ['a', '-r', '../${DIST_DIR.path}/spark.zip', '.'],
-        workingDirectory: 'app',
-        quiet: true);
+    try {
+      // 7z a -r ..\dist\spark.zip .
+      runProcess(
+          context,
+          '7z',
+          arguments: ['a', '-r', '../${DIST_DIR.path}/spark.zip', '.'],
+          workingDirectory: 'app',
+          quiet: true);
+    } on ProcessException catch(e) {
+      context.fail("Unable to execute 7z.\n"
+        "Please install 7zip. Add 7z directory to the PATH environment variable.");
+    };
   } else {
     // zip spark.zip . -r -q -x .*
     runProcess(
