@@ -7,6 +7,7 @@ library spark.ace_test;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
@@ -31,6 +32,9 @@ class MockAceContainer implements AceContainer {
     return new MockEditSession(fileName);
   }
 
+  Point get cursorPosition => new Point(0, 0);
+  void set cursorPosition(Point position) {}
+  ace.EditSession get currentSession => null;
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }

@@ -146,11 +146,9 @@ class EditorManager implements EditorProvider {
     // version: 1 -> PREFS_EDITORSTATES_VERSION. The version number helps
     //     ensure that the format is valid.
     Map savedMap = {};
-    List<String> openedTabs = [];
-    _openedEditorStates.forEach((_EditorState state) {
-      openedTabs.add(state.file.persistToToken());
-    });
-    savedMap['openedTabs'] = openedTabs;
+    savedMap['openedTabs'] =
+        _openedEditorStates.map((_EditorState s) => s.file.persistToToken()).
+        toList();
     List<Map> filesState = [];
     _savedEditorStates.forEach((String key, _EditorState value) {
       filesState.add(value.toMap());
