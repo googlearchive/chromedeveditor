@@ -511,13 +511,7 @@ abstract class SparkAction extends Action {
       return false;
     }
     List items = object as List;
-    bool result = true;
-    items.forEach((Object item) {
-      if (item is! ws.Resource) {
-        result = false;
-      }
-    });
-    return result;
+    return items.every((r) => r is ws.Resource);
   }
 
   /**
@@ -552,13 +546,7 @@ abstract class SparkAction extends Action {
       return false;
     }
     List<ws.Resource> resources = object as List;
-    bool result = true;
-    resources.forEach((ws.Resource resource) {
-      if (!resource.isTopLevel) {
-        result = false;
-      }
-    });
-    return result;
+    return resources.every((ws.Resource r) => r.isTopLevel);
   }
 
   /**
@@ -569,30 +557,22 @@ abstract class SparkAction extends Action {
       return false;
     }
     List<ws.Resource> resources = object as List;
-    bool result = true;
-    resources.forEach((ws.Resource resource) {
-      if (resource is! ws.File) {
-        result = false;
-      }
-    });
-    return result;
+    return resources.every((r) => r is ws.File);
   }
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
   FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in a New Tab") {
-    defaultBinding("alt-click");
-  }
+      super(spark, "file-open-in-tab", "Open in a New Tab");
 
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
     files.forEach((ws.File file) {
-      spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+      spark.selectInEditor(file, forceOpen: true, replaceCurrent: false);
     });
   }
 
-  String get category => 'resource';
+  String get category => 'tab';
 
   bool appliesTo(Object object) => _isFileList(object);
 }
