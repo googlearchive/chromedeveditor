@@ -11,7 +11,6 @@ library spark.editors;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' as html;
-import 'dart:html' as html show Element;
 
 import 'ace.dart' as ace;
 import 'preferences.dart';
@@ -48,7 +47,6 @@ class EditorManager implements EditorProvider {
   final Workspace _workspace;
   final ace.AceContainer _aceContainer;
   final PreferenceStore _prefs;
-<<<<<<< HEAD
   final int PREFS_EDITORSTATES_VERSION = 1;
 
   // List of files opened in a tab.
@@ -56,10 +54,7 @@ class EditorManager implements EditorProvider {
   // Keep state of files that have been opened earlier.
   // Keys are persist tokens of the files.
   final Map<String, _EditorState> _savedEditorStates = {};
-=======
-  final List<_EditorState> _editorStates = [];
   final Map<File, Editor> _editorMap = {};
->>>>>>> upstream/master
 
   final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
@@ -69,21 +64,8 @@ class EditorManager implements EditorProvider {
 
   EditorManager(this._workspace, this._aceContainer, this._prefs) {
     _workspace.whenAvailable().then((_) {
-<<<<<<< HEAD
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
-=======
-      _prefs.getValue('editorStates').then((String data) {
-        if (data != null) {
-          for (Map m in JSON.decode(data)) {
-            _editorStates.add(new _EditorState.fromMap(this, _workspace, m));
-          }
-          for (_EditorState state in _editorStates) {
-            openOrSelect(state.file, switching: false);
-          }
-          _loadedCompleter.complete(true);
-        }
->>>>>>> upstream/master
       });
     });
   }
@@ -332,7 +314,7 @@ class _EditorState {
     if (session != null) {
       scrollTop = session.scrollTop;
       if (manager._currentState == this) {
-        cursorPosition = manager._aceEditor.cursorPosition;
+        cursorPosition = manager._aceContainer.cursorPosition;
       }
     }
   }

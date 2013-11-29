@@ -8,7 +8,7 @@
 library spark.ace;
 
 import 'dart:async';
-import 'dart:html' as html show Element;
+import 'dart:html' as html;
 import 'dart:js' as js;
 
 import 'package:ace/ace.dart' as ace;
@@ -92,12 +92,12 @@ class AceContainer {
     return session;
   }
 
-  Point get cursorPosition {
+  html.Point get cursorPosition {
     ace.Point cursorPosition = _aceEditor.cursorPosition;
-    return new Point(cursorPosition.column, cursorPosition.row);
+    return new html.Point(cursorPosition.column, cursorPosition.row);
   }
 
-  void set cursorPosition(Point position) {
+  void set cursorPosition(html.Point position) {
     _aceEditor.navigateTo(position.y, position.x);
   }
 
