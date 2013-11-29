@@ -197,6 +197,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void createActions() {
     actionManager = new ActionManager();
+    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
@@ -308,10 +309,14 @@ class Spark extends Application implements FilesControllerDelegate {
   // Implementation of FilesControllerDelegate interface.
 
   void selectInEditor(ws.File file,
-                      {bool forceOpen: false, bool replaceCurrent: true}) {
+                      {bool forceOpen: false,
+                       bool replaceCurrent: true,
+                       bool switchesTab: true}) {
     if (forceOpen || editorManager.isFileOpened(file)) {
-      editorArea.selectFile(file, forceOpen: forceOpen,
-          replaceCurrent: replaceCurrent);
+      editorArea.selectFile(file,
+          forceOpen: forceOpen,
+          replaceCurrent: replaceCurrent,
+          switchesTab: switchesTab);
     }
   }
 
@@ -506,13 +511,7 @@ abstract class SparkAction extends Action {
       return false;
     }
     List items = object as List;
-    bool result = true;
-    items.forEach((Object item) {
-      if (item is! ws.Resource) {
-        result = false;
-      }
-    });
-    return result;
+    return items.every((r) => r is ws.Resource);
   }
 
   /**
@@ -547,14 +546,35 @@ abstract class SparkAction extends Action {
       return false;
     }
     List<ws.Resource> resources = object as List;
-    bool result = true;
-    resources.forEach((ws.Resource resource) {
-      if (!resource.isTopLevel) {
-        result = false;
-      }
-    });
-    return result;
+    return resources.every((ws.Resource r) => r.isTopLevel);
   }
+
+  /**
+   * Returns true if `object` is a list of File.
+   */
+  bool _isFileList(Object object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    return resources.every((r) => r is ws.File);
+  }
+}
+
+class FileOpenInTabAction extends SparkAction implements ContextAction {
+  FileOpenInTabAction(Spark spark) :
+      super(spark, "file-open-in-tab", "Open in a New Tab");
+
+  void _invoke([List<ws.File> files]) {
+    bool forceOpen = files.length > 1;
+    files.forEach((ws.File file) {
+      spark.selectInEditor(file, forceOpen: true, replaceCurrent: false);
+    });
+  }
+
+  String get category => 'tab';
+
+  bool appliesTo(Object object) => _isFileList(object);
 }
 
 class FileNewAction extends SparkAction implements ContextAction {
