@@ -79,7 +79,10 @@ class EditorManager implements EditorProvider {
 
   bool get dirty => _currentState == null ? false : _currentState.dirty;
 
-  void _insertState(_EditorState state) => _openedEditorStates.add(state);
+  void _insertState(_EditorState state) {
+    _openedEditorStates.add(state);
+    _savedEditorStates[state.file.persistToToken()] = state;
+  }
 
   bool _removeState(_EditorState state) => _openedEditorStates.remove(state);
 
@@ -270,9 +273,7 @@ class _EditorState {
   html.Point cursorPosition = new html.Point(0, 0);
   bool _dirty = false;
 
-  _EditorState.fromFile(this.manager, this.file) {
-    manager._savedEditorStates[file.persistToToken()] = this;
-  }
+  _EditorState.fromFile(this.manager, this.file);
 
   factory _EditorState.fromMap(EditorManager manager, Map m) {
     File f = manager._workspace.restoreResource(m['file']);
