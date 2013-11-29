@@ -11,8 +11,9 @@ library spark.editors;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' as html;
+import 'dart:html' as html show Element;
 
-import 'ace.dart';
+import 'ace.dart' as ace;
 import 'preferences.dart';
 import 'workspace.dart';
 
@@ -21,20 +22,33 @@ import 'workspace.dart';
  * TODO(ikarienator): Abstract [AceEditor] so we can support more editor types.
  */
 abstract class EditorProvider {
-  AceEditor createEditorForFile(Resource file);
-  void selectFileForEditor(AceEditor editor, Resource file);
-  void close(Resource file);
+  Editor createEditorForFile(File file);
+  void selectFileForEditor(Editor editor, File file);
+  void close(File file);
 }
 
+/**
+ * An abstract Editor class. It knows:
+ *
+ *  * the main DOM element it's associated with
+ *  * the File it's editing
+ *
+ * In the future, it will know how to save and restore its session state.
+ */
+abstract class Editor {
+  html.Element get element;
+  File get file;
+  void resize();
+}
 
 /**
  * Manage a list of open editors.
  */
 class EditorManager implements EditorProvider {
   final Workspace _workspace;
-  final AceEditor _aceEditor;
-
+  final ace.AceContainer _aceContainer;
   final PreferenceStore _prefs;
+<<<<<<< HEAD
   final int PREFS_EDITORSTATES_VERSION = 1;
 
   // List of files opened in a tab.
@@ -42,6 +56,10 @@ class EditorManager implements EditorProvider {
   // Keep state of files that have been opened earlier.
   // Keys are persist tokens of the files.
   final Map<String, _EditorState> _savedEditorStates = {};
+=======
+  final List<_EditorState> _editorStates = [];
+  final Map<File, Editor> _editorMap = {};
+>>>>>>> upstream/master
 
   final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
@@ -49,10 +67,23 @@ class EditorManager implements EditorProvider {
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
-  EditorManager(this._workspace, this._aceEditor, this._prefs) {
+  EditorManager(this._workspace, this._aceContainer, this._prefs) {
     _workspace.whenAvailable().then((_) {
+<<<<<<< HEAD
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
+=======
+      _prefs.getValue('editorStates').then((String data) {
+        if (data != null) {
+          for (Map m in JSON.decode(data)) {
+            _editorStates.add(new _EditorState.fromMap(this, _workspace, m));
+          }
+          for (_EditorState state in _editorStates) {
+            openOrSelect(state.file, switching: false);
+          }
+          _loadedCompleter.complete(true);
+        }
+>>>>>>> upstream/master
       });
     });
   }
@@ -191,7 +222,7 @@ class EditorManager implements EditorProvider {
       _currentState = state;
       _selectedController.add(currentFile);
       if (state == null) {
-        _aceEditor.switchTo(null);
+        _aceContainer.switchTo(null);
         persistState();
       } else {
         state.withSession().then((state) {
@@ -200,8 +231,8 @@ class EditorManager implements EditorProvider {
             return;
           }
           _selectedController.add(currentFile);
-          _aceEditor.switchTo(state.session);
-          _aceEditor.cursorPosition = state.cursorPosition;
+          _aceContainer.switchTo(state.session);
+          _aceContainer.cursorPosition = state.cursorPosition;
           persistState();
         });
       }
@@ -228,14 +259,20 @@ class EditorManager implements EditorProvider {
   }
 
   // EditorProvider
-  AceEditor createEditorForFile(Resource file) {
+  Editor createEditorForFile(File file) {
+    ace.AceEditor editor =
+        _editorMap[file] != null ? _editorMap[file] : new ace.AceEditor(_aceContainer);
+    _editorMap[file] = editor;
     openOrSelect(file);
-    return _aceEditor;
+    editor.file = file;
+    return editor;
   }
 
-  void selectFileForEditor(AceEditor editor, Resource file) {
+  void selectFileForEditor(Editor editor, File file) {
     _EditorState state = _getStateFor(file);
     _switchState(state);
+    _editorMap[file] = editor;
+    (editor as ace.AceEditor).file = file;
   }
 }
 
@@ -245,7 +282,7 @@ class EditorManager implements EditorProvider {
 class _EditorState {
   EditorManager manager;
   File file;
-  EditSession session;
+  ace.EditSession session;
 
   int scrollTop = 0;
   html.Point cursorPosition = new html.Point(0, 0);
@@ -318,7 +355,7 @@ class _EditorState {
       return new Future.value(this);
     } else {
       return file.getContents().then((text) {
-        session = manager._aceEditor.createEditSession(text, file.name);
+        session = manager._aceContainer.createEditSession(text, file.name);
         session.scrollTop = scrollTop;
         session.onChange.listen((delta) => dirty = true);
         return this;

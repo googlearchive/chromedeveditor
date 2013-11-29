@@ -10,21 +10,22 @@ import 'dart:html';
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/workspace.dart' as workspace;
 
 defineTests() {
   group('ace', () {
     // This essentially tests that the ace codebase is available.
     test('is available', () {
-      expect(AceEditor.available, true);
+      expect(AceContainer.available, true);
     });
   });
 }
 
-class MockAceEditor implements AceEditor {
+class MockAceContainer implements AceContainer {
   /// The element to put the editor in.
   final Element parentElement = null;
 
-  MockAceEditor();
+  MockAceContainer();
 
   EditSession createEditSession(String text, String fileName) {
     return new MockEditSession(fileName);
@@ -38,6 +39,17 @@ class MockAceEditor implements AceEditor {
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);
   void setKeyBinding(String name) { }
+}
+
+class MockAceEditor implements AceEditor {
+  AceContainer aceContainer;
+  workspace.File file;
+
+  MockAceEditor([this.aceContainer]);
+
+  Element get element => aceContainer.parentElement;
+
+  void resize() { }
 }
 
 class MockEditSession implements EditSession {
