@@ -240,7 +240,7 @@ class ObjectStore {
           });
         }
       });
-    }, onError:(e){
+    }, onError:(e) {
       return this._findPackedObject(shaBytes).then(
           (FindPackedObjectResult obj) {
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
@@ -371,7 +371,7 @@ class ObjectStore {
           // this means a local merge commit.
           _nonFastForward();
           completer.completeError("");
-        } else if(commitObj.parents.length == 0 ||
+        } else if (commitObj.parents.length == 0 ||
             commitObj.parents[0] == remoteRef.sha || remoteShas[commitObj.parents[0]]) {
           //TODO callback commits, remoteRef;
           completer.complete();

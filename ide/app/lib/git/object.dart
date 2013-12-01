@@ -21,7 +21,8 @@ import 'object_utils.dart';
 abstract class GitObject {
 
   /**
-   * constructs a GitObject of the given type.
+   * Constructs a GitObject of the given type. [content] can be of type [String]
+   * or [Uint8List].
    */
   static GitObject make(String sha, String type, content) {
     switch (type) {
@@ -41,7 +42,6 @@ abstract class GitObject {
 
   // The type of git object.
   String _type;
-
   dynamic data;
   String _sha;
 
@@ -239,7 +239,9 @@ class LooseObject {
 
   // Represents either an ArrayBuffer or a string representation of byte
   //stream.
-  dynamic data;
+  dynamic get data => _data;
+
+  Object _data;
 
   LooseObject(buf) {
     _parse(buf);
@@ -260,13 +262,13 @@ class LooseObject {
       }
       header = headChars.join(' ');
 
-      this.data = data.sublist(i + 1, data.length);
+      this._data = data.sublist(i + 1, data.length);
     } else {
       String data = buf;
       i = data.indexOf('\0)');
       header = data.substring(0, i);
       // move past null terminator but keep zlib header
-      this.data = data.substring(i + 1, data.length);
+      this._data = data.substring(i + 1, data.length);
     }
     List<String> parts = header.split(' ');
     this._type = parts[0];
