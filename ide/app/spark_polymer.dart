@@ -10,13 +10,16 @@ import 'package:polymer/polymer.dart' as polymer;
 import 'spark.dart';
 import 'lib/ace.dart';
 import 'lib/utils.dart' as utils;
+import 'package:spark_widgets/spark-overlay/spark-overlay.dart';
+import 'package:spark_widgets/spark-icon/spark-icon.dart';
+import 'package:spark_widgets/spark-icon-button/spark-icon-button.dart';
 
 void main() {
-  polymer.initPolymer();
-
-  // TODO: hard-code developer mode to true for now.
-  SparkPolymer spark = new SparkPolymer(true);
-  spark.start();
+  polymer.initPolymer().run(() {
+    // TODO: hard-code developer mode to true for now.
+    SparkPolymer spark = new SparkPolymer(true);
+    spark.start();
+  });
 }
 
 class SparkPolymer extends Spark {
@@ -44,6 +47,31 @@ class SparkPolymer extends Spark {
   @override
   void buildMenu() {
     // TODO: Implement this.
+  }
+
+  bool pointInOverlay(SparkOverlay overlay, Point xyGlobal) {
+    var dialogId = overlay.attributes['id'];
+    Element dialog = querySelector('#$dialogId');
+
+    Rectangle globalOffset = dialog.offset;
+    Node currParent = dialog.parentNode;
+    while (dialog.ownerDocument != currParent && currParent is! ShadowRoot) {
+      Element parentElement = currParent;
+      globalOffset = globalOffset.boundingBox(parentElement.offset);
+      currParent = parentElement.parentNode;
+    }
+
+    return globalOffset.containsPoint(xyGlobal);
+  }
+
+  @override
+  void showStatus(String text, {bool error: false}) {
+    Element element = querySelector("#status");
+    element.text = text;
+    SparkOverlay overlay = querySelector("#spark-dialog");
+    if (overlay != null) {
+      overlay.toggle();
+    }
   }
 
   void _switchTheme([_]) {

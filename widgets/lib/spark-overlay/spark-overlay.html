@@ -12,56 +12,56 @@ license that can be found in the LICENSE file.
  * hidden and is displayed by setting it's opened property
  * to true. A spark-overlay's opened state can be toggled by calling the toggle
  * method.
- * 
+ *
  * It's common to want a spark-overlay to animate to its opened position. A number
  * of helper css classes provide some basic open/close animations. For example,
- * assigning the class spark-overlay-fade to a spark-overlay will make it fade into 
+ * assigning the class spark-overlay-fade to a spark-overlay will make it fade into
  * and out of view as it opens and closes. Note, if multiple spark-overlay's are
  * opened, they should stack on top of each other.
- * 
+ *
  * Styling: The size and position of a spark-overlay should be setup via css.
  * spark-overlay is natually sized around its content. When a spark-overlay is opened
  * it is shown and the 'opened' class is added to it. This is typically where
  * css transitions and animations are applied. When the spark-overlay is closed,
  * the 'opened' class is removed and a 'closing' class is added. Use 'closing'
- * to customize the closing animation. 
- * 
+ * to customize the closing animation.
+ *
  * Classes for animating spark-overlay:
- * 
+ *
  * * spark-overlay-fade: fade in/out when opened/closed
  * * spark-overlay-scale-slideup: open: fade in and shrink; close: slide up
  * * spark-overlay-shake: open: fly in and shake; close: shake and fly out.
  *
  * It's common to use spark-overlay to gather user input, for example a login
- * dialog. To facilitate this, spark-overlay supports automatic focusing of a 
+ * dialog. To facilitate this, spark-overlay supports automatic focusing of a
  * specific element when it's opened. The element to be focused should be given
  * an autofocus attribute.
- * 
+ *
  * An element that should close the spark-overlay will automatically do so if it
- * is given the overlay-toggle attribute. Please note that spark-overlay will 
- * close whenever the user taps outside it or presses the escape key. The 
+ * is given the overlay-toggle attribute. Please note that spark-overlay will
+ * close whenever the user taps outside it or presses the escape key. The
  * behavior can be turned off via the autoCloseDisabled property.
- * 
+ *
  *     <spark-overlay class="spark-overlay-scale-slideup">
  *       <h2>Dialog</h2>
  *       <input placeholder="say something..." autofocus"></input>
  *       <div>I agree with this wholeheartedly.</div>
  *       <button overlay-toggle>OK</button>
  *     </spark-overlay>
- * 
- * 
+ *
+ *
  * @class spark-overlay
  */
 /**
  * Fired when the spark-overlay opened property is set.
- * 
+ *
  * @event open
  * @param {Object} inDetail
  * @param {Object} inDetail.opened the opened state
  */
 -->
-<polymer-element name="spark-overlay" 
-         attributes="opened autoCloseDisabled" 
+<polymer-element name="spark-overlay"
+         attributes="opened autoCloseDisabled"
          on-webkitAnimationStart="{{openedAnimationStart}}"
          on-animationStart="{{openedAnimationStart}}"
          on-webkitAnimationEnd="{{openedAnimationEnd}}"
@@ -83,22 +83,22 @@ license that can be found in the LICENSE file.
  */
 
 /*
-  TODO(sorvell): include a reasonable set of default overlay opening 
+  TODO(sorvell): include a reasonable set of default overlay opening
   animations. What's here right now is ad hoc.
 */
- 
+
  /*
     Styling a spark-overlay:
- 
+
     1. use the 'opened' class to style the overlay when it is open.
     A transition or animation can be applied to animate the overlay into place.
     Note: there's no need to set the display property of an overlay. That's
     managed automatically.
- 
-    2. To apply a different animation when the overlay closes, use the 
+
+    2. To apply a different animation when the overlay closes, use the
     'closing' class.
  */
- 
+
 /* Note that trbl: 0 + position: fixed will not 'fit to window'
 if a transform is applied to a parent of this element. That parent
 becomes the containing block; see:
@@ -118,12 +118,12 @@ We address this by using script based positioning =(
 
   /*
     The revealed class exists because it's necessary to 'show' a node
-    before applying a transition. When an overlay is opened, it is 
-    immediately revealed (display: block) and then asynchronously the 
+    before applying a transition. When an overlay is opened, it is
+    immediately revealed (display: block) and then asynchronously the
     opened or closing classes are added.
 
     Because we don't want to actually show the node before a transition
-    or animation is applied, when the node is 
+    or animation is applied, when the node is
     revealed, it is made display: block but visibility: hidden.
     It is then made visibility: visible when it is opened.
   */
@@ -144,12 +144,12 @@ We address this by using script based positioning =(
     visibility: visible;
   }
 
-  /* 
+  /*
     When an animation is detected (via an animationstart event) this class
     is applied to remove any transition. This ensures only 1 animation end event
     will be processed.
 
-    NOTE: if a rule such as a media query changes an overlay from using a css 
+    NOTE: if a rule such as a media query changes an overlay from using a css
     animation to a transition, the animation class must be altered or removed.
   */
   .animation {
@@ -188,7 +188,7 @@ We address this by using script based positioning =(
     -webkit-transition: all 0.4s;
     transition: all 0.4s;
   }
-  
+
   .spark-overlay-shake.opened {
     -webkit-animation-duration: 0.5s;
     -webkit-animation-fill-mode: both;

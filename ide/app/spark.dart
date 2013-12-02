@@ -333,7 +333,6 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     // TODO: currently, there's no way in Dart to handle uncaught exceptions
-
   }
 }
 

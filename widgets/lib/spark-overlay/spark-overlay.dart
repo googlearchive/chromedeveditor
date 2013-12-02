@@ -9,7 +9,7 @@ library spark_widgets.overlay;
 import 'dart:async';
 import 'dart:html';
 import 'package:polymer/polymer.dart';
-import '../../app.dart';
+
 
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-overlay")
@@ -24,7 +24,7 @@ class SparkOverlay extends PolymerElement {
       var z0 = currentOverlayZ();
       overlays.add(inOverlay);
       var z1 = currentOverlayZ();
-      if (z1 <= z0) {
+      if (z0 != null && z1 != null && z1 <= z0) {
         applyOverlayZ(inOverlay, z0);
       }
     } else {
@@ -68,9 +68,10 @@ class SparkOverlay extends PolymerElement {
   }
 
   SparkOverlay.created(): super.created();
+
   /**
    * Set opened to true to show an overlay and to false to hide it.
-   * A g-overlay may be made intially opened by setting its opened
+   * A spark-overlay may be made intially opened by setting its opened
    * attribute.
    */
   @observable bool opened = false;
@@ -120,8 +121,8 @@ class SparkOverlay extends PolymerElement {
   void enableCaptureHandler(inEnable) {
     // TODO(terry): Need to use overlay docfrag document doesn't map to that.
     //              However, we should use getShadowRoot or lightdom or the
-    //              event.path when those work.
-//    var doc = getShadowRoot('g-overlay');
+    //              event.path when those work we should be able to use
+    //              var doc = getShadowRoot('spark-overlay');
     var doc = document;
     if (inEnable) {
       doc.addEventListener(captureEventType, captureHandler, true);
@@ -194,7 +195,6 @@ class SparkOverlay extends PolymerElement {
     e.preventDefault();
   }
 
-
   void tapHandler(MouseEvent e) {
     Element target = e.target;
     if (target != null && target.attributes.containsKey('overlay-toggle')) {
@@ -209,19 +209,19 @@ class SparkOverlay extends PolymerElement {
   // scrim.
   void captureHandler(MouseEvent e) {
     // TODO(terry): Hack to work around lightdom or event.path not yet working.
-    if (e.target is TestUI) {
-      var testUi = e.target;
-      if (!autoCloseDisabled && !testUi.pointInOverlay(this, e.client)) {
-//    if (!autoCloseDisabled && (currentOverlay() == this) && (this
-//        != e.target) && !(this.contains(e.target)))) {
+    if (!autoCloseDisabled && !pointInOverlay(this, e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;
-        e.stopImmediatePropagation();
-        e.preventDefault();
+      e.stopImmediatePropagation();
+      e.preventDefault();
 
-        autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
-      }
+      autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
     }
   }
+
+  bool pointInOverlay(SparkOverlay overlay, Point xyGlobal) {
+    return overlay.offset.containsPoint(xyGlobal);
+  }
+
 
   void keydownHandler(KeyboardEvent e) {
     if (!autoCloseDisabled && (e.keyCode == ESCAPE_KEY)) {
@@ -232,7 +232,7 @@ class SparkOverlay extends PolymerElement {
   }
 
   /**
-   * Extensions of g-overlay should implement the resizeHandler
+   * Extensions of spark-overlay should implement the resizeHandler
    * method to adjust the size and position of the overlay when the
    * browser window resizes.
    */
