@@ -39,7 +39,7 @@ void main([List<String> args]) {
  */
 void setup(GrinderContext context) {
   // check to make sure we can locate the SDK
-if (sdkDir == null) {
+  if (sdkDir == null) {
     context.fail("Unable to locate the Dart SDK\n"
         "Please set the DART_SDK environment variable to the SDK path.\n"
         "  e.g.: 'export DART_SDK=your/path/to/dart/dart-sdk'");
