@@ -62,7 +62,7 @@ class Spark extends Application implements FilesControllerDelegate {
   // The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
-  AceEditor editor;
+  AceContainer aceContainer;
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
@@ -130,11 +130,11 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initEditor() {
-    editor = new AceEditor(new DivElement());
+    aceContainer = new AceContainer(new DivElement());
   }
 
   void initEditorManager() {
-    editorManager = new EditorManager(workspace, editor, localPrefs);
+    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
@@ -182,7 +182,7 @@ class Spark extends Application implements FilesControllerDelegate {
   void initSplitView() {
     _splitView = new SplitView(querySelector('#splitview'));
     _splitView.onResized.listen((_) {
-      editor.resize();
+      aceContainer.resize();
       syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
     });
     syncPrefs.getValue('splitViewPosition').then((String position) {
@@ -197,6 +197,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void createActions() {
     actionManager = new ActionManager();
+    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
@@ -219,8 +220,8 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void buildMenu() {
-    ThemeManager themeManager = new ThemeManager(editor, syncPrefs);
-    KeyBindingManager keysManager = new KeyBindingManager(editor, syncPrefs);
+    ThemeManager themeManager = new ThemeManager(aceContainer, syncPrefs);
+    KeyBindingManager keysManager = new KeyBindingManager(aceContainer, syncPrefs);
 
     UListElement ul = querySelector('#hotdogMenu ul');
 
@@ -308,10 +309,14 @@ class Spark extends Application implements FilesControllerDelegate {
   // Implementation of FilesControllerDelegate interface.
 
   void selectInEditor(ws.File file,
-                      {bool forceOpen: false, bool replaceCurrent: true}) {
+                      {bool forceOpen: false,
+                       bool replaceCurrent: true,
+                       bool switchesTab: true}) {
     if (forceOpen || editorManager.isFileOpened(file)) {
-      editorArea.selectFile(file, forceOpen: forceOpen,
-          replaceCurrent: replaceCurrent);
+      editorArea.selectFile(file,
+          forceOpen: forceOpen,
+          replaceCurrent: replaceCurrent,
+          switchesTab: switchesTab);
     }
   }
 
@@ -378,7 +383,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
       spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
-          spark.editor.focus();
+          spark.aceContainer.focus();
         }
       });
     });
@@ -400,18 +405,18 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 }
 
 class ThemeManager {
-  AceEditor editor;
+  AceContainer aceContainer;
   preferences.PreferenceStore prefs;
   Element _label;
 
-  ThemeManager(this.editor, this.prefs) {
+  ThemeManager(this.aceContainer, this.prefs) {
     _label = querySelector('#changeTheme a span');
     prefs.getValue('aceTheme').then((String value) {
       if (value != null) {
-        editor.theme = value;
+        aceContainer.theme = value;
         _updateName(value);
       } else {
-        _updateName(editor.theme);
+        _updateName(aceContainer.theme);
       }
     });
   }
@@ -427,12 +432,12 @@ class ThemeManager {
   }
 
   void _changeTheme(int direction) {
-    int index = AceEditor.THEMES.indexOf(editor.theme);
-    index = (index + direction) % AceEditor.THEMES.length;
-    String newTheme = AceEditor.THEMES[index];
+    int index = AceContainer.THEMES.indexOf(aceContainer.theme);
+    index = (index + direction) % AceContainer.THEMES.length;
+    String newTheme = AceContainer.THEMES[index];
     prefs.setValue('aceTheme', newTheme);
     _updateName(newTheme);
-    editor.theme = newTheme;
+    aceContainer.theme = newTheme;
   }
 
   void _updateName(String name) {
@@ -441,15 +446,15 @@ class ThemeManager {
 }
 
 class KeyBindingManager {
-  AceEditor editor;
+  AceContainer aceContainer;
   preferences.PreferenceStore prefs;
   Element _label;
 
-  KeyBindingManager(this.editor, this.prefs) {
+  KeyBindingManager(this.aceContainer, this.prefs) {
     _label = querySelector('#changeKeys a span');
     prefs.getValue('keyBinding').then((String value) {
       if (value != null) {
-        editor.setKeyBinding(value);
+        aceContainer.setKeyBinding(value);
       }
       _updateName(value);
     });
@@ -466,13 +471,13 @@ class KeyBindingManager {
   }
 
   void _changeBinding(int direction) {
-    editor.getKeyBinding().then((String name) {
-      int index = math.max(AceEditor.KEY_BINDINGS.indexOf(name), 0);
-      index = (index + direction) % AceEditor.KEY_BINDINGS.length;
-      String newBinding = AceEditor.KEY_BINDINGS[index];
+    aceContainer.getKeyBinding().then((String name) {
+      int index = math.max(AceContainer.KEY_BINDINGS.indexOf(name), 0);
+      index = (index + direction) % AceContainer.KEY_BINDINGS.length;
+      String newBinding = AceContainer.KEY_BINDINGS[index];
       prefs.setValue('keyBinding', newBinding);
       _updateName(newBinding);
-      editor.setKeyBinding(newBinding);
+      aceContainer.setKeyBinding(newBinding);
     });
   }
 
@@ -506,13 +511,7 @@ abstract class SparkAction extends Action {
       return false;
     }
     List items = object as List;
-    bool result = true;
-    items.forEach((Object item) {
-      if (item is! ws.Resource) {
-        result = false;
-      }
-    });
-    return result;
+    return items.every((r) => r is ws.Resource);
   }
 
   /**
@@ -547,14 +546,35 @@ abstract class SparkAction extends Action {
       return false;
     }
     List<ws.Resource> resources = object as List;
-    bool result = true;
-    resources.forEach((ws.Resource resource) {
-      if (!resource.isTopLevel) {
-        result = false;
-      }
-    });
-    return result;
+    return resources.every((ws.Resource r) => r.isTopLevel);
   }
+
+  /**
+   * Returns true if `object` is a list of File.
+   */
+  bool _isFileList(Object object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    return resources.every((r) => r is ws.File);
+  }
+}
+
+class FileOpenInTabAction extends SparkAction implements ContextAction {
+  FileOpenInTabAction(Spark spark) :
+      super(spark, "file-open-in-tab", "Open in a New Tab");
+
+  void _invoke([List<ws.File> files]) {
+    bool forceOpen = files.length > 1;
+    files.forEach((ws.File file) {
+      spark.selectInEditor(file, forceOpen: true, replaceCurrent: false);
+    });
+  }
+
+  String get category => 'tab';
+
+  bool appliesTo(Object object) => _isFileList(object);
 }
 
 class FileNewAction extends SparkAction implements ContextAction {
