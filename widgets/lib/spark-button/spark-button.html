@@ -4,31 +4,19 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
-<polymer-element name="spark-button" attributes="active">
+<polymer-element name="spark-button" attributes="primary active">
   <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="spark-button.css" -->
     <style>
       button {
-        background: #ddd;
-        border: 1px solid #888;
-        border-radius: 5px;
-        display: inline-block;
-        color: black;
-        font-size: 14px;
-        outline: none;
-        padding: 5px;
-        text-decoration: none;
-      }
-      button:hover {
-        background: #eee;
-      }
-      button:active {
-        background: #ccc;
+        padding: 2px 8px 2px 8px;
       }
     </style>
-
-    <!-- Handle "active" properly, possibly using 'template if'.
-         Setting 'disabled' attribute here somehow doesn't work. -->
-    <button type="button"><content></content></button>
+    
+    <button type="button" class={{btnClasses}}>
+      <content></content>
+    </button>
   </template>
 
   <script type="application/dart" src="spark-button.dart"></script>

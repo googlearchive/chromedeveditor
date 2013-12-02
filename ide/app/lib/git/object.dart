@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 
-import 'git_object_utils.dart';
+import 'object_utils.dart';
 
 
 /**
@@ -21,7 +21,8 @@ import 'git_object_utils.dart';
 abstract class GitObject {
 
   /**
-   * constructs a GitObject of the given type.
+   * Constructs a GitObject of the given type. [content] can be of type [String]
+   * or [Uint8List].
    */
   static GitObject make(String sha, String type, content) {
     switch (type) {
@@ -41,7 +42,6 @@ abstract class GitObject {
 
   // The type of git object.
   String _type;
-
   dynamic data;
   String _sha;
 

@@ -2,14 +2,12 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark;
+library spark_polymer;
 
-import 'dart:html';
+import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 import 'spark.dart';
-import 'lib/ace.dart';
-import 'lib/utils.dart' as utils;
 
 void main() {
   polymer.initPolymer();
@@ -22,40 +20,52 @@ void main() {
 class SparkPolymer extends Spark {
   SparkPolymer(bool developerMode) : super(developerMode);
 
-  @override
-  void setupSplitView() {
-    // We're using a Polymer-based splitview, so disable the default
-    // by overriding this method to be empty.
-  }
+  //
+  // Override some parts of the parent's ctor:
+  //
 
   @override
-  void setupEditorThemes() {
-    syncPrefs.getValue('aceTheme').then((String theme) {
-      final selected = (theme != null) ? AceEditor.THEMES.indexOf(theme) : 0;
+  String get appName => super.appName + "Polymer";
 
-      (querySelector('#themeChooser') as dynamic)
-        ..items = AceEditor.THEMES.map(_beautifyThemeName)
-        ..selected = selected
-        ..onClick.listen(_switchTheme);
-      _switchTheme();
-    });
+  @override
+  void initAnalytics() => super.initAnalytics();
+
+  @override
+  void initWorkspace() => super.initWorkspace();
+
+  @override
+  void initEditor() => super.initEditor();
+
+  @override
+  void initEditorManager() => super.initEditorManager();
+
+  @override
+  void initEditorArea() => super.initEditorArea();
+
+  @override
+  void initSplitView() {
+    // We're using a Polymer-based splitview, so disable the default.
   }
 
   @override
-  void buildMenu() {
-    // TODO: Implement this.
+  void initFilesController() => super.initFilesController();
+
+  @override
+  void initLookAndFeel() {
+    // Init the Bootjack library (a wrapper around Bootstrap).
+    bootjack.Bootjack.useDefault();
   }
 
-  void _switchTheme([_]) {
-    int selected =
-        (querySelector('#themeChooser') as dynamic).selected;
-    if (selected == -1)
-      selected = 0;
-    final String themeName = AceEditor.THEMES[selected];
-    editor.theme = themeName;
-    syncPrefs.setValue('aceTheme', themeName);
-  }
+  @override
+  void createActions() => super.createActions();
 
-  String _beautifyThemeName(String themeName) =>
-      utils.capitalize(themeName).replaceAll('_', ' ');
+  @override
+  void initToolbar() => super.initToolbar();
+
+  @override
+  void buildMenu() => super.buildMenu();
+
+  //
+  // - End parts of the parent's ctor.
+  //
 }

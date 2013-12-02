@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 
-import 'git_pack.dart';
+import 'pack.dart';
 
 /**
  * This class partially parses the data contained in a pack-*.idx file, and

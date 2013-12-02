@@ -15,11 +15,11 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'file_operations.dart';
-import 'git_object.dart';
-import 'git_object_utils.dart';
-import 'git_pack.dart';
-import 'git_pack_index.dart';
-import 'git_utils.dart';
+import 'object.dart';
+import 'object_utils.dart';
+import 'pack.dart';
+import 'pack_index.dart';
+import 'utils.dart';
 
 import 'zlib.dart';
 
@@ -240,7 +240,7 @@ class ObjectStore {
           });
         }
       });
-    }, onError:(e){
+    }, onError:(e) {
       return this._findPackedObject(shaBytes).then(
           (FindPackedObjectResult obj) {
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
@@ -371,7 +371,7 @@ class ObjectStore {
           // this means a local merge commit.
           _nonFastForward();
           completer.completeError("");
-        } else if(commitObj.parents.length == 0 ||
+        } else if (commitObj.parents.length == 0 ||
             commitObj.parents[0] == remoteRef.sha || remoteShas[commitObj.parents[0]]) {
           //TODO callback commits, remoteRef;
           completer.complete();

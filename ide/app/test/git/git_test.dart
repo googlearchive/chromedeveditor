@@ -6,7 +6,7 @@ library spark.git_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/git/git.dart';
+import '../../lib/git/git.dart';
 
 defineTests() {
   group('git', () {

@@ -27,7 +27,7 @@ set to the `app/spark.html` file. This file it turn runs `app/spark.dart`.
 Dependencies need first to be fetched using [pub](http://pub.dartlang.org).
 Run:
 
-    pub install
+    pub get
 
 ### Packages
 Chrome apps do not like symlinks. There's a Chrome bug about this, but for now

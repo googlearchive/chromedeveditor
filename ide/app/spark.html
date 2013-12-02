@@ -17,13 +17,9 @@
     <div class="fileview-filename-container">
       <div class="filename">
       </div>
-      <div class="dropdown container">
-        <div class="menu pull-right">
-          <button class="dropdown-toggle" type="button" data-toggle="dropdown">
-            <span class="caret"></span>
-          </button>
-        </div>
-      </div>
+      <a href="#" class="menu">
+        <span class="caret"></span>
+      </a>
     </div>
   </template>
 
@@ -39,20 +35,31 @@
 
 <body>
   <div id="toolbar">
-    <button type="button" class="btn btn-primary" id="newFile">New File</button>
-    <button type="button" class="btn btn-default" id="openFile">Open File...</button>
+    <button type="button" class="btn btn-primary" id="newFile">
+      New File
+    </button>
+    <button type="button" class="btn btn-default" id="openFile">
+      Open File...
+    </button>
 
     <span id="status"></span>
 
     <div id="hotdogMenu" class="btn-group">
-      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-        Menu <span class="caret"></span>
+      <button type="button" data-toggle="dropdown"
+          class="btn btn-default dropdown-toggle main-menu-button">
+        <img src="images/menu.png">
       </button>
       <ul class="dropdown-menu pull-right">
-        <li class="disabled" id="themeControl"><a>Change Theme &nbsp;
+        <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
           <span class="pull-right">
             <button type="button" id="themeLeft"><strong>-</strong></button>
             <button type="button" id="themeRight"><strong>+</strong></button>
+          </span></a>
+        </li>
+        <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
+          <span class="pull-right">
+            <button type="button" id="keysLeft"><strong>-</strong></button>
+            <button type="button" id="keysRight"><strong>+</strong></button>
           </span></a>
         </li>
       </ul>
@@ -64,6 +71,13 @@
     <div id="editorArea" min-size="200"></div>
   </div>
   
+  <!--  file context menu -->
+  <div id="file-item-context-menu" class="dropdown">
+    <div class="backdrop"></div>
+    <ul class="dropdown-menu" role="menu">
+    </ul>
+  </div>
+  
   <!-- file delete dialog -->
     <div id="deleteDialog" class="modal fade">
       <div class="modal-dialog">
@@ -73,19 +87,20 @@
           </div>
           <div class="modal-footer">
             <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button id="deleteOkButton" class="btn btn-primary" data-dismiss="modal">Delete</button>
+            <button id="deleteOkButton" class="btn btn-primary"
+                data-dismiss="modal">Delete</button>
           </div>
         </div>
       </div>
     </div>
-  
 
   <!-- about dialog -->
   <div class="modal fade" id="aboutDialog">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <button type="button" class="close" data-dismiss="modal"
+              aria-hidden="true">&times;</button>
           <h4 class="modal-title">Spark</h4>
         </div>
         <div class="modal-body">
@@ -97,12 +112,13 @@
             <label>
               <input type="checkbox" id="analyticsCheck">
                 Allow Spark to collect anonymous usage statistics
-              </input>
             </label>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">
+            Close
+          </button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

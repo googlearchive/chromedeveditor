@@ -14,7 +14,6 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'files_controller_delegate.dart';
 import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
-import 'widgets/listview.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
@@ -162,8 +161,9 @@ class FilesController implements TreeViewDelegate {
   void treeViewDropCells(TreeView view,
                          List<String> nodesUIDs,
                          String targetNodeUID) {
-    // TODO(dvh): Move files designated by `nodesUIDs` to the folder
-    // designated by `targetNodeUID`.
+
+    Resource parent = _filesMap[targetNodeUID];
+    _workspace.moveTo(nodesUIDs.map((f) => _filesMap[f]).toList(), parent);
   }
 
   /*
@@ -355,7 +355,6 @@ class FilesController implements TreeViewDelegate {
   void _processEvents(ResourceChangeEvent event) {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
-
       var resource = event.resource;
       _files.add(resource);
       _recursiveAddResource(resource);
@@ -365,8 +364,18 @@ class FilesController implements TreeViewDelegate {
       var resource = event.resource;
       _files.remove(resource);
       _recursiveRemoveResource(resource);
-      // TODO: make a more informed selection, maybe before the delete?
-      selectLastFile();
+      _treeView.reloadData();
+
+    }
+    if (event.type == ResourceEventType.CHANGE) {
+      // refresh the container that has changed.
+      // remove all old paths and add anew.
+      var resource = event.resource;
+      var keys = _filesMap.keys.toList();
+      keys.forEach((key) {
+        if (key.startsWith(resource.path)) _filesMap.remove(key);
+      });
+      _recursiveAddResource(resource);
       _treeView.reloadData();
     }
   }
@@ -391,31 +400,61 @@ class FilesController implements TreeViewDelegate {
 
   void _handleContextMenu(FileItemCell cell, Resource resource, html.Event e) {
     cancelEvent(e);
-
-    _treeView.selection = [resource.path];
-
-    _showMenu(cell, resource);
+    _showMenu(cell, cell.menuElement, resource);
   }
 
   void _handleMenuClick(FileItemCell cell, Resource resource, html.Event e) {
     cancelEvent(e);
-    _showMenu(cell, resource);
+    _showMenu(cell, cell.menuElement, resource);
   }
 
-  void _showMenu(FileItemCell cell, Resource resource) {
-    // delete any existing menus
-    cell.menuElement.children.removeWhere((c) => c.classes.contains('dropdown-menu'));
+  void _showMenu(FileItemCell cell, html.Element disclosureButton, Resource resource) {
+    if (!_treeView.selection.contains(resource.path)) {
+      _treeView.selection = [resource.path];
+    }
 
-    // get all applicable actions
-    List<ContextAction> actions = _delegate.getActionsFor(resource);
+    html.Element menuContainer = html.querySelector('#file-item-context-menu');
+    html.Element contextMenu =
+        html.querySelector('#file-item-context-menu .dropdown-menu');
+    // Delete any existing menu items.
+    contextMenu.children.clear();
 
-    // create and show the menu
-    html.Element menuElement = createContextMenu(actions, resource);
-    cell.menuElement.children.add(menuElement);
-    bootjack.Dropdown dropdown = bootjack.Dropdown.wire(menuElement);
-    menuElement.onMouseLeave.listen((_) {
-      cell.menuElement.children.remove(menuElement);
-    });
+    List<Resource> resources = getSelection();
+    // Get all applicable actions.
+    List<ContextAction> actions = _delegate.getActionsFor(resources);
+    fillContextMenu(contextMenu, actions, resources);
+
+    // Position the context menu at the expected location.
+    html.Point position = getAbsolutePosition(disclosureButton);
+    position += new html.Point(0, disclosureButton.clientHeight);
+    contextMenu.style.left = '${position.x}px';
+    contextMenu.style.top = '${position.y - 2}px';
+
+    // Keep the disclosure button visible when the menu is opened.
+    cell.menuElement.classes.add('open');
+    // Show the menu.
+    bootjack.Dropdown dropdown = bootjack.Dropdown.wire(contextMenu);
     dropdown.toggle();
+
+    void _closeContextMenu(html.Event event) {
+      cell.menuElement.classes.remove('open');
+      // We workaround an issue with bootstrap/boojack: There's no other way
+      // to close the dropdown. For example dropdown.toggle() won't work.
+      menuContainer.classes.remove('open');
+      cancelEvent(event);
+    }
+
+    // When the user clicks outside the menu, we'll close it.
+    html.Element backdrop =
+        html.querySelector('#file-item-context-menu .backdrop');
+    backdrop.onClick.listen((event) {
+      _closeContextMenu(event);
+    });
+    // When the user click on an item in the list, the menu will be closed.
+    contextMenu.children.forEach((html.Element element) {
+      element.onClick.listen((html.Event event) {
+        _closeContextMenu(event);
+      });
+    });
   }
 }
