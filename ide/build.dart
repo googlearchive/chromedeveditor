@@ -23,8 +23,3 @@ void update(context) {
 void lint(context) {
   polymer.lint(entryPoints: ['app/spark_polymer.html']);
 }
-/*
-void main(List<String> args) {
-  polymer.lint(entryPoints: ['app/spark_polymer.html'], options: polymer.parseOptions(args));
-}
-*/

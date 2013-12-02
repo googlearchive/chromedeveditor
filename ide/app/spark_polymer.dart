@@ -49,21 +49,7 @@ class SparkPolymer extends Spark {
     // TODO: Implement this.
   }
 
-  bool pointInOverlay(SparkOverlay overlay, Point xyGlobal) {
-    var dialogId = overlay.attributes['id'];
-    Element dialog = querySelector('#$dialogId');
-
-    Rectangle globalOffset = dialog.offset;
-    Node currParent = dialog.parentNode;
-    while (dialog.ownerDocument != currParent && currParent is! ShadowRoot) {
-      Element parentElement = currParent;
-      globalOffset = globalOffset.boundingBox(parentElement.offset);
-      currParent = parentElement.parentNode;
-    }
-
-    return globalOffset.containsPoint(xyGlobal);
-  }
-
+  // TODO(terry): Hookup overlay dialog.
   @override
   void showStatus(String text, {bool error: false}) {
     Element element = querySelector("#status");
