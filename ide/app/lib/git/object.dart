@@ -239,9 +239,7 @@ class LooseObject {
 
   // Represents either an ArrayBuffer or a string representation of byte
   //stream.
-  dynamic get data => _data;
-
-  Object _data;
+  dynamic data;
 
   LooseObject(buf) {
     _parse(buf);
@@ -262,13 +260,13 @@ class LooseObject {
       }
       header = headChars.join(' ');
 
-      this._data = data.sublist(i + 1, data.length);
+      this.data = data.sublist(i + 1, data.length);
     } else {
       String data = buf;
       i = data.indexOf('\0)');
       header = data.substring(0, i);
       // move past null terminator but keep zlib header
-      this._data = data.substring(i + 1, data.length);
+      this.data = data.substring(i + 1, data.length);
     }
     List<String> parts = header.split(' ');
     this._type = parts[0];

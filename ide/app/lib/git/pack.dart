@@ -422,7 +422,7 @@ class Pack {
       }
     }
 
-    return resultData; //.buffer;
+    return resultData;
   }
 }
 
