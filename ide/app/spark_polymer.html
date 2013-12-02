@@ -114,26 +114,46 @@
   </polymer-flex-panel>
 
   <!-- file delete dialog -->
-  <div id="deleteDialog" class="modal fade">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body">
-          <p id="message"></p>
-        </div>
-        <div class="modal-footer">
-          <spark-button data-dismiss="modal">Cancel</spark-button>
-          <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
+    <div id="deleteDialog" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <p id="message"></p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button id="deleteOkButton" class="btn btn-primary"
+                data-dismiss="modal">Delete</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+     <!-- file new dialog -->
+    <div id="fileNewDialog" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <p>
+              File name:  <input id="fileName" type="text">
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+            <button id="fileNewOkButton" class="btn btn-primary"
+                data-dismiss="modal">Create</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   <!-- about dialog -->
   <div class="modal fade" id="aboutDialog">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
+          <button type="button" class="close" data-dismiss="modal"
+              aria-hidden="true">&times;</button>
           <h4 class="modal-title">Spark</h4>
         </div>
         <div class="modal-body">
@@ -144,12 +164,14 @@
           <div class="checkbox">
             <label>
               <input type="checkbox" id="analyticsCheck">
-              Allow Spark to collect anonymous usage statistics
+                Allow Spark to collect anonymous usage statistics
             </label>
           </div>
         </div>
         <div class="modal-footer">
-          <spark-button primary data-dismiss="modal">Close</spark-button>
+          <button type="button" class="btn btn-primary" data-dismiss="modal">
+            Close
+          </button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
