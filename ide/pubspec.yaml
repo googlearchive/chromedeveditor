@@ -19,4 +19,4 @@ dependencies:
   unittest: any
 dev_dependencies:
   args: any
-  grinder: '>=0.4.2'
+  grinder: '>=0.4.3'
