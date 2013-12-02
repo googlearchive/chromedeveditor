@@ -116,6 +116,21 @@ class Workspace implements Container {
     });
   }
 
+  /**
+   * Creates a new [File] with the given name in the given [Folder]
+   */
+  Future<File> createNewFile(Folder folder, String name) {
+    return (folder._entry as chrome.DirectoryEntry).createFile(name).then((entry) {
+      File file = new File(folder, entry, folder._syncable);
+      folder._children.add(file);
+      _controller.add(new ResourceChangeEvent(file, ResourceEventType.ADD));
+      return file;
+    });
+
+  }
+
+
+
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
       if (resource.name == name) {
