@@ -80,8 +80,7 @@ class DartSdk extends SdkDirectory {
   bool get available => libDirectory != null;
 
   /**
-   * This temporary method will exists only as long as it takes to figure out a
-   * good sync/async story with running the analyzer.
+   * Return the content for the file at the given path.
    */
   String getSourceForPath(String path) {
     List<String> paths = path.split('/');

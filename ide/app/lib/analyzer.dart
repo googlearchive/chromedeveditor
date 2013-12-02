@@ -214,7 +214,6 @@ class SdkSource extends Source {
   bool exists() => true;
 
   void getContents(Source_ContentReceiver receiver) {
-    // TODO: an unglamorous hack for now
     String cachedSource = _sdk.getSourceForPath(fullName);
 
     if (cachedSource != null) {
