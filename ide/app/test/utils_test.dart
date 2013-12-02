@@ -8,7 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/utils.dart';
 
-main() {
+defineTests() {
   group('utils', () {
     test('i18n found', () {
       expect(i18n('app_name'), 'Spark');

@@ -10,13 +10,15 @@
 }
 
 .tabview-tabbar {
+  -webkit-transition: height 250ms, padding 250ms;
+  -webkit-user-select: none;
   background: white;
   border-bottom: 1px solid #CCC;
   display: flex;
+  height: 32px;
   overflow: visible;
   padding-bottom: 3px;
   position: relative;
-  -webkit-user-select: none;
 }
 
 .tabview-tabbar:after {
@@ -31,7 +33,9 @@
 }
 
 .tabview-tabbar.tabview-tabbar-hidden {
-  display: none;
+  height: 0;
+  padding: 0;
+  border-bottom: none;
 }
 
 .tabview-tabbar-scroller {
@@ -68,11 +72,6 @@
   z-index: 100;
 }
 
-.tabview-tablabel:hover {
-  border: 1px solid #CCC;
-  padding-bottom: 1px;
-}
-
 .tabview-tablabel:first-child {
   margin-left: 15px;
 }
@@ -91,12 +90,8 @@
   position: relative;
 }
 
-.tabview-tablabel-active:hover {
-  background: -webkit-linear-gradient(bottom, #DDD, white);
-}
-
 .tabview-tablabel:hover .tabview-tablabel-caption {
-  
+  color: #448; 
 }
 
 .tabview-tablabel-caption {

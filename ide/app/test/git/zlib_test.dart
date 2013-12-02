@@ -10,13 +10,13 @@ import 'dart:typed_data';
 import 'package:unittest/unittest.dart';
 import 'package:utf/utf.dart';
 
-import '../lib/git/zlib.dart';
+import '../../lib/git/zlib.dart';
 
 final String ZLIB_INPUT_STRING = "This is a test.";
 final String ZLIB_DEFLATE_OUTPUT =
   "12015613194651300821924236481415120184233272346311218722219302251454341151536";
 
-main() {
+defineTests() {
   group('git.zlib', () {
     test('inflate', () {
 

@@ -313,4 +313,3 @@ class _NullConfig implements Config {
   void setSampleRate(int sampleRate) { }
   void setTrackingPermitted(bool permitted) { }
 }
-

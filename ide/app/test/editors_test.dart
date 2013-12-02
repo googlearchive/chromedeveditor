@@ -14,13 +14,13 @@ import '../lib/editors.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
-main() {
+defineTests() {
   group('editors', () {
     test('general test', () {
       Workspace workspace = new Workspace();
-      AceEditor editor = new MockAceEditor();
+      AceContainer aceContainer = new MockAceContainer();
       PreferenceStore store = new MapPreferencesStore();
-      EditorManager manager = new EditorManager(workspace, editor, store);
+      EditorManager manager = new EditorManager(workspace, aceContainer, store);
 
       MockFileSystem fs = new MockFileSystem();
 

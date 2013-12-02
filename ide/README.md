@@ -1,6 +1,6 @@
 # Spark
 
-A Chrome app based development environment.
+A Chrome App-based development environment.
 
 [![Build Status](https://drone.io/github.com/dart-lang/spark/status.png)](https://drone.io/github.com/dart-lang/spark/latest)
 
@@ -12,13 +12,13 @@ and point it to `your/path/to/dart-sdk`.
 You **need** to enable experimental Web Platform features in Chrome. From 
 `chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
-When you initially check the source out, in the Editor, right-click on the `app/sdk`
+When you initially check the source out, in the editor, right-click on the `app/sdk`
 directory, and choose "Don't Analyze". This directory will contain the source code
-for the `dart:` libraries. We don't want the Editor to analyze them as this will
+for the `dart:` libraries. We don't want the editor to analyze them as this will
 be a significant overhead.
 
 ### Entry Point
-The main entry point to the chrome app is `app/manifest.json`. It calls defines
+The main entry point to the Chrome App is `app/manifest.json`. It calls defines
 the background script for the application (`app/background.js`). This script
 gets invoked when the application starts. It open a new window with the contents
 set to the `app/spark.html` file. This file it turn runs `app/spark.dart`.
@@ -27,10 +27,10 @@ set to the `app/spark.html` file. This file it turn runs `app/spark.dart`.
 Dependencies need first to be fetched using [pub](http://pub.dartlang.org).
 Run:
 
-    pub install
+    pub get
 
 ### Packages
-Chrome apps do not like symlinks. There's a chrome bug about this, but for now
+Chrome apps do not like symlinks. There's a Chrome bug about this, but for now
 symlinks are right out. We use pub and a pubspec.yaml to provision our
 package dependencies. We then physically copy all the packages into the
 app/packages directory. This is not a normal symlinked pub directory but has the
@@ -52,12 +52,12 @@ lives in the `app/lib` directory.
 Documentation for the Spark APIs is available [here](http://dart-lang.github.io/spark/docs/spark.html).
 
 ### Tests
-All the tests live in app/test. These are standard dart unit tests. Generally,
+All the tests live in app/test. These are standard Dart unit tests. Generally,
 one library under test == 1 test file, and they should all be referenced from
 `all.dart`.
 
-In order to run the tests, we modify the html entry-point slightly to point to
-`app/spark_test.dart`. This source file references the entire spark app as
+In order to run the tests, we modify the HTML entry-point slightly to point to
+`app/spark_test.dart`. This source file references the entire Spark app as
 well as the unit tests for the app.
 
 Run
@@ -70,8 +70,8 @@ to switch the app over to including tests, and
 
 to switch it back before commit.
 
-Ideally, the application might include it's own tests. There's currently an
-issue with the compiled javascript size if we do that however. More about the
+Ideally, the application might include its own tests. However, there's currently an
+issue with the compiled JavaScript size if we do that. More about the
 testing story [here](https://github.com/dart-lang/spark/wiki/Testing).
 
 ### Contributing

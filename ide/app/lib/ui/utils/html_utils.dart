@@ -13,6 +13,7 @@ Point getAbsolutePosition(Element element) {
   Point result = new Point(0, 0);
   while (element != null) {
     result += element.offset.topLeft;
+    result -= new Point(element.scrollLeft, element.scrollTop);
     element = element.offsetParent;
   }
   return result;
@@ -51,4 +52,37 @@ bool isMouseLocationInElement(MouseEvent event,
 void cancelEvent(Event event) {
   event.stopPropagation();
   event.preventDefault();
+}
+
+/**
+ * Draws a rounded rectangle in a canvas.
+ */
+void roundRect(CanvasRenderingContext2D ctx, Rectangle rect,
+               {int radius: 5, bool fill: false, bool stroke: true}) {
+  ctx.beginPath();
+  ctx.moveTo(rect.left + radius, rect.top);
+  ctx.lineTo(rect.left + rect.width - radius, rect.top);
+  ctx.quadraticCurveTo(rect.left + rect.width,
+      rect.top,
+      rect.left + rect.width,
+      rect.top + radius);
+  ctx.lineTo(rect.left + rect.width, rect.top + rect.height - radius);
+  ctx.quadraticCurveTo(rect.left + rect.width,
+      rect.top + rect.height,
+      rect.left + rect.width - radius,
+      rect.top + rect.height);
+  ctx.lineTo(rect.left + radius, rect.top + rect.height);
+  ctx.quadraticCurveTo(rect.left,
+      rect.top + rect.height,
+      rect.left,
+      rect.top + rect.height - radius);
+  ctx.lineTo(rect.left, rect.top + radius);
+  ctx.quadraticCurveTo(rect.left, rect.top, rect.left + radius, rect.top);
+  ctx.closePath();
+  if (stroke) {
+    ctx.stroke();
+  }
+  if (fill) {
+    ctx.fill();
+  }
 }

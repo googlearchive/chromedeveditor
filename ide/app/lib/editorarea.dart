@@ -9,37 +9,65 @@
 library spark.editorarea;
 
 import 'dart:html';
-import 'ace.dart';
 
 import 'editors.dart';
 import 'ui/widgets/tabview.dart';
+import 'ui/widgets/imageviewer.dart';
 import 'workspace.dart';
 
-class EditorTab extends Tab {
+/// A tab associated with a file.
+abstract class EditorTab extends Tab {
   final Resource file;
-  final AceEditor editor;
-  EditorTab(EditorArea parent, AceEditor editor, this.file)
-      : editor = editor,  // FIXME(ikarienator): cannot use this.editor style.
-        super(parent, page: editor.parentElement) {
+  EditorTab(EditorArea parent, this.file) : super(parent) {
     label = file.name;
   }
+
+  void resize();
+}
+
+/// An [EditorTab] that contains an [AceEditor].
+class AceEditorTab extends EditorTab {
+  final Editor editor;
+  final EditorProvider provider;
+  AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
+    : super(parent, file) {
+    page = editor.element;
+  }
+
+  void activate() {
+    provider.selectFileForEditor(editor, file);
+    super.activate();
+  }
+
+  void resize() => editor.resize();
+}
+
+/// An [EditorTab] that contains an [ImageViewerTab].
+class ImageViewerTab extends EditorTab {
+  final ImageViewer imageViewer;
+  ImageViewerTab(EditorArea parent, this.imageViewer, Resource file)
+    : super(parent, file) {
+    page = imageViewer.rootElement;
+  }
+
+  void resize() => imageViewer.resize();
 }
 
 /**
- * Manage a list of open editors.
+ * Manages a list of open editors.
  */
 class EditorArea extends TabView {
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
+  static final RegExp _imageFileType =
+      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
+
   bool _allowsLabelBar = true;
 
   EditorArea(Element parentElement,
              this.editorProvider,
              {allowsLabelBar: true})
       : super(parentElement) {
-    onSelected.listen((EditorTab tab) {
-      editorProvider.selectFileForEditor(tab.editor, tab.file);
-    });
     onClose.listen((EditorTab tab) {
       closeFile(tab.file);
     });
@@ -60,6 +88,7 @@ class EditorArea extends TabView {
     return super.add(tab, switchesTab: switchesTab);
   }
 
+  // TabView
   Tab replace(EditorTab tabToReplace, EditorTab tab, {bool switchesTab: true}) {
     _tabOfFile[tab.file] = tab;
     showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
@@ -76,6 +105,13 @@ class EditorArea extends TabView {
     return false;
   }
 
+  /// Inform the editor area to layout it self according to the new size.
+  void resize() {
+    if (selectedTab != null) {
+      (selectedTab as EditorTab).resize();
+    }
+  }
+
   /// Switches to a file. If the file is not opened and [forceOpen] is `true`,
   /// [selectFile] will be called instead. Otherwise the editor provide is
   /// requested to switch the file to the editor in case the editor is shared.
@@ -84,16 +120,19 @@ class EditorArea extends TabView {
                  bool replaceCurrent: true}) {
     if (_tabOfFile.containsKey(file)) {
       EditorTab tab = _tabOfFile[file];
-      editorProvider.selectFileForEditor(tab.editor, file);
-      if (switchesTab) {
-        tab.select();
-      }
+      if (switchesTab) tab.select();
       return;
     }
 
     if (forceOpen || replaceCurrent) {
-      AceEditor editor = editorProvider.createEditorForFile(file);
-      var tab = new EditorTab(this, editor, file);
+      EditorTab tab;
+      if (_imageFileType.hasMatch(file.name)) {
+        ImageViewer viewer = new ImageViewer(file);
+        tab = new ImageViewerTab(this, viewer, file);
+      } else {
+        Editor editor = editorProvider.createEditorForFile(file);
+        tab = new AceEditorTab(this, editorProvider, editor, file);
+      }
       if (replaceCurrent) {
         replace(selectedTab, tab, switchesTab: switchesTab);
       } else {

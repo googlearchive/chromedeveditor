@@ -1,14 +1,14 @@
 name: spark
-version: 0.0.3-dev
 author: Chrome Team <apps-dev@chromium.org>
-description: A Chrome app based development environment.
+version: 0.1.4-dev
 homepage: https://github.com/GoogleChrome/spark
+description: A Chrome app based development environment.
 dependencies:
-  ace: '>=0.0.8'
-  bootjack: any
+  ace: '>=0.1.3'
   analyzer: any
+  bootjack: any
   browser: any
-  chrome_gen: '>=0.1.0'
+  chrome_gen: '>=0.3.0'
   crc32: 0.1.3
   crypto: any
   intl: any
@@ -16,7 +16,7 @@ dependencies:
   mime: any
   spark_widgets:
     path: ../widgets
+  unittest: any
 dev_dependencies:
   args: any
-  grinder: any
-  unittest: any
+  grinder: '>=0.4.2'

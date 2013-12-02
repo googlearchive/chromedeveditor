@@ -9,7 +9,7 @@ import 'package:unittest/unittest.dart';
 import '../lib/analyzer.dart';
 import '../lib/utils.dart';
 
-main() {
+defineTests() {
   group('analyzer.', () {
     test('ChromeDartSdk exists', () {
       return createSdk().then((ChromeDartSdk sdk) {

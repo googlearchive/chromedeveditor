@@ -32,7 +32,13 @@ final int EXIT_PROCESS_TIMEOUT = 1;
 
 void main([List<String> args = const []]) {
   if (!new Directory('app').existsSync()) {
-    throw 'This script must be run from the root of the project directory.';
+    print('This script must be run from the root of the project directory.');
+    exit(1);
+  }
+
+  if (!_canLocateSdk()) {
+    print('Unable to locate the Dart SDK; please set the DART_SDK env variable');
+    exit(1);
   }
 
   ArgParser parser = _createArgsParser();
@@ -145,10 +151,12 @@ String _dartiumPath() {
   final Map m = {
     "linux": "chrome",
     "macos": "Chromium.app/Contents/MacOS/Chromium",
-    "windows": "Chromium.exe"
+    "windows": "chrome.exe"
   };
 
-  String path = "${sdkDir.path}/../chromium/${m[Platform.operatingSystem]}";
+  String sep = Platform.pathSeparator;
+  String os = Platform.operatingSystem;
+  String path = "${sdkDir.path}${sep}..${sep}chromium${sep}${m[os]}";
 
   if (FileSystemEntity.isFileSync(path)) {
     return new File(path).absolute.path;
@@ -163,8 +171,16 @@ String _chromeStablePath() {
   } else if (Platform.isMacOS) {
     return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
   } else {
-    // TODO: locate Chrome on Windows
-    throw 'unable to locate Chrome; ${Platform.operatingSystem} not yet supported';
+    List paths = [
+      r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+      r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+    ];
+
+    for (String path in paths) {
+      if (new File(path).existsSync()) {
+        return path;
+      }
+    }
   }
 }
 
@@ -228,6 +244,12 @@ void _doExit(int code) {
     }
     exit(code);
   });
+}
+
+bool _canLocateSdk() {
+  Directory dir = sdkDir;
+
+  return dir != null && dir.existsSync() && joinDir(dir, ['bin']).existsSync();
 }
 
 class TestListener {

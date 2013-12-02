@@ -7,35 +7,53 @@ library spark.ace_test;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/workspace.dart' as workspace;
 
-main() {
+defineTests() {
   group('ace', () {
     // This essentially tests that the ace codebase is available.
     test('is available', () {
-      expect(AceEditor.available, true);
+      expect(AceContainer.available, true);
     });
   });
 }
 
-class MockAceEditor implements AceEditor {
+class MockAceContainer implements AceContainer {
   /// The element to put the editor in.
   final Element parentElement = null;
 
-  MockAceEditor();
+  MockAceContainer();
 
   EditSession createEditSession(String text, String fileName) {
     return new MockEditSession(fileName);
   }
 
+  Point get cursorPosition => new Point(0, 0);
+  void set cursorPosition(Point position) {}
+  ace.EditSession get currentSession => null;
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }
   void switchTo(EditSession session) { }
   set theme(String value) { }
   String get theme => null;
+  Future<String> getKeyBinding() => new Future.value(null);
+  void setKeyBinding(String name) { }
+}
+
+class MockAceEditor implements AceEditor {
+  AceContainer aceContainer;
+  workspace.File file;
+
+  MockAceEditor([this.aceContainer]);
+
+  Element get element => aceContainer.parentElement;
+
+  void resize() { }
 }
 
 class MockEditSession implements EditSession {
