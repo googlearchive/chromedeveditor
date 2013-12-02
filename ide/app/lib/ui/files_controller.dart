@@ -356,7 +356,9 @@ class FilesController implements TreeViewDelegate {
     // TODO: process other types of events
     if (event.type == ResourceEventType.ADD) {
       var resource = event.resource;
-      if (resource.isTopLevel) _files.add(resource);
+      if (resource.isTopLevel) {
+        _files.add(resource);
+      }
       _recursiveAddResource(resource);
       _treeView.reloadData();
     }
