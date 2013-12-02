@@ -146,14 +146,13 @@ class Pack {
   }
 
   /**
-   * Returns a SHA1 hash of given byete stream.
+   * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(int type, contentData) {
+  List<int> getObjectHash(int type, Uint8List contentData) {
     List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
         + " ${contentData.length}\u0000");
 
-    Uint8List fullContent =
-        new Uint8List(header.length + contentData.length);
+    Uint8List fullContent = new Uint8List(header.length + contentData.length);
 
     fullContent.setAll(0, header);
     fullContent.setAll(header.length, contentData);
