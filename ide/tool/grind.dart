@@ -192,7 +192,7 @@ void clean(GrinderContext context) {
   // delete the sdk directory
   _runCommandSync(context, 'rm -rf app/sdk/lib');
   _runCommandSync(context, 'rm -f app/sdk/version');
-  _runCommandSync(context, 'rm -f app/sdk/dart-sdk-lib.fil');
+  _runCommandSync(context, 'rm -f app/sdk/dart-sdk.bin');
 
   // delete any compiled js output
   _runCommandSync(context, 'rm -f app/*.dart.js');
@@ -339,26 +339,22 @@ void _populateSdk(GrinderContext context) {
 
   destSdkDir.createSync();
 
-  File srcVersionFile = joinFile(srcSdkDir, ['version']);
-  File destVersionFile = joinFile(destSdkDir, ['version']);
-  File destArchiveFile = joinFile(destSdkDir, ['dart-sdk-lib.fil']);
+  File versionFile = joinFile(srcSdkDir, ['version']);
+  File destArchiveFile = joinFile(destSdkDir, ['dart-sdk.bin']);
 
-  FileSet srcVer = new FileSet.fromFile(srcVersionFile);
-  FileSet destVer = new FileSet.fromFile(destVersionFile);
+  FileSet srcVer = new FileSet.fromFile(versionFile);
   FileSet destArchive = new FileSet.fromFile(destArchiveFile);
 
   Directory compilerDir = new Directory('packages/compiler');
 
   // check the state of the sdk/version file, to see if things are up-to-date
-  if (!destVer.upToDate(srcVer) || !destArchive.upToDate(srcVer)
-      || !compilerDir.existsSync()) {
+  if (!destArchive.upToDate(srcVer) || !compilerDir.existsSync()) {
     // copy files over
     context.log('copying SDK');
-    copyFile(srcVersionFile, destSdkDir);
     copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']), context);
 
     // Create a synthetic package:compiler package in the packages directory.
-    // TODO(devoncarew): this would be much better as a std pub package
+    // TODO(devoncarew): this would be much better as a standard pub package
     compilerDir.createSync();
 
     _runCommandSync(context, 'rm -rf packages/compiler/compiler');
@@ -371,20 +367,33 @@ void _populateSdk(GrinderContext context) {
 
     context.log('creating SDK archive');
 
-    _createSdkArchive(joinDir(destSdkDir, ['lib']), destArchiveFile);
+    _createSdkArchive(versionFile, joinDir(destSdkDir, ['lib']), destArchiveFile);
     _runCommandSync(context, 'rm -rf ${joinDir(destSdkDir, ['lib']).path}');
   }
 }
 
 /**
  * Create an archived version of the Dart SDK.
+ *
+ * File format is:
+ *  - sdk version, as a UTF8 string
+ *  - null byte
+ *  - file count, as a 4-byte int
+ *  - n file entries:
+ *    - file path, as a UTF8 string
+ *    - null byte
+ *    - file length, as a 4-byte int
+ *  - file contents appended to the archive file, n times
  */
-void _createSdkArchive(Directory srcDir, File destFile) {
+void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
   List files = srcDir.listSync(recursive: true, followLinks: false);
   files = files.where((f) => f is File).toList();
 
   BytesBuilder bb = new BytesBuilder();
 
+  String version = versionFile.readAsStringSync().trim();
+  bb.add(UTF8.encoder.convert(version));
+  bb.addByte(0);
   _writeInt(bb, files.length);
 
   String pathPrefix = srcDir.path + '/';

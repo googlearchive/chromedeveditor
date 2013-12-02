@@ -41,7 +41,8 @@ Future<ChromeDartSdk> createSdk() {
 
   spark.DartSdk.createSdk().then((spark.DartSdk sdk) {
     ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
-    chromeSdk._parseLibraries().then((_) => _sdkCompleter.complete(chromeSdk));
+    chromeSdk._parseLibrariesFile();
+    _sdkCompleter.complete(chromeSdk);
   });
 
   return _sdkCompleter.future;
@@ -135,15 +136,9 @@ class ChromeDartSdk extends DartSdk {
 
   List<String> get uris => _libraryMap.uris;
 
-  Future _parseLibraries() {
-    return _sdk.libDirectory.getChild('_internal').then((spark.SdkDirectory dir) {
-      return dir.getChild('libraries.dart').then((spark.SdkFile file) {
-        return file.getContents().then((String contents) {
-          _libraryMap = _parseLibrariesMap(contents);
-          return _libraryMap;
-        });
-      });
-    });
+  void _parseLibrariesFile() {
+    String contents = _sdk.getSourceForPath('_internal/libraries.dart');
+    _libraryMap = _parseLibrariesMap(contents);
   }
 
   LibraryMap _parseLibrariesMap(String contents) {
@@ -220,7 +215,7 @@ class SdkSource extends Source {
 
   void getContents(Source_ContentReceiver receiver) {
     // TODO: an unglamorous hack for now
-    String cachedSource = _sdk.getCachedSource(fullName);
+    String cachedSource = _sdk.getSourceForPath(fullName);
 
     if (cachedSource != null) {
       receiver.accept2(cachedSource, modificationStamp);

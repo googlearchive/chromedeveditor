@@ -11,22 +11,28 @@
  *    dart:core String)
  * * the analyzer to analyze against, so we can get warnings about incorrect
  *    API usage
- * * the user to navigate to when doing things like exploring the dart apis
+ * * the user to navigate to when doing things like exploring the Dart apis
  */
 library spark.sdk;
 
 import 'dart:async';
 import 'dart:convert';
 import 'dart:html' as html;
+import 'dart:typed_data' as typed_data;
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 /**
  * Return the contents of the file at the given path. The path is relative to
  * the Chrome app's directory.
  */
-Future<String> _getContents(String path) {
-  return html.HttpRequest.getString(chrome_gen.runtime.getURL(path));
+Future<List<int>> _getContentsBinary(String path) {
+  String url = chrome.runtime.getURL(path);
+
+  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
+    typed_data.ByteBuffer buffer = request.response;
+    return new typed_data.Uint8List.view(buffer);
+  });
 }
 
 /**
@@ -34,10 +40,9 @@ Future<String> _getContents(String path) {
  * query the SDK version and to get the contents of the included Dart libraries.
  */
 class DartSdk extends SdkDirectory {
-  final String version;
-
+  String _version;
+  List<int> _contents;
   SdkDirectory _libDirectory;
-  Map<String, String> _coreSource;
 
   /**
    * Create a return a [DartSdk]. Generally, an application will only have one
@@ -45,31 +50,24 @@ class DartSdk extends SdkDirectory {
    * objects.
    */
   static Future<DartSdk> createSdk() {
-    DartSdk sdk;
-
-    return _getContents('sdk/version').then((String verContents) {
-      sdk = new DartSdk._(version: verContents.trim());
-      return sdk.getChild('lib');
-    }).then((SdkDirectory dir) {
-      sdk._libDirectory = dir;
-      return sdk._cacheCoreSource();
-    }).then((_) {
-      return sdk;
+    return _getContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
+      return new DartSdk._withContents(contents);
     }).catchError((e) {
-      return new DartSdk._(version: '');
+      return new DartSdk._fromVersion('');
     });
   }
 
-  /**
-   * Return the location of the SDK, as a [Uri].
-   */
-  static Uri getSdkLocationUri() {
-    return Uri.parse(chrome_gen.runtime.getURL('sdk/'));
-  }
+  String get version => _version;
 
   DartSdk get sdk => this;
 
-  DartSdk._({this.version}): super._(null, 'sdk');
+  DartSdk._withContents(this._contents): super._(null, 'sdk') {
+    _parseArchive();
+  }
+
+  DartSdk._fromVersion(this._version): super._(null, 'sdk') {
+    _libDirectory = _getCreateDir('lib');
+  }
 
   /**
    * Return the `sdk/lib` directory.
@@ -85,28 +83,55 @@ class DartSdk extends SdkDirectory {
    * This temporary method will exists only as long as it takes to figure out a
    * good sync/async story with running the analyzer.
    */
-  String getCachedSource(String path) => _coreSource[path];
+  String getSourceForPath(String path) {
+    List<String> paths = path.split('/');
 
-  Future _cacheCoreSource() {
-    _coreSource = {};
+    SdkDirectory dir = libDirectory;
 
-    return new Future.value();
+    for (String p in paths.sublist(0, paths.length - 1)) {
+      dir = dir._getCreateDir(p);
 
-//    List dirs = ['core', 'collection', '_collection_dev', 'math', 'convert', 'async'];
-//
-//    return Future.forEach(dirs, (dirName) {
-//      return libDirectory.getChild(dirName).then((SdkDirectory dir) {
-//        return dir.getChildren().then((List<SdkEntity> children) {
-//          return Future.forEach(children, (child) {
-//            return html.HttpRequest.getString(getSdkLocationUri().resolve(
-//                'lib/${dirName}/${child.name}').path).then((contents) {
-//              _coreSource['${dirName}/${child.name}'] = contents;
-//            });
-//          });
-//        });
-//      });
-//    });
+      if (dir == null) {
+        return null;
+      }
+    }
+
+    SdkFile file = dir.getChild(paths.last);
+    return file != null ? file.getContents() : null;
   }
+
+  void _parseArchive() {
+    _libDirectory = _getCreateDir('lib');
+
+    int pos = 0;
+    int len = _utfLen(_contents, pos);
+    _version = _readUtf(_contents, pos, len);
+    pos += len + 1;
+    int fileCount = _readInt(_contents, pos);
+    pos += 4;
+
+    List<_ArchiveEntry> entries = [];
+
+    for (int i = 0; i < fileCount; i++) {
+      len = _utfLen(_contents, pos);
+      String path = _readUtf(_contents, pos, len);
+      pos += len + 1;
+      int fileLen = _readInt(_contents, pos);
+      pos += 4;
+
+      entries.add(new _ArchiveEntry(path, fileLen));
+    }
+
+    int fileContentStart =  pos;
+
+    for (_ArchiveEntry entry in entries) {
+      _libDirectory._createFile(entry.path, fileContentStart, entry.length);
+      fileContentStart += entry.length;
+    }
+  }
+
+  List<int> _getFileContents(int offset, int len) =>
+      _contents.sublist(offset, offset + len);
 }
 
 /**
@@ -142,68 +167,92 @@ abstract class SdkEntity {
  * An SDK file.
  */
 class SdkFile extends SdkEntity {
-  SdkFile._(SdkDirectory parent, String path): super._(parent, path);
+  int _offset;
+  int _length;
+
+  SdkFile._(SdkDirectory parent, String path, this._offset, this._length):
+    super._(parent, path);
 
   /**
    * Return the contents of this file.
    */
-  Future<String> getContents() => _getContents(path);
+  String getContents() =>
+      UTF8.decoder.convert(sdk._getFileContents(_offset, _length));
 }
 
 /**
  * An SDK directory entry.
  */
 class SdkDirectory extends SdkEntity {
-  List<SdkEntity> _children;
+  List<SdkEntity> _children = [];
 
   SdkDirectory._(SdkDirectory parent, String path): super._(parent, path);
 
   /**
    * Return the given named child of this directory.
    */
-  Future<SdkEntity> getChild(String name) {
-    return getChildren().then((List<SdkEntity> children) {
-      return children.firstWhere(
-          (c) => c.name == name,
-          orElse: () => null);
-    });
+  SdkEntity getChild(String name) {
+    return _children.firstWhere((c) => c.name == name, orElse: () => null);
   }
 
   /**
    * Return the children of this directory.
    */
-  Future<List<SdkEntity>> getChildren() {
-    if (_children != null) {
-      return new Future.value(_children);
-    } else {
-      Completer completer = new Completer();
+  List<SdkEntity> getChildren() => _children;
 
-      _getContents("${path}/.files").then((String value) {
-        _children = _parseJson(value);
-        completer.complete(_children);
-      }).catchError((_) {
-        _children = new List<SdkEntity>();
-        completer.complete(_children);
-      });
+  SdkDirectory _getCreateDir(String name) {
+    SdkDirectory dir = getChild(name);
 
-      return completer.future;
+    if (dir == null) {
+      dir = new SdkDirectory._(this, name);
+      _children.add(dir);
     }
+
+    return dir;
   }
 
-  List<SdkEntity> _parseJson(String jsonText) {
-    List<SdkEntity> results = new List<SdkEntity>();
+  SdkFile _createFile(String path, int offset, int length) {
+    List<String> paths = path.split('/');
 
-    var values = JSON.decode(jsonText);
+    SdkDirectory dir = this;
 
-    for (String value in values) {
-      if (value.endsWith('/')) {
-        results.add(new SdkDirectory._(this,
-            "${path}/${value.substring(0, value.length - 1)}"));
-      } else {
-        results.add(new SdkFile._(this,"${path}/${value}"));
-      }
+    for (String p in paths.sublist(0, paths.length - 1)) {
+      dir = dir._getCreateDir(p);
     }
 
-    return results;
+    SdkFile file = new SdkFile._(dir, paths.last, offset, length);
+    dir._children.add(file);
+    return file;
   }
 }
+
+class _ArchiveEntry {
+  final String path;
+  final int length;
+
+  _ArchiveEntry(this.path, this.length);
+
+  String toString() => '${path} ${length}';
+}
+
+int _readInt(List<int> _contents, int pos) {
+  return _contents[pos] << 24 |
+      _contents[pos + 1] << 16 |
+      _contents[pos + 2] << 8 |
+      _contents[pos + 3];
+}
+
+String _readUtf(List<int> _contents, int pos, int len) {
+  return UTF8.decoder.convert(_contents.sublist(pos, pos + len));
+}
+
+int _utfLen(List<int> _contents, int pos) {
+  int len = 0;
+
+  while (_contents[pos + len] != 0) {
+    len++;
+  }
+
+  return len;
+}
+
