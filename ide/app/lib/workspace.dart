@@ -248,8 +248,6 @@ abstract class Container extends Resource {
     }
   }
 
-  void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
-
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     _children.remove(resource);
     if (fireEvent) _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
@@ -284,6 +282,8 @@ abstract class Resource {
 
   Container get parent => _parent;
 
+  void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
+
   Future delete() {
     if (_entry.isFile) return _entry.remove().then((_) => _parent._removeChild(this));
 
@@ -293,6 +293,14 @@ abstract class Resource {
   Future close({bool fireEvent: true}) {
     _parent._removeChild(this, fireEvent: fireEvent);
     return new Future.value();
+  }
+
+  Future rename(String name) {
+    return _entry.moveTo(_parent._entry, name: name).then((entry) {
+      _entry = entry;
+      _fireEvent(new ResourceChangeEvent(_parent, ResourceEventType.CHANGE));
+      return new Future.value();
+    });
   }
 
   /**

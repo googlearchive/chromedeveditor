@@ -205,6 +205,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new FileRenameAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
     actionManager.registerKeyListener();
@@ -657,6 +658,44 @@ class FileDeleteAction extends SparkAction implements ContextAction {
   String get category => 'resource';
 
   bool appliesTo(Object object) => _isResourceList(object);
+}
+
+class FileRenameAction extends SparkAction implements ContextAction {
+  bootjack.Modal _renameDialog;
+  ws.Resource resource;
+  InputElement _element;
+
+  FileRenameAction(Spark spark) : super(spark, "file-rename", "Rename") {
+    _renameDialog = bootjack.Modal.wire(querySelector('#renameDialog'));
+    _element = _renameDialog.element.querySelector("#fileName");
+    _renameDialog.element.querySelector("#renameOkButton").onClick.listen((_) {
+      _renameResource();
+    });
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+   if (resources != null && resources.isNotEmpty) {
+     resource = resources.first;
+     spark._closeOpenEditor(resource);
+     _element.value = '';
+     _renameDialog.show();
+   }
+  }
+
+  void _renameResource() {
+    if (_element.value.isNotEmpty) {
+      resource.rename(_element.value).then((_) {
+        if (resource is ws.File) {
+          spark.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
+        }
+      });
+    }
+
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 
 class FileCloseAction extends SparkAction implements ContextAction {
