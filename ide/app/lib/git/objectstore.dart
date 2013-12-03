@@ -298,7 +298,7 @@ class ObjectStore {
       });
       });
     }
-    return walkLevel(headShas).then((_) => new CommitGraph(commits, []]));
+    return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
   }
 
 
