@@ -149,8 +149,10 @@ class FilesController implements TreeViewDelegate {
     // Do nothing.
   }
 
-  String treeViewDropEffect(TreeView view) {
-    return 'copy';
+  String treeViewDropEffect(TreeView view,
+                            html.DataTransfer dataTransfer,
+                            String nodeUID) {
+    return "move";
   }
 
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
@@ -158,12 +160,60 @@ class FilesController implements TreeViewDelegate {
     // dataTransfer.files
   }
 
+  // Returns true if the move is valid:
+  // - We don't allow moving a file to its parent since it's a no-op.
+  // - We don't allow moving an ancestor folder to one of its descendant.
+  bool _isValidMove(List<String> nodesUIDs, String targetNodeUID) {
+    if (targetNodeUID == null) {
+      return false;
+    }
+    Resource destination = _filesMap[targetNodeUID];
+    // Collect list of ancestors of the destination.
+    Set<String> ancestorsUIDs = new Set();
+    Resource currentNode = destination;
+    while (currentNode != null) {
+      ancestorsUIDs.add(currentNode.path);
+      currentNode = currentNode.parent;
+    }
+    // Make sure that source items are not one of them.
+    for(String nodeUID in nodesUIDs) {
+      if (ancestorsUIDs.contains(nodeUID)) {
+        // Unable to move this file.
+        return false;
+      }
+    }
+    // Check whether a resource is moved to its current directory, which would
+    // make it a no-op.
+    for(String nodeUID in nodesUIDs) {
+      Resource node = _filesMap[nodeUID];
+      if (node.parent == destination) {
+        // Unable to move this file.
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   void treeViewDropCells(TreeView view,
                          List<String> nodesUIDs,
                          String targetNodeUID) {
+    Resource destination = _filesMap[targetNodeUID];
+    if (_isValidMove(nodesUIDs, targetNodeUID)) {
+      _workspace.moveTo(nodesUIDs.map((f) => _filesMap[f]).toList(), destination);
+    }
+  }
 
-    Resource parent = _filesMap[targetNodeUID];
-    _workspace.moveTo(nodesUIDs.map((f) => _filesMap[f]).toList(), parent);
+  bool treeViewAllowsDropCells(TreeView view,
+                               List<String> nodesUIDs,
+                               String destinationNodeUID) {
+    return _isValidMove(nodesUIDs, destinationNodeUID);
+  }
+
+  bool treeViewAllowsDrop(TreeView view,
+                          html.DataTransfer dataTransfer,
+                          String destinationNodeUID) {
+    return false;
   }
 
   /*

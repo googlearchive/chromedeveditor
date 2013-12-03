@@ -10,7 +10,8 @@ library spark.ui.widgets.treeview;
 
 import 'dart:collection';
 import 'dart:html';
-import 'dart:convert' show JSON;
+
+import 'package:uuid/uuid.dart';
 
 import 'treeview_cell.dart';
 import 'treeview_row.dart';
@@ -46,6 +47,10 @@ class TreeView implements ListViewDelegate {
   TreeViewCell _currentDragOverCell;
   // Whether the user can drag a cell.
   bool draggingEnabled = false;
+  // Unique identifier of the tree.
+  String _uuid;
+
+  String get uuid => _uuid;
 
   /**
    * Constructor of a `TreeView`.
@@ -54,6 +59,8 @@ class TreeView implements ListViewDelegate {
    * interacting with the tree.
    */
   TreeView(Element element, TreeViewDelegate delegate) {
+    Uuid uuidGenerator = new Uuid();
+    _uuid = uuidGenerator.v4();
     _delegate = delegate;
     _listView = new ListView(element, this);
     _rows = null;
@@ -233,33 +240,46 @@ class TreeView implements ListViewDelegate {
         event);
   }
 
-  String listViewDropEffect(ListView view) {
-    return _delegate.treeViewDropEffect(this);
+  String listViewDropEffect(ListView view, MouseEvent event) {
+    String nodeUID = null;
+    if (_currentDragOverCell != null) {
+      nodeUID = _currentDragOverCell.nodeUID;
+    }
+    return _delegate.treeViewDropEffect(this, event.dataTransfer, nodeUID);
+  }
+
+   List<String> _innerDragSelection(DataTransfer dataTransfer) {
+     String encodedSelection =
+         dataTransfer.getData('application/x-spark-treeview');
+     if (encodedSelection != null) {
+       // TODO(dvh): dataTransfer.getData returns empty string when
+       // it's called in dragOver event handler. Then, we can't check if uuid
+       // matches. We'll improve the behavior when it will be fixed.
+       return selection;
+     } else {
+       return null;
+     }
   }
 
   void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {
-    String encodedSelection = dataTransfer.getData('application/x-spark-treeview');
-    if (encodedSelection != null) {
-      // Inner drag&dropping.
-      // TODO(dvh): we need to make sure it's the same instance of the
-      // TreeView.
-      List<String> dragSelection = JSON.decode(encodedSelection);
-      String nodeUID = null;
-      if (_currentDragOverCell != null) {
-        nodeUID = _currentDragOverCell.nodeUID;
+    List<String> dragSelection = _innerDragSelection(dataTransfer);
+    String nodeUID = null;
+    if (_currentDragOverCell != null) {
+      nodeUID = _currentDragOverCell.nodeUID;
+    }
+    if (dragSelection != null) {
+      if (_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUID)) {
+        _delegate.treeViewDropCells(this, dragSelection, nodeUID);
       }
-      _delegate.treeViewDropCells(this, dragSelection, nodeUID);
     } else {
       // Dropping from somewhere else.
-      String nodeUID = null;
-      if (rowIndex != -1) {
-        nodeUID = _rowIndexesToNodeUIDs([rowIndex])[0];
+      if (_delegate.treeViewAllowsDrop(this, dataTransfer, nodeUID)) {
+        _delegate.treeViewDrop(this, nodeUID, dataTransfer);
       }
-      if (_currentDragOverCell != null) {
-        _currentDragOverCell.dragOverlayVisible = false;
-        _currentDragOverCell = null;
-      }
-      _delegate.treeViewDrop(this, nodeUID, dataTransfer);
+    }
+    if (_currentDragOverCell != null) {
+      _currentDragOverCell.dragOverlayVisible = false;
+      _currentDragOverCell = null;
     }
   }
 
@@ -283,6 +303,23 @@ class TreeView implements ListViewDelegate {
         cell = null;
       }
     }
+
+    String nodeUID = null;
+    if (cell != null) {
+      nodeUID = cell.nodeUID;
+    }
+    List<String> dragSelection = _innerDragSelection(event.dataTransfer);
+    if (dragSelection != null) {
+      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUID)) {
+        cell = null;
+      }
+    } else {
+      // Dropping from somewhere else.
+      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, nodeUID)) {
+        cell = null;
+      }
+    }
+
     // Shows an overlay on the cell.
     if (_currentDragOverCell != cell) {
       if (_currentDragOverCell != null) {
@@ -295,11 +332,23 @@ class TreeView implements ListViewDelegate {
     }
   }
 
-  void listViewDragEnter(ListView view) {
-    // Do nothing
+  void listViewDragEnter(ListView view, MouseEvent event) {
+    bool allowed = true;
+    List<String> dragSelection = _innerDragSelection(event.dataTransfer);
+    if (dragSelection != null) {
+      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, null)) {
+        allowed = false;
+      }
+    } else {
+      // Dropping from somewhere else.
+      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, null)) {
+        allowed = false;
+      }
+    }
+    _listView.globalDraggingOverAllowed = allowed;
   }
 
-  void listViewDragLeave(ListView view) {
+  void listViewDragLeave(ListView view, MouseEvent event) {
     // Unhighlight the current cell.
     if (_currentDragOverCell != null) {
       _currentDragOverCell.dragOverlayVisible = false;

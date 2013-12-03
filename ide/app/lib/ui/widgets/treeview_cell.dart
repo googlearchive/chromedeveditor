@@ -97,8 +97,9 @@ class TreeViewCell implements ListViewCell {
     _embeddedCellContainer.onDragStart.listen((event) {
       _treeView.privateCheckSelectNode(_row.nodeUID);
       // Dragged data.
+      Map dragInfo = {'uuid': _treeView.uuid, 'selection': _treeView.selection};
       event.dataTransfer.setData('application/x-spark-treeview',
-          JSON.encode(_treeView.selection));
+          JSON.encode(dragInfo));
       TreeViewDragImage imageInfo = _treeView.privateDragImage(event);
       if (imageInfo != null) {
         event.dataTransfer.setDragImage(imageInfo.image,
