@@ -1,8 +1,6 @@
-/**
- * Copyright 2013 The Polymer Authors. All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be found
- * in the LICENSE file.
- */
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 library spark_widgets.overlay;
 
@@ -74,14 +72,14 @@ class SparkOverlay extends PolymerElement {
    * A spark-overlay may be made intially opened by setting its opened
    * attribute.
    */
-  @observable bool opened = false;
+  @published bool opened = false;
 
   /**
    * By default an overlay will close automatically if the user taps outside
    * it or presses the escape key. Disable this behavior by setting the
    * autoCloseDisabled property to true.
    */
-  @observable bool autoCloseDisabled = false;
+  @published bool autoCloseDisabled = false;
 
   // TODO(terry): Should be tap when PointerEvents are supported.
   static const String captureEventType = 'mousedown';

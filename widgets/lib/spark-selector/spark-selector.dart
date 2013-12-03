@@ -1,8 +1,6 @@
-/**
- * Copyright 2013 The Polymer Authors. All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be found
- * in the LICENSE file.
- */
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 library spark_widgets.selector;
 
@@ -42,37 +40,37 @@ import 'package:spark_widgets/spark-selection/spark-selection.dart';
  */
 @CustomTag("spark-selector")
 class SparkSelector extends SparkSelection {
-  @observable dynamic selected = null;
+  @published dynamic selected = null;
 
   /// If true, multiple selections are allowed.
-  @observable bool multi = false;
+  @published bool multi = false;
 
   /// Specifies the attribute to be used for "selected" attribute.
-  @observable String valueattr = 'name';
+  @published String valueattr = 'name';
 
   /// Specifies the CSS class to be used to add to the selected element.
-  @observable String selectedClass = 'selected';
+  @published String selectedClass = 'selected';
 
   /// Specifies the property to be used to set on the selected element.
-  @observable String selectedProperty = 'active';
+  @published String selectedProperty = 'active';
 
   /* Returns the currently selected element. In multi-selection this returns
    * an array of selected elements.
    */
   // TODO(terry): If marked as @observable bad crash think stack overflow?
-  @observable dynamic selectedItem = null;
+  @published dynamic selectedItem = null;
 
   /* The target element that contains items.  If this is not set
    * polymer-selector is the container.
    */
-  @observable Node target = null;
+  @published Node target = null;
 
-  String itemsSelector = '';
+  @published String itemsSelector = '';
 
   // TODO(terry): Should be tap when PointerEvents are supported.
-  String activateEvent = 'click';
-  bool notap = false;
-  var selectedModel = null;
+  @published String activateEvent = 'click';
+  @published bool notap = false;
+  @published dynamic selectedModel = null;
 
   dynamic _activateListener;
 

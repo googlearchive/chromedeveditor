@@ -1,8 +1,6 @@
-/**
- * Copyright 2013 The Polymer Authors. All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be found
- * in the LICENSE file.
- */
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 library spark_widgets.selection;
 
@@ -11,7 +9,7 @@ import 'package:polymer/polymer.dart';
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-selection")
 class SparkSelection extends PolymerElement {
-  @observable bool multi = false;
+  @published bool multi = false;
 
   final List _selection = [];
 

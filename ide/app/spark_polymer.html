@@ -121,9 +121,8 @@
             <p id="message"></p>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button id="deleteOkButton" class="btn btn-primary"
-                data-dismiss="modal">Delete</button>
+            <spark-button data-dismiss="modal">Cancel</spark-button>
+ -          <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
           </div>
         </div>
       </div>
@@ -139,9 +138,9 @@
             </p>
           </div>
           <div class="modal-footer">
-            <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-            <button id="fileNewOkButton" class="btn btn-primary"
-                data-dismiss="modal">Create</button>
+            <spark-button class="btn btn-default" data-dismiss="modal">Cancel</spark-button>
+            <spark-button id="fileNewOkButton" class="btn btn-primary"
+                data-dismiss="modal">Create</spark-button>
           </div>
         </div>
       </div>
@@ -152,8 +151,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal"
-              aria-hidden="true">&times;</button>
+          <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
           <h4 class="modal-title">Spark</h4>
         </div>
         <div class="modal-body">
@@ -169,9 +167,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">
-            Close
-          </button>
+          <spark-button primary data-dismiss="modal">Close</spark-button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
