@@ -62,7 +62,9 @@ abstract class TreeViewDelegate {
    * It will adjust the visual of the mouse cursor when the item is
    * dragged over the treeview.
    */
-  String treeViewDropEffect(TreeView view);
+  String treeViewDropEffect(TreeView view,
+                            DataTransfer dataTransfer,
+                            String nodeUID);
 
   /**
    * This method is called when the dragged item is actually dropped on the
@@ -77,6 +79,30 @@ abstract class TreeViewDelegate {
   void treeViewDropCells(TreeView view,
                          List<String> nodesUIDs,
                          String targetNodeUID);
+
+  /**
+   * This method is called when the user dropped nodes from the treeview to one
+   * of its node.
+   * This method is called with a null destinationNodeUID if the nodes are not
+   * dropped on a specific node.
+   */
+  bool treeViewAllowsDropCells(TreeView view,
+                               List<String> nodesUIDs,
+                               String destinationNodeUID) {
+
+  }
+
+  /**
+   * This method is called when the user dropped an external item to one of its
+   * node.
+   * This method is called with a null destinationNodeUID if the external item
+   * is not not dropped on a specific node.
+   */
+  bool treeViewAllowsDrop(TreeView view,
+                          DataTransfer dataTransfer,
+                          String destinationNodeUID) {
+
+  }
 
   /**
    * This method provides a drag image and location for the given nodes UIDs.

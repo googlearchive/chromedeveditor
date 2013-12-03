@@ -52,12 +52,12 @@ abstract class ListViewDelegate {
   void listViewDoubleClicked(ListView view, List<int> rowIndexes, Event event);
 
   /**
-   * This method is called on dragenter.
+   * This method is called on dragenter and dragover.
    * Return 'copy', 'move', 'link' or 'none'.
    * It will adjust the visual of the mouse cursor when the item is
    * dragged over the treeview.
    */
-  String listViewDropEffect(ListView view);
+  String listViewDropEffect(ListView view, MouseEvent event);
 
   /**
    * This method is called when the user confirmed dropped an item on the list.
@@ -76,11 +76,11 @@ abstract class ListViewDelegate {
    * This method is called when the mouse cursor enters the list visual area
    * while the user is dragging an item.
    */
-  void listViewDragEnter(ListView view);
+  void listViewDragEnter(ListView view, MouseEvent event);
 
   /**
    * This method is called when the mouse cursor leaves the list visual area
    * while the user is dragging an item.
    */
-  void listViewDragLeave(ListView view);
+  void listViewDragLeave(ListView view, MouseEvent event);
 }

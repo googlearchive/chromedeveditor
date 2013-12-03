@@ -17,6 +17,7 @@ dependencies:
   spark_widgets:
     path: ../widgets
   unittest: any
+  uuid: any
 dev_dependencies:
   args: any
   grinder: '>=0.4.3'
