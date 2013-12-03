@@ -211,9 +211,14 @@ class _CompilerProvider {
         return new Future.error('unhandled: ${uri.scheme}');
       }
     } else if (uri.scheme == 'sdk') {
-      // Remove the '/lib/' prefix.
-      String contents = sdk.getSourceForPath(uri.path.substring(5));
+      final prefix = '/lib/';
 
+      String path = uri.path;
+      if (path.startsWith(prefix)) {
+        path = path.substring(prefix.length);
+      }
+
+      String contents = sdk.getSourceForPath(path);
       if (contents != null) {
         return new Future.value(contents);
       } else {

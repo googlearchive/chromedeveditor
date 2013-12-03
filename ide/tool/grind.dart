@@ -414,17 +414,14 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
   BytesBuilder bb = new BytesBuilder();
 
   String version = versionFile.readAsStringSync().trim();
-  bb.add(UTF8.encoder.convert(version));
-  bb.addByte(0);
-  _writeInt(bb, files.length);
+  _writeString(bb, version);
+  writeInt(bb, files.length);
 
   String pathPrefix = srcDir.path + '/';
 
   for (File file in files) {
-    String path = file.path.substring(pathPrefix.length);
-    bb.add(UTF8.encoder.convert(path));
-    bb.addByte(0);
-    _writeInt(bb, file.lengthSync());
+    _writeString(bb, file.path.substring(pathPrefix.length));
+    writeInt(bb, file.lengthSync());
   }
 
   for (File file in files) {
@@ -434,9 +431,12 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
   destFile.writeAsBytesSync(bb.toBytes());
 }
 
-void _writeInt(BytesBuilder bb, int val) {
-  bb.add([val >> 24, val >> 16, val >> 8, val]);
+void _writeString(BytesBuilder bb, String str) {
+  bb.add(UTF8.encoder.convert(str));
+  bb.addByte(0);
 }
+
+void writeInt(BytesBuilder bb, int val) => _writeString(bb, val.toString());
 
 void _printSize(GrinderContext context, File file) {
   int sizeKb = file.lengthSync() ~/ 1024;

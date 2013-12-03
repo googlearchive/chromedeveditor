@@ -3,6 +3,7 @@
 .files
 .settings/
 app/app.json
+app/sdk/dart-sdk.bin
 app/sdk/lib/
 app/sdk/version
 app/spark.dart.js

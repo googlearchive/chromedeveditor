@@ -102,26 +102,18 @@ class DartSdk extends SdkDirectory {
   void _parseArchive() {
     _libDirectory = _getCreateDir('lib');
 
-    int pos = 0;
-    int len = _utfLen(_contents, pos);
-    _version = _readUtf(_contents, pos, len);
-    pos += len + 1;
-    int fileCount = _readInt(_contents, pos);
-    pos += 4;
+    _ByteReader reader = new _ByteReader(_contents);
+
+    _version = reader.readUtf();
+    int fileCount = reader.readInt();
 
     List<_ArchiveEntry> entries = [];
 
     for (int i = 0; i < fileCount; i++) {
-      len = _utfLen(_contents, pos);
-      String path = _readUtf(_contents, pos, len);
-      pos += len + 1;
-      int fileLen = _readInt(_contents, pos);
-      pos += 4;
-
-      entries.add(new _ArchiveEntry(path, fileLen));
+      entries.add(new _ArchiveEntry(reader.readUtf(), reader.readInt()));
     }
 
-    int fileContentStart =  pos;
+    int fileContentStart = reader.pos;
 
     for (_ArchiveEntry entry in entries) {
       _libDirectory._createFile(entry.path, fileContentStart, entry.length);
@@ -234,24 +226,35 @@ class _ArchiveEntry {
   String toString() => '${path} ${length}';
 }
 
-int _readInt(List<int> _contents, int pos) {
-  return _contents[pos] << 24 |
-      _contents[pos + 1] << 16 |
-      _contents[pos + 2] << 8 |
-      _contents[pos + 3];
-}
+/**
+ * A class to simplify reading data from a byte array.
+ */
+class _ByteReader {
+  List<int> _contents;
+  int _pos = 0;
 
-String _readUtf(List<int> _contents, int pos, int len) {
-  return UTF8.decoder.convert(_contents.sublist(pos, pos + len));
-}
+  _ByteReader(this._contents);
 
-int _utfLen(List<int> _contents, int pos) {
-  int len = 0;
+  int get pos => _pos;
 
-  while (_contents[pos + len] != 0) {
-    len++;
+  String readUtf() {
+    int len = 0;
+
+    while (_contents[_pos + len] != 0) {
+      len++;
+
+      // Assert that we don't read past the end of the archive - all utf strings
+      // should be null-terminated.
+      assert(len != _contents.length);
+    }
+
+    String str = UTF8.decoder.convert(_contents.sublist(_pos, _pos + len));
+    _pos += len + 1;
+    return str;
   }
 
-  return len;
+  int readInt() {
+    String str = readUtf();
+    return str == null ? null : int.parse(str);
+  }
 }
-
