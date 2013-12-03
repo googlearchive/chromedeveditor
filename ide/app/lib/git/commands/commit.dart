@@ -16,8 +16,15 @@ import '../object_utils.dart';
 import '../objectstore.dart';
 import '../utils.dart';
 
+/**
+ * This class implments the git commit command.
+ */
 class Commit {
 
+  /**
+   * Walks over all the files in the working tree. Returns sha of the
+   * working tree.
+   */
   static Future<String> walkFiles(chrome.DirectoryEntry root,
       ObjectStore store) {
     return FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
@@ -81,6 +88,23 @@ class Commit {
     }
   }
 
+  /**
+   * Creates a commit of all the changed files int the working tree with
+   * [options.commitMessage] as commit message.
+   */
+  static Future commit(GitOptions options) {
+    chrome.DirectoryEntry dir = options.root;
+    ObjectStore store = options.store;
+
+    return store.getHeadRef().then((String headRefName) {
+      return store.getHeadForRef(headRefName).then((String parent) {
+        return _createCommitFromWorkingTree(options, parent, headRefName);
+      }, onError: (e) {
+        return _createCommitFromWorkingTree(options, null, headRefName);
+      });
+    });
+  }
+
   static Future _createCommitFromWorkingTree(GitOptions options, String parent,
       String refName) {
     chrome.DirectoryEntry dir = options.root;
@@ -92,8 +116,7 @@ class Commit {
     return walkFiles(dir, store).then((String sha) {
       return checkTreeChanged(store, parent, sha).then((_) {
         DateTime now = new DateTime.now();
-        String dateString = (now.millisecond / 1000).floor()
-            .toString();
+        String dateString = (now.millisecond / 1000).floor().toString();
         int offset = (now.timeZoneOffset.inMilliseconds / -60).floor();
         int absOffset = offset.abs().floor();
         String offsetStr = '' + (offset < 0 ? '-' : '+');
@@ -126,19 +149,6 @@ class Commit {
             return store.updateLastChange(null).then((_) => commitSha);
           });
         });
-      });
-    });
-  }
-
-  static Future commit(GitOptions options) {
-    chrome.DirectoryEntry dir = options.root;
-    ObjectStore store = options.store;
-
-    return store.getHeadRef().then((String headRefName) {
-      return store.getHeadForRef(headRefName).then((String parent) {
-        return _createCommitFromWorkingTree(options, parent, headRefName);
-      }, onError: (e) {
-        return _createCommitFromWorkingTree(options, null, headRefName);
       });
     });
   }

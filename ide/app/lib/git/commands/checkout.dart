@@ -17,6 +17,9 @@ import '../object_utils.dart';
 import '../objectstore.dart';
 import 'conditions.dart';
 
+/**
+ * This class implments the git checkout command.
+ */
 class Checkout {
 
   /**
@@ -40,6 +43,7 @@ class Checkout {
 
   /**
    * Switches the workspace to a given git branch.
+   * Throws a BRANCH_NOT_FOUND error if the branch does not exist.
    */
   static Future checkout(GitOptions options) {
     chrome.DirectoryEntry root = options.root;

@@ -32,6 +32,5 @@ String shaBytesToString(List<int> shaBytes) {
 /**
  * An empty function.
  */
-nopFunction() {
+void nopFunction() => null;
 
-}

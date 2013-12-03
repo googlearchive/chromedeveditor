@@ -12,6 +12,9 @@ import '../objectstore.dart';
 import '../pack.dart';
 import '../utils.dart';
 
+/**
+ * This class implements the git push command.
+ */
 class Push {
 
   Future push(GitOptions options) {

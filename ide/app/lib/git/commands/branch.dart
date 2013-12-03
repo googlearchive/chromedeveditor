@@ -7,29 +7,38 @@ library git.commands.branch;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:chrome_gen/chrome_app.dart' as chrome;
+
 import '../git.dart';
 import '../objectstore.dart';
 
+/**
+ * This class implements the git branch command.
+ */
 class Branch {
+
+  /* A valid branch name must :
+   * 1) must not contain \ or ? or * or [] or ASCII control
+   *    characters.
+   * 2) no two consecutive '.'
+   * 3) cannot begin or end with '/' or contain consecutive '/'.
+   * 4) cannot end with a '.'
+   * 5) Do not contain a sequence '@{'
+   * 6) cannot end with '.lock'.
+  */
+  static const BRANCH_PATTERN
+      = "^(?!/|\.|.* ([/.]\.|//|@\{|\\\\))[^\\x00-\\x20 ~^:?*\[]+(?<!\.lock|[/.])\$";
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    var branchRegex = new RegExp(
-        "^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+\$");
-    if (name.isNotEmpty && name.matchAsPrefix(name).groupCount) {
-      if ((length < 5 || name.lastIndexOf('.lock') != length - 5) &&
-          name[length -1] != '.' && name[length - 1] != '/'
-          && name[0] != '.') {
-        return true;
-      }
-    }
-    return false;
+    var branchRegex = new RegExp(BRANCH_PATTERN);
+    return name.isNotEmpty && name.matchAsPrefix(name).groupCount;
   }
 
   /**
    * Creates a new branch. Throws error if the branch already exist.
    */
-  static Future branch(GitOptions options) {
+  static Future<chrome.FileEntry> branch(GitOptions options) {
     ObjectStore store = options.store;
     String branchName = options.branchName;
 

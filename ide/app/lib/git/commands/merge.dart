@@ -29,11 +29,11 @@ class TreeDiffResult {
 }
 
 /**
- * TODO(grv) add unittests.
+ * Implements tree diffs and merging of git trees.
  */
 class Merge {
 
-  shasEqual(List<int> sha1, List<int> sha2) {
+  bool shasEqual(List<int> sha1, List<int> sha2) {
     for (var i = 0; i < sha1.length; ++i) {
       if (sha1[i] != sha2[i]) return false;
     }
@@ -44,7 +44,7 @@ class Merge {
     return new Uint8List(0);
   }
 
-  static diffTree(TreeObject oldTree, TreeObject newTree) {
+  static TreeDiffResult diffTree(TreeObject oldTree, TreeObject newTree) {
     oldTree.sortEntries();
     newTree.sortEntries();
 

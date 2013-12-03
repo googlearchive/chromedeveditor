@@ -40,6 +40,8 @@ abstract class GitObject {
     }
   }
 
+  GitObject([this._sha, this.data]);
+
   // The type of git object.
   String _type;
   dynamic data;
@@ -86,10 +88,8 @@ class TreeObject extends GitObject {
 
   List<TreeEntry> entries;
 
-  TreeObject([String sha, Uint8List data]) {
+  TreeObject( [String sha, Uint8List data]) : super(sha, data) {
     this._type = ObjectTypes.TREE;
-    this._sha = sha;
-    this.data = data;
     _parse();
   }
 
@@ -130,10 +130,8 @@ class TreeObject extends GitObject {
  */
 class BlobObject extends GitObject {
 
-  BlobObject(String sha, String data) {
+  BlobObject(String sha, String data) : super(sha, data) {
     this._type = ObjectTypes.BLOB;
-    this._sha = sha;
-    this.data = data;
   }
 }
 
@@ -223,10 +221,8 @@ class CommitObject extends GitObject {
  * Represents a git tag object.
  */
 class TagObject extends GitObject {
-  TagObject(String sha, String data) {
+  TagObject(String sha, String data) : super(sha, data) {
     this._type = ObjectTypes.TAG;
-    this._sha = sha;
-    this.data = data;
   }
 }
 
