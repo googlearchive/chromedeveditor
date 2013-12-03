@@ -12,11 +12,7 @@
 
   <link rel="stylesheet" href="spark_polymer.css">
 
-  <link rel="import" href="packages/spark_widgets/spark-button/spark-button.html">
-  <link rel="import" href="packages/spark_widgets/spark-select/spark-select.html">
-  <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
-
-  <link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html">
+  <link rel="import" href="lib/polymer_ui/spark_polymer_ui.html">
 
   <!-- template for FileItemCell -->
   <template id="fileview-filename-template" >
@@ -41,83 +37,6 @@
       <div class="treeviewcell-disclosure">&#9654;</div>
     </div>
   </template>
-</head>
-
-<body>
-  <div id="toolbar">
-    <spark-button id="newFile" primary="true">New File</spark-button>
-    <spark-button id="openFile">Open File...</spark-button>
-
-    <span id="status"></span>
-  
-    <div id="hotdogMenu" class="btn-group">
-      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-        Menu <span class="caret"></span>
-      </button>
-      <ul class="dropdown-menu pull-right">
-        <li class="disabled" id="changeTheme"><a><span>Change Theme</span> &nbsp;
-          <span class="pull-right">
-            <spark-button id="themeLeft"><strong>-</strong></spark-button>
-            <spark-button id="themeRight"><strong>+</strong></spark-button>
-          </span></a>
-        </li>
-        <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
-          <span class="pull-right">
-            <spark-button id="keysLeft"><strong>-</strong></spark-button>
-            <spark-button id="keysRight"><strong>+</strong></spark-button>
-          </span></a>
-        </li>
-      </ul>
-    </div>
-  </div>
-  
-  <polymer-flex-panel id="splitview">
-    <div id="fileViewArea" min-size="100"></div>
-    <spark-splitter direction="left"></spark-splitter>
-    <div id="editorArea" min-size="200"></div>
-  </polymer-flex-panel>
-  
-  <!-- file delete dialog -->
-  <div id="deleteDialog" class="modal fade">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body">
-          <p id="message"></p>
-        </div>
-        <div class="modal-footer">
-          <spark-button data-dismiss="modal">Cancel</spark-button>
-          <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- about dialog -->
-  <div class="modal fade" id="aboutDialog">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
-          <h4 class="modal-title">Spark</h4>
-        </div>
-        <div class="modal-body">
-          <dl>
-            <dt>A Chrome Apps based development environment</dt>
-            <dd>version <span id="aboutVersion"></span></dd>
-          </dl>
-          <div class="checkbox">
-            <label>
-              <input type="checkbox" id="analyticsCheck">
-              Allow Spark to collect anonymous usage statistics
-            </label>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <spark-button primary data-dismiss="modal">Close</spark-button>
-        </div>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
 
   <!-- analytics includes -->
   <script src="analytics/google-analytics-bundle.js"></script>
@@ -150,6 +69,11 @@
   <script src="spark_bootstrap.js" defer></script>
 
   <script type="application/dart" src="spark_polymer.dart" defer></script>
+</head>
+
+<body>
+  <!-- Main UI -->
+  <spark-polymer-ui id="topUi"></spark-polymer-ui>
 </body>
 
 </html>

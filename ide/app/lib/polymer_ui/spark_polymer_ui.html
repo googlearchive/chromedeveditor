@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
+<link rel="import" href="../../packages/spark_widgets/spark-select/spark-select.html">
+<link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
+
+<link rel="import" href="../../packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html">
+
+<polymer-element name="spark-polymer-ui">
+  <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="spark_polymer_ui.css"-->  
+    <style>
+      @import url("packages/bootjack/css/bootstrap.css");
+      @import url("packages/bootjack/css/bootstrap-theme.css");
+      @import url("lib/ui/widgets/listview.css");
+      @import url("lib/ui/widgets/treeview.css");
+      @import url("lib/ui/widgets/tabview.css");
+      @import url("lib/ui/widgets/imageviewer.css");
+        
+      #status {
+        vertical-align: bottom;
+        flex: 1;
+      }
+ 
+      #status.error {
+        color: #C66;
+      }
+ 
+      .fileview-filename-container {
+      }
+
+      .fileview-filename-container .filename {
+        display: inline-block;
+      }
+
+      .fileview-filename-container .menu button {
+        opacity: 0;
+        margin-right: -15px;
+      }
+
+      .fileview-filename-container .dropdown-toggle {
+        height: 20px;
+      }
+
+      .fileview-filename-container .dropdown-toggle .caret {
+        vertical-align: super;  
+      }
+
+      .fileview-filename-container .dropdown-menu {
+        min-width: 120px;
+      }
+
+      .fileview-filename-container .filename {
+        overflow: hidden;
+        position: absolute;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+      }
+
+      .fileview-filename-container:hover .filename {
+        width: calc(100% - 26px);
+      }
+
+      .fileview-filename-container:hover .menu button {
+        opacity: 1.0;
+      }
+
+      .ace_gutter-cell {
+        color: #aaa;
+      }
+
+      #splitview {
+        width: 100%;
+        height: 100%;
+      }
+
+      #fileViewArea {
+        position: relative;
+        width: 300px;
+      }
+
+      #fileViewArea .listview-container {
+        bottom: 0;
+        left: 0;
+        overflow-x: auto;
+        overflow-y: auto;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+
+      #fileViewArea .listview-dragover {
+        bottom: 0;
+        left: 0;
+        pointer-events: none;
+        position: absolute;
+        right: 0;
+        top: 0;
+      }
+
+      #fileViewArea .listview-dragover.listview-dragover-active {
+        border: 2px solid #aaf;
+      }
+
+      #editorArea {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+      }
+
+      #toolbar {
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        padding: 4px;
+      }
+
+      #hotdogMenu li {
+        min-width: 16em;
+      }
+      
+      #hotdogMenu .main-menu-button {
+        background-image: url(../../images/menu.png);
+        background-position: -1px -2px;
+        height: 26px;
+        width: 26px;
+      }
+      
+      #hotdogMenu .main-menu-button:focus {
+        background-color: white;
+      }
+
+      /* bootstrap overrides */
+
+      #toolbar .btn {
+        padding: 2px 8px 2px 8px;
+        margin: 0px 2px 0px 2px;
+      }
+    </style>
+
+    <polymer-flex-panel id="toolbar">
+      <spark-button id="newFile" primary="true">New File</spark-button>
+      <spark-button id="openFile">Open File...</spark-button>
+
+      <span id="status"></span>
+
+      <div id="hotdogMenu" class="btn-group">
+        <button type="button"
+            class="btn btn-default dropdown-toggle main-menu-button"
+            data-toggle="dropdown">
+        </button>
+        <ul class="dropdown-menu pull-right">
+          <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
+            <span class="pull-right">
+              <button type="button" id="themeLeft"><strong>-</strong></button>
+              <button type="button" id="themeRight"><strong>+</strong></button>
+            </span></a>
+          </li>
+          <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
+            <span class="pull-right">
+              <button type="button" id="keysLeft"><strong>-</strong></button>
+              <button type="button" id="keysRight"><strong>+</strong></button>
+            </span></a>
+          </li>
+        </ul>
+      </div>
+    </polymer-flex-panel> <!-- /#toolbar -->
+
+    <polymer-flex-panel id="splitview">
+      <div id="fileViewArea" min-size="100"></div>
+      <spark-splitter direction="left"></spark-splitter>
+      <div id="editorArea" min-size="200"></div>
+    </polymer-flex-panel>
+
+    <!-- file delete dialog -->
+    <div id="deleteDialog" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <p id="message"></p>
+          </div>
+          <div class="modal-footer">
+            <spark-button data-dismiss="modal">Cancel</spark-button>
+            <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- about dialog -->
+    <div class="modal fade" id="aboutDialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
+            <h4 class="modal-title">Spark</h4>
+          </div>
+          <div class="modal-body">
+            <dl>
+              <dt>A Chrome Apps based development environment</dt>
+              <dd>version <span id="aboutVersion"></span></dd>
+            </dl>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" id="analyticsCheck">
+                Allow Spark to collect anonymous usage statistics
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <spark-button primary data-dismiss="modal">Close</spark-button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+  </template>
+
+  <script type="application/dart" src="spark_polymer_ui.dart"></script>
+</polymer-element>

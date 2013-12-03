@@ -2,20 +2,7 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-body {
-  bottom: 0;
-  display: flex;
-  flex-flow: column;
-  left: 0;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-#topUi {
-  width: 100%;
-  height: 100%;
-}
+/* 
+TODO(sergeygs): move the <style> contents from *.html to here after
+https://code.google.com/p/dart/issues/detail?id=14382 is fixed
+*/

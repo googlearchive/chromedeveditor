@@ -9,7 +9,7 @@ import 'dart:async';
 
 import 'package:polymer/polymer.dart';
 
-import '../src/widget.dart';
+import '../common/widget.dart';
 
 /// Implements the spark-splitter custom Polymer element.
 @CustomTag('spark-splitter')

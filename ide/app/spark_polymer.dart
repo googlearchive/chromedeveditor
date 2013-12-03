@@ -10,8 +10,6 @@ import 'package:polymer/polymer.dart' as polymer;
 import 'spark.dart';
 
 void main() {
-  polymer.initPolymer();
-
   // TODO: hard-code developer mode to true for now.
   SparkPolymer spark = new SparkPolymer(true);
   spark.start();
@@ -36,34 +34,41 @@ class SparkPolymer extends Spark {
   @override
   void initEditor() => super.initEditor();
 
+  // TEMP:
   @override
-  void initEditorManager() => super.initEditorManager();
+  void initEditorManager() => null; //super.initEditorManager();
 
+  // TEMP:
   @override
-  void initEditorArea() => super.initEditorArea();
+  void initEditorArea() => null; //super.initEditorArea();
 
+  // We're using a Polymer-based splitview, so disable the default.
   @override
-  void initSplitView() {
-    // We're using a Polymer-based splitview, so disable the default.
-  }
+  void initSplitView() => null;
 
+  // TEMP:
   @override
-  void initFilesController() => super.initFilesController();
+  void initFilesController() => null; //super.initFilesController();
 
   @override
   void initLookAndFeel() {
+    // Init the Polymer library.
+    polymer.initPolymer();
     // Init the Bootjack library (a wrapper around Bootstrap).
     bootjack.Bootjack.useDefault();
   }
 
+  // TEMP:
   @override
-  void createActions() => super.createActions();
+  void createActions() => null; //super.createActions();
 
+  // TEMP:
   @override
-  void initToolbar() => super.initToolbar();
+  void initToolbar() => null; //super.initToolbar();
 
+  // TEMP:
   @override
-  void buildMenu() => super.buildMenu();
+  void buildMenu() => null; //super.buildMenu();
 
   //
   // - End parts of the parent's ctor.
