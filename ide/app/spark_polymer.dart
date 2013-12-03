@@ -9,12 +9,15 @@ import 'package:polymer/polymer.dart' as polymer;
 
 import 'spark.dart';
 
-void main() {
-  polymer.initPolymer();
+import 'dart:html';
+import 'package:spark_widgets/spark-overlay/spark-overlay.dart';
 
-  // TODO: hard-code developer mode to true for now.
-  SparkPolymer spark = new SparkPolymer(true);
-  spark.start();
+void main() {
+  polymer.initPolymer().run(() {
+    // TODO: hard-code developer mode to true for now.
+    SparkPolymer spark = new SparkPolymer(true);
+    spark.start();
+  });
 }
 
 class SparkPolymer extends Spark {
@@ -45,6 +48,17 @@ class SparkPolymer extends Spark {
   @override
   void initSplitView() {
     // We're using a Polymer-based splitview, so disable the default.
+  }
+
+  // TODO(terry): Hookup overlay dialog.
+  @override
+  void showStatus(String text, {bool error: false}) {
+    Element element = querySelector("#status");
+    element.text = text;
+    SparkOverlay overlay = querySelector("#spark-dialog");
+    if (overlay != null) {
+      overlay.toggle();
+    }
   }
 
   @override

@@ -212,8 +212,6 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initToolbar() {
-    querySelector("#newFile").onClick.listen(
-        (_) => actionManager.getAction('file-new').invoke());
     querySelector("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
 
@@ -226,7 +224,6 @@ class Spark extends Application implements FilesControllerDelegate {
 
     UListElement ul = querySelector('#hotdogMenu ul');
 
-    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
     ul.children.add(createMenuItem(actionManager.getAction('file-close')));
@@ -260,8 +257,6 @@ class Spark extends Application implements FilesControllerDelegate {
   //
   // - End parts of ctor.
   //
-
-  void newFile() => notImplemented('Spark.newFile()');
 
   void openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -345,7 +340,6 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     // TODO: currently, there's no way in Dart to handle uncaught exceptions
-
   }
 }
 
@@ -579,17 +573,33 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
 }
 
 class FileNewAction extends SparkAction implements ContextAction {
+  bootjack.Modal _fileNewDialog;
+  InputElement _nameElement;
+  ws.Folder folder;
+
   FileNewAction(Spark spark) : super(spark, "file-new", "New File") {
     defaultBinding("ctrl-n");
+    _fileNewDialog = bootjack.Modal.wire(querySelector('#fileNewDialog'));
+    _nameElement = _fileNewDialog.element.querySelector("#fileName");
+    _fileNewDialog.element.querySelector("#fileNewOkButton").onClick.listen((_) {
+      _createFile();
+    });
   }
 
   void _invoke([List<ws.Folder> folders]) {
-    if (folders == null) {
-      spark.newFile();
-    } else {
-      ws.Folder folder = folders.first;
-      // TODO: create a new file in the given folder
-      spark.notImplemented('new file');
+    if (folders != null && folders.isNotEmpty) {
+      folder = folders.first;
+      _nameElement.value = '';
+      _fileNewDialog.show();
+    }
+  }
+
+  // called when user validates the dialog
+  void _createFile() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFile(name).then((file) =>
+          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true));
     }
   }
 

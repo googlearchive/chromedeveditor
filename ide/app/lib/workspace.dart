@@ -318,6 +318,17 @@ class Folder extends Container {
   Folder(Container parent, chrome.Entry entry, bool syncable):
     super(parent, entry, syncable);
 
+  /**
+   * Creates a new [File] with the given name
+   */
+  Future<File> createNewFile(String name) {
+    return (_entry as chrome.DirectoryEntry).createFile(name).then((entry) {
+      File file = new File(this, entry, _syncable);
+      _children.add(file);
+      _fireEvent(new ResourceChangeEvent(file, ResourceEventType.ADD));
+      return file;
+    });
+  }
 
 }
 
