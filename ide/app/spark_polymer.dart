@@ -4,14 +4,10 @@
 
 library spark_polymer;
 
-import 'dart:html';
-
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 import 'spark.dart';
-import 'lib/ace.dart';
-import 'lib/utils.dart' as utils;
 
 void main() {
   polymer.initPolymer();
@@ -52,20 +48,6 @@ class SparkPolymer extends Spark {
   }
 
   @override
-  void initEditorThemes() {
-    super.initEditorThemes();
-//    syncPrefs.getValue('aceTheme').then((String theme) {
-//      final selected = (theme != null) ? AceEditor.THEMES.indexOf(theme) : 0;
-
-//      (querySelector('#themeChooser') as dynamic)
-//        ..items = AceEditor.THEMES.map(_beautifyThemeName)
-//        ..selected = selected
-//        ..onClick.listen(_switchTheme);
-//      _switchTheme();
-//    });
-  }
-
-  @override
   void initFilesController() => super.initFilesController();
 
   @override
@@ -86,17 +68,4 @@ class SparkPolymer extends Spark {
   //
   // - End parts of the parent's ctor.
   //
-
-  void _switchTheme([_]) {
-    int selected =
-        (querySelector('#themeChooser') as dynamic).selected;
-    if (selected == -1)
-      selected = 0;
-    final String themeName = AceEditor.THEMES[selected];
-    editor.theme = themeName;
-    syncPrefs.setValue('aceTheme', themeName);
-  }
-
-  String _beautifyThemeName(String themeName) =>
-      utils.capitalize(themeName).replaceAll('_', ' ');
 }

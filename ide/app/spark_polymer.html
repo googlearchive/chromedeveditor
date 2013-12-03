@@ -16,6 +16,8 @@
   <link rel="import" href="packages/spark_widgets/spark-select/spark-select.html">
   <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
 
+  <link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html">
+
   <!-- template for FileItemCell -->
   <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
@@ -53,21 +55,27 @@
         Menu <span class="caret"></span>
       </button>
       <ul class="dropdown-menu pull-right">
-        <li class="disabled" id="themeControl"><a>Change Theme &nbsp;
+        <li class="disabled" id="changeTheme"><a><span>Change Theme</span> &nbsp;
           <span class="pull-right">
             <spark-button id="themeLeft"><strong>-</strong></spark-button>
             <spark-button id="themeRight"><strong>+</strong></spark-button>
+          </span></a>
+        </li>
+        <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
+          <span class="pull-right">
+            <spark-button id="keysLeft"><strong>-</strong></spark-button>
+            <spark-button id="keysRight"><strong>+</strong></spark-button>
           </span></a>
         </li>
       </ul>
     </div>
   </div>
   
-  <div id="splitview" class="flexbox">
+  <polymer-flex-panel id="splitview">
     <div id="fileViewArea" min-size="100"></div>
     <spark-splitter direction="left"></spark-splitter>
     <div id="editorArea" min-size="200"></div>
-  </div>
+  </polymer-flex-panel>
   
   <!-- file delete dialog -->
   <div id="deleteDialog" class="modal fade">
@@ -77,8 +85,8 @@
           <p id="message"></p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="deleteOkButton" class="btn btn-primary" data-dismiss="modal">Delete</button>
+          <spark-button data-dismiss="modal">Cancel</spark-button>
+          <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
         </div>
       </div>
     </div>
@@ -89,7 +97,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
           <h4 class="modal-title">Spark</h4>
         </div>
         <div class="modal-body">
@@ -101,12 +109,11 @@
             <label>
               <input type="checkbox" id="analyticsCheck">
               Allow Spark to collect anonymous usage statistics
-				      </input>
             </label>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+          <spark-button primary data-dismiss="modal">Close</spark-button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
