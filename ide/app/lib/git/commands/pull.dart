@@ -11,11 +11,11 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import '../file_operations.dart';
-import '../git.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
+import '../options.dart';
 import '../pack.dart';
 import '../pack_index.dart';
 import '../upload_pack_parser.dart';

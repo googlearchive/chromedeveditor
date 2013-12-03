@@ -11,10 +11,10 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 import '../constants.dart';
 import '../file_operations.dart';
-import '../git.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
+import '../options.dart';
 import 'conditions.dart';
 
 /**

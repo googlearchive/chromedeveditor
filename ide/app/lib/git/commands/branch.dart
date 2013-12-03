@@ -9,8 +9,8 @@ import 'dart:html';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
-import '../git.dart';
 import '../objectstore.dart';
+import '../options.dart';
 
 /**
  * This class implements the git branch command.

@@ -6,9 +6,9 @@ library git.commands.push;
 
 import 'dart:async';
 
-import '../git.dart';
 import '../http_fetcher.dart';
 import '../objectstore.dart';
+import '../options.dart';
 import '../pack.dart';
 import '../utils.dart';
 
