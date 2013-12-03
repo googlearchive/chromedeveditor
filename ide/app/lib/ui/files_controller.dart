@@ -146,7 +146,12 @@ class FilesController implements TreeViewDelegate {
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUIDs,
                              html.Event event) {
-    // Do nothing.
+    if (nodeUIDs.length == 1) {
+      String uid = nodeUIDs.first;
+      if (_filesMap[uid] is Container) {
+        view.toggleExpanded(uid);
+      }
+    }
   }
 
   String treeViewDropEffect(TreeView view) {
