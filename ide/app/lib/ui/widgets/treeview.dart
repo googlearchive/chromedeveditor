@@ -168,8 +168,8 @@ class TreeView implements ListViewDelegate {
   }
 
   void toggleExpanded(String nodeUID) {
-    // TODO:
-
+    // TODO: given a nodeUID, how to get a ListViewCell?
+    // listViewCell.toggleExpanded();
   }
 
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
