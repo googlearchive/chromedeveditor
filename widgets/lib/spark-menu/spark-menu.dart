@@ -1,8 +1,6 @@
-/**
- * Copyright 2013 The Polymer Authors. All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be found
- * in the LICENSE file.
- */
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 library spark_widgets.menu;
 
@@ -17,8 +15,8 @@ class SparkMenu extends SparkSelector {
 
   // TODO(terry): Work around because changed events aren't handled up the
   //              sub-chain.
-  targetChanged(old) => super.targetChanged(old);
-  selectedItemChanged() => super.selectedItemChanged();
-  selectedChanged() => super.selectedChanged();
+  void targetChanged(old) => super.targetChanged(old);
+  void selectedItemChanged() => super.selectedItemChanged();
+  void selectedChanged() => super.selectedChanged();
   void selectionSelect(e, detail) => super.selectionSelect(e, detail);
 }

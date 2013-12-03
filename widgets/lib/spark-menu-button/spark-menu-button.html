@@ -1,11 +1,12 @@
-<!--
-Copyright 2013 The Polymer Authors. All rights reserved.
-Use of this source code is governed by a BSD-style
-license that can be found in the LICENSE file.
--->
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
 <!--
 /**
- * @module Polymer Elements
+ * See g-menu-button https://github.com/Polymer/toolkit-ui/tree/master/elements.
  */
 -->
 <link rel="import" href="spark-icon-button.html"/>
@@ -26,7 +27,7 @@ license that can be found in the LICENSE file.
     height: 44px;
   }
 }
- 
+
 #overlay {
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
@@ -54,7 +55,7 @@ license that can be found in the LICENSE file.
   border-style: solid;
   border-width: 8px;
 }
- 
+
 .arrow-inner {
   border-bottom-color: white;
   margin-top: -16px;
@@ -71,7 +72,7 @@ license that can be found in the LICENSE file.
   left: -7px;
   margin-left: 10%;
 }
- 
+
 #overlayMenu {
   display: block;
   box-sizing: border-box;
@@ -85,11 +86,11 @@ container */
   [responsive=true] .arrow-border, .arrow {
     display: none;
   }
-  
+
   [responsive=true] #overlayMenu {
     width: 100%;
   }
-  
+
   [responsive=true] #overlay  {
     /* override spark-overlay @host rule style */
     position: absolute !important;
@@ -102,7 +103,7 @@ container */
     border-bottom: 0;
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
   }
-  
+
   [responsive=true] #overlay.slideup {
     -webkit-transform: translateY(100%);
     transform: translateY(100%);
@@ -110,7 +111,7 @@ container */
     -webkit-transition: -webkit-transform 0.218s !important;
     transition: transform 0.218s !important;
   }
-  
+
   [responsive=true] #overlay.slideup.opened {
     -webkit-transform: translateY(0);
     transform: translateY(0);

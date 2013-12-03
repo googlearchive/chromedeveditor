@@ -1,13 +1,13 @@
-<!--
-Copyright 2013 The Polymer Authors. All rights reserved.
-Use of this source code is governed by a BSD-style
-license that can be found in the LICENSE file.
--->
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
 <!--
 /**
- * @module Polymer Elements
- */
-/**
+ * See g-selector https://github.com/Polymer/toolkit-ui/tree/master/elements.
+ *
  * spark-selector is used to display a list of elements that can be selected.
  * The attribute "selected" indicates which element is being selected.
  * Tapping on the element to change selection would fire "activate"
@@ -23,7 +23,7 @@ license that can be found in the LICENSE file.
  *
  * spark-selector is not styled.  So one needs to use "selected" CSS class
  * to style the selected element.
- * 
+ *
  *     <style>
  *       .item.selected {
  *         background: #eee;
@@ -35,12 +35,10 @@ license that can be found in the LICENSE file.
  *       <div class="item">Item 2</div>
  *       <div class="item">Item 3</div>
  *     </spark-selector>
- *
- * @class spark-selector
  */
 /**
  * Fired when an element is selected via tap.
- * 
+ *
  * @event activate
  * @param {Object} inDetail
  *   @param {Object} inDetail.item the selected element

@@ -1,20 +1,18 @@
-<!--
-Copyright 2013 The Polymer Authors. All rights reserved.
-Use of this source code is governed by a BSD-style
-license that can be found in the LICENSE file.
--->
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
 <!--
 /**
- * @module Polymer Elements
- */
-/**
+ * See g-icon-button https://github.com/Polymer/toolkit-ui/tree/master/elements.
+ *
  * spark-icon-button enables you to place an image centered in a button.
  *
  * Example:
  *
  *     <spark-icon-button src="star.png"></spark-icon-button>
- *
- * @class spark-icon-button
  */
 -->
 <link rel="import" href="../spark-icon/spark-icon.html">
@@ -41,21 +39,21 @@ license that can be found in the LICENSE file.
           background-position: 0 0;
           vertical-align: middle;
         }
-        
+
         *:hover {
           background-position: 0 -44px;
         }
-        
+
         *.selected {
           background-position: 0 -88px;
         }
-        
+
         *:active, *.selected:active {
           background-position: 0 -132px;
         }
       }
     </style>
-    <spark-icon draggable=true src="{{src}}"></spark-icon>
+    <spark-icon src="{{src}}"></spark-icon>
   </template>
   <script type="application/dart" src="spark-icon-button.dart"></script>
 </polymer-element>

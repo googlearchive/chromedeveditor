@@ -1,13 +1,13 @@
-<!--
-Copyright 2013 The Polymer Authors. All rights reserved.
-Use of this source code is governed by a BSD-style
-license that can be found in the LICENSE file.
--->
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
 <!--
 /**
- * @module Polymer Elements
- */
-/**
+ * See g-toolbar https://github.com/Polymer/toolkit-ui/tree/master/elements.
+ *
  * spark-toolbar is a horizontal bar containing elements that can perform actions.
  *
  * Example:
@@ -17,8 +17,6 @@ license that can be found in the LICENSE file.
  *       <div class="flex">Title</div>
  *       <spark-icon-button src="more.png" on-click="{{moreAction}}"></spark-icon-button>
  *     </spark-toolbar>
- *
- * @class spark-toolbar
  */
 -->
 <polymer-element name="spark-toolbar" attributes="responsive touch-action">
@@ -38,19 +36,19 @@ license that can be found in the LICENSE file.
         box-shadow: inset 0px 0px 3px rgba(255, 255, 255, 1);
         border-bottom: 1px solid rgba(0, 0, 0, 0.28);
       }
-      
+
       /* toolbars can be made plain and nested toolbars are unstyled by default */
       /* TODO(ffu): use :scope when it is available */
       .toolbar[responsive=true] {
         box-shadow: none;
         border-bottom: 0;
       }
-      
+
       /*@polyfill .toolbar > *:not(spark-toolbar) */
       ::-webkit-distributed(:not(spark-toolbar)) {
         margin: 0 10px;
       }
-      
+
       /*@polyfill .toolbar > .flex */
       ::-webkit-distributed(.flex) {
         -webkit-box-flex: 1;
@@ -58,7 +56,7 @@ license that can be found in the LICENSE file.
         -ms-flex: 1;
         flex: 1;
       }
-      
+
       /* TODO(ffu): ad hoc, replace with a more thoughtful set of responsive rules */
       @media screen and (max-width: 800px) {
         .toolbar[responsive=true] {
@@ -71,7 +69,7 @@ license that can be found in the LICENSE file.
           border: 0;
           border-top: 1px solid rgba(0, 0, 0, 0.28);
         }
-        
+
         /*@polyfill .toolbar > *.hidden-narrow */
         ::-webkit-distributed(.hidden-narrow) {
           display: none;

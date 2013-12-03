@@ -1,8 +1,6 @@
-/**
- * Copyright 2013 The Polymer Authors. All rights reserved.
- * Use of this source code is governed by a BSD-style license that can be found
- * in the LICENSE file.
- */
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 library spark_widgets.menu_item;
 
@@ -13,13 +11,13 @@ import 'package:polymer/polymer.dart';
 @CustomTag("spark-menu-item")
 class SparkMenuItem extends PolymerElement {
   /// URL image for the icon associated with this menu item.
-  @observable String src = "";
+  @published String src = "";
 
   /// Size of the icon.
-  @observable String iconsize = "24";
+  @published String iconsize = "24";
 
   /// Specifies the label for the menu item.
-  @observable String label = "";
+  @published String label = "";
 
   SparkMenuItem.created(): super.created();
 }
