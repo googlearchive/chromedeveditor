@@ -6,9 +6,12 @@ library spark_widgets.selection;
 
 import 'package:polymer/polymer.dart';
 
+import '../src/widget.dart';
+
 // Ported from Polymer Javascript to Dart code.
+
 @CustomTag("spark-selection")
-class SparkSelection extends PolymerElement {
+class SparkSelection extends Widget {
   @published bool multi = false;
 
   final List _selection = [];

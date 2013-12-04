@@ -6,10 +6,12 @@ library spark_widgets.menu_item;
 
 import 'package:polymer/polymer.dart';
 
+import '../src/widget.dart';
+
 // Ported from Polymer Javascript to Dart code.
 
 @CustomTag("spark-menu-item")
-class SparkMenuItem extends PolymerElement {
+class SparkMenuItem extends Widget {
   /// URL image for the icon associated with this menu item.
   @published String src = "";
 

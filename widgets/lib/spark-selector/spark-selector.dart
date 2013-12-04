@@ -5,9 +5,11 @@
 library spark_widgets.selector;
 
 import 'dart:html' show MutationObserver, Node, Element;
+
 import 'package:polymer/polymer.dart';
 import "package:template_binding/template_binding.dart" show nodeBind;
-import 'package:spark_widgets/spark-selection/spark-selection.dart';
+
+import '../spark-selection/spark-selection.dart';
 
 // Ported from Polymer Javascript to Dart code.
 
@@ -72,8 +74,6 @@ class SparkSelector extends SparkSelection {
   @published bool notap = false;
   @published dynamic selectedModel = null;
 
-  dynamic _activateListener;
-
   MutationObserver _observer;
 
   SparkSelector.created(): super.created();
@@ -90,10 +90,14 @@ class SparkSelector extends SparkSelection {
   }
 
   List get items {
-    List nodes = target != this ? (itemsSelector != null ?
-        (target as dynamic).querySelectorAll(itemsSelector) :
-            (target as dynamic).children) :
-            ($['items'] as dynamic).getDistributedNodes();
+    List nodes = null;
+    if (target == this) {
+      nodes = ($['items'] as dynamic).getDistributedNodes();
+    } else if (itemsSelector != null) {
+      nodes = (target as dynamic).querySelectorAll(itemsSelector);
+    } else {
+      nodes = (target as dynamic).children;
+    }
     return nodes.where((node) => node.localName != "template").toList();
   }
 

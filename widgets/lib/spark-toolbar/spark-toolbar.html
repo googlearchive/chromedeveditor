@@ -19,7 +19,8 @@
  *     </spark-toolbar>
  */
 -->
-<polymer-element name="spark-toolbar" attributes="responsive touch-action">
+
+<polymer-element name="spark-toolbar" attributes="responsive touch color">
   <template>
     <style>
       .toolbar {
@@ -32,7 +33,7 @@
         -ms-flex-align: center;
         align-items: center;
         min-height: 40px;
-        background-color: whitesmoke;
+        background-color: "{{color}}";
         box-shadow: inset 0px 0px 3px rgba(255, 255, 255, 1);
         border-bottom: 1px solid rgba(0, 0, 0, 0.28);
       }
@@ -76,9 +77,11 @@
         }
       }
     </style>
+
     <div class="toolbar" responsive="{{responsive}}" touch-action="{{touchAction}}">
       <content></content>
     </div>
   </template>
+  
   <script type="application/dart" src="spark-toolbar.dart"></script>
 </polymer-element>

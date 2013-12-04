@@ -19,20 +19,14 @@
   <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
   <link rel="import" href="packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
-  <link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html">
-
   <!-- template for FileItemCell -->
   <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
       <div class="filename">
       </div>
-      <div class="dropdown container">
-        <div class="menu pull-right">
-          <button class="dropdown-toggle" type="button" data-toggle="dropdown">
-            <span class="caret"></span>
-          </button>
-        </div>
-      </div>
+      <a href="#" class="menu">
+        <span class="caret"></span>
+      </a>
     </div>
   </template>
 
@@ -79,18 +73,19 @@
 </head>
 
 <body>
-<body>
-  <spark-toolbar>
-    <spark-icon-button id="newFile" src="../../../add.png"></spark-icon-button>
-    <spark-icon-button id="openFile" src="../../../open.png"></spark-icon-button>
+  <spark-toolbar id="toolbar" responsive color="white">
+    <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
+    <spark-icon-button id="openFile" src="images/open.png"></spark-icon-button>
+    
     <span id="status"></span>
 
     <div id="hotdogMenu" class="btn-group">
-      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-        Menu <span class="caret"></span>
+      <button type="button" data-toggle="dropdown"
+          class="btn btn-default dropdown-toggle main-menu-button">
+        <img src="images/menu.png">
       </button>
       <ul class="dropdown-menu pull-right">
-        <li class="disabled" id="changeTheme"><a><span>Change Theme</span> &nbsp;
+        <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
           <span class="pull-right">
             <spark-button id="themeLeft"><strong>-</strong></spark-button>
             <spark-button id="themeRight"><strong>+</strong></spark-button>
@@ -104,14 +99,20 @@
         </li>
       </ul>
     </div>
-    <spark-icon-button src="../../../menu.png" style="margin-left:auto; margin-right:20px;"></spark-icon-button>
   </spark-toolbar>
 
-  <polymer-flex-panel id="splitview">
+  <div id="splitview">
     <div id="fileViewArea" min-size="100"></div>
     <spark-splitter direction="left"></spark-splitter>
     <div id="editorArea" min-size="200"></div>
-  </polymer-flex-panel>
+  </div>
+
+  <!--  file context menu -->
+  <div id="file-item-context-menu" class="dropdown">
+    <div class="backdrop"></div>
+    <ul class="dropdown-menu" role="menu">
+    </ul>
+  </div>
 
   <!-- file delete dialog -->
     <div id="deleteDialog" class="modal fade">
@@ -122,7 +123,8 @@
           </div>
           <div class="modal-footer">
             <spark-button data-dismiss="modal">Cancel</spark-button>
- -          <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
+            <spark-button id="deleteOkButton" primary 
+                data-dismiss="modal">Delete</spark-button>
           </div>
         </div>
       </div>
@@ -139,7 +141,7 @@
           </div>
           <div class="modal-footer">
             <spark-button data-dismiss="modal">Cancel</spark-button>
-            <spark-button id="fileNewOkButton" class="btn btn-primary"
+            <spark-button id="fileNewOkButton" primary
                 data-dismiss="modal">Create</spark-button>
           </div>
         </div>
@@ -151,7 +153,8 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
+          <spark-button class="close" data-dismiss="modal"
+              aria-hidden="true">&times;</spark-button>
           <h4 class="modal-title">Spark</h4>
         </div>
         <div class="modal-body">
@@ -167,10 +170,13 @@
           </div>
         </div>
         <div class="modal-footer">
-          <spark-button primary data-dismiss="modal">Close</spark-button>
+          <spark-button primary data-dismiss="modal">
+            Close
+          </spark-button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
 </body>
+
 </html>
