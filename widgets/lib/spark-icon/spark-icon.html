@@ -19,6 +19,7 @@
  *     <spark-icon src="big_star.png" size="32"></spark-icon>
  */
 -->
+
 <polymer-element name="spark-icon" attributes="src size">
   <template>
     <style>
@@ -38,7 +39,11 @@
         background-size: 100% 100%;
       }
     </style>
-    <div id="icon" style="background-image:url({{src}}); width:{{size}}px; height:{{size}}px"></div>
+
+    <div id="icon" 
+        style="background-image:url({{src}}); width:{{size}}px; height:{{size}}px">
+    </div>
   </template>
+
   <script type="application/dart" src="spark-icon.dart"></script>
 </polymer-element>

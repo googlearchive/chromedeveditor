@@ -26,6 +26,7 @@
  *     </div>
  */
 -->
+
 <polymer-element name="spark-splitter" attributes="direction locked">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
@@ -45,7 +46,7 @@
           width: auto;
           height: 10px;
           cursor: row-resize;
-          background-image: url(packages/spark_widgets/spark-splitter/handle_horiz.png);
+          background-image: url(packages/spark_widgets/spark-splitter/handle_horiz.png) no-repeat center;
         }
 
         :hover, .active {

@@ -6,10 +6,12 @@ library spark_widgets.menu_button;
 
 import 'package:polymer/polymer.dart';
 
+import '../src/widget.dart';
+
 // Ported from Polymer Javascript to Dart code.
 
 @CustomTag("spark-menu-button")
-class SparkMenuButton extends PolymerElement {
+class SparkMenuButton extends Widget {
   @published String src = "";
   @published int selected = 0;
   @published bool opened = false;

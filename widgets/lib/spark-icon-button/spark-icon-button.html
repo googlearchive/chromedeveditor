@@ -15,7 +15,9 @@
  *     <spark-icon-button src="star.png"></spark-icon-button>
  */
 -->
+
 <link rel="import" href="../spark-icon/spark-icon.html">
+
 <polymer-element name="spark-icon-button" attributes="src active">
   <template>
     <style>
@@ -35,7 +37,7 @@
           background-position: top left;
           background-size: cover;
           background-repeat: no-repeat;
-          background-image: url("images/btn_light.png");
+          background-image: url("btn_light.png");
           background-position: 0 0;
           vertical-align: middle;
         }
@@ -53,7 +55,9 @@
         }
       }
     </style>
+
     <spark-icon src="{{src}}"></spark-icon>
   </template>
+
   <script type="application/dart" src="spark-icon-button.dart"></script>
 </polymer-element>

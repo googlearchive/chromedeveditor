@@ -6,11 +6,14 @@ library spark_widgets.toolbar;
 
 import 'package:polymer/polymer.dart';
 
+import '../src/widget.dart';
+
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-toolbar")
-class SparkToolbar extends PolymerElement {
+class SparkToolbar extends Widget {
   @published bool responsive = false;
   @published bool touch = false;
+  @published String color = "whitesmoke";
 
   SparkToolbar.created(): super.created();
 
