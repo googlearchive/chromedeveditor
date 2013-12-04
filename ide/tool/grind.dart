@@ -398,13 +398,11 @@ void _populateSdk(GrinderContext context) {
  * Create an archived version of the Dart SDK.
  *
  * File format is:
- *  - sdk version, as a UTF8 string
- *  - null byte
- *  - file count, as a 4-byte int
+ *  - sdk version, as a utf8 string (null-terminated)
+ *  - file count, printed as a utf8 string
  *  - n file entries:
  *    - file path, as a UTF8 string
- *    - null byte
- *    - file length, as a 4-byte int
+ *    - file length (utf8 string)
  *  - file contents appended to the archive file, n times
  */
 void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
@@ -415,13 +413,15 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
 
   String version = versionFile.readAsStringSync().trim();
   _writeString(bb, version);
-  writeInt(bb, files.length);
+  _writeInt(bb, files.length);
 
-  String pathPrefix = srcDir.path + '/';
+  String pathPrefix = srcDir.path + Platform.pathSeparator;
 
   for (File file in files) {
-    _writeString(bb, file.path.substring(pathPrefix.length));
-    writeInt(bb, file.lengthSync());
+    String path = file.path.substring(pathPrefix.length);
+    path = path.replaceAll(Platform.pathSeparator, '/');
+    _writeString(bb, path);
+    _writeInt(bb, file.lengthSync());
   }
 
   for (File file in files) {
@@ -436,7 +436,7 @@ void _writeString(BytesBuilder bb, String str) {
   bb.addByte(0);
 }
 
-void writeInt(BytesBuilder bb, int val) => _writeString(bb, val.toString());
+void _writeInt(BytesBuilder bb, int val) => _writeString(bb, val.toString());
 
 void _printSize(GrinderContext context, File file) {
   int sizeKb = file.lengthSync() ~/ 1024;

@@ -88,9 +88,11 @@ class DartSdk extends SdkDirectory {
     SdkDirectory dir = libDirectory;
 
     for (String p in paths.sublist(0, paths.length - 1)) {
-      dir = dir._getCreateDir(p);
+      SdkEntity child = dir.getChild(p);
 
-      if (dir == null) {
+      if (child is SdkDirectory) {
+        dir = child;
+      } else {
         return null;
       }
     }
@@ -240,12 +242,12 @@ class _ByteReader {
   String readUtf() {
     int len = 0;
 
+    // Assert that we don't read past the end of the archive - all utf strings
+    // should be null-terminated.
+    assert(_contents.isNotEmpty && _contents.last == 0);
+
     while (_contents[_pos + len] != 0) {
       len++;
-
-      // Assert that we don't read past the end of the archive - all utf strings
-      // should be null-terminated.
-      assert(len != _contents.length);
     }
 
     String str = UTF8.decoder.convert(_contents.sublist(_pos, _pos + len));
