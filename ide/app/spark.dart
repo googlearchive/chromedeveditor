@@ -686,7 +686,7 @@ class FileRenameAction extends SparkAction implements ContextAction {
   void _invoke([List<ws.Resource> resources]) {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
-     _element.value = '';
+     _element.value = resource.name;
      _renameDialog.show();
    }
   }
@@ -694,13 +694,8 @@ class FileRenameAction extends SparkAction implements ContextAction {
   void _renameResource() {
     if (_element.value.isNotEmpty) {
       spark._closeOpenEditor(resource);
-      resource.rename(_element.value).then((_) {
-        if (resource is ws.File) {
-          spark.selectInEditor(resource, forceOpen: true);
-        }
-      });
+      resource.rename(_element.value);
     }
-
   }
 
   String get category => 'resource';
