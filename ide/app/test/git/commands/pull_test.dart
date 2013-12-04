@@ -11,5 +11,8 @@ import 'package:unittest/unittest.dart';
  */
 defineTests() {
   group('git.commands.pull', () {
+    test('todo', () {
+
+    });
   });
 }

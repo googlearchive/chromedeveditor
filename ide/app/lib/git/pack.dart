@@ -43,25 +43,18 @@ class PackedTypes {
     switch(type) {
       case COMMIT:
         return "commit";
-        break;
       case TREE:
         return "tree";
-        break;
       case BLOB:
         return "blob";
-        break;
       case TAG:
         return "tag";
-        break;
       case OFS_DELTA:
         return "ofs_delta";
-        break;
       case REF_DELTA:
         return "ref_delta";
-        break;
       default:
         throw "unsupported pack type.";
-        break;
     }
   }
 }
@@ -277,10 +270,8 @@ class Pack {
       case PackedTypes.OFS_DELTA:
       case PackedTypes.REF_DELTA:
         return expandDeltifiedObject(object);
-        break;
       default:
         return new Future.value(object);
-        break;
     }
   }
 

@@ -49,7 +49,7 @@ defineTests() {
       if (isDart2js()) return;
 
       try {
-        throw new ArgumentError('happy message');;
+        throw new ArgumentError('happy message');
       } catch (e, st) {
         String description = minimizeStackTrace(st);
         expect(description.contains('chrome-extension:'), false);
