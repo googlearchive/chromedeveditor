@@ -14,6 +14,7 @@ import 'package:crc32/crc32.dart' as crc;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
 
+import 'object.dart';
 import 'objectstore.dart';
 import 'zlib.dart';
 
@@ -423,6 +424,12 @@ class Pack {
 
     return resultData;
   }
+
+  static Future buildPack(List<CommitObject> commits, repo) {
+   // TODO(grv) : implement
+
+    throw "to be implemented";
+  }
 }
 
 /**
@@ -436,10 +443,5 @@ class DeltaDataStream {
     this.offset = offset;
   }
 
-  Future buildPack(commits, repo) {
-   // TODO(grv) : implement
-
-    throw "to be implemented";
-  }
 
 }
