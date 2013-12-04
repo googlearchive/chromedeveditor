@@ -44,10 +44,27 @@
  *   @param {Object} inDetail.item the selected element
  */
 -->
-<link rel="import" href="spark-selection.html">
+<link rel="import" href="../spark-selection/spark-selection.html">
 <polymer-element name="spark-selector"
     attributes="selected multi valueattr selectedClass selectedProperty selectedItem selectedModel notap target itemsSelector activateEvent">
   <template>
+    <style>
+      spark-selector {
+        display: block;
+        border: 1px solid #ccc;
+        border-bottom: none;
+        -webkit-user-select: none;
+      }
+      spark-selector > * {
+        height: 40px;
+        line-height: 40px;
+        padding: 0 20px;
+        border-bottom: 1px solid #ccc;
+      }
+      spark-selector > .selected {
+        background: #eee;
+      }
+    </style>
     <spark-selection id="selection" multi="{{multi}}" on-select="{{selectionSelect}}"></spark-selection>
     <content id="items" select="*"></content>
   </template>
