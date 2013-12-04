@@ -17,8 +17,6 @@ import '../../lib/git/pack_index.dart';
 final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack_index_test.idx';
 
-
-
 Future<Pack> initPack() {
   return chrome_gen.runtime.getPackageDirectoryEntry().then(
       (chrome_gen.DirectoryEntry dir) {

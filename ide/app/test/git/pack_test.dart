@@ -14,7 +14,6 @@ import '../../lib/git/pack.dart';
 final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack-_index_test.idx';
 
-
 defineTests() {
   group('git.pack', () {
     test('parsePack', () {
