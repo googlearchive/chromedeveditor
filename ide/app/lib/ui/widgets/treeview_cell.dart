@@ -66,7 +66,7 @@ class TreeViewCell implements ListViewCell {
 
     // Adds an arrow in front the cell.
     _arrow = _element.querySelector('.treeviewcell-disclosure');
-    _arrow.style.left = '${margin}px';
+    _arrow.style.left = '${margin + 4}px';
     _applyExpanded(_row.expanded);
     if (!hasChildren) {
       _arrow.style.visibility = 'hidden';
@@ -75,23 +75,7 @@ class TreeViewCell implements ListViewCell {
     // Click handler for the arrow: toggle expanded state of the node.
     _arrow.onClick.listen((event) {
       event.stopPropagation();
-
-      // Don't change the expanded state if it's already animating to change
-      // the expanded state.
-      if (_animating) {
-        return;
-      }
-
-      // Change visual appearance.
-      _applyExpanded(!_row.expanded);
-
-      // Wait for animation to finished before effectively changing the
-      // expanded state.
-      _animating = true;
-      _arrow.on['transitionend'].listen((event) {
-        _animating = false;
-        _treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
-      });
+      toggleExpanded();
     });
 
     _embeddedCellContainer.onDragStart.listen((event) {
@@ -135,6 +119,25 @@ class TreeViewCell implements ListViewCell {
   }
 
   String get nodeUID => _row.nodeUID;
+
+  void toggleExpanded() {
+    // Don't change the expanded state if it's already animating to change
+    // the expanded state.
+    if (_animating) {
+      return;
+    }
+
+    // Change visual appearance.
+    _applyExpanded(!_row.expanded);
+
+    // Wait for animation to finished before effectively changing the
+    // expanded state.
+    _animating = true;
+    _arrow.onTransitionEnd.listen((event) {
+      _animating = false;
+      _treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
+    });
+  }
 
   // Change visual appearance of the disclosure arrow, depending whether the
   // node is expanded or not.

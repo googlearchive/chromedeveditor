@@ -149,6 +149,10 @@ class TreeView implements ListViewDelegate {
     _listView.selection = restoredSelection;
   }
 
+  bool isNodeExpanded(String nodeUID) {
+    return _rowsMap[nodeUID] == null ? false : _rowsMap[nodeUID].expanded;
+  }
+
   /**
    * Sets expanded state of a node.
    */
@@ -172,6 +176,11 @@ class TreeView implements ListViewDelegate {
           _rowIndexesToNodeUIDs(_listView.selection),
           null);
     }
+  }
+
+  void toggleNodeExpanded(String nodeUID) {
+    // TODO: this should instead call listViewCell.toggleExpanded();
+    setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID));
   }
 
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
