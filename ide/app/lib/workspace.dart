@@ -45,6 +45,7 @@ class Workspace implements Container {
   String persistToToken() => path;
 
   Future delete() => null;
+  Future rename(String name) => null;
 
   Container get parent => null;
   Project get project => null;
