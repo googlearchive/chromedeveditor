@@ -31,9 +31,7 @@ defineTests() {
     });
 
     test('list directory entries', () {
-      return sdk.getChildren().then((List children) {
-        expect(children.length, 2);
-      });
+      expect(sdk.getChildren().length, 1);
     });
 
     test('lib directory parent is sdk', () {
@@ -41,9 +39,7 @@ defineTests() {
     });
 
     test('list lib directory entries', () {
-      return sdk.libDirectory.getChildren().then((List children) {
-        expect(children.length, greaterThan(10));
-      });
+      expect(sdk.libDirectory.getChildren().length, greaterThan(10));
     });
   });
 }
