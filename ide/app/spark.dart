@@ -59,7 +59,7 @@ void main() {
 class Spark extends Application implements FilesControllerDelegate {
   final bool developerMode;
 
-  // The Google Analytics app ID for Spark.
+  /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   AceContainer aceContainer;
@@ -158,8 +158,8 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void initEditorArea() {
     editorArea = new EditorArea(document.getElementById('editorArea'),
-        editorManager,
-        allowsLabelBar: true);
+                                editorManager,
+                                allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
@@ -220,7 +220,8 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void buildMenu() {
     ThemeManager themeManager = new ThemeManager(aceContainer, syncPrefs);
-    KeyBindingManager keysManager = new KeyBindingManager(aceContainer, syncPrefs);
+    KeyBindingManager keysManager =
+        new KeyBindingManager(aceContainer, syncPrefs);
 
     UListElement ul = querySelector('#hotdogMenu ul');
 
@@ -231,14 +232,14 @@ class Spark extends Application implements FilesControllerDelegate {
 
     ul.children.add(createMenuSeparator());
 
-    // theme control
+    // Theme control.
     Element theme = ul.querySelector('#changeTheme');
     ul.children.remove(theme);
     ul.children.add(theme);
     querySelector('#themeLeft').onClick.listen((e) => themeManager.dec(e));
     querySelector('#themeRight').onClick.listen((e) => themeManager.inc(e));
 
-    // key binding control
+    // Key binding control.
     Element keys = ul.querySelector('#changeKeys');
     ul.children.remove(keys);
     ul.children.add(keys);
@@ -261,8 +262,8 @@ class Spark extends Application implements FilesControllerDelegate {
   void openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
-      chrome.ChromeFileEntry entry = result.entry;
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
         workspace.link(entry).then((file) {
@@ -276,8 +277,8 @@ class Spark extends Application implements FilesControllerDelegate {
   void openFolder() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
-      chrome.ChromeFileEntry entry = result.entry;
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
         workspace.link(entry).then((file) {
@@ -302,7 +303,11 @@ class Spark extends Application implements FilesControllerDelegate {
     element.classes.toggle('error', error);
   }
 
-  // Implementation of FilesControllerDelegate interface.
+  void notImplemented(String str) => showStatus("Not implemented: ${str}");
+
+  //
+  // Implementation of FilesControllerDelegate interface:
+  //
 
   void selectInEditor(ws.File file,
                       {bool forceOpen: false,
@@ -320,7 +325,9 @@ class Spark extends Application implements FilesControllerDelegate {
     return actionManager.getContextActions(resources);
   }
 
-  void notImplemented(String str) => showStatus("Not implemented: ${str}");
+  //
+  // - End implementation of FilesControllerDelegate interface.
+  //
 
   void _startTrackingExceptions() {
     // Handle logged exceptions.
@@ -328,7 +335,8 @@ class Spark extends Application implements FilesControllerDelegate {
       if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
         // We don't log the error object because of PII concerns.
         // TODO: we need to add a test to verify this
-        String error = r.error != null ? r.error.runtimeType.toString() : r.message;
+        String error =
+            r.error != null ? r.error.runtimeType.toString() : r.message;
         String desc = '${error}\n${minimizeStackTrace(r.stackTrace)}'.trim();
 
         if (desc.length > analytics.MAX_EXCEPTION_LENGTH) {
@@ -359,11 +367,11 @@ class PlatformInfo {
    * The native client architecture. This may be different from arch on some
    * platforms. One of: "arm", "x86-32", "x86-64".
    */
-  final String nacl_arch;
+  final String naclArch;
 
-  PlatformInfo._(this.os, this.arch, this.nacl_arch);
+  PlatformInfo._(this.os, this.arch, this.naclArch);
 
-  String toString() => "${os}, ${arch}, ${nacl_arch}";
+  String toString() => "${os}, ${arch}, ${naclArch}";
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
@@ -651,10 +659,12 @@ class FileDeleteAction extends SparkAction implements ContextAction {
   void _setMessageAndShow() {
     if (_resources.length == 1) {
       _deleteDialog.element.querySelector("#message").text =
-          "Are you sure you want to delete '${_resources.first.name}' from the file system?";
+          "Are you sure you want to delete '${_resources.first.name}'"
+          " from the file system?";
     } else {
       _deleteDialog.element.querySelector("#message").text =
-          "Are you sure you want to delete '${_resources.length}' files from the file system?";
+          "Are you sure you want to delete '${_resources.length}'"
+          " files from the file system?";
     }
     _deleteDialog.show();
   }
@@ -753,9 +763,11 @@ class AboutSparkAction extends SparkAction {
       _aboutBox = bootjack.Modal.wire(querySelector('#aboutDialog'));
 
       var checkbox = _aboutBox.element.querySelector('#analyticsCheck');
-      checkbox.checked = spark.tracker.service.getConfig().isTrackingPermitted();
+      checkbox.checked =
+          spark.tracker.service.getConfig().isTrackingPermitted();
       checkbox.onChange.listen((e) {
-        spark.tracker.service.getConfig().setTrackingPermitted(checkbox.checked);
+        spark.tracker.service.getConfig()
+            .setTrackingPermitted(checkbox.checked);
       });
 
       _aboutBox.element.querySelector('#aboutVersion').text = spark.appVersion;
