@@ -710,10 +710,13 @@ class FileCloseAction extends SparkAction implements ContextAction {
     if (resources == null) {
       resources = spark._getSelection();
     }
-    Future.forEach(resources, (ws.Resource resource) {
+
+    for (ws.Resource resource in resources) {
       spark._closeOpenEditor(resource);
-      return resource.close();
-    }).then((_) => spark.workspace.save());
+      resource.workspace.unlink(resource);
+    }
+
+    spark.workspace.save();
   }
 
   String get category => 'resource';
