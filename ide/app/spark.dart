@@ -57,14 +57,13 @@ void main() {
     List<ws.Resource> _resources;
 
       _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));//, () => new Modal());
-      
       _deleteDialog.show();
+      var _i = 1;
       
       Timer.run(() {
         _deleteDialog.element.querySelector("#deleteOkButton").focus();
-
-        _deleteDialog.element.querySelector("#message").text =
-            "Timer.run - Blip";
+        _i++;
+        _deleteDialog.element.querySelector("#message").text = (_i).toString();
       });
 
 }
