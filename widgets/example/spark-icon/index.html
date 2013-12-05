@@ -5,17 +5,18 @@
     <title>spark-icon</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      
     <!-- import elements -->
     <link rel="import" href="packages/spark_widgets/spark-icon/spark-icon.html">
-    
     <script type="application/dart"> 
-      import "packages/polymer/init.dart";
       export "packages/polymer/init.dart";
     </script> 
     <script src="packages/browser/dart.js"></script>
   </head>
-  
   <body>
+    <!-- TODO: not able to use relative location -->
+    <spark-icon src="/widgets/example/assets/add.png" size="32"></spark-icon>
+    <spark-icon src="/widgets/example/assets/add.png" size="24"></spark-icon>
+    <spark-icon src="/widgets/example/assets/add.png" size="14"></spark-icon>
+    <spark-icon src="/widgets/example/assets/add.png" size="4"></spark-icon>
   </body>
 </html>

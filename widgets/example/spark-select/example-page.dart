@@ -1,12 +1,10 @@
 library example_page;
 
-import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 @CustomTag('example-page')
 class ExamplePage extends PolymerElement {
+  final List<String> exampleItems = toObservable(<String>['dog', 'cat', 'bat']);
+  @published int selectedItem = 1;
   ExamplePage.created(): super.created();
-  menuAction(Event e, var detail, Node target) {
-    print("menuAction clicked");
-  }
 }

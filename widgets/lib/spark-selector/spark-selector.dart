@@ -160,6 +160,8 @@ class SparkSelector extends SparkSelection {
   }
 
   void valueToSelection(value) {
+    // TODO: if value is string but valueattr have non integer
+    // string values this type of valueToSelection will not work.
     if (value is String) {
       value = int.parse(value);
     }
