@@ -19,7 +19,7 @@
   <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
   <link rel="import" href="packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
-  <!-- template for FileItemCell -->
+  <!-- Template for FileItemCell -->
   <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
       <div class="filename">
@@ -30,7 +30,7 @@
     </div>
   </template>
 
-  <!-- template for TreeViewCell -->
+  <!-- Template for TreeViewCell -->
   <template id="treeview-cell-template" >
     <div class="treeviewcell">
       <div class="treeviewcell-content"></div>
@@ -107,46 +107,46 @@
     <div id="editorArea" min-size="200"></div>
   </div>
 
-  <!--  file context menu -->
+  <!-- File context menu -->
   <div id="file-item-context-menu" class="dropdown">
     <div class="backdrop"></div>
     <ul class="dropdown-menu" role="menu">
     </ul>
   </div>
 
-  <!-- file delete dialog -->
-    <div id="deleteDialog" class="modal fade">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-body">
-            <p id="message"></p>
-          </div>
-          <div class="modal-footer">
-            <spark-button data-dismiss="modal">Cancel</spark-button>
-            <spark-button id="deleteOkButton" primary 
-                data-dismiss="modal">Delete</spark-button>
-          </div>
+  <!-- Delete File dialog -->
+  <div id="deleteDialog" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p id="message"></p>
+        </div>
+        <div class="modal-footer">
+          <spark-button data-dismiss="modal">Cancel</spark-button>
+          <spark-button id="deleteOkButton" primary 
+              data-dismiss="modal">Delete</spark-button>
         </div>
       </div>
     </div>
+  </div>
 
-     <!-- file new dialog -->
-    <div id="fileNewDialog" class="modal fade">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-body">
-            <p>
-              File name:  <input id="fileName" type="text">
-            </p>
-          </div>
-          <div class="modal-footer">
-            <spark-button data-dismiss="modal">Cancel</spark-button>
-            <spark-button id="fileNewOkButton" primary
-                data-dismiss="modal">Create</spark-button>
-          </div>
+  <!-- New File dialog -->
+  <div id="fileNewDialog" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p>
+            File name:  <input id="fileName" type="text">
+          </p>
+        </div>
+        <div class="modal-footer">
+          <spark-button data-dismiss="modal">Cancel</spark-button>
+          <spark-button id="fileNewOkButton" primary
+              data-dismiss="modal">Create</spark-button>
         </div>
       </div>
     </div>
+  </div>
 
   <!-- Rename File dialog -->
   <div id="renameDialog" class="modal fade">
@@ -158,16 +158,16 @@
           </p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="renameOkButton" class="btn btn-primary"
-               data-dismiss="modal">Rename</button>
+          <spark-button data-dismiss="modal">Cancel</spark-button>
+          <spark-button id="renameOkButton" primary
+               data-dismiss="modal">Rename</spark-button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- about dialog -->
-  <div class="modal fade" id="aboutDialog">
+  <!-- About dialog -->
+  <div id="aboutDialog" class="modal fade">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
