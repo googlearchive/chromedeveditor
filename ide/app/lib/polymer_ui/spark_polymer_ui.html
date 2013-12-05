@@ -5,8 +5,11 @@
      license that can be found in the LICENSE file. -->
 
 <link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
+<link rel="import" href="../../packages/spark_widgets/spark-icon/spark-icon.html">
+<link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-select/spark-select.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
+<link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
 <link rel="import" href="../../packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html">
 
@@ -174,41 +177,37 @@ display: inline-block;
 }
     </style>
 
-    <!-- Temporarily switch back to div: most recent polymer-flex-panel
-      requires working external CSS linking.
-      TODO(sergeygs): revert once external CSS linking is available
-      (don't forget to remove 'display: flex' in the CSS). -->
-    <!--polymer-flex-panel id="toolbar"-->
-    <div id="toolbar">
-      <spark-button id="newFile" primary="true">New File</spark-button>
-      <spark-button id="openFile">Open File...</spark-button>
+    <spark-toolbar id="toolbar" responsive color="white">
+      <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
+      <spark-icon-button id="openFile" src="images/open.png"></spark-icon-button>
 
       <span id="status"></span>
 
       <div id="hotdogMenu" class="btn-group">
-        <button type="button"
-            class="btn btn-default dropdown-toggle main-menu-button"
-            data-toggle="dropdown">
+        <button type="button" data-toggle="dropdown"
+            class="btn btn-default dropdown-toggle main-menu-button">
         </button>
         <ul class="dropdown-menu pull-right">
           <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
             <span class="pull-right">
-              <button type="button" id="themeLeft"><strong>-</strong></button>
-              <button type="button" id="themeRight"><strong>+</strong></button>
+              <spark-button id="themeLeft"><strong>-</strong></spark-button>
+              <spark-button id="themeRight"><strong>+</strong></spark-button>
             </span></a>
           </li>
           <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
             <span class="pull-right">
-              <button type="button" id="keysLeft"><strong>-</strong></button>
-              <button type="button" id="keysRight"><strong>+</strong></button>
+              <spark-button id="keysLeft"><strong>-</strong></spark-button>
+              <spark-button id="keysRight"><strong>+</strong></spark-button>
             </span></a>
           </li>
         </ul>
       </div>
-    <!--/polymer-flex-panel-->
-    </div> <!-- /#toolbar -->
+    </spark-toolbar>
 
-    <!-- TODO(sergey): see the comment for a similar change above. -->
+    <!-- Temporarily switch back to div: most recent polymer-flex-panel
+      requires working external CSS linking.
+      TODO(sergeygs): revert once external CSS linking is available
+      (don't forget to remove 'display: flex' in the CSS). -->
     <!--polymer-flex-panel id="splitview"-->
     <div id="splitview">
       <div id="fileViewArea" min-size="100"></div>
@@ -217,7 +216,14 @@ display: inline-block;
     <!--/polymer-flex-panel-->
     </div>
 
-    <!-- file delete dialog -->
+    <!-- File context menu -->
+    <div id="file-item-context-menu" class="dropdown">
+      <div class="backdrop"></div>
+      <ul class="dropdown-menu" role="menu">
+      </ul>
+    </div>
+
+    <!-- Delete File dialog -->
     <div id="deleteDialog" class="modal fade">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -226,18 +232,56 @@ display: inline-block;
           </div>
           <div class="modal-footer">
             <spark-button data-dismiss="modal">Cancel</spark-button>
-            <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
+            <spark-button id="deleteOkButton" primary 
+              data-dismiss="modal">Delete</spark-button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- about dialog -->
-    <div class="modal fade" id="aboutDialog">
+    <!-- New File dialog -->
+    <div id="fileNewDialog" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <p>
+              File name:  <input id="fileName" type="text">
+            </p>
+          </div>
+          <div class="modal-footer">
+            <spark-button data-dismiss="modal">Cancel</spark-button>
+            <spark-button id="fileNewOkButton" primary
+                data-dismiss="modal">Create</spark-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Rename File dialog -->
+    <div id="renameDialog" class="modal fade">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-body">
+            <p>
+              File name: <input id="fileName" type="text">
+            </p>
+          </div>
+          <div class="modal-footer">
+            <spark-button data-dismiss="modal">Cancel</spark-button>
+            <spark-button id="renameOkButton" primary
+                 data-dismiss="modal">Rename</spark-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- About dialog -->
+    <div id="aboutDialog" class="modal fade">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
+            <spark-button class="close" data-dismiss="modal"
+                aria-hidden="true">&times;</spark-button>
             <h4 class="modal-title">Spark</h4>
           </div>
           <div class="modal-body">
@@ -248,12 +292,14 @@ display: inline-block;
             <div class="checkbox">
               <label>
                 <input type="checkbox" id="analyticsCheck">
-                Allow Spark to collect anonymous usage statistics
+                  Allow Spark to collect anonymous usage statistics
               </label>
             </div>
           </div>
           <div class="modal-footer">
-            <spark-button primary data-dismiss="modal">Close</spark-button>
+            <spark-button primary data-dismiss="modal">
+              Close
+            </spark-button>
           </div>
         </div><!-- /.modal-content -->
       </div><!-- /.modal-dialog -->
