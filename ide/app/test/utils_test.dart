@@ -39,15 +39,12 @@ defineTests() {
 
     test('dart2js stack trace', () {
       final line = '  at Object.wrapException (chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13)';
-      Match match = DART2JS_REGEX.firstMatch(line);
+      Match match = DART2JS_REGEX_1.firstMatch(line);
       expect(match.group(1), 'Object.wrapException');
       expect(match.group(2), 'chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13');
     });
 
     test('minimizeStackTrace', () {
-      // TODO: this fails under dart2js
-      if (isDart2js()) return;
-
       try {
         throw new ArgumentError('happy message');
       } catch (e, st) {
