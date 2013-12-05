@@ -50,10 +50,23 @@ Future<bool> isTestMode() {
 }
 
 void main() {
-  isTestMode().then((testMode) {
-    Spark spark = new Spark(testMode);
-    spark.start();
-  });
+//    Spark spark = new Spark(false);
+//    spark.start();
+//    
+    bootjack.Modal _deleteDialog;
+    List<ws.Resource> _resources;
+
+      _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));//, () => new Modal());
+      
+      _deleteDialog.show();
+      
+      Timer.run(() {
+        _deleteDialog.element.querySelector("#deleteOkButton").focus();
+
+        _deleteDialog.element.querySelector("#message").text =
+            "Timer.run - Blip";
+      });
+
 }
 
 class Spark extends Application implements FilesControllerDelegate {
