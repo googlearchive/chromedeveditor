@@ -633,7 +633,7 @@ class FileOpenAction extends SparkAction {
     defaultBinding("ctrl-o");
   }
 
-  void _invoke([Object context]) => throw 'foo'; //spark.openFile();
+  void _invoke([Object context]) => spark.openFile();
 }
 
 class FileSaveAction extends SparkAction {
