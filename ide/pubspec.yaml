@@ -14,6 +14,8 @@ dependencies:
   intl: any
   logging: any
   mime: any
+  polymer_elements:
+    git: https://github.com/ErikGrimes/polymer_elements
   spark_widgets:
     path: ../widgets
   unittest: any
