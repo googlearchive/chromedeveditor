@@ -618,7 +618,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
   List<ws.Resource> _resources;
 
   FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete") {
-    _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));//, () => new Modal());
+    _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));
     _deleteDialog.element.querySelector("#deleteOkButton").onClick.listen((_) {
       _deleteResource();
     });
@@ -646,16 +646,6 @@ class FileDeleteAction extends SparkAction implements ContextAction {
           "Are you sure you want to delete '${_resources.length}' files from the file system?";
     }
     _deleteDialog.show();
-    
-    Timer.run(() {
-      _deleteDialog.element.querySelector("#deleteOkButton").focus();
-
-      _deleteDialog.element.querySelector("#message").text =
-          "Timer.run - Blip";
-    });
-//    _deleteDialog.element.querySelector("#deleteOkButton").focus();
-//    _deleteDialog.element.querySelector("#message").text =
-//      "" + _deleteDialog.element.querySelector("#deleteOkButton").parent.innerHtml;
   }
 
   void _deleteResource() {
