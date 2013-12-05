@@ -28,20 +28,19 @@
 @import url("lib/ui/widgets/imageviewer.css");
 
 #status {
-vertical-align: bottom;
-flex: 1;
+  flex: 1;
+  vertical-align: bottom;
 }
 
 #status.error {
-color: #C66;
+  color: #C66;
 }
 
 .fileview-filename-container {
-
 }
 
 .fileview-filename-container .filename {
-display: inline-block;
+  display: inline-block;
 }
 
 .fileview-filename-container .menu {
@@ -118,23 +117,19 @@ display: inline-block;
   position: relative;
 }
 
+/*
 #toolbar {
   border-top: 1px solid #ddd;
   border-bottom: 1px solid #ddd;
-  display: flex;
-  padding: 4px;
 }
 
 #toolbar button {
   outline: none;
 }
+*/
 
 #hotdogMenu li {
   min-width: 16em;
-}
-
-#hotdogMenu .main-menu-button:focus {
-  background-color: white;
 }
 
 #file-item-context-menu {
@@ -159,11 +154,12 @@ display: inline-block;
 }
 
 /* bootstrap overrides */
-
+/*
 #toolbar .btn {
-  padding: 2px 8px 2px 8px;
   margin: 0px 2px 0px 2px;
+  padding: 2px 8px 2px 8px;
 }
+*/
 
 #hotdogMenu .main-menu-button {
   background-image: url(../../images/menu.png);
@@ -177,7 +173,7 @@ display: inline-block;
 }
     </style>
 
-    <spark-toolbar id="toolbar" responsive color="white">
+    <spark-toolbar id="toolbar" color="white">
       <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
       <spark-icon-button id="openFile" src="images/open.png"></spark-icon-button>
 
@@ -233,7 +229,7 @@ display: inline-block;
           <div class="modal-footer">
             <spark-button data-dismiss="modal">Cancel</spark-button>
             <spark-button id="deleteOkButton" primary 
-              data-dismiss="modal">Delete</spark-button>
+                data-dismiss="modal">Delete</spark-button>
           </div>
         </div>
       </div>
@@ -269,7 +265,7 @@ display: inline-block;
           <div class="modal-footer">
             <spark-button data-dismiss="modal">Cancel</spark-button>
             <spark-button id="renameOkButton" primary
-                 data-dismiss="modal">Rename</spark-button>
+                data-dismiss="modal">Rename</spark-button>
           </div>
         </div>
       </div>
@@ -292,7 +288,7 @@ display: inline-block;
             <div class="checkbox">
               <label>
                 <input type="checkbox" id="analyticsCheck">
-                  Allow Spark to collect anonymous usage statistics
+                Allow Spark to collect anonymous usage statistics
               </label>
             </div>
           </div>
