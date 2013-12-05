@@ -38,27 +38,15 @@ class SparkPolymer extends Spark {
 
   // TEMP:
   @override
-  void initEditorManager() => null; //super.initEditorManager();
+  void initEditorManager() => super.initEditorManager();
 
   // TEMP:
   @override
-  void initEditorArea() => null; //super.initEditorArea();
+  void initEditorArea() => super.initEditorArea();
 
   // We're using a Polymer-based splitview, so disable the default.
   @override
   void initSplitView() => null;
-
-  // TODO(terry): Hookup overlay dialog.
-  @override
-  void showStatus(String text, {bool error: false}) {
-    // TEMP:
-    //Element element = querySelector("#status");
-    //element.text = text;
-    //SparkOverlay overlay = querySelector("#spark-dialog");
-    //if (overlay != null) {
-    //  overlay.toggle();
-    //}
-  }
 
   @override
   void initFilesController() => null; //super.initFilesController();
@@ -84,4 +72,16 @@ class SparkPolymer extends Spark {
   //
   // - End parts of the parent's ctor.
   //
+
+  // TODO(terry): Hookup overlay dialog.
+  @override
+  void showStatus(String text, {bool error: false}) {
+    // TEMP:
+    //Element element = querySelector("#status");
+    //element.text = text;
+    //SparkOverlay overlay = querySelector("#spark-dialog");
+    //if (overlay != null) {
+    //  overlay.toggle();
+    //}
+  }
 }
