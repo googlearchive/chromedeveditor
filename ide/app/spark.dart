@@ -646,6 +646,14 @@ class FileDeleteAction extends SparkAction implements ContextAction {
           "Are you sure you want to delete '${_resources.length}' files from the file system?";
     }
     _deleteDialog.show();
+    
+    var _i = 1;
+    
+    var timer = new Timer(const Duration(milliseconds: 1000), () {
+//      _deleteDialog.element.querySelector("#deleteOkButton").focus();
+      _i++;
+      _deleteDialog.element.querySelector("#message").text = (_i).toString();
+    });
   }
 
   void _deleteResource() {
