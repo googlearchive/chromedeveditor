@@ -34,7 +34,7 @@ class SparkPolymer extends Spark {
   void initWorkspace() => super.initWorkspace();
 
   @override
-  void initEditor() => super.initEditor();
+  void createEditorComponents() => super.createEditorComponents();
 
   // TEMP:
   @override

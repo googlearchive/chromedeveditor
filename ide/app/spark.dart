@@ -94,15 +94,19 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     initWorkspace();
-    initEditor();
-    initEditorManager();
+
+    createEditorComponents();
     initEditorArea();
+    initEditorManager();
+
     initFilesController();
 
     initLookAndFeel();
 
     createActions();
+
     initToolbar();
+
     initSplitView();
   }
 
@@ -129,12 +133,15 @@ class Spark extends Application implements FilesControllerDelegate {
     workspace = new ws.Workspace(localPrefs);
   }
 
-  void initEditor() {
+  void createEditorComponents() {
     aceContainer = new AceContainer(new DivElement());
+    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
+    editorArea = new EditorArea(document.getElementById('editorArea'),
+                                editorManager,
+                                allowsLabelBar: true);
   }
 
   void initEditorManager() {
-    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
@@ -157,9 +164,6 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initEditorArea() {
-    editorArea = new EditorArea(document.getElementById('editorArea'),
-                                editorManager,
-                                allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
