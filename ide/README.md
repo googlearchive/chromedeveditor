@@ -13,13 +13,13 @@ You **need** to enable experimental Web Platform features in Chrome. From
 `chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
 ### Entry Point
-The main entry point to the Chrome App is `app/manifest.json`. It calls defines
+The main entry point to the Chrome App is `app/manifest.json`. It defines
 the background script for the application (`app/background.js`). This script
-gets invoked when the application starts. It open a new window with the contents
-set to the `app/spark.html` file. This file it turn runs `app/spark.dart`.
+gets invoked when the application starts. It opens a new window with the contents
+set to the `app/spark.html` file. This file in turn runs `app/spark.dart`.
 
 ### Dependencies
-Dependencies need first to be fetched using [pub](http://pub.dartlang.org).
+Dependencies needs to be fetched first, using [pub](http://pub.dartlang.org).
 Run:
 
     pub get
@@ -51,7 +51,7 @@ All the tests live in app/test. These are standard Dart unit tests. Generally,
 one library under test == 1 test file, and they should all be referenced from
 `all.dart`.
 
-In order to run the tests, we modify the HTML entry-point slightly to point to
+In order to run the tests, we modify the HTML entry point slightly to point to
 `app/spark_test.dart`. This source file references the entire Spark app as
 well as the unit tests for the app.
 
