@@ -1,10 +1,12 @@
 .imageeditor-root {
-  background: gray;
+  background: white;
+  margin: 10px;
   overflow: auto;
   position: relative;
 }
 
 .imageeditor-root > img {
   background: white;
+  border: 1px solid #ccc;
   position: absolute;
 }

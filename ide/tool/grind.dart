@@ -154,13 +154,18 @@ void archive(GrinderContext context) {
   if (Platform.isWindows) {
     _delete('dist/spark.zip');
 
-    // 7z a -r ..\dist\spark.zip .
-    runProcess(
-        context,
-        '7z',
-        arguments: ['a', '-r', '../${DIST_DIR.path}/spark.zip', '.'],
-        workingDirectory: 'app',
-        quiet: true);
+    try {
+      // 7z a -r ..\dist\spark.zip .
+      runProcess(
+          context,
+          '7z',
+          arguments: ['a', '-r', '../${DIST_DIR.path}/spark.zip', '.'],
+          workingDirectory: 'app',
+          quiet: true);
+    } on ProcessException catch(e) {
+      context.fail("Unable to execute 7z.\n"
+        "Please install 7zip. Add 7z directory to the PATH environment variable.");
+    };
   } else {
     // zip spark.zip . -r -q -x .*
     runProcess(
@@ -202,9 +207,8 @@ void docs(GrinderContext context) {
  * Delete all generated artifacts.
  */
 void clean(GrinderContext context) {
-  // delete the sdk directory
-  getDir('app/sdk/lib').deleteSync(recursive: true);
-  getFile('app/sdk/version').deleteSync();
+  // delete the sdk archive
+  getFile('app/sdk/dart-sdk.bin').deleteSync();
 
   // delete any compiled js output
   for (FileSystemEntity entity in getDir('app').listSync()) {
@@ -355,23 +359,22 @@ void _populateSdk(GrinderContext context) {
 
   destSdkDir.createSync();
 
-  File srcVersionFile = joinFile(srcSdkDir, ['version']);
-  File destVersionFile = joinFile(destSdkDir, ['version']);
+  File versionFile = joinFile(srcSdkDir, ['version']);
+  File destArchiveFile = joinFile(destSdkDir, ['dart-sdk.bin']);
 
-  FileSet srcVer = new FileSet.fromFile(srcVersionFile);
-  FileSet destVer = new FileSet.fromFile(destVersionFile);
+  FileSet srcVer = new FileSet.fromFile(versionFile);
+  FileSet destArchive = new FileSet.fromFile(destArchiveFile);
 
   Directory compilerDir = new Directory('packages/compiler');
 
-  // check the state of the sdk/version file, to see if things are up-to-date
-  if (!destVer.upToDate(srcVer) || !compilerDir.existsSync()) {
+  // Check the timestamp of the SDK archive to see if things are up-to-date.
+  if (!destArchive.upToDate(srcVer) || !compilerDir.existsSync()) {
     // copy files over
     context.log('copying SDK');
-    copyFile(srcVersionFile, destSdkDir);
     copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']), context);
 
     // Create a synthetic package:compiler package in the packages directory.
-    // TODO(devoncarew): this would be much better as a std pub package
+    // TODO(devoncarew): this would be much better as a standard pub package
     compilerDir.createSync();
 
     _delete('packages/compiler/compiler', context);
@@ -384,39 +387,56 @@ void _populateSdk(GrinderContext context) {
     _delete('app/sdk/lib/_internal/pub', context);
     _delete('app/sdk/lib/_internal/dartdoc', context);
 
-    // traverse directories, creating a .files json directory listing
-    context.log('creating SDK directory listings');
-    _createDirectoryListings(destSdkDir);
+    context.log('creating SDK archive');
+    _createSdkArchive(versionFile, joinDir(destSdkDir, ['lib']), destArchiveFile);
+
+    deleteEntity(joinDir(destSdkDir, ['lib']), context);
   }
 }
 
 /**
- * Recursively create `.files` json files in the given directory; these files
- * serve as directory listings.
+ * Create an archived version of the Dart SDK.
+ *
+ * File format is:
+ *  - sdk version, as a utf8 string (null-terminated)
+ *  - file count, printed as a utf8 string
+ *  - n file entries:
+ *    - file path, as a UTF8 string
+ *    - file length (utf8 string)
+ *  - file contents appended to the archive file, n times
  */
-void _createDirectoryListings(Directory dir) {
-  List<String> files = [];
+void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
+  List files = srcDir.listSync(recursive: true, followLinks: false);
+  files = files.where((f) => f is File).toList();
 
-  String parentName = fileName(dir);
+  BytesBuilder bb = new BytesBuilder();
 
-  for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
-    String name = fileName(entity);
+  String version = versionFile.readAsStringSync().trim();
+  _writeString(bb, version);
+  _writeInt(bb, files.length);
 
-    // ignore hidden files and directories
-    if (name.startsWith('.')) continue;
+  String pathPrefix = srcDir.path + Platform.pathSeparator;
 
-    if (entity is File) {
-      files.add(name);
-    } else {
-      files.add("${name}/");
-      _createDirectoryListings(entity);
-    }
-  };
+  for (File file in files) {
+    String path = file.path.substring(pathPrefix.length);
+    path = path.replaceAll(Platform.pathSeparator, '/');
+    _writeString(bb, path);
+    _writeInt(bb, file.lengthSync());
+  }
 
-  files.sort();
+  for (File file in files) {
+    bb.add(file.readAsBytesSync());
+  }
 
-  joinFile(dir, ['.files']).writeAsStringSync(JSON.encode(files) + '\n');
+  destFile.writeAsBytesSync(bb.toBytes());
 }
+
+void _writeString(BytesBuilder bb, String str) {
+  bb.add(UTF8.encoder.convert(str));
+  bb.addByte(0);
+}
+
+void _writeInt(BytesBuilder bb, int val) => _writeString(bb, val.toString());
 
 void _printSize(GrinderContext context, File file) {
   int sizeKb = file.lengthSync() ~/ 1024;

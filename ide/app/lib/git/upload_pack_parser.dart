@@ -25,7 +25,7 @@ class PktLine {
 class PackParseResult {
   List<PackObject> objects;
   String shallow;
-  dynamic common;
+  List<String> common;
   Uint8List data;
 
   PackParseResult(this.objects,  this.data, this.shallow, this.common);

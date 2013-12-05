@@ -32,6 +32,8 @@ class GitRef {
   String sha;
   String name;
   String type;
+  String head;
+  String localHead;
   dynamic remote;
 
   GitRef(this.sha, this.name, [this.type, this.remote]);
@@ -41,7 +43,7 @@ class GitRef {
 class GitConfig {
 
   String url;
-  bool shallow;
+  String shallow;
   Map<String, String> remoteHeads = {};
   DateTime time;
 
@@ -73,6 +75,12 @@ class FindPackedObjectResult {
   FindPackedObjectResult(this.pack, this.offset);
 }
 
+class CommitGraph {
+  List<CommitObject> commits;
+  List<String> nextLevel;
+  CommitGraph(this.commits, this.nextLevel);
+}
+
 class ObjectStore {
 
   static final GIT_FOLDER_PATH = '.git';
@@ -90,7 +98,7 @@ class ObjectStore {
   // Git directory path.
   String gitPath = '.git/';
 
-  List<PackEntry> _packs = [];
+  List<PackEntry> packs = [];
 
   ObjectStore(chrome.DirectoryEntry root) {
     _rootDir = root;
@@ -98,7 +106,7 @@ class ObjectStore {
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
     this.objectDir = objectDir;
-    _packs = packs;
+    packs = packs;
   }
 
   Future load() {
@@ -145,7 +153,7 @@ class ObjectStore {
 
   Future<String> getHeadSha() {
     return getHeadRef().then((String headRefName)
-        => _getHeadForRef(headRefName));
+        => getHeadForRef(headRefName));
   }
 
   Future<String> getAllHeads() {
@@ -162,7 +170,7 @@ class ObjectStore {
     });
   }
 
-  Future<String> _getHeadForRef(String headRefName) {
+  Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
       .then((String content) => content.substring(0, 40));
   }
@@ -178,7 +186,7 @@ class ObjectStore {
 
             PackIndex packIdx = new PackIndex(new Uint8List.fromList(
                 idxData.getBytes()).buffer);
-            _packs.add(new PackEntry(pack, packIdx));
+            packs.add(new PackEntry(pack, packIdx));
             return new Future.value();
       });
     });
@@ -190,15 +198,15 @@ class ObjectStore {
   Future<FindPackedObjectResult> _findPackedObject(Uint8List shaBytes) {
     Completer completer = new Completer();
 
-    _packs.forEach((PackEntry packEntry) {
+    packs.forEach((PackEntry packEntry) {
       int offset = packEntry.packIdx.getObjectOffset(shaBytes);
 
     });
-    for (var i = 0; i < _packs.length; ++i) {
-      int offset = _packs[i].packIdx.getObjectOffset(shaBytes);
+    for (var i = 0; i < packs.length; ++i) {
+      int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
       if (offset != -1) {
-        completer.complete(new FindPackedObjectResult(_packs[i].pack, offset));
+        completer.complete(new FindPackedObjectResult(packs[i].pack, offset));
       }
     }
 
@@ -240,7 +248,7 @@ class ObjectStore {
           });
         }
       });
-    }, onError:(e){
+    }, onError:(e) {
       return this._findPackedObject(shaBytes).then(
           (FindPackedObjectResult obj) {
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
@@ -252,12 +260,12 @@ class ObjectStore {
   }
 
 
-  Future getCommitGraph(List<String> headShas, int limit) {
+  Future<CommitGraph> getCommitGraph(List<String> headShas, int limit) {
     List<CommitObject> commits = [];
     Map<String, bool> seen = {};
 
 
-    Future walkLevel(List<String> shas) {
+    Future<CommitGraph> walkLevel(List<String> shas) {
       List<String> nextLevel = [];
 
       return Future.forEach(shas, (String sha) {
@@ -283,14 +291,14 @@ class ObjectStore {
       }).then((_) {
 
         if (commits.length >= limit || nextLevel.length == 0) {
-          return new Future.value();
+          return new Future.value(new CommitGraph(commits, nextLevel));
         } else {
           return walkLevel(nextLevel);
         }
       });
       });
     }
-    return walkLevel(headShas).then((_) => commits);
+    return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
   }
 
 
@@ -312,7 +320,7 @@ class ObjectStore {
   }
 
 
-  Future _getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
+  Future getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
     // special case of empty remote.
     if (baseRefs.length == 1 && baseRefs[0].sha == HEAD_MASTER_SHA) {
       baseRefs[0].name = HEAD_MASTER_REF_PATH;
@@ -334,13 +342,13 @@ class ObjectStore {
       }
 
       return _checkRemoteHead(remoteRef).then((_) {
-        return _getHeadForRef(headRefName).then((String sha) {
+        return getHeadForRef(headRefName).then((String sha) {
           if (sha == remoteRef.sha) {
           // no changes to push.
             return new Future.value();
           }
 
-          //remoteRef.head = sha;
+          remoteRef.head = sha;
           remoteRef.sha = sha;
 
          //TODO handle case of new branch with no commits.
@@ -371,7 +379,7 @@ class ObjectStore {
           // this means a local merge commit.
           _nonFastForward();
           completer.completeError("");
-        } else if(commitObj.parents.length == 0 ||
+        } else if (commitObj.parents.length == 0 ||
             commitObj.parents[0] == remoteRef.sha || remoteShas[commitObj.parents[0]]) {
           //TODO callback commits, remoteRef;
           completer.complete();
@@ -388,14 +396,14 @@ class ObjectStore {
     return getNextCommit(sha);
   }
 
-  Future _retrieveObjectBlobsAsString(List<String> shas) {
+  Future retrieveObjectBlobsAsString(List<String> shas) {
     List blobs;
     return Future.forEach(shas, (String sha) {
       retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
     }).then((_) => blobs);
   }
 
-  Future _retrieveObjectList(List<String> shas, String objType) {
+  Future retrieveObjectList(List<String> shas, String objType) {
     List objects = [];
     return Future.forEach(shas, (sha) {
       return retrieveObject(sha, objType).then((object) => objects.add(object));
@@ -429,22 +437,23 @@ class ObjectStore {
     });
   }
 
-  Future _getTreeFromCommitSha(String sha) {
+  Future<TreeObject> _getTreeFromCommitSha(String sha) {
     return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commit) {
      return  retrieveObject(commit.treeSha, ObjectTypes.TREE).then(
          (rawObject) => rawObject);
     });
   }
 
-  Future _getTreesWithCommits(List<String> shas) {
-    List trees = [];
+  Future<List<TreeObject>> getTreesFromCommits(List<String> shas) {
+    List<TreeObject> trees = [];
 
-    return Future.forEach(shas, (sha) {
-      return _getTreeFromCommitSha(sha).then((tree) => trees.add(tree));
+    return Future.forEach(shas, (String sha) {
+      return _getTreeFromCommitSha(sha).then((TreeObject tree) => trees.add(
+          tree));
     }).then((_) => trees);
   }
 
-  Future writeRawObject(String type, content) {
+  Future<String> writeRawObject(String type, content) {
 
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
@@ -485,7 +494,7 @@ class ObjectStore {
     return completer.future;
   }
 
-  Future _storeInFile(String digest, Uint8List store) {
+  Future<String> _storeInFile(String digest, Uint8List store) {
     String subDirName = digest.substring(0,2);
     String objectFileName = digest.substring(2);
 
@@ -518,7 +527,10 @@ class ObjectStore {
     });
   }
 
-  Future _writeTree(List treeEntries) {
+  /**
+   * Writes a given tree onto disk, and returns the treeSha.
+   */
+  Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((tree) {
       blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);

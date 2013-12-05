@@ -5,8 +5,9 @@
 library git;
 
 import 'dart:async';
-import 'dart:html';
 import 'dart:js' as js;
+
+import 'options.dart';
 
 /**
  * The class encapsulates the result returned by the git api.
@@ -27,49 +28,6 @@ class GitResult {
  * TODO(grv): Add verifers for api methods.
  *
  */
-class GitOptions {
-
-  // The directory entry where the git checkout resides.
-  DirectoryEntry entry;
-
-  // Optional
-
-  // Remote repository username
-  String username;
-  // Remote repository password
-  String password;
-  // Repository url
-  String repoUrl;
-  // Current branch name
-  String branchName;
-
-  String email;
-  String commitMessage;
-  String name;
-  int depth;
-  Function progressCallback;
-
-  js.JsObject toJsMap() {
-    Map<String, dynamic> options = new Map<String, dynamic>();
-
-    options['dir'] = this.entry;
-    options['username'] = this.username;
-    options['password'] = this.password;
-    options['branch'] = this.branchName;
-    options['email'] = this.email;
-    options['name'] = this.name;
-    options['depth'] = this.depth;
-    options['url'] = this.repoUrl;
-    options['progress'] = this.progressCallback;
-    options['commitMsg'] = this.commitMessage;
-    return new js.JsObject.jsify(options);
-  }
-
-  // TODO(grv): Specialize the verification for different api methods.
-  bool verify() {
-    return this.entry != null;
-  }
-}
 
 /**
  * This git.dart provides an git api library to perform basic git operations in

@@ -28,3 +28,8 @@ String shaBytesToString(List<int> shaBytes) {
   });
   return sha;
 }
+
+/**
+ * An empty function.
+ */
+void nopFunction() => null;

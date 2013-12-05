@@ -49,7 +49,8 @@ defineTests() {
           return store.getHeadSha().then((sha) {
             expect(sha, 'dc85576bd94bdcaff1bd60b0fb4cd032c8fa2c54');
             return store.getCommitGraph([sha], 32).then(
-                (List<CommitObject> commits) {
+                (CommitGraph graph) {
+                  List<CommitObject> commits = graph.commits;
                   expect(commits.length, 5);
                   expect(commits[0].treeSha,
                       "85933892cd114abc0c2a4b7b3a25cddc471cd09d");

@@ -54,6 +54,9 @@ class ListView {
   // True if any cell is highlighted when dragging an item on it.
   // In this case, we don't want to highlight the whole list.
   bool _cellHighlightedOnDragover;
+  // True if the list should be highlighted when dragging over and no cell
+  // accepts the drop.
+  bool _globalDraggingOverAllowed;
 
   /**
    * Constructor of a `ListView`.
@@ -82,6 +85,7 @@ class ListView {
     _draggingCount = 0;
     _draggingOver = false;
     _cellHighlightedOnDragover = false;
+    _globalDraggingOverAllowed = true;
     reloadData();
   }
 
@@ -235,14 +239,14 @@ class ListView {
         _draggingCount ++;
         if (_draggingCount == 1) {
           cancelEvent(event);
-          String effect = _delegate.listViewDropEffect(this);
+          String effect = _delegate.listViewDropEffect(this, event);
           if (effect == null) {
             return;
           }
           _draggingOver = true;
           _updateDraggingVisual();
           event.dataTransfer.dropEffect = effect;
-          _delegate.listViewDragEnter(this);
+          _delegate.listViewDragEnter(this, event);
         }
       });
       _dragLeaveSubscription = _container.onDragLeave.listen((event) {
@@ -253,12 +257,17 @@ class ListView {
           cancelEvent(event);
           _draggingOver = false;
           _updateDraggingVisual();
-          _delegate.listViewDragLeave(this);
+          _delegate.listViewDragLeave(this, event);
         }
       });
       _dragOverSubscription = _container.onDragOver.listen((event) {
         cancelEvent(event);
         _delegate.listViewDragOver(this, event);
+
+        String effect = _delegate.listViewDropEffect(this, event);
+        if (effect != null) {
+          event.dataTransfer.dropEffect = effect;
+        }
       });
       _dropSubscription = _container.onDrop.listen((event) {
         cancelEvent(event);
@@ -287,9 +296,17 @@ class ListView {
     _updateDraggingVisual();
   }
 
+  bool get globalDraggingOverAllowed => _globalDraggingOverAllowed;
+
+  void set globalDraggingOverAllowed(bool allowed) {
+    _globalDraggingOverAllowed = allowed;
+    _updateDraggingVisual();
+  }
+
   void _updateDraggingVisual() {
     // We highlight is dragging is over the list and no cells is highlighted.
-    if (_draggingOver && !_cellHighlightedOnDragover) {
+    if (_draggingOver && !_cellHighlightedOnDragover &&
+        _globalDraggingOverAllowed) {
       _dragoverVisual.classes.add('listview-dragover-active');
     } else {
       _dragoverVisual.classes.remove('listview-dragover-active');

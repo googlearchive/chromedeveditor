@@ -10,9 +10,11 @@ import 'package:polymer/polymer.dart' as polymer;
 import 'spark.dart';
 
 void main() {
-  // TODO: hard-code developer mode to true for now.
-  SparkPolymer spark = new SparkPolymer(true);
-  spark.start();
+  polymer.initPolymer().run(() {
+    // TODO: hard-code developer mode to true for now.
+    SparkPolymer spark = new SparkPolymer(true);
+    spark.start();
+  });
 }
 
 class SparkPolymer extends Spark {
@@ -46,14 +48,23 @@ class SparkPolymer extends Spark {
   @override
   void initSplitView() => null;
 
-  // TEMP:
+  // TODO(terry): Hookup overlay dialog.
+  @override
+  void showStatus(String text, {bool error: false}) {
+    // TEMP:
+    //Element element = querySelector("#status");
+    //element.text = text;
+    //SparkOverlay overlay = querySelector("#spark-dialog");
+    //if (overlay != null) {
+    //  overlay.toggle();
+    //}
+  }
+
   @override
   void initFilesController() => null; //super.initFilesController();
 
   @override
   void initLookAndFeel() {
-    // Init the Polymer library.
-    polymer.initPolymer();
     // Init the Bootjack library (a wrapper around Bootstrap).
     bootjack.Bootjack.useDefault();
   }
