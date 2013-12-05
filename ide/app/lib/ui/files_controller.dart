@@ -27,13 +27,15 @@ class FilesController implements TreeViewDelegate {
   FilesControllerDelegate _delegate;
   Map<String, Resource> _filesMap;
 
-  FilesController(Workspace workspace, FilesControllerDelegate delegate) {
+  FilesController(Workspace workspace,
+                  FilesControllerDelegate delegate,
+                  html.Element fileViewArea) {
     _workspace = workspace;
     _delegate = delegate;
     _files = [];
     _filesMap = {};
 
-    _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
+    _treeView = new TreeView(fileViewArea, this);
     _treeView.dropEnabled = true;
     _treeView.draggingEnabled = true;
 
