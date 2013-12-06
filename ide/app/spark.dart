@@ -564,7 +564,7 @@ abstract class SparkAction extends Action {
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
   FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in a Tab");
+      super(spark, "file-open-in-tab", "Open in new Tab");
 
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
