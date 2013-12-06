@@ -6,6 +6,7 @@ library spark.git.all_tests;
 
 import 'commands/branch_test.dart' as git_commands_branch_test;
 import 'commands/checkout_test.dart' as git_commands_checkout_test;
+import 'commands/clone_test.dart' as git_commands_clone_test;
 import 'commands/commit_test.dart' as git_commands_commit_test;
 import 'commands/conditions_test.dart' as git_commands_conditions_test;
 import 'commands/merge_test.dart' as git_commands_merge_test;
@@ -27,6 +28,7 @@ void defineTests() {
   git_commands_branch_test.defineTests();
   git_commands_checkout_test.defineTests();
   git_commands_commit_test.defineTests();
+  git_commands_clone_test.defineTests();
   git_commands_conditions_test.defineTests();
   git_commands_merge_test.defineTests();
   git_commands_pull_test.defineTests();
