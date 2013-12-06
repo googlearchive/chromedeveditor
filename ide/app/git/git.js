@@ -1783,6 +1783,12 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
      * This can happen if it's a first push to blank repo and a url wasn't specified as one of the options. */
     PUSH_NO_REMOTE: errutils.PUSH_NO_REMOTE,
 
+    getFs : function(success) {
+      window.webkitRequestFileSystem(window.TEMPORARY, 5 * 1024 * 1024 * 1024, function(fs) {
+        success(fs);
+      });
+    },
+
     /**
      * Clones a remote git repo into a local HTML5 DirectoryEntry. It only requests a single branch. This will either
      * be the branch specified or the HEAD at specified url. You can also specify the depth of the clone. It's recommended

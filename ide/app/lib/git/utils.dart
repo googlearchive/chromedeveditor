@@ -24,7 +24,9 @@ List<int> shaToBytes(String sha) {
 String shaBytesToString(List<int> shaBytes) {
   String sha = "";
   shaBytes.forEach((int byte) {
-    sha += byte.toRadixString(16);
+    String shaPart = byte.toRadixString(16);
+    if (shaPart.length == 1) shaPart = '0' + shaPart;
+    sha += shaPart;
   });
   return sha;
 }

@@ -52,7 +52,7 @@ abstract class ObjectUtils {
         } else {
           return dir.createDirectory(entry.name).then(
               (chrome.DirectoryEntry newDir) {
-            return expandTree(dir, store, sha);
+            return expandTree(newDir, store, sha);
           });
         }
       });
