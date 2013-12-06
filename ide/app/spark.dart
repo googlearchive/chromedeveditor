@@ -210,9 +210,9 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileRenameAction(this));
     actionManager.registerAction(new GitCloneAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
     actionManager.registerKeyListener();
@@ -234,8 +234,6 @@ class Spark extends Application implements FilesControllerDelegate {
 
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
 
     ul.children.add(createMenuSeparator());
 
@@ -494,7 +492,7 @@ class KeyBindingManager {
   }
 
   void _updateName(String name) {
-    _label.text = name == null ? 'Spark Default' : capitalize(name);
+    _label.text = 'Keys: ' + (name == null ? 'default' : capitalize(name));
   }
 }
 
@@ -575,7 +573,7 @@ abstract class SparkAction extends Action {
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
   FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in a New Tab");
+      super(spark, "file-open-in-tab", "Open in new Tab");
 
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
@@ -594,7 +592,7 @@ class FileNewAction extends SparkAction implements ContextAction {
   InputElement _nameElement;
   ws.Folder folder;
 
-  FileNewAction(Spark spark) : super(spark, "file-new", "New File") {
+  FileNewAction(Spark spark) : super(spark, "file-new", "New File…") {
     defaultBinding("ctrl-n");
     _fileNewDialog = bootjack.Modal.wire(querySelector('#fileNewDialog'));
     _nameElement = _fileNewDialog.element.querySelector("#fileName");
@@ -668,12 +666,10 @@ class FileDeleteAction extends SparkAction implements ContextAction {
   void _setMessageAndShow() {
     if (_resources.length == 1) {
       _deleteDialog.element.querySelector("#message").text =
-          "Are you sure you want to delete '${_resources.first.name}'"
-          " from the file system?";
+          "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
       _deleteDialog.element.querySelector("#message").text =
-          "Are you sure you want to delete '${_resources.length}'"
-          " files from the file system?";
+          "Are you sure you want to delete ${_resources.length} files?";
     }
     _deleteDialog.show();
   }
@@ -684,7 +680,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
     });
   }
 
-  String get category => 'resource';
+  String get category => 'resource-delete';
 
   bool appliesTo(Object object) => _isResourceList(object);
 }
@@ -694,7 +690,7 @@ class FileRenameAction extends SparkAction implements ContextAction {
   ws.Resource resource;
   InputElement _element;
 
-  FileRenameAction(Spark spark) : super(spark, "file-rename", "Rename") {
+  FileRenameAction(Spark spark) : super(spark, "file-rename", "Rename…") {
     _renameDialog = bootjack.Modal.wire(querySelector('#renameDialog'));
     _element = _renameDialog.element.querySelector("#fileName");
     _renameDialog.element.querySelector("#renameOkButton").onClick.listen((_) {
