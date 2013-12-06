@@ -11,9 +11,7 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
-String i18n(String messageId) {
-  return chrome.i18n.getMessage(messageId);
-}
+String i18n(String messageId) => chrome.i18n.getMessage(messageId);
 
 String capitalize(String s) {
   return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
@@ -53,6 +51,61 @@ String baseName(String path) {
  * Return whether the current runtime is dart2js (vs Dartium).
  */
 bool isDart2js() => identical(1, 1.0);
+
+/**
+ * A simple class to do `print()` profiling. It is used to profile a single
+ * operation, and can time multiple sequential tasks within that operation.
+ * Each call to [emit] reset the task timer, but does not effect the operation
+ * timer. Call [finish] when the whole operation is complete.
+ */
+class PrintProfiler {
+  final String name;
+  final bool quiet;
+
+  int _previousTaskTime = 0;
+  Stopwatch _stopwatch = new Stopwatch();
+
+  /**
+   * Create a profiler to time a single operation (`name`).
+   */
+  PrintProfiler(this.name, {this.quiet: false}) {
+    _stopwatch.start();
+  }
+
+  /**
+   * The elapsed time for the current task.
+   */
+  int currentElapsedMs() => _stopwatch.elapsedMilliseconds;
+
+  /**
+   * Finish the current task and print out that task's elapsed time.
+   */
+  void emit(String taskName) {
+    _stopwatch.stop();
+    int ms = _stopwatch.elapsedMilliseconds;
+    if (!quiet) {
+      print('${name}, ${taskName} ${ms / 1000}s');
+    }
+    _previousTaskTime += ms;
+    _stopwatch.reset();
+    _stopwatch.start();
+  }
+
+  /**
+   * Stop the timer, and print out the total time for the operation.
+   */
+  void finish() {
+    _stopwatch.stop();
+    if (!quiet) {
+      print('${name} total: ${totalElapsedMs() / 1000}s');
+    }
+  }
+
+  /**
+   * The elapsed time for the whole operation.
+   */
+  int totalElapsedMs() => _previousTaskTime + _stopwatch.elapsedMilliseconds;
+}
 
 /**
  * Returns a minimal textual description of the stack trace. I.e., instead of a
