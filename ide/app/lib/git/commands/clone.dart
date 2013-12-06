@@ -15,27 +15,15 @@ import '../http_fetcher.dart';
 import '../object.dart';
 import '../objectstore.dart';
 import '../object_utils.dart';
+import '../options.dart';
 import '../pack.dart';
 import '../pack_index.dart';
 import '../upload_pack_parser.dart';
 import '../utils.dart';
 
-class GitOptions {
-  chrome.DirectoryEntry root;
-  ObjectStore store;
-  String url;
-  int depth;
-  String branch;
-  String username;
-  String password;
-
-  // progress function.
-  var progress;
-
-}
-
-nopFunction() {}
-
+/**
+ * This class implments the git clone command.
+ */
 class Clone {
 
   GitOptions _options;
@@ -53,25 +41,21 @@ class Clone {
 
     return FileOps.listFiles(dir).then((entries) {
       if (entries.length == 0) {
-        throw "error";
-        //error({type: errutils.CLONE_DIR_NOT_INTIALIZED, msg: errutils.CLONE_DIR_NOT_INTIALIZED_MSG});
+        throw "CLONE_DIR_NOT_INTIALIZED";
       } else if (entries.length != 1 || entries[0].isFile
           || entries[0].name != '.git') {
-        throw "error";
-        //error({type: errutils.CLONE_DIR_NOT_EMPTY, msg: errutils.CLONE_DIR_NOT_EMPTY_MSG});
+        throw "CLONE_DIR_NOT_EMPTY";
       } else {
         return FileOps.listFiles(store.objectDir).then((entries) {
           if (entries.length > 1) {
-            throw "";
-            //error({type: errutils.CLONE_GIT_DIR_IN_USE, msg: errutils.CLONE_GIT_DIR_IN_USE_MSG});
+            throw "CLONE_GIT_DIR_IN_USE";
           } else if (entries.length == 1) {
             if (entries[0].name == "pack") {
               return store.objectDir.getDirectory('pack').then(
                   (chrome.DirectoryEntry packDir) {
                 return FileOps.listFiles(packDir).then((entries) {
                   if (entries.length > 0) {
-                    throw "";
-                    //error({type: errutils.CLONE_GIT_DIR_IN_USE, msg: errutils.CLONE_GIT_DIR_IN_USE_MSG});
+                    throw "CLONE_GIT_DIR_IN_USE";
                   } else {
                     return null;
                   }
@@ -98,7 +82,7 @@ class Clone {
 
   Future _createInitialConfig(String shallow, GitRef localHeadRef) {
     GitConfig config = new GitConfig();
-    config.url = _options.url;
+    config.url = _options.repoUrl;
     config.time = new DateTime.now();
 
     if (_options.depth && shallow) {
@@ -112,9 +96,9 @@ class Clone {
   }
 
   Clone(this._options) {
-    if (_options.branch == null) _options.branch = 'master';
-    if (_options.progress == null) {
-      _options.progress = nopFunction();
+    if (_options.branchName == null) _options.branchName = 'master';
+    if (_options.progressCallback == null) {
+      _options.progressCallback = nopFunction;
     }
   }
 
@@ -127,13 +111,13 @@ class Clone {
         });
   }
 
-  Future _something(chrome.DirectoryEntry gitDir, GitRef localHeadRef,
+  Future _processClone(chrome.DirectoryEntry gitDir, GitRef localHeadRef,
       HttpFetcher fetcher) {
     return FileOps.createFileWithContent(gitDir, "HEAD",
         "ref: ${localHeadRef.name}\n", "Text").then((_) {
       return FileOps.createFileWithContent(gitDir, localHeadRef.name,
           localHeadRef.sha, "Text").then((_) {
-        return fetcher.fetchRef([localHeadRef], null, null, _options.depth,
+        return fetcher.fetchRef([localHeadRef.sha], null, null, _options.depth,
             null, nopFunction, nopFunction).then((PackParseResult result) {
           Uint8List packData = result.data;
           List<int> packSha = packData.sublist(packData.length - 20);
@@ -170,7 +154,7 @@ class Clone {
   Future clone() {
 
     HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
-        _options.url, _options.username, _options.password);
+        _options.repoUrl, _options.username, _options.password);
 
     return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
       return  _options.root.createDirectory(".git").then(
@@ -186,7 +170,7 @@ class Clone {
           refs.forEach((GitRef ref) {
             if (ref.name == "HEAD") {
               remoteHead = ref.sha;
-            } else if (ref.name == "refs/heads/" + _options.branch) {
+            } else if (ref.name == "refs/heads/" + _options.branchName) {
               localHeadRef = ref;
             } else if (ref.name.indexOf("refs/heads/") == 0) {
               if (ref.sha == remoteHead) {
@@ -196,14 +180,14 @@ class Clone {
           });
 
           if (localHeadRef == null) {
-            if (_options.branch == null) {
-              //error({type: errutils.REMOTE_BRANCH_NOT_FOUND, msg: errutils.REMOTE_BRANCH_NOT_FOUND_MSG});
+            if (_options.branchName == null) {
+              //REMOTE_BRANCH_NOT_FOUND;
               return null;
             } else {
               localHeadRef = remoteHeadRef;
             }
           }
-          return _something(gitDir, localHeadRef, fetcher);
+          return _processClone(gitDir, localHeadRef, fetcher);
         });
       });
     });

@@ -106,7 +106,7 @@ class ObjectStore {
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
     this.objectDir = objectDir;
-    packs = packs;
+    this.packs = packs;
   }
 
   Future load() {
@@ -198,10 +198,6 @@ class ObjectStore {
   Future<FindPackedObjectResult> _findPackedObject(Uint8List shaBytes) {
     Completer completer = new Completer();
 
-    packs.forEach((PackEntry packEntry) {
-      int offset = packEntry.packIdx.getObjectOffset(shaBytes);
-
-    });
     for (var i = 0; i < packs.length; ++i) {
       int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
@@ -243,7 +239,7 @@ class ObjectStore {
           completer.complete(new LooseObject(buff));
         } else {
           return FileOps.readBlob(new Blob(inflated.getBytes()), 'Text').then(
-              ( data) {
+              (data) {
             completer.complete(new LooseObject(data));
           });
         }
@@ -414,11 +410,13 @@ class ObjectStore {
     return _rootDir.getDirectory('.git').then((chrome.DirectoryEntry gitDir) {
       return load();
     }, onError: (FileError e) {
-      if (e.code == FileError.NOT_FOUND_ERR) {
+      return _init();
+      // TODO(grv) : error handling.
+      /*if (e.code == FileError.NOT_FOUND_ERR) {
         return _init();
       } else {
         throw e;
-      }
+      }*/
     });
   }
 
