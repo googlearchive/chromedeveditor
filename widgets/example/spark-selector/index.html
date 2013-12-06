@@ -8,10 +8,6 @@
     <!-- import elements -->
     <link rel="import" href="packages/spark_widgets/spark-selector/spark-selector.html">
     <link rel="import" href="packages/spark_widgets/spark-selection/spark-selection.html">
-    <script type="application/dart"> 
-      export "packages/polymer/init.dart";
-    </script> 
-    <script src="packages/browser/dart.js"></script>
     <style>
       .item.selected {
         background: #eee;
@@ -19,6 +15,7 @@
     </style>
   </head>
   <body>
+    <script type="application/dart">export "packages/polymer/init.dart";</script>
     <spark-selector>
       <div class="item">Item 1</div>
       <div class="item">Item 2</div>

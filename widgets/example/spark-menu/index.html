@@ -8,12 +8,9 @@
     <!-- import elements -->
     <link rel="import" href="packages/spark_widgets/spark-menu/spark-menu.html">
     <link rel="import" href="packages/spark_widgets/spark-menu-item/spark-menu-item.html">
-    <script type="application/dart"> 
-      export "packages/polymer/init.dart";
-    </script> 
-    <script src="packages/browser/dart.js"></script>
   </head>
   <body>
+    <script type="application/dart">export "packages/polymer/init.dart";</script>
     <!-- TODO: SparkSelector::valueToSelection(value) does not support non
     integer selected values. -->
     <spark-menu selected="email">

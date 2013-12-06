@@ -7,12 +7,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <!-- import elements -->
     <link rel="import" href="packages/spark_widgets/spark-button/spark-button.html">
-    <script type="application/dart"> 
-      export "packages/polymer/init.dart";
-  	</script> 
-    <script src="packages/browser/dart.js"></script>
   </head>
   <body>
+    <script type="application/dart">export "packages/polymer/init.dart";</script> 
     <spark-button id="newFile" primary>New File</spark-button>
     <spark-button id="saveFile">Save File</spark-button>
     <spark-button id="deleteFile" active>delete File</spark-button>
