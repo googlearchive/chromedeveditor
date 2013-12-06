@@ -169,3 +169,7 @@ body {
 #hotdogMenu .main-menu-button {
   padding: 0;
 }
+
+div.modal-body input {
+	width: 100%;
+}
