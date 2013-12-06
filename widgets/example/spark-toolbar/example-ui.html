@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<!-- import elements -->
 <link rel="import" 
 href="packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 <link rel="import" 
 href="packages/spark_widgets/spark-icon-button/spark-icon-button.html">
-<polymer-element name="example-page">
+<polymer-element name="example-ui">
   <template>
     <spark-toolbar>
       <spark-icon-button src="menu.png" on-click="{{menuAction}}">
@@ -13,5 +12,5 @@ href="packages/spark_widgets/spark-icon-button/spark-icon-button.html">
       <div class="flex">Title</div>
     </spark-toolbar>
   </template>
-  <script src="example-page.dart" type="application/dart"></script>
+  <script src="example-ui.dart" type="application/dart"></script>
 </polymer-element>

@@ -1,0 +1,20 @@
+<!doctype html>
+
+<link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
+<polymer-element name="example-ui">
+  <template>
+    <!-- TODO: left right splitter does not work. -->
+    <div class="flexbox">
+     <div>left</div>
+     <spark-splitter direction="left"></spark-splitter>
+     <div flex>right</div>
+    </div>
+    <!-- TODO: disable text selection at the splitter -->
+    <div class="flexbox column">
+     <div>top</div>
+     <spark-splitter direction="up"></spark-splitter>
+     <div flex>bottom</div>
+    </div>
+  </template>
+  <script type="application/dart" src="example-ui.dart"></script>
+</polymer-element>

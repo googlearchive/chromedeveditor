@@ -5,19 +5,10 @@
     <title>spark-menu</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <!-- import elements -->
-    <link rel="import" href="packages/spark_widgets/spark-menu/spark-menu.html">
-    <link rel="import" href="packages/spark_widgets/spark-menu-item/spark-menu-item.html">
+    <link rel="import" href="example-ui.html">
   </head>
   <body>
-    <script type="application/dart">export "packages/polymer/init.dart";</script>
-    <!-- TODO: SparkSelector::valueToSelection(value) does not support non
-    integer selected values. -->
-    <spark-menu selected="email">
-      <spark-menu-item name="post" src="/widgets/example/assets/add.png">Post a Comment</spark-menu-item>
-      <spark-menu-item name="share" src="/widgets/example/assets/add.png">Share Link</spark-menu-item>
-      <spark-menu-item name="email" src="/widgets/example/assets/add.png">Email Link</spark-menu-item>
-      <spark-menu-item name="favorite" src="/widgets/example/assets/add.png">Add to Favorites</spark-menu-item>
-    </spark-menu>
+    <example-ui></example-ui>
   </body>
+  <script type="application/dart">export "packages/polymer/init.dart";</script>   
 </html>
