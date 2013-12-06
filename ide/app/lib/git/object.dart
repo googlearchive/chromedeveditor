@@ -177,7 +177,7 @@ class CommitObject extends GitObject {
       i++;
     }
 
-    String authorLine = lines[i].replaceFirst("author", "");
+    String authorLine = lines[i].replaceFirst("author ", "");
     author = _parseAuthor(authorLine);
 
     var committerLine = lines[i + 1].replaceFirst("committer ", "");
