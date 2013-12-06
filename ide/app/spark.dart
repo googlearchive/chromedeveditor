@@ -672,7 +672,7 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
 
   void _setMessageAndShow() {
     if (_resources.length == 1) {
-      _dialogElement.element.querySelector("#message").text =
+      _dialogElement.querySelector("#message").text =
           "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
       _dialogElement.querySelector("#message").text =
