@@ -7,10 +7,12 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
+import 'dart:js' as js;
 import 'dart:math' as math;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome_gen/src/files.dart';
 import 'package:logging/logging.dart';
 
 import 'lib/ace.dart';
@@ -19,6 +21,12 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
+
+// git includes.
+import 'lib/git/commands/clone.dart';
+import 'lib/git/objectstore.dart';
+import 'lib/git/options.dart';
+
 import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
@@ -27,6 +35,7 @@ import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
+
 
 /**
  * Returns true if app.json contains a test-mode entry set to true.
@@ -206,6 +215,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileRenameAction(this));
+    actionManager.registerAction(new GitProjectAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
     actionManager.registerKeyListener();
@@ -249,6 +259,8 @@ class Spark extends Application implements FilesControllerDelegate {
     if (developerMode) {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
+      ul.children.add(createMenuSeparator());
+      ul.children.add(createMenuItem(actionManager.getAction('git-project')));
     }
 
     ul.children.add(createMenuSeparator());
@@ -751,6 +763,60 @@ class FolderOpenAction extends SparkAction {
   FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder...");
 
   void _invoke([Object context]) => spark.openFolder();
+}
+
+class ProjectOpenAction extends SparkAction {
+  ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
+
+  void _invoke([Object context]) => spark.openProject();
+}
+
+class GitProjectAction extends SparkAction {
+  bootjack.Modal _gitCloneBox;
+
+  GitProjectAction(Spark spark) : super(spark, "git-project", "Git Project");
+  void _invoke([Object context]) {
+    if (_gitCloneBox == null) {
+      _gitCloneBox = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
+
+      var submit = _gitCloneBox.element.querySelector("#git-create-button");
+      submit.onClick.listen((e) {
+        String projectName = _gitCloneBox.element.querySelector(
+            '#git-project-name').value;
+        String repoUrl = _gitCloneBox.element.querySelector(
+            '#git-repo-url').value;
+        _gitClone(projectName, repoUrl, spark);
+        _gitCloneBox.hide();
+      });
+    }
+
+    _gitCloneBox.show();
+  }
+
+  _gitClone(String projectName, String url, Spark spark) {
+    Function callback = (js.JsObject fs) {
+      CrFileSystem cfs = new CrFileSystem.fromProxy(fs);
+      cfs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+        GitOptions options = new GitOptions();
+        options.root = dir;
+        options.repoUrl = url;
+        options.depth = 1;
+        options.store = new ObjectStore(dir);
+        Clone clone = new Clone(options);
+        options.store.init().then((_) {
+          clone.clone().then((_) {
+            spark.workspace.link(dir).then((file) {
+              spark._filesController.selectLastFile();
+              spark.workspace.save();
+            });
+          });
+        });
+      });
+    };
+
+    js.JsObject git = js.context['GitApi'];
+    js.JsObject fs = git.callMethod('getFs', [callback]);
+  }
 }
 
 class AboutSparkAction extends SparkAction {

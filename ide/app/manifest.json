@@ -23,6 +23,7 @@
     "https://www.google-analytics.com/",
     "clipboardRead",
     "clipboardWrite",
+    "https://github.com/*",
     {
       "fileSystem": [
         "write",
