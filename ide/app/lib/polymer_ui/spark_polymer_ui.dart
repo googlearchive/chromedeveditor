@@ -4,15 +4,10 @@
 
 library spark_polymer.ui;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/widget.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends Widget {
   SparkPolymerUI.created() : super.created();
-
-  Element getElement(String selectors) =>
-      this.shadowRoot.querySelector(selectors);
 }

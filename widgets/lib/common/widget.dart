@@ -4,17 +4,20 @@
 
 library spark_widgets;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 class Widget extends PolymerElement {
   static const CSS_ENABLED = "enabled";
   static const CSS_DISABLED = "disabled";
 
-  Widget.created() : super.created() {
-  }
+  Widget.created() : super.created();
 
   @override
   bool get applyAuthorStyles => true;
 
   String joinClasses(List<String> cls) => cls.join(" ");
+
+  Element getElement(String selectors) => shadowRoot.querySelector(selectors);
 }
