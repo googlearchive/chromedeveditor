@@ -4,21 +4,32 @@
 
 library spark_polymer;
 
+import 'dart:html';
+
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 import 'spark.dart';
+import 'lib/actions.dart';
+import 'lib/polymer_ui/spark_polymer_ui.dart';
 
 void main() {
-  polymer.initPolymer().run(() {
-    // TODO: hard-code developer mode to true for now.
-    SparkPolymer spark = new SparkPolymer(true);
-    spark.start();
+  isTestMode().then((testMode) {
+    polymer.initPolymer().run(() {
+      SparkPolymer spark = new SparkPolymer(testMode);
+      spark.start();
+    });
   });
 }
 
 class SparkPolymer extends Spark {
-  SparkPolymer(bool developerMode) : super(developerMode);
+  SparkPolymerUI _ui;
+
+  SparkPolymer(bool developerMode)
+      : _ui = document.querySelector('#topUi') as SparkPolymerUI,
+        super(developerMode);
+
+  Element getUiElement(String selectors) => _ui.getElement(selectors);
 
   //
   // Override some parts of the parent's ctor:
@@ -36,11 +47,9 @@ class SparkPolymer extends Spark {
   @override
   void createEditorComponents() => super.createEditorComponents();
 
-  // TEMP:
   @override
   void initEditorManager() => super.initEditorManager();
 
-  // TEMP:
   @override
   void initEditorArea() => super.initEditorArea();
 
@@ -49,7 +58,7 @@ class SparkPolymer extends Spark {
   void initSplitView() => null;
 
   @override
-  void initFilesController() => null; //super.initFilesController();
+  void initFilesController() => super.initFilesController();
 
   @override
   void initLookAndFeel() {
@@ -57,17 +66,47 @@ class SparkPolymer extends Spark {
     bootjack.Bootjack.useDefault();
   }
 
-  // TEMP:
   @override
-  void createActions() => null; //super.createActions();
+  void createActions() => super.createActions();
 
-  // TEMP:
   @override
-  void initToolbar() => null; //super.initToolbar();
+  void initToolbar() => super.initToolbar();
 
-  // TEMP:
   @override
-  void buildMenu() => null; //super.buildMenu();
+  void buildMenu() {
+    // TODO(ussuri):
+    UListElement ul = getUiElement('#hotdogMenu ul');
+
+    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
+    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
+
+    ul.children.add(createMenuSeparator());
+
+    // Theme control.
+    // NOTE: Disabled because doing this resulted in a crash.
+//    Element theme = ul.querySelector('#changeTheme');
+//    ul.children.remove(theme);
+//    ul.children.add(theme);
+    ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
+    ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
+
+    // Key binding control.
+//    Element keys = ul.querySelector('#changeKeys');
+//    ul.children.remove(keys);
+//    ul.children.add(keys);
+    ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
+    ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
+
+    if (developerMode) {
+      ul.children.add(createMenuSeparator());
+      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
+    }
+
+    ul.children.add(createMenuSeparator());
+    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
+  }
 
   //
   // - End parts of the parent's ctor.
