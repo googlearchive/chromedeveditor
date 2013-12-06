@@ -765,12 +765,6 @@ class FolderOpenAction extends SparkAction {
   void _invoke([Object context]) => spark.openFolder();
 }
 
-class ProjectOpenAction extends SparkAction {
-  ProjectOpenAction(Spark spark) : super(spark, "project-open", "Open Project...");
-
-  void _invoke([Object context]) => spark.openProject();
-}
-
 class GitProjectAction extends SparkAction {
   bootjack.Modal _gitCloneBox;
 
