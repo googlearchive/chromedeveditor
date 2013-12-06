@@ -21,9 +21,9 @@
   },
   "permissions": [
     "https://www.google-analytics.com/",
+    "https://github.com/*",
     "clipboardRead",
     "clipboardWrite",
-    "https://github.com/*",
     {
       "fileSystem": [
         "write",

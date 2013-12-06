@@ -21,12 +21,9 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
-
-// git includes.
 import 'lib/git/commands/clone.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
-
 import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
@@ -215,7 +212,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new FileRenameAction(this));
-    actionManager.registerAction(new GitProjectAction(this));
+    actionManager.registerAction(new GitCloneAction(this));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this));
     actionManager.registerKeyListener();
@@ -260,7 +257,7 @@ class Spark extends Application implements FilesControllerDelegate {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
       ul.children.add(createMenuSeparator());
-      ul.children.add(createMenuItem(actionManager.getAction('git-project')));
+      ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
     }
 
     ul.children.add(createMenuSeparator());
@@ -765,32 +762,32 @@ class FolderOpenAction extends SparkAction {
   void _invoke([Object context]) => spark.openFolder();
 }
 
-class GitProjectAction extends SparkAction {
-  bootjack.Modal _gitCloneBox;
+class GitCloneAction extends SparkAction {
+  bootjack.Modal _gitCloneButton;
 
-  GitProjectAction(Spark spark) : super(spark, "git-project", "Git Project");
+  GitCloneAction(Spark spark) : super(spark, "git-clone", "Git Clone");
   void _invoke([Object context]) {
-    if (_gitCloneBox == null) {
-      _gitCloneBox = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
+    if (_gitCloneButton == null) {
+      _gitCloneButton = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
 
-      var submit = _gitCloneBox.element.querySelector("#git-create-button");
+      var submit = _gitCloneButton.element.querySelector("#git-clone-button");
       submit.onClick.listen((e) {
-        String projectName = _gitCloneBox.element.querySelector(
-            '#git-project-name').value;
-        String repoUrl = _gitCloneBox.element.querySelector(
-            '#git-repo-url').value;
+        // TODO(grv): add verify checks.
+        String projectName = (_gitCloneButton.element.querySelector(
+            '#git-project-name') as InputElement).value;
+        String repoUrl = (_gitCloneButton.element.querySelector(
+            '#git-repo-url') as InputElement).value;
         _gitClone(projectName, repoUrl, spark);
-        _gitCloneBox.hide();
+        _gitCloneButton.hide();
       });
     }
 
-    _gitCloneBox.show();
+    _gitCloneButton.show();
   }
 
-  _gitClone(String projectName, String url, Spark spark) {
-    Function callback = (js.JsObject fs) {
-      CrFileSystem cfs = new CrFileSystem.fromProxy(fs);
-      cfs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+  void _gitClone(String projectName, String url, Spark spark) {
+    _getGitTestFileSystem().then((CrFileSystem fs) {
+      fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         GitOptions options = new GitOptions();
         options.root = dir;
         options.repoUrl = url;
@@ -806,10 +803,16 @@ class GitProjectAction extends SparkAction {
           });
         });
       });
-    };
+    });
+  }
 
-    js.JsObject git = js.context['GitApi'];
-    js.JsObject fs = git.callMethod('getFs', [callback]);
+  Future<CrFileSystem> _getGitTestFileSystem() {
+    Completer completer = new Completer();
+    callback(fs) {
+      completer.complete(new CrFileSystem.fromProxy(fs));
+    }
+    js.JsObject fs = js.context['GitApi'].callMethod('getFs', [callback]);
+    return completer.future;
   }
 }
 

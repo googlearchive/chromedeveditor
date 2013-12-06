@@ -12,7 +12,6 @@ import 'package:crypto/crypto.dart' as crypto;
 
 import '../file_operations.dart';
 import '../http_fetcher.dart';
-import '../object.dart';
 import '../objectstore.dart';
 import '../object_utils.dart';
 import '../options.dart';
@@ -22,16 +21,64 @@ import '../upload_pack_parser.dart';
 import '../utils.dart';
 
 /**
- * This class implments the git clone command.
+ * This class implements the git clone command.
  */
 class Clone {
 
   GitOptions _options;
 
+  Clone(this._options) {
+    if (_options.branchName == null) _options.branchName = 'master';
+    if (_options.progressCallback == null) {
+      _options.progressCallback = nopFunction;
+    }
+  }
+
+  Future clone() {
+
+    HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
+        _options.repoUrl, _options.username, _options.password);
+
+    return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
+      return  _options.root.createDirectory(".git").then(
+          (chrome.DirectoryEntry gitDir) {
+        return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
+          if (refs.isEmpty) {
+            return _createInitialConfig(null, null);
+          }
+
+          GitRef remoteHeadRef, localHeadRef;
+          String remoteHead;
+
+          refs.forEach((GitRef ref) {
+            if (ref.name == "HEAD") {
+              remoteHead = ref.sha;
+            } else if (ref.name == "refs/heads/" + _options.branchName) {
+              localHeadRef = ref;
+            } else if (ref.name.indexOf("refs/heads/") == 0) {
+              if (ref.sha == remoteHead) {
+                remoteHeadRef = ref;
+              }
+            }
+          });
+
+          if (localHeadRef == null) {
+            if (_options.branchName == null) {
+              //REMOTE_BRANCH_NOT_FOUND;
+              return null;
+            } else {
+              localHeadRef = remoteHeadRef;
+            }
+          }
+          return _processClone(gitDir, localHeadRef, fetcher);
+        });
+      });
+    });
+  }
+
   Future _createCurrentTreeFromPack(chrome.DirectoryEntry dir, ObjectStore store,
       String headSha) {
-    return store.retrieveObject(headSha, ObjectTypes.COMMIT).then(
-        (CommitObject commit) {
+    return store.retrieveObject(headSha, ObjectTypes.COMMIT).then((commit) {
           return ObjectUtils.expandTree(dir, store, commit.treeSha);
     });
   }
@@ -42,15 +89,15 @@ class Clone {
     return FileOps.listFiles(dir).then((entries) {
       if (entries.length == 0) {
         throw "CLONE_DIR_NOT_INTIALIZED";
-      } else if (entries.length != 1 || entries[0].isFile
-          || entries[0].name != '.git') {
+      } else if (entries.length != 1 || entries.first.isFile
+          || entries.first.name != '.git') {
         throw "CLONE_DIR_NOT_EMPTY";
       } else {
         return FileOps.listFiles(store.objectDir).then((entries) {
           if (entries.length > 1) {
             throw "CLONE_GIT_DIR_IN_USE";
           } else if (entries.length == 1) {
-            if (entries[0].name == "pack") {
+            if (entries.first.name == "pack") {
               return store.objectDir.getDirectory('pack').then(
                   (chrome.DirectoryEntry packDir) {
                 return FileOps.listFiles(packDir).then((entries) {
@@ -93,13 +140,6 @@ class Clone {
       config.remoteHeads[localHeadRef.name]= localHeadRef.sha;
     }
     return _options.store.setConfig(config);
-  }
-
-  Clone(this._options) {
-    if (_options.branchName == null) _options.branchName = 'master';
-    if (_options.progressCallback == null) {
-      _options.progressCallback = nopFunction;
-    }
   }
 
   Future _createPackFiles(chrome.DirectoryEntry objectsDir, String packName,
@@ -146,48 +186,6 @@ class Clone {
                   localHeadRef.sha);
             });
           });
-        });
-      });
-    });
-  }
-
-  Future clone() {
-
-    HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
-        _options.repoUrl, _options.username, _options.password);
-
-    return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
-      return  _options.root.createDirectory(".git").then(
-          (chrome.DirectoryEntry gitDir) {
-        return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-          if (refs.isEmpty) {
-            return _createInitialConfig(null, null);
-          }
-
-          GitRef remoteHeadRef, localHeadRef;
-          String remoteHead;
-
-          refs.forEach((GitRef ref) {
-            if (ref.name == "HEAD") {
-              remoteHead = ref.sha;
-            } else if (ref.name == "refs/heads/" + _options.branchName) {
-              localHeadRef = ref;
-            } else if (ref.name.indexOf("refs/heads/") == 0) {
-              if (ref.sha == remoteHead) {
-                remoteHeadRef = ref;
-              }
-            }
-          });
-
-          if (localHeadRef == null) {
-            if (_options.branchName == null) {
-              //REMOTE_BRANCH_NOT_FOUND;
-              return null;
-            } else {
-              localHeadRef = remoteHeadRef;
-            }
-          }
-          return _processClone(gitDir, localHeadRef, fetcher);
         });
       });
     });

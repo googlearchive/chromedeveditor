@@ -128,7 +128,7 @@ class HttpFetcher {
         // TODO add UploadPackParser class.
         UploadPackParser parser = getUploadPackParser();
         parser.parse(buffer, store, packProgress).then((PackParseResult obj) {
-         completer.complete(obj);
+           completer.complete(obj);
         });
       }
     });
