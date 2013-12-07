@@ -339,9 +339,11 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
-  List<ContextAction> getActionsFor(List<ws.Resource> resources) {
-    return actionManager.getContextActions(resources);
-  }
+  Element getContextMenuContainer() =>
+      getUiElement('#file-item-context-menu');
+
+  List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
+      actionManager.getContextActions(resources);
 
   //
   // - End implementation of FilesControllerDelegate interface.

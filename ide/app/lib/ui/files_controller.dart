@@ -469,9 +469,8 @@ class FilesController implements TreeViewDelegate {
       _treeView.selection = [resource.path];
     }
 
-    html.Element menuContainer = html.querySelector('#file-item-context-menu');
-    html.Element contextMenu =
-        html.querySelector('#file-item-context-menu .dropdown-menu');
+    html.Element menuContainer = _delegate.getContextMenuContainer();
+    html.Element contextMenu = menuContainer.querySelector('.dropdown-menu');
     // Delete any existing menu items.
     contextMenu.children.clear();
 
@@ -501,8 +500,7 @@ class FilesController implements TreeViewDelegate {
     }
 
     // When the user clicks outside the menu, we'll close it.
-    html.Element backdrop =
-        html.querySelector('#file-item-context-menu .backdrop');
+    html.Element backdrop = menuContainer.querySelector('.backdrop');
     backdrop.onClick.listen((event) {
       _closeContextMenu(event);
     });
