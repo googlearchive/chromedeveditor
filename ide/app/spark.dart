@@ -227,7 +227,8 @@ class Spark extends Application implements FilesControllerDelegate {
         this, getUiElement('#renameDialog')));
     actionManager.registerAction(new FileDeleteAction(
         this, getUiElement('#deleteDialog')));
-    actionManager.registerAction(new GitCloneAction(this));
+    actionManager.registerAction(new GitCloneAction(
+        this, getUiElement("#gitCloneDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(
         this, getUiElement('#aboutDialog')));
@@ -772,27 +773,21 @@ class FolderOpenAction extends SparkAction {
   void _invoke([Object context]) => spark.openFolder();
 }
 
-class GitCloneAction extends SparkAction {
-  bootjack.Modal _gitCloneButton;
+class GitCloneAction extends SparkActionWithDialog {
+  GitCloneAction(Spark spark, Element dialog)
+      : super(spark, "git-clone", "Git Clone", dialog);
 
-  GitCloneAction(Spark spark) : super(spark, "git-clone", "Git Clone");
   void _invoke([Object context]) {
-    if (_gitCloneButton == null) {
-      _gitCloneButton = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
+    _dialog.show();
+  }
 
-      var submit = _gitCloneButton.element.querySelector("#git-clone-button");
-      submit.onClick.listen((e) {
-        // TODO(grv): add verify checks.
-        String projectName = (_gitCloneButton.element.querySelector(
-            '#git-project-name') as InputElement).value;
-        String repoUrl = (_gitCloneButton.element.querySelector(
-            '#git-repo-url') as InputElement).value;
-        _gitClone(projectName, repoUrl, spark);
-        _gitCloneButton.hide();
-      });
-    }
-
-    _gitCloneButton.show();
+  void _commit() {
+    // TODO(grv): add verify checks.
+    String projectName = (_dialogElement.querySelector(
+        "#git-project-name") as InputElement).value;
+    String repoUrl = (_dialogElement.querySelector(
+        "#git-repo-url") as InputElement).value;
+    _gitClone(projectName, repoUrl, spark);
   }
 
   void _gitClone(String projectName, String url, Spark spark) {
@@ -818,9 +813,7 @@ class GitCloneAction extends SparkAction {
 
   Future<CrFileSystem> _getGitTestFileSystem() {
     Completer completer = new Completer();
-    callback(fs) {
-      completer.complete(new CrFileSystem.fromProxy(fs));
-    }
+    void callback(fs) => completer.complete(new CrFileSystem.fromProxy(fs));
     js.JsObject fs = js.context['GitApi'].callMethod('getFs', [callback]);
     return completer.future;
   }
