@@ -270,6 +270,27 @@
         </div>
       </div>
     </div>
+
+    <!-- Git Clone dialog -->
+    <div class="modal fade" id="gitCloneDialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <spark-button class="close" data-dismiss="modal" 
+                aria-hidden="true">&times;</spark-button>
+            <h4 class="modal-title">New Git Project</h4>
+          </div>
+          <div class="modal-body">
+            Project Name: <input type="text" id="git-project-name"></input><br/><br/>
+            Repo URL: <input type="text" id="git-repo-url"></input>
+          </div>
+          <div class="modal-footer">
+            <spark-button data-dismiss="modal">Cancel</spark-button>
+            <spark-button primary id="git-clone-button">Create</spark-button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
   
     <!-- About dialog -->
     <div id="aboutDialog" class="modal fade">
