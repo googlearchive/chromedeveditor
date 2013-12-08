@@ -9,7 +9,6 @@ library spark.workspace;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:html' as html;
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
@@ -341,7 +340,8 @@ class File extends Resource {
 
   Future setContents(String contents) {
     return _fileEntry.writeText(contents).then((_) {
-      workspace._fireEvent(new ResourceChangeEvent(this, ResourceEventType.CHANGE));
+      workspace._fireEvent(new ResourceChangeEvent(this,
+          ResourceEventType.CHANGE));
     });
   }
 
@@ -352,7 +352,8 @@ class File extends Resource {
   Future setBytes(List<int> data) {
     chrome.ArrayBuffer bytes = new chrome.ArrayBuffer.fromBytes(data);
     return _fileEntry.writeBytes(bytes).then((_) {
-      workspace._fireEvent(new ResourceChangeEvent(this, ResourceEventType.CHANGE));
+      workspace._fireEvent(new ResourceChangeEvent(this,
+          ResourceEventType.CHANGE));
     });
   }
 
