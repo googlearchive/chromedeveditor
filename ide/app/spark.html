@@ -159,7 +159,7 @@
   </div><!-- /.modal -->
 
   <!-- Git Clone dialog -->
-  <div class="modal fade" id="gitCloneDialog">
+  <div id="gitCloneDialog" class="modal fade">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -167,8 +167,8 @@
           <h4 class="modal-title">New Git Project</h4>
         </div>
         <div class="modal-body">
-          Project Name: <input type="text" id="git-project-name"></input><br/><br/>
-          Repo URL: <input type="text" id="git-repo-url"></input>
+          Project Name: <input type="text" id="gitProjectName"></input><br/><br/>
+          Repo URL: <input type="text" id="gitRepoUrl"></input>
         </div>
         <div class="modal-footer">
           <button class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -178,6 +178,7 @@
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
+  
   <!-- Analytics includes -->
   <script src="analytics/google-analytics-bundle.js"></script>
 
