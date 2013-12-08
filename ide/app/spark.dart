@@ -124,7 +124,11 @@ class Spark extends Application implements FilesControllerDelegate {
 
   PlatformInfo get platformInfo => _platformInfo;
 
-  Element getUiElement(String selectors) => document.querySelector(selectors);
+  Element getUiElement(String selectors) =>
+      document.querySelector(selectors);
+
+  Element getDialogElement(String selectors) =>
+      document.querySelector(selectors);
 
   //
   // Parts of ctor:
@@ -217,21 +221,21 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager = new ActionManager();
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAction(
-        this, getUiElement('#fileNewDialog')));
+        this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileRenameAction(
-        this, getUiElement('#renameDialog')));
+        this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new FileDeleteAction(
-        this, getUiElement('#deleteDialog')));
+        this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new GitCloneAction(
-        this, getUiElement("#gitCloneDialog")));
+        this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(
-        this, getUiElement('#aboutDialog')));
+        this, getDialogElement('#aboutDialog')));
     actionManager.registerKeyListener();
   }
 
@@ -786,9 +790,9 @@ class GitCloneAction extends SparkActionWithDialog {
   void _commit() {
     // TODO(grv): add verify checks.
     String projectName = (_dialogElement.querySelector(
-        "#git-project-name") as InputElement).value;
+        "#gitProjectName") as InputElement).value;
     String repoUrl = (_dialogElement.querySelector(
-        "#git-repo-url") as InputElement).value;
+        "#gitRepoUrl") as InputElement).value;
     _gitClone(projectName, repoUrl, spark);
   }
 
