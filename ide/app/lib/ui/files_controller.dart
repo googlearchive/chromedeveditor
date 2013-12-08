@@ -154,12 +154,26 @@ class FilesController implements TreeViewDelegate {
   String treeViewDropEffect(TreeView view,
                             html.DataTransfer dataTransfer,
                             String nodeUID) {
-    return "move";
+    if (dataTransfer.types.contains('Files')) {
+      // Import files.
+      return "copy";
+    } else {
+      // Move files inside top-level folder.
+      return "move";
+    }
   }
 
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
-    // TODO(dvh): Import to the workspace the files referenced by
-    // dataTransfer.files
+    Folder destinationFolder = _filesMap[nodeUID] as Folder;
+    for(html.File file in dataTransfer.files) {
+      html.FileReader reader = new html.FileReader();
+      reader.onLoadEnd.listen((html.ProgressEvent event) {
+        destinationFolder.createNewFile(file.name).then((File file) {
+          file.setBytes(reader.result);
+        });
+      });
+      reader.readAsArrayBuffer(file);
+    }
   }
 
   // Returns true if the move is valid:
@@ -215,7 +229,10 @@ class FilesController implements TreeViewDelegate {
   bool treeViewAllowsDrop(TreeView view,
                           html.DataTransfer dataTransfer,
                           String destinationNodeUID) {
-    return false;
+    if (destinationNodeUID == null) {
+      return false;
+    }
+    return dataTransfer.types.contains('Files');
   }
 
   /*
