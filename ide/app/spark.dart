@@ -587,16 +587,15 @@ abstract class SparkAction extends Action {
 }
 
 abstract class SparkActionWithDialog extends SparkAction {
-  Element _dialogElement;
   bootjack.Modal _dialog;
 
   SparkActionWithDialog(Spark spark,
                         String id,
                         String name,
-                        this._dialogElement)
+                        Element dialogElement)
       : super(spark, id, name) {
-    _dialog = bootjack.Modal.wire(_dialogElement);
-    _dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
+    dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
+    _dialog = bootjack.Modal.wire(dialogElement);
   }
 
   void _commit();
@@ -625,7 +624,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File", dialog) {
     defaultBinding("ctrl-n");
-    _nameElement = _dialogElement.querySelector("#fileName");
+    _nameElement = _dialog.element.querySelector("#fileName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
@@ -688,10 +687,10 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
 
   void _setMessageAndShow() {
     if (_resources.length == 1) {
-      _dialogElement.querySelector("#message").text =
+      _dialog.element.querySelector("#message").text =
           "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
-      _dialogElement.querySelector("#message").text =
+      _dialog.element.querySelector("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
     _dialog.show();
@@ -716,7 +715,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _element = _dialogElement.querySelector("#fileName");
+    _element = _dialog.element.querySelector("#fileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {
@@ -789,9 +788,9 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    String projectName = (_dialogElement.querySelector(
+    String projectName = (_dialog.element.querySelector(
         "#gitProjectName") as InputElement).value;
-    String repoUrl = (_dialogElement.querySelector(
+    String repoUrl = (_dialog.element.querySelector(
         "#gitRepoUrl") as InputElement).value;
     _gitClone(projectName, repoUrl, spark);
   }
@@ -833,7 +832,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-      var checkbox = _dialogElement.querySelector('#analyticsCheck');
+      var checkbox = _dialog.element.querySelector('#analyticsCheck');
       checkbox.checked =
           spark.tracker.service.getConfig().isTrackingPermitted();
       checkbox.onChange.listen((e) {
@@ -841,7 +840,7 @@ class AboutSparkAction extends SparkActionWithDialog {
             .setTrackingPermitted(checkbox.checked);
       });
 
-      _dialogElement.querySelector('#aboutVersion').text = spark.appVersion;
+      _dialog.element.querySelector('#aboutVersion').text = spark.appVersion;
 
       _initialized = true;
     }
