@@ -7,6 +7,8 @@ library git;
 import 'dart:async';
 import 'dart:js' as js;
 
+import 'package:chrome_gen/src/files.dart' as chrome_files;
+
 import 'options.dart';
 
 /**
@@ -20,18 +22,18 @@ class GitResult {
   GitResult.fromData(this.result);
 }
 
-/**
- * This class encapsulates the various options that can be passed to the git
- * api. This class also exposes methods to verify options for different api
- * call.
- *
- * TODO(grv): Add verifers for api methods.
- *
- */
+Future<chrome_files.CrFileSystem> getGitTestFileSystem() {
+  Completer completer = new Completer();
+  callback(fs) {
+    completer.complete(new chrome_files.CrFileSystem.fromProxy(fs));
+  }
+  js.JsObject fs = js.context['GitApi'].callMethod('getFs', [callback]);
+  return completer.future;
+}
 
 /**
- * This git.dart provides an git api library to perform basic git operations in
- * dart. Currently the library is a wrapper on the existing git.js open source
+ * This class encapsulates the various options that can be passed to the git
+ * api. Currently the library is a wrapper on the existing git.js open source
  * library.
  *
  * Example usage:
@@ -43,7 +45,6 @@ class GitResult {
  *
  */
 class Git {
-
   static final js.JsObject _jsgit = js.context['GitApi'];
 
   static bool get available => _jsgit != null;
@@ -107,5 +108,4 @@ class Git {
 
     return completer.future;
   }
-
 }
