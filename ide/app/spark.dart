@@ -250,6 +250,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(
         this, getDialogElement('#aboutDialog')));
+    actionManager.registerAction(new TogglePolymerUIAction(this));
     actionManager.registerKeyListener();
   }
 
@@ -286,6 +287,7 @@ class Spark extends Application implements FilesControllerDelegate {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
       ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
+      ul.children.add(createMenuItem(actionManager.getAction('toggle-polymer')));
     }
 
     ul.children.add(createMenuSeparator());
@@ -881,13 +883,37 @@ class AboutSparkAction extends SparkActionWithDialog {
     _dialog.show();
   }
 
-  void _commit() {
-    // Nothing to do for this dialog.
-  }
+  void _commit() { }
 }
 
 class RunTestsAction extends SparkAction {
-  RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests");
+  RunTestsAction(Spark spark): super(spark, "run-tests", "Run Tests");
 
   _invoke([Object context]) => spark._testDriver.runTests();
+}
+
+/**
+ * Toggle between the spark.html and spark_polymer.html UIs.
+ */
+class TogglePolymerUIAction extends SparkAction {
+  static final List SKINS = ["spark.html", "spark_polymer.html"];
+
+  TogglePolymerUIAction(Spark spark):
+    super(spark, "toggle-polymer", "Toggle Polymer UI");
+
+  void _invoke([Object context]) {
+    chrome.storage.local.get('skin').then((Map m) {
+      String curVal = m == null ? SKINS[0] : m['skin'];
+      int index = (SKINS.indexOf(curVal) + 1) % SKINS.length;
+      String newVal = SKINS[index];
+
+      chrome.storage.local.set({'skin': newVal}).then((_) {
+        var options = new chrome.CreateWindowOptions(
+            id: 'main_editor_window${newVal}');
+        chrome.app.window.create(newVal, options).then((_) {
+          chrome.app.window.current().close();
+        });
+      });
+    });
+  }
 }
