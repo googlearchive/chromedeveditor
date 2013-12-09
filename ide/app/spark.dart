@@ -256,10 +256,8 @@ class Spark extends Application implements FilesControllerDelegate {
   void initToolbar() {
     getUIElement("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
-    querySelector("#newFile").onClick.listen(
+    getUIElement("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new-as').invoke());
-
-    buildMenu();
   }
 
   void buildMenu() {
