@@ -89,7 +89,6 @@ class UploadPackParser {
           break;
         default:
           throw "fatal error in packet line.";
-          break;
       }
       pktLine = _nextPktLine();
     }
