@@ -10,4 +10,10 @@ import 'package:spark_widgets/common/widget.dart';
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends Widget {
   SparkPolymerUI.created() : super.created();
+
+  void toggleDropdownMenu() {
+    var menu = getElement("#dropDownMenu");
+    menu.style.display =
+      menu.style.display == "block" ? "none" : "block";
+  }
 }

@@ -180,10 +180,15 @@
       <span id="status"></span>
 
       <div id="hotdogMenu" class="btn-group">
+        <!-- TEMP(ussuri): All of this is temp, but especially the on-click
+          below. The menu was expected to drop down without it, but Bootjack
+          refused to cooperate with Polymer here and in other places.
+        -->
         <button type="button" data-toggle="dropdown"
-            class="btn btn-default dropdown-toggle main-menu-button">
+            class="btn btn-default dropdown-toggle main-menu-button"
+            on-click={{toggleDropdownMenu}}>
         </button>
-        <ul class="dropdown-menu pull-right">
+        <ul id="dropDownMenu" class="dropdown-menu pull-right">
           <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
             <span class="pull-right">
               <spark-button id="themeLeft"><strong>-</strong></spark-button>
@@ -202,7 +207,7 @@
 
     <!-- Temporarily switch back to div: most recent polymer-flex-panel
       requires working external CSS linking.
-      TODO(sergeygs): revert once external CSS linking is available
+      TODO(ussuri): revert once external CSS linking is available
       (don't forget to remove 'display: flex' in the CSS). -->
     <!--polymer-flex-panel id="splitview"-->
     <div id="splitview">
