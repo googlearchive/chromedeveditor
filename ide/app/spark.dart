@@ -123,9 +123,23 @@ class Spark extends Application implements FilesControllerDelegate {
 
   PlatformInfo get platformInfo => _platformInfo;
 
-  Element getUiElement(String selectors) =>
+  // TODO(ussuri): The below two methods are a temporary means to make Spark
+  // reusable in SparkPolymer. Once the switch to Polymer is complete, they
+  // will go away.
+
+  /**
+   * Should extract a UI Element from the underlying DOM. This method
+   * is overwritten in SparkPolymer, which encapsulates the UI in a top-level
+   * Polymer widget, rather than the top-level document's DOM.
+   */
+  Element getUIElement(String selectors) =>
       document.querySelector(selectors);
 
+  /**
+   * Should extract a dialog Element from the underlying UI's DOM. This is
+   * different from [getUIElement] in that it's not currently overridden in
+   * SparkPolymer.
+   */
   Element getDialogElement(String selectors) =>
       document.querySelector(selectors);
 
@@ -149,12 +163,12 @@ class Spark extends Application implements FilesControllerDelegate {
   void createEditorComponents() {
     aceContainer = new AceContainer(new DivElement());
     aceThemeManager = new ThemeManager(
-        aceContainer, syncPrefs, getUiElement('#changeTheme a span'));
+        aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
     aceKeysManager = new KeyBindingManager(
-        aceContainer, syncPrefs, getUiElement('#changeKeys a span'));
+        aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
     editorManager = new EditorManager(workspace, aceContainer, localPrefs);
     editorArea = new EditorArea(
-        getUiElement('#editorArea'), editorManager, allowsLabelBar: true);
+        getUIElement('#editorArea'), editorManager, allowsLabelBar: true);
   }
 
   void initEditorManager() {
@@ -192,7 +206,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void initFilesController() {
     _filesController =
-        new FilesController(workspace, this, getUiElement('#fileViewArea'));
+        new FilesController(workspace, this, getUIElement('#fileViewArea'));
   }
 
   void initLookAndFeel() {
@@ -201,7 +215,7 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initSplitView() {
-    _splitView = new SplitView(getUiElement('#splitview'));
+    _splitView = new SplitView(getUIElement('#splitview'));
     _splitView.onResized.listen((_) {
       aceContainer.resize();
       syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
@@ -239,12 +253,12 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initToolbar() {
-    getUiElement("#openFile").onClick.listen(
+    getUIElement("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
   }
 
   void buildMenu() {
-    UListElement ul = getUiElement('#hotdogMenu ul');
+    UListElement ul = getUIElement('#hotdogMenu ul');
 
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
@@ -318,7 +332,7 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void showStatus(String text, {bool error: false}) {
-    Element element = getUiElement("#status");
+    Element element = getUIElement("#status");
     element.text = text;
     element.classes.toggle('error', error);
   }
@@ -342,7 +356,7 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   Element getContextMenuContainer() =>
-      getUiElement('#file-item-context-menu');
+      getUIElement('#file-item-context-menu');
 
   List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
       actionManager.getContextActions(resources);
@@ -839,7 +853,9 @@ class AboutSparkAction extends SparkActionWithDialog {
     _dialog.show();
   }
 
-  void _commit() => null;
+  void _commit() {
+    // Nothing to do for this dialog.
+  }
 }
 
 class RunTestsAction extends SparkAction {

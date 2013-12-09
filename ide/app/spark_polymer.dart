@@ -29,7 +29,8 @@ class SparkPolymer extends Spark {
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode);
 
-  Element getUiElement(String selectors) => _ui.getElement(selectors);
+  @override
+  Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
   //
   // Override some parts of the parent's ctor:
@@ -74,8 +75,9 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    // TODO(ussuri):
-    UListElement ul = getUiElement('#hotdogMenu ul');
+    // TODO(ussuri): This is a temporary hack just to test the functionality
+    // triggered from the menu. This will be replaced by spark-menu ASAP.
+    UListElement ul = getUIElement('#hotdogMenu ul');
 
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
