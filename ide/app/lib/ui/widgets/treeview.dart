@@ -258,9 +258,7 @@ class TreeView implements ListViewDelegate {
   }
 
    List<String> _innerDragSelection(DataTransfer dataTransfer) {
-     String encodedSelection =
-         dataTransfer.getData('application/x-spark-treeview');
-     if (encodedSelection != null) {
+     if (dataTransfer.types.contains('application/x-spark-treeview')) {
        // TODO(dvh): dataTransfer.getData returns empty string when
        // it's called in dragOver event handler. Then, we can't check if uuid
        // matches. We'll improve the behavior when it will be fixed.
