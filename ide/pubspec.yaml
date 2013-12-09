@@ -16,11 +16,14 @@ dependencies:
   intl: any
   logging: any
   mime: any
+  path: any
   polymer: any
   spark_widgets:
     path: ../widgets
   unittest: any
   uuid: any
+dependency_overrides:
+  path: '1.0.0-rc.1'
 dev_dependencies:
   args: any
   grinder: '>=0.4.3'
