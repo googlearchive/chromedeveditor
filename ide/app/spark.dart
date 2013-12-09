@@ -233,6 +233,7 @@ class Spark extends Application implements FilesControllerDelegate {
   void createActions() {
     actionManager = new ActionManager();
     actionManager.registerAction(new FileOpenInTabAction(this));
+    actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileNewAction(
         this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
@@ -255,6 +256,10 @@ class Spark extends Application implements FilesControllerDelegate {
   void initToolbar() {
     getUIElement("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
+    querySelector("#newFile").onClick.listen(
+        (_) => actionManager.getAction('file-new-as').invoke());
+
+    buildMenu();
   }
 
   void buildMenu() {
@@ -292,6 +297,24 @@ class Spark extends Application implements FilesControllerDelegate {
   //
   // - End parts of ctor.
   //
+
+  /**
+   * Allow for creating a new file using the Save as dialog.
+   */
+  void newFileAs() {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.SAVE_FILE);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
+
+      if (entry != null) {
+        workspace.link(entry).then((file) {
+          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
+          workspace.save();
+        });
+      }
+    }).catchError((e) => null);
+  }
 
   void openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -668,6 +691,13 @@ class FileOpenAction extends SparkAction {
 
   void _invoke([Object context]) => spark.openFile();
 }
+
+class FileNewAsAction extends SparkAction {
+  FileNewAsAction(Spark spark) : super(spark, "file-new-as", "New File…");
+
+  void _invoke([Object context]) => spark.newFileAs();
+}
+
 
 class FileSaveAction extends SparkAction {
   FileSaveAction(Spark spark) : super(spark, "file-save", "Save") {
