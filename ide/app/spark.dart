@@ -12,6 +12,7 @@ import 'dart:math' as math;
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
+import 'package:spark_widgets/spark-overlay/spark-overlay.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -105,6 +106,8 @@ class Spark extends Application implements FilesControllerDelegate {
     initToolbar();
     initSplitView();
   }
+
+  bool get isPolymerUi => document.querySelector("spark-toolbar") != null;
 
   String get appName => i18n('app_name');
 
@@ -204,9 +207,10 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
+print("$isPolymerUi");
+    actionManager.registerAction(isPolymerUi ? new FileDeleteActionPolymer(this) : new FileDeleteAction(this));
     actionManager.registerAction(new RunTestsAction(this));
-    actionManager.registerAction(new AboutSparkAction(this));
+    actionManager.registerAction(isPolymerUi ?  new AboutSparkActionPolymer(this) : new AboutSparkAction(this));
     actionManager.registerKeyListener();
   }
 
@@ -669,6 +673,54 @@ class FileDeleteAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isResourceList(object);
 }
 
+class FileDeleteActionPolymer extends SparkAction implements ContextAction {
+  SparkOverlay _deleteDialog;
+  List<ws.Resource> _resources;
+
+  FileDeleteActionPolymer(Spark spark) : super(spark, "file-delete", "Delete") {
+    _deleteDialog = querySelector('#deleteDialog');
+    _deleteDialog.querySelector("#deleteOkButton").onClick.listen((_) {
+      _deleteResource();
+    });
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+    if (resources == null) {
+      var sel = spark._filesController.getSelection();
+      if (sel.isNotEmpty) {
+        _resources = sel;
+        _setMessageAndShow();
+      }
+    } else {
+      _resources = resources;
+      _setMessageAndShow();
+    }
+
+  }
+
+  void _setMessageAndShow() {
+    if (_resources.length == 1) {
+      _deleteDialog.querySelector("#message").text =
+          "Are you sure you want to delete '${_resources.first.name}' from the file system?";
+    } else {
+      _deleteDialog.querySelector("#message").text =
+          "Are you sure you want to delete '${_resources.length}' files from the file system?";
+    }
+    _deleteDialog.toggle();
+  }
+
+  void _deleteResource() {
+    _resources.forEach((ws.Resource resource) {
+      resource.delete();
+    });
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => _isResourceList(object);
+}
+
+
 class FileCloseAction extends SparkAction implements ContextAction {
   FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
 
@@ -725,6 +777,29 @@ class AboutSparkAction extends SparkAction {
     }
 
     _aboutBox.show();
+  }
+}
+
+class AboutSparkActionPolymer extends SparkAction {
+  SparkOverlay _aboutBox;
+
+  AboutSparkActionPolymer(Spark spark) : super(spark, "help-about", "About Spark");
+
+  void _invoke([Object context]) {
+    if (_aboutBox == null) {
+      _aboutBox = querySelector("#aboutDialog");
+      assert(_aboutBox != null);
+
+      var checkbox = _aboutBox.querySelector('#analyticsCheck');
+      checkbox.checked = spark.tracker.service.getConfig().isTrackingPermitted();
+      checkbox.onChange.listen((e) {
+        spark.tracker.service.getConfig().setTrackingPermitted(checkbox.checked);
+      });
+
+      _aboutBox.querySelector('#aboutVersion').text = spark.appVersion;
+    }
+
+    _aboutBox.toggle();
   }
 }
 

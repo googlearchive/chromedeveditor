@@ -15,7 +15,13 @@
   <link rel="import" href="packages/spark_widgets/spark-button/spark-button.html">
   <link rel="import" href="packages/spark_widgets/spark-icon/spark-icon.html">
   <link rel="import" href="packages/spark_widgets/spark-icon-button/spark-icon-button.html">
+  <link rel="import" href="packages/spark_widgets/spark-menu/spark-menu.html">
+  <link rel="import" href="packages/spark_widgets/spark-menu-button/spark-menu-button.html">
+  <link rel="import" href="packages/spark_widgets/spark-menu-item/spark-menu-item.html">
+  <link rel="import" href="packages/spark_widgets/spark-overlay/spark-overlay.html">
   <link rel="import" href="packages/spark_widgets/spark-select/spark-select.html">
+  <link rel="import" href="packages/spark_widgets/spark-selection/spark-selection.html">
+  <link rel="import" href="packages/spark_widgets/spark-selector/spark-selector.html">
   <link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
   <link rel="import" href="packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
@@ -76,13 +82,36 @@
   <script src="spark_bootstrap.js" defer></script>
 
   <script type="application/dart" src="spark_polymer.dart" defer></script>
+
+  <style>
+    /** Dialog Stuff */
+    #aboutDialog {
+      top: 72px;
+      left: 50%;
+      width: 512px;
+      margin-left: -256px;
+    }
+    #aboutDialog, #deleteDialog, #fileNewDialog {
+      box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      overflow: hidden;
+      background: white;
+      padding:30px 42px;
+      outline: 1px solid rgba(0,0,0,0.2);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
 
 <body>
 <body>
   <spark-toolbar>
-    <spark-icon-button id="newFile" src="../../../add.png"></spark-icon-button>
-    <spark-icon-button id="openFile" src="../../../open.png"></spark-icon-button>
+    <spark-icon-button id="newFile" src="add.png"></spark-icon-button>
+    <spark-icon-button id="openFile" src="open.png"></spark-icon-button>
     <span id="status"></span>
 
     <div id="hotdogMenu" class="btn-group">
@@ -104,8 +133,21 @@
         </li>
       </ul>
     </div>
-    <spark-icon-button src="../../../menu.png" style="margin-left:auto; margin-right:20px;"></spark-icon-button>
+
+    <spark-menu-button id="toolbar_menu" responsive="true" src="menu.png" selected="1" on-select="{{testMenu}}">
+      <spark-menu-item id="menu_open_file" iconsize=0>Open File...</spark-menu-item>
+      <spark-menu-item id="menu_open_folder" iconsize=0>Open Folder</spark-menu-item>
+      <spark-menu-item id="menu_close" iconsize=0>Close</spark-menu-item>
+      <spark-menu-item id="menu_delete" iconsize=0>Delete</spark-menu-item>
+      <spark-menu-item id="menu_run_tests" iconsize=0>Run Tests</spark-menu-item>
+      <spark-menu-item id="menu_about" iconsize=0>About Spark</spark-menu-item>
+    </spark-menu-button>
   </spark-toolbar>
+
+<spark-menu>
+      <spark-menu-item>Open File...</spark-menu-item>
+      <spark-menu-item>Open Folder</spark-menu-item>
+</spark-menu>
 
   <polymer-flex-panel id="splitview">
     <div id="fileViewArea" min-size="100"></div>
@@ -114,63 +156,54 @@
   </polymer-flex-panel>
 
   <!-- file delete dialog -->
-    <div id="deleteDialog" class="modal fade">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-body">
-            <p id="message"></p>
-          </div>
-          <div class="modal-footer">
-            <spark-button data-dismiss="modal">Cancel</spark-button>
- -          <spark-button id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-     <!-- file new dialog -->
-    <div id="fileNewDialog" class="modal fade">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-body">
-            <p>
-              File name:  <input id="fileName" type="text">
-            </p>
-          </div>
-          <div class="modal-footer">
-            <spark-button data-dismiss="modal">Cancel</spark-button>
-            <spark-button id="fileNewOkButton" class="btn btn-primary"
-                data-dismiss="modal">Create</spark-button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  <!-- about dialog -->
-  <div class="modal fade" id="aboutDialog">
+  <spark-overlay id="deleteDialog" class="modal fade">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
-          <spark-button class="close" data-dismiss="modal" aria-hidden="true">&times;</spark-button>
-          <h4 class="modal-title">Spark</h4>
-        </div>
         <div class="modal-body">
-          <dl>
-            <dt>A Chrome Apps based development environment</dt>
-            <dd>version <span id="aboutVersion"></span></dd>
-          </dl>
-          <div class="checkbox">
-            <label>
-              <input type="checkbox" id="analyticsCheck">
-                Allow Spark to collect anonymous usage statistics
-            </label>
-          </div>
+          <p id="message"></p>
         </div>
         <div class="modal-footer">
-          <spark-button primary data-dismiss="modal">Close</spark-button>
+          <spark-button overlay-toggle data-dismiss="modal">Cancel</spark-button>
+ -        <spark-button overlay-toggle id="deleteOkButton" primary data-dismiss="modal">Delete</spark-button>
         </div>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
+      </div>
+    </div>
+  </spark-overlay>
+
+  <!-- file new dialog -->
+  <spark-overlay id="fileNewDialog" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p>
+            File name:  <input id="fileName" type="text">
+          </p>
+        </div>
+        <div class="modal-footer">
+          <spark-button data-dismiss="modal">Cancel</spark-button>
+          <spark-button id="fileNewOkButton" class="btn btn-primary"
+              data-dismiss="modal">Create</spark-button>
+        </div>
+      </div>
+    </div>
+  </spark-overlay>
+
+  <!-- about dialog -->
+  <spark-overlay id="aboutDialog" class="spark-overlay-scale-slideup">
+    <h4 class="modal-title">Spark</h4>
+    <div class="modal-body">
+      <dl>
+        <dt>A Chrome Apps based development environment</dt>
+        <dd>version <span id="aboutVersion"></span></dd>
+      </dl>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" id="analyticsCheck">
+            Allow Spark to collect anonymous usage statistics
+        </label>
+      </div>
+    </div>
+    <spark-button overlay-toggle enabled>OK</spark-button>
+  </spark-overlay>
 </body>
 </html>

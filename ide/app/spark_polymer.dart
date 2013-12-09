@@ -77,8 +77,19 @@ class SparkPolymer extends Spark {
   void initToolbar() => super.initToolbar();
 
   @override
-  void buildMenu() => super.buildMenu();
+//  void buildMenu() => super.buildMenu();
+void buildMenu() {
+    var node = querySelector("#toolbar_menu");
+    node.on['activate'].listen((event) {
+      var item = event.detail['item'];
+      print(">>>>activate hit ${item.attributes['id']}");
+    });
+    super.buildMenu();
+}
 
+  void testMenu(e) {
+    print("Test Menu pressed");
+  }
   //
   // - End parts of the parent's ctor.
   //
