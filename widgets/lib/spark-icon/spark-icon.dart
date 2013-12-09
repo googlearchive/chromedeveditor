@@ -6,7 +6,7 @@ library spark_widgets.icon;
 
 import 'package:polymer/polymer.dart';
 
-import '../src/widget.dart';
+import '../common/widget.dart';
 
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-icon")

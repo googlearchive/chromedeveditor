@@ -8,6 +8,8 @@
  */
 library spark.ui.widgets.files_controller_delegate;
 
+import 'dart:html' as html;
+
 import '../actions.dart';
 import '../workspace.dart';
 
@@ -17,6 +19,13 @@ abstract class FilesControllerDelegate {
    */
   void selectInEditor(File file,
                       {bool forceOpen: false, bool replaceCurrent: true});
+
+  /**
+   * This should return the top HTML element representing the (hidden)
+   * context menu (which should have class 'dropdown-menu') and its backdrop
+   * (which should have class '.backdrop').
+   */
+  html.Element getContextMenuContainer();
 
   /**
    * Returns the list of actions that apply in the context of the given

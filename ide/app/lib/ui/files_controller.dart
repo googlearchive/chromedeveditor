@@ -27,13 +27,15 @@ class FilesController implements TreeViewDelegate {
   FilesControllerDelegate _delegate;
   Map<String, Resource> _filesMap;
 
-  FilesController(Workspace workspace, FilesControllerDelegate delegate) {
+  FilesController(Workspace workspace,
+                  FilesControllerDelegate delegate,
+                  html.Element fileViewArea) {
     _workspace = workspace;
     _delegate = delegate;
     _files = [];
     _filesMap = {};
 
-    _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
+    _treeView = new TreeView(fileViewArea, this);
     _treeView.dropEnabled = true;
     _treeView.draggingEnabled = true;
 
@@ -491,9 +493,8 @@ class FilesController implements TreeViewDelegate {
       _treeView.selection = [resource.path];
     }
 
-    html.Element menuContainer = html.querySelector('#file-item-context-menu');
-    html.Element contextMenu =
-        html.querySelector('#file-item-context-menu .dropdown-menu');
+    html.Element menuContainer = _delegate.getContextMenuContainer();
+    html.Element contextMenu = menuContainer.querySelector('.dropdown-menu');
     // Delete any existing menu items.
     contextMenu.children.clear();
 
@@ -523,8 +524,7 @@ class FilesController implements TreeViewDelegate {
     }
 
     // When the user clicks outside the menu, we'll close it.
-    html.Element backdrop =
-        html.querySelector('#file-item-context-menu .backdrop');
+    html.Element backdrop = menuContainer.querySelector('.backdrop');
     backdrop.onClick.listen((event) {
       _closeContextMenu(event);
     });
