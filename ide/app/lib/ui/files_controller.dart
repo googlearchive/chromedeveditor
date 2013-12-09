@@ -184,12 +184,18 @@ class FilesController implements TreeViewDelegate {
         return false;
       }
     }
-    // Check whether a resource is moved to its current directory, which would
-    // make it a no-op.
+
+    Resource destTopLevel = destination.topLevelResource;
     for(String nodeUID in nodesUIDs) {
       Resource node = _filesMap[nodeUID];
+      // Check whether a resource is moved to its current directory, which would
+      // make it a no-op.
       if (node.parent == destination) {
         // Unable to move this file.
+        return false;
+      }
+      // Check if the resource have the same top-level container.
+      if (node.topLevelResource != destTopLevel) {
         return false;
       }
     }
