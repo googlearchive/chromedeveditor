@@ -92,16 +92,16 @@ EditorWindow.prototype.onCreated_ = function(win) {
 
 // A listener called after the DOM has been constructed for the content window.
 EditorWindow.prototype.onLoad_ = function() {
-  chrome.contextMenus.create({
-    title: "Spark: Switch UI",
-    id: 'switch_ui',
-    contexts: [ 'all' ]
-  });
-  chrome.contextMenus.onClicked.addListener(function(info) {
-    if (info.menuItemId == 'switch_ui') {
-      this.app_.switchUi();
-    }
-  }.bind(this));
+//  chrome.contextMenus.create({
+//    title: "Spark: Switch UI",
+//    id: 'switch_ui',
+//    contexts: [ 'all' ]
+//  });
+//  chrome.contextMenus.onClicked.addListener(function(info) {
+//    if (info.menuItemId == 'switch_ui') {
+//      this.app_.switchUi();
+//    }
+//  }.bind(this));
 }
 
 // Destroy the window, if any.

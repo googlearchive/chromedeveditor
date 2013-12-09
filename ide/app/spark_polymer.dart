@@ -105,6 +105,7 @@ class SparkPolymer extends Spark {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
       ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
+      ul.children.add(createMenuItem(actionManager.getAction('toggle-polymer')));
     }
 
     ul.children.add(createMenuSeparator());
