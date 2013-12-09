@@ -172,7 +172,7 @@ class Workspace implements Container {
    * Store info for workspace children.
    */
   Future save() {
-    List<String> entries = _children.where((c) => c._syncable).map(
+    List<String> entries = _children.where((c) => !c._syncable).map(
         (c) => chrome.fileSystem.retainEntry(c.entry)).toList();
 
     return _store.setValue('workspace', JSON.encode(entries));
