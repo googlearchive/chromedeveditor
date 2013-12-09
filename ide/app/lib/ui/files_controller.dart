@@ -149,7 +149,7 @@ class FilesController implements TreeViewDelegate {
                              List<String> nodeUIDs,
                              html.Event event) {
     if (nodeUIDs.length == 1 && _filesMap[nodeUIDs.first] is Container) {
-      view.toggleNodeExpanded(nodeUIDs.first);
+      view.toggleNodeExpanded(nodeUIDs.first, animated: true);
     }
   }
 

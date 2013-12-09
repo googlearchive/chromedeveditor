@@ -313,5 +313,9 @@ class ListView {
     }
   }
 
+  ListViewCell cellForRow(int rowIndex) {
+    return _rows[rowIndex].cell;
+  }
+
   bool get dropEnabled => _dropEnabled;
 }
