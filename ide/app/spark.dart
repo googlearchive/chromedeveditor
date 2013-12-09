@@ -7,12 +7,11 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
-import 'dart:js' as js;
 import 'dart:math' as math;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
-import 'package:chrome_gen/src/files.dart';
+import 'package:chrome_gen/src/files.dart' as chrome_files;
 import 'package:logging/logging.dart';
 
 import 'lib/ace.dart';
@@ -22,17 +21,17 @@ import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/git/commands/clone.dart';
+import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
-import 'lib/utils.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
+import 'lib/utils.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
-
 
 /**
  * Returns true if app.json contains a test-mode entry set to true.
@@ -254,7 +253,6 @@ class Spark extends Application implements FilesControllerDelegate {
     if (developerMode) {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-      ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
     }
 
@@ -624,7 +622,7 @@ class FileNewAction extends SparkAction implements ContextAction {
 }
 
 class FileOpenAction extends SparkAction {
-  FileOpenAction(Spark spark) : super(spark, "file-open", "Open File...") {
+  FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
     defaultBinding("ctrl-o");
   }
 
@@ -753,7 +751,7 @@ class FileExitAction extends SparkAction {
 }
 
 class FolderOpenAction extends SparkAction {
-  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder...");
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
 
   void _invoke([Object context]) => spark.openFolder();
 }
@@ -761,7 +759,8 @@ class FolderOpenAction extends SparkAction {
 class GitCloneAction extends SparkAction {
   bootjack.Modal _gitCloneButton;
 
-  GitCloneAction(Spark spark) : super(spark, "git-clone", "Git Clone");
+  GitCloneAction(Spark spark) : super(spark, "git-clone", "Git Clone…");
+
   void _invoke([Object context]) {
     if (_gitCloneButton == null) {
       _gitCloneButton = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
@@ -782,7 +781,7 @@ class GitCloneAction extends SparkAction {
   }
 
   void _gitClone(String projectName, String url, Spark spark) {
-    _getGitTestFileSystem().then((CrFileSystem fs) {
+    getGitTestFileSystem().then((chrome_files.CrFileSystem fs) {
       fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         GitOptions options = new GitOptions();
         options.root = dir;
@@ -792,7 +791,7 @@ class GitCloneAction extends SparkAction {
         Clone clone = new Clone(options);
         options.store.init().then((_) {
           clone.clone().then((_) {
-            spark.workspace.link(dir).then((file) {
+            spark.workspace.link(dir).then((folder) {
               spark._filesController.selectLastFile();
               spark.workspace.save();
             });
@@ -800,15 +799,6 @@ class GitCloneAction extends SparkAction {
         });
       });
     });
-  }
-
-  Future<CrFileSystem> _getGitTestFileSystem() {
-    Completer completer = new Completer();
-    callback(fs) {
-      completer.complete(new CrFileSystem.fromProxy(fs));
-    }
-    js.JsObject fs = js.context['GitApi'].callMethod('getFs', [callback]);
-    return completer.future;
   }
 }
 
