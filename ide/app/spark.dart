@@ -762,15 +762,15 @@ class GitCloneAction extends SparkAction {
   GitCloneAction(Spark spark) : super(spark, "git-clone", "Git Clone…");
 
   void _invoke([Object context]) {
-    if (_gitCloneButton == null) {
-      _gitCloneButton = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
+    if (_gitCloneDialog == null) {
+      _gitCloneDialog = bootjack.Modal.wire(querySelector('#gitCloneDialog'));
 
-      var submit = _gitCloneButton.element.querySelector("#gitCloneButton");
+      var submit = _gitCloneDialog.element.querySelector("#gitCloneButton");
       submit.onClick.listen((e) {
         // TODO(grv): add verify checks.
         String projectName = (_gitCloneDialog.element.querySelector(
             "#gitProjectName") as InputElement).value;
-        String repoUrl = (_gitCloneButton.element.querySelector(
+        String repoUrl = (_gitCloneDialog.element.querySelector(
             "#gitRepoUrl") as InputElement).value;
         _gitClone(projectName, repoUrl, spark);
         _gitCloneDialog.hide();
