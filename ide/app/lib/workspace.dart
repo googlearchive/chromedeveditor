@@ -51,7 +51,6 @@ class Workspace implements Container {
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
-  Resource get topLevelResource => null;
 
   Future<Resource> link(chrome.Entry entity, {bool syncable: false}) {
     return _link(entity, syncable: syncable, fireEvent: true);
@@ -302,14 +301,6 @@ abstract class Resource {
    * for the workspace.
    */
   Project get project => parent is Project ? parent : parent.project;
-
-  Resource get topLevelResource {
-    Resource resource = this;
-    while (!resource.isTopLevel) {
-      resource = resource.parent;
-    }
-    return resource;
-  }
 
   Workspace get workspace => parent.workspace;
 

@@ -185,7 +185,8 @@ class FilesController implements TreeViewDelegate {
       }
     }
 
-    Resource destTopLevel = destination.topLevelResource;
+    Project destinationProject = destination is Project ? destination :
+        destination.project;
     for(String nodeUID in nodesUIDs) {
       Resource node = _filesMap[nodeUID];
       // Check whether a resource is moved to its current directory, which would
@@ -195,7 +196,7 @@ class FilesController implements TreeViewDelegate {
         return false;
       }
       // Check if the resource have the same top-level container.
-      if (node.topLevelResource != destTopLevel) {
+      if (node.project != destinationProject) {
         return false;
       }
     }
