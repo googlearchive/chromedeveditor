@@ -118,7 +118,6 @@ class FilesController implements TreeViewDelegate {
     if (resource is Folder) {
       cell.acceptDrop = true;
     }
-    // TODO: add an onContextMenu listening, call _handleContextMenu().
     cell.menuElement.onClick.listen(
         (e) => _handleMenuClick(cell, resource, e));
     return cell;
