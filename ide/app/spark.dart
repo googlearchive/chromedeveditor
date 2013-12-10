@@ -714,14 +714,14 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   FolderNewAction(Spark spark, Element dialog)
       : super(spark, "folder-new", "New Folder", dialog) {
     defaultBinding("ctrl-shift-n");
-    _nameElement = _dialog.element.querySelector("#folderName");
+    _nameElement = getElement("#folderName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      _dialog.show();
+      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
     }
   }
 
