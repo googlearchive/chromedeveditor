@@ -19,7 +19,7 @@ gets invoked when the application starts. It opens a new window with the content
 set to the `app/spark.html` file. This file in turn runs `app/spark.dart`.
 
 ### Dependencies
-Dependencies needs to be fetched first, using [pub](http://pub.dartlang.org).
+Dependencies need to be fetched first, using [pub](http://pub.dartlang.org).
 Run:
 
     pub get
