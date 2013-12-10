@@ -4,6 +4,7 @@
 
 library spark_polymer;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
@@ -16,8 +17,10 @@ import 'lib/polymer_ui/spark_polymer_ui.dart';
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
-      SparkPolymer spark = new SparkPolymer(testMode);
-      spark.start();
+      createSparkZone().runGuarded(() {
+        SparkPolymer spark = new SparkPolymer(testMode);
+        spark.start();
+      });
     });
   });
 }

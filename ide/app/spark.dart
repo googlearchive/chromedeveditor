@@ -33,7 +33,14 @@ import 'lib/utils.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
-Spark spark;
+void main() {
+  createSparkZone().runGuarded(() {
+    isTestMode().then((testMode) {
+      Spark spark = new Spark(testMode);
+      spark.start();
+    });
+  });
+}
 
 /**
  * Returns true if app.json contains a test-mode entry set to true. If app.json
@@ -56,22 +63,20 @@ Future<bool> isTestMode() {
   });
 }
 
-void main() {
+/**
+ * Create a [Zone] that logs uncaught exceptions.
+ */
+Zone createSparkZone() {
   var errorHandler = (self, parent, zone, error, stackTrace) {
-    spark._handleUncaughtException(error, stackTrace);
+    Spark.SPARK_SINGLETON._handleUncaughtException(error, stackTrace);
   };
   var specification = new ZoneSpecification(handleUncaughtError: errorHandler);
-  Zone sparkZone = Zone.current.fork(specification: specification);
-
-  sparkZone.runGuarded(() {
-    isTestMode().then((testMode) {
-      spark = new Spark(testMode);
-      spark.start();
-    });
-  });
+  return Zone.current.fork(specification: specification);
 }
 
 class Spark extends Application implements FilesControllerDelegate {
+  static Spark SPARK_SINGLETON;
+
   final bool developerMode;
 
   /// The Google Analytics app ID for Spark.
@@ -96,6 +101,10 @@ class Spark extends Application implements FilesControllerDelegate {
   TestDriver _testDriver;
 
   Spark(this.developerMode) {
+    if (SPARK_SINGLETON == null) {
+      SPARK_SINGLETON = this;
+    }
+
     document.title = appName;
 
     localPrefs = preferences.localStore;
