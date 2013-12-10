@@ -635,13 +635,17 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
 
-  void _triggerOnReturn(Element element) {
+  Element getElement(String id) => _dialog.element.querySelector(id);
+
+  Element _triggerOnReturn(String name) {
+    var element = _dialog.element.querySelector(name);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
-        _dialog.hide();
+        isPolymer ? _dialog.toggle() : _dialog.hide();
       }
     });
+    return element;
   }
 }
 
@@ -668,8 +672,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File…", dialog) {
     defaultBinding("ctrl-n");
-    _nameElement = _dialog.element.querySelector("#fileName");
-    _triggerOnReturn(_nameElement);
+    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
@@ -739,10 +742,10 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
 
   void _setMessageAndShow() {
     if (_resources.length == 1) {
-      _dialog.element.querySelector("#message").text =
+      getElement("#message").text =
           "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
-      _dialog.element.querySelector("#message").text =
+      getElement("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
@@ -766,14 +769,14 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _nameElement = _dialog.element.querySelector("#fileName");
-    _triggerOnReturn(_nameElement);
+    // TODO(terry): Renable can't find element with id of 'fileName'.
+//    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
-    _nameElement.value = resource.name;
+     _nameElement.value = resource.name;
      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
    }
   }
@@ -836,9 +839,8 @@ class GitCloneAction extends SparkActionWithDialog {
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    _projectNameElement = _dialog.element.querySelector("#gitProjectName");
-    _repoUrlElement = _dialog.element.querySelector("#gitRepoUrl");
-    _triggerOnReturn(_repoUrlElement);
+    _projectNameElement = getElement("#gitProjectName");
+    _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
   }
 
   void _invoke([Object context]) {
@@ -882,7 +884,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (isPolymer || !_initialized) {
-      var checkbox = _dialog.element.querySelector('#analyticsCheck');
+      var checkbox = getElement('#analyticsCheck');
       checkbox.checked =
           spark.tracker.service.getConfig().isTrackingPermitted();
       checkbox.onChange.listen((e) {
@@ -890,7 +892,7 @@ class AboutSparkAction extends SparkActionWithDialog {
             .setTrackingPermitted(checkbox.checked);
       });
 
-      _dialog.element.querySelector('#aboutVersion').text = spark.appVersion;
+      getElement('#aboutVersion').text = spark.appVersion;
 
       _initialized = true;
     }
