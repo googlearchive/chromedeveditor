@@ -178,7 +178,10 @@ class Spark extends Application implements FilesControllerDelegate {
         aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
     editorManager = new EditorManager(workspace, aceContainer, localPrefs);
     editorArea = new EditorArea(
-        getUIElement('#editorArea'), editorManager, allowsLabelBar: true);
+        getUIElement('#editorArea'),
+        getUIElement('#editedFilename'),
+        editorManager,
+        allowsLabelBar: true);
   }
 
   void initEditorManager() {
