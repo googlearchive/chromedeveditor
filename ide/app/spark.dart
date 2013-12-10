@@ -236,6 +236,8 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileNewAction(
         this, getDialogElement('#fileNewDialog')));
+    actionManager.registerAction(new FolderNewAction(
+        this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
@@ -676,6 +678,38 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (name.isNotEmpty) {
       folder.createNewFile(name).then((file) =>
           spark.selectInEditor(file, forceOpen: true, replaceCurrent: true));
+    }
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+class FolderNewAction extends SparkActionWithDialog implements ContextAction {
+  InputElement _nameElement;
+  ws.Folder folder;
+
+  FolderNewAction(Spark spark, Element dialog)
+      : super(spark, "folder-new", "New Folder", dialog) {
+    defaultBinding("ctrl-shift-n");
+    _nameElement = _dialog.element.querySelector("#folderName");
+  }
+
+  void _invoke([List<ws.Folder> folders]) {
+    if (folders != null && folders.isNotEmpty) {
+      folder = folders.first;
+      _nameElement.value = '';
+      _dialog.show();
+    }
+  }
+
+  // called when user validates the dialog
+  void _commit() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFolder(name).then((folder) =>
+          spark._filesController.selectFile(folder));
     }
   }
 
