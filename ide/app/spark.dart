@@ -823,11 +823,7 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
           "Are you sure you want to delete ${_resources.length} files?";
     }
 
-    if (isPolymer) {
-      (_dialog.element as dynamic).toggle();
-    } else {
-      showWithFocus(".btn-primary");
-    }
+    _show();
   }
 
   void _commit() {
