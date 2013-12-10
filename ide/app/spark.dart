@@ -634,11 +634,20 @@ abstract class SparkActionWithDialog extends SparkAction {
   void _commit();
 
   bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
+
+  void _triggerOnReturn(Element element) {
+    element.onKeyDown.listen((event) {
+      if (event.keyCode == KeyCode.ENTER) {
+        _commit();
+        _dialog.hide();
+      }
+    });
+  }
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
   FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in new Tab");
+      super(spark, "file-open-in-tab", "Open in New Tab");
 
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
@@ -657,9 +666,10 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   ws.Folder folder;
 
   FileNewAction(Spark spark, Element dialog)
-      : super(spark, "file-new", "New File", dialog) {
+      : super(spark, "file-new", "New File…", dialog) {
     defaultBinding("ctrl-n");
     _nameElement = _dialog.element.querySelector("#fileName");
+    _triggerOnReturn(_nameElement);
   }
 
   void _invoke([List<ws.Folder> folders]) {
@@ -752,26 +762,26 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
 
 class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   ws.Resource resource;
-  // TODO: Rename this to _fileName.
-  InputElement _element;
+  InputElement _nameElement;
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _element = _dialog.element.querySelector("#fileName");
+    _nameElement = _dialog.element.querySelector("#fileName");
+    _triggerOnReturn(_nameElement);
   }
 
   void _invoke([List<ws.Resource> resources]) {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
-     _element.value = resource.name;
+    _nameElement.value = resource.name;
      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
    }
   }
 
   void _commit() {
-    if (_element.value.isNotEmpty) {
+    if (_nameElement.value.isNotEmpty) {
       spark._closeOpenEditor(resource);
-      resource.rename(_element.value);
+      resource.rename(_nameElement.value);
     }
   }
 
@@ -821,8 +831,15 @@ class FolderOpenAction extends SparkAction {
 }
 
 class GitCloneAction extends SparkActionWithDialog {
+  InputElement _projectNameElement;
+  InputElement _repoUrlElement;
+
   GitCloneAction(Spark spark, Element dialog)
-      : super(spark, "git-clone", "Git Clone…", dialog);
+      : super(spark, "git-clone", "Git Clone…", dialog) {
+    _projectNameElement = _dialog.element.querySelector("#gitProjectName");
+    _repoUrlElement = _dialog.element.querySelector("#gitRepoUrl");
+    _triggerOnReturn(_repoUrlElement);
+  }
 
   void _invoke([Object context]) {
     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
@@ -830,11 +847,7 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    String projectName = (_dialog.element.querySelector(
-        "#gitProjectName") as InputElement).value;
-    String repoUrl = (_dialog.element.querySelector(
-        "#gitRepoUrl") as InputElement).value;
-    _gitClone(projectName, repoUrl, spark);
+    _gitClone(_projectNameElement.value, _repoUrlElement.value, spark);
   }
 
   void _gitClone(String projectName, String url, Spark spark) {
