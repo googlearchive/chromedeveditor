@@ -620,12 +620,12 @@ abstract class SparkAction extends Action {
 }
 
 abstract class SparkActionWithDialog extends SparkAction {
-  bootjack.Modal _dialog;
+  dynamic _dialog;
 
   SparkActionWithDialog(Spark spark,
                         String id,
                         String name,
-                        Element dialogElement)
+                        dialogElement)
       : super(spark, id, name) {
     dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
     _dialog = bootjack.Modal.wire(dialogElement);
@@ -633,13 +633,19 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   void _commit();
 
-  void _triggerOnReturn(Element element) {
+  bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
+
+  Element getElement(String id) => _dialog.element.querySelector(id);
+
+  Element _triggerOnReturn(String name) {
+    var element = _dialog.element.querySelector(name);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
         _dialog.hide();
       }
     });
+    return element;
   }
 }
 
@@ -666,15 +672,14 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File…", dialog) {
     defaultBinding("ctrl-n");
-    _nameElement = _dialog.element.querySelector("#fileName");
-    _triggerOnReturn(_nameElement);
+    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      _dialog.show();
+      isPolymer ? _dialog.element.toggle() : _dialog.show();
     }
   }
 
@@ -743,7 +748,8 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
       _dialog.element.querySelector("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
-    _dialog.show();
+
+    isPolymer ? _dialog.element.toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -764,15 +770,14 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _nameElement = _dialog.element.querySelector("#fileName");
-    _triggerOnReturn(_nameElement);
+    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _nameElement.value = resource.name;
-     _dialog.show();
+     isPolymer ? _dialog.element.toggle() : _dialog.show();
    }
   }
 
@@ -835,12 +840,11 @@ class GitCloneAction extends SparkActionWithDialog {
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
     _projectNameElement = _dialog.element.querySelector("#gitProjectName");
-    _repoUrlElement = _dialog.element.querySelector("#gitRepoUrl");
-    _triggerOnReturn(_repoUrlElement);
+     _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
   }
 
   void _invoke([Object context]) {
-    _dialog.show();
+    isPolymer ? _dialog.element.toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -873,11 +877,11 @@ class GitCloneAction extends SparkActionWithDialog {
 class AboutSparkAction extends SparkActionWithDialog {
   bool _initialized = false;
 
-  AboutSparkAction(Spark spark, Element dialog)
+  AboutSparkAction(Spark spark, dialog)
       : super(spark, "help-about", "About Spark", dialog);
 
   void _invoke([Object context]) {
-    if (!_initialized) {
+    if (isPolymer || !_initialized) {
       var checkbox = _dialog.element.querySelector('#analyticsCheck');
       checkbox.checked =
           spark.tracker.service.getConfig().isTrackingPermitted();
@@ -891,7 +895,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    _dialog.show();
+    isPolymer ? _dialog.element.toggle() : _dialog.show();
   }
 
   void _commit() {

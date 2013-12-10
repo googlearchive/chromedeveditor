@@ -198,6 +198,9 @@ class SparkOverlay extends Widget {
     Element target = e.target;
     if (target != null && target.attributes.containsKey('overlay-toggle')) {
       toggle();
+      if (target.attributes.containsKey('primary')) {
+        asyncFire('commit');
+      }
     } else if (autoCloseTask != null) {
       autoCloseTask.cancel();
       autoCloseTask = null;
