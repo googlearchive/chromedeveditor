@@ -323,6 +323,15 @@ class Folder extends Container {
     });
   }
 
+  Future<Folder> createNewFolder(String name) {
+    return _dirEntry.createDirectory(name).then((entry) {
+      Folder folder = new Folder(this, entry, _syncable);
+      _children.add(folder);
+      _fireEvent(new ResourceChangeEvent(folder, ResourceEventType.ADD));
+      return folder;
+    });
+  }
+
   Future delete() {
     return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
   }
