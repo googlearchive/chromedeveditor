@@ -33,9 +33,11 @@ import 'lib/utils.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
+Spark spark;
+
 /**
- * Returns true if app.json contains a test-mode entry set to true.
- * If app.json does not exit, it returns true.
+ * Returns true if app.json contains a test-mode entry set to true. If app.json
+ * does not exit, it returns true.
  */
 Future<bool> isTestMode() {
   String url = chrome.runtime.getURL('app.json');
@@ -44,7 +46,7 @@ Future<bool> isTestMode() {
     try {
       Map info = JSON.decode(contents);
       result = info['test-mode'];
-    } catch(exception, stackTrace) {
+    } catch (exception, stackTrace) {
       // If JSON is invalid, assume test mode.
       result = true;
     }
@@ -55,9 +57,17 @@ Future<bool> isTestMode() {
 }
 
 void main() {
-  isTestMode().then((testMode) {
-    Spark spark = new Spark(testMode);
-    spark.start();
+  var errorHandler = (self, parent, zone, error, stackTrace) {
+    spark._handleUncaughtException(error, stackTrace);
+  };
+  var specification = new ZoneSpecification(handleUncaughtError: errorHandler);
+  Zone sparkZone = Zone.current.fork(specification: specification);
+
+  sparkZone.runGuarded(() {
+    isTestMode().then((testMode) {
+      spark = new Spark(testMode);
+      spark.start();
+    });
   });
 }
 
@@ -152,7 +162,7 @@ class Spark extends Application implements FilesControllerDelegate {
       // Init the analytics tracker and send a page view for the main page.
       tracker = service.getTracker(_ANALYTICS_ID);
       tracker.sendAppView('main');
-      _startTrackingExceptions();
+      _trackLoggedExceptions();
     });
   }
 
@@ -388,25 +398,23 @@ class Spark extends Application implements FilesControllerDelegate {
   // - End implementation of FilesControllerDelegate interface.
   //
 
-  void _startTrackingExceptions() {
-    // Handle logged exceptions.
+  /**
+   * Handle logged exceptions.
+   */
+  void _trackLoggedExceptions() {
     Logger.root.onRecord.listen((LogRecord r) {
       if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
-        // We don't log the error object because of PII concerns.
-        // TODO: we need to add a test to verify this
-        String error =
-            r.error != null ? r.error.runtimeType.toString() : r.message;
-        String desc = '${error}\n${minimizeStackTrace(r.stackTrace)}'.trim();
-
-        if (desc.length > analytics.MAX_EXCEPTION_LENGTH) {
-          desc = '${desc.substring(0, analytics.MAX_EXCEPTION_LENGTH - 1)}~';
-        }
-
-        tracker.sendException(desc);
+        _handleUncaughtException(r.error, r.stackTrace);
       }
     });
+  }
 
-    // TODO: currently, there's no way in Dart to handle uncaught exceptions
+  void _handleUncaughtException(error, StackTrace stackTrace) {
+    // We don't log the error object itself because of PII concerns.
+    String errorDesc = error != null ? error.runtimeType.toString() : '';
+    String desc = '${errorDesc}\n${minimizeStackTrace(stackTrace)}'.trim();
+
+    tracker.sendException(desc);
   }
 }
 
