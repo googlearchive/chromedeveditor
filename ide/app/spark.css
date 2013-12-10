@@ -177,6 +177,10 @@ body {
   white-space: nowrap;
 }
 
+#editedFilename.hidden {
+  opacity: 0.0;
+}
+
 /* bootstrap overrides */
 
 #toolbar .btn {

@@ -79,11 +79,7 @@ class EditorArea extends TabView {
 
   set showLabelBar(bool showLabelBar) {
     super.showLabelBar = showLabelBar;
-    if (showLabelBar) {
-      _filenameLabel.style.opacity = '0';
-    } else {
-      _filenameLabel.style.opacity = '1';
-    }
+    _filenameLabel.classes.toggle('hidden', showLabelBar);
   }
 
   bool get allowsLabelBar => _allowsLabelBar;
