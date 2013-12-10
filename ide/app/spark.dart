@@ -642,7 +642,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
-        _dialog.hide();
+        isPolymer ? _dialog.toggle() : _dialog.hide();
       }
     });
     return element;
@@ -742,10 +742,10 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
 
   void _setMessageAndShow() {
     if (_resources.length == 1) {
-      _dialog.element.querySelector("#message").text =
+      getElement("#message").text =
           "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
-      _dialog.element.querySelector("#message").text =
+      getElement("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
@@ -839,8 +839,8 @@ class GitCloneAction extends SparkActionWithDialog {
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    _projectNameElement = _dialog.element.querySelector("#gitProjectName");
-     _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
+    _projectNameElement = getElement("#gitProjectName");
+    _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
   }
 
   void _invoke([Object context]) {
@@ -884,7 +884,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (isPolymer || !_initialized) {
-      var checkbox = _dialog.element.querySelector('#analyticsCheck');
+      var checkbox = getElement('#analyticsCheck');
       checkbox.checked =
           spark.tracker.service.getConfig().isTrackingPermitted();
       checkbox.onChange.listen((e) {
@@ -892,7 +892,7 @@ class AboutSparkAction extends SparkActionWithDialog {
             .setTrackingPermitted(checkbox.checked);
       });
 
-      _dialog.element.querySelector('#aboutVersion').text = spark.appVersion;
+      getElement('#aboutVersion').text = spark.appVersion;
 
       _initialized = true;
     }
