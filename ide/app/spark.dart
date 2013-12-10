@@ -34,9 +34,18 @@ import 'lib/utils.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
+void main() {
+  createSparkZone().runGuarded(() {
+    isTestMode().then((testMode) {
+      Spark spark = new Spark(testMode);
+      spark.start();
+    });
+  });
+}
+
 /**
- * Returns true if app.json contains a test-mode entry set to true.
- * If app.json does not exit, it returns true.
+ * Returns true if app.json contains a test-mode entry set to true. If app.json
+ * does not exit, it returns true.
  */
 Future<bool> isTestMode() {
   String url = chrome.runtime.getURL('app.json');
@@ -45,7 +54,7 @@ Future<bool> isTestMode() {
     try {
       Map info = JSON.decode(contents);
       result = info['test-mode'];
-    } catch(exception, stackTrace) {
+    } catch (exception, stackTrace) {
       // If JSON is invalid, assume test mode.
       result = true;
     }
@@ -55,14 +64,20 @@ Future<bool> isTestMode() {
   });
 }
 
-void main() {
-  isTestMode().then((testMode) {
-    Spark spark = new Spark(testMode);
-    spark.start();
-  });
+/**
+ * Create a [Zone] that logs uncaught exceptions.
+ */
+Zone createSparkZone() {
+  var errorHandler = (self, parent, zone, error, stackTrace) {
+    Spark.SPARK_SINGLETON._handleUncaughtException(error, stackTrace);
+  };
+  var specification = new ZoneSpecification(handleUncaughtError: errorHandler);
+  return Zone.current.fork(specification: specification);
 }
 
 class Spark extends Application implements FilesControllerDelegate {
+  static Spark SPARK_SINGLETON;
+
   final bool developerMode;
 
   /// The Google Analytics app ID for Spark.
@@ -87,6 +102,10 @@ class Spark extends Application implements FilesControllerDelegate {
   TestDriver _testDriver;
 
   Spark(this.developerMode) {
+    if (SPARK_SINGLETON == null) {
+      SPARK_SINGLETON = this;
+    }
+
     document.title = appName;
 
     localPrefs = preferences.localStore;
@@ -153,7 +172,7 @@ class Spark extends Application implements FilesControllerDelegate {
       // Init the analytics tracker and send a page view for the main page.
       tracker = service.getTracker(_ANALYTICS_ID);
       tracker.sendAppView('main');
-      _startTrackingExceptions();
+      _trackLoggedExceptions();
     });
   }
 
@@ -169,7 +188,10 @@ class Spark extends Application implements FilesControllerDelegate {
         aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
     editorManager = new EditorManager(workspace, aceContainer, localPrefs);
     editorArea = new EditorArea(
-        getUIElement('#editorArea'), editorManager, allowsLabelBar: true);
+        getUIElement('#editorArea'),
+        getUIElement('#editedFilename'),
+        editorManager,
+        allowsLabelBar: true);
   }
 
   void initEditorManager() {
@@ -237,6 +259,8 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileNewAction(
         this, getDialogElement('#fileNewDialog')));
+    actionManager.registerAction(new FolderNewAction(
+        this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
@@ -387,25 +411,23 @@ class Spark extends Application implements FilesControllerDelegate {
   // - End implementation of FilesControllerDelegate interface.
   //
 
-  void _startTrackingExceptions() {
-    // Handle logged exceptions.
+  /**
+   * Handle logged exceptions.
+   */
+  void _trackLoggedExceptions() {
     Logger.root.onRecord.listen((LogRecord r) {
       if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
-        // We don't log the error object because of PII concerns.
-        // TODO: we need to add a test to verify this
-        String error =
-            r.error != null ? r.error.runtimeType.toString() : r.message;
-        String desc = '${error}\n${minimizeStackTrace(r.stackTrace)}'.trim();
-
-        if (desc.length > analytics.MAX_EXCEPTION_LENGTH) {
-          desc = '${desc.substring(0, analytics.MAX_EXCEPTION_LENGTH - 1)}~';
-        }
-
-        tracker.sendException(desc);
+        _handleUncaughtException(r.error, r.stackTrace);
       }
     });
+  }
 
-    // TODO: currently, there's no way in Dart to handle uncaught exceptions
+  void _handleUncaughtException(error, StackTrace stackTrace) {
+    // We don't log the error object itself because of PII concerns.
+    String errorDesc = error != null ? error.runtimeType.toString() : '';
+    String desc = '${errorDesc}\n${minimizeStackTrace(stackTrace)}'.trim();
+
+    tracker.sendException(desc);
   }
 }
 
@@ -634,13 +656,19 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   void _commit();
 
-  void _triggerOnReturn(Element element) {
+  bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
+
+  Element getElement(String id) => _dialog.element.querySelector(id);
+
+  Element _triggerOnReturn(String name) {
+    var element = _dialog.element.querySelector(name);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
-        _dialog.hide();
+        isPolymer ? _dialog.toggle() : _dialog.hide();
       }
     });
+    return element;
   }
   
   void focusElementByQuery(String query) {
@@ -674,16 +702,19 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File…", dialog) {
     defaultBinding("ctrl-n");
-    _nameElement = _dialog.element.querySelector("#fileName");
-    _triggerOnReturn(_nameElement);
+    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      this.focusElementByQuery("#fileName");
-      _dialog.show();
+      if (isPolymer) {
+        _dialog.element as dynamic).toggle();
+      } else {
+        this.focusElementByQuery("#fileName");
+        _dialog.show();
+      }
     }
   }
 
@@ -693,6 +724,38 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (name.isNotEmpty) {
       folder.createNewFile(name).then((file) =>
           spark.selectInEditor(file, forceOpen: true, replaceCurrent: true));
+    }
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+class FolderNewAction extends SparkActionWithDialog implements ContextAction {
+  InputElement _nameElement;
+  ws.Folder folder;
+
+  FolderNewAction(Spark spark, Element dialog)
+      : super(spark, "folder-new", "New Folder", dialog) {
+    defaultBinding("ctrl-shift-n");
+    _nameElement = getElement("#folderName");
+  }
+
+  void _invoke([List<ws.Folder> folders]) {
+    if (folders != null && folders.isNotEmpty) {
+      folder = folders.first;
+      _nameElement.value = '';
+      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
+    }
+  }
+
+  // called when user validates the dialog
+  void _commit() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFolder(name).then((folder) =>
+          spark._filesController.selectFile(folder));
     }
   }
 
@@ -746,15 +809,21 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
 
   void _setMessageAndShow() {
     if (_resources.length == 1) {
-      _dialog.element.querySelector("#message").text =
+      getElement("#message").text =
           "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
-      _dialog.element.querySelector("#message").text =
+      getElement("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
-    
-    focusElementByQuery(".btn-default");
-    _dialog.show();
+
+    if (isPolymer) {
+      _dialog.element as dynamic).toggle();
+    } else {
+      _deleteDialog.$element.on('shown.bs.modal', (e) {
+        e.target.querySelector("#deleteOkButton").focus();
+      });
+      _deleteDialog.show();
+    }
   }
 
   void _commit() {
@@ -775,16 +844,15 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _nameElement = _dialog.element.querySelector("#fileName");
-    _triggerOnReturn(_nameElement);
+    // TODO(terry): Renable can't find element with id of 'fileName'.
+//    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _nameElement.value = resource.name;
-     focusElementByQuery("#fileName");
-     _dialog.show();
+     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
    }
   }
 
@@ -846,14 +914,12 @@ class GitCloneAction extends SparkActionWithDialog {
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    _projectNameElement = _dialog.element.querySelector("#gitProjectName");
-    _repoUrlElement = _dialog.element.querySelector("#gitRepoUrl");
-    _triggerOnReturn(_repoUrlElement);
+    _projectNameElement = getElement("#gitProjectName");
+    _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
   }
 
   void _invoke([Object context]) {
-    focusElementByQuery("#gitProjectName");
-    _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -883,6 +949,8 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 }
 
+// TODO(terry):  When only polymer overlays are used remove _initialized and
+//               isPolymer's defintion and usage.
 class AboutSparkAction extends SparkActionWithDialog {
   bool _initialized = false;
 
@@ -890,8 +958,8 @@ class AboutSparkAction extends SparkActionWithDialog {
       : super(spark, "help-about", "About Spark", dialog);
 
   void _invoke([Object context]) {
-    if (!_initialized) {
-      var checkbox = _dialog.element.querySelector('#analyticsCheck');
+    if (isPolymer || !_initialized) {
+      var checkbox = getElement('#analyticsCheck');
       checkbox.checked =
           spark.tracker.service.getConfig().isTrackingPermitted();
       checkbox.onChange.listen((e) {
@@ -899,13 +967,12 @@ class AboutSparkAction extends SparkActionWithDialog {
             .setTrackingPermitted(checkbox.checked);
       });
 
-      _dialog.element.querySelector('#aboutVersion').text = spark.appVersion;
+      getElement('#aboutVersion').text = spark.appVersion;
 
       _initialized = true;
     }
 
-    focusElementByQuery(".btn-default");
-    _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
