@@ -13,6 +13,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:chrome_gen/src/files.dart' as chrome_files;
 import 'package:logging/logging.dart';
+import 'package:spark_widgets/spark-overlay/spark-overlay.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -256,7 +257,7 @@ class Spark extends Application implements FilesControllerDelegate {
   void initToolbar() {
     getUIElement("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
-    querySelector("#newFile").onClick.listen(
+    getUIElement("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new-as').invoke());
 
     buildMenu();
@@ -622,18 +623,20 @@ abstract class SparkAction extends Action {
 }
 
 abstract class SparkActionWithDialog extends SparkAction {
-  bootjack.Modal _dialog;
+  dynamic _dialog;
 
   SparkActionWithDialog(Spark spark,
                         String id,
                         String name,
-                        Element dialogElement)
+                        dialogElement)
       : super(spark, id, name) {
     dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
     _dialog = bootjack.Modal.wire(dialogElement);
   }
 
   void _commit();
+
+  bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
@@ -666,7 +669,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      _dialog.show();
+      isPolymer ? _dialog.element.toggle() : _dialog.show();
     }
   }
 
@@ -735,7 +738,8 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
       _dialog.element.querySelector("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
-    _dialog.show();
+
+    isPolymer ? _dialog.element.toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -764,7 +768,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _element.value = resource.name;
-     _dialog.show();
+     isPolymer ? _dialog.element.toggle() : _dialog.show();
    }
   }
 
@@ -825,7 +829,7 @@ class GitCloneAction extends SparkActionWithDialog {
       : super(spark, "git-clone", "Git Clone…", dialog);
 
   void _invoke([Object context]) {
-    _dialog.show();
+    isPolymer ? _dialog.element.toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -862,11 +866,11 @@ class GitCloneAction extends SparkActionWithDialog {
 class AboutSparkAction extends SparkActionWithDialog {
   bool _initialized = false;
 
-  AboutSparkAction(Spark spark, Element dialog)
+  AboutSparkAction(Spark spark, dialog)
       : super(spark, "help-about", "About Spark", dialog);
 
   void _invoke([Object context]) {
-    if (!_initialized) {
+    if (isPolymer || !_initialized) {
       var checkbox = _dialog.element.querySelector('#analyticsCheck');
       checkbox.checked =
           spark.tracker.service.getConfig().isTrackingPermitted();
@@ -880,7 +884,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    _dialog.show();
+    isPolymer ? _dialog.element.toggle() : _dialog.show();
   }
 
   void _commit() {
