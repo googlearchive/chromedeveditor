@@ -285,6 +285,22 @@
       </div>
     </spark-overlay>
 
+    <!-- New Folder dialog -->
+    <spark-overlay id="folderNewDialog" class="modal fade">
+      <div class="modal-body">
+        <p>
+          Folder name: <input id="folderName" type="text">
+        </p>
+      </div>
+      <div class="modal-footer">
+        <spark-button class="btn btn-default" data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="folderNewOkButton" primary class="btn btn-primary"
+            data-dismiss="modal">Create</spark-button>
+      </div>
+    </spark-overlay>
+
     <!-- Rename File dialog -->
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
