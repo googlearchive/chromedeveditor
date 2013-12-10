@@ -6,6 +6,8 @@
 
 <link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon/spark-icon.html">
+<link rel="import" href="../../packages/spark_widgets/spark-menu-button/spark-menu-button.html">
+<link rel="import" href="../../packages/spark_widgets/spark-menu-item/spark-menu-item.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-select/spark-select.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
@@ -178,6 +180,10 @@
       <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
 
       <span id="status"></span>
+
+      <spark-menu-button id="hotdogMenu2" src="../../images/menu.png">
+        <spark-menu-item src="images/open.png" label="Label">Text</spark-menu-item>
+      </spark-menu-button>
 
       <div id="hotdogMenu" class="btn-group">
         <!-- TEMP(ussuri): All of this is temp, but especially the on-click

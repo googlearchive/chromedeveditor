@@ -74,22 +74,30 @@ class SparkSelector extends SparkSelection {
   @published bool notap = false;
   @published dynamic selectedModel = null;
 
+  List<Element> items = [];
+
   MutationObserver _observer;
 
-  SparkSelector.created(): super.created();
-
-  void ready() {
-    super.ready();
-    _observer =
-        new MutationObserver((List mutations, MutationObserver observer) {
-          updateSelected();
-        });
+  SparkSelector.created(): super.created() {
     if (target == null) {
       target = this;
     }
+    updateItems();
   }
 
-  List get items {
+  void ready() {
+    super.ready();
+    _observer = new MutationObserver(onMutation);
+    _observer.observe(shadowRoot, childList: true, subtree: true);
+  }
+
+  void onMutation(List<MutationRecord> mutations, MutationObserver observer) {
+    print(mutations);
+    updateItems();
+    updateSelected();
+  }
+
+  void updateItems() {
     List nodes = null;
     if (target == this) {
       nodes = ($['items'] as dynamic).getDistributedNodes();
@@ -98,7 +106,7 @@ class SparkSelector extends SparkSelection {
     } else {
       nodes = (target as dynamic).children;
     }
-    return nodes.where((node) => node.localName != "template").toList();
+    items = nodes.where((node) => node.localName != "template").toList();
   }
 
   void targetChanged(old) {
@@ -141,6 +149,7 @@ class SparkSelector extends SparkSelection {
 
   void validateSelected() {
     if (multi && selected is List) {
+      // TODO(ussuri): What does this achieve?
       selected = selected;
     }
   }
@@ -160,13 +169,13 @@ class SparkSelector extends SparkSelection {
   }
 
   void valueToSelection(value) {
-    // TODO: if value is string but valueattr have non integer
-    // string values this type of valueToSelection will not work.
-    if (value is String) {
-      value = int.parse(value);
+    print(items);
+    final index = valueToIndex(value);
+    print(index);
+    if (index < items.length) {
+      var item = items[index];
+      ($['selection'] as dynamic).select(item);
     }
-    var item = items[valueToIndex(value)];
-    ($['selection'] as dynamic).select(item);
   }
 
   void updateSelectedItem() {
@@ -183,7 +192,7 @@ class SparkSelector extends SparkSelection {
     }
   }
 
-  valueToIndex(value) {
+  int valueToIndex(var value) {
     var allItems = items;
     // find an item with value == value and return it's index
     for (var i = 0; i < allItems.length; i++) {
@@ -193,7 +202,7 @@ class SparkSelector extends SparkSelection {
       }
     }
     // if no item found, the value itself is probably the index
-    return value;
+    return (value is num) ? value : int.parse(value);
   }
 
   String valueForNode(Element node) =>

@@ -17,11 +17,11 @@
 <polymer-element name="spark-menu-item" attributes="src label iconsize">
   <template>
     <style>
-      .label {
+      .labelText {
         margin: 0 15px;
       }
 
-      spark-icon, .label, .label > * {
+      spark-icon, .labelText, .labelText > * {
         display: inline-block;
         vertical-align: middle;
       }
@@ -29,7 +29,7 @@
     
     <spark-icon src="{{src}}" size="{{iconsize}}"></spark-icon>
     
-    <div class="label">
+    <div class="labelText">
       <span>{{label}}</span>
       <content></content>
     </div>
