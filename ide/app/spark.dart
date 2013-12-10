@@ -682,6 +682,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
+      this.focusElementByQuery("#fileName");
       _dialog.show();
     }
   }
@@ -755,7 +756,7 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
     focusElementByQuery(".btn-default");
     _dialog.show();
   }
-  
+
   void _commit() {
     _resources.forEach((ws.Resource resource) {
       resource.delete();
@@ -782,6 +783,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _nameElement.value = resource.name;
+     focusElementByQuery("#fileName");
      _dialog.show();
    }
   }
@@ -850,6 +852,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    focusElementByQuery("#gitProjectName");
     _dialog.show();
   }
 
@@ -901,6 +904,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
+    focusElementByQuery(".btn-default");
     _dialog.show();
   }
 
