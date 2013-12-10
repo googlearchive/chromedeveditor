@@ -826,7 +826,7 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
     if (isPolymer) {
       (_dialog.element as dynamic).toggle();
     } else {
-      showWithFocus(".btn-default");
+      showWithFocus(".btn-primary");
     }
   }
 
@@ -976,7 +976,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus(".btn-default");
+    isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus(".btn-primary");
   }
 
   void _commit() {
