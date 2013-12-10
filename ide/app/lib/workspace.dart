@@ -219,7 +219,7 @@ class Workspace implements Container {
 abstract class Container extends Resource {
   List<Resource> _children = [];
 
-  Container(Container parent, chrome.Entry entry, bool syncable):
+  Container(Container parent, chrome.Entry entry, [bool syncable = false]):
     super(parent, entry, syncable);
 
   Resource getChild(String name) {
@@ -261,7 +261,7 @@ abstract class Resource {
   chrome.Entry _entry;
   final bool _syncable;
 
-  Resource(this._parent, this._entry, this._syncable);
+  Resource(this._parent, this._entry, [this._syncable = false]);
 
   String get name => _entry.name;
 
@@ -340,7 +340,7 @@ class Folder extends Container {
 }
 
 class File extends Resource {
-  File(Container parent, chrome.Entry entry, bool syncable):
+  File(Container parent, chrome.Entry entry, [bool syncable = false]):
     super(parent, entry, syncable);
 
   Future<String> getContents() => _fileEntry.readText();
@@ -374,7 +374,7 @@ class File extends Resource {
  * [Projects]s can be immediate child elements of a [Workspace].
  */
 class Project extends Folder {
-  Project(Container parent, chrome.Entry entry, bool syncable):
+  Project(Container parent, chrome.Entry entry, [bool syncable = false]):
     super(parent, entry, syncable);
 
   Project get project => this;

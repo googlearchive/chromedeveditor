@@ -50,7 +50,6 @@ defineTests() {
       return chrome.runtime.getPackageDirectoryEntry().then((dir) {
         return workspace.link(dir).then((Resource resource) {
           expect(resource, isNotNull);
-
           return workspace.save().then((_) {
             return prefs.getValue('workspace').then((String prefVal) {
               expect(prefVal, isNotNull);
