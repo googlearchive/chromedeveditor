@@ -185,8 +185,6 @@ void docs(GrinderContext context) {
       new Directory('app'), endsWith: '.dart', recurse: true);
 
   if (!docFiles.upToDate(sourceFiles)) {
-    // Notice: Once more libraries are referenced from spark.dart, we won't need
-    // to explicitly pass them to dartdoc.
     runSdkBinary(context, 'dartdoc',
         arguments: ['--omit-generation-time', '--no-code',
                     '--mode', 'static',
