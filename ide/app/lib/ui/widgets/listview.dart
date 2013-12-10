@@ -118,6 +118,10 @@ class ListView {
         _onDoubleClicked(i, event);
         event.stopPropagation();
       });
+      row.container.onContextMenu.listen((event) {
+        _onContextMenu(i, event);
+        cancelEvent(event);
+      });
       y += cellHeight;
       _rows.add(row);
       _container.children.add(row.container);
@@ -179,6 +183,10 @@ class ListView {
     }
     _addCurrentSelectionHighlight();
     _delegate.listViewSelectedChanged(this, _selection.toList(), event);
+  }
+
+  void _onContextMenu(int rowIndex, Event event) {
+    _delegate.listViewContextMenu(this, _selection.toList(), rowIndex, event);
   }
 
   List<int> get selection => _selection.toList();

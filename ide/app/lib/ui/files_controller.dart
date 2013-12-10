@@ -118,7 +118,6 @@ class FilesController implements TreeViewDelegate {
     if (resource is Folder) {
       cell.acceptDrop = true;
     }
-    // TODO: add an onContextMenu listening, call _handleContextMenu().
     cell.menuElement.onClick.listen(
         (e) => _handleMenuClick(cell, resource, e));
     return cell;
@@ -151,6 +150,16 @@ class FilesController implements TreeViewDelegate {
     if (nodeUIDs.length == 1 && _filesMap[nodeUIDs.first] is Container) {
       view.toggleNodeExpanded(nodeUIDs.first, animated: true);
     }
+  }
+
+  void treeViewContextMenu(TreeView view,
+                           List<String> nodeUIDs,
+                           String nodeUID,
+                           html.Event event) {
+    cancelEvent(event);
+    Resource resource = _filesMap[nodeUID];
+    FileItemCell cell = new FileItemCell(resource.name);
+    _showMenuForEvent(cell, event, resource);
   }
 
   String treeViewDropEffect(TreeView view,
@@ -493,7 +502,25 @@ class FilesController implements TreeViewDelegate {
     _showMenu(cell, cell.menuElement, resource);
   }
 
-  void _showMenu(FileItemCell cell, html.Element disclosureButton, Resource resource) {
+  void _showMenu(FileItemCell cell,
+                 html.Element disclosureButton,
+                 Resource resource) {
+    // Position the context menu at the expected location.
+    html.Point position = getAbsolutePosition(disclosureButton);
+    position += new html.Point(0, disclosureButton.clientHeight - 2);
+    _showMenuAtLocation(cell, position, resource);
+  }
+
+  void _showMenuForEvent(FileItemCell cell,
+                         html.Event event,
+                         Resource resource) {
+    html.Point position = getEventAbsolutePosition(event);
+    _showMenuAtLocation(cell, position, resource);
+  }
+
+  void _showMenuAtLocation(FileItemCell cell,
+                           html.Point position,
+                           Resource resource) {
     if (!_treeView.selection.contains(resource.path)) {
       _treeView.selection = [resource.path];
     }
@@ -509,10 +536,8 @@ class FilesController implements TreeViewDelegate {
     fillContextMenu(contextMenu, actions, resources);
 
     // Position the context menu at the expected location.
-    html.Point position = getAbsolutePosition(disclosureButton);
-    position += new html.Point(0, disclosureButton.clientHeight);
     contextMenu.style.left = '${position.x}px';
-    contextMenu.style.top = '${position.y - 2}px';
+    contextMenu.style.top = '${position.y}px';
 
     // Keep the disclosure button visible when the menu is opened.
     cell.menuElement.classes.add('open');
@@ -531,6 +556,9 @@ class FilesController implements TreeViewDelegate {
     // When the user clicks outside the menu, we'll close it.
     html.Element backdrop = menuContainer.querySelector('.backdrop');
     backdrop.onClick.listen((event) {
+      _closeContextMenu(event);
+    });
+    backdrop.onContextMenu.listen((event) {
       _closeContextMenu(event);
     });
     // When the user click on an item in the list, the menu will be closed.
