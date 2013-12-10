@@ -829,14 +829,14 @@ class FolderOpenAction extends SparkAction {
 }
 
 class GitCloneAction extends SparkActionWithDialog {
-  InputElement projectNameElement;
-  InputElement repoUrlElement;
+  InputElement _projectNameElement;
+  InputElement _repoUrlElement;
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    projectNameElement = _dialog.element.querySelector("#gitProjectName");
-    repoUrlElement = _dialog.element.querySelector("#gitRepoUrl");
-    _triggerOnReturn(repoUrlElement);
+    _projectNameElement = _dialog.element.querySelector("#gitProjectName");
+    _repoUrlElement = _dialog.element.querySelector("#gitRepoUrl");
+    _triggerOnReturn(_repoUrlElement);
   }
 
   void _invoke([Object context]) {
@@ -845,7 +845,7 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    _gitClone(projectNameElement.value, repoUrlElement.value, spark);
+    _gitClone(_projectNameElement.value, _repoUrlElement.value, spark);
   }
 
   void _gitClone(String projectName, String url, Spark spark) {
