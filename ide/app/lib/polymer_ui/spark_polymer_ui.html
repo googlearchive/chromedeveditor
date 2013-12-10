@@ -263,7 +263,7 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="deleteOkButton" overlay-toggle primary
+        <spark-button id="deleteOkButton" overlay-toggle primary focused
             data-dismiss="modal">
           Delete
         </spark-button>
@@ -274,7 +274,7 @@
     <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
-          File name:  <input id="fileName" type="text">
+          File name:  <input id="fileName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
@@ -292,7 +292,7 @@
     <spark-overlay id="folderNewDialog" class="modal fade">
       <div class="modal-body">
         <p>
-          Folder name: <input id="folderName" type="text">
+          Folder name: <input id="folderName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
@@ -308,7 +308,7 @@
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
-          File name:  <input id="fileName" type="text">
+          File name: <input id="fileName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
@@ -330,7 +330,7 @@
         <h4 class="modal-title">New Git Project</h4>
       </div>
       <div class="modal-body">
-        Project Name: <input id="gitProjectName" type="text"></input><br/><br/>
+        Project Name: <input id="gitProjectName" type="text" focused></input><br/><br/>
         Repository URL: <input id="gitRepoUrl" type="text"></input>
       </div>
       <div class="modal-footer">
@@ -362,7 +362,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
       </div>

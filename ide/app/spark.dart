@@ -652,6 +652,16 @@ abstract class SparkActionWithDialog extends SparkAction {
       : super(spark, id, name) {
     dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
     _dialog = bootjack.Modal.wire(dialogElement);
+    
+    // TODO(ericarnold): Bootjack should handle focus
+    _dialog.$element.on('shown.bs.modal', (event) {
+      Element dialog = event.target;
+      Element elementToFocus = dialog.querySelector('[focused]');
+      
+      if (elementToFocus != null) {
+        elementToFocus.focus();
+      }
+    });
   }
 
   void _commit();
@@ -672,27 +682,12 @@ abstract class SparkActionWithDialog extends SparkAction {
     return element;
   }
   
-  show() {
+  _show() {
     if (isPolymer) {
       (_dialog.element as dynamic).toggle();
     } else {
-      showWithFocus(".focused");
+      _dialog.show();
     }
-  }
-  
-  // TODO(ericarnold): Fix the focus issues in bootjack.
-  void showWithFocus(String query) {
-    focusElementByQuery(query);
-    _dialog.show();
-  }
-  
-  void focusElementByQuery(String query) {
-    _dialog.$element.on('shown.bs.modal', (DQueryEvent e) {
-      Element element = e.target;
-      if (element != null) {
-        element.querySelector(query).focus();
-      }
-    });
   }
 }
 
@@ -726,7 +721,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      show();
+      _show();
     }
   }
 
@@ -749,7 +744,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   ws.Folder folder;
 
   FolderNewAction(Spark spark, Element dialog)
-      : super(spark, "folder-new", "New Folder", dialog) {
+      : super(spark, "folder-new", "New Folder…", dialog) {
     defaultBinding("ctrl-shift-n");
     _nameElement = getElement("#folderName");
   }
@@ -758,7 +753,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      show();
+      _show();
     }
   }
 
@@ -853,15 +848,14 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    // TODO(terry): Renable can't find element with id of 'fileName'.
-//    _nameElement = _triggerOnReturn("#fileName");
+    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _nameElement.value = resource.name;
-     show();
+     _show();
    }
   }
 
@@ -928,7 +922,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-    show();
+    _show();
   }
 
   void _commit() {
@@ -981,7 +975,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    show();
+    _show();
   }
 
   void _commit() {
