@@ -674,7 +674,9 @@ abstract class SparkActionWithDialog extends SparkAction {
   void focusElementByQuery(String query) {
     _dialog.$element.on('shown.bs.modal', (DQueryEvent e) {
       Element element = e.target;
-      element.querySelector(query).focus();
+      if (element != null) {
+        element.querySelector(query).focus();
+      }
     });
   }
 }
