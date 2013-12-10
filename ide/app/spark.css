@@ -173,6 +173,7 @@ body {
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
   white-space: nowrap;
 }
 
