@@ -13,7 +13,6 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:chrome_gen/src/files.dart' as chrome_files;
 import 'package:logging/logging.dart';
-import 'package:spark_widgets/spark-overlay/spark-overlay.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -667,7 +666,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      isPolymer ? _dialog.element.toggle() : _dialog.show();
+      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
     }
   }
 
@@ -736,8 +735,7 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
       _dialog.element.querySelector("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
-
-    isPolymer ? _dialog.element.toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -766,7 +764,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _element.value = resource.name;
-     isPolymer ? _dialog.element.toggle() : _dialog.show();
+     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
    }
   }
 
@@ -827,7 +825,7 @@ class GitCloneAction extends SparkActionWithDialog {
       : super(spark, "git-clone", "Git Clone…", dialog);
 
   void _invoke([Object context]) {
-    isPolymer ? _dialog.element.toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -882,7 +880,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    isPolymer ? _dialog.element.toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
