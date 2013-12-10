@@ -255,6 +255,16 @@ class TreeView implements ListViewDelegate {
         event);
   }
 
+  void listViewContextMenu(ListView view,
+                           List<int> rowIndexes,
+                           int rowIndex,
+                           Event event) {
+    _delegate.treeViewContextMenu(this,
+        _rowIndexesToNodeUIDs(rowIndexes),
+        _rows[rowIndex].nodeUID,
+        event);
+  }
+
   String listViewDropEffect(ListView view, MouseEvent event) {
     String nodeUID = null;
     if (_currentDragOverCell != null) {

@@ -52,6 +52,16 @@ abstract class ListViewDelegate {
   void listViewDoubleClicked(ListView view, List<int> rowIndexes, Event event);
 
   /**
+   * The implementation of this method will be run when the user click-right
+   * on the row at index `rowIndex`.
+   * `view` is the list the callback is called from.
+   */
+  void listViewContextMenu(ListView view,
+                           List<int> rowIndexes,
+                           int rowIndex,
+                           Event event);
+
+  /**
    * This method is called on dragenter and dragover.
    * Return 'copy', 'move', 'link' or 'none'.
    * It will adjust the visual of the mouse cursor when the item is

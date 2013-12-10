@@ -160,11 +160,13 @@ final RegExp DARTIUM_REGEX = new RegExp(r'#\d+\s+([\S ]+) \((\S+)\)');
 //  at UnknownJavaScriptObject.Object.$index (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:20740:17)
 //  at Object.J.$index$asx (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:157983:41)
 //  at Object.CrEntry_CrEntry$fromProxy (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:7029:14)
+//  at Closure$0._asyncRunCallback [as call$0] (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js:15853:18)
 
-// Matches any string line "ws, at, 1 space, non-ws, 1 space, (, non-ws, )".
-final RegExp DART2JS_REGEX = new RegExp(r'\s+at (\S+) \((\S+)\)');
+// Matches any string line "at, 1 space, non-ws, 1 space, (, non-ws, )".
+final RegExp DART2JS_REGEX_1 = new RegExp(r'at (\S+) \((\S+)\)');
+final RegExp DART2JS_REGEX_2 = new RegExp(r'at (\S+) (\[.+\]) \((\S+)\)');
 
-String  _minimizeLine(String line) {
+String _minimizeLine(String line) {
   // Try and match a dartium stack trace first.
   Match match = DARTIUM_REGEX.firstMatch(line);
 
@@ -175,12 +177,21 @@ String  _minimizeLine(String line) {
     return '${method} ${location}';
   }
 
-  // Then try a dart2js stack trace.
-  match = DART2JS_REGEX.firstMatch(line);
+  // Try and match a dart2js stack trace.
+  match = DART2JS_REGEX_1.firstMatch(line);
 
   if (match != null) {
     String method = match.group(1);
     String location = _removeExtPrefix(match.group(2));
+    return '${method} ${location}';
+  }
+
+  // Try and match an alternative dart2js stack trace format.
+  match = DART2JS_REGEX_2.firstMatch(line);
+
+  if (match != null) {
+    String method = match.group(1);
+    String location = _removeExtPrefix(match.group(3));
     return '${method} ${location}';
   }
 

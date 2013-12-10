@@ -50,11 +50,20 @@ abstract class TreeViewDelegate {
                                Event event);
 
   /**
-   * This method will be called when the give node is double-clicked.
+   * This method will be called when the given node is double-clicked.
    */
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUIDs,
                              Event event);
+
+  /**
+   * This method will be called when the user open the context menu on the
+   * given node.
+   */
+  void treeViewContextMenu(TreeView view,
+                           List<String> nodeUIDs,
+                           String nodeUID,
+                           Event event);
 
   /**
    * This method is called on dragenter.
