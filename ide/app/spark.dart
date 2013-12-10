@@ -13,6 +13,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:chrome_gen/src/files.dart' as chrome_files;
 import 'package:logging/logging.dart';
+import 'package:dquery/dquery.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -641,6 +642,13 @@ abstract class SparkActionWithDialog extends SparkAction {
       }
     });
   }
+  
+  void focusElementByQuery(String query) {
+    _dialog.$element.on('shown.bs.modal', (DQueryEvent e) {
+      Element element = e.target;
+      element.querySelector(query).focus();
+    });
+  }
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
@@ -744,14 +752,10 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
           "Are you sure you want to delete ${_resources.length} files?";
     }
     
-    _dialog.$element.on('shown.bs.modal', (e) {
-      e.target.querySelector("#deleteOkButton").focus();
-    });
-
-    
+    focusElementByQuery(".btn-default");
     _dialog.show();
   }
-
+  
   void _commit() {
     _resources.forEach((ws.Resource resource) {
       resource.delete();
