@@ -17,23 +17,30 @@
 <polymer-element name="spark-menu-item" attributes="src label iconsize">
   <template>
     <style>
-      .label {
+      .labelText {
         margin: 0 15px;
       }
 
-      spark-icon, .label, .label > * {
+      spark-icon, .labelText, .labelText > * {
         display: inline-block;
         vertical-align: middle;
       }
+
+      spark-menu-item:hover {
+        color: black;
+        opacity: 1 !important;
+        border: 1px solid #ccc;
+        background: #eee;
+      }
     </style>
-    
+
     <spark-icon src="{{src}}" size="{{iconsize}}"></spark-icon>
-    
-    <div class="label">
+
+    <div class="labelText">
       <span>{{label}}</span>
       <content></content>
     </div>
   </template>
-  
+
   <script type="application/dart" src="spark-menu-item.dart"></script>
 </polymer-element>

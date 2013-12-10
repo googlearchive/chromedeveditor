@@ -5,6 +5,7 @@
 library spark_widgets.menu_button;
 
 import 'package:polymer/polymer.dart';
+import 'package:spark_widgets/spark-menu/spark-menu.dart';
 
 import '../common/widget.dart';
 
@@ -23,6 +24,8 @@ class SparkMenuButton extends Widget {
 
   //* Toggle the opened state of the dropdown.
   void toggle() {
+    SparkMenu menu = $['overlayMenu'];
+    menu.clearSelection();
     opened = !opened;
   }
 
