@@ -6,9 +6,11 @@ library spark.workspace_test;
 
 import 'dart:async';
 
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
+import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
 const _FILETEXT = 'This is sample text for mock file entry.';
@@ -39,6 +41,23 @@ defineTests() {
         expect(restoredResource, isNotNull);
         expect(restoredResource.name, resource.name);
         expect(restoredResource.path, resource.path);
+      });
+    });
+
+    test('persist workspace roots', () {
+      var prefs = new MapPreferencesStore();
+      var workspace = new Workspace(prefs);
+      return chrome.runtime.getPackageDirectoryEntry().then((dir) {
+        return workspace.link(dir).then((Resource resource) {
+          expect(resource, isNotNull);
+
+          return workspace.save().then((_) {
+            return prefs.getValue('workspace').then((String prefVal) {
+              expect(prefVal, isNotNull);
+              expect(prefVal.length, greaterThanOrEqualTo(10));
+            });
+          });
+        });
       });
     });
 
