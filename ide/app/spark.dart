@@ -11,6 +11,7 @@ import 'dart:math' as math;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome_gen/src/files.dart' as chrome_files;
 import 'package:logging/logging.dart';
 
 import 'lib/ace.dart';
@@ -19,12 +20,16 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
-import 'lib/utils.dart';
+import 'lib/git/commands/clone.dart';
+import 'lib/git/git.dart';
+import 'lib/git/objectstore.dart';
+import 'lib/git/options.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
+import 'lib/utils.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
@@ -59,10 +64,12 @@ void main() {
 class Spark extends Application implements FilesControllerDelegate {
   final bool developerMode;
 
-  // The Google Analytics app ID for Spark.
+  /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   AceContainer aceContainer;
+  ThemeManager aceThemeManager;
+  KeyBindingManager aceKeysManager;
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
@@ -94,15 +101,19 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     initWorkspace();
-    initEditor();
-    initEditorManager();
+
+    createEditorComponents();
     initEditorArea();
+    initEditorManager();
+
     initFilesController();
 
     initLookAndFeel();
 
     createActions();
     initToolbar();
+    buildMenu();
+
     initSplitView();
   }
 
@@ -111,6 +122,26 @@ class Spark extends Application implements FilesControllerDelegate {
   String get appVersion => chrome.runtime.getManifest()['version'];
 
   PlatformInfo get platformInfo => _platformInfo;
+
+  // TODO(ussuri): The below two methods are a temporary means to make Spark
+  // reusable in SparkPolymer. Once the switch to Polymer is complete, they
+  // will go away.
+
+  /**
+   * Should extract a UI Element from the underlying DOM. This method
+   * is overwritten in SparkPolymer, which encapsulates the UI in a top-level
+   * Polymer widget, rather than the top-level document's DOM.
+   */
+  Element getUIElement(String selectors) =>
+      document.querySelector(selectors);
+
+  /**
+   * Should extract a dialog Element from the underlying UI's DOM. This is
+   * different from [getUIElement] in that it's not currently overridden in
+   * SparkPolymer.
+   */
+  Element getDialogElement(String selectors) =>
+      document.querySelector(selectors);
 
   //
   // Parts of ctor:
@@ -129,12 +160,18 @@ class Spark extends Application implements FilesControllerDelegate {
     workspace = new ws.Workspace(localPrefs);
   }
 
-  void initEditor() {
+  void createEditorComponents() {
     aceContainer = new AceContainer(new DivElement());
+    aceThemeManager = new ThemeManager(
+        aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
+    aceKeysManager = new KeyBindingManager(
+        aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
+    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
+    editorArea = new EditorArea(
+        getUIElement('#editorArea'), editorManager, allowsLabelBar: true);
   }
 
   void initEditorManager() {
-    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
@@ -157,9 +194,6 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initEditorArea() {
-    editorArea = new EditorArea(document.getElementById('editorArea'),
-        editorManager,
-        allowsLabelBar: true);
     editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
@@ -171,7 +205,8 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initFilesController() {
-    _filesController = new FilesController(workspace, this);
+    _filesController =
+        new FilesController(workspace, this, getUIElement('#fileViewArea'));
   }
 
   void initLookAndFeel() {
@@ -180,7 +215,7 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initSplitView() {
-    _splitView = new SplitView(querySelector('#splitview'));
+    _splitView = new SplitView(getUIElement('#splitview'));
     _splitView.onResized.listen((_) {
       aceContainer.resize();
       syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
@@ -198,58 +233,59 @@ class Spark extends Application implements FilesControllerDelegate {
   void createActions() {
     actionManager = new ActionManager();
     actionManager.registerAction(new FileOpenInTabAction(this));
-    actionManager.registerAction(new FileNewAction(this));
+    actionManager.registerAction(new FileNewAsAction(this));
+    actionManager.registerAction(new FileNewAction(
+        this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
-    actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new FileRenameAction(
+        this, getDialogElement('#renameDialog')));
+    actionManager.registerAction(new FileDeleteAction(
+        this, getDialogElement('#deleteDialog')));
+    actionManager.registerAction(new GitCloneAction(
+        this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new RunTestsAction(this));
-    actionManager.registerAction(new AboutSparkAction(this));
+    actionManager.registerAction(new AboutSparkAction(
+        this, getDialogElement('#aboutDialog')));
     actionManager.registerKeyListener();
   }
 
   void initToolbar() {
-    querySelector("#newFile").onClick.listen(
-        (_) => actionManager.getAction('file-new').invoke());
-    querySelector("#openFile").onClick.listen(
+    getUIElement("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
-
-    buildMenu();
+    getUIElement("#newFile").onClick.listen(
+        (_) => actionManager.getAction('file-new-as').invoke());
   }
 
   void buildMenu() {
-    ThemeManager themeManager = new ThemeManager(aceContainer, syncPrefs);
-    KeyBindingManager keysManager = new KeyBindingManager(aceContainer, syncPrefs);
+    UListElement ul = getUIElement('#hotdogMenu ul');
 
-    UListElement ul = querySelector('#hotdogMenu ul');
-
-    ul.children.add(createMenuItem(actionManager.getAction('file-new')));
     ul.children.add(createMenuItem(actionManager.getAction('file-open')));
     ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
 
     ul.children.add(createMenuSeparator());
 
-    // theme control
+    // Theme control.
     Element theme = ul.querySelector('#changeTheme');
     ul.children.remove(theme);
     ul.children.add(theme);
-    querySelector('#themeLeft').onClick.listen((e) => themeManager.dec(e));
-    querySelector('#themeRight').onClick.listen((e) => themeManager.inc(e));
+    ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
+    ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
 
-    // key binding control
+    // Key binding control.
     Element keys = ul.querySelector('#changeKeys');
     ul.children.remove(keys);
     ul.children.add(keys);
-    querySelector('#keysLeft').onClick.listen((e) => keysManager.dec(e));
-    querySelector('#keysRight').onClick.listen((e) => keysManager.inc(e));
+    ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
+    ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
 
     if (developerMode) {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
+      ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
     }
 
     ul.children.add(createMenuSeparator());
@@ -260,13 +296,29 @@ class Spark extends Application implements FilesControllerDelegate {
   // - End parts of ctor.
   //
 
-  void newFile() => notImplemented('Spark.newFile()');
+  /**
+   * Allow for creating a new file using the Save as dialog.
+   */
+  void newFileAs() {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.SAVE_FILE);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
+
+      if (entry != null) {
+        workspace.link(entry).then((file) {
+          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
+          workspace.save();
+        });
+      }
+    }).catchError((e) => null);
+  }
 
   void openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
-      chrome.ChromeFileEntry entry = result.entry;
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
         workspace.link(entry).then((file) {
@@ -280,8 +332,8 @@ class Spark extends Application implements FilesControllerDelegate {
   void openFolder() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult result) {
-      chrome.ChromeFileEntry entry = result.entry;
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
         workspace.link(entry).then((file) {
@@ -301,12 +353,16 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void showStatus(String text, {bool error: false}) {
-    Element element = querySelector("#status");
+    Element element = getUIElement("#status");
     element.text = text;
     element.classes.toggle('error', error);
   }
 
-  // Implementation of FilesControllerDelegate interface.
+  void notImplemented(String str) => showStatus("Not implemented: ${str}");
+
+  //
+  // Implementation of FilesControllerDelegate interface:
+  //
 
   void selectInEditor(ws.File file,
                       {bool forceOpen: false,
@@ -320,11 +376,15 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
-  List<ContextAction> getActionsFor(List<ws.Resource> resources) {
-    return actionManager.getContextActions(resources);
-  }
+  Element getContextMenuContainer() =>
+      getUIElement('#file-item-context-menu');
 
-  void notImplemented(String str) => showStatus("Not implemented: ${str}");
+  List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
+      actionManager.getContextActions(resources);
+
+  //
+  // - End implementation of FilesControllerDelegate interface.
+  //
 
   void _startTrackingExceptions() {
     // Handle logged exceptions.
@@ -332,7 +392,8 @@ class Spark extends Application implements FilesControllerDelegate {
       if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
         // We don't log the error object because of PII concerns.
         // TODO: we need to add a test to verify this
-        String error = r.error != null ? r.error.runtimeType.toString() : r.message;
+        String error =
+            r.error != null ? r.error.runtimeType.toString() : r.message;
         String desc = '${error}\n${minimizeStackTrace(r.stackTrace)}'.trim();
 
         if (desc.length > analytics.MAX_EXCEPTION_LENGTH) {
@@ -344,7 +405,6 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     // TODO: currently, there's no way in Dart to handle uncaught exceptions
-
   }
 }
 
@@ -364,11 +424,11 @@ class PlatformInfo {
    * The native client architecture. This may be different from arch on some
    * platforms. One of: "arm", "x86-32", "x86-64".
    */
-  final String nacl_arch;
+  final String naclArch;
 
-  PlatformInfo._(this.os, this.arch, this.nacl_arch);
+  PlatformInfo._(this.os, this.arch, this.naclArch);
 
-  String toString() => "${os}, ${arch}, ${nacl_arch}";
+  String toString() => "${os}, ${arch}, ${naclArch}";
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
@@ -409,8 +469,7 @@ class ThemeManager {
   preferences.PreferenceStore prefs;
   Element _label;
 
-  ThemeManager(this.aceContainer, this.prefs) {
-    _label = querySelector('#changeTheme a span');
+  ThemeManager(this.aceContainer, this.prefs, this._label) {
     prefs.getValue('aceTheme').then((String value) {
       if (value != null) {
         aceContainer.theme = value;
@@ -450,8 +509,7 @@ class KeyBindingManager {
   preferences.PreferenceStore prefs;
   Element _label;
 
-  KeyBindingManager(this.aceContainer, this.prefs) {
-    _label = querySelector('#changeKeys a span');
+  KeyBindingManager(this.aceContainer, this.prefs, this._label) {
     prefs.getValue('keyBinding').then((String value) {
       if (value != null) {
         aceContainer.setKeyBinding(value);
@@ -482,7 +540,7 @@ class KeyBindingManager {
   }
 
   void _updateName(String name) {
-    _label.text = name == null ? 'Spark Default' : capitalize(name);
+    _label.text = 'Keys: ' + (name == null ? 'default' : capitalize(name));
   }
 }
 
@@ -561,9 +619,33 @@ abstract class SparkAction extends Action {
   }
 }
 
+abstract class SparkActionWithDialog extends SparkAction {
+  bootjack.Modal _dialog;
+
+  SparkActionWithDialog(Spark spark,
+                        String id,
+                        String name,
+                        Element dialogElement)
+      : super(spark, id, name) {
+    dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
+    _dialog = bootjack.Modal.wire(dialogElement);
+  }
+
+  void _commit();
+
+  void _triggerOnReturn(Element element) {
+    element.onKeyDown.listen((event) {
+      if (event.keyCode == KeyCode.ENTER) {
+        _commit();
+        _dialog.hide();
+      }
+    });
+  }
+}
+
 class FileOpenInTabAction extends SparkAction implements ContextAction {
   FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in a New Tab");
+      super(spark, "file-open-in-tab", "Open in New Tab");
 
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
@@ -577,18 +659,31 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isFileList(object);
 }
 
-class FileNewAction extends SparkAction implements ContextAction {
-  FileNewAction(Spark spark) : super(spark, "file-new", "New File") {
+class FileNewAction extends SparkActionWithDialog implements ContextAction {
+  InputElement _nameElement;
+  ws.Folder folder;
+
+  FileNewAction(Spark spark, Element dialog)
+      : super(spark, "file-new", "New File…", dialog) {
     defaultBinding("ctrl-n");
+    _nameElement = _dialog.element.querySelector("#fileName");
+    _triggerOnReturn(_nameElement);
   }
 
   void _invoke([List<ws.Folder> folders]) {
-    if (folders == null) {
-      spark.newFile();
-    } else {
-      ws.Folder folder = folders.first;
-      // TODO: create a new file in the given folder
-      spark.notImplemented('new file');
+    if (folders != null && folders.isNotEmpty) {
+      folder = folders.first;
+      _nameElement.value = '';
+      _dialog.show();
+    }
+  }
+
+  // called when user validates the dialog
+  void _commit() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFile(name).then((file) =>
+          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true));
     }
   }
 
@@ -598,12 +693,19 @@ class FileNewAction extends SparkAction implements ContextAction {
 }
 
 class FileOpenAction extends SparkAction {
-  FileOpenAction(Spark spark) : super(spark, "file-open", "Open File...") {
+  FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
     defaultBinding("ctrl-o");
   }
 
   void _invoke([Object context]) => spark.openFile();
 }
+
+class FileNewAsAction extends SparkAction {
+  FileNewAsAction(Spark spark) : super(spark, "file-new-as", "New File…");
+
+  void _invoke([Object context]) => spark.newFileAs();
+}
+
 
 class FileSaveAction extends SparkAction {
   FileSaveAction(Spark spark) : super(spark, "file-save", "Save") {
@@ -613,16 +715,12 @@ class FileSaveAction extends SparkAction {
   void _invoke([Object context]) => spark.editorManager.saveAll();
 }
 
-class FileDeleteAction extends SparkAction implements ContextAction {
-  bootjack.Modal _deleteDialog;
+class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
   List<ws.Resource> _resources;
+  // TODO: Add _messageElement.
 
-  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete") {
-    _deleteDialog = bootjack.Modal.wire(querySelector('#deleteDialog'));
-    _deleteDialog.element.querySelector("#deleteOkButton").onClick.listen((_) {
-      _deleteResource();
-    });
-  }
+  FileDeleteAction(Spark spark, Element dialog)
+      : super(spark, "file-delete", "Delete", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -639,11 +737,11 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
   void _setMessageAndShow() {
     if (_resources.length == 1) {
-      _deleteDialog.element.querySelector("#message").text =
-          "Are you sure you want to delete '${_resources.first.name}' from the file system?";
+      _dialog.element.querySelector("#message").text =
+          "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
-      _deleteDialog.element.querySelector("#message").text =
-          "Are you sure you want to delete '${_resources.length}' files from the file system?";
+      _dialog.element.querySelector("#message").text =
+          "Are you sure you want to delete ${_resources.length} files?";
     }
     
     _deleteDialog.$element.on('shown.bs.modal', (e) {
@@ -654,15 +752,46 @@ class FileDeleteAction extends SparkAction implements ContextAction {
     _deleteDialog.show();
   }
 
-  void _deleteResource() {
+  void _commit() {
     _resources.forEach((ws.Resource resource) {
       resource.delete();
     });
+    _resources = null;
+  }
+
+  String get category => 'resource-delete';
+
+  bool appliesTo(Object object) => _isResourceList(object);
+}
+
+class FileRenameAction extends SparkActionWithDialog implements ContextAction {
+  ws.Resource resource;
+  InputElement _nameElement;
+
+  FileRenameAction(Spark spark, Element dialog)
+      : super(spark, "file-rename", "Rename…", dialog) {
+    _nameElement = _dialog.element.querySelector("#fileName");
+    _triggerOnReturn(_nameElement);
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+   if (resources != null && resources.isNotEmpty) {
+     resource = resources.first;
+     _nameElement.value = resource.name;
+     _dialog.show();
+   }
+  }
+
+  void _commit() {
+    if (_nameElement.value.isNotEmpty) {
+      spark._closeOpenEditor(resource);
+      resource.rename(_nameElement.value);
+    }
   }
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => _isResourceList(object);
+  bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 
 class FileCloseAction extends SparkAction implements ContextAction {
@@ -672,10 +801,13 @@ class FileCloseAction extends SparkAction implements ContextAction {
     if (resources == null) {
       resources = spark._getSelection();
     }
-    Future.forEach(resources, (ws.Resource resource) {
+
+    for (ws.Resource resource in resources) {
       spark._closeOpenEditor(resource);
-      return resource.close();
-    }).then((_) => spark.workspace.save());
+      resource.workspace.unlink(resource);
+    }
+
+    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -697,30 +829,79 @@ class FileExitAction extends SparkAction {
 }
 
 class FolderOpenAction extends SparkAction {
-  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder...");
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
 
   void _invoke([Object context]) => spark.openFolder();
 }
 
-class AboutSparkAction extends SparkAction {
-  bootjack.Modal _aboutBox;
+class GitCloneAction extends SparkActionWithDialog {
+  InputElement _projectNameElement;
+  InputElement _repoUrlElement;
 
-  AboutSparkAction(Spark spark) : super(spark, "help-about", "About Spark");
+  GitCloneAction(Spark spark, Element dialog)
+      : super(spark, "git-clone", "Git Clone…", dialog) {
+    _projectNameElement = _dialog.element.querySelector("#gitProjectName");
+    _repoUrlElement = _dialog.element.querySelector("#gitRepoUrl");
+    _triggerOnReturn(_repoUrlElement);
+  }
 
   void _invoke([Object context]) {
-    if (_aboutBox == null) {
-      _aboutBox = bootjack.Modal.wire(querySelector('#aboutDialog'));
+    _dialog.show();
+  }
 
-      var checkbox = _aboutBox.element.querySelector('#analyticsCheck');
-      checkbox.checked = spark.tracker.service.getConfig().isTrackingPermitted();
+  void _commit() {
+    // TODO(grv): add verify checks.
+    _gitClone(_projectNameElement.value, _repoUrlElement.value, spark);
+  }
+
+  void _gitClone(String projectName, String url, Spark spark) {
+    getGitTestFileSystem().then((chrome_files.CrFileSystem fs) {
+      fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+        GitOptions options = new GitOptions();
+        options.root = dir;
+        options.repoUrl = url;
+        options.depth = 1;
+        options.store = new ObjectStore(dir);
+        Clone clone = new Clone(options);
+        options.store.init().then((_) {
+          clone.clone().then((_) {
+            spark.workspace.link(dir).then((folder) {
+              spark._filesController.selectLastFile();
+              spark.workspace.save();
+            });
+          });
+        });
+      });
+    });
+  }
+}
+
+class AboutSparkAction extends SparkActionWithDialog {
+  bool _initialized = false;
+
+  AboutSparkAction(Spark spark, Element dialog)
+      : super(spark, "help-about", "About Spark", dialog);
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
+      var checkbox = _dialog.element.querySelector('#analyticsCheck');
+      checkbox.checked =
+          spark.tracker.service.getConfig().isTrackingPermitted();
       checkbox.onChange.listen((e) {
-        spark.tracker.service.getConfig().setTrackingPermitted(checkbox.checked);
+        spark.tracker.service.getConfig()
+            .setTrackingPermitted(checkbox.checked);
       });
 
-      _aboutBox.element.querySelector('#aboutVersion').text = spark.appVersion;
+      _dialog.element.querySelector('#aboutVersion').text = spark.appVersion;
+
+      _initialized = true;
     }
 
-    _aboutBox.show();
+    _dialog.show();
+  }
+
+  void _commit() {
+    // Nothing to do for this dialog.
   }
 }
 

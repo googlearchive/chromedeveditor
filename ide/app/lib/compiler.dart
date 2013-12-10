@@ -59,11 +59,11 @@ class Compiler {
    * Compile the given string and return the resulting [CompilerResult].
    */
   Future<CompilerResult> compileString(String input) {
-    _CompilerProvider provider = new _CompilerProvider.fromString(input);
+    _CompilerProvider provider = new _CompilerProvider.fromString(_sdk, input);
     CompilerResult result = new CompilerResult._();
     DateTime startTime = new DateTime.now();
 
-    return compiler.compile(provider.inputUri, DartSdk.getSdkLocationUri(), null,
+    return compiler.compile(provider.inputUri, new Uri(scheme: 'sdk', path: '/'), null,
         provider.inputProvider,
         result._diagnosticHandler,
         [],
@@ -197,8 +197,9 @@ class _CompilerProvider {
   static final String INPUT_URI_TEXT = 'resource:/foo.dart';
 
   String input;
+  DartSdk sdk;
 
-  _CompilerProvider.fromString(this.input);
+  _CompilerProvider.fromString(this.sdk, this.input);
 
   Uri get inputUri => Uri.parse(INPUT_URI_TEXT);
 
@@ -208,6 +209,20 @@ class _CompilerProvider {
         return new Future.value(input);
       } else {
         return new Future.error('unhandled: ${uri.scheme}');
+      }
+    } else if (uri.scheme == 'sdk') {
+      final prefix = '/lib/';
+
+      String path = uri.path;
+      if (path.startsWith(prefix)) {
+        path = path.substring(prefix.length);
+      }
+
+      String contents = sdk.getSourceForPath(path);
+      if (contents != null) {
+        return new Future.value(contents);
+      } else {
+        return new Future.error('file not found');
       }
     } else if (uri.scheme == 'file') {
       // TODO: file:

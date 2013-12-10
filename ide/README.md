@@ -12,11 +12,6 @@ and point it to `your/path/to/dart-sdk`.
 You **need** to enable experimental Web Platform features in Chrome. From 
 `chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
-When you initially check the source out, in the editor, right-click on the `app/sdk`
-directory, and choose "Don't Analyze". This directory will contain the source code
-for the `dart:` libraries. We don't want the editor to analyze them as this will
-be a significant overhead.
-
 ### Entry Point
 The main entry point to the Chrome App is `app/manifest.json`. It calls defines
 the background script for the application (`app/background.js`). This script
@@ -64,15 +59,9 @@ Run
 
     ./grind mode-test
 
-to switch the app over to including tests, and
+to switch the app over to including tests (the default mode).
 
-    ./grind mode-notest
-
-to switch it back before commit.
-
-Ideally, the application might include its own tests. However, there's currently an
-issue with the compiled JavaScript size if we do that. More about the
-testing story [here](https://github.com/dart-lang/spark/wiki/Testing).
+More about the testing story [here](https://github.com/dart-lang/spark/wiki/Testing).
 
 ### Contributing
 Contributions welcome! Please see our

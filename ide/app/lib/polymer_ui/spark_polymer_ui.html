@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
+<link rel="import" href="../../packages/spark_widgets/spark-icon/spark-icon.html">
+<link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
+<link rel="import" href="../../packages/spark_widgets/spark-select/spark-select.html">
+<link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
+<link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
+
+<link rel="import" href="../../packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html">
+
+<polymer-element name="spark-polymer-ui">
+  <template>
+  
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="spark_polymer_ui.css"-->  
+    <style>
+
+@import url("packages/bootjack/css/bootstrap.css");
+@import url("packages/bootjack/css/bootstrap-theme.css");
+@import url("lib/ui/widgets/listview.css");
+@import url("lib/ui/widgets/treeview.css");
+@import url("lib/ui/widgets/tabview.css");
+@import url("lib/ui/widgets/imageviewer.css");
+
+#status {
+  flex: 1;
+  vertical-align: bottom;
+}
+
+#status.error {
+  color: #C66;
+}
+
+.fileview-filename-container {
+}
+
+.fileview-filename-container .filename {
+  display: inline-block;
+}
+
+.fileview-filename-container .menu {
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  width: 15px;
+}
+
+.fileview-filename-container .menu.open {
+  opacity: 1;
+}
+
+.fileview-filename-container .filename {
+  font-family: Helvetica, Sans-serif;
+  font-size: 13px;
+  overflow: hidden;
+  position: absolute;
+  top: 1px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.fileview-filename-container:hover .filename {
+  width: calc(100% - 15px);
+}
+
+.fileview-filename-container:hover .menu {
+  opacity: 1.0;
+}
+
+.ace_gutter-cell {
+  color: #aaa;
+}
+
+#splitview {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+#fileViewArea {
+  position: relative;
+  width: 300px;
+}
+
+#fileViewArea .listview-container {
+  bottom: 0;
+  left: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+#fileViewArea .listview-dragover {
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+#fileViewArea .listview-dragover.listview-dragover-active {
+  border: 2px solid #aaf;
+}
+
+#editorArea {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/*
+#toolbar {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+
+#toolbar spark-button {
+  outline: none;
+}
+*/
+
+#hotdogMenu li {
+  min-width: 16em;
+}
+
+#file-item-context-menu {
+  top: 0;
+  left: 0;
+  position: fixed;
+  z-index: 100;
+  display: none;
+}
+
+#file-item-context-menu.open {
+  display: block;
+}
+
+#file-item-context-menu .backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0);
+}
+
+/* bootstrap overrides */
+/*
+#toolbar .btn {
+  margin: 0px 2px 0px 2px;
+  padding: 2px 8px 2px 8px;
+}
+*/
+
+#hotdogMenu .main-menu-button {
+  background-image: url(../../images/menu.png);
+  background-position: -1px -2px;
+  height: 26px;
+  width: 26px;
+}
+
+#hotdogMenu .main-menu-button:focus {
+  background-color: white;
+}
+    </style>
+
+    <spark-toolbar id="toolbar" color="white">
+      <spark-icon-button id="openFile" src="images/open.png"></spark-icon-button>
+      <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
+
+      <span id="status"></span>
+
+      <div id="hotdogMenu" class="btn-group">
+        <!-- TEMP(ussuri): All of this is temp, but especially the on-click
+          below. The menu was expected to drop down without it, but Bootjack
+          refused to cooperate with Polymer here and in other places.
+        -->
+        <button type="button" data-toggle="dropdown"
+            class="btn btn-default dropdown-toggle main-menu-button"
+            on-click={{toggleDropdownMenu}}>
+        </button>
+        <ul id="dropDownMenu" class="dropdown-menu pull-right">
+          <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
+            <span class="pull-right">
+              <spark-button id="themeLeft"><strong>-</strong></spark-button>
+              <spark-button id="themeRight"><strong>+</strong></spark-button>
+            </span></a>
+          </li>
+          <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
+            <span class="pull-right">
+              <spark-button id="keysLeft"><strong>-</strong></spark-button>
+              <spark-button id="keysRight"><strong>+</strong></spark-button>
+            </span></a>
+          </li>
+        </ul>
+      </div>
+    </spark-toolbar>
+
+    <!-- Temporarily switch back to div: most recent polymer-flex-panel
+      requires working external CSS linking.
+      TODO(ussuri): revert once external CSS linking is available
+      (don't forget to remove 'display: flex' in the CSS). -->
+    <!--polymer-flex-panel id="splitview"-->
+    <div id="splitview">
+      <div id="fileViewArea" min-size="100"></div>
+      <spark-splitter direction="left"></spark-splitter>
+      <div id="editorArea" min-size="200"></div>
+    <!--/polymer-flex-panel-->
+    </div>
+
+    <!-- File context menu -->
+    <div id="file-item-context-menu" class="dropdown">
+      <div class="backdrop"></div>
+      <ul class="dropdown-menu" role="menu">
+      </ul>
+    </div>
+
+  </template>
+
+  <script type="application/dart" src="spark_polymer_ui.dart"></script>
+</polymer-element>

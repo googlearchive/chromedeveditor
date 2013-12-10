@@ -5,60 +5,50 @@
 library git.zlib;
 
 import 'dart:js' as js;
-import 'dart:typed_data';
 
-import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
+import 'package:chrome_gen/src/common_exp.dart' as chrome;
 
 /**
  * Encapsulates the result returned by js zlib library.
  */
 class ZlibResult {
+  final chrome.ArrayBuffer buffer;
+  final int expectedLength;
 
-  chrome_gen.ArrayBuffer buffer;
-  int expectedLength;
+  ZlibResult(this.buffer, [this.expectedLength]);
 
-  ZlibResult(chrome_gen.ArrayBuffer buffer) {
-    this.buffer = buffer;
-  }
+  List<int> get data => buffer.getBytes();
 }
 
 /**
  * Dart port of the javascript zlib library.
  */
 class Zlib {
-
   static js.JsObject _zlib = js.context['Zlib'];
 
-  /** Inflates a zlib deflated byte stream. */
-  static ZlibResult inflate(Uint8List data, int expectedLength) {
-
-    Map<String, int> options = new Map<String, int>();
+  /**
+   * Inflates a zlib deflated byte stream.
+   */
+  static ZlibResult inflate(List<int> data, [int expectedLength]) {
+    Map<String, int> options = {};
     if (expectedLength != null) {
       options['bufferSize'] = expectedLength;
     }
-    js.JsObject inflate = new js.JsObject(_zlib['Inflate'],
-        [Zlib._uint8ListToJs(data), options]);
-    inflate['verify'] = true;
-    var buffer = inflate.callMethod('decompress', []);
-    ZlibResult result = new ZlibResult(chrome_gen.ArrayBuffer.create(buffer));
-    result.expectedLength = inflate['ip'];
-    return result;
+    js.JsObject inflater = new js.JsObject(
+        _zlib['Inflate'], [_listToJs(data), options]);
+    inflater['verify'] = true;
+    js.JsObject buffer = inflater.callMethod('decompress');
+    return new ZlibResult(chrome.ArrayBuffer.create(buffer), inflater['ip']);
   }
 
   /**
    * Deflates a byte stream.
    */
-  static ZlibResult deflate(Uint8List data) {
-
-    js.JsObject deflate = new js.JsObject(_zlib['Deflate'],
-        [Zlib._uint8ListToJs(data)]);
-    var buffer = deflate.callMethod('compress', []);
-
-    return new ZlibResult(chrome_gen.ArrayBuffer.create(buffer));
+  static ZlibResult deflate(List<int> data) {
+    js.JsObject deflater = new js.JsObject(_zlib['Deflate'], [_listToJs(data)]);
+    js.JsObject buffer = deflater.callMethod('compress');
+    return new ZlibResult(chrome.ArrayBuffer.create(buffer));
   }
 
-  static dynamic _uint8ListToJs(Uint8List buffer) {
-    return new js.JsObject(js.context['Uint8Array'],
-        [new js.JsObject.jsify(buffer.toList(growable: true))]);
-  }
+  static dynamic _listToJs(List<int> data) => new js.JsArray.from(data);
 }

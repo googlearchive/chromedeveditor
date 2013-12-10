@@ -25,7 +25,7 @@ class PktLine {
 class PackParseResult {
   List<PackObject> objects;
   String shallow;
-  dynamic common;
+  List<String> common;
   Uint8List data;
 
   PackParseResult(this.objects,  this.data, this.shallow, this.common);
@@ -83,13 +83,12 @@ class UploadPackParser {
       switch (pktLineType) {
         case 1:
           packDataLines.add(data.sublist(pktLine.offset + 1,
-              pktLine.offset + pktLine.length -1));
+              pktLine.offset + pktLine.length));
           break;
         case 2:
           break;
         default:
           throw "fatal error in packet line.";
-          break;
       }
       pktLine = _nextPktLine();
     }

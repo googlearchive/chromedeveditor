@@ -6,7 +6,7 @@ library spark_widgets.button;
 
 import 'package:polymer/polymer.dart';
 
-import '../src/widget.dart';
+import '../common/widget.dart';
 
 @CustomTag('spark-button')
 class SparkButton extends Widget {

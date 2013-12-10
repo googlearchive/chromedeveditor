@@ -2,12 +2,14 @@
   "name": "__MSG_app_name__",
   "short_name": "__MSG_app_name__",
   "description": "__MSG_app_description__",
-  "version": "0.0.17",
+  "version": "0.0.19",
   "minimum_chrome_version": "31",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
-    "128": "images/spark.png"
+    "16": "images/spark_16.png",
+    "48": "images/spark_48.png",
+    "128": "images/spark_128.png"
   },
   "app": {
     "background": {
@@ -19,6 +21,7 @@
   },
   "permissions": [
     "https://www.google-analytics.com/",
+    "https://github.com/*",
     "clipboardRead",
     "clipboardWrite",
     {

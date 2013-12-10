@@ -102,13 +102,23 @@ abstract class FileOps {
   }
 
   /**
-   * Reads a given [blob] as a given [type].
+   * Reads a given [blob] as a given [type]. The returned value will either be a
+   * [String] or a [Uint8List].
    */
-  static Future readBlob(chrome.Blob blob, String type) {
+  static Future<dynamic> readBlob(chrome.Blob blob, String type) {
     Completer completer = new Completer();
     var reader = new JsObject(context['FileReader']);
     reader['onload'] = (var event) {
-      completer.complete(reader['result']);
+      var result = reader['result'];
+
+      if (result is JsObject) {
+        var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
+        result = new Uint8List.fromList(arrBuf.getBytes());
+      } else if (result is ByteBuffer) {
+        result = new Uint8List.view(result);
+      }
+
+      completer.complete(result);
     };
 
     reader['onerror'] = (var domError) {

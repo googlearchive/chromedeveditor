@@ -148,7 +148,7 @@ class PackIndex {
   /**
    * Creates a pack file index and returns the bytestream.
    */
-  Uint8List writePackIndex(List<PackObject> objects, List<int> packSha) {
+  static Uint8List writePackIndex(List<PackObject> objects, List<int> packSha) {
     int size = 4 + 4 + (256 * 4) + (objects.length * 20) + (objects.length * 4)
         + (objects.length * 4) + (20 * 2);
 

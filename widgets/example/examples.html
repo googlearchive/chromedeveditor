@@ -1,0 +1,32 @@
+<!doctype html>
+
+<polymer-element name="widget-examples">
+  <template>
+    <style>
+      body {
+        font-family: 'sans-serif';
+      }
+      
+      a, a:visited {
+        color: #00f;
+      }
+
+      a.disabled_link {
+        pointer-events: none;
+        cursor: default;
+        text-decoration: none;
+        color: #888;
+      }
+    </style>
+    <div>
+      <ul>
+        <template repeat="{{link in links | enumerate}}">
+            <li>
+              <a href='{{link.value}}/index.html'>{{link.value}}</a>
+            </li>
+        </template>
+      </ul>
+    </div>
+  </template>
+  <script type="application/dart" src="examples.dart"></script>
+</polymer-element>

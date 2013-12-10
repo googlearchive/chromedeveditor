@@ -4,11 +4,7 @@
 
 @import url("packages/bootjack/css/bootstrap.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
-@import url("lib/ui/widgets/listview.css");
-@import url("lib/ui/widgets/treeview.css");
-@import url("lib/ui/widgets/tabview.css");
-@import url("lib/ui/widgets/imageviewer.css");
-  
+
 body {
   bottom: 0;
   display: flex;
@@ -22,115 +18,7 @@ body {
   top: 0;
 }
 
-#status {
-  vertical-align: bottom;
-}
-
-#status.error {
-  color: #C66;
-}
-
-.fileview-filename-container {
-
-}
-
-.fileview-filename-container .filename {
-  display: inline-block;
-}
-
-.fileview-filename-container .menu button {
-  opacity: 0;
-  margin-right: -15px;
-}
-
-.fileview-filename-container .dropdown-toggle {
-  height: 20px;
-}
-
-.fileview-filename-container .dropdown-toggle .caret {
-  vertical-align: super;  
-}
-
-.fileview-filename-container .dropdown-menu {
-  min-width: 120px;
-}
-
-.fileview-filename-container .filename {
-  overflow: hidden;
-  position: absolute;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 100%;
-}
-
-.fileview-filename-container:hover .filename {
-  width: calc(100% - 26px);
-}
-
-.fileview-filename-container:hover .menu button {
-  opacity: 1.0;
-}
-
-.ace_gutter-cell {
-  color: #aaa;
-}
-
-#splitview {
-  width: 100%;
+#topUi {
   height: 100%;
+  width: 100%;
 }
-
-#fileViewArea {
-  position: relative;
-  width: 300px;
-}
-
-#fileViewArea .listview-container {
-  bottom: 0;
-  left: 0;
-  overflow-x: auto;
-  overflow-y: auto;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-#fileViewArea .listview-dragover {
-  bottom: 0;
-  left: 0;
-  pointer-events: none;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-#fileViewArea .listview-dragover.listview-dragover-active {
-  border: 2px solid #aaf;
-}
-
-#editorArea {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
-}
-
-#toolbar {
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  padding: 4px;
-}
-
-#hotdogMenu {
-  float: right;  
-}
-
-#hotdogMenu li {
-  min-width: 16em;
-}
-
-/* bootstrap overrides */
-
-#toolbar .btn {
-  padding: 2px 8px 2px 8px ;
-}
-

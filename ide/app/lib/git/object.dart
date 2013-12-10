@@ -12,7 +12,6 @@ import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
 
 import 'object_utils.dart';
 
-
 /**
  * Encapsulates a Gitobject
  *
@@ -21,7 +20,8 @@ import 'object_utils.dart';
 abstract class GitObject {
 
   /**
-   * constructs a GitObject of the given type.
+   * Constructs a GitObject of the given type. [content] can be of type [String]
+   * or [Uint8List].
    */
   static GitObject make(String sha, String type, content) {
     switch (type) {
@@ -39,9 +39,10 @@ abstract class GitObject {
     }
   }
 
+  GitObject([this._sha, this.data]);
+
   // The type of git object.
   String _type;
-
   dynamic data;
   String _sha;
 
@@ -53,15 +54,11 @@ abstract class GitObject {
  */
 class TreeEntry {
 
-  bool isBlob;
   String name;
   Uint8List sha;
+  bool isBlob;
 
-  TreeEntry(bool isBlob, String nameStr, Uint8List sha) {
-    this.isBlob = isBlob;
-    this.name = nameStr;
-    this.sha = sha;
-  }
+  TreeEntry(this.name, this.sha, this.isBlob);
 }
 
 
@@ -90,11 +87,13 @@ class TreeObject extends GitObject {
 
   List<TreeEntry> entries;
 
-  TreeObject(String sha, Uint8List data) {
+  TreeObject( [String sha, Uint8List data]) : super(sha, data) {
     this._type = ObjectTypes.TREE;
-    this._sha = sha;
-    this.data = data;
     _parse();
+  }
+
+  sortEntries() {
+    //TODO implement.
   }
 
   // Parses the byte stream and constructs the tree object.
@@ -115,7 +114,7 @@ class TreeObject extends GitObject {
       String nameStr = UTF8.decode(buffer.sublist(
           entryStart + (isBlob ? 7: 6), idx++));
       nameStr = Uri.decodeComponent(HTML_ESCAPE.convert(nameStr));
-      TreeEntry entry = new TreeEntry(isBlob, nameStr, buffer.sublist(idx, idx + 20));
+      TreeEntry entry = new TreeEntry(nameStr, buffer.sublist(idx, idx + 20), isBlob);
       treeEntries.add(entry);
       idx += 20;
     }
@@ -130,10 +129,8 @@ class TreeObject extends GitObject {
  */
 class BlobObject extends GitObject {
 
-  BlobObject(String sha, String data) {
+  BlobObject(String sha, String data) : super(sha, data) {
     this._type = ObjectTypes.BLOB;
-    this._sha = sha;
-    this.data = data;
   }
 }
 
@@ -180,7 +177,7 @@ class CommitObject extends GitObject {
       i++;
     }
 
-    String authorLine = lines[i].replaceFirst("author", "");
+    String authorLine = lines[i].replaceFirst("author ", "");
     author = _parseAuthor(authorLine);
 
     var committerLine = lines[i + 1].replaceFirst("committer ", "");
@@ -198,7 +195,7 @@ class CommitObject extends GitObject {
   Author _parseAuthor(String input) {
 
     // Regex " AuthorName <Email>  timestamp timeOffset"
-    final RegExp pattern = new RegExp(r' (.*) <(.*)> (\d+) (\+|\-)\d\d\d\d');
+    final RegExp pattern = new RegExp(r'(.*) <(.*)> (\d+) (\+|\-)\d\d\d\d');
     List<Match> match = pattern.allMatches(input).toList();
 
     Author author = new Author();
@@ -223,10 +220,8 @@ class CommitObject extends GitObject {
  * Represents a git tag object.
  */
 class TagObject extends GitObject {
-  TagObject(String sha, String data) {
+  TagObject(String sha, String data) : super(sha, data) {
     this._type = ObjectTypes.TAG;
-    this._sha = sha;
-    this.data = data;
   }
 }
 

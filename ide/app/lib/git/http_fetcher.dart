@@ -92,17 +92,16 @@ class HttpFetcher {
     return completer.future;
   }
 
-  Future<PackParseResult> fetchRef(List<GitRef> wantRefs,
-      List<GitRef> haveRefs, String shallow, int depth, bool moreHaves,
-      noCommon, progress) {
+  Future<PackParseResult> fetchRef(List<String> wantRefs,
+      List<String> haveRefs, String shallow, int depth, List<String> moreHaves,
+      noCommon, Function progress) {
     Completer completer = new Completer();
     String url = _makeUri('/git-upload-pack', {});
-    String body = _refWantRequst(wantRefs, haveRefs, shallow, depth,
-        moreHaves);
+    String body = _refWantRequst(wantRefs, haveRefs, shallow, depth, moreHaves);
     HttpRequest xhr = getNewHttpRequest();
 
     //TODO add progress.
-    var packProgress, receiveProgress;
+    Function packProgress, receiveProgress;
 
     xhr.open("POST", url, async: true , user: username , password: password);
     xhr.responseType = 'arraybuffer';
@@ -112,7 +111,7 @@ class HttpFetcher {
       ByteBuffer buffer = xhr.response;
       if (haveRefs != null) {
         Uint8List data = new Uint8List.view(buffer, 4, 3);
-        if (moreHaves && UTF8.decode(data.toList()) == "NAK") {
+        if (moreHaves.isNotEmpty && UTF8.decode(data.toList()) == "NAK") {
           //TODO handle case of more haves.
           //store.getCommitGraph(headShas, COMMIT_LIMIT).then((obj) {
           //});
@@ -126,10 +125,10 @@ class HttpFetcher {
         }
 
         // TODO add UploadPackParser class.
-        //UploadPackParser parser = getUploadPackParser();
-        //parser.parse(buffer, store, packProgress).then((PackParseResult obj) {
-          //completer.complete(obj);
-        //});
+        UploadPackParser parser = getUploadPackParser();
+        parser.parse(buffer, store, packProgress).then((PackParseResult obj) {
+           completer.complete(obj);
+        });
       }
     });
 
@@ -268,12 +267,12 @@ class HttpFetcher {
   /**
    * Constructs a want request from the server.
    */
-  String _refWantRequst(List<GitRef> wantRefs, List<GitRef> haveRefs, String shallow,
-      int depth, bool moreHaves) {
-    StringBuffer request = new StringBuffer("0067want ${wantRefs[0].sha} ");
+  String _refWantRequst(List<String> wantRefs, List<String> haveRefs, String shallow,
+      int depth, List<String> moreHaves) {
+    StringBuffer request = new StringBuffer("0067want ${wantRefs[0]} ");
     request.write("multi_ack_detailed side-band-64k thin-pack ofs-delta\n");
     for (int i = 1; i < wantRefs.length; ++i) {
-      request.write("0032want ${wantRefs[i].sha}\n");
+      request.write("0032want ${wantRefs[i]}\n");
     }
 
     if (haveRefs != null) {
@@ -281,10 +280,10 @@ class HttpFetcher {
         request.write("0034shallow " + shallow);
       }
       request.write("0000");
-      haveRefs.forEach((GitRef ref) {
-        request.write("0032have ${ref.sha}\n");
+      haveRefs.forEach((String sha) {
+        request.write("0032have ${sha}\n");
       });
-      if (moreHaves) {
+      if (moreHaves.isNotEmpty) {
         request.write("0000");
       } else {
         request.write("0009done\n");

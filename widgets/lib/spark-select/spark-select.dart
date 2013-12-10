@@ -6,7 +6,7 @@ library spark_widgets.select;
 
 import 'package:polymer/polymer.dart';
 
-import '../src/widget.dart';
+import '../common/widget.dart';
 
 @CustomTag('spark-select')
 class SparkSelect extends Widget {

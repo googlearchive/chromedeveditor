@@ -5,8 +5,11 @@
 library git;
 
 import 'dart:async';
-import 'dart:html';
 import 'dart:js' as js;
+
+import 'package:chrome_gen/src/files.dart' as chrome_files;
+
+import 'options.dart';
 
 /**
  * The class encapsulates the result returned by the git api.
@@ -19,61 +22,18 @@ class GitResult {
   GitResult.fromData(this.result);
 }
 
-/**
- * This class encapsulates the various options that can be passed to the git
- * api. This class also exposes methods to verify options for different api
- * call.
- *
- * TODO(grv): Add verifers for api methods.
- *
- */
-class GitOptions {
-
-  // The directory entry where the git checkout resides.
-  DirectoryEntry entry;
-
-  // Optional
-
-  // Remote repository username
-  String username;
-  // Remote repository password
-  String password;
-  // Repository url
-  String repoUrl;
-  // Current branch name
-  String branchName;
-
-  String email;
-  String commitMessage;
-  String name;
-  int depth;
-  Function progressCallback;
-
-  js.JsObject toJsMap() {
-    Map<String, dynamic> options = new Map<String, dynamic>();
-
-    options['dir'] = this.entry;
-    options['username'] = this.username;
-    options['password'] = this.password;
-    options['branch'] = this.branchName;
-    options['email'] = this.email;
-    options['name'] = this.name;
-    options['depth'] = this.depth;
-    options['url'] = this.repoUrl;
-    options['progress'] = this.progressCallback;
-    options['commitMsg'] = this.commitMessage;
-    return new js.JsObject.jsify(options);
+Future<chrome_files.CrFileSystem> getGitTestFileSystem() {
+  Completer completer = new Completer();
+  callback(fs) {
+    completer.complete(new chrome_files.CrFileSystem.fromProxy(fs));
   }
-
-  // TODO(grv): Specialize the verification for different api methods.
-  bool verify() {
-    return this.entry != null;
-  }
+  js.JsObject fs = js.context['GitApi'].callMethod('getFs', [callback]);
+  return completer.future;
 }
 
 /**
- * This git.dart provides an git api library to perform basic git operations in
- * dart. Currently the library is a wrapper on the existing git.js open source
+ * This class encapsulates the various options that can be passed to the git
+ * api. Currently the library is a wrapper on the existing git.js open source
  * library.
  *
  * Example usage:
@@ -85,7 +45,6 @@ class GitOptions {
  *
  */
 class Git {
-
   static final js.JsObject _jsgit = js.context['GitApi'];
 
   static bool get available => _jsgit != null;
@@ -149,5 +108,4 @@ class Git {
 
     return completer.future;
   }
-
 }
