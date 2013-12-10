@@ -671,6 +671,12 @@ abstract class SparkActionWithDialog extends SparkAction {
     return element;
   }
   
+  // TODO(ericarnold): Fix the focus issues in bootjack.
+  void showWithFocus(String query) {
+    focusElementByQuery(query);
+    _dialog.show();
+  }
+  
   void focusElementByQuery(String query) {
     _dialog.$element.on('shown.bs.modal', (DQueryEvent e) {
       Element element = e.target;
@@ -714,8 +720,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
       if (isPolymer) {
         (_dialog.element as dynamic).toggle();
       } else {
-        focusElementByQuery("#fileName");
-        _dialog.show();
+        showWithFocus("#fileName");
       }
     }
   }
@@ -748,7 +753,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
+      isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus("#fileName");
     }
   }
 
@@ -819,12 +824,9 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
     }
 
     if (isPolymer) {
-      _dialog.element as dynamic).toggle();
+      (_dialog.element as dynamic).toggle();
     } else {
-      _deleteDialog.$element.on('shown.bs.modal', (e) {
-        e.target.querySelector("#deleteOkButton").focus();
-      });
-      _deleteDialog.show();
+      showWithFocus(".btn-default");
     }
   }
 
@@ -854,7 +856,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _nameElement.value = resource.name;
-     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
+     isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus("#fileName");
    }
   }
 
@@ -921,7 +923,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus("#gitProjectName");
   }
 
   void _commit() {
@@ -974,7 +976,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus(".btn-default");
   }
 
   void _commit() {
