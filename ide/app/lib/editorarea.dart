@@ -59,12 +59,14 @@ class ImageViewerTab extends EditorTab {
 class EditorArea extends TabView {
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
+  final Element _filenameLabel;
   static final RegExp _imageFileType =
       new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
 
   bool _allowsLabelBar = true;
 
   EditorArea(Element parentElement,
+             this._filenameLabel,
              this.editorProvider,
              {allowsLabelBar: true})
       : super(parentElement) {
@@ -73,6 +75,15 @@ class EditorArea extends TabView {
     });
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
+  }
+
+  set showLabelBar(bool showLabelBar) {
+    super.showLabelBar = showLabelBar;
+    if (showLabelBar) {
+      _filenameLabel.style.opacity = '0';
+    } else {
+      _filenameLabel.style.opacity = '1';
+    }
   }
 
   bool get allowsLabelBar => _allowsLabelBar;
@@ -119,6 +130,7 @@ class EditorArea extends TabView {
                 {bool forceOpen: false, bool switchesTab: true,
                  bool replaceCurrent: true}) {
     if (_tabOfFile.containsKey(file)) {
+      _filenameLabel.text = file.name;
       EditorTab tab = _tabOfFile[file];
       if (switchesTab) tab.select();
       return;
@@ -126,6 +138,7 @@ class EditorArea extends TabView {
 
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
+      _filenameLabel.text = file.name;
       if (_imageFileType.hasMatch(file.name)) {
         ImageViewer viewer = new ImageViewer(file);
         tab = new ImageViewerTab(this, viewer, file);
