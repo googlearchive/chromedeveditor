@@ -32,6 +32,12 @@ class SparkPolymer extends Spark {
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
+
+  // Dialogs are located inside <spark-polymer-ui> shadowDom.
+  @override
+  Element getDialogElement(String selectors) =>
+      _ui.getShadowDomElement(selectors);
+
   //
   // Override some parts of the parent's ctor:
   //
@@ -126,8 +132,4 @@ class SparkPolymer extends Spark {
     //  overlay.toggle();
     //}
   }
-
-  @override
-  /// Dialogs are located inside <spark-polymer-ui> shadowDom.
-  Element getDialogElement(String selectors) => getUIElement(selectors);
 }

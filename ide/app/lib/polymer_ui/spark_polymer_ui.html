@@ -174,14 +174,18 @@
 }
 
 /** Dialog Stuff */
-#aboutDialog, #deleteDialog, #fileNewDialog, #gitCloneDialog, #renameDialog {
+.spark-overlay-scale-slideup {
   top: 72px;
   left: 50%;
   width: 512px;
   margin-left: -256px;
 }
 
-#aboutDialog, #deleteDialog, #fileNewDialog, #gitCloneDialog, #renameDialog {
+#deleteDialog, #fileNewDialog, #renameDialog {
+  width: 412px;
+}
+
+.spark-overlay-scale-slideup {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
@@ -212,13 +216,13 @@
             on-click={{toggleDropdownMenu}}>
         </button>
         <ul id="dropDownMenu" class="dropdown-menu pull-right">
-          <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
+          <li id="changeTheme" class="disabled"><a><span>Change Theme</span>
             <span class="pull-right">
               <spark-button id="themeLeft"><strong>-</strong></spark-button>
               <spark-button id="themeRight"><strong>+</strong></spark-button>
             </span></a>
           </li>
-          <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
+          <li id="changeKeys" class="disabled"><a><span>Spark Default</span>
             <span class="pull-right">
               <spark-button id="keysLeft"><strong>-</strong></spark-button>
               <spark-button id="keysRight"><strong>+</strong></spark-button>
@@ -256,8 +260,8 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle id="deleteOkButton" primary
-         data-dismiss="modal">
+        <spark-button id="deleteOkButton" overlay-toggle primary
+            data-dismiss="modal">
           Delete
         </spark-button>
       </div>
@@ -274,8 +278,8 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle id="fileNewOkButton" primary
-         data-dismiss="modal">
+        <spark-button id="fileNewOkButton" overlay-toggle primary
+            data-dismiss="modal">
           Create
         </spark-button>
       </div>
@@ -292,8 +296,8 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle id="renameOkButton" primary
-         data-dismiss="modal">
+        <spark-button id="renameOkButton" overlay-toggle primary
+            data-dismiss="modal">
           Rename
         </spark-button>
       </div>
@@ -307,14 +311,14 @@
         <h4 class="modal-title">New Git Project</h4>
       </div>
       <div class="modal-body">
-        Project Name: <input type="text" id="gitProjectName"></input><br/><br/>
-        Repo URL: <input type="text" id="gitRepoUrl"></input>
+        Project Name: <input id="gitProjectName" type="text"></input><br/><br/>
+        Repository URL: <input id="gitRepoUrl" type="text"></input>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle id="gitCloneButton" primary
+        <spark-button id="gitCloneButton" overlay-toggle primary
           data-dismiss="modal">
           Clone
         </spark-button>
@@ -333,7 +337,7 @@
         </dl>
         <div class="checkbox">
           <label>
-            <input type="checkbox" id="analyticsCheck">
+            <input id="analyticsCheck" type="checkbox">
               Allow Spark to collect anonymous usage statistics
           </label>
         </div>
