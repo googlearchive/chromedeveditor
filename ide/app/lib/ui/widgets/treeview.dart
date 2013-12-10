@@ -153,6 +153,29 @@ class TreeView implements ListViewDelegate {
     return _rowsMap[nodeUID] == null ? false : _rowsMap[nodeUID].expanded;
   }
 
+  List<String> get expandedState {
+    List<String> result = [];
+    if (_rows != null) {
+      // Save expanded state.
+      _rows.forEach((TreeViewRow row) {
+        if (row.expanded) {
+          result.add(row.nodeUID);
+        }
+      });
+    }
+    return result;
+  }
+
+  void restoreExpandedState(List<String> expandedState) {
+    // Save expanded state.
+    _expandedState = new HashSet();
+    _expandedState.addAll(expandedState);
+
+    _fillRows();
+    _expandedState.clear();
+    _listView.reloadData();
+  }
+
   /**
    * Sets expanded state of a node.
    */
@@ -176,6 +199,8 @@ class TreeView implements ListViewDelegate {
           _rowIndexesToNodeUIDs(_listView.selection),
           null);
     }
+
+    _delegate.treeViewSaveExpandedState(this);
   }
 
   void toggleNodeExpanded(String nodeUID) {
