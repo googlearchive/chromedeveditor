@@ -658,7 +658,8 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
 
-  Element getElement(String id) => _dialog.element.querySelector(id);
+  Element getElement(String selectors) =>
+      _dialog.element.querySelector(selectors);
 
   Element _triggerOnReturn(String name) {
     var element = _dialog.element.querySelector(name);
