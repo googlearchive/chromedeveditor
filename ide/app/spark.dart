@@ -671,6 +671,14 @@ abstract class SparkActionWithDialog extends SparkAction {
     return element;
   }
   
+  show() {
+    if (isPolymer) {
+      (_dialog.element as dynamic).toggle();
+    } else {
+      showWithFocus(".focused");
+    }
+  }
+  
   // TODO(ericarnold): Fix the focus issues in bootjack.
   void showWithFocus(String query) {
     focusElementByQuery(query);
@@ -717,11 +725,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      if (isPolymer) {
-        (_dialog.element as dynamic).toggle();
-      } else {
-        showWithFocus("#fileName");
-      }
+      show();
     }
   }
 
@@ -753,7 +757,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus("#fileName");
+      show();
     }
   }
 
@@ -856,7 +860,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _nameElement.value = resource.name;
-     isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus("#fileName");
+     show();
    }
   }
 
@@ -923,7 +927,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-    isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus("#gitProjectName");
+    show();
   }
 
   void _commit() {
@@ -976,7 +980,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    isPolymer ? (_dialog.element as dynamic).toggle() : showWithFocus(".btn-primary");
+    show();
   }
 
   void _commit() {
