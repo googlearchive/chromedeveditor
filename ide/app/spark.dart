@@ -623,12 +623,12 @@ abstract class SparkAction extends Action {
 }
 
 abstract class SparkActionWithDialog extends SparkAction {
-  dynamic _dialog;
+  bootjack.Modal _dialog;
 
   SparkActionWithDialog(Spark spark,
                         String id,
                         String name,
-                        dialogElement)
+                        Element dialogElement)
       : super(spark, id, name) {
     dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
     _dialog = bootjack.Modal.wire(dialogElement);
