@@ -206,29 +206,32 @@
 
       <span id="status"></span>
 
-      <div id="hotdogMenu" class="btn-group">
-        <!-- TEMP(ussuri): All of this is temp, but especially the on-click
-          below. The menu was expected to drop down without it, but Bootjack
-          refused to cooperate with Polymer here and in other places.
-        -->
-        <button type="button" data-toggle="dropdown"
-            class="btn btn-default dropdown-toggle main-menu-button"
-            on-click={{toggleDropdownMenu}}>
-        </button>
-        <ul id="dropDownMenu" class="dropdown-menu pull-right">
-          <li id="changeTheme" class="disabled"><a><span>Change Theme</span>
-            <span class="pull-right">
-              <spark-button id="themeLeft"><strong>-</strong></spark-button>
-              <spark-button id="themeRight"><strong>+</strong></spark-button>
-            </span></a>
-          </li>
-          <li id="changeKeys" class="disabled"><a><span>Spark Default</span>
-            <span class="pull-right">
-              <spark-button id="keysLeft"><strong>-</strong></spark-button>
-              <spark-button id="keysRight"><strong>+</strong></spark-button>
-            </span></a>
-          </li>
-        </ul>
+      <div id="toolbarRight">
+        <div id="editedFilename"></div>
+        <div id="hotdogMenu" class="btn-group">
+          <!-- TEMP(ussuri): All of this is temp, but especially the on-click
+            below. The menu was expected to drop down without it, but Bootjack
+            refused to cooperate with Polymer here and in other places.
+          -->
+          <button type="button" data-toggle="dropdown"
+              class="btn btn-default dropdown-toggle main-menu-button"
+              on-click={{toggleDropdownMenu}}>
+          </button>
+          <ul id="dropDownMenu" class="dropdown-menu pull-right">
+            <li id="changeTheme" class="disabled"><a><span>Change Theme</span>
+              <span class="pull-right">
+                <spark-button id="themeLeft"><strong>-</strong></spark-button>
+                <spark-button id="themeRight"><strong>+</strong></spark-button>
+              </span></a>
+            </li>
+            <li id="changeKeys" class="disabled"><a><span>Spark Default</span>
+              <span class="pull-right">
+                <spark-button id="keysLeft"><strong>-</strong></spark-button>
+                <spark-button id="keysRight"><strong>+</strong></spark-button>
+              </span></a>
+            </li>
+          </ul>
+        </div>
       </div>
     </spark-toolbar>
 
