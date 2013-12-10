@@ -19,5 +19,5 @@ class Widget extends PolymerElement {
 
   String joinClasses(List<String> cls) => cls.join(" ");
 
-  PolymerElement getShadowDomElement(String selectors) => shadowRoot.querySelector(selectors);
+  Element getShadowDomElement(String selectors) => shadowRoot.querySelector(selectors);
 }
