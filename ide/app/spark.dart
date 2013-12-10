@@ -710,9 +710,9 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
       folder = folders.first;
       _nameElement.value = '';
       if (isPolymer) {
-        _dialog.element as dynamic).toggle();
+        (_dialog.element as dynamic).toggle();
       } else {
-        this.focusElementByQuery("#fileName");
+        focusElementByQuery("#fileName");
         _dialog.show();
       }
     }
