@@ -96,6 +96,7 @@ class TreeView implements ListViewDelegate {
       TreeViewRow row = new TreeViewRow(nodeUID);
       row.expanded = expanded;
       row.level = level;
+      row.rowIndex = _rows.length;
       _rows.add(row);
       _rowsMap[nodeUID] = row;
     }
@@ -178,9 +179,14 @@ class TreeView implements ListViewDelegate {
     }
   }
 
-  void toggleNodeExpanded(String nodeUID) {
-    // TODO: this should instead call listViewCell.toggleExpanded();
-    setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID));
+  void toggleNodeExpanded(String nodeUID, {bool animated: false}) {
+    if (animated) {
+      int rowIndex = _rowsMap[nodeUID].rowIndex;
+      TreeViewCell cell = _listView.cellForRow(rowIndex);
+      cell.toggleExpanded();
+    } else {
+      setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID));
+    }
   }
 
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
@@ -258,9 +264,7 @@ class TreeView implements ListViewDelegate {
   }
 
    List<String> _innerDragSelection(DataTransfer dataTransfer) {
-     String encodedSelection =
-         dataTransfer.getData('application/x-spark-treeview');
-     if (encodedSelection != null) {
+     if (dataTransfer.types.contains('application/x-spark-treeview')) {
        // TODO(dvh): dataTransfer.getData returns empty string when
        // it's called in dragOver event handler. Then, we can't check if uuid
        // matches. We'll improve the behavior when it will be fixed.

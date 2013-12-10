@@ -57,7 +57,7 @@ class AceContainer {
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
     //_aceEditor.renderer.showGutter = false;
-    _aceEditor.setOption('scrollPastEnd', true);
+    //_aceEditor.setOption('scrollPastEnd', true);
     _aceEditor.readOnly = true;
 
     // Fallback

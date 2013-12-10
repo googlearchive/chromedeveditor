@@ -35,6 +35,9 @@
 
 <body>
   <div id="toolbar">
+    <button type="button" class="btn btn-primary" id="newFile">
+      New File...
+    </button>
     <button type="button" class="btn btn-default" id="openFile">
       Open File...
     </button>
@@ -84,7 +87,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="deleteOkButton" class="btn btn-primary"
+          <button id="deleteOkButton" primary class="btn btn-primary"
               data-dismiss="modal">Delete</button>
         </div>
       </div>
@@ -102,7 +105,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="fileNewOkButton" class="btn btn-primary" 
+          <button id="fileNewOkButton" primary class="btn btn-primary" 
               data-dismiss="modal">Create</button>
         </div>
       </div>
@@ -120,7 +123,7 @@
         </div>
         <div class="modal-footer">
           <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="renameOkButton" class="btn btn-primary"
+          <button id="renameOkButton" primary class="btn btn-primary"
                data-dismiss="modal">Rename</button>
         </div>
       </div>
@@ -149,9 +152,31 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-dismiss="modal">
+          <button type="button" primary class="btn btn-primary" 
+              data-dismiss="modal">
             Close
           </button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+  <!-- Git Clone dialog -->
+  <div id="gitCloneDialog" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">New Git Project</h4>
+        </div>
+        <div class="modal-body">
+          Project Name: <input type="text" id="gitProjectName"></input><br/><br/>
+          Repository URL: <input type="text" id="gitRepoUrl"></input>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button id="gitCloneButton" primary class="btn btn-primary"
+              data-dismiss="modal">Clone</button>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

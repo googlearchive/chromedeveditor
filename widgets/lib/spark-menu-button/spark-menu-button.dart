@@ -6,7 +6,7 @@ library spark_widgets.menu_button;
 
 import 'package:polymer/polymer.dart';
 
-import '../src/widget.dart';
+import '../common/widget.dart';
 
 // Ported from Polymer Javascript to Dart code.
 

@@ -172,7 +172,7 @@ class Workspace implements Container {
    * Store info for workspace children.
    */
   Future save() {
-    List<String> entries = _children.where((c) => c._syncable).map(
+    List<String> entries = _children.where((c) => !c._syncable).map(
         (c) => chrome.fileSystem.retainEntry(c.entry)).toList();
 
     return _store.setValue('workspace', JSON.encode(entries));
@@ -340,12 +340,21 @@ class File extends Resource {
 
   Future setContents(String contents) {
     return _fileEntry.writeText(contents).then((_) {
-      workspace._fireEvent(new ResourceChangeEvent(this, ResourceEventType.CHANGE));
+      workspace._fireEvent(new ResourceChangeEvent(this,
+          ResourceEventType.CHANGE));
     });
   }
 
   Future delete() {
     return _fileEntry.remove().then((_) => _parent._removeChild(this));
+  }
+
+  Future setBytes(List<int> data) {
+    chrome.ArrayBuffer bytes = new chrome.ArrayBuffer.fromBytes(data);
+    return _fileEntry.writeBytes(bytes).then((_) {
+      workspace._fireEvent(new ResourceChangeEvent(this,
+          ResourceEventType.CHANGE));
+    });
   }
 
   chrome.ChromeFileEntry get _fileEntry => entry;

@@ -14,13 +14,14 @@
 }
 
 .treeviewcell-disclosure {
-	color: #888;
+  color: #888;
   font-size: 10px;
   height: 15px;
   position: absolute;
   text-align: center;
   top: calc((100% - 15px) / 2);
   transition: -webkit-transform 250ms;
+  -webkit-transform: translate(0.5px, 0px);
   width: 15px;
 }
 
@@ -29,5 +30,5 @@
 }
 
 .treeviewcell-disclosed {
-  -webkit-transform: rotate(90deg);
+  -webkit-transform: rotate(90deg) translate(0.5px, 0.5px);
 }

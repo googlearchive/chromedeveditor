@@ -27,13 +27,15 @@ class FilesController implements TreeViewDelegate {
   FilesControllerDelegate _delegate;
   Map<String, Resource> _filesMap;
 
-  FilesController(Workspace workspace, FilesControllerDelegate delegate) {
+  FilesController(Workspace workspace,
+                  FilesControllerDelegate delegate,
+                  html.Element fileViewArea) {
     _workspace = workspace;
     _delegate = delegate;
     _files = [];
     _filesMap = {};
 
-    _treeView = new TreeView(html.querySelector('#fileViewArea'), this);
+    _treeView = new TreeView(fileViewArea, this);
     _treeView.dropEnabled = true;
     _treeView.draggingEnabled = true;
 
@@ -147,19 +149,38 @@ class FilesController implements TreeViewDelegate {
                              List<String> nodeUIDs,
                              html.Event event) {
     if (nodeUIDs.length == 1 && _filesMap[nodeUIDs.first] is Container) {
-      view.toggleNodeExpanded(nodeUIDs.first);
+      view.toggleNodeExpanded(nodeUIDs.first, animated: true);
     }
   }
 
   String treeViewDropEffect(TreeView view,
                             html.DataTransfer dataTransfer,
                             String nodeUID) {
-    return "move";
+    if (dataTransfer.types.contains('Files')) {
+      if (nodeUID == null) {
+        // Importing to top-level is not allowed for now.
+        return "none";
+      } else {
+        // Import files into a folder.
+        return "copy";
+      }
+    } else {
+      // Move files inside top-level folder.
+      return "move";
+    }
   }
 
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
-    // TODO(dvh): Import to the workspace the files referenced by
-    // dataTransfer.files
+    Folder destinationFolder = _filesMap[nodeUID] as Folder;
+    for(html.File file in dataTransfer.files) {
+      html.FileReader reader = new html.FileReader();
+      reader.onLoadEnd.listen((html.ProgressEvent event) {
+        destinationFolder.createNewFile(file.name).then((File file) {
+          file.setBytes(reader.result);
+        });
+      });
+      reader.readAsArrayBuffer(file);
+    }
   }
 
   // Returns true if the move is valid:
@@ -184,12 +205,19 @@ class FilesController implements TreeViewDelegate {
         return false;
       }
     }
-    // Check whether a resource is moved to its current directory, which would
-    // make it a no-op.
+
+    Project destinationProject = destination is Project ? destination :
+        destination.project;
     for(String nodeUID in nodesUIDs) {
       Resource node = _filesMap[nodeUID];
+      // Check whether a resource is moved to its current directory, which would
+      // make it a no-op.
       if (node.parent == destination) {
         // Unable to move this file.
+        return false;
+      }
+      // Check if the resource have the same top-level container.
+      if (node.project != destinationProject) {
         return false;
       }
     }
@@ -215,7 +243,10 @@ class FilesController implements TreeViewDelegate {
   bool treeViewAllowsDrop(TreeView view,
                           html.DataTransfer dataTransfer,
                           String destinationNodeUID) {
-    return false;
+    if (destinationNodeUID == null) {
+      return false;
+    }
+    return dataTransfer.types.contains('Files');
   }
 
   /*
@@ -467,9 +498,8 @@ class FilesController implements TreeViewDelegate {
       _treeView.selection = [resource.path];
     }
 
-    html.Element menuContainer = html.querySelector('#file-item-context-menu');
-    html.Element contextMenu =
-        html.querySelector('#file-item-context-menu .dropdown-menu');
+    html.Element menuContainer = _delegate.getContextMenuContainer();
+    html.Element contextMenu = menuContainer.querySelector('.dropdown-menu');
     // Delete any existing menu items.
     contextMenu.children.clear();
 
@@ -499,8 +529,7 @@ class FilesController implements TreeViewDelegate {
     }
 
     // When the user clicks outside the menu, we'll close it.
-    html.Element backdrop =
-        html.querySelector('#file-item-context-menu .backdrop');
+    html.Element backdrop = menuContainer.querySelector('.backdrop');
     backdrop.onClick.listen((event) {
       _closeContextMenu(event);
     });

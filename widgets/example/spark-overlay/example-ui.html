@@ -1,0 +1,14 @@
+<!doctype html>
+
+<link rel="import" href="packages/spark_widgets/spark-overlay/spark-overlay.html">
+<polymer-element name="example-ui">
+  <template>
+    <spark-overlay class="spark-overlay-scale-slideup" opened>
+      <h2>Dialog</h2>
+      <input placeholder="say something..." autofocus></input>
+      <div>I agree with this wholeheartedly.</div>
+      <button overlay-toggle>OK</button>
+    </spark-overlay>  
+  </template>
+  <script type="application/dart" src="example-ui.dart"></script>
+</polymer-element>

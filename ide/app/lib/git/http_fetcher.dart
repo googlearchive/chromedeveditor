@@ -97,8 +97,7 @@ class HttpFetcher {
       noCommon, Function progress) {
     Completer completer = new Completer();
     String url = _makeUri('/git-upload-pack', {});
-    String body = _refWantRequst(wantRefs, haveRefs, shallow, depth,
-        moreHaves);
+    String body = _refWantRequst(wantRefs, haveRefs, shallow, depth, moreHaves);
     HttpRequest xhr = getNewHttpRequest();
 
     //TODO add progress.
@@ -112,7 +111,7 @@ class HttpFetcher {
       ByteBuffer buffer = xhr.response;
       if (haveRefs != null) {
         Uint8List data = new Uint8List.view(buffer, 4, 3);
-        if (moreHaves && UTF8.decode(data.toList()) == "NAK") {
+        if (moreHaves.isNotEmpty && UTF8.decode(data.toList()) == "NAK") {
           //TODO handle case of more haves.
           //store.getCommitGraph(headShas, COMMIT_LIMIT).then((obj) {
           //});
@@ -126,10 +125,10 @@ class HttpFetcher {
         }
 
         // TODO add UploadPackParser class.
-        //UploadPackParser parser = getUploadPackParser();
-        //parser.parse(buffer, store, packProgress).then((PackParseResult obj) {
-          //completer.complete(obj);
-        //});
+        UploadPackParser parser = getUploadPackParser();
+        parser.parse(buffer, store, packProgress).then((PackParseResult obj) {
+           completer.complete(obj);
+        });
       }
     });
 

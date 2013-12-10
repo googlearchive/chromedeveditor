@@ -135,7 +135,6 @@ class Pack {
       size |= ((headByte & 0x7f) << bitsToShift);
       bitsToShift += 7;
     }
-
     return new PackObjectHeader(size, type, objectStartoffset);
   }
 
@@ -230,8 +229,15 @@ class Pack {
     return completer.future;
   }
 
-  ZlibResult _uncompressObject(int objOffset, int uncompressedLength) =>
-      Zlib.inflate(data.sublist(objOffset), uncompressedLength);
+  ZlibResult _uncompressObject(int objOffset, int uncompressedLength) {
+    // We assume that the compressed string will not be greater by 1000 in
+    // length to the uncompressed string.
+    // This has a very significant impact on performance.
+    int end =  uncompressedLength + objOffset + 1000;
+    if (end > data.length) end = data.length;
+    return Zlib.inflate(data.sublist(objOffset, end), uncompressedLength);
+  }
+
 
   PackObject _matchObjectData(PackObjectHeader header) {
 
@@ -292,6 +298,8 @@ class Pack {
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
+      print('numObjects: ${numObjects}');
+
       for (int i = 0; i < numObjects; ++i) {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = crc.CRC32.compute(data.sublist(object.offset, _offset));
@@ -310,7 +318,6 @@ class Pack {
         }
         objects.add(object);
       }
-
       return Future.forEach(deferredObjects, (PackObject obj) {
         return expandDeltifiedObject(obj).then((PackObject deltifiedObj) {
           deltifiedObj.data = null;
@@ -433,6 +440,4 @@ class DeltaDataStream {
     this.data = data;
     this.offset = offset;
   }
-
-
 }

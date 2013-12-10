@@ -1,0 +1,19 @@
+<!doctype html>
+
+<link rel="import" href="packages/spark_widgets/spark-selector/spark-selector.html">
+<link rel="import" href="packages/spark_widgets/spark-selection/spark-selection.html">
+<polymer-element name="example-ui">
+  <template>
+    <style>
+      .item.selected {
+        background: #eee;
+      }
+    </style>
+    <spark-selector>
+      <div class="item">Item 1</div>
+      <div class="item">Item 2</div>
+      <div class="item">Item 3</div>
+    </spark-selector>
+  </template>
+  <script type="application/dart" src="example-ui.dart"></script>
+</polymer-element>
