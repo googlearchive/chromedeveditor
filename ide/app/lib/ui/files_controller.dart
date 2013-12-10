@@ -149,7 +149,7 @@ class FilesController implements TreeViewDelegate {
                              List<String> nodeUIDs,
                              html.Event event) {
     if (nodeUIDs.length == 1 && _filesMap[nodeUIDs.first] is Container) {
-      view.toggleNodeExpanded(nodeUIDs.first);
+      view.toggleNodeExpanded(nodeUIDs.first, animated: true);
     }
   }
 
@@ -157,8 +157,13 @@ class FilesController implements TreeViewDelegate {
                             html.DataTransfer dataTransfer,
                             String nodeUID) {
     if (dataTransfer.types.contains('Files')) {
-      // Import files.
-      return "copy";
+      if (nodeUID == null) {
+        // Importing to top-level is not allowed for now.
+        return "none";
+      } else {
+        // Import files into a folder.
+        return "copy";
+      }
     } else {
       // Move files inside top-level folder.
       return "move";

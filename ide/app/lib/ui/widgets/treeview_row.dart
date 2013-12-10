@@ -11,6 +11,8 @@ class TreeViewRow {
   bool expanded = false;
   // Indentation level of the node.
   int level = 0;
+  // Index in the list of rows in the listview.
+  int rowIndex;
 
   TreeViewRow(this.nodeUID);
 }
