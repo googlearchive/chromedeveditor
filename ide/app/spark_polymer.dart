@@ -126,4 +126,8 @@ class SparkPolymer extends Spark {
     //  overlay.toggle();
     //}
   }
+
+  @override
+  /// Dialogs are located inside <spark-polymer-ui> shadowDom.
+  Element getDialogElement(String selectors) => getUIElement(selectors);
 }

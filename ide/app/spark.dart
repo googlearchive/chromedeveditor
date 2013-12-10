@@ -632,6 +632,8 @@ abstract class SparkActionWithDialog extends SparkAction {
   }
 
   void _commit();
+
+  bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
@@ -664,7 +666,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      _dialog.show();
+      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
     }
   }
 
@@ -733,7 +735,7 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
       _dialog.element.querySelector("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
-    _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -762,7 +764,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _element.value = resource.name;
-     _dialog.show();
+     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
    }
   }
 
@@ -823,7 +825,7 @@ class GitCloneAction extends SparkActionWithDialog {
       : super(spark, "git-clone", "Git Clone…", dialog);
 
   void _invoke([Object context]) {
-    _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -860,11 +862,11 @@ class GitCloneAction extends SparkActionWithDialog {
 class AboutSparkAction extends SparkActionWithDialog {
   bool _initialized = false;
 
-  AboutSparkAction(Spark spark, Element dialog)
+  AboutSparkAction(Spark spark, dialog)
       : super(spark, "help-about", "About Spark", dialog);
 
   void _invoke([Object context]) {
-    if (!_initialized) {
+    if (isPolymer || !_initialized) {
       var checkbox = _dialog.element.querySelector('#analyticsCheck');
       checkbox.checked =
           spark.tracker.service.getConfig().isTrackingPermitted();
@@ -878,7 +880,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
