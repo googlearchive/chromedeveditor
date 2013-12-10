@@ -679,7 +679,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     if (folders != null && folders.isNotEmpty) {
       folder = folders.first;
       _nameElement.value = '';
-      isPolymer ? _dialog.element.toggle() : _dialog.show();
+      isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
     }
   }
 
@@ -748,8 +748,7 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
       _dialog.element.querySelector("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
-
-    isPolymer ? _dialog.element.toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -770,14 +769,15 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _nameElement = _triggerOnReturn("#fileName");
+    // TODO(terry): Renable can't find element with id of 'fileName'.
+//    _nameElement = _triggerOnReturn("#fileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {
    if (resources != null && resources.isNotEmpty) {
      resource = resources.first;
      _nameElement.value = resource.name;
-     isPolymer ? _dialog.element.toggle() : _dialog.show();
+     isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
    }
   }
 
@@ -844,7 +844,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-    isPolymer ? _dialog.element.toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
@@ -895,7 +895,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    isPolymer ? _dialog.element.toggle() : _dialog.show();
+    isPolymer ? (_dialog.element as dynamic).toggle() : _dialog.show();
   }
 
   void _commit() {
