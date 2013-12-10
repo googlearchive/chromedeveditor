@@ -177,7 +177,7 @@ String _minimizeLine(String line) {
     return '${method} ${location}';
   }
 
-  // Then try a dart2js stack trace.
+  // Try and match a dart2js stack trace.
   match = DART2JS_REGEX_1.firstMatch(line);
 
   if (match != null) {
@@ -186,7 +186,7 @@ String _minimizeLine(String line) {
     return '${method} ${location}';
   }
 
-  // Then try a second dart2js stack trace.
+  // Try and match an alternative dart2js stack trace format.
   match = DART2JS_REGEX_2.firstMatch(line);
 
   if (match != null) {

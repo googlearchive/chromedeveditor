@@ -412,10 +412,6 @@ class Spark extends Application implements FilesControllerDelegate {
     String errorDesc = error != null ? error.runtimeType.toString() : '';
     String desc = '${errorDesc}\n${minimizeStackTrace(stackTrace)}'.trim();
 
-    if (desc.length > analytics.MAX_EXCEPTION_LENGTH) {
-      desc = '${desc.substring(0, analytics.MAX_EXCEPTION_LENGTH - 1)}~';
-    }
-
     tracker.sendException(desc);
   }
 }
