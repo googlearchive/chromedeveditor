@@ -874,10 +874,12 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 }
 
+// TODO(terry):  When only polymer overlays are used remove _initialized and
+//               isPolymer's defintion and usage.
 class AboutSparkAction extends SparkActionWithDialog {
   bool _initialized = false;
 
-  AboutSparkAction(Spark spark, dialog)
+  AboutSparkAction(Spark spark, Element dialog)
       : super(spark, "help-about", "About Spark", dialog);
 
   void _invoke([Object context]) {
