@@ -15,7 +15,7 @@ library spark.tcp;
 
 import 'dart:async';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 export 'package:chrome_gen/chrome_app.dart' show SocketInfo;
 
 const LOCAL_HOST = '127.0.0.1';
@@ -54,12 +54,12 @@ class TcpClient {
   bool _keepPolling = true;
 
   static Future<TcpClient> createClient(String host, int port) {
-    return chrome_gen.socket.create(chrome_gen.SocketType.TCP).then((chrome_gen.CreateInfo createInfo) {
+    return chrome.socket.create(chrome.SocketType.TCP).then((chrome.CreateInfo createInfo) {
       int socketId = createInfo.socketId;
 
-      return chrome_gen.socket.connect(socketId, host, port).then((int result) {
+      return chrome.socket.connect(socketId, host, port).then((int result) {
         if (result < 0) {
-          chrome_gen.socket.destroy(socketId);
+          chrome.socket.destroy(socketId);
           throw new SocketException('unable to connect to ${host} ${port}: ${result}');
         } else {
           return new TcpClient._fromSocketId(socketId);
@@ -74,7 +74,7 @@ class TcpClient {
     _sink = new _SocketEventSink(this);
   }
 
-  Future<chrome_gen.SocketInfo> getInfo() => chrome_gen.socket.getInfo(_socketId);
+  Future<chrome.SocketInfo> getInfo() => chrome.socket.getInfo(_socketId);
 
   /**
    * The read [Stream] for incoming data.
@@ -97,13 +97,13 @@ class TcpClient {
   void writeString(String str) => sink.add(str.codeUnits);
 
   void dispose() {
-    chrome_gen.socket.disconnect(_socketId);
+    chrome.socket.disconnect(_socketId);
   }
 
   void _pollIncoming() {
     _keepPolling = true;
 
-    chrome_gen.socket.read(_socketId).then((chrome_gen.SocketReadInfo info) {
+    chrome.socket.read(_socketId).then((chrome.SocketReadInfo info) {
       if (info.resultCode < 0) {
         // TODO: get the bsd socket codes
         if (info.resultCode != -15) {
@@ -146,15 +146,15 @@ class TcpServer {
   StreamController<TcpClient> _controller;
 
   static Future<TcpServer> createServerSocket([int port = 0]) {
-    return chrome_gen.socket.create(chrome_gen.SocketType.TCP).then((chrome_gen.CreateInfo info) {
+    return chrome.socket.create(chrome.SocketType.TCP).then((chrome.CreateInfo info) {
       int socketId = info.socketId;
 
-      return chrome_gen.socket.listen(socketId, LOCAL_HOST, port, 5).then((int result) {
+      return chrome.socket.listen(socketId, LOCAL_HOST, port, 5).then((int result) {
         if (result < 0) {
-          chrome_gen.socket.destroy(socketId);
+          chrome.socket.destroy(socketId);
           throw new SocketException('unable to listen on port ${port}: ${result}');
         } else {
-          return chrome_gen.socket.getInfo(socketId).then((chrome_gen.SocketInfo info) {
+          return chrome.socket.getInfo(socketId).then((chrome.SocketInfo info) {
             return new TcpServer._(socketId, info.localPort);
           });
         }
@@ -168,14 +168,14 @@ class TcpServer {
 
   Stream<TcpClient> get onAccept => _controller.stream;
 
-  Future<chrome_gen.SocketInfo> getInfo() => chrome_gen.socket.getInfo(_socketId);
+  Future<chrome.SocketInfo> getInfo() => chrome.socket.getInfo(_socketId);
 
   void dispose() {
-    chrome_gen.socket.destroy(_socketId);
+    chrome.socket.destroy(_socketId);
   }
 
   void _accept() {
-    chrome_gen.socket.accept(_socketId).then((chrome_gen.AcceptInfo info) {
+    chrome.socket.accept(_socketId).then((chrome.AcceptInfo info) {
       if (info.resultCode == 0) {
         _controller.add(new TcpClient._fromSocketId(info.socketId));
         _accept();
@@ -196,9 +196,9 @@ class _SocketEventSink implements EventSink<List<int>> {
     // TODO(devoncarew): do we need to do anything with the returned
     // Future<SocketWriteInfo>? Send it to the read stream controller?
 
-    chrome_gen.socket.write(
+    chrome.socket.write(
         tcpClient._socketId,
-        new chrome_gen.ArrayBuffer.fromBytes(event));
+        new chrome.ArrayBuffer.fromBytes(event));
   }
 
   void addError(errorEvent, [StackTrace stackTrace]) {
