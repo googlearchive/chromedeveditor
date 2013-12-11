@@ -362,7 +362,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          _filesController.selectLastFile();
+          _filesController.selectFile(file);
           workspace.save();
         });
       }
@@ -652,12 +652,12 @@ abstract class SparkActionWithDialog extends SparkAction {
       : super(spark, id, name) {
     dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
     _dialog = bootjack.Modal.wire(dialogElement);
-    
+
     // TODO(ericarnold): Bootjack should handle focus
     _dialog.$element.on('shown.bs.modal', (event) {
       Element dialog = event.target;
       Element elementToFocus = dialog.querySelector('[focused]');
-      
+
       if (elementToFocus != null) {
         elementToFocus.focus();
       }
@@ -681,7 +681,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     });
     return element;
   }
-  
+
   _show() {
     if (isPolymer) {
       (_dialog.element as dynamic).toggle();
@@ -938,7 +938,7 @@ class GitCloneAction extends SparkActionWithDialog {
         options.store.init().then((_) {
           clone.clone().then((_) {
             spark.workspace.link(dir).then((folder) {
-              spark._filesController.selectLastFile();
+              spark._filesController.selectFile(folder);
               spark.workspace.save();
             });
           });

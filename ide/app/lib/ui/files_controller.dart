@@ -21,11 +21,18 @@ import '../actions.dart';
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
+  // TreeView that's used to show the workspace.
   TreeView _treeView;
+  // Workspace that references all the resources.
   Workspace _workspace;
+  // List of top-level resources.
   List<Resource> _files;
+  // Implements callbacks required for the FilesController.
   FilesControllerDelegate _delegate;
+  // Map of nodeUID to the resources of the workspace for a quick lookup.
   Map<String, Resource> _filesMap;
+  // Cache of sorted children of nodes.
+  Map<String, List<String>> _childrenCache;
 
   FilesController(Workspace workspace,
                   FilesControllerDelegate delegate,
@@ -34,6 +41,7 @@ class FilesController implements TreeViewDelegate {
     _delegate = delegate;
     _files = [];
     _filesMap = {};
+    _childrenCache = {};
 
     _treeView = new TreeView(fileViewArea, this);
     _treeView.dropEnabled = true;
@@ -62,13 +70,6 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
-  void selectLastFile({bool forceOpen: false}) {
-    if (_files.isEmpty) {
-      return;
-    }
-    selectFile(_files.last, forceOpen: forceOpen);
-  }
-
   void selectFirstFile({bool forceOpen: false}) {
     if (_files.isEmpty) {
       return;
@@ -90,7 +91,8 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return _files.length;
     } else if (_filesMap[nodeUID] is Container) {
-      return (_filesMap[nodeUID] as Container).getChildren().length;
+      _cacheChildren(nodeUID);
+      return _childrenCache[nodeUID].length;
     } else {
       return 0;
     }
@@ -100,7 +102,8 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return _files[childIndex].path;
     } else {
-      return (_filesMap[nodeUID] as Container).getChildren()[childIndex].path;
+      _cacheChildren(nodeUID);
+      return _childrenCache[nodeUID][childIndex];
     }
   }
 
@@ -432,13 +435,40 @@ class FilesController implements TreeViewDelegate {
         y + counterTextPosition);
   }
 
+  // Cache management for sorted list of resources.
+
+  void _cacheChildren(String nodeUID) {
+    if (_childrenCache[nodeUID] == null) {
+      _childrenCache[nodeUID] =
+          (_filesMap[nodeUID] as Container).getChildren().
+          map((Resource resource) => resource.path).toList();
+      _childrenCache[nodeUID].sort((String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    }
+  }
+
+  void _clearChildrenCache() {
+    _childrenCache.clear();
+  }
+
+  void _sortTopLevel() {
+    _files.sort((Resource a, Resource b) => a.path.toLowerCase().
+        compareTo(b.path.toLowerCase()));
+  }
+
+  void _reloadData() {
+    _clearChildrenCache();
+    _treeView.reloadData();
+  }
+
+  // Processing workspace events.
+
   void _addAllFiles() {
     for (Resource resource in _workspace.getChildren()) {
       _files.add(resource);
       _recursiveAddResource(resource);
     }
-
-    _treeView.reloadData();
+    _sortTopLevel();
+    _reloadData();
   }
 
   /**
@@ -451,26 +481,23 @@ class FilesController implements TreeViewDelegate {
       if (resource.isTopLevel) {
         _files.add(resource);
       }
+      _sortTopLevel();
       _recursiveAddResource(resource);
-      _treeView.reloadData();
+      _reloadData();
     }
     if (event.type == ResourceEventType.DELETE) {
       var resource = event.resource;
       _files.remove(resource);
       _recursiveRemoveResource(resource);
-      _treeView.reloadData();
-
+      _reloadData();
     }
     if (event.type == ResourceEventType.CHANGE) {
       // refresh the container that has changed.
-      // remove all old paths and add anew.
+      // remove all old paths and add new.
       var resource = event.resource;
-      var keys = _filesMap.keys.toList();
-      keys.forEach((key) {
-        if (key.startsWith(resource.path)) _filesMap.remove(key);
-      });
+      _recursiveRemoveResource(resource);
       _recursiveAddResource(resource);
-      _treeView.reloadData();
+      _reloadData();
     }
   }
 
@@ -492,16 +519,17 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
-  void _handleContextMenu(FileItemCell cell, Resource resource, html.Event e) {
-    cancelEvent(e);
-    _showMenu(cell, cell.menuElement, resource);
-  }
-
+  /**
+   * Menu icon click handler: show the context menu.
+   */
   void _handleMenuClick(FileItemCell cell, Resource resource, html.Event e) {
     cancelEvent(e);
     _showMenu(cell, cell.menuElement, resource);
   }
 
+  /**
+   * Shows the context menu under the menu disclosure button.
+   */
   void _showMenu(FileItemCell cell,
                  html.Element disclosureButton,
                  Resource resource) {
@@ -511,6 +539,9 @@ class FilesController implements TreeViewDelegate {
     _showMenuAtLocation(cell, position, resource);
   }
 
+  /**
+   * Shows the context menu at the location of the mouse event.
+   */
   void _showMenuForEvent(FileItemCell cell,
                          html.Event event,
                          Resource resource) {
@@ -518,6 +549,9 @@ class FilesController implements TreeViewDelegate {
     _showMenuAtLocation(cell, position, resource);
   }
 
+  /**
+   * Shows the context menu at given location.
+   */
   void _showMenuAtLocation(FileItemCell cell,
                            html.Point position,
                            Resource resource) {
