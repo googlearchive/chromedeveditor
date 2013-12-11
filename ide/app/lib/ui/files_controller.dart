@@ -7,6 +7,7 @@
  */
 library spark.ui.widgets.files_controller;
 
+import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
@@ -18,6 +19,7 @@ import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
+import '../preferences.dart' as preferences;
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
@@ -26,6 +28,7 @@ class FilesController implements TreeViewDelegate {
   List<Resource> _files;
   FilesControllerDelegate _delegate;
   Map<String, Resource> _filesMap;
+  preferences.PreferenceStore localPrefs = preferences.localStore;
 
   FilesController(Workspace workspace,
                   FilesControllerDelegate delegate,
@@ -432,13 +435,23 @@ class FilesController implements TreeViewDelegate {
         y + counterTextPosition);
   }
 
+  void treeViewSaveExpandedState(TreeView view) {
+    localPrefs.setValue('FilesExpandedState',
+        JSON.encode(_treeView.expandedState));
+  }
+
   void _addAllFiles() {
     for (Resource resource in _workspace.getChildren()) {
       _files.add(resource);
       _recursiveAddResource(resource);
     }
-
-    _treeView.reloadData();
+    localPrefs.getValue('FilesExpandedState').then((String state) {
+      if (state != null) {
+        _treeView.restoreExpandedState(JSON.decode(state));
+      } else {
+        _treeView.reloadData();
+      }
+    });
   }
 
   /**
