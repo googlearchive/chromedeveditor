@@ -151,31 +151,10 @@ void release(GrinderContext context) {
 // - Remove test
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
 void archive(GrinderContext context) {
-  if (Platform.isWindows) {
-    _delete('dist/spark.zip');
-
-    try {
-      // 7z a -r ..\dist\spark.zip .
-      runProcess(
-          context,
-          '7z',
-          arguments: ['a', '-r', '../${DIST_DIR.path}/spark.zip', '.'],
-          workingDirectory: 'app',
-          quiet: true);
-    } on ProcessException catch(e) {
-      context.fail("Unable to execute 7z.\n"
-        "Please install 7zip. Add 7z directory to the PATH environment variable.");
-    };
-  } else {
-    // zip spark.zip . -r -q -x .*
-    runProcess(
-        context,
-        'zip',
-        arguments: ['../${DIST_DIR.path}/spark.zip', '.', '-qr', '-x', '.*'],
-        workingDirectory: 'app');
-  }
-
-  _printSize(context, getFile('dist/spark.zip'));
+  String sparkZip = '${DIST_DIR.path}/spark.zip';
+  _delete(sparkZip);
+  _zip(context, 'app', '../${sparkZip}');
+  _printSize(context, getFile(sparkZip));
 }
 
 void docs(GrinderContext context) {
@@ -193,10 +172,7 @@ void docs(GrinderContext context) {
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
                     'app/spark.dart']);
-
-    // TODO(sunglim) : Make this work on Windows.
-    _runCommandSync(context,
-        'zip ../dist/spark-docs.zip . -qr -x .*', cwd: 'docs');
+    _zip(context, 'docs', '../${DIST_DIR.path}/spark-docs.zip');
   }
 }
 
@@ -221,6 +197,30 @@ void clean(GrinderContext context) {
 
   // delete the build/ dir
   getDir('build').deleteSync(recursive: true);
+}
+
+void _zip(GrinderContext context, String dirToZip, String destFile) {
+    if (Platform.isWindows) {
+      try {
+        // 7z a -r '${destFile}'
+        runProcess(
+            context,
+            '7z',
+            arguments: ['a', '-r', destFile, '.'],
+            workingDirectory: dirToZip,
+            quiet: true);
+      } on ProcessException catch(e) {
+        context.fail("Unable to execute 7z.\n"
+          "Please install 7zip. Add 7z directory to the PATH environment variable.");
+      }
+    } else {
+      // zip '${destFile}' . -r -q -x .*
+      runProcess(
+          context,
+          'zip',
+          arguments: [destFile, '.', '-qr', '-x', '.*'],
+          workingDirectory: dirToZip);
+    }
 }
 
 void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
@@ -468,6 +468,7 @@ void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   }
 }
 
+// TODO(sunglim): Fix me. This doesn't support Windows.
 String _getCommandOutput(String command) {
   return Process.runSync('/bin/sh', ['-c', command]).stdout.trim();
 }
