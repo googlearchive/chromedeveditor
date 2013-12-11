@@ -712,8 +712,11 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     var name = _nameElement.value;
     if (name.isNotEmpty) {
-      folder.createNewFile(name).then((file) =>
-          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true));
+      folder.createNewFile(name).then((file) {
+        Timer.run(() {
+          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+        });
+      });
     }
   }
 
