@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:typed_data';
 
-import 'package:chrome_gen/src/common_exp.dart' as chrome_gen;
+import 'package:chrome_gen/src/common_exp.dart' as chrome;
 
 import 'object_utils.dart';
 
@@ -245,7 +245,7 @@ class LooseObject {
     Uint8List data = new Uint8List(buf);
     String header;
     int i;
-    if (buf is chrome_gen.ArrayBuffer) {
+    if (buf is chrome.ArrayBuffer) {
       List<String> headChars = [];
       for (i = 0; i < data.length; ++i) {
         if (data[i] != 0)
