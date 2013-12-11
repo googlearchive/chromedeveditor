@@ -16,7 +16,7 @@ dependencies:
   intl: any
   logging: any
   mime: any
-  polymer: any
+  polymer: '>=0.9.0 <0.10.0'
   polymer_elements:
     git: https://github.com/ErikGrimes/polymer_elements
   spark_widgets:
