@@ -42,7 +42,7 @@ class TreeView implements ListViewDelegate {
   // Map from node UID to info.
   Map<String, TreeViewRow> _rowsMap;
   // Saved expanded state of the nodes when reloading the content of the tree.
-  HashSet<String> _expandedState;
+  Set<String> _expandedState;
   // When dragging over a cell the tree view, it's the highlighted cell.
   TreeViewCell _currentDragOverCell;
   // Whether the user can drag a cell.
@@ -123,14 +123,9 @@ class TreeView implements ListViewDelegate {
     _listView.selection = [];
 
     // Save expanded state.
-    _expandedState = new HashSet();
+    _expandedState = new Set();
     if (_rows != null) {
-      // Save expanded state.
-      _rows.forEach((TreeViewRow row) {
-        if (row.expanded) {
-          _expandedState.add(row.nodeUID);
-        }
-      });
+      _expandedState = new Set.from(expandedState);
     }
 
     _fillRows();
@@ -154,23 +149,16 @@ class TreeView implements ListViewDelegate {
   }
 
   List<String> get expandedState {
-    List<String> result = [];
-    if (_rows != null) {
-      // Save expanded state.
-      _rows.forEach((TreeViewRow row) {
-        if (row.expanded) {
-          result.add(row.nodeUID);
-        }
-      });
+    if (_rows == null) {
+      return [];
+    } else {
+      return _rows.where((row) => row.expanded).map((row) => row.nodeUID).
+          toList();
     }
-    return result;
   }
 
   void restoreExpandedState(List<String> expandedState) {
-    // Save expanded state.
-    _expandedState = new HashSet();
-    _expandedState.addAll(expandedState);
-
+    _expandedState = new Set.from(expandedState);
     _fillRows();
     _expandedState.clear();
     _listView.reloadData();
