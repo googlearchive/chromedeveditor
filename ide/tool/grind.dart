@@ -194,9 +194,27 @@ void docs(GrinderContext context) {
                     '--include-lib', 'git,git.objects,git.zlib',
                     'app/spark.dart']);
 
-    // TODO(sunglim) : Make this work on Windows.
-    _runCommandSync(context,
-        'zip ../dist/spark-docs.zip . -qr -x .*', cwd: 'docs');
+    if (Platform.isWindows) {
+      try {
+        // 7z a -r ..\dist\spark-docs.zip .
+        runProcess(
+            context,
+            '7z',
+            arguments: ['a', '-r', '../${DIST_DIR.path}/spark-docs.zip', '.'],
+            workingDirectory: 'docs',
+            quiet: true);
+      } on ProcessException catch(e) {
+        context.fail("Unable to execute 7z.\n"
+          "Please install 7zip. Add 7z directory to the PATH environment variable.");
+      };
+    } else {
+      // zip spark-docs.zip . -r -q -x .*
+      runProcess(
+          context,
+          'zip',
+          arguments: ['../${DIST_DIR.path}/spark-docs.zip', '.', '-qr', '-x', '.*'],
+          workingDirectory: 'docs');
+    }
   }
 }
 
