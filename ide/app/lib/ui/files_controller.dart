@@ -7,6 +7,7 @@
  */
 library spark.ui.widgets.files_controller;
 
+import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
@@ -18,6 +19,7 @@ import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
+import '../preferences.dart' as preferences;
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
@@ -33,6 +35,8 @@ class FilesController implements TreeViewDelegate {
   Map<String, Resource> _filesMap;
   // Cache of sorted children of nodes.
   Map<String, List<String>> _childrenCache;
+  // Preferences where to store tree expanded/collapsed state.
+  preferences.PreferenceStore localPrefs = preferences.localStore;
 
   FilesController(Workspace workspace,
                   FilesControllerDelegate delegate,
@@ -435,6 +439,11 @@ class FilesController implements TreeViewDelegate {
         y + counterTextPosition);
   }
 
+  void treeViewSaveExpandedState(TreeView view) {
+    localPrefs.setValue('FilesExpandedState',
+        JSON.encode(_treeView.expandedState));
+  }
+
   // Cache management for sorted list of resources.
 
   void _cacheChildren(String nodeUID) {
@@ -468,7 +477,13 @@ class FilesController implements TreeViewDelegate {
       _recursiveAddResource(resource);
     }
     _sortTopLevel();
-    _reloadData();
+    localPrefs.getValue('FilesExpandedState').then((String state) {
+      if (state != null) {
+        _treeView.restoreExpandedState(JSON.decode(state));
+      } else {
+        _treeView.reloadData();
+      }
+    });
   }
 
   /**

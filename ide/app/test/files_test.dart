@@ -4,7 +4,7 @@
 
 library spark.files_test;
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
@@ -12,22 +12,22 @@ import 'files_mock.dart';
 defineTests() {
   group('files', () {
     test('package directory available', () {
-      return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {
+      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
         expect(dir, isNotNull);
       });
     });
 
     test('can list directories', () {
-      return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {
-        return dir.createReader().readEntries().then((List<chrome_gen.Entry> entries) {
+      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+        return dir.createReader().readEntries().then((List<chrome.Entry> entries) {
           expect(entries.length, greaterThan(1));
         });
       });
     });
 
     test('can get file', () {
-      return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {
-        return dir.getFile('manifest.json').then((chrome_gen.Entry file) {
+      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+        return dir.getFile('manifest.json').then((chrome.Entry file) {
           expect(file, isNotNull);
           expect(file.name, 'manifest.json');
         });
@@ -35,11 +35,11 @@ defineTests() {
     });
 
     test('can retain and restore file', () {
-      return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {
-        return dir.getFile('manifest.json').then((chrome_gen.Entry file) {
+      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+        return dir.getFile('manifest.json').then((chrome.Entry file) {
           expect(file, isNotNull);
-          String id = chrome_gen.fileSystem.retainEntry(file);
-          return chrome_gen.fileSystem.restoreEntry(id).then((chrome_gen.Entry restoredFile) {
+          String id = chrome.fileSystem.retainEntry(file);
+          return chrome.fileSystem.restoreEntry(id).then((chrome.Entry restoredFile) {
             expect(restoredFile, isNotNull);
             expect(restoredFile.name, 'manifest.json');
           });
@@ -47,8 +47,8 @@ defineTests() {
       });
     });
     test('ChromeFileEntry readText()', () {
-      return chrome_gen.runtime.getPackageDirectoryEntry().then((chrome_gen.DirectoryEntry dir) {
-        return dir.getFile('manifest.json').then((chrome_gen.ChromeFileEntry file) {
+      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+        return dir.getFile('manifest.json').then((chrome.ChromeFileEntry file) {
           expect(file, isNotNull);
           return file.readText().then((String text) {
             expect(text.length, greaterThan(1));
@@ -61,7 +61,7 @@ defineTests() {
   group('syncFileSystem', () {
     test('is available', () {
       // TODO: this fails if the app is not signed in
-//      return chrome_gen.syncFileSystem.requestFileSystem().then((chrome_gen.FileSystem fs) {
+//      return chrome.syncFileSystem.requestFileSystem().then((chrome.FileSystem fs) {
 //        expect(fs, isNotNull);
 //      });
     });
