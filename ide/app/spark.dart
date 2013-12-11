@@ -34,9 +34,11 @@ import 'lib/utils.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
+analytics.Tracker _analyticsTracker = new analytics.NullTracker();
+
 void main() {
-  createSparkZone().runGuarded(() {
-    isTestMode().then((testMode) {
+  isTestMode().then((testMode) {
+    createSparkZone().runGuarded(() {
       Spark spark = new Spark(testMode);
       spark.start();
     });
@@ -69,19 +71,17 @@ Future<bool> isTestMode() {
  */
 Zone createSparkZone() {
   var errorHandler = (self, parent, zone, error, stackTrace) {
-    Spark.SPARK_SINGLETON._handleUncaughtException(error, stackTrace);
+    _handleUncaughtException(error, stackTrace);
   };
   var specification = new ZoneSpecification(handleUncaughtError: errorHandler);
   return Zone.current.fork(specification: specification);
 }
 
 class Spark extends Application implements FilesControllerDelegate {
-  static Spark SPARK_SINGLETON;
-
-  final bool developerMode;
-
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
+
+  final bool developerMode;
 
   AceContainer aceContainer;
   ThemeManager aceThemeManager;
@@ -89,7 +89,6 @@ class Spark extends Application implements FilesControllerDelegate {
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
-  analytics.Tracker tracker = new analytics.NullTracker();
 
   preferences.PreferenceStore localPrefs;
   preferences.PreferenceStore syncPrefs;
@@ -102,10 +101,6 @@ class Spark extends Application implements FilesControllerDelegate {
   TestDriver _testDriver;
 
   Spark(this.developerMode) {
-    if (SPARK_SINGLETON == null) {
-      SPARK_SINGLETON = this;
-    }
-
     document.title = appName;
 
     localPrefs = preferences.localStore;
@@ -170,9 +165,15 @@ class Spark extends Application implements FilesControllerDelegate {
   void initAnalytics() {
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
-      tracker = service.getTracker(_ANALYTICS_ID);
-      tracker.sendAppView('main');
-      _trackLoggedExceptions();
+      _analyticsTracker = service.getTracker(_ANALYTICS_ID);
+      _analyticsTracker.sendAppView('main');
+
+      // Track logged exceptions.
+      Logger.root.onRecord.listen((LogRecord r) {
+        if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
+          _handleUncaughtException(r.error, r.stackTrace);
+        }
+      });
     });
   }
 
@@ -410,25 +411,6 @@ class Spark extends Application implements FilesControllerDelegate {
   //
   // - End implementation of FilesControllerDelegate interface.
   //
-
-  /**
-   * Handle logged exceptions.
-   */
-  void _trackLoggedExceptions() {
-    Logger.root.onRecord.listen((LogRecord r) {
-      if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
-        _handleUncaughtException(r.error, r.stackTrace);
-      }
-    });
-  }
-
-  void _handleUncaughtException(error, StackTrace stackTrace) {
-    // We don't log the error object itself because of PII concerns.
-    String errorDesc = error != null ? error.runtimeType.toString() : '';
-    String desc = '${errorDesc}\n${minimizeStackTrace(stackTrace)}'.trim();
-
-    tracker.sendException(desc);
-  }
 }
 
 class PlatformInfo {
@@ -577,7 +559,7 @@ abstract class SparkAction extends Action {
 
   void invoke([Object context]) {
     // Send an action event with the 'main' event category.
-    spark.tracker.sendEvent('main', id);
+    _analyticsTracker.sendEvent('main', id);
 
     _invoke(context);
   }
@@ -653,9 +635,10 @@ abstract class SparkActionWithDialog extends SparkAction {
     dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
     _dialog = bootjack.Modal.wire(dialogElement);
 
-    // TODO(ericarnold): Bootjack should handle focus
+    // TODO(ussuri): This will be triggered only in non-Polymer UI via Bootjack.
+    // Polymer UI should handle focusing itself.
     _dialog.$element.on('shown.bs.modal', (event) {
-      Element dialog = event.target;
+      final Element dialog = event.target;
       Element elementToFocus = dialog.querySelector('[focused]');
 
       if (elementToFocus != null) {
@@ -682,7 +665,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     return element;
   }
 
-  _show() {
+  void _show() {
     if (isPolymer) {
       (_dialog.element as dynamic).toggle();
     } else {
@@ -959,12 +942,8 @@ class AboutSparkAction extends SparkActionWithDialog {
   void _invoke([Object context]) {
     if (isPolymer || !_initialized) {
       var checkbox = getElement('#analyticsCheck');
-      checkbox.checked =
-          spark.tracker.service.getConfig().isTrackingPermitted();
-      checkbox.onChange.listen((e) {
-        spark.tracker.service.getConfig()
-            .setTrackingPermitted(checkbox.checked);
-      });
+      checkbox.checked = _isTrackingPermitted;
+      checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
 
       getElement('#aboutVersion').text = spark.appVersion;
 
@@ -984,3 +963,19 @@ class RunTestsAction extends SparkAction {
 
   _invoke([Object context]) => spark._testDriver.runTests();
 }
+
+// analytics code
+
+void _handleUncaughtException(error, StackTrace stackTrace) {
+  // We don't log the error object itself because of PII concerns.
+  String errorDesc = error != null ? error.runtimeType.toString() : '';
+  String desc = '${errorDesc}\n${minimizeStackTrace(stackTrace)}'.trim();
+
+  _analyticsTracker.sendException(desc);
+}
+
+bool get _isTrackingPermitted =>
+    _analyticsTracker.service.getConfig().isTrackingPermitted();
+
+set _isTrackingPermitted(bool value) =>
+    _analyticsTracker.service.getConfig().setTrackingPermitted(value);
