@@ -363,7 +363,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          _filesController.selectLastFile();
+          _filesController.selectFile(file);
           workspace.save();
         });
       }
@@ -921,7 +921,7 @@ class GitCloneAction extends SparkActionWithDialog {
         options.store.init().then((_) {
           clone.clone().then((_) {
             spark.workspace.link(dir).then((folder) {
-              spark._filesController.selectLastFile();
+              spark._filesController.selectFile(folder);
               spark.workspace.save();
             });
           });
