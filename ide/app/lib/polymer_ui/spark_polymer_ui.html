@@ -6,10 +6,10 @@
 
 <link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon/spark-icon.html">
+<link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-button/spark-menu-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-item/spark-menu-item.html">
-<link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
-<link rel="import" href="../../packages/spark_widgets/spark-select/spark-select.html">
+<link rel="import" href="../../packages/spark_widgets/spark-overlay/spark-overlay.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
 <link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
@@ -17,9 +17,9 @@
 
 <polymer-element name="spark-polymer-ui">
   <template>
-  
+
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="spark_polymer_ui.css"-->  
+    <!-- link rel="stylesheet" href="spark_polymer_ui.css"-->
     <style>
 
 @import url("packages/bootjack/css/bootstrap.css");
@@ -173,6 +173,32 @@
 #hotdogMenu .main-menu-button:focus {
   background-color: white;
 }
+
+/** Dialog Stuff */
+.spark-overlay-scale-slideup {
+  top: 72px;
+  left: 50%;
+  width: 512px;
+  margin-left: -256px;
+}
+
+#deleteDialog, #fileNewDialog, #renameDialog {
+  width: 412px;
+}
+
+.spark-overlay-scale-slideup {
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  overflow: hidden;
+  background: white;
+  padding:30px 42px;
+  outline: 1px solid rgba(0,0,0,0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
     </style>
 
     <spark-toolbar id="toolbar" color="white">
@@ -181,33 +207,52 @@
 
       <span id="status"></span>
 
-      <spark-menu-button id="hotdogMenu2" src="../../images/menu.png">
-        <spark-menu-item src="images/open.png" label="Label">Text</spark-menu-item>
+      <div id="toolbarRight">
+        <div id="editedFilename"></div>
+
+      <spark-menu-button id="hotdogMenu2" responsive="true"
+          src="../../images/menu.png" selected="1">
+        <spark-menu-item id="file-open" iconsize=0>
+          Open File...
+        </spark-menu-item>
+        <spark-menu-item id="folder-open" iconsize=0>
+          Open Folder
+        </spark-menu-item>
+        <spark-menu-item id="file-close" iconsize=0>Close</spark-menu-item>
+        <spark-menu-item id="file-delete" iconsize=0>Delete</spark-menu-item>
+        <spark-menu-item id="run-tests" iconsize=0>Run Tests</spark-menu-item>
+        <spark-menu-item id="git-clone" iconsize=0>
+          Git Clone...
+        </spark-menu-item>
+        <spark-menu-item id="help-about" iconsize=0>
+          About Spark
+        </spark-menu-item>
       </spark-menu-button>
 
-      <div id="hotdogMenu" class="btn-group">
-        <!-- TEMP(ussuri): All of this is temp, but especially the on-click
-          below. The menu was expected to drop down without it, but Bootjack
-          refused to cooperate with Polymer here and in other places.
-        -->
-        <button type="button" data-toggle="dropdown"
-            class="btn btn-default dropdown-toggle main-menu-button"
-            on-click={{toggleDropdownMenu}}>
-        </button>
-        <ul id="dropDownMenu" class="dropdown-menu pull-right">
-          <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
-            <span class="pull-right">
-              <spark-button id="themeLeft"><strong>-</strong></spark-button>
-              <spark-button id="themeRight"><strong>+</strong></spark-button>
-            </span></a>
-          </li>
-          <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
-            <span class="pull-right">
-              <spark-button id="keysLeft"><strong>-</strong></spark-button>
-              <spark-button id="keysRight"><strong>+</strong></spark-button>
-            </span></a>
-          </li>
-        </ul>
+        <div id="hotdogMenu" class="btn-group">
+          <!-- TEMP(ussuri): All of this is temp, but especially the on-click
+            below. The menu was expected to drop down without it, but Bootjack
+            refused to cooperate with Polymer here and in other places.
+          -->
+          <button type="button" data-toggle="dropdown"
+              class="btn btn-default dropdown-toggle main-menu-button"
+              on-click={{toggleDropdownMenu}}>
+          </button>
+          <ul id="dropDownMenu" class="dropdown-menu pull-right">
+            <li id="changeTheme" class="disabled"><a><span>Change Theme</span>
+              <span class="pull-right">
+                <spark-button id="themeLeft"><strong>-</strong></spark-button>
+                <spark-button id="themeRight"><strong>+</strong></spark-button>
+              </span></a>
+            </li>
+            <li id="changeKeys" class="disabled"><a><span>Spark Default</span>
+              <span class="pull-right">
+                <spark-button id="keysLeft"><strong>-</strong></spark-button>
+                <spark-button id="keysRight"><strong>+</strong></spark-button>
+              </span></a>
+            </li>
+          </ul>
+        </div>
       </div>
     </spark-toolbar>
 
@@ -230,6 +275,119 @@
       </ul>
     </div>
 
+    <!-- Delete File dialog -->
+    <spark-overlay id="deleteDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <p id="message"></p>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="deleteOkButton" overlay-toggle primary focused
+            data-dismiss="modal">
+          Delete
+        </spark-button>
+      </div>
+    </spark-overlay>
+
+    <!-- New File dialog -->
+    <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <p>
+          File name:  <input id="fileName" type="text" focused>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="fileNewOkButton" overlay-toggle primary
+            data-dismiss="modal">
+          Create
+        </spark-button>
+      </div>
+    </spark-overlay>
+
+    <!-- New Folder dialog -->
+    <spark-overlay id="folderNewDialog" class="modal fade">
+      <div class="modal-body">
+        <p>
+          Folder name: <input id="folderName" type="text" focused>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <spark-button class="btn btn-default" data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="folderNewOkButton" primary class="btn btn-primary"
+            data-dismiss="modal">Create</spark-button>
+      </div>
+    </spark-overlay>
+
+    <!-- Rename File dialog -->
+    <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <p>
+          File name: <input id="fileName" type="text" focused>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="renameOkButton" overlay-toggle primary
+            data-dismiss="modal">
+          Rename
+        </spark-button>
+      </div>
+    </spark-overlay>
+
+    <!-- Git Clone dialog -->
+    <spark-overlay id="gitCloneDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
+        <h4 class="modal-title">New Git Project</h4>
+      </div>
+      <div class="modal-body">
+        Project Name: <input id="gitProjectName" type="text" focused></input><br/><br/>
+        Repository URL: <input id="gitRepoUrl" type="text"></input>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="gitCloneButton" overlay-toggle primary
+          data-dismiss="modal">
+          Clone
+        </spark-button>
+      </div>
+    </spark-overlay><!-- /.modal -->
+
+    <!-- About dialog -->
+    <spark-overlay id="aboutDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <h4 class="modal-title">Spark</h4>
+      </div>
+      <div class="modal-body">
+        <dl>
+          <dt>A Chrome Apps based development environment</dt>
+          <dd>version <span id="aboutVersion"></span></dd>
+        </dl>
+        <div class="checkbox">
+          <label>
+            <input id="analyticsCheck" type="checkbox">
+              Allow Spark to collect anonymous usage statistics
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-overlay><!-- /.modal -->
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>

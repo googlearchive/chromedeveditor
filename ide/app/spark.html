@@ -44,25 +44,28 @@
 
     <span id="status"></span>
 
-    <div id="hotdogMenu" class="btn-group">
-      <button type="button" data-toggle="dropdown"
-          class="btn btn-default dropdown-toggle main-menu-button">
-        <img src="images/menu.png">
-      </button>
-      <ul class="dropdown-menu pull-right">
-        <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
-          <span class="pull-right">
-            <button type="button" id="themeLeft"><strong>-</strong></button>
-            <button type="button" id="themeRight"><strong>+</strong></button>
-          </span></a>
-        </li>
-        <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
-          <span class="pull-right">
-            <button type="button" id="keysLeft"><strong>-</strong></button>
-            <button type="button" id="keysRight"><strong>+</strong></button>
-          </span></a>
-        </li>
-      </ul>
+    <div id="toolbarRight">
+      <div id="editedFilename"></div>
+      <div id="hotdogMenu" class="btn-group">
+        <button type="button" data-toggle="dropdown"
+            class="btn btn-default dropdown-toggle main-menu-button">
+          <img src="images/menu.png">
+        </button>
+        <ul class="dropdown-menu pull-right">
+          <li class="disabled" id="changeTheme"><a><span>Change Theme</span>
+            <span class="pull-right">
+              <button type="button" id="themeLeft"><strong>-</strong></button>
+              <button type="button" id="themeRight"><strong>+</strong></button>
+            </span></a>
+          </li>
+          <li class="disabled" id="changeKeys"><a><span>Spark Default</span>
+            <span class="pull-right">
+              <button type="button" id="keysLeft"><strong>-</strong></button>
+              <button type="button" id="keysRight"><strong>+</strong></button>
+            </span></a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -86,7 +89,7 @@
           <p id="message"></p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button class="btn btn-default" focused data-dismiss="modal">Cancel</button>
           <button id="deleteOkButton" primary class="btn btn-primary"
               data-dismiss="modal">Delete</button>
         </div>
@@ -100,12 +103,30 @@
       <div class="modal-content">
         <div class="modal-body">
           <p>
-            File name: <input id="fileName" type="text">
+            File name: <input id="fileName" focused type="text">
           </p>
         </div>
         <div class="modal-footer">
           <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="fileNewOkButton" primary class="btn btn-primary" 
+          <button id="fileNewOkButton" primary class="btn btn-primary"
+              data-dismiss="modal">Create</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Folder dialog -->
+  <div id="folderNewDialog" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p>
+            Folder name: <input id="folderName" focused type="text">
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button id="folderNewOkButton" primary class="btn btn-primary"
               data-dismiss="modal">Create</button>
         </div>
       </div>
@@ -118,7 +139,7 @@
       <div class="modal-content">
         <div class="modal-body">
           <p>
-            File name: <input id="fileName" type="text">
+            File name: <input id="fileName" focused type="text">
           </p>
         </div>
         <div class="modal-footer">
@@ -152,7 +173,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" primary class="btn btn-primary" 
+          <button type="button" primary focused class="btn btn-primary"
               data-dismiss="modal">
             Close
           </button>
@@ -170,7 +191,7 @@
           <h4 class="modal-title">New Git Project</h4>
         </div>
         <div class="modal-body">
-          Project Name: <input type="text" id="gitProjectName"></input><br/><br/>
+          Project Name: <input type="text" id="gitProjectName" focused></input><br/><br/>
           Repository URL: <input type="text" id="gitRepoUrl"></input>
         </div>
         <div class="modal-footer">

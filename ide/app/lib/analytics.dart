@@ -192,6 +192,10 @@ class Tracker extends _ProxyHolder {
    * may contain personally identifiable information.
    */
   void sendException([String description, bool fatal]) {
+    if (description != null && description.length > MAX_EXCEPTION_LENGTH) {
+      description = '${description.substring(0, MAX_EXCEPTION_LENGTH - 1)}~';
+    }
+
     _proxy.callMethod('sendException', [description, fatal]);
   }
 
