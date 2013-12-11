@@ -7,8 +7,12 @@
 <link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon/spark-icon.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
+<link rel="import" href="../../packages/spark_widgets/spark-menu/spark-menu.html">
+<link rel="import" href="../../packages/spark_widgets/spark-menu-button/spark-menu-button.html">
+<link rel="import" href="../../packages/spark_widgets/spark-menu-item/spark-menu-item.html">
 <link rel="import" href="../../packages/spark_widgets/spark-overlay/spark-overlay.html">
-<link rel="import" href="../../packages/spark_widgets/spark-select/spark-select.html">
+<link rel="import" href="../../packages/spark_widgets/spark-selection/spark-selection.html">
+<link rel="import" href="../../packages/spark_widgets/spark-selector/spark-selector.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
 <link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
@@ -208,6 +212,26 @@
 
       <div id="toolbarRight">
         <div id="editedFilename"></div>
+
+      <spark-menu-button id="hotdogMenu2" responsive="true"
+          src="../../images/menu.png" selected="1">
+        <spark-menu-item id="file-open" iconsize=0>
+          Open File...
+        </spark-menu-item>
+        <spark-menu-item id="folder-open" iconsize=0>
+          Open Folder
+        </spark-menu-item>
+        <spark-menu-item id="file-close" iconsize=0>Close</spark-menu-item>
+        <spark-menu-item id="file-delete" iconsize=0>Delete</spark-menu-item>
+        <spark-menu-item id="run-tests" iconsize=0>Run Tests</spark-menu-item>
+        <spark-menu-item id="git-clone" iconsize=0>
+          Git Clone...
+        </spark-menu-item>
+        <spark-menu-item id="help-about" iconsize=0>
+          About Spark
+        </spark-menu-item>
+      </spark-menu-button>
+
         <div id="hotdogMenu" class="btn-group">
           <!-- TEMP(ussuri): All of this is temp, but especially the on-click
             below. The menu was expected to drop down without it, but Bootjack
