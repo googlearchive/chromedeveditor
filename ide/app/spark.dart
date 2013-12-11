@@ -634,12 +634,13 @@ abstract class SparkActionWithDialog extends SparkAction {
       : super(spark, id, name) {
     dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
     _dialog = bootjack.Modal.wire(dialogElement);
-    
-    // TODO(ericarnold): Bootjack should handle focus
+
+    // TODO(ussuri): This will be triggered only in non-Polymer UI via Bootjack.
+    // Polymer UI should handle focusing itself.
     _dialog.$element.on('shown.bs.modal', (event) {
-      Element dialog = event.target;
+      final Element dialog = event.target;
       Element elementToFocus = dialog.querySelector('[focused]');
-      
+
       if (elementToFocus != null) {
         elementToFocus.focus();
       }
@@ -663,8 +664,8 @@ abstract class SparkActionWithDialog extends SparkAction {
     });
     return element;
   }
-  
-  _show() {
+
+  void _show() {
     if (isPolymer) {
       (_dialog.element as dynamic).toggle();
     } else {
