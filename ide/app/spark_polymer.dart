@@ -35,7 +35,6 @@ class SparkPolymer extends Spark {
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
-
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
   Element getDialogElement(String selectors) =>
@@ -103,22 +102,15 @@ class SparkPolymer extends Spark {
       }
     });
 
-    // TODO(ussuri): This is a temporary hack just to test the functionality
-    // triggered from the menu. This will be replaced by spark-menu ASAP.
+    // TODO(ussuri): This is a temporary hack. This will be replaced by the
+    // preferences dialog.
     UListElement ul = getUIElement('#hotdogMenu ul');
 
     // Theme control.
-    // NOTE: Disabled because doing this resulted in a crash.
-//    Element theme = ul.querySelector('#changeTheme');
-//    ul.children.remove(theme);
-//    ul.children.add(theme);
     ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
     ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
 
     // Key binding control.
-//    Element keys = ul.querySelector('#changeKeys');
-//    ul.children.remove(keys);
-//    ul.children.add(keys);
     ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
     ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
   }
