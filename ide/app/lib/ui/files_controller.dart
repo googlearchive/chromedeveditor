@@ -129,6 +129,8 @@ class FilesController implements TreeViewDelegate {
   void treeViewSelectedChanged(TreeView view,
                                List<String> nodeUIDs,
                                html.Event event) {
+    print("treeViewSelectedChanged");
+
     if (nodeUIDs.isEmpty) {
       return;
     }
@@ -171,6 +173,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
+    print("treeViewDrop");
     Folder destinationFolder = _filesMap[nodeUID] as Folder;
     for(html.File file in dataTransfer.files) {
       html.FileReader reader = new html.FileReader();

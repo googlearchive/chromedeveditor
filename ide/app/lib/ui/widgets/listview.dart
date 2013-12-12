@@ -65,12 +65,19 @@ class ListView {
    * interacting with the list.
    */
   ListView(Element element, ListViewDelegate delegate) {
+    /*%TRACE3*/ print("(4> 12/10/13): ListView!"); // TRACE%
     _element = element;
     _delegate = delegate;
     _dragoverVisual = new DivElement();
     _dragoverVisual.classes.add('listview-dragover');
     _container = new DivElement();
     _container.classes.add('listview-container');
+    
+    print("document.activeElement");
+    
+    new Timer.periodic(const Duration(milliseconds: 500), (t) {
+      print(document.activeElement);
+    });
     _dropEnabled = false;
     _element.children.add(_container);
     _element.children.add(_dragoverVisual);
@@ -78,6 +85,7 @@ class ListView {
     _rows = [];
     _selectedRow = -1;
     _container.onClick.listen((event) {
+      /*%TRACE3*/ print("(4> 12/10/13): onClick!"); // TRACE%
       _removeCurrentSelectionHighlight();
       _selection.clear();
       _delegate.listViewSelectedChanged(this, _selection.toList(), event);
@@ -145,6 +153,7 @@ class ListView {
    * Callback on a single click.
    */
   void _onClicked(int rowIndex, Event event) {
+    /*%TRACE3*/ print("(4> 12/11/13): _onClicked!"); // TRACE%
     _removeCurrentSelectionHighlight();
     if ((event as MouseEvent).shiftKey) {
       // Click while holding shift.
