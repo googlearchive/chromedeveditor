@@ -215,13 +215,14 @@ class Workspace implements Container {
     List futures = [];
     for(Project resource in getChildren()) {
       if (resource is Project) {
-        // We use a temporary project to fill the children ...
+        // We use a temporary project to fill the children...
         Project tmpProject =
             new Project(this, resource.entry, resource._syncable);
         Future future =
             _gatherChildren(tmpProject, tmpProject._syncable).then((container) {
           // Then, we are able to replace the children in one atomic operation.
           // It helps make the UI more stable visually.
+          // TODO(dvh): indentity of objects needs to be preserved.
           resource._children = tmpProject._children;
           tmpProject._children = [];
           _controller.add(new ResourceChangeEvent(resource,
@@ -238,7 +239,7 @@ class Workspace implements Container {
    * This method checks if the layout of files on the filesystem has changed
    * and will update the content of the workspace if needed.
    */
-  Future checkForChange() {
+  Future refresh() {
     Set<String> existing = new Set();
     _fillSetWithResource(existing, this);
     Set<String> current = new Set();
@@ -283,7 +284,7 @@ class Workspace implements Container {
   }
 
   /**
-   * Collect the list of paths (and subpaths for the given resouce) as strings
+   * Collect the list of paths (and subpaths for the given resource) as strings
    * in a Set.
    */
   void _fillSetWithResource(Set<String> paths, Resource resource) {

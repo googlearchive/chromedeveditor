@@ -136,7 +136,7 @@ class Spark extends Application implements FilesControllerDelegate {
       // content of the workspace from other applications.
       // For that reason, when the user switch back to Spark, we want to check
       // whether the content of the workspace changed.
-      workspace.checkForChange();
+      workspace.refresh();
     });
   }
 
