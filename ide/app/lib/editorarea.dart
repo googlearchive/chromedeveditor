@@ -125,7 +125,7 @@ class EditorArea extends TabView {
   void selectFile(Resource file,
                 {bool forceOpen: false, bool switchesTab: true,
                  bool replaceCurrent: true}) {
-    if (_tabOfFile.containsKey(file)) {
+    if (_tabOfFile.containsKey(file) && !forceOpen) {
       _filenameLabel.text = file.name;
       EditorTab tab = _tabOfFile[file];
       if (switchesTab) tab.select();
