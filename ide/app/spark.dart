@@ -89,6 +89,7 @@ class Spark extends Application implements FilesControllerDelegate {
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
+  final EventBus eventBus = new EventBus();
 
   preferences.PreferenceStore localPrefs;
   preferences.PreferenceStore syncPrefs;
@@ -130,6 +131,7 @@ class Spark extends Application implements FilesControllerDelegate {
     buildMenu();
 
     initSplitView();
+    initSaveStatusListener();
   }
 
   String get appName => i18n('app_name');
@@ -187,7 +189,8 @@ class Spark extends Application implements FilesControllerDelegate {
         aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
     aceKeysManager = new KeyBindingManager(
         aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
-    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
+    editorManager = new EditorManager(
+        workspace, aceContainer, localPrefs, eventBus);
     editorArea = new EditorArea(
         getUIElement('#editorArea'),
         getUIElement('#editedFilename'),
@@ -251,6 +254,16 @@ class Spark extends Application implements FilesControllerDelegate {
           _splitView.position = value;
         }
       }
+    });
+  }
+
+  void initSaveStatusListener() {
+    eventBus.onEvent('fileModified').listen((_) {
+      getUIElement('#saveStatus').text = 'Saving…';
+    });
+
+    eventBus.onEvent('filesSaved').listen((_) {
+      getUIElement('#saveStatus').text = 'All changes saved';
     });
   }
 
@@ -378,13 +391,10 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
-  void showStatus(String text, {bool error: false}) {
-    Element element = getUIElement("#status");
+  void showStatus(String text) {
+    Element element = getUIElement("#saveStatus");
     element.text = text;
-    element.classes.toggle('error', error);
   }
-
-  void notImplemented(String str) => showStatus("Not implemented: ${str}");
 
   //
   // Implementation of FilesControllerDelegate interface:
