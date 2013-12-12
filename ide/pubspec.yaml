@@ -16,8 +16,7 @@ dependencies:
   intl: any
   logging: any
   mime: any
-  polymer: '>=0.9.0 <0.10.0'
-  polymer_elements: any
+  polymer: any
   spark_widgets:
     path: ../widgets
   unittest: any
