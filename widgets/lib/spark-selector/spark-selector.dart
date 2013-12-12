@@ -167,9 +167,7 @@ class SparkSelector extends SparkSelection {
   }
 
   void valueToSelection(value) {
-    print(items);
     final index = valueToIndex(value);
-    print(index);
     if (index < items.length) {
       var item = items[index];
       ($['selection'] as dynamic).select(item);
