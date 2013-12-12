@@ -80,7 +80,6 @@ class ListView {
       print(document.activeElement);
     });
     _container.onKeyDown.listen((event) {
-      /*%TRACE3*/ print("(4> 12/10/13): onKeyDown!"); // TRACE%
     });
     
     _dropEnabled = false;
