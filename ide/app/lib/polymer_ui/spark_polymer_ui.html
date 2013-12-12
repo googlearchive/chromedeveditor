@@ -199,6 +199,20 @@
   outline: 1px solid rgba(0,0,0,0.2);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
+
+/* TODO(ussuri): None of these worked. Fix.
+.plus-minus-container {
+  display: flex;
+}
+
+.plus-minus-spacer {
+  flex: 1;
+}
+
+.plus-minus {
+  margin: 0;
+}
+*/
     </style>
 
     <spark-toolbar id="toolbar" color="white">
@@ -208,9 +222,9 @@
       <span id="status"></span>
 
       <div id="toolbarRight">
-        <div id="editedFilename"></div>
+        <span id="editedFilename"></span>
 
-        <spark-menu-button id="hotdogMenu2" responsive="true"
+        <spark-menu-button id="hotdogMenuNew" responsive="true"
             src="../../images/menu.png" selected="1">
           <spark-menu-item actionId="file-open" iconsize=0 label="Open File...">
           </spark-menu-item>
@@ -221,15 +235,25 @@
           <spark-menu-item actionId="file-delete" iconsize=0 label="Delete">
           </spark-menu-item>
           <spark-menu-item id="changeTheme2" iconsize=0 label="Change Theme">
-            <span>
-              <spark-button id="themeLeft2"><strong>-</strong></spark-button>
-              <spark-button id="themeRight2"><strong>+</strong></spark-button>
+            <span class="plus-minus-container">
+              <label class="plus-minus-spacer"></label>
+              <spark-button id="themeLeft2" class="plus-minus">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button id="themeRight2" class="plus-minus">
+                <strong>+</strong>
+              </spark-button>
             </span>
           </spark-menu-item>
           <spark-menu-item id="changeKeys2" iconsize=0 label="Spark Default">
-            <span>
-              <spark-button id="keysLeft2"><strong>-</strong></spark-button>
-              <spark-button id="keysRight2"><strong>+</strong></spark-button>
+            <span class="plus-minus-container>
+              <label class="plus-minus-spacer"></label>
+              <spark-button id="keysLeft2" class="plus-minus">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button id="keysRight2" class="plus-minus">
+                <strong>+</strong>
+              </spark-button>
             </span>
           </spark-menu-item>
           <spark-menu-item actionId="run-tests" iconsize=0 label="Run Tests">

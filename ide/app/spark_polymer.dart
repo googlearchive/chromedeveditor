@@ -83,8 +83,8 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    var node = getUIElement("#hotdogMenu2");
-    node.on['activate'].listen((event) {
+    var menu = getUIElement('#hotdogMenuNew');
+    menu.on['activate'].listen((event) {
       final item = event.detail['item'];
       final actionId = item.attributes['actionId'];
       switch (actionId) {
@@ -104,15 +104,19 @@ class SparkPolymer extends Spark {
 
     // TODO(ussuri): This is a temporary hack. This will be replaced by the
     // preferences dialog.
-    UListElement ul = getUIElement('#hotdogMenu ul');
+    UListElement oldMenu = getUIElement('#hotdogMenu ul');
 
     // Theme control.
-    ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
-    ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
+    oldMenu.querySelector('#themeLeft').onClick.listen(
+        (e) => aceThemeManager.dec(e));
+    oldMenu.querySelector('#themeRight').onClick.listen(
+        (e) => aceThemeManager.inc(e));
 
     // Key binding control.
-    ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
-    ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
+    oldMenu.querySelector('#keysLeft').onClick.listen(
+        (e) => aceKeysManager.dec(e));
+    oldMenu.querySelector('#keysRight').onClick.listen(
+        (e) => aceKeysManager.inc(e));
   }
 
   //
