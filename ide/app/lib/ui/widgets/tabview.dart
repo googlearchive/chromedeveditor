@@ -185,7 +185,7 @@ class TabView {
       add(tab, switchesTab: switchesTab);
     } else {
       int index = tabs.indexOf(tabToReplace);
-      remove(tabToReplace);
+      remove(tabToReplace, switchesTab: false);
       tabs.insert(index, tab);
       _tabViewWorkspace.children.insert(index, tab._pageContainer);
       _tabBarScrollable.children.insert(index, tab._label);
