@@ -256,26 +256,35 @@ class Spark extends Application implements FilesControllerDelegate {
 
   void createActions() {
     actionManager = new ActionManager();
+
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileNewAction(
         this, getDialogElement('#fileNewDialog')));
-    actionManager.registerAction(new FolderNewAction(
-        this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileCloseAction(this));
-    actionManager.registerAction(new FolderOpenAction(this));
-    actionManager.registerAction(new FileRenameAction(
-        this, getDialogElement('#renameDialog')));
+    // TODO(ussuri): This particular action somehow silently crashes the app in
+    // its _triggerOnReturn() (the "#fileName" element can't be found).
+    // Investigate.
+//    actionManager.registerAction(new FileRenameAction(
+//        this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new FileDeleteAction(
         this, getDialogElement('#deleteDialog')));
+
+    actionManager.registerAction(new FolderNewAction(
+        this, getDialogElement('#folderNewDialog')));
+    actionManager.registerAction(new FolderOpenAction(this));
+
     actionManager.registerAction(new GitCloneAction(
         this, getDialogElement("#gitCloneDialog")));
+
     actionManager.registerAction(new RunTestsAction(this));
+
     actionManager.registerAction(new AboutSparkAction(
         this, getDialogElement('#aboutDialog')));
+
     actionManager.registerKeyListener();
   }
 
