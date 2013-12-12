@@ -85,9 +85,9 @@ class SparkPolymer extends Spark {
   void buildMenu() {
     var node = getUIElement("#hotdogMenu2");
     node.on['activate'].listen((event) {
-      var item = event.detail['item'];
-      var menuId = item.attributes['id'];
-      switch (menuId) {
+      final item = event.detail['item'];
+      final actionId = item.attributes['actionId'];
+      switch (actionId) {
         case 'file-open':
         case 'folder-open':
         case 'file-close':
@@ -95,10 +95,10 @@ class SparkPolymer extends Spark {
         case 'run-tests':
         case 'git-clone':
         case 'help-about':
-          actionManager.getAction(menuId).invoke();
+          actionManager.getAction(actionId).invoke();
           break;
         default:
-          print("WARNING: Menu Item Unhandled Action $menuId");
+          print("WARNING: Menu Item Unhandled Action $actionId");
       }
     });
 
