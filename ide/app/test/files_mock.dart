@@ -49,6 +49,25 @@ class MockFileSystem implements FileSystem {
     }
   }
 
+  void removeFile(String path) {
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+
+    String dirPath = dirName(path);
+    String fileName = baseName(path);
+
+    if (dirPath == null) {
+      _root._removeFile(path);
+    } else {
+      _MockDirectoryEntry dir = getEntry(dirPath);
+      if (dir is! DirectoryEntry) {
+        return;
+      }
+      dir._removeFile(fileName);
+    }
+  }
+
   DirectoryEntry createDirectory(String path) {
     if (path.startsWith('/')) {
       path = path.substring(1);
@@ -275,6 +294,15 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
     entry = new _MockDirectoryEntry(this, name);
     _children.add(entry);
     return entry;
+  }
+
+  Future<Entry> _removeFile(String name) {
+    _MockFileEntry entry = _getChild(name);
+    if (entry == null) {
+      return new Future.value();
+    }
+
+    return _remove(entry);
   }
 
   Entry _getChild(String name) {

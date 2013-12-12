@@ -208,7 +208,97 @@ class Workspace implements Container {
     });
   }
 
- void _removeChild(Resource resource, {bool fireEvent: true}) {
+  /**
+   * Updates the content of the workspace with what's on the filesystem.
+   */
+  Future _reloadContents() {
+    List futures = [];
+    for(Project resource in getChildren()) {
+      if (resource is Project) {
+        // We use a temporary project to fill the children...
+        Project tmpProject =
+            new Project(this, resource.entry, resource._syncable);
+        Future future =
+            _gatherChildren(tmpProject, tmpProject._syncable).then((container) {
+          // Then, we are able to replace the children in one atomic operation.
+          // It helps make the UI more stable visually.
+          // TODO(dvh): indentity of objects needs to be preserved.
+          resource._children = tmpProject._children;
+          tmpProject._children = [];
+          _controller.add(new ResourceChangeEvent(resource,
+              ResourceEventType.CHANGE));
+          return container;
+        });
+        futures.add(future);
+      }
+    }
+    return Future.wait(futures);
+  }
+
+  /**
+   * This method checks if the layout of files on the filesystem has changed
+   * and will update the content of the workspace if needed.
+   */
+  Future refresh() {
+    Set<String> existing = new Set();
+    _fillSetWithResource(existing, this);
+    Set<String> current = new Set();
+    List futures = [];
+    for(Resource resource in getChildren()) {
+      futures.add(_gatherPaths(current, resource.entry));
+    }
+    return Future.wait(futures).then((e) {
+      Set<String> union = new Set();
+      union.addAll(current);
+      union.addAll(existing);
+      // We compare the list of paths.
+      if (union.length != current.length ||
+          current.length != existing.length) {
+        return _reloadContents();
+      } else {
+        return new Future.value();
+      }
+    });
+  }
+
+  /**
+   * Collect the list of paths (and subpaths for the given entry) as strings
+   * in a Set.
+   */
+  Future _gatherPaths(Set<String> paths, chrome.Entry entry) {
+    paths.add(entry.fullPath);
+    if (entry is chrome.DirectoryEntry) {
+      return entry.createReader().readEntries().then((entries) {
+        List futures = [];
+        for (chrome.Entry ent in entries) {
+          if (ent.name == '.git') {
+            continue;
+          }
+          futures.add(_gatherPaths(paths, ent));
+        }
+        return Future.wait(futures);
+      });
+    } else {
+      return new Future.value();
+    }
+  }
+
+  /**
+   * Collect the list of paths (and subpaths for the given resource) as strings
+   * in a Set.
+   */
+  void _fillSetWithResource(Set<String> paths, Resource resource) {
+    if (resource is! Workspace) {
+      paths.add(resource.path);
+    }
+    if (resource is Container) {
+      resource.getChildren().forEach((Resource child) {
+        _fillSetWithResource(paths, child);
+      });
+    }
+  }
+
+  void _removeChild(Resource resource, {bool fireEvent: true}) {
    _children.remove(resource);
    if (fireEvent) {
      _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
