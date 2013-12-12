@@ -71,6 +71,7 @@ class ListView {
     _dragoverVisual = new DivElement();
     _dragoverVisual.classes.add('listview-dragover');
     _container = new DivElement();
+    _container.tabIndex = 1;
     _container.classes.add('listview-container');
     
     print("document.activeElement");
@@ -78,6 +79,9 @@ class ListView {
     new Timer.periodic(const Duration(milliseconds: 500), (t) {
       print(document.activeElement);
     });
+    _container.onKeyDown.listen((event) {
+    });
+    
     _dropEnabled = false;
     _element.children.add(_container);
     _element.children.add(_dragoverVisual);
@@ -85,6 +89,7 @@ class ListView {
     _rows = [];
     _selectedRow = -1;
     _container.onClick.listen((event) {
+      _container.focus();
       /*%TRACE3*/ print("(4> 12/10/13): onClick!"); // TRACE%
       _removeCurrentSelectionHighlight();
       _selection.clear();
@@ -154,6 +159,7 @@ class ListView {
    */
   void _onClicked(int rowIndex, Event event) {
     /*%TRACE3*/ print("(4> 12/11/13): _onClicked!"); // TRACE%
+    _container.focus();
     _removeCurrentSelectionHighlight();
     if ((event as MouseEvent).shiftKey) {
       // Click while holding shift.

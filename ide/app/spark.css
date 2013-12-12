@@ -87,6 +87,7 @@ body {
   position: absolute;
   right: 0;
   top: 0;
+  outline: none;
 }
 
 #fileViewArea .listview-dragover {
@@ -96,6 +97,10 @@ body {
   position: absolute;
   right: 0;
   top: 0;
+}
+
+#fileViewArea .listview-container:focus ~ .listview-dragover {
+  border: 1px solid #aaf;
 }
 
 #fileViewArea .listview-dragover.listview-dragover-active {

@@ -246,6 +246,7 @@ class FilesController implements TreeViewDelegate {
   bool treeViewAllowsDrop(TreeView view,
                           html.DataTransfer dataTransfer,
                           String destinationNodeUID) {
+    return true;
     if (destinationNodeUID == null) {
       return false;
     }
