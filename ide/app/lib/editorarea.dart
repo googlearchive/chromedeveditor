@@ -18,6 +18,7 @@ import 'workspace.dart';
 /// A tab associated with a file.
 abstract class EditorTab extends Tab {
   final Resource file;
+
   EditorTab(EditorArea parent, this.file) : super(parent) {
     label = file.name;
   }
@@ -29,6 +30,7 @@ abstract class EditorTab extends Tab {
 class AceEditorTab extends EditorTab {
   final Editor editor;
   final EditorProvider provider;
+
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
@@ -36,6 +38,7 @@ class AceEditorTab extends EditorTab {
 
   void activate() {
     provider.selectFileForEditor(editor, file);
+    editor.focus();
     super.activate();
   }
 
