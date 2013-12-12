@@ -140,5 +140,35 @@ defineTests() {
       });
       return future;
     });
+
+    test('check for changes from filesystem', () {
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/index.html');
+      fs.createFile('/myProject/myApp.dart');
+      fs.createFile('/myProject/myApp.css');
+      var dirEntry = fs.createDirectory('/myProject/myDir');
+      fs.createFile('/myProject/myDir/test.txt');
+      fs.createFile('/myProject/myDir/test.html');
+      fs.createFile('/myProject/myDir/test.dart');
+
+      return workspace.link(projectDir).then((project) {
+        Folder dir = project.getChild('myDir');
+        expect(project.getChildren().length, 4);
+        expect(dir.getChildren().length, 3);
+        fs.createFile('/myProject/myApp2.dart');
+        fs.createFile('/myProject/myApp2.css');
+        fs.removeFile('/myProject/myApp.css');
+        fs.createFile('/myProject/myDir/test2.html');
+        return workspace.checkForChange().then((e) {
+          // Instance of /myProject/myDir might have changed because of
+          // checkForChange(), then we request it again.
+          dir = project.getChild('myDir');
+          expect(project.getChildren().length, 5);
+          expect(dir.getChildren().length, 4);
+        });
+      });
+    });
   });
 }
