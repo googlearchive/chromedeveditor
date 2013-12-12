@@ -68,6 +68,15 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
+
+    List parents = _collectParents(file, []);
+
+    parents.forEach((Container container) {
+      if (!_treeView.isNodeExpanded(container.path)) {
+        _treeView.setNodeExpanded(container.path, true);
+      }
+    });
+
     _treeView.selection = [file.path];
     if (file is File) {
       _delegate.selectInEditor(file, forceOpen: forceOpen);
@@ -616,5 +625,18 @@ class FilesController implements TreeViewDelegate {
         _closeContextMenu(event);
       });
     });
+  }
+
+  List _collectParents(Resource resource, List parents) {
+    if (resource.isTopLevel) return parents;
+
+    Container parent = resource.parent;
+
+    if (parent != null) {
+      parents.insert(0, parent);
+      return _collectParents(parent, parents);
+    } else {
+      return parents;
+    }
   }
 }

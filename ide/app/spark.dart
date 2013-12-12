@@ -721,8 +721,15 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     var name = _nameElement.value;
     if (name.isNotEmpty) {
-      folder.createNewFile(name).then((file) =>
-          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true));
+      folder.createNewFile(name).then((file) {
+        // Delay a bit to allow the files view to process the new file event.
+        // TODO: This is due to a race condition in when the files view receives
+        // the resource creation event; we should remove the possibility for
+        // this to occur.
+        Timer.run(() {
+          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+        });
+      });
     }
   }
 
@@ -738,7 +745,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   FolderNewAction(Spark spark, Element dialog)
       : super(spark, "folder-new", "New Folder…", dialog) {
     defaultBinding("ctrl-shift-n");
-    _nameElement = getElement("#folderName");
+    _nameElement = _triggerOnReturn("#folderName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
@@ -753,8 +760,12 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     var name = _nameElement.value;
     if (name.isNotEmpty) {
-      folder.createNewFolder(name).then((folder) =>
-          spark._filesController.selectFile(folder));
+      folder.createNewFolder(name).then((folder) {
+        // Delay a bit to allow the files view to process the new file event.
+        Timer.run(() {
+          spark._filesController.selectFile(folder);
+        });
+      });
     }
   }
 
