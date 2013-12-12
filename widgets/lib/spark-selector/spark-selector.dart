@@ -4,7 +4,7 @@
 
 library spark_widgets.selector;
 
-import 'dart:html' show MutationObserver, Node, Element;
+import 'dart:html' show MutationRecord, MutationObserver, Node, Element;
 
 import 'package:polymer/polymer.dart';
 import "package:template_binding/template_binding.dart" show nodeBind;
@@ -82,17 +82,16 @@ class SparkSelector extends SparkSelection {
     if (target == null) {
       target = this;
     }
-    updateItems();
   }
 
+  @override
   void ready() {
     super.ready();
-    _observer = new MutationObserver(onMutation);
+    _observer = new MutationObserver(_onMutation);
     _observer.observe(shadowRoot, childList: true, subtree: true);
   }
 
-  void onMutation(List<MutationRecord> mutations, MutationObserver observer) {
-    print(mutations);
+  void _onMutation(List<MutationRecord> mutations, MutationObserver observer) {
     updateItems();
     updateSelected();
   }
@@ -110,7 +109,6 @@ class SparkSelector extends SparkSelection {
   }
 
   void targetChanged(old) {
-    print('target changed: $target, old: $old');
     if (old != null) {
       removeListener(old);
       _observer.disconnect();
