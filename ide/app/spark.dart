@@ -687,7 +687,10 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
 
   String get category => 'tab';
 
-  bool appliesTo(Object object) => _isFileList(object);
+  // Open in new tab should only appear if the file is not already open
+  // in one of the editor tabs
+  bool appliesTo(Object object) => _isFileList(object) 
+                                && (object as List).every((f) => !spark.editorArea.isOpenInEditor(f));
 }
 
 class FileNewAction extends SparkActionWithDialog implements ContextAction {
