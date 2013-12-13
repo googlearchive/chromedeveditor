@@ -4,7 +4,6 @@
 
 library spark.utils;
 
-import 'dart:async';
 import 'dart:web_audio';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
@@ -52,45 +51,6 @@ String baseName(String path) {
  * Return whether the current runtime is dart2js (vs Dartium).
  */
 bool isDart2js() => identical(1, 1.0);
-
-/**
- * An event bus class. Clients can listen for classes of events, optionally
- * filtered by a string type. This can be used to decouple events sources and
- * event listeners.
- */
-class EventBus {
-  StreamController<EventBusEvent> _controller;
-
-  EventBus() {
-    _controller = new StreamController.broadcast();
-  }
-
-  /**
-   * Listen for events on the event bus. Clients can pass in an optional [type],
-   * which filters the events to only those specific ones.
-   */
-  Stream<EventBusEvent> onEvent([String type]) {
-    return _controller.stream.where((e) => type == null || e.type == type);
-  }
-
-  /**
-   * Add an event to the event bus.
-   */
-  void addEvent(String type, Object data) {
-    _controller.add(new EventBusEvent(type, data));
-  }
-}
-
-/**
- * An event type for use with [EventBus].
- */
-class EventBusEvent {
-  final String type;
-  final Object data;
-
-  EventBusEvent(this.type, this.data);
-}
-
 
 /**
  * A simple class to do `print()` profiling. It is used to profile a single

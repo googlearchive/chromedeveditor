@@ -13,8 +13,8 @@ import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'ace.dart' as ace;
+import 'event_bus.dart';
 import 'preferences.dart';
-import 'utils.dart';
 import 'workspace.dart';
 
 /**

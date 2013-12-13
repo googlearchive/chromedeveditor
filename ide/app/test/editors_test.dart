@@ -11,8 +11,8 @@ import 'ace_test.dart';
 import 'files_mock.dart';
 import '../lib/ace.dart';
 import '../lib/editors.dart';
+import '../lib/event_bus.dart';
 import '../lib/preferences.dart';
-import '../lib/utils.dart';
 import '../lib/workspace.dart';
 
 defineTests() {

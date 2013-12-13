@@ -21,6 +21,7 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
+import 'lib/event_bus.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
