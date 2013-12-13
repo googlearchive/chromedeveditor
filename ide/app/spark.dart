@@ -269,9 +269,6 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new FileCloseAction(this));
-    // TODO(ussuri): This particular action somehow silently crashes the app in
-    // its _triggerOnReturn() (the "#fileName" element can't be found).
-    // Investigate.
     actionManager.registerAction(new FileRenameAction(
         this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new FileDeleteAction(
@@ -720,7 +717,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File…", dialog) {
     defaultBinding("ctrl-n");
-    _nameElement = _triggerOnReturn("#fileName");
+    _nameElement = _triggerOnReturn("#fileNewName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
@@ -861,7 +858,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _nameElement = _triggerOnReturn("#fileName");
+    _nameElement = _triggerOnReturn("#renameFileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {
