@@ -65,7 +65,6 @@ class ListView {
    * interacting with the list.
    */
   ListView(Element element, ListViewDelegate delegate) {
-    /*%TRACE3*/ print("(4> 12/10/13): ListView!"); // TRACE%
     _element = element;
     _delegate = delegate;
     _dragoverVisual = new DivElement();
@@ -73,14 +72,7 @@ class ListView {
     _container = new DivElement();
     _container.tabIndex = 1;
     _container.classes.add('listview-container');
-    
-    print("document.activeElement");
-    
-    new Timer.periodic(const Duration(milliseconds: 500), (t) {
-      print(document.activeElement);
-    });
     _container.onKeyDown.listen(_onKeyDown);
-    
     _dropEnabled = false;
     _element.children.add(_container);
     _element.children.add(_dragoverVisual);
@@ -89,7 +81,6 @@ class ListView {
     _selectedRow = -1;
     _container.onClick.listen((event) {
       _container.focus();
-      /*%TRACE3*/ print("(4> 12/10/13): onClick!"); // TRACE%
       _removeCurrentSelectionHighlight();
       _selection.clear();
       _delegate.listViewSelectedChanged(this, _selection.toList());
@@ -178,7 +169,6 @@ class ListView {
    * Callback on a single click.
    */
   void _onClicked(int rowIndex, Event event) {
-    /*%TRACE3*/ print("(4> 12/11/13): _onClicked!"); // TRACE%
     _container.focus();
 
     if (!_delegate.listViewRowClicked(event, rowIndex)) {
