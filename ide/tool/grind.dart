@@ -10,7 +10,7 @@ import 'package:intl/intl.dart';
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
-// TODO: make the deploy-test and deploy tasks incremental
+// TODO: Make the deploy-test and deploy tasks incremental.
 
 final Directory BUILD_DIR = new Directory('build');
 final Directory DIST_DIR = new Directory('dist');
@@ -151,31 +151,10 @@ void release(GrinderContext context) {
 // - Remove test
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
 void archive(GrinderContext context) {
-  if (Platform.isWindows) {
-    _delete('dist/spark.zip');
-
-    try {
-      // 7z a -r ..\dist\spark.zip .
-      runProcess(
-          context,
-          '7z',
-          arguments: ['a', '-r', '../${DIST_DIR.path}/spark.zip', '.'],
-          workingDirectory: 'app',
-          quiet: true);
-    } on ProcessException catch(e) {
-      context.fail("Unable to execute 7z.\n"
-        "Please install 7zip. Add 7z directory to the PATH environment variable.");
-    };
-  } else {
-    // zip spark.zip . -r -q -x .*
-    runProcess(
-        context,
-        'zip',
-        arguments: ['../${DIST_DIR.path}/spark.zip', '.', '-qr', '-x', '.*'],
-        workingDirectory: 'app');
-  }
-
-  _printSize(context, getFile('dist/spark.zip'));
+  String sparkZip = '${DIST_DIR.path}/spark.zip';
+  _delete(sparkZip);
+  _zip(context, 'app', '../${sparkZip}');
+  _printSize(context, getFile(sparkZip));
 }
 
 void docs(GrinderContext context) {
@@ -185,21 +164,15 @@ void docs(GrinderContext context) {
       new Directory('app'), endsWith: '.dart', recurse: true);
 
   if (!docFiles.upToDate(sourceFiles)) {
-    // TODO: once more libraries are referenced from spark.dart, we won't need
-    // to explicitly pass them to dartdoc
     runSdkBinary(context, 'dartdoc',
         arguments: ['--omit-generation-time', '--no-code',
                     '--mode', 'static',
                     '--package-root', 'packages/',
-                    '--include-lib', 'spark,spark.ace,spark.file_item_view,spark.html_utils,spark.split_view,spark.utils,spark.preferences,spark.workspace,spark.sdk',
+                    '--include-lib', 'spark,spark.ace,spark.utils,spark.preferences,spark.workspace,spark.sdk',
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
-                    'app/spark.dart', 'app/lib/preferences.dart', 'app/lib/workspace.dart', 'app/lib/sdk.dart',
-                    'app/lib/server.dart', 'app/lib/tcp.dart',
-                    'app/lib/git.dart', 'app/lib/git_object.dart', 'app/lib/zlib.dart']);
-
-    _runCommandSync(context,
-        'zip ../dist/spark-docs.zip . -qr -x .*', cwd: 'docs');
+                    'app/spark.dart']);
+    _zip(context, 'docs', '../${DIST_DIR.path}/spark-docs.zip');
   }
 }
 
@@ -226,6 +199,30 @@ void clean(GrinderContext context) {
   getDir('build').deleteSync(recursive: true);
 }
 
+void _zip(GrinderContext context, String dirToZip, String destFile) {
+    if (Platform.isWindows) {
+      try {
+        // 7z a -r '${destFile}'
+        runProcess(
+            context,
+            '7z',
+            arguments: ['a', '-r', destFile, '.'],
+            workingDirectory: dirToZip,
+            quiet: true);
+      } on ProcessException catch(e) {
+        context.fail("Unable to execute 7z.\n"
+          "Please install 7zip. Add 7z directory to the PATH environment variable.");
+      }
+    } else {
+      // zip '${destFile}' . -r -q -x .*
+      runProcess(
+          context,
+          'zip',
+          arguments: [destFile, '.', '-qr', '-x', '.*'],
+          workingDirectory: dirToZip);
+    }
+}
+
 void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
   deleteEntity(getDir('${sourceDir.path}'), context);
   deleteEntity(getDir('${destDir.path}'), context);
@@ -249,6 +246,8 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
   runSdkBinary(context, 'dart2js', arguments: [
      joinDir(target, [filePath]).path,
      '--package-root=packages',
+     '--suppress-warnings',
+     '--suppress-hints',
      '--out=' + joinDir(target, ['${filePath}.js']).path]);
 
   // clean up unnecessary (and large) files
@@ -469,6 +468,7 @@ void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   }
 }
 
+// TODO(sunglim): Fix me. This doesn't support Windows.
 String _getCommandOutput(String command) {
   return Process.runSync('/bin/sh', ['-c', command]).stdout.trim();
 }

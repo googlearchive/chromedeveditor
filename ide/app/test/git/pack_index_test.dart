@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:convert';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome_gen;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import '../../lib/git/pack.dart';
@@ -18,11 +18,10 @@ final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack_index_test.idx';
 
 Future<Pack> initPack() {
-  return chrome_gen.runtime.getPackageDirectoryEntry().then(
-      (chrome_gen.DirectoryEntry dir) {
-    return dir.getFile(PACK_FILE_PATH).then(
-        (chrome_gen.ChromeFileEntry entry) {
-      return entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
+  return chrome.runtime.getPackageDirectoryEntry().then(
+      (chrome.DirectoryEntry dir) {
+    return dir.getFile(PACK_FILE_PATH).then((chrome.ChromeFileEntry entry) {
+      return entry.readBytes().then((chrome.ArrayBuffer binaryData) {
         Uint8List data = new Uint8List.fromList(binaryData.getBytes());
         Pack pack = new Pack(data, null);
         return pack.parseAll(null).then((_) {
@@ -34,17 +33,17 @@ Future<Pack> initPack() {
 }
 
 Future<PackIndex> initPackIndex() {
-  return chrome_gen.runtime.getPackageDirectoryEntry().then(
-      (chrome_gen.DirectoryEntry dir) {
+  return chrome.runtime.getPackageDirectoryEntry().then(
+      (chrome.DirectoryEntry dir) {
     return dir.getFile(PACK_INDEX_FILE_PATH).then(
-        (chrome_gen.ChromeFileEntry entry) {
-      return entry.readBytes().then((chrome_gen.ArrayBuffer binaryData) {
+        (chrome.ChromeFileEntry entry) {
+      return entry.readBytes().then((chrome.ArrayBuffer binaryData) {
         Uint8List data = new Uint8List.fromList(binaryData.getBytes());
         PackIndex packIdx = new PackIndex(data.buffer);
         return new Future.value(packIdx);
-        });
       });
     });
+  });
 }
 
 String shaToString(List<int> sha) {

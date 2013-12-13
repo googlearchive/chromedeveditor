@@ -38,6 +38,7 @@ abstract class Editor {
   html.Element get element;
   File get file;
   void resize();
+  void focus();
 }
 
 /**

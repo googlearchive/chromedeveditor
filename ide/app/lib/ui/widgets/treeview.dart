@@ -42,7 +42,7 @@ class TreeView implements ListViewDelegate {
   // Map from node UID to info.
   Map<String, TreeViewRow> _rowsMap;
   // Saved expanded state of the nodes when reloading the content of the tree.
-  HashSet<String> _expandedState;
+  Set<String> _expandedState;
   // When dragging over a cell the tree view, it's the highlighted cell.
   TreeViewCell _currentDragOverCell;
   // Whether the user can drag a cell.
@@ -136,14 +136,9 @@ class TreeView implements ListViewDelegate {
     _listView.selection = [];
 
     // Save expanded state.
-    _expandedState = new HashSet();
+    _expandedState = new Set();
     if (_rows != null) {
-      // Save expanded state.
-      _rows.forEach((TreeViewRow row) {
-        if (row.expanded) {
-          _expandedState.add(row.nodeUID);
-        }
-      });
+      _expandedState = new Set.from(expandedState);
     }
 
     _fillRows();
@@ -164,6 +159,22 @@ class TreeView implements ListViewDelegate {
 
   bool isNodeExpanded(String nodeUID) {
     return _rowsMap[nodeUID] == null ? false : _rowsMap[nodeUID].expanded;
+  }
+
+  List<String> get expandedState {
+    if (_rows == null) {
+      return [];
+    } else {
+      return _rows.where((row) => row.expanded).map((row) => row.nodeUID).
+          toList();
+    }
+  }
+
+  void restoreExpandedState(List<String> expandedState) {
+    _expandedState = new Set.from(expandedState);
+    _fillRows();
+    _expandedState.clear();
+    _listView.reloadData();
   }
 
   /**
@@ -188,6 +199,8 @@ class TreeView implements ListViewDelegate {
       _delegate.treeViewSelectedChanged(this,
           _rowIndexesToNodeUIDs(_listView.selection));
     }
+
+    _delegate.treeViewSaveExpandedState(this);
   }
 
   void toggleNodeExpanded(String nodeUID, {bool animated: false}) {
@@ -292,6 +305,15 @@ class TreeView implements ListViewDelegate {
     if (!expand) {
       _cleanSelection();
     }
+
+  void listViewContextMenu(ListView view,
+                           List<int> rowIndexes,
+                           int rowIndex,
+                           Event event) {
+    _delegate.treeViewContextMenu(this,
+        _rowIndexesToNodeUIDs(rowIndexes),
+        _rows[rowIndex].nodeUID,
+        event);
   }
   
   String listViewDropEffect(ListView view, MouseEvent event) {

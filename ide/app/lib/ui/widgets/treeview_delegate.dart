@@ -55,11 +55,20 @@ abstract class TreeViewDelegate {
   bool treeViewRowClicked(Event event, String uid);
 
   /**
-   * This method will be called when the give node is double-clicked.
+   * This method will be called when the given node is double-clicked.
    */
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUIDs,
-                             Event event);
+                             Event event) {}
+
+  /**
+   * This method will be called when the user open the context menu on the
+   * given node.
+   */
+  void treeViewContextMenu(TreeView view,
+                           List<String> nodeUIDs,
+                           String nodeUID,
+                           Event event);
 
   /**
    * This method is called on dragenter.
@@ -69,13 +78,13 @@ abstract class TreeViewDelegate {
    */
   String treeViewDropEffect(TreeView view,
                             DataTransfer dataTransfer,
-                            String nodeUID);
+                            String nodeUID) => null;
 
   /**
    * This method is called when the dragged item is actually dropped on the
    * tree or on a specific node in the treeview.
    */
-  void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer);
+  void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer) {}
 
   /**
    * This method is called when a selection of the TreeView is actually dropped
@@ -83,7 +92,7 @@ abstract class TreeViewDelegate {
    */
   void treeViewDropCells(TreeView view,
                          List<String> nodesUIDs,
-                         String targetNodeUID);
+                         String targetNodeUID) {}
 
   /**
    * This method is called when the user dropped nodes from the treeview to one
@@ -93,9 +102,7 @@ abstract class TreeViewDelegate {
    */
   bool treeViewAllowsDropCells(TreeView view,
                                List<String> nodesUIDs,
-                               String destinationNodeUID) {
-
-  }
+                               String destinationNodeUID) {}
 
   /**
    * This method is called when the user dropped an external item to one of its
@@ -105,14 +112,18 @@ abstract class TreeViewDelegate {
    */
   bool treeViewAllowsDrop(TreeView view,
                           DataTransfer dataTransfer,
-                          String destinationNodeUID) {
-
-  }
+                          String destinationNodeUID) {}
 
   /**
    * This method provides a drag image and location for the given nodes UIDs.
    */
   TreeViewDragImage treeViewDragImage(TreeView view,
                                       List<String> nodesUIDs,
-                                      MouseEvent event);
+                                      MouseEvent event) => null;
+
+  /**
+   * This method is called whenever it's a good time to save the state of the
+   * tree.
+   */
+  void treeViewSaveExpandedState(TreeView view) {}
 }
