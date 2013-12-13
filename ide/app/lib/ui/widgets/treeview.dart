@@ -305,6 +305,7 @@ class TreeView implements ListViewDelegate {
     if (!expand) {
       _cleanSelection();
     }
+  }
 
   void listViewContextMenu(ListView view,
                            List<int> rowIndexes,
