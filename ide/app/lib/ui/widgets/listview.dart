@@ -80,6 +80,7 @@ class ListView {
       print(document.activeElement);
     });
     _container.onKeyDown.listen((event) {
+      var target = event.target;
     });
     
     _dropEnabled = false;
@@ -93,7 +94,7 @@ class ListView {
       /*%TRACE3*/ print("(4> 12/10/13): onClick!"); // TRACE%
       _removeCurrentSelectionHighlight();
       _selection.clear();
-      _delegate.listViewSelectedChanged(this, _selection.toList(), event);
+      _delegate.listViewSelectedChanged(this, _selection.toList());
     });
     _draggingCount = 0;
     _draggingOver = false;
@@ -160,40 +161,65 @@ class ListView {
   void _onClicked(int rowIndex, Event event) {
     /*%TRACE3*/ print("(4> 12/11/13): _onClicked!"); // TRACE%
     _container.focus();
-    _removeCurrentSelectionHighlight();
+
+    if (!_delegate.listViewRowClicked(event, rowIndex)) {
+      // If listViewRowClicked returns false, don't handle.
+      return;
+    }
+
     if ((event as MouseEvent).shiftKey) {
       // Click while holding shift.
-      if (_selectedRow == -1) {
-        _selectedRow = rowIndex;
-        _selection.clear();
-        _selection.add(rowIndex);
-      } else if (_selectedRow < rowIndex) {
-        _selection.clear();
-        for(int i = _selectedRow ; i <= rowIndex ; i++) {
-          _selection.add(i);
-        }
-      } else {
-        _selection.clear();
-        for(int i = rowIndex ; i <= _selectedRow ; i++) {
-          _selection.add(i);
-        }
-      }
+      _setSelection(
+          (_selectedRow != -1) ? _selectedRow : rowIndex,
+          endSelectionIndex: rowIndex);
     } else if ((event as MouseEvent).metaKey || (event as MouseEvent).ctrlKey) {
       // Click while holding Ctrl (Mac/Linux) or Command (for Mac).
-      _selectedRow = rowIndex;
-      if (_selection.contains(rowIndex)) {
-        _selection.remove(rowIndex);
-      } else {
-        _selection.add(rowIndex);
-      }
+      _toggleSelectedRow(rowIndex);
     } else {
       // Click without any modifiers.
-      _selectedRow = rowIndex;
-      _selection.clear();
+      _setSelection(rowIndex);
+    }
+  }
+  
+  void _toggleSelectedRow(int rowIndex) {
+    _removeCurrentSelectionHighlight();
+
+    _selectedRow = rowIndex;
+    
+    if (_selection.contains(rowIndex)) {
+      _selection.remove(rowIndex);
+    } else {
       _selection.add(rowIndex);
     }
+    
     _addCurrentSelectionHighlight();
-    _delegate.listViewSelectedChanged(this, _selection.toList(), event);
+    _delegate.listViewSelectedChanged(this, _selection.toList());
+  }
+  
+  void _setSelection(int selectionIndex, {int endSelectionIndex: -1}) {
+    _removeCurrentSelectionHighlight();
+    
+    // If endSelection is -1 (default for not-provided), one item is being selected.
+    if (endSelectionIndex == -1) {
+      endSelectionIndex = selectionIndex;
+    }
+    
+    if (selectionIndex < endSelectionIndex) {
+      _selection.clear();
+      for(int i = selectionIndex ; i <= endSelectionIndex ; i++) {
+        _selection.add(i);
+      }
+    } else {
+      _selection.clear();
+      for(int i = endSelectionIndex ; i <= selectionIndex ; i++) {
+        _selection.add(i);
+      }
+    }
+    
+    _selectedRow = selectionIndex;
+    
+    _addCurrentSelectionHighlight();
+    _delegate.listViewSelectedChanged(this, _selection.toList());
   }
 
   List<int> get selection => _selection.toList();

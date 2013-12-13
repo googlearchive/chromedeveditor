@@ -127,23 +127,31 @@ class FilesController implements TreeViewDelegate {
   int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
 
   void treeViewSelectedChanged(TreeView view,
-                               List<String> nodeUIDs,
-                               html.Event event) {
+                               List<String> nodeUIDs) {
     print("treeViewSelectedChanged");
+  }
 
-    if (nodeUIDs.isEmpty) {
-      return;
+  bool treeViewRowClicked(html.Event event, String uid) {
+    if (uid == null) {
+      return true;
     }
 
-    Resource resource = _filesMap[nodeUIDs.first];
+    Resource resource = _filesMap[uid];
     if (resource is File) {
       bool altKeyPressed = false;
       if (event != null) {
         altKeyPressed = ((event as html.MouseEvent).altKey);
       }
-      // If alt key is pressed, it will open a new tab.
-      _delegate.selectInEditor(resource, forceOpen: true,
-          replaceCurrent: !altKeyPressed);
+      
+      // Open in editor only if alt key or no modifier key is down.  If alt key
+      // is pressed, it will open a new tab.
+      if (!(event as html.MouseEvent).shiftKey
+          && !(event as html.MouseEvent).ctrlKey
+          && !(event as html.MouseEvent).metaKey) {
+        _delegate.selectInEditor(resource, forceOpen: true,
+            replaceCurrent: !altKeyPressed);
+      }
+      return true;
     }
   }
 
@@ -246,7 +254,6 @@ class FilesController implements TreeViewDelegate {
   bool treeViewAllowsDrop(TreeView view,
                           html.DataTransfer dataTransfer,
                           String destinationNodeUID) {
-    return true;
     if (destinationNodeUID == null) {
       return false;
     }

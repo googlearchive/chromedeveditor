@@ -174,8 +174,7 @@ class TreeView implements ListViewDelegate {
     }
     if (changed) {
       _delegate.treeViewSelectedChanged(this,
-          _rowIndexesToNodeUIDs(_listView.selection),
-          null);
+          _rowIndexesToNodeUIDs(_listView.selection));
     }
   }
 
@@ -240,11 +239,13 @@ class TreeView implements ListViewDelegate {
   }
 
   void listViewSelectedChanged(ListView view,
-                               List<int> rowIndexes,
-                               Event event) {
+                               List<int> rowIndexes) {
     _delegate.treeViewSelectedChanged(this,
-        _rowIndexesToNodeUIDs(rowIndexes),
-        event);
+        _rowIndexesToNodeUIDs(rowIndexes));
+  }
+
+  bool listViewRowClicked(Event event, int rowIndex) {
+    return _delegate.treeViewRowClicked(event, _rows[rowIndex].nodeUID);
   }
 
   void listViewDoubleClicked(ListView view,

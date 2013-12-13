@@ -36,13 +36,19 @@ abstract class ListViewDelegate {
   int listViewHeightForRow(ListView view, int rowIndex);
 
   /**
-   * The implementation of this method will be run when the cell at the given
-   * index `rowIndex` is clicked.
+   * The implementation of this method will be run when the cell at the given.
    * `view` is the list the callback is called from.
+   * indexes `rowIndexes` are selected.
    */
   void listViewSelectedChanged(ListView view,
-                               List<int> rowIndexes,
-                               Event event);
+                               List<int> rowIndexes);
+
+  /**
+   * The implementation of this method will be triggered when a row is clicked.
+   * Event `event` is the click event.
+   * Unique id `uid` is the node id.
+   */
+  bool listViewRowClicked(Event event, int rowIndex);
 
   /**
    * The implementation of this method will be run when the cell at the given

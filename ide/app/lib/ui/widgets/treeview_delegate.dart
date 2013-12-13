@@ -42,12 +42,17 @@ abstract class TreeViewDelegate {
   int treeViewHeightForNode(TreeView view, String nodeUID);
 
   /**
-   * The implementation of this method will be run when the given node is
-   * clicked.
+   * The implementation of this method will be run when the selection
+   * has changed.
    */
   void treeViewSelectedChanged(TreeView view,
-                               List<String> nodeUIDs,
-                               Event event);
+                               List<String> nodeUIDs);
+
+  /**
+   * The implementation of this method will be triggered when a node is
+   * clicked.
+   */
+  bool treeViewRowClicked(Event event, String uid);
 
   /**
    * This method will be called when the give node is double-clicked.
