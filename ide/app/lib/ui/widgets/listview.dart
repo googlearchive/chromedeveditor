@@ -79,8 +79,18 @@ class ListView {
     new Timer.periodic(const Duration(milliseconds: 500), (t) {
       print(document.activeElement);
     });
-    _container.onKeyDown.listen((event) {
-      var target = event.target;
+    _container.onKeyDown.listen((KeyboardEvent event) {
+      int keyCode = event.which;
+      switch (keyCode) {
+        case KeyCode.UP:
+          break;
+        case KeyCode.DOWN:
+          break;
+        case KeyCode.RIGHT:
+          break;
+        case KeyCode.LEFT:
+          break;
+      }
     });
     
     _dropEnabled = false;
