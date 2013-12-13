@@ -79,19 +79,7 @@ class ListView {
     new Timer.periodic(const Duration(milliseconds: 500), (t) {
       print(document.activeElement);
     });
-    _container.onKeyDown.listen((KeyboardEvent event) {
-      int keyCode = event.which;
-      switch (keyCode) {
-        case KeyCode.UP:
-          break;
-        case KeyCode.DOWN:
-          break;
-        case KeyCode.RIGHT:
-          break;
-        case KeyCode.LEFT:
-          break;
-      }
-    });
+    _container.onKeyDown.listen(_onKeyDown);
     
     _dropEnabled = false;
     _element.children.add(_container);
@@ -111,6 +99,27 @@ class ListView {
     _cellHighlightedOnDragover = false;
     _globalDraggingOverAllowed = true;
     reloadData();
+  }
+  
+  void _onKeyDown(KeyboardEvent event) {
+    if (!_delegate.listViewKeyDown(event)) {
+      return;
+    }
+    
+    int keyCode = event.which;
+    switch (keyCode) {
+      case KeyCode.UP:
+        /*%TRACE3*/ print("(4> 12/12/13): KeyCode.UP!"); // TRACE%
+        if (_selectedRow > 0) {
+          _setSelection(_selectedRow - 1);
+        }
+        break;
+      case KeyCode.DOWN:
+        if (_selectedRow < _rows.length - 1) {
+          _setSelection(_selectedRow + 1);
+        }
+        break;
+    }
   }
 
   /**

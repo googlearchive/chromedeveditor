@@ -255,7 +255,27 @@ class TreeView implements ListViewDelegate {
         _rowIndexesToNodeUIDs(rowIndexes),
         event);
   }
-
+  
+  bool listViewKeyDown(KeyboardEvent event) {
+    int keyCode = event.which;
+    bool expand;
+    
+    switch (keyCode) {
+      case KeyCode.RIGHT:
+        expand = true;
+        break;
+      case KeyCode.LEFT:
+        expand = false;
+        break;
+      default:
+        return true;
+    }
+    
+    for(String nodeUID in selection) {
+      setNodeExpanded(nodeUID, expand);
+    }
+  }
+  
   String listViewDropEffect(ListView view, MouseEvent event) {
     String nodeUID = null;
     if (_currentDragOverCell != null) {

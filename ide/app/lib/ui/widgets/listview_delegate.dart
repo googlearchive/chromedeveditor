@@ -59,6 +59,12 @@ abstract class ListViewDelegate {
   void listViewDoubleClicked(ListView view, List<int> rowIndexes, Event event);
 
   /**
+   * The implementation of this method will trigger when a key-down event
+   * occurs.  Returning false will cancel futher key handling.
+   */
+  bool listViewKeyDown(KeyboardEvent event);
+  
+  /**
    * This method is called on dragenter and dragover.
    * Return 'copy', 'move', 'link' or 'none'.
    * It will adjust the visual of the mouse cursor when the item is
