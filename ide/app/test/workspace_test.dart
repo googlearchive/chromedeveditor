@@ -20,7 +20,7 @@ defineTests() {
       var workspace = new Workspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
-      var fileResource = new File(workspace, fileEntry, false);
+      var fileResource = new File(workspace, fileEntry);
       expect(fileResource.name, fileEntry.name);
       expect(fileResource.path, '/test.txt');
       fileResource.getContents().then((string) {

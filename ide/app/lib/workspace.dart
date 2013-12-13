@@ -30,6 +30,7 @@ class Workspace implements Container {
   bool get _syncable => false;
 
   List<Resource> _children = [];
+  List<Resource> _syncFsChildren = [];
   PreferenceStore _store;
   Completer<Workspace> _whenAvailable = new Completer();
 
@@ -58,16 +59,24 @@ class Workspace implements Container {
 
   Future<Resource> _link(chrome.Entry entity, {bool syncable: false, bool fireEvent: true}) {
     if (entity.isFile) {
-      var resource = new File(this, entity, syncable);
-      _children.add(resource);
+      var resource = new File(this, entity);
+      if (syncable) {
+        _syncFsChildren.add(resource);
+      } else {
+        _children.add(resource);
+      }
       if (fireEvent) {
         _controller.add(new ResourceChangeEvent(resource, ResourceEventType.ADD));
       }
       return new Future.value(resource);
     } else {
-      var project = new Project(this, entity, syncable);
-      _children.add(project);
-      return _gatherChildren(project, syncable).then((container) {
+      var project = new Project(this, entity);
+      if (syncable) {
+        _syncFsChildren.add(project);
+      } else {
+        _children.add(project);
+      }
+      return _gatherChildren(project).then((container) {
         if (fireEvent) {
           _controller.add(new ResourceChangeEvent(container, ResourceEventType.ADD));
         }
@@ -77,7 +86,7 @@ class Workspace implements Container {
   }
 
   void unlink(Resource resource) {
-    if (!_children.contains(resource)) {
+    if (!_children.contains(resource) && !_syncFsChildren.contains(resource)) {
       throw new ArgumentError('${resource} is not a top level entity');
     }
     _removeChild(resource);
@@ -90,7 +99,7 @@ class Workspace implements Container {
    * [ResourceEventType.CHANGE] after the moves are completed.
    */
   Future moveTo(List<Resource> resources, Container container) {
-    List futures = resources.map((r) => _moveTo(r, container, container._syncable));
+    List futures = resources.map((r) => _moveTo(r, container));
     return Future.wait(futures).then((_) {
       _controller.add(new ResourceChangeEvent(container, ResourceEventType.CHANGE));
     });
@@ -101,18 +110,18 @@ class Workspace implements Container {
    * and adds it to the container's children. [syncable] indicates whether the
    * entry is in the sync file sytem.
    */
-  Future _moveTo(Resource resource, Container container, bool syncable) {
+  Future _moveTo(Resource resource, Container container) {
     return resource.entry.moveTo(container.entry).then((chrome.Entry newEntry) {
       resource.parent._removeChild(resource, fireEvent: false);
 
       if (newEntry.isFile) {
-        var file = new File(container, newEntry, syncable);
+        var file = new File(container, newEntry);
         container._children.add(file);
         return new Future.value();
       } else {
-        var folder = new Folder(container, newEntry, syncable);
+        var folder = new Folder(container, newEntry);
         container._children.add(folder);
-        return _gatherChildren(folder, syncable);
+        return _gatherChildren(folder);
       }
     });
   }
@@ -172,7 +181,7 @@ class Workspace implements Container {
    * Store info for workspace children.
    */
   Future save() {
-    List<String> entries = _children.where((c) => !c._syncable).map(
+    List<String> entries = _children.map(
         (c) => chrome.fileSystem.retainEntry(c.entry)).toList();
 
     return _store.setValue('workspace', JSON.encode(entries));
@@ -185,23 +194,23 @@ class Workspace implements Container {
     return getChildPath(token.substring(1));
   }
 
-  Future<Resource> _gatherChildren(Container container, bool syncable) {
+  Future<Resource> _gatherChildren(Container container) {
     chrome.DirectoryEntry dir = container.entry;
     List futures = [];
 
     return dir.createReader().readEntries().then((entries) {
       for (chrome.Entry ent in entries) {
         if (ent.isFile) {
-          var file = new File(container, ent, syncable);
+          var file = new File(container, ent);
           container._children.add(file);
         } else {
           // We don't want to show .git folders to the user.
           if (ent.name == '.git') {
             continue;
           }
-          var folder = new Folder(container, ent, syncable);
+          var folder = new Folder(container, ent);
           container._children.add(folder);
-          futures.add(_gatherChildren(folder, syncable));
+          futures.add(_gatherChildren(folder));
         }
       }
       return Future.wait(futures).then((_) => container);
@@ -217,9 +226,9 @@ class Workspace implements Container {
       if (resource is Project) {
         // We use a temporary project to fill the children...
         Project tmpProject =
-            new Project(this, resource.entry, resource._syncable);
+            new Project(this, resource.entry);
         Future future =
-            _gatherChildren(tmpProject, tmpProject._syncable).then((container) {
+            _gatherChildren(tmpProject).then((container) {
           // Then, we are able to replace the children in one atomic operation.
           // It helps make the UI more stable visually.
           // TODO(dvh): indentity of objects needs to be preserved.
@@ -299,7 +308,11 @@ class Workspace implements Container {
   }
 
   void _removeChild(Resource resource, {bool fireEvent: true}) {
-   _children.remove(resource);
+    if (_children.contains(resource)) {
+      _children.remove(resource);
+    } else {
+      _syncFsChildren.remove(resource);
+    }
    if (fireEvent) {
      _fireEvent(new ResourceChangeEvent(resource, ResourceEventType.DELETE));
    }
@@ -309,8 +322,8 @@ class Workspace implements Container {
 abstract class Container extends Resource {
   List<Resource> _children = [];
 
-  Container(Container parent, chrome.Entry entry, bool syncable):
-    super(parent, entry, syncable);
+  Container(Container parent, chrome.Entry entry):
+    super(parent, entry);
 
   Resource getChild(String name) {
     for (Resource resource in getChildren()) {
@@ -349,9 +362,8 @@ abstract class Container extends Resource {
 abstract class Resource {
   Container _parent;
   chrome.Entry _entry;
-  final bool _syncable;
 
-  Resource(this._parent, this._entry, this._syncable);
+  Resource(this._parent, this._entry);
 
   String get name => _entry.name;
 
@@ -398,15 +410,15 @@ abstract class Resource {
 }
 
 class Folder extends Container {
-  Folder(Container parent, chrome.Entry entry, bool syncable):
-    super(parent, entry, syncable);
+  Folder(Container parent, chrome.Entry entry):
+    super(parent, entry);
 
   /**
    * Creates a new [File] with the given name
    */
   Future<File> createNewFile(String name) {
     return _dirEntry.createFile(name).then((entry) {
-      File file = new File(this, entry, _syncable);
+      File file = new File(this, entry);
       _children.add(file);
       _fireEvent(new ResourceChangeEvent(file, ResourceEventType.ADD));
       return file;
@@ -415,7 +427,7 @@ class Folder extends Container {
 
   Future<Folder> createNewFolder(String name) {
     return _dirEntry.createDirectory(name).then((entry) {
-      Folder folder = new Folder(this, entry, _syncable);
+      Folder folder = new Folder(this, entry);
       _children.add(folder);
       _fireEvent(new ResourceChangeEvent(folder, ResourceEventType.ADD));
       return folder;
@@ -430,8 +442,8 @@ class Folder extends Container {
 }
 
 class File extends Resource {
-  File(Container parent, chrome.Entry entry, bool syncable):
-    super(parent, entry, syncable);
+  File(Container parent, chrome.Entry entry):
+    super(parent, entry);
 
   Future<String> getContents() => _fileEntry.readText();
 
@@ -464,8 +476,8 @@ class File extends Resource {
  * [Projects]s can be immediate child elements of a [Workspace].
  */
 class Project extends Folder {
-  Project(Container parent, chrome.Entry entry, bool syncable):
-    super(parent, entry, syncable);
+  Project(Container parent, chrome.Entry entry):
+    super(parent, entry);
 
   Project get project => this;
 }
