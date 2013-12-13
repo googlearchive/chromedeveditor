@@ -45,7 +45,8 @@ abstract class ListViewDelegate {
 
   /**
    * The implementation of this method will be triggered when a row is clicked.
-   * Event `event` is the click event.
+   * Event `event` is the click event.  Returning false will cancel
+   * further selection operations.
    * Unique id `uid` is the node id.
    */
   bool listViewRowClicked(Event event, int rowIndex);

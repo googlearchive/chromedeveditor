@@ -151,8 +151,9 @@ class FilesController implements TreeViewDelegate {
         _delegate.selectInEditor(resource, forceOpen: true,
             replaceCurrent: !altKeyPressed);
       }
-      return true;
     }
+    
+    return true;
   }
 
   void treeViewDoubleClicked(TreeView view,
