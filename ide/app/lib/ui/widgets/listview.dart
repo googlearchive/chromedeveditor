@@ -99,8 +99,9 @@ class ListView {
     
     int keyCode = event.which;
     switch (keyCode) {
+      //TODO: Handle shift + UP/DOWN (not selecting file)
+      //TODO: Open file on UP/DOWN?  On ENTER?  Alt+ENTER opens in new tab?
       case KeyCode.UP:
-        /*%TRACE3*/ print("(4> 12/12/13): KeyCode.UP!"); // TRACE%
         if (_selectedRow > 0) {
           _setSelection(_selectedRow - 1);
         }
