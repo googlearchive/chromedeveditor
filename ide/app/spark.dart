@@ -158,6 +158,10 @@ class Spark extends Application implements FilesControllerDelegate {
   Element getDialogElement(String selectors) =>
       document.querySelector(selectors);
 
+  SparkDialog createDialog(Element dialogElement) =>
+      new SparkBootjackDialog(dialogElement);
+
+
   //
   // Parts of ctor:
   //
@@ -268,8 +272,8 @@ class Spark extends Application implements FilesControllerDelegate {
     // TODO(ussuri): This particular action somehow silently crashes the app in
     // its _triggerOnReturn() (the "#fileName" element can't be found).
     // Investigate.
-//    actionManager.registerAction(new FileRenameAction(
-//        this, getDialogElement('#renameDialog')));
+    actionManager.registerAction(new FileRenameAction(
+        this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new FileDeleteAction(
         this, getDialogElement('#deleteDialog')));
 
@@ -633,19 +637,18 @@ abstract class SparkAction extends Action {
   }
 }
 
-abstract class SparkActionWithDialog extends SparkAction {
+abstract class SparkDialog {
+  void show();
+  void hide();
+  Element get element;
+}
+
+class SparkBootjackDialog implements SparkDialog {
   bootjack.Modal _dialog;
 
-  SparkActionWithDialog(Spark spark,
-                        String id,
-                        String name,
-                        Element dialogElement)
-      : super(spark, id, name) {
-    dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
+  SparkBootjackDialog(Element dialogElement) {
     _dialog = bootjack.Modal.wire(dialogElement);
 
-    // TODO(ussuri): This will be triggered only in non-Polymer UI via Bootjack.
-    // Polymer UI should handle focusing itself.
     _dialog.$element.on('shown.bs.modal', (event) {
       final Element dialog = event.target;
       Element elementToFocus = dialog.querySelector('[focused]');
@@ -656,31 +659,42 @@ abstract class SparkActionWithDialog extends SparkAction {
     });
   }
 
+  void show() => _dialog.show();
+
+  void hide() => _dialog.hide();
+
+  Element get element => _dialog.element;
+}
+
+abstract class SparkActionWithDialog extends SparkAction {
+  SparkDialog _dialog;
+
+  SparkActionWithDialog(Spark spark,
+                        String id,
+                        String name,
+                        Element dialogElement)
+      : super(spark, id, name) {
+    _dialog = spark.createDialog(dialogElement);
+    _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
+  }
+
   void _commit();
 
-  bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
-
-  Element getElement(String selectors) =>
+  Element _getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
 
-  Element _triggerOnReturn(String name) {
-    var element = _dialog.element.querySelector(name);
+  Element _triggerOnReturn(String selectors) {
+    var element = _dialog.element.querySelector(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
-        isPolymer ? _dialog.toggle() : _dialog.hide();
+        _dialog.hide();
       }
     });
     return element;
   }
 
-  void _show() {
-    if (isPolymer) {
-      (_dialog.element as dynamic).toggle();
-    } else {
-      _dialog.show();
-    }
-  }
+  void _show() => _dialog.show();
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
@@ -819,10 +833,10 @@ class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
 
   void _setMessageAndShow() {
     if (_resources.length == 1) {
-      getElement("#message").text =
+      _getElement("#message").text =
           "Are you sure you want to delete '${_resources.first.name}'?";
     } else {
-      getElement("#message").text =
+      _getElement("#message").text =
           "Are you sure you want to delete ${_resources.length} files?";
     }
 
@@ -916,7 +930,7 @@ class GitCloneAction extends SparkActionWithDialog {
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    _projectNameElement = getElement("#gitProjectName");
+    _projectNameElement = _getElement("#gitProjectName");
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
   }
 
@@ -960,12 +974,12 @@ class AboutSparkAction extends SparkActionWithDialog {
       : super(spark, "help-about", "About Spark", dialog);
 
   void _invoke([Object context]) {
-    if (isPolymer || !_initialized) {
-      var checkbox = getElement('#analyticsCheck');
+    if (!_initialized) {
+      var checkbox = _getElement('#analyticsCheck');
       checkbox.checked = _isTrackingPermitted;
       checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
 
-      getElement('#aboutVersion').text = spark.appVersion;
+      _getElement('#aboutVersion').text = spark.appVersion;
 
       _initialized = true;
     }
