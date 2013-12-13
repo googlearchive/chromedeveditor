@@ -109,6 +109,18 @@ class TreeView implements ListViewDelegate {
       }
     }
   }
+  
+  /**
+   * Cleans the selection to not include non-showing elements
+   */
+  void _cleanSelection() {
+    for(String nodeUID in selection) {
+      TreeViewRow row = _rowsMap[nodeUID];
+      if (row == null) {
+        selection.remove(nodeUID);
+      }
+    }
+  }
 
   /**
    * This method can be called to refresh the content when the data provided
@@ -272,7 +284,13 @@ class TreeView implements ListViewDelegate {
     }
     
     for(String nodeUID in selection) {
-      setNodeExpanded(nodeUID, expand);
+      if (_rowsMap.containsKey(nodeUID)) {
+        setNodeExpanded(nodeUID, expand);
+      }
+    }
+    
+    if (!expand) {
+      _cleanSelection();
     }
   }
   
