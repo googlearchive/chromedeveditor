@@ -9,6 +9,7 @@ import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
+import 'package:spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
 
 import 'spark.dart';
 import 'lib/actions.dart';
@@ -25,6 +26,19 @@ void main() {
   });
 }
 
+class SparkPolymerDialog implements SparkDialog {
+  widgets.SparkOverlay _dialogElement;
+
+  SparkPolymerDialog(Element dialogElement)
+      : _dialogElement = dialogElement;
+
+  void show() => _dialogElement.toggle();
+
+  void hide() => _dialogElement.toggle();
+
+  Element get element => _dialogElement;
+}
+
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
@@ -35,11 +49,14 @@ class SparkPolymer extends Spark {
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
-
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
   Element getDialogElement(String selectors) =>
       _ui.getShadowDomElement(selectors);
+
+  @override
+  SparkDialog createDialog(Element dialogElement) =>
+      new SparkPolymerDialog(dialogElement);
 
   //
   // Override some parts of the parent's ctor:
@@ -84,11 +101,11 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    var node = getUIElement("#hotdogMenu2");
-    node.on['activate'].listen((event) {
-      var item = event.detail['item'];
-      var menuId = item.attributes['id'];
-      switch (menuId) {
+    var menu = getUIElement('#hotdogMenuNew');
+    menu.on['activate'].listen((event) {
+      final item = event.detail['item'];
+      final actionId = item.attributes['actionId'];
+      switch (actionId) {
         case 'file-open':
         case 'folder-open':
         case 'file-close':
@@ -96,31 +113,28 @@ class SparkPolymer extends Spark {
         case 'run-tests':
         case 'git-clone':
         case 'help-about':
-          actionManager.getAction(menuId).invoke();
+          actionManager.getAction(actionId).invoke();
           break;
         default:
-          print("WARNING: Menu Item Unhandled Action $menuId");
+          print("WARNING: Menu Item Unhandled Action $actionId");
       }
     });
 
-    // TODO(ussuri): This is a temporary hack just to test the functionality
-    // triggered from the menu. This will be replaced by spark-menu ASAP.
-    UListElement ul = getUIElement('#hotdogMenu ul');
+    // TODO(ussuri): This is a temporary hack. This will be replaced by the
+    // preferences dialog.
+    UListElement oldMenu = getUIElement('#hotdogMenu ul');
 
     // Theme control.
-    // NOTE: Disabled because doing this resulted in a crash.
-//    Element theme = ul.querySelector('#changeTheme');
-//    ul.children.remove(theme);
-//    ul.children.add(theme);
-    ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
-    ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
+    oldMenu.querySelector('#themeLeft').onClick.listen(
+        (e) => aceThemeManager.dec(e));
+    oldMenu.querySelector('#themeRight').onClick.listen(
+        (e) => aceThemeManager.inc(e));
 
     // Key binding control.
-//    Element keys = ul.querySelector('#changeKeys');
-//    ul.children.remove(keys);
-//    ul.children.add(keys);
-    ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
-    ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
+    oldMenu.querySelector('#keysLeft').onClick.listen(
+        (e) => aceKeysManager.dec(e));
+    oldMenu.querySelector('#keysRight').onClick.listen(
+        (e) => aceKeysManager.inc(e));
   }
 
   //

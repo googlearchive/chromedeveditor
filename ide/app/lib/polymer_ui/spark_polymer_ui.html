@@ -7,12 +7,9 @@
 <link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon/spark-icon.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
-<link rel="import" href="../../packages/spark_widgets/spark-menu/spark-menu.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-button/spark-menu-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-item/spark-menu-item.html">
 <link rel="import" href="../../packages/spark_widgets/spark-overlay/spark-overlay.html">
-<link rel="import" href="../../packages/spark_widgets/spark-selection/spark-selection.html">
-<link rel="import" href="../../packages/spark_widgets/spark-selector/spark-selector.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
 <link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
@@ -177,6 +174,21 @@
   background-color: white;
 }
 
+#editedFilename {
+  color: #ccc;
+  display: inline-block;
+  margin-right: 10px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+#editedFilename.hidden {
+  opacity: 0.0;
+}
+
 /** Dialog Stuff */
 .spark-overlay-scale-slideup {
   top: 72px;
@@ -202,6 +214,20 @@
   outline: 1px solid rgba(0,0,0,0.2);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
+
+/* TODO(ussuri): None of these worked. Fix.
+.plus-minus-container {
+  display: flex;
+}
+
+.plus-minus-spacer {
+  flex: 1;
+}
+
+.plus-minus {
+  margin: 0;
+}
+*/
     </style>
 
     <spark-toolbar id="toolbar" color="white">
@@ -211,26 +237,47 @@
       <span id="status"></span>
 
       <div id="toolbarRight">
-        <div id="editedFilename"></div>
+        <span id="editedFilename"></span>
 
-      <spark-menu-button id="hotdogMenu2" responsive="true"
-          src="../../images/menu.png" selected="1">
-        <spark-menu-item id="file-open" iconsize=0>
-          Open File...
-        </spark-menu-item>
-        <spark-menu-item id="folder-open" iconsize=0>
-          Open Folder
-        </spark-menu-item>
-        <spark-menu-item id="file-close" iconsize=0>Close</spark-menu-item>
-        <spark-menu-item id="file-delete" iconsize=0>Delete</spark-menu-item>
-        <spark-menu-item id="run-tests" iconsize=0>Run Tests</spark-menu-item>
-        <spark-menu-item id="git-clone" iconsize=0>
-          Git Clone...
-        </spark-menu-item>
-        <spark-menu-item id="help-about" iconsize=0>
-          About Spark
-        </spark-menu-item>
-      </spark-menu-button>
+        <spark-menu-button id="hotdogMenuNew" responsive="true"
+            src="../../images/menu.png" selected="1">
+          <spark-menu-item actionId="file-open" iconsize=0 label="Open File...">
+          </spark-menu-item>
+          <spark-menu-item actionId="folder-open" iconsize=0 label="Open Folder...">
+          </spark-menu-item>
+          <spark-menu-item actionId="file-close" iconsize=0 label="Close">
+          </spark-menu-item>
+          <spark-menu-item actionId="file-delete" iconsize=0 label="Delete">
+          </spark-menu-item>
+          <spark-menu-item id="changeTheme2" iconsize=0 label="Change Theme">
+            <span class="plus-minus-container">
+              <label class="plus-minus-spacer"></label>
+              <spark-button id="themeLeft2" class="plus-minus">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button id="themeRight2" class="plus-minus">
+                <strong>+</strong>
+              </spark-button>
+            </span>
+          </spark-menu-item>
+          <spark-menu-item id="changeKeys2" iconsize=0 label="Spark Default">
+            <span class="plus-minus-container">
+              <label class="plus-minus-spacer"></label>
+              <spark-button id="keysLeft2" class="plus-minus">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button id="keysRight2" class="plus-minus">
+                <strong>+</strong>
+              </spark-button>
+            </span>
+          </spark-menu-item>
+          <spark-menu-item actionId="run-tests" iconsize=0 label="Run Tests">
+          </spark-menu-item>
+          <spark-menu-item actionId="git-clone" iconsize=0 label="Git Clone...">
+          </spark-menu-item>
+          <spark-menu-item actionId="help-about" iconsize=0 label="About Spark">
+          </spark-menu-item>
+        </spark-menu-button>
 
         <div id="hotdogMenu" class="btn-group">
           <!-- TEMP(ussuri): All of this is temp, but especially the on-click
@@ -298,7 +345,7 @@
     <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
-          File name:  <input id="fileName" type="text" focused>
+          File name: <input id="fileNewName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
@@ -313,17 +360,17 @@
     </spark-overlay>
 
     <!-- New Folder dialog -->
-    <spark-overlay id="folderNewDialog" class="modal fade">
+    <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
           Folder name: <input id="folderName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
-        <spark-button class="btn btn-default" data-dismiss="modal">
+        <spark-button data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="folderNewOkButton" primary class="btn btn-primary"
+        <spark-button id="folderNewOkButton" primary
             data-dismiss="modal">Create</spark-button>
       </div>
     </spark-overlay>
@@ -332,7 +379,7 @@
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
-          File name: <input id="fileName" type="text" focused>
+          File name: <input id="renameFileName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
