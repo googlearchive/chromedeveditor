@@ -214,6 +214,20 @@
   outline: 1px solid rgba(0,0,0,0.2);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
+
+/* TODO(ussuri): None of these worked. Fix.
+.plus-minus-container {
+  display: flex;
+}
+
+.plus-minus-spacer {
+  flex: 1;
+}
+
+.plus-minus {
+  margin: 0;
+}
+*/
     </style>
 
     <spark-toolbar id="toolbar" color="white">
@@ -234,6 +248,28 @@
           <spark-menu-item actionId="file-close" iconsize=0 label="Close">
           </spark-menu-item>
           <spark-menu-item actionId="file-delete" iconsize=0 label="Delete">
+          </spark-menu-item>
+          <spark-menu-item id="changeTheme2" iconsize=0 label="Change Theme">
+            <span class="plus-minus-container">
+              <label class="plus-minus-spacer"></label>
+              <spark-button id="themeLeft2" class="plus-minus">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button id="themeRight2" class="plus-minus">
+                <strong>+</strong>
+              </spark-button>
+            </span>
+          </spark-menu-item>
+          <spark-menu-item id="changeKeys2" iconsize=0 label="Spark Default">
+            <span class="plus-minus-container">
+              <label class="plus-minus-spacer"></label>
+              <spark-button id="keysLeft2" class="plus-minus">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button id="keysRight2" class="plus-minus">
+                <strong>+</strong>
+              </spark-button>
+            </span>
           </spark-menu-item>
           <spark-menu-item actionId="run-tests" iconsize=0 label="Run Tests">
           </spark-menu-item>
