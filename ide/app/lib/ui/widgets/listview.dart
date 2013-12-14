@@ -80,7 +80,6 @@ class ListView {
     _rows = [];
     _selectedRow = -1;
     _container.onClick.listen((event) {
-      _container.focus();
       _removeCurrentSelectionHighlight();
       _selection.clear();
       _delegate.listViewSelectedChanged(this, _selection.toList());
@@ -91,16 +90,18 @@ class ListView {
     _globalDraggingOverAllowed = true;
     reloadData();
   }
-  
+
   void _onKeyDown(KeyboardEvent event) {
     if (!_delegate.listViewKeyDown(event)) {
       return;
     }
-    
+
     int keyCode = event.which;
     switch (keyCode) {
       //TODO: Handle shift + UP/DOWN (not selecting file)
       //TODO: Open file on UP/DOWN?  On ENTER?  Alt+ENTER opens in new tab?
+      //TODO: Handle pgup/pgdn (and mac equiv): scroll list up/down.
+      //TODO: Handle begin/end (and mac equiv): scroll to top/bottom.
       case KeyCode.UP:
         if (_selectedRow > 0) {
           _setSelection(_selectedRow - 1);
@@ -194,30 +195,33 @@ class ListView {
       _setSelection(rowIndex);
     }
   }
-  
+
   void _toggleSelectedRow(int rowIndex) {
     _removeCurrentSelectionHighlight();
 
     _selectedRow = rowIndex;
-    
+
     if (_selection.contains(rowIndex)) {
       _selection.remove(rowIndex);
     } else {
       _selection.add(rowIndex);
     }
-    
+
     _addCurrentSelectionHighlight();
     _delegate.listViewSelectedChanged(this, _selection.toList());
   }
-  
+
   void _setSelection(int selectionIndex, {int endSelectionIndex: -1}) {
     _removeCurrentSelectionHighlight();
-    
+
     // If endSelection is -1 (default for not-provided), one item is being selected.
     if (endSelectionIndex == -1) {
       endSelectionIndex = selectionIndex;
     }
-    
+
+    selectionIndex = selectionIndex.clamp(0, _rows.length);
+    endSelectionIndex = endSelectionIndex.clamp(0, _rows.length);
+
     if (selectionIndex < endSelectionIndex) {
       _selection.clear();
       for(int i = selectionIndex ; i <= endSelectionIndex ; i++) {
@@ -229,9 +233,9 @@ class ListView {
         _selection.add(i);
       }
     }
-    
+
     _selectedRow = selectionIndex;
-    
+
     _addCurrentSelectionHighlight();
     _delegate.listViewSelectedChanged(this, _selection.toList());
   }
