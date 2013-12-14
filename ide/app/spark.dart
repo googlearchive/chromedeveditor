@@ -695,7 +695,8 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
 
   String get category => 'tab';
 
-  bool appliesTo(Object object) => _isFileList(object);
+  bool appliesTo(Object object) => 
+      _isFileList(object) && (object as List).any((f) => !spark.editorArea.isOpenInTab(f));
 }
 
 class FileNewAction extends SparkActionWithDialog implements ContextAction {
