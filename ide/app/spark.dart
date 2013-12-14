@@ -130,6 +130,14 @@ class Spark extends Application implements FilesControllerDelegate {
     buildMenu();
 
     initSplitView();
+
+    window.onFocus.listen((Event e) {
+      // When the user switch to an other application, he might change the
+      // content of the workspace from other applications.
+      // For that reason, when the user switch back to Spark, we want to check
+      // whether the content of the workspace changed.
+      workspace.refresh();
+    });
   }
 
   String get appName => i18n('app_name');
