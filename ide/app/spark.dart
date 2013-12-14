@@ -705,7 +705,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File…", dialog) {
     defaultBinding("ctrl-n");
-    _nameElement = _triggerOnReturn("#fileName");
+    _nameElement = _triggerOnReturn("#fileNewName");
   }
 
   void _invoke([List<ws.Folder> folders]) {
@@ -846,7 +846,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   FileRenameAction(Spark spark, Element dialog)
       : super(spark, "file-rename", "Rename…", dialog) {
-    _nameElement = _triggerOnReturn("#fileName");
+    _nameElement = _triggerOnReturn("#renameFileName");
   }
 
   void _invoke([List<ws.Resource> resources]) {

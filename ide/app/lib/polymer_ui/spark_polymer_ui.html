@@ -298,7 +298,7 @@
     <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
-          File name:  <input id="fileName" type="text" focused>
+          File name: <input id="fileNewName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
@@ -313,17 +313,17 @@
     </spark-overlay>
 
     <!-- New Folder dialog -->
-    <spark-overlay id="folderNewDialog" class="modal fade">
+    <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
           Folder name: <input id="folderName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
-        <spark-button class="btn btn-default" data-dismiss="modal">
+        <spark-button data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="folderNewOkButton" primary class="btn btn-primary"
+        <spark-button id="folderNewOkButton" primary
             data-dismiss="modal">Create</spark-button>
       </div>
     </spark-overlay>
@@ -332,7 +332,7 @@
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
-          File name: <input id="fileName" type="text" focused>
+          File name: <input id="renameFileName" type="text" focused>
         </p>
       </div>
       <div class="modal-footer">
