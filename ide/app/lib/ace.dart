@@ -35,6 +35,10 @@ class AceEditor extends Editor {
 
   void resize() => aceContainer.resize();
   void focus() => aceContainer.focus();
+  
+  void apply(EditorPreferences prefs) {
+    aceContainer.setPreferencesForSession(prefs);
+  }
 }
 
 

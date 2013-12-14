@@ -10,43 +10,49 @@ import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 import 'files_mock.dart';
 
+class MockFileTypePreferences implements FileTypePreferences {
+  final String fileType;
+  MockFileTypePreferences(String this.fileType, [int this.custom = 0]);
+  int custom = 0;
+  Map toMap() => { 'custom' : custom };
+}
+
+MockFileTypePreferences _factory(String fileType, [Map map]) =>
+    new MockFileTypePreferences(fileType, (map == null ? 0 : map['custom']));
+
 defineTests() {
   group('filetypes', () {
     test("recognize inbuilt file types", () {
       var fs = new MockFileSystem();
       var workspace = new Workspace();
-      
-      var ftRegistry = new FileTypeRegistry();
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.css'), false)), 'css');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.dart'), false)), 'dart');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.htm'), false)), 'html');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.js'), false)), 'js');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.json'), false)), 'json');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.md'), false)), 'md');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.yaml'), false)), 'yaml');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world'), false)), 'unknown');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.css'))), 'css');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.dart'))), 'dart');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.htm'))), 'html');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.js'))), 'js');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.json'))), 'json');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.md'))), 'md');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.yaml'))), 'yaml');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world'))), 'unknown');
     });
     
     test("recognize custom file types", () {
       var fs = new MockFileSystem();
       var workspace = new Workspace();
-      var ftRegistry = new FileTypeRegistry();
-      ftRegistry.registerCustomType('foo', '.foo');
-      expect(ftRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.foo'), false)), 'foo');
+      fileTypeRegistry.registerCustomType('foo', '.foo');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.foo'))), 'foo');
     });
     
     test('preference changed stream', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
-      var ftRegistry = new FileTypeRegistry();
-      ftRegistry.registerCustomType('test1', '.test1');
+      fileTypeRegistry.registerCustomType('test1', '.test1');
       var future = 
-          ftRegistry.onFileTypePreferenceChange(prefStore, 'test1')
+          fileTypeRegistry.onFileTypePreferenceChange(prefStore, _factory)
                     .first.then((prefs) {
-                      expect(prefs.tabSize, 32);
+                      expect(prefs.custom, 32);
                     });
       
-      prefStore.setJsonValue('fileTypePrefs/test1', { 'useSoftTabs' : true, 'tabSize' : 32});
+      prefStore.setJsonValue('fileTypePrefs/test1', { 'custom' : 32});
       
       return future;
     });
@@ -54,27 +60,24 @@ defineTests() {
     test('global defaults loaded for new type', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
-      var ftRegistry = new FileTypeRegistry();
-      ftRegistry.registerCustomType('test2', '.test2');
-      return ftRegistry.restorePreferences(prefStore, 'test2')
+      fileTypeRegistry.registerCustomType('test2', '.test2');
+      return fileTypeRegistry.restorePreferences(prefStore, _factory, 'test2')
           .then((prefs) {
-            expect(prefs.useSoftTabs, true);
-            expect(prefs.tabSize, 2);
+            expect(prefs.custom, 0);
           });
     });
     
     test('read/write preferences', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
-      var ftRegistry = new FileTypeRegistry();
-      ftRegistry.registerCustomType('test3', '.test3');
-      var prefs = ftRegistry.createPreferences('test3');
-      prefs.tabSize = 50;
-      return ftRegistry.persistPreferences(prefStore, prefs)
+      fileTypeRegistry.registerCustomType('test3', '.test3');
+      var prefs = _factory('test3');
+      prefs.custom = 50;
+      return fileTypeRegistry.persistPreferences(prefStore, prefs)
         .then((_) {
-          return ftRegistry.restorePreferences(prefStore, 'test3')
+          return fileTypeRegistry.restorePreferences(prefStore, _factory, 'test3')
               .then((prefs) {
-                expect(prefs.tabSize, 50);
+                expect(prefs.custom, 50);
               });
         });
     });

@@ -11,7 +11,10 @@ import 'package:path/path.dart' as path;
 import 'preferences.dart';
 import 'workspace.dart';
 
-final FileTypeRegistry _FILE_TYPE_REGISTRY = new FileTypeRegistry._();
+/**
+ * The global file type registry.
+ */
+final FileTypeRegistry fileTypeRegistry = new FileTypeRegistry._();
 
 /**
  * A group of file types that we know about a priori. The runtime can 
@@ -25,6 +28,26 @@ const Map<String, String> _INBUILT_TYPES =
             'json' : '.json',
             'md'   : '.md',
             'yaml' : '.yaml' };
+        
+/**
+ * Preferences specific to a given file type
+ */
+abstract class FileTypePreferences {
+  final String fileType;
+  FileTypePreferences(String this.fileType);
+  /**
+   * Return a json serializable map of the preferences.
+   */
+  Map<String,dynamic> toMap();
+}
+
+/**
+ * An interface for defining handlers of file types
+ * If the argument [:prefs:] is not provided or is null, returns
+ * a [FileTypePreferences] object containing default values for all
+ * the stored preferences.
+ */
+typedef FileTypePreferences PreferenceFactory(String fileType, [Map prefs]);
 
 
 /**
@@ -34,10 +57,6 @@ class FileTypeRegistry {
   
   FileTypeRegistry._() :
     _knownTypes = new Map.fromIterable(_INBUILT_TYPES.keys, value: (k) => _INBUILT_TYPES[k].split('|'));
-  
-  factory FileTypeRegistry() {
-    return _FILE_TYPE_REGISTRY;
-  }
   
   final Map<String, List<String>> _knownTypes;
   
@@ -68,51 +87,68 @@ class FileTypeRegistry {
     _knownTypes.keys.firstWhere(
           (k) => _knownTypes[k].contains(path.extension(file.path)), 
           orElse: () => "unknown");
-  
-  /**
-   * Creates a new [FileTypePreferences] object for the given file,
-   * with all of the global defaults
-   */
-  FileTypePreferences createPreferences(String fileType) {
-    if (!_knownTypes.keys.contains(fileType)) {
-      throw new ArgumentError('Unknown file type: ${fileType}');
-    }
-    return new FileTypePreferences._(fileType);
-  }
       
   
   /**
    * Returns a future the file type preferences for the given file, or the global defaults
    * if there is no stored preference value for the key. 
    */
-  Future<FileTypePreferences> restorePreferences(PreferenceStore prefStore, String fileType) {
+  Future<FileTypePreferences> restorePreferences(PreferenceStore prefStore, PreferenceFactory prefFactory, String fileType) {
     if (!_knownTypes.keys.contains(fileType)) {
       return new Future.error(new ArgumentError('Unknown file type: $fileType'));
     }
     return prefStore.getJsonValue('fileTypePrefs/$fileType', ifAbsent: () => null)
-        .then(
-            (prefs) => new FileTypePreferences._(fileType, prefs: prefs));
+        .then((prefs) {
+          var defaults = prefFactory(fileType);
+          if (prefs == null) return defaults;
+          return prefFactory(
+              fileType, 
+              new Map.fromIterable(defaults.toMap().keys, value: (k) => prefs[k]));
+        });
   }
   
   /**
    * Store the preferences for the file type as a JSON encoded map under the key
    * `'fileTypePrefs/${fileType}'`
    */
-  Future persistPreferences(PreferenceStore prefStore, FileTypePreferences prefs) =>
-      prefStore.setJsonValue('fileTypePrefs/${prefs.fileType}', prefs._toMap());  
+  Future persistPreferences(PreferenceStore prefStore, FileTypePreferences prefs) {
+    Completer completer = new Completer<String>();
+    prefStore.getJsonValue('fileTypePrefs/${prefs.fileType}')
+      .then((existingPrefs) {
+        var toUpdate = prefs.toMap();        
+        var updated;
+        if (existingPrefs == null) {
+          updated = toUpdate;
+        } else {
+          updated = new Map.fromIterable(
+            existingPrefs.keys,
+            value: (k) => toUpdate.containsKey(k) ? toUpdate[k] : existingPrefs[k]);
+        }
+        prefStore.setJsonValue('fileTypePrefs/${prefs.fileType}', updated)
+            .then(completer.complete, onError: completer.completeError);
+      });
+    return completer.future;
+  }
   
   /**
    * Forwards all [PreferenceChangeEvent] from the given [PreferenceStore]
    * into a new stream if they represent a change in the given fileType. 
    */
-  Stream <FileTypePreferences> onFileTypePreferenceChange(PreferenceStore prefStore, String fileType) {
+  Stream <FileTypePreferences> onFileTypePreferenceChange(PreferenceStore prefStore, PreferenceFactory prefFactory) {
     void forwardEventData(PreferenceEvent data, EventSink<FileTypePreferences> sink) {
      if (data.key.startsWith('fileTypePrefs')) {
-       String prefFileType = data.key.split('/')[1];
-       if (prefFileType == fileType) {
-         Map jsonVal = data.valueAsJson(ifAbsent: () => null);
-         sink.add(new FileTypePreferences._(fileType, prefs: jsonVal)); 
+       String fileType = data.key.split('/')[1];
+       Map jsonVal = data.valueAsJson(ifAbsent: () => null);
+       var defaults = prefFactory(fileType);
+       var prefs;
+       if (jsonVal == null) {
+         prefs = defaults;
+       } else {
+          prefs = prefFactory(
+              fileType, 
+              new Map.fromIterable(defaults.toMap().keys, value: (k) => jsonVal[k]));
        }
+       sink.add(prefs);
      }
     }
     
@@ -122,47 +158,5 @@ class FileTypeRegistry {
             handleError: (error, stackTrace, sink) => sink.addError(error, stackTrace),
             handleDone: (sink) => sink.close())
         .bind(prefStore.onPreferenceChange);
-  }
-}
-
-/**
- * A delegating preference store which handles file type errors.
- */
-class FileTypePreferences {
-  //By making this const, we ensure that preferences 
-  //can only take primitive values, maps or lists.
-  static const Map _GLOBAL_DEFAULTS = 
-      const { 'useSoftTabs' : true,
-              'tabSize' : 2 };
- 
-  final String fileType;
-  
-  /**
-   * Should soft tabs be used in the editor?
-   * If `true`, then spaces will be used instead of tab stops when editing files
-   * of the specified type.
-   */
-  bool useSoftTabs;
-  
-  /**
-   * The size of a tab stop in the editor.
-   */
-  int tabSize;
-  
-  /**
-   * Creates a new [FileTypePreferences] object with the default values for every
-   * preference
-   */
-  FileTypePreferences._(String this.fileType, { Map prefs: null }) {
-    if (prefs == null) prefs = _GLOBAL_DEFAULTS;
-    useSoftTabs = prefs['useSoftTabs'];
-    tabSize = prefs['tabSize'];
-  }
-  
-  Map _toMap() {
-    Map m = new Map();
-    m['useSoftTabs'] = useSoftTabs;
-    m['tabSize'] = tabSize;
-    return m;
   }
 }
