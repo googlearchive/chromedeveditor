@@ -7,12 +7,9 @@
 <link rel="import" href="../../packages/spark_widgets/spark-button/spark-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon/spark-icon.html">
 <link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
-<link rel="import" href="../../packages/spark_widgets/spark-menu/spark-menu.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-button/spark-menu-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-item/spark-menu-item.html">
 <link rel="import" href="../../packages/spark_widgets/spark-overlay/spark-overlay.html">
-<link rel="import" href="../../packages/spark_widgets/spark-selection/spark-selection.html">
-<link rel="import" href="../../packages/spark_widgets/spark-selector/spark-selector.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
 <link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
 
@@ -177,6 +174,21 @@
   background-color: white;
 }
 
+#editedFilename {
+  color: #ccc;
+  display: inline-block;
+  margin-right: 10px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+#editedFilename.hidden {
+  opacity: 0.0;
+}
+
 /** Dialog Stuff */
 .spark-overlay-scale-slideup {
   top: 72px;
@@ -211,7 +223,7 @@
       <span id="status"></span>
 
       <div id="toolbarRight">
-        <div id="editedFilename"></div>
+        <span id="editedFilename"></span>
 
       <spark-menu-button id="hotdogMenu2" responsive="true"
           src="../../images/menu.png" selected="1">
