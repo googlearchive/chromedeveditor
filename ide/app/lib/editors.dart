@@ -9,7 +9,6 @@
 library spark.editors;
 
 import 'dart:async';
-import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'ace.dart' as ace;
@@ -40,6 +39,7 @@ abstract class Editor {
   void resize();
   void focus();
 }
+
 
 /**
  * Manage a list of open editors.
@@ -156,32 +156,27 @@ class EditorManager implements EditorProvider {
     });
     savedMap['filesState'] = filesState;
     savedMap['version'] = PREFS_EDITORSTATES_VERSION;
-    _prefs.setValue('editorStates', JSON.encode(savedMap));
+    _prefs.setJsonValue('editorStates', savedMap);
   }
 
   // Restore state of the editor manager.
   Future _restoreState() {
-    return _prefs.getValue('editorStates').then((String data) {
-      if (data != null) {
-        Map savedMap = JSON.decode(data);
-        if (savedMap is Map) {
-          int version = savedMap['version'];
-          if (version == PREFS_EDITORSTATES_VERSION) {
-            List<String> openedTabs = savedMap['openedTabs'];
-            List<Map> filesState = savedMap['filesState'];
-            // Restore state of known files.
-            filesState.forEach((Map m) {
-              _EditorState state = new _EditorState.fromMap(this, m);
-              if (state != null) {
-                _savedEditorStates[m['file']] = state;
-              }
-            });
-            // Restore opened files.
-            for (String filePersistID in openedTabs) {
-              File f = _workspace.restoreResource(filePersistID);
-              openOrSelect(f, switching: false);
-            }
+    return _prefs.getJsonValue('editorStates', ifAbsent: () => {}).then((Map savedData) {
+      int version = savedData['version'];
+      if (version == PREFS_EDITORSTATES_VERSION) {
+        List<String> openedTabs = savedData['openedTabs'];
+        List<Map> filesState = savedData['filesState'];
+        // Restore state of known files.
+        filesState.forEach((Map m) {
+          _EditorState state = new _EditorState.fromMap(this, m);
+          if (state != null) {
+            _savedEditorStates[m['file']] = state;
           }
+        });
+        // Restore opened files.
+        for (String filePersistID in openedTabs) {
+          File f = _workspace.restoreResource(filePersistID);
+          openOrSelect(f, switching: false);
         }
       }
     });
