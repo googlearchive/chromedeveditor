@@ -152,6 +152,8 @@ class EditorArea extends TabView {
       }
     }
   }
+  
+  bool isOpenInEditor(Resource file) => _tabOfFile.keys.contains(file);
 
   /// Closes the tab.
   void closeFile(Resource file) {
