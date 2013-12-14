@@ -143,30 +143,32 @@ class FilesController implements TreeViewDelegate {
 
   void treeViewSelectedChanged(TreeView view,
                                List<String> nodeUIDs) {
+    Resource resource = _filesMap[nodeUIDs.first];
+    if (resource is File) {
+      _delegate.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
+    }
   }
 
-  bool treeViewRowClicked(html.Event event, String uid) {
+  bool treeViewRowClicked(html.MouseEvent event, String uid) {
     if (uid == null) {
       return true;
     }
 
     Resource resource = _filesMap[uid];
     if (resource is File) {
-      bool altKeyPressed = false;
-      if (event != null) {
-        altKeyPressed = ((event as html.MouseEvent).altKey);
-      }
-      
+      bool altKeyPressed = event.altKey;
+      bool shiftKeyPressed = event.shiftKey;
+      bool ctrlKeyPressed = event.ctrlKey || event.metaKey;
+
       // Open in editor only if alt key or no modifier key is down.  If alt key
       // is pressed, it will open a new tab.
-      if (!(event as html.MouseEvent).shiftKey
-          && !(event as html.MouseEvent).ctrlKey
-          && !(event as html.MouseEvent).metaKey) {
+      if (altKeyPressed && !shiftKeyPressed && !ctrlKeyPressed) {
         _delegate.selectInEditor(resource, forceOpen: true,
-            replaceCurrent: !altKeyPressed);
+            replaceCurrent: false);
+        return false;
       }
     }
-    
+
     return true;
   }
 
