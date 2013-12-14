@@ -11,6 +11,7 @@ import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/filetypes.dart';
 import '../lib/workspace.dart' as workspace;
 
 defineTests() {
@@ -48,8 +49,13 @@ class MockAceContainer implements AceContainer {
 class MockAceEditor implements AceEditor {
   AceContainer aceContainer;
   workspace.File file;
+  FileTypePreferences preferences;
+  
 
-  MockAceEditor([this.aceContainer]);
+  MockAceEditor([this.aceContainer]) {
+    var reg = new FileTypeRegistry();
+    preferences = reg.createPreferences('unknown');
+  }
 
   Element get element => aceContainer.parentElement;
 

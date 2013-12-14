@@ -15,6 +15,7 @@ import 'package:ace/ace.dart' as ace;
 
 import 'workspace.dart' as workspace;
 import 'editors.dart';
+import 'filetypes.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -22,7 +23,12 @@ class AceEditor extends Editor {
   final AceContainer aceContainer;
 
   workspace.File file;
-
+  FileTypePreferences _preferences;
+  FileTypePreferences get preferences => _preferences;
+  set preferences(prefs) {
+    aceContainer.setPreferencesForSession(prefs);
+  }
+  
   html.Element get element => aceContainer.parentElement;
 
   AceEditor(this.aceContainer);
@@ -92,6 +98,11 @@ class AceContainer {
     // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
     return session;
+  }
+  
+  void setPreferencesForSession(FileTypePreferences prefs) {
+    //TODO (once tabSize and softTabs are recognized by the session)
+    return;
   }
 
   html.Point get cursorPosition {
