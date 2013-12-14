@@ -109,7 +109,7 @@ class TreeView implements ListViewDelegate {
       }
     }
   }
-  
+
   /**
    * Cleans the selection to not include non-showing elements
    */
@@ -181,26 +181,28 @@ class TreeView implements ListViewDelegate {
    * Sets expanded state of a node.
    */
   void setNodeExpanded(String nodeUID, bool expanded) {
-    HashSet<String> previousSelection = new HashSet.from(selection);
-    _rowsMap[nodeUID].expanded = expanded;
-    reloadData();
-    HashSet<String> currentSelection = new HashSet.from(selection);
+    if (isNodeExpanded(nodeUID) != expanded) {
+      HashSet<String> previousSelection = new HashSet.from(selection);
+      _rowsMap[nodeUID].expanded = expanded;
+      reloadData();
+      HashSet<String> currentSelection = new HashSet.from(selection);
 
-    // Testing previousSelection == currentSelection won't behaves as expected
-    // then, we're testing if the set are the same using intersection.
-    bool changed = false;
-    if (previousSelection.length != currentSelection.length) {
-      changed = true;
-    }
-    if (previousSelection.length != previousSelection.intersection(currentSelection).length) {
-      changed = true;
-    }
-    if (changed) {
-      _delegate.treeViewSelectedChanged(this,
-          _rowIndexesToNodeUIDs(_listView.selection));
-    }
+      // Testing previousSelection == currentSelection won't behaves as expected
+      // then, we're testing if the set are the same using intersection.
+      bool changed = false;
+      if (previousSelection.length != currentSelection.length) {
+        changed = true;
+      }
+      if (previousSelection.length != previousSelection.intersection(currentSelection).length) {
+        changed = true;
+      }
+      if (changed) {
+        _delegate.treeViewSelectedChanged(this,
+            _rowIndexesToNodeUIDs(_listView.selection));
+      }
 
-    _delegate.treeViewSaveExpandedState(this);
+      _delegate.treeViewSaveExpandedState(this);
+    }
   }
 
   void toggleNodeExpanded(String nodeUID, {bool animated: false}) {
@@ -280,11 +282,11 @@ class TreeView implements ListViewDelegate {
         _rowIndexesToNodeUIDs(rowIndexes),
         event);
   }
-  
+
   bool listViewKeyDown(KeyboardEvent event) {
     int keyCode = event.which;
     bool expand;
-    
+
     switch (keyCode) {
       case KeyCode.RIGHT:
         expand = true;
@@ -295,13 +297,13 @@ class TreeView implements ListViewDelegate {
       default:
         return true;
     }
-    
+
     for(String nodeUID in selection) {
       if (_rowsMap.containsKey(nodeUID)) {
         setNodeExpanded(nodeUID, expand);
       }
     }
-    
+
     if (!expand) {
       _cleanSelection();
     }
@@ -316,7 +318,7 @@ class TreeView implements ListViewDelegate {
         _rows[rowIndex].nodeUID,
         event);
   }
-  
+
   String listViewDropEffect(ListView view, MouseEvent event) {
     String nodeUID = null;
     if (_currentDragOverCell != null) {
@@ -325,15 +327,15 @@ class TreeView implements ListViewDelegate {
     return _delegate.treeViewDropEffect(this, event.dataTransfer, nodeUID);
   }
 
-   List<String> _innerDragSelection(DataTransfer dataTransfer) {
-     if (dataTransfer.types.contains('application/x-spark-treeview')) {
-       // TODO(dvh): dataTransfer.getData returns empty string when
-       // it's called in dragOver event handler. Then, we can't check if uuid
-       // matches. We'll improve the behavior when it will be fixed.
-       return selection;
-     } else {
-       return null;
-     }
+  List<String> _innerDragSelection(DataTransfer dataTransfer) {
+    if (dataTransfer.types.contains('application/x-spark-treeview')) {
+      // TODO(dvh): dataTransfer.getData returns empty string when
+      // it's called in dragOver event handler. Then, we can't check if uuid
+      // matches. We'll improve the behavior when it will be fixed.
+      return selection;
+    } else {
+      return null;
+    }
   }
 
   void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {
