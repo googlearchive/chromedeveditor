@@ -193,13 +193,22 @@ class TreeView implements ListViewDelegate {
   }
 
   void toggleNodeExpanded(String nodeUID, {bool animated: false}) {
-    if (animated) {
-      int rowIndex = _rowsMap[nodeUID].rowIndex;
-      TreeViewCell cell = _listView.cellForRow(rowIndex);
-      cell.toggleExpanded();
-    } else {
-      setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID));
+    int rowIndex = _rowsMap[nodeUID].rowIndex;
+    TreeViewCell cell = _listView.cellForRow(rowIndex);
+    // Don't change the expanded state if it's already animating to change
+    // the expanded state.
+    if (cell.isAnimating) return;
+    
+    setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID));
+    if (animated) {  
+      //The data was refreshed, so we need to get a new reference to the cell.
+      rowIndex = _rowsMap[nodeUID].rowIndex;
+      cell = _listView.cellForRow(rowIndex);
+      cell.animateDisclosure();
     }
+    //Ensure that the expanded node is selected.
+    selection = [nodeUID];
+    _delegate.treeViewSelectedChanged(this, [nodeUID], null);
   }
 
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
