@@ -102,6 +102,10 @@ class AceContainer {
         session.useSoftTabs = true;
         break;
       default:
+        // For now, 2-space for all file types by default. This can be changed
+        // in the future.
+        session.tabSize = 2;
+        session.useSoftTabs = true;
         break;
     }
     // Disable Ace's analysis (this shows up in JavaScript files).
