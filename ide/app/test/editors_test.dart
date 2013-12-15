@@ -25,7 +25,7 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
 
       FileEntry fileEntry = fs.createFile('test.txt', contents: 'foobar');
-      File fileResource = new File(workspace, fileEntry, false);
+      File fileResource = new File(workspace, fileEntry);
 
       Completer completer = new Completer();
       manager.onSelectedChange.first.then((f) {
