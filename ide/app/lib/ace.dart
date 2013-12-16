@@ -15,7 +15,6 @@ import 'package:ace/ace.dart' as ace;
 
 import 'workspace.dart' as workspace;
 import 'editors.dart';
-import 'utils.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -87,29 +86,26 @@ class AceContainer {
 
   void resize() => _aceEditor.resize(false);
 
-  ace.EditSession createEditSession(String text, String fileName) {
+  ace.EditSession createEditSession(String text, String fileName, EditorPreferences prefs) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
-    _applyCustomSession(session, fileName);
+    _applyCustomSession(session, fileName, prefs);
     return session;
   }
 
-  void _applyCustomSession(ace.EditSession session, String fileName) {
-    String extention = fileExt(fileName);
-    switch (extention) {
-      case 'dart':
-        session.tabSize = 2;
-        session.useSoftTabs = true;
-        break;
-      default:
-        // For now, 2-space for all file types by default. This can be changed
-        // in the future.
-        session.tabSize = 2;
-        session.useSoftTabs = true;
-        break;
-    }
+  void _applyCustomSession(ace.EditSession session, String fileName, EditorPreferences prefs) {
+    session.tabSize = prefs.tabSize;
+    session.useSoftTabs = prefs.useSoftTabs;
     // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
+  }
+
+  /**
+   * Apply the preferences to the currently loaded session.
+   * The current file is assumed to be the same type as the preference type.
+   */
+  void applySessionPreferences(String fileName, EditorPreferences prefs) {
+    _applyCustomSession(currentSession, fileName, prefs);
   }
 
   html.Point get cursorPosition {

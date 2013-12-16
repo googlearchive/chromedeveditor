@@ -9,11 +9,11 @@
 library spark.editors;
 
 import 'dart:async';
-import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'ace.dart' as ace;
 import 'preferences.dart';
+import 'filetypes.dart';
 import 'workspace.dart';
 
 /**
@@ -41,13 +41,33 @@ abstract class Editor {
   void focus();
 }
 
+class EditorPreferences extends FileTypePreferences {
+  int tabSize;
+  bool useSoftTabs;
+
+  EditorPreferences(String fileType) : super(fileType);
+
+  static _fromMap(String fileType, [Map map = null]) {
+    var prefs = new EditorPreferences(fileType);
+    if (map != null) {
+      prefs.tabSize = map['tabSize'];
+      prefs.useSoftTabs = map['useSoftTabs'];
+    }
+    return prefs;
+  }
+
+  Map toMap() => { 'tabSize' : tabSize,
+                   'useSoftTabs' : useSoftTabs };
+}
+
+
 /**
  * Manage a list of open editors.
  */
 class EditorManager implements EditorProvider {
   final Workspace _workspace;
   final ace.AceContainer _aceContainer;
-  final PreferenceStore _prefs;
+  final PreferenceStore _prefStore;
   final int PREFS_EDITORSTATES_VERSION = 1;
 
   // List of files opened in a tab.
@@ -63,7 +83,15 @@ class EditorManager implements EditorProvider {
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
-  EditorManager(this._workspace, this._aceContainer, this._prefs) {
+  EditorManager(this._workspace, this._aceContainer, this._prefStore) {
+    fileTypeRegistry
+        .onFileTypePreferenceChange(_prefStore, EditorPreferences._fromMap)
+        .listen((prefs) {
+           if (currentFile != null
+               && fileTypeRegistry.fileTypeOf(currentFile) == prefs.fileType) {
+            _aceContainer.applySessionPreferences(currentFile.name, prefs);
+          }
+        });
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
@@ -156,32 +184,27 @@ class EditorManager implements EditorProvider {
     });
     savedMap['filesState'] = filesState;
     savedMap['version'] = PREFS_EDITORSTATES_VERSION;
-    _prefs.setValue('editorStates', JSON.encode(savedMap));
+    _prefStore.setJsonValue('editorStates', savedMap);
   }
 
   // Restore state of the editor manager.
   Future _restoreState() {
-    return _prefs.getValue('editorStates').then((String data) {
-      if (data != null) {
-        Map savedMap = JSON.decode(data);
-        if (savedMap is Map) {
-          int version = savedMap['version'];
-          if (version == PREFS_EDITORSTATES_VERSION) {
-            List<String> openedTabs = savedMap['openedTabs'];
-            List<Map> filesState = savedMap['filesState'];
-            // Restore state of known files.
-            filesState.forEach((Map m) {
-              _EditorState state = new _EditorState.fromMap(this, m);
-              if (state != null) {
-                _savedEditorStates[m['file']] = state;
-              }
-            });
-            // Restore opened files.
-            for (String filePersistID in openedTabs) {
-              File f = _workspace.restoreResource(filePersistID);
-              openOrSelect(f, switching: false);
-            }
+    return _prefStore.getJsonValue('editorStates', ifAbsent: () => {}).then((Map savedData) {
+      int version = savedData['version'];
+      if (version == PREFS_EDITORSTATES_VERSION) {
+        List<String> openedTabs = savedData['openedTabs'];
+        List<Map> filesState = savedData['filesState'];
+        // Restore state of known files.
+        filesState.forEach((Map m) {
+          _EditorState state = new _EditorState.fromMap(this, m);
+          if (state != null) {
+            _savedEditorStates[m['file']] = state;
           }
+        });
+        // Restore opened files.
+        for (String filePersistID in openedTabs) {
+          File f = _workspace.restoreResource(filePersistID);
+          openOrSelect(f, switching: false);
         }
       }
     });
@@ -244,8 +267,7 @@ class EditorManager implements EditorProvider {
 
   // EditorProvider
   Editor createEditorForFile(File file) {
-    ace.AceEditor editor =
-        _editorMap[file] != null ? _editorMap[file] : new ace.AceEditor(_aceContainer);
+    ace.AceEditor editor = new ace.AceEditor(_aceContainer);
     _editorMap[file] = editor;
     openOrSelect(file);
     editor.file = file;
@@ -336,12 +358,19 @@ class _EditorState {
     if (hasSession) {
       return new Future.value(this);
     } else {
-      return file.getContents().then((text) {
-        session = manager._aceContainer.createEditSession(text, file.name);
-        session.scrollTop = scrollTop;
-        session.onChange.listen((delta) => dirty = true);
-        return this;
+      Completer<_EditorState> completer = new Completer<_EditorState>();
+      file.getContents().then((text) {
+        var fileType = fileTypeRegistry.fileTypeOf(file);
+        fileTypeRegistry
+            .restorePreferences(manager._prefStore, EditorPreferences._fromMap, fileType)
+            .then((prefs) {
+              session = manager._aceContainer.createEditSession(text, file.name, prefs);
+              session.scrollTop = scrollTop;
+              session.onChange.listen((delta) => dirty = true);
+              completer.complete(this);
+            });
       });
+      return completer.future;
     }
   }
 }

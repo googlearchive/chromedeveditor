@@ -15,6 +15,7 @@ import 'app_test.dart' as app_test;
 import 'compiler_test.dart' as compiler_test;
 import 'editors_test.dart' as editors_test;
 import 'files_test.dart' as files_test;
+import 'filetypes_test.dart' as filetypes_test;
 import 'git/all.dart' as git_all_test;
 import 'preferences_test.dart' as preferences_test;
 import 'sdk_test.dart' as sdk_test;
@@ -35,6 +36,7 @@ void defineTests() {
   compiler_test.defineTests();
   editors_test.defineTests();
   files_test.defineTests();
+  filetypes_test.defineTests();
   git_all_test.defineTests();
   preferences_test.defineTests();
   sdk_test.defineTests();

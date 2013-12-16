@@ -62,5 +62,16 @@ defineTests() {
         });
       });
     });
+    
+    test("type json preferences", () {
+      //It's a mixin -- testing for one store tests them all.
+      PreferenceStore mapStore = new MapPreferencesStore();
+      return mapStore.setJsonValue("jsonval", {'key' : 'value'})
+          .then((_) {
+            return mapStore.getJsonValue("jsonval").then((val) {
+              expect(val, containsPair('key', 'value'));
+            });
+          });
+    });
   });
 }

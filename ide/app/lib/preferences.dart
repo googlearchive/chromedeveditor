@@ -12,6 +12,7 @@
 library spark.preferences;
 
 import 'dart:async';
+import 'dart:convert' show JSON;
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
@@ -40,12 +41,34 @@ abstract class PreferenceStore {
    * Get the value for the given key. The value is returned as a [Future].
    */
   Future<String> getValue(String key);
+  
+  /**
+   * Gets the value for the given key which was stored as a JSON encoded value.
+   * The semantics for encoding the object as a JSON string are the same as
+   * those of the [JSON.encode] method.
+   * 
+   * If [:defaultValue:] is provided, the value is used if there is no current
+   * value stored for the given key
+   */
+  Future<dynamic> getJsonValue(String key, 
+      { reviver(var key, var value): null, dynamic ifAbsent() });
+  
+  
 
   /**
    * Set the value for the given key. The returned [Future] has the same value
    * as [value] on success.
    */
   Future<String> setValue(String key, String value);
+  
+  /**
+   * Sets the value encoded for the given key
+   * The semantics for encoding the value as a JSON object are the same as for
+   * the [JSON] converter.
+   * The returned future has the encoded representation of [value] on
+   * success.
+   */
+  Future<String> setJsonValue(String key, dynamic value, {dynamic toEncodable(var object) : null });
 
   /**
    * Flush any unsaved changes to this [PreferenceStore].
@@ -55,10 +78,46 @@ abstract class PreferenceStore {
   Stream<PreferenceEvent> get onPreferenceChange;
 }
 
+abstract class JsonStoreMixin {
+  Future<String> getValue(String key);
+  Future<String> setValue(String key, String value);
+  
+  /**
+   * Returns a preference stored as a JSON object
+   */
+  Future<dynamic> getJsonValue(String key, {reviver(var key, var value) : null, ifAbsent()}) {
+    return getValue(key).then((value) {
+      if (value == null) {
+        if (ifAbsent != null) {
+          return ifAbsent();
+        }
+        return value;
+      }
+      return JSON.decode(value, reviver: reviver);
+    });
+  }
+  
+  /**
+   * Sets a preference to the given value.
+   * The semantics of the encoding are the same as for the [JSON] object in `dart:convert`
+   */
+  Future<String> setJsonValue(String key, dynamic value, {dynamic toEncodable(var object) : null }) {
+    var jsonString;
+    try {
+      jsonString = JSON.encode(value, toEncodable: toEncodable);
+    } catch (e) {
+      return new Future.error(e, e.stackTrace);
+    }
+    return setValue(key, jsonString);
+  }
+}
+
 /**
  * A [PreferenceStore] implementation based on a [Map].
  */
-class MapPreferencesStore implements PreferenceStore {
+class MapPreferencesStore 
+    extends Object with JsonStoreMixin 
+    implements PreferenceStore {
   Map _map = {};
   bool _dirty = false;
   StreamController<PreferenceEvent> _controller = new StreamController.broadcast();
@@ -87,7 +146,9 @@ class MapPreferencesStore implements PreferenceStore {
  * This preferences implementation will automatically flush any dirty changes
  * out to `chrome.storage` periodically.
  */
-class _ChromePreferenceStore implements PreferenceStore {
+class _ChromePreferenceStore 
+    extends Object with JsonStoreMixin 
+    implements PreferenceStore {
   chrome.StorageArea _storageArea;
   Duration _flushInterval;
   Map _map = {};
@@ -170,4 +231,17 @@ class PreferenceEvent {
   final String value;
 
   PreferenceEvent(this.store, this.key, this.value);
+  
+  /**
+   * Decodes value as if it were a stored JSON string using the specified [:reviver:]
+   * If [:ifAbsent:] is provided and the [value] is `null`, returns the result of
+   * calling the function.
+   */
+  valueAsJson({reviver(var key, var value): null, ifAbsent(): null }) {
+    if (value == null && ifAbsent != null) {
+      return ifAbsent();
+    }
+    return JSON.decode(value, reviver: reviver);
+  }
+      
 }
