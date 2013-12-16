@@ -298,7 +298,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new CloseFileOrProjectAction(this));
+    actionManager.registerAction(new FileOrProjectCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileRenameAction(
         this, getDialogElement('#renameDialog')));
@@ -912,8 +912,8 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 
-class CloseFileOrProjectAction extends SparkAction implements ContextAction {
-  CloseFileOrProjectAction(Spark spark) : super(spark, "file-close", "Close");
+class FileOrProjectCloseAction extends SparkAction implements ContextAction {
+  FileOrProjectCloseAction(Spark spark) : super(spark, "file-close", "Close");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -921,6 +921,7 @@ class CloseFileOrProjectAction extends SparkAction implements ContextAction {
     }
 
     for (ws.Resource resource in resources) {
+      spark.workspace.unlink(resource);
       if (resource is ws.File) {
         spark._closeOpenEditor(resource);
       } else if (resource is ws.Project) {
