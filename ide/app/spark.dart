@@ -267,12 +267,19 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initSaveStatusListener() {
+    Element element = getUIElement('#saveStatus');
+    Timer timer = new Timer(new Duration(seconds: 0), () => null);
+
     eventBus.onEvent('fileModified').listen((_) {
-      getUIElement('#saveStatus').text = 'Saving…';
+      //element.text = 'text modified…';
+      element.text = '';
+      timer.cancel();
     });
 
     eventBus.onEvent('filesSaved').listen((_) {
-      getUIElement('#saveStatus').text = 'All changes saved';
+      element.text = 'all changes saved';
+      timer.cancel();
+      timer = new Timer(new Duration(seconds: 3), () => (element.text = ''));
     });
   }
 

@@ -66,8 +66,8 @@ class EditorManager implements EditorProvider {
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
-  // TODO: we need to investigate dependency injection - we're passing around
-  // too many ctor vars.
+  // TODO: Investigate dependency injection OR overridable singletons. We're
+  // passing around too many ctor vars.
   EditorManager(this._workspace, this._aceContainer, this._prefs, this._eventBus) {
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
