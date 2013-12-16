@@ -4,10 +4,12 @@
 
 library spark_polymer;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
+import 'package:spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
 
 import 'spark.dart';
 import 'lib/actions.dart';
@@ -16,10 +18,25 @@ import 'lib/polymer_ui/spark_polymer_ui.dart';
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
-      SparkPolymer spark = new SparkPolymer(testMode);
-      spark.start();
+      createSparkZone().runGuarded(() {
+        SparkPolymer spark = new SparkPolymer(testMode);
+        spark.start();
+      });
     });
   });
+}
+
+class SparkPolymerDialog implements SparkDialog {
+  widgets.SparkOverlay _dialogElement;
+
+  SparkPolymerDialog(Element dialogElement)
+      : _dialogElement = dialogElement;
+
+  void show() => _dialogElement.toggle();
+
+  void hide() => _dialogElement.toggle();
+
+  Element get element => _dialogElement;
 }
 
 class SparkPolymer extends Spark {
@@ -32,11 +49,14 @@ class SparkPolymer extends Spark {
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
-
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
   Element getDialogElement(String selectors) =>
       _ui.getShadowDomElement(selectors);
+
+  @override
+  SparkDialog createDialog(Element dialogElement) =>
+      new SparkPolymerDialog(dialogElement);
 
   //
   // Override some parts of the parent's ctor:
@@ -81,16 +101,28 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
+    var node = getUIElement("#hotdogMenu2");
+    node.on['activate'].listen((event) {
+      var item = event.detail['item'];
+      var menuId = item.attributes['id'];
+      switch (menuId) {
+        case 'file-open':
+        case 'folder-open':
+        case 'file-close':
+        case 'file-delete':
+        case 'run-tests':
+        case 'git-clone':
+        case 'help-about':
+          actionManager.getAction(menuId).invoke();
+          break;
+        default:
+          print("WARNING: Menu Item Unhandled Action $menuId");
+      }
+    });
+
     // TODO(ussuri): This is a temporary hack just to test the functionality
     // triggered from the menu. This will be replaced by spark-menu ASAP.
     UListElement ul = getUIElement('#hotdogMenu ul');
-
-    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-close')));
-    ul.children.add(createMenuItem(actionManager.getAction('file-delete')));
-
-    ul.children.add(createMenuSeparator());
 
     // Theme control.
     // NOTE: Disabled because doing this resulted in a crash.
@@ -106,15 +138,6 @@ class SparkPolymer extends Spark {
 //    ul.children.add(keys);
     ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
     ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
-
-    if (developerMode) {
-      ul.children.add(createMenuSeparator());
-      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-      ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
-    }
-
-    ul.children.add(createMenuSeparator());
-    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
 
   //

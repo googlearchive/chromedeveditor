@@ -42,14 +42,25 @@ abstract class ListViewDelegate {
    */
   void listViewSelectedChanged(ListView view,
                                List<int> rowIndexes,
-                               Event event);
+                               Event event) {}
 
   /**
    * The implementation of this method will be run when the cell at the given
    * index `rowIndex` is double-clicked.
    * `view` is the list the callback is called from.
    */
-  void listViewDoubleClicked(ListView view, List<int> rowIndexes, Event event);
+  void listViewDoubleClicked(ListView view, List<int> rowIndexes, Event event) {
+  }
+
+  /**
+   * The implementation of this method will be run when the user click-right
+   * on the row at index `rowIndex`.
+   * `view` is the list the callback is called from.
+   */
+  void listViewContextMenu(ListView view,
+                           List<int> rowIndexes,
+                           int rowIndex,
+                           Event event);
 
   /**
    * This method is called on dragenter and dragover.
@@ -57,30 +68,30 @@ abstract class ListViewDelegate {
    * It will adjust the visual of the mouse cursor when the item is
    * dragged over the treeview.
    */
-  String listViewDropEffect(ListView view, MouseEvent event);
+  String listViewDropEffect(ListView view, MouseEvent event) => null;
 
   /**
    * This method is called when the user confirmed dropped an item on the list.
    * rowIndex is the location where it's been dropped. The value is -1
    * if it's not been dropped on a specific cell.
    */
-  void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer);
+  void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {}
 
   /**
    * This method is called regularly when the user is dragging an item over
    * the list.
    */
-  void listViewDragOver(ListView view, MouseEvent event);
+  void listViewDragOver(ListView view, MouseEvent event) {}
 
   /**
    * This method is called when the mouse cursor enters the list visual area
    * while the user is dragging an item.
    */
-  void listViewDragEnter(ListView view, MouseEvent event);
+  void listViewDragEnter(ListView view, MouseEvent event) {}
 
   /**
    * This method is called when the mouse cursor leaves the list visual area
    * while the user is dragging an item.
    */
-  void listViewDragLeave(ListView view, MouseEvent event);
+  void listViewDragLeave(ListView view, MouseEvent event) {}
 }

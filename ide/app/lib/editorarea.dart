@@ -18,6 +18,7 @@ import 'workspace.dart';
 /// A tab associated with a file.
 abstract class EditorTab extends Tab {
   final Resource file;
+
   EditorTab(EditorArea parent, this.file) : super(parent) {
     label = file.name;
   }
@@ -29,6 +30,7 @@ abstract class EditorTab extends Tab {
 class AceEditorTab extends EditorTab {
   final Editor editor;
   final EditorProvider provider;
+
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
@@ -36,6 +38,7 @@ class AceEditorTab extends EditorTab {
 
   void activate() {
     provider.selectFileForEditor(editor, file);
+    editor.focus();
     super.activate();
   }
 
@@ -59,12 +62,14 @@ class ImageViewerTab extends EditorTab {
 class EditorArea extends TabView {
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
+  final Element _filenameLabel;
   static final RegExp _imageFileType =
       new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
 
   bool _allowsLabelBar = true;
 
   EditorArea(Element parentElement,
+             this._filenameLabel,
              this.editorProvider,
              {allowsLabelBar: true})
       : super(parentElement) {
@@ -73,6 +78,11 @@ class EditorArea extends TabView {
     });
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
+  }
+
+  set showLabelBar(bool showLabelBar) {
+    super.showLabelBar = showLabelBar;
+    _filenameLabel.classes.toggle('hidden', showLabelBar);
   }
 
   bool get allowsLabelBar => _allowsLabelBar;
@@ -119,6 +129,7 @@ class EditorArea extends TabView {
                 {bool forceOpen: false, bool switchesTab: true,
                  bool replaceCurrent: true}) {
     if (_tabOfFile.containsKey(file)) {
+      _filenameLabel.text = file.name;
       EditorTab tab = _tabOfFile[file];
       if (switchesTab) tab.select();
       return;
@@ -126,6 +137,7 @@ class EditorArea extends TabView {
 
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
+      _filenameLabel.text = file.name;
       if (_imageFileType.hasMatch(file.name)) {
         ImageViewer viewer = new ImageViewer(file);
         tab = new ImageViewerTab(this, viewer, file);

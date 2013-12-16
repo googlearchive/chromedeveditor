@@ -7,6 +7,7 @@
  */
 library spark.ui.widgets.files_controller;
 
+import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
@@ -18,14 +19,24 @@ import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
 import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
+import '../preferences.dart' as preferences;
 import '../workspace.dart';
 
 class FilesController implements TreeViewDelegate {
+  // TreeView that's used to show the workspace.
   TreeView _treeView;
+  // Workspace that references all the resources.
   Workspace _workspace;
+  // List of top-level resources.
   List<Resource> _files;
+  // Implements callbacks required for the FilesController.
   FilesControllerDelegate _delegate;
+  // Map of nodeUID to the resources of the workspace for a quick lookup.
   Map<String, Resource> _filesMap;
+  // Cache of sorted children of nodes.
+  Map<String, List<String>> _childrenCache;
+  // Preferences where to store tree expanded/collapsed state.
+  preferences.PreferenceStore localPrefs = preferences.localStore;
 
   FilesController(Workspace workspace,
                   FilesControllerDelegate delegate,
@@ -34,6 +45,7 @@ class FilesController implements TreeViewDelegate {
     _delegate = delegate;
     _files = [];
     _filesMap = {};
+    _childrenCache = {};
 
     _treeView = new TreeView(fileViewArea, this);
     _treeView.dropEnabled = true;
@@ -56,17 +68,19 @@ class FilesController implements TreeViewDelegate {
     if (_files.isEmpty) {
       return;
     }
+
+    List parents = _collectParents(file, []);
+
+    parents.forEach((Container container) {
+      if (!_treeView.isNodeExpanded(container.path)) {
+        _treeView.setNodeExpanded(container.path, true);
+      }
+    });
+
     _treeView.selection = [file.path];
     if (file is File) {
       _delegate.selectInEditor(file, forceOpen: forceOpen);
     }
-  }
-
-  void selectLastFile({bool forceOpen: false}) {
-    if (_files.isEmpty) {
-      return;
-    }
-    selectFile(_files.last, forceOpen: forceOpen);
   }
 
   void selectFirstFile({bool forceOpen: false}) {
@@ -90,7 +104,8 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return _files.length;
     } else if (_filesMap[nodeUID] is Container) {
-      return (_filesMap[nodeUID] as Container).getChildren().length;
+      _cacheChildren(nodeUID);
+      return _childrenCache[nodeUID].length;
     } else {
       return 0;
     }
@@ -100,7 +115,8 @@ class FilesController implements TreeViewDelegate {
     if (nodeUID == null) {
       return _files[childIndex].path;
     } else {
-      return (_filesMap[nodeUID] as Container).getChildren()[childIndex].path;
+      _cacheChildren(nodeUID);
+      return _childrenCache[nodeUID][childIndex];
     }
   }
 
@@ -118,7 +134,6 @@ class FilesController implements TreeViewDelegate {
     if (resource is Folder) {
       cell.acceptDrop = true;
     }
-    // TODO: add an onContextMenu listening, call _handleContextMenu().
     cell.menuElement.onClick.listen(
         (e) => _handleMenuClick(cell, resource, e));
     return cell;
@@ -151,6 +166,16 @@ class FilesController implements TreeViewDelegate {
     if (nodeUIDs.length == 1 && _filesMap[nodeUIDs.first] is Container) {
       view.toggleNodeExpanded(nodeUIDs.first, animated: true);
     }
+  }
+
+  void treeViewContextMenu(TreeView view,
+                           List<String> nodeUIDs,
+                           String nodeUID,
+                           html.Event event) {
+    cancelEvent(event);
+    Resource resource = _filesMap[nodeUID];
+    FileItemCell cell = new FileItemCell(resource.name);
+    _showMenuForEvent(cell, event, resource);
   }
 
   String treeViewDropEffect(TreeView view,
@@ -423,13 +448,51 @@ class FilesController implements TreeViewDelegate {
         y + counterTextPosition);
   }
 
+  void treeViewSaveExpandedState(TreeView view) {
+    localPrefs.setValue('FilesExpandedState',
+        JSON.encode(_treeView.expandedState));
+  }
+
+  // Cache management for sorted list of resources.
+
+  void _cacheChildren(String nodeUID) {
+    if (_childrenCache[nodeUID] == null) {
+      _childrenCache[nodeUID] =
+          (_filesMap[nodeUID] as Container).getChildren().
+          map((Resource resource) => resource.path).toList();
+      _childrenCache[nodeUID].sort((String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    }
+  }
+
+  void _clearChildrenCache() {
+    _childrenCache.clear();
+  }
+
+  void _sortTopLevel() {
+    _files.sort((Resource a, Resource b) => a.path.toLowerCase().
+        compareTo(b.path.toLowerCase()));
+  }
+
+  void _reloadData() {
+    _clearChildrenCache();
+    _treeView.reloadData();
+  }
+
+  // Processing workspace events.
+
   void _addAllFiles() {
     for (Resource resource in _workspace.getChildren()) {
       _files.add(resource);
       _recursiveAddResource(resource);
     }
-
-    _treeView.reloadData();
+    _sortTopLevel();
+    localPrefs.getValue('FilesExpandedState').then((String state) {
+      if (state != null) {
+        _treeView.restoreExpandedState(JSON.decode(state));
+      } else {
+        _treeView.reloadData();
+      }
+    });
   }
 
   /**
@@ -442,26 +505,23 @@ class FilesController implements TreeViewDelegate {
       if (resource.isTopLevel) {
         _files.add(resource);
       }
+      _sortTopLevel();
       _recursiveAddResource(resource);
-      _treeView.reloadData();
+      _reloadData();
     }
     if (event.type == ResourceEventType.DELETE) {
       var resource = event.resource;
       _files.remove(resource);
       _recursiveRemoveResource(resource);
-      _treeView.reloadData();
-
+      _reloadData();
     }
     if (event.type == ResourceEventType.CHANGE) {
       // refresh the container that has changed.
-      // remove all old paths and add anew.
+      // remove all old paths and add new.
       var resource = event.resource;
-      var keys = _filesMap.keys.toList();
-      keys.forEach((key) {
-        if (key.startsWith(resource.path)) _filesMap.remove(key);
-      });
+      _recursiveRemoveResource(resource);
       _recursiveAddResource(resource);
-      _treeView.reloadData();
+      _reloadData();
     }
   }
 
@@ -483,17 +543,42 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
-  void _handleContextMenu(FileItemCell cell, Resource resource, html.Event e) {
-    cancelEvent(e);
-    _showMenu(cell, cell.menuElement, resource);
-  }
-
+  /**
+   * Menu icon click handler: show the context menu.
+   */
   void _handleMenuClick(FileItemCell cell, Resource resource, html.Event e) {
     cancelEvent(e);
     _showMenu(cell, cell.menuElement, resource);
   }
 
-  void _showMenu(FileItemCell cell, html.Element disclosureButton, Resource resource) {
+  /**
+   * Shows the context menu under the menu disclosure button.
+   */
+  void _showMenu(FileItemCell cell,
+                 html.Element disclosureButton,
+                 Resource resource) {
+    // Position the context menu at the expected location.
+    html.Point position = getAbsolutePosition(disclosureButton);
+    position += new html.Point(0, disclosureButton.clientHeight - 2);
+    _showMenuAtLocation(cell, position, resource);
+  }
+
+  /**
+   * Shows the context menu at the location of the mouse event.
+   */
+  void _showMenuForEvent(FileItemCell cell,
+                         html.Event event,
+                         Resource resource) {
+    html.Point position = getEventAbsolutePosition(event);
+    _showMenuAtLocation(cell, position, resource);
+  }
+
+  /**
+   * Shows the context menu at given location.
+   */
+  void _showMenuAtLocation(FileItemCell cell,
+                           html.Point position,
+                           Resource resource) {
     if (!_treeView.selection.contains(resource.path)) {
       _treeView.selection = [resource.path];
     }
@@ -509,10 +594,8 @@ class FilesController implements TreeViewDelegate {
     fillContextMenu(contextMenu, actions, resources);
 
     // Position the context menu at the expected location.
-    html.Point position = getAbsolutePosition(disclosureButton);
-    position += new html.Point(0, disclosureButton.clientHeight);
     contextMenu.style.left = '${position.x}px';
-    contextMenu.style.top = '${position.y - 2}px';
+    contextMenu.style.top = '${position.y}px';
 
     // Keep the disclosure button visible when the menu is opened.
     cell.menuElement.classes.add('open');
@@ -533,11 +616,27 @@ class FilesController implements TreeViewDelegate {
     backdrop.onClick.listen((event) {
       _closeContextMenu(event);
     });
+    backdrop.onContextMenu.listen((event) {
+      _closeContextMenu(event);
+    });
     // When the user click on an item in the list, the menu will be closed.
     contextMenu.children.forEach((html.Element element) {
       element.onClick.listen((html.Event event) {
         _closeContextMenu(event);
       });
     });
+  }
+
+  List _collectParents(Resource resource, List parents) {
+    if (resource.isTopLevel) return parents;
+
+    Container parent = resource.parent;
+
+    if (parent != null) {
+      parents.insert(0, parent);
+      return _collectParents(parent, parents);
+    } else {
+      return parents;
+    }
   }
 }

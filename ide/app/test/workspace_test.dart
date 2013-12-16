@@ -22,7 +22,7 @@ defineTests() {
       var workspace = new Workspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
-      var fileResource = new File(workspace, fileEntry, false);
+      var fileResource = new File(workspace, fileEntry);
       expect(fileResource.name, fileEntry.name);
       expect(fileResource.path, '/test.txt');
       fileResource.getContents().then((string) {
@@ -56,6 +56,26 @@ defineTests() {
               expect(prefVal.length, greaterThanOrEqualTo(10));
             });
           });
+        });
+      });
+    });
+
+    test('resource is hashable', () {
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var file1 = fs.createFile('test1.txt', contents: _FILETEXT);
+      var file2 = fs.createFile('test2.txt', contents: _FILETEXT);
+      return workspace.link(file1).then((Resource resource1) {
+        return workspace.link(file2).then((Resource resource2) {
+          Map m = {};
+          m[resource1] = 'foo';
+          m[resource2] = 'bar';
+          expect(m[resource1], 'foo');
+          expect(m[resource2], 'bar');
+          var resource3 = workspace.getChild('test2.txt');
+          m[resource3] = 'baz';
+          expect(m[resource2], 'baz');
+          expect(m[resource3], 'baz');
         });
       });
     });
@@ -157,6 +177,38 @@ defineTests() {
         }
       });
       return future;
+    });
+
+    test('refresh from filesystem', () {
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/index.html');
+      fs.createFile('/myProject/myApp.dart');
+      fs.createFile('/myProject/myApp.css');
+      var dirEntry = fs.createDirectory('/myProject/myDir');
+      fs.createFile('/myProject/myDir/test.txt');
+      fs.createFile('/myProject/myDir/test.html');
+      fs.createFile('/myProject/myDir/test.dart');
+
+      return workspace.link(projectDir).then((project) {
+        Folder dir = project.getChild('myDir');
+        expect(project.getChildren().length, 4);
+        expect(dir.getChildren().length, 3);
+        fs.createFile('/myProject/myApp2.dart');
+        fs.createFile('/myProject/myApp2.css');
+        fs.removeFile('/myProject/myApp.css');
+        fs.createFile('/myProject/myDir/test2.html');
+        return workspace.refresh().then((e) {
+          // Instance of /myProject/myDir might have changed because of
+          // refresh(), then we request it again.
+          // TODO(dvh): indentity of objects needs to be preserved by
+          // workspace.refresh().
+          dir = project.getChild('myDir');
+          expect(project.getChildren().length, 5);
+          expect(dir.getChildren().length, 4);
+        });
+      });
     });
   });
 }
