@@ -239,8 +239,9 @@
       <div id="toolbarRight">
         <span id="editedFilename"></span>
 
-        <spark-menu-button id="hotdogMenuNew" responsive="true"
-            src="../../images/menu.png" selected="1">
+        <spark-menu-button id="hotdogMenuNew" src="../../images/menu.png" 
+            responsive="true" selected="1"
+            on-menuselected={{onMenuSelected}}>
           <spark-menu-item actionId="file-open" iconsize=0 label="Open File...">
           </spark-menu-item>
           <spark-menu-item actionId="folder-open" iconsize=0 label="Open Folder...">

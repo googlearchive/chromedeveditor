@@ -14,11 +14,13 @@ import 'spark.dart';
 import 'lib/actions.dart';
 import 'lib/polymer_ui/spark_polymer_ui.dart';
 
+SparkPolymer spark = null;
+
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
       createSparkZone().runGuarded(() {
-        SparkPolymer spark = new SparkPolymer(testMode);
+        spark = new SparkPolymer._(testMode);
         spark.start();
       });
     });
@@ -28,13 +30,12 @@ void main() {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  SparkPolymer(bool developerMode)
+  SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode);
 
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
-
 
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
@@ -84,14 +85,6 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    var menu = getUIElement('#hotdogMenuNew');
-    menu.on['activate'].listen((event) {
-      final item = event.detail['item'];
-      final actionId = item.attributes['actionId'];
-      var action = actionManager.getAction(actionId).invoke();
-      assert(action != null);
-    });
-
     // TODO(ussuri): This is a temporary hack. This will be replaced by the
     // preferences dialog.
     UListElement oldMenu = getUIElement('#hotdogMenu ul');
@@ -107,6 +100,14 @@ class SparkPolymer extends Spark {
         (e) => aceKeysManager.dec(e));
     oldMenu.querySelector('#keysRight').onClick.listen(
         (e) => aceKeysManager.inc(e));
+  }
+
+  void onMenuSelected(var event, Map<String, dynamic> detail) {
+    final item = detail['item'];
+    final actionId = item.attributes['actionId'];
+    var action = actionManager.getAction(actionId);
+    assert(action != null);
+    action.invoke();
   }
 
   //
