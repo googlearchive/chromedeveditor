@@ -15,6 +15,7 @@ import 'package:logging/logging.dart';
 
 import 'preferences.dart';
 
+
 /**
  * The Workspace is a top-level entity that can contain files and projects. The
  * files that it contains are loose files; they do not have parent projects.
@@ -148,6 +149,8 @@ class Workspace implements Container {
   }
 
   List<Resource> getChildren() => _localChildren;
+
+  Iterable<Resource> walkChildren() => preOrderTraversal(this);
 
   List<File> getFiles() => _localChildren.where((c) => c is File).toList();
 
@@ -360,6 +363,10 @@ abstract class Container extends Resource {
   }
 
   List<Resource> getChildren() => _localChildren;
+  /**
+   * Returns a pre-order traversal of all the children of `this`.
+   */
+  Iterable<Resource> walkChildren() => preOrderTraversal(this);
 }
 
 abstract class Resource {
@@ -374,7 +381,7 @@ abstract class Resource {
 
   /**
    * Return the path to this element from the workspace. Paths are not
-   * guarenteed to be unique.
+   * guaranteed to be unique.
    */
   String get path => '${parent.path}/${name}';
 
@@ -447,6 +454,7 @@ class Folder extends Container {
   }
 
   chrome.DirectoryEntry get _dirEntry => entry;
+
 }
 
 class File extends Resource {
@@ -477,6 +485,8 @@ class File extends Resource {
   }
 
   chrome.ChromeFileEntry get _fileEntry => entry;
+
+
 }
 
 /**
@@ -527,3 +537,24 @@ class ResourceChangeEvent {
 
   String toString() => '${type}: ${resource}';
 }
+
+/**
+ * Returns a pre-order traversal of the children of the resource.
+ */
+Iterable<Resource> preOrderTraversal(Resource r) {
+  int compareChildren(Resource r1, Resource r2) {
+    if (r1 is Container && r2 is File) return 1;
+    if (r2 is Container && r1 is File) return -1;
+    return r1.name.compareTo(r2.name);
+  }
+  if (r is Container) {
+    var children = r.getChildren()
+        ..sort(compareChildren);
+    return [ [r], children.expand((c) => preOrderTraversal(c)) ]
+           .expand((i) => i);
+  } else {
+    return [r];
+  }
+}
+
+
