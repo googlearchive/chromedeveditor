@@ -535,7 +535,7 @@ class ThemeManager {
   }
 
   void _updateName(String name) {
-    _label.text = capitalize(name.replaceAll('_', ' '));
+    _label.text = 'Theme: ' + capitalize(name.replaceAll('_', ' '));
   }
 }
 
