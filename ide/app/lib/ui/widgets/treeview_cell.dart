@@ -32,7 +32,7 @@ class TreeViewCell implements ListViewCell {
   // Whether the disclosure arrow is animating.
   bool _animating;
   bool get isAnimating => _animating;
-  
+
   // When the user is dragging an item over the _embeddedCell, we show a
   // "drag over" highlight.
   DivElement _dragOverlay;
@@ -122,36 +122,19 @@ class TreeViewCell implements ListViewCell {
 
   String get nodeUID => _row.nodeUID;
 
-  void toggleExpanded() => 
+  void toggleExpanded() =>
 	  _treeView.toggleNodeExpanded(_row.nodeUID, animated: true);
-  
+
   /**
    * Animate the disclosure arrow to reflect the change in expanded state
    * of the cell.
    */
   void animateDisclosure() {
-    //FIXME: The following doesn't work -- I'm not sure why.
-    //       There's no reason I can see why it shouldn't
-    //       Apply expanded seems to complete *after* setting the transition
-    //       because if you place a breakpoint at the line indicated, it works.
-    //       Strange!
-    
-//    _animating = true;
-//    _applyExpanded(!row.expanded);
-//    _arrow.style.transition = '-webkit-transition 250ms'; //breakpoint here.
-//    StreamSubscription subscription;
-//    subscription = _arrow.onTransitionEnd.listen((event) {
-//      _arrow.style.transition = 'none';
-//      _animating = false;
-//      subscription.cancel();
-//    });
-    
+    //Workaround for dartbug #15648
     _animating = true;
     StreamSubscription subscription;
     _arrow.style.transition = '-webkit-transform 0.01ms';
     subscription = _arrow.onTransitionEnd.listen((event) {
-      print('Transition end');
-      _animating = false;
       _arrow.style.transition = '-webkit-transform 250ms';
       subscription.cancel();
       subscription = _arrow.onTransitionEnd.listen((event) {
