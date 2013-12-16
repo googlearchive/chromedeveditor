@@ -15,11 +15,13 @@ import 'spark.dart';
 import 'lib/actions.dart';
 import 'lib/polymer_ui/spark_polymer_ui.dart';
 
+SparkPolymer spark = null;
+
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
       createSparkZone().runGuarded(() {
-        SparkPolymer spark = new SparkPolymer(testMode);
+        spark = new SparkPolymer._(testMode);
         spark.start();
       });
     });
@@ -42,7 +44,7 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  SparkPolymer(bool developerMode)
+  SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode);
 
@@ -101,43 +103,29 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    var node = getUIElement("#hotdogMenu2");
-    node.on['activate'].listen((event) {
-      var item = event.detail['item'];
-      var menuId = item.attributes['id'];
-      switch (menuId) {
-        case 'file-open':
-        case 'folder-open':
-        case 'file-close':
-        case 'file-delete':
-        case 'run-tests':
-        case 'git-clone':
-        case 'help-about':
-          actionManager.getAction(menuId).invoke();
-          break;
-        default:
-          print("WARNING: Menu Item Unhandled Action $menuId");
-      }
-    });
-
-    // TODO(ussuri): This is a temporary hack just to test the functionality
-    // triggered from the menu. This will be replaced by spark-menu ASAP.
-    UListElement ul = getUIElement('#hotdogMenu ul');
+    // TODO(ussuri): This is a temporary hack. This will be replaced by the
+    // preferences dialog.
+    UListElement oldMenu = getUIElement('#hotdogMenu ul');
 
     // Theme control.
-    // NOTE: Disabled because doing this resulted in a crash.
-//    Element theme = ul.querySelector('#changeTheme');
-//    ul.children.remove(theme);
-//    ul.children.add(theme);
-    ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
-    ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
+    oldMenu.querySelector('#themeLeft').onClick.listen(
+        (e) => aceThemeManager.dec(e));
+    oldMenu.querySelector('#themeRight').onClick.listen(
+        (e) => aceThemeManager.inc(e));
 
     // Key binding control.
-//    Element keys = ul.querySelector('#changeKeys');
-//    ul.children.remove(keys);
-//    ul.children.add(keys);
-    ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
-    ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
+    oldMenu.querySelector('#keysLeft').onClick.listen(
+        (e) => aceKeysManager.dec(e));
+    oldMenu.querySelector('#keysRight').onClick.listen(
+        (e) => aceKeysManager.inc(e));
+  }
+
+  void onMenuSelected(var event, Map<String, dynamic> detail) {
+    final item = detail['item'];
+    final actionId = item.attributes['actionId'];
+    var action = actionManager.getAction(actionId);
+    assert(action != null);
+    action.invoke();
   }
 
   //

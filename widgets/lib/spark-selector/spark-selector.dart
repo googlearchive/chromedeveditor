@@ -65,39 +65,38 @@ class SparkSelector extends SparkSelection {
   /* The target element that contains items.  If this is not set
    * polymer-selector is the container.
    */
-  @published Node target = null;
+  @published Element target = null;
 
   @published String itemsSelector = '';
 
   // TODO(terry): Should be tap when PointerEvents are supported.
   @published String activateEvent = 'click';
-  @published bool notap = false;
-  @published dynamic selectedModel = null;
 
-  List<Element> items = [];
+  @published bool notap = false;
+
+  @published dynamic selectedModel = null;
 
   MutationObserver _observer;
 
-  SparkSelector.created(): super.created() {
+  SparkSelector.created(): super.created();
+
+  @override
+  void enteredView() {
+    super.enteredView();
+
+    _observer = new MutationObserver(_onMutation);
     if (target == null) {
       target = this;
     }
-  }
-
-  @override
-  void ready() {
-    super.ready();
-    _observer = new MutationObserver(_onMutation);
-    _observer.observe(shadowRoot, childList: true, subtree: true);
-  }
-
-  void _onMutation(List<MutationRecord> mutations, MutationObserver observer) {
-    updateItems();
     updateSelected();
   }
 
-  void updateItems() {
-    List nodes = null;
+  void _onMutation(List<MutationRecord> mutations, MutationObserver observer) {
+    updateSelected();
+  }
+
+  List<Element> get items {
+    List<Element> nodes = null;
     if (target == this) {
       nodes = ($['items'] as dynamic).getDistributedNodes();
     } else if (itemsSelector != null) {
@@ -105,7 +104,8 @@ class SparkSelector extends SparkSelection {
     } else {
       nodes = (target as dynamic).children;
     }
-    items = nodes.where((node) => node.localName != "template").toList();
+    return nodes.where((node) => node.localName != "template")
+        .toList(growable: false);
   }
 
   void targetChanged(old) {
@@ -115,7 +115,7 @@ class SparkSelector extends SparkSelection {
     }
     if (target != null) {
       addListener(target);
-      _observer.observe(target, childList: true);
+      _observer.observe(target, childList: true, subtree: true);
     }
   }
 
@@ -225,7 +225,7 @@ class SparkSelector extends SparkSelection {
   // event fired from host
   activateHandler(e) {
     if (!notap) {
-      var i = findDistributedTarget(e.target, this.items);
+      var i = findDistributedTarget(e.target, items);
       if (i >= 0) {
         var item = items[i];
         var selectByName = valueForNode(item);
@@ -240,7 +240,7 @@ class SparkSelector extends SparkSelection {
         } else {
           selected = s;
         }
-        asyncFire('activate', detail: {'item': item});
+        asyncFire('activate', detail: {'item': item}, canBubble: true);
       }
     }
   }

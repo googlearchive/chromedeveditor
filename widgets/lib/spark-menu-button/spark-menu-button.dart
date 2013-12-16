@@ -4,6 +4,8 @@
 
 library spark_widgets.menu_button;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/spark-menu/spark-menu.dart';
 
@@ -27,6 +29,10 @@ class SparkMenuButton extends Widget {
     SparkMenu menu = $['overlayMenu'];
     menu.clearSelection();
     opened = !opened;
+  }
+
+  void onActivate(CustomEvent event, Map<String, dynamic> detail) {
+    asyncFire('menuselected', detail: detail, canBubble: true);
   }
 
   //* Returns the selected item.
