@@ -15,7 +15,6 @@ import 'package:ace/ace.dart' as ace;
 
 import 'workspace.dart' as workspace;
 import 'editors.dart';
-import 'filetypes.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -23,24 +22,15 @@ class AceEditor extends Editor {
   final AceContainer aceContainer;
 
   workspace.File file;
-  FileTypePreferences _preferences;
-  FileTypePreferences get preferences => _preferences;
-  set preferences(prefs) {
-    aceContainer.setPreferencesForSession(prefs);
-  }
-  
+
   html.Element get element => aceContainer.parentElement;
 
   AceEditor(this.aceContainer);
 
   void resize() => aceContainer.resize();
-  void focus() => aceContainer.focus();
-  
-  void apply(EditorPreferences prefs) {
-    aceContainer.setPreferencesForSession(prefs);
-  }
-}
 
+  void focus() => aceContainer.focus();
+}
 
 /**
  * A wrapper around an Ace editor instance.
@@ -96,17 +86,26 @@ class AceContainer {
 
   void resize() => _aceEditor.resize(false);
 
-  ace.EditSession createEditSession(String text, String fileName) {
+  ace.EditSession createEditSession(String text, String fileName, EditorPreferences prefs) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
-    // Disable Ace's analysis (this shows up in JavaScript files).
-    session.useWorker = false;
+    _applyCustomSession(session, fileName, prefs);
     return session;
   }
-  
-  void setPreferencesForSession(FileTypePreferences prefs) {
-    //TODO (once tabSize and softTabs are recognized by the session)
-    return;
+
+  void _applyCustomSession(ace.EditSession session, String fileName, EditorPreferences prefs) {
+    session.tabSize = prefs.tabSize;
+    session.useSoftTabs = prefs.useSoftTabs;
+    // Disable Ace's analysis (this shows up in JavaScript files).
+    session.useWorker = false;
+  }
+
+  /**
+   * Apply the preferences to the currently loaded session.
+   * The current file is assumed to be the same type as the preference type.
+   */
+  void applySessionPreferences(String fileName, EditorPreferences prefs) {
+    _applyCustomSession(currentSession, fileName, prefs);
   }
 
   html.Point get cursorPosition {

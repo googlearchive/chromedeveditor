@@ -48,6 +48,15 @@ String baseName(String path) {
 }
 
 /**
+ * Returns the extension without the period. This returns `null` if there is no
+ * extension.
+ */
+String fileExt(String file) {
+  int index = file.lastIndexOf('.');
+  return index != -1 && index < file.length ? file.substring(index + 1) : null;
+}
+
+/**
  * Return whether the current runtime is dart2js (vs Dartium).
  */
 bool isDart2js() => identical(1, 1.0);

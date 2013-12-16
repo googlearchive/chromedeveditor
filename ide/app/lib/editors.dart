@@ -38,17 +38,15 @@ abstract class Editor {
   html.Element get element;
   File get file;
   void resize();
-  void focus(); 
-  
-  void apply(EditorPreferences preferences);
+  void focus();
 }
 
 class EditorPreferences extends FileTypePreferences {
   int tabSize;
   bool useSoftTabs;
-  
+
   EditorPreferences(String fileType) : super(fileType);
-  
+
   static _fromMap(String fileType, [Map map = null]) {
     var prefs = new EditorPreferences(fileType);
     if (map != null) {
@@ -57,7 +55,7 @@ class EditorPreferences extends FileTypePreferences {
     }
     return prefs;
   }
-  
+
   Map toMap() => { 'tabSize' : tabSize,
                    'useSoftTabs' : useSoftTabs };
 }
@@ -69,7 +67,7 @@ class EditorPreferences extends FileTypePreferences {
 class EditorManager implements EditorProvider {
   final Workspace _workspace;
   final ace.AceContainer _aceContainer;
-  final PreferenceStore _prefs;
+  final PreferenceStore _prefStore;
   final int PREFS_EDITORSTATES_VERSION = 1;
 
   // List of files opened in a tab.
@@ -85,7 +83,15 @@ class EditorManager implements EditorProvider {
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
 
-  EditorManager(this._workspace, this._aceContainer, this._prefs) {
+  EditorManager(this._workspace, this._aceContainer, this._prefStore) {
+    fileTypeRegistry
+        .onFileTypePreferenceChange(_prefStore, EditorPreferences._fromMap)
+        .listen((prefs) {
+           if (currentFile != null
+               && fileTypeRegistry.fileTypeOf(currentFile) == prefs.fileType) {
+            _aceContainer.applySessionPreferences(currentFile.name, prefs);
+          }
+        });
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
@@ -178,12 +184,12 @@ class EditorManager implements EditorProvider {
     });
     savedMap['filesState'] = filesState;
     savedMap['version'] = PREFS_EDITORSTATES_VERSION;
-    _prefs.setJsonValue('editorStates', savedMap);
+    _prefStore.setJsonValue('editorStates', savedMap);
   }
 
   // Restore state of the editor manager.
   Future _restoreState() {
-    return _prefs.getJsonValue('editorStates', ifAbsent: () => {}).then((Map savedData) {
+    return _prefStore.getJsonValue('editorStates', ifAbsent: () => {}).then((Map savedData) {
       int version = savedData['version'];
       if (version == PREFS_EDITORSTATES_VERSION) {
         List<String> openedTabs = savedData['openedTabs'];
@@ -265,11 +271,6 @@ class EditorManager implements EditorProvider {
     _editorMap[file] = editor;
     openOrSelect(file);
     editor.file = file;
-    var fileType = fileTypeRegistry.fileTypeOf(file);
-    fileTypeRegistry.restorePreferences(_prefs, EditorPreferences._fromMap, fileType)
-        .then((prefs) {
-          editor.preferences = prefs;
-        });
     return editor;
   }
 
@@ -278,11 +279,6 @@ class EditorManager implements EditorProvider {
     _switchState(state);
     _editorMap[file] = editor;
     (editor as ace.AceEditor).file = file;
-    var fileType = fileTypeRegistry.fileTypeOf(file);
-    fileTypeRegistry.restorePreferences(_prefs, EditorPreferences._fromMap, fileType)
-        .then((prefs) {
-          (editor as ace.AceEditor).preferences = prefs;
-        });
   }
 }
 
@@ -362,12 +358,19 @@ class _EditorState {
     if (hasSession) {
       return new Future.value(this);
     } else {
-      return file.getContents().then((text) {
-        session = manager._aceContainer.createEditSession(text, file.name);
-        session.scrollTop = scrollTop;
-        session.onChange.listen((delta) => dirty = true);
-        return this;
+      Completer<_EditorState> completer = new Completer<_EditorState>();
+      file.getContents().then((text) {
+        var fileType = fileTypeRegistry.fileTypeOf(file);
+        fileTypeRegistry
+            .restorePreferences(manager._prefStore, EditorPreferences._fromMap, fileType)
+            .then((prefs) {
+              session = manager._aceContainer.createEditSession(text, file.name, prefs);
+              session.scrollTop = scrollTop;
+              session.onChange.listen((delta) => dirty = true);
+              completer.complete(this);
+            });
       });
+      return completer.future;
     }
   }
 }

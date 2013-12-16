@@ -9,6 +9,7 @@ import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
+import 'package:spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
 
 import 'spark.dart';
 import 'lib/actions.dart';
@@ -25,6 +26,19 @@ void main() {
   });
 }
 
+class SparkPolymerDialog implements SparkDialog {
+  widgets.SparkOverlay _dialogElement;
+
+  SparkPolymerDialog(Element dialogElement)
+      : _dialogElement = dialogElement;
+
+  void show() => _dialogElement.toggle();
+
+  void hide() => _dialogElement.toggle();
+
+  Element get element => _dialogElement;
+}
+
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
@@ -35,11 +49,14 @@ class SparkPolymer extends Spark {
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
-
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
   Element getDialogElement(String selectors) =>
       _ui.getShadowDomElement(selectors);
+
+  @override
+  SparkDialog createDialog(Element dialogElement) =>
+      new SparkPolymerDialog(dialogElement);
 
   //
   // Override some parts of the parent's ctor:

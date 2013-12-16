@@ -6,9 +6,8 @@ library spark.filetypes;
 
 import 'dart:async';
 
-import 'package:path/path.dart' as path;
-
 import 'preferences.dart';
+import 'utils.dart';
 import 'workspace.dart';
 
 /**
@@ -17,18 +16,18 @@ import 'workspace.dart';
 final FileTypeRegistry fileTypeRegistry = new FileTypeRegistry._();
 
 /**
- * A group of file types that we know about a priori. The runtime can 
+ * A group of file types that we know about a priori. The runtime can
  * extend this using [FileTypeRegistry]
  */
-const Map<String, String> _INBUILT_TYPES = 
-    const { 'css'  : '.css',
-            'dart' : '.dart',
-            'html' : '.htm|.html',
-            'js'   : '.js',
-            'json' : '.json',
-            'md'   : '.md',
-            'yaml' : '.yaml' };
-        
+const Map<String, String> _INBUILT_TYPES =
+    const { 'css'  : 'css',
+            'dart' : 'dart',
+            'html' : 'htm|.html',
+            'js'   : 'js',
+            'json' : 'json',
+            'md'   : 'md',
+            'yaml' : 'yaml' };
+
 /**
  * Preferences specific to a given file type
  */
@@ -51,15 +50,15 @@ typedef FileTypePreferences PreferenceFactory(String fileType, [Map prefs]);
 
 
 /**
- * A registry for all known handled file types. 
+ * A registry for all known handled file types.
  */
 class FileTypeRegistry {
-  
+
   FileTypeRegistry._() :
     _knownTypes = new Map.fromIterable(_INBUILT_TYPES.keys, value: (k) => _INBUILT_TYPES[k].split('|'));
-  
+
   final Map<String, List<String>> _knownTypes;
-  
+
   /**
    * Register a custom type.
    * [:extensions:] is a pipe (`'|'`) seperated list of all extensions
@@ -78,23 +77,23 @@ class FileTypeRegistry {
     _knownTypes[type] = exts;
     return type;
   }
-      
-  
+
+
   /**
    * Retieves the file type associated with the given file.
    */
   String fileTypeOf(Resource file) =>
     _knownTypes.keys.firstWhere(
-          (k) => _knownTypes[k].contains(path.extension(file.path)), 
-          orElse: () => "unknown");
-      
-  
+          (k) => _knownTypes[k].contains(fileExt(file.path)),
+          orElse: () => "text");
+
+
   /**
    * Returns a future the file type preferences for the given file, or the global defaults
-   * if there is no stored preference value for the key. 
+   * if there is no stored preference value for the key.
    */
   Future<FileTypePreferences> restorePreferences(PreferenceStore prefStore, PreferenceFactory prefFactory, String fileType) {
-    if (!_knownTypes.keys.contains(fileType)) {
+    if (!_knownTypes.keys.contains(fileType) && fileType != "text") {
       return new Future.error(new ArgumentError('Unknown file type: $fileType'));
     }
     return prefStore.getJsonValue('fileTypePrefs/$fileType', ifAbsent: () => null)
@@ -102,11 +101,11 @@ class FileTypeRegistry {
           var defaults = prefFactory(fileType);
           if (prefs == null) return defaults;
           return prefFactory(
-              fileType, 
+              fileType,
               new Map.fromIterable(defaults.toMap().keys, value: (k) => prefs[k]));
         });
   }
-  
+
   /**
    * Store the preferences for the file type as a JSON encoded map under the key
    * `'fileTypePrefs/${fileType}'`
@@ -115,7 +114,7 @@ class FileTypeRegistry {
     Completer completer = new Completer<String>();
     prefStore.getJsonValue('fileTypePrefs/${prefs.fileType}')
       .then((existingPrefs) {
-        var toUpdate = prefs.toMap();        
+        var toUpdate = prefs.toMap();
         var updated;
         if (existingPrefs == null) {
           updated = toUpdate;
@@ -129,10 +128,10 @@ class FileTypeRegistry {
       });
     return completer.future;
   }
-  
+
   /**
    * Forwards all [PreferenceChangeEvent] from the given [PreferenceStore]
-   * into a new stream if they represent a change in the given fileType. 
+   * into a new stream if they represent a change in the given fileType.
    */
   Stream <FileTypePreferences> onFileTypePreferenceChange(PreferenceStore prefStore, PreferenceFactory prefFactory) {
     void forwardEventData(PreferenceEvent data, EventSink<FileTypePreferences> sink) {
@@ -145,13 +144,13 @@ class FileTypeRegistry {
          prefs = defaults;
        } else {
           prefs = prefFactory(
-              fileType, 
+              fileType,
               new Map.fromIterable(defaults.toMap().keys, value: (k) => jsonVal[k]));
        }
        sink.add(prefs);
      }
     }
-    
+
     return new StreamTransformer<PreferenceEvent, FileTypePreferences>
         .fromHandlers(
             handleData: forwardEventData,
