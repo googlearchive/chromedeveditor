@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.utils_tests;
+library spark.utils_test;
 
 import 'package:unittest/unittest.dart';
 
@@ -28,6 +28,13 @@ defineTests() {
       expect(dirName('foo'), null);
       expect(dirName('foo/bar'), 'foo');
       expect(dirName('foo/bar/baz'), 'foo/bar');
+    });
+
+    test('fileExt', () {
+      expect(fileExt('filename'), null);
+      expect(fileExt('filename.dart'), 'dart');
+      expect(fileExt('bar/filename.dart'), 'dart');
+      expect(fileExt('foo/bar/filename.dart'), 'dart');
     });
 
     test('dartium stack trace', () {

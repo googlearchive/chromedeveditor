@@ -15,6 +15,7 @@ import 'package:ace/ace.dart' as ace;
 
 import 'workspace.dart' as workspace;
 import 'editors.dart';
+import 'utils.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -89,9 +90,26 @@ class AceContainer {
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
+    _applyCustomSession(session, fileName);
+    return session;
+  }
+
+  void _applyCustomSession(ace.EditSession session, String fileName) {
+    String extention = fileExt(fileName);
+    switch (extention) {
+      case 'dart':
+        session.tabSize = 2;
+        session.useSoftTabs = true;
+        break;
+      default:
+        // For now, 2-space for all file types by default. This can be changed
+        // in the future.
+        session.tabSize = 2;
+        session.useSoftTabs = true;
+        break;
+    }
     // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
-    return session;
   }
 
   html.Point get cursorPosition {

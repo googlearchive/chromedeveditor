@@ -29,13 +29,12 @@
 @import url("lib/ui/widgets/tabview.css");
 @import url("lib/ui/widgets/imageviewer.css");
 
-#status {
+#saveStatus {
   flex: 1;
+  color: #ccc;
+  margin-left: 6px;
   vertical-align: bottom;
-}
-
-#status.error {
-  color: #C66;
+  white-space: nowrap;
 }
 
 .fileview-filename-container {
@@ -234,7 +233,7 @@
       <spark-icon-button id="openFile" src="images/open.png"></spark-icon-button>
       <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
 
-      <span id="status"></span>
+      <span id="saveStatus"></span>
 
       <div id="toolbarRight">
         <span id="editedFilename"></span>

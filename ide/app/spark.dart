@@ -21,6 +21,7 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
+import 'lib/event_bus.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
@@ -89,6 +90,7 @@ class Spark extends Application implements FilesControllerDelegate {
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
+  final EventBus eventBus = new EventBus();
 
   preferences.PreferenceStore localPrefs;
   preferences.PreferenceStore syncPrefs;
@@ -130,6 +132,7 @@ class Spark extends Application implements FilesControllerDelegate {
     buildMenu();
 
     initSplitView();
+    initSaveStatusListener();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -166,6 +169,10 @@ class Spark extends Application implements FilesControllerDelegate {
   Element getDialogElement(String selectors) =>
       document.querySelector(selectors);
 
+  SparkDialog createDialog(Element dialogElement) =>
+      new SparkBootjackDialog(dialogElement);
+
+
   //
   // Parts of ctor:
   //
@@ -195,7 +202,8 @@ class Spark extends Application implements FilesControllerDelegate {
         aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
     aceKeysManager = new KeyBindingManager(
         aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
-    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
+    editorManager = new EditorManager(
+        workspace, aceContainer, localPrefs, eventBus);
     editorArea = new EditorArea(
         getUIElement('#editorArea'),
         getUIElement('#editedFilename'),
@@ -259,6 +267,23 @@ class Spark extends Application implements FilesControllerDelegate {
           _splitView.position = value;
         }
       }
+    });
+  }
+
+  void initSaveStatusListener() {
+    Element element = getUIElement('#saveStatus');
+    Timer timer = new Timer(new Duration(seconds: 0), () => null);
+
+    eventBus.onEvent('fileModified').listen((_) {
+      //element.text = 'text modified…';
+      element.text = '';
+      timer.cancel();
+    });
+
+    eventBus.onEvent('filesSaved').listen((_) {
+      element.text = 'all changes saved';
+      timer.cancel();
+      timer = new Timer(new Duration(seconds: 3), () => (element.text = ''));
     });
   }
 
@@ -386,13 +411,10 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
-  void showStatus(String text, {bool error: false}) {
-    Element element = getUIElement("#status");
+  void showStatus(String text) {
+    Element element = getUIElement("#saveStatus");
     element.text = text;
-    element.classes.toggle('error', error);
   }
-
-  void notImplemented(String str) => showStatus("Not implemented: ${str}");
 
   //
   // Implementation of FilesControllerDelegate interface:
@@ -513,7 +535,7 @@ class ThemeManager {
   }
 
   void _updateName(String name) {
-    _label.text = capitalize(name.replaceAll('_', ' '));
+    _label.text = 'Theme: ' + capitalize(name.replaceAll('_', ' '));
   }
 }
 
@@ -632,19 +654,18 @@ abstract class SparkAction extends Action {
   }
 }
 
-abstract class SparkActionWithDialog extends SparkAction {
+abstract class SparkDialog {
+  void show();
+  void hide();
+  Element get element;
+}
+
+class SparkBootjackDialog implements SparkDialog {
   bootjack.Modal _dialog;
 
-  SparkActionWithDialog(Spark spark,
-                        String id,
-                        String name,
-                        Element dialogElement)
-      : super(spark, id, name) {
-    dialogElement.querySelector("[primary]").onClick.listen((_) => _commit());
+  SparkBootjackDialog(Element dialogElement) {
     _dialog = bootjack.Modal.wire(dialogElement);
 
-    // TODO(ussuri): This will be triggered only in non-Polymer UI via Bootjack.
-    // Polymer UI should handle focusing itself.
     _dialog.$element.on('shown.bs.modal', (event) {
       final Element dialog = event.target;
       Element elementToFocus = dialog.querySelector('[focused]');
@@ -655,31 +676,42 @@ abstract class SparkActionWithDialog extends SparkAction {
     });
   }
 
-  void _commit();
+  void show() => _dialog.show();
 
-  bool get isPolymer => _dialog.element.tagName == "SPARK-OVERLAY";
+  void hide() => _dialog.hide();
+
+  Element get element => _dialog.element;
+}
+
+abstract class SparkActionWithDialog extends SparkAction {
+  SparkDialog _dialog;
+
+  SparkActionWithDialog(Spark spark,
+                        String id,
+                        String name,
+                        Element dialogElement)
+      : super(spark, id, name) {
+    _dialog = spark.createDialog(dialogElement);
+    _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
+  }
+
+  void _commit();
 
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
 
-  Element _triggerOnReturn(String name) {
-    var element = _dialog.element.querySelector(name);
+  Element _triggerOnReturn(String selectors) {
+    var element = _dialog.element.querySelector(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
-        isPolymer ? _dialog.toggle() : _dialog.hide();
+        _dialog.hide();
       }
     });
     return element;
   }
 
-  void _show() {
-    if (isPolymer) {
-      (_dialog.element as dynamic).toggle();
-    } else {
-      _dialog.show();
-    }
-  }
+  void _show() => _dialog.show();
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
@@ -959,7 +991,7 @@ class AboutSparkAction extends SparkActionWithDialog {
       : super(spark, "help-about", "About Spark", dialog);
 
   void _invoke([Object context]) {
-    if (isPolymer || !_initialized) {
+    if (!_initialized) {
       var checkbox = getElement('#analyticsCheck');
       checkbox.checked = _isTrackingPermitted;
       checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
