@@ -70,7 +70,9 @@ class ListView {
     _dragoverVisual = new DivElement();
     _dragoverVisual.classes.add('listview-dragover');
     _container = new DivElement();
+    _container.tabIndex = 1;
     _container.classes.add('listview-container');
+    _container.onKeyDown.listen(_onKeyDown);
     _dropEnabled = false;
     _element.children.add(_container);
     _element.children.add(_dragoverVisual);
@@ -80,13 +82,37 @@ class ListView {
     _container.onClick.listen((event) {
       _removeCurrentSelectionHighlight();
       _selection.clear();
-      _delegate.listViewSelectedChanged(this, _selection.toList(), event);
+      _delegate.listViewSelectedChanged(this, _selection.toList());
     });
     _draggingCount = 0;
     _draggingOver = false;
     _cellHighlightedOnDragover = false;
     _globalDraggingOverAllowed = true;
     reloadData();
+  }
+
+  void _onKeyDown(KeyboardEvent event) {
+    if (!_delegate.listViewKeyDown(event)) {
+      return;
+    }
+
+    int keyCode = event.which;
+    switch (keyCode) {
+      //TODO: Handle shift + UP/DOWN (not selecting file)
+      //TODO: Open file on UP/DOWN?  On ENTER?  Alt+ENTER opens in new tab?
+      //TODO: Handle pgup/pgdn (and mac equiv): scroll list up/down.
+      //TODO: Handle begin/end (and mac equiv): scroll to top/bottom.
+      case KeyCode.UP:
+        if (_selectedRow > 0) {
+          _setSelection(_selectedRow - 1);
+        }
+        break;
+      case KeyCode.DOWN:
+        if (_selectedRow < _rows.length - 1) {
+          _setSelection(_selectedRow + 1);
+        }
+        break;
+    }
   }
 
   /**
@@ -149,40 +175,69 @@ class ListView {
    * Callback on a single click.
    */
   void _onClicked(int rowIndex, Event event) {
-    _removeCurrentSelectionHighlight();
+    _container.focus();
+
+    if (!_delegate.listViewRowClicked(event, rowIndex)) {
+      // If listViewRowClicked returns false, don't handle.
+      return;
+    }
+
     if ((event as MouseEvent).shiftKey) {
       // Click while holding shift.
-      if (_selectedRow == -1) {
-        _selectedRow = rowIndex;
-        _selection.clear();
-        _selection.add(rowIndex);
-      } else if (_selectedRow < rowIndex) {
-        _selection.clear();
-        for(int i = _selectedRow ; i <= rowIndex ; i++) {
-          _selection.add(i);
-        }
-      } else {
-        _selection.clear();
-        for(int i = rowIndex ; i <= _selectedRow ; i++) {
-          _selection.add(i);
-        }
-      }
+      _setSelection(
+          (_selectedRow != -1) ? _selectedRow : rowIndex,
+          endSelectionIndex: rowIndex);
     } else if ((event as MouseEvent).metaKey || (event as MouseEvent).ctrlKey) {
       // Click while holding Ctrl (Mac/Linux) or Command (for Mac).
-      _selectedRow = rowIndex;
-      if (_selection.contains(rowIndex)) {
-        _selection.remove(rowIndex);
-      } else {
-        _selection.add(rowIndex);
-      }
+      _toggleSelectedRow(rowIndex);
     } else {
       // Click without any modifiers.
-      _selectedRow = rowIndex;
-      _selection.clear();
+      _setSelection(rowIndex);
+    }
+  }
+
+  void _toggleSelectedRow(int rowIndex) {
+    _removeCurrentSelectionHighlight();
+
+    _selectedRow = rowIndex;
+
+    if (_selection.contains(rowIndex)) {
+      _selection.remove(rowIndex);
+    } else {
       _selection.add(rowIndex);
     }
+
     _addCurrentSelectionHighlight();
-    _delegate.listViewSelectedChanged(this, _selection.toList(), event);
+    _delegate.listViewSelectedChanged(this, _selection.toList());
+  }
+
+  void _setSelection(int selectionIndex, {int endSelectionIndex: -1}) {
+    _removeCurrentSelectionHighlight();
+
+    // If endSelection is -1 (default for not-provided), one item is being selected.
+    if (endSelectionIndex == -1) {
+      endSelectionIndex = selectionIndex;
+    }
+
+    selectionIndex = selectionIndex.clamp(0, _rows.length);
+    endSelectionIndex = endSelectionIndex.clamp(0, _rows.length);
+
+    if (selectionIndex < endSelectionIndex) {
+      _selection.clear();
+      for(int i = selectionIndex ; i <= endSelectionIndex ; i++) {
+        _selection.add(i);
+      }
+    } else {
+      _selection.clear();
+      for(int i = endSelectionIndex ; i <= selectionIndex ; i++) {
+        _selection.add(i);
+      }
+    }
+
+    _selectedRow = selectionIndex;
+
+    _addCurrentSelectionHighlight();
+    _delegate.listViewSelectedChanged(this, _selection.toList());
   }
 
   void _onContextMenu(int rowIndex, Event event) {
