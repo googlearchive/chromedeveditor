@@ -24,12 +24,11 @@ body {
   top: 0;
 }
 
-#status {
+#saveStatus {
+  color: #ccc;
+  margin-left: 6px;
   vertical-align: bottom;
-}
-
-#status.error {
-  color: #C66;
+  white-space: nowrap;
 }
 
 .fileview-filename-container {
@@ -173,7 +172,7 @@ body {
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
-  vertical-align: middle;
+  vertical-align: bottom;
   white-space: nowrap;
 }
 

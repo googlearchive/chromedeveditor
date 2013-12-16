@@ -11,6 +11,7 @@ import 'ace_test.dart';
 import 'files_mock.dart';
 import '../lib/ace.dart';
 import '../lib/editors.dart';
+import '../lib/event_bus.dart';
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
@@ -20,7 +21,8 @@ defineTests() {
       Workspace workspace = new Workspace();
       AceContainer aceContainer = new MockAceContainer();
       PreferenceStore store = new MapPreferencesStore();
-      EditorManager manager = new EditorManager(workspace, aceContainer, store);
+      EditorManager manager = new EditorManager(
+          workspace, aceContainer, store, new EventBus());
 
       MockFileSystem fs = new MockFileSystem();
 

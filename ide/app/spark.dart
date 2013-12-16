@@ -21,6 +21,7 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
+import 'lib/event_bus.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
@@ -89,6 +90,7 @@ class Spark extends Application implements FilesControllerDelegate {
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
+  final EventBus eventBus = new EventBus();
 
   preferences.PreferenceStore localPrefs;
   preferences.PreferenceStore syncPrefs;
@@ -130,6 +132,7 @@ class Spark extends Application implements FilesControllerDelegate {
     buildMenu();
 
     initSplitView();
+    initSaveStatusListener();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -199,7 +202,8 @@ class Spark extends Application implements FilesControllerDelegate {
         aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
     aceKeysManager = new KeyBindingManager(
         aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
-    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
+    editorManager = new EditorManager(
+        workspace, aceContainer, localPrefs, eventBus);
     editorArea = new EditorArea(
         getUIElement('#editorArea'),
         getUIElement('#editedFilename'),
@@ -263,6 +267,23 @@ class Spark extends Application implements FilesControllerDelegate {
           _splitView.position = value;
         }
       }
+    });
+  }
+
+  void initSaveStatusListener() {
+    Element element = getUIElement('#saveStatus');
+    Timer timer = new Timer(new Duration(seconds: 0), () => null);
+
+    eventBus.onEvent('fileModified').listen((_) {
+      //element.text = 'text modified…';
+      element.text = '';
+      timer.cancel();
+    });
+
+    eventBus.onEvent('filesSaved').listen((_) {
+      element.text = 'all changes saved';
+      timer.cancel();
+      timer = new Timer(new Duration(seconds: 3), () => (element.text = ''));
     });
   }
 
@@ -390,13 +411,10 @@ class Spark extends Application implements FilesControllerDelegate {
     }
   }
 
-  void showStatus(String text, {bool error: false}) {
-    Element element = getUIElement("#status");
+  void showStatus(String text) {
+    Element element = getUIElement("#saveStatus");
     element.text = text;
-    element.classes.toggle('error', error);
   }
-
-  void notImplemented(String str) => showStatus("Not implemented: ${str}");
 
   //
   // Implementation of FilesControllerDelegate interface:
