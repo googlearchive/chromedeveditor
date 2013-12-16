@@ -32,31 +32,31 @@ defineTests() {
       expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.json'))), 'json');
       expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.md'))), 'md');
       expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.yaml'))), 'yaml');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world'))), 'unknown');
+      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world'))), 'text');
     });
-    
+
     test("recognize custom file types", () {
       var fs = new MockFileSystem();
       var workspace = new Workspace();
       fileTypeRegistry.registerCustomType('foo', '.foo');
       expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.foo'))), 'foo');
     });
-    
+
     test('preference changed stream', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
       fileTypeRegistry.registerCustomType('test1', '.test1');
-      var future = 
+      var future =
           fileTypeRegistry.onFileTypePreferenceChange(prefStore, _factory)
                     .first.then((prefs) {
                       expect(prefs.custom, 32);
                     });
-      
+
       prefStore.setJsonValue('fileTypePrefs/test1', { 'custom' : 32});
-      
+
       return future;
     });
-    
+
     test('global defaults loaded for new type', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
@@ -66,7 +66,7 @@ defineTests() {
             expect(prefs.custom, 0);
           });
     });
-    
+
     test('read/write preferences', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
