@@ -6,7 +6,7 @@ import 'dart:async';
  * A Job manager. This class can be used to schedule jobs, and provides event
  * notification for job progress.
  *
- * This class is available as a singleton on the workbench.
+ * This class is available as a singleton.
  */
 class JobManager {
   StreamController<JobManagerEvent> _streamController =
