@@ -80,6 +80,8 @@ class EditorArea extends TabView {
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
   }
+  
+  bool isOpenInTab(Resource file) => _tabOfFile.keys.contains(file);
 
   set showLabelBar(bool showLabelBar) {
     super.showLabelBar = showLabelBar;
