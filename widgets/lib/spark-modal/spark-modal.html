@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<link rel="import" href="../spark-overlay/spark-overlay.html">
+
+<polymer-element name="spark-modal"
+         on-click="{{tapHandler}}"
+         on-keydown="{{keydownHandler}}" extends="spark-overlay">
+  <template>
+    <shadow></shadow>
+  </template>
+  <script type="application/dart" src="spark-modal.dart"></script>
+</polymer-element>

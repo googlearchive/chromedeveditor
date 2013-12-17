@@ -9,6 +9,7 @@
 <link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-button/spark-menu-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-item/spark-menu-item.html">
+<link rel="import" href="../../packages/spark_widgets/spark-modal/spark-modal.html">
 <link rel="import" href="../../packages/spark_widgets/spark-overlay/spark-overlay.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
 <link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
@@ -230,7 +231,7 @@
 */
     </style>
 
-    <spark-toolbar id="toolbar" color="white">
+    <spark-toolbar id="toolbar" color="white" lightdom>
       <spark-icon-button id="openFile" src="images/open.png"></spark-icon-button>
       <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
 
@@ -239,7 +240,7 @@
       <div id="toolbarRight">
         <span id="editedFilename"></span>
 
-        <spark-menu-button id="hotdogMenuNew" src="../../images/menu.png" 
+        <spark-menu-button id="hotdogMenuNew" src="../../images/menu.png"
             responsive="true" selected="1"
             on-menuselected={{onMenuSelected}}>
           <spark-menu-item actionId="file-open" iconsize=0 label="Open File...">
@@ -327,7 +328,7 @@
     </div>
 
     <!-- Delete File dialog -->
-    <spark-overlay id="deleteDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="deleteDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p id="message"></p>
       </div>
@@ -340,7 +341,7 @@
           Delete
         </spark-button>
       </div>
-    </spark-overlay>
+    </spark-modal>
 
     <!-- New File dialog -->
     <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
@@ -395,7 +396,7 @@
     </spark-overlay>
 
     <!-- Git Clone dialog -->
-    <spark-overlay id="gitCloneDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="gitCloneDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal"
             aria-hidden="true">&times;</spark-button>
@@ -414,10 +415,10 @@
           Clone
         </spark-button>
       </div>
-    </spark-overlay><!-- /.modal -->
+    </spark-modal><!-- /.modal -->
 
     <!-- About dialog -->
-    <spark-overlay id="aboutDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="aboutDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <h4 class="modal-title">Spark</h4>
       </div>
@@ -438,7 +439,7 @@
           Close
         </spark-button>
       </div>
-    </spark-overlay><!-- /.modal -->
+    </spark-modal><!-- /.modal -->
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>
