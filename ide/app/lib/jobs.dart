@@ -1,4 +1,4 @@
-library spark.app;
+library spark.jobs;
 
 import 'dart:async';
 
