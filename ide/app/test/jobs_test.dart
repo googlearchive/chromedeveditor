@@ -7,7 +7,6 @@ library spark.jobs_test;
 import 'dart:async';
 
 import 'package:unittest/unittest.dart';
-//import '../packages/unittest/unittest.dart';
 
 import '../lib/jobs.dart';
 
@@ -55,5 +54,4 @@ class MockJob extends Job {
       return this;
     });
   }
-
 }
