@@ -167,4 +167,13 @@ class EditorArea extends TabView {
       editorProvider.close(file);
     }
   }
+
+  // Replaces the file loaded in a tab with a renamed version of the file
+  // The new tab is not selected.
+  void renameFile(Resource file) {
+    if (_tabOfFile.containsKey(file)) {
+      EditorTab tab = _tabOfFile[file];
+      tab.label = file.name;
+    }
+  }
 }
