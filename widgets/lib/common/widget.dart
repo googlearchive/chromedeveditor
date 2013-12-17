@@ -21,7 +21,4 @@ class Widget extends PolymerElement {
 
   Element getShadowDomElement(String selectors) =>
       shadowRoot.querySelector(selectors);
-
-  Element getShadowDomElementFromPoint(PolymerElement elem, int x, int y) =>
-      shadowRoot.elementFromPoint(x, y);
 }
