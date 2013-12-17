@@ -21,7 +21,8 @@ class JobManager {
   }
 
   /**
-   * TODO:
+   * Will schedule a [job] after all other queued jobs.  If no [Job] is
+   * currently waiting, it run [job].
    */
   void schedule(Job job) {
     _waitingJobs.add(job);
@@ -32,7 +33,7 @@ class JobManager {
   }
 
   /**
-   * TODO:
+   * Whether or not a job is currently running.
    */
   bool get isJobRunning => _runningJob != null;
 
@@ -122,7 +123,9 @@ abstract class Job {
 }
 
 /**
- * TODO:
+ * Outlines a progress monitor with given [title] (the title of the progress
+ * monitor), and [maxWork] (the [work] value determining when progress is
+ * complete).  A maxWork of 0 indicates that progress cannot be determined.
  */
 abstract class ProgressMonitor {
   String _title;
@@ -130,35 +133,36 @@ abstract class ProgressMonitor {
   num _work = 0;
 
   /**
-   * TODO:
+   * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
+   * when work is completed)
    */
-  void start(String title, [num workAmount = 0]) {
+  void start(String title, [num maxWork = 0]) {
     this._title = title;
-    this._maxWork = workAmount;
+    this._maxWork = maxWork;
   }
 
   /**
-   * TODO:
+   * The current value of work complete.
    */
   num get work => _work;
 
   /**
-   * TODO:
+   * The final value of work once progress is complete.
    */
   num get maxWork => _maxWork;
 
   /**
-   * TODO:
+   * `true` if progress cannot be determined ([maxWork] == 0)
    */
   bool get indeterminate => maxWork == 0;
 
   /**
-   * TODO:
+   * The total progress of work complete (a double from 0 to 1)
    */
   double get progress => _work / _maxWork;
 
   /**
-   * TODO:
+   * Adds [amount] to [work] completed (but no greater than maxWork).
    */
   void worked(num amount) {
     _work += amount;
@@ -169,7 +173,7 @@ abstract class ProgressMonitor {
   }
 
   /**
-   * TODO:
+   * Sets the work as completely done (work = maxWork).
    */
   void done() {
     _work = maxWork;
