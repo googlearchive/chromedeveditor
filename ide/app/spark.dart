@@ -321,7 +321,7 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileRenameAction(
         this, getDialogElement('#renameDialog')));
@@ -431,7 +431,16 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
 
    void _closeOpenEditor(ws.Resource resource) {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
-      editorManager.close(resource);
+      editorArea.closeFile(resource);
+    }
+  }
+
+  /**
+   * Refreshes the file name on an opened editor tab.
+   */
+  void _renameOpenEditor(ws.Resource renamedResource) {
+    if (renamedResource is ws.File && editorManager.isFileOpened(renamedResource)) {
+      editorArea.renameFile(renamedResource);
     }
   }
 
@@ -835,8 +844,10 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     if (_nameElement.value.isNotEmpty) {
-      spark._closeOpenEditor(resource);
-      resource.rename(_nameElement.value);
+      resource.rename(_nameElement.value)
+        .then((value) {
+          spark._renameOpenEditor(resource);
+        });
     }
   }
 
@@ -845,8 +856,8 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 
-class FileCloseAction extends SparkAction implements ContextAction {
-  FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
+class ResourceCloseAction extends SparkAction implements ContextAction {
+  ResourceCloseAction(Spark spark) : super(spark, "file-close", "Close");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -854,8 +865,12 @@ class FileCloseAction extends SparkAction implements ContextAction {
     }
 
     for (ws.Resource resource in resources) {
-      spark._closeOpenEditor(resource);
-      resource.workspace.unlink(resource);
+      spark.workspace.unlink(resource);
+      if (resource is ws.File) {
+        spark._closeOpenEditor(resource);
+      } else if (resource is ws.Project) {
+        resource.traverse().forEach(spark._closeOpenEditor);
+      }
     }
 
     spark.workspace.save();
