@@ -27,7 +27,7 @@ class Tab {
   Tab(this.tabView, {Element page: null, bool closable: true}) {
     _label = new DivElement()..classes.add('tabview-tablabel');
     _label.onClick.listen((e) {
-      select();
+      select(forceFocus: true);
       e.stopPropagation();
       e.preventDefault();
     });
@@ -90,7 +90,13 @@ class Tab {
     tabView.scrollIntoView(this);
   }
 
-  select() => tabView.selectedTab = this;
+  void select({bool forceFocus}) {
+    tabView.selectedTab = this;
+
+    if (forceFocus) focus();
+  }
+
+  void focus() => _pageContainer.focus();
 
   bool close() => tabView.remove(this);
 
@@ -107,6 +113,7 @@ class Tab {
 
 class TabView {
   static const int SCROLL_MARGIN = 7;
+
   final Element parentElement;
   DivElement _tabViewContainer;
   DivElement _tabBar;
