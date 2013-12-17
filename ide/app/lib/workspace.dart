@@ -150,7 +150,7 @@ class Workspace implements Container {
 
   List<Resource> getChildren() => _localChildren;
 
-  Iterable<Resource> walkChildren() => Container._workspaceTraversal(this);
+  Iterable<Resource> walkChildren() => Resource._workspaceTraversal(this);
 
   List<File> getFiles() => _localChildren.where((c) => c is File).toList();
 
@@ -363,21 +363,6 @@ abstract class Container extends Resource {
   }
 
   List<Resource> getChildren() => _localChildren;
-
-  /**
-   * Returns an iterable of the children of the container as a pre-order traversal
-   * of the tree of subcontainers and their children.
-   */
-  Iterable<Resource> walkChildren() => _workspaceTraversal(this);
-
-  static Iterable<Resource> _workspaceTraversal(Resource r) {
-    if (r is Container) {
-      return [ [r], r.getChildren().expand((c) => _workspaceTraversal(c)) ]
-      .expand((i) => i);
-    } else {
-      return [r];
-    }
-  }
 }
 
 abstract class Resource {
@@ -433,6 +418,21 @@ abstract class Resource {
   int get hashCode => path.hashCode;
 
   String toString() => '${this.runtimeType} ${name}';
+
+  /**
+   * Returns an iterable of the children of the resource as a pre-order traversal
+   * of the tree of subcontainers and their children.
+   */
+  Iterable<Resource> walkChildren() => _workspaceTraversal(this);
+
+  static Iterable<Resource> _workspaceTraversal(Resource r) {
+    if (r is Container) {
+      return [ [r], r.getChildren().expand(_workspaceTraversal) ]
+             .expand((i) => i);
+    } else {
+      return [r];
+    }
+  }
 }
 
 class Folder extends Container {
