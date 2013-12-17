@@ -51,7 +51,6 @@ class SparkSplitter extends Widget {
   /// Triggered when the control is first displayed.
   @override
   void enteredView() {
-    print("HERE");
     // TODO(sergeygs): Perhaps switch to using onDrag* instead of onMouse* once
     // support for drag-and-drop in shadow DOM is fixed. It is less important
     // here, because the element is not actually supposed to be dropped onto
