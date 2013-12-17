@@ -37,7 +37,7 @@ class JobManager {
   bool get isJobRunning => _runningJob != null;
 
   /**
-   * Stream of change events handled by this [JobManager]
+   * Stream of state change events handled by this [JobManager]
    */
   Stream<JobManagerEvent> get onChange => _controller.stream;
 
@@ -61,21 +61,21 @@ class JobManager {
     });
   }
 
-  _jobStarted(Job job) {
+  void _jobStarted(Job job) {
     _controller.add(new JobManagerEvent(this, job, started: true));
   }
 
-  _monitorWorked(_ProgressMonitorImpl monitor, Job job) {
+  void _monitorWorked(_ProgressMonitorImpl monitor, Job job) {
     _controller.add(new JobManagerEvent(this, job,
         indeterminate: monitor.indeterminate, progress: monitor.progress));
   }
 
-  _monitorDone(_ProgressMonitorImpl monitor, Job job) {
+  void _monitorDone(_ProgressMonitorImpl monitor, Job job) {
     _controller.add(new JobManagerEvent(this, job,
         indeterminate: monitor.indeterminate, progress: monitor.progress));
   }
 
-  _jobFinished(Job job) {
+  void _jobFinished(Job job) {
     _controller.add(new JobManagerEvent(this, job, finished: true));
   }
 }
