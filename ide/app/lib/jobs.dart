@@ -37,7 +37,7 @@ class JobManager {
   bool get isJobRunning => _runningJob != null;
 
   /**
-   * TODO:
+   * Stream of change events handled by this [JobManager]
    */
   Stream<JobManagerEvent> get onChange => _controller.stream;
 
