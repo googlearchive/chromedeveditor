@@ -12,12 +12,12 @@ import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
 
 abstract class SparkModel {
-  bool get _developerMode;
+  bool get developerMode;
 
-  AceContainer get _aceContainer;
-  ThemeManager get _aceThemeManager;
-  KeyBindingManager get _aceKeysManager;
-  ws.Workspace get _workspace;
+  AceContainer get aceContainer;
+  ThemeManager get aceThemeManager;
+  KeyBindingManager get aceKeysManager;
+  ws.Workspace get workspace;
   EditorManager get editorManager;
   EditorArea get editorArea;
 
