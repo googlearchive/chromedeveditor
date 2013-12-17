@@ -13,16 +13,11 @@ import 'dart:async';
  * This class is available as a singleton.
  */
 class JobManager {
-  StreamController<JobManagerEvent> _streamController =
-      new StreamController<JobManagerEvent>();
-  Stream<JobManagerEvent> _stream;
+  StreamController<JobManagerEvent> _controller =
+      new StreamController.broadcast();
 
   Job _runningJob;
   List<Job> _waitingJobs = new List<Job>();
-
-  JobManager() {
-    _stream = _streamController.stream.asBroadcastStream();
-  }
 
   /**
    * Will schedule a [job] after all other queued jobs.  If no [Job] is
@@ -44,7 +39,7 @@ class JobManager {
   /**
    * TODO:
    */
-  Stream<JobManagerEvent> get onChange => _stream;
+  Stream<JobManagerEvent> get onChange => _controller.stream;
 
   void _scheduleNextJob() {
     if (!_waitingJobs.isEmpty) {
@@ -67,21 +62,21 @@ class JobManager {
   }
 
   _jobStarted(Job job) {
-    _streamController.add(new JobManagerEvent(this, job, started: true));
+    _controller.add(new JobManagerEvent(this, job, started: true));
   }
 
   _monitorWorked(_ProgressMonitorImpl monitor, Job job) {
-    _streamController.add(new JobManagerEvent(this, job,
+    _controller.add(new JobManagerEvent(this, job,
         indeterminate: monitor.indeterminate, progress: monitor.progress));
   }
 
   _monitorDone(_ProgressMonitorImpl monitor, Job job) {
-    _streamController.add(new JobManagerEvent(this, job,
+    _controller.add(new JobManagerEvent(this, job,
         indeterminate: monitor.indeterminate, progress: monitor.progress));
   }
 
   _jobFinished(Job job) {
-    _streamController.add(new JobManagerEvent(this, job, finished: true));
+    _controller.add(new JobManagerEvent(this, job, finished: true));
   }
 }
 
