@@ -5,12 +5,12 @@ import 'dart:async';
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/filetypes.dart';
+import '../lib/filetypes.dart' as ftypes;
 import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 import 'files_mock.dart';
 
-class MockFileTypePreferences implements FileTypePreferences {
+class MockFileTypePreferences implements ftypes.FileTypePreferences {
   final String fileType;
   MockFileTypePreferences(String this.fileType, [int this.custom = 0]);
   int custom = 0;
@@ -22,35 +22,14 @@ MockFileTypePreferences _factory(String fileType, [Map map]) =>
 
 defineTests() {
   group('filetypes', () {
-    test("recognize inbuilt file types", () {
-      var fs = new MockFileSystem();
-      var workspace = new Workspace();
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.css'))), 'css');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.dart'))), 'dart');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.htm'))), 'html');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.js'))), 'js');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.json'))), 'json');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.md'))), 'md');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.yaml'))), 'yaml');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world'))), 'text');
-    });
-
-    test("recognize custom file types", () {
-      var fs = new MockFileSystem();
-      var workspace = new Workspace();
-      fileTypeRegistry.registerCustomType('foo', '.foo');
-      expect(fileTypeRegistry.fileTypeOf(new File(workspace, fs.createFile('hello_world.foo'))), 'foo');
-    });
 
     test('preference changed stream', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
-      fileTypeRegistry.registerCustomType('test1', '.test1');
-      var future =
-          fileTypeRegistry.onFileTypePreferenceChange(prefStore, _factory)
-                    .first.then((prefs) {
-                      expect(prefs.custom, 32);
-                    });
+      var future = ftypes.onFileTypePreferenceChange(prefStore, _factory)
+          .first.then((prefs) {
+             expect(prefs.custom, 32);
+          });
 
       prefStore.setJsonValue('fileTypePrefs/test1', { 'custom' : 32});
 
@@ -60,8 +39,10 @@ defineTests() {
     test('global defaults loaded for new type', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
-      fileTypeRegistry.registerCustomType('test2', '.test2');
-      return fileTypeRegistry.restorePreferences(prefStore, _factory, 'test2')
+      var testFile = fs.createFile('foo.test2');
+      Workspace workspace = new Workspace();
+      workspace.link(testFile);
+      return ftypes.restorePreferences(prefStore, _factory, workspace.getChild('foo.test2'))
           .then((prefs) {
             expect(prefs.custom, 0);
           });
@@ -70,12 +51,14 @@ defineTests() {
     test('read/write preferences', () {
       var prefStore = new MapPreferencesStore();
       var fs = new MockFileSystem();
-      fileTypeRegistry.registerCustomType('test3', '.test3');
+      var testFile = fs.createFile('foo.test3');
+      Workspace workspace = new Workspace()
+          ..link(testFile);
       var prefs = _factory('test3');
       prefs.custom = 50;
-      return fileTypeRegistry.persistPreferences(prefStore, prefs)
+      return ftypes.persistPreferences(prefStore, prefs)
         .then((_) {
-          return fileTypeRegistry.restorePreferences(prefStore, _factory, 'test3')
+          return ftypes.restorePreferences(prefStore, _factory, workspace.getChild('foo.test3'))
               .then((prefs) {
                 expect(prefs.custom, 50);
               });

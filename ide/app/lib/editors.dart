@@ -13,7 +13,8 @@ import 'dart:html' as html;
 
 import 'ace.dart' as ace;
 import 'preferences.dart';
-import 'filetypes.dart';
+import 'filetypes.dart' as ftypes;
+import 'utils.dart';
 import 'workspace.dart';
 
 /**
@@ -41,7 +42,7 @@ abstract class Editor {
   void focus();
 }
 
-class EditorPreferences extends FileTypePreferences {
+class EditorPreferences extends ftypes.FileTypePreferences {
   int tabSize;
   bool useSoftTabs;
 
@@ -84,11 +85,10 @@ class EditorManager implements EditorProvider {
       new StreamController.broadcast();
 
   EditorManager(this._workspace, this._aceContainer, this._prefStore) {
-    fileTypeRegistry
-        .onFileTypePreferenceChange(_prefStore, EditorPreferences._fromMap)
+    ftypes.onFileTypePreferenceChange(_prefStore, EditorPreferences._fromMap)
         .listen((prefs) {
            if (currentFile != null
-               && fileTypeRegistry.fileTypeOf(currentFile) == prefs.fileType) {
+               && canonicFileExt(currentFile.name) == prefs.fileType) {
             _aceContainer.applySessionPreferences(currentFile.name, prefs);
           }
         });
@@ -360,9 +360,7 @@ class _EditorState {
     } else {
       Completer<_EditorState> completer = new Completer<_EditorState>();
       file.getContents().then((text) {
-        var fileType = fileTypeRegistry.fileTypeOf(file);
-        fileTypeRegistry
-            .restorePreferences(manager._prefStore, EditorPreferences._fromMap, fileType)
+        ftypes.restorePreferences(manager._prefStore, EditorPreferences._fromMap, file)
             .then((prefs) {
               session = manager._aceContainer.createEditSession(text, file.name, prefs);
               session.scrollTop = scrollTop;
