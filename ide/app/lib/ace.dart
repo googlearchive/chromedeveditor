@@ -86,16 +86,16 @@ class AceContainer {
 
   void resize() => _aceEditor.resize(false);
 
-  ace.EditSession createEditSession(String text, String fileName, EditorPreferences prefs) {
+  ace.EditSession createEditSession(String text, String fileName, Map<String,dynamic> prefs) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
     _applyCustomSession(session, fileName, prefs);
     return session;
   }
 
-  void _applyCustomSession(ace.EditSession session, String fileName, EditorPreferences prefs) {
-    session.tabSize = prefs.tabSize;
-    session.useSoftTabs = prefs.useSoftTabs;
+  void _applyCustomSession(ace.EditSession session, String fileName, Map<String,dynamic> prefs) {
+    session.tabSize = prefs['tabSize'];
+    session.useSoftTabs = prefs['useSoftTabs'];
     // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
   }
@@ -104,7 +104,7 @@ class AceContainer {
    * Apply the preferences to the currently loaded session.
    * The current file is assumed to be the same type as the preference type.
    */
-  void applySessionPreferences(String fileName, EditorPreferences prefs) {
+  void applySessionPreferences(String fileName, Map<String,dynamic> prefs) {
     _applyCustomSession(currentSession, fileName, prefs);
   }
 

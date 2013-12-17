@@ -11,7 +11,6 @@ import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
-import '../lib/editors.dart';
 import '../lib/workspace.dart' as workspace;
 
 defineTests() {
@@ -29,7 +28,7 @@ class MockAceContainer implements AceContainer {
 
   MockAceContainer();
 
-  EditSession createEditSession(String text, String fileName, EditorPreferences prefs) {
+  EditSession createEditSession(String text, String fileName, Map<String,dynamic> preferences) {
     return new MockEditSession(fileName);
   }
 
@@ -45,7 +44,7 @@ class MockAceContainer implements AceContainer {
   Future<String> getKeyBinding() => new Future.value(null);
   void setKeyBinding(String name) { }
 
-  void applySessionPreferences(String fileName, EditorPreferences prefs) { }
+  void applySessionPreferences(String fileName, Map<String,dynamic> prefs) { }
 }
 
 class MockAceEditor implements AceEditor {
