@@ -55,8 +55,8 @@ class FilesController implements TreeViewDelegate {
       _addAllFiles();
     });
 
-    _workspace.onResourceChange.listen((event) {
-      _processEvents(event);
+    _workspace.onResourceChange.listen((events) {
+      _processEvents(events);
     });
   }
 
@@ -498,31 +498,33 @@ class FilesController implements TreeViewDelegate {
   /**
    * Event handler for workspace events.
    */
-  void _processEvents(ResourceChangeEvent event) {
+  void _processEvents(List<ResourceChangeEvent> events) {
     // TODO: process other types of events
-    if (event.type == ResourceEventType.ADD) {
-      var resource = event.resource;
-      if (resource.isTopLevel) {
-        _files.add(resource);
+    for (ResourceChangeEvent event in  events) {
+      if (event.type == ResourceEventType.ADD) {
+        var resource = event.resource;
+        if (resource.isTopLevel) {
+          _files.add(resource);
+        }
+        _sortTopLevel();
+        _recursiveAddResource(resource);
       }
-      _sortTopLevel();
-      _recursiveAddResource(resource);
-      _reloadData();
+
+      if (event.type == ResourceEventType.DELETE) {
+        var resource = event.resource;
+        _files.remove(resource);
+        _recursiveRemoveResource(resource);
+      }
+
+      if (event.type == ResourceEventType.CHANGE) {
+        // refresh the container that has changed.
+        // remove all old paths and add new.
+        var resource = event.resource;
+        _recursiveRemoveResource(resource);
+        _recursiveAddResource(resource);
+      }
     }
-    if (event.type == ResourceEventType.DELETE) {
-      var resource = event.resource;
-      _files.remove(resource);
-      _recursiveRemoveResource(resource);
-      _reloadData();
-    }
-    if (event.type == ResourceEventType.CHANGE) {
-      // refresh the container that has changed.
-      // remove all old paths and add new.
-      var resource = event.resource;
-      _recursiveRemoveResource(resource);
-      _recursiveAddResource(resource);
-      _reloadData();
-    }
+    _reloadData();
   }
 
   void _recursiveAddResource(Resource resource) {

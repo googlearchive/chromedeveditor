@@ -47,7 +47,7 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt');
 
-      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
+      Future future = workspace.onResourceChange.first.then((List<ResourceChangeEvent> events) {
         ResourceChangeEvent event = events.single;
         expect(event.resource.name, fileEntry.name);
         expect(event.type, ResourceEventType.ADD);
@@ -76,7 +76,8 @@ defineTests() {
         resource.delete();
       });
 
-      return workspace.onResourceChange.first.then((ResourceChangeEvent event) {
+      return workspace.onResourceChange.first.then((List<ResourceChangeEvent> events) {
+        ResourceChangeEvent event = events.single;
         expect(event.resource.name, fileEntry.name);
         expect(event.type, ResourceEventType.DELETE);
       });
@@ -91,7 +92,7 @@ defineTests() {
       fs.createFile('/myProject/test.dart');
       var dirEntry = fs.getEntry('myProject');
 
-      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
+      Future future = workspace.onResourceChange.first.then((List<ResourceChangeEvent> events) {
         ResourceChangeEvent event = events.single;
         expect(event.resource.name, dirEntry.name);
         expect(event.type, ResourceEventType.ADD);
@@ -120,7 +121,7 @@ defineTests() {
       fs.createFile('/myProject/myDir/test.html');
       fs.createFile('/myProject/myDir/test.dart');
 
-      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
+      Future future = workspace.onResourceChange.first.then((List<ResourceChangeEvent> events) {
         ResourceChangeEvent event = events.single;
         expect(event.resource.name, projectDir.name);
         expect(event.type, ResourceEventType.ADD);
