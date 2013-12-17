@@ -51,10 +51,6 @@ class SparkPolymer extends Spark {
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
-  @override
-  Element getUIElementFromPoint(polymer.PolymerElement elem, int x, int y) =>
-      elem.shadowRoot.elementFromPoint(x, y);
-
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
   Element getDialogElement(String selectors) =>

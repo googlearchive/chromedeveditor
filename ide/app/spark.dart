@@ -161,9 +161,6 @@ class Spark extends Application implements FilesControllerDelegate {
   Element getUIElement(String selectors) =>
       document.querySelector(selectors);
 
-  Element getUIElementFromPoint(Element target, int x, int y) =>
-      document.elementFromPoint(x, y);
-
   /**
    * Should extract a dialog Element from the underlying UI's DOM. This is
    * different from [getUIElement] in that it's not currently overridden in
@@ -702,7 +699,6 @@ class SparkBootjackDialog implements SparkDialog {
 
 abstract class SparkActionWithDialog extends SparkAction {
   SparkDialog _dialog;
-  bool _opened = false;
 
   SparkActionWithDialog(Spark spark,
                         String id,
@@ -712,39 +708,12 @@ abstract class SparkActionWithDialog extends SparkAction {
     _dialog = spark.createDialog(dialogElement);
     if (dialogElement.tagName == "SPARK-MODAL") {
       dialogElement.on['opened'].listen((event) {
-        _opened = event.detail;
-
         var appModal = querySelector("#app_modal");
-        if (_opened) {
-          appModal.style.display = "inline";
-          window.addEventListener("click", _capturedMouseEvent, true);
-        } else {
-          window.removeEventListener("click", _capturedMouseEvent, true);
-          appModal.style.display = "none";
-        }
+        appModal.style.display = event.detail ? "block" : "none";
       });
 
     }
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
-  }
-
-  void _capturedMouseEvent(Event event) {
-    if (!_opened) return;
-    var targetElem = event.target;
-    if (targetElem.tagName.startsWith("SPARK-")) {
-      MouseEvent mouseEvt = event;
-      var foundElem = spark.getUIElementFromPoint(targetElem,
-          mouseEvt.client.x, mouseEvt.client.y);
-
-      var parent = foundElem.parent;
-      while (parent != null && parent.tagName != "SPARK-MODAL") {
-        parent = parent.parent;
-      }
-      // Clicked outside of dialog stop everything.
-      if (parent == null) {
-        event.stopImmediatePropagation();
-      }
-    }
   }
 
   void _commit();
