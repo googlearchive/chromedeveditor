@@ -150,7 +150,7 @@ class Workspace implements Container {
 
   List<Resource> getChildren() => _localChildren;
 
-  Iterable<Resource> walkChildren() => preOrderTraversal(this);
+  Iterable<Resource> walkChildren() => Container._workspaceTraversal(this);
 
   List<File> getFiles() => _localChildren.where((c) => c is File).toList();
 
@@ -363,10 +363,21 @@ abstract class Container extends Resource {
   }
 
   List<Resource> getChildren() => _localChildren;
+
   /**
-   * Returns a pre-order traversal of all the children of `this`.
+   * Returns an iterable of the children of the container as a pre-order traversal
+   * of the tree of subcontainers and their children.
    */
-  Iterable<Resource> walkChildren() => preOrderTraversal(this);
+  Iterable<Resource> walkChildren() => _workspaceTraversal(this);
+
+  static Iterable<Resource> _workspaceTraversal(Resource r) {
+    if (r is Container) {
+      return [ [r], r.getChildren().expand((c) => _workspaceTraversal(c)) ]
+      .expand((i) => i);
+    } else {
+      return [r];
+    }
+  }
 }
 
 abstract class Resource {
@@ -538,23 +549,6 @@ class ResourceChangeEvent {
   String toString() => '${type}: ${resource}';
 }
 
-/**
- * Returns a pre-order traversal of the children of the resource.
- */
-Iterable<Resource> preOrderTraversal(Resource r) {
-  int compareChildren(Resource r1, Resource r2) {
-    if (r1 is Container && r2 is File) return 1;
-    if (r2 is Container && r1 is File) return -1;
-    return r1.name.compareTo(r2.name);
-  }
-  if (r is Container) {
-    var children = r.getChildren()
-        ..sort(compareChildren);
-    return [ [r], children.expand((c) => preOrderTraversal(c)) ]
-           .expand((i) => i);
-  } else {
-    return [r];
-  }
-}
+
 
 
