@@ -12,7 +12,8 @@ defineTests() {
     test('schedule', () {
       JobManager jobManager = new JobManager();
 
-      Future future = jobManager.onChange.take(5).toList().then((List<JobManagerEvent> events) {
+      Future future = jobManager.onChange.take(5).toList()
+          .then((List<JobManagerEvent> events) {
         JobManagerEvent e = events.removeAt(0);
         expect(true, e.started);
 
