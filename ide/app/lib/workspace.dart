@@ -496,8 +496,6 @@ class File extends Resource {
   }
 
   chrome.ChromeFileEntry get _fileEntry => entry;
-
-
 }
 
 /**
@@ -548,7 +546,3 @@ class ResourceChangeEvent {
 
   String toString() => '${type}: ${resource}';
 }
-
-
-
-
