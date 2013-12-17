@@ -9,10 +9,18 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/widget.dart';
 
-import '../../spark_polymer.dart';
+import '../../spark_model.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends Widget {
+  SparkModel app;
+
+  factory SparkPolymerUI(SparkModel app) {
+    SparkPolymerUI ui = new Element.tag('spark-polymer-ui');
+    ui.app = app;
+    return ui;
+  }
+
   SparkPolymerUI.created() : super.created();
 
   void toggleDropdownMenu() {
@@ -21,13 +29,10 @@ class SparkPolymerUI extends Widget {
       menu.style.display == "block" ? "none" : "block";
   }
 
-  // TODO(ussuri): this could be bound in the HTML via
-  // `@observable SparkPolymer app` initialized to [spark].
-  // But [spark] is initialized asynchronously and that happens to be later
-  // than any of the events associated with this object. Find a way to do
-  // that.
-  void onMenuSelected(CustomEvent event, Map<String, dynamic> detail) {
-      print("HERE");
-      spark.onMenuSelected(event, detail);
+  void onMenuSelected(Event event, Map<String, dynamic> detail) {
+    final actionId = detail['item'].attributes['actionId'];
+    final action = app.actionManager.getAction(actionId);
+    assert(action != null);
+    action.invoke();
   }
 }

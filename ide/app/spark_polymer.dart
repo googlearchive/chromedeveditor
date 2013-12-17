@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark_polymer;
+library spark_polymer.app;
 
 import 'dart:async';
 import 'dart:html';
@@ -11,17 +11,15 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 import 'package:spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
 
-import 'spark.dart';
-import 'lib/actions.dart';
 import 'lib/polymer_ui/spark_polymer_ui.dart';
 
-SparkPolymer spark = null;
+import 'spark.dart';
 
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
       createSparkZone().runGuarded(() {
-        spark = new SparkPolymer._(testMode);
+        SparkPolymer spark = new SparkPolymer._(testMode);
         spark.start();
       });
     });
@@ -44,17 +42,22 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  SparkPolymer._(bool developerMode)
-      : _ui = document.querySelector('#topUi') as SparkPolymerUI,
-        super(developerMode);
+  SparkPolymer._(bool developerMode) : super(developerMode);
+
+  SparkPolymerUI get ui {
+    if (_ui == null) {
+      _ui = new SparkPolymerUI(this);
+    }
+    return _ui;
+  }
 
   @override
-  Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
+  Element getUIElement(String selectors) => ui.getShadowDomElement(selectors);
 
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
   Element getDialogElement(String selectors) =>
-      _ui.getShadowDomElement(selectors);
+      ui.getShadowDomElement(selectors);
 
   @override
   SparkDialog createDialog(Element dialogElement) =>
@@ -85,6 +88,9 @@ class SparkPolymer extends Spark {
   // We're using a Polymer-based splitview, so disable the default.
   @override
   void initSplitView() => null;
+
+  @override
+  void initSaveStatusListener() => super.initSaveStatusListener();
 
   @override
   void initFilesController() => super.initFilesController();
@@ -118,14 +124,6 @@ class SparkPolymer extends Spark {
         (e) => aceKeysManager.dec(e));
     oldMenu.querySelector('#keysRight').onClick.listen(
         (e) => aceKeysManager.inc(e));
-  }
-
-  void onMenuSelected(var event, Map<String, dynamic> detail) {
-    final item = detail['item'];
-    final actionId = item.attributes['actionId'];
-    var action = actionManager.getAction(actionId);
-    assert(action != null);
-    action.invoke();
   }
 
   //
