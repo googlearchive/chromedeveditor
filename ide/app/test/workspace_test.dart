@@ -223,7 +223,7 @@ defineTests() {
       fs.createFile('/root/folder2/file3');
       return workspace.link(rootDir).then((_) {
         Folder rootFolder = workspace.getChild('root');
-        expect(rootFolder.walkChildren().map((f) => f.path),
+        expect(rootFolder.traverse().map((f) => f.path),
                equals([ '/root',
                           '/root/folder1',
                             '/root/folder1/folder3',

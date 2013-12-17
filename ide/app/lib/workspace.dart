@@ -150,7 +150,7 @@ class Workspace implements Container {
 
   List<Resource> getChildren() => _localChildren;
 
-  Iterable<Resource> walkChildren() => Resource._workspaceTraversal(this);
+  Iterable<Resource> traverse() => Resource._workspaceTraversal(this);
 
   List<File> getFiles() => _localChildren.where((c) => c is File).toList();
 
@@ -423,7 +423,7 @@ abstract class Resource {
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
    */
-  Iterable<Resource> walkChildren() => _workspaceTraversal(this);
+  Iterable<Resource> traverse() => _workspaceTraversal(this);
 
   static Iterable<Resource> _workspaceTraversal(Resource r) {
     if (r is Container) {

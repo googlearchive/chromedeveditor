@@ -925,7 +925,7 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
       if (resource is ws.File) {
         spark._closeOpenEditor(resource);
       } else if (resource is ws.Project) {
-        resource.walkChildren().forEach(spark._closeOpenEditor);
+        resource.traverse().forEach(spark._closeOpenEditor);
       }
     }
 
