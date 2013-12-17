@@ -15,6 +15,7 @@ import 'package:logging/logging.dart';
 
 import 'preferences.dart';
 
+
 /**
  * The Workspace is a top-level entity that can contain files and projects. The
  * files that it contains are loose files; they do not have parent projects.
@@ -148,6 +149,8 @@ class Workspace implements Container {
   }
 
   List<Resource> getChildren() => _localChildren;
+
+  Iterable<Resource> traverse() => Resource._workspaceTraversal(this);
 
   List<File> getFiles() => _localChildren.where((c) => c is File).toList();
 
@@ -374,7 +377,7 @@ abstract class Resource {
 
   /**
    * Return the path to this element from the workspace. Paths are not
-   * guarenteed to be unique.
+   * guaranteed to be unique.
    */
   String get path => '${parent.path}/${name}';
 
@@ -415,6 +418,21 @@ abstract class Resource {
   int get hashCode => path.hashCode;
 
   String toString() => '${this.runtimeType} ${name}';
+
+  /**
+   * Returns an iterable of the children of the resource as a pre-order traversal
+   * of the tree of subcontainers and their children.
+   */
+  Iterable<Resource> traverse() => _workspaceTraversal(this);
+
+  static Iterable<Resource> _workspaceTraversal(Resource r) {
+    if (r is Container) {
+      return [ [r], r.getChildren().expand(_workspaceTraversal) ]
+             .expand((i) => i);
+    } else {
+      return [r];
+    }
+  }
 }
 
 class Folder extends Container {
@@ -447,6 +465,7 @@ class Folder extends Container {
   }
 
   chrome.DirectoryEntry get _dirEntry => entry;
+
 }
 
 class File extends Resource {

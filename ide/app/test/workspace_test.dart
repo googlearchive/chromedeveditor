@@ -210,5 +210,29 @@ defineTests() {
         });
       });
     });
+
+    test("walk children performs a pre-order traversal", () {
+      MockFileSystem fs = new MockFileSystem();
+      Workspace workspace = new Workspace();
+      var rootDir = fs.createDirectory('/root');
+      fs.createDirectory('/root/folder1');
+      fs.createDirectory('/root/folder2');
+      fs.createDirectory('/root/folder1/folder3');
+      fs.createFile('/root/folder1/file1');
+      fs.createFile('/root/folder1/folder3/file2');
+      fs.createFile('/root/folder2/file3');
+      return workspace.link(rootDir).then((_) {
+        Folder rootFolder = workspace.getChild('root');
+        expect(rootFolder.traverse().map((f) => f.path),
+               equals([ '/root',
+                          '/root/folder1',
+                            '/root/folder1/folder3',
+                              '/root/folder1/folder3/file2',
+                            '/root/folder1/file1',
+                          '/root/folder2',
+                            '/root/folder2/file3'
+                      ]));
+      });
+    });
   });
 }
