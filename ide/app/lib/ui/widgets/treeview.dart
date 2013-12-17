@@ -111,6 +111,18 @@ class TreeView implements ListViewDelegate {
   }
 
   /**
+   * Cleans the selection to not include non-showing elements
+   */
+  void _cleanSelection() {
+    for(String nodeUID in selection) {
+      TreeViewRow row = _rowsMap[nodeUID];
+      if (row == null) {
+        selection.remove(nodeUID);
+      }
+    }
+  }
+
+  /**
    * This method can be called to refresh the content when the data provided
    * by the delegate changed.
    */
@@ -169,27 +181,28 @@ class TreeView implements ListViewDelegate {
    * Sets expanded state of a node.
    */
   void setNodeExpanded(String nodeUID, bool expanded) {
-    HashSet<String> previousSelection = new HashSet.from(selection);
-    _rowsMap[nodeUID].expanded = expanded;
-    reloadData();
-    HashSet<String> currentSelection = new HashSet.from(selection);
+    if (isNodeExpanded(nodeUID) != expanded) {
+      HashSet<String> previousSelection = new HashSet.from(selection);
+      _rowsMap[nodeUID].expanded = expanded;
+      reloadData();
+      HashSet<String> currentSelection = new HashSet.from(selection);
 
-    // Testing previousSelection == currentSelection won't behaves as expected
-    // then, we're testing if the set are the same using intersection.
-    bool changed = false;
-    if (previousSelection.length != currentSelection.length) {
-      changed = true;
-    }
-    if (previousSelection.length != previousSelection.intersection(currentSelection).length) {
-      changed = true;
-    }
-    if (changed) {
-      _delegate.treeViewSelectedChanged(this,
-          _rowIndexesToNodeUIDs(_listView.selection),
-          null);
-    }
+      // Testing previousSelection == currentSelection won't behaves as expected
+      // then, we're testing if the set are the same using intersection.
+      bool changed = false;
+      if (previousSelection.length != currentSelection.length) {
+        changed = true;
+      }
+      if (previousSelection.length != previousSelection.intersection(currentSelection).length) {
+        changed = true;
+      }
+      if (changed) {
+        _delegate.treeViewSelectedChanged(this,
+            _rowIndexesToNodeUIDs(_listView.selection));
+      }
 
-    _delegate.treeViewSaveExpandedState(this);
+      _delegate.treeViewSaveExpandedState(this);
+    }
   }
 
   void toggleNodeExpanded(String nodeUID, {bool animated: false}) {
@@ -253,11 +266,13 @@ class TreeView implements ListViewDelegate {
   }
 
   void listViewSelectedChanged(ListView view,
-                               List<int> rowIndexes,
-                               Event event) {
+                               List<int> rowIndexes) {
     _delegate.treeViewSelectedChanged(this,
-        _rowIndexesToNodeUIDs(rowIndexes),
-        event);
+        _rowIndexesToNodeUIDs(rowIndexes));
+  }
+
+  bool listViewRowClicked(Event event, int rowIndex) {
+    return _delegate.treeViewRowClicked(event, _rows[rowIndex].nodeUID);
   }
 
   void listViewDoubleClicked(ListView view,
@@ -266,6 +281,32 @@ class TreeView implements ListViewDelegate {
     _delegate.treeViewDoubleClicked(this,
         _rowIndexesToNodeUIDs(rowIndexes),
         event);
+  }
+
+  bool listViewKeyDown(KeyboardEvent event) {
+    int keyCode = event.which;
+    bool expand;
+
+    switch (keyCode) {
+      case KeyCode.RIGHT:
+        expand = true;
+        break;
+      case KeyCode.LEFT:
+        expand = false;
+        break;
+      default:
+        return true;
+    }
+
+    for(String nodeUID in selection) {
+      if (_rowsMap.containsKey(nodeUID)) {
+        setNodeExpanded(nodeUID, expand);
+      }
+    }
+
+    if (!expand) {
+      _cleanSelection();
+    }
   }
 
   void listViewContextMenu(ListView view,
@@ -286,15 +327,15 @@ class TreeView implements ListViewDelegate {
     return _delegate.treeViewDropEffect(this, event.dataTransfer, nodeUID);
   }
 
-   List<String> _innerDragSelection(DataTransfer dataTransfer) {
-     if (dataTransfer.types.contains('application/x-spark-treeview')) {
-       // TODO(dvh): dataTransfer.getData returns empty string when
-       // it's called in dragOver event handler. Then, we can't check if uuid
-       // matches. We'll improve the behavior when it will be fixed.
-       return selection;
-     } else {
-       return null;
-     }
+  List<String> _innerDragSelection(DataTransfer dataTransfer) {
+    if (dataTransfer.types.contains('application/x-spark-treeview')) {
+      // TODO(dvh): dataTransfer.getData returns empty string when
+      // it's called in dragOver event handler. Then, we can't check if uuid
+      // matches. We'll improve the behavior when it will be fixed.
+      return selection;
+    } else {
+      return null;
+    }
   }
 
   void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {

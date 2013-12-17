@@ -38,9 +38,10 @@ class AceEditorTab extends EditorTab {
 
   void activate() {
     provider.selectFileForEditor(editor, file);
-    editor.focus();
     super.activate();
   }
+
+  void focus() => editor.focus();
 
   void resize() => editor.resize();
 }
@@ -126,18 +127,19 @@ class EditorArea extends TabView {
   /// [selectFile] will be called instead. Otherwise the editor provide is
   /// requested to switch the file to the editor in case the editor is shared.
   void selectFile(Resource file,
-                {bool forceOpen: false, bool switchesTab: true,
-                 bool replaceCurrent: true}) {
+                  {bool forceOpen: false, bool switchesTab: true,
+                  bool replaceCurrent: true, bool forceFocus: false}) {
     if (_tabOfFile.containsKey(file)) {
       _filenameLabel.text = file.name;
       EditorTab tab = _tabOfFile[file];
-      if (switchesTab) tab.select();
+      if (switchesTab) tab.select(forceFocus: forceFocus);
       return;
     }
 
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
       _filenameLabel.text = file.name;
+
       if (_imageFileType.hasMatch(file.name)) {
         ImageViewer viewer = new ImageViewer(file);
         tab = new ImageViewerTab(this, viewer, file);
@@ -145,11 +147,14 @@ class EditorArea extends TabView {
         Editor editor = editorProvider.createEditorForFile(file);
         tab = new AceEditorTab(this, editorProvider, editor, file);
       }
+
       if (replaceCurrent) {
         replace(selectedTab, tab, switchesTab: switchesTab);
       } else {
         add(tab, switchesTab: switchesTab);
       }
+
+      if (forceFocus) tab.select(forceFocus: forceFocus);
     }
   }
 
@@ -160,6 +165,15 @@ class EditorArea extends TabView {
       remove(tab);
       tab.close();
       editorProvider.close(file);
+    }
+  }
+
+  // Replaces the file loaded in a tab with a renamed version of the file
+  // The new tab is not selected.
+  void renameFile(Resource file) {
+    if (_tabOfFile.containsKey(file)) {
+      EditorTab tab = _tabOfFile[file];
+      tab.label = file.name;
     }
   }
 }

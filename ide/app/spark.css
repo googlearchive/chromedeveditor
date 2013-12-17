@@ -24,12 +24,11 @@ body {
   top: 0;
 }
 
-#status {
+#saveStatus {
+  color: #ccc;
+  margin-left: 6px;
   vertical-align: bottom;
-}
-
-#status.error {
-  color: #C66;
+  white-space: nowrap;
 }
 
 .fileview-filename-container {
@@ -87,6 +86,7 @@ body {
   position: absolute;
   right: 0;
   top: 0;
+  outline: none;
 }
 
 #fileViewArea .listview-dragover {
@@ -96,6 +96,10 @@ body {
   position: absolute;
   right: 0;
   top: 0;
+}
+
+#fileViewArea .listview-container:focus ~ .listview-dragover {
+  border: 1px solid #aaf;
 }
 
 #fileViewArea .listview-dragover.listview-dragover-active {
@@ -123,7 +127,7 @@ body {
 }
 
 #hotdogMenu li {
-  min-width: 16em;
+  min-width: 18em;
 }
 
 #hotdogMenu .main-menu-button {
@@ -173,7 +177,7 @@ body {
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
-  vertical-align: middle;
+  vertical-align: bottom;
   white-space: nowrap;
 }
 

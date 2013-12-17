@@ -67,7 +67,7 @@ class SparkSelector extends SparkSelection {
    */
   @published Element target = null;
 
-  @published String itemsSelector = '';
+  @published String itemsSelector = null;
 
   // TODO(terry): Should be tap when PointerEvents are supported.
   @published String activateEvent = 'click';

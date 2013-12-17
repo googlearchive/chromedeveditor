@@ -6,9 +6,11 @@ library spark.workspace_test;
 
 import 'dart:async';
 
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
+import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
 const _FILETEXT = 'This is sample text for mock file entry.';
@@ -39,6 +41,42 @@ defineTests() {
         expect(restoredResource, isNotNull);
         expect(restoredResource.name, resource.name);
         expect(restoredResource.path, resource.path);
+      });
+    });
+
+    test('persist workspace roots', () {
+      var prefs = new MapPreferencesStore();
+      var workspace = new Workspace(prefs);
+      return chrome.runtime.getPackageDirectoryEntry().then((dir) {
+        return workspace.link(dir).then((Resource resource) {
+          expect(resource, isNotNull);
+          return workspace.save().then((_) {
+            return prefs.getValue('workspace').then((String prefVal) {
+              expect(prefVal, isNotNull);
+              expect(prefVal.length, greaterThanOrEqualTo(10));
+            });
+          });
+        });
+      });
+    });
+
+    test('resource is hashable', () {
+      var workspace = new Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var file1 = fs.createFile('test1.txt', contents: _FILETEXT);
+      var file2 = fs.createFile('test2.txt', contents: _FILETEXT);
+      return workspace.link(file1).then((Resource resource1) {
+        return workspace.link(file2).then((Resource resource2) {
+          Map m = {};
+          m[resource1] = 'foo';
+          m[resource2] = 'bar';
+          expect(m[resource1], 'foo');
+          expect(m[resource2], 'bar');
+          var resource3 = workspace.getChild('test2.txt');
+          m[resource3] = 'baz';
+          expect(m[resource2], 'baz');
+          expect(m[resource3], 'baz');
+        });
       });
     });
 
@@ -170,6 +208,30 @@ defineTests() {
           expect(project.getChildren().length, 5);
           expect(dir.getChildren().length, 4);
         });
+      });
+    });
+
+    test("walk children performs a pre-order traversal", () {
+      MockFileSystem fs = new MockFileSystem();
+      Workspace workspace = new Workspace();
+      var rootDir = fs.createDirectory('/root');
+      fs.createDirectory('/root/folder1');
+      fs.createDirectory('/root/folder2');
+      fs.createDirectory('/root/folder1/folder3');
+      fs.createFile('/root/folder1/file1');
+      fs.createFile('/root/folder1/folder3/file2');
+      fs.createFile('/root/folder2/file3');
+      return workspace.link(rootDir).then((_) {
+        Folder rootFolder = workspace.getChild('root');
+        expect(rootFolder.traverse().map((f) => f.path),
+               equals([ '/root',
+                          '/root/folder1',
+                            '/root/folder1/folder3',
+                              '/root/folder1/folder3/file2',
+                            '/root/folder1/file1',
+                          '/root/folder2',
+                            '/root/folder2/file3'
+                      ]));
       });
     });
   });

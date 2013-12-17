@@ -21,6 +21,7 @@ import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
+import 'lib/event_bus.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
@@ -89,6 +90,7 @@ class Spark extends Application implements FilesControllerDelegate {
   ws.Workspace workspace;
   EditorManager editorManager;
   EditorArea editorArea;
+  final EventBus eventBus = new EventBus();
 
   preferences.PreferenceStore localPrefs;
   preferences.PreferenceStore syncPrefs;
@@ -130,6 +132,7 @@ class Spark extends Application implements FilesControllerDelegate {
     buildMenu();
 
     initSplitView();
+    initSaveStatusListener();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -202,7 +205,8 @@ class Spark extends Application implements FilesControllerDelegate {
         aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
     aceKeysManager = new KeyBindingManager(
         aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
-    editorManager = new EditorManager(workspace, aceContainer, localPrefs);
+    editorManager = new EditorManager(
+        workspace, aceContainer, localPrefs, eventBus);
     editorArea = new EditorArea(
         getUIElement('#editorArea'),
         getUIElement('#editedFilename'),
@@ -227,7 +231,7 @@ class Spark extends Application implements FilesControllerDelegate {
           editorArea.tabs[0].select();
           return;
         }
-        editorArea.selectFile(resource, switchesTab: true);
+        _selectFile(resource);
       });
     });
   }
@@ -269,6 +273,23 @@ class Spark extends Application implements FilesControllerDelegate {
     });
   }
 
+  void initSaveStatusListener() {
+    Element element = getUIElement('#saveStatus');
+    Timer timer = new Timer(new Duration(seconds: 0), () => null);
+
+    eventBus.onEvent('fileModified').listen((_) {
+      //element.text = 'text modified…';
+      element.text = '';
+      timer.cancel();
+    });
+
+    eventBus.onEvent('filesSaved').listen((_) {
+      element.text = 'all changes saved';
+      timer.cancel();
+      timer = new Timer(new Duration(seconds: 3), () => (element.text = ''));
+    });
+  }
+
   void createActions() {
     actionManager = new ActionManager();
     actionManager.registerAction(new FileOpenInTabAction(this));
@@ -280,7 +301,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileRenameAction(
         this, getDialogElement('#renameDialog')));
@@ -348,7 +369,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
+          _selectFile(file);
           workspace.save();
         });
       }
@@ -363,7 +384,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
+          _selectFile(file);
           workspace.save();
         });
       }
@@ -387,19 +408,30 @@ class Spark extends Application implements FilesControllerDelegate {
 
   List<ws.Resource> _getSelection() => _filesController.getSelection();
 
-   void _closeOpenEditor(ws.Resource resource) {
+  void _closeOpenEditor(ws.Resource resource) {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
-      editorManager.close(resource);
+      editorArea.closeFile(resource);
     }
   }
 
-  void showStatus(String text, {bool error: false}) {
-    Element element = getUIElement("#status");
-    element.text = text;
-    element.classes.toggle('error', error);
+  /**
+   * Refreshes the file name on an opened editor tab.
+   */
+  void _renameOpenEditor(ws.Resource renamedResource) {
+    if (renamedResource is ws.File && editorManager.isFileOpened(renamedResource)) {
+      editorArea.renameFile(renamedResource);
+    }
   }
 
-  void notImplemented(String str) => showStatus("Not implemented: ${str}");
+  void _selectFile(ws.Resource file) {
+    editorArea.selectFile(file,
+        forceOpen: true, switchesTab: true, forceFocus: true);
+  }
+
+  void showStatus(String text) {
+    Element element = getUIElement("#saveStatus");
+    element.text = text;
+  }
 
   //
   // Implementation of FilesControllerDelegate interface:
@@ -520,7 +552,7 @@ class ThemeManager {
   }
 
   void _updateName(String name) {
-    _label.text = capitalize(name.replaceAll('_', ' '));
+    _label.text = 'Theme: ' + capitalize(name.replaceAll('_', ' '));
   }
 }
 
@@ -911,8 +943,10 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     if (_nameElement.value.isNotEmpty) {
-      spark._closeOpenEditor(resource);
-      resource.rename(_nameElement.value);
+      resource.rename(_nameElement.value)
+        .then((value) {
+          spark._renameOpenEditor(resource);
+        });
     }
   }
 
@@ -921,8 +955,8 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 
-class FileCloseAction extends SparkAction implements ContextAction {
-  FileCloseAction(Spark spark) : super(spark, "file-close", "Close");
+class ResourceCloseAction extends SparkAction implements ContextAction {
+  ResourceCloseAction(Spark spark) : super(spark, "file-close", "Close");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -930,8 +964,12 @@ class FileCloseAction extends SparkAction implements ContextAction {
     }
 
     for (ws.Resource resource in resources) {
-      spark._closeOpenEditor(resource);
-      resource.workspace.unlink(resource);
+      spark.workspace.unlink(resource);
+      if (resource is ws.File) {
+        spark._closeOpenEditor(resource);
+      } else if (resource is ws.Project) {
+        resource.traverse().forEach(spark._closeOpenEditor);
+      }
     }
 
     spark.workspace.save();
