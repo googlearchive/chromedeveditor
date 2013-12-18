@@ -21,7 +21,7 @@ class FileItemCell implements ListViewCell {
   FileItemCell(String name) {
     DocumentFragment template =
         (querySelector('#fileview-filename-template') as TemplateElement).content;
-    Element templateClone = template.clone(true);
+    DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.fileview-filename-container');
     _element.querySelector('.filename').text = name;
     acceptDrop = false;
