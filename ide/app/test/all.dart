@@ -12,6 +12,7 @@ import 'actions_test.dart' as actions_test;
 import 'analytics_test.dart' as analytics_test;
 import 'analyzer_test.dart' as analyzer_test;
 import 'app_test.dart' as app_test;
+import 'builder_test.dart' as builder_test;
 import 'compiler_test.dart' as compiler_test;
 import 'editors_test.dart' as editors_test;
 import 'event_bus_test.dart' as event_bus_test;
@@ -34,6 +35,7 @@ void defineTests() {
   analytics_test.defineTests();
   analyzer_test.defineTests();
   app_test.defineTests();
+  builder_test.defineTests();
   compiler_test.defineTests();
   editors_test.defineTests();
   event_bus_test.defineTests();
