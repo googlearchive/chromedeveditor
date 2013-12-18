@@ -15,13 +15,13 @@ import 'package:logging/logging.dart';
 
 import 'preferences.dart';
 
+final Logger _logger = new Logger('spark.workspace');
 
 /**
  * The Workspace is a top-level entity that can contain files and projects. The
  * files that it contains are loose files; they do not have parent projects.
  */
 class Workspace implements Container {
-  Logger _logger = new Logger('spark.workspace');
   Container _parent = null;
 
   chrome.Entry get _entry => null;
