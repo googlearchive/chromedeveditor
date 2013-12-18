@@ -250,7 +250,7 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
           editorArea.tabs[0].select();
           return;
         }
-        editorArea.selectFile(resource, switchesTab: true);
+        _selectFile(resource);
       });
     });
   }
@@ -390,7 +390,7 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
+          _selectFile(file);
           workspace.save();
         });
       }
@@ -405,7 +405,7 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
 
       if (entry != null) {
         workspace.link(entry).then((file) {
-          editorArea.selectFile(file, forceOpen: true, switchesTab: true);
+          _selectFile(file);
           workspace.save();
         });
       }
@@ -429,7 +429,7 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
 
   List<ws.Resource> _getSelection() => _filesController.getSelection();
 
-   void _closeOpenEditor(ws.Resource resource) {
+  void _closeOpenEditor(ws.Resource resource) {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorArea.closeFile(resource);
     }
@@ -442,6 +442,11 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
     if (renamedResource is ws.File && editorManager.isFileOpened(renamedResource)) {
       editorArea.renameFile(renamedResource);
     }
+  }
+
+  void _selectFile(ws.Resource file) {
+    editorArea.selectFile(file,
+        forceOpen: true, switchesTab: true, forceFocus: true);
   }
 
   void showStatus(String text) {

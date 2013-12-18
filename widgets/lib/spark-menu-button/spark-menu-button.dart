@@ -7,9 +7,9 @@ library spark_widgets.menu_button;
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
-import 'package:spark_widgets/spark-menu/spark-menu.dart';
 
 import '../common/widget.dart';
+import '../spark-menu/spark-menu.dart';
 
 // Ported from Polymer Javascript to Dart code.
 

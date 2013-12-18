@@ -9,7 +9,9 @@ import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
-import 'package:spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
+
+// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
+import '../packages/spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
 
 import 'lib/polymer_ui/spark_polymer_ui.dart';
 
