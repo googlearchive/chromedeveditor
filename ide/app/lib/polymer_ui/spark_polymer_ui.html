@@ -213,6 +213,20 @@
   outline: 1px solid rgba(0,0,0,0.2);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
+
+/* TODO(ussuri): None of these worked. Fix.
+.plus-minus-container {
+  display: flex;
+}
+
+.plus-minus-spacer {
+  flex: 1;
+}
+
+.plus-minus {
+  margin: 0;
+}
+*/
     </style>
 
     <spark-toolbar id="toolbar" color="white">
@@ -224,49 +238,48 @@
       <div id="toolbarRight">
         <span id="editedFilename"></span>
 
-      <spark-menu-button id="hotdogMenu2" responsive="true"
-          src="../../images/menu.png" selected="1">
-        <spark-menu-item id="file-open" iconsize=0>
-          Open File...
-        </spark-menu-item>
-        <spark-menu-item id="folder-open" iconsize=0>
-          Open Folder
-        </spark-menu-item>
-        <spark-menu-item id="file-close" iconsize=0>Close</spark-menu-item>
-        <spark-menu-item id="file-delete" iconsize=0>Delete</spark-menu-item>
-        <spark-menu-item id="run-tests" iconsize=0>Run Tests</spark-menu-item>
-        <spark-menu-item id="git-clone" iconsize=0>
-          Git Clone...
-        </spark-menu-item>
-        <spark-menu-item id="help-about" iconsize=0>
-          About Spark
-        </spark-menu-item>
-      </spark-menu-button>
-
-        <div id="hotdogMenu" class="btn-group">
-          <!-- TEMP(ussuri): All of this is temp, but especially the on-click
-            below. The menu was expected to drop down without it, but Bootjack
-            refused to cooperate with Polymer here and in other places.
-          -->
-          <button type="button" data-toggle="dropdown"
-              class="btn btn-default dropdown-toggle main-menu-button"
-              on-click={{toggleDropdownMenu}}>
-          </button>
-          <ul id="dropDownMenu" class="dropdown-menu pull-right">
-            <li id="changeTheme" class="disabled"><a><span>Change Theme</span>
-              <span class="pull-right">
-                <spark-button id="themeLeft"><strong>-</strong></spark-button>
-                <spark-button id="themeRight"><strong>+</strong></spark-button>
-              </span></a>
-            </li>
-            <li id="changeKeys" class="disabled"><a><span>Spark Default</span>
-              <span class="pull-right">
-                <spark-button id="keysLeft"><strong>-</strong></spark-button>
-                <spark-button id="keysRight"><strong>+</strong></spark-button>
-              </span></a>
-            </li>
-          </ul>
-        </div>
+        <spark-menu-button id="hotdogMenuNew" 
+            src="../../images/menu.png" 
+            responsive="true" 
+            selected="1" 
+            valueattr="action-id" 
+            valign="right"
+            on-activate={{onMenuSelected}}>
+          <spark-menu-item action-id="file-open" iconsize=0 label="Open File...">
+          </spark-menu-item>
+          <spark-menu-item action-id="folder-open" iconsize=0 label="Open Folder...">
+          </spark-menu-item>
+          <spark-menu-item id="changeTheme" iconsize=0>
+            <a><span></span></a>
+            <span class="plus-minus-container">
+              <label class="plus-minus-spacer"></label>
+              <spark-button class="plus-minus" on-click="{{onThemeMinus}}">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button class="plus-minus" on-click="{{onThemePlus}}">
+                <strong>+</strong>
+              </spark-button>
+            </span>
+          </spark-menu-item>
+          <spark-menu-item id="changeKeys" iconsize=0>
+            <a><span></span></a>
+            <span class="plus-minus-container">
+              <label class="plus-minus-spacer"></label>
+              <spark-button class="plus-minus" on-click="{{onKeysMinus}}">
+                <strong>-</strong>
+              </spark-button>
+              <spark-button class="plus-minus" on-click="{{onKeysPlus}}">
+                <strong>+</strong>
+              </spark-button>
+            </span>
+          </spark-menu-item>
+          <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">
+          </spark-menu-item>
+          <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
+          </spark-menu-item>
+          <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
+          </spark-menu-item>
+        </spark-menu-button>
       </div>
     </spark-toolbar>
 

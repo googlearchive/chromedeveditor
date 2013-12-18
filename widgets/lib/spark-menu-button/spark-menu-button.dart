@@ -15,9 +15,10 @@ import '../spark-menu/spark-menu.dart';
 class SparkMenuButton extends Widget {
   @published String src = "";
   @published int selected = 0;
+  @published String valueattr = "";
   @published bool opened = false;
   @published bool responsive = false;
-  @published String valign = 'center';
+  @published String valign = "center";
   @published String selectedClass = "";
 
   SparkMenuButton.created(): super.created();
