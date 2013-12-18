@@ -6,7 +6,6 @@ fi
 
 # Setup the build environment.
 pub get 
-./grind setup          
 
 # Build the archive.
 ./grind archive

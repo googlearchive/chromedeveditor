@@ -46,7 +46,7 @@ void setup(GrinderContext context) {
   }
 
   PubTools pub = new PubTools();
-  pub.install(context);
+  pub.get(context);
 
   _populateSdk(context);
 
