@@ -29,4 +29,20 @@ class SparkPolymerUI extends Widget {
     assert(action != null);
     action.invoke();
   }
+
+  void onThemeMinus(Event e) {
+    SparkModel.instance.aceThemeManager.dec(e);
+  }
+
+  void onThemePlus(Event e) {
+    SparkModel.instance.aceThemeManager.inc(e);
+  }
+
+  void onKeysMinus(Event e) {
+    SparkModel.instance.aceKeysManager.dec(e);
+  }
+
+  void onKeysPlus(Event e) {
+    SparkModel.instance.aceKeysManager.inc(e);
+  }
 }
