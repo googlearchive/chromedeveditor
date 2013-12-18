@@ -511,30 +511,32 @@ class FilesController implements TreeViewDelegate {
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
-    // TODO: process other types of events
-    if (event.type == ResourceEventType.ADD) {
-      var resource = event.resource;
-      if (resource.isTopLevel) {
-        _files.add(resource);
+
+    event.changes.forEach((change) {
+      if (change.type == ResourceEventType.ADD) {
+        var resource = change.resource;
+        if (resource.isTopLevel) {
+          _files.add(resource);
+        }
+        _sortTopLevel();
+        _recursiveAddResource(resource);
       }
-      _sortTopLevel();
-      _recursiveAddResource(resource);
-      _reloadData();
-    }
-    if (event.type == ResourceEventType.DELETE) {
-      var resource = event.resource;
-      _files.remove(resource);
-      _recursiveRemoveResource(resource);
-      _reloadData();
-    }
-    if (event.type == ResourceEventType.CHANGE) {
-      // refresh the container that has changed.
-      // remove all old paths and add new.
-      var resource = event.resource;
-      _recursiveRemoveResource(resource);
-      _recursiveAddResource(resource);
-      _reloadData();
-    }
+
+      if (change.type == ResourceEventType.DELETE) {
+        var resource = change.resource;
+        _files.remove(resource);
+        _recursiveRemoveResource(resource);
+      }
+
+      if (change.type == ResourceEventType.CHANGE) {
+        // refresh the container that has changed.
+        // remove all old paths and add new.
+        var resource = change.resource;
+        _recursiveRemoveResource(resource);
+        _recursiveAddResource(resource);
+      }
+    });
+    _reloadData();
   }
 
   void _recursiveAddResource(Resource resource) {
