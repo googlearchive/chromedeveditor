@@ -317,6 +317,12 @@ class Spark extends Application implements FilesControllerDelegate {
         (_) => actionManager.getAction('file-open').invoke());
     getUIElement("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new-as').invoke());
+    getUIElement("#progressBar").onClick.listen(
+        (_) => testProgressBar());
+  }
+
+  void testProgressBar() {
+    /*%TRACE3*/ print("(4> 12/17/13): testProgressBar!"); // TRACE%
   }
 
   void buildMenu() {
