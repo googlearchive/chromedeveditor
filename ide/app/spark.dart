@@ -100,6 +100,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
   final bool developerMode;
 
+  ActivitySpinner activitySpinner;
   AceContainer aceContainer;
   ThemeManager aceThemeManager;
   KeyBindingManager aceKeysManager;
@@ -134,6 +135,8 @@ class Spark extends Application implements FilesControllerDelegate {
     });
 
     initWorkspace();
+
+    initProgressManager();
 
     createEditorComponents();
     initEditorArea();
@@ -225,6 +228,11 @@ class Spark extends Application implements FilesControllerDelegate {
         getUIElement('#editedFilename'),
         editorManager,
         allowsLabelBar: true);
+  }
+
+  void initProgressManager() {
+    activitySpinner = new ActivitySpinner(this);
+    activitySpinner.setShowing(false);
   }
 
   void initEditorManager() {
@@ -538,6 +546,27 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
+  }
+}
+
+class ActivitySpinner {
+  Element element;
+
+  static ActivitySpinner _instance;
+
+  factory ActivitySpinner(Spark spark) {
+    if (_instance == null) {
+      _instance = new ActivitySpinner._internal(spark);
+    }
+    return _instance;
+  }
+
+  void setShowing(bool showing) {
+    element.style.opacity = '0';
+  }
+
+  ActivitySpinner._internal(Spark spark) {
+    element = spark.getUIElement('#activitySpinner');
   }
 }
 
