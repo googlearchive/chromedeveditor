@@ -16,6 +16,7 @@ import 'package:logging/logging.dart';
 import 'package:dquery/dquery.dart';
 
 import 'lib/ace.dart';
+import 'lib/jobs.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
@@ -76,6 +77,21 @@ Zone createSparkZone() {
   };
   var specification = new ZoneSpecification(handleUncaughtError: errorHandler);
   return Zone.current.fork(specification: specification);
+}
+
+class MockJob extends Job {
+  MockJob() : super("Mock job");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start("Mock job...", 10);
+
+    return new Future(() {
+      monitor.worked(1);
+      monitor.done();
+
+      return this;
+    });
+  }
 }
 
 class Spark extends Application implements FilesControllerDelegate {
@@ -322,7 +338,27 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void testProgressBar() {
-    /*%TRACE3*/ print("(4> 12/17/13): testProgressBar!"); // TRACE%
+    JobManager jobManager = new JobManager();
+
+    Future future = jobManager.onChange.take(5).toList()
+        .then((List<JobManagerEvent> events) {
+          JobManagerEvent e = events.removeAt(0);
+
+          e = events.removeAt(0);
+          print(e.progress);
+
+          e = events.removeAt(0);
+          print(e.progress);
+
+          e = events.removeAt(0);
+          print(e.progress);
+
+          e = events.removeAt(0);
+          print(e.finished);
+    });
+
+    MockJob job = new MockJob();
+    jobManager.schedule(job);
   }
 
   void buildMenu() {
