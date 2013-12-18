@@ -45,7 +45,7 @@ class TreeViewCell implements ListViewCell {
                bool hasChildren, bool draggable) {
     DocumentFragment template =
         (querySelector('#treeview-cell-template') as TemplateElement).content;
-    Element templateClone = template.clone(true);
+    DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.treeviewcell');
 
     _embeddedCellContainer = _element.querySelector('.treeviewcell-content');
