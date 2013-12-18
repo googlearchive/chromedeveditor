@@ -31,6 +31,8 @@ class TreeViewCell implements ListViewCell {
   TreeViewRow _row;
   // Whether the disclosure arrow is animating.
   bool _animating;
+  bool get isAnimating => _animating;
+
   // When the user is dragging an item over the _embeddedCell, we show a
   // "drag over" highlight.
   DivElement _dragOverlay;
@@ -120,23 +122,28 @@ class TreeViewCell implements ListViewCell {
 
   String get nodeUID => _row.nodeUID;
 
-  void toggleExpanded() {
-    // Don't change the expanded state if it's already animating to change
-    // the expanded state.
-    if (_animating) {
-      return;
-    }
+  void toggleExpanded() =>
+	  _treeView.toggleNodeExpanded(_row.nodeUID, animated: true);
 
-    // Change visual appearance.
-    _applyExpanded(!_row.expanded);
-
-    // Wait for animation to finished before effectively changing the
-    // expanded state.
+  /**
+   * Animate the disclosure arrow to reflect the change in expanded state
+   * of the cell.
+   */
+  void animateDisclosure() {
+    //Workaround for dartbug #15648
     _animating = true;
-    _arrow.onTransitionEnd.listen((event) {
-      _animating = false;
-      _treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
+    StreamSubscription subscription;
+    _arrow.style.transition = '-webkit-transform 0.01ms';
+    subscription = _arrow.onTransitionEnd.listen((event) {
+      _arrow.style.transition = '-webkit-transform 250ms';
+      subscription.cancel();
+      subscription = _arrow.onTransitionEnd.listen((event) {
+        _animating = false;
+        subscription.cancel();
+      });
+      _applyExpanded(_row.expanded);
     });
+    _applyExpanded(!_row.expanded);
   }
 
   // Change visual appearance of the disclosure arrow, depending whether the

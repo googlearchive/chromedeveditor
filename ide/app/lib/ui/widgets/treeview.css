@@ -20,7 +20,6 @@
   position: absolute;
   text-align: center;
   top: calc((100% - 15px) / 2);
-  transition: -webkit-transform 250ms;
   -webkit-transform: translate(0.5px, 0px);
   width: 15px;
 }
