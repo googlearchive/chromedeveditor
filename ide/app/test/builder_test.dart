@@ -37,7 +37,7 @@ class MockBuilder extends Builder {
 
   MockBuilder(this.completer);
 
-  Future build(List<ResourceChangeEvent> changes) {
+  Future build(ResourceChangeEvent changes) {
     completer.complete();
   }
 }

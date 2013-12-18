@@ -3,7 +3,8 @@
 // license that can be found in the LICENSE file.
 
 /**
- * TODO:
+ * This library contains [BuilderManager] and the abstract [Builder] class.
+ * These classes are used to batch process resource change events.
  */
 library spark.builder;
 
@@ -17,7 +18,10 @@ import 'jobs.dart';
 final Logger _logger = new Logger('spark.builder');
 
 /**
- * TODO:
+ * A [BuilderManager] listens for changes to a [Workspace], batches up those
+ * changes, and feeds them into [Builder]s to be processed. A build - a
+ * sequential execution of [Builder]s - can be a long running process. The build
+ * is run in a [Job] in order to give good indication of progress to the user.
  */
 class BuilderManager {
   final Workspace workspace;
@@ -45,36 +49,67 @@ class BuilderManager {
   }
 
   void _startTimer() {
+    if (_timer != null) {
+      _timer.cancel();
+    }
     // Bundle up changes for ~50ms.
-    if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: 50), _runBuild);
   }
 
   void _runBuild() {
-    // TODO: this should run in a job
-    List buildersCopy = builders.toList(growable: false);
-    List eventsCopy = _events.toList(growable: false);
+    ResourceChangeEvent event = _combineEvents(_events);
+    Completer completer = new Completer();
+    _BuildJob job = new _BuildJob(event, builders, completer);
 
     _events.clear();
     _buildRunning = true;
 
-    Future.forEach(buildersCopy, (Builder builder) {
-      builder.build(eventsCopy);
-    }).then((_) {
+    jobManager.schedule(job);
+
+    completer.future.then((_) {
       _buildRunning = false;
-      if (_events.isNotEmpty) _startTimer();
-    }).catchError((e) {
-      _logger.log(Level.SEVERE, 'Exception from builder', e);
+      if (_events.isNotEmpty) {
+        _startTimer();
+      }
     });
   }
 }
 
 /**
- * TODO:
+ * An abstract class that is given batched up resources changes to process.
+ * Builders can be long running, and are executed in [Job]s.
+ *
+ * See also [BuilderManager].
  */
 abstract class Builder {
+  /**
+   * Process a set of resource changes and complete the [Future] when finished.
+   */
+  Future build(ResourceChangeEvent changes);
+}
 
-  // TODO:
-  Future build(List<ResourceChangeEvent> changes);
+class _BuildJob extends Job {
+  final ResourceChangeEvent event;
+  final List<Builder> builders;
+  final Completer completer;
 
+  _BuildJob(this.event, List<Builder> builders, this.completer) :
+    this.builders = builders.toList(), super('Building…');
+
+  Future<Job> run(ProgressMonitor monitor) {
+    return Future.forEach(builders, (Builder builder) {
+      builder.build(event);
+    }).then((_) {
+      completer.complete();
+    }).catchError((e) {
+      _logger.log(Level.SEVERE, 'Exception from builder', e);
+      completer.complete();
+    });
+  }
+}
+
+ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
+  List<ChangeDelta> deltas = [];
+  events.forEach((e) => deltas.addAll(e.changes));
+  return new ResourceChangeEvent.fromList(deltas);
 }

@@ -552,7 +552,7 @@ class ResourceChangeEvent {
   final List<ChangeDelta> changes;
 
   factory ResourceChangeEvent.fromSingle(ChangeDelta delta) {
-   return new ResourceChangeEvent._([delta]);
+    return new ResourceChangeEvent._([delta]);
   }
 
   factory ResourceChangeEvent.fromList(List<ChangeDelta> deltas) {
@@ -563,7 +563,7 @@ class ResourceChangeEvent {
 }
 
 /**
- * Indicates a change on a particular resource
+ * Indicates a change on a particular resource.
  */
 class ChangeDelta {
   final Resource resource;
