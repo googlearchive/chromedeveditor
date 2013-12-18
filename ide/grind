@@ -5,11 +5,10 @@
 
 DART_VER=$(dart --version 2>&1)
 if [[ "$DART_VER" != Dart\ VM\ version:* ]] ; then
-  echo "Error: Unable to execute 'dart'"
-  echo "       Please set the DART_SDK environment variable to the SDK path."
-  echo "       And add DART_SDK/bin to PATH environment variable."
-  echo "       e.g.: 'export DART_SDK=your/path/to/dart/dart-sdk'";
-  echo "             'export PATH=\$PATH:\$DART_SDK/bin'";
+  echo "Unable to execute dart. Please set the DART_SDK environment variable to"
+  echo "the SDK path and add DART_SDK/bin to PATH environment variable. E.g.:"
+  echo "  'export DART_SDK=your/path/to/dart/dart-sdk'"
+  echo "  'export PATH=\$PATH:\$DART_SDK/bin'";
   exit -1
 fi
 
