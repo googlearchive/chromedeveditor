@@ -116,7 +116,7 @@ class Workspace implements Container {
    * Removes the given resource from parent, moves to the specifed container,
    * and adds it to the container's children.
    */
-  Future _moveTo(Resource resource, Container container) {
+  Future<ChangeDelta> _moveTo(Resource resource, Container container) {
     return resource.entry.moveTo(container.entry).then((chrome.Entry newEntry) {
       resource.parent._removeChild(resource, fireEvent: false);
 
