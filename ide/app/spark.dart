@@ -79,7 +79,7 @@ Zone createSparkZone() {
   return Zone.current.fork(specification: specification);
 }
 
-class Spark extends Application implements SparkModel, FilesControllerDelegate {
+class Spark extends SparkModel implements FilesControllerDelegate {
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
@@ -91,7 +91,7 @@ class Spark extends Application implements SparkModel, FilesControllerDelegate {
   ws.Workspace _workspace;
   EditorManager _editorManager;
   EditorArea _editorArea;
-  
+
   final EventBus eventBus = new EventBus();
 
   preferences.PreferenceStore _localPrefs;

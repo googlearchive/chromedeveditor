@@ -44,22 +44,17 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  SparkPolymer._(bool developerMode) : super(developerMode);
-
-  SparkPolymerUI get ui {
-    if (_ui == null) {
-      _ui = new SparkPolymerUI(this);
-    }
-    return _ui;
-  }
+  SparkPolymer._(bool developerMode)
+      : _ui = document.querySelector('#topUi') as SparkPolymerUI,
+        super(developerMode);
 
   @override
-  Element getUIElement(String selectors) => ui.getShadowDomElement(selectors);
+  Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
 
   // Dialogs are located inside <spark-polymer-ui> shadowDom.
   @override
   Element getDialogElement(String selectors) =>
-      ui.getShadowDomElement(selectors);
+      _ui.getShadowDomElement(selectors);
 
   @override
   SparkDialog createDialog(Element dialogElement) =>

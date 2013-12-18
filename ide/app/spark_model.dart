@@ -6,12 +6,22 @@ library spark.model;
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
+import 'lib/app.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
 
-abstract class SparkModel {
+abstract class SparkModel extends Application {
+  static SparkModel _instance;
+
+  SparkModel() {
+    assert(_instance == null);
+    _instance = this;
+  }
+
+  static SparkModel get instance => _instance;
+
   bool get developerMode;
 
   AceContainer get aceContainer;

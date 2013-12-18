@@ -15,14 +15,6 @@ import '../../spark_model.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends Widget {
-  SparkModel app;
-
-  factory SparkPolymerUI(SparkModel app) {
-    SparkPolymerUI ui = new Element.tag('spark-polymer-ui');
-    ui.app = app;
-    return ui;
-  }
-
   SparkPolymerUI.created() : super.created();
 
   void toggleDropdownMenu() {
@@ -31,9 +23,9 @@ class SparkPolymerUI extends Widget {
       menu.style.display == "block" ? "none" : "block";
   }
 
-  void onMenuSelected(Event event, Map<String, dynamic> detail) {
-    final actionId = detail['item'].attributes['actionId'];
-    final action = app.actionManager.getAction(actionId);
+  void onMenuSelected(Event event, var detail) {
+    final actionId = detail['item'];
+    final action = SparkModel.instance.actionManager.getAction(actionId);
     assert(action != null);
     action.invoke();
   }
