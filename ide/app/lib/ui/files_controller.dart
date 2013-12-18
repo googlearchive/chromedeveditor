@@ -55,8 +55,8 @@ class FilesController implements TreeViewDelegate {
       _addAllFiles();
     });
 
-    _workspace.onResourceChange.listen((events) {
-      _processEvents(events);
+    _workspace.onResourceChange.listen((event) {
+      _processEvents(event);
     });
   }
 
