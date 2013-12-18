@@ -1,0 +1,19 @@
+--- spark.dart.precompiled.js.old	2013-12-17 22:24:00.000000000 -0800
++++ spark.dart.precompiled.js	2013-12-17 22:24:12.000000000 -0800
+@@ -28775,9 +28775,16 @@
+   },
+   _getDartProxy: function(o, propertyName, createProxy) {
+     var dartProxy = o[propertyName];
++    if (dartProxy != null) {
++      if (o['_$Object'] != P.Object) {
++        o['_$Object'] = null;
++        dartProxy = null;
++      }
++    }
+     if (dartProxy == null) {
+       dartProxy = createProxy.call$1(o);
+       P._defineProperty(o, propertyName, dartProxy);
++      P._defineProperty(o, '_$Object', P.Object)
+     }
+     return dartProxy;
+   },
