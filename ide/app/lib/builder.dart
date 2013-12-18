@@ -100,10 +100,10 @@ class _BuildJob extends Job {
     return Future.forEach(builders, (Builder builder) {
       builder.build(event);
     }).then((_) {
-      completer.complete();
+      completer.complete(this);
     }).catchError((e) {
       _logger.log(Level.SEVERE, 'Exception from builder', e);
-      completer.complete();
+      completer.complete(this);
     });
   }
 }
