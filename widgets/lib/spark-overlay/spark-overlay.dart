@@ -66,7 +66,15 @@ class SparkOverlay extends Widget {
     }
   }
 
-  SparkOverlay.created(): super.created();
+  // Function closures aren't canonicalized need to have one pointer for the
+  // listener's handler that is added/removed.
+  EventListener _captureHandler;
+  EventListener _resizeHandler;
+
+  SparkOverlay.created(): super.created() {
+    _captureHandler = captureHandler;
+    _resizeHandler = resizeHandler;
+  }
 
   /**
    * Set opened to true to show an overlay and to false to hide it.
@@ -111,9 +119,9 @@ class SparkOverlay extends Widget {
 
   void enableResizeHandler(inEnable) {
     if (inEnable) {
-      window.addEventListener('resize', resizeHandler);
+      window.addEventListener('resize', _resizeHandler);
     } else {
-      window.removeEventListener('resize', resizeHandler);
+      window.removeEventListener('resize', _resizeHandler);
     }
   }
 
@@ -124,9 +132,9 @@ class SparkOverlay extends Widget {
     //              var doc = getShadowRoot('spark-overlay');
     var doc = document;
     if (inEnable) {
-      doc.addEventListener(captureEventType, captureHandler, true);
+      doc.addEventListener(captureEventType, _captureHandler, true);
     } else {
-      doc.removeEventListener(captureEventType, captureHandler, true);
+      doc.removeEventListener(captureEventType, _captureHandler, true);
     }
   }
 
@@ -207,6 +215,7 @@ class SparkOverlay extends Widget {
   // TODO(sorvell): This approach will not work with modal. For this we need a
   // scrim.
   void captureHandler(MouseEvent e) {
+print("inCapture Handler");
     // TODO(terry): Hack to work around lightdom or event.path not yet working.
     if (!autoCloseDisabled && !pointInOverlay(this, e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;
