@@ -360,6 +360,26 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         (_) => actionManager.getAction('file-open').invoke());
     getUIElement("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new-as').invoke());
+    getUIElement("#progressBar").onClick.listen(
+        (_) => testProgressBar());
+  }
+
+  void testProgressBar() {
+    MockJob job;
+    Element button = getUIElement("#progressBar");
+    String buttonTitle = button.text;
+    int stage = int.parse(buttonTitle);
+    getUIElement("#progressBar").text = (3 - stage).toString();
+
+    switch (stage) {
+      case 1:
+        job = new MockJob();
+        _jobManager.schedule(job);
+        break;
+
+      case 2:
+        break;
+    }
   }
 
   void buildMenu() {
@@ -498,6 +518,19 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
   // - End implementation of FilesControllerDelegate interface.
   //
+}
+
+class MockJob extends Job {
+  MockJob() : super("Mock job");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start("Mock job...", 10);
+    Completer completer = new Completer();
+    new Timer(new Duration(seconds: 5), () {
+      completer.complete(this);
+    });
+    return completer.future;
+  }
 }
 
 class PlatformInfo {
