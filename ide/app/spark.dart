@@ -86,7 +86,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   final bool developerMode;
 
-  JobManager jobManager = new JobManager();
+  final JobManager jobManager = new JobManager();
   ActivitySpinner _activitySpinner;
 
   AceContainer _aceContainer;
@@ -557,7 +557,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 class ActivitySpinner {
   Element element;
 
-  ActivitySpinner(Spark spark, {id}) {
+  ActivitySpinner(Spark spark, {String id}) {
     element = spark.getUIElement(id);
   }
 
