@@ -96,7 +96,7 @@ class SparkSelector extends SparkSelection {
   }
 
   List<Element> get items {
-    assert(target == null);
+    assert(target != null);
     List<Element> nodes = null;
     if (target == this) {
       nodes = ($['items'] as dynamic).getDistributedNodes();
