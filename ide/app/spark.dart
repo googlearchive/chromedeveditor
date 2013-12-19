@@ -103,7 +103,9 @@ class Spark extends Application implements FilesControllerDelegate {
 
   final bool developerMode;
 
+  JobManager jobManager;
   ActivitySpinner activitySpinner;
+
   AceContainer aceContainer;
   ThemeManager aceThemeManager;
   KeyBindingManager aceKeysManager;
@@ -139,7 +141,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     initWorkspace();
 
-    initProgressManager();
+    initJobManager();
 
     createEditorComponents();
     initEditorArea();
@@ -233,9 +235,21 @@ class Spark extends Application implements FilesControllerDelegate {
         allowsLabelBar: true);
   }
 
-  void initProgressManager() {
+  void initJobManager() {
     activitySpinner = new ActivitySpinner(this);
     activitySpinner.setShowing(false);
+
+    jobManager = new JobManager();
+    jobManager.onChange.listen(onJobManagerData, onDone: onJobDone);
+  }
+
+  void onJobManagerData(JobManagerEvent event) {
+    /*%TRACE3*/ print("(4> 12/18/13): onJobManagerData!" + event.started.toString()); // TRACE%
+    this.activitySpinner.setShowing(event.started);
+  }
+
+  bool onJobDone(JobManagerEvent event) {
+    /*%TRACE3*/ print("(4> 12/18/13): onJobDone!" + event.started.toString()); // TRACE%
   }
 
   void initEditorManager() {
@@ -349,7 +363,6 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void testProgressBar() {
-    JobManager jobManager;
     MockJob job;
     Element button = getUIElement("#progressBar");
     String buttonTitle = button.text;
@@ -359,7 +372,6 @@ class Spark extends Application implements FilesControllerDelegate {
     switch (stage) {
       case 1:
         /*%TRACE3*/ print("(4> 12/18/13): 1!"); // TRACE%
-        jobManager = new JobManager();
         job = new MockJob();
         jobManager.schedule(job);
         break;
