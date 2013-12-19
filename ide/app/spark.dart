@@ -25,6 +25,7 @@ import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
+import 'lib/jobs.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
@@ -85,6 +86,9 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   final bool developerMode;
 
+  final JobManager jobManager = new JobManager();
+  ActivitySpinner _activitySpinner;
+
   AceContainer _aceContainer;
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
@@ -120,6 +124,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     });
 
     initWorkspace();
+
+    initActivitySpinner();
 
     createEditorComponents();
     initEditorArea();
@@ -231,6 +237,16 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         getUIElement('#editedFilename'),
         editorManager,
         allowsLabelBar: true);
+  }
+
+  void initActivitySpinner() {
+    _activitySpinner = new ActivitySpinner(this, id: '#activitySpinner');
+    _activitySpinner.setShowing(false);
+
+    // TODO: This might cause the spinner to "blink" between jobs.
+    jobManager.onChange.listen((JobManagerEvent event) {
+      _activitySpinner.setShowing(!event.finished);
+    });
   }
 
   void initEditorManager() {
@@ -534,6 +550,19 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
+  }
+}
+
+// TODO: This should be moved into the ui/ directory.
+class ActivitySpinner {
+  Element element;
+
+  ActivitySpinner(Spark spark, {String id}) {
+    element = spark.getUIElement(id);
+  }
+
+  void setShowing(bool showing) {
+    element.style.opacity = showing ? '1' : '0';
   }
 }
 
