@@ -3,6 +3,7 @@
 /* license that can be found in the LICENSE file. */
 
 
+@import url("assets/font-awesome/css/font-awesome.min.css");
 @import url("packages/bootjack/css/bootstrap.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("lib/ui/widgets/splitview.css");
