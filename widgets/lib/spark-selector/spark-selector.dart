@@ -4,7 +4,7 @@
 
 library spark_widgets.selector;
 
-import 'dart:html' show MutationRecord, MutationObserver, Node, Element;
+import 'dart:html' show MutationRecord, MutationObserver, Node, Element, EventListener;
 
 import 'package:polymer/polymer.dart';
 import "package:template_binding/template_binding.dart" show nodeBind;
@@ -78,7 +78,13 @@ class SparkSelector extends SparkSelection {
 
   MutationObserver _observer;
 
-  SparkSelector.created(): super.created();
+  // Function closures aren't canonicalized need to have one pointer for the
+  // listener's handler that is added/removed.
+  EventListener _activateHandler;
+
+  SparkSelector.created(): super.created() {
+    _activateHandler = activateHandler;
+  }
 
   @override
   void enteredView() {
@@ -121,11 +127,11 @@ class SparkSelector extends SparkSelection {
   }
 
   void addListener(Node node) {
-    node.addEventListener(activateEvent, activateHandler);
+    node.addEventListener(activateEvent, _activateHandler);
   }
 
   void removeListener(node) {
-    node.removeEventListener(activateEvent, activateHandler);
+    node.removeEventListener(activateEvent, _activateHandler);
   }
 
   get selection => ($['selection'] as dynamic).selection;
