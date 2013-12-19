@@ -248,6 +248,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void onJobManagerData(JobManagerEvent event) {
+    // TODO: This might cause the spinner to "blink" between jobs.
     bool showSpinner = (event.finished != true);
     this._activitySpinner.setShowing(showSpinner);
   }
