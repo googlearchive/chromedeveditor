@@ -240,16 +240,16 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void initJobManager() {
-    activitySpinner = new ActivitySpinner(this);
-    activitySpinner.setShowing(false);
+    _activitySpinner = new ActivitySpinner(this);
+    _activitySpinner.setShowing(false);
 
-    jobManager = new JobManager();
-    jobManager.onChange.listen(onJobManagerData);
+    _jobManager = new JobManager();
+    _jobManager.onChange.listen(onJobManagerData);
   }
 
   void onJobManagerData(JobManagerEvent event) {
     bool showSpinner = (event.finished != true);
-    this.activitySpinner.setShowing(showSpinner);
+    this._activitySpinner.setShowing(showSpinner);
   }
 
   void initEditorManager() {
