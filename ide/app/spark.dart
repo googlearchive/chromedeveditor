@@ -15,7 +15,6 @@ import 'package:logging/logging.dart';
 import 'package:dquery/dquery.dart';
 
 import 'lib/ace.dart';
-import 'lib/jobs.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
@@ -26,6 +25,7 @@ import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
+import 'lib/jobs.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
@@ -86,7 +86,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   final bool developerMode;
 
-  JobManager _jobManager;
+  JobManager jobManager = new JobManager();
   ActivitySpinner _activitySpinner;
 
   AceContainer _aceContainer;
@@ -125,7 +125,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     initWorkspace();
 
-    initJobManager();
+    initActivitySpinner();
 
     createEditorComponents();
     initEditorArea();
@@ -239,18 +239,14 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         allowsLabelBar: true);
   }
 
-  void initJobManager() {
-    _activitySpinner = new ActivitySpinner(this);
+  void initActivitySpinner() {
+    _activitySpinner = new ActivitySpinner(this, id: '#activitySpinner');
     _activitySpinner.setShowing(false);
 
-    _jobManager = new JobManager();
-    _jobManager.onChange.listen(onJobManagerData);
-  }
-
-  void onJobManagerData(JobManagerEvent event) {
     // TODO: This might cause the spinner to "blink" between jobs.
-    bool showSpinner = (event.finished != true);
-    this._activitySpinner.setShowing(showSpinner);
+    jobManager.onChange.listen((JobManagerEvent event) {
+      _activitySpinner.setShowing(!event.finished);
+    });
   }
 
   void initEditorManager() {
@@ -557,24 +553,16 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   }
 }
 
+// TODO: This should be moved into the ui/ directory.
 class ActivitySpinner {
   Element element;
 
-  static ActivitySpinner _instance;
-
-  factory ActivitySpinner(Spark spark) {
-    if (_instance == null) {
-      _instance = new ActivitySpinner._internal(spark);
-    }
-    return _instance;
+  ActivitySpinner(Spark spark, {id}) {
+    element = spark.getUIElement(id);
   }
 
   void setShowing(bool showing) {
     element.style.opacity = showing ? '1' : '0';
-  }
-
-  ActivitySpinner._internal(Spark spark) {
-    element = spark.getUIElement('#activitySpinner');
   }
 }
 
