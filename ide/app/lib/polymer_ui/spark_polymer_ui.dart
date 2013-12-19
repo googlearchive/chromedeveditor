@@ -5,10 +5,13 @@
 library spark_polymer.ui;
 
 import 'dart:html';
-import 'package:polymer/polymer.dart';
-import 'package:spark_widgets/common/widget.dart';
 
-import '../../spark_polymer.dart';
+import 'package:polymer/polymer.dart';
+
+// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
+import '../../packages/spark_widgets/common/widget.dart';
+
+import '../../spark_model.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends Widget {
@@ -20,12 +23,26 @@ class SparkPolymerUI extends Widget {
       menu.style.display == "block" ? "none" : "block";
   }
 
-  void onMenuSelected(CustomEvent event, Map<String, dynamic> detail) {
-    // TODO(ussuri): this could be bound in the HTML via
-    // `@observable SparkPolymer app` initialized to [spark].
-    // But [spark] is initialized asynchronously and that happens to be later
-    // than any of the events associated with this object. Find a way to do
-    // that.
-    spark.onMenuSelected(event, detail);
+  void onMenuSelected(Event event, var detail) {
+    final actionId = detail['item'];
+    final action = SparkModel.instance.actionManager.getAction(actionId);
+    assert(action != null);
+    action.invoke();
+  }
+
+  void onThemeMinus(Event e) {
+    SparkModel.instance.aceThemeManager.dec(e);
+  }
+
+  void onThemePlus(Event e) {
+    SparkModel.instance.aceThemeManager.inc(e);
+  }
+
+  void onKeysMinus(Event e) {
+    SparkModel.instance.aceKeysManager.dec(e);
+  }
+
+  void onKeysPlus(Event e) {
+    SparkModel.instance.aceKeysManager.inc(e);
   }
 }

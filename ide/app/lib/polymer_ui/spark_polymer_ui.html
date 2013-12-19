@@ -239,71 +239,48 @@
       <div id="toolbarRight">
         <span id="editedFilename"></span>
 
-        <spark-menu-button id="hotdogMenuNew" src="../../images/menu.png"
-            responsive="true" selected="1"
-            on-menuselected={{onMenuSelected}}>
-          <spark-menu-item actionId="file-open" iconsize=0 label="Open File...">
+        <spark-menu-button id="hotdogMenuNew"
+            src="../../images/menu.png"
+            responsive="true"
+            selected="1"
+            valueattr="action-id"
+            valign="right"
+            on-activate={{onMenuSelected}}>
+          <spark-menu-item action-id="file-open" iconsize=0 label="Open File...">
           </spark-menu-item>
-          <spark-menu-item actionId="folder-open" iconsize=0 label="Open Folder...">
+          <spark-menu-item action-id="folder-open" iconsize=0 label="Open Folder...">
           </spark-menu-item>
-          <spark-menu-item actionId="file-close" iconsize=0 label="Close">
-          </spark-menu-item>
-          <spark-menu-item actionId="file-delete" iconsize=0 label="Delete">
-          </spark-menu-item>
-          <spark-menu-item id="changeTheme2" iconsize=0 label="Change Theme">
+          <spark-menu-item id="changeTheme" iconsize=0>
+            <a><span></span></a>
             <span class="plus-minus-container">
               <label class="plus-minus-spacer"></label>
-              <spark-button id="themeLeft2" class="plus-minus">
+              <spark-button class="plus-minus" on-click="{{onThemeMinus}}">
                 <strong>-</strong>
               </spark-button>
-              <spark-button id="themeRight2" class="plus-minus">
+              <spark-button class="plus-minus" on-click="{{onThemePlus}}">
                 <strong>+</strong>
               </spark-button>
             </span>
           </spark-menu-item>
-          <spark-menu-item id="changeKeys2" iconsize=0 label="Spark Default">
+          <spark-menu-item id="changeKeys" iconsize=0>
+            <a><span></span></a>
             <span class="plus-minus-container">
               <label class="plus-minus-spacer"></label>
-              <spark-button id="keysLeft2" class="plus-minus">
+              <spark-button class="plus-minus" on-click="{{onKeysMinus}}">
                 <strong>-</strong>
               </spark-button>
-              <spark-button id="keysRight2" class="plus-minus">
+              <spark-button class="plus-minus" on-click="{{onKeysPlus}}">
                 <strong>+</strong>
               </spark-button>
             </span>
           </spark-menu-item>
-          <spark-menu-item actionId="run-tests" iconsize=0 label="Run Tests">
+          <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">
           </spark-menu-item>
-          <spark-menu-item actionId="git-clone" iconsize=0 label="Git Clone...">
+          <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
           </spark-menu-item>
-          <spark-menu-item actionId="help-about" iconsize=0 label="About Spark">
+          <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
           </spark-menu-item>
         </spark-menu-button>
-
-        <div id="hotdogMenu" class="btn-group">
-          <!-- TEMP(ussuri): All of this is temp, but especially the on-click
-            below. The menu was expected to drop down without it, but Bootjack
-            refused to cooperate with Polymer here and in other places.
-          -->
-          <button type="button" data-toggle="dropdown"
-              class="btn btn-default dropdown-toggle main-menu-button"
-              on-click={{toggleDropdownMenu}}>
-          </button>
-          <ul id="dropDownMenu" class="dropdown-menu pull-right">
-            <li id="changeTheme" class="disabled"><a><span>Change Theme</span>
-              <span class="pull-right">
-                <spark-button id="themeLeft"><strong>-</strong></spark-button>
-                <spark-button id="themeRight"><strong>+</strong></spark-button>
-              </span></a>
-            </li>
-            <li id="changeKeys" class="disabled"><a><span>Spark Default</span>
-              <span class="pull-right">
-                <spark-button id="keysLeft"><strong>-</strong></spark-button>
-                <spark-button id="keysRight"><strong>+</strong></spark-button>
-              </span></a>
-            </li>
-          </ul>
-        </div>
       </div>
     </spark-toolbar>
 

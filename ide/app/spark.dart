@@ -7,7 +7,6 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
-import 'dart:math' as math;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
@@ -34,6 +33,8 @@ import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart';
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
+
+import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 
@@ -78,24 +79,25 @@ Zone createSparkZone() {
   return Zone.current.fork(specification: specification);
 }
 
-class Spark extends Application implements FilesControllerDelegate {
+class Spark extends SparkModel implements FilesControllerDelegate {
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
   final bool developerMode;
 
-  AceContainer aceContainer;
-  ThemeManager aceThemeManager;
-  KeyBindingManager aceKeysManager;
-  ws.Workspace workspace;
-  EditorManager editorManager;
-  EditorArea editorArea;
+  AceContainer _aceContainer;
+  ThemeManager _aceThemeManager;
+  KeyBindingManager _aceKeysManager;
+  ws.Workspace _workspace;
+  EditorManager _editorManager;
+  EditorArea _editorArea;
+
   final EventBus eventBus = new EventBus();
 
-  preferences.PreferenceStore localPrefs;
-  preferences.PreferenceStore syncPrefs;
+  preferences.PreferenceStore _localPrefs;
+  preferences.PreferenceStore _syncPrefs;
 
-  ActionManager actionManager;
+  ActionManager _actionManager;
 
   SplitView _splitView;
   FilesController _filesController;
@@ -105,8 +107,8 @@ class Spark extends Application implements FilesControllerDelegate {
   Spark(this.developerMode) {
     document.title = appName;
 
-    localPrefs = preferences.localStore;
-    syncPrefs = preferences.syncStore;
+    _localPrefs = preferences.localStore;
+    _syncPrefs = preferences.syncStore;
 
     initAnalytics();
 
@@ -142,6 +144,26 @@ class Spark extends Application implements FilesControllerDelegate {
       workspace.refresh();
     });
   }
+
+  //
+  // SparkModel interface:
+  //
+
+  AceContainer get aceContainer => _aceContainer;
+  ThemeManager get aceThemeManager => _aceThemeManager;
+  KeyBindingManager get aceKeysManager => _aceKeysManager;
+  ws.Workspace get workspace => _workspace;
+  EditorManager get editorManager => _editorManager;
+  EditorArea get editorArea => _editorArea;
+
+  preferences.PreferenceStore get localPrefs => _localPrefs;
+  preferences.PreferenceStore get syncPrefs => _syncPrefs;
+
+  ActionManager get actionManager => _actionManager;
+
+  //
+  // - End SparkModel interface.
+  //
 
   String get appName => i18n('app_name');
 
@@ -193,18 +215,18 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void initWorkspace() {
-    workspace = new ws.Workspace(localPrefs);
+    _workspace = new ws.Workspace(localPrefs);
   }
 
   void createEditorComponents() {
-    aceContainer = new AceContainer(new DivElement());
-    aceThemeManager = new ThemeManager(
+    _aceContainer = new AceContainer(new DivElement());
+    _aceThemeManager = new ThemeManager(
         aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
-    aceKeysManager = new KeyBindingManager(
+    _aceKeysManager = new KeyBindingManager(
         aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
-    editorManager = new EditorManager(
+    _editorManager = new EditorManager(
         workspace, aceContainer, localPrefs, eventBus);
-    editorArea = new EditorArea(
+    _editorArea = new EditorArea(
         getUIElement('#editorArea'),
         getUIElement('#editedFilename'),
         editorManager,
@@ -288,7 +310,8 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void createActions() {
-    actionManager = new ActionManager();
+    _actionManager = new ActionManager();
+
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileNewAction(
@@ -309,6 +332,7 @@ class Spark extends Application implements FilesControllerDelegate {
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(
         this, getDialogElement('#aboutDialog')));
+
     actionManager.registerKeyListener();
   }
 
@@ -510,86 +534,6 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
-  }
-}
-
-class ThemeManager {
-  AceContainer aceContainer;
-  preferences.PreferenceStore prefs;
-  Element _label;
-
-  ThemeManager(this.aceContainer, this.prefs, this._label) {
-    prefs.getValue('aceTheme').then((String value) {
-      if (value != null) {
-        aceContainer.theme = value;
-        _updateName(value);
-      } else {
-        _updateName(aceContainer.theme);
-      }
-    });
-  }
-
-  void inc(Event e) {
-   e.stopPropagation();
-    _changeTheme(1);
-  }
-
-  void dec(Event e) {
-    e.stopPropagation();
-    _changeTheme(-1);
-  }
-
-  void _changeTheme(int direction) {
-    int index = AceContainer.THEMES.indexOf(aceContainer.theme);
-    index = (index + direction) % AceContainer.THEMES.length;
-    String newTheme = AceContainer.THEMES[index];
-    prefs.setValue('aceTheme', newTheme);
-    _updateName(newTheme);
-    aceContainer.theme = newTheme;
-  }
-
-  void _updateName(String name) {
-    _label.text = 'Theme: ' + capitalize(name.replaceAll('_', ' '));
-  }
-}
-
-class KeyBindingManager {
-  AceContainer aceContainer;
-  preferences.PreferenceStore prefs;
-  Element _label;
-
-  KeyBindingManager(this.aceContainer, this.prefs, this._label) {
-    prefs.getValue('keyBinding').then((String value) {
-      if (value != null) {
-        aceContainer.setKeyBinding(value);
-      }
-      _updateName(value);
-    });
-  }
-
-  void inc(Event e) {
-    e.stopPropagation();
-    _changeBinding(1);
-  }
-
-  void dec(Event e) {
-    e.stopPropagation();
-    _changeBinding(-1);
-  }
-
-  void _changeBinding(int direction) {
-    aceContainer.getKeyBinding().then((String name) {
-      int index = math.max(AceContainer.KEY_BINDINGS.indexOf(name), 0);
-      index = (index + direction) % AceContainer.KEY_BINDINGS.length;
-      String newBinding = AceContainer.KEY_BINDINGS[index];
-      prefs.setValue('keyBinding', newBinding);
-      _updateName(newBinding);
-      aceContainer.setKeyBinding(newBinding);
-    });
-  }
-
-  void _updateName(String name) {
-    _label.text = 'Keys: ' + (name == null ? 'default' : capitalize(name));
   }
 }
 

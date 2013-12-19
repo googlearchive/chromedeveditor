@@ -10,13 +10,14 @@
  */
 -->
 
-<link rel="import" href="../spark-icon-button/spark-icon-button.html"/>
-<link rel="import" href="../spark-overlay/spark-overlay.html">
-<link rel="import" href="../spark-menu/spark-menu.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark-icon-button/spark-icon-button.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark-overlay/spark-overlay.html">
+<link rel="import" href="../../../packages/spark_widgets/spark-menu/spark-menu.html"/>
 
 <polymer-element name="spark-menu-button"
     attributes="src,
                 selected,
+                valueattr,
                 opened,
                 responsive,
                 valign">
@@ -134,8 +135,9 @@
       <spark-overlay id="overlay" class="slideup" opened="{{opened}}" modal>
         <div class="arrow"></div>
         <div class="arrow arrow-inner"></div>
-        <spark-menu id="overlayMenu" selected="{{selected}}"
-            on-activate="{{onActivate}}">
+        <spark-menu id="overlayMenu" 
+            selected="{{selected}}" 
+            valueattr="{{valueattr}}">
           <content select="*"></content>
         </spark-menu>
       </spark-overlay>

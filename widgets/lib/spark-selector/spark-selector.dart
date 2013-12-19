@@ -96,6 +96,7 @@ class SparkSelector extends SparkSelection {
   }
 
   List<Element> get items {
+    assert(target == null);
     List<Element> nodes = null;
     if (target == this) {
       nodes = ($['items'] as dynamic).getDistributedNodes();
@@ -227,10 +228,10 @@ class SparkSelector extends SparkSelection {
     if (!notap) {
       var i = findDistributedTarget(e.target, items);
       if (i >= 0) {
-        var item = items[i];
-        var selectByName = valueForNode(item);
+        Element item = items[i];
+        String value = valueForNode(item);
         // By name or by id.
-        var s = selectByName.isNotEmpty ? selectByName : i;
+        var s = value.isNotEmpty ? value : i;
         if (multi) {
           if (selected != null) {
             addRemoveSelected(s);
@@ -240,7 +241,7 @@ class SparkSelector extends SparkSelection {
         } else {
           selected = s;
         }
-        asyncFire('activate', detail: {'item': item}, canBubble: true);
+        asyncFire('activate', detail: {'item': value}, canBubble: true);
       }
     }
   }
@@ -256,5 +257,6 @@ class SparkSelector extends SparkSelection {
   }
 
   /// Find first ancestor of target (including itself) in nodes.
-  int findDistributedTarget(target, List nodes) => nodes.indexOf(target);
+  int findDistributedTarget(Element target, List<Element> nodes) =>
+      nodes.indexOf(target);
 }

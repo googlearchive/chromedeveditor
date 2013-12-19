@@ -9,19 +9,19 @@ import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
-import 'package:spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
 
-import 'spark.dart';
-import 'lib/actions.dart';
+// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
+import 'packages/spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
+
 import 'lib/polymer_ui/spark_polymer_ui.dart';
 
-SparkPolymer spark = null;
+import 'spark.dart';
 
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
       createSparkZone().runGuarded(() {
-        spark = new SparkPolymer._(testMode);
+        SparkPolymer spark = new SparkPolymer._(testMode);
         spark.start();
       });
     });
@@ -84,7 +84,10 @@ class SparkPolymer extends Spark {
 
   // We're using a Polymer-based splitview, so disable the default.
   @override
-  void initSplitView() => null;
+  void initSplitView() {}
+
+  @override
+  void initSaveStatusListener() => super.initSaveStatusListener();
 
   @override
   void initFilesController() => super.initFilesController();
@@ -102,31 +105,7 @@ class SparkPolymer extends Spark {
   void initToolbar() => super.initToolbar();
 
   @override
-  void buildMenu() {
-    // TODO(ussuri): This is a temporary hack. This will be replaced by the
-    // preferences dialog.
-    UListElement oldMenu = getUIElement('#hotdogMenu ul');
-
-    // Theme control.
-    oldMenu.querySelector('#themeLeft').onClick.listen(
-        (e) => aceThemeManager.dec(e));
-    oldMenu.querySelector('#themeRight').onClick.listen(
-        (e) => aceThemeManager.inc(e));
-
-    // Key binding control.
-    oldMenu.querySelector('#keysLeft').onClick.listen(
-        (e) => aceKeysManager.dec(e));
-    oldMenu.querySelector('#keysRight').onClick.listen(
-        (e) => aceKeysManager.inc(e));
-  }
-
-  void onMenuSelected(var event, Map<String, dynamic> detail) {
-    final item = detail['item'];
-    final actionId = item.attributes['actionId'];
-    var action = actionManager.getAction(actionId);
-    assert(action != null);
-    action.invoke();
-  }
+  void buildMenu() {}
 
   //
   // - End parts of the parent's ctor.
