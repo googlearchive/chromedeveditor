@@ -47,7 +47,7 @@ class SparkOverlay extends Widget {
     return overlays.isNotEmpty ? overlays.last : null;
   }
 
-  static int DEFAULT_Z = 10;
+  static int DEFAULT_Z = 1000;
 
   static currentOverlayZ() {
     var z = DEFAULT_Z;
