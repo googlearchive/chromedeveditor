@@ -195,6 +195,13 @@ body {
   padding: 0;
 }
 
+#activitySpinner {
+  opacity: 1;
+  font-size: 18pt;
+  vertical-align: middle;
+  color: #777;
+}
+
 div.modal-body input {
 	width: 100%;
 }
