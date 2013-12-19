@@ -58,15 +58,16 @@ class BuilderManager {
 
   void _runBuild() {
     ResourceChangeEvent event = _combineEvents(_events);
-    Completer completer = new Completer();
-    _BuildJob job = new _BuildJob(event, builders, completer);
 
     _events.clear();
     _buildRunning = true;
 
-    jobManager.schedule(job);
-
-    completer.future.then((_) {
+    Future.forEach(builders, (builder) {
+      Completer completer = new Completer();
+      _BuildJob job = new _BuildJob(event, builder, completer);
+      jobManager.schedule(job);
+      return completer.future;
+    }).then((_) {
       _buildRunning = false;
       if (_events.isNotEmpty) {
         _startTimer();
@@ -85,25 +86,24 @@ abstract class Builder {
   /**
    * Process a set of resource changes and complete the [Future] when finished.
    */
-  Future build(ResourceChangeEvent changes);
+  Future build(ResourceChangeEvent changes, ProgressMonitor monitor);
 }
 
 class _BuildJob extends Job {
   final ResourceChangeEvent event;
-  final List<Builder> builders;
+  final Builder builder;
   final Completer completer;
 
-  _BuildJob(this.event, List<Builder> builders, this.completer) :
-    this.builders = builders.toList(), super('Building…');
+  _BuildJob(this.event, this.builder, this.completer) : super('Building…');
 
   Future<Job> run(ProgressMonitor monitor) {
-    return Future.forEach(builders, (Builder builder) {
-      builder.build(event);
-    }).then((_) {
-      completer.complete(this);
+    return builder.build(event, monitor).then((_) {
+      completer.complete();
+      return this;
     }).catchError((e) {
       _logger.log(Level.SEVERE, 'Exception from builder', e);
-      completer.complete(this);
+      completer.complete();
+      return this;
     });
   }
 }
