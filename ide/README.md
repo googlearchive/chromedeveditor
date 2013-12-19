@@ -43,7 +43,6 @@ All the Dart code for the application (modulo the spark.dart entry point)
 lives in the `app/lib` directory.
 
 ### API Documentation
-
 Documentation for the Spark APIs is available [here](http://dart-lang.github.io/spark/docs/spark.html).
 
 ### Tests
@@ -63,6 +62,7 @@ to switch the app over to including tests (the default mode).
 
 More about the testing story [here](https://github.com/dart-lang/spark/wiki/Testing).
 
-### Contributing
-Contributions welcome! Please see our
-[contributing](https://github.com/dart-lang/spark/wiki/Contributing) page.
+### Getting Code, Development and Contributing
+Contributions are welcome! See [our Wiki](https://github.com/dart-lang/spark/wiki/)
+for details on how to get the code, run, debug and build Spark, and contribute
+the code back.
