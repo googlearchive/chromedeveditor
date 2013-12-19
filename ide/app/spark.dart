@@ -79,19 +79,6 @@ Zone createSparkZone() {
   return Zone.current.fork(specification: specification);
 }
 
-class MockJob extends Job {
-  MockJob() : super("Mock job");
-
-  Future<Job> run(ProgressMonitor monitor) {
-    monitor.start("Mock job...", 10);
-    Completer completer = new Completer();
-    new Timer(new Duration(seconds: 5), () {
-      completer.complete(this);
-    });
-    return completer.future;
-  }
-}
-
 class Spark extends Application implements FilesControllerDelegate {
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
@@ -349,26 +336,6 @@ class Spark extends Application implements FilesControllerDelegate {
         (_) => actionManager.getAction('file-open').invoke());
     getUIElement("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new-as').invoke());
-    getUIElement("#progressBar").onClick.listen(
-        (_) => testProgressBar());
-  }
-
-  void testProgressBar() {
-    MockJob job;
-    Element button = getUIElement("#progressBar");
-    String buttonTitle = button.text;
-    int stage = int.parse(buttonTitle);
-    getUIElement("#progressBar").text = (3 - stage).toString();
-
-    switch (stage) {
-      case 1:
-        job = new MockJob();
-        jobManager.schedule(job);
-        break;
-
-      case 2:
-        break;
-    }
   }
 
   void buildMenu() {
