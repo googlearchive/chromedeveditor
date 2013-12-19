@@ -80,20 +80,15 @@ Zone createSparkZone() {
 }
 
 class MockJob extends Job {
-  Completer completer = new Completer();
   MockJob() : super("Mock job");
 
   Future<Job> run(ProgressMonitor monitor) {
     monitor.start("Mock job...", 10);
+    Completer completer = new Completer();
+    new Timer(new Duration(seconds: 5), () {
+      completer.complete(this);
+    });
     return completer.future;
-  }
-
-  // TODO: Create progress method to partially complete job for testing.
-  void progress() {
-  }
-
-  void finish() {
-    completer.complete(this);
   }
 }
 
@@ -371,7 +366,7 @@ class Spark extends Application implements FilesControllerDelegate {
 
     switch (stage) {
       case 1:
-        /*%TRACE3*/ print("(4> 12/18/13): 1!"); // TRACE%
+        jobManager = new JobManager();
         job = new MockJob();
         jobManager.schedule(job);
         break;
