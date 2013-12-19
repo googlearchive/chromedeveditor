@@ -97,7 +97,10 @@ class _BuildJob extends Job {
   _BuildJob(this.event, this.builder, this.completer) : super('Building…');
 
   Future<Job> run(ProgressMonitor monitor) {
-    return builder.build(event, monitor).then((_) {
+    Future f = builder.build(event, monitor);
+    assert(f != null);
+    assert(f is Future);
+    return f.then((_) {
       completer.complete();
       return this;
     }).catchError((e) {

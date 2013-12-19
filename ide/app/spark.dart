@@ -18,6 +18,8 @@ import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/builder.dart';
+import 'lib/dart/dart_builder.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/event_bus.dart';
@@ -25,6 +27,7 @@ import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
+import 'lib/jobs.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
@@ -89,6 +92,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
+  BuilderManager _buildManager;
   EditorManager _editorManager;
   EditorArea _editorArea;
 
@@ -143,6 +147,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       // whether the content of the workspace changed.
       workspace.refresh();
     });
+
+    addBuilder(new DartBuilder());
   }
 
   //
@@ -378,6 +384,15 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
   // - End parts of ctor.
   //
+
+  void addBuilder(Builder builder) {
+    if (_buildManager == null) {
+      // TODO: temp temp
+      _buildManager = new BuilderManager(workspace, new JobManager());
+    }
+
+    _buildManager.builders.add(builder);
+  }
 
   /**
    * Allow for creating a new file using the Save as dialog.

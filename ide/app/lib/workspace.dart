@@ -571,5 +571,9 @@ class ChangeDelta {
 
   ChangeDelta(this.resource, this.type);
 
+  bool get isAdd => type == ResourceEventType.ADD;
+  bool get isChange => type == ResourceEventType.CHANGE;
+  bool get isDelete => type == ResourceEventType.DELETE;
+
   String toString() => '${type}: ${resource}';
 }
