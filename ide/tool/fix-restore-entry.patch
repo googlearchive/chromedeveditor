@@ -1,11 +1,11 @@
---- spark.dart.precompiled.js.old	2013-12-18 09:22:29.000000000 -0800
-+++ spark.dart.precompiled.js	2013-12-18 09:22:39.000000000 -0800
-@@ -28775,7 +28775,7 @@
-   },
-   _getDartProxy: function(o, propertyName, createProxy) {
-     var dartProxy = o[propertyName];
--    if (dartProxy == null) {
-+    if (dartProxy == null || (!(o instanceof Object))) {
-       dartProxy = createProxy.call$1(o);
-       P._defineProperty(o, propertyName, dartProxy);
-     }
+--- a/ide/app/spark.dart.precompiled.js
++++ b/ide/app/spark.dart.precompiled.js
+@@ -31736,7 +31736,7 @@ _wrapToDart: function(o) {
+ 
+ _getDartProxy: function(o, propertyName, createProxy) {
+   var dartProxy = o[propertyName];
+-  if (dartProxy == null) {
++  if (dartProxy == null || (!(o instanceof Object))) {
+     dartProxy = createProxy.call$1(o);
+     P._defineProperty(o, propertyName, dartProxy);
+   }
