@@ -1,8 +1,9 @@
 {
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwqXKrcvbi1a1IjFM5COs07Ee9xvPyOSh9dhEF6kwBGjAH6/4F7MHOfPk+W04PURi707E8SsS2iCkvrMiJPh4GnrZ3fWqFUzlsAcUljcYbkyorKxglwdZEXWbFgcKVR/uzuzXD8mOcuXRLu0YyVSdEGzhfZ1HkeMQCKEncUCL5ziE4ZkZJ7I8YVhVG+uiROeMg3zjxxSQrYHOfG5HOqmVslRPCfyiRbIHH3JPD0lax5FudngdKy0+1nkkqVJCpRSf75cRRnxGPjdEvNzTEFmf5oGFxSVs7iXoVQvNXB35Qfyw5rV6N+JyERdu6a7xEnz9lbw41m/noKInlfP+uBQuaQIDAQAB",
   "name": "__MSG_app_name__",
   "short_name": "__MSG_app_name__",
   "description": "__MSG_app_description__",
-  "version": "0.4.22",
+  "version": "0.4.24",
   "minimum_chrome_version": "31",
   "manifest_version": 2,
   "default_locale": "en",

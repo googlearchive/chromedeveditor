@@ -85,10 +85,10 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt');
 
-      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
-        ResourceChangeEvent event = events.single;
-        expect(event.resource.name, fileEntry.name);
-        expect(event.type, ResourceEventType.ADD);
+      Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
+        ChangeDelta change = event.changes.single;
+        expect(change.resource.name, fileEntry.name);
+        expect(change.type, ResourceEventType.ADD);
       });
 
       workspace.link(fileEntry).then((resource) {
@@ -115,8 +115,9 @@ defineTests() {
       });
 
       return workspace.onResourceChange.first.then((ResourceChangeEvent event) {
-        expect(event.resource.name, fileEntry.name);
-        expect(event.type, ResourceEventType.DELETE);
+        ChangeDelta change = event.changes.single;
+        expect(change.resource.name, fileEntry.name);
+        expect(change.type, ResourceEventType.DELETE);
       });
 
     });
@@ -129,10 +130,10 @@ defineTests() {
       fs.createFile('/myProject/test.dart');
       var dirEntry = fs.getEntry('myProject');
 
-      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
-        ResourceChangeEvent event = events.single;
-        expect(event.resource.name, dirEntry.name);
-        expect(event.type, ResourceEventType.ADD);
+      Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
+        ChangeDelta change = event.changes.single;
+        expect(change.resource.name, dirEntry.name);
+        expect(change.type, ResourceEventType.ADD);
       });
 
       workspace.link(dirEntry).then((project) {
@@ -158,10 +159,10 @@ defineTests() {
       fs.createFile('/myProject/myDir/test.html');
       fs.createFile('/myProject/myDir/test.dart');
 
-      Future future = workspace.onResourceChange.take(1).toList().then((List<ResourceChangeEvent> events) {
-        ResourceChangeEvent event = events.single;
-        expect(event.resource.name, projectDir.name);
-        expect(event.type, ResourceEventType.ADD);
+      Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
+        ChangeDelta change = event.changes.single;
+        expect(change.resource.name, projectDir.name);
+        expect(change.type, ResourceEventType.ADD);
       });
 
       workspace.link(projectDir).then((project) {
@@ -208,6 +209,30 @@ defineTests() {
           expect(project.getChildren().length, 5);
           expect(dir.getChildren().length, 4);
         });
+      });
+    });
+
+    test("walk children performs a pre-order traversal", () {
+      MockFileSystem fs = new MockFileSystem();
+      Workspace workspace = new Workspace();
+      var rootDir = fs.createDirectory('/root');
+      fs.createDirectory('/root/folder1');
+      fs.createDirectory('/root/folder2');
+      fs.createDirectory('/root/folder1/folder3');
+      fs.createFile('/root/folder1/file1');
+      fs.createFile('/root/folder1/folder3/file2');
+      fs.createFile('/root/folder2/file3');
+      return workspace.link(rootDir).then((_) {
+        Folder rootFolder = workspace.getChild('root');
+        expect(rootFolder.traverse().map((f) => f.path),
+               equals([ '/root',
+                          '/root/folder1',
+                            '/root/folder1/folder3',
+                              '/root/folder1/folder3/file2',
+                            '/root/folder1/file1',
+                          '/root/folder2',
+                            '/root/folder2/file3'
+                      ]));
       });
     });
   });

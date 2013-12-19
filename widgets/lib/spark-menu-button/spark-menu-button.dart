@@ -5,9 +5,9 @@
 library spark_widgets.menu_button;
 
 import 'package:polymer/polymer.dart';
-import 'package:spark_widgets/spark-menu/spark-menu.dart';
 
 import '../common/widget.dart';
+import '../spark-menu/spark-menu.dart';
 
 // Ported from Polymer Javascript to Dart code.
 
@@ -15,9 +15,10 @@ import '../common/widget.dart';
 class SparkMenuButton extends Widget {
   @published String src = "";
   @published int selected = 0;
+  @published String valueattr = "";
   @published bool opened = false;
   @published bool responsive = false;
-  @published String valign = 'center';
+  @published String valign = "center";
   @published String selectedClass = "";
 
   SparkMenuButton.created(): super.created();

@@ -46,7 +46,7 @@ void setup(GrinderContext context) {
   }
 
   PubTools pub = new PubTools();
-  pub.install(context);
+  pub.get(context);
 
   _populateSdk(context);
 
@@ -118,12 +118,16 @@ void release(GrinderContext context) {
     return;
   }
 
-  String version = _increaseBuildNumber(context);
+  String version = _increaseBuildNumber(context, removeKey: true);
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
 
   archive(context);
 
+  _runCommandSync(
+    context,
+    'git checkout app/manifest.json');
+  _increaseBuildNumber(context);
   _runCommandSync(
     context,
     'git commit -m "Build version ${version}" app/manifest.json');
@@ -249,6 +253,16 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
      '--suppress-warnings',
      '--suppress-hints',
      '--out=' + joinDir(target, ['${filePath}.js']).path]);
+  if (Platform.isWindows) {
+    context.log('WARNING! Build on windows won\'t apply the patch for dart2js.');
+  } else {
+    // patch spark.dart.precompile.js tool/fix-restore-entry.patch
+    runProcess(
+        context,
+        'patch',
+        arguments: ['${filePath}.precompiled.js', '../tool/fix-restore-entry.patch'],
+        workingDirectory: target.path);
+  }
 
   // clean up unnecessary (and large) files
   deleteEntity(joinFile(target, ['${filePath}.js']), context);
@@ -310,7 +324,7 @@ void _archiveWithRevision(GrinderContext context) {
 
 // Increase the build number in the manifest.json file. Returns the full
 // version.
-String _increaseBuildNumber(GrinderContext context) {
+String _increaseBuildNumber(GrinderContext context, {bool removeKey: false}) {
   // Tweaking build version in manifest.
   File file = new File('app/manifest.json');
   String content = file.readAsStringSync();
@@ -327,6 +341,9 @@ String _increaseBuildNumber(GrinderContext context) {
 
   version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
+  if (removeKey) {
+    manifestDict.remove('key');
+  }
   file.writeAsStringSync(new JsonPrinter().print(manifestDict));
 
   // It needs to be copied to compile result directory.
