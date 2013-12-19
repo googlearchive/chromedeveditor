@@ -215,7 +215,6 @@ class SparkOverlay extends Widget {
   // TODO(sorvell): This approach will not work with modal. For this we need a
   // scrim.
   void captureHandler(MouseEvent e) {
-print("inCapture Handler");
     // TODO(terry): Hack to work around lightdom or event.path not yet working.
     if (!autoCloseDisabled && !pointInOverlay(this, e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;

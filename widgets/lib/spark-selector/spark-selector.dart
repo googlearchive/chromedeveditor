@@ -127,11 +127,11 @@ class SparkSelector extends SparkSelection {
   }
 
   void addListener(Node node) {
-    node.addEventListener(activateEvent, activateHandler);
+    node.addEventListener(activateEvent, _activateHandler);
   }
 
   void removeListener(node) {
-    node.removeEventListener(activateEvent, activateHandler);
+    node.removeEventListener(activateEvent, _activateHandler);
   }
 
   get selection => ($['selection'] as dynamic).selection;
