@@ -80,17 +80,20 @@ Zone createSparkZone() {
 }
 
 class MockJob extends Job {
+  Completer completer = new Completer();
   MockJob() : super("Mock job");
 
   Future<Job> run(ProgressMonitor monitor) {
     monitor.start("Mock job...", 10);
+    return completer.future;
+  }
 
-    return new Future(() {
-      monitor.worked(1);
-      monitor.done();
+  // TODO: Create progress method to partially complete job for testing.
+  void progress() {
+  }
 
-      return this;
-    });
+  void finish() {
+    completer.complete(this);
   }
 }
 
@@ -346,27 +349,25 @@ class Spark extends Application implements FilesControllerDelegate {
   }
 
   void testProgressBar() {
-    JobManager jobManager = new JobManager();
+    JobManager jobManager;
+    MockJob job;
+    Element button = getUIElement("#progressBar");
+    String buttonTitle = button.text;
+    int stage = int.parse(buttonTitle);
+    getUIElement("#progressBar").text = (3 - stage).toString();
 
-    Future future = jobManager.onChange.take(5).toList()
-        .then((List<JobManagerEvent> events) {
-          JobManagerEvent e = events.removeAt(0);
+    switch (stage) {
+      case 1:
+        /*%TRACE3*/ print("(4> 12/18/13): 1!"); // TRACE%
+        jobManager = new JobManager();
+        job = new MockJob();
+        jobManager.schedule(job);
+        break;
 
-          e = events.removeAt(0);
-          print(e.progress);
-
-          e = events.removeAt(0);
-          print(e.progress);
-
-          e = events.removeAt(0);
-          print(e.progress);
-
-          e = events.removeAt(0);
-          print(e.finished);
-    });
-
-    MockJob job = new MockJob();
-    jobManager.schedule(job);
+      case 2:
+        job.finish();
+        break;
+    }
   }
 
   void buildMenu() {
