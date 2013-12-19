@@ -235,16 +235,12 @@ class Spark extends Application implements FilesControllerDelegate {
     activitySpinner.setShowing(false);
 
     jobManager = new JobManager();
-    jobManager.onChange.listen(onJobManagerData, onDone: onJobDone);
+    jobManager.onChange.listen(onJobManagerData);
   }
 
   void onJobManagerData(JobManagerEvent event) {
-    /*%TRACE3*/ print("(4> 12/18/13): onJobManagerData!" + event.started.toString()); // TRACE%
-    this.activitySpinner.setShowing(event.started);
-  }
-
-  bool onJobDone(JobManagerEvent event) {
-    /*%TRACE3*/ print("(4> 12/18/13): onJobDone!" + event.started.toString()); // TRACE%
+    bool showSpinner = (event.finished != true);
+    this.activitySpinner.setShowing(showSpinner);
   }
 
   void initEditorManager() {
@@ -366,13 +362,11 @@ class Spark extends Application implements FilesControllerDelegate {
 
     switch (stage) {
       case 1:
-        jobManager = new JobManager();
         job = new MockJob();
         jobManager.schedule(job);
         break;
 
       case 2:
-        job.finish();
         break;
     }
   }
@@ -570,7 +564,7 @@ class ActivitySpinner {
   }
 
   void setShowing(bool showing) {
-    element.style.opacity = '0';
+    element.style.opacity = showing ? '1' : '0';
   }
 
   ActivitySpinner._internal(Spark spark) {
