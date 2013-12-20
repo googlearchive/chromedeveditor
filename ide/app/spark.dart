@@ -956,10 +956,26 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    _gitClone(_projectNameElement.value, _repoUrlElement.value, spark);
+    _GitCloneJob job = new _GitCloneJob(
+        _projectNameElement.value, _repoUrlElement.value, spark);
+    spark.jobManager.schedule(job);
   }
 
-  void _gitClone(String projectName, String url, Spark spark) {
+}
+
+class _GitCloneJob extends Job {
+  String projectName;
+  String url;
+  Spark spark;
+
+  _GitCloneJob(this.projectName, this.url, this.spark)
+      : super("Cloning git repository");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    Completer completer = new Completer();
+
     getGitTestFileSystem().then((chrome_files.CrFileSystem fs) {
       fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         GitOptions options = new GitOptions();
@@ -974,10 +990,12 @@ class GitCloneAction extends SparkActionWithDialog {
               spark._filesController.selectFile(folder);
               spark.workspace.save();
             });
-          });
+          }).then((_) => completer.complete(this));
         });
       });
     });
+
+    return completer.future;
   }
 }
 

@@ -25,6 +25,7 @@ class GitResult {
 Future<chrome_files.CrFileSystem> getGitTestFileSystem() {
   Completer completer = new Completer();
   callback(fs) {
+    /*%TRACE3*/ print("(4> 12/20/13): completer.complete!"); // TRACE%
     completer.complete(new chrome_files.CrFileSystem.fromProxy(fs));
   }
   js.JsObject fs = js.context['GitApi'].callMethod('getFs', [callback]);
