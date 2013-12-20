@@ -11,8 +11,8 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import 'tcp.dart' as tcp;
 import 'jobs.dart';
+import 'tcp.dart' as tcp;
 
 const int _DEFAULT_TESTPORT = 5120;
 
@@ -22,7 +22,7 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
-  final JobManager jobManager;
+  final JobManager _jobManager;
 
   Function _defineTestsFn;
   Element _testDiv;
@@ -30,7 +30,7 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this.jobManager, {bool connectToTestListener: false}) {
+  TestDriver(this._defineTestsFn, this._jobManager, {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
     _logger.onRecord.listen((record) => print(record.toString()));
 
@@ -57,7 +57,7 @@ class TestDriver {
     }
 
     _TestJob job = new _TestJob(this, _testCompleter);
-    jobManager.schedule(job);
+    _jobManager.schedule(job);
 
     return _testCompleter.future;
   }
@@ -124,10 +124,7 @@ class _TestJob extends Job {
 
     unittest.rerunTests();
 
-    return testCompleter.future
-        .then((_) {
-          return(this);
-        });
+    return testCompleter.future.then((_) => this);
   }
 }
 

@@ -1012,9 +1012,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 class RunTestsAction extends SparkAction {
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests");
 
-  _invoke([Object context]) {
-    spark._testDriver.runTests();
-  }
+  _invoke([Object context]) => spark._testDriver.runTests();
 }
 
 // analytics code
