@@ -256,11 +256,16 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
   if (Platform.isWindows) {
     context.log('WARNING! Build on windows won\'t apply the patch for dart2js.');
   } else {
-    // patch spark.dart.precompile.js tool/fix-restore-entry.patch
+    String patchFilename = '../tool/fix-restore-entry.patch';
+    if (Platform.isMacOS) {
+      // On Mac, number of generated space is not the same as Windows and Linux.
+      // patch spark.dart.precompile.js tool/fix-restore-entry-mac.patch
+      patchFilename = '../tool/fix-restore-entry-mac.patch';
+    }
     runProcess(
         context,
         'patch',
-        arguments: ['${filePath}.precompiled.js', '../tool/fix-restore-entry.patch'],
+        arguments: ['${filePath}.precompiled.js', patchFilename],
         workingDirectory: target.path);
   }
 
