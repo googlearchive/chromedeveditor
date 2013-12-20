@@ -88,7 +88,7 @@ defineTests() {
       Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
         ChangeDelta change = event.changes.single;
         expect(change.resource.name, fileEntry.name);
-        expect(change.type, ResourceEventType.ADD);
+        expect(change.type, EventType.ADD);
       });
 
       workspace.link(fileEntry).then((resource) {
@@ -117,7 +117,7 @@ defineTests() {
       return workspace.onResourceChange.first.then((ResourceChangeEvent event) {
         ChangeDelta change = event.changes.single;
         expect(change.resource.name, fileEntry.name);
-        expect(change.type, ResourceEventType.DELETE);
+        expect(change.type, EventType.DELETE);
       });
 
     });
@@ -133,7 +133,7 @@ defineTests() {
       Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
         ChangeDelta change = event.changes.single;
         expect(change.resource.name, dirEntry.name);
-        expect(change.type, ResourceEventType.ADD);
+        expect(change.type, EventType.ADD);
       });
 
       workspace.link(dirEntry).then((project) {
@@ -162,7 +162,7 @@ defineTests() {
       Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
         ChangeDelta change = event.changes.single;
         expect(change.resource.name, projectDir.name);
-        expect(change.type, ResourceEventType.ADD);
+        expect(change.type, EventType.ADD);
       });
 
       workspace.link(projectDir).then((project) {

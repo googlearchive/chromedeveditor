@@ -44,6 +44,7 @@ class Workspace implements Container {
   String get name => null;
   String get path => '';
   bool get isTopLevel => false;
+  bool get isFile => false;
   String persistToToken() => path;
 
   Future delete() => new Future.value();
@@ -71,7 +72,7 @@ class Workspace implements Container {
       }
       if (fireEvent) {
         _controller.add(
-            new ResourceChangeEvent.fromSingle(new ChangeDelta(resource, ResourceEventType.ADD)));
+            new ResourceChangeEvent.fromSingle(new ChangeDelta(resource, EventType.ADD)));
       }
       return new Future.value(resource);
     } else {
@@ -84,7 +85,7 @@ class Workspace implements Container {
       return _gatherChildren(project).then((container) {
         if (fireEvent) {
           _controller.add(
-              new ResourceChangeEvent.fromSingle(new ChangeDelta(container, ResourceEventType.ADD)));
+              new ResourceChangeEvent.fromSingle(new ChangeDelta(container, EventType.ADD)));
         }
         return container;
       });
@@ -107,7 +108,7 @@ class Workspace implements Container {
     List futures = resources.map((r) => _moveTo(r, container));
     return Future.wait(futures).then((events) {
       List<ChangeDelta> list = [];
-      resources.forEach((r) => list.add(new ChangeDelta(r, ResourceEventType.DELETE)));
+      resources.forEach((r) => list.add(new ChangeDelta(r, EventType.DELETE)));
       list.addAll(events);
       _controller.add(new ResourceChangeEvent.fromList(list));
     });
@@ -124,11 +125,11 @@ class Workspace implements Container {
       if (newEntry.isFile) {
         var file = new File(container, newEntry);
         container._localChildren.add(file);
-        return new Future.value(new ChangeDelta(file, ResourceEventType.ADD));
+        return new Future.value(new ChangeDelta(file, EventType.ADD));
       } else {
         var folder = new Folder(container, newEntry);
         container._localChildren.add(folder);
-        return _gatherChildren(folder).then((_) => new ChangeDelta(folder, ResourceEventType.ADD));
+        return _gatherChildren(folder).then((_) => new ChangeDelta(folder, EventType.ADD));
       }
     });
   }
@@ -205,6 +206,16 @@ class Workspace implements Container {
     return getChildPath(token.substring(1));
   }
 
+  List<Marker> getMarkers() {
+    //TODO: add sync resources too
+    return getChildren().map((c) => c.getMarkers()).toList();
+  }
+
+  void clearMarkers() {
+    // TODO: add sync resources too
+    return getChildren().forEach((c) => c.clearMarkers());
+  }
+
   Future<Resource> _gatherChildren(Container container) {
     chrome.DirectoryEntry dir = container.entry;
     List futures = [];
@@ -246,7 +257,7 @@ class Workspace implements Container {
           resource._localChildren = tmpProject._localChildren;
           tmpProject._localChildren = [];
           _controller.add(new ResourceChangeEvent.fromSingle(
-                new ChangeDelta(resource, ResourceEventType.CHANGE)));
+                new ChangeDelta(resource, EventType.CHANGE)));
           return container;
         });
         futures.add(future);
@@ -326,7 +337,7 @@ class Workspace implements Container {
     }
    if (fireEvent) {
      _fireEvent(new ResourceChangeEvent.fromSingle(
-         new ChangeDelta(resource, ResourceEventType.DELETE)));
+         new ChangeDelta(resource, EventType.DELETE)));
    }
   }
 }
@@ -365,7 +376,7 @@ abstract class Container extends Resource {
     _localChildren.remove(resource);
     if (fireEvent) {
       _fireEvent(new ResourceChangeEvent.fromSingle(
-          new ChangeDelta(resource, ResourceEventType.DELETE)));
+          new ChangeDelta(resource, EventType.DELETE)));
     }
   }
 
@@ -390,6 +401,8 @@ abstract class Resource {
 
   bool get isTopLevel => _parent is Workspace;
 
+  bool get isFile => false;
+
   /**
    * Return a token that can be later used to deserialize this [Resource]. This
    * is an opaque token.
@@ -405,9 +418,9 @@ abstract class Resource {
   Future rename(String name) {
     return entry.moveTo(_parent._entry, name: name).then((chrome.Entry e) {
       List<ChangeDelta> list = [];
-      list.add(new ChangeDelta(this, ResourceEventType.DELETE));
+      list.add(new ChangeDelta(this, EventType.DELETE));
       _entry = e;
-      list.add(new ChangeDelta(this, ResourceEventType.ADD));
+      list.add(new ChangeDelta(this, EventType.ADD));
       _fireEvent(new ResourceChangeEvent.fromList(list));
     });
   }
@@ -426,6 +439,20 @@ abstract class Resource {
   int get hashCode => path.hashCode;
 
   String toString() => '${this.runtimeType} ${name}';
+
+  /**
+   * Returns a [List] of [Marker] from all the [Resources] in the [Container].
+   */
+  List<Marker> getMarkers() {
+    return traverse().where((r) => r.isFile)
+        .map((f) => f.getMarkers()).toList();
+  }
+
+  void clearMarkers() {
+    traverse().where((r) => r.isFile)
+        .forEach((f) => (f as File)._clearMarkers(fireEvent : false));
+    _fireEvent(new ResourceChangeEvent.fromSingle(new ChangeDelta(this, EventType.CHANGE)));
+  }
 
   /**
    * Returns an iterable of the children of the resource as a pre-order traversal
@@ -455,7 +482,7 @@ class Folder extends Container {
       File file = new File(this, entry);
       _localChildren.add(file);
       _fireEvent(new ResourceChangeEvent.fromSingle(
-          new ChangeDelta(file, ResourceEventType.ADD)));
+          new ChangeDelta(file, EventType.ADD)));
       return file;
     });
   }
@@ -465,7 +492,7 @@ class Folder extends Container {
       Folder folder = new Folder(this, entry);
       _localChildren.add(folder);
       _fireEvent(new ResourceChangeEvent.fromSingle(
-          new ChangeDelta(folder, ResourceEventType.ADD)));
+          new ChangeDelta(folder, EventType.ADD)));
       return folder;
     });
   }
@@ -479,6 +506,9 @@ class Folder extends Container {
 }
 
 class File extends Resource {
+
+  List<Marker> _markers = [];
+
   File(Container parent, chrome.Entry entry):
     super(parent, entry);
 
@@ -489,7 +519,7 @@ class File extends Resource {
   Future setContents(String contents) {
     return _fileEntry.writeText(contents).then((_) {
       workspace._fireEvent(new ResourceChangeEvent.fromSingle(
-          new ChangeDelta(this, ResourceEventType.CHANGE)));
+          new ChangeDelta(this, EventType.CHANGE)));
     });
   }
 
@@ -501,9 +531,29 @@ class File extends Resource {
     chrome.ArrayBuffer bytes = new chrome.ArrayBuffer.fromBytes(data);
     return _fileEntry.writeBytes(bytes).then((_) {
       workspace._fireEvent(new ResourceChangeEvent.fromSingle(
-          new ChangeDelta(this, ResourceEventType.CHANGE)));
+          new ChangeDelta(this, EventType.CHANGE)));
     });
   }
+
+  void createMarker(Type type, Severity severity, String message, int lineno, [int start = -1, int end = -1]) {
+    _markers.add(new Marker(this, type, severity, message, lineno, start, end));
+    _fireEvent(new ResourceChangeEvent.fromSingle(new ChangeDelta(this, EventType.CHANGE)));
+  }
+
+  void clearMarkers() {
+    _clearMarkers();
+  }
+
+  void _clearMarkers({bool fireEvent : true}) {
+    _markers.clear();
+    if (fireEvent) {
+      _fireEvent(new ResourceChangeEvent.fromSingle(new ChangeDelta(this, EventType.CHANGE)));
+    }
+  }
+
+  bool get isFile => true;
+
+  List<Marker> getMarkers() => _markers;
 
   chrome.ChromeFileEntry get _fileEntry => entry;
 }
@@ -522,25 +572,25 @@ class Project extends Folder {
 /**
  * An enum of the valid [ResourceChangeEvent] types.
  */
-class ResourceEventType {
+class EventType {
   final String name;
 
-  const ResourceEventType._(this.name);
+  const EventType._(this.name);
 
   /**
    * Event type indicates resource has been added to workspace.
    */
-  static const ResourceEventType ADD = const ResourceEventType._('ADD');
+  static const EventType ADD = const EventType._('ADD');
 
   /**
    * Event type indicates resource has been removed from workspace.
    */
-  static const ResourceEventType DELETE = const ResourceEventType._('DELETE');
+  static const EventType DELETE = const EventType._('DELETE');
 
   /**
    * Event type indicates resource has changed.
    */
-  static const ResourceEventType CHANGE = const ResourceEventType._('CHANGE');
+  static const EventType CHANGE = const EventType._('CHANGE');
 
   String toString() => name;
 }
@@ -567,9 +617,126 @@ class ResourceChangeEvent {
  */
 class ChangeDelta {
   final Resource resource;
-  final ResourceEventType type;
+  final EventType type;
 
   ChangeDelta(this.resource, this.type);
 
   String toString() => '${type}: ${resource}';
+}
+
+/**
+ * Used to associate a error, warning or info for a [File].
+ */
+class Marker {
+
+  /**
+   * The file for the marker.
+   */
+  File file;
+
+  /**
+   * Stores all the attributes of the marker - severity, line number etc.
+   */
+  Map<String, dynamic> _attributes;
+
+  /**
+   * Key for type of marker, based on type of file association - html,
+   * dart, js etc.
+   */
+  static const String TYPE = "type";
+
+  /**
+   * Key for [Severity] of the marker, from the set of error, warning and info
+   * severities.
+   */
+  static const String SEVERITY = "severity";
+
+  /**
+   * The key to for a string describing the nature of the marker.
+   */
+  static const String MESSAGE = "message";
+
+  /**
+   * An integer value indicating the line number for a marker.
+   */
+  static const String LINE_NO = "lineno";
+
+  /**
+   * Key to an integer value indicating where a marker starts.
+   */
+  static const String CHAR_START = "charStart";
+
+  /**
+   * Key to an integer value indicating where a marker ends.
+   */
+  static const String CHAR_END = "charEnd";
+
+  Marker(this.file, Type type, Severity severity, String message, int lineNo, [int char_start=-1, int char_end=-1]) {
+    _attributes.putIfAbsent(TYPE, type);
+    _attributes.putIfAbsent(SEVERITY, severity);
+    _attributes.putIfAbsent(MESSAGE,message);
+    _attributes.putIfAbsent(LINE_NO,lineNo);
+    _attributes.putIfAbsent(CHAR_START, char_start);
+    _attributes.putIfAbsent(CHAR_END, char_end);
+
+  }
+
+  String get type => _attributes[TYPE];
+
+  int get severity => _attributes[SEVERITY];
+
+  String get message => _attributes[MESSAGE];
+
+  int get lineno => _attributes[LINE_NO];
+
+  int get charStart => _attributes[CHAR_START];
+
+  int get charEnd => _attributes[CHAR_END];
+
+  void addAttribute(String key, dynamic value) => _attributes.putIfAbsent(key, value);
+
+  dynamic getAttribute(String key) => _attributes[key];
+
+}
+
+
+/**
+ * Indicates the severity of the [Marker] - whether it is an error, warning or information.
+ */
+class Severity {
+  final int severity;
+
+  const Severity._(this.severity);
+
+  static const Severity ERROR = const Severity._(0);
+
+  static const Severity WARNING = const Severity._(1);
+
+  static const Severity INFO = const Severity._(2);
+
+}
+
+/**
+ * Indicates the type of the [Marker], whether it is associated with dart, html or js.
+ */
+class Type {
+
+  final String type;
+
+  const Type._(this.type);
+
+  static const Type DART = const Type._('dart');
+
+  static const Type HTML = const Type._('html');
+
+  static const Type JS = const Type._('js');
+
+}
+
+class MarkerChangeEvent {
+
+  Marker marker;
+
+  MarkerChangeEvent(this.marker);
+
 }
