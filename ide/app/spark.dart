@@ -960,7 +960,6 @@ class GitCloneAction extends SparkActionWithDialog {
         _projectNameElement.value, _repoUrlElement.value, spark);
     spark.jobManager.schedule(job);
   }
-
 }
 
 class _GitCloneJob extends Job {
