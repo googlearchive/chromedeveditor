@@ -41,7 +41,7 @@ class Commit {
 
         if (entry.isDirectory) {
           return walkFiles(entry, store).then((String sha) {
-            if (sha != null) {return;
+            if (sha != null) {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
                   false));
             }
@@ -109,7 +109,7 @@ class Commit {
       String refName) {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
-    String name = options.name;
+    String username = options.username;
     String email = options.email;
     String commitMsg = options.commitMessage;
 
@@ -131,11 +131,11 @@ class Commit {
           }
         }
 
-        commitParts.add('author ${name} ');
+        commitParts.add('author ${username} ');
         commitParts.add(' <$email> ');
         commitParts.add(dateString);
         commitParts.add('\n');
-        commitParts.add('committer ${name}');
+        commitParts.add('committer ${username}');
         commitParts.add(' <${email}>');
         commitParts.add(dateString);
         commitParts.add('\n\n${commitMsg}\n');
