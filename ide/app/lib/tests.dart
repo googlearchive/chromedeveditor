@@ -22,13 +22,15 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
+  final JobManager jobManager;
+
   Function _defineTestsFn;
   Element _testDiv;
   Element _statusDiv;
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, {bool connectToTestListener: false}) {
+  TestDriver(this._defineTestsFn, this.jobManager, {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
     _logger.onRecord.listen((record) => print(record.toString()));
 
@@ -42,7 +44,7 @@ class TestDriver {
   /**
    * Run the tests and return back whether they passed.
    */
-  Future<bool> runTests() {
+  void runTests() {
     _testDiv.style.display = 'inline';
     _statusDiv.style.background = 'rgb(84, 180, 84)';
     _statusDiv.text = '';
@@ -54,9 +56,8 @@ class TestDriver {
       _defineTestsFn = null;
     }
 
-    unittest.rerunTests();
-
-    return _testCompleter.future;
+    _TestJob job = new _TestJob(this, _testCompleter);
+    jobManager.schedule(job);
   }
 
   void _connectToListener() {
@@ -109,22 +110,22 @@ class TestDriver {
   }
 }
 
-class TestJob extends Job {
-  TestDriver testDriver;
+class _TestJob extends Job {
+  final TestDriver testDriver;
+  final Completer<bool> testCompleter;
 
-  TestJob(this.testDriver, String name) : super(name);
+  _TestJob(this.testDriver, this.testCompleter) : super("Running Tests…");
 
   Future<Job> run(ProgressMonitor monitor) {
     // TODO: Count tests for future progress bar.
     monitor.start(name, 1);
-    Completer completer = new Completer();
 
-    testDriver.runTests()
-        .then((bool success) {
-          completer.complete(this);
+    unittest.rerunTests();
+
+    return testCompleter.future
+        .then((_) {
+          return(this);
         });
-
-    return completer.future;
   }
 }
 

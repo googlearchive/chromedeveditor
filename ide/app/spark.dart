@@ -541,7 +541,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   Future applicationStarted(Application application) {
     if (spark.developerMode) {
       spark._testDriver = new TestDriver(
-          all_tests.defineTests, connectToTestListener: true);
+          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
     }
   }
 
@@ -1013,8 +1013,7 @@ class RunTestsAction extends SparkAction {
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests");
 
   _invoke([Object context]) {
-    TestJob job = new TestJob(spark._testDriver, name);
-    spark.jobManager.schedule(job);
+    spark._testDriver.runTests();
   }
 }
 
