@@ -34,15 +34,9 @@ class SparkPolymerDialog implements SparkDialog {
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement;
 
-  void show() {
-   querySelector("#modalBackdrop").style.display = "block";
-    _dialogElement.toggle();
-  }
+  void show() => _dialogElement.toggle();
 
-  void hide() {
-    querySelector("#modalBackdrop").style.display = "none";
-    _dialogElement.toggle();
-  }
+  void hide() => _dialogElement.toggle();
 
   Element get element => _dialogElement;
 }

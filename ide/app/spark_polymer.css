@@ -23,7 +23,7 @@ body {
   width: 100%;
 }
 
-#app_modal {
+#modalBackdrop {
   display:none;
   position: absolute;
   top: 0px;
@@ -31,5 +31,6 @@ body {
   width: 100%;
   height: 100%;
   background-color: black;
-  opacity: 0.8;
+  opacity: 0.6;
+  z-index: 500;
 }

@@ -82,7 +82,7 @@ class SparkSelector extends SparkSelection {
   // listener's handler that is added/removed.
   EventListener _activateHandler;
 
-  SparkSelector.created(): super.created() {
+  SparkSelector.created() : super.created() {
     _activateHandler = activateHandler;
   }
 
