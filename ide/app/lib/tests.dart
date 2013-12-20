@@ -12,6 +12,7 @@ import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
 import 'tcp.dart' as tcp;
+import 'jobs.dart';
 
 const int _DEFAULT_TESTPORT = 5120;
 
@@ -105,6 +106,25 @@ class TestDriver {
 
   void _testsFinished(bool sucess) {
     _testCompleter.complete(sucess);
+  }
+}
+
+class TestJob extends Job {
+  TestDriver testDriver;
+
+  TestJob(this.testDriver) : super("Run Tests");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    // TODO: Count tests for future progress bar.
+    monitor.start("Run Tests...", 1);
+    Completer completer = new Completer();
+
+    testDriver.runTests()
+        .then((bool success) {
+          completer.complete(this);
+        });
+
+    return completer.future;
   }
 }
 
