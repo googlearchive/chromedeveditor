@@ -109,7 +109,7 @@ class Commit {
       String refName) {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
-    String username = options.username;
+    String name = options.name;
     String email = options.email;
     String commitMsg = options.commitMessage;
 
@@ -131,11 +131,11 @@ class Commit {
           }
         }
 
-        commitParts.add('author ${username} ');
+        commitParts.add('author ${name} ');
         commitParts.add(' <$email> ');
         commitParts.add(dateString);
         commitParts.add('\n');
-        commitParts.add('committer ${username}');
+        commitParts.add('committer ${name}');
         commitParts.add(' <${email}>');
         commitParts.add(dateString);
         commitParts.add('\n\n${commitMsg}\n');
