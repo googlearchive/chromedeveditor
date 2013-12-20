@@ -560,6 +560,13 @@ class ResourceChangeEvent {
   }
 
   ResourceChangeEvent._(List<ChangeDelta> delta): changes = new UnmodifiableListView(delta);
+
+  /**
+   * A convenience getter used to return modified (new or changed) files.
+   */
+  Iterable<File> get modifiedFiles => changes
+      .where((delta) => !delta.isDelete && delta.resource is File)
+      .map((delta) => delta.resource);
 }
 
 /**

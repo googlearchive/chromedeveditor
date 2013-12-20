@@ -19,11 +19,12 @@ import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
-export 'package:analyzer/src/generated/ast.dart';
-export 'package:analyzer/src/generated/error.dart';
-
 import 'sdk.dart' as spark;
 import 'utils.dart';
+
+export 'package:analyzer/src/generated/ast.dart';
+export 'package:analyzer/src/generated/error.dart';
+export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
 
 // TODO: investigate web workers and isolates
 
@@ -97,6 +98,12 @@ class AnalyzerResult {
   AnalyzerResult(this.ast, this.errorInfo);
 
   List<AnalysisError> get errors => errorInfo.errors;
+
+  LineInfo_Location getLineInfo(AnalysisError error) {
+    return errorInfo.lineInfo.getLocation(error.offset);
+  }
+
+  String toString() => 'AnalyzerResult[${errorInfo.errors.length} issues]';
 }
 
 /**

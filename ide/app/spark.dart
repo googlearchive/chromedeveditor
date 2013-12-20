@@ -245,7 +245,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void initActivitySpinner() {
-    _activitySpinner = new ActivitySpinner(this, id: '#activitySpinner');
+    _activitySpinner = new ActivitySpinner(this, '#activitySpinner');
     _activitySpinner.setShowing(false);
 
     // TODO: This might cause the spinner to "blink" between jobs.
@@ -402,8 +402,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void addBuilder(Builder builder) {
     if (_buildManager == null) {
-      // TODO: temp temp
-      _buildManager = new BuilderManager(workspace, new JobManager());
+      _buildManager = new BuilderManager(workspace, jobManager);
     }
 
     _buildManager.builders.add(builder);
@@ -571,8 +570,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 class ActivitySpinner {
   Element element;
 
-  ActivitySpinner(Spark spark, {String id}) {
-    element = spark.getUIElement(id);
+  ActivitySpinner(Spark spark, String elementId) {
+    element = spark.getUIElement(elementId);
   }
 
   void setShowing(bool showing) {
