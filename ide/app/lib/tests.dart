@@ -44,7 +44,7 @@ class TestDriver {
   /**
    * Run the tests and return back whether they passed.
    */
-  void runTests() {
+  Future<bool> runTests() {
     _testDiv.style.display = 'inline';
     _statusDiv.style.background = 'rgb(84, 180, 84)';
     _statusDiv.text = '';
@@ -58,6 +58,8 @@ class TestDriver {
 
     _TestJob job = new _TestJob(this, _testCompleter);
     jobManager.schedule(job);
+
+    return _testCompleter.future;
   }
 
   void _connectToListener() {
