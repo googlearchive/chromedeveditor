@@ -679,12 +679,6 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
-    if (dialogElement.tagName == "SPARK-MODAL") {
-      dialogElement.on['opened'].listen((event) {
-        var appModal = querySelector("#modalBackdrop");
-        appModal.style.display = event.detail ? "block" : "none";
-      });
-    }
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
   }
 
