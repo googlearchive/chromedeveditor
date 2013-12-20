@@ -112,11 +112,11 @@ class TestDriver {
 class TestJob extends Job {
   TestDriver testDriver;
 
-  TestJob(this.testDriver) : super("Run Tests");
+  TestJob(this.testDriver, String name) : super(name);
 
   Future<Job> run(ProgressMonitor monitor) {
     // TODO: Count tests for future progress bar.
-    monitor.start("Run Tests...", 1);
+    monitor.start(this.name, 1);
     Completer completer = new Completer();
 
     testDriver.runTests()
