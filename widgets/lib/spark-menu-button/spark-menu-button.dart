@@ -14,7 +14,7 @@ import '../spark-menu/spark-menu.dart';
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends Widget {
   @published String src = "";
-  @published int selected = 0;
+  @published dynamic selected;
   @published String valueattr = "";
   @published bool opened = false;
   @published bool responsive = false;
