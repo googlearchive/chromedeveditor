@@ -116,7 +116,7 @@ class TestJob extends Job {
 
   Future<Job> run(ProgressMonitor monitor) {
     // TODO: Count tests for future progress bar.
-    monitor.start(this.name, 1);
+    monitor.start(name, 1);
     Completer completer = new Completer();
 
     testDriver.runTests()

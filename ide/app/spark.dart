@@ -1013,7 +1013,7 @@ class RunTestsAction extends SparkAction {
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests");
 
   _invoke([Object context]) {
-    TestJob job = new TestJob(spark._testDriver);
+    TestJob job = new TestJob(spark._testDriver, name);
     spark.jobManager.schedule(job);
   }
 }
