@@ -16,7 +16,7 @@ class SparkOverlay extends Widget {
   // TODO(sorvell): need keyhelper component.
   static final int ESCAPE_KEY = 27;
 
-  // track overlays for z-index and focus managemant
+  // Track overlays for z-index and focus managemant.
   static List overlays = [];
   static void trackOverlays(inOverlay) {
     if (inOverlay.opened) {
@@ -66,7 +66,7 @@ class SparkOverlay extends Widget {
     }
   }
 
-  // Function closures aren't canonicalized need to have one pointer for the
+  // Function closures aren't canonicalized: need to have one pointer for the
   // listener's handler that is added/removed.
   EventListener _captureHandler;
   EventListener _resizeHandler;

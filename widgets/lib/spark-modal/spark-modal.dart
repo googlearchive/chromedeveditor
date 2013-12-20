@@ -4,8 +4,9 @@
 
 library spark_widgets.menu;
 
-import 'package:spark_widgets/spark-overlay/spark-overlay.dart';
 import 'package:polymer/polymer.dart';
+
+import '../spark-overlay/spark-overlay.dart';
 
 // Ported from Polymer Javascript to Dart code.
 
