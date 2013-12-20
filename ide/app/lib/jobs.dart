@@ -13,6 +13,13 @@ import 'dart:async';
  * This class is available as a singleton.
  */
 class JobManager {
+  static int count = 0;
+  int myCount = 0;
+  JobManager() {
+    myCount = ++count;
+    /*%TRACE3*/ print("(4> 12/19/13): JobManager!"); // TRACE%
+  }
+
   StreamController<JobManagerEvent> _controller =
       new StreamController.broadcast();
 
