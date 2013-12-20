@@ -421,7 +421,7 @@ abstract class Resource {
   Workspace get workspace => parent.workspace;
 
   bool operator ==(other) =>
-      identical(this.runtimeType, other.runtimeType) && path == other.path;
+      this.runtimeType == other.runtimeType && path == other.path;
 
   int get hashCode => path.hashCode;
 
