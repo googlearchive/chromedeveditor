@@ -77,6 +77,9 @@ class SparkPolymer extends Spark {
   void createEditorComponents() => super.createEditorComponents();
 
   @override
+  void initActivitySpinner() => super.initActivitySpinner();
+
+  @override
   void initEditorManager() => super.initEditorManager();
 
   @override
