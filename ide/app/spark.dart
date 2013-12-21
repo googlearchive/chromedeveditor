@@ -989,10 +989,11 @@ class _GitCloneJob extends Job {
               spark._filesController.selectFile(folder);
               spark.workspace.save();
             });
-          }).then((_) => completer.complete(this));
-        });
+          }).then((_) => completer.complete(this))
+          .catchError((error) => completer.complete(this));
+        }).catchError((error) => completer.complete(this));
       });
-    });
+    }).catchError((error) => completer.complete(this));
 
     return completer.future;
   }
