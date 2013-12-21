@@ -229,7 +229,6 @@ class SparkOverlay extends Widget {
     return overlay.offset.containsPoint(xyGlobal);
   }
 
-
   void keydownHandler(KeyboardEvent e) {
     if (!autoCloseDisabled && (e.keyCode == ESCAPE_KEY)) {
       this.opened = false;
