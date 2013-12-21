@@ -976,24 +976,25 @@ class _GitCloneJob extends Job {
     Completer completer = new Completer();
 
     getGitTestFileSystem().then((chrome_files.CrFileSystem fs) {
-      fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+      return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         GitOptions options = new GitOptions();
         options.root = dir;
         options.repoUrl = url;
         options.depth = 1;
         options.store = new ObjectStore(dir);
         Clone clone = new Clone(options);
-        options.store.init().then((_) {
-          clone.clone().then((_) {
-            spark.workspace.link(dir).then((folder) {
-              spark._filesController.selectFile(folder);
+        return options.store.init().then((_) {
+          return clone.clone().then((_) {
+            return spark.workspace.link(dir).then((folder) {
+              Timer.run(() {
+                spark._filesController.selectFile(folder);
+              });
               spark.workspace.save();
             });
-          }).then((_) => completer.complete(this))
-          .catchError((error) => completer.complete(this));
-        }).catchError((error) => completer.complete(this));
+          });
+        });
       });
-    }).catchError((error) => completer.complete(this));
+    }).whenComplete(() => completer.complete(this));
 
     return completer.future;
   }
