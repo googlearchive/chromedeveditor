@@ -968,7 +968,7 @@ class _GitCloneJob extends Job {
   Spark spark;
 
   _GitCloneJob(this.projectName, this.url, this.spark)
-      : super("Cloning git repository");
+      : super("Cloning …");
 
   Future<Job> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
