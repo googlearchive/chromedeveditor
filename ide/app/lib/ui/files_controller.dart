@@ -143,9 +143,11 @@ class FilesController implements TreeViewDelegate {
 
   void treeViewSelectedChanged(TreeView view,
                                List<String> nodeUIDs) {
-    Resource resource = _filesMap[nodeUIDs.first];
-    if (resource is File) {
-      _delegate.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
+    if (nodeUIDs.isNotEmpty) {
+      Resource resource = _filesMap[nodeUIDs.first];
+      if (resource is File) {
+        _delegate.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
+      }
     }
   }
 
