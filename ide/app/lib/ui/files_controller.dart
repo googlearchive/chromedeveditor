@@ -7,6 +7,7 @@
  */
 library spark.ui.widgets.files_controller;
 
+import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' as html;
 

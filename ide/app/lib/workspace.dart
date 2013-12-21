@@ -10,6 +10,7 @@ library spark.workspace;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert' show JSON;
+import 'dart:math';
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
@@ -34,8 +35,16 @@ class Workspace implements Container {
   PreferenceStore _store;
   Completer<Workspace> _whenAvailable = new Completer();
 
-  StreamController<ResourceChangeEvent> _controller =
+  StreamController<ResourceChangeEvent> _resourceController =
       new StreamController.broadcast();
+
+  StreamController<MarkerChangeEvent> _markerController =
+      new StreamController.broadcast();
+
+  // controls whether to post maker event or queue them up for later posting
+  bool _postMakerEvents = true;
+
+  List<MarkerChangeEvent> _markerEvents = [];
 
   Workspace([this._store]);
 
@@ -71,7 +80,7 @@ class Workspace implements Container {
         _localChildren.add(resource);
       }
       if (fireEvent) {
-        _controller.add(
+        _resourceController.add(
             new ResourceChangeEvent.fromSingle(new ChangeDelta(resource, EventType.ADD)));
       }
       return new Future.value(resource);
@@ -84,7 +93,7 @@ class Workspace implements Container {
       }
       return _gatherChildren(project).then((container) {
         if (fireEvent) {
-          _controller.add(
+          _resourceController.add(
               new ResourceChangeEvent.fromSingle(new ChangeDelta(container, EventType.ADD)));
         }
         return container;
@@ -110,7 +119,7 @@ class Workspace implements Container {
       List<ChangeDelta> list = [];
       resources.forEach((r) => list.add(new ChangeDelta(r, EventType.DELETE)));
       list.addAll(events);
-      _controller.add(new ResourceChangeEvent.fromList(list));
+      _resourceController.add(new ResourceChangeEvent.fromList(list));
     });
   }
 
@@ -162,9 +171,13 @@ class Workspace implements Container {
 
   List<Project> getProjects() => _localChildren.where((c) => c is Project).toList();
 
-  Stream<ResourceChangeEvent> get onResourceChange => _controller.stream;
+  Stream<ResourceChangeEvent> get onResourceChange => _resourceController.stream;
 
-  void _fireEvent(ResourceChangeEvent event) => _controller.add(event);
+  Stream<MarkerChangeEvent> get onMarkerChange => _markerController.stream;
+
+  void _fireEvent(ResourceChangeEvent event) => _resourceController.add(event);
+
+  void _fireMarkerEvent(MarkerChangeEvent event) => _markerController.add(event);
 
   /**
    * Read the workspace data from storage and restore entries.
@@ -216,6 +229,19 @@ class Workspace implements Container {
     return getChildren().forEach((c) => c.clearMarkers());
   }
 
+  int findMaxProblemSeverity(Resource target, String type) {
+    int maxSeverity = -1;
+    target.traverse().where((r) => r.isFile).forEach((File file) {
+      file.getMarkers().where((marker) => marker.type == type).
+        forEach((marker) {
+            maxSeverity = max(maxSeverity, marker.severity);
+            if (maxSeverity == Severity.ERROR) {
+              return maxSeverity;
+            }
+        });
+     });
+  }
+
   Future<Resource> _gatherChildren(Container container) {
     chrome.DirectoryEntry dir = container.entry;
     List futures = [];
@@ -256,7 +282,7 @@ class Workspace implements Container {
           // TODO(dvh): indentity of objects needs to be preserved.
           resource._localChildren = tmpProject._localChildren;
           tmpProject._localChildren = [];
-          _controller.add(new ResourceChangeEvent.fromSingle(
+          _resourceController.add(new ResourceChangeEvent.fromSingle(
                 new ChangeDelta(resource, EventType.CHANGE)));
           return container;
         });
@@ -413,6 +439,8 @@ abstract class Resource {
 
   void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
 
+  void _fireMarkerEvent(MarkerChangeEvent event) => _parent._fireMarkerEvent(event);
+
   Future delete();
 
   Future rename(String name) {
@@ -451,7 +479,7 @@ abstract class Resource {
   void clearMarkers() {
     traverse().where((r) => r.isFile)
         .forEach((f) => (f as File)._clearMarkers(fireEvent : false));
-    _fireEvent(new ResourceChangeEvent.fromSingle(new ChangeDelta(this, EventType.CHANGE)));
+    _fireMarkerEvent(new MarkerChangeEvent(this, null,EventType.DELETE));
   }
 
   /**
@@ -536,8 +564,9 @@ class File extends Resource {
   }
 
   void createMarker(Type type, Severity severity, String message, int lineno, [int start = -1, int end = -1]) {
-    _markers.add(new Marker(this, type, severity, message, lineno, start, end));
-    _fireEvent(new ResourceChangeEvent.fromSingle(new ChangeDelta(this, EventType.CHANGE)));
+    Marker marker = new Marker(this, type, severity, message, lineno, start, end);
+    _markers.add(marker);
+    _fireMarkerEvent(new MarkerChangeEvent(this, marker, EventType.ADD));
   }
 
   void clearMarkers() {
@@ -547,7 +576,7 @@ class File extends Resource {
   void _clearMarkers({bool fireEvent : true}) {
     _markers.clear();
     if (fireEvent) {
-      _fireEvent(new ResourceChangeEvent.fromSingle(new ChangeDelta(this, EventType.CHANGE)));
+      _fireMarkerEvent(new MarkerChangeEvent(this, null, EventType.DELETE));
     }
   }
 
@@ -672,12 +701,12 @@ class Marker {
   static const String CHAR_END = "charEnd";
 
   Marker(this.file, Type type, Severity severity, String message, int lineNo, [int char_start=-1, int char_end=-1]) {
-    _attributes.putIfAbsent(TYPE, type);
-    _attributes.putIfAbsent(SEVERITY, severity);
-    _attributes.putIfAbsent(MESSAGE,message);
-    _attributes.putIfAbsent(LINE_NO,lineNo);
-    _attributes.putIfAbsent(CHAR_START, char_start);
-    _attributes.putIfAbsent(CHAR_END, char_end);
+    _attributes[TYPE] = type;
+    _attributes[SEVERITY] = severity;
+    _attributes[MESSAGE] = message;
+    _attributes[LINE_NO] = lineNo;
+    _attributes[CHAR_START] = char_start;
+    _attributes[CHAR_END] = char_end;
 
   }
 
@@ -693,7 +722,7 @@ class Marker {
 
   int get charEnd => _attributes[CHAR_END];
 
-  void addAttribute(String key, dynamic value) => _attributes.putIfAbsent(key, value);
+  void addAttribute(String key, dynamic value) => _attributes[key] = value;
 
   dynamic getAttribute(String key) => _attributes[key];
 
@@ -733,10 +762,15 @@ class Type {
 
 }
 
+/**
+ * Used to indicates changes to markers
+ */
 class MarkerChangeEvent {
 
-  Marker marker;
+  final Marker marker;
+  final Resource resource;
+  final EventType type;
 
-  MarkerChangeEvent(this.marker);
+  MarkerChangeEvent(this.resource, this.marker, this.type);
 
 }
