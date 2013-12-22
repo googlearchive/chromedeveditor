@@ -124,13 +124,16 @@ void release(GrinderContext context) {
 
   archive(context);
 
+  var sep = Platform.pathSeparator;
   _runCommandSync(
     context,
-    'git checkout app/manifest.json');
+    'git checkout app${sep}manifest.json');
   _increaseBuildNumber(context);
   _runCommandSync(
     context,
-    'git commit -m "Build version ${version}" app/manifest.json');
+    // "(double quotes) is ignored from |args| parameter of Process.runSync.
+    // So the commit message is made as one long word with '_' char.
+    'git commit -m Build_version_${version} app${sep}manifest.json');
 
   File file = new File('dist/spark.zip');
   String filename = 'spark-${version}.zip';
@@ -154,8 +157,9 @@ void release(GrinderContext context) {
 // - Copy the packages/ directory in build/chrome-app/spark/packages
 // - Remove test
 // - Zip the content of build/chrome-app-spark to dist/spark.zip
-void archive(GrinderContext context) {
-  String sparkZip = '${DIST_DIR.path}/spark.zip';
+void archive(GrinderContext context, [String outputZip]) {
+  String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
+                                        '${DIST_DIR.path}/${outputZip}';
   _delete(sparkZip);
   _zip(context, 'app', '../${sparkZip}');
   _printSize(context, getFile(sparkZip));
@@ -294,7 +298,7 @@ void _changeMode(GrinderContext context, bool useTestMode) {
 
 // Returns the name of the current branch.
 String _getBranchName() {
-  return _getCommandOutput('git branch | grep "*" | sed -e "s/\* //g"');
+  return _getCommandOutput('git rev-parse --abbrev-ref HEAD');
 }
 
 // Returns the URL of the git repository.
@@ -304,7 +308,7 @@ String _getRepositoryUrl() {
 
 // Returns the current revision identifier of the local copy.
 String _getCurrentRevision() {
-  return _getCommandOutput('git rev-parse HEAD | cut -c1-10');
+  return _getCommandOutput('git rev-parse HEAD').substring(0, 10);
 }
 
 // We can build a real release only if the repository is the original
@@ -319,11 +323,9 @@ bool _canReleaseFromHere() {
 // archive and name the archive with the revision identifier.
 void _archiveWithRevision(GrinderContext context) {
   context.log('Performing archive instead.');
-  archive(context);
-  File file = new File('dist/spark.zip');
   String version = _getCurrentRevision();
   String filename = 'spark-rev-${version}.zip';
-  file.rename('dist/${filename}');
+  archive(context, filename);
   context.log("Created ${filename}");
 }
 
@@ -475,8 +477,12 @@ void _delete(String path, [GrinderContext context]) {
 void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   context.log(command);
 
-  var result = Process.runSync(
-      '/bin/sh', ['-c', command], workingDirectory: cwd);
+  ProcessResult result;
+  if (Platform.isWindows) {
+    result = Process.runSync('cmd.exe', ['/c', command], workingDirectory: cwd);
+  } else {
+    result = Process.runSync('/bin/sh', ['-c', command], workingDirectory: cwd);
+  }
 
   if (result.stdout.isNotEmpty) {
     context.log(result.stdout);
@@ -490,9 +496,12 @@ void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   }
 }
 
-// TODO(sunglim): Fix me. This doesn't support Windows.
 String _getCommandOutput(String command) {
-  return Process.runSync('/bin/sh', ['-c', command]).stdout.trim();
+  if (Platform.isWindows) {
+    return Process.runSync('cmd.exe', ['/c', command]).stdout.trim();
+  } else {
+    return Process.runSync('/bin/sh', ['-c', command]).stdout.trim();
+  }
 }
 
 /**
