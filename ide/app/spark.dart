@@ -330,8 +330,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
-    actionManager.registerAction(new FileNewAction(
-        this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(
         this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
