@@ -27,7 +27,11 @@ void main([List<String> args]) {
 
   defineTask('docs', taskFunction : docs, depends : ['setup']);
   defineTask('archive', taskFunction : archive, depends : ['mode-notest', 'compile']);
-  defineTask('release', taskFunction : release, depends : ['mode-notest', 'compile']);
+
+  // For now, we won't be building the webstore version from Windows.
+  if (!Platform.isWindows) {
+    defineTask('release', taskFunction : release, depends : ['mode-notest', 'compile']);
+  }
 
   defineTask('clean', taskFunction: clean);
 
@@ -131,9 +135,7 @@ void release(GrinderContext context) {
   _increaseBuildNumber(context);
   _runCommandSync(
     context,
-    // "(double quotes) is ignored from |args| parameter of Process.runSync.
-    // So the commit message is made as one long word with '_' char.
-    'git commit -m Build_version_${version} app${sep}manifest.json');
+    'git commit -m "Build version ${version}" app${sep}manifest.json');
 
   File file = new File('dist/spark.zip');
   String filename = 'spark-${version}.zip';
