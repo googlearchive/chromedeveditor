@@ -12,6 +12,7 @@ import 'dart:html';
 
 import 'package:chrome_gen/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
+import 'package:path/path.dart';
 
 import '../lib/utils.dart';
 
@@ -38,10 +39,10 @@ class MockFileSystem implements FileSystem {
       path = path.substring(1);
     }
 
-    String dirPath = dirName(path);
-    String fileName = baseName(path);
+    String dirPath = dirname(path);
+    String fileName = basename(path);
 
-    if (dirPath == null) {
+    if (dirPath == '.') {
       return _root._createFile(path, contents: contents);
     } else {
       _MockDirectoryEntry dir = createDirectory(dirPath);
@@ -54,10 +55,10 @@ class MockFileSystem implements FileSystem {
       path = path.substring(1);
     }
 
-    String dirPath = dirName(path);
-    String fileName = baseName(path);
+    String dirPath = dirname(path);
+    String fileName = basename(path);
 
-    if (dirPath == null) {
+    if (dirPath == '.') {
       _root._removeFile(path);
     } else {
       _MockDirectoryEntry dir = getEntry(dirPath);
@@ -73,10 +74,10 @@ class MockFileSystem implements FileSystem {
       path = path.substring(1);
     }
 
-    String dirPath = dirName(path);
-    String fileName = baseName(path);
+    String dirPath = dirname(path);
+    String fileName = basename(path);
 
-    if (dirPath == null) {
+    if (dirPath == '.') {
       return _root._createDirectory(path);
     } else {
       _MockDirectoryEntry dir = createDirectory(dirPath);
