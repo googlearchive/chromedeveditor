@@ -12,9 +12,7 @@ import 'dart:html';
 
 import 'package:chrome_gen/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
-import 'package:path/path.dart';
-
-import '../lib/utils.dart';
+import 'package:path/path.dart' as path;
 
 export 'package:chrome_gen/chrome_app.dart'
   show FileEntry, DirectoryEntry, ChromeFileEntry;
@@ -34,32 +32,32 @@ class MockFileSystem implements FileSystem {
 
   // Utility methods.
 
-  FileEntry createFile(String path, {String contents}) {
-    if (path.startsWith('/')) {
-      path = path.substring(1);
+  FileEntry createFile(String filePath, {String contents}) {
+    if (filePath.startsWith('/')) {
+      filePath = filePath.substring(1);
     }
 
-    String dirPath = dirname(path);
-    String fileName = basename(path);
+    String dirPath = path.dirname(filePath);
+    String fileName = path.basename(filePath);
 
     if (dirPath == '.') {
-      return _root._createFile(path, contents: contents);
+      return _root._createFile(filePath, contents: contents);
     } else {
       _MockDirectoryEntry dir = createDirectory(dirPath);
       return dir._createFile(fileName, contents: contents);
     }
   }
 
-  void removeFile(String path) {
-    if (path.startsWith('/')) {
-      path = path.substring(1);
+  void removeFile(String filePath) {
+    if (filePath.startsWith('/')) {
+      filePath = filePath.substring(1);
     }
 
-    String dirPath = dirname(path);
-    String fileName = basename(path);
+    String dirPath = path.dirname(filePath);
+    String fileName = path.basename(filePath);
 
     if (dirPath == '.') {
-      _root._removeFile(path);
+      _root._removeFile(filePath);
     } else {
       _MockDirectoryEntry dir = getEntry(dirPath);
       if (dir is! DirectoryEntry) {
@@ -69,16 +67,16 @@ class MockFileSystem implements FileSystem {
     }
   }
 
-  DirectoryEntry createDirectory(String path) {
-    if (path.startsWith('/')) {
-      path = path.substring(1);
+  DirectoryEntry createDirectory(String filePath) {
+    if (filePath.startsWith('/')) {
+      filePath = filePath.substring(1);
     }
 
-    String dirPath = dirname(path);
-    String fileName = basename(path);
+    String dirPath = path.dirname(filePath);
+    String fileName = path.basename(filePath);
 
     if (dirPath == '.') {
-      return _root._createDirectory(path);
+      return _root._createDirectory(filePath);
     } else {
       _MockDirectoryEntry dir = createDirectory(dirPath);
       return dir._createDirectory(fileName);

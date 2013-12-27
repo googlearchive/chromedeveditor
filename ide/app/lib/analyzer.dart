@@ -18,13 +18,12 @@ import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
 import 'package:chrome_gen/chrome_app.dart' as chrome;
-import 'package:path/path.dart';
+import 'package:path/path.dart' as path;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
 
 import 'sdk.dart' as spark;
-import 'utils.dart';
 
 // TODO: investigate web workers and isolates
 
@@ -226,7 +225,7 @@ class SdkSource extends Source {
 
   String get encoding => 'UTF-8';
 
-  String get shortName => basename(fullName);
+  String get shortName => path.basename(fullName);
 
   UriKind get uriKind => UriKind.DART_URI;
 
@@ -235,7 +234,7 @@ class SdkSource extends Source {
   bool get isInSystemLibrary => true;
 
   Source resolveRelative(Uri relativeUri) {
-    return new SdkSource(_sdk, '${dirname(fullName)}/${relativeUri.path}');
+    return new SdkSource(_sdk, '${path.dirname(fullName)}/${relativeUri.path}');
   }
 
   int get modificationStamp => 0;
