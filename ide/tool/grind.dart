@@ -18,16 +18,16 @@ final Directory DIST_DIR = new Directory('dist');
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
 
-  defineTask('mode-notest', taskFunction: (c) => _changeMode(c, false));
-  defineTask('mode-test', taskFunction: (c) => _changeMode(c, true));
+  defineTask('mode-notest', taskFunction: (c) => _changeMode(useTestMode: false));
+  defineTask('mode-test', taskFunction: (c) => _changeMode(useTestMode: true));
 
   defineTask('compile', taskFunction: compile, depends : ['setup']);
-  defineTask('deploy', taskFunction: deploy, depends : ['setup', 'mode-notest']);
-  defineTask('deploy-test', taskFunction: deployTest, depends : ['setup', 'mode-test']);
+  defineTask('deploy', taskFunction: deploy, depends : ['setup']);
 
-  defineTask('docs', taskFunction : docs, depends : ['setup']);
-  defineTask('archive', taskFunction : archive, depends : ['mode-notest', 'compile']);
-  defineTask('release', taskFunction : release, depends : ['mode-notest', 'compile']);
+  defineTask('docs', taskFunction: docs, depends : ['setup']);
+  defineTask('stats', taskFunction: stats);
+  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'compile']);
+  defineTask('release', taskFunction: release, depends : ['mode-notest', 'compile']);
 
   defineTask('clean', taskFunction: clean);
 
@@ -74,22 +74,11 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
-      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e, true));
-}
-
-/**
- * Copy all source to `build/deploy-test`. Do a polymer deploy to
- * `build/deploy-test-out`. This builds a test version of the app.
- */
-void deployTest(GrinderContext context) {
-  Directory sourceDir = joinDir(BUILD_DIR, ['deploy-test']);
-  Directory destDir = joinDir(BUILD_DIR, ['deploy-test-out']);
-
-  _polymerDeploy(context, sourceDir, destDir);
-
-  ['spark.html_bootstrap.dart', 'spark_polymer.html_bootstrap.dart']
-      .forEach((e) => _dart2jsCompile(context, joinDir(destDir, ['web']), e, true));
+  // TODO: Do we need to compile both of these?
+  _dart2jsCompile(context, joinDir(destDir, ['web']),
+      'spark.html_bootstrap.dart', true);
+  _dart2jsCompile(context, joinDir(destDir, ['web']),
+      'spark_polymer.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -180,14 +169,20 @@ void docs(GrinderContext context) {
   }
 }
 
+void stats(GrinderContext context) {
+  StatsCounter stats = new StatsCounter();
+  stats.collect(getDir('..'));
+  context.log(stats.toString());
+}
+
 /**
  * Delete all generated artifacts.
  */
 void clean(GrinderContext context) {
-  // delete the sdk archive
-  getFile('app/sdk/dart-sdk.bin').deleteSync();
+  // Delete the sdk archive.
+  _delete('app/sdk/dart-sdk.bin');
 
-  // delete any compiled js output
+  // Delete any compiled js output.
   for (FileSystemEntity entity in getDir('app').listSync()) {
     if (entity is File) {
       String ext = fileExt(entity);
@@ -199,8 +194,15 @@ void clean(GrinderContext context) {
     }
   }
 
-  // delete the build/ dir
-  getDir('build').deleteSync(recursive: true);
+  // Delete the build/ dir.
+  deleteEntity(BUILD_DIR);
+
+  // Remove any symlinked packages that may have snuck into app/.
+  for (var entity in getDir('app').listSync(recursive: true, followLinks: false)) {
+    if (entity is Link && fileName(entity) == 'packages') {
+      entity.deleteSync();
+    }
+  }
 }
 
 void _zip(GrinderContext context, String dirToZip, String destFile) {
@@ -231,43 +233,44 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   deleteEntity(getDir('${sourceDir.path}'), context);
   deleteEntity(getDir('${destDir.path}'), context);
 
+  // copy spark/widgets to spark/ide/build/widgets
+  copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
+
   // copy the app directory to target/web
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
   copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
+  deleteEntity(joinFile(destDir, ['web', 'spark.dart.precompiled.js']), context);
   deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
-  Link link = new Link(sourceDir.path + '/packages');
+  final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
+
+  // HACK(ussuri): This is really ugly. We're replacing "../../packages/" parts
+  // in all <link rel="import"> in spark_polymer_ui.html with just "packages".
+  // deploy.dart can't find the imports any other way, but we still need
+  // the "../../" when debugging the uncompiled app. This is supposed to be
+  // resolved in Dart/Polymer at some point (?).
+  _patchHtmlPackageImports(
+      joinFile(sourceDir, ['web', 'lib', 'polymer_ui', 'spark_polymer_ui.html']),
+      context);
 
   runDartScript(context, 'packages/polymer/deploy.dart',
       arguments: ['--out', '../../${destDir.path}'],
       packageRoot: 'packages',
-      workingDirectory: sourceDir.path);
+      workingDirectory: sourceDir.path,
+      vmNewGenHeapMB: 128, vmOldGenHeapMB: 4096);
 }
 
 void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
                      [bool removeSymlinks = false]) {
+  _patchDartJsInterop(context);
+
   runSdkBinary(context, 'dart2js', arguments: [
      joinDir(target, [filePath]).path,
      '--package-root=packages',
      '--suppress-warnings',
      '--suppress-hints',
      '--out=' + joinDir(target, ['${filePath}.js']).path]);
-  if (Platform.isWindows) {
-    context.log('WARNING! Build on windows won\'t apply the patch for dart2js.');
-  } else {
-    String patchFilename = '../tool/fix-restore-entry.patch';
-    if (Platform.isMacOS) {
-      // On Mac, number of generated space is not the same as Windows and Linux.
-      // patch spark.dart.precompile.js tool/fix-restore-entry-mac.patch
-      patchFilename = '../tool/fix-restore-entry-mac.patch';
-    }
-    runProcess(
-        context,
-        'patch',
-        arguments: ['${filePath}.precompiled.js', patchFilename],
-        workingDirectory: target.path);
-  }
 
   // clean up unnecessary (and large) files
   deleteEntity(joinFile(target, ['${filePath}.js']), context);
@@ -287,9 +290,54 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
   _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
 }
 
-void _changeMode(GrinderContext context, bool useTestMode) {
-  File configFile = joinFile(Directory.current, ['app', 'app.json']);
-  configFile.writeAsStringSync('{"test-mode":${useTestMode}}');
+/**
+ * This patches the dart:js library to fix dartbug.com/15193.
+ */
+void _patchDartJsInterop(GrinderContext context) {
+  final matchString = 'if (dartProxy == null) {';
+  final replaceString = 'if (dartProxy == null || !_isLocalObject(o)) {';
+
+  File file = joinFile(sdkDir, ['lib', 'js', 'dart2js', 'js_dart2js.dart']);
+
+  String contents = file.readAsStringSync();
+
+  // This depends on the SDK files being writeable.
+  if (contents.contains(matchString)) {
+    context.log('Patching dart:js ${fileName(file)}');
+
+    file.writeAsStringSync(contents.replaceFirst(matchString, replaceString));
+  }
+}
+
+/**
+ * This patches spark_polymer_ui.html to pacify `polymer/deploy.dart`.
+ */
+void _patchHtmlPackageImports(File file, GrinderContext context) {
+  context.log('Patching ${fileName(file)}');
+
+  final matchString = '../../packages';
+  final replaceString = 'packages';
+
+  String contents = file.readAsStringSync();
+  if (!contents.contains(matchString)) {
+    print('${fileName(file)} no longer needs fixing: remove this step');
+  }
+  file.writeAsStringSync(contents.replaceAll(matchString, replaceString));
+}
+
+void _changeMode({bool useTestMode: true}) {
+  File file = joinFile(Directory.current, ['app', 'app.json']);
+  file.writeAsStringSync('{"test-mode":${useTestMode}}');
+
+  file = joinFile(BUILD_DIR, ['deploy', 'web', 'app.json']);
+  if (file.parent.existsSync()) {
+    file.writeAsStringSync('{"test-mode":${useTestMode}}');
+  }
+
+  file = joinFile(BUILD_DIR, ['deploy-out', 'web', 'app.json']);
+  if (file.parent.existsSync()) {
+    file.writeAsStringSync('{"test-mode":${useTestMode}}');
+  }
 }
 
 // Returns the name of the current branch.
@@ -428,26 +476,26 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
   List files = srcDir.listSync(recursive: true, followLinks: false);
   files = files.where((f) => f is File).toList();
 
-  BytesBuilder bb = new BytesBuilder();
+  ByteWriter writer = new ByteWriter();
 
   String version = versionFile.readAsStringSync().trim();
-  _writeString(bb, version);
-  _writeInt(bb, files.length);
+  writer.writeString(version);
+  writer.writeInt(files.length);
 
   String pathPrefix = srcDir.path + Platform.pathSeparator;
 
   for (File file in files) {
     String path = file.path.substring(pathPrefix.length);
     path = path.replaceAll(Platform.pathSeparator, '/');
-    _writeString(bb, path);
-    _writeInt(bb, file.lengthSync());
+    writer.writeString(path);
+    writer.writeInt(file.lengthSync());
   }
 
   for (File file in files) {
-    bb.add(file.readAsBytesSync());
+    writer.writeBytes(file.readAsBytesSync());
   }
 
-  destFile.writeAsBytesSync(bb.toBytes());
+  destFile.writeAsBytesSync(writer.toBytes());
 }
 
 void _writeString(BytesBuilder bb, String str) {
@@ -481,6 +529,7 @@ void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   if (result.stdout.isNotEmpty) {
     context.log(result.stdout);
   }
+
   if (result.stderr.isNotEmpty) {
     context.log(result.stderr);
   }
@@ -547,4 +596,53 @@ class JsonPrinter {
     _in = _in.substring(2);
     return '\n${_in}';
   }
+}
+
+class StatsCounter {
+  int _files = 0;
+  int _lines = 0;
+
+  void collect(Directory dir) => _collectLineInfo(dir);
+
+  int get fileCount => _files;
+
+  int get lineCount => _lines;
+
+  String toString() => 'found ${_NF.format(fileCount)} dart files,'
+      ' ${_NF.format(lineCount)} lines of code.';
+
+  void _collectLineInfo(Directory dir) {
+    for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
+      if (entity is Directory) {
+        if (fileName(entity) != 'packages' && !fileName(entity).startsWith('.')) {
+          _collectLineInfo(entity);
+        }
+      } else if (entity is File) {
+        if (fileExt(entity) == 'dart') {
+          _files++;
+          _lines += _lineCount(entity);
+        }
+      }
+    }
+  }
+
+  static int _lineCount(File file) {
+    return file.readAsStringSync().split('\n').where(
+        (l) => l.trim().isNotEmpty).length;
+  }
+}
+
+class ByteWriter {
+  List<int> _bytes = [];
+
+  void writeString(String str) {
+    writeBytes(UTF8.encoder.convert(str));
+    _bytes.add(0);
+  }
+
+  void writeInt(int val) => writeString(val.toString());
+
+  void writeBytes(List<int> data) => _bytes.addAll(data);
+
+  List<int> toBytes() => _bytes;
 }
