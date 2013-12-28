@@ -242,8 +242,18 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
   deleteEntity(joinFile(destDir, ['web', 'spark.dart.precompiled.js']), context);
   deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
-  Link link = new Link(sourceDir.path + '/packages');
+  final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
+
+  // HACK(ussuri): This is really ugly. Replace "../../packages/" parts in
+  // <link rel="import"> in spark_polymer_ui.html with just "packages".
+  // deploy.dart can't find the imports any other way, but we still need
+  // the "../../" when debugging the uncompiled app. This is supposed to be
+  // resolved in Dart/Polymer at some point (?).
+  _runCommandSync(
+      context,
+      "perl -i -pe 's[\.\./\.\./packages][packages]g' "
+          "${sourceDir.path}/web/lib/polymer_ui/spark_polymer_ui.html");
 
   runDartScript(context, 'packages/polymer/deploy.dart',
       arguments: ['--out', '../../${destDir.path}'],
@@ -504,6 +514,7 @@ void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   if (result.stdout.isNotEmpty) {
     context.log(result.stdout);
   }
+
   if (result.stderr.isNotEmpty) {
     context.log(result.stderr);
   }
