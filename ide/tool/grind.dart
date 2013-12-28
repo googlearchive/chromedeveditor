@@ -245,15 +245,14 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
 
-  // HACK(ussuri): This is really ugly. Replace "../../packages/" parts in
-  // <link rel="import"> in spark_polymer_ui.html with just "packages".
+  // HACK(ussuri): This is really ugly. We're replacing "../../packages/" parts
+  // in all <link rel="import"> in spark_polymer_ui.html with just "packages".
   // deploy.dart can't find the imports any other way, but we still need
   // the "../../" when debugging the uncompiled app. This is supposed to be
   // resolved in Dart/Polymer at some point (?).
-  _runCommandSync(
-      context,
-      "perl -i -pe 's[\.\./\.\./packages][packages]g' "
-          "${sourceDir.path}/web/lib/polymer_ui/spark_polymer_ui.html");
+  _patchHtmlPackageImports(
+      joinFile(sourceDir, ['web', 'lib', 'polymer_ui', 'spark_polymer_ui.html']),
+      context);
 
   runDartScript(context, 'packages/polymer/deploy.dart',
       arguments: ['--out', '../../${destDir.path}'],
@@ -308,6 +307,22 @@ void _patchDartJsInterop(GrinderContext context) {
 
     file.writeAsStringSync(contents.replaceFirst(matchString, replaceString));
   }
+}
+
+/**
+ * This patches spark_polymer_ui.html to pacify `polymer/deploy.dart`.
+ */
+void _patchHtmlPackageImports(File file, GrinderContext context) {
+  context.log('Patching ${fileName(file)}');
+
+  final matchString = '../../packages';
+  final replaceString = 'packages';
+
+  String contents = file.readAsStringSync();
+  if (!contents.contains(matchString)) {
+    print('${fileName(file)} no longer needs fixing: remove this step');
+  }
+  file.writeAsStringSync(contents.replaceAll(matchString, replaceString));
 }
 
 void _changeMode({bool useTestMode: true}) {
