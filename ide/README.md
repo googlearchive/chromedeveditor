@@ -16,7 +16,7 @@ You **need** to enable experimental Web Platform features in Chrome. From
 The main entry point to the Chrome App is `app/manifest.json`. It defines
 the background script for the application (`app/background.js`). This script
 gets invoked when the application starts. It opens a new window with the contents
-set to the `app/spark.html` file. This file in turn runs `app/spark.dart`.
+set to the `app/spark_polymer.html` file. This file in turn runs `app/spark_polymer.dart`.
 
 ### Dependencies
 Dependencies need to be fetched first, using [pub](http://pub.dartlang.org).
@@ -39,7 +39,7 @@ to copy library code from packages/ to app/packages/. This step also copies the
 `dart:` code from the Dart SDK into the `app/sdk` directory.
 
 ### Lib
-All the Dart code for the application (modulo the spark.dart entry point)
+All the Dart code for the application (modulo the spark_polymer.dart entry point)
 lives in the `app/lib` directory.
 
 ### API Documentation

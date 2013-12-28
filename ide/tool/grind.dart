@@ -61,7 +61,7 @@ void setup(GrinderContext context) {
  * Compile the two Spark entry-points.
  */
 void compile(GrinderContext context) {
-  _dart2jsCompile(context, new Directory('app'), 'spark.dart');
+  _dart2jsCompile(context, new Directory('app'), 'spark_polymer.dart');
 }
 
 /**
@@ -76,7 +76,7 @@ void deploy(GrinderContext context) {
 
   // TODO: Do we need to compile both of these?
   _dart2jsCompile(context, joinDir(destDir, ['web']),
-      'spark.html_bootstrap.dart', true);
+      'spark_polymer.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer.html_bootstrap.dart', true);
 }
@@ -164,7 +164,7 @@ void docs(GrinderContext context) {
                     '--include-lib', 'spark,spark.ace,spark.utils,spark.preferences,spark.workspace,spark.sdk',
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
-                    'app/spark.dart']);
+                    'app/spark_polymer.dart']);
     _zip(context, 'docs', '../${DIST_DIR.path}/spark-docs.zip');
   }
 }
@@ -240,7 +240,7 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
   copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
-  deleteEntity(joinFile(destDir, ['web', 'spark.dart.precompiled.js']), context);
+  deleteEntity(joinFile(destDir, ['web', 'spark_polymer.dart.precompiled.js']), context);
   deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');

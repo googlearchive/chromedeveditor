@@ -96,11 +96,11 @@ class PrintProfiler {
  * stack trace several thousand chars long, this tries to return one that can
  * meaningfully fit into several hundred chars. So, it converts something like:
  *
- *     "#0      newFile (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart:157:7)\n"
+ *     "#0      newFile (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark_polymer.dart:157:7)\n"
  *
  * into:
  *
- *     newFile spark.dart:157
+ *     newFile spark_polymer.dart:157
  */
 String minimizeStackTrace(StackTrace st) {
   if (st == null) return '';
@@ -139,12 +139,12 @@ String minimizeStackTrace(StackTrace st) {
 final RegExp DARTIUM_REGEX = new RegExp(r'#\d+\s+([\S ]+) \((\S+)\)');
 
 // A sample stack trace from dart2js/chrome:
-//  at Object.wrapException (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:2646:13)
-//  at UnknownJavaScriptObject.Interceptor.noSuchMethod$1 (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:442:13)
-//  at UnknownJavaScriptObject.Object.$index (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:20740:17)
-//  at Object.J.$index$asx (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:157983:41)
-//  at Object.CrEntry_CrEntry$fromProxy (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:7029:14)
-//  at Closure$0._asyncRunCallback [as call$0] (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart.precompiled.js:15853:18)
+//  at Object.wrapException (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark_polymer.dart.precompiled.js:2646:13)
+//  at UnknownJavaScriptObject.Interceptor.noSuchMethod$1 (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark_polymer.dart.precompiled.js:442:13)
+//  at UnknownJavaScriptObject.Object.$index (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark_polymer.dart.precompiled.js:20740:17)
+//  at Object.J.$index$asx (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark_polymer.dart.precompiled.js:157983:41)
+//  at Object.CrEntry_CrEntry$fromProxy (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark_polymer.dart.precompiled.js:7029:14)
+//  at Closure$0._asyncRunCallback [as call$0] (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark_polymer.dart.precompiled.js:15853:18)
 
 // Matches any string line "at, 1 space, non-ws, 1 space, (, non-ws, )".
 final RegExp DART2JS_REGEX_1 = new RegExp(r'at (\S+) \((\S+)\)');

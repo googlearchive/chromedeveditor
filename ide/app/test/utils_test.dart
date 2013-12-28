@@ -26,17 +26,17 @@ defineTests() {
     });
 
     test('dart2js stack trace', () {
-      final line = 'at Object.wrapException (chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13)';
+      final line = 'at Object.wrapException (chrome-extension://aadcannocln/spark_polymer.dart.precompiled.js:2646:13)';
       Match match = DART2JS_REGEX_1.firstMatch(line);
       expect(match.group(1), 'Object.wrapException');
-      expect(match.group(2), 'chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13');
+      expect(match.group(2), 'chrome-extension://aadcannocln/spark_polymer.dart.precompiled.js:2646:13');
     });
 
     test('dart2js stack trace alternative', () {
-      final line = r'at Object.wrapException [as call$0] (chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13)';
+      final line = r'at Object.wrapException [as call$0] (chrome-extension://aadcannocln/spark_polymer.dart.precompiled.js:2646:13)';
       Match match = DART2JS_REGEX_2.firstMatch(line);
       expect(match.group(1), 'Object.wrapException');
-      expect(match.group(3), 'chrome-extension://aadcannocln/spark.dart.precompiled.js:2646:13');
+      expect(match.group(3), 'chrome-extension://aadcannocln/spark_polymer.dart.precompiled.js:2646:13');
     });
 
     test('minimizeStackTrace', () {
