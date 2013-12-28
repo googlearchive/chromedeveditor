@@ -163,7 +163,7 @@
   margin-left: -256px;
 }
 
-#deleteDialog, #fileNewDialog, #renameDialog {
+#deleteDialog, #renameDialog {
   width: 412px;
 }
 
@@ -285,24 +285,6 @@
         </spark-button>
       </div>
     </spark-modal>
-
-    <!-- New File dialog -->
-    <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
-      <div class="modal-body">
-        <p>
-          File name: <input id="fileNewName" type="text" focused>
-        </p>
-      </div>
-      <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
-        </spark-button>
-        <spark-button id="fileNewOkButton" overlay-toggle primary
-            data-dismiss="modal">
-          Create
-        </spark-button>
-      </div>
-    </spark-overlay>
 
     <!-- New Folder dialog -->
     <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
