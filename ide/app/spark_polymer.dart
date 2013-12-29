@@ -13,7 +13,7 @@ import 'package:polymer/polymer.dart' as polymer;
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
 
-import 'lib/polymer_ui/spark_polymer_ui.dart';
+import 'spark_polymer_ui.dart';
 
 import 'spark.dart';
 
