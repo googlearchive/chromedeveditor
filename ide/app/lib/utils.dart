@@ -100,7 +100,7 @@ class PrintProfiler {
  *
  * into:
  *
- *     newFile spark_polymer.dart:157
+ *     newFile spark.dart:157
  */
 String minimizeStackTrace(StackTrace st) {
   if (st == null) return '';
@@ -139,7 +139,7 @@ String minimizeStackTrace(StackTrace st) {
 final RegExp DARTIUM_REGEX = new RegExp(r'#\d+\s+([\S ]+) \((\S+)\)');
 
 // A sample stack trace from dart2js/chrome:
-//  at Object.wrapException (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark_.dart.precompiled.js:2646:13)
+//  at Object.wrapException (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:2646:13)
 //  at UnknownJavaScriptObject.Interceptor.noSuchMethod$1 (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:442:13)
 //  at UnknownJavaScriptObject.Object.$index (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:20740:17)
 //  at Object.J.$index$asx (chrome-extension://aadcannncidoiihkmomkaknobobnocln/spark.dart.precompiled.js:157983:41)
