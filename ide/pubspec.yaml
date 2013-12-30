@@ -25,7 +25,8 @@ dependency_overrides:
   path: '>=1.0.0'
 dev_dependencies:
   args: any
-  grinder: '>=0.4.4'
+  grinder: '>=0.4.5'
 transformers:
 - polymer:
     entry_points: web/spark_polymer.html
+    csp: true
