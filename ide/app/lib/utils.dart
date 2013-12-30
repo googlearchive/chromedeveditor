@@ -96,7 +96,7 @@ class PrintProfiler {
  * stack trace several thousand chars long, this tries to return one that can
  * meaningfully fit into several hundred chars. So, it converts something like:
  *
- *     "#0      newFile (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark_polymer.dart:157:7)\n"
+ *     "#0      newFile (chrome-extension://ldgidbpjipgjnfimmhbmjbebaffmmdjc/spark.dart:157:7)\n"
  *
  * into:
  *

@@ -58,10 +58,12 @@ void setup(GrinderContext context) {
 }
 
 /**
- * Compile the two Spark entry-points.
+ * Compile the Spark non-Polymer entry-point. This step will be removed soon in
+ * favor of the Polymer-oriented [deploy].
  */
+@deprecated
 void compile(GrinderContext context) {
-  _dart2jsCompile(context, new Directory('app'), 'spark_polymer.dart');
+  _dart2jsCompile(context, new Directory('app'), 'spark.dart');
 }
 
 /**
@@ -74,11 +76,13 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  // TODO: Do we need to compile both of these?
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer.html_bootstrap.dart', true);
+  // TODO(ussuri): this is needed only in the interim while we still want to
+  // switch back to non-Polymer UI for reference. Remove this once the
+  // switchover to Polymer is complete.
   _dart2jsCompile(context, joinDir(destDir, ['web']),
-      'spark_polymer.html_bootstrap.dart', true);
+      'spark.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
