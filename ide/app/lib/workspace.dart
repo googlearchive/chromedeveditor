@@ -57,6 +57,7 @@ class Workspace implements Container {
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
+  int findMaxProblemSeverity(String type) => -1;
 
   /**
    * Adds a chrome entry and its children to the workspace.
@@ -158,19 +159,22 @@ class Workspace implements Container {
     }
   }
 
+  //TODO: add sync resources too
   List<Resource> getChildren() => _localChildren;
 
   Iterable<Resource> traverse() => Resource._workspaceTraversal(this);
 
+  //TODO: add sync resources too
   List<File> getFiles() => _localChildren.where((c) => c is File).toList();
 
+  //TODO: add sync resources too
   List<Project> getProjects() => _localChildren.where((c) => c is Project).toList();
 
   Stream<ResourceChangeEvent> get onResourceChange => _resourceController.stream;
 
   Stream<MarkerChangeEvent> get onMarkerChange => _markerController.stream;
 
-  void _fireEvent(ResourceChangeEvent event) => _resourceController.add(event);
+  void _fireResourceEvent(ResourceChangeEvent event) => _resourceController.add(event);
 
   void _fireMarkerEvent(MarkerChangeEvent event) => _markerController.add(event);
 
@@ -222,20 +226,6 @@ class Workspace implements Container {
   void clearMarkers() {
     // TODO: add sync resources too
     return getChildren().forEach((c) => c.clearMarkers());
-  }
-
-  int findMaxProblemSeverity(Resource target, String type) {
-    int maxSeverity = -1;
-    target.traverse().where((r) => r.isFile).forEach((File file) {
-      file.getMarkers().where((marker) => marker.type == type).
-        forEach((marker) {
-            maxSeverity = max(maxSeverity, marker.severity);
-            if (maxSeverity == Marker.SEVERITY_ERROR) {
-              return maxSeverity;
-            }
-        });
-     });
-    return maxSeverity;
   }
 
   Future<Resource> _gatherChildren(Container container) {
@@ -358,7 +348,7 @@ class Workspace implements Container {
       _syncChildren.remove(resource);
     }
    if (fireEvent) {
-     _fireEvent(new ResourceChangeEvent.fromSingle(
+     _fireResourceEvent(new ResourceChangeEvent.fromSingle(
          new ChangeDelta(resource, EventType.DELETE)));
    }
   }
@@ -397,7 +387,7 @@ abstract class Container extends Resource {
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     _localChildren.remove(resource);
     if (fireEvent) {
-      _fireEvent(new ResourceChangeEvent.fromSingle(
+      _fireResourceEvent(new ResourceChangeEvent.fromSingle(
           new ChangeDelta(resource, EventType.DELETE)));
     }
   }
@@ -433,7 +423,7 @@ abstract class Resource {
 
   Container get parent => _parent;
 
-  void _fireEvent(ResourceChangeEvent event) => _parent._fireEvent(event);
+  void _fireResourceEvent(ResourceChangeEvent event) => _parent._fireResourceEvent(event);
 
   void _fireMarkerEvent(MarkerChangeEvent event) => _parent._fireMarkerEvent(event);
 
@@ -445,7 +435,7 @@ abstract class Resource {
       list.add(new ChangeDelta(this, EventType.DELETE));
       _entry = e;
       list.add(new ChangeDelta(this, EventType.ADD));
-      _fireEvent(new ResourceChangeEvent.fromList(list));
+      _fireResourceEvent(new ResourceChangeEvent.fromList(list));
     });
   }
 
@@ -480,6 +470,20 @@ abstract class Resource {
     _fireMarkerEvent(new MarkerChangeEvent(this, null,EventType.DELETE));
   }
 
+  int findMaxProblemSeverity(String type) {
+    int maxSeverity = -1;
+    traverse().where((r) => r.isFile).forEach((File file) {
+      file.getMarkers().where((marker) => marker.type == type).
+        forEach((marker) {
+            maxSeverity = max(maxSeverity, marker.severity);
+            if (maxSeverity == Marker.SEVERITY_ERROR) {
+              return maxSeverity;
+            }
+        });
+     });
+    return maxSeverity;
+  }
+
   /**
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
@@ -507,7 +511,7 @@ class Folder extends Container {
     return _dirEntry.createFile(name).then((entry) {
       File file = new File(this, entry);
       _localChildren.add(file);
-      _fireEvent(new ResourceChangeEvent.fromSingle(
+      _fireResourceEvent(new ResourceChangeEvent.fromSingle(
           new ChangeDelta(file, EventType.ADD)));
       return file;
     });
@@ -517,7 +521,7 @@ class Folder extends Container {
     return _dirEntry.createDirectory(name).then((entry) {
       Folder folder = new Folder(this, entry);
       _localChildren.add(folder);
-      _fireEvent(new ResourceChangeEvent.fromSingle(
+      _fireResourceEvent(new ResourceChangeEvent.fromSingle(
           new ChangeDelta(folder, EventType.ADD)));
       return folder;
     });
@@ -544,7 +548,7 @@ class File extends Resource {
 
   Future setContents(String contents) {
     return _fileEntry.writeText(contents).then((_) {
-      workspace._fireEvent(new ResourceChangeEvent.fromSingle(
+      workspace._fireResourceEvent(new ResourceChangeEvent.fromSingle(
           new ChangeDelta(this, EventType.CHANGE)));
     });
   }
@@ -556,12 +560,12 @@ class File extends Resource {
   Future setBytes(List<int> data) {
     chrome.ArrayBuffer bytes = new chrome.ArrayBuffer.fromBytes(data);
     return _fileEntry.writeBytes(bytes).then((_) {
-      workspace._fireEvent(new ResourceChangeEvent.fromSingle(
+      workspace._fireResourceEvent(new ResourceChangeEvent.fromSingle(
           new ChangeDelta(this, EventType.CHANGE)));
     });
   }
 
-  void createMarker(Type type, int severity, String message, int lineno, [int start = -1, int end = -1]) {
+  void createMarker(String type, int severity, String message, int lineno, [int start = -1, int end = -1]) {
     Marker marker = new Marker(this, type, severity, message, lineno, start, end);
     _markers.add(marker);
     _fireMarkerEvent(new MarkerChangeEvent(this, marker, EventType.ADD));
@@ -713,13 +717,13 @@ class Marker {
    */
   static const SEVERITY_INFO = 0;
 
-  Marker(this.file, Type type, int severity, String message, int lineNo, [int char_start=-1, int char_end=-1]) {
+  Marker(this.file, String type, int severity, String message, int lineNum, [int charStart=-1, int charEnd=-1]) {
     _attributes[TYPE] = type;
     _attributes[SEVERITY] = severity;
     _attributes[MESSAGE] = message;
-    _attributes[LINE_NO] = lineNo;
-    _attributes[CHAR_START] = char_start;
-    _attributes[CHAR_END] = char_end;
+    _attributes[LINE_NO] = lineNum;
+    _attributes[CHAR_START] = charStart;
+    _attributes[CHAR_END] = charEnd;
 
   }
 
@@ -729,7 +733,7 @@ class Marker {
 
   String get message => _attributes[MESSAGE];
 
-  int get lineno => _attributes[LINE_NO];
+  int get lineNum => _attributes[LINE_NO];
 
   int get charStart => _attributes[CHAR_START];
 
@@ -741,22 +745,6 @@ class Marker {
 
 }
 
-/**
- * Indicates the type of the [Marker], whether it is associated with dart, html or js.
- */
-class Type {
-
-  final String type;
-
-  const Type._(this.type);
-
-  static const Type DART = const Type._('dart');
-
-  static const Type HTML = const Type._('html');
-
-  static const Type JS = const Type._('js');
-
-}
 
 /**
  * Used to indicates changes to markers

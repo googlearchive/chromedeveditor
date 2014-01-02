@@ -249,11 +249,11 @@ defineTests() {
 
       return workspace.link(projectDir).then((project) {
         ws.File file = project.getChild('myApp.dart');
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
         var markers = file.getMarkers();
         expect(markers.length, 1);
         expect(markers.first.file, file);
-        expect(markers.first.type, ws.Type.DART);
+        expect(markers.first.type, 'dart');
         expect(markers.first.severity, ws.Marker.SEVERITY_ERROR);
         return future;
       });
@@ -268,20 +268,20 @@ defineTests() {
 
       return workspace.link(projectDir).then((project) {
         ws.File file = project.getChild('myApp.dart');
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_ERROR, 'error marker', 2);
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_WARNING, 'dart warning marker', 6);
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'dart warning marker', 6);
         var markers = file.getMarkers();
         expect(markers.length, 2);
         expect(markers.first.file, file);
-        expect(markers.first.type, ws.Type.DART);
+        expect(markers.first.type, 'dart');
         expect(markers.first.severity, ws.Marker.SEVERITY_ERROR);
         ws.File htmlFile = project.getChild('index.html');
-        htmlFile.createMarker(ws.Type.HTML, ws.Marker.SEVERITY_WARNING, 'warning marker', 5);
-        htmlFile.createMarker(ws.Type.HTML, ws.Marker.SEVERITY_INFO, 'info', 3);
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_WARNING, 'warning marker', 5);
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_INFO, 'info', 3);
         markers = htmlFile.getMarkers();
         expect(markers.length, 2);
         expect(markers.first.file, htmlFile);
-        expect(markers.first.type, ws.Type.HTML);
+        expect(markers.first.type, 'html');
         expect(markers.first.severity, ws.Marker.SEVERITY_WARNING);
         markers = project.getMarkers();
         expect(markers.length, 4);
@@ -306,7 +306,7 @@ defineTests() {
 
       return workspace.link(projectDir).then((project) {
         ws.File file = project.getChild('myApp.dart');
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
         var markers = file.getMarkers();
         expect(markers.length, 1);
         file.clearMarkers();
@@ -326,18 +326,18 @@ defineTests() {
 
       return workspace.link(projectDir).then((project) {
         ws.File file = project.getChild('myApp.dart');
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_ERROR, 'error marker', 2);
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_WARNING, 'dart warning marker', 6);
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'dart warning marker', 6);
         ws.File htmlFile = project.getChild('index.html');
-        htmlFile.createMarker(ws.Type.HTML, ws.Marker.SEVERITY_WARNING, 'warning marker', 5);
-        htmlFile.createMarker(ws.Type.HTML, ws.Marker.SEVERITY_INFO, 'info', 3);
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_WARNING, 'warning marker', 5);
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_INFO, 'info', 3);
         file = project.getChild('myLib.dart');
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_WARNING, 'dart warning', 3);
-        file.createMarker(ws.Type.DART, ws.Marker.SEVERITY_INFO, 'dart info marker', 4);
+        file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'dart warning', 3);
+        file.createMarker('dart', ws.Marker.SEVERITY_INFO, 'dart info marker', 4);
 
-        int severity = workspace.findMaxProblemSeverity(project, ws.Type.DART);
+        int severity = project.findMaxProblemSeverity('dart');
         expect(severity, ws.Marker.SEVERITY_ERROR);
-        severity = workspace.findMaxProblemSeverity(project, ws.Type.HTML);
+        severity = project.findMaxProblemSeverity('html');
         expect(severity, ws.Marker.SEVERITY_WARNING);
 
       });
