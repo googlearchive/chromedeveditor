@@ -235,11 +235,12 @@ class Workspace implements Container {
       file.getMarkers().where((marker) => marker.type == type).
         forEach((marker) {
             maxSeverity = max(maxSeverity, marker.severity);
-            if (maxSeverity == Severity.ERROR) {
+            if (maxSeverity == Marker.SEVERITY_ERROR) {
               return maxSeverity;
             }
         });
      });
+    return maxSeverity;
   }
 
   Future<Resource> _gatherChildren(Container container) {
@@ -472,8 +473,10 @@ abstract class Resource {
    * Returns a [List] of [Marker] from all the [Resources] in the [Container].
    */
   List<Marker> getMarkers() {
-    return traverse().where((r) => r.isFile)
-        .map((f) => f.getMarkers()).toList();
+    List<Marker> markers = [];
+    traverse().where((r) => r.isFile)
+      .forEach((f) => markers.addAll(f.getMarkers()));
+    return markers;
   }
 
   void clearMarkers() {
@@ -563,7 +566,7 @@ class File extends Resource {
     });
   }
 
-  void createMarker(Type type, Severity severity, String message, int lineno, [int start = -1, int end = -1]) {
+  void createMarker(Type type, int severity, String message, int lineno, [int start = -1, int end = -1]) {
     Marker marker = new Marker(this, type, severity, message, lineno, start, end);
     _markers.add(marker);
     _fireMarkerEvent(new MarkerChangeEvent(this, marker, EventType.ADD));
@@ -666,7 +669,7 @@ class Marker {
   /**
    * Stores all the attributes of the marker - severity, line number etc.
    */
-  Map<String, dynamic> _attributes;
+  Map<String, dynamic> _attributes = new Map();
 
   /**
    * Key for type of marker, based on type of file association - html,
@@ -675,7 +678,7 @@ class Marker {
   static const String TYPE = "type";
 
   /**
-   * Key for [Severity] of the marker, from the set of error, warning and info
+   * Key for severity of the marker, from the set of error, warning and info
    * severities.
    */
   static const String SEVERITY = "severity";
@@ -700,7 +703,22 @@ class Marker {
    */
   static const String CHAR_END = "charEnd";
 
-  Marker(this.file, Type type, Severity severity, String message, int lineNo, [int char_start=-1, int char_end=-1]) {
+  /**
+   * The severity of the marker, error being the highest severity
+   */
+  static const int SEVERITY_ERROR = 2;
+
+  /**
+   * Indicates maker is a warning.
+   */
+  static const SEVERITY_WARNING = 1;
+
+  /**
+   * Indicates marker is informational.
+   */
+  static const SEVERITY_INFO = 0;
+
+  Marker(this.file, Type type, int severity, String message, int lineNo, [int char_start=-1, int char_end=-1]) {
     _attributes[TYPE] = type;
     _attributes[SEVERITY] = severity;
     _attributes[MESSAGE] = message;
@@ -725,23 +743,6 @@ class Marker {
   void addAttribute(String key, dynamic value) => _attributes[key] = value;
 
   dynamic getAttribute(String key) => _attributes[key];
-
-}
-
-
-/**
- * Indicates the severity of the [Marker] - whether it is an error, warning or information.
- */
-class Severity {
-  final int severity;
-
-  const Severity._(this.severity);
-
-  static const Severity ERROR = const Severity._(0);
-
-  static const Severity WARNING = const Severity._(1);
-
-  static const Severity INFO = const Severity._(2);
 
 }
 
