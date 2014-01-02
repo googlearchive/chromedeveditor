@@ -32,10 +32,18 @@ class SparkPolymerDialog implements SparkDialog {
   widgets.SparkOverlay _dialogElement;
 
   SparkPolymerDialog(Element dialogElement)
-      : _dialogElement = dialogElement;
+      : _dialogElement = dialogElement {
+    // TODO(ussuri): Encapsulate backdrop in SparkOverlay.
+    _dialogElement.on['opened'].listen((event) {
+      var appModal = querySelector("#modalBackdrop");
+      appModal.style.display = event.detail ? "block" : "none";
+    });
+  }
 
   void show() => _dialogElement.toggle();
 
+  // TODO(ussuri): Currently, this never gets called (the dialog closes in
+  // another way). Make symmetrical when merging Polymer and non-Polymer.
   void hide() => _dialogElement.toggle();
 
   Element get element => _dialogElement;
@@ -75,6 +83,9 @@ class SparkPolymer extends Spark {
 
   @override
   void createEditorComponents() => super.createEditorComponents();
+
+  @override
+  void initActivitySpinner() => super.initActivitySpinner();
 
   @override
   void initEditorManager() => super.initEditorManager();

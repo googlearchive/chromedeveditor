@@ -16,7 +16,7 @@ class SparkOverlay extends Widget {
   // TODO(sorvell): need keyhelper component.
   static final int ESCAPE_KEY = 27;
 
-  // track overlays for z-index and focus managemant
+  // Track overlays for z-index and focus managemant.
   static List overlays = [];
   static void trackOverlays(inOverlay) {
     if (inOverlay.opened) {
@@ -47,7 +47,7 @@ class SparkOverlay extends Widget {
     return overlays.isNotEmpty ? overlays.last : null;
   }
 
-  static int DEFAULT_Z = 10;
+  static int DEFAULT_Z = 1000;
 
   static currentOverlayZ() {
     var z = DEFAULT_Z;
@@ -66,7 +66,15 @@ class SparkOverlay extends Widget {
     }
   }
 
-  SparkOverlay.created(): super.created();
+  // Function closures aren't canonicalized: need to have one pointer for the
+  // listener's handler that is added/removed.
+  EventListener _captureHandler;
+  EventListener _resizeHandler;
+
+  SparkOverlay.created(): super.created() {
+    _captureHandler = captureHandler;
+    _resizeHandler = resizeHandler;
+  }
 
   /**
    * Set opened to true to show an overlay and to false to hide it.
@@ -111,9 +119,9 @@ class SparkOverlay extends Widget {
 
   void enableResizeHandler(inEnable) {
     if (inEnable) {
-      window.addEventListener('resize', resizeHandler);
+      window.addEventListener('resize', _resizeHandler);
     } else {
-      window.removeEventListener('resize', resizeHandler);
+      window.removeEventListener('resize', _resizeHandler);
     }
   }
 
@@ -124,9 +132,9 @@ class SparkOverlay extends Widget {
     //              var doc = getShadowRoot('spark-overlay');
     var doc = document;
     if (inEnable) {
-      doc.addEventListener(captureEventType, captureHandler, true);
+      doc.addEventListener(captureEventType, _captureHandler, true);
     } else {
-      doc.removeEventListener(captureEventType, captureHandler, true);
+      doc.removeEventListener(captureEventType, _captureHandler, true);
     }
   }
 
@@ -220,7 +228,6 @@ class SparkOverlay extends Widget {
   bool pointInOverlay(SparkOverlay overlay, Point xyGlobal) {
     return overlay.offset.containsPoint(xyGlobal);
   }
-
 
   void keydownHandler(KeyboardEvent e) {
     if (!autoCloseDisabled && (e.keyCode == ESCAPE_KEY)) {

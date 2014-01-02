@@ -9,6 +9,7 @@
 <link rel="import" href="../../packages/spark_widgets/spark-icon-button/spark-icon-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-button/spark-menu-button.html">
 <link rel="import" href="../../packages/spark_widgets/spark-menu-item/spark-menu-item.html">
+<link rel="import" href="../../packages/spark_widgets/spark-modal/spark-modal.html">
 <link rel="import" href="../../packages/spark_widgets/spark-overlay/spark-overlay.html">
 <link rel="import" href="../../packages/spark_widgets/spark-splitter/spark-splitter.html">
 <link rel="import" href="../../packages/spark_widgets/spark-toolbar/spark-toolbar.html">
@@ -118,21 +119,6 @@
   position: relative;
 }
 
-/*
-#toolbar {
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-}
-
-#toolbar spark-button {
-  outline: none;
-}
-*/
-
-#hotdogMenu li {
-  min-width: 16em;
-}
-
 #file-item-context-menu {
   top: 0;
   left: 0;
@@ -152,25 +138,6 @@
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0);
-}
-
-/* bootstrap overrides */
-/*
-#toolbar .btn {
-  margin: 0px 2px 0px 2px;
-  padding: 2px 8px 2px 8px;
-}
-*/
-
-#hotdogMenu .main-menu-button {
-  background-image: url(../../images/menu.png);
-  background-position: -1px -2px;
-  height: 26px;
-  width: 26px;
-}
-
-#hotdogMenu .main-menu-button:focus {
-  background-color: white;
 }
 
 #editedFilename {
@@ -196,7 +163,11 @@
   margin-left: -256px;
 }
 
-#deleteDialog, #fileNewDialog, #renameDialog {
+.spark-overlay-scale-slideup input {
+  width: 100%;
+}
+
+#deleteDialog, #renameDialog, #gitCloneDialog {
   width: 412px;
 }
 
@@ -229,7 +200,7 @@
 */
     </style>
 
-    <spark-toolbar id="toolbar" color="white">
+    <spark-toolbar id="toolbar" color="white" lightdom>
       <spark-icon-button id="openFile" src="images/open.png"></spark-icon-button>
       <spark-icon-button id="newFile" src="images/add.png"></spark-icon-button>
 
@@ -237,12 +208,13 @@
 
       <div id="toolbarRight">
         <span id="editedFilename"></span>
+        <i id="activitySpinner" class="fa fa-spinner fa-spin"></i>
 
-        <spark-menu-button id="hotdogMenuNew" 
-            src="../../images/menu.png" 
-            responsive="true" 
-            selected="1" 
-            valueattr="action-id" 
+        <spark-menu-button id="hotdogMenuNew"
+            src="../../images/menu.png"
+            responsive="true"
+            selected="1"
+            valueattr="action-id"
             valign="right"
             on-activate={{onMenuSelected}}>
           <spark-menu-item action-id="file-open" iconsize=0 label="Open File...">
@@ -303,7 +275,7 @@
     </div>
 
     <!-- Delete File dialog -->
-    <spark-overlay id="deleteDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="deleteDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p id="message"></p>
       </div>
@@ -316,7 +288,7 @@
           Delete
         </spark-button>
       </div>
-    </spark-overlay>
+    </spark-modal>
 
     <!-- New File dialog -->
     <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
@@ -371,15 +343,15 @@
     </spark-overlay>
 
     <!-- Git Clone dialog -->
-    <spark-overlay id="gitCloneDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="gitCloneDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal"
             aria-hidden="true">&times;</spark-button>
         <h4 class="modal-title">New Git Project</h4>
       </div>
       <div class="modal-body">
-        Project Name: <input id="gitProjectName" type="text" focused></input><br/><br/>
-        Repository URL: <input id="gitRepoUrl" type="text"></input>
+        Project Name: <input id="gitProjectName" type="text" focused><br/><br/>
+        Repository URL: <input id="gitRepoUrl" type="text">
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
@@ -390,10 +362,10 @@
           Clone
         </spark-button>
       </div>
-    </spark-overlay><!-- /.modal -->
+    </spark-modal><!-- /.modal -->
 
     <!-- About dialog -->
-    <spark-overlay id="aboutDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="aboutDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <h4 class="modal-title">Spark</h4>
       </div>
@@ -414,7 +386,7 @@
           Close
         </spark-button>
       </div>
-    </spark-overlay><!-- /.modal -->
+    </spark-modal><!-- /.modal -->
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>

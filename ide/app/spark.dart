@@ -25,6 +25,7 @@ import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
+import 'lib/jobs.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
@@ -85,6 +86,9 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   final bool developerMode;
 
+  final JobManager jobManager = new JobManager();
+  ActivitySpinner _activitySpinner;
+
   AceContainer _aceContainer;
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
@@ -120,6 +124,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     });
 
     initWorkspace();
+
+    initActivitySpinner();
 
     createEditorComponents();
     initEditorArea();
@@ -231,6 +237,16 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         getUIElement('#editedFilename'),
         editorManager,
         allowsLabelBar: true);
+  }
+
+  void initActivitySpinner() {
+    _activitySpinner = new ActivitySpinner(this, id: '#activitySpinner');
+    _activitySpinner.setShowing(false);
+
+    // TODO: This might cause the spinner to "blink" between jobs.
+    jobManager.onChange.listen((JobManagerEvent event) {
+      _activitySpinner.setShowing(!event.finished);
+    });
   }
 
   void initEditorManager() {
@@ -525,7 +541,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   Future applicationStarted(Application application) {
     if (spark.developerMode) {
       spark._testDriver = new TestDriver(
-          all_tests.defineTests, connectToTestListener: true);
+          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
     }
   }
 
@@ -534,6 +550,19 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
+  }
+}
+
+// TODO: This should be moved into the ui/ directory.
+class ActivitySpinner {
+  Element element;
+
+  ActivitySpinner(Spark spark, {String id}) {
+    element = spark.getUIElement(id);
+  }
+
+  void setShowing(bool showing) {
+    element.style.opacity = showing ? '1' : '0';
   }
 }
 
@@ -921,28 +950,47 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    _gitClone(_projectNameElement.value, _repoUrlElement.value, spark);
+    _GitCloneJob job = new _GitCloneJob(
+        _projectNameElement.value, _repoUrlElement.value, spark);
+    spark.jobManager.schedule(job);
   }
+}
 
-  void _gitClone(String projectName, String url, Spark spark) {
+class _GitCloneJob extends Job {
+  String projectName;
+  String url;
+  Spark spark;
+
+  _GitCloneJob(this.projectName, this.url, this.spark)
+      : super("Cloning …");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    Completer completer = new Completer();
+
     getGitTestFileSystem().then((chrome_files.CrFileSystem fs) {
-      fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+      return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         GitOptions options = new GitOptions();
         options.root = dir;
         options.repoUrl = url;
         options.depth = 1;
         options.store = new ObjectStore(dir);
         Clone clone = new Clone(options);
-        options.store.init().then((_) {
-          clone.clone().then((_) {
-            spark.workspace.link(dir).then((folder) {
-              spark._filesController.selectFile(folder);
+        return options.store.init().then((_) {
+          return clone.clone().then((_) {
+            return spark.workspace.link(dir).then((folder) {
+              Timer.run(() {
+                spark._filesController.selectFile(folder);
+              });
               spark.workspace.save();
             });
           });
         });
       });
-    });
+    }).whenComplete(() => completer.complete(this));
+
+    return completer.future;
   }
 }
 

@@ -18,25 +18,6 @@ defineTests() {
       expect(i18n('not_found'), '');
     });
 
-    test('baseName', () {
-      expect(baseName('foo'), 'foo');
-      expect(baseName('foo/bar'), 'bar');
-      expect(baseName('foo/bar/baz'), 'baz');
-    });
-
-    test('dirName', () {
-      expect(dirName('foo'), null);
-      expect(dirName('foo/bar'), 'foo');
-      expect(dirName('foo/bar/baz'), 'foo/bar');
-    });
-
-    test('fileExt', () {
-      expect(fileExt('filename'), null);
-      expect(fileExt('filename.dart'), 'dart');
-      expect(fileExt('bar/filename.dart'), 'dart');
-      expect(fileExt('foo/bar/filename.dart'), 'dart');
-    });
-
     test('dartium stack trace', () {
       final line = '#0      main.foo (chrome-extension://ldgidbpjc/test/utils_test.dart:35:9)';
       Match match = DARTIUM_REGEX.firstMatch(line);
