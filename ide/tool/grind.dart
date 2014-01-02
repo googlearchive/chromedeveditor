@@ -24,13 +24,13 @@ void main([List<String> args]) {
   defineTask('compile', taskFunction: compile, depends : ['setup']);
   defineTask('deploy', taskFunction: deploy, depends : ['setup']);
 
-  defineTask('docs', taskFunction : docs, depends : ['setup']);
+  defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
-  defineTask('archive', taskFunction : archive, depends : ['mode-notest', 'compile']);
+  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'compile']);
   
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
-    defineTask('release', taskFunction : release, depends : ['mode-notest', 'compile']);
+    defineTask('release', taskFunction: release, depends : ['mode-notest', 'compile']);
     defineTask('release-nightly',
                taskFunction : releaseNighly,
                depends : ['mode-notest', 'compile']);
