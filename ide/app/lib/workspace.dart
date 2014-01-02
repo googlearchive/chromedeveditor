@@ -41,11 +41,6 @@ class Workspace implements Container {
   StreamController<MarkerChangeEvent> _markerController =
       new StreamController.broadcast();
 
-  // controls whether to post maker event or queue them up for later posting
-  bool _postMakerEvents = true;
-
-  List<MarkerChangeEvent> _markerEvents = [];
-
   Workspace([this._store]);
 
   Future<Workspace> whenAvailable() => _whenAvailable.future;
