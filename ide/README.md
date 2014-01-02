@@ -26,9 +26,8 @@ Run:
     pub get
 
 ### Packages
-Chrome apps do not like symlinks. There's a Chrome bug about this, but for now
-symlinks are right out. We use pub and a pubspec.yaml to provision our
-package dependencies. We then physically copy all the packages into the
+Chrome apps do not like symlinks. We use pub and a pubspec.yaml to provision our
+package dependencies, but we then physically copy all the packages into the
 app/packages directory. This is not a normal symlinked pub directory but has the
 same layout as one.
 
