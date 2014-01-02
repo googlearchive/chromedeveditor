@@ -8,7 +8,7 @@ fi
 pub get 
 
 # Build the archive.
-./grind archive
+./grind release-nightly
 
 # Disable polymer deploy on drone.io for now.
 #./grind deploy-test

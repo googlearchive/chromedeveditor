@@ -28,6 +28,9 @@ void main([List<String> args]) {
   defineTask('docs', taskFunction : docs, depends : ['setup']);
   defineTask('archive', taskFunction : archive, depends : ['mode-notest', 'compile']);
   defineTask('release', taskFunction : release, depends : ['mode-notest', 'compile']);
+  defineTask('release-nightly',
+             taskFunction : releaseNighly,
+             depends : ['mode-notest', 'compile']);
 
   defineTask('clean', taskFunction: clean);
 
@@ -142,6 +145,21 @@ void release(GrinderContext context) {
   if (line.trim() == 'y') {
     _runCommandSync(context, 'git push origin master');
   }
+}
+
+void releaseNighly(GrinderContext context) {
+  String version =
+      _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
+
+  // Creating an archive of the Chrome App.
+  context.log('Creating build ${version}');
+
+  archive(context);
+
+  File file = new File('dist/spark.zip');
+  String filename = 'spark-${version}.zip';
+  file.renameSync('dist/${filename}');
+  context.log('Created ${filename}');
 }
 
 // Creates an archive of the Chrome App.
@@ -341,6 +359,45 @@ String _increaseBuildNumber(GrinderContext context, {bool removeKey: false}) {
 
   version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
+  if (removeKey) {
+    manifestDict.remove('key');
+  }
+  file.writeAsStringSync(new JsonPrinter().print(manifestDict));
+
+  // It needs to be copied to compile result directory.
+  copyFile(
+      joinFile(Directory.current, ['app', 'manifest.json']),
+      joinDir(BUILD_DIR, ['deploy-out', 'web']));
+
+  return version;
+}
+
+String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
+                                             {bool removeKey: false})
+{
+  String buildNumber = Platform.environment['DRONE_BUILD_NUMBER'];
+  String revision = Platform.environment['DRONE_COMMIT'];
+  if (buildNumber == null || revision == null) {
+    context.fail("This build process must be run in a drone.io environment");
+    return null;
+  }
+
+  // Tweaking build version in manifest.
+  File file = new File('app/manifest.json');
+  String content = file.readAsStringSync();
+  var manifestDict = JSON.decode(content);
+  String version = manifestDict['version'];
+  RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
+  Iterable<Match> matches = exp.allMatches(version);
+  assert(matches.length > 0);
+
+  Match m = matches.first;
+  String majorVersion = m.group(1);
+  int buildVersion = int.parse(buildNumber);
+
+  version = '${majorVersion}.${buildVersion}';
+  manifestDict['version'] = version;
+  manifestDict['x-spark-revision'] = revision;
   if (removeKey) {
     manifestDict.remove('key');
   }
