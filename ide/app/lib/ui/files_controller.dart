@@ -515,7 +515,7 @@ class FilesController implements TreeViewDelegate {
   void _processEvents(ResourceChangeEvent event) {
 
     event.changes.forEach((change) {
-      if (change.type == ResourceEventType.ADD) {
+      if (change.type == EventType.ADD) {
         var resource = change.resource;
         if (resource.isTopLevel) {
           _files.add(resource);
@@ -524,13 +524,13 @@ class FilesController implements TreeViewDelegate {
         _recursiveAddResource(resource);
       }
 
-      if (change.type == ResourceEventType.DELETE) {
+      if (change.type == EventType.DELETE) {
         var resource = change.resource;
         _files.remove(resource);
         _recursiveRemoveResource(resource);
       }
 
-      if (change.type == ResourceEventType.CHANGE) {
+      if (change.type == EventType.CHANGE) {
         // refresh the container that has changed.
         // remove all old paths and add new.
         var resource = change.resource;
