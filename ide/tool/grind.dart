@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path;
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
@@ -26,11 +27,11 @@ void main([List<String> args]) {
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
-  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'compile']);
+  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'deploy']);
 
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
-    defineTask('release', taskFunction: release, depends : ['mode-notest', 'compile']);
+    defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
   }
 
   defineTask('clean', taskFunction: clean);
@@ -145,20 +146,21 @@ void release(GrinderContext context) {
 }
 
 // Creates an archive of the Chrome App.
-// - Sources will be compiled in Javascript using "compile" task
 //
-// We'll create an archive using the content of build-chrome-app.
-// - Copy the compiled sources to build/chrome-app/spark
-// - We clean all packages/ folders that have been duplicated into every
+// Sources must be pre-compiled to Javascript using "deploy" task.
+//
+// Will create an archive using the contents of build/deploy-out:
+// - Copy the compiled sources to build/chrome-app
+// - Clean all packages/ folders that have been duplicated into every
 //   folders by the "compile" task
-// - Copy the packages/ directory in build/chrome-app/spark/packages
+// - Copy the packages/ directory to build/chrome-app/packages
 // - Remove test
-// - Zip the content of build/chrome-app-spark to dist/spark.zip
+// - Zip the content of build/chrome-app to dist/spark.zip
 void archive(GrinderContext context, [String outputZip]) {
-  String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
-                                        '${DIST_DIR.path}/${outputZip}';
+  final String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
+                                              '${DIST_DIR.path}/${outputZip}';
   _delete(sparkZip);
-  _zip(context, 'app', '../${sparkZip}');
+  _zip(context, 'build/deploy-out/web', sparkZip);
   _printSize(context, getFile(sparkZip));
 }
 
@@ -218,37 +220,40 @@ void clean(GrinderContext context) {
 }
 
 void _zip(GrinderContext context, String dirToZip, String destFile) {
-    if (Platform.isWindows) {
-      try {
-        // 7z a -r '${destFile}'
-        runProcess(
-            context,
-            '7z',
-            arguments: ['a', '-r', destFile, '.'],
-            workingDirectory: dirToZip,
-            quiet: true);
-      } on ProcessException catch(e) {
-        context.fail("Unable to execute 7z.\n"
-          "Please install 7zip. Add 7z directory to the PATH environment variable.");
-      }
-    } else {
-      // zip '${destFile}' . -r -q -x .*
+  final String destPath = path.relative(destFile, from: dirToZip);
+
+  if (Platform.isWindows) {
+    try {
+      // 7z a -r '${destFile}'
       runProcess(
           context,
-          'zip',
-          arguments: [destFile, '.', '-qr', '-x', '.*'],
-          workingDirectory: dirToZip);
+          '7z',
+          arguments: ['a', '-r', destPath, '.'],
+          workingDirectory: dirToZip,
+          quiet: true);
+    } on ProcessException catch(e) {
+      context.fail("Unable to execute 7z.\n"
+        "Please install 7zip. Add 7z directory to the PATH environment variable.");
     }
+  } else {
+    // zip '${destFile}' . -r -q -x .*
+    runProcess(
+        context,
+        'zip',
+        arguments: [destPath, '.', '-qr', '-x', '.*'],
+        workingDirectory: dirToZip);
+  }
 }
 
 void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
   deleteEntity(getDir('${sourceDir.path}'), context);
   deleteEntity(getDir('${destDir.path}'), context);
 
-  // copy spark/widgets to spark/ide/build/widgets
+  // Copy spark/widgets to spark/ide/build/widgets. This is necessary because
+  // spark_widgets is a relative "path" dependency in pubspec.yaml.
   copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
 
-  // copy the app directory to target/web
+  // Copy the app directory to target/web.
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
   copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
