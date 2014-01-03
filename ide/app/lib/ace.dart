@@ -103,7 +103,7 @@ class AceContainer {
   void _applyCustomSession(ace.EditSession session, String fileName) {
     String extention = path.extension(fileName);
     switch (extention) {
-      case 'dart':
+      case '.dart':
         session.tabSize = 2;
         session.useSoftTabs = true;
         break;
@@ -144,7 +144,7 @@ class AceContainer {
     // Setup the code completion options for the current file type.
     if (file != null) {
       _aceEditor.setOption(
-          'enableBasicAutocompletion', utils.fileExt(file.name) != 'dart');
+          'enableBasicAutocompletion', path.extension(file.name) != '.dart');
     }
   }
 }
