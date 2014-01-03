@@ -129,7 +129,7 @@ class AceContainer {
 
   ace.EditSession get currentSession => _aceEditor.session;
 
-  void switchTo(ace.EditSession session,[workspace.File file]) {
+  void switchTo(ace.EditSession session, [workspace.File file]) {
     if (session == null) {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.readOnly = true;
