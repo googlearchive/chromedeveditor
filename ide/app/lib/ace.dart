@@ -53,7 +53,6 @@ class AceContainer {
   final html.Element parentElement;
 
   ace.Editor _aceEditor;
-  workspace.File _file;
 
   static bool get available => js.context['ace'] != null;
 
@@ -62,9 +61,13 @@ class AceContainer {
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
-    //_aceEditor.renderer.showGutter = false;
     //_aceEditor.setOption('scrollPastEnd', true);
     _aceEditor.readOnly = true;
+
+    // Enable code completion.
+    ace.require('ace/ext/language_tools');
+    _aceEditor.setOption('enableBasicAutocompletion', true);
+    _aceEditor.setOption('enableSnippets', true);
 
     // Fallback
     theme = THEMES[0];
@@ -100,7 +103,7 @@ class AceContainer {
   void _applyCustomSession(ace.EditSession session, String fileName) {
     String extention = path.extension(fileName);
     switch (extention) {
-      case 'dart':
+      case '.dart':
         session.tabSize = 2;
         session.useSoftTabs = true;
         break;
@@ -126,7 +129,7 @@ class AceContainer {
 
   ace.EditSession get currentSession => _aceEditor.session;
 
-  void switchTo(ace.EditSession session) {
+  void switchTo(ace.EditSession session, [workspace.File file]) {
     if (session == null) {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.readOnly = true;
@@ -136,6 +139,12 @@ class AceContainer {
       if (_aceEditor.readOnly) {
         _aceEditor.readOnly = false;
       }
+    }
+
+    // Setup the code completion options for the current file type.
+    if (file != null) {
+      _aceEditor.setOption(
+          'enableBasicAutocompletion', path.extension(file.name) != '.dart');
     }
   }
 }
