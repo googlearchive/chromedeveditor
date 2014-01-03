@@ -144,12 +144,9 @@ class _TestListenerClient {
    * instance of [TestListenerClient] on success.
    */
   static Future<_TestListenerClient> connect([int port = _DEFAULT_TESTPORT]) {
-    return tcp.TcpClient.createClient(tcp.LOCAL_HOST, port)
+    return tcp.TcpClient.createClient(tcp.LOCAL_HOST, port, throwOnError: false)
         .then((tcp.TcpClient client) {
-          return new _TestListenerClient._(port, client);
-        })
-        .catchError((e) {
-          return null;
+          return client == null ? null : new _TestListenerClient._(port, client);
         });
   }
 
