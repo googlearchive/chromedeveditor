@@ -13,6 +13,7 @@ import 'dart:js' as js;
 import 'dart:math' as math;
 
 import 'package:ace/ace.dart' as ace;
+import 'package:path/path.dart' as path;
 
 import 'workspace.dart' as workspace;
 import 'editors.dart';
@@ -100,7 +101,7 @@ class AceContainer {
   }
 
   void _applyCustomSession(ace.EditSession session, String fileName) {
-    String extention = utils.fileExt(fileName);
+    String extention = path.extension(fileName);
     switch (extention) {
       case 'dart':
         session.tabSize = 2;
