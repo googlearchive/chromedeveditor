@@ -197,7 +197,7 @@ body {
 }
 
 #activitySpinner {
-  opacity: 0;
+  opacity: 1;
   font-size: 18pt;
   vertical-align: middle;
   color: #777;
