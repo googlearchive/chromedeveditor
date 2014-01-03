@@ -7,11 +7,9 @@ library spark_polymer.ui;
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
+import 'package:spark_widgets/common/widget.dart';
 
-// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import '../../packages/spark_widgets/common/widget.dart';
-
-import '../../spark_model.dart';
+import 'spark_model.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends Widget {
