@@ -139,7 +139,7 @@ class SparkOverlay extends Widget {
   }
 
   getFocusNode() {
-    var focus = this.querySelector('[autofocus]');
+    var focus = this.querySelector('[focused]');
     return (focus != null) ? focus : this;
   }
 
