@@ -65,6 +65,10 @@ class TestDriver {
   void _connectToListener() {
     // Try to connect to a pre-defined port.
     _TestListenerClient.connect().then((_TestListenerClient testClient) {
+      if (testClient == null) {
+        return;
+      }
+
       print('Connected to test listener on port ${testClient.port}');
 
       _logger.onRecord.listen((LogRecord record) {
@@ -145,7 +149,7 @@ class _TestListenerClient {
           return new _TestListenerClient._(port, client);
         })
         .catchError((e) {
-          throw 'No test listener available on port ${port}';
+          return null;
         });
   }
 
