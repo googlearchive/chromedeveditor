@@ -8,7 +8,11 @@ fi
 pub get 
 
 # Build the archive.
-./grind release-nightly
+if test x$DRONE_BRANCH = xmaster ; then
+  ./grind release-nightly
+else
+  ./grind archive
+fi
 
 # Disable polymer deploy on drone.io for now.
 #./grind deploy-test
