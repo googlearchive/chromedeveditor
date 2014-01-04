@@ -382,34 +382,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         (_) => test());
   }
 
-  ace.Annotation testAnnotation;
-
-  void test() {
-    int title = int.parse(getUIElement("#testTitle").innerHtml);
-
-    List<ws.File> files = workspace.getFiles();
-    ws.File file = files.first;
-
-    switch (title) {
-      case 0:
-        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 5);
-        break;
-      case 1:
-        file.clearMarkers();
-        break;
-      case 2:
-        testAnnotation = _aceContainer.setAnnotation(
-            text: "hello", row: 1, type: ace.Annotation.ERROR);
-        break;
-      case 3:
-        _aceContainer.removeAnnotation(testAnnotation);
-        break;
-    }
-
-    title = (title + 1) % 4;
-    getUIElement("#testTitle").innerHtml = title.toString();
-  }
-
   void buildMenu() {
     UListElement ul = getUIElement('#hotdogMenu ul');
 
