@@ -363,6 +363,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void test() {
     /*%TRACE3*/ print("(4> 1/3/14): test!"); // TRACE%
+    _aceContainer.test();
   }
 
   void buildMenu() {

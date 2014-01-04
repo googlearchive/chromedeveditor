@@ -70,6 +70,21 @@ class AceContainer {
     theme = THEMES[0];
   }
 
+  test() {
+    ace.EditSession c = this.currentSession;
+    //c.annotations = new List<ace.Annotation>();
+    var annotations = c.annotations;
+    /*%TRACE3*/ print("(4> 1/3/14): currentSession.getLine(1): " + c.getLine(1).toString()); // TRACE%
+    var annotation = new ace.Annotation(
+        text: "hello there",
+        row: 1
+        );
+    annotations.add(annotation);
+    c.annotations = annotations;
+    /*%TRACE3*/ print("(4> 1/3/14): " + annotations.toString()); // TRACE%
+
+  }
+
   String get theme => _aceEditor.theme.name;
 
   set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
