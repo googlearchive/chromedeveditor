@@ -223,6 +223,26 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void initWorkspace() {
     _workspace = new ws.Workspace(localPrefs);
+
+    workspace.onMarkerChange.listen((ws.MarkerChangeEvent event) {
+      ws.File currentFile = editorManager.currentFile;
+      ws.File eventFile = event.resource;
+
+      if (eventFile == currentFile) {
+        switch (event.type) {
+          case ws.EventType.ADD:
+            ws.Marker marker = event.marker;
+            ace.Annotation annotation = _aceContainer.setAnnotation(
+                text: marker.message,
+                row: marker.lineNum,
+                // TODO (ericarnold): Update with actual annotation type.
+                type: ace.Annotation.INFO);
+            break;
+          case ws.EventType.DELETE:
+            _aceContainer.clearAnnotations();
+        }
+      }
+    });
   }
 
   void createEditorComponents() {
@@ -250,11 +270,24 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     });
   }
 
+  void updateMarkers() {
+    _aceContainer.clearAnnotations();
+    var markers = _workspace.getMarkers();
+    for (ws.Marker marker in markers) {
+      ace.Annotation annotation = _aceContainer.setAnnotation(
+          text: marker.message,
+          row: marker.lineNum,
+          // TODO (ericarnold): Update with actual annotation type.
+          type: ace.Annotation.INFO);
+    }
+  }
+
   void initEditorManager() {
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
         editorArea.selectFile(file, forceOpen: true, switchesTab: false);
+        updateMarkers();
       });
       localPrefs.getValue('lastFileSelection').then((String filePath) {
         if (editorArea.tabs.isEmpty) return;
@@ -372,25 +405,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     switch (title) {
       case 0:
-        workspace.onMarkerChange.listen((ws.MarkerChangeEvent event) {
-          ws.File currentFile = editorManager.currentFile;
-          ws.File eventFile = event.resource;
-
-          if (eventFile == currentFile) {
-            switch (event.type) {
-              case ws.EventType.ADD:
-                ws.Marker marker = event.marker;
-                ace.Annotation annotation = _aceContainer.setAnnotation(
-                    text: marker.message,
-                    row: marker.lineNum,
-                    type: ace.Annotation.INFO);
-                break;
-              case ws.EventType.DELETE:
-                _aceContainer.clearAnnotations();
-            }
-          }
-        });
-
         file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 5);
         break;
       case 1:
