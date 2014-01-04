@@ -25,7 +25,7 @@ dependencies:
   uuid: any
 dev_dependencies:
   args: any
-  grinder: '>=0.4.5'
+  grinder: '>=0.4.5 <0.5.0'
 transformers:
 - polymer:
     entry_points: web/spark_polymer.html

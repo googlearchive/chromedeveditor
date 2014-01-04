@@ -11,7 +11,7 @@ import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/preferences.dart';
-import '../lib/workspace.dart';
+import '../lib/workspace.dart' as ws;
 
 const _FILETEXT = 'This is sample text for mock file entry.';
 
@@ -19,10 +19,10 @@ defineTests() {
   group('workspace', () {
 
     test('create file and check contents', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
-      var fileResource = new File(workspace, fileEntry);
+      var fileResource = new ws.File(workspace, fileEntry);
       expect(fileResource.name, fileEntry.name);
       expect(fileResource.path, '/test.txt');
       fileResource.getContents().then((string) {
@@ -31,10 +31,10 @@ defineTests() {
     });
 
     test('restore entry', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
-      return workspace.link(fileEntry).then((Resource resource) {
+      return workspace.link(fileEntry).then((ws.Resource resource) {
         expect(resource.name, fileEntry.name);
         String token = resource.persistToToken();
         var restoredResource = workspace.restoreResource(token);
@@ -46,9 +46,9 @@ defineTests() {
 
     test('persist workspace roots', () {
       var prefs = new MapPreferencesStore();
-      var workspace = new Workspace(prefs);
+      var workspace = new ws.Workspace(prefs);
       return chrome.runtime.getPackageDirectoryEntry().then((dir) {
-        return workspace.link(dir).then((Resource resource) {
+        return workspace.link(dir).then((ws.Resource resource) {
           expect(resource, isNotNull);
           return workspace.save().then((_) {
             return prefs.getValue('workspace').then((String prefVal) {
@@ -61,12 +61,12 @@ defineTests() {
     });
 
     test('resource is hashable', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       var file1 = fs.createFile('test1.txt', contents: _FILETEXT);
       var file2 = fs.createFile('test2.txt', contents: _FILETEXT);
-      return workspace.link(file1).then((Resource resource1) {
-        return workspace.link(file2).then((Resource resource2) {
+      return workspace.link(file1).then((ws.Resource resource1) {
+        return workspace.link(file2).then((ws.Resource resource2) {
           Map m = {};
           m[resource1] = 'foo';
           m[resource2] = 'bar';
@@ -81,14 +81,14 @@ defineTests() {
     });
 
     test('add file, check for resource add event', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt');
 
-      Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
-        ChangeDelta change = event.changes.single;
+      Future future = workspace.onResourceChange.first.then((ws.ResourceChangeEvent event) {
+        ws.ChangeDelta change = event.changes.single;
         expect(change.resource.name, fileEntry.name);
-        expect(change.type, ResourceEventType.ADD);
+        expect(change.type, ws.EventType.ADD);
       });
 
       workspace.link(fileEntry).then((resource) {
@@ -101,7 +101,7 @@ defineTests() {
     });
 
     test('delete file, check for resource delete event', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt');
       var resource;
@@ -114,33 +114,33 @@ defineTests() {
         resource.delete();
       });
 
-      return workspace.onResourceChange.first.then((ResourceChangeEvent event) {
-        ChangeDelta change = event.changes.single;
+      return workspace.onResourceChange.first.then((ws.ResourceChangeEvent event) {
+        ws.ChangeDelta change = event.changes.single;
         expect(change.resource.name, fileEntry.name);
-        expect(change.type, ResourceEventType.DELETE);
+        expect(change.type, ws.EventType.DELETE);
       });
 
     });
 
     test('add directory, check for resource add event', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       fs.createFile('/myProject/test.txt');
       fs.createFile('/myProject/test.html');
       fs.createFile('/myProject/test.dart');
       var dirEntry = fs.getEntry('myProject');
 
-      Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
-        ChangeDelta change = event.changes.single;
+      Future future = workspace.onResourceChange.first.then((ws.ResourceChangeEvent event) {
+        ws.ChangeDelta change = event.changes.single;
         expect(change.resource.name, dirEntry.name);
-        expect(change.type, ResourceEventType.ADD);
+        expect(change.type, ws.EventType.ADD);
       });
 
       workspace.link(dirEntry).then((project) {
         expect(project, isNotNull);
         expect(workspace.getChildren().contains(project), isTrue);
         expect(workspace.getProjects().contains(project), isTrue);
-        var children = (project as Container).getChildren();
+        var children = (project as ws.Container).getChildren();
         expect(children.length, 3);
       });
 
@@ -148,7 +148,7 @@ defineTests() {
     });
 
     test('add directory with folders, check for resource add event', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       var projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -159,21 +159,21 @@ defineTests() {
       fs.createFile('/myProject/myDir/test.html');
       fs.createFile('/myProject/myDir/test.dart');
 
-      Future future = workspace.onResourceChange.first.then((ResourceChangeEvent event) {
-        ChangeDelta change = event.changes.single;
+      Future future = workspace.onResourceChange.first.then((ws.ResourceChangeEvent event) {
+        ws.ChangeDelta change = event.changes.single;
         expect(change.resource.name, projectDir.name);
-        expect(change.type, ResourceEventType.ADD);
+        expect(change.type, ws.EventType.ADD);
       });
 
       workspace.link(projectDir).then((project) {
         expect(project, isNotNull);
         expect(workspace.getChildren().contains(project), isTrue);
         expect(workspace.getProjects().contains(project), isTrue);
-        var children = (project as Container).getChildren();
+        var children = (project as ws.Container).getChildren();
         expect(children.length, 4);
         for (var child in children){
-          if (child is Folder) {
-            expect((child as Folder).getChildren().length, 3);
+          if (child is ws.Folder) {
+            expect((child as ws.Folder).getChildren().length, 3);
           }
         }
       });
@@ -181,7 +181,7 @@ defineTests() {
     });
 
     test('refresh from filesystem', () {
-      var workspace = new Workspace();
+      var workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
       var projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -193,7 +193,7 @@ defineTests() {
       fs.createFile('/myProject/myDir/test.dart');
 
       return workspace.link(projectDir).then((project) {
-        Folder dir = project.getChild('myDir');
+        ws.Folder dir = project.getChild('myDir');
         expect(project.getChildren().length, 4);
         expect(dir.getChildren().length, 3);
         fs.createFile('/myProject/myApp2.dart');
@@ -214,7 +214,7 @@ defineTests() {
 
     test("walk children performs a pre-order traversal", () {
       MockFileSystem fs = new MockFileSystem();
-      Workspace workspace = new Workspace();
+      ws.Workspace workspace = new ws.Workspace();
       var rootDir = fs.createDirectory('/root');
       fs.createDirectory('/root/folder1');
       fs.createDirectory('/root/folder2');
@@ -223,7 +223,7 @@ defineTests() {
       fs.createFile('/root/folder1/folder3/file2');
       fs.createFile('/root/folder2/file3');
       return workspace.link(rootDir).then((_) {
-        Folder rootFolder = workspace.getChild('root');
+        ws.Folder rootFolder = workspace.getChild('root');
         expect(rootFolder.traverse().map((f) => f.path),
                equals([ '/root',
                           '/root/folder1',
@@ -235,5 +235,114 @@ defineTests() {
                       ]));
       });
     });
+
+    test("create marker on resource, check for marker add event", () {
+      var workspace = new ws.Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/index.html');
+      fs.createFile('/myProject/myApp.dart');
+      Future future = workspace.onMarkerChange.first.then((ws.MarkerChangeEvent event) {
+        expect(event.resource.name, 'myApp.dart');
+        expect(event.type, ws.EventType.ADD);
+      });
+
+      return workspace.link(projectDir).then((project) {
+        ws.File file = project.getChild('myApp.dart');
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        var markers = file.getMarkers();
+        expect(markers.length, 1);
+        expect(markers.first.file, file);
+        expect(markers.first.type, 'dart');
+        expect(markers.first.severity, ws.Marker.SEVERITY_ERROR);
+        return future;
+      });
+    });
+
+    test("create different types of markers and clear markers", () {
+      var workspace = new ws.Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/index.html');
+      fs.createFile('/myProject/myApp.dart');
+
+      return workspace.link(projectDir).then((project) {
+        ws.File file = project.getChild('myApp.dart');
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'dart warning marker', 6);
+        var markers = file.getMarkers();
+        expect(markers.length, 2);
+        expect(markers.first.file, file);
+        expect(markers.first.type, 'dart');
+        expect(markers.first.severity, ws.Marker.SEVERITY_ERROR);
+        ws.File htmlFile = project.getChild('index.html');
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_WARNING, 'warning marker', 5);
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_INFO, 'info', 3);
+        markers = htmlFile.getMarkers();
+        expect(markers.length, 2);
+        expect(markers.first.file, htmlFile);
+        expect(markers.first.type, 'html');
+        expect(markers.first.severity, ws.Marker.SEVERITY_WARNING);
+        markers = project.getMarkers();
+        expect(markers.length, 4);
+        project.clearMarkers();
+        markers = project.getMarkers();
+        expect(markers.length, 0);
+      });
+
+    });
+
+    test("create and clear marker, check for delete event", () {
+      var workspace = new ws.Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/index.html');
+      fs.createFile('/myProject/myApp.dart');
+
+      Future future = workspace.onMarkerChange.skip(1).first.then((ws.MarkerChangeEvent event) {
+        expect(event.resource.name, 'myApp.dart');
+        expect(event.type, ws.EventType.DELETE);
+      });
+
+      return workspace.link(projectDir).then((project) {
+        ws.File file = project.getChild('myApp.dart');
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        var markers = file.getMarkers();
+        expect(markers.length, 1);
+        file.clearMarkers();
+        markers = file.getMarkers();
+        expect(markers.length, 0);
+        return future;
+      });
+    });
+
+    test("get max severity marker", () {
+      var workspace = new ws.Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/index.html');
+      fs.createFile('/myProject/myApp.dart');
+      fs.createFile('myProject/myLib.dart');
+
+      return workspace.link(projectDir).then((project) {
+        ws.File file = project.getChild('myApp.dart');
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+        file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'dart warning marker', 6);
+        ws.File htmlFile = project.getChild('index.html');
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_WARNING, 'warning marker', 5);
+        htmlFile.createMarker('html', ws.Marker.SEVERITY_INFO, 'info', 3);
+        file = project.getChild('myLib.dart');
+        file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'dart warning', 3);
+        file.createMarker('dart', ws.Marker.SEVERITY_INFO, 'dart info marker', 4);
+
+        int severity = project.findMaxProblemSeverity('dart');
+        expect(severity, ws.Marker.SEVERITY_ERROR);
+        severity = project.findMaxProblemSeverity('html');
+        expect(severity, ws.Marker.SEVERITY_WARNING);
+
+      });
+
+    });
+
   });
 }

@@ -7,6 +7,7 @@ import 'dart:io';
 
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as path;
 
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
@@ -26,14 +27,14 @@ void main([List<String> args]) {
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
-  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'compile']);
+  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'deploy']);
 
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
-    defineTask('release', taskFunction: release, depends : ['mode-notest', 'compile']);
+    defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
     defineTask('release-nightly',
                taskFunction : releaseNighly,
-               depends : ['mode-notest', 'compile']);
+               depends : ['mode-notest', 'deploy']);
   }
 
   defineTask('clean', taskFunction: clean);
@@ -65,8 +66,10 @@ void setup(GrinderContext context) {
 }
 
 /**
- * Compile the two Spark entry-points.
+ * Compile the Spark non-Polymer entry-point. This step will be removed soon in
+ * favor of the Polymer-oriented [deploy].
  */
+@deprecated
 void compile(GrinderContext context) {
   _dart2jsCompile(context, new Directory('app'), 'spark.dart');
 }
@@ -81,11 +84,15 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  // TODO: Do we need to compile both of these?
-  _dart2jsCompile(context, joinDir(destDir, ['web']),
-      'spark.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer.html_bootstrap.dart', true);
+  _dart2jsCompile(context, joinDir(destDir, ['web']),
+      'spark_polymer_ui.html_bootstrap.dart', true);
+  // TODO(ussuri): this is needed only in the interim while we still want to
+  // switch back to non-Polymer UI for reference. Remove this once the
+  // switchover to Polymer is complete.
+  _dart2jsCompile(context, joinDir(destDir, ['web']),
+      'spark.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -157,20 +164,21 @@ void releaseNighly(GrinderContext context) {
 }
 
 // Creates an archive of the Chrome App.
-// - Sources will be compiled in Javascript using "compile" task
 //
-// We'll create an archive using the content of build-chrome-app.
-// - Copy the compiled sources to build/chrome-app/spark
-// - We clean all packages/ folders that have been duplicated into every
+// Sources must be pre-compiled to Javascript using "deploy" task.
+//
+// Will create an archive using the contents of build/deploy-out:
+// - Copy the compiled sources to build/chrome-app
+// - Clean all packages/ folders that have been duplicated into every
 //   folders by the "compile" task
-// - Copy the packages/ directory in build/chrome-app/spark/packages
+// - Copy the packages/ directory to build/chrome-app/packages
 // - Remove test
-// - Zip the content of build/chrome-app-spark to dist/spark.zip
+// - Zip the content of build/chrome-app to dist/spark.zip
 void archive(GrinderContext context, [String outputZip]) {
-  String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
-                                        '${DIST_DIR.path}/${outputZip}';
+  final String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
+                                              '${DIST_DIR.path}/${outputZip}';
   _delete(sparkZip);
-  _zip(context, 'app', '../${sparkZip}');
+  _zip(context, 'build/deploy-out/web', sparkZip);
   _printSize(context, getFile(sparkZip));
 }
 
@@ -188,7 +196,7 @@ void docs(GrinderContext context) {
                     '--include-lib', 'spark,spark.ace,spark.utils,spark.preferences,spark.workspace,spark.sdk',
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
-                    'app/spark.dart']);
+                    'app/spark_polymer.dart']);
     _zip(context, 'docs', '../${DIST_DIR.path}/spark-docs.zip');
   }
 }
@@ -230,53 +238,47 @@ void clean(GrinderContext context) {
 }
 
 void _zip(GrinderContext context, String dirToZip, String destFile) {
-    if (Platform.isWindows) {
-      try {
-        // 7z a -r '${destFile}'
-        runProcess(
-            context,
-            '7z',
-            arguments: ['a', '-r', destFile, '.'],
-            workingDirectory: dirToZip,
-            quiet: true);
-      } on ProcessException catch(e) {
-        context.fail("Unable to execute 7z.\n"
-          "Please install 7zip. Add 7z directory to the PATH environment variable.");
-      }
-    } else {
-      // zip '${destFile}' . -r -q -x .*
+  final String destPath = path.relative(destFile, from: dirToZip);
+
+  if (Platform.isWindows) {
+    try {
+      // 7z a -r '${destFile}'
       runProcess(
           context,
-          'zip',
-          arguments: [destFile, '.', '-qr', '-x', '.*'],
-          workingDirectory: dirToZip);
+          '7z',
+          arguments: ['a', '-r', destPath, '.'],
+          workingDirectory: dirToZip,
+          quiet: true);
+    } on ProcessException catch(e) {
+      context.fail("Unable to execute 7z.\n"
+        "Please install 7zip. Add 7z directory to the PATH environment variable.");
     }
+  } else {
+    // zip '${destFile}' . -r -q -x .*
+    runProcess(
+        context,
+        'zip',
+        arguments: [destPath, '.', '-qr', '-x', '.*'],
+        workingDirectory: dirToZip);
+  }
 }
 
 void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
   deleteEntity(getDir('${sourceDir.path}'), context);
   deleteEntity(getDir('${destDir.path}'), context);
 
-  // copy spark/widgets to spark/ide/build/widgets
+  // Copy spark/widgets to spark/ide/build/widgets. This is necessary because
+  // spark_widgets is a relative "path" dependency in pubspec.yaml.
   copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
 
-  // copy the app directory to target/web
+  // Copy the app directory to target/web.
   copyFile(new File('pubspec.yaml'), sourceDir);
   copyFile(new File('pubspec.lock'), sourceDir);
   copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
-  deleteEntity(joinFile(destDir, ['web', 'spark.dart.precompiled.js']), context);
+  deleteEntity(joinFile(destDir, ['web', 'spark_polymer.dart.precompiled.js']), context);
   deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
-
-  // HACK(ussuri): This is really ugly. We're replacing "../../packages/" parts
-  // in all <link rel="import"> in spark_polymer_ui.html with just "packages".
-  // deploy.dart can't find the imports any other way, but we still need
-  // the "../../" when debugging the uncompiled app. This is supposed to be
-  // resolved in Dart/Polymer at some point (?).
-  _patchHtmlPackageImports(
-      joinFile(sourceDir, ['web', 'lib', 'polymer_ui', 'spark_polymer_ui.html']),
-      context);
 
   runDartScript(context, 'packages/polymer/deploy.dart',
       arguments: ['--out', '../../${destDir.path}'],
@@ -331,22 +333,6 @@ void _patchDartJsInterop(GrinderContext context) {
 
     file.writeAsStringSync(contents.replaceFirst(matchString, replaceString));
   }
-}
-
-/**
- * This patches spark_polymer_ui.html to pacify `polymer/deploy.dart`.
- */
-void _patchHtmlPackageImports(File file, GrinderContext context) {
-  context.log('Patching ${fileName(file)}');
-
-  final matchString = '../../packages';
-  final replaceString = 'packages';
-
-  String contents = file.readAsStringSync();
-  if (!contents.contains(matchString)) {
-    print('${fileName(file)} no longer needs fixing: remove this step');
-  }
-  file.writeAsStringSync(contents.replaceAll(matchString, replaceString));
 }
 
 void _changeMode({bool useTestMode: true}) {

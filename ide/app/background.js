@@ -8,7 +8,7 @@
 var App = function() {
   this.settings = null;
   this.editorWin_ = null;
-  this.skins_ = [ "spark.html", "spark_polymer.html" ];
+  this.skins_ = [ "spark_polymer.html", "spark.html" ];
 };
 
 App.prototype.getSettings = function(callback) {
