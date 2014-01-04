@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
 
-import 'package:ace/ace.dart' as ace;
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:chrome_gen/src/files.dart' as chrome_files;
@@ -232,7 +231,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         switch (event.type) {
           case ws.EventType.ADD:
             ws.Marker marker = event.marker;
-            ace.Annotation annotation = _aceContainer.setAnnotation(
+            _aceContainer.setAnnotation(
                 text: marker.message,
                 row: marker.lineNum,
                 // TODO (ericarnold): Update with actual annotation type.
