@@ -70,19 +70,29 @@ class AceContainer {
     theme = THEMES[0];
   }
 
-  test() {
-    ace.EditSession c = this.currentSession;
-    //c.annotations = new List<ace.Annotation>();
-    var annotations = c.annotations;
-    /*%TRACE3*/ print("(4> 1/3/14): currentSession.getLine(1): " + c.getLine(1).toString()); // TRACE%
+  ace.Annotation setAnnotation({
+      String text : null,
+      int row  : 0,
+      String type : ace.Annotation.INFO }) {
+    // TODO(ericarnold): This is a hack until `annotations` can be modified
+    // directly.
+    ace.EditSession currentSession = this.currentSession;
+    var annotations = currentSession.annotations;
     var annotation = new ace.Annotation(
-        text: "hello there",
-        row: 1
-        );
+        text: text,
+        row: row,
+        type: type);
     annotations.add(annotation);
-    c.annotations = annotations;
-    /*%TRACE3*/ print("(4> 1/3/14): " + annotations.toString()); // TRACE%
+    currentSession.annotations = annotations;
+    return annotation;
+  }
 
+  bool removeAnnotation(ace.Annotation annotation) {
+    ace.EditSession currentSession = this.currentSession;
+    var annotations = currentSession.annotations;
+    bool success = annotations.remove(annotation);
+    currentSession.annotations = annotations;
+    return success;
   }
 
   String get theme => _aceEditor.theme.name;
