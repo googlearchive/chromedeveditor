@@ -125,7 +125,8 @@ void release(GrinderContext context) {
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
 
-  archive(context);
+  String filename = 'spark-${version}.zip';
+  archive(context, filename);
 
   var sep = Platform.pathSeparator;
   _runCommandSync(
@@ -136,9 +137,6 @@ void release(GrinderContext context) {
     context,
     'git commit -m "Build version ${version}" app${sep}manifest.json');
 
-  File file = new File('dist/spark.zip');
-  String filename = 'spark-${version}.zip';
-  file.renameSync('dist/${filename}');
   context.log('Created ${filename}');
   context.log('** A commit has been created, you need to push it. ***');
   print('Do you want to push to the remote git repository now? (y/n [n])');
@@ -154,12 +152,8 @@ void releaseNighly(GrinderContext context) {
 
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
-
-  archive(context);
-
-  File file = new File('dist/spark.zip');
   String filename = 'spark-${version}.zip';
-  file.renameSync('dist/${filename}');
+  archive(context, filename);
   context.log('Created ${filename}');
 }
 
