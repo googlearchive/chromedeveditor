@@ -223,7 +223,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void initWorkspace() {
     _workspace = new ws.Workspace(localPrefs);
 
-    workspace.onMarkerChange.listen((ws.MarkerChangeEvent event) {
+    _workspace.onMarkerChange.listen((ws.MarkerChangeEvent event) {
       ws.File currentFile = editorManager.currentFile;
       ws.File eventFile = event.resource;
 
