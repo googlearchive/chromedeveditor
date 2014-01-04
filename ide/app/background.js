@@ -6,35 +6,18 @@
 // caches/saves/restores settings, manages app's window(s), and performs UI
 // skin switching when requested.
 var App = function() {
-  this.settings = null;
-  this.editorWin_ = null;
   this.skins_ = [ "spark_polymer.html", "spark.html" ];
-};
+  this.DEFAULT_SKIN_ = 0;
+  this.CAN_SWITCH_SKINS_ = 0;
+  this.settings = { skin: this.skins_[this.DEFAULT_SKIN_] };
 
-App.prototype.getSettings = function(callback) {
-  if (this.settings !== null) {
-    callback();
-  } else {
-    chrome.storage.local.get(
-      {
-        skin: this.skins_[0]
-      },
-      function(settings) {
-        this.settings = settings;
-        callback();
-      }.bind(this)
-    );
-  }
+  this.editorWin_ = null;
 };
 
 App.prototype.updateSettings = function(changedSettings) {
   for (var key in changedSettings) {
     this.settings[key] = changedSettings[key];
   }
-  // NOTE: The method is asynchronous, but there's no need to wait since
-  // the stored value is used only on app's startup -- the rest of the code uses
-  // the cached value.
-  chrome.storage.local.set(this.settings);
 };
 
 App.prototype.launch = function(skin_opt) {
@@ -47,9 +30,7 @@ App.prototype.launch = function(skin_opt) {
     delete this.editorWin_;
   }
 
-  this.getSettings(function() {
-    this.editorWin_ = new EditorWindow(this);
-  }.bind(this));
+  this.editorWin_ = new EditorWindow(this);
 }
 
 App.prototype.switchUi = function() {
@@ -92,16 +73,18 @@ EditorWindow.prototype.onCreated_ = function(win) {
 
 // A listener called after the DOM has been constructed for the content window.
 EditorWindow.prototype.onLoad_ = function() {
-  chrome.contextMenus.create({
-    title: "Spark: Switch UI",
-    id: 'switch_ui',
-    contexts: [ 'all' ]
-  });
-  chrome.contextMenus.onClicked.addListener(function(info) {
-    if (info.menuItemId == 'switch_ui') {
-      this.app_.switchUi();
-    }
-  }.bind(this));
+  if (this.app_.CAN_SWITCH_SKINS_) {
+    chrome.contextMenus.create({
+      title: "Spark: Switch UI",
+      id: 'switch_ui',
+      contexts: [ 'all' ]
+    });
+    chrome.contextMenus.onClicked.addListener(function(info) {
+      if (info.menuItemId == 'switch_ui') {
+        this.app_.switchUi();
+      }
+    }.bind(this));
+  }
 }
 
 // Destroy the window, if any.
@@ -111,7 +94,7 @@ EditorWindow.prototype.destroy = function() {
   }
 }
 
-// Create a new app window and restore settings/state.
+// Create a new app window.
 chrome.app.runtime.onLaunched.addListener(function(launchData) {
   new App().launch();
 });
