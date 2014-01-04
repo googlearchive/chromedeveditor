@@ -8,7 +8,6 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/widget.dart';
-import 'package:spark_widgets/spark-menu-button/spark-menu-button.dart';
 
 import 'spark_model.dart';
 
@@ -21,7 +20,6 @@ class SparkPolymerUI extends Widget {
     final action = SparkModel.instance.actionManager.getAction(actionId);
     assert(action != null);
     action.invoke();
-    (getShadowDomElement("#hotdogMenuNew") as SparkMenuButton).toggle();
   }
 
   void onThemeMinus(Event e) {
