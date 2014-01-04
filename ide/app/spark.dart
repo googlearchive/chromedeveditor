@@ -358,25 +358,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     getUIElement("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new-as').invoke());
     getUIElement("#progressBar").onClick.listen(
-        (_) => testProgressBar());
+        (_) => test());
   }
 
-  void testProgressBar() {
-    MockJob job;
-    Element button = getUIElement("#progressBar");
-    String buttonTitle = button.text;
-    int stage = int.parse(buttonTitle);
-    getUIElement("#progressBar").text = (3 - stage).toString();
-
-    switch (stage) {
-      case 1:
-        job = new MockJob();
-        _jobManager.schedule(job);
-        break;
-
-      case 2:
-        break;
-    }
+  void test() {
+    /*%TRACE3*/ print("(4> 1/3/14): test!"); // TRACE%
   }
 
   void buildMenu() {
