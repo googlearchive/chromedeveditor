@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
 
+import 'package:ace/ace.dart' as ace;
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:chrome_gen/src/files.dart' as chrome_files;
@@ -361,9 +362,20 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         (_) => test());
   }
 
+  ace.Annotation annotation;
+
   void test() {
-    /*%TRACE3*/ print("(4> 1/3/14): test!"); // TRACE%
-    _aceContainer.test();
+    String title = getUIElement("#progressBar").title;
+    if (title == "") {
+      annotation = _aceContainer.setAnnotation(
+          text: "hello", row: 1, type: ace.Annotation.ERROR);
+      getUIElement("#progressBar").title = "1";
+
+    } else {
+      _aceContainer.removeAnnotation(annotation);
+      getUIElement("#progressBar").title = "";
+
+    }
   }
 
   void buildMenu() {
