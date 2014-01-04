@@ -362,20 +362,55 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         (_) => test());
   }
 
-  ace.Annotation annotation;
+  ace.Annotation testAnnotation;
+  Map<ws.Marker, ace.Annotation> markerAnnotations = new Map();
 
   void test() {
-    String title = getUIElement("#progressBar").title;
-    if (title == "") {
-      annotation = _aceContainer.setAnnotation(
-          text: "hello", row: 1, type: ace.Annotation.ERROR);
-      getUIElement("#progressBar").title = "1";
+    int title = int.parse(getUIElement("#testTitle").innerHtml);
 
-    } else {
-      _aceContainer.removeAnnotation(annotation);
-      getUIElement("#progressBar").title = "";
+    List<ws.File> files = workspace.getFiles();
+    ws.File file = files.first;
 
+    switch (title) {
+
+      case 0:
+        workspace.onMarkerChange.listen((ws.MarkerChangeEvent event) {
+          ws.Marker marker = event.marker;
+          ws.File currentFile = editorManager.currentFile;
+          ws.File eventFile = event.resource;
+          if (eventFile == currentFile) {
+            switch (event.type) {
+              case ws.EventType.ADD:
+                ace.Annotation annotation = _aceContainer.setAnnotation(
+                    text: marker.message,
+                    row: marker.lineNum,
+                    type: ace.Annotation.INFO);
+                markerAnnotations[marker] = annotation;
+                break;
+              case ws.EventType.DELETE:
+                ace.Annotation annotation = markerAnnotations.remove(marker);
+                _aceContainer.removeAnnotation(annotation);
+            }
+          }
+        });
+
+        file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 5);
+        /*%TRACE3*/ print("(4> 1/3/14): file.getMarkers(): " + file.getMarkers().toString()); // TRACE%
+        break;
+      case 1:
+        file.clearMarkers();
+        break;
+      case 2:
+        testAnnotation = _aceContainer.setAnnotation(
+            text: "hello", row: 1, type: ace.Annotation.ERROR);
+        break;
+      case 3:
+        _aceContainer.removeAnnotation(testAnnotation);
+        break;
     }
+
+    title = (title + 1) % 4;
+    getUIElement("#testTitle").innerHtml = title.toString();
   }
 
   void buildMenu() {
