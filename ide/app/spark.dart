@@ -363,7 +363,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   ace.Annotation testAnnotation;
-  Map<ws.Marker, ace.Annotation> markerAnnotations = new Map();
 
   void test() {
     int title = int.parse(getUIElement("#testTitle").innerHtml);
@@ -372,30 +371,27 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     ws.File file = files.first;
 
     switch (title) {
-
       case 0:
         workspace.onMarkerChange.listen((ws.MarkerChangeEvent event) {
-          ws.Marker marker = event.marker;
           ws.File currentFile = editorManager.currentFile;
           ws.File eventFile = event.resource;
+
           if (eventFile == currentFile) {
             switch (event.type) {
               case ws.EventType.ADD:
+                ws.Marker marker = event.marker;
                 ace.Annotation annotation = _aceContainer.setAnnotation(
                     text: marker.message,
                     row: marker.lineNum,
                     type: ace.Annotation.INFO);
-                markerAnnotations[marker] = annotation;
                 break;
               case ws.EventType.DELETE:
-                ace.Annotation annotation = markerAnnotations.remove(marker);
-                _aceContainer.removeAnnotation(annotation);
+                _aceContainer.clearAnnotations();
             }
           }
         });
 
         file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 5);
-        /*%TRACE3*/ print("(4> 1/3/14): file.getMarkers(): " + file.getMarkers().toString()); // TRACE%
         break;
       case 1:
         file.clearMarkers();

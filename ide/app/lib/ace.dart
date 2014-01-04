@@ -95,6 +95,12 @@ class AceContainer {
     return success;
   }
 
+  clearAnnotations() {
+    ace.EditSession currentSession = this.currentSession;
+    var annotations = new List<ace.Annotation>();
+    currentSession.annotations = annotations;
+  }
+
   String get theme => _aceEditor.theme.name;
 
   set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
