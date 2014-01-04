@@ -270,24 +270,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     });
   }
 
-  void updateMarkers() {
-    _aceContainer.clearAnnotations();
-    var markers = _workspace.getMarkers();
-    for (ws.Marker marker in markers) {
-      ace.Annotation annotation = _aceContainer.setAnnotation(
-          text: marker.message,
-          row: marker.lineNum,
-          // TODO (ericarnold): Update with actual annotation type.
-          type: ace.Annotation.INFO);
-    }
-  }
-
   void initEditorManager() {
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
         editorArea.selectFile(file, forceOpen: true, switchesTab: false);
-        updateMarkers();
       });
       localPrefs.getValue('lastFileSelection').then((String filePath) {
         if (editorArea.tabs.isEmpty) return;
