@@ -4,12 +4,12 @@
 
 // App class. Implements the windowless top part of Spark app that
 // caches/saves/restores settings, manages app's window(s), and performs UI
-// skin switching when requested.
+// ui switching when requested.
 var App = function() {
-  this.skins_ = [ "spark_polymer.html", "spark.html" ];
-  this.DEFAULT_SKIN_ = 0;
-  this.CAN_SWITCH_SKINS_ = 0;
-  this.settings = { skin: this.skins_[this.DEFAULT_SKIN_] };
+  this.uis_ = [ "spark_polymer.html", "spark.html" ];
+  this.DEFAULT_UI_ = 0;
+  this.CAN_SWITCH_UIS_ = 0;
+  this.settings = { ui: this.uis_[this.DEFAULT_UI_] };
 
   this.editorWin_ = null;
 };
@@ -20,9 +20,9 @@ App.prototype.updateSettings = function(changedSettings) {
   }
 };
 
-App.prototype.launch = function(skin_opt) {
-  if (skin_opt !== undefined) {
-    this.updateSettings({ skin: skin_opt });
+App.prototype.launch = function(ui_opt) {
+  if (ui_opt !== undefined) {
+    this.updateSettings({ ui: ui_opt });
   }
 
   if (this.editorWin_) {
@@ -35,8 +35,8 @@ App.prototype.launch = function(skin_opt) {
 
 App.prototype.switchUi = function() {
   var nextSkinIdx =
-      (this.skins_.indexOf(this.settings.skin) + 1) % this.skins_.length;
-  this.launch(this.skins_[nextSkinIdx]);
+      (this.uis_.indexOf(this.settings.ui) + 1) % this.uis_.length;
+  this.launch(this.uis_[nextSkinIdx]);
 }
 
 
@@ -46,9 +46,9 @@ var EditorWindow = function(app) {
   this.window = null;
 
   chrome.app.window.create(
-    this.app_.settings.skin,
+    this.app_.settings.ui,
     {
-      id: 'main_editor_window' + this.app_.settings.skin,
+      id: 'main_editor_window' + this.app_.settings.ui,
       frame: 'chrome',
       // Bounds will have effect only on the first start after app installation
       // in a given Chromium instance. After that, size & position will be
@@ -73,7 +73,7 @@ EditorWindow.prototype.onCreated_ = function(win) {
 
 // A listener called after the DOM has been constructed for the content window.
 EditorWindow.prototype.onLoad_ = function() {
-  if (this.app_.CAN_SWITCH_SKINS_) {
+  if (this.app_.CAN_SWITCH_UIS_) {
     chrome.contextMenus.create({
       title: "Spark: Switch UI",
       id: 'switch_ui',
