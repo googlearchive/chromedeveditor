@@ -8,18 +8,18 @@
 /**
  * See g-togglebutton https://github.com/Polymer/toolkit-ui/tree/master/elements
  *
- * spark-togglebutton is a button that has one of two states (ON/OFF).
+ * spark-toggle-button is a button that has one of two states (ON/OFF).
  * You can tap or drag the button to switch state.
  *
  * Example:
  *
- *     <spark-togglebutton value="true"></spark-togglebutton>
+ *     <spark-toggle-button value="true"></spark-toggle-button>
  */
 
  // TODO(terry): Remove the on-click when touch is working shouldn't be needed.
 -->
 
-<polymer-element name="spark-togglebutton" attributes="value"
+<polymer-element name="spark-toggle-button" attributes="value"
     on-click="{{toggle}}" 
     on-tap="{{toggle}}" 
     on-trackstart="{{trackStart}}" 
@@ -29,7 +29,7 @@
     
   <template>
     <!-- TODO(terry): link/rel for css not working, need to inline the style -->
-    <!-- link rel="stylesheet" href="css/spark-togglebutton.css" /-->
+    <!-- link rel="stylesheet" href="css/spark-toggle-button.css" /-->
     <style>
       @host {
         * {
@@ -131,5 +131,5 @@
     </div>
   </template>
   
-  <script type="application/dart" src="spark-togglebutton.dart"></script>
+  <script type="application/dart" src="spark-toggle-button.dart"></script>
 </polymer-element>

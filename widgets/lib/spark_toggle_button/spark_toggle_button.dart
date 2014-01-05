@@ -15,7 +15,7 @@ import '../common/widget.dart';
 // TODO(terry): Need to properly support touch.  Today there's an onclick
 //               handler in the template to toggle the state - this shouldn't
 //               be needed.
-@CustomTag("spark-togglebutton")
+@CustomTag("spark-toggle-button")
 class SparkToggleButton extends Widget {
   /// Gets or sets the state, true is ON and false is OFF.
   @observable bool value = false;

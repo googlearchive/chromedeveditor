@@ -16,7 +16,7 @@ class Examples extends PolymerElement {
                  'spark-selection',
                  'spark-selector',
                  'spark-splitter',
-                 'spark-togglebutton',
+                 'spark-toggle-button',
                  'spark-toolbar'];
 
   factory Examples() => new Element.tag('Examples');
