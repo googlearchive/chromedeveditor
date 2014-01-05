@@ -290,40 +290,6 @@
       </div>
     </spark-modal>
 
-    <!-- New File dialog -->
-    <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
-      <div class="modal-body">
-        <p>
-          File name: <input id="fileNewName" type="text" focused>
-        </p>
-      </div>
-      <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
-        </spark-button>
-        <spark-button id="fileNewOkButton" overlay-toggle primary
-            data-dismiss="modal">
-          Create
-        </spark-button>
-      </div>
-    </spark-overlay>
-
-    <!-- New Folder dialog -->
-    <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
-      <div class="modal-body">
-        <p>
-          Folder name: <input id="folderName" type="text" focused>
-        </p>
-      </div>
-      <div class="modal-footer">
-        <spark-button data-dismiss="modal">
-          Cancel
-        </spark-button>
-        <spark-button id="folderNewOkButton" primary
-            data-dismiss="modal">Create</spark-button>
-      </div>
-    </spark-overlay>
-
     <!-- Rename File dialog -->
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
@@ -367,6 +333,8 @@
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
         <h4 class="modal-title">Spark</h4>
       </div>
       <div class="modal-body">
