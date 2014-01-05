@@ -4,6 +4,7 @@
 
 library spark_widgets.menu;
 
+import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../spark-overlay/spark-overlay.dart';
@@ -13,4 +14,12 @@ import '../spark-overlay/spark-overlay.dart';
 @CustomTag("spark-modal")
 class SparkModal extends SparkOverlay {
   SparkModal.created(): super.created();
+
+  @override
+  void captureHandler(MouseEvent e) {
+    if (!pointInOverlay(this, e.client)) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    }
+  }
 }
