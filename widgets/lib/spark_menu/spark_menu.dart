@@ -6,7 +6,7 @@ library spark_widgets.menu;
 
 import 'package:polymer/polymer.dart';
 
-import '../spark-selector/spark-selector.dart';
+import '../spark_selector/spark_selector.dart';
 
 // Ported from Polymer Javascript to Dart code.
 

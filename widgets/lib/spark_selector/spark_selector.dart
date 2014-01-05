@@ -9,7 +9,7 @@ import 'dart:html' show MutationRecord, MutationObserver, Node, Element, EventLi
 import 'package:polymer/polymer.dart';
 import "package:template_binding/template_binding.dart" show nodeBind;
 
-import '../spark-selection/spark-selection.dart';
+import '../spark_selection/spark_selection.dart';
 
 // Ported from Polymer Javascript to Dart code.
 
