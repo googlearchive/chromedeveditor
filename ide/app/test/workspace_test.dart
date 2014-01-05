@@ -335,14 +335,11 @@ defineTests() {
         file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'dart warning', 3);
         file.createMarker('dart', ws.Marker.SEVERITY_INFO, 'dart info marker', 4);
 
-        int severity = project.findMaxProblemSeverity('dart');
+        int severity = project.findMaxProblemSeverity();
         expect(severity, ws.Marker.SEVERITY_ERROR);
-        severity = project.findMaxProblemSeverity('html');
+        severity = htmlFile.findMaxProblemSeverity();
         expect(severity, ws.Marker.SEVERITY_WARNING);
-
       });
-
     });
-
   });
 }

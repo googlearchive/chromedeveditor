@@ -254,6 +254,11 @@ class TreeView implements ListViewDelegate {
     return _delegate.treeViewHeightForNode(this, _rows[rowIndex].nodeUID);
   }
 
+  TreeViewCell getTreeViewCellForUID(String nodeUID) {
+    int rowIndex = _rowsMap[nodeUID].rowIndex;
+    return _listView.cellForRow(rowIndex);
+  }
+
   /**
    * Returns the list of node UIDs based on the list of row indexes.
    */

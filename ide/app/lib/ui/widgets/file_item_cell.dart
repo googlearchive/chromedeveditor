@@ -11,20 +11,22 @@ library spark.ui.widgets.fileitem_cell;
 import 'dart:html';
 
 import 'listview_cell.dart';
+import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
+  Resource _resource;
   Element _element;
-  Element _container;
   bool _highlighted;
   bool acceptDrop;
 
-  FileItemCell(String name) {
+  FileItemCell(this._resource) {
     DocumentFragment template =
         (querySelector('#fileview-filename-template') as TemplateElement).content;
     DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.fileview-filename-container');
-    _element.querySelector('.filename').text = name;
+    _element.querySelector('.filename').text = _resource.name;
     acceptDrop = false;
+    updateErrorStatus();
   }
 
   Element get element => _element;
@@ -35,9 +37,17 @@ class FileItemCell implements ListViewCell {
 
   set highlighted(bool value) => _highlighted = value;
 
-  Element get container => _container;
-
-  set container(Element container) => _container = container;
-
   Element get menuElement => _element.querySelector('.menu');
+
+  void updateErrorStatus() {
+    _element.classes.removeAll(['warning', 'error']);
+
+    int severity = _resource.findMaxProblemSeverity();
+
+    if (severity == Marker.SEVERITY_ERROR) {
+      _element.classes.add('error');
+    } else if (severity == Marker.SEVERITY_WARNING) {
+      _element.classes.add('warning');
+    }
+  }
 }

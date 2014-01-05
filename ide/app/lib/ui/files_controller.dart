@@ -17,6 +17,7 @@ import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
+import 'widgets/treeview_cell.dart';
 import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
 import '../preferences.dart' as preferences;
@@ -58,6 +59,8 @@ class FilesController implements TreeViewDelegate {
     _workspace.onResourceChange.listen((event) {
       _processEvents(event);
     });
+
+    _workspace.onMarkerChange.listen((_) => _processMarkerChange());
   }
 
   bool isFileSelected(Resource file) {
@@ -130,7 +133,7 @@ class FilesController implements TreeViewDelegate {
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     Resource resource = _filesMap[nodeUID];
-    FileItemCell cell = new FileItemCell(resource.name);
+    FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
       cell.acceptDrop = true;
     }
@@ -188,7 +191,7 @@ class FilesController implements TreeViewDelegate {
                            html.Event event) {
     cancelEvent(event);
     Resource resource = _filesMap[nodeUID];
-    FileItemCell cell = new FileItemCell(resource.name);
+    FileItemCell cell = new FileItemCell(resource);
     _showMenuForEvent(cell, event, resource);
   }
 
@@ -483,8 +486,16 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _sortTopLevel() {
-    _files.sort((Resource a, Resource b) => a.path.toLowerCase().
-        compareTo(b.path.toLowerCase()));
+    // Show top-level files before folders.
+    _files.sort((Resource a, Resource b) {
+      if (a is File && b is Container) {
+        return -1;
+      } else if (a is Container && b is File) {
+        return 1;
+      } else {
+        return a.path.toLowerCase().compareTo(b.path.toLowerCase());
+      }
+    });
   }
 
   void _reloadData() {
@@ -513,7 +524,6 @@ class FilesController implements TreeViewDelegate {
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
-
     event.changes.forEach((change) {
       if (change.type == EventType.ADD) {
         var resource = change.resource;
@@ -539,6 +549,18 @@ class FilesController implements TreeViewDelegate {
       }
     });
     _reloadData();
+  }
+
+  /**
+   * Traverse all the created [FileItemCell]s, calling updateErrorStatus().
+   */
+  void _processMarkerChange() {
+    for (String uid in _filesMap.keys) {
+      TreeViewCell treeViewCell = _treeView.getTreeViewCellForUID(uid);
+      FileItemCell fileItemCell = treeViewCell.embeddedCell;
+
+      fileItemCell.updateErrorStatus();
+    }
   }
 
   void _recursiveAddResource(Resource resource) {
