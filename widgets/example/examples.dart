@@ -12,7 +12,6 @@ class Examples extends PolymerElement {
                  'spark-menu-button',
                  'spark-menu-item',
                  'spark-overlay',
-                 'spark-select',
                  'spark-selection',
                  'spark-selector',
                  'spark-splitter',
