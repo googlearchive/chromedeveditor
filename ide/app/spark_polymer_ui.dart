@@ -15,6 +15,12 @@ import 'spark_model.dart';
 class SparkPolymerUI extends Widget {
   SparkPolymerUI.created() : super.created();
 
+  void toggleDropdownMenu() {
+    var menu = getShadowDomElement("#dropDownMenu");
+    menu.style.display =
+      menu.style.display == "block" ? "none" : "block";
+  }
+
   void onMenuSelected(Event event, var detail) {
     final actionId = detail['item'];
     final action = SparkModel.instance.actionManager.getAction(actionId);
