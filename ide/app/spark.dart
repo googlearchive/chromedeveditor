@@ -10,7 +10,6 @@ import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
-import 'package:chrome_gen/src/files.dart' as chrome_files;
 import 'package:logging/logging.dart';
 import 'package:dquery/dquery.dart';
 
@@ -889,7 +888,7 @@ class _GitCloneJob extends Job {
 
     Completer completer = new Completer();
 
-    getGitTestFileSystem().then((chrome_files.CrFileSystem fs) {
+    getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         GitOptions options = new GitOptions();
         options.root = dir;
