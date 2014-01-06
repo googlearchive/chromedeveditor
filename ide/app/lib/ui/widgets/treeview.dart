@@ -188,6 +188,9 @@ class TreeView implements ListViewDelegate {
         TreeViewCell cell = _listView.cellForRow(rowIndex);
         // We can use toggleExpanded() here since we made sure that it was
         // different from the current value.
+        // TreeViewCell.toggleExpanded() will animate, then call
+        // TreeView.setNodeExpanded with animated = false when animation is
+        // done.
         cell.toggleExpanded();
       } else {
         HashSet<String> previousSelection = new HashSet.from(selection);
