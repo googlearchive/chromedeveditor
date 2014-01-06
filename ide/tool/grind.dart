@@ -178,9 +178,9 @@ void archive(GrinderContext context, [String outputZip]) {
 
 void docs(GrinderContext context) {
   FileSet docFiles = new FileSet.fromDir(
-      new Directory('docs'), endsWith: '.html');
+      new Directory('docs'), pattern: '*.html');
   FileSet sourceFiles = new FileSet.fromDir(
-      new Directory('app'), endsWith: '.dart', recurse: true);
+      new Directory('app'), pattern: '*.dart', recurse: true);
 
   if (!docFiles.upToDate(sourceFiles)) {
     runSdkBinary(context, 'dartdoc',
@@ -191,7 +191,7 @@ void docs(GrinderContext context) {
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
                     'app/spark_polymer.dart']);
-    _zip(context, 'docs', '../${DIST_DIR.path}/spark-docs.zip');
+    _zip(context, 'docs', '${DIST_DIR.path}/spark-docs.zip');
   }
 }
 
@@ -656,13 +656,15 @@ class StatsCounter {
 
   int get lineCount => _lines;
 
-  String toString() => 'found ${_NF.format(fileCount)} dart files,'
-      ' ${_NF.format(lineCount)} lines of code.';
+  String toString() => 'Found ${_NF.format(fileCount)} Dart files and '
+      '${_NF.format(lineCount)} lines of code.';
 
   void _collectLineInfo(Directory dir) {
     for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
       if (entity is Directory) {
-        if (fileName(entity) != 'packages' && !fileName(entity).startsWith('.')) {
+        if (fileName(entity) != 'packages' &&
+            fileName(entity) != 'build' &&
+            !fileName(entity).startsWith('.')) {
           _collectLineInfo(entity);
         }
       } else if (entity is File) {
