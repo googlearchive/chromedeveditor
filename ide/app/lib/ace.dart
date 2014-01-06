@@ -72,9 +72,7 @@ class AceContainer {
 
   List<ace.Annotation> setMarkers(List<workspace.Marker> markers) {
     ace.EditSession currentSession = this.currentSession;
-    // TODO(ericarnold): This is a hack until `annotations` can be modified
-    // directly.
-    var annotations = currentSession.annotations;
+    List<ace.Annotation> annotations = [];
 
     for (workspace.Marker marker in markers) {
       // TODO(ericarnold): Check the type here before taking from severity.
