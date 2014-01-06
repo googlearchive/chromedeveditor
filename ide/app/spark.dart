@@ -222,26 +222,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void initWorkspace() {
     _workspace = new ws.Workspace(localPrefs);
-
-    _workspace.onMarkerChange.listen((ws.MarkerChangeEvent event) {
-      ws.File currentFile = editorManager.currentFile;
-      ws.File eventFile = event.resource;
-
-      if (eventFile == currentFile) {
-        switch (event.type) {
-          case ws.EventType.ADD:
-            ws.Marker marker = event.marker;
-            _aceContainer.setAnnotation(
-                text: marker.message,
-                row: marker.lineNum,
-                // TODO (ericarnold): Update with actual annotation type.
-                type: ace.Annotation.INFO);
-            break;
-          case ws.EventType.DELETE:
-            _aceContainer.clearAnnotations();
-        }
-      }
-    });
   }
 
   void createEditorComponents() {
