@@ -2,6 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -15,6 +16,13 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 final Directory BUILD_DIR = new Directory('build');
 final Directory DIST_DIR = new Directory('dist');
+
+// Here's how to generate refreshToken:
+// https://docs.google.com/a/google.com/document/d/1OEM4GGhMrOWS4pYvtIWtkw_17C2pAlWPxUFu-7_YF-4
+final String clientID = Platform.environment['SPARK_UPLOADER_CLIENTID'];
+final String clientSecret = Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
+final String refreshToken = Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
+final String appID = Platform.environment['SPARK_APP_ID'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
@@ -33,7 +41,7 @@ void main([List<String> args]) {
   if (!Platform.isWindows) {
     defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
     defineTask('release-nightly',
-               taskFunction : releaseNighly,
+               taskFunction : releaseNightly,
                depends : ['mode-notest', 'deploy']);
   }
 
@@ -141,7 +149,7 @@ void release(GrinderContext context) {
   }
 }
 
-void releaseNighly(GrinderContext context) {
+Future releaseNightly(GrinderContext context) {
   String version =
       _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
 
@@ -150,6 +158,108 @@ void releaseNighly(GrinderContext context) {
   String filename = 'spark-${version}.zip';
   archive(context, filename);
   context.log('Created ${filename}');
+  
+  return requestToken().then((String token) {
+    return uploadItem('dist/${filename}', token).then((e) {
+      context.log('Uploaded ${filename}');
+    });
+  });
+}
+
+Future requestToken() {
+  HttpClient client = new HttpClient();
+  return client.postUrl(Uri.parse("https://accounts.google.com/o/oauth2/token"))
+      .then((HttpClientRequest request) {
+        request.headers.contentType
+            = new ContentType("application", "x-www-form-urlencoded");
+        String postData = 'client_id=${Uri.encodeQueryComponent(clientID)}&client_secret=${Uri.encodeQueryComponent(clientSecret)}&refresh_token=${Uri.encodeQueryComponent(refreshToken)}&grant_type=refresh_token';
+        request.headers.contentLength = postData.length;
+        request.headers.set('Accept', '*/*');
+        request.write(postData);
+        return request.close();
+      })
+      .then((HttpClientResponse response) {
+        Completer completer = new Completer();
+        String result = '';
+        response.listen((List<int> data) {
+          String str = new String.fromCharCodes(data);
+          result += str;
+        }, onError: (e) {
+          completer.completeError('error from stream when expected close');
+        }, onDone: () {
+          Map<String, String> response = JSON.decode(result) as Map<String, String>;
+          String token = response['access_token'];
+          if (token == null) {
+            completer.completeError('authentication error');
+          } else {
+            completer.complete(token);
+          }
+        });
+
+        return completer.future;
+      });
+}
+
+Future uploadItem(String filename, String token) {
+  File file = new File(filename);
+  List<int> data = file.readAsBytesSync();
+  
+  HttpClient client = new HttpClient();
+  return client.openUrl('PUT', Uri.parse("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${appID}"))
+      .then((HttpClientRequest request) {
+        request.headers.contentType
+            = new ContentType("application", "zip");
+        request.headers.contentLength = data.length;
+        request.headers.set('Accept', '*/*');
+        request.headers.set('x-goog-api-version', '2');
+        request.headers.set('Authorization', 'Bearer ${token}');
+        request.add(data);
+        return request.close();
+      })
+      .then((HttpClientResponse response) {
+        Completer completer = new Completer();
+        String result = '';
+        response.listen((List<int> data) {
+          String str = new String.fromCharCodes(data);
+          result += str;
+        }, onError: (e) {
+          completer.completeError('error from stream when expected close');
+        }, onDone: () {
+          completer.complete(result);
+        });
+
+        return completer.future;
+      });
+}
+
+Future publishItem(String token) {
+  HttpClient client = new HttpClient();
+  print("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${appID}/publish");
+  return client.postUrl(Uri.parse("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${appID}/publish"))
+      .then((HttpClientRequest request) {
+        request.headers.contentType = 'application/json';
+        request.headers.contentLength = 2;
+        request.headers.set('Accept', '*/*');
+        request.headers.set('x-goog-api-version', '2');
+        request.headers.set('Authorization', 'Bearer ${token}');
+        print('Authorization: Bearer ${token}');
+        request.write('{}');
+        return request.close();
+      })
+      .then((HttpClientResponse response) {
+        Completer completer = new Completer();
+        String result = '';
+        response.listen((List<int> data) {
+          String str = new String.fromCharCodes(data);
+          result += str;
+        }, onError: (e) {
+          completer.completeError('error from stream when expected close');
+        }, onDone: () {
+          completer.complete(result);
+        });
+
+        return completer.future;
+      });
 }
 
 // Creates an archive of the Chrome App.
