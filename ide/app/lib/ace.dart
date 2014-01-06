@@ -78,7 +78,7 @@ class AceContainer {
 
     for (workspace.Marker marker in markers) {
       // TODO(ericarnold): Check the type here before taking from severity.
-      String annotationType = _convertMarkerType(marker.severity);
+      String annotationType = _convertMarkerSeverity(marker.severity);
       var annotation = new ace.Annotation(
           text: marker.message,
           row: marker.lineNum,
@@ -160,8 +160,8 @@ class AceContainer {
     }
   }
 
-  String _convertMarkerType(int markerType) {
-    switch (markerType) {
+  String _convertMarkerSeverity(int markerSeverity) {
+    switch (markerSeverity) {
       case workspace.Marker.SEVERITY_ERROR:
         return ace.Annotation.WARNING;
         break;
