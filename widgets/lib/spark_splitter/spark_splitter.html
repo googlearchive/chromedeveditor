@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ * spark-splitter provides a split bar, which, when dragged, will resize one
+ * of the sibling elements. Use the property "direction" to indicate
+ * the orientation of the split and which sibling to resize:
+ *   "left":  vertical split,   left sibling
+ *   "rigth": vertical split,   right sibling
+ *   "up":    horizontal split, upper sibling
+ *   "down":  horizontal split, lower sibling
+ *
+ * Examples:
+ *
+ *     <div class="flexbox">
+ *       <div>left</div>
+ *       <spark-splitter direction="left"></spark-splitter>
+ *       <div flex>right</div>
+ *     </div>
+ *
+ *     <div class="flexbox column">
+ *       <div>top</div>
+ *       <spark-splitter direction="up"></spark-splitter>
+ *       <div flex>bottom</div>
+ *     </div>
+ */
+-->
+
+<polymer-element name="spark-splitter" attributes="direction locked">
+  <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="spark_splitter.css" -->
+    <style>
+      @host {
+        * {
+          display: block;
+          width: 10px;
+          background: #efefef url(packages/spark_widgets/spark_splitter/handle.png) no-repeat center;
+          box-shadow: inset 0 0 2px 1px #ccc;
+          opacity: 0.9;
+          cursor: col-resize;
+        }
+
+        .horizontal {
+          width: auto;
+          height: 10px;
+          cursor: row-resize;
+          background-image: url(packages/spark_widgets/spark-splitter/handle_horiz.png) no-repeat center;
+        }
+
+        :hover, .active {
+          background-color: #ddd;
+        }
+      }
+    </style>
+  </template>
+
+  <script type="application/dart" src="spark_splitter.dart"></script>
+</polymer-element>

@@ -88,7 +88,7 @@ body {
 }
 
 .fileview-filename-container:hover .menu {
-  opacity: 1.0;
+  opacity: 1;
 }
 
 .ace_gutter-cell {
@@ -204,7 +204,7 @@ body {
 }
 
 #editedFilename.hidden {
-  opacity: 0.0;
+  opacity: 0;
 }
 
 /* bootstrap overrides */
