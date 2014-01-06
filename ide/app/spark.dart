@@ -18,6 +18,8 @@ import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/builder.dart';
+import 'lib/dart/dart_builder.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/event_bus.dart';
@@ -93,6 +95,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
+  BuilderManager _buildManager;
   EditorManager _editorManager;
   EditorArea _editorArea;
 
@@ -149,6 +152,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       // whether the content of the workspace changed.
       workspace.refresh();
     });
+
+    addBuilder(new DartBuilder());
   }
 
   //
@@ -240,7 +245,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void initActivitySpinner() {
-    _activitySpinner = new ActivitySpinner(this, id: '#activitySpinner');
+    _activitySpinner = new ActivitySpinner(this, '#activitySpinner');
     _activitySpinner.setShowing(false);
 
     // TODO: This might cause the spinner to "blink" between jobs.
@@ -390,6 +395,14 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
   // - End parts of ctor.
   //
+
+  void addBuilder(Builder builder) {
+    if (_buildManager == null) {
+      _buildManager = new BuilderManager(workspace, jobManager);
+    }
+
+    _buildManager.builders.add(builder);
+  }
 
   /**
    * Allow for creating a new file using the Save as dialog.
@@ -553,8 +566,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 class ActivitySpinner {
   Element element;
 
-  ActivitySpinner(Spark spark, {String id}) {
-    element = spark.getUIElement(id);
+  ActivitySpinner(Spark spark, String elementId) {
+    element = spark.getUIElement(elementId);
   }
 
   void setShowing(bool showing) {
