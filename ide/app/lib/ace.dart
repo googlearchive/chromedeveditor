@@ -164,7 +164,16 @@ class AceContainer {
     if (file != null) {
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
+      if (_markerChangeHandler == null) {
+        workspace.Workspace fileWorkspace = file.workspace;
+        fileWorkspace.onMarkerChange.listen(_handleMarkerChange);
+        _markerChangeHandler = _handleMarkerChange;
+      }
     }
+  }
+
+  var _markerChangeHandler = null;
+  _handleMarkerChange(workspace.MarkerChangeEvent event) {
   }
 
   String _convertMarkerSeverity(int markerSeverity) {
