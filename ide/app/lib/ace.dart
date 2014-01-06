@@ -89,14 +89,6 @@ class AceContainer {
     return annotations;
   }
 
-  bool removeAnnotation(ace.Annotation annotation) {
-    ace.EditSession currentSession = this.currentSession;
-    var annotations = currentSession.annotations;
-    bool success = annotations.remove(annotation);
-    currentSession.annotations = annotations;
-    return success;
-  }
-
   clearAnnotations() {
     ace.EditSession currentSession = this.currentSession;
     var annotations = new List<ace.Annotation>();
