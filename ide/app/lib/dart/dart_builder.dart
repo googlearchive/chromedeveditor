@@ -45,12 +45,10 @@ class DartBuilder extends Builder {
           LineInfo_Location location = result.getLineInfo(error);
 
           // Create markers.
-          Marker marker = file.createMarker(
+          file.createMarker(
               'dart', _convertSeverity(error.errorCode.errorSeverity),
               error.message, location.lineNumber,
               error.offset, error.offset + error.length);
-
-          print(marker);
         }
       });
     });
