@@ -70,21 +70,23 @@ class AceContainer {
     theme = THEMES[0];
   }
 
-  ace.Annotation setAnnotation({
-      String text : null,
-      int row  : 0,
-      String type : ace.Annotation.INFO }) {
+  List<ace.Annotation> setMarkers(List<workspace.Marker> markers) {
+    ace.EditSession currentSession = this.currentSession;
     // TODO(ericarnold): This is a hack until `annotations` can be modified
     // directly.
-    ace.EditSession currentSession = this.currentSession;
     var annotations = currentSession.annotations;
-    var annotation = new ace.Annotation(
-        text: text,
-        row: row,
-        type: type);
-    annotations.add(annotation);
+
+    for (workspace.Marker marker in markers) {
+      // TODO(ericarnold): Check the type here before taking from severity.
+      String annotationType = _convertMarkerType(marker.severity);
+      var annotation = new ace.Annotation(
+          text: marker.message,
+          row: marker.lineNum,
+          type: annotationType);
+      annotations.add(annotation);
+    }
     currentSession.annotations = annotations;
-    return annotation;
+    return annotations;
   }
 
   bool removeAnnotation(ace.Annotation annotation) {
@@ -167,6 +169,20 @@ class AceContainer {
       if (_aceEditor.readOnly) {
         _aceEditor.readOnly = false;
       }
+    }
+  }
+
+  String _convertMarkerType(int markerType) {
+    switch (markerType) {
+      case workspace.Marker.SEVERITY_ERROR:
+        return ace.Annotation.WARNING;
+        break;
+      case workspace.Marker.SEVERITY_WARNING:
+        return ace.Annotation.WARNING;
+        break;
+      case workspace.Marker.SEVERITY_INFO:
+        return ace.Annotation.WARNING;
+        break;
     }
   }
 }

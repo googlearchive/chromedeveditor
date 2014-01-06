@@ -710,12 +710,12 @@ class Marker {
   /**
    * Indicates maker is a warning.
    */
-  static const SEVERITY_WARNING = 1;
+  static const int SEVERITY_WARNING = 1;
 
   /**
    * Indicates marker is informational.
    */
-  static const SEVERITY_INFO = 0;
+  static const int SEVERITY_INFO = 0;
 
   Marker(this.file, String type, int severity, String message, int lineNum, [int charStart=-1, int charEnd=-1]) {
     _attributes[TYPE] = type;
