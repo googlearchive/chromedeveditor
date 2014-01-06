@@ -43,6 +43,8 @@ class MockAceContainer implements AceContainer {
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);
   void setKeyBinding(String name) { }
+  clearAnnotations() { }
+  List<ace.Annotation> setMarkers(List<workspace.Marker> markers) { }
 }
 
 class MockAceEditor implements AceEditor {
