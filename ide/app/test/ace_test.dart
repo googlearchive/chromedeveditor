@@ -38,7 +38,7 @@ class MockAceContainer implements AceContainer {
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }
-  void switchTo(EditSession session) { }
+  void switchTo(EditSession session, [workspace.File file]) { }
   set theme(String value) { }
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);

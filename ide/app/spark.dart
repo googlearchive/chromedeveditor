@@ -10,7 +10,6 @@ import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
-import 'package:chrome_gen/src/files.dart' as chrome_files;
 import 'package:logging/logging.dart';
 import 'package:dquery/dquery.dart';
 
@@ -18,6 +17,8 @@ import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/builder.dart';
+import 'lib/dart/dart_builder.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/event_bus.dart';
@@ -93,6 +94,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
+  BuilderManager _buildManager;
   EditorManager _editorManager;
   EditorArea _editorArea;
 
@@ -149,6 +151,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       // whether the content of the workspace changed.
       workspace.refresh();
     });
+
+    addBuilder(new DartBuilder());
   }
 
   //
@@ -240,7 +244,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void initActivitySpinner() {
-    _activitySpinner = new ActivitySpinner(this, id: '#activitySpinner');
+    _activitySpinner = new ActivitySpinner(this, '#activitySpinner');
     _activitySpinner.setShowing(false);
 
     // TODO: This might cause the spinner to "blink" between jobs.
@@ -330,10 +334,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
-    actionManager.registerAction(new FileNewAction(
-        this, getDialogElement('#fileNewDialog')));
-    actionManager.registerAction(new FolderNewAction(
-        this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileExitAction(this));
@@ -394,6 +394,14 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
   // - End parts of ctor.
   //
+
+  void addBuilder(Builder builder) {
+    if (_buildManager == null) {
+      _buildManager = new BuilderManager(workspace, jobManager);
+    }
+
+    _buildManager.builders.add(builder);
+  }
 
   /**
    * Allow for creating a new file using the Save as dialog.
@@ -557,8 +565,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 class ActivitySpinner {
   Element element;
 
-  ActivitySpinner(Spark spark, {String id}) {
-    element = spark.getUIElement(id);
+  ActivitySpinner(Spark spark, String elementId) {
+    element = spark.getUIElement(elementId);
   }
 
   void setShowing(bool showing) {
@@ -717,81 +725,6 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isFileList(object);
 }
 
-class FileNewAction extends SparkActionWithDialog implements ContextAction {
-  InputElement _nameElement;
-  ws.Folder folder;
-
-  FileNewAction(Spark spark, Element dialog)
-      : super(spark, "file-new", "New File…", dialog) {
-    defaultBinding("ctrl-n");
-    _nameElement = _triggerOnReturn("#fileNewName");
-  }
-
-  void _invoke([List<ws.Folder> folders]) {
-    if (folders != null && folders.isNotEmpty) {
-      folder = folders.first;
-      _nameElement.value = '';
-      _show();
-    }
-  }
-
-  // called when user validates the dialog
-  void _commit() {
-    var name = _nameElement.value;
-    if (name.isNotEmpty) {
-      folder.createNewFile(name).then((file) {
-        // Delay a bit to allow the files view to process the new file event.
-        // TODO: This is due to a race condition in when the files view receives
-        // the resource creation event; we should remove the possibility for
-        // this to occur.
-        Timer.run(() {
-          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
-        });
-      });
-    }
-  }
-
-  String get category => 'resource';
-
-  bool appliesTo(Object object) => _isSingleFolder(object);
-}
-
-class FolderNewAction extends SparkActionWithDialog implements ContextAction {
-  InputElement _nameElement;
-  ws.Folder folder;
-
-  FolderNewAction(Spark spark, Element dialog)
-      : super(spark, "folder-new", "New Folder…", dialog) {
-    defaultBinding("ctrl-shift-n");
-    _nameElement = _triggerOnReturn("#folderName");
-  }
-
-  void _invoke([List<ws.Folder> folders]) {
-    if (folders != null && folders.isNotEmpty) {
-      folder = folders.first;
-      _nameElement.value = '';
-      _show();
-    }
-  }
-
-  // called when user validates the dialog
-  void _commit() {
-    var name = _nameElement.value;
-    if (name.isNotEmpty) {
-      folder.createNewFolder(name).then((folder) {
-        // Delay a bit to allow the files view to process the new file event.
-        Timer.run(() {
-          spark._filesController.selectFile(folder);
-        });
-      });
-    }
-  }
-
-  String get category => 'resource';
-
-  bool appliesTo(Object object) => _isSingleFolder(object);
-}
-
 class FileOpenAction extends SparkAction {
   FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
     defaultBinding("ctrl-o");
@@ -805,7 +738,6 @@ class FileNewAsAction extends SparkAction {
 
   void _invoke([Object context]) => spark.newFileAs();
 }
-
 
 class FileSaveAction extends SparkAction {
   FileSaveAction(Spark spark) : super(spark, "file-save", "Save") {
@@ -969,7 +901,7 @@ class _GitCloneJob extends Job {
 
     Completer completer = new Completer();
 
-    getGitTestFileSystem().then((chrome_files.CrFileSystem fs) {
+    getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         GitOptions options = new GitOptions();
         options.root = dir;

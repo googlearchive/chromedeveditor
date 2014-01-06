@@ -11,7 +11,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
+import 'packages/spark_widgets/spark_overlay/spark_overlay.dart' as widgets;
 
 import 'spark_polymer_ui.dart';
 
@@ -73,7 +73,7 @@ class SparkPolymer extends Spark {
   //
 
   @override
-  String get appName => super.appName + "Polymer";
+  String get appName => super.appName;
 
   @override
   void initAnalytics() => super.initAnalytics();

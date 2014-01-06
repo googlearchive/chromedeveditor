@@ -32,6 +32,9 @@ void main([List<String> args]) {
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
     defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
+    defineTask('release-nightly',
+               taskFunction : releaseNighly,
+               depends : ['mode-notest', 'deploy']);
   }
 
   defineTask('clean', taskFunction: clean);
@@ -85,11 +88,6 @@ void deploy(GrinderContext context) {
       'spark_polymer.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer_ui.html_bootstrap.dart', true);
-  // TODO(ussuri): this is needed only in the interim while we still want to
-  // switch back to non-Polymer UI for reference. Remove this once the
-  // switchover to Polymer is complete.
-  _dart2jsCompile(context, joinDir(destDir, ['web']),
-      'spark.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -122,7 +120,8 @@ void release(GrinderContext context) {
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
 
-  archive(context);
+  String filename = 'spark-${version}.zip';
+  archive(context, filename);
 
   var sep = Platform.pathSeparator;
   _runCommandSync(
@@ -133,9 +132,6 @@ void release(GrinderContext context) {
     context,
     'git commit -m "Build version ${version}" app${sep}manifest.json');
 
-  File file = new File('dist/spark.zip');
-  String filename = 'spark-${version}.zip';
-  file.renameSync('dist/${filename}');
   context.log('Created ${filename}');
   context.log('** A commit has been created, you need to push it. ***');
   print('Do you want to push to the remote git repository now? (y/n [n])');
@@ -143,6 +139,17 @@ void release(GrinderContext context) {
   if (line.trim() == 'y') {
     _runCommandSync(context, 'git push origin master');
   }
+}
+
+void releaseNighly(GrinderContext context) {
+  String version =
+      _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
+
+  // Creating an archive of the Chrome App.
+  context.log('Creating build ${version}');
+  String filename = 'spark-${version}.zip';
+  archive(context, filename);
+  context.log('Created ${filename}');
 }
 
 // Creates an archive of the Chrome App.
@@ -166,9 +173,9 @@ void archive(GrinderContext context, [String outputZip]) {
 
 void docs(GrinderContext context) {
   FileSet docFiles = new FileSet.fromDir(
-      new Directory('docs'), endsWith: '.html');
+      new Directory('docs'), pattern: '*.html');
   FileSet sourceFiles = new FileSet.fromDir(
-      new Directory('app'), endsWith: '.dart', recurse: true);
+      new Directory('app'), pattern: '*.dart', recurse: true);
 
   if (!docFiles.upToDate(sourceFiles)) {
     runSdkBinary(context, 'dartdoc',
@@ -179,7 +186,7 @@ void docs(GrinderContext context) {
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
                     'app/spark_polymer.dart']);
-    _zip(context, 'docs', '../${DIST_DIR.path}/spark-docs.zip');
+    _zip(context, 'docs', '${DIST_DIR.path}/spark-docs.zip');
   }
 }
 
@@ -384,6 +391,45 @@ String _increaseBuildNumber(GrinderContext context, {bool removeKey: false}) {
 
   version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
+  if (removeKey) {
+    manifestDict.remove('key');
+  }
+  file.writeAsStringSync(new JsonPrinter().print(manifestDict));
+
+  // It needs to be copied to compile result directory.
+  copyFile(
+      joinFile(Directory.current, ['app', 'manifest.json']),
+      joinDir(BUILD_DIR, ['deploy-out', 'web']));
+
+  return version;
+}
+
+String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
+                                             {bool removeKey: false})
+{
+  String buildNumber = Platform.environment['DRONE_BUILD_NUMBER'];
+  String revision = Platform.environment['DRONE_COMMIT'];
+  if (buildNumber == null || revision == null) {
+    context.fail("This build process must be run in a drone.io environment");
+    return null;
+  }
+
+  // Tweaking build version in manifest.
+  File file = new File('app/manifest.json');
+  String content = file.readAsStringSync();
+  var manifestDict = JSON.decode(content);
+  String version = manifestDict['version'];
+  RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
+  Iterable<Match> matches = exp.allMatches(version);
+  assert(matches.length > 0);
+
+  Match m = matches.first;
+  String majorVersion = m.group(1);
+  int buildVersion = int.parse(buildNumber);
+
+  version = '${majorVersion}.${buildVersion}';
+  manifestDict['version'] = version;
+  manifestDict['x-spark-revision'] = revision;
   if (removeKey) {
     manifestDict.remove('key');
   }
@@ -605,13 +651,15 @@ class StatsCounter {
 
   int get lineCount => _lines;
 
-  String toString() => 'found ${_NF.format(fileCount)} dart files,'
-      ' ${_NF.format(lineCount)} lines of code.';
+  String toString() => 'Found ${_NF.format(fileCount)} Dart files and '
+      '${_NF.format(lineCount)} lines of code.';
 
   void _collectLineInfo(Directory dir) {
     for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
       if (entity is Directory) {
-        if (fileName(entity) != 'packages' && !fileName(entity).startsWith('.')) {
+        if (fileName(entity) != 'packages' &&
+            fileName(entity) != 'build' &&
+            !fileName(entity).startsWith('.')) {
           _collectLineInfo(entity);
         }
       } else if (entity is File) {

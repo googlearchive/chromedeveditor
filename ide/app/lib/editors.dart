@@ -220,7 +220,7 @@ class EditorManager implements EditorProvider {
             return;
           }
           _selectedController.add(currentFile);
-          _aceContainer.switchTo(state.session);
+          _aceContainer.switchTo(state.session, state.file);
           _aceContainer.cursorPosition = state.cursorPosition;
           persistState();
         });

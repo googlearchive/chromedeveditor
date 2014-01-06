@@ -98,42 +98,6 @@
     </div>
   </div>
 
-  <!-- New File dialog -->
-  <div id="fileNewDialog" class="modal fade">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body">
-          <p>
-            File name: <input id="fileNewName" focused type="text">
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="fileNewOkButton" primary class="btn btn-primary"
-              data-dismiss="modal">Create</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- New Folder dialog -->
-  <div id="folderNewDialog" class="modal fade">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body">
-          <p>
-            Folder name: <input id="folderName" focused type="text">
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="folderNewOkButton" primary class="btn btn-primary"
-              data-dismiss="modal">Create</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Rename File dialog -->
   <div id="renameDialog" class="modal fade">
     <div class="modal-dialog">
@@ -227,6 +191,7 @@
 
   <!-- Ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
+  <script src="packages/ace/src/js/ext-language_tools.js"></script>
 
   <!-- This is necessary for dart:js -->
   <script src="packages/browser/interop.js"></script>

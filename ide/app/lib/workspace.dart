@@ -256,7 +256,7 @@ class Workspace implements Container {
    */
   Future _reloadContents() {
     List futures = [];
-    for(Project resource in getChildren()) {
+    for (Project resource in getChildren()) {
       if (resource is Project) {
         // We use a temporary project to fill the children...
         Project tmpProject =
@@ -287,7 +287,7 @@ class Workspace implements Container {
     _fillSetWithResource(existing, this);
     Set<String> current = new Set();
     List futures = [];
-    for(Resource resource in getChildren()) {
+    for (Resource resource in getChildren()) {
       futures.add(_gatherPaths(current, resource.entry));
     }
     return Future.wait(futures).then((e) {
@@ -565,10 +565,13 @@ class File extends Resource {
     });
   }
 
-  void createMarker(String type, int severity, String message, int lineno, [int start = -1, int end = -1]) {
-    Marker marker = new Marker(this, type, severity, message, lineno, start, end);
+  Marker createMarker(String type, int severity, String message, int lineNum,
+                    [int charStart = -1, int charEnd = -1]) {
+    Marker marker = new Marker(
+        this, type, severity, message, lineNum, charStart, charEnd);
     _markers.add(marker);
     _fireMarkerEvent(new MarkerChangeEvent(this, marker, EventType.ADD));
+    return marker;
   }
 
   void clearMarkers() {
@@ -641,6 +644,13 @@ class ResourceChangeEvent {
   }
 
   ResourceChangeEvent._(List<ChangeDelta> delta): changes = new UnmodifiableListView(delta);
+
+  /**
+   * A convenience getter used to return modified (new or changed) files.
+   */
+  Iterable<File> get modifiedFiles => changes
+      .where((delta) => !delta.isDelete && delta.resource is File)
+      .map((delta) => delta.resource);
 }
 
 /**
@@ -651,6 +661,10 @@ class ChangeDelta {
   final EventType type;
 
   ChangeDelta(this.resource, this.type);
+
+  bool get isAdd => type == EventType.ADD;
+  bool get isChange => type == EventType.CHANGE;
+  bool get isDelete => type == EventType.DELETE;
 
   String toString() => '${type}: ${resource}';
 }
@@ -717,14 +731,14 @@ class Marker {
    */
   static const int SEVERITY_INFO = 0;
 
-  Marker(this.file, String type, int severity, String message, int lineNum, [int charStart=-1, int charEnd=-1]) {
+  Marker(this.file, String type, int severity, String message, int lineNum,
+      [int charStart = -1, int charEnd = -1]) {
     _attributes[TYPE] = type;
     _attributes[SEVERITY] = severity;
     _attributes[MESSAGE] = message;
     _attributes[LINE_NO] = lineNum;
     _attributes[CHAR_START] = charStart;
     _attributes[CHAR_END] = charEnd;
-
   }
 
   String get type => _attributes[TYPE];
@@ -743,8 +757,15 @@ class Marker {
 
   dynamic getAttribute(String key) => _attributes[key];
 
-}
+  String toString() => '${_severityDescription()}: ${message}, line ${lineNum}';
 
+  String _severityDescription() {
+    if (severity == SEVERITY_ERROR) return 'error';
+    if (severity == SEVERITY_WARNING) return 'warning';
+    if (severity == SEVERITY_INFO) return 'info';
+    return '';
+  }
+}
 
 /**
  * Used to indicates changes to markers
@@ -756,5 +777,4 @@ class MarkerChangeEvent {
   final EventType type;
 
   MarkerChangeEvent(this.resource, this.marker, this.type);
-
 }
