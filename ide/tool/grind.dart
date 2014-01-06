@@ -20,8 +20,10 @@ final Directory DIST_DIR = new Directory('dist');
 // Here's how to generate refreshToken:
 // https://docs.google.com/a/google.com/document/d/1OEM4GGhMrOWS4pYvtIWtkw_17C2pAlWPxUFu-7_YF-4
 final String clientID = Platform.environment['SPARK_UPLOADER_CLIENTID'];
-final String clientSecret = Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
-final String refreshToken = Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
+final String clientSecret =
+    Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
+final String refreshToken =
+    Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
 final String appID = Platform.environment['SPARK_APP_ID'];
 
 void main([List<String> args]) {
@@ -150,6 +152,23 @@ void release(GrinderContext context) {
 }
 
 Future releaseNightly(GrinderContext context) {
+  final String clientID = Platform.environment['SPARK_UPLOADER_CLIENTID'];
+  final String clientSecret = Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
+  final String refreshToken = Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
+  final String appID = Platform.environment['SPARK_APP_ID'];
+  if (clientID == null) {
+    context.fail("SPARK_UPLOADER_CLIENTID environment variable should be set and contain the client ID.");
+  }
+  if (clientSecret == null) {
+    context.fail("SPARK_UPLOADER_CLIENTSECRET environment variable should be set and contain the client secret.");
+  }
+  if (refreshToken == null) {
+    context.fail("SPARK_UPLOADER_REFRESHTOKEN environment variable should be set and contain the refresh token.");
+  }
+  if (appID == null) {
+    context.fail("SPARK_APP_ID environment variable should be set and contain the refresh token.");
+  }
+  
   String version =
       _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
 
@@ -185,7 +204,7 @@ Future requestToken() {
           String str = new String.fromCharCodes(data);
           result += str;
         }, onError: (e) {
-          completer.completeError('error from stream when expected close');
+          completer.completeError('Connection to server closed unexpectedly');
         }, onDone: () {
           Map<String, String> response = JSON.decode(result) as Map<String, String>;
           String token = response['access_token'];
@@ -223,7 +242,7 @@ Future uploadItem(String filename, String token) {
           String str = new String.fromCharCodes(data);
           result += str;
         }, onError: (e) {
-          completer.completeError('error from stream when expected close');
+          completer.completeError('Connection to server closed unexpectedly');
         }, onDone: () {
           completer.complete(result);
         });
@@ -253,7 +272,7 @@ Future publishItem(String token) {
           String str = new String.fromCharCodes(data);
           result += str;
         }, onError: (e) {
-          completer.completeError('error from stream when expected close');
+          completer.completeError('Connection to server closed unexpectedly');
         }, onDone: () {
           completer.complete(result);
         });
