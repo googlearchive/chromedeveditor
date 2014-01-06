@@ -73,6 +73,25 @@ class AceContainer {
     theme = THEMES[0];
   }
 
+  List<ace.Annotation> setMarkers(List<workspace.Marker> markers) {
+    ace.EditSession currentSession = this.currentSession;
+    List<ace.Annotation> annotations = [];
+
+    for (workspace.Marker marker in markers) {
+      // TODO(ericarnold): Check the type here before taking from severity.
+      String annotationType = _convertMarkerSeverity(marker.severity);
+      var annotation = new ace.Annotation(
+          text: marker.message,
+          row: marker.lineNum,
+          type: annotationType);
+      annotations.add(annotation);
+    }
+    currentSession.annotations = annotations;
+    return annotations;
+  }
+
+  clearAnnotations() => currentSession.annotations = [];
+
   String get theme => _aceEditor.theme.name;
 
   set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
@@ -145,6 +164,20 @@ class AceContainer {
     if (file != null) {
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
+    }
+  }
+
+  String _convertMarkerSeverity(int markerSeverity) {
+    switch (markerSeverity) {
+      case workspace.Marker.SEVERITY_ERROR:
+        return ace.Annotation.WARNING;
+        break;
+      case workspace.Marker.SEVERITY_WARNING:
+        return ace.Annotation.WARNING;
+        break;
+      case workspace.Marker.SEVERITY_INFO:
+        return ace.Annotation.WARNING;
+        break;
     }
   }
 }
