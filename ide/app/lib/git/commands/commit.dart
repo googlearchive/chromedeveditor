@@ -27,34 +27,35 @@ class Commit {
    */
   static Future<String> walkFiles(chrome.DirectoryEntry root,
       ObjectStore store) {
-    return FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
+    Completer completer = new Completer();
+
+    FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
       if (entries.isEmpty) {
         return null;
       }
 
       List<TreeEntry> treeEntries = [];
 
-      return Future.forEach(entries, (chrome.DirectoryEntry entry) {
+      Future.forEach(entries, (chrome.DirectoryEntry entry) {
         if (entry.name == '.git') {
-          return null;
+          return;
         }
 
         if (entry.isDirectory) {
-          return walkFiles(entry, store).then((String sha) {
+          walkFiles(entry, store).then((String sha) {
             if (sha != null) {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
                   false));
             }
-            return null;
+            return;
           });
         } else {
-          return (entry as chrome.ChromeFileEntry).readBytes().then(
+          (entry as chrome.ChromeFileEntry).readBytes().then(
               (chrome.ArrayBuffer buf) {
             store.writeRawObject('blob', new Uint8List.fromList(
                 buf.getBytes())).then((String sha) {
-              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
-                  true));
-              return null;
+              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
+              return;
             });
           });
         }
@@ -64,9 +65,13 @@ class Commit {
           String bName = b.isBlob ? b.name : (b.name + '/');
           return aName.compareTo(bName);
         });
-        return store.writeTree(treeEntries);
+        store.writeTree(treeEntries).then((String result) {
+          completer.complete(result);
+        });
       });
     });
+
+    return completer.future;
   }
 
   static Future checkTreeChanged(ObjectStore store, String parent,
@@ -79,11 +84,13 @@ class Commit {
         String oldTree = parentCommit.treeSha;
         if (oldTree == sha) {
           // TODO throw COMMITS_NO_CHANGES error.
+          throw "commits_no_changes";
         } else {
           return null;
         }
       }, onError: (e) {
         //TODO throw error object_store_corrupted.
+        throw "object_store_corrupted";
       });
     }
   }
@@ -96,13 +103,21 @@ class Commit {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
 
-    return store.getHeadRef().then((String headRefName) {
-      return store.getHeadForRef(headRefName).then((String parent) {
-        return _createCommitFromWorkingTree(options, parent, headRefName);
+    Completer completer = new Completer();
+
+    store.getHeadRef().then((String headRefName) {
+      store.getHeadForRef(headRefName).then((String parent) {
+        _createCommitFromWorkingTree(options, parent, headRefName).then(
+            (String str) {
+              completer.complete(str);
+            }, onError: (e) => throw e);
       }, onError: (e) {
-        return _createCommitFromWorkingTree(options, null, headRefName);
+        _createCommitFromWorkingTree(options, null, headRefName).then(
+            (String str) => completer.complete(str), onError: (e) => throw e);
       });
     });
+
+    return completer.future;
   }
 
   static Future _createCommitFromWorkingTree(GitOptions options, String parent,
@@ -113,8 +128,10 @@ class Commit {
     String email = options.email;
     String commitMsg = options.commitMessage;
 
-    return walkFiles(dir, store).then((String sha) {
-      return checkTreeChanged(store, parent, sha).then((_) {
+    Completer completer = new Completer();
+
+    walkFiles(dir, store).then((String sha) {
+      checkTreeChanged(store, parent, sha).then((_) {
         DateTime now = new DateTime.now();
         String dateString = (now.millisecond / 1000).floor().toString();
         int offset = (now.timeZoneOffset.inMilliseconds / -60).floor();
@@ -141,15 +158,19 @@ class Commit {
         commitParts.add('\n\n${commitMsg}\n');
 
         StringBuffer commitContent = new StringBuffer(commitParts);
-
-        return store.writeRawObject('commit', commitContent.toString()).then(
+        store.writeRawObject('commit', commitContent.toString()).then(
             (String commitSha) {
-          return FileOps.createFileWithContent(dir, '.git/${refName}',
+          FileOps.createFileWithContent(dir, '.git/${refName}',
               commitSha + '\n', 'Text').then((_) {
-            return store.updateLastChange(null).then((_) => commitSha);
+                store.updateLastChange(null).then((_) {
+                  completer.complete(commitSha);
+                },
+                onError: (e) => completer.completeError(e));
           });
         });
       });
     });
+
+    return completer.future;
   }
 }

@@ -196,18 +196,20 @@ class ObjectStore {
       sha.substring(0, 2) + '/' + sha.substring(2));
 
   Future<FindPackedObjectResult> _findPackedObject(Uint8List shaBytes) {
-    Completer completer = new Completer();
 
-    for (var i = 0; i < packs.length; ++i) {
-      int offset = packs[i].packIdx.getObjectOffset(shaBytes);
+    FindPackedObjectResult findPack() {
+      for (var i = 0; i < packs.length; ++i) {
+        int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
-      if (offset != -1) {
-        completer.complete(new FindPackedObjectResult(packs[i].pack, offset));
+        if (offset != -1) {
+          return new FindPackedObjectResult(packs[i].pack, offset);
+        }
       }
+      return throw("Not found.");
     }
 
     //TODO complete with error.
-    return completer.future;
+    return new Future.sync(() => findPack());
   }
 
   Future<GitObject> retrieveObject(String sha, String objType) {
@@ -472,15 +474,25 @@ class ObjectStore {
     var reader = new JsObject(context['FileReader']);
 
     reader['onloadend'] = (var event) {
-      chrome.ArrayBuffer buffer = reader['result'];
+      var result = reader['result'];
       crypto.SHA1 sha1 = new crypto.SHA1();
-      Uint8List data = new Uint8List.fromList(buffer.getBytes());
+
+      if (result is JsObject) {
+        var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
+        result = new Uint8List.fromList(arrBuf.getBytes());
+      } else if (result is ByteBuffer) {
+        result = new Uint8List.view(result);
+      }
+
+      Uint8List data = new Uint8List.fromList(result);
       sha1.add(data);
       List<int> digest = sha1.close();
-      return _findPackedObject(digest).then((_) {
-        completer.complete(digest);
+      _findPackedObject(digest).then((_) {
+        completer.complete(shaBytesToString(digest));
       }, onError: (e) {
-        return _storeInFile(shaBytesToString(digest), data);
+        Future<String> str = _storeInFile(shaBytesToString(digest), data).then((str) {
+          completer.complete(str);
+        });
       });
     };
 
@@ -489,6 +501,7 @@ class ObjectStore {
     };
 
     reader.callMethod('readAsArrayBuffer', [new Blob(blobParts)]);
+
     return completer.future;
   }
 
@@ -498,22 +511,19 @@ class ObjectStore {
 
     return objectDir.createDirectory(subDirName).then(
         (chrome.DirectoryEntry dirEntry) {
-      return dirEntry.createDirectory(objectFileName).then(
-          (chrome.FileEntry fileEntry) {
+      return dirEntry.createFile(objectFileName).then(
+          (chrome.ChromeFileEntry fileEntry) {
         return fileEntry.file().then((File file) {
-          Completer completer = new Completer();
-          if (file.size == 0) {
-            chrome.ArrayBuffer content = Zlib.deflate(store).buffer;
-            return fileEntry.createWriter().then((fileWriter) {
-              fileWriter.write(new Blob([content]));
-              completer.complete(digest);
-            }, onError: (e) {
 
+          Future<String> writeContent() {
+            chrome.ArrayBuffer content = Zlib.deflate(store).buffer;
+            // TODO: Use fileEntry.createWriter() once implemented in ChromeGen.
+            return fileEntry.writeBytes(content).then((_) {
+              return digest;
             });
-          } else {
-            completer.complete(digest);
           }
-          return completer.future;
+
+          return writeContent();
         }, onError: (e) {
 
         });
@@ -540,11 +550,15 @@ class ObjectStore {
   }
 
   Future<GitConfig> getConfig() {
-    return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
-        (String configStr)  => new GitConfig(configStr),
+    Completer completer = new Completer();
+
+    FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
+        (String configStr) => completer.complete(new GitConfig(configStr)),
       onError: (e) {
-      //TODO handle errors.
+        // TODO: handle errors / build default GitConfig.
+        completer.complete(new GitConfig());
       });
+    return completer.future;
   }
 
   Future<Entry> setConfig(GitConfig config) {
