@@ -88,11 +88,6 @@ void deploy(GrinderContext context) {
       'spark_polymer.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer_ui.html_bootstrap.dart', true);
-  // TODO(ussuri): this is needed only in the interim while we still want to
-  // switch back to non-Polymer UI for reference. Remove this once the
-  // switchover to Polymer is complete.
-  _dart2jsCompile(context, joinDir(destDir, ['web']),
-      'spark.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
