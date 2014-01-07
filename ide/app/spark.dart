@@ -7,7 +7,6 @@ library spark;
 import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html';
-import 'dart:js' as js;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome_gen/chrome_app.dart' as chrome;
@@ -284,14 +283,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         _filesController.selectFile(tab.file);
       }
       localPrefs.setValue('lastFileSelection', tab.file.path);
-      js.JsObject _context = js.context;
-      js.JsObject _ace = _context['ace'];
-      js.JsObject _gh = _ace['GutterHandler'];
-
-      var a = _ace.callMethod('edit', []);
-      js.JsObject _tooltip = _ace['moveTooltip'];
-      /*%TRACE3*/ print("(4> 1/7/14): _tooltip: " + _tooltip.toString()); // TRACE%
-
     });
   }
 
