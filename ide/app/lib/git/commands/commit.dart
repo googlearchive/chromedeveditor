@@ -82,7 +82,7 @@ class Commit {
           return null;
         }
       }, onError: (e) {
-        //TODO throw error object_store_corrupted.
+        // TODO throw error object_store_corrupted.
         throw "object_store_corrupted";
       });
     }
@@ -96,21 +96,13 @@ class Commit {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
 
-    Completer completer = new Completer();
-
-    store.getHeadRef().then((String headRefName) {
-      store.getHeadForRef(headRefName).then((String parent) {
-        _createCommitFromWorkingTree(options, parent, headRefName).then(
-            (String str) {
-              completer.complete(str);
-            }, onError: (e) => throw e);
+    return store.getHeadRef().then((String headRefName) {
+      return store.getHeadForRef(headRefName).then((String parent) {
+        return _createCommitFromWorkingTree(options, parent, headRefName);
       }, onError: (e) {
-        _createCommitFromWorkingTree(options, null, headRefName).then(
-            (String str) => completer.complete(str), onError: (e) => throw e);
+        return _createCommitFromWorkingTree(options, null, headRefName);
       });
     });
-
-    return completer.future;
   }
 
   static Future _createCommitFromWorkingTree(GitOptions options, String parent,
@@ -121,10 +113,8 @@ class Commit {
     String email = options.email;
     String commitMsg = options.commitMessage;
 
-    Completer completer = new Completer();
-
-    walkFiles(dir, store).then((String sha) {
-      checkTreeChanged(store, parent, sha).then((_) {
+    return walkFiles(dir, store).then((String sha) {
+      return checkTreeChanged(store, parent, sha).then((_) {
         DateTime now = new DateTime.now();
         String dateString = (now.millisecond / 1000).floor().toString();
         int offset = (now.timeZoneOffset.inMilliseconds / -60).floor();
@@ -151,19 +141,14 @@ class Commit {
         commitParts.add('\n\n${commitMsg}\n');
 
         StringBuffer commitContent = new StringBuffer(commitParts);
-        store.writeRawObject('commit', commitContent.toString()).then(
+        return store.writeRawObject('commit', commitContent.toString()).then(
             (String commitSha) {
-          FileOps.createFileWithContent(dir, '.git/${refName}',
+          return FileOps.createFileWithContent(dir, '.git/${refName}',
               commitSha + '\n', 'Text').then((_) {
-                store.updateLastChange(null).then((_) {
-                  completer.complete(commitSha);
-                },
-                onError: (e) => completer.completeError(e));
+                return store.updateLastChange(null).then((_) => commitSha);
           });
         });
       });
     });
-
-    return completer.future;
   }
 }
