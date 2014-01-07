@@ -77,7 +77,7 @@ class Workspace implements Container {
    */
   void resumeMarkerStream() {
     _markersPauseCount--;
-    if (_markersPauseCount == 0) {
+    if (_markersPauseCount == 0 && _makerChangeList.isNotEmpty) {
       _markerController.add(new MarkerChangeEvent.fromList(_makerChangeList));
       _makerChangeList.clear();
     }
@@ -816,13 +816,10 @@ class MarkerChangeEvent {
   MarkerChangeEvent._(List<MarkerDelta> delta): changes = new UnmodifiableListView(delta);
 
   /**
-   * Checks if given [File] is present in the list of delta for marker changes
+   * Checks if given [Resource] is present in the list of delta for marker changes
    */
   bool hasResourceChanged(Resource resource) {
-    changes.forEach((MarkerDelta delta) {
-        if (delta.resource == resource) return true;
-      });
-    return false;
+    return changes.any((delta) => delta.resource == resource);
   }
 
 }
