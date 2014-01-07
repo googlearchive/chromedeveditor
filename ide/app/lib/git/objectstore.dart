@@ -497,7 +497,6 @@ class ObjectStore {
     };
 
     reader.callMethod('readAsArrayBuffer', [new Blob(blobParts)]);
-
     return completer.future;
   }
 
@@ -546,15 +545,10 @@ class ObjectStore {
   }
 
   Future<GitConfig> getConfig() {
-    Completer completer = new Completer();
-
-    FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
-        (String configStr) => completer.complete(new GitConfig(configStr)),
-      onError: (e) {
-        // TODO: handle errors / build default GitConfig.
-        completer.complete(new GitConfig());
-      });
-    return completer.future;
+    return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
+        (String configStr) => new GitConfig(configStr),
+      // TODO: handle errors / build default GitConfig.
+      onError: (e) => new GitConfig());
   }
 
   Future<Entry> setConfig(GitConfig config) {
