@@ -67,7 +67,7 @@ class Workspace implements Container {
    * Stops the posting of [MarkerChangeEvent] to the stream. Clients should
    * call [resumeMakerEventStream] to resume posting of maker events.
    */
-  void pauseMarkerEventStream() {
+  void pauseMarkerStream() {
     _markersPauseCount ++;
   }
 
@@ -75,7 +75,7 @@ class Workspace implements Container {
    * Resumes posting of marker events to the stream. All marker changes made
    * when the stream was paused will be posted on resume.
    */
-  void resumeMarkerEventStream() {
+  void resumeMarkerStream() {
     _markersPauseCount--;
     if (_markersPauseCount == 0) {
       _markerController.add(new MarkerChangeEvent.fromList(_makerChangeList));
@@ -818,7 +818,7 @@ class MarkerChangeEvent {
   /**
    * Checks if given [File] is present in the list of delta for marker changes
    */
-  bool hasFileChanged(Resource resource) {
+  bool hasResourceChanged(Resource resource) {
     changes.forEach((MarkerDelta delta) {
         if (delta.resource == resource) return true;
       });

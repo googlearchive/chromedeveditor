@@ -357,10 +357,10 @@ defineTests() {
         ws.File file = project.getChild('myApp.dart');
         file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'warning marker', 2);
         return future.then((_) {
-          workspace.pauseMarkerEventStream();
+          workspace.pauseMarkerStream();
           file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
           file.createMarker('dart', ws.Marker.SEVERITY_INFO, 'dart info marker', 4);
-          workspace.resumeMarkerEventStream();
+          workspace.resumeMarkerStream();
           return future2;
         });
       });
