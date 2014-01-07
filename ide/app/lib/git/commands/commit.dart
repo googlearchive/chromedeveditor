@@ -27,16 +27,15 @@ class Commit {
    */
   static Future<String> walkFiles(chrome.DirectoryEntry root,
       ObjectStore store) {
-    Completer completer = new Completer();
 
-    FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
+    return FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
       if (entries.isEmpty) {
         return null;
       }
 
       List<TreeEntry> treeEntries = [];
 
-      Future.forEach(entries, (chrome.DirectoryEntry entry) {
+      return Future.forEach(entries, (chrome.DirectoryEntry entry) {
         if (entry.name == '.git') {
           return;
         }
@@ -47,7 +46,6 @@ class Commit {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
                   false));
             }
-            return;
           });
         } else {
           (entry as chrome.ChromeFileEntry).readBytes().then(
@@ -55,7 +53,6 @@ class Commit {
             store.writeRawObject('blob', new Uint8List.fromList(
                 buf.getBytes())).then((String sha) {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
-              return;
             });
           });
         }
@@ -65,13 +62,9 @@ class Commit {
           String bName = b.isBlob ? b.name : (b.name + '/');
           return aName.compareTo(bName);
         });
-        store.writeTree(treeEntries).then((String result) {
-          completer.complete(result);
-        });
+        return store.writeTree(treeEntries);
       });
     });
-
-    return completer.future;
   }
 
   static Future checkTreeChanged(ObjectStore store, String parent,
