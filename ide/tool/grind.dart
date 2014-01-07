@@ -10,6 +10,8 @@ import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 
+import 'webstore_client.dart';
+
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 // TODO: Make the deploy-test and deploy tasks incremental.
@@ -152,10 +154,6 @@ void release(GrinderContext context) {
 }
 
 Future releaseNightly(GrinderContext context) {
-  final String clientID = Platform.environment['SPARK_UPLOADER_CLIENTID'];
-  final String clientSecret = Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
-  final String refreshToken = Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
-  final String appID = Platform.environment['SPARK_APP_ID'];
   if (clientID == null) {
     context.fail("SPARK_UPLOADER_CLIENTID environment variable should be set and contain the client ID.");
   }
@@ -168,7 +166,7 @@ Future releaseNightly(GrinderContext context) {
   if (appID == null) {
     context.fail("SPARK_APP_ID environment variable should be set and contain the refresh token.");
   }
-  
+
   String version =
       _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
 
@@ -178,107 +176,15 @@ Future releaseNightly(GrinderContext context) {
   archive(context, filename);
   context.log('Created ${filename}');
   
-  return requestToken().then((String token) {
-    return uploadItem('dist/${filename}', token).then((e) {
+  WebStoreClient client =
+      new WebStoreClient(appID, clientID, clientSecret, refreshToken);
+  context.log('Authenticating...');
+  return client.requestToken().then((e) {
+    context.log('Uploading ${filename}...');
+    return client.uploadItem('dist/${filename}').then((e) {
       context.log('Uploaded ${filename}');
     });
   });
-}
-
-Future requestToken() {
-  HttpClient client = new HttpClient();
-  return client.postUrl(Uri.parse("https://accounts.google.com/o/oauth2/token"))
-      .then((HttpClientRequest request) {
-        request.headers.contentType
-            = new ContentType("application", "x-www-form-urlencoded");
-        String postData = 'client_id=${Uri.encodeQueryComponent(clientID)}&client_secret=${Uri.encodeQueryComponent(clientSecret)}&refresh_token=${Uri.encodeQueryComponent(refreshToken)}&grant_type=refresh_token';
-        request.headers.contentLength = postData.length;
-        request.headers.set('Accept', '*/*');
-        request.write(postData);
-        return request.close();
-      })
-      .then((HttpClientResponse response) {
-        Completer completer = new Completer();
-        String result = '';
-        response.listen((List<int> data) {
-          String str = new String.fromCharCodes(data);
-          result += str;
-        }, onError: (e) {
-          completer.completeError('Connection to server closed unexpectedly');
-        }, onDone: () {
-          Map<String, String> response = JSON.decode(result) as Map<String, String>;
-          String token = response['access_token'];
-          if (token == null) {
-            completer.completeError('authentication error');
-          } else {
-            completer.complete(token);
-          }
-        });
-
-        return completer.future;
-      });
-}
-
-Future uploadItem(String filename, String token) {
-  File file = new File(filename);
-  List<int> data = file.readAsBytesSync();
-  
-  HttpClient client = new HttpClient();
-  return client.openUrl('PUT', Uri.parse("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${appID}"))
-      .then((HttpClientRequest request) {
-        request.headers.contentType
-            = new ContentType("application", "zip");
-        request.headers.contentLength = data.length;
-        request.headers.set('Accept', '*/*');
-        request.headers.set('x-goog-api-version', '2');
-        request.headers.set('Authorization', 'Bearer ${token}');
-        request.add(data);
-        return request.close();
-      })
-      .then((HttpClientResponse response) {
-        Completer completer = new Completer();
-        String result = '';
-        response.listen((List<int> data) {
-          String str = new String.fromCharCodes(data);
-          result += str;
-        }, onError: (e) {
-          completer.completeError('Connection to server closed unexpectedly');
-        }, onDone: () {
-          completer.complete(result);
-        });
-
-        return completer.future;
-      });
-}
-
-Future publishItem(String token) {
-  HttpClient client = new HttpClient();
-  print("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${appID}/publish");
-  return client.postUrl(Uri.parse("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${appID}/publish"))
-      .then((HttpClientRequest request) {
-        request.headers.contentType = 'application/json';
-        request.headers.contentLength = 2;
-        request.headers.set('Accept', '*/*');
-        request.headers.set('x-goog-api-version', '2');
-        request.headers.set('Authorization', 'Bearer ${token}');
-        print('Authorization: Bearer ${token}');
-        request.write('{}');
-        return request.close();
-      })
-      .then((HttpClientResponse response) {
-        Completer completer = new Completer();
-        String result = '';
-        response.listen((List<int> data) {
-          String str = new String.fromCharCodes(data);
-          result += str;
-        }, onError: (e) {
-          completer.completeError('Connection to server closed unexpectedly');
-        }, onDone: () {
-          completer.complete(result);
-        });
-
-        return completer.future;
-      });
 }
 
 // Creates an archive of the Chrome App.
