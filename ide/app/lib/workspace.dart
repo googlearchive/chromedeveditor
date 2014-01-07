@@ -200,11 +200,11 @@ class Workspace implements Container {
 
   void _fireResourceEvent(ResourceChangeEvent event) => _resourceController.add(event);
 
-  void _fireMarkerEvent(MarkerChangeEvent event) {
+  void _fireMarkerEvent(List<MarkerDelta> deltas) {
     if (_markersPauseCount == 0) {
-      _markerController.add(event);
+      _markerController.add(new MarkerChangeEvent.fromList(deltas));
     } else {
-      _makerChangeList.addAll(event.changes);
+      _makerChangeList.addAll(deltas);
     }
   }
 
@@ -455,7 +455,7 @@ abstract class Resource {
 
   void _fireResourceEvent(ResourceChangeEvent event) => _parent._fireResourceEvent(event);
 
-  void _fireMarkerEvent(MarkerChangeEvent event) => _parent._fireMarkerEvent(event);
+  void _fireMarkerEvent(List<MarkerDelta> delta) => _parent._fireMarkerEvent(delta);
 
   Future delete();
 
@@ -497,7 +497,7 @@ abstract class Resource {
   void clearMarkers() {
     traverse().where((r) => r.isFile)
         .forEach((f) => (f as File)._clearMarkers(fireEvent : false));
-    _fireMarkerEvent(new MarkerChangeEvent.fromSingle(new MarkerDelta(this, null,EventType.DELETE)));
+    _fireMarkerEvent([new MarkerDelta(this, null,EventType.DELETE)]);
   }
 
   int findMaxProblemSeverity(String type) {
@@ -600,7 +600,7 @@ class File extends Resource {
     Marker marker = new Marker(
         this, type, severity, message, lineNum, charStart, charEnd);
     _markers.add(marker);
-    _fireMarkerEvent(new MarkerChangeEvent.fromSingle(new MarkerDelta(this, marker, EventType.ADD)));
+    _fireMarkerEvent([new MarkerDelta(this, marker, EventType.ADD)]);
     return marker;
   }
 
@@ -611,7 +611,7 @@ class File extends Resource {
   void _clearMarkers({bool fireEvent : true}) {
     _markers.clear();
     if (fireEvent) {
-      _fireMarkerEvent(new MarkerChangeEvent.fromSingle(new MarkerDelta(this, null, EventType.DELETE)));
+      _fireMarkerEvent([new MarkerDelta(this, null, EventType.DELETE)]);
     }
   }
 
@@ -804,12 +804,7 @@ class MarkerChangeEvent {
 
   List<MarkerDelta> changes;
 
-  factory MarkerChangeEvent.fromSingle(MarkerDelta delta) {
-    return new MarkerChangeEvent._([delta]);
-  }
-
   factory MarkerChangeEvent.fromList(List<MarkerDelta> deltas) {
-    var event = new MarkerChangeEvent._(deltas.toList());
     return new MarkerChangeEvent._(deltas.toList());
   }
 
