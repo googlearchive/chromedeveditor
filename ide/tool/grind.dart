@@ -175,7 +175,7 @@ Future releaseNightly(GrinderContext context) {
   String filename = 'spark-${version}.zip';
   archive(context, filename);
   context.log('Created ${filename}');
-  
+
   WebStoreClient client =
       new WebStoreClient(appID, clientID, clientSecret, refreshToken);
   context.log('Authenticating...');
@@ -519,7 +519,6 @@ void _populateSdk(GrinderContext context) {
     compilerDir.createSync();
 
     _delete('packages/compiler/compiler', context);
-    _delete('packages/compiler/compiler', context);
     _delete('packages/compiler/lib', context);
     _delete('app/sdk/lib/_internal/compiler/samples', context);
     copyDirectory(getDir('app/sdk/lib/_internal/compiler'), getDir('packages/compiler/compiler'), context);
@@ -571,13 +570,6 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
 
   destFile.writeAsBytesSync(writer.toBytes());
 }
-
-void _writeString(BytesBuilder bb, String str) {
-  bb.add(UTF8.encoder.convert(str));
-  bb.addByte(0);
-}
-
-void _writeInt(BytesBuilder bb, int val) => _writeString(bb, val.toString());
 
 void _printSize(GrinderContext context, File file) {
   int sizeKb = file.lengthSync() ~/ 1024;
