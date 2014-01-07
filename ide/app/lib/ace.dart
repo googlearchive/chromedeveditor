@@ -56,7 +56,7 @@ class AceContainer {
 
   static bool get available => js.context['ace'] != null;
 
-  StreamSubscription _markerChangeHandler;
+  StreamSubscription _markerSubscription;
   workspace.File currentFile;
 
   AceContainer(this.parentElement) {
@@ -172,8 +172,8 @@ class AceContainer {
       // TODO(ericarnold): Markers aren't shown until file is edited.  Fix.
       setMarkers(currentFile.getMarkers());
 
-      if (_markerChangeHandler == null) {
-        _markerChangeHandler = file.workspace.onMarkerChange.listen(
+      if (_markerSubscription == null) {
+        _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
       }
     }
