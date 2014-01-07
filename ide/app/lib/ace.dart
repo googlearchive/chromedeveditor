@@ -181,7 +181,12 @@ class AceContainer {
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
     // TODO(ericarnold): This gets called repeatedly.  Fix.
-    setMarkers(currentFile.getMarkers());
+    switch (event.type) {
+      case workspace.EventType.ADD:
+      case workspace.EventType.DELETE:
+        setMarkers(currentFile.getMarkers());
+        break;
+    }
   }
 
   String _convertMarkerSeverity(int markerSeverity) {
