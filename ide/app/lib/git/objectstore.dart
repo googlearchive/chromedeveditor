@@ -195,21 +195,16 @@ class ObjectStore {
   Future<chrome.FileEntry> _findLooseObject(String sha) => objectDir.getFile(
       sha.substring(0, 2) + '/' + sha.substring(2));
 
-  Future<FindPackedObjectResult> _findPackedObject(Uint8List shaBytes) {
+  FindPackedObjectResult _findPackedObject(Uint8List shaBytes) {
+    for (var i = 0; i < packs.length; ++i) {
+      int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
-    FindPackedObjectResult findPack() {
-      for (var i = 0; i < packs.length; ++i) {
-        int offset = packs[i].packIdx.getObjectOffset(shaBytes);
-
-        if (offset != -1) {
-          return new FindPackedObjectResult(packs[i].pack, offset);
-        }
+      if (offset != -1) {
+        return new FindPackedObjectResult(packs[i].pack, offset);
       }
-      return throw("Not found.");
     }
-
-    //TODO complete with error.
-    return new Future.sync(() => findPack());
+    // TODO More specific error.
+    return throw("Not found.");
   }
 
   Future<GitObject> retrieveObject(String sha, String objType) {
@@ -247,13 +242,13 @@ class ObjectStore {
         }
       });
     }, onError:(e) {
-      return this._findPackedObject(shaBytes).then(
-          (FindPackedObjectResult obj) {
+      try {
+        FindPackedObjectResult obj = this._findPackedObject(shaBytes);
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
         return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType);
-      }, onError: (e) {
+      } catch (e) {
         throw "Can't find object with SHA " + sha;
-      });
+      }
     });
   }
 
@@ -487,13 +482,14 @@ class ObjectStore {
       Uint8List data = new Uint8List.fromList(result);
       sha1.add(data);
       List<int> digest = sha1.close();
-      _findPackedObject(digest).then((_) {
+
+      try {
+        FindPackedObjectResult obj = _findPackedObject(digest);
         completer.complete(shaBytesToString(digest));
-      }, onError: (e) {
-        Future<String> str = _storeInFile(shaBytesToString(digest), data).then((str) {
-          completer.complete(str);
-        });
-      });
+      } catch (e) {
+        Future<String> str = _storeInFile(shaBytesToString(digest), data).then(
+            (str) => completer.complete(str));
+      }
     };
 
     reader['onerror'] = (var domError) {
