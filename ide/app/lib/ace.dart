@@ -166,6 +166,7 @@ class AceContainer {
     // Setup the code completion options for the current file type.
     if (file != null) {
       currentFile = file;
+      currentFile.createMarker("dart", workspace.Marker.SEVERITY_ERROR, "message", 3);
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
 
