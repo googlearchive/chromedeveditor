@@ -183,7 +183,7 @@ Future releaseNightly(GrinderContext context) {
     context.log('Uploading ${filename}...');
     return client.uploadItem('dist/${filename}').then((e) {
       context.log('Publishing...');
-      return client.publish().then((e) {
+      return client.publishItem().then((e) {
         context.log('Published');
       });
     });
