@@ -56,6 +56,8 @@ class AceContainer {
 
   static bool get available => js.context['ace'] != null;
 
+  StreamSubscription _markerChangeHandler;
+
   AceContainer(this.parentElement) {
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -165,15 +167,14 @@ class AceContainer {
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
       if (_markerChangeHandler == null) {
-        workspace.Workspace fileWorkspace = file.workspace;
-        fileWorkspace.onMarkerChange.listen(_handleMarkerChange);
-        _markerChangeHandler = _handleMarkerChange;
+        _markerChangeHandler = file.workspace.onMarkerChange.listen(
+            _handleMarkerChange);
       }
     }
   }
 
-  var _markerChangeHandler = null;
-  _handleMarkerChange(workspace.MarkerChangeEvent event) {
+  void _handleMarkerChange(workspace.MarkerChangeEvent event) {
+    setMarkers(event.marker);
   }
 
   String _convertMarkerSeverity(int markerSeverity) {
