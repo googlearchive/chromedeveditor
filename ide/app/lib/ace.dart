@@ -56,6 +56,9 @@ class AceContainer {
 
   static bool get available => js.context['ace'] != null;
 
+  StreamSubscription _markerSubscription;
+  workspace.File currentFile;
+
   AceContainer(this.parentElement) {
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -162,21 +165,36 @@ class AceContainer {
 
     // Setup the code completion options for the current file type.
     if (file != null) {
+      currentFile = file;
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
+
+      // TODO(ericarnold): Markers aren't shown until file is edited.  Fix.
+      setMarkers(currentFile.getMarkers());
+
+      if (_markerSubscription == null) {
+        _markerSubscription = file.workspace.onMarkerChange.listen(
+            _handleMarkerChange);
+      }
     }
+  }
+
+  void _handleMarkerChange(workspace.MarkerChangeEvent event) {
+    // TODO(ericarnold): This gets called repeatedly.  Fix.
+    // This should work for both ADD and DELETE events.
+    setMarkers(currentFile.getMarkers());
   }
 
   String _convertMarkerSeverity(int markerSeverity) {
     switch (markerSeverity) {
       case workspace.Marker.SEVERITY_ERROR:
-        return ace.Annotation.WARNING;
+        return ace.Annotation.ERROR;
         break;
       case workspace.Marker.SEVERITY_WARNING:
         return ace.Annotation.WARNING;
         break;
       case workspace.Marker.SEVERITY_INFO:
-        return ace.Annotation.WARNING;
+        return ace.Annotation.INFO;
         break;
     }
   }
