@@ -8,7 +8,7 @@ fi
 pub get 
 
 # Build the archive.
-if test x$DRONE_BRANCH = xmaster ; then
+if test x$DRONE_BRANCH = xmaster -o x$FORCE_NIGHTLY = xyes ; then
   ./grind release-nightly
 else
   ./grind archive

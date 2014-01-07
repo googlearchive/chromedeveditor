@@ -25,6 +25,7 @@ defineTests() {
 class MockAceContainer implements AceContainer {
   /// The element to put the editor in.
   final Element parentElement = null;
+  workspace.File currentFile = null;
 
   MockAceContainer();
 
