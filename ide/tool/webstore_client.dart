@@ -91,14 +91,12 @@ class WebStoreClient {
 
   Future publishItem() {
     HttpClient client = new HttpClient();
-    return client.postUrl(Uri.parse("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${_appID}/publish"))
+    return client.postUrl(Uri.parse("https://www.googleapis.com/chromewebstore/v1.1/items/${_appID}/publish"))
         .then((HttpClientRequest request) {
-          request.headers.contentType = 'application/json';
-          request.headers.contentLength = 2;
+          request.headers.contentLength = 0;
           request.headers.set('Accept', '*/*');
           request.headers.set('x-goog-api-version', '2');
           request.headers.set('Authorization', 'Bearer ${_token}');
-          request.write('{}');
           return request.close();
         })
         .then((HttpClientResponse response) {
