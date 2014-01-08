@@ -1,3 +1,6 @@
+echo Chrome version: `/usr/bin/google-chrome --version`
+exit 0
+
 # Install zip and start a virtual frame buffer.
 if [ "$DRONE" = "true" ]; then
   sudo apt-get -y -q install zip
@@ -23,5 +26,4 @@ fi
 dart tool/test_runner.dart --dartium
 
 # Run tests on chrome.
-echo Chrome version: `/usr/bin/google-chrome --version`
 #dart tool/test_runner.dart --chrome
