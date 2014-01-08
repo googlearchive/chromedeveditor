@@ -22,6 +22,7 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/event_bus.dart';
+import 'lib/git/commands/branch.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
@@ -109,6 +110,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   FilesController _filesController;
   PlatformInfo _platformInfo;
   TestDriver _testDriver;
+
+  DirectoryEntry _gitDir;
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -345,6 +348,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new GitCloneAction(
         this, getDialogElement("#gitCloneDialog")));
+    actionManager.registerAction(new GitBranchAction(
+        this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(
         this, getDialogElement('#aboutDialog')));
@@ -384,9 +389,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     if (developerMode) {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-      ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
+
     }
 
+    ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
+    ul.children.add(createMenuItem(actionManager.getAction('git-branch')));
     ul.children.add(createMenuSeparator());
     ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
@@ -903,6 +910,7 @@ class _GitCloneJob extends Job {
 
     getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+        spark._gitDir = dir;
         GitOptions options = new GitOptions();
         options.root = dir;
         options.repoUrl = url;
@@ -920,6 +928,51 @@ class _GitCloneJob extends Job {
           });
         });
       });
+    }).whenComplete(() => completer.complete(this));
+
+    return completer.future;
+  }
+}
+
+class GitBranchAction extends SparkActionWithDialog {
+  InputElement _branchNameElement;
+
+  GitBranchAction(Spark spark, Element dialog)
+      : super(spark, "git-branch", "Git Branch…", dialog) {
+    _branchNameElement = getElement("#gitBranchName");
+  }
+
+  void _invoke([Object context]) {
+    _show();
+  }
+
+  void _commit() {
+    // TODO(grv): add verify checks.
+    _GitBranchJob job = new _GitBranchJob(_branchNameElement.value, spark);
+    spark.jobManager.schedule(job);
+  }
+}
+
+class _GitBranchJob extends Job {
+  String _branchName;
+  String url;
+  Spark spark;
+
+  _GitBranchJob(this._branchName, this.spark)
+  : super("Branch …");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    Completer completer = new Completer();
+    GitOptions options = new GitOptions();
+    options.root = spark._gitDir;
+    options.branchName = _branchName;
+    options.store = new ObjectStore(spark._gitDir);
+    Branch.branch(options).then((entry) {
+      // TODO(grv) : checkout the new branch.
+    }, onError: (e) {
+      print(e);
     }).whenComplete(() => completer.complete(this));
 
     return completer.future;
