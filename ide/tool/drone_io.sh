@@ -23,4 +23,8 @@ fi
 dart tool/test_runner.dart --dartium
 
 # Run tests on chrome.
+if [ "$DRONE" = "true" ]; then
+  # Show the version of Chrome installed on drone.io.
+  /usr/bin/google-chrome --version
+fi
 #dart tool/test_runner.dart --chrome

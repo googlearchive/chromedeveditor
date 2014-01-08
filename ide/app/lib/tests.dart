@@ -75,6 +75,8 @@ class TestDriver {
         testClient.log(record.toString());
       });
 
+      _logger.info('Running tests on ${window.navigator.appCodeName} ${window.navigator.appName} ${window.navigator.appVersion}');
+
       runTests().then((bool success) {
         testClient.log('test exit code: ${(success ? 0 : 1)}');
 
