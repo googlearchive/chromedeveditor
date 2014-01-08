@@ -390,11 +390,10 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     if (developerMode) {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-
+      ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
+      ul.children.add(createMenuItem(actionManager.getAction('git-branch')));
     }
 
-    ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
-    ul.children.add(createMenuItem(actionManager.getAction('git-branch')));
     ul.children.add(createMenuSeparator());
     ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
