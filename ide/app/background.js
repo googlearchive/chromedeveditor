@@ -10,6 +10,7 @@ var App = function() {
   this.DEFAULT_UI_ = 0;
   this.CAN_SWITCH_UIS_ = 0;
   this.settings = { ui: this.uis_[this.DEFAULT_UI_] };
+  this.settings.ui = "spark.html";
 
   this.editorWin_ = null;
 };
