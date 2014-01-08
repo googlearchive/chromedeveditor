@@ -53,22 +53,47 @@ class AceContainer {
   final html.Element parentElement;
 
   ace.Editor _aceEditor;
-  workspace.File _file;
 
   static bool get available => js.context['ace'] != null;
+
+  StreamSubscription _markerSubscription;
+  workspace.File currentFile;
 
   AceContainer(this.parentElement) {
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
-    //_aceEditor.renderer.showGutter = false;
     //_aceEditor.setOption('scrollPastEnd', true);
     _aceEditor.readOnly = true;
+
+    // Enable code completion.
+    ace.require('ace/ext/language_tools');
+    _aceEditor.setOption('enableBasicAutocompletion', true);
+    _aceEditor.setOption('enableSnippets', true);
 
     // Fallback
     theme = THEMES[0];
   }
+
+  List<ace.Annotation> setMarkers(List<workspace.Marker> markers) {
+    ace.EditSession currentSession = this.currentSession;
+    List<ace.Annotation> annotations = [];
+
+    for (workspace.Marker marker in markers) {
+      // TODO(ericarnold): Check the type here before taking from severity.
+      String annotationType = _convertMarkerSeverity(marker.severity);
+      var annotation = new ace.Annotation(
+          text: marker.message,
+          row: marker.lineNum,
+          type: annotationType);
+      annotations.add(annotation);
+    }
+    currentSession.annotations = annotations;
+    return annotations;
+  }
+
+  clearAnnotations() => currentSession.annotations = [];
 
   String get theme => _aceEditor.theme.name;
 
@@ -100,7 +125,7 @@ class AceContainer {
   void _applyCustomSession(ace.EditSession session, String fileName) {
     String extention = path.extension(fileName);
     switch (extention) {
-      case 'dart':
+      case '.dart':
         session.tabSize = 2;
         session.useSoftTabs = true;
         break;
@@ -126,7 +151,7 @@ class AceContainer {
 
   ace.EditSession get currentSession => _aceEditor.session;
 
-  void switchTo(ace.EditSession session) {
+  void switchTo(ace.EditSession session, [workspace.File file]) {
     if (session == null) {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.readOnly = true;
@@ -136,6 +161,41 @@ class AceContainer {
       if (_aceEditor.readOnly) {
         _aceEditor.readOnly = false;
       }
+    }
+
+    // Setup the code completion options for the current file type.
+    if (file != null) {
+      currentFile = file;
+      _aceEditor.setOption(
+          'enableBasicAutocompletion', path.extension(file.name) != '.dart');
+
+      // TODO(ericarnold): Markers aren't shown until file is edited.  Fix.
+      setMarkers(currentFile.getMarkers());
+
+      if (_markerSubscription == null) {
+        _markerSubscription = file.workspace.onMarkerChange.listen(
+            _handleMarkerChange);
+      }
+    }
+  }
+
+  void _handleMarkerChange(workspace.MarkerChangeEvent event) {
+    // TODO(ericarnold): This gets called repeatedly.  Fix.
+    // This should work for both ADD and DELETE events.
+    setMarkers(currentFile.getMarkers());
+  }
+
+  String _convertMarkerSeverity(int markerSeverity) {
+    switch (markerSeverity) {
+      case workspace.Marker.SEVERITY_ERROR:
+        return ace.Annotation.ERROR;
+        break;
+      case workspace.Marker.SEVERITY_WARNING:
+        return ace.Annotation.WARNING;
+        break;
+      case workspace.Marker.SEVERITY_INFO:
+        return ace.Annotation.INFO;
+        break;
     }
   }
 }

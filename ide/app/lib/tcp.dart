@@ -53,14 +53,20 @@ class TcpClient {
   _SocketEventSink _sink;
   bool _keepPolling = true;
 
-  static Future<TcpClient> createClient(String host, int port) {
+  static Future<TcpClient> createClient(String host, int port,
+      {bool throwOnError: true}) {
     return chrome.socket.create(chrome.SocketType.TCP).then((chrome.CreateInfo createInfo) {
       int socketId = createInfo.socketId;
 
       return chrome.socket.connect(socketId, host, port).then((int result) {
         if (result < 0) {
           chrome.socket.destroy(socketId);
-          throw new SocketException('unable to connect to ${host} ${port}: ${result}');
+
+          if (throwOnError) {
+            throw new SocketException('unable to connect to ${host} ${port}: ${result}');
+          } else {
+            return null;
+          }
         } else {
           return new TcpClient._fromSocketId(socketId);
         }

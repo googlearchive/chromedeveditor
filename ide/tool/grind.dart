@@ -2,6 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,12 +10,23 @@ import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 
+import 'webstore_client.dart';
+
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 // TODO: Make the deploy-test and deploy tasks incremental.
 
 final Directory BUILD_DIR = new Directory('build');
 final Directory DIST_DIR = new Directory('dist');
+
+// Here's how to generate refreshToken:
+// https://docs.google.com/a/google.com/document/d/1OEM4GGhMrOWS4pYvtIWtkw_17C2pAlWPxUFu-7_YF-4
+final String clientID = Platform.environment['SPARK_UPLOADER_CLIENTID'];
+final String clientSecret =
+    Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
+final String refreshToken =
+    Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
+final String appID = Platform.environment['SPARK_APP_ID'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
@@ -32,6 +44,9 @@ void main([List<String> args]) {
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
     defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
+    defineTask('release-nightly',
+               taskFunction : releaseNightly,
+               depends : ['mode-notest', 'deploy']);
   }
 
   defineTask('clean', taskFunction: clean);
@@ -85,11 +100,6 @@ void deploy(GrinderContext context) {
       'spark_polymer.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer_ui.html_bootstrap.dart', true);
-  // TODO(ussuri): this is needed only in the interim while we still want to
-  // switch back to non-Polymer UI for reference. Remove this once the
-  // switchover to Polymer is complete.
-  _dart2jsCompile(context, joinDir(destDir, ['web']),
-      'spark.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -122,7 +132,8 @@ void release(GrinderContext context) {
   // Creating an archive of the Chrome App.
   context.log('Creating build ${version}');
 
-  archive(context);
+  String filename = 'spark-${version}.zip';
+  archive(context, filename);
 
   var sep = Platform.pathSeparator;
   _runCommandSync(
@@ -133,9 +144,6 @@ void release(GrinderContext context) {
     context,
     'git commit -m "Build version ${version}" app${sep}manifest.json');
 
-  File file = new File('dist/spark.zip');
-  String filename = 'spark-${version}.zip';
-  file.renameSync('dist/${filename}');
   context.log('Created ${filename}');
   context.log('** A commit has been created, you need to push it. ***');
   print('Do you want to push to the remote git repository now? (y/n [n])');
@@ -143,6 +151,43 @@ void release(GrinderContext context) {
   if (line.trim() == 'y') {
     _runCommandSync(context, 'git push origin master');
   }
+}
+
+Future releaseNightly(GrinderContext context) {
+  if (clientID == null) {
+    context.fail("SPARK_UPLOADER_CLIENTID environment variable should be set and contain the client ID.");
+  }
+  if (clientSecret == null) {
+    context.fail("SPARK_UPLOADER_CLIENTSECRET environment variable should be set and contain the client secret.");
+  }
+  if (refreshToken == null) {
+    context.fail("SPARK_UPLOADER_REFRESHTOKEN environment variable should be set and contain the refresh token.");
+  }
+  if (appID == null) {
+    context.fail("SPARK_APP_ID environment variable should be set and contain the refresh token.");
+  }
+
+  String version =
+      _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
+
+  // Creating an archive of the Chrome App.
+  context.log('Creating build ${version}');
+  String filename = 'spark-${version}.zip';
+  archive(context, filename);
+  context.log('Created ${filename}');
+
+  WebStoreClient client =
+      new WebStoreClient(appID, clientID, clientSecret, refreshToken);
+  context.log('Authenticating...');
+  return client.requestToken().then((e) {
+    context.log('Uploading ${filename}...');
+    return client.uploadItem('dist/${filename}').then((e) {
+      context.log('Publishing...');
+      return client.publishItem().then((e) {
+        context.log('Published');
+      });
+    });
+  });
 }
 
 // Creates an archive of the Chrome App.
@@ -166,9 +211,9 @@ void archive(GrinderContext context, [String outputZip]) {
 
 void docs(GrinderContext context) {
   FileSet docFiles = new FileSet.fromDir(
-      new Directory('docs'), endsWith: '.html');
+      new Directory('docs'), pattern: '*.html');
   FileSet sourceFiles = new FileSet.fromDir(
-      new Directory('app'), endsWith: '.dart', recurse: true);
+      new Directory('app'), pattern: '*.dart', recurse: true);
 
   if (!docFiles.upToDate(sourceFiles)) {
     runSdkBinary(context, 'dartdoc',
@@ -179,7 +224,7 @@ void docs(GrinderContext context) {
                     '--include-lib', 'spark.server,spark.tcp',
                     '--include-lib', 'git,git.objects,git.zlib',
                     'app/spark_polymer.dart']);
-    _zip(context, 'docs', '../${DIST_DIR.path}/spark-docs.zip');
+    _zip(context, 'docs', '${DIST_DIR.path}/spark-docs.zip');
   }
 }
 
@@ -397,6 +442,45 @@ String _increaseBuildNumber(GrinderContext context, {bool removeKey: false}) {
   return version;
 }
 
+String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
+                                             {bool removeKey: false})
+{
+  String buildNumber = Platform.environment['DRONE_BUILD_NUMBER'];
+  String revision = Platform.environment['DRONE_COMMIT'];
+  if (buildNumber == null || revision == null) {
+    context.fail("This build process must be run in a drone.io environment");
+    return null;
+  }
+
+  // Tweaking build version in manifest.
+  File file = new File('app/manifest.json');
+  String content = file.readAsStringSync();
+  var manifestDict = JSON.decode(content);
+  String version = manifestDict['version'];
+  RegExp exp = new RegExp(r"(\d+\.\d+)\.(\d+)");
+  Iterable<Match> matches = exp.allMatches(version);
+  assert(matches.length > 0);
+
+  Match m = matches.first;
+  String majorVersion = m.group(1);
+  int buildVersion = int.parse(buildNumber);
+
+  version = '${majorVersion}.${buildVersion}';
+  manifestDict['version'] = version;
+  manifestDict['x-spark-revision'] = revision;
+  if (removeKey) {
+    manifestDict.remove('key');
+  }
+  file.writeAsStringSync(new JsonPrinter().print(manifestDict));
+
+  // It needs to be copied to compile result directory.
+  copyFile(
+      joinFile(Directory.current, ['app', 'manifest.json']),
+      joinDir(BUILD_DIR, ['deploy-out', 'web']));
+
+  return version;
+}
+
 void _removePackagesLinks(GrinderContext context, Directory target) {
   target.listSync(recursive: true, followLinks: false).forEach((FileSystemEntity entity) {
     if (entity is Link && fileName(entity) == 'packages') {
@@ -434,7 +518,6 @@ void _populateSdk(GrinderContext context) {
     // TODO(devoncarew): this would be much better as a standard pub package
     compilerDir.createSync();
 
-    _delete('packages/compiler/compiler', context);
     _delete('packages/compiler/compiler', context);
     _delete('packages/compiler/lib', context);
     _delete('app/sdk/lib/_internal/compiler/samples', context);
@@ -487,13 +570,6 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
 
   destFile.writeAsBytesSync(writer.toBytes());
 }
-
-void _writeString(BytesBuilder bb, String str) {
-  bb.add(UTF8.encoder.convert(str));
-  bb.addByte(0);
-}
-
-void _writeInt(BytesBuilder bb, int val) => _writeString(bb, val.toString());
 
 void _printSize(GrinderContext context, File file) {
   int sizeKb = file.lengthSync() ~/ 1024;
@@ -605,13 +681,15 @@ class StatsCounter {
 
   int get lineCount => _lines;
 
-  String toString() => 'found ${_NF.format(fileCount)} dart files,'
-      ' ${_NF.format(lineCount)} lines of code.';
+  String toString() => 'Found ${_NF.format(fileCount)} Dart files and '
+      '${_NF.format(lineCount)} lines of code.';
 
   void _collectLineInfo(Directory dir) {
     for (FileSystemEntity entity in dir.listSync(followLinks: false)) {
       if (entity is Directory) {
-        if (fileName(entity) != 'packages' && !fileName(entity).startsWith('.')) {
+        if (fileName(entity) != 'packages' &&
+            fileName(entity) != 'build' &&
+            !fileName(entity).startsWith('.')) {
           _collectLineInfo(entity);
         }
       } else if (entity is File) {
