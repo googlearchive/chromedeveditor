@@ -2,6 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,12 +10,23 @@ import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
 
+import 'webstore_client.dart';
+
 final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 // TODO: Make the deploy-test and deploy tasks incremental.
 
 final Directory BUILD_DIR = new Directory('build');
 final Directory DIST_DIR = new Directory('dist');
+
+// Here's how to generate refreshToken:
+// https://docs.google.com/a/google.com/document/d/1OEM4GGhMrOWS4pYvtIWtkw_17C2pAlWPxUFu-7_YF-4
+final String clientID = Platform.environment['SPARK_UPLOADER_CLIENTID'];
+final String clientSecret =
+    Platform.environment['SPARK_UPLOADER_CLIENTSECRET'];
+final String refreshToken =
+    Platform.environment['SPARK_UPLOADER_REFRESHTOKEN'];
+final String appID = Platform.environment['SPARK_APP_ID'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
@@ -33,7 +45,7 @@ void main([List<String> args]) {
   if (!Platform.isWindows) {
     defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
     defineTask('release-nightly',
-               taskFunction : releaseNighly,
+               taskFunction : releaseNightly,
                depends : ['mode-notest', 'deploy']);
   }
 
@@ -141,7 +153,20 @@ void release(GrinderContext context) {
   }
 }
 
-void releaseNighly(GrinderContext context) {
+Future releaseNightly(GrinderContext context) {
+  if (clientID == null) {
+    context.fail("SPARK_UPLOADER_CLIENTID environment variable should be set and contain the client ID.");
+  }
+  if (clientSecret == null) {
+    context.fail("SPARK_UPLOADER_CLIENTSECRET environment variable should be set and contain the client secret.");
+  }
+  if (refreshToken == null) {
+    context.fail("SPARK_UPLOADER_REFRESHTOKEN environment variable should be set and contain the refresh token.");
+  }
+  if (appID == null) {
+    context.fail("SPARK_APP_ID environment variable should be set and contain the refresh token.");
+  }
+
   String version =
       _modifyManifestWithDroneIOBuildNumber(context, removeKey: true);
 
@@ -150,6 +175,19 @@ void releaseNighly(GrinderContext context) {
   String filename = 'spark-${version}.zip';
   archive(context, filename);
   context.log('Created ${filename}');
+
+  WebStoreClient client =
+      new WebStoreClient(appID, clientID, clientSecret, refreshToken);
+  context.log('Authenticating...');
+  return client.requestToken().then((e) {
+    context.log('Uploading ${filename}...');
+    return client.uploadItem('dist/${filename}').then((e) {
+      context.log('Publishing...');
+      return client.publishItem().then((e) {
+        context.log('Published');
+      });
+    });
+  });
 }
 
 // Creates an archive of the Chrome App.
@@ -481,7 +519,6 @@ void _populateSdk(GrinderContext context) {
     compilerDir.createSync();
 
     _delete('packages/compiler/compiler', context);
-    _delete('packages/compiler/compiler', context);
     _delete('packages/compiler/lib', context);
     _delete('app/sdk/lib/_internal/compiler/samples', context);
     copyDirectory(getDir('app/sdk/lib/_internal/compiler'), getDir('packages/compiler/compiler'), context);
@@ -533,13 +570,6 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
 
   destFile.writeAsBytesSync(writer.toBytes());
 }
-
-void _writeString(BytesBuilder bb, String str) {
-  bb.add(UTF8.encoder.convert(str));
-  bb.addByte(0);
-}
-
-void _writeInt(BytesBuilder bb, int val) => _writeString(bb, val.toString());
 
 void _printSize(GrinderContext context, File file) {
   int sizeKb = file.lengthSync() ~/ 1024;

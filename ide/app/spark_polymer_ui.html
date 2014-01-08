@@ -45,6 +45,28 @@
   display: inline-block;
 }
 
+.fileview-filename-container.error:after {
+  background: #F55;
+  content: '';
+  border-radius: 2px;
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  height: 16px;
+  width: 4px;
+}
+
+.fileview-filename-container.warning:after {
+  background: #DD3;
+  content: '';
+  border-radius: 2px;
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  height: 16px;
+  width: 4px;
+}
+
 .fileview-filename-container .menu {
   opacity: 0;
   position: absolute;

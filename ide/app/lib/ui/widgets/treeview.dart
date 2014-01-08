@@ -19,6 +19,7 @@ import 'listview.dart';
 import 'listview_cell.dart';
 import 'listview_delegate.dart';
 import 'treeview_delegate.dart';
+import '../utils/html_utils.dart';
 
 class TreeViewDragImage {
   ImageElement image;
@@ -180,39 +181,45 @@ class TreeView implements ListViewDelegate {
   /**
    * Sets expanded state of a node.
    */
-  void setNodeExpanded(String nodeUID, bool expanded) {
+  void setNodeExpanded(String nodeUID, bool expanded, {bool animated: false}) {
     if (isNodeExpanded(nodeUID) != expanded) {
-      HashSet<String> previousSelection = new HashSet.from(selection);
-      _rowsMap[nodeUID].expanded = expanded;
-      reloadData();
-      HashSet<String> currentSelection = new HashSet.from(selection);
+      if (animated) {
+        int rowIndex = _rowsMap[nodeUID].rowIndex;
+        TreeViewCell cell = _listView.cellForRow(rowIndex);
+        // We can use toggleExpanded() here since we made sure that it was
+        // different from the current value.
+        // TreeViewCell.toggleExpanded() will animate, then call
+        // TreeView.setNodeExpanded with animated = false when animation is
+        // done.
+        cell.toggleExpanded();
+      } else {
+        HashSet<String> previousSelection = new HashSet.from(selection);
+        _rowsMap[nodeUID].expanded = expanded;
+        reloadData();
+        HashSet<String> currentSelection = new HashSet.from(selection);
 
-      // Testing previousSelection == currentSelection won't behaves as expected
-      // then, we're testing if the set are the same using intersection.
-      bool changed = false;
-      if (previousSelection.length != currentSelection.length) {
-        changed = true;
-      }
-      if (previousSelection.length != previousSelection.intersection(currentSelection).length) {
-        changed = true;
-      }
-      if (changed) {
-        _delegate.treeViewSelectedChanged(this,
-            _rowIndexesToNodeUIDs(_listView.selection));
-      }
+        // Testing previousSelection == currentSelection won't behaves as expected
+        // then, we're testing if the set are the same using intersection.
+        bool changed = false;
+        if (previousSelection.length != currentSelection.length) {
+          changed = true;
+        }
+        if (previousSelection.length !=
+            previousSelection.intersection(currentSelection).length) {
+          changed = true;
+        }
+        if (changed) {
+          _delegate.treeViewSelectedChanged(this,
+              _rowIndexesToNodeUIDs(_listView.selection));
+        }
 
-      _delegate.treeViewSaveExpandedState(this);
+        _delegate.treeViewSaveExpandedState(this);
+      }
     }
   }
 
   void toggleNodeExpanded(String nodeUID, {bool animated: false}) {
-    if (animated) {
-      int rowIndex = _rowsMap[nodeUID].rowIndex;
-      TreeViewCell cell = _listView.cellForRow(rowIndex);
-      cell.toggleExpanded();
-    } else {
-      setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID));
-    }
+    setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID), animated: animated);
   }
 
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
@@ -303,15 +310,12 @@ class TreeView implements ListViewDelegate {
         return true;
     }
 
-    for(String nodeUID in selection) {
-      if (_rowsMap.containsKey(nodeUID)) {
-        setNodeExpanded(nodeUID, expand);
-      }
+    if (_listView.selectedRow != -1) {
+      setNodeExpanded(_rows[_listView.selectedRow].nodeUID, expand,
+          animated: true);
     }
 
-    if (!expand) {
-      _cleanSelection();
-    }
+    cancelEvent(event);
   }
 
   void listViewContextMenu(ListView view,

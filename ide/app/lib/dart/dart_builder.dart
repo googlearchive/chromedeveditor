@@ -60,7 +60,9 @@ int _convertSeverity(ErrorSeverity sev) {
     return Marker.SEVERITY_ERROR;
   } else  if (sev == ErrorSeverity.WARNING) {
     return Marker.SEVERITY_WARNING;
-  } else {
+  } else  if (sev == ErrorSeverity.INFO) {
     return Marker.SEVERITY_INFO;
+  } else {
+    return Marker.SEVERITY_NONE;
   }
 }

@@ -57,10 +57,16 @@ class FilesController implements TreeViewDelegate {
     });
 
     _workspace.onResourceChange.listen((event) {
-      _processEvents(event);
+      bool hasAddsDeletes = event.changes.any(
+          (d) => d.isAdd || d.isDelete || !d.resource.isFile);
+      if (hasAddsDeletes) {
+        _processEvents(event);
+      }
     });
 
-    _workspace.onMarkerChange.listen((_) => _processMarkerChange());
+    _workspace.onMarkerChange.listen((_) {
+      _processMarkerChange();
+    });
   }
 
   bool isFileSelected(Resource file) {
