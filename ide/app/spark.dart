@@ -23,6 +23,7 @@ import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/event_bus.dart';
 import 'lib/git/commands/branch.dart';
+import 'lib/git/commands/checkout.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
@@ -970,6 +971,7 @@ class _GitBranchJob extends Job {
     options.branchName = _branchName;
     options.store = new ObjectStore(spark._gitDir);
     Branch.branch(options).then((entry) {
+      Checkout.checkout(options);
       // TODO(grv) : checkout the new branch.
     }, onError: (e) {
       print(e);
