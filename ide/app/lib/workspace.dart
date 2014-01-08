@@ -78,7 +78,7 @@ class Workspace implements Container {
   void resumeMarkerStream() {
     _markersPauseCount--;
     if (_markersPauseCount == 0 && _makerChangeList.isNotEmpty) {
-      _markerController.add(new MarkerChangeEvent.fromList(_makerChangeList));
+      _markerController.add(new MarkerChangeEvent(_makerChangeList));
       _makerChangeList.clear();
     }
   }
@@ -202,7 +202,7 @@ class Workspace implements Container {
 
   void _fireMarkerEvent(List<MarkerDelta> deltas) {
     if (_markersPauseCount == 0) {
-      _markerController.add(new MarkerChangeEvent.fromList(deltas));
+      _markerController.add(new MarkerChangeEvent(deltas));
     } else {
       _makerChangeList.addAll(deltas);
     }
@@ -804,11 +804,7 @@ class MarkerChangeEvent {
 
   List<MarkerDelta> changes;
 
-  factory MarkerChangeEvent.fromList(List<MarkerDelta> deltas) {
-    return new MarkerChangeEvent._(deltas.toList());
-  }
-
-  MarkerChangeEvent._(List<MarkerDelta> delta): changes = new UnmodifiableListView(delta);
+  MarkerChangeEvent(List<MarkerDelta> delta): changes = new UnmodifiableListView(delta);
 
   /**
    * Checks if given [Resource] is present in the list of delta for marker changes
