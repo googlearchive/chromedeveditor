@@ -243,8 +243,8 @@ defineTests() {
       fs.createFile('/myProject/index.html');
       fs.createFile('/myProject/myApp.dart');
       Future future = workspace.onMarkerChange.first.then((ws.MarkerChangeEvent event) {
-        expect(event.resource.name, 'myApp.dart');
-        expect(event.type, ws.EventType.ADD);
+        expect(event.changes.first.resource.name, 'myApp.dart');
+        expect(event.changes.first.type, ws.EventType.ADD);
       });
 
       return workspace.link(projectDir).then((project) {
@@ -300,8 +300,8 @@ defineTests() {
       fs.createFile('/myProject/myApp.dart');
 
       Future future = workspace.onMarkerChange.skip(1).first.then((ws.MarkerChangeEvent event) {
-        expect(event.resource.name, 'myApp.dart');
-        expect(event.type, ws.EventType.DELETE);
+        expect(event.changes.first.resource.name, 'myApp.dart');
+        expect(event.changes.first.type, ws.EventType.DELETE);
       });
 
       return workspace.link(projectDir).then((project) {
@@ -339,9 +339,31 @@ defineTests() {
         expect(severity, ws.Marker.SEVERITY_ERROR);
         severity = project.findMaxProblemSeverity('html');
         expect(severity, ws.Marker.SEVERITY_WARNING);
-
       });
+    });
 
+    test("pause and resume posting marker events", () {
+      var workspace = new ws.Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      var projectDir = fs.createDirectory('myProject');
+      fs.createFile('/myProject/myApp.dart');
+      Future future2 = workspace.onMarkerChange.skip(1).first.then((ws.MarkerChangeEvent event) {
+        expect(event.changes.length, 2);
+      });
+      Future future =  workspace.onMarkerChange.first.then((ws.MarkerChangeEvent event){
+        expect(event.changes.length, 1);
+      });
+      return workspace.link(projectDir).then((project) {
+        ws.File file = project.getChild('myApp.dart');
+        file.createMarker('dart', ws.Marker.SEVERITY_WARNING, 'warning marker', 2);
+        return future.then((_) {
+          workspace.pauseMarkerStream();
+          file.createMarker('dart', ws.Marker.SEVERITY_ERROR, 'error marker', 2);
+          file.createMarker('dart', ws.Marker.SEVERITY_INFO, 'dart info marker', 4);
+          workspace.resumeMarkerStream();
+          return future2;
+        });
+      });
     });
 
   });
