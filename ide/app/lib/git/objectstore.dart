@@ -83,7 +83,7 @@ class CommitGraph {
 
 class ObjectStore {
 
-  static final GIT_FOLDER_PATH = '.git';
+  static final GIT_FOLDER_PATH = '.git/';
   static final OBJECT_FOLDER_PATH = 'objects';
   static final HEAD_PATH = 'HEAD';
   static final HEAD_MASTER_REF_PATH = 'refs/head/master';

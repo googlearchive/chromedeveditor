@@ -27,7 +27,7 @@ class Branch {
    * 6) cannot end with '.lock'.
   */
   static const BRANCH_PATTERN
-      = "^(?!/|\.|.* ([/.]\.|//|@\{|\\\\))[^\\x00-\\x20 ~^:?*\[]+(?<!\.lock|[/.])\$";
+      = r"^(?!/|\.|.* ([/.]\.|//|@\{|\\\\))[^\\x00-\\x20 ~^:?*\[]+(?<!\.lock|[/.])$";
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
@@ -42,23 +42,25 @@ class Branch {
     ObjectStore store = options.store;
     String branchName = options.branchName;
 
-    if (!_verifyBranchName(branchName)) {
+    // TODO(grv) : fix bug with branchname regex.
+   /* if (!_verifyBranchName(branchName)) {
       // TODO(grv) throw error.
-      return null;
-    }
+      throw "invalid branch name.";
+    }*/
 
     return store.getHeadForRef('refs/heads/' + branchName).then((_) {
       // TODO(Grv) : throw branch already exists.
+      throw "branch already exists.";
     }, onError: (e) {
-      if (e.code == FileError.NOT_FOUND_ERR) {
+      //if (e.code == FileError.NOT_FOUND_ERR) {
         return store.getHeadRef().then((String refName) {
           return store.getHeadForRef(refName).then((String sha) {
             return store.createNewRef('refs/heads/' + branchName, sha);
           });
         });
-      } else {
-        throw e;
-      }
+     // } else {
+       // throw e;
+     // }
     });
   }
 }
