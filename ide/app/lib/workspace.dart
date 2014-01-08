@@ -24,6 +24,10 @@ final Logger _logger = new Logger('spark.workspace');
  * files that it contains are loose files; they do not have parent projects.
  */
 class Workspace implements Container {
+
+  int _markersPauseCount = 0;
+  List<MarkerDelta> _makerChangeList = [];
+
   Container _parent = null;
 
   chrome.Entry get _entry => null;
@@ -57,6 +61,26 @@ class Workspace implements Container {
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
+
+  /**
+   * Stops the posting of [MarkerChangeEvent] to the stream. Clients should
+   * call [resumeMakerEventStream] to resume posting of maker events.
+   */
+  void pauseMarkerStream() {
+    _markersPauseCount ++;
+  }
+
+  /**
+   * Resumes posting of marker events to the stream. All marker changes made
+   * when the stream was paused will be posted on resume.
+   */
+  void resumeMarkerStream() {
+    _markersPauseCount--;
+    if (_markersPauseCount == 0 && _makerChangeList.isNotEmpty) {
+      _markerController.add(new MarkerChangeEvent.fromList(_makerChangeList));
+      _makerChangeList.clear();
+    }
+  }
 
   /**
    * Adds a chrome entry and its children to the workspace.
@@ -175,7 +199,13 @@ class Workspace implements Container {
 
   void _fireResourceEvent(ResourceChangeEvent event) => _resourceController.add(event);
 
-  void _fireMarkerEvent(MarkerChangeEvent event) => _markerController.add(event);
+  void _fireMarkerEvent(MarkerDelta delta) {
+    if (_markersPauseCount == 0) {
+      _markerController.add(new MarkerChangeEvent(delta));
+    } else {
+      _makerChangeList.add(delta);
+    }
+  }
 
   /**
    * Read the workspace data from storage and restore entries.
@@ -445,7 +475,7 @@ abstract class Resource {
 
   void _fireResourceEvent(ResourceChangeEvent event) => _parent._fireResourceEvent(event);
 
-  void _fireMarkerEvent(MarkerChangeEvent event) => _parent._fireMarkerEvent(event);
+  void _fireMarkerEvent(MarkerDelta delta) => _parent._fireMarkerEvent(delta);
 
   Future delete();
 
@@ -567,7 +597,7 @@ class File extends Resource {
     Marker marker = new Marker(
         this, type, severity, message, lineNum, charStart, charEnd);
     _markers.add(marker);
-    _fireMarkerEvent(new MarkerChangeEvent(this, marker, EventType.ADD));
+    _fireMarkerEvent(new MarkerDelta(this, marker, EventType.ADD));
     return marker;
   }
 
@@ -577,7 +607,7 @@ class File extends Resource {
 
   void clearMarkers() {
     _markers.clear();
-    _fireMarkerEvent(new MarkerChangeEvent(this, null, EventType.DELETE));
+    _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
   }
 
   int findMaxProblemSeverity() {
@@ -775,13 +805,42 @@ class Marker {
 }
 
 /**
- * Used to indicates changes to markers
+ * Used to indicate changes to markers
  */
 class MarkerChangeEvent {
+  List<MarkerDelta> changes;
 
+  MarkerChangeEvent(MarkerDelta delta) {
+    changes = new UnmodifiableListView([delta]);
+  }
+
+  factory MarkerChangeEvent.fromList(List<MarkerDelta> deltas) {
+    return new MarkerChangeEvent._(deltas.toList());
+  }
+
+  MarkerChangeEvent._(List<MarkerDelta> delta): changes = new UnmodifiableListView(delta);
+
+  /**
+   * Checks if given [Resource] is present in the list of delta for marker changes
+   */
+  bool hasResourceChanged(Resource resource) {
+    return changes.any((delta) => delta.resource == resource);
+  }
+}
+
+/**
+ * Indicates change on a marker
+ */
+class MarkerDelta {
   final Marker marker;
-  final Resource resource;
   final EventType type;
+  final Resource resource;
 
-  MarkerChangeEvent(this.resource, this.marker, this.type);
+  MarkerDelta(this.resource, this.marker, this.type);
+
+  bool get isAdd => type == EventType.ADD;
+  bool get isChange => type == EventType.CHANGE;
+  bool get isDelete => type == EventType.DELETE;
+
+  String toString() => '${type}: ${marker}';
 }

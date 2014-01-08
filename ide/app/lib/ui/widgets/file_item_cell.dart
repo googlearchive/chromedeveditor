@@ -26,7 +26,7 @@ class FileItemCell implements ListViewCell {
     _element = templateClone.querySelector('.fileview-filename-container');
     _element.querySelector('.filename').text = _resource.name;
     acceptDrop = false;
-    updateErrorStatus();
+    updateFileStatus();
   }
 
   Element get element => _element;
@@ -37,17 +37,20 @@ class FileItemCell implements ListViewCell {
 
   set highlighted(bool value) => _highlighted = value;
 
-  Element get menuElement => _element.querySelector('.menu');
+  Element get fileStatusElement => _element.querySelector('.fileStatus');
 
-  void updateErrorStatus() {
-    _element.classes.removeAll(['warning', 'error']);
+  Element get gitStatusElement => _element.querySelector('.gitStatus');
+
+  void updateFileStatus() {
+    Element element = fileStatusElement;
+    element.classes.removeAll(['warning', 'error']);
 
     int severity = _resource.findMaxProblemSeverity();
 
     if (severity == Marker.SEVERITY_ERROR) {
-      _element.classes.add('error');
+      element.classes.add('error');
     } else if (severity == Marker.SEVERITY_WARNING) {
-      _element.classes.add('warning');
+      element.classes.add('warning');
     }
   }
 }

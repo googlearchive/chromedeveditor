@@ -45,9 +45,8 @@
   display: inline-block;
 }
 
-.fileview-filename-container.error:after {
+.fileview-filename-container .fileStatus.error {
   background: #F55;
-  content: '';
   border-radius: 2px;
   position: absolute;
   top: 2px;
@@ -56,9 +55,8 @@
   width: 4px;
 }
 
-.fileview-filename-container.warning:after {
+.fileview-filename-container .fileStatus.warning {
   background: #DD3;
-  content: '';
   border-radius: 2px;
   position: absolute;
   top: 2px;
@@ -90,11 +88,7 @@
 }
 
 .fileview-filename-container:hover .filename {
-  width: calc(100% - 15px);
-}
-
-.fileview-filename-container:hover .menu {
-  opacity: 1.0;
+  
 }
 
 .ace_gutter-cell {

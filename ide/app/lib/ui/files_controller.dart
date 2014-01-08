@@ -143,8 +143,6 @@ class FilesController implements TreeViewDelegate {
     if (resource is Folder) {
       cell.acceptDrop = true;
     }
-    cell.menuElement.onClick.listen(
-        (e) => _handleMenuClick(cell, resource, e));
     return cell;
   }
 
@@ -563,9 +561,11 @@ class FilesController implements TreeViewDelegate {
   void _processMarkerChange() {
     for (String uid in _filesMap.keys) {
       TreeViewCell treeViewCell = _treeView.getTreeViewCellForUID(uid);
-      FileItemCell fileItemCell = treeViewCell.embeddedCell;
 
-      fileItemCell.updateErrorStatus();
+      if (treeViewCell != null) {
+        FileItemCell fileItemCell = treeViewCell.embeddedCell;
+        fileItemCell.updateFileStatus();
+      }
     }
   }
 
@@ -585,14 +585,6 @@ class FilesController implements TreeViewDelegate {
         _recursiveRemoveResource(child);
       });
     }
-  }
-
-  /**
-   * Menu icon click handler: show the context menu.
-   */
-  void _handleMenuClick(FileItemCell cell, Resource resource, html.Event e) {
-    cancelEvent(e);
-    _showMenu(cell, cell.menuElement, resource);
   }
 
   /**
@@ -641,14 +633,11 @@ class FilesController implements TreeViewDelegate {
     contextMenu.style.left = '${position.x}px';
     contextMenu.style.top = '${position.y}px';
 
-    // Keep the disclosure button visible when the menu is opened.
-    cell.menuElement.classes.add('open');
     // Show the menu.
     bootjack.Dropdown dropdown = bootjack.Dropdown.wire(contextMenu);
     dropdown.toggle();
 
     void _closeContextMenu(html.Event event) {
-      cell.menuElement.classes.remove('open');
       // We workaround an issue with bootstrap/boojack: There's no other way
       // to close the dropdown. For example dropdown.toggle() won't work.
       menuContainer.classes.remove('open');
