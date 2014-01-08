@@ -223,21 +223,18 @@ class ObjectStore {
       shaBytes = shaToBytes(sha);
     }
 
-    Completer completer = new Completer();
-
     return this._findLooseObject(sha).then((chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
         chrome.ArrayBuffer inflated = Zlib.inflate(
             new Uint8List.fromList(buffer.getBytes()), 0).buffer;
-
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
           // TODO do trim buffer and return completer ;
           var buff;
-          completer.complete(new LooseObject(buff));
+          return new LooseObject(buff);
         } else {
           return FileOps.readBlob(new Blob(inflated.getBytes()), 'Text').then(
               (data) {
-            completer.complete(new LooseObject(data));
+            return new LooseObject(data);
           });
         }
       });
@@ -457,7 +454,7 @@ class ObjectStore {
     if (content is Uint8List) {
       size = content.length;
     } else if (content is Blob) {
-     size = content.size;
+      size = content.size;
     }
 
     String header = 'type ${size}' ;
@@ -471,17 +468,23 @@ class ObjectStore {
     reader['onloadend'] = (var event) {
       var result = reader['result'];
       crypto.SHA1 sha1 = new crypto.SHA1();
+      Uint8List resultList;
 
       if (result is JsObject) {
         var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
-        result = new Uint8List.fromList(arrBuf.getBytes());
+        resultList = new Uint8List.fromList(arrBuf.getBytes());
       } else if (result is ByteBuffer) {
-        result = new Uint8List.view(result);
+        resultList = new Uint8List.view(result);
+      } else if (result is Uint8List) {
+        resultList = result;
+      } else {
+        // TODO: Check expected types here.
+        throw "Unexpected result type.";
       }
 
-      Uint8List data = new Uint8List.fromList(result);
+      Uint8List data = new Uint8List.fromList(resultList);
       sha1.add(data);
-      List<int> digest = sha1.close();
+      Uint8List digest = new Uint8List.fromList(sha1.close());
 
       try {
         FindPackedObjectResult obj = _findPackedObject(digest);
@@ -535,7 +538,7 @@ class ObjectStore {
    */
   Future<String> writeTree(List treeEntries) {
     List blobParts = [];
-    treeEntries.forEach((tree) {
+    treeEntries.forEach((TreeEntry tree) {
       blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
       blobParts.add(tree.sha);
