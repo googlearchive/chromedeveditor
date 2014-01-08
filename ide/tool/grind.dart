@@ -100,6 +100,8 @@ void deploy(GrinderContext context) {
       'spark_polymer.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer_ui.html_bootstrap.dart', true);
+  _dart2jsCompile(context, joinDir(destDir, ['web']),
+      'spark.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
