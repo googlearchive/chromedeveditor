@@ -556,7 +556,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   /**
-   * Traverse all the created [FileItemCell]s, calling updateErrorStatus().
+   * Traverse all the created [FileItemCell]s, calling `updateFileStatus()`.
    */
   void _processMarkerChange() {
     for (String uid in _filesMap.keys) {
