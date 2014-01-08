@@ -9,8 +9,6 @@ import 'dart:async';
 /**
  * A Job manager. This class can be used to schedule jobs, and provides event
  * notification for job progress.
- *
- * This class is available as a singleton.
  */
 class JobManager {
   StreamController<JobManagerEvent> _controller =
@@ -37,7 +35,7 @@ class JobManager {
   bool get isJobRunning => _runningJob != null;
 
   /**
-   * Stream of state change events handled by this [JobManager]
+   * Stream of state change events handled by this [JobManager].
    */
   Stream<JobManagerEvent> get onChange => _controller.stream;
 
@@ -116,7 +114,7 @@ abstract class Job {
    * progress monitor. When it finishes, it should complete the [Future] that
    * is returned.
    */
-  Future<Job> run(ProgressMonitor monitor);
+  Future run(ProgressMonitor monitor);
 
   String toString() => name;
 }
@@ -151,12 +149,12 @@ abstract class ProgressMonitor {
   num get maxWork => _maxWork;
 
   /**
-   * `true` if progress cannot be determined ([maxWork] == 0)
+   * Returns `true` if progress cannot be determined ([maxWork] == 0).
    */
   bool get indeterminate => maxWork == 0;
 
   /**
-   * The total progress of work complete (a double from 0 to 1)
+   * The total progress of work complete (a double from 0 to 1).
    */
   double get progress => _work / _maxWork;
 

@@ -4,15 +4,15 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
-<link rel="import" href="packages/spark_widgets/spark-button/spark-button.html">
-<link rel="import" href="packages/spark_widgets/spark-icon/spark-icon.html">
-<link rel="import" href="packages/spark_widgets/spark-icon-button/spark-icon-button.html">
-<link rel="import" href="packages/spark_widgets/spark-menu-button/spark-menu-button.html">
-<link rel="import" href="packages/spark_widgets/spark-menu-item/spark-menu-item.html">
-<link rel="import" href="packages/spark_widgets/spark-modal/spark-modal.html">
-<link rel="import" href="packages/spark_widgets/spark-overlay/spark-overlay.html">
-<link rel="import" href="packages/spark_widgets/spark-splitter/spark-splitter.html">
-<link rel="import" href="packages/spark_widgets/spark-toolbar/spark-toolbar.html">
+<link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
+<link rel="import" href="packages/spark_widgets/spark_icon/spark_icon.html">
+<link rel="import" href="packages/spark_widgets/spark_icon_button/spark_icon_button.html">
+<link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
+<link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
+<link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
+<link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
+<link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
+<link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <!--link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html"-->
 
@@ -290,40 +290,6 @@
       </div>
     </spark-modal>
 
-    <!-- New File dialog -->
-    <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
-      <div class="modal-body">
-        <p>
-          File name: <input id="fileNewName" type="text" focused>
-        </p>
-      </div>
-      <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
-        </spark-button>
-        <spark-button id="fileNewOkButton" overlay-toggle primary
-            data-dismiss="modal">
-          Create
-        </spark-button>
-      </div>
-    </spark-overlay>
-
-    <!-- New Folder dialog -->
-    <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
-      <div class="modal-body">
-        <p>
-          Folder name: <input id="folderName" type="text" focused>
-        </p>
-      </div>
-      <div class="modal-footer">
-        <spark-button data-dismiss="modal">
-          Cancel
-        </spark-button>
-        <spark-button id="folderNewOkButton" primary
-            data-dismiss="modal">Create</spark-button>
-      </div>
-    </spark-overlay>
-
     <!-- Rename File dialog -->
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
@@ -367,6 +333,8 @@
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
         <h4 class="modal-title">Spark</h4>
       </div>
       <div class="modal-body">
