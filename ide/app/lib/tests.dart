@@ -33,7 +33,6 @@ class TestDriver {
   TestDriver(this._defineTestsFn, this._jobManager, {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
     _logger.onRecord.listen((record) => print(record.toString()));
-    _logger.info('Running tests on ${window.navigator.appCodeName} ${window.navigator.appName} ${window.navigator.appVersion}');
 
     if (connectToTestListener) {
       _connectToListener();
@@ -75,6 +74,8 @@ class TestDriver {
       _logger.onRecord.listen((LogRecord record) {
         testClient.log(record.toString());
       });
+
+      _logger.info('Running tests on ${window.navigator.appCodeName} ${window.navigator.appName} ${window.navigator.appVersion}');
 
       runTests().then((bool success) {
         testClient.log('test exit code: ${(success ? 0 : 1)}');
