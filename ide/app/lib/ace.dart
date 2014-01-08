@@ -96,6 +96,9 @@ class AceContainer {
 
     /*%TRACE3*/ print("(4> 1/7/14): parentElement: " + parentElement.toString()); // TRACE%
     var gutterCells = parentElement.getElementsByClassName("ace_error");
+    for (var cell in gutterCells) {
+//      cell
+    }
 //    var _ui = html.document.querySelector('#topUi');
 //    /*%TRACE3*/ print("(4> 1/7/14): _ui: " + _ui.toString()); // TRACE%
 //    var errorGutters = _ui.getShadowDomElement(".ace_gutter-cell");
