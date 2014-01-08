@@ -164,7 +164,6 @@ class CommitObject extends GitObject {
     _parseData();
   }
 
-
   // Parses the byte stream and constructs the commit object.
   void _parseData() {
     List<String> lines = data.split("\n");
@@ -201,7 +200,7 @@ class CommitObject extends GitObject {
     Author author = new Author();
     author.name = match[0].group(1);
     author.email = match[0].group(2);
-    author.timestamp = int.parse(match[0].group(3));
+    author.timestamp = (int.parse(match[0].group(3))) * 1000;
     author.date = new DateTime.fromMillisecondsSinceEpoch(
         author.timestamp, isUtc:true);
     return author;
