@@ -30,6 +30,8 @@ class SparkButton extends Widget {
   SparkButton.created() : super.created();
 
   void focus() {
+    // Only the first found element that has 'focused' attribute on it will be
+    // actually focused; if there are more than one, the rest will be ignored.
     Element elementToFocus = this.getShadowDomElement('[focused]');
     if (elementToFocus != null) {
       elementToFocus.focus();
