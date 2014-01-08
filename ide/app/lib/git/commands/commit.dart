@@ -7,6 +7,8 @@ library git.commands.commit;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'dart:html';
+
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 import '../file_operations.dart';
@@ -37,24 +39,25 @@ class Commit {
 
       return Future.forEach(entries, (chrome.DirectoryEntry entry) {
         if (entry.name == '.git') {
-          return;
+          return null;
         }
 
         if (entry.isDirectory) {
-          walkFiles(entry, store).then((String sha) {
+          return walkFiles(entry, store).then((String sha) {
             if (sha != null) {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
                   false));
             }
           });
         } else {
-          (entry as chrome.ChromeFileEntry).readBytes().then(
+          return (entry as chrome.ChromeFileEntry).readBytes().then(
               (chrome.ArrayBuffer buf) {
-            store.writeRawObject('blob', new Uint8List.fromList(
-                buf.getBytes())).then((String sha) {
-              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
-            });
-          });
+                return store.writeRawObject('blob', new Uint8List.fromList(
+                    buf.getBytes()));
+              }).then((String sha) {
+                treeEntries.add(
+                    new TreeEntry(entry.name, shaToBytes(sha), true));
+              });
         }
       }).then((_) {
         treeEntries.sort((TreeEntry a, TreeEntry b) {
