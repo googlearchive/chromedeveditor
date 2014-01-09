@@ -97,7 +97,7 @@ class SparkPolymer extends Spark {
   @override
   void initSplitView() {
     SparkSplitter splitter = _ui.$['splitter'];
-    splitter.position = 200;
+    //splitter.targetSize = 200;
   }
 
   @override
