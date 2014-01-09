@@ -209,7 +209,6 @@ class ObjectStore {
 
   Future<GitObject> retrieveObject(String sha, String objType) {
     String dataType = (objType == ObjectTypes.COMMIT ? "Text" : "ArrayBuffer");
-
     return retrieveRawObject(sha, dataType).then(
         (LooseObject object) => GitObject.make(sha, objType, object.data));
   }
@@ -232,10 +231,9 @@ class ObjectStore {
           var buff;
           return new LooseObject(buff);
         } else {
-          return FileOps.readBlob(new Blob(inflated.getBytes()), 'Text').then(
-              (data) {
-            return new LooseObject(data);
-          });
+          return FileOps.readBlob(new Blob(
+              [new Uint8List.fromList(inflated.getBytes())]), 'Text').then(
+              (data) => new LooseObject(data));
         }
       });
     }, onError:(e) {
@@ -455,6 +453,11 @@ class ObjectStore {
       size = content.length;
     } else if (content is Blob) {
       size = content.size;
+    } else if (content is String) {
+      size = content.length;
+    } else {
+      // TODO: Check expected types here.
+      throw "Unexpected content type.";
     }
 
     String header = 'type ${size}' ;

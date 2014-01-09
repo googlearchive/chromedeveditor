@@ -157,10 +157,19 @@ class CommitObject extends GitObject {
   String _message;
   String treeSha;
 
-  CommitObject(String sha, Uint8List data) {
+  CommitObject(String sha, var data) {
     this._type = ObjectTypes.COMMIT;
     this._sha = sha;
-    this.data = UTF8.decode(data);
+
+    if (data is Uint8List) {
+      this.data = UTF8.decode(data);
+    } else if (data is String) {
+      this.data = data;
+    } else {
+      // TODO: Clarify this exception.
+      throw "Data is in incompatible format.";
+    }
+
     _parseData();
   }
 
@@ -179,7 +188,7 @@ class CommitObject extends GitObject {
     String authorLine = lines[i].replaceFirst("author ", "");
     author = _parseAuthor(authorLine);
 
-    var committerLine = lines[i + 1].replaceFirst("committer ", "");
+    String committerLine = lines[i + 1].replaceFirst("committer ", "");
     committer = _parseAuthor(committerLine);
 
     if (lines[i + 2].split(" ")[0] == "encoding") {
@@ -241,10 +250,10 @@ class LooseObject {
 
   // Parses and constructs a loose git object.
   void _parse(buf) {
-    Uint8List data = new Uint8List(buf);
     String header;
     int i;
     if (buf is chrome.ArrayBuffer) {
+     Uint8List data = new Uint8List.fromList(buf);
       List<String> headChars = [];
       for (i = 0; i < data.length; ++i) {
         if (data[i] != 0)
@@ -257,7 +266,7 @@ class LooseObject {
       this.data = data.sublist(i + 1, data.length);
     } else {
       String data = buf;
-      i = data.indexOf('\0)');
+      i = data.indexOf(new String.fromCharCode(0));
       header = data.substring(0, i);
       // move past null terminator but keep zlib header
       this.data = data.substring(i + 1, data.length);
