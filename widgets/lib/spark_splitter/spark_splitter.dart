@@ -23,6 +23,31 @@ class SparkSplitter extends Widget {
   /// Locks the split bar so it can't be dragged.
   @published bool locked = false;
 
+  @published dynamic onUpdate;
+
+  /**
+   * Return the current splitter location.
+   */
+  @published num get targetSize {
+    final style = _target.getComputedStyle();
+    final sizeStr = _isHorizontal ? style.height : style.width;
+
+    return int.parse(_sizeRe.firstMatch(sizeStr).group(1));
+  }
+
+  /**
+   * Set the current splitter location.
+   */
+  set targetSize(num val) {
+    final sizeStr = '${val.toInt()}px';
+
+    if (_isHorizontal) {
+      _target.style.height = sizeStr;
+    } else {
+      _target.style.width = sizeStr;
+    }
+  }
+
   /// Whether the split view is horizontal or vertical.
   bool _isHorizontal;
 
@@ -126,6 +151,8 @@ class SparkSplitter extends Widget {
     _trackSubscr = null;
     _trackEndSubscr.cancel();
     _trackEndSubscr = null;
+
+    if (onUpdate != null) onUpdate(_targetSize);
 
     // Prevent possible wrong use of the cached value.
     _targetSize = null;

@@ -12,6 +12,7 @@ import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_overlay/spark_overlay.dart' as widgets;
+import 'packages/spark_widgets/spark_splitter/spark_splitter.dart';
 
 import 'spark_polymer_ui.dart';
 
@@ -93,9 +94,11 @@ class SparkPolymer extends Spark {
   @override
   void initEditorArea() => super.initEditorArea();
 
-  // We're using a Polymer-based splitview, so disable the default.
   @override
-  void initSplitView() {}
+  void initSplitView() {
+    SparkSplitter splitter = _ui.$['splitter'];
+    splitter.position = 200;
+  }
 
   @override
   void initSaveStatusListener() => super.initSaveStatusListener();
