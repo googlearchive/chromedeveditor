@@ -61,6 +61,9 @@ class AceContainer {
 
   AceContainer(this.parentElement) {
     _aceEditor = ace.edit(parentElement);
+//    _aceEditor.onChange.listen(handleEditorChanged);
+    currentSession.onChangeAnnotation.listen(handleEditorChanged);
+
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
@@ -90,6 +93,16 @@ class AceContainer {
       annotations.add(annotation);
     }
     currentSession.annotations = annotations;
+
+    /*%TRACE3*/ print("(4> 1/7/14): parentElement: " + parentElement.toString()); // TRACE%
+    var gutterCells = parentElement.getElementsByClassName("ace_error");
+    for (var cell in gutterCells) {
+//      cell
+    }
+//    var _ui = html.document.querySelector('#topUi');
+//    /*%TRACE3*/ print("(4> 1/7/14): _ui: " + _ui.toString()); // TRACE%
+//    var errorGutters = _ui.getShadowDomElement(".ace_gutter-cell");
+//    /*%TRACE3*/ print("(4> 1/7/14): errorGutters: " + errorGutters.toString()); // TRACE%
     return annotations;
   }
 
@@ -166,6 +179,7 @@ class AceContainer {
     // Setup the code completion options for the current file type.
     if (file != null) {
       currentFile = file;
+      currentFile.createMarker("dart", workspace.Marker.SEVERITY_ERROR, "message", 3);
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
 
@@ -197,6 +211,11 @@ class AceContainer {
         return ace.Annotation.INFO;
         break;
     }
+  }
+
+  void handleEditorChanged(dynamic event) {
+    var gutterCells = parentElement.getElementsByClassName("ace_error");
+    /*%TRACE3*/ print("(4> 1/7/14): gutterCells: " + gutterCells.toString()); // TRACE%
   }
 }
 

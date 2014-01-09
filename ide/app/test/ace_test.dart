@@ -46,6 +46,7 @@ class MockAceContainer implements AceContainer {
   void setKeyBinding(String name) { }
   clearAnnotations() { }
   List<ace.Annotation> setMarkers(List<workspace.Marker> markers) { }
+  void handleEditorChanged(event) { }
 }
 
 class MockAceEditor implements AceEditor {
