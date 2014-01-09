@@ -96,8 +96,15 @@ class SparkPolymer extends Spark {
 
   @override
   void initSplitView() {
-    SparkSplitter splitter = _ui.$['splitter'];
-    //splitter.targetSize = 200;
+    syncPrefs.getValue('splitViewPosition').then((String position) {
+      if (position != null) {
+        int value = int.parse(position, onError: (_) => 0);
+        if (value != 0) {
+          SparkSplitter splitter = _ui.$['splitter'];
+          splitter.targetSize = value;
+        }
+      }
+    });
   }
 
   @override

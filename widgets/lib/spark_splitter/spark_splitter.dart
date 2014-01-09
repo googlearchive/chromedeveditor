@@ -11,6 +11,8 @@ import 'package:polymer/polymer.dart';
 
 import '../common/widget.dart';
 
+typedef void SplitterUpdateFunction(int position);
+
 /// Implements the spark-splitter custom Polymer element.
 @CustomTag('spark-splitter')
 class SparkSplitter extends Widget {
@@ -22,16 +24,15 @@ class SparkSplitter extends Widget {
   @published String direction = 'left';
   /// Locks the split bar so it can't be dragged.
   @published bool locked = false;
-
-  @published dynamic onUpdate;
+  /// Get notified of position changes.
+  @published SplitterUpdateFunction onUpdate;
 
   /**
    * Return the current splitter location.
    */
-  @published num get targetSize {
+  num get targetSize {
     final style = _target.getComputedStyle();
     final sizeStr = _isHorizontal ? style.height : style.width;
-
     return int.parse(_sizeRe.firstMatch(sizeStr).group(1));
   }
 
@@ -40,7 +41,6 @@ class SparkSplitter extends Widget {
    */
   set targetSize(num val) {
     final sizeStr = '${val.toInt()}px';
-
     if (_isHorizontal) {
       _target.style.height = sizeStr;
     } else {
