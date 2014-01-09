@@ -178,9 +178,9 @@ class AceContainer {
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
-    // TODO(ericarnold): This gets called repeatedly.  Fix.
-    // This should work for both ADD and DELETE events.
-    setMarkers(currentFile.getMarkers());
+    if (event.hasChangesFor(currentFile)) {
+      setMarkers(currentFile.getMarkers());
+    }
   }
 
   String _convertMarkerSeverity(int markerSeverity) {

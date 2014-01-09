@@ -72,7 +72,7 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
   try {
     unit = context.parseCompilationUnit(source);
   } catch (e) {
-    unit = new CompilationUnit();
+    unit = null;
   }
 
   if (performResolution) {

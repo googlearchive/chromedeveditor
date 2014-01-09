@@ -67,7 +67,7 @@ class Workspace implements Container {
    * call [resumeMakerEventStream] to resume posting of maker events.
    */
   void pauseMarkerStream() {
-    _markersPauseCount ++;
+    _markersPauseCount++;
   }
 
   /**
@@ -424,10 +424,13 @@ abstract class Container extends Resource {
   }
 
   void clearMarkers() {
-    // TODO: make sure we only fire one change event
+    workspace.pauseMarkerStream();
+
     for (Resource resource in getChildren()) {
       resource.clearMarkers();
     }
+
+    workspace.resumeMarkerStream();
   }
 
   int findMaxProblemSeverity() {
@@ -606,8 +609,10 @@ class File extends Resource {
   List<Marker> getMarkers() => _markers;
 
   void clearMarkers() {
-    _markers.clear();
-    _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+    if (_markers.isNotEmpty) {
+      _markers.clear();
+      _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+    }
   }
 
   int findMaxProblemSeverity() {
@@ -821,10 +826,10 @@ class MarkerChangeEvent {
   MarkerChangeEvent._(List<MarkerDelta> delta): changes = new UnmodifiableListView(delta);
 
   /**
-   * Checks if given [Resource] is present in the list of delta for marker changes
+   * Checks if the given [File] is present in the list of marker changes.
    */
-  bool hasResourceChanged(Resource resource) {
-    return changes.any((delta) => delta.resource == resource);
+  bool hasChangesFor(File file) {
+    return changes.any((delta) => delta.resource == file);
   }
 }
 
