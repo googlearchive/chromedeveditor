@@ -18,7 +18,7 @@
 
 <link rel="import" href="../../../packages/spark_widgets/spark_icon/spark_icon.html">
 
-<polymer-element name="spark-icon-button" attributes="src active">
+<polymer-element name="spark-icon-button" attributes="src tooltip active">
   <template>
     <style>
       @host {
@@ -56,7 +56,7 @@
       }
     </style>
 
-    <spark-icon src="{{src}}"></spark-icon>
+    <spark-icon src="{{src}}" tooltip="{{tooltip}}"></spark-icon>
   </template>
 
   <script type="application/dart" src="spark_icon_button.dart"></script>

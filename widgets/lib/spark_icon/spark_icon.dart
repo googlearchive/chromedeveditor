@@ -17,5 +17,7 @@ class SparkIcon extends Widget {
   /// Size of the icon defaults to 24.
   @published String size = "24";
 
+  @published String tooltip = "";
+
   SparkIcon.created(): super.created();
 }
