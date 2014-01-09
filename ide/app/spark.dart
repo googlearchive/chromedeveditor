@@ -343,6 +343,10 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
+    actionManager.registerAction(new FolderNewAction(
+        this, getDialogElement('#folderNewDialog')));
+    actionManager.registerAction(new FileNewAction(
+        this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FileRenameAction(
         this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new FileDeleteAction(
@@ -740,6 +744,45 @@ class FileOpenAction extends SparkAction {
   void _invoke([Object context]) => spark.openFile();
 }
 
+class FileNewAction extends SparkActionWithDialog implements ContextAction {
+   InputElement _nameElement;
+   ws.Folder folder;
+
+   FileNewAction(Spark spark, Element dialog)
+     : super(spark, "file-new", "New File…", dialog) {
+       defaultBinding("ctrl-n");
+       _nameElement = _triggerOnReturn("#fileNewName");
+   }
+
+   void _invoke([List<ws.Folder> folders]) {
+     if (folders != null && folders.isNotEmpty) {
+       folder = folders.first;
+       _nameElement.value = '';
+       _show();
+     }
+   }
+
+  // called when user validates the dialog
+  void _commit() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFile(name).then((file) {
+        // Delay a bit to allow the files view to process the new file event.
+        // TODO: This is due to a race condition in when the files view receives
+        // the resource creation event; we should remove the possibility for
+        // this to occur.
+        Timer.run(() {
+          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+        });
+      });
+    }
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
 class FileNewAsAction extends SparkAction {
   FileNewAsAction(Spark spark) : super(spark, "file-new-as", "New File…");
 
@@ -865,6 +908,42 @@ class FileExitAction extends SparkAction {
       chrome.app.window.current().close();
     });
   }
+}
+
+class FolderNewAction extends SparkActionWithDialog implements ContextAction {
+   InputElement _nameElement;
+   ws.Folder folder;
+
+   FolderNewAction(Spark spark, Element dialog)
+     : super(spark, "folder-new", "New Folder…", dialog) {
+     defaultBinding("ctrl-shift-n");
+     _nameElement = _triggerOnReturn("#folderName");
+   }
+
+   void _invoke([List<ws.Folder> folders]) {
+     if (folders != null && folders.isNotEmpty) {
+       folder = folders.first;
+       _nameElement.value = '';
+       _show();
+     }
+   }
+
+  // called when user validates the dialog
+  void _commit() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFolder(name).then((folder) {
+        // Delay a bit to allow the files view to process the new file event.
+        Timer.run(() {
+          spark._filesController.selectFile(folder);
+        });
+      });
+    }
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
 class FolderOpenAction extends SparkAction {
