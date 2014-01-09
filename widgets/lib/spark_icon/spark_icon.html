@@ -20,7 +20,7 @@
  */
 -->
 
-<polymer-element name="spark-icon" attributes="src size">
+<polymer-element name="spark-icon" attributes="src tooltip size">
   <template>
     <style>
       @host {
@@ -41,7 +41,8 @@
     </style>
 
     <div id="icon"
-        style="background-image:url({{src}}); width:{{size}}px; height:{{size}}px">
+        style="background-image:url({{src}}); width:{{size}}px; height:{{size}}px"
+        title="{{tooltip}}">
     </div>
   </template>
 
