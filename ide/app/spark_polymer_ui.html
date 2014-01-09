@@ -297,7 +297,7 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="deleteOkButton" overlay-toggle primary focused
+        <spark-button id="deleteOkButton" overlay-toggle primary autofocus
             data-dismiss="modal">
           Delete
         </spark-button>
@@ -308,7 +308,7 @@
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
-          File name: <input id="renameFileName" type="text" focused>
+          File name: <input id="renameFileName" type="text" autofocus>
         </p>
       </div>
       <div class="modal-footer">
@@ -330,7 +330,7 @@
         <h4 class="modal-title">New Git Project</h4>
       </div>
       <div class="modal-body">
-        Project Name: <input id="gitProjectName" type="text" focused><br/><br/>
+        Project Name: <input id="gitProjectName" type="text" autofocus><br/><br/>
         Repository URL: <input id="gitRepoUrl" type="text">
       </div>
       <div class="modal-footer">
@@ -344,7 +344,7 @@
       </div>
     </spark-modal><!-- /.modal --> 
     
-    <!-- Git Clone dialog -->
+    <!-- Git Branch dialog -->
     <spark-modal id="gitBranchDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal"
@@ -352,7 +352,7 @@
         <h4 class="modal-title">New Branch</h4>
       </div>
       <div class="modal-body">
-        New Branch Name: <input id="gitBranchName" type="text" focused><br/><br/>
+        New Branch Name: <input id="gitBranchName" type="text" autofocus><br/><br/>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
