@@ -12,6 +12,7 @@ import '../common/widget.dart';
 @CustomTag("spark-icon-button")
 class SparkIconButton extends Widget {
   @published String src = "";
+  @published String tooltip = "";
   @published bool active = false;
 
   SparkIconButton.created(): super.created();
