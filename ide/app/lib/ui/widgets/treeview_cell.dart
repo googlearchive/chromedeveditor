@@ -95,6 +95,8 @@ class TreeViewCell implements ListViewCell {
     treeViewCellExpando[_element] = this;
   }
 
+  ListViewCell get embeddedCell => _embeddedCell;
+
   Element get element => _element;
   set element(Element element) => _element = element;
 

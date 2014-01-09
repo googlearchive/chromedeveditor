@@ -76,24 +76,22 @@ class AceContainer {
     theme = THEMES[0];
   }
 
-  List<ace.Annotation> setMarkers(List<workspace.Marker> markers) {
-    ace.EditSession currentSession = this.currentSession;
+  void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
 
     for (workspace.Marker marker in markers) {
-      // TODO(ericarnold): Check the type here before taking from severity.
       String annotationType = _convertMarkerSeverity(marker.severity);
       var annotation = new ace.Annotation(
           text: marker.message,
-          row: marker.lineNum,
+          row: marker.lineNum - 1, // Ace uses 0-based lines.
           type: annotationType);
       annotations.add(annotation);
     }
+
     currentSession.annotations = annotations;
-    return annotations;
   }
 
-  clearAnnotations() => currentSession.annotations = [];
+  void clearMarkers() => currentSession.clearAnnotations();
 
   String get theme => _aceEditor.theme.name;
 

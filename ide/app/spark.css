@@ -2,7 +2,6 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-
 @import url("assets/font-awesome/css/font-awesome.min.css");
 @import url("packages/bootjack/css/bootstrap.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
@@ -40,6 +39,26 @@ body {
   display: inline-block;
 }
 
+.fileview-filename-container .fileStatus.error {
+  background: #F55;
+  border-radius: 2px;
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  height: 16px;
+  width: 4px;
+}
+
+.fileview-filename-container .fileStatus.warning {
+	background: #DD3;
+  border-radius: 2px;
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  height: 16px;
+  width: 4px;
+}
+
 .fileview-filename-container .menu {
   opacity: 0;
   position: absolute;
@@ -63,11 +82,7 @@ body {
 }
 
 .fileview-filename-container:hover .filename {
-  width: calc(100% - 15px);
-}
-
-.fileview-filename-container:hover .menu {
-  opacity: 1;
+  
 }
 
 .ace_gutter-cell {

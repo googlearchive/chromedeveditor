@@ -10,7 +10,7 @@ library spark.workspace;
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert' show JSON;
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
@@ -61,7 +61,6 @@ class Workspace implements Container {
   Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
-  int findMaxProblemSeverity(String type) => -1;
 
   /**
    * Stops the posting of [MarkerChangeEvent] to the stream. Clients should
@@ -200,11 +199,11 @@ class Workspace implements Container {
 
   void _fireResourceEvent(ResourceChangeEvent event) => _resourceController.add(event);
 
-  void _fireMarkerEvent(List<MarkerDelta> deltas) {
+  void _fireMarkerEvent(MarkerDelta delta) {
     if (_markersPauseCount == 0) {
-      _markerController.add(new MarkerChangeEvent.fromList(deltas));
+      _markerController.add(new MarkerChangeEvent(delta));
     } else {
-      _makerChangeList.addAll(deltas);
+      _makerChangeList.add(delta);
     }
   }
 
@@ -248,15 +247,11 @@ class Workspace implements Container {
     return getChildPath(token.substring(1));
   }
 
-  List<Marker> getMarkers() {
-    //TODO: add sync resources too
-    return getChildren().map((c) => c.getMarkers()).toList();
-  }
+  List<Marker> getMarkers() => [];
 
-  void clearMarkers() {
-    // TODO: add sync resources too
-    return getChildren().forEach((c) => c.clearMarkers());
-  }
+  void clearMarkers() { }
+
+  int findMaxProblemSeverity() => Marker.SEVERITY_NONE;
 
   Future<Resource> _gatherChildren(Container container) {
     chrome.DirectoryEntry dir = container.entry;
@@ -423,6 +418,31 @@ abstract class Container extends Resource {
   }
 
   List<Resource> getChildren() => _localChildren;
+
+  List<Marker> getMarkers() {
+    return traverse().where((r) => r is File).expand((f) => f.getMarkers());
+  }
+
+  void clearMarkers() {
+    // TODO: make sure we only fire one change event
+    for (Resource resource in getChildren()) {
+      resource.clearMarkers();
+    }
+  }
+
+  int findMaxProblemSeverity() {
+    int severity = Marker.SEVERITY_NONE;
+
+    for (Resource resource in getChildren()) {
+      severity = math.max(severity, resource.findMaxProblemSeverity());
+
+      if (severity == Marker.SEVERITY_ERROR) {
+        return severity;
+      }
+    }
+
+    return severity;
+  }
 }
 
 abstract class Resource {
@@ -455,7 +475,7 @@ abstract class Resource {
 
   void _fireResourceEvent(ResourceChangeEvent event) => _parent._fireResourceEvent(event);
 
-  void _fireMarkerEvent(List<MarkerDelta> delta) => _parent._fireMarkerEvent(delta);
+  void _fireMarkerEvent(MarkerDelta delta) => _parent._fireMarkerEvent(delta);
 
   Future delete();
 
@@ -487,32 +507,11 @@ abstract class Resource {
   /**
    * Returns a [List] of [Marker] from all the [Resources] in the [Container].
    */
-  List<Marker> getMarkers() {
-    List<Marker> markers = [];
-    traverse().where((r) => r.isFile)
-      .forEach((f) => markers.addAll(f.getMarkers()));
-    return markers;
-  }
+  List<Marker> getMarkers();
 
-  void clearMarkers() {
-    traverse().where((r) => r.isFile)
-        .forEach((f) => (f as File)._clearMarkers(fireEvent : false));
-    _fireMarkerEvent([new MarkerDelta(this, null,EventType.DELETE)]);
-  }
+  void clearMarkers();
 
-  int findMaxProblemSeverity(String type) {
-    int maxSeverity = -1;
-    traverse().where((r) => r.isFile).forEach((File file) {
-      file.getMarkers().where((marker) => marker.type == type).
-        forEach((marker) {
-            maxSeverity = max(maxSeverity, marker.severity);
-            if (maxSeverity == Marker.SEVERITY_ERROR) {
-              return maxSeverity;
-            }
-        });
-     });
-    return maxSeverity;
-  }
+  int findMaxProblemSeverity();
 
   /**
    * Returns an iterable of the children of the resource as a pre-order traversal
@@ -562,11 +561,9 @@ class Folder extends Container {
   }
 
   chrome.DirectoryEntry get _dirEntry => entry;
-
 }
 
 class File extends Resource {
-
   List<Marker> _markers = [];
 
   File(Container parent, chrome.Entry entry):
@@ -600,24 +597,32 @@ class File extends Resource {
     Marker marker = new Marker(
         this, type, severity, message, lineNum, charStart, charEnd);
     _markers.add(marker);
-    _fireMarkerEvent([new MarkerDelta(this, marker, EventType.ADD)]);
+    _fireMarkerEvent(new MarkerDelta(this, marker, EventType.ADD));
     return marker;
-  }
-
-  void clearMarkers() {
-    _clearMarkers();
-  }
-
-  void _clearMarkers({bool fireEvent : true}) {
-    _markers.clear();
-    if (fireEvent) {
-      _fireMarkerEvent([new MarkerDelta(this, null, EventType.DELETE)]);
-    }
   }
 
   bool get isFile => true;
 
   List<Marker> getMarkers() => _markers;
+
+  void clearMarkers() {
+    _markers.clear();
+    _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+  }
+
+  int findMaxProblemSeverity() {
+    int severity = Marker.SEVERITY_NONE;
+
+    for (Marker marker in _markers) {
+      severity = math.max(severity, marker.severity);
+
+      if (severity == Marker.SEVERITY_ERROR) {
+        return severity;
+      }
+    }
+
+    return severity;
+  }
 
   chrome.ChromeFileEntry get _fileEntry => entry;
 }
@@ -747,19 +752,21 @@ class Marker {
   static const String CHAR_END = "charEnd";
 
   /**
-   * The severity of the marker, error being the highest severity
+   * The severity of the marker, error being the highest severity.
    */
-  static const int SEVERITY_ERROR = 2;
+  static const int SEVERITY_ERROR = 3;
 
   /**
    * Indicates maker is a warning.
    */
-  static const int SEVERITY_WARNING = 1;
+  static const int SEVERITY_WARNING = 2;
 
   /**
    * Indicates marker is informational.
    */
-  static const int SEVERITY_INFO = 0;
+  static const int SEVERITY_INFO = 1;
+
+  static const int SEVERITY_NONE = 0;
 
   Marker(this.file, String type, int severity, String message, int lineNum,
       [int charStart = -1, int charEnd = -1]) {
@@ -801,8 +808,11 @@ class Marker {
  * Used to indicate changes to markers
  */
 class MarkerChangeEvent {
-
   List<MarkerDelta> changes;
+
+  MarkerChangeEvent(MarkerDelta delta) {
+    changes = new UnmodifiableListView([delta]);
+  }
 
   factory MarkerChangeEvent.fromList(List<MarkerDelta> deltas) {
     return new MarkerChangeEvent._(deltas.toList());
@@ -816,7 +826,6 @@ class MarkerChangeEvent {
   bool hasResourceChanged(Resource resource) {
     return changes.any((delta) => delta.resource == resource);
   }
-
 }
 
 /**
