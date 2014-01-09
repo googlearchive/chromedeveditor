@@ -111,7 +111,12 @@ void runApp(String browserPath, String appPath) {
   Process.start(browserPath, args, workingDirectory: appPath)
     .then((Process process) {
       chromeProcess = process;
-
+      chromeProcess.stdout.transform(new Utf8Decoder())
+                          .transform(new LineSplitter())
+                          .listen((String line) => print(line));
+      chromeProcess.stderr.transform(new Utf8Decoder())
+                          .transform(new LineSplitter())
+                          .listen((String line) => print(line));
       chromeProcess.exitCode.then((int exitCode) {
         log("Chrome process finished [${exitCode}]");
         chromeProcess = null;
