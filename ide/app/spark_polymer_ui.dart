@@ -39,6 +39,6 @@ class SparkPolymerUI extends Widget {
   }
 
   void onSplitterUpdate(int position) {
-    SparkModel.instance.syncPrefs.setValue('splitViewPosition', position.toString());
+    SparkModel.instance.onSplitViewUpdate(position);
   }
 }

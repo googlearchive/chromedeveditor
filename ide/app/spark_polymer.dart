@@ -100,8 +100,7 @@ class SparkPolymer extends Spark {
       if (position != null) {
         int value = int.parse(position, onError: (_) => 0);
         if (value != 0) {
-          SparkSplitter splitter = _ui.$['splitter'];
-          splitter.targetSize = value;
+          (getUIElement('#splitter') as SparkSplitter).targetSize = value;
         }
       }
     });
@@ -131,6 +130,10 @@ class SparkPolymer extends Spark {
   //
   // - End parts of the parent's ctor.
   //
+
+  void onSplitViewUpdate(int position) {
+    syncPrefs.setValue('splitViewPosition', position.toString());
+  }
 
   // TODO(terry): Hookup overlay dialog.
   @override

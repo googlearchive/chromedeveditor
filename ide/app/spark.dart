@@ -462,6 +462,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
+  void onSplitViewUpdate(int position) { }
+
   List<ws.Resource> _getSelection() => _filesController.getSelection();
 
   void _closeOpenEditor(ws.Resource resource) {
