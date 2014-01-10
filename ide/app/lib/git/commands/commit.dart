@@ -27,6 +27,7 @@ class Commit {
    */
   static Future<String> walkFiles(chrome.DirectoryEntry root,
       ObjectStore store) {
+
     return FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
       if (entries.isEmpty) {
         return null;
@@ -45,18 +46,16 @@ class Commit {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
                   false));
             }
-            return null;
           });
         } else {
           return (entry as chrome.ChromeFileEntry).readBytes().then(
               (chrome.ArrayBuffer buf) {
-            store.writeRawObject('blob', new Uint8List.fromList(
-                buf.getBytes())).then((String sha) {
-              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
-                  true));
-              return null;
-            });
-          });
+                return store.writeRawObject('blob', new Uint8List.fromList(
+                    buf.getBytes()));
+              }).then((String sha) {
+                treeEntries.add(
+                    new TreeEntry(entry.name, shaToBytes(sha), true));
+              });
         }
       }).then((_) {
         treeEntries.sort((TreeEntry a, TreeEntry b) {
@@ -79,11 +78,13 @@ class Commit {
         String oldTree = parentCommit.treeSha;
         if (oldTree == sha) {
           // TODO throw COMMITS_NO_CHANGES error.
+          throw "commits_no_changes";
         } else {
           return null;
         }
       }, onError: (e) {
-        //TODO throw error object_store_corrupted.
+        // TODO throw error object_store_corrupted.
+        throw "object_store_corrupted";
       });
     }
   }
@@ -116,37 +117,37 @@ class Commit {
     return walkFiles(dir, store).then((String sha) {
       return checkTreeChanged(store, parent, sha).then((_) {
         DateTime now = new DateTime.now();
-        String dateString = (now.millisecond / 1000).floor().toString();
-        int offset = (now.timeZoneOffset.inMilliseconds / -60).floor();
+        String dateString =
+            (now.millisecondsSinceEpoch / 1000).floor().toString();
+        int offset = (now.timeZoneOffset.inHours).floor();
         int absOffset = offset.abs().floor();
-        String offsetStr = '' + (offset < 0 ? '-' : '+');
+        String offsetStr = ' ' + (offset < 0 ? '-' : '+');
         offsetStr += (absOffset < 10 ? '0' : '') + '${absOffset}00';
         dateString += offsetStr;
-        List<String> commitParts = [];
-        commitParts.add('tree ${sha}\n');
+        StringBuffer commitContent = new StringBuffer();
+        commitContent.write('tree ${sha}\n');
         if (parent != null && parent.length) {
-          commitParts.add('parent ${parent}');
+          commitContent.write('parent ${parent}');
           if (parent[parent.length -1] != '\n') {
-            commitParts.add('\n');
+            commitContent.write('\n');
           }
         }
 
-        commitParts.add('author ${name} ');
-        commitParts.add(' <$email> ');
-        commitParts.add(dateString);
-        commitParts.add('\n');
-        commitParts.add('committer ${name}');
-        commitParts.add(' <${email}>');
-        commitParts.add(dateString);
-        commitParts.add('\n\n${commitMsg}\n');
+        commitContent.write('author ${name} ');
+        commitContent.write(' <$email> ');
+        commitContent.write(dateString);
+        commitContent.write('\n');
+        commitContent.write('committer ${name}');
+        commitContent.write(' <${email}> ');
+        commitContent.write(dateString);
+        commitContent.write('\n\n${commitMsg}\n');
 
-        StringBuffer commitContent = new StringBuffer(commitParts);
-
-        return store.writeRawObject('commit', commitContent.toString()).then(
-            (String commitSha) {
+        return store.writeRawObject(
+            ObjectTypes.COMMIT, commitContent.toString()).then(
+                (String commitSha) {
           return FileOps.createFileWithContent(dir, '.git/${refName}',
               commitSha + '\n', 'Text').then((_) {
-            return store.updateLastChange(null).then((_) => commitSha);
+                return store.updateLastChange(null).then((_) => commitSha);
           });
         });
       });
