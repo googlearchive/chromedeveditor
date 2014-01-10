@@ -25,6 +25,7 @@ import 'lib/event_bus.dart';
 import 'lib/git/commands/branch.dart';
 import 'lib/git/commands/checkout.dart';
 import 'lib/git/commands/clone.dart';
+import 'lib/git/commands/commit.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
@@ -147,6 +148,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     initSplitView();
     initSaveStatusListener();
+    initSyncFs();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -230,6 +232,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void initWorkspace() {
     _workspace = new ws.Workspace(localPrefs);
+  }
+
+  void initSyncFs() {
+    _SyncFsProjectLoadJob job = new _SyncFsProjectLoadJob(this);
+    this.jobManager.schedule(job);
   }
 
   void createEditorComponents() {
@@ -353,6 +360,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new GitCloneAction(
         this, getDialogElement("#gitCloneDialog")));
+    actionManager.registerAction(new GitCommitAction(
+        this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitBranchAction(
         this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -395,6 +404,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
       ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
+      ul.children.add(createMenuItem(actionManager.getAction('git-commit')));
       ul.children.add(createMenuItem(actionManager.getAction('git-branch')));
     }
 
@@ -949,6 +959,34 @@ class FolderOpenAction extends SparkAction {
   void _invoke([Object context]) => spark.openFolder();
 }
 
+class _SyncFsProjectLoadJob extends Job {
+
+  Spark spark;
+
+  _SyncFsProjectLoadJob(this.spark)
+      : super("Loading Syncfs Projects …");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    Completer completer = new Completer();
+
+    getSyncFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
+      fs.root.createReader().readEntries().then((List<Entry> entries) {
+        Future.forEach(entries, (Entry entry) {
+          if (entry.isDirectory) {
+            spark.workspace.link(entry);
+          }
+        }).then((_){
+          spark.workspace.save();
+          completer.complete(this);
+        });
+      });
+    });
+    return completer.future;
+  }
+}
+
 class GitCloneAction extends SparkActionWithDialog {
   InputElement _projectNameElement;
   InputElement _repoUrlElement;
@@ -984,7 +1022,8 @@ class _GitCloneJob extends Job {
 
     Completer completer = new Completer();
 
-    getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
+    getSyncFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
+
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         spark._gitDir = dir;
         GitOptions options = new GitOptions();
@@ -1052,6 +1091,48 @@ class _GitBranchJob extends Job {
       print(e);
     }).whenComplete(() => completer.complete(this));
 
+    return completer.future;
+  }
+}
+
+class GitCommitAction extends SparkActionWithDialog {
+  InputElement _commitMessageElement;
+
+  GitCommitAction(Spark spark, Element dialog)
+      : super(spark, "git-commit", "Git Commit…", dialog) {
+    _commitMessageElement = getElement("#commitMessage");
+  }
+
+  void _invoke([Object context]) {
+    _show();
+  }
+
+  void _commit() {
+    // TODO(grv): add verify checks.
+    _GitBranchJob job = new _GitBranchJob(_commitMessageElement.value, spark);
+    spark.jobManager.schedule(job);
+  }
+}
+
+class _GitCommitJob extends Job {
+  String _commitMessage;
+  Spark spark;
+
+  _GitCommitJob(this._commitMessage, this.spark)
+  : super("Commit …");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    Completer completer = new Completer();
+    GitOptions options = new GitOptions();
+    options.root = spark._gitDir;
+    options.commitMessage = _commitMessage;
+    options.store = new ObjectStore(spark._gitDir);
+    Commit.commit(options).then((_) {
+      print('commit successful.');
+
+    }).whenComplete(() => completer.complete(this));
     return completer.future;
   }
 }
