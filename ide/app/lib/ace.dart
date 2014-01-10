@@ -76,6 +76,12 @@ class AceContainer {
     theme = THEMES[0];
   }
 
+  html.Element get _editorElement =>
+      parentElement.parent;
+
+  html.Element get _minimapElement =>
+      _editorElement.getElementsByClassName("minimap").first;
+
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
 
@@ -86,6 +92,23 @@ class AceContainer {
           row: marker.lineNum - 1, // Ace uses 0-based lines.
           type: annotationType);
       annotations.add(annotation);
+      int numberLines = currentSession.document.length;
+      double markerHeightPercentage =
+          marker.lineNum / numberLines * 100;
+
+      html.Element minimapMarker = new html.Element.div();
+      minimapMarker.style.border="1px solid #FF0000";
+      minimapMarker.style.background = "#AA0000";
+
+      minimapMarker.style.height="4px";
+      minimapMarker.style.left="0px";
+      minimapMarker.style.top =
+          markerHeightPercentage.toStringAsFixed(2) + "%";
+      minimapMarker.style.right="0px";
+      minimapMarker.style.position="absolute";
+
+      var mm = _minimapElement;
+      _minimapElement.append(minimapMarker);
     }
 
     currentSession.annotations = annotations;
