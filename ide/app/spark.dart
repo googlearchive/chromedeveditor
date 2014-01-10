@@ -486,11 +486,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         forceOpen: true, switchesTab: true, forceFocus: true);
   }
 
-  void showStatus(String text) {
-    Element element = getUIElement("#saveStatus");
-    element.text = text;
-  }
-
   //
   // Implementation of FilesControllerDelegate interface:
   //
