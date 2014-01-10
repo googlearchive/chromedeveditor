@@ -30,7 +30,6 @@ abstract class EditorTab extends Tab {
 class AceEditorTab extends EditorTab {
   final Editor editor;
   final EditorProvider provider;
-  Element minimap;
 
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
@@ -156,17 +155,6 @@ class EditorArea extends TabView {
       }
 
       if (forceFocus) tab.select(forceFocus: forceFocus);
-      if (tab is AceEditorTab) {
-        Element editorElement = tab.editor.element.parent;
-        Element scrollbarElement =
-            editorElement.getElementsByClassName("ace_scrollbar").first;
-        if (scrollbarElement.style.right != "20px") {
-          scrollbarElement.style.right = "20px";
-        }
-        Element minimap = new Element.div();
-        minimap.classes.add("minimap");
-        editorElement.append(minimap);
-      }
     }
   }
 

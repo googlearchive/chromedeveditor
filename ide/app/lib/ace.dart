@@ -79,11 +79,21 @@ class AceContainer {
   html.Element get _editorElement =>
       parentElement.parent;
 
-  html.Element get _minimapElement =>
-      _editorElement.getElementsByClassName("minimap").first;
+  html.Element get _minimapElement {
+    List<html.Node> minimapElements =
+        _editorElement.getElementsByClassName("minimap");
+    if (minimapElements.length == 1) {
+      return minimapElements.first;
+    }
+
+    return null;
+  }
 
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
+
+    int numberLines = currentSession.document.length;
+    recreateMiniMap();
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -92,26 +102,38 @@ class AceContainer {
           row: marker.lineNum - 1, // Ace uses 0-based lines.
           type: annotationType);
       annotations.add(annotation);
-      int numberLines = currentSession.document.length;
+
+
       double markerHeightPercentage =
           marker.lineNum / numberLines * 100;
 
       html.Element minimapMarker = new html.Element.div();
-      minimapMarker.style.border="1px solid #FF0000";
-      minimapMarker.style.background = "#AA0000";
-
-      minimapMarker.style.height="4px";
-      minimapMarker.style.left="0px";
+      minimapMarker.classes.add("minimap-marker");
       minimapMarker.style.top =
           markerHeightPercentage.toStringAsFixed(2) + "%";
-      minimapMarker.style.right="0px";
-      minimapMarker.style.position="absolute";
 
-      var mm = _minimapElement;
       _minimapElement.append(minimapMarker);
     }
 
     currentSession.annotations = annotations;
+  }
+
+  void recreateMiniMap() {
+    html.Element scrollbarElement =
+        _editorElement.getElementsByClassName("ace_scrollbar").first;
+    if (scrollbarElement.style.right != "20px") {
+      scrollbarElement.style.right = "20px";
+    }
+
+    html.Element miniMap = new html.Element.div();
+    miniMap.classes.add("minimap");
+
+    if (_minimapElement != null) {
+      _minimapElement.replaceWith(miniMap);
+    } else {
+      _editorElement.append(miniMap);
+    }
+
   }
 
   void clearMarkers() => currentSession.clearAnnotations();
