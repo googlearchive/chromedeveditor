@@ -135,16 +135,4 @@ class SparkPolymer extends Spark {
   void onSplitViewUpdate(int position) {
     syncPrefs.setValue('splitViewPosition', position.toString());
   }
-
-  // TODO(terry): Hookup overlay dialog.
-  @override
-  void showStatus(String text, {bool error: false}) {
-    // TEMP:
-    //Element element = querySelector("#status");
-    //element.text = text;
-    //SparkOverlay overlay = querySelector("#spark-dialog");
-    //if (overlay != null) {
-    //  overlay.toggle();
-    //}
-  }
 }
