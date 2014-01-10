@@ -53,14 +53,14 @@ void main([List<String> args = const []]) {
   }
 
   if (results['chrome'] || results['chrome-stable']) {
-    appPath = 'app';
-    //appPath = 'build/deploy-test-out/web';
+    //appPath = 'app';
+    appPath = 'build/deploy-out/web';
     browserPath = _chromeStablePath();
   }
 
   if (results['chrome-dev']) {
-    appPath = 'app';
-    //appPath = 'build/deploy-test-out/web';
+    //appPath = 'app';
+    appPath = 'build/deploy-out/web';
     browserPath = _chromeDevPath();
   }
 

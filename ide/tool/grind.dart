@@ -100,6 +100,14 @@ void deploy(GrinderContext context) {
       'spark_polymer.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer_ui.html_bootstrap.dart', true);
+  _runCommandSync(
+      context,
+      "sed -e 's/spark_polymer\\.html_bootstrap\\.dart\\.js/spark_polymer\\.html_bootstrap\\.dart\\.precompiled\\.js/' < build/deploy-out/web/spark_polymer.html > build/deploy-out/web/spark_polymer.html.new");
+  File file = new File('build/deploy-out/web/spark_polymer.html.new');
+  file.renameSync('build/deploy-out/web/spark_polymer.html');
+  _runCommandSync(
+      context,
+      'patch build/deploy-out/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -362,7 +370,30 @@ void _patchDartJsInterop(GrinderContext context) {
   }
 }
 
+void _changeChromeVersionRequirement(String version)
+{
+  File file = new File('app/manifest.json');
+  String content = file.readAsStringSync();
+  var manifestDict = JSON.decode(content);
+  manifestDict['minimum_chrome_version'] = version;
+  file.writeAsStringSync(new JsonPrinter().print(manifestDict));
+
+  // It needs to be copied to compile result directory.
+  copyFile(
+      joinFile(Directory.current, ['app', 'manifest.json']),
+      joinDir(BUILD_DIR, ['deploy-out', 'web']));
+  copyFile(
+      joinFile(Directory.current, ['app', 'manifest.json']),
+      joinDir(BUILD_DIR, ['deploy', 'web']));
+}
+
 void _changeMode({bool useTestMode: true}) {
+  if (useTestMode) {
+    _changeChromeVersionRequirement('30');
+  } else {
+    _changeChromeVersionRequirement('31');
+  }
+  
   File file = joinFile(Directory.current, ['app', 'app.json']);
   file.writeAsStringSync('{"test-mode":${useTestMode}}');
 
