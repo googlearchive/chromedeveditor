@@ -114,6 +114,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   TestDriver _testDriver;
 
   DirectoryEntry _gitDir;
+  ObjectStore _currentGitStore;
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -364,6 +365,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitBranchAction(
         this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitCheckoutAction(
+        this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(
         this, getDialogElement('#aboutDialog')));
@@ -406,6 +409,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
       ul.children.add(createMenuItem(actionManager.getAction('git-commit')));
       ul.children.add(createMenuItem(actionManager.getAction('git-branch')));
+      ul.children.add(createMenuItem(actionManager.getAction('git-checkout')));
     }
 
     ul.children.add(createMenuSeparator());
@@ -1031,6 +1035,7 @@ class _GitCloneJob extends Job {
         options.repoUrl = url;
         options.depth = 1;
         options.store = new ObjectStore(dir);
+        spark._currentGitStore = options.store;
         Clone clone = new Clone(options);
         return options.store.init().then((_) {
           return clone.clone().then((_) {
@@ -1083,7 +1088,7 @@ class _GitBranchJob extends Job {
     GitOptions options = new GitOptions();
     options.root = spark._gitDir;
     options.branchName = _branchName;
-    options.store = new ObjectStore(spark._gitDir);
+    options.store = spark._currentGitStore;
     Branch.branch(options).then((entry) {
       Checkout.checkout(options);
       // TODO(grv) : checkout the new branch.
@@ -1109,7 +1114,7 @@ class GitCommitAction extends SparkActionWithDialog {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    _GitBranchJob job = new _GitBranchJob(_commitMessageElement.value, spark);
+    _GitCommitJob job = new _GitCommitJob(_commitMessageElement.value, spark);
     spark.jobManager.schedule(job);
   }
 }
@@ -1128,10 +1133,65 @@ class _GitCommitJob extends Job {
     GitOptions options = new GitOptions();
     options.root = spark._gitDir;
     options.commitMessage = _commitMessage;
-    options.store = new ObjectStore(spark._gitDir);
+    options.store = spark._currentGitStore;
     Commit.commit(options).then((_) {
       print('commit successful.');
 
+    }).whenComplete(() => completer.complete(this));
+    return completer.future;
+  }
+}
+
+class GitCheckoutAction extends SparkActionWithDialog {
+  SelectElement _branchSelectElement;
+
+  GitCheckoutAction(Spark spark, Element dialog)
+      : super(spark, "git-checkout", "Git Checkout…", dialog) {
+    _branchSelectElement = getElement("#gitCheckout");
+  }
+
+  void _invoke([Object context]) {
+    ObjectStore store = spark._currentGitStore;
+
+    store.getCurrentBranch().then((currentBranch) {
+     (getElement('#currentBranchName') as InputElement).value = currentBranch;
+     store.getLocalBranches().then((List<String> branches) {
+       branches.sort();
+       branches.forEach((branchName) {
+         _branchSelectElement.append(new OptionElement(data: branchName, value: branchName));
+       });
+
+     });
+     _show();
+    });
+  }
+
+  void _commit() {
+    // TODO(grv): add verify checks.
+    String branchName = _branchSelectElement.options[
+        _branchSelectElement.selectedIndex].value;
+    _GitCheckoutJob job = new _GitCheckoutJob(branchName, spark);
+    spark.jobManager.schedule(job);
+  }
+}
+
+class _GitCheckoutJob extends Job {
+  String _branchName;
+  Spark spark;
+
+  _GitCheckoutJob(this._branchName, this.spark)
+  : super("Checkout …");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    Completer completer = new Completer();
+    GitOptions options = new GitOptions();
+    options.root = spark._gitDir;
+    options.branchName = _branchName;
+    options.store = spark._currentGitStore;
+    Checkout.checkout(options).then((_) {
+      print('checkout successful');
     }).whenComplete(() => completer.complete(this));
     return completer.future;
   }

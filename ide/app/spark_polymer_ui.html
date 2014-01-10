@@ -184,7 +184,7 @@
 }
 
 #deleteDialog, #renameDialog, #gitCloneDialog, #gitBranchDialog,
-    #gitCommitDialog {
+    #gitCommitDialog, #gitCheckoutDialog {
   width: 412px;
 }
 
@@ -290,6 +290,8 @@
           <spark-menu-item action-id="git-commit" iconsize=0 label="Git Commit...">
           </spark-menu-item>
           <spark-menu-item action-id="git-branch" iconsize=0 label="Git Branch...">
+          </spark-menu-item>
+          <spark-menu-item action-id="git-checkout" iconsize=0 label="Git Checkout...">
           </spark-menu-item>
           <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
           </spark-menu-item>
@@ -445,6 +447,29 @@
         <spark-button id="gitBranchButton" overlay-toggle primary
           data-dismiss="modal">
           Create branch
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal --> 
+
+    <!-- Git Checkout dialog -->
+    <spark-modal id="gitCheckoutDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
+        <h4 class="modal-title">Git Checkout</h4>
+      </div>
+      <div class="modal-body">
+        Current Branch Name: <input id="currentBranchName" type="text" disabled>
+        <br/><br/>
+        <select id="gitCheckout"></select>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="gitCheckoutButton" overlay-toggle primary
+          data-dismiss="modal">
+          Ok
         </spark-button>
       </div>
     </spark-modal><!-- /.modal --> 
