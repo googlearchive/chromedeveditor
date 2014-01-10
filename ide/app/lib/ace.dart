@@ -76,8 +76,7 @@ class AceContainer {
     theme = THEMES[0];
   }
 
-  html.Element get _editorElement =>
-      parentElement.parent;
+  html.Element get _editorElement => parentElement.parent;
 
   html.Element get _minimapElement {
     List<html.Node> minimapElements =
@@ -102,7 +101,6 @@ class AceContainer {
           row: marker.lineNum - 1, // Ace uses 0-based lines.
           type: annotationType);
       annotations.add(annotation);
-
 
       double markerHeightPercentage =
           marker.lineNum / numberLines * 100;
@@ -133,7 +131,6 @@ class AceContainer {
     } else {
       _editorElement.append(miniMap);
     }
-
   }
 
   void clearMarkers() => currentSession.clearAnnotations();
