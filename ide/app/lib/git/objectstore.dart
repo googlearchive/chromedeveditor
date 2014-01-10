@@ -160,11 +160,7 @@ class ObjectStore {
     return _rootDir.getDirectory('.git/refs/heads').then((
         chrome.DirectoryEntry dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
-        List<String> branches = [];
-        entries.forEach((chrome.Entry entry) {
-          branches.add(entry.name);
-        });
-        return branches;
+        return entries.map((entry) => entry.name).toList();
       });
     });
   }
