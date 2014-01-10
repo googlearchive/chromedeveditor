@@ -156,16 +156,11 @@ class ObjectStore {
         => getHeadForRef(headRefName));
   }
 
-  Future<String> getAllHeads() {
+  Future<List<String>> getAllHeads() {
     return _rootDir.getDirectory('.git/refs/heads').then((
         chrome.DirectoryEntry dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
-        List<String> branches;
-        Completer completer = new Completer();
-        entries.forEach((chrome.Entry entry) {
-          branches.add(entry.name);
-        });
-        completer.complete(branches);
+        return entries.map((entry) => entry.name).toList();
       });
     });
   }
@@ -173,6 +168,17 @@ class ObjectStore {
   Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
       .then((String content) => content.substring(0, 40));
+  }
+
+  Future<List<String>> getLocalBranches() => getAllHeads();
+
+  /**
+   * Returns the name of the current branches.
+   */
+  Future<String> getCurrentBranch() {
+    return getHeadRef().then((ref) {
+      return ref.substring('refs/heads/'.length);
+    });
   }
 
   Future _readPackEntry(chrome.DirectoryEntry packDir,
