@@ -35,4 +35,6 @@ abstract class SparkModel extends Application {
   preferences.PreferenceStore get syncPrefs;
 
   ActionManager get actionManager;
+
+  void onSplitViewUpdate(int position);
 }
