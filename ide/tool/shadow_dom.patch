@@ -4,7 +4,7 @@
      // don't test for eval if document has CSP securityPolicy object and we can see that
      // eval is not supported. This avoids an error message in console even when the exception
      // is caught
-+    if (chrome.app.runtime) { // dvh
++    if (chrome.app.runtime) {
 +      return false;
 +    }
      if (global.document &&
@@ -14,7 +14,7 @@
    // even when the exception is caught
    var hasEval = !('securityPolicy' in document) ||
        document.securityPolicy.allowsEval;
-+  if (chrome.app.runtime) { // dvh
++  if (chrome.app.runtime) {
 +    hasEval = false;
 +  }
    if (hasEval) {

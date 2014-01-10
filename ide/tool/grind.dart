@@ -370,8 +370,7 @@ void _patchDartJsInterop(GrinderContext context) {
   }
 }
 
-void _changeChromeVersionRequirement(String version)
-{
+void _changeChromeVersionRequirement(String version) {
   File file = new File('app/manifest.json');
   String content = file.readAsStringSync();
   var manifestDict = JSON.decode(content);
