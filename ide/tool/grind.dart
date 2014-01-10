@@ -39,7 +39,7 @@ void main([List<String> args]) {
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
-  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'deploy']);
+  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'compile']);
 
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
@@ -100,6 +100,8 @@ void deploy(GrinderContext context) {
       'spark_polymer.html_bootstrap.dart', true);
   _dart2jsCompile(context, joinDir(destDir, ['web']),
       'spark_polymer_ui.html_bootstrap.dart', true);
+  _dart2jsCompile(context, joinDir(destDir, ['web']),
+      'spark.html_bootstrap.dart', true);
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -205,7 +207,8 @@ void archive(GrinderContext context, [String outputZip]) {
   final String sparkZip = outputZip == null ? '${DIST_DIR.path}/spark.zip' :
                                               '${DIST_DIR.path}/${outputZip}';
   _delete(sparkZip);
-  _zip(context, 'build/deploy-out/web', sparkZip);
+  //_zip(context, 'build/deploy-out/web', sparkZip);
+  _zip(context, 'app', sparkZip);
   _printSize(context, getFile(sparkZip));
 }
 

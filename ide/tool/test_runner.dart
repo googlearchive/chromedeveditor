@@ -54,16 +54,19 @@ void main([List<String> args = const []]) {
 
   if (results['chrome'] || results['chrome-stable']) {
     appPath = 'app';
-    //appPath = 'build/deploy-test-out/web';
+    //appPath = 'build/deploy-out/web';
     browserPath = _chromeStablePath();
   }
 
   if (results['chrome-dev']) {
     appPath = 'app';
-    //appPath = 'build/deploy-test-out/web';
+    //appPath = 'build/deploy-out/web';
     browserPath = _chromeDevPath();
   }
 
+  String portString = results['port'];
+  int port = int.parse(portString);
+  
 //  if (results['appPath'] != null) {
 //    appPath = results['appPath'];
 //  }
@@ -78,7 +81,7 @@ void main([List<String> args = const []]) {
   }
 
   // start a test listener
-  TestListener.create().then((TestListener listener) {
+  TestListener.create(port).then((TestListener listener) {
     testListener = listener;
 
     runApp(browserPath, appPath);
@@ -108,7 +111,12 @@ void runApp(String browserPath, String appPath) {
   Process.start(browserPath, args, workingDirectory: appPath)
     .then((Process process) {
       chromeProcess = process;
-
+      chromeProcess.stdout.transform(new Utf8Decoder())
+                          .transform(new LineSplitter())
+                          .listen((String line) => print(line));
+      chromeProcess.stderr.transform(new Utf8Decoder())
+                          .transform(new LineSplitter())
+                          .listen((String line) => print(line));
       chromeProcess.exitCode.then((int exitCode) {
         log("Chrome process finished [${exitCode}]");
         chromeProcess = null;
@@ -129,6 +137,7 @@ ArgParser _createArgsParser() {
       help: 'run in chrome stable, test the app in build/deploy-test-out/web/', negatable: false);
   parser.addFlag('chrome-dev',
       help: 'run in chrome dev, test the app in build/deploy-test-out/web/', negatable: false);
+  parser.addOption('port', defaultsTo: '5120');
 
 //  parser.addOption('appPath', help: 'the application path to run');
 //  parser.addOption('browserPath', help: 'the path to chrome');
