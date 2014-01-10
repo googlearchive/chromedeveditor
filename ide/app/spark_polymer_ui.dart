@@ -37,4 +37,8 @@ class SparkPolymerUI extends Widget {
   void onKeysPlus(Event e) {
     SparkModel.instance.aceKeysManager.inc(e);
   }
+
+  void onSplitterUpdate(int position) {
+    SparkModel.instance.onSplitViewUpdate(position);
+  }
 }

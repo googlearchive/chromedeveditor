@@ -8,7 +8,7 @@ fi
 pub get 
 
 # Build the archive.
-if test x$DRONE_BRANCH = xmaster ; then
+if test x$DRONE_BRANCH = xmaster -o x$FORCE_NIGHTLY = xyes ; then
   ./grind release-nightly
 else
   ./grind archive
@@ -23,4 +23,8 @@ fi
 dart tool/test_runner.dart --dartium
 
 # Run tests on chrome.
+if [ "$DRONE" = "true" ]; then
+  # Show the version of Chrome installed on drone.io.
+  /usr/bin/google-chrome --version
+fi
 #dart tool/test_runner.dart --chrome

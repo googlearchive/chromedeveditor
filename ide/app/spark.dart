@@ -22,6 +22,8 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editorarea.dart';
 import 'lib/editors.dart';
 import 'lib/event_bus.dart';
+import 'lib/git/commands/branch.dart';
+import 'lib/git/commands/checkout.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
@@ -109,6 +111,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   FilesController _filesController;
   PlatformInfo _platformInfo;
   TestDriver _testDriver;
+
+  DirectoryEntry _gitDir;
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -339,12 +343,18 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FolderOpenAction(this));
+    actionManager.registerAction(new FolderNewAction(
+        this, getDialogElement('#folderNewDialog')));
+    actionManager.registerAction(new FileNewAction(
+        this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FileRenameAction(
         this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new FileDeleteAction(
         this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new GitCloneAction(
         this, getDialogElement("#gitCloneDialog")));
+    actionManager.registerAction(new GitBranchAction(
+        this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(
         this, getDialogElement('#aboutDialog')));
@@ -385,6 +395,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       ul.children.add(createMenuSeparator());
       ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
       ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
+      ul.children.add(createMenuItem(actionManager.getAction('git-branch')));
     }
 
     ul.children.add(createMenuSeparator());
@@ -451,6 +462,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
+  void onSplitViewUpdate(int position) { }
+
   List<ws.Resource> _getSelection() => _filesController.getSelection();
 
   void _closeOpenEditor(ws.Resource resource) {
@@ -471,11 +484,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void _selectFile(ws.Resource file) {
     editorArea.selectFile(file,
         forceOpen: true, switchesTab: true, forceFocus: true);
-  }
-
-  void showStatus(String text) {
-    Element element = getUIElement("#saveStatus");
-    element.text = text;
   }
 
   //
@@ -733,6 +741,45 @@ class FileOpenAction extends SparkAction {
   void _invoke([Object context]) => spark.openFile();
 }
 
+class FileNewAction extends SparkActionWithDialog implements ContextAction {
+   InputElement _nameElement;
+   ws.Folder folder;
+
+   FileNewAction(Spark spark, Element dialog)
+     : super(spark, "file-new", "New File…", dialog) {
+       defaultBinding("ctrl-n");
+       _nameElement = _triggerOnReturn("#fileNewName");
+   }
+
+   void _invoke([List<ws.Folder> folders]) {
+     if (folders != null && folders.isNotEmpty) {
+       folder = folders.first;
+       _nameElement.value = '';
+       _show();
+     }
+   }
+
+  // called when user validates the dialog
+  void _commit() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFile(name).then((file) {
+        // Delay a bit to allow the files view to process the new file event.
+        // TODO: This is due to a race condition in when the files view receives
+        // the resource creation event; we should remove the possibility for
+        // this to occur.
+        Timer.run(() {
+          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+        });
+      });
+    }
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
 class FileNewAsAction extends SparkAction {
   FileNewAsAction(Spark spark) : super(spark, "file-new-as", "New File…");
 
@@ -860,6 +907,42 @@ class FileExitAction extends SparkAction {
   }
 }
 
+class FolderNewAction extends SparkActionWithDialog implements ContextAction {
+   InputElement _nameElement;
+   ws.Folder folder;
+
+   FolderNewAction(Spark spark, Element dialog)
+     : super(spark, "folder-new", "New Folder…", dialog) {
+     defaultBinding("ctrl-shift-n");
+     _nameElement = _triggerOnReturn("#folderName");
+   }
+
+   void _invoke([List<ws.Folder> folders]) {
+     if (folders != null && folders.isNotEmpty) {
+       folder = folders.first;
+       _nameElement.value = '';
+       _show();
+     }
+   }
+
+  // called when user validates the dialog
+  void _commit() {
+    var name = _nameElement.value;
+    if (name.isNotEmpty) {
+      folder.createNewFolder(name).then((folder) {
+        // Delay a bit to allow the files view to process the new file event.
+        Timer.run(() {
+          spark._filesController.selectFile(folder);
+        });
+      });
+    }
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
 class FolderOpenAction extends SparkAction {
   FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
 
@@ -903,6 +986,7 @@ class _GitCloneJob extends Job {
 
     getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+        spark._gitDir = dir;
         GitOptions options = new GitOptions();
         options.root = dir;
         options.repoUrl = url;
@@ -920,6 +1004,52 @@ class _GitCloneJob extends Job {
           });
         });
       });
+    }).whenComplete(() => completer.complete(this));
+
+    return completer.future;
+  }
+}
+
+class GitBranchAction extends SparkActionWithDialog {
+  InputElement _branchNameElement;
+
+  GitBranchAction(Spark spark, Element dialog)
+      : super(spark, "git-branch", "Git Branch…", dialog) {
+    _branchNameElement = getElement("#gitBranchName");
+  }
+
+  void _invoke([Object context]) {
+    _show();
+  }
+
+  void _commit() {
+    // TODO(grv): add verify checks.
+    _GitBranchJob job = new _GitBranchJob(_branchNameElement.value, spark);
+    spark.jobManager.schedule(job);
+  }
+}
+
+class _GitBranchJob extends Job {
+  String _branchName;
+  String url;
+  Spark spark;
+
+  _GitBranchJob(this._branchName, this.spark)
+  : super("Branch …");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    Completer completer = new Completer();
+    GitOptions options = new GitOptions();
+    options.root = spark._gitDir;
+    options.branchName = _branchName;
+    options.store = new ObjectStore(spark._gitDir);
+    Branch.branch(options).then((entry) {
+      Checkout.checkout(options);
+      // TODO(grv) : checkout the new branch.
+    }, onError: (e) {
+      print(e);
     }).whenComplete(() => completer.complete(this));
 
     return completer.future;

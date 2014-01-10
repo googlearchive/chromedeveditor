@@ -25,6 +25,7 @@ defineTests() {
 class MockAceContainer implements AceContainer {
   /// The element to put the editor in.
   final Element parentElement = null;
+  workspace.File currentFile = null;
 
   MockAceContainer();
 
@@ -43,6 +44,8 @@ class MockAceContainer implements AceContainer {
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);
   void setKeyBinding(String name) { }
+  void setMarkers(List<workspace.Marker> markers) { }
+  void clearMarkers() { }
 }
 
 class MockAceEditor implements AceEditor {

@@ -4,6 +4,8 @@
 
 library spark_widgets.button;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/widget.dart';
@@ -26,4 +28,13 @@ class SparkButton extends Widget {
   static const CSS_PRIMARY = "btn-primary";
 
   SparkButton.created() : super.created();
+
+  void focus() {
+    // Only the first found element that has 'focused' attribute on it will be
+    // actually focused; if there are more than one, the rest will be ignored.
+    Element elementToFocus = this.getShadowDomElement('[focused]');
+    if (elementToFocus != null) {
+      elementToFocus.focus();
+    }
+  }
 }

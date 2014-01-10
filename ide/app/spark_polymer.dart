@@ -12,6 +12,7 @@ import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_overlay/spark_overlay.dart' as widgets;
+import 'packages/spark_widgets/spark_splitter/spark_splitter.dart';
 
 import 'spark_polymer_ui.dart';
 
@@ -93,9 +94,17 @@ class SparkPolymer extends Spark {
   @override
   void initEditorArea() => super.initEditorArea();
 
-  // We're using a Polymer-based splitview, so disable the default.
   @override
-  void initSplitView() {}
+  void initSplitView() {
+    syncPrefs.getValue('splitViewPosition').then((String position) {
+      if (position != null) {
+        int value = int.parse(position, onError: (_) => 0);
+        if (value != 0) {
+          (getUIElement('#splitter') as SparkSplitter).targetSize = value;
+        }
+      }
+    });
+  }
 
   @override
   void initSaveStatusListener() => super.initSaveStatusListener();
@@ -122,15 +131,8 @@ class SparkPolymer extends Spark {
   // - End parts of the parent's ctor.
   //
 
-  // TODO(terry): Hookup overlay dialog.
   @override
-  void showStatus(String text, {bool error: false}) {
-    // TEMP:
-    //Element element = querySelector("#status");
-    //element.text = text;
-    //SparkOverlay overlay = querySelector("#spark-dialog");
-    //if (overlay != null) {
-    //  overlay.toggle();
-    //}
+  void onSplitViewUpdate(int position) {
+    syncPrefs.setValue('splitViewPosition', position.toString());
   }
 }

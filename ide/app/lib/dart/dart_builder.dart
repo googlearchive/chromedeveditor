@@ -39,16 +39,21 @@ class DartBuilder extends Builder {
   Future _processFile(ChromeDartSdk sdk, File file) {
     return file.getContents().then((String contents) {
       return analyzeString(sdk, contents, performResolution: false).then((AnalyzerResult result) {
-        file.clearMarkers();
+        file.workspace.pauseMarkerStream();
 
-        for (AnalysisError error in result.errors) {
-          LineInfo_Location location = result.getLineInfo(error);
+        try {
+          file.clearMarkers();
 
-          // Create markers.
-          file.createMarker(
-              'dart', _convertSeverity(error.errorCode.errorSeverity),
-              error.message, location.lineNumber,
-              error.offset, error.offset + error.length);
+          for (AnalysisError error in result.errors) {
+            LineInfo_Location location = result.getLineInfo(error);
+
+            file.createMarker(
+                'dart', _convertSeverity(error.errorCode.errorSeverity),
+                error.message, location.lineNumber,
+                error.offset, error.offset + error.length);
+          }
+        } finally {
+          file.workspace.resumeMarkerStream();
         }
       });
     });
@@ -60,7 +65,9 @@ int _convertSeverity(ErrorSeverity sev) {
     return Marker.SEVERITY_ERROR;
   } else  if (sev == ErrorSeverity.WARNING) {
     return Marker.SEVERITY_WARNING;
-  } else {
+  } else  if (sev == ErrorSeverity.INFO) {
     return Marker.SEVERITY_INFO;
+  } else {
+    return Marker.SEVERITY_NONE;
   }
 }
