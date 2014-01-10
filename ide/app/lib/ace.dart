@@ -102,6 +102,7 @@ class AceContainer {
           type: annotationType);
       annotations.add(annotation);
 
+      // TODO(ericarnold): This won't work with code folding.  Fix
       double markerHeightPercentage =
           marker.lineNum / numberLines * 100;
 
