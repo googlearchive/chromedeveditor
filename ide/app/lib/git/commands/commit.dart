@@ -142,8 +142,9 @@ class Commit {
         commitContent.write(dateString);
         commitContent.write('\n\n${commitMsg}\n');
 
-        return store.writeRawObject('commit', commitContent.toString()).then(
-            (String commitSha) {
+        return store.writeRawObject(
+            ObjectTypes.COMMIT, commitContent.toString()).then(
+                (String commitSha) {
           return FileOps.createFileWithContent(dir, '.git/${refName}',
               commitSha + '\n', 'Text').then((_) {
                 return store.updateLastChange(null).then((_) => commitSha);

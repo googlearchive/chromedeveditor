@@ -460,8 +460,7 @@ class ObjectStore {
       throw "Unexpected content type.";
     }
 
-    String header = 'type ${size}' ;
-
+    String header = '${type} ${size}' ;
     blobParts.add(header);
     blobParts.add(new Uint8List.fromList([0]));
     blobParts.add(content);
@@ -542,7 +541,7 @@ class ObjectStore {
   Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((TreeEntry tree) {
-      blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);
+      blobParts.add(tree.isBlob ? '100644 ' : '040000 ' + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
       blobParts.add(tree.sha);
     });
