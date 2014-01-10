@@ -131,6 +131,7 @@ class SparkPolymer extends Spark {
   // - End parts of the parent's ctor.
   //
 
+  @override
   void onSplitViewUpdate(int position) {
     syncPrefs.setValue('splitViewPosition', position.toString());
   }
