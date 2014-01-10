@@ -18,12 +18,13 @@ import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
 import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:path/path.dart' as path;
+
+import 'sdk.dart' as spark;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
-
-import 'sdk.dart' as spark;
-import 'utils.dart';
+export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
 
 // TODO: investigate web workers and isolates
 
@@ -71,7 +72,7 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
   try {
     unit = context.parseCompilationUnit(source);
   } catch (e) {
-    unit = new CompilationUnit();
+    unit = null;
   }
 
   if (performResolution) {
@@ -97,6 +98,12 @@ class AnalyzerResult {
   AnalyzerResult(this.ast, this.errorInfo);
 
   List<AnalysisError> get errors => errorInfo.errors;
+
+  LineInfo_Location getLineInfo(AnalysisError error) {
+    return errorInfo.lineInfo.getLocation(error.offset);
+  }
+
+  String toString() => 'AnalyzerResult[${errorInfo.errors.length} issues]';
 }
 
 /**
@@ -225,7 +232,7 @@ class SdkSource extends Source {
 
   String get encoding => 'UTF-8';
 
-  String get shortName => baseName(fullName);
+  String get shortName => path.basename(fullName);
 
   UriKind get uriKind => UriKind.DART_URI;
 
@@ -234,7 +241,7 @@ class SdkSource extends Source {
   bool get isInSystemLibrary => true;
 
   Source resolveRelative(Uri relativeUri) {
-    return new SdkSource(_sdk, '${dirName(fullName)}/${relativeUri.path}');
+    return new SdkSource(_sdk, '${path.dirname(fullName)}/${relativeUri.path}');
   }
 
   int get modificationStamp => 0;

@@ -17,6 +17,9 @@ import 'event_bus.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 
+// The auto-save delay - the time from the last user edit to the file auto-save.
+final int _DELAY_MS = 500;
+
 /**
  * Classes implement this interface provides/refreshes editors for [Resource]s.
  * TODO(ikarienator): Abstract [AceEditor] so we can support more editor types.
@@ -220,7 +223,7 @@ class EditorManager implements EditorProvider {
             return;
           }
           _selectedController.add(currentFile);
-          _aceContainer.switchTo(state.session);
+          _aceContainer.switchTo(state.session, state.file);
           _aceContainer.cursorPosition = state.cursorPosition;
           persistState();
         });
@@ -235,7 +238,7 @@ class EditorManager implements EditorProvider {
 
     if (_timer != null) _timer.cancel();
 
-    _timer = new Timer(new Duration(seconds: 2), () => _saveAll());
+    _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
   }
 
   void _saveAll() {

@@ -34,6 +34,7 @@ class ListView {
   // In case of multiple selection using shift, it's the starting row index.
   // -1 is used when there's not starting row.
   int _selectedRow;
+  int _extendedSelectionRow;
   // Stores info about the cells of the ListView.
   List<ListViewRow> _rows;
   // Whether dropping items on the listView is allowed.
@@ -79,6 +80,7 @@ class ListView {
     _selection = new HashSet();
     _rows = [];
     _selectedRow = -1;
+    _extendedSelectionRow = -1;
     _container.onClick.listen((event) {
       _removeCurrentSelectionHighlight();
       _selection.clear();
@@ -98,18 +100,37 @@ class ListView {
 
     int keyCode = event.which;
     switch (keyCode) {
-      //TODO: Handle shift + UP/DOWN (not selecting file)
       //TODO: Open file on UP/DOWN?  On ENTER?  Alt+ENTER opens in new tab?
-      //TODO: Handle pgup/pgdn (and mac equiv): scroll list up/down.
-      //TODO: Handle begin/end (and mac equiv): scroll to top/bottom.
       case KeyCode.UP:
         if (_selectedRow > 0) {
-          _setSelection(_selectedRow - 1);
+          if (event.shiftKey) {
+            if (_extendedSelectionRow == -1) {
+              _extendedSelectionRow = _selectedRow;
+            }
+            _setSelection(_selectedRow - 1,
+                endSelectionIndex: _extendedSelectionRow);
+          } else {
+            _extendedSelectionRow = -1;
+            _setSelection(_selectedRow - 1);
+          }
+          _makeSureRowIsVisible(_selectedRow);
+          cancelEvent(event);
         }
         break;
       case KeyCode.DOWN:
         if (_selectedRow < _rows.length - 1) {
-          _setSelection(_selectedRow + 1);
+          if (event.shiftKey) {
+            if (_extendedSelectionRow == -1) {
+              _extendedSelectionRow = _selectedRow;
+            }
+            _setSelection(_selectedRow + 1,
+                endSelectionIndex: _extendedSelectionRow);
+          } else {
+            _extendedSelectionRow = -1;
+            _setSelection(_selectedRow + 1);
+          }
+          _makeSureRowIsVisible(_selectedRow);
+          cancelEvent(event);
         }
         break;
     }
@@ -175,6 +196,7 @@ class ListView {
    * Callback on a single click.
    */
   void _onClicked(int rowIndex, Event event) {
+    _extendedSelectionRow = -1;
     _container.focus();
 
     if (!_delegate.listViewRowClicked(event, rowIndex)) {
@@ -209,6 +231,20 @@ class ListView {
 
     _addCurrentSelectionHighlight();
     _delegate.listViewSelectedChanged(this, _selection.toList());
+  }
+
+  void _makeSureRowIsVisible(int selectionIndex) {
+    if (_rows[selectionIndex].container.offsetTop +
+        _rows[selectionIndex].container.offsetHeight > _container.scrollTop +
+        _container.offsetHeight) {
+      _container.scrollTop =
+          _rows[selectionIndex].container.offsetTop +
+          _rows[selectionIndex].container.offsetHeight -
+          _container.offsetHeight;
+    }
+    if (_rows[selectionIndex].container.offsetTop < _container.scrollTop) {
+      _container.scrollTop = _rows[selectionIndex].container.offsetTop;
+    }
   }
 
   void _setSelection(int selectionIndex, {int endSelectionIndex: -1}) {
@@ -381,4 +417,6 @@ class ListView {
   }
 
   bool get dropEnabled => _dropEnabled;
+
+  int get selectedRow => _selectedRow;
 }

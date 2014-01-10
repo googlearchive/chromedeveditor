@@ -13,18 +13,16 @@
   <link rel="stylesheet" href="spark.css">
 
   <!-- Template for FileItemCell -->
-  <template id="fileview-filename-template" >
+  <template id="fileview-filename-template">
     <div class="fileview-filename-container">
-      <div class="filename">
-      </div>
-      <a href="#" class="menu">
-        <span class="caret"></span>
-      </a>
+      <div class="filename"></div>
+      <div class="fileStatus"></div>
+      <div class="gitStatus"></div>
     </div>
   </template>
 
   <!-- Template for TreeViewCell -->
-  <template id="treeview-cell-template" >
+  <template id="treeview-cell-template">
     <div class="treeviewcell">
       <div class="treeviewcell-content"></div>
       <div class="treeviewcell-dragoverlay"></div>
@@ -46,6 +44,7 @@
 
     <div id="toolbarRight">
       <div id="editedFilename"></div>
+      <i id="activitySpinner" class="fa fa-spinner fa-spin"></i>
       <div id="hotdogMenu" class="btn-group">
         <button type="button" data-toggle="dropdown"
             class="btn btn-default dropdown-toggle main-menu-button">
@@ -97,42 +96,6 @@
     </div>
   </div>
 
-  <!-- New File dialog -->
-  <div id="fileNewDialog" class="modal fade">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body">
-          <p>
-            File name: <input id="fileNewName" focused type="text">
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="fileNewOkButton" primary class="btn btn-primary"
-              data-dismiss="modal">Create</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- New Folder dialog -->
-  <div id="folderNewDialog" class="modal fade">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body">
-          <p>
-            Folder name: <input id="folderName" focused type="text">
-          </p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
-          <button id="folderNewOkButton" primary class="btn btn-primary"
-              data-dismiss="modal">Create</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Rename File dialog -->
   <div id="renameDialog" class="modal fade">
     <div class="modal-dialog">
@@ -146,6 +109,24 @@
           <button class="btn btn-default" data-dismiss="modal">Cancel</button>
           <button id="renameOkButton" primary class="btn btn-primary"
                data-dismiss="modal">Rename</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+   <!-- New File dialog -->
+  <div id="fileNewDialog" class="modal fade">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <p>
+            File name: <input id="fileNewName" focused type="text">
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button id="fileNewOkButton" primary class="btn btn-primary"
+              data-dismiss="modal">Create</button>
         </div>
       </div>
     </div>
@@ -191,8 +172,8 @@
           <h4 class="modal-title">New Git Project</h4>
         </div>
         <div class="modal-body">
-          Project Name: <input type="text" id="gitProjectName" focused></input><br/><br/>
-          Repository URL: <input type="text" id="gitRepoUrl"></input>
+          Project Name: <input type="text" id="gitProjectName" focused><br/><br/>
+          Repository URL: <input type="text" id="gitRepoUrl">
         </div>
         <div class="modal-footer">
           <button class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -209,23 +190,14 @@
   <!-- Git includes -->
   <script src="git/third_party/zlib_inflate.js"></script>
   <script src="git/third_party/zlib_deflate.js"></script>
-  <script src="git/third_party/underscore-min.js"></script>
-  <script src="git/third_party/2.2.0-sha1.js"></script>
-  <script src="git/third_party/crc32.js"></script>
   <script src="git/utils/misc_utils.js"></script>
-  <script src="git/objectstore/object_to_file.js"></script>
-  <script src="git/objectstore/objects.js"></script>
   <script src="git/utils/file_utils.js"></script>
-  <script src="git/objectstore/delta.js"></script>
-  <script src="git/formats/pack.js"></script>
-  <script src="git/formats/upload_pack_parser.js"></script>
-  <script src="git/formats/pack_index.js"></script>
   <script src="git/utils/errors.js"></script>
-  <script src="git/objectstore/file_repo.js"></script>
   <script src="git/git.js"></script>
 
   <!-- Ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
+  <script src="packages/ace/src/js/ext-language_tools.js"></script>
 
   <!-- This is necessary for dart:js -->
   <script src="packages/browser/interop.js"></script>

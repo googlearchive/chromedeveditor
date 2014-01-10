@@ -11,6 +11,7 @@ import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
+import 'jobs.dart';
 import 'tcp.dart' as tcp;
 
 const int _DEFAULT_TESTPORT = 5120;
@@ -21,13 +22,15 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
+  final JobManager _jobManager;
+
   Function _defineTestsFn;
   Element _testDiv;
   Element _statusDiv;
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, {bool connectToTestListener: false}) {
+  TestDriver(this._defineTestsFn, this._jobManager, {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
     _logger.onRecord.listen((record) => print(record.toString()));
 
@@ -53,7 +56,8 @@ class TestDriver {
       _defineTestsFn = null;
     }
 
-    unittest.rerunTests();
+    _TestJob job = new _TestJob(this, _testCompleter);
+    _jobManager.schedule(job);
 
     return _testCompleter.future;
   }
@@ -61,11 +65,17 @@ class TestDriver {
   void _connectToListener() {
     // Try to connect to a pre-defined port.
     _TestListenerClient.connect().then((_TestListenerClient testClient) {
+      if (testClient == null) {
+        return;
+      }
+
       print('Connected to test listener on port ${testClient.port}');
 
       _logger.onRecord.listen((LogRecord record) {
         testClient.log(record.toString());
       });
+
+      _logger.info('Running tests on ${window.navigator.appCodeName} ${window.navigator.appName} ${window.navigator.appVersion}');
 
       runTests().then((bool success) {
         testClient.log('test exit code: ${(success ? 0 : 1)}');
@@ -108,6 +118,22 @@ class TestDriver {
   }
 }
 
+class _TestJob extends Job {
+  final TestDriver testDriver;
+  final Completer<bool> testCompleter;
+
+  _TestJob(this.testDriver, this.testCompleter) : super("Running Tests…");
+
+  Future<Job> run(ProgressMonitor monitor) {
+    // TODO: Count tests for future progress bar.
+    monitor.start(name, 1);
+
+    unittest.rerunTests();
+
+    return testCompleter.future.then((_) => this);
+  }
+}
+
 /**
  * A class to connect to an existing test listener and write test output to it.
  */
@@ -120,12 +146,9 @@ class _TestListenerClient {
    * instance of [TestListenerClient] on success.
    */
   static Future<_TestListenerClient> connect([int port = _DEFAULT_TESTPORT]) {
-    return tcp.TcpClient.createClient(tcp.LOCAL_HOST, port)
+    return tcp.TcpClient.createClient(tcp.LOCAL_HOST, port, throwOnError: false)
         .then((tcp.TcpClient client) {
-          return new _TestListenerClient._(port, client);
-        })
-        .catchError((e) {
-          throw 'No test listener available on port ${port}';
+          return client == null ? null : new _TestListenerClient._(port, client);
         });
   }
 

@@ -7,21 +7,19 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Spark IDE with Polymer</title>
+  <title>Spark</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="spark_polymer.css">
 
-  <link rel="import" href="lib/polymer_ui/spark_polymer_ui.html">
+  <link rel="import" href="spark_polymer_ui.html">
 
   <!-- template for FileItemCell -->
   <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
-      <div class="filename">
-      </div>
-      <a href="#" class="menu">
-        <span class="caret"></span>
-      </a>
+      <div class="filename"></div>
+      <div class="fileStatus"></div>
+      <div class="gitStatus"></div>
     </div>
   </template>
 
@@ -40,28 +38,19 @@
   <!-- git includes -->
   <script src="git/third_party/zlib_inflate.js"></script>
   <script src="git/third_party/zlib_deflate.js"></script>
-  <script src="git/third_party/underscore-min.js"></script>
-  <script src="git/third_party/2.2.0-sha1.js"></script>
-  <script src="git/third_party/crc32.js"></script>
   <script src="git/utils/misc_utils.js"></script>
-  <script src="git/objectstore/object_to_file.js"></script>
-  <script src="git/objectstore/objects.js"></script>
   <script src="git/utils/file_utils.js"></script>
-  <script src="git/objectstore/delta.js"></script>
-  <script src="git/formats/pack.js"></script>
-  <script src="git/formats/upload_pack_parser.js"></script>
-  <script src="git/formats/pack_index.js"></script>
   <script src="git/utils/errors.js"></script>
-  <script src="git/objectstore/file_repo.js"></script>
   <script src="git/git.js"></script>
 
   <!-- ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
+  <script src="packages/ace/src/js/ext-language_tools.js"></script>
 
   <!-- this is necessary for dart:js -->
   <script src="packages/browser/interop.js"></script>
 
-  <!-- this injects spark.dart.precompiled.js in a JS context -->
+  <!-- this injects spark_polymer.dart.precompiled.js in a JS context -->
   <script src="spark_bootstrap.js" defer></script>
 
   <script type="application/dart" src="spark_polymer.dart" defer></script>
@@ -70,6 +59,8 @@
 <body>
   <!-- Main UI -->
   <spark-polymer-ui id="topUi"></spark-polymer-ui>
+  <!-- app_modal used to make app appear modal. -->
+  <div id="modalBackdrop"></div>
 </body>
 
 </html>

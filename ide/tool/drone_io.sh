@@ -8,7 +8,11 @@ fi
 pub get 
 
 # Build the archive.
-./grind archive
+if test x$DRONE_BRANCH = xmaster -o x$FORCE_NIGHTLY = xyes ; then
+  ./grind release-nightly
+else
+  ./grind archive
+fi
 
 # Disable polymer deploy on drone.io for now.
 #./grind deploy-test
@@ -19,4 +23,8 @@ pub get
 dart tool/test_runner.dart --dartium
 
 # Run tests on chrome.
+if [ "$DRONE" = "true" ]; then
+  # Show the version of Chrome installed on drone.io.
+  /usr/bin/google-chrome --version
+fi
 #dart tool/test_runner.dart --chrome

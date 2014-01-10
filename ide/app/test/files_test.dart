@@ -71,8 +71,25 @@ defineTests() {
     test('create file', () {
       MockFileSystem fs = new MockFileSystem();
       fs.createFile('foo.txt');
+      fs.createFile('/baz/foo.txt');
+
       expect(fs.getEntry('foo.txt'), isNotNull);
       expect(fs.getEntry('foo.txt').name, 'foo.txt');
+
+      expect(fs.getEntry('baz/foo.txt'), isNotNull);
+      expect(fs.getEntry('baz/foo.txt').name, 'foo.txt');
+    });
+
+    test('remove file', () {
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('foo.txt');
+      fs.createFile('/baz/foo.txt');
+
+      fs.removeFile('foo.txt');
+      fs.removeFile('/baz/foo.txt');
+
+      expect(fs.getEntry('foo.txt'), null);
+      expect(fs.getEntry('baz/foo.txt'), null);
     });
 
     test('file contents', () {
@@ -89,10 +106,14 @@ defineTests() {
     test('create dir', () {
       MockFileSystem fs = new MockFileSystem();
       fs.createDirectory('bar');
+      fs.createDirectory('/aaa/bar');
       fs.createFile('/baz/foo.txt');
 
       expect(fs.getEntry('bar'), isNotNull);
       expect(fs.getEntry('bar'), new isInstanceOf<DirectoryEntry>('DirectoryEntry'));
+
+      expect(fs.getEntry('aaa/bar'), isNotNull);
+      expect(fs.getEntry('aaa/bar'), new isInstanceOf<DirectoryEntry>('DirectoryEntry'));
 
       expect(fs.getEntry('baz'), isNotNull);
       expect(fs.getEntry('baz'), new isInstanceOf<DirectoryEntry>('DirectoryEntry'));

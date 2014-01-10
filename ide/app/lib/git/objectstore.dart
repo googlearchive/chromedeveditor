@@ -83,7 +83,7 @@ class CommitGraph {
 
 class ObjectStore {
 
-  static final GIT_FOLDER_PATH = '.git';
+  static final GIT_FOLDER_PATH = '.git/';
   static final OBJECT_FOLDER_PATH = 'objects';
   static final HEAD_PATH = 'HEAD';
   static final HEAD_MASTER_REF_PATH = 'refs/head/master';
@@ -156,16 +156,11 @@ class ObjectStore {
         => getHeadForRef(headRefName));
   }
 
-  Future<String> getAllHeads() {
+  Future<List<String>> getAllHeads() {
     return _rootDir.getDirectory('.git/refs/heads').then((
         chrome.DirectoryEntry dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
-        List<String> branches;
-        Completer completer = new Completer();
-        entries.forEach((chrome.Entry entry) {
-          branches.add(entry.name);
-        });
-        completer.complete(branches);
+        return entries.map((entry) => entry.name).toList();
       });
     });
   }
@@ -173,6 +168,17 @@ class ObjectStore {
   Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
       .then((String content) => content.substring(0, 40));
+  }
+
+  Future<List<String>> getLocalBranches() => getAllHeads();
+
+  /**
+   * Returns the name of the current branches.
+   */
+  Future<String> getCurrentBranch() {
+    return getHeadRef().then((ref) {
+      return ref.substring('refs/heads/'.length);
+    });
   }
 
   Future _readPackEntry(chrome.DirectoryEntry packDir,
@@ -195,24 +201,20 @@ class ObjectStore {
   Future<chrome.FileEntry> _findLooseObject(String sha) => objectDir.getFile(
       sha.substring(0, 2) + '/' + sha.substring(2));
 
-  Future<FindPackedObjectResult> _findPackedObject(Uint8List shaBytes) {
-    Completer completer = new Completer();
-
+  FindPackedObjectResult _findPackedObject(Uint8List shaBytes) {
     for (var i = 0; i < packs.length; ++i) {
       int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
       if (offset != -1) {
-        completer.complete(new FindPackedObjectResult(packs[i].pack, offset));
+        return new FindPackedObjectResult(packs[i].pack, offset);
       }
     }
-
-    //TODO complete with error.
-    return completer.future;
+    // TODO More specific error.
+    return throw("Not found.");
   }
 
   Future<GitObject> retrieveObject(String sha, String objType) {
     String dataType = (objType == ObjectTypes.COMMIT ? "Text" : "ArrayBuffer");
-
     return retrieveRawObject(sha, dataType).then(
         (LooseObject object) => GitObject.make(sha, objType, object.data));
   }
@@ -226,32 +228,28 @@ class ObjectStore {
       shaBytes = shaToBytes(sha);
     }
 
-    Completer completer = new Completer();
-
     return this._findLooseObject(sha).then((chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
         chrome.ArrayBuffer inflated = Zlib.inflate(
             new Uint8List.fromList(buffer.getBytes()), 0).buffer;
-
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
           // TODO do trim buffer and return completer ;
           var buff;
-          completer.complete(new LooseObject(buff));
+          return new LooseObject(buff);
         } else {
-          return FileOps.readBlob(new Blob(inflated.getBytes()), 'Text').then(
-              (data) {
-            completer.complete(new LooseObject(data));
-          });
+          return FileOps.readBlob(new Blob(
+              [new Uint8List.fromList(inflated.getBytes())]), 'Text').then(
+              (data) => new LooseObject(data));
         }
       });
     }, onError:(e) {
-      return this._findPackedObject(shaBytes).then(
-          (FindPackedObjectResult obj) {
+      try {
+        FindPackedObjectResult obj = this._findPackedObject(shaBytes);
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
         return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType);
-      }, onError: (e) {
+      } catch (e) {
         throw "Can't find object with SHA " + sha;
-      });
+      }
     });
   }
 
@@ -460,11 +458,15 @@ class ObjectStore {
     if (content is Uint8List) {
       size = content.length;
     } else if (content is Blob) {
-     size = content.size;
+      size = content.size;
+    } else if (content is String) {
+      size = content.length;
+    } else {
+      // TODO: Check expected types here.
+      throw "Unexpected content type.";
     }
 
-    String header = 'type ${size}' ;
-
+    String header = '${type} ${size}' ;
     blobParts.add(header);
     blobParts.add(new Uint8List.fromList([0]));
     blobParts.add(content);
@@ -472,16 +474,33 @@ class ObjectStore {
     var reader = new JsObject(context['FileReader']);
 
     reader['onloadend'] = (var event) {
-      chrome.ArrayBuffer buffer = reader['result'];
+      var result = reader['result'];
       crypto.SHA1 sha1 = new crypto.SHA1();
-      Uint8List data = new Uint8List.fromList(buffer.getBytes());
+      Uint8List resultList;
+
+      if (result is JsObject) {
+        var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
+        resultList = new Uint8List.fromList(arrBuf.getBytes());
+      } else if (result is ByteBuffer) {
+        resultList = new Uint8List.view(result);
+      } else if (result is Uint8List) {
+        resultList = result;
+      } else {
+        // TODO: Check expected types here.
+        throw "Unexpected result type.";
+      }
+
+      Uint8List data = new Uint8List.fromList(resultList);
       sha1.add(data);
-      List<int> digest = sha1.close();
-      return _findPackedObject(digest).then((_) {
-        completer.complete(digest);
-      }, onError: (e) {
-        return _storeInFile(shaBytesToString(digest), data);
-      });
+      Uint8List digest = new Uint8List.fromList(sha1.close());
+
+      try {
+        FindPackedObjectResult obj = _findPackedObject(digest);
+        completer.complete(shaBytesToString(digest));
+      } catch (e) {
+        Future<String> str = _storeInFile(shaBytesToString(digest), data).then(
+            (str) => completer.complete(str));
+      }
     };
 
     reader['onerror'] = (var domError) {
@@ -498,22 +517,19 @@ class ObjectStore {
 
     return objectDir.createDirectory(subDirName).then(
         (chrome.DirectoryEntry dirEntry) {
-      return dirEntry.createDirectory(objectFileName).then(
-          (chrome.FileEntry fileEntry) {
+      return dirEntry.createFile(objectFileName).then(
+          (chrome.ChromeFileEntry fileEntry) {
         return fileEntry.file().then((File file) {
-          Completer completer = new Completer();
-          if (file.size == 0) {
-            chrome.ArrayBuffer content = Zlib.deflate(store).buffer;
-            return fileEntry.createWriter().then((fileWriter) {
-              fileWriter.write(new Blob([content]));
-              completer.complete(digest);
-            }, onError: (e) {
 
+          Future<String> writeContent() {
+            chrome.ArrayBuffer content = Zlib.deflate(store).buffer;
+            // TODO: Use fileEntry.createWriter() once implemented in ChromeGen.
+            return fileEntry.writeBytes(content).then((_) {
+              return digest;
             });
-          } else {
-            completer.complete(digest);
           }
-          return completer.future;
+
+          return writeContent();
         }, onError: (e) {
 
         });
@@ -530,8 +546,8 @@ class ObjectStore {
    */
   Future<String> writeTree(List treeEntries) {
     List blobParts = [];
-    treeEntries.forEach((tree) {
-      blobParts.add(tree.isBlob ? '100644 ' : '40000 ' + tree.name);
+    treeEntries.forEach((TreeEntry tree) {
+      blobParts.add(tree.isBlob ? '100644 ' : '040000 ' + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
       blobParts.add(tree.sha);
     });
@@ -541,10 +557,9 @@ class ObjectStore {
 
   Future<GitConfig> getConfig() {
     return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
-        (String configStr)  => new GitConfig(configStr),
-      onError: (e) {
-      //TODO handle errors.
-      });
+        (String configStr) => new GitConfig(configStr),
+      // TODO: handle errors / build default GitConfig.
+      onError: (e) => new GitConfig());
   }
 
   Future<Entry> setConfig(GitConfig config) {

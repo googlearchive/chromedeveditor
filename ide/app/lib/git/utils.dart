@@ -5,23 +5,23 @@
 library git.utils;
 
 import 'dart:core';
+import 'dart:typed_data';
 
 /**
  * Convertes [sha] string to sha bytes.
  */
-List<int> shaToBytes(String sha) {
+Uint8List shaToBytes(String sha) {
   List<int> bytes = [];
-
   for (var i = 0; i < sha.length; i+=2) {
     bytes.add(int.parse('0x' + sha[i] + sha[i+1]));
   }
-  return bytes;
+  return new Uint8List.fromList(bytes);
 }
 
 /**
  * Converts [shaBytes] to HEX string.
  */
-String shaBytesToString(List<int> shaBytes) {
+String shaBytesToString(Uint8List shaBytes) {
   String sha = "";
   shaBytes.forEach((int byte) {
     String shaPart = byte.toRadixString(16);

@@ -17,6 +17,7 @@ import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
+import 'widgets/treeview_cell.dart';
 import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
 import '../preferences.dart' as preferences;
@@ -56,7 +57,15 @@ class FilesController implements TreeViewDelegate {
     });
 
     _workspace.onResourceChange.listen((event) {
-      _processEvents(event);
+      bool hasAddsDeletes = event.changes.any(
+          (d) => d.isAdd || d.isDelete || !d.resource.isFile);
+      if (hasAddsDeletes) {
+        _processEvents(event);
+      }
+    });
+
+    _workspace.onMarkerChange.listen((_) {
+      _processMarkerChange();
     });
   }
 
@@ -130,12 +139,10 @@ class FilesController implements TreeViewDelegate {
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     Resource resource = _filesMap[nodeUID];
-    FileItemCell cell = new FileItemCell(resource.name);
+    FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
       cell.acceptDrop = true;
     }
-    cell.menuElement.onClick.listen(
-        (e) => _handleMenuClick(cell, resource, e));
     return cell;
   }
 
@@ -143,9 +150,11 @@ class FilesController implements TreeViewDelegate {
 
   void treeViewSelectedChanged(TreeView view,
                                List<String> nodeUIDs) {
-    Resource resource = _filesMap[nodeUIDs.first];
-    if (resource is File) {
-      _delegate.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
+    if (nodeUIDs.isNotEmpty) {
+      Resource resource = _filesMap[nodeUIDs.first];
+      if (resource is File) {
+        _delegate.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
+      }
     }
   }
 
@@ -186,7 +195,7 @@ class FilesController implements TreeViewDelegate {
                            html.Event event) {
     cancelEvent(event);
     Resource resource = _filesMap[nodeUID];
-    FileItemCell cell = new FileItemCell(resource.name);
+    FileItemCell cell = new FileItemCell(resource);
     _showMenuForEvent(cell, event, resource);
   }
 
@@ -481,8 +490,16 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _sortTopLevel() {
-    _files.sort((Resource a, Resource b) => a.path.toLowerCase().
-        compareTo(b.path.toLowerCase()));
+    // Show top-level files before folders.
+    _files.sort((Resource a, Resource b) {
+      if (a is File && b is Container) {
+        return -1;
+      } else if (a is Container && b is File) {
+        return 1;
+      } else {
+        return a.path.toLowerCase().compareTo(b.path.toLowerCase());
+      }
+    });
   }
 
   void _reloadData() {
@@ -511,9 +528,8 @@ class FilesController implements TreeViewDelegate {
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
-
     event.changes.forEach((change) {
-      if (change.type == ResourceEventType.ADD) {
+      if (change.type == EventType.ADD) {
         var resource = change.resource;
         if (resource.isTopLevel) {
           _files.add(resource);
@@ -522,13 +538,13 @@ class FilesController implements TreeViewDelegate {
         _recursiveAddResource(resource);
       }
 
-      if (change.type == ResourceEventType.DELETE) {
+      if (change.type == EventType.DELETE) {
         var resource = change.resource;
         _files.remove(resource);
         _recursiveRemoveResource(resource);
       }
 
-      if (change.type == ResourceEventType.CHANGE) {
+      if (change.type == EventType.CHANGE) {
         // refresh the container that has changed.
         // remove all old paths and add new.
         var resource = change.resource;
@@ -537,6 +553,20 @@ class FilesController implements TreeViewDelegate {
       }
     });
     _reloadData();
+  }
+
+  /**
+   * Traverse all the created [FileItemCell]s, calling `updateFileStatus()`.
+   */
+  void _processMarkerChange() {
+    for (String uid in _filesMap.keys) {
+      TreeViewCell treeViewCell = _treeView.getTreeViewCellForUID(uid);
+
+      if (treeViewCell != null) {
+        FileItemCell fileItemCell = treeViewCell.embeddedCell;
+        fileItemCell.updateFileStatus();
+      }
+    }
   }
 
   void _recursiveAddResource(Resource resource) {
@@ -555,14 +585,6 @@ class FilesController implements TreeViewDelegate {
         _recursiveRemoveResource(child);
       });
     }
-  }
-
-  /**
-   * Menu icon click handler: show the context menu.
-   */
-  void _handleMenuClick(FileItemCell cell, Resource resource, html.Event e) {
-    cancelEvent(e);
-    _showMenu(cell, cell.menuElement, resource);
   }
 
   /**
@@ -611,14 +633,11 @@ class FilesController implements TreeViewDelegate {
     contextMenu.style.left = '${position.x}px';
     contextMenu.style.top = '${position.y}px';
 
-    // Keep the disclosure button visible when the menu is opened.
-    cell.menuElement.classes.add('open');
     // Show the menu.
     bootjack.Dropdown dropdown = bootjack.Dropdown.wire(contextMenu);
     dropdown.toggle();
 
     void _closeContextMenu(html.Event event) {
-      cell.menuElement.classes.remove('open');
       // We workaround an issue with bootstrap/boojack: There's no other way
       // to close the dropdown. For example dropdown.toggle() won't work.
       menuContainer.classes.remove('open');

@@ -50,7 +50,7 @@ class Checkout {
     ObjectStore store = options.store;
     String branch = options.branchName;
 
-    return store.getHeadForRef(REFS_HEADS + 'branch').then(
+    return store.getHeadForRef(REFS_HEADS + branch).then(
         (String branchSha) {
       return store.getHeadSha().then((String currentSha) {
         if (currentSha != branchSha) {
@@ -69,7 +69,7 @@ class Checkout {
             });
           });
         } else {
-          return store.setHeadRef(REFS_HEADS + 'branch', '');
+          return store.setHeadRef(REFS_HEADS + branch, '');
         }
       });
     }, onError: (e) {

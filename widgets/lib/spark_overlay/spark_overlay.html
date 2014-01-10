@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ * See g-overlay https://github.com/Polymer/toolkit-ui/tree/master/elements.
+ *
+ * spark-overlay displays overlayed on top of other content. It starts out
+ * hidden and is displayed by setting it's opened property
+ * to true. A spark-overlay's opened state can be toggled by calling the toggle
+ * method.
+ *
+ * It's common to want a spark-overlay to animate to its opened position. A number
+ * of helper css classes provide some basic open/close animations. For example,
+ * assigning the class spark-overlay-fade to a spark-overlay will make it fade into
+ * and out of view as it opens and closes. Note, if multiple spark-overlay's are
+ * opened, they should stack on top of each other.
+ *
+ * Styling: The size and position of a spark-overlay should be setup via css.
+ * spark-overlay is natually sized around its content. When a spark-overlay is opened
+ * it is shown and the 'opened' class is added to it. This is typically where
+ * css transitions and animations are applied. When the spark-overlay is closed,
+ * the 'opened' class is removed and a 'closing' class is added. Use 'closing'
+ * to customize the closing animation.
+ *
+ * Classes for animating spark-overlay:
+ *
+ * * spark-overlay-fade: fade in/out when opened/closed
+ * * spark-overlay-scale-slideup: open: fade in and shrink; close: slide up
+ * * spark-overlay-shake: open: fly in and shake; close: shake and fly out.
+ *
+ * It's common to use spark-overlay to gather user input, for example a login
+ * dialog. To facilitate this, spark-overlay supports automatic focusing of a
+ * specific element when it's opened. The element to be focused should be given
+ * an autofocus attribute.
+ *
+ * An element that should close the spark-overlay will automatically do so if it
+ * is given the overlay-toggle attribute. Please note that spark-overlay will
+ * close whenever the user taps outside it or presses the escape key. The
+ * behavior can be turned off via the autoCloseDisabled property.
+ *
+ *     <spark-overlay class="spark-overlay-scale-slideup">
+ *       <h2>Dialog</h2>
+ *       <input placeholder="say something..." autofocus>
+ *       <div>I agree with this wholeheartedly.</div>
+ *       <button overlay-toggle>OK</button>
+ *     </spark-overlay>
+ */
+/**
+ * Fired when the spark-overlay opened property is set.
+ *
+ * @event open
+ * @param {Object} inDetail
+ * @param {Object} inDetail.opened the opened state
+ */
+-->
+<polymer-element name="spark-overlay"
+         attributes="opened autoCloseDisabled"
+         on-webkitAnimationStart="{{openedAnimationStart}}"
+         on-animationStart="{{openedAnimationStart}}"
+         on-webkitAnimationEnd="{{openedAnimationEnd}}"
+         on-animationEnd="{{openedAnimationEnd}}"
+         on-webkitTransitionEnd="{{openedTransitionEnd}}"
+         on-transitionEnd="{{openedTransitionEnd}}"
+         on-click="{{tapHandler}}"
+         on-keydown="{{keydownHandler}}">
+         <!-- on-tap="{{tapHandler}}" -->
+
+  <template>
+    <!-- TODO(terry): Need link/rel for css.-->
+    <!--link rel="stylesheet" href="css/spark-overlay.css"-->
+    <style>
+      /*
+        TODO(sorvell): include a reasonable set of default overlay opening
+        animations. What's here right now is ad hoc.
+      */
+
+      /*
+        Styling a spark-overlay:
+
+        1. use the 'opened' class to style the overlay when it is open.
+        A transition or animation can be applied to animate the overlay into place.
+        Note: there's no need to set the display property of an overlay. That's
+        managed automatically.
+
+        2. To apply a different animation when the overlay closes, use the
+        'closing' class.
+      */
+
+      /* Note that trbl: 0 + position: fixed will not 'fit to window'
+      if a transform is applied to a parent of this element. That parent
+      becomes the containing block; see:
+      http://dev.w3.org/csswg/css3-transforms/#transform-rendering
+      We address this by using script based positioning =(
+      */
+      @host {
+        * {
+          position: fixed;
+          z-index: 1000;
+          outline: none;
+          display: none;
+          opacity: 0.99;
+          -webkit-transition: opacity 0.001s;
+          transition: opacity 0.001s;
+        }
+
+        /*
+          The revealed class exists because it's necessary to 'show' a node
+          before applying a transition. When an overlay is opened, it is
+          immediately revealed (display: block) and then asynchronously the
+          opened or closing classes are added.
+
+          Because we don't want to actually show the node before a transition
+          or animation is applied, when the node is
+          revealed, it is made display: block but visibility: hidden.
+          It is then made visibility: visible when it is opened.
+        */
+
+        .revealed {
+          display: block;
+          visibility: hidden;
+        }
+
+        .revealed.opened {
+          opacity: 1;
+          display: block;
+          visibility: visible;
+        }
+
+        .revealed.closing {
+          display: block;
+          visibility: visible;
+        }
+
+        /*
+          When an animation is detected (via an animationstart event) this class
+          is applied to remove any transition. This ensures only 1 animation end event
+          will be processed.
+
+          NOTE: if a rule such as a media query changes an overlay from using a css
+          animation to a transition, the animation class must be altered or removed.
+        */
+        .animation {
+          -webkit-transition: none;
+          transition: none;
+        }
+
+        .spark-overlay-fade {
+          opacity: 0;
+          -webkit-transition: all 0.218s;
+          transition: all 0.218s;
+        }
+
+        .spark-overlay-fade.opened {
+          opacity: 1;
+        }
+
+        .spark-overlay-scale-slideup {
+          opacity: 0.0;
+          -webkit-transform: scale(1.05);
+          transform: scale(1.05);
+        }
+
+        .spark-overlay-scale-slideup.opened {
+          opacity: 1.0;
+          -webkit-transform: scale(1.0);
+          transform: scale(1.0);
+          -webkit-transition: all 0.218s;
+          transition: all 0.218s;
+        }
+
+        .spark-overlay-scale-slideup.closing {
+          opacity: 0;
+          -webkit-transform: translateY(-100%);
+          transform: translateY(-100%);
+          -webkit-transition: all 0.4s;
+          transition: all 0.4s;
+        }
+
+        .spark-overlay-shake.opened {
+          -webkit-animation-duration: 0.5s;
+          -webkit-animation-fill-mode: both;
+          -webkit-animation-name: spark-overlay-shakeFadeIn;
+          animation-duration: 0.5s;
+          animation-fill-mode: both;
+          animation-name: spark-overlay-shakeFadeIn;
+        }
+
+        .spark-overlay-shake.closing {
+          -webkit-animation-duration: 0.5s;
+          -webkit-animation-fill-mode: both;
+          -webkit-animation-name: spark-overlay-shakeFadeOut;
+          animation-duration: 0.5s;
+          animation-fill-mode: both;
+          animation-name: spark-overlay-shakeFadeOut;
+        }
+      }
+    </style>
+
+    <!--link rel="stylesheet" polymer-scope="global" href="css/spark-overlay-global.css"-->
+    <style>
+      @-webkit-keyframes spark-overlay-shakeFadeIn {
+        0% {
+          opacity: 0;
+          -webkit-transform: translateX(0);
+        }
+        10% {
+          -webkit-transform: translateX(-50px);
+        }
+        30% {
+          -webkit-transform: translateX(50px);
+        }
+        50% {
+          -webkit-transform: translateX(-25px);
+        }
+        70% {
+          -webkit-transform: translateX(25px);
+        }
+        90% {
+          -webkit-transform: translateX(-13px);
+        }
+        100% {
+          -webkit-transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes spark-overlay-shakeFadeIn {
+        0% {
+          opacity: 0;
+          transform: translateX(0);
+        }
+        10% {
+          transform: translateX(-50px);
+        }
+        30% {
+          transform: translateX(50px);
+        }
+        50% {
+          transform: translateX(-25px);
+        }
+        70% {
+          transform: translateX(25px);
+        }
+        90% {
+          transform: translateX(-13px);
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @-webkit-keyframes spark-overlay-shakeFadeOut {
+        0% {
+          opacity: 1;
+          -webkit-transform: translateX(0);
+        }
+        10% {
+          -webkit-transform: translateX(-50px);
+        }
+        30% {
+          -webkit-transform: translateX(50px);
+        }
+        100% {
+          -webkit-transform: translateX(-100%);
+          opacity: 0;
+        }
+      }
+
+      @keyframes spark-overlay-shakeFadeOut {
+        0% {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        10% {
+          transform: translateX(-50px);
+        }
+        30% {
+          transform: translateX(50px);
+        }
+        100% {
+          transform: translateX(-100%);
+          opacity: 0;
+        }
+      }
+    </style>
+
+    <content></content>
+  </template>
+
+  <script type="application/dart" src="spark_overlay.dart"></script>
+</polymer-element>

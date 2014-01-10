@@ -11,17 +11,18 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import '../packages/spark_widgets/spark-overlay/spark-overlay.dart' as widgets;
+import 'packages/spark_widgets/spark_overlay/spark_overlay.dart' as widgets;
+import 'packages/spark_widgets/spark_splitter/spark_splitter.dart';
+
+import 'spark_polymer_ui.dart';
 
 import 'spark.dart';
-import 'lib/actions.dart';
-import 'lib/polymer_ui/spark_polymer_ui.dart';
 
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
       createSparkZone().runGuarded(() {
-        SparkPolymer spark = new SparkPolymer(testMode);
+        SparkPolymer spark = new SparkPolymer._(testMode);
         spark.start();
       });
     });
@@ -32,10 +33,18 @@ class SparkPolymerDialog implements SparkDialog {
   widgets.SparkOverlay _dialogElement;
 
   SparkPolymerDialog(Element dialogElement)
-      : _dialogElement = dialogElement;
+      : _dialogElement = dialogElement {
+    // TODO(ussuri): Encapsulate backdrop in SparkOverlay.
+    _dialogElement.on['opened'].listen((event) {
+      var appModal = querySelector("#modalBackdrop");
+      appModal.style.display = event.detail ? "block" : "none";
+    });
+  }
 
   void show() => _dialogElement.toggle();
 
+  // TODO(ussuri): Currently, this never gets called (the dialog closes in
+  // another way). Make symmetrical when merging Polymer and non-Polymer.
   void hide() => _dialogElement.toggle();
 
   Element get element => _dialogElement;
@@ -44,7 +53,7 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  SparkPolymer(bool developerMode)
+  SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode);
 
@@ -65,7 +74,7 @@ class SparkPolymer extends Spark {
   //
 
   @override
-  String get appName => super.appName + "Polymer";
+  String get appName => super.appName;
 
   @override
   void initAnalytics() => super.initAnalytics();
@@ -77,14 +86,28 @@ class SparkPolymer extends Spark {
   void createEditorComponents() => super.createEditorComponents();
 
   @override
+  void initActivitySpinner() => super.initActivitySpinner();
+
+  @override
   void initEditorManager() => super.initEditorManager();
 
   @override
   void initEditorArea() => super.initEditorArea();
 
-  // We're using a Polymer-based splitview, so disable the default.
   @override
-  void initSplitView() => null;
+  void initSplitView() {
+    syncPrefs.getValue('splitViewPosition').then((String position) {
+      if (position != null) {
+        int value = int.parse(position, onError: (_) => 0);
+        if (value != 0) {
+          (getUIElement('#splitter') as SparkSplitter).targetSize = value;
+        }
+      }
+    });
+  }
+
+  @override
+  void initSaveStatusListener() => super.initSaveStatusListener();
 
   @override
   void initFilesController() => super.initFilesController();
@@ -102,59 +125,14 @@ class SparkPolymer extends Spark {
   void initToolbar() => super.initToolbar();
 
   @override
-  void buildMenu() {
-    var node = getUIElement("#hotdogMenu2");
-    node.on['activate'].listen((event) {
-      var item = event.detail['item'];
-      var menuId = item.attributes['id'];
-      switch (menuId) {
-        case 'file-open':
-        case 'folder-open':
-        case 'file-close':
-        case 'file-delete':
-        case 'run-tests':
-        case 'git-clone':
-        case 'help-about':
-          actionManager.getAction(menuId).invoke();
-          break;
-        default:
-          print("WARNING: Menu Item Unhandled Action $menuId");
-      }
-    });
-
-    // TODO(ussuri): This is a temporary hack just to test the functionality
-    // triggered from the menu. This will be replaced by spark-menu ASAP.
-    UListElement ul = getUIElement('#hotdogMenu ul');
-
-    // Theme control.
-    // NOTE: Disabled because doing this resulted in a crash.
-//    Element theme = ul.querySelector('#changeTheme');
-//    ul.children.remove(theme);
-//    ul.children.add(theme);
-    ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
-    ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
-
-    // Key binding control.
-//    Element keys = ul.querySelector('#changeKeys');
-//    ul.children.remove(keys);
-//    ul.children.add(keys);
-    ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
-    ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
-  }
+  void buildMenu() {}
 
   //
   // - End parts of the parent's ctor.
   //
 
-  // TODO(terry): Hookup overlay dialog.
   @override
-  void showStatus(String text, {bool error: false}) {
-    // TEMP:
-    //Element element = querySelector("#status");
-    //element.text = text;
-    //SparkOverlay overlay = querySelector("#spark-dialog");
-    //if (overlay != null) {
-    //  overlay.toggle();
-    //}
+  void onSplitViewUpdate(int position) {
+    syncPrefs.setValue('splitViewPosition', position.toString());
   }
 }
