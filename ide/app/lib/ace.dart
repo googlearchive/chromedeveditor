@@ -274,7 +274,6 @@ class KeyBindingManager {
   }
 
   void _updateName(String name) {
-    _label.text =
-        'Keys: ' + (name == null ? 'default' : utils.capitalize(name));
+    _label.text = (name == null ? 'default' : utils.capitalize(name));
   }
 }

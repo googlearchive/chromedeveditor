@@ -235,9 +235,9 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void createEditorComponents() {
     _aceContainer = new AceContainer(new DivElement());
     _aceThemeManager = new ThemeManager(
-        aceContainer, syncPrefs, getUIElement('#changeTheme a span'));
+        aceContainer, syncPrefs, getUIElement('#changeTheme span'));
     _aceKeysManager = new KeyBindingManager(
-        aceContainer, syncPrefs, getUIElement('#changeKeys a span'));
+        aceContainer, syncPrefs, getUIElement('#changeKeys span'));
     _editorManager = new EditorManager(
         workspace, aceContainer, localPrefs, eventBus);
     _editorArea = new EditorArea(
