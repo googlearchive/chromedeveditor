@@ -88,7 +88,7 @@
 }
 
 .fileview-filename-container:hover .filename {
-  
+
 }
 
 .ace_gutter-cell {
@@ -169,7 +169,7 @@
 
 .titleFont {
   font-family: Helvetica, Sans-serif;
-  font-size: 14px;  
+  font-size: 14px;
 }
 
 #editedFilename.hidden {
@@ -251,13 +251,13 @@
 
       <div id="toolbarRight" class="titleFont">
         <span id="editedFilename"></span>
-        
+
         <i id="activitySpinner" class="fa fa-spinner fa-spin"></i>
 
         <spark-menu-button id="hotdogMenuNew"
             src="images/menu.png"
             responsive="true"
-            selected="1"
+            selected="0"
             valueattr="action-id"
             valign="right"
             on-activate={{onMenuSelected}}>
@@ -354,7 +354,7 @@
         </spark-button>
       </div>
     </spark-overlay>
-    
+
      <!-- New File dialog -->
      <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
        <div class="modal-body">
@@ -371,8 +371,8 @@
            Create
          </spark-button>
        </div>
-     </spark-overlay>    
-     
+     </spark-overlay>
+
      <!-- New Folder dialog -->
     <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
@@ -409,8 +409,8 @@
           Clone
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal --> 
-    
+    </spark-modal><!-- /.modal -->
+
     <!-- Git Clone dialog -->
     <spark-modal id="gitBranchDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
@@ -430,7 +430,7 @@
           Create branch
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal --> 
+    </spark-modal><!-- /.modal -->
 
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="spark-overlay-scale-slideup">
