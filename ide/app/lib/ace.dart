@@ -126,8 +126,8 @@ class AceContainer {
   void recreateMiniMap() {
     html.Element scrollbarElement =
         _editorElement.getElementsByClassName("ace_scrollbar").first;
-    if (scrollbarElement.style.right != "20px") {
-      scrollbarElement.style.right = "20px";
+    if (scrollbarElement.style.right != "10px") {
+      scrollbarElement.style.right = "10px";
     }
 
     html.Element miniMap = new html.Element.div();
