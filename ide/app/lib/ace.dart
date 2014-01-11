@@ -92,7 +92,7 @@ class AceContainer {
     List<ace.Annotation> annotations = [];
 
     int numberLines = currentSession.document.length;
-    recreateMiniMap();
+    _recreateMiniMap();
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -123,7 +123,7 @@ class AceContainer {
     /*%TRACE3*/ print("(4> 1/10/14): miniMapMarkerClicked!"); // TRACE%
   }
 
-  void recreateMiniMap() {
+  void _recreateMiniMap() {
     html.Element scrollbarElement =
         _editorElement.getElementsByClassName("ace_scrollbar").first;
     if (scrollbarElement.style.right != "10px") {
