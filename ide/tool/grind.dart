@@ -103,8 +103,6 @@ void deploy(GrinderContext context) {
   _runCommandSync(
       context,
       "perl -i -pe 's/spark_polymer\\.html_bootstrap\\.dart\\.js/spark_polymer\\.html_bootstrap\\.dart\\.precompiled\\.js/' ${destDir.path}/web/spark_polymer.html");
-  File file = new File('${destDir.path}/web/spark_polymer.html.new');
-  file.renameSync('${destDir.path}/web/spark_polymer.html');
   _runCommandSync(
       context,
       'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
