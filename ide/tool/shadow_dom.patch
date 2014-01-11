@@ -1,0 +1,32 @@
+--- shadow_dom.debug.js.orig	2014-01-09 17:38:03.000000000 -0800
++++ shadow_dom.debug.js	2014-01-09 17:36:23.000000000 -0800
+@@ -100,6 +100,9 @@
+     // don't test for eval if document has CSP securityPolicy object and we can see that
+     // eval is not supported. This avoids an error message in console even when the exception
+     // is caught
++    if (chrome.app.runtime) {
++      return false;
++    }
+     if (global.document &&
+         'securityPolicy' in global.document &&
+         !global.document.securityPolicy.allowsEval) {
+@@ -1475,6 +1478,9 @@
+   // even when the exception is caught
+   var hasEval = !('securityPolicy' in document) ||
+       document.securityPolicy.allowsEval;
++  if (chrome.app.runtime) {
++    hasEval = false;
++  }
+   if (hasEval) {
+     try {
+       var f = new Function('', 'return true;');
+@@ -6576,6 +6582,9 @@
+   // change a selector like 'div' to 'name div'
+   scopeRules: function(cssRules, name, typeExtension) {
+     var cssText = '';
++    if (cssRules == null) {
++      return cssText
++    }
+     Array.prototype.forEach.call(cssRules, function(rule) {
+       if (rule.selectorText && (rule.style && rule.style.cssText)) {
+         cssText += this.scopeSelector(rule.selectorText, name, typeExtension, 
