@@ -102,12 +102,12 @@ void deploy(GrinderContext context) {
       'spark_polymer_ui.html_bootstrap.dart', true);
   _runCommandSync(
       context,
-      "perl -i -pe 's/spark_polymer\\.html_bootstrap\\.dart\\.js/spark_polymer\\.html_bootstrap\\.dart\\.precompiled\\.js/' ${destDir}/web/spark_polymer.html");
-  File file = new File('${destDir}/web/spark_polymer.html.new');
-  file.renameSync('${destDir}/web/spark_polymer.html');
+      "perl -i -pe 's/spark_polymer\\.html_bootstrap\\.dart\\.js/spark_polymer\\.html_bootstrap\\.dart\\.precompiled\\.js/' ${destDir.path}/web/spark_polymer.html");
+  File file = new File('${destDir.path}/web/spark_polymer.html.new');
+  file.renameSync('${destDir.path}/web/spark_polymer.html');
   _runCommandSync(
       context,
-      'patch ${destDir}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
+      'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
