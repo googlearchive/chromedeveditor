@@ -301,10 +301,12 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
 
   // Copy the app directory to target/web.
-  copyFile(new File('pubspec.yaml'), sourceDir);
-  copyFile(new File('pubspec.lock'), sourceDir);
-  copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
+  copyFile(getFile('pubspec.yaml'), sourceDir);
+  copyFile(getFile('pubspec.lock'), sourceDir);
+  copyDirectory(getDir('app'), joinDir(sourceDir, ['web']), context);
+
   deleteEntity(joinFile(destDir, ['web', 'spark_polymer.dart.precompiled.js']), context);
+
   deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
@@ -342,7 +344,10 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
         context);
   }
 
-  _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
+  final Link link = new Link(joinFile(target, ['${filePath}.js']).path);
+  link.createSync('./${filePath}.precompiled.js');
+
+  _printSize(context, joinFile(target, ['${filePath}.precompiled.js']));
 }
 
 /**
