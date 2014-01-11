@@ -107,14 +107,20 @@ class AceContainer {
           marker.lineNum / numberLines * 100;
 
       html.Element minimapMarker = new html.Element.div();
-      minimapMarker.classes.add("minimap-marker");
+      minimapMarker.classes.add("minimap-marker error");
       minimapMarker.style.top =
           markerHeightPercentage.toStringAsFixed(2) + "%";
+      minimapMarker.onClick.listen(
+          (_) => miniMapMarkerClicked());
 
       _minimapElement.append(minimapMarker);
     }
 
     currentSession.annotations = annotations;
+  }
+
+  miniMapMarkerClicked() {
+    /*%TRACE3*/ print("(4> 1/10/14): miniMapMarkerClicked!"); // TRACE%
   }
 
   void recreateMiniMap() {
