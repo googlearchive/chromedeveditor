@@ -8,7 +8,9 @@ import 'dart:async';
 
 import 'package:unittest/unittest.dart';
 
+import 'files_mock.dart';
 import '../lib/app.dart';
+import '../lib/workspace.dart';
 
 // TODO: test that adding a participant after start() has been called, calls
 // the lifecycle methods of that participant.
@@ -52,6 +54,39 @@ defineTests() {
       } on StateError catch (ex) {
         expect(true, true);
       }
+    });
+  });
+
+  group('app focus', () {
+    Workspace workspace = new Workspace();
+    Project project;
+    File file;
+
+    setUp(() {
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('/myProject/test.txt');
+      return workspace.link(fs.getEntry('myProject')).then((Project p) {
+        project = p;
+        file = p.getChild('test.txt');
+      });
+    });
+
+    test('changing resources fires project event', () {
+      FocusManager manager = new FocusManager();
+      Future future = manager.onProjectChange.first.then((event) {
+        expect(event, project);
+      });
+      manager.setCurrentResource(file);
+      return future;
+    });
+
+    test('changing edited file fires resource event', () {
+      FocusManager manager = new FocusManager();
+      Future future = manager.onResourceChange.first.then((event) {
+        expect(event, file);
+      });
+      manager.setEditedFile(file);
+      return future;
     });
   });
 }

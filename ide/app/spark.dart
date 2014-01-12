@@ -185,6 +185,21 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   PlatformInfo get platformInfo => _platformInfo;
 
+  /**
+   * Get the currently selected [Resource].
+   */
+  ws.Resource get currentResource => focusManager.currentResource;
+
+  /**
+   * Get the [File] currently being edited.
+   */
+  ws.File get currentEditedFile => focusManager.currentEditedFile;
+
+  /**
+   * Get the currently selected [Project].
+   */
+  ws.Project get currentProject => focusManager.currentProject;
+
   // TODO(ussuri): The below two methods are a temporary means to make Spark
   // reusable in SparkPolymer. Once the switch to Polymer is complete, they
   // will go away.
@@ -207,7 +222,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   SparkDialog createDialog(Element dialogElement) =>
       new SparkBootjackDialog(dialogElement);
-
 
   //
   // Parts of ctor:
@@ -287,12 +301,16 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         _filesController.selectFile(tab.file);
       }
       localPrefs.setValue('lastFileSelection', tab.file.path);
+      focusManager.setEditedFile(tab.file);
     });
   }
 
   void initFilesController() {
-    _filesController =
-        new FilesController(workspace, this, getUIElement('#fileViewArea'));
+    _filesController = new FilesController(
+        workspace, this, getUIElement('#fileViewArea'));
+    _filesController.onSelectionChange.listen((resource) {
+      focusManager.setCurrentResource(resource);
+    });
   }
 
   void initLookAndFeel() {
