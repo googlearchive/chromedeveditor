@@ -8,56 +8,42 @@
  */
 library spark.scm;
 
-import 'dart:collection';
+import 'dart:async';
 
 import 'workspace.dart';
 
-List<ScmProvider> _providers;
+final List<ScmProvider> _providers = [new GitScmProvider()];
 
 /**
  * Returns `true` if the given project is under SCM.
  */
-bool isUnderScm(Project project) => getProvider(project) != null;
-
-/**
- * Returns the [ScmProvider] for the given project, or `null` if the project is
- * not under SCM.
- */
-ScmProvider getProvider(Project project) {
-  _initialize();
-
-  for (ScmProvider provider in _providers) {
-    if (provider.isUnderScm(project)) {
-      return provider;
-    }
-  }
-
-  return null;
-}
+bool isUnderScm(Project project) =>
+    _providers.any((provider) => provider.isUnderScm(project));
 
 /**
  * Return all the SCM providers known to the system.
  */
-List<ScmProvider> getProviders() {
-  _initialize();
-
-  return new UnmodifiableListView(_providers);
-}
+List<ScmProvider> getProviders() => _providers;
 
 /**
- * Register a new [ScmProvider].
+ * Return the [ScmProvider] cooresponding to the given type. The only valid
+ * value for [type] currently is `git`.
  */
-void registerProvider(ScmProvider provider) {
-  _initialize();
-  _providers.add(provider);
-}
+ScmProvider getProviderType(String type) =>
+    _providers.firstWhere((p) => p.id == type, orElse: () => null);
 
-void _initialize() {
-  if (_providers != null) return;
+/**
+ * Returns the [ScmProjectOperations] for the given project, or `null` if the
+ * project is not under SCM.
+ */
+ScmProjectOperations getScmOperationsFor(Project project) {
+  for (ScmProvider provider in _providers) {
+    if (provider.isUnderScm(project)) {
+      return provider.getOperationsFor(project);
+    }
+  }
 
-  _providers = [];
-
-  registerProvider(new GitScmProvider._());
+  return null;
 }
 
 /**
@@ -77,17 +63,78 @@ abstract class ScmProvider {
    * contract for this method is that it should return quickly.
    */
   bool isUnderScm(Project project);
+
+  /**
+   * Return the [ScmProjectOperations] cooresponding to the given [Project].
+   */
+  ScmProjectOperations getOperationsFor(Project project);
+}
+
+/**
+ * A class that exports various SCM operations to act on the given [Project].
+ */
+abstract class ScmProjectOperations {
+  final ScmProvider provider;
+  final Project project;
+
+  ScmProjectOperations(this.provider, this.project);
+
+  /**
+   * Return the SCM status for the given file or folder.
+   */
+  Future<FileStatus> getFileStatus(Resource resource);
+}
+
+/**
+ * The possible SCM file statuses (`committed`, `dirty`, or `unknown`).
+ */
+class FileStatus {
+  final FileStatus COMITTED = new FileStatus._('comitted');
+  final FileStatus DIRTY = new FileStatus._('dirty');
+  final FileStatus UNKNOWN = new FileStatus._('unknown');
+
+  final String _status;
+
+  FileStatus._(this._status);
+
+  String toString() => _status;
 }
 
 /**
  * The Git SCM provider.
  */
 class GitScmProvider extends ScmProvider {
-  GitScmProvider._();
+  Map<Project, ScmProjectOperations> _operations = {};
+
+  GitScmProvider();
 
   String get id => 'git';
 
   bool isUnderScm(Project project) {
     return project.getChild('.git') is Folder;
+  }
+
+  ScmProjectOperations getOperationsFor(Project project) {
+    if (_operations[project] == null) {
+      if (isUnderScm(project)) {
+        _operations[project] = new GitScmProjectOperations(this, project);
+      }
+    }
+
+    return _operations[project];
+  }
+}
+
+/**
+ * The Git SCM project operations implementation.
+ */
+class GitScmProjectOperations extends ScmProjectOperations {
+
+  GitScmProjectOperations(ScmProvider provider, Project project) :
+    super(provider, project);
+
+  Future<FileStatus> getFileStatus(Resource resource) {
+    // TODO: how to retrieve the git file status?
+    return new Future.error('unimplemented - getFileStatus()');
   }
 }
