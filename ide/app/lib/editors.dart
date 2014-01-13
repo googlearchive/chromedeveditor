@@ -229,6 +229,7 @@ class EditorManager implements EditorProvider {
           if (state != _currentState) {
             return;
           }
+          // TODO: this explicit casting to AceEditor will go away in a future refactoring
           (_editorMap[currentFile] as ace.AceEditor).setSession(state.session);
           _selectedController.add(currentFile);
           _aceContainer.switchTo(state.session, state.file);
