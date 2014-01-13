@@ -148,7 +148,7 @@ class AceContainer {
       minimapMarker.style.top =
           markerHeightPercentage.toStringAsFixed(2) + "%";
       minimapMarker.onClick.listen(
-          (_) => miniMapMarkerClicked());
+          (_) => miniMapMarkerClicked(annotation));
 
       _minimapElement.append(minimapMarker);
     }
@@ -156,8 +156,9 @@ class AceContainer {
     currentSession.annotations = annotations;
   }
 
-  void miniMapMarkerClicked() {
-    // TODO(ericarnold): Handle marker click
+  void miniMapMarkerClicked(ace.Annotation annotation) {
+    // TODO(ericarnold): Handle column too
+    this._aceEditor.selection.moveCursorTo(annotation.row, 0);
   }
 
   void _recreateMiniMap() {
