@@ -236,8 +236,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void initSyncFs() {
-    _SyncFsProjectLoadJob job = new _SyncFsProjectLoadJob(this);
-    this.jobManager.schedule(job);
+   // _SyncFsProjectLoadJob job = new _SyncFsProjectLoadJob(this);
+   // this.jobManager.schedule(job);
   }
 
   void createEditorComponents() {
