@@ -37,7 +37,8 @@ class AceEditorTab extends EditorTab {
   }
 
   void activate() {
-    provider.selectFileForEditor(editor, file);
+    editor.activate();
+    provider.activate(editor);
     super.activate();
   }
 
@@ -49,6 +50,7 @@ class AceEditorTab extends EditorTab {
 /// An [EditorTab] that contains an [ImageViewerTab].
 class ImageViewerTab extends EditorTab {
   final ImageViewer imageViewer;
+
   ImageViewerTab(EditorArea parent, this.imageViewer, Resource file)
     : super(parent, file) {
     page = imageViewer.rootElement;
@@ -61,11 +63,12 @@ class ImageViewerTab extends EditorTab {
  * Manages a list of open editors.
  */
 class EditorArea extends TabView {
+  static final RegExp _imageFileType =
+      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
+
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
   final Element _filenameLabel;
-  static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
 
   bool _allowsLabelBar = true;
 

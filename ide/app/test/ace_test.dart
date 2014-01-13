@@ -56,9 +56,19 @@ class MockAceEditor implements AceEditor {
 
   Element get element => aceContainer.parentElement;
 
+  void activate() { }
   void resize() { }
-
   void focus() { }
+
+  bool get dirty => false;
+
+  set dirty(bool value) { }
+
+  Stream get onDirtyChange => null;
+
+  Future save() { }
+
+  void setSession(ace.EditSession value) { }
 }
 
 class MockEditSession implements EditSession {
