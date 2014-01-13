@@ -14,18 +14,29 @@ import '../common/widget.dart';
 class SparkButton extends Widget {
   @published bool primary = false;
   @published bool active = true;
+  @published bool large = false;
+  @published bool small = false;
+
+  String get actionId => attributes['action-id'];
 
   @observable String get btnClasses {
-    return joinClasses([
-      CSS_BUTTON,
-      primary ? CSS_PRIMARY : CSS_DEFAULT,
-      active ? Widget.CSS_ENABLED : Widget.CSS_DISABLED
-    ]);
+    List classes = [
+        CSS_BUTTON,
+        primary ? CSS_PRIMARY : CSS_DEFAULT,
+        active ? Widget.CSS_ENABLED : Widget.CSS_DISABLED
+    ];
+
+    if (large) classes.add(CSS_LARGE);
+    if (small) classes.add(CSS_SMALL);
+
+    return joinClasses(classes);
   }
 
   static const CSS_BUTTON = "btn";
   static const CSS_DEFAULT = "btn-default";
   static const CSS_PRIMARY = "btn-primary";
+  static const CSS_LARGE = "btn-lg";
+  static const CSS_SMALL = "btn-sm";
 
   SparkButton.created() : super.created();
 

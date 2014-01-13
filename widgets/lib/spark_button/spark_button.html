@@ -4,16 +4,13 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
-<polymer-element name="spark-button" attributes="primary active"
+<polymer-element name="spark-button" attributes="primary active large small"
     on-focus="{{focus}}">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="css/spark_button.css" -->
     <style>
-      button {
-        padding: 2px 2px 2px 2px;
-        margin: 0;
-      }
+
     </style>
 
     <button type="button" focused class="{{btnClasses}}">
