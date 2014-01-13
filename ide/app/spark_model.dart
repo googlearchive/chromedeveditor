@@ -7,8 +7,8 @@ library spark.model;
 import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';
-import 'lib/editorarea.dart';
 import 'lib/editors.dart';
+import 'lib/editor_area.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
 

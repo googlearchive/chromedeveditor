@@ -24,16 +24,50 @@ export 'package:ace/ace.dart' show EditSession;
 
 class AceEditor extends Editor {
   final AceContainer aceContainer;
+  final workspace.File file;
 
-  workspace.File file;
+  StreamController _dirtyController = new StreamController.broadcast();
+
+  ace.EditSession _session;
+
+  void setSession(ace.EditSession value) {
+    _session = value;
+    _session.onChange.listen((_) => dirty = true);
+  }
+
+  bool _dirty = false;
+
+  AceEditor(this.aceContainer, this.file);
+
+  bool get dirty => _dirty;
+
+  Stream get onDirtyChange => _dirtyController.stream;
+
+  set dirty(bool value) {
+    if (value != _dirty) {
+      _dirty = value;
+      _dirtyController.add(value);
+    }
+  }
 
   html.Element get element => aceContainer.parentElement;
 
-  AceEditor(this.aceContainer);
+  void activate() {
+    // TODO:
+
+  }
 
   void resize() => aceContainer.resize();
 
   void focus() => aceContainer.focus();
+
+  Future save() {
+    if (_dirty) {
+      return file.setContents(_session.value).then((_) => dirty = false);
+    } else {
+      return new Future.value();
+    }
+  }
 }
 
 /**
