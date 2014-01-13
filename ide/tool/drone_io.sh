@@ -27,4 +27,4 @@ if [ "$DRONE" = "true" ]; then
   # Show the version of Chrome installed on drone.io.
   /usr/bin/google-chrome --version
 fi
-#dart tool/test_runner.dart --chrome
+dart tool/test_runner.dart --chrome
