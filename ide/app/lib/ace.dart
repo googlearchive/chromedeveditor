@@ -25,11 +25,19 @@ export 'package:ace/ace.dart' show EditSession;
 class AceEditor extends Editor {
   final AceContainer aceContainer;
 
-  workspace.File file;
+  workspace.File _file;
+
+  workspace.File get file => _file;
+
+  set file (workspace.File file) {
+    this._file = file;
+//    aceContainer.setMarkers(file.getMarkers());
+  }
 
   html.Element get element => aceContainer.parentElement;
 
-  AceEditor(this.aceContainer);
+  AceEditor(this.aceContainer) {
+  }
 
   void resize() => aceContainer.resize();
 
@@ -91,7 +99,7 @@ class AceContainer {
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
 
-    int numberLines = currentSession.document.length;
+    int numberLines = currentSession.screenLength;
     _recreateMiniMap();
 
     for (workspace.Marker marker in markers) {
@@ -102,9 +110,12 @@ class AceContainer {
           type: annotationType);
       annotations.add(annotation);
 
-      // TODO(ericarnold): This won't work with code folding.  Fix
+      // TODO(ericarnold): This won't update on code folds.  Fix
+      // TODO(ericarnold): This should also be based upon annotations so ace's
+      //     immediate handling of deleting / adding lines gets used.
       double markerHeightPercentage =
-          marker.lineNum / numberLines * 100;
+          currentSession.documentToScreenRow(marker.lineNum, 0)
+          / numberLines * 100.0;
 
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker error");
@@ -222,6 +233,8 @@ class AceContainer {
       if (_markerSubscription == null) {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
+        currentSession.onChange.listen(
+            (_) => setMarkers(currentFile.getMarkers()));
       }
     }
   }
