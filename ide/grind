@@ -3,11 +3,6 @@
 # All rights reserved. Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-if [ ! -d "packages" ]; then
-  echo "Unable to find dependency pacakges."
-  echo "Please execute> pub get"
-fi
-
 DART_VER=$(dart --version 2>&1)
 if [[ "$DART_VER" != Dart\ VM\ version:* ]] ; then
   echo "Unable to execute dart. Please set the DART_SDK environment variable to"
@@ -15,6 +10,12 @@ if [[ "$DART_VER" != Dart\ VM\ version:* ]] ; then
   echo "  'export DART_SDK=your/path/to/dart/dart-sdk'"
   echo "  'export PATH=\$PATH:\$DART_SDK/bin'";
   exit -1
+fi
+
+if [ ! -d "packages" ]; then
+  echo "Unable to find dependency pacakges."
+  echo "Now running 'pub get'"
+  pub get
 fi
 
 dart tool/grind.dart $@

@@ -32,7 +32,7 @@
 
 #saveStatus {
   flex: 1;
-  color: #ccc;
+  color: #aaa;
   margin-left: 6px;
   vertical-align: bottom;
   white-space: nowrap;
@@ -157,14 +157,19 @@
 }
 
 #editedFilename {
-  color: #ccc;
+  color: #aaa;
   display: inline-block;
-  margin-right: 10px;
+  margin: 0 6px 0 0;
   max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
   white-space: nowrap;
+}
+
+.titleFont {
+  font-family: Helvetica, Sans-serif;
+  font-size: 14px;  
 }
 
 #editedFilename.hidden {
@@ -183,7 +188,8 @@
   width: 100%;
 }
 
-#deleteDialog, #renameDialog, #gitCloneDialog, #gitBranchDialog {
+#deleteDialog, #renameDialog, #gitCloneDialog, #gitBranchDialog,
+    #gitCommitDialog, #gitCheckoutDialog {
   width: 412px;
 }
 
@@ -218,6 +224,7 @@
   font-size: 18pt;
   vertical-align: middle;
   color: #777;
+  margin: 0;
 }
 
 .minimap {
@@ -267,10 +274,11 @@
       <spark-icon-button id="newFile" tooltip="New File..." src="images/add.png">
       </spark-icon-button>
 
-      <span id="saveStatus"></span>
+      <span id="saveStatus" class="titleFont"></span>
 
-      <div id="toolbarRight">
+      <div id="toolbarRight" class="titleFont">
         <span id="editedFilename"></span>
+        
         <i id="activitySpinner" class="fa fa-spinner fa-spin"></i>
 
         <spark-menu-button id="hotdogMenuNew"
@@ -284,8 +292,8 @@
           </spark-menu-item>
           <spark-menu-item action-id="folder-open" iconsize=0 label="Open Folder...">
           </spark-menu-item>
-          <spark-menu-item id="changeTheme" iconsize=0>
-            <a><span></span></a>
+          <spark-menu-item id="changeTheme" iconsize=0 label="Theme:">
+            <span></span>
             <span class="plus-minus-container">
               <label class="plus-minus-spacer"></label>
               <spark-button class="plus-minus" on-click="{{onThemeMinus}}">
@@ -296,8 +304,8 @@
               </spark-button>
             </span>
           </spark-menu-item>
-          <spark-menu-item id="changeKeys" iconsize=0>
-            <a><span></span></a>
+          <spark-menu-item id="changeKeys" iconsize=0 label="Keys:">
+            <span></span>
             <span class="plus-minus-container">
               <label class="plus-minus-spacer"></label>
               <spark-button class="plus-minus" on-click="{{onKeysMinus}}">
@@ -312,7 +320,11 @@
           </spark-menu-item>
           <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
           </spark-menu-item>
+          <spark-menu-item action-id="git-commit" iconsize=0 label="Git Commit...">
+          </spark-menu-item>
           <spark-menu-item action-id="git-branch" iconsize=0 label="Git Branch...">
+          </spark-menu-item>
+          <spark-menu-item action-id="git-checkout" iconsize=0 label="Git Checkout...">
           </spark-menu-item>
           <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
           </spark-menu-item>
@@ -430,7 +442,28 @@
       </div>
     </spark-modal><!-- /.modal --> 
     
-    <!-- Git Clone dialog -->
+    <!-- Git Commit dialog -->
+    <spark-modal id="gitCommitDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
+        <h4 class="modal-title">Git Commit</h4>
+      </div>
+      <div class="modal-body">
+        Commit Message: <input id="commitMessage" type="text" focused><br/><br/>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="gitCommitButton" overlay-toggle primary
+          data-dismiss="modal">
+          Commit
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal --> 
+    
+    <!-- Git Branch dialog -->
     <spark-modal id="gitBranchDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal"
@@ -447,6 +480,29 @@
         <spark-button id="gitBranchButton" overlay-toggle primary
           data-dismiss="modal">
           Create branch
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal --> 
+
+    <!-- Git Checkout dialog -->
+    <spark-modal id="gitCheckoutDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
+        <h4 class="modal-title">Git Checkout</h4>
+      </div>
+      <div class="modal-body">
+        Current Branch Name: <input id="currentBranchName" type="text" disabled>
+        <br/><br/>
+        <select id="gitCheckout"></select>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="gitCheckoutButton" overlay-toggle primary
+          data-dismiss="modal">
+          Ok
         </spark-button>
       </div>
     </spark-modal><!-- /.modal --> 

@@ -11,6 +11,7 @@ import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/preferences.dart';
+import '../lib/utils.dart';
 import '../lib/workspace.dart' as ws;
 
 const _FILETEXT = 'This is sample text for mock file entry.';
@@ -45,6 +46,9 @@ defineTests() {
     });
 
     test('persist workspace roots', () {
+      // Disabled because it doesn't work on Chrome < 31.
+      if (isDart2js()) return null;
+
       var prefs = new MapPreferencesStore();
       var workspace = new ws.Workspace(prefs);
       return chrome.runtime.getPackageDirectoryEntry().then((dir) {

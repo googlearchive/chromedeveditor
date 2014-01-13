@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:js' as js;
 
 import 'package:chrome_gen/src/files.dart' as chrome_files;
+import 'package:chrome_gen/chrome_app.dart' as chrome;
 
 import 'options.dart';
 
@@ -29,6 +30,10 @@ Future<chrome_files.CrFileSystem> getGitTestFileSystem() {
   }
   js.JsObject fs = js.context['GitApi'].callMethod('getFs', [callback]);
   return completer.future;
+}
+
+Future<chrome_files.CrFileSystem> getSyncFileSystem() {
+  return chrome.syncFileSystem.requestFileSystem();
 }
 
 /**

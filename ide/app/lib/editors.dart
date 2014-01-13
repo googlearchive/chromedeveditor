@@ -26,7 +26,7 @@ final int _DELAY_MS = 500;
  */
 abstract class EditorProvider {
   Editor createEditorForFile(File file);
-  void selectFileForEditor(Editor editor, File file);
+  void activate(Editor editor);
   void close(File file);
 }
 
@@ -41,8 +41,14 @@ abstract class EditorProvider {
 abstract class Editor {
   html.Element get element;
   File get file;
+  bool get dirty;
+
+  Stream get onDirtyChange;
+
+  void activate();
   void resize();
   void focus();
+  Future save();
 }
 
 /**
@@ -83,10 +89,9 @@ class EditorManager implements EditorProvider {
 
   Iterable<File> get files => _openedEditorStates.map((s) => s.file);
   Future<bool> get loaded => _loadedCompleter.future;
+  Iterable<Editor> get editors => _editorMap.values;
 
   Stream<File> get onSelectedChange => _selectedController.stream;
-
-  bool get dirty => _currentState == null ? false : _currentState.dirty;
 
   void _insertState(_EditorState state) {
     _openedEditorStates.add(state);
@@ -99,7 +104,7 @@ class EditorManager implements EditorProvider {
    * This will open the given [File]. If this file is already open, it will
    * instead be made the active editor.
    */
-  void openOrSelect(File file, {switching: true}) {
+  void openFile(File file, {activateEditor: true}) {
     if (file == null) return;
     _EditorState state = _getStateFor(file);
 
@@ -111,8 +116,9 @@ class EditorManager implements EditorProvider {
       _insertState(state);
     }
 
-    if (switching)
+    if (activateEditor) {
       _switchState(state);
+    }
   }
 
   bool isFileOpened(File file) => _getStateFor(file) != null;
@@ -121,14 +127,15 @@ class EditorManager implements EditorProvider {
 
   void close(File file) {
     _EditorState state = _getStateFor(file);
+    Editor editor = _editorMap[file];
 
     if (state != null) {
       int index = _openedEditorStates.indexOf(state);
       state.updateState();
       _removeState(state);
 
-      if (state.dirty) {
-        state.save();
+      if (editor.dirty) {
+        editor.save();
       }
 
       if (_currentState == state) {
@@ -187,7 +194,7 @@ class EditorManager implements EditorProvider {
             // Restore opened files.
             for (String filePersistID in openedTabs) {
               File f = _workspace.restoreResource(filePersistID);
-              openOrSelect(f, switching: false);
+              openFile(f, activateEditor: false);
             }
           }
         }
@@ -222,6 +229,8 @@ class EditorManager implements EditorProvider {
           if (state != _currentState) {
             return;
           }
+          // TODO: this explicit casting to AceEditor will go away in a future refactoring
+          (_editorMap[currentFile] as ace.AceEditor).setSession(state.session);
           _selectedController.add(currentFile);
           _aceContainer.switchTo(state.session, state.file);
           _aceContainer.cursorPosition = state.cursorPosition;
@@ -247,29 +256,35 @@ class EditorManager implements EditorProvider {
       _timer = null;
     }
 
-    // TODO: start a workspace change event; this might modify multiple files
-    _openedEditorStates.forEach((e) => e.save());
-    // TODO: end the workspace change event
+    bool wasDirty = false;
 
-    _eventBus.addEvent('filesSaved', null);
+    for (Editor editor in editors) {
+      if (editor.dirty) {
+        editor.save();
+        wasDirty = true;
+      }
+    }
+
+    if (wasDirty) {
+      _eventBus.addEvent('filesSaved', null);
+    }
   }
 
   // EditorProvider
   Editor createEditorForFile(File file) {
     ace.AceEditor editor =
-        _editorMap[file] != null ? _editorMap[file] : new ace.AceEditor(_aceContainer);
+        _editorMap[file] != null ? _editorMap[file] : new ace.AceEditor(_aceContainer, file);
     _editorMap[file] = editor;
-    openOrSelect(file);
-    editor.file = file;
+    openFile(file);
+    editor.onDirtyChange.listen((_) {
+      if (editor.dirty) _startSaveTimer();
+    });
     return editor;
   }
 
-  void selectFileForEditor(Editor editor, File file) {
-    _EditorState state = _getStateFor(file);
+  void activate(Editor editor) {
+    _EditorState state = _getStateFor(editor.file);
     _switchState(state);
-    _editorMap[file] = editor;
-    (editor as ace.AceEditor).file = file;
-
     _aceContainer.setMarkers(file.getMarkers());
   }
 }
@@ -284,7 +299,6 @@ class _EditorState {
 
   int scrollTop = 0;
   html.Point cursorPosition = new html.Point(0, 0);
-  bool _dirty = false;
 
   _EditorState.fromFile(this.manager, this.file);
 
@@ -301,26 +315,7 @@ class _EditorState {
     }
   }
 
-  bool get dirty => _dirty;
-
-  set dirty(bool value) {
-    if (_dirty != value) {
-      _dirty = value;
-    }
-
-    if (value) {
-      manager._startSaveTimer();
-    }
-  }
-
   bool get hasSession => session != null;
-
-  void save() {
-    if (dirty) {
-      file.setContents(session.value);
-      dirty = false;
-    }
-  }
 
   // This method save the ACE editor state in this class.
   // Then, further calls of toMap() to save the state of the editor will return
@@ -354,7 +349,6 @@ class _EditorState {
       return file.getContents().then((text) {
         session = manager._aceContainer.createEditSession(text, file.name);
         session.scrollTop = scrollTop;
-        session.onChange.listen((delta) => dirty = true);
         return this;
       });
     }

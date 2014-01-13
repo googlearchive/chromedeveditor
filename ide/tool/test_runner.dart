@@ -26,7 +26,7 @@ Process chromeProcess;
 int exitCode;
 Directory tempDir;
 
-final int TEST_TIMEOUT = 10;
+final int TEST_TIMEOUT = 30;
 final int CHROME_SHUTDOWN_TIMEOUT = 1;
 final int EXIT_PROCESS_TIMEOUT = 1;
 
@@ -53,14 +53,14 @@ void main([List<String> args = const []]) {
   }
 
   if (results['chrome'] || results['chrome-stable']) {
-    appPath = 'app';
-    //appPath = 'build/deploy-test-out/web';
+    //appPath = 'app';
+    appPath = 'build/deploy-out/web';
     browserPath = _chromeStablePath();
   }
 
   if (results['chrome-dev']) {
-    appPath = 'app';
-    //appPath = 'build/deploy-test-out/web';
+    //appPath = 'app';
+    appPath = 'build/deploy-out/web';
     browserPath = _chromeDevPath();
   }
 
@@ -108,6 +108,13 @@ void runApp(String browserPath, String appPath) {
   Process.start(browserPath, args, workingDirectory: appPath)
     .then((Process process) {
       chromeProcess = process;
+
+      chromeProcess.stdout.transform(new Utf8Decoder())
+                          .transform(new LineSplitter())
+                          .listen((String line) => print(line));
+      chromeProcess.stderr.transform(new Utf8Decoder())
+                          .transform(new LineSplitter())
+                          .listen((String line) => print(line));
 
       chromeProcess.exitCode.then((int exitCode) {
         log("Chrome process finished [${exitCode}]");

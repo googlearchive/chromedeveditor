@@ -7,6 +7,7 @@
  */
 library spark.ui.widgets.files_controller;
 
+import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' as html;
 
@@ -38,6 +39,8 @@ class FilesController implements TreeViewDelegate {
   Map<String, List<String>> _childrenCache;
   // Preferences where to store tree expanded/collapsed state.
   preferences.PreferenceStore localPrefs = preferences.localStore;
+  // The file selection stream controller.
+  StreamController<Resource> _selectionController = new StreamController.broadcast();
 
   FilesController(Workspace workspace,
                   FilesControllerDelegate delegate,
@@ -90,6 +93,7 @@ class FilesController implements TreeViewDelegate {
     if (file is File) {
       _delegate.selectInEditor(file, forceOpen: forceOpen);
     }
+    _selectionController.add(file);
   }
 
   void selectFirstFile({bool forceOpen: false}) {
@@ -98,6 +102,11 @@ class FilesController implements TreeViewDelegate {
     }
     selectFile(_files[0], forceOpen: forceOpen);
   }
+
+  /**
+   * Listen for selection change events.
+   */
+  Stream<Resource> get onSelectionChange => _selectionController.stream;
 
   // Implementation of [TreeViewDelegate] interface.
 
@@ -155,6 +164,7 @@ class FilesController implements TreeViewDelegate {
       if (resource is File) {
         _delegate.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
       }
+      _selectionController.add(resource);
     }
   }
 

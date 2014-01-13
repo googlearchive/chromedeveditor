@@ -14,8 +14,8 @@ class Conditions {
 
   static Future<GitConfig> checkForUncommittedChanges(chrome.DirectoryEntry dir,
       ObjectStore store) {
-    //TODO implement.
-    throw "To be implmented.";
+    //TODO(grv) : implement.
+    return new Future.value();
   }
 
 }
