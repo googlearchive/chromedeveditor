@@ -144,7 +144,7 @@ class AceManager {
 
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
-      minimapMarker.style.top = '${markerPos}%';
+      minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
       minimapMarker.onClick.listen((_) => miniMapMarkerClicked());
 
       _minimapElement.append(minimapMarker);
