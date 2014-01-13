@@ -5,7 +5,8 @@
 
 if [ ! -d "packages" ]; then
   echo "Unable to find dependency pacakges."
-  echo "Please execute> pub get"
+  echo "Now running 'pub get'"
+  pub get
 fi
 
 DART_VER=$(dart --version 2>&1)
