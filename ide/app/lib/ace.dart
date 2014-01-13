@@ -157,7 +157,7 @@ class AceContainer {
   }
 
   miniMapMarkerClicked() {
-    /*%TRACE3*/ print("(4> 1/10/14): miniMapMarkerClicked!"); // TRACE%
+    // TODO(ericarnold): Handle marker click
   }
 
   void _recreateMiniMap() {
