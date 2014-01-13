@@ -124,6 +124,7 @@ class AceManager {
 
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
+    int numberLines = currentSession.screenLength;
 
     _recreateMiniMap();
 
@@ -138,7 +139,6 @@ class AceManager {
       // TODO(ericarnold): This won't update on code folds.  Fix
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
-      int numberLines = currentSession.screenLength;
       double markerPos =
           currentSession.documentToScreenRow(marker.lineNum, 0) / numberLines * 100.0;
 
