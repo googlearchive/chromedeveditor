@@ -235,7 +235,7 @@ class ObjectStore {
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
           // TODO do trim buffer and return completer ;
           var buff;
-          return new LooseObject(buff);
+          return new LooseObject(inflated);
         } else {
           return FileOps.readBlob(new Blob(
               [new Uint8List.fromList(inflated.getBytes())]), 'Text').then(
@@ -547,7 +547,7 @@ class ObjectStore {
   Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((TreeEntry tree) {
-      blobParts.add(tree.isBlob ? '100644 ' : '040000 ' + tree.name);
+      blobParts.add((tree.isBlob ? '100644 ' : '40000 ') + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
       blobParts.add(tree.sha);
     });
@@ -570,12 +570,14 @@ class ObjectStore {
 
   Future<Entry> updateLastChange(GitConfig config) {
     Future<Entry> doUpdate(GitConfig config) {
+      return new Future.value();
       config.time = new DateTime.now();
       return setConfig(config);
     }
     if (config != null) {
       return doUpdate(config);
     }
-    return this.getConfig().then((GitConfig config) => doUpdate(config));
+    return new Future.value();
+    //return this.getConfig().then((GitConfig config) => doUpdate(config));
   }
 }
