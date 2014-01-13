@@ -145,7 +145,7 @@ class AceManager {
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
       minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
-      minimapMarker.onClick.listen((_) => miniMapMarkerClicked(marker));
+      minimapMarker.onClick.listen((_) => _miniMapMarkerClicked(marker));
 
       _minimapElement.append(minimapMarker);
     }
@@ -153,13 +153,13 @@ class AceManager {
     currentSession.annotations = annotations;
   }
 
-  void miniMapMarkerClicked(workspace.Marker marker) {
+  void _miniMapMarkerClicked(workspace.Marker marker) {
     // TODO(ericarnold): Marker range should be selected, but we either need
     // Marker to include col info or we need a way to convert col to char-pos
-    this._aceEditor.selection.setSelectionAnchor(
+    _aceEditor.selection.setSelectionAnchor(
         marker.lineNum, marker.charStart);
     _aceEditor.selection.selectTo(marker.lineNum, marker.charEnd);
-    this._aceEditor.selection.moveCursorTo(marker.lineNum, 0);
+    _aceEditor.selection.moveCursorTo(marker.lineNum, 0);
   }
 
   void _recreateMiniMap() {
