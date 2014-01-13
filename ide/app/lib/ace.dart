@@ -125,7 +125,7 @@ class AceContainer {
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
 
-    int numberLines = currentSession.document.length;
+    int numberLines = currentSession.screenLength;
     _recreateMiniMap();
 
     for (workspace.Marker marker in markers) {
@@ -136,9 +136,12 @@ class AceContainer {
           type: annotationType);
       annotations.add(annotation);
 
-      // TODO(ericarnold): This won't work with code folding.  Fix
+      // TODO(ericarnold): This won't update on code folds.  Fix
+      // TODO(ericarnold): This should also be based upon annotations so ace's
+      //     immediate handling of deleting / adding lines gets used.
       double markerHeightPercentage =
-          marker.lineNum / numberLines * 100;
+          currentSession.documentToScreenRow(marker.lineNum, 0)
+          / numberLines * 100.0;
 
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker error");
