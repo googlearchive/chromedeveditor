@@ -17,17 +17,17 @@ defineTests() {
   group('ace', () {
     // This essentially tests that the ace codebase is available.
     test('is available', () {
-      expect(AceContainer.available, true);
+      expect(AceManager.available, true);
     });
   });
 }
 
-class MockAceContainer implements AceContainer {
+class MockAceManager implements AceManager {
   /// The element to put the editor in.
   final Element parentElement = null;
   workspace.File currentFile = null;
 
-  MockAceContainer();
+  MockAceManager();
 
   EditSession createEditSession(String text, String fileName) {
     return new MockEditSession(fileName);
@@ -49,13 +49,13 @@ class MockAceContainer implements AceContainer {
   void miniMapMarkerClicked(workspace.Marker annotation) { }
 }
 
-class MockAceEditor implements AceEditor {
-  AceContainer aceContainer;
+class MockAceEditor implements TextEditor {
+  AceManager aceManager;
   workspace.File file;
 
-  MockAceEditor([this.aceContainer]);
+  MockAceEditor([this.aceManager]);
 
-  Element get element => aceContainer.parentElement;
+  Element get element => aceManager.parentElement;
 
   void activate() { }
   void resize() { }
