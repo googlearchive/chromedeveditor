@@ -5,6 +5,7 @@
 library spark.editors_test;
 
 import 'dart:async';
+
 import 'package:unittest/unittest.dart';
 
 import 'ace_test.dart';
@@ -19,10 +20,10 @@ defineTests() {
   group('editors', () {
     test('general test', () {
       Workspace workspace = new Workspace();
-      AceContainer aceContainer = new MockAceContainer();
+      AceManager aceManager = new MockAceManager();
       PreferenceStore store = new MapPreferencesStore();
       EditorManager manager = new EditorManager(
-          workspace, aceContainer, store, new EventBus());
+          workspace, aceManager, store, new EventBus());
 
       MockFileSystem fs = new MockFileSystem();
 

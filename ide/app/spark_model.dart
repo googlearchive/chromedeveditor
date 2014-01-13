@@ -24,7 +24,7 @@ abstract class SparkModel extends Application {
 
   bool get developerMode;
 
-  AceContainer get aceContainer;
+  AceManager get aceManager;
   ThemeManager get aceThemeManager;
   KeyBindingManager get aceKeysManager;
   ws.Workspace get workspace;
