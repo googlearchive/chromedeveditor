@@ -962,7 +962,7 @@ class FolderOpenAction extends SparkAction {
 
   void _invoke([Object context]) => spark.openFolder();
 }
-
+// TODO(grv) : This should be the resposibility of workspace.
 class _SyncFsProjectLoadJob extends Job {
 
   Spark spark;
@@ -1135,6 +1135,7 @@ class _GitCommitJob extends Job {
     options.commitMessage = _commitMessage;
     options.store = spark._currentGitStore;
     Commit.commit(options).then((_) {
+      // TODO(grv) : add status line API for transitory success messages.
       print('commit successful.');
 
     }).whenComplete(() => completer.complete(this));
@@ -1154,9 +1155,12 @@ class GitCheckoutAction extends SparkActionWithDialog {
     ObjectStore store = spark._currentGitStore;
 
     store.getCurrentBranch().then((currentBranch) {
+      print('git current branch.');
      (getElement('#currentBranchName') as InputElement).value = currentBranch;
      store.getLocalBranches().then((List<String> branches) {
-       branches.sort();
+       branches.sort((String a, String b) {
+         return a.toLowerCase().compareTo(b.toLowerCase());
+       });
        branches.forEach((branchName) {
          _branchSelectElement.append(new OptionElement(data: branchName, value: branchName));
        });
@@ -1191,6 +1195,7 @@ class _GitCheckoutJob extends Job {
     options.branchName = _branchName;
     options.store = spark._currentGitStore;
     Checkout.checkout(options).then((_) {
+      // TODO : add UI notification.
       print('checkout successful');
     }).whenComplete(() => completer.complete(this));
     return completer.future;

@@ -261,11 +261,10 @@ class LooseObject {
         else
           break;
       }
-      header = headChars.join('');
+      header = headChars.join();
 
       this.data = data.sublist(i + 1, data.length);
     } else {
-      String data = buf;
       i = data.indexOf(new String.fromCharCode(0));
       header = data.substring(0, i);
       // move past null terminator but keep zlib header
