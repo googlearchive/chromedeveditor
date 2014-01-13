@@ -148,7 +148,7 @@ class AceContainer {
       minimapMarker.style.top =
           markerHeightPercentage.toStringAsFixed(2) + "%";
       minimapMarker.onClick.listen(
-          (_) => miniMapMarkerClicked(annotation));
+          (_) => miniMapMarkerClicked(marker));
 
       _minimapElement.append(minimapMarker);
     }
@@ -156,9 +156,13 @@ class AceContainer {
     currentSession.annotations = annotations;
   }
 
-  void miniMapMarkerClicked(ace.Annotation annotation) {
-    // TODO(ericarnold): Handle column too
-    this._aceEditor.selection.moveCursorTo(annotation.row, 0);
+  void miniMapMarkerClicked(workspace.Marker marker) {
+    // TODO(ericarnold): Marker range should be selected, but we either need
+    // Marker to include col info or we need a way to convert col to char-pos
+    this._aceEditor.selection.setSelectionAnchor(
+        marker.lineNum, marker.charStart);
+    _aceEditor.selection.selectTo(marker.lineNum, marker.charEnd);
+    this._aceEditor.selection.moveCursorTo(marker.lineNum, 0);
   }
 
   void _recreateMiniMap() {
