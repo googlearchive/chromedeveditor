@@ -99,6 +99,7 @@ class SparkOverlay extends Widget {
     if (tabIndex == null) {
       tabIndex = -1;
     }
+    // TODO(ussuri): 'touch-action' is not anywhere else - mistake?
     attributes['touch-action'] = 'none';
   }
 

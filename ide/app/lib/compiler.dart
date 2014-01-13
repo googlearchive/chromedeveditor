@@ -10,8 +10,8 @@ library spark.compiler;
 import 'dart:async';
 import 'dart:html' as html;
 
-import 'package:compiler/compiler/compiler.dart' as compiler;
-export 'package:compiler/compiler/compiler.dart' show Diagnostic;
+import 'compiler/compiler/compiler.dart' as compiler;
+export 'compiler/compiler/compiler.dart' show Diagnostic;
 
 import 'sdk.dart';
 

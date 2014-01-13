@@ -23,6 +23,12 @@
 <polymer-element name="spark-icon" attributes="src tooltip size">
   <template>
     <style>
+      :host {
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
       @host {
         * {
           display: inline-block;

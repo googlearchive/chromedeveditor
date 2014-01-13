@@ -273,13 +273,10 @@ class AceManager {
     switch (markerSeverity) {
       case workspace.Marker.SEVERITY_ERROR:
         return ace.Annotation.ERROR;
-        break;
       case workspace.Marker.SEVERITY_WARNING:
         return ace.Annotation.WARNING;
-        break;
       case workspace.Marker.SEVERITY_INFO:
         return ace.Annotation.INFO;
-        break;
     }
   }
 }

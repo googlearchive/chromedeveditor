@@ -26,6 +26,15 @@
     <!-- TODO(terry): Need to support link/rel for CSS in templates.-->
     <!--link rel="stylesheet" href="css/spark_menu_button.css"-->
     <style>
+      :host {
+        display: inline-block;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        width: 44px;
+        height: 44px;
+      }
+
+      /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
       @host {
         * {
           display: inline-block;
@@ -100,7 +109,7 @@
         }
 
         [responsive=true] #overlay  {
-          /* override spark-overlay @host rule style */
+          /* override spark-overlay :host rule style */
           position: absolute !important;
           -webkit-transform: translateX(0);
           transform: translateX(0);
