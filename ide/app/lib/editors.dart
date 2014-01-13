@@ -269,6 +269,8 @@ class EditorManager implements EditorProvider {
     _switchState(state);
     _editorMap[file] = editor;
     (editor as ace.AceEditor).file = file;
+
+    _aceContainer.setMarkers(file.getMarkers());
   }
 }
 

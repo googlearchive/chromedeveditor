@@ -76,8 +76,23 @@ class AceContainer {
     theme = THEMES[0];
   }
 
+  html.Element get _editorElement => parentElement.parent;
+
+  html.Element get _minimapElement {
+    List<html.Node> minimapElements =
+        _editorElement.getElementsByClassName("minimap");
+    if (minimapElements.length == 1) {
+      return minimapElements.first;
+    }
+
+    return null;
+  }
+
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
+
+    int numberLines = currentSession.document.length;
+    recreateMiniMap();
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -86,9 +101,37 @@ class AceContainer {
           row: marker.lineNum - 1, // Ace uses 0-based lines.
           type: annotationType);
       annotations.add(annotation);
+
+      // TODO(ericarnold): This won't work with code folding.  Fix
+      double markerHeightPercentage =
+          marker.lineNum / numberLines * 100;
+
+      html.Element minimapMarker = new html.Element.div();
+      minimapMarker.classes.add("minimap-marker");
+      minimapMarker.style.top =
+          markerHeightPercentage.toStringAsFixed(2) + "%";
+
+      _minimapElement.append(minimapMarker);
     }
 
     currentSession.annotations = annotations;
+  }
+
+  void recreateMiniMap() {
+    html.Element scrollbarElement =
+        _editorElement.getElementsByClassName("ace_scrollbar").first;
+    if (scrollbarElement.style.right != "20px") {
+      scrollbarElement.style.right = "20px";
+    }
+
+    html.Element miniMap = new html.Element.div();
+    miniMap.classes.add("minimap");
+
+    if (_minimapElement != null) {
+      _minimapElement.replaceWith(miniMap);
+    } else {
+      _editorElement.append(miniMap);
+    }
   }
 
   void clearMarkers() => currentSession.clearAnnotations();

@@ -227,6 +227,24 @@
   margin: 0;
 }
 
+.minimap {
+  right: 0px;
+  width: 20px;
+  bottom: 15px;
+  top: 0px;
+  position: absolute;
+  z-index: 9;
+  /* TODO(ericarnold): Needs a background which inherits editor bg color.*/
+}
+
+.minimap-marker {
+  background: #F55;
+  border-radius: 2px;
+  position: absolute;
+  height: 4px;
+  left: 0px;
+  right: 0px; 
+}
 /* TODO(ussuri): None of these worked. Fix.
 .plus-minus-container {
   display: flex;
