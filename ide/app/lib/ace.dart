@@ -156,7 +156,7 @@ class AceContainer {
     currentSession.annotations = annotations;
   }
 
-  miniMapMarkerClicked() {
+  void miniMapMarkerClicked() {
     // TODO(ericarnold): Handle marker click
   }
 
