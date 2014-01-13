@@ -1155,7 +1155,6 @@ class GitCheckoutAction extends SparkActionWithDialog {
     ObjectStore store = spark._currentGitStore;
 
     store.getCurrentBranch().then((currentBranch) {
-      print('git current branch.');
      (getElement('#currentBranchName') as InputElement).value = currentBranch;
      store.getLocalBranches().then((List<String> branches) {
        branches.sort((String a, String b) {
