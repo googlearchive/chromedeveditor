@@ -155,34 +155,34 @@ class AceManager {
     currentSession.annotations = annotations;
   }
 
-  void selectMarkerFromCurrent(int offset) {
+  void _selectMarkerFromCurrent(int offset) {
     if (_currentMarker != null) {
       List<workspace.Marker> markers = currentFile.getMarkers();
       if (markers != null && markers.length > 0) {
         int markerIndex = markers.indexOf(_currentMarker);
         markerIndex += offset;
-        if (markerIndex > 0 && markerIndex < markers.length) {
-          selectMarker(markers[markerIndex]);
+        if (markerIndex >= 0 && markerIndex < markers.length) {
+          _selectMarker(markers[markerIndex]);
         } else {
-          selectMarker(_currentMarker);
+          _selectMarker(_currentMarker);
         }
       }
     }
   }
 
   void selectNextMarker() {
-    selectMarkerFromCurrent(1);
+    _selectMarkerFromCurrent(1);
   }
 
   void selectPrevMarker() {
-    selectMarkerFromCurrent(-1);
+    _selectMarkerFromCurrent(-1);
   }
 
   void _miniMapMarkerClicked(workspace.Marker marker) {
-    selectMarker(marker);
+    _selectMarker(marker);
   }
 
-  void selectMarker(workspace.Marker marker) {
+  void _selectMarker(workspace.Marker marker) {
     // TODO(ericarnold): Marker range should be selected, but we either need
     // Marker to include col info or we need a way to convert col to char-pos
     _aceEditor.selection.setSelectionAnchor(

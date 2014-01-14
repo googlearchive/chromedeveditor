@@ -547,11 +547,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
 
   selectPrevMarker() {
-    this._aceManager.selectNextMarker();
+    this._aceManager.selectPrevMarker();
   }
 
   selectNextMarker() {
-    this._aceManager.selectPrevMarker();
+    this._aceManager.selectNextMarker();
   }
 }
 
@@ -969,7 +969,7 @@ class NextAnnotationAction extends SparkAction {
   }
 
   void _invoke([Object context]) {
-    spark.selectNextAnnotation();
+    spark.selectNextMarker();
   }
 }
 
