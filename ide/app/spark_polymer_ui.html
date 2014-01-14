@@ -88,7 +88,7 @@
 }
 
 .fileview-filename-container:hover .filename {
-  
+
 }
 
 .ace_gutter-cell {
@@ -169,7 +169,7 @@
 
 .titleFont {
   font-family: Helvetica, Sans-serif;
-  font-size: 14px;  
+  font-size: 14px;
 }
 
 #editedFilename.hidden {
@@ -281,13 +281,13 @@
 
       <div id="toolbarRight" class="titleFont">
         <span id="editedFilename"></span>
-        
+
         <i id="activitySpinner" class="fa fa-spinner fa-spin"></i>
 
         <spark-menu-button id="hotdogMenuNew"
             src="images/menu.png"
             responsive="true"
-            selected="1"
+            selected="0"
             valueattr="action-id"
             valign="right"
             on-activate={{onMenuSelected}}>
@@ -388,7 +388,7 @@
         </spark-button>
       </div>
     </spark-overlay>
-    
+
      <!-- New File dialog -->
      <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
        <div class="modal-body">
@@ -405,8 +405,8 @@
            Create
          </spark-button>
        </div>
-     </spark-overlay>    
-     
+     </spark-overlay>
+
      <!-- New Folder dialog -->
     <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
@@ -485,7 +485,7 @@
           Create branch
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal --> 
+    </spark-modal><!-- /.modal -->
 
     <!-- Git Checkout dialog -->
     <spark-modal id="gitCheckoutDialog" class="spark-overlay-scale-slideup">
@@ -536,10 +536,6 @@
       </div>
     </spark-modal><!-- /.modal -->
   </template>
-
-  <!-- This injects spark_polymer_ui.dart.precompiled.js in the deployed
-       code -->
-  <script src="spark_bootstrap.js" defer></script>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>
 </polymer-element>

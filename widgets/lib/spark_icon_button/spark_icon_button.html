@@ -21,6 +21,38 @@
 <polymer-element name="spark-icon-button" attributes="src tooltip active">
   <template>
     <style>
+      :host {
+        display: inline-block;
+        position: relative;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        width: 44px;
+        height: 44px;
+        line-height: 24px;
+        padding: 10px;
+        cursor: pointer;
+        border: none;
+        background-color: rgba(0, 0, 0, 0);
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-image: url("packages/spark_widgets/spark_icon_button/btn_light.png");
+        background-position: 0 0;
+        vertical-align: middle;
+      }
+
+      :host:hover {
+        background-position: 0 -44px;
+      }
+
+      :host(.selected) {
+        background-position: 0 -88px;
+      }
+
+      :host:active, :host(.selected):active {
+        background-position: 0 -132px;
+      }
+
+      /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
       @host {
         * {
           display: inline-block;
@@ -55,7 +87,7 @@
       }
     </style>
 
-    <spark-icon src="{{src}}" tooltip="{{tooltip}}"></spark-icon>
+    <spark-icon id="icon" src="{{src}}" tooltip="{{tooltip}}"></spark-icon>
   </template>
 
   <script type="application/dart" src="spark_icon_button.dart"></script>

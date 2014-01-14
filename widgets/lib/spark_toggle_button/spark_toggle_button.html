@@ -31,6 +31,27 @@
     <!-- TODO(terry): link/rel for css not working, need to inline the style -->
     <!-- link rel="stylesheet" href="css/spark_toggle_button.css" /-->
     <style>
+      :host {
+        display: inline-block;
+        position: relative;
+        width: 70px;
+        height: 30px;
+        overflow: hidden;
+        border: 1px solid #b6b6b6;
+        border-radius: 3px;
+        box-shadow: inset 0px 0px 1px 0 rgba(0,0,0,0.1);
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -webkit-transition: border 0.130s ease-out;
+        transition: border 0.130s ease-out;
+        cursor: pointer;
+      }
+
+      :host(.on) {
+        border: 1px solid #4584f2;
+      }
+
+      /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
       @host {
         * {
           display: inline-block;

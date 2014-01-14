@@ -33,7 +33,6 @@
         -ms-flex-align: center;
         align-items: center;
         min-height: 40px;
-        height: 40px;
         background-color: {{color}};
         box-shadow: inset 0px 0px 3px rgba(255, 255, 255, 1);
         border-top: 1px solid #ddd;
@@ -46,6 +45,21 @@
         box-shadow: none;
         border-bottom: 0;
       }
+
+      /*@polyfill .toolbar > *:not(spark-toolbar) */
+      ::content :not(spark-toolbar) {
+        margin: 0 4px;
+      }
+
+      /*@polyfill .toolbar > .flex */
+      ::content .flex {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        -ms-flex: 1;
+        flex: 1;
+      }
+
+      /* TODO(ussuri): Remove the below 2 styles once Dartium supports ::content */
 
       /*@polyfill .toolbar > *:not(spark-toolbar) */
       ::-webkit-distributed(:not(spark-toolbar)) {
@@ -74,6 +88,11 @@
         }
 
         /*@polyfill .toolbar > *.hidden-narrow */
+        ::content .hidden-narrow {
+          display: none;
+        }
+        
+        /* TODO(ussuri): Remove the below style once Dartium supports ::content */
         ::-webkit-distributed(.hidden-narrow) {
           display: none;
         }

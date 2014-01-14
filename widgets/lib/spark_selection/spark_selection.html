@@ -13,6 +13,11 @@
 <polymer-element name="spark-selection" attributes="multi">
   <template>
     <style>
+      :host {
+        display: none !important;
+      }
+
+      /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
       @host {
         * {
           display: none !important;

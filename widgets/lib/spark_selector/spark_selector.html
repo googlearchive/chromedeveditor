@@ -62,6 +62,25 @@
 
   <template>
     <style>
+      :host {
+        display: block;
+        border: 1px solid #ccc;
+        border-bottom: none;
+        -webkit-user-select: none;
+      }
+
+      :host > * {
+        height: 40px;
+        line-height: 40px;
+        padding: 0 20px;
+        border-bottom: 1px solid #ccc;
+      }
+
+      :host > .selected {
+        background: #eee;
+      }
+
+      /* TODO(ussuri): remove all styles below once :host works in Dartium */
       spark-selector {
         display: block;
         border: 1px solid #ccc;
