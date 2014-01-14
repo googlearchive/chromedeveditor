@@ -513,12 +513,24 @@ void _populateSdk(GrinderContext context) {
   FileSet srcVer = new FileSet.fromFile(versionFile);
   FileSet destArchive = new FileSet.fromFile(destArchiveFile);
 
+  Directory compilerDir = new Directory('packages/compiler');
+
   // Check the timestamp of the SDK archive to see if things are up-to-date.
-  if (!destArchive.upToDate(srcVer)) {
+  if (!destArchive.upToDate(srcVer) || !compilerDir.existsSync()) {
     // copy files over
     context.log('copying SDK');
     copyDirectory(joinDir(srcSdkDir, ['lib']), joinDir(destSdkDir, ['lib']), context);
 
+    // Create a synthetic package:compiler package in the packages directory.
+    // TODO(devoncarew): this would be much better as a standard pub package
+    compilerDir.createSync();
+
+    _delete('packages/compiler/compiler', context);
+    _delete('packages/compiler/lib', context);
+    _delete('app/sdk/lib/_internal/compiler/samples', context);
+    copyDirectory(getDir('app/sdk/lib/_internal/compiler'), getDir('packages/compiler/compiler'), context);
+    _delete('app/sdk/lib/_internal/compiler', context);
+    copyFile(getFile('app/sdk/lib/_internal/libraries.dart'), getDir('packages/compiler'), context);
     _delete('app/sdk/lib/_internal/pub', context);
     _delete('app/sdk/lib/_internal/dartdoc', context);
 
