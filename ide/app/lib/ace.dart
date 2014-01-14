@@ -153,6 +153,14 @@ class AceManager {
     currentSession.annotations = annotations;
   }
 
+  void selectNextMarker() {
+
+  }
+
+  void selectPrevMarker() {
+
+  }
+
   void _miniMapMarkerClicked(workspace.Marker marker) {
     // TODO(ericarnold): Marker range should be selected, but we either need
     // Marker to include col info or we need a way to convert col to char-pos

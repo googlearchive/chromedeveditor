@@ -362,6 +362,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void createActions() {
     _actionManager = new ActionManager();
 
+    actionManager.registerAction(new NextAnnotationAction(this));
+    actionManager.registerAction(new PrevAnnotationAction(this));
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileOpenAction(this));
@@ -543,6 +545,14 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
   // - End implementation of FilesControllerDelegate interface.
   //
+
+  selectPrevMarker() {
+    this._aceManager.selectNextMarker();
+  }
+
+  selectNextMarker() {
+    this._aceManager.selectPrevMarker();
+  }
 }
 
 class PlatformInfo {
@@ -936,6 +946,30 @@ class FileExitAction extends SparkAction {
     spark.close().then((_) {
       chrome.app.window.current().close();
     });
+  }
+}
+
+class PrevAnnotationAction extends SparkAction {
+  PrevAnnotationAction(Spark spark) : super(
+      spark, "annotation-prev", "Previous Annotation") {
+    macBinding("ctrl-shift-p");
+    winBinding("ctrl-shift-p");
+  }
+
+  void _invoke([Object context]) {
+    spark.selectPrevMarker();
+  }
+}
+
+class NextAnnotationAction extends SparkAction {
+  NextAnnotationAction(Spark spark) : super(
+      spark, "annotation-next", "Next Annotation") {
+    macBinding("ctrl-p");
+    winBinding("ctrl-p");
+  }
+
+  void _invoke([Object context]) {
+    spark.selectNextAnnotation();
   }
 }
 
