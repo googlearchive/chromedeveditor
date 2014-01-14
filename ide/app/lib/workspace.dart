@@ -36,8 +36,11 @@ class Workspace implements Container {
 
   List<Resource> _localChildren = [];
   List<Resource> _syncChildren = [];
+  chrome.FileSystem _syncFileSystem;
+
   PreferenceStore _store;
   Completer<Workspace> _whenAvailable = new Completer();
+  Completer<Workspace> _whenAvailableSyncFs = new Completer();
 
   StreamController<ResourceChangeEvent> _resourceController =
       new StreamController.broadcast();
@@ -48,6 +51,7 @@ class Workspace implements Container {
   Workspace([this._store]);
 
   Future<Workspace> whenAvailable() => _whenAvailable.future;
+  Future<Workspace> whenAvailableSyncFs() => _whenAvailableSyncFs.future;
 
   String get name => null;
   String get path => '';
@@ -182,16 +186,26 @@ class Workspace implements Container {
     }
   }
 
-  //TODO: add sync resources too
-  List<Resource> getChildren() => _localChildren;
+  List<Resource> getChildren() {
+    var list = new List.from(_localChildren);
+    list.addAll(_syncChildren);
+    return list;
+  }
 
   Iterable<Resource> traverse() => Resource._workspaceTraversal(this);
 
-  //TODO: add sync resources too
-  List<File> getFiles() => _localChildren.where((c) => c is File).toList();
 
-  //TODO: add sync resources too
-  List<Project> getProjects() => _localChildren.where((c) => c is Project).toList();
+  List<File> getFiles() {
+    var list = _localChildren.where((c) => c is File).toList();
+    list.addAll(_syncChildren.where((c) => c is File).toList());
+    return list;
+  }
+
+  List<Project> getProjects() {
+    var projects = _localChildren.where((c) => c is Project).toList();
+    projects.addAll(_syncChildren.where((c) => c is Project).toList());
+    return projects;
+  }
 
   Stream<ResourceChangeEvent> get onResourceChange => _resourceController.stream;
 
@@ -219,7 +233,7 @@ class Workspace implements Container {
         Future.forEach(ids, (id) {
           return chrome.fileSystem.restoreEntry(id)
               .then((entry) => _link(entry, fireEvent: false))
-              .catchError((_) => null);
+              .catchError((_e) => print(_e));
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
         _logger.log(Level.INFO, 'Exception in workspace restore', e);
@@ -231,6 +245,27 @@ class Workspace implements Container {
   }
 
   /**
+   * read the sync file system and restore entries.
+   */
+  Future restoreSyncFs() {
+    chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
+      chrome.FileSystem _syncFileSystem = fs;
+      _syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
+        Future.forEach(entries, (chrome.Entry entry) {
+          // TODO: send one event when complete, rather than firing individual
+          // resource change events.
+          _link(entry, syncable: true);
+        }).then((_) => _whenAvailableSyncFs.complete(this));
+      });
+    }, onError: (e) {
+        _logger.log(Level.INFO, 'Exception in workspace restore sync file system', e);
+        _whenAvailableSyncFs.complete(this);
+    });
+
+    return whenAvailableSyncFs();
+  }
+
+  /**
    * Store info for workspace children.
    */
   Future save() {
@@ -238,6 +273,14 @@ class Workspace implements Container {
         (c) => chrome.fileSystem.retainEntry(c.entry)).toList();
 
     return _store.setValue('workspace', JSON.encode(entries));
+  }
+
+  bool get syncFsIsAvailable => _syncFileSystem != null;
+
+  Future<File> createFileSyncFs(name) {
+    _syncFileSystem.root.createFile(name).then((chrome.Entry entry) {
+      link(entry, syncable: true).then((resource) => resource);
+    }, onError: (e) => null);
   }
 
   Resource restoreResource(String token) {
