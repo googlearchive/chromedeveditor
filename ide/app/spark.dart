@@ -545,14 +545,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
   // - End implementation of FilesControllerDelegate interface.
   //
-
-  selectPrevMarker() {
-    this._aceManager.selectPrevMarker();
-  }
-
-  selectNextMarker() {
-    this._aceManager.selectNextMarker();
-  }
 }
 
 class PlatformInfo {
@@ -956,7 +948,7 @@ class PrevMarkerAction extends SparkAction {
   }
 
   void _invoke([Object context]) {
-    spark.selectPrevMarker();
+    spark._aceManager.selectPrevMarker();
   }
 }
 
@@ -967,7 +959,7 @@ class NextMarkerAction extends SparkAction {
   }
 
   void _invoke([Object context]) {
-    spark.selectNextMarker();
+    spark._aceManager.selectNextMarker();
   }
 }
 
