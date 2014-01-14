@@ -6,11 +6,11 @@ library spark_widgets.icon_button;
 
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-icon-button")
-class SparkIconButton extends Widget {
+class SparkIconButton extends SparkWidget {
   @published String src = "";
   @published String tooltip = "";
   @published bool active = false;
