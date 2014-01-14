@@ -43,16 +43,15 @@
         border-right: 1px solid #DDD;
         cursor: col-resize;
         background-color: #F7F7F7;
+      }
 
-        .horizontal {
+      :host(.horizontal) {
           width: auto;
           height: 6px;
           cursor: row-resize;
-        }
+      }
 
-        :hover, .active {
-
-        }
+      :host(.active):hover {
       }
 
       /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */

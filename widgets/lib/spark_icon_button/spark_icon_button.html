@@ -38,18 +38,18 @@
         background-image: url("packages/spark_widgets/spark_icon_button/btn_light.png");
         background-position: 0 0;
         vertical-align: middle;
+      }
 
-        :hover {
-          background-position: 0 -44px;
-        }
+      :host:hover {
+        background-position: 0 -44px;
+      }
 
-        .selected {
-          background-position: 0 -88px;
-        }
+      :host(.selected) {
+        background-position: 0 -88px;
+      }
 
-        :active, .selected:active {
-          background-position: 0 -132px;
-        }
+      :host:active, :host(.selected):active {
+        background-position: 0 -132px;
       }
 
       /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
