@@ -7,8 +7,8 @@ library git;
 import 'dart:async';
 import 'dart:js' as js;
 
-import 'package:chrome_gen/src/files.dart' as chrome_files;
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/src/files.dart' as chrome_files;
+import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'options.dart';
 

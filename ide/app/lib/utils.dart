@@ -6,7 +6,7 @@ library spark.utils;
 
 import 'dart:web_audio';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].

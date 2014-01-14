@@ -6,7 +6,7 @@ library git.zlib;
 
 import 'dart:js' as js;
 
-import 'package:chrome_gen/src/common_exp.dart' as chrome;
+import 'package:chrome/src/common_exp.dart' as chrome;
 
 /**
  * Encapsulates the result returned by js zlib library.

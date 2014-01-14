@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:typed_data';
 
-import 'package:chrome_gen/src/common_exp.dart' as chrome;
+import 'package:chrome/src/common_exp.dart' as chrome;
 
 import 'object_utils.dart';
 
@@ -16,7 +16,7 @@ import 'object_utils.dart';
  * Encapsulates a Gitobject
  *
  * TODO(grv): Add unittests.
- **/
+ */
 abstract class GitObject {
 
   /**

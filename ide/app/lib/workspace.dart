@@ -12,7 +12,7 @@ import 'dart:collection';
 import 'dart:convert' show JSON;
 import 'dart:math' as math;
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import 'preferences.dart';

@@ -7,7 +7,7 @@ library git.objects.utils;
 import 'dart:async';
 import 'dart:core';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'file_operations.dart';
 import 'object.dart';
