@@ -362,8 +362,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void createActions() {
     _actionManager = new ActionManager();
 
-    actionManager.registerAction(new NextAnnotationAction(this));
-    actionManager.registerAction(new PrevAnnotationAction(this));
+    actionManager.registerAction(new NextMarkerAction(this));
+    actionManager.registerAction(new PrevMarkerAction(this));
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileOpenAction(this));
@@ -949,11 +949,10 @@ class FileExitAction extends SparkAction {
   }
 }
 
-class PrevAnnotationAction extends SparkAction {
-  PrevAnnotationAction(Spark spark) : super(
-      spark, "annotation-prev", "Previous Annotation") {
-    macBinding("ctrl-shift-p");
-    winBinding("ctrl-shift-p");
+class PrevMarkerAction extends SparkAction {
+  PrevMarkerAction(Spark spark) : super(
+      spark, "marker-prev", "Previous Marker") {
+    defaultBinding("ctrl-shift-p");
   }
 
   void _invoke([Object context]) {
@@ -961,11 +960,10 @@ class PrevAnnotationAction extends SparkAction {
   }
 }
 
-class NextAnnotationAction extends SparkAction {
-  NextAnnotationAction(Spark spark) : super(
-      spark, "annotation-next", "Next Annotation") {
-    macBinding("ctrl-p");
-    winBinding("ctrl-p");
+class NextMarkerAction extends SparkAction {
+  NextMarkerAction(Spark spark) : super(
+      spark, "marker-next", "Next Marker") {
+    defaultBinding("ctrl-p");
   }
 
   void _invoke([Object context]) {
