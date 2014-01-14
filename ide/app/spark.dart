@@ -786,10 +786,10 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
      } else {
        // create new file in sync fs on chrome os
        if (spark.platformInfo.os == 'cros' && spark.workspace.syncFsIsAvailable) {
-       _nameElement.value = '';
-       _show();
+          _nameElement.value = '';
+          _show();
        } else { // use file save as for local fs
-         spark.newFileAs();
+          spark.newFileAs();
        }
      }
    }
