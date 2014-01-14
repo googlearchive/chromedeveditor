@@ -8,6 +8,8 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
+bool IS_DART2JS = identical(1, 1.0);
+
 class Widget extends PolymerElement {
   static const CSS_ENABLED = "enabled";
   static const CSS_DISABLED = "disabled";

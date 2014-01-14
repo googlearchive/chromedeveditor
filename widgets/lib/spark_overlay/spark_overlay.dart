@@ -76,12 +76,26 @@ class SparkOverlay extends Widget {
     _resizeHandler = resizeHandler;
   }
 
+  bool _opened = false;
+
   /**
    * Set opened to true to show an overlay and to false to hide it.
    * A spark-overlay may be made intially opened by setting its opened
    * attribute.
    */
-  @published bool opened = false;
+  @published bool get opened => _opened;
+
+  @published set opened(bool val) {
+    print("set opened");
+    if (_opened != val) {
+      _opened = val;
+      // TODO(ussuri): Getter/setter were needed to fix the Menu and Modal not
+      // working in the deployed code. With a simple `@published bool opened`,
+      // writes to it via data binding or direct assignment elsewhere here
+      // were not detected (didn't invoke [openedChanged]).
+      openedChanged();
+    }
+  }
 
   /**
    * By default an overlay will close automatically if the user taps outside
@@ -104,11 +118,8 @@ class SparkOverlay extends Widget {
   }
 
   /// Toggle the opened state of the overlay.
-  void toggle({bool force: false}) {
+  void toggle() {
     opened = !opened;
-    if (force) {
-      openedChanged();
-    }
   }
 
   void openedChanged() {
@@ -219,6 +230,7 @@ class SparkOverlay extends Widget {
   }
 
   void tapHandler(MouseEvent e) {
+    print("tapHandler");
     Element target = e.target;
     if (target != null && target.attributes.containsKey('overlay-toggle')) {
       toggle();
@@ -231,6 +243,7 @@ class SparkOverlay extends Widget {
   // TODO(sorvell): This approach will not work with modal. For this we need a
   // scrim.
   void captureHandler(MouseEvent e) {
+    print("Overlay.captureHandler");
     // TODO(terry): Hack to work around lightdom or event.path not yet working.
     if (!autoCloseDisabled && !pointInOverlay(this, e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;

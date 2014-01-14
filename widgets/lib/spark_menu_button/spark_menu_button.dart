@@ -13,7 +13,6 @@ import '../spark_menu/spark_menu.dart';
 
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
-bool isDart2js() => identical(1, 1.0);
 
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends Widget {
@@ -35,16 +34,9 @@ class SparkMenuButton extends Widget {
     opened = !opened;
     // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
     // in 'opened' when run as deployed code. Just binding via {{opened}} alone
-    // isn't detected and the menu doesn't open (again, in deployed code -
-    // undeployed works without this).
-    if (isDart2js()) {
-      ($['overlay'] as SparkOverlay).toggle(force: true);
-      // Both of these alternatives worked too, although worse than the above.
-      // The first few clicks didn't quite open the menu, and then there was
-      // desynchronization between the button's 'active' state and the overlay's
-      // 'opened' state.
-      // ($['overlay'] as SparkOverlay).deliverChanges();
-      // Observable.dirtyCheck();
+    // isn't detected and the menu doesn't open.
+    if (IS_DART2JS) {
+      ($['overlay'] as SparkOverlay).opened = opened;
     }
   }
 
