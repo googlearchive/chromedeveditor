@@ -17,7 +17,6 @@ class SparkModal extends SparkOverlay {
 
   @override
   void captureHandler(MouseEvent e) {
-    print("Modal.captureHandler");
     if (!pointInOverlay(this, e.client)) {
       e.stopImmediatePropagation();
       e.preventDefault();

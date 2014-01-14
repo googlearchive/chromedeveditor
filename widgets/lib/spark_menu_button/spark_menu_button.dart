@@ -28,7 +28,6 @@ class SparkMenuButton extends Widget {
 
   //* Toggle the opened state of the dropdown.
   void toggle() {
-    print("toggle");
     SparkMenu menu = $['overlayMenu'];
     menu.clearSelection();
     opened = !opened;

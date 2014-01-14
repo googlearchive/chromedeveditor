@@ -86,7 +86,6 @@ class SparkOverlay extends Widget {
   @published bool get opened => _opened;
 
   @published set opened(bool val) {
-    print("set opened");
     if (_opened != val) {
       _opened = val;
       // TODO(ussuri): Getter/setter were needed to fix the Menu and Modal not
@@ -123,7 +122,6 @@ class SparkOverlay extends Widget {
   }
 
   void openedChanged() {
-    print("openedChanged");
     renderOpened();
     trackOverlays(this);
     if (!autoCloseDisabled) {
@@ -172,10 +170,8 @@ class SparkOverlay extends Widget {
   }
 
   void renderOpened() {
-    print("renderOpened");
     classes.remove('closing');
     classes.add('revealed');
-    print("    [$classes]");
     // continue styling after delay so display state can change without
     // aborting transitions
     Timer.run(() { continueRenderOpened(); });
@@ -183,34 +179,27 @@ class SparkOverlay extends Widget {
   }
 
   void continueRenderOpened() {
-    print("continueRenderOpened");
     classes.toggle('opened', opened);
     classes.toggle('closing', !opened);
-    print("    [$classes]");
 //    this.animating = this.asyncMethod('completeOpening', null, this.timeout);
   }
 
   void completeOpening() {
-    print("completeOpening");
 //    clearTimeout(this.animating);
     classes.remove('closing');
     classes.toggle('revealed', opened);
-    print("    [$classes]");
     applyFocus();
   }
 
   void openedAnimationEnd(AnimationEvent e) {
-    print("openedAnimationEnd");
     if (!opened) {
       classes.remove('animation');
     }
-    print("    [$classes]");
     // same steps as when a transition ends
     openedTransitionEnd(e);
   }
 
   void openedTransitionEnd(Event e) {
-    print("openedTransitionEnd");
     // TODO(sorvell): Necessary due to
     // https://bugs.webkit.org/show_bug.cgi?id=107892
     // Remove when that bug is addressed.
@@ -222,15 +211,12 @@ class SparkOverlay extends Widget {
   }
 
   void openedAnimationStart(AnimationEvent e) {
-    print("openedAnimationStart");
     classes.add('animation');
-    print("    [$classes]");
     e.stopImmediatePropagation();
     e.preventDefault();
   }
 
   void tapHandler(MouseEvent e) {
-    print("tapHandler");
     Element target = e.target;
     if (target != null && target.attributes.containsKey('overlay-toggle')) {
       toggle();
@@ -243,7 +229,6 @@ class SparkOverlay extends Widget {
   // TODO(sorvell): This approach will not work with modal. For this we need a
   // scrim.
   void captureHandler(MouseEvent e) {
-    print("Overlay.captureHandler");
     // TODO(terry): Hack to work around lightdom or event.path not yet working.
     if (!autoCloseDisabled && !pointInOverlay(this, e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;
