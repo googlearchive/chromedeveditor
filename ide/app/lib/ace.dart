@@ -164,6 +164,7 @@ class AceManager {
   }
 
   void _selectMarkerFromCurrent(int offset) {
+    // TODO(ericarnold): This should be based upon the current cursor position.
     List<workspace.Marker> markers = currentFile.getMarkers();
     if (markers != null && markers.length > 0) {
       if (_currentMarker == null) {
