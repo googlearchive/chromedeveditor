@@ -22,7 +22,7 @@ final int _DELAY_MS = 500;
 
 /**
  * Classes implement this interface provides/refreshes editors for [Resource]s.
- * TODO(ikarienator): Abstract [AceEditor] so we can support more editor types.
+ * TODO(ikarienator): Abstract [TextEditor] so we can support more editor types.
  */
 abstract class EditorProvider {
   Editor createEditorForFile(File file);
@@ -56,7 +56,7 @@ abstract class Editor {
  */
 class EditorManager implements EditorProvider {
   final Workspace _workspace;
-  final ace.AceContainer _aceContainer;
+  final ace.AceManager _aceContainer;
   final PreferenceStore _prefs;
   final EventBus _eventBus;
 
@@ -230,7 +230,7 @@ class EditorManager implements EditorProvider {
             return;
           }
           // TODO: this explicit casting to AceEditor will go away in a future refactoring
-          (_editorMap[currentFile] as ace.AceEditor).setSession(state.session);
+          (_editorMap[currentFile] as ace.TextEditor).setSession(state.session);
           _selectedController.add(currentFile);
           _aceContainer.switchTo(state.session, state.file);
           _aceContainer.cursorPosition = state.cursorPosition;
@@ -272,8 +272,8 @@ class EditorManager implements EditorProvider {
 
   // EditorProvider
   Editor createEditorForFile(File file) {
-    ace.AceEditor editor =
-        _editorMap[file] != null ? _editorMap[file] : new ace.AceEditor(_aceContainer, file);
+    ace.TextEditor editor =
+        _editorMap[file] != null ? _editorMap[file] : new ace.TextEditor(_aceContainer, file);
     _editorMap[file] = editor;
     openFile(file);
     editor.onDirtyChange.listen((_) {
@@ -285,6 +285,7 @@ class EditorManager implements EditorProvider {
   void activate(Editor editor) {
     _EditorState state = _getStateFor(editor.file);
     _switchState(state);
+    _aceContainer.setMarkers(editor.file.getMarkers());
   }
 }
 

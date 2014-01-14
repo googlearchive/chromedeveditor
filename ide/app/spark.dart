@@ -93,7 +93,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   final JobManager jobManager = new JobManager();
   ActivitySpinner _activitySpinner;
 
-  AceContainer _aceContainer;
+  AceManager _aceManager;
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
@@ -165,7 +165,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   // SparkModel interface:
   //
 
-  AceContainer get aceContainer => _aceContainer;
+  AceManager get aceManager => _aceManager;
   ThemeManager get aceThemeManager => _aceThemeManager;
   KeyBindingManager get aceKeysManager => _aceKeysManager;
   ws.Workspace get workspace => _workspace;
@@ -253,13 +253,13 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void createEditorComponents() {
-    _aceContainer = new AceContainer(new DivElement());
+    _aceManager = new AceManager(new DivElement());
     _aceThemeManager = new ThemeManager(
-        aceContainer, syncPrefs, getUIElement('#changeTheme span'));
+        aceManager, syncPrefs, getUIElement('#changeTheme span'));
     _aceKeysManager = new KeyBindingManager(
-        aceContainer, syncPrefs, getUIElement('#changeKeys span'));
+        aceManager, syncPrefs, getUIElement('#changeKeys span'));
     _editorManager = new EditorManager(
-        workspace, aceContainer, localPrefs, eventBus);
+        workspace, aceManager, localPrefs, eventBus);
     _editorArea = new EditorArea(
         getUIElement('#editorArea'),
         getUIElement('#editedFilename'),
@@ -327,7 +327,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void initSplitView() {
     _splitView = new SplitView(getUIElement('#splitview'));
     _splitView.onResized.listen((_) {
-      aceContainer.resize();
+      aceManager.resize();
       syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
     });
     syncPrefs.getValue('splitViewPosition').then((String position) {
@@ -578,7 +578,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
       spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
-          spark.aceContainer.focus();
+          spark.aceManager.focus();
         }
       });
       spark.workspace.restoreSyncFs();

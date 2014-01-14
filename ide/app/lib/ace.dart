@@ -22,8 +22,8 @@ import 'utils.dart' as utils;
 
 export 'package:ace/ace.dart' show EditSession;
 
-class AceEditor extends Editor {
-  final AceContainer aceContainer;
+class TextEditor extends Editor {
+  final AceManager aceManager;
   final workspace.File file;
 
   StreamController _dirtyController = new StreamController.broadcast();
@@ -37,7 +37,7 @@ class AceEditor extends Editor {
 
   bool _dirty = false;
 
-  AceEditor(this.aceContainer, this.file);
+  TextEditor(this.aceManager, this.file);
 
   bool get dirty => _dirty;
 
@@ -50,16 +50,16 @@ class AceEditor extends Editor {
     }
   }
 
-  html.Element get element => aceContainer.parentElement;
+  html.Element get element => aceManager.parentElement;
 
   void activate() {
     // TODO:
 
   }
 
-  void resize() => aceContainer.resize();
+  void resize() => aceManager.resize();
 
-  void focus() => aceContainer.focus();
+  void focus() => aceManager.focus();
 
   Future save() {
     if (_dirty) {
@@ -73,7 +73,7 @@ class AceEditor extends Editor {
 /**
  * A wrapper around an Ace editor instance.
  */
-class AceContainer {
+class AceManager {
   static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
   // 2 light themes, 4 dark ones.
   static final THEMES = [
@@ -93,7 +93,7 @@ class AceContainer {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
 
-  AceContainer(this.parentElement) {
+  AceManager(this.parentElement) {
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;
@@ -110,8 +110,23 @@ class AceContainer {
     theme = THEMES[0];
   }
 
+  html.Element get _editorElement => parentElement.parent;
+
+  html.Element get _minimapElement {
+    List<html.Node> minimapElements =
+        _editorElement.getElementsByClassName("minimap");
+    if (minimapElements.length == 1) {
+      return minimapElements.first;
+    }
+
+    return null;
+  }
+
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
+    int numberLines = currentSession.screenLength;
+
+    _recreateMiniMap();
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -120,9 +135,48 @@ class AceContainer {
           row: marker.lineNum - 1, // Ace uses 0-based lines.
           type: annotationType);
       annotations.add(annotation);
+
+      // TODO(ericarnold): This won't update on code folds.  Fix
+      // TODO(ericarnold): This should also be based upon annotations so ace's
+      //     immediate handling of deleting / adding lines gets used.
+      double markerPos =
+          currentSession.documentToScreenRow(marker.lineNum, 0) / numberLines * 100.0;
+
+      html.Element minimapMarker = new html.Element.div();
+      minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
+      minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
+      minimapMarker.onClick.listen((_) => _miniMapMarkerClicked(marker));
+
+      _minimapElement.append(minimapMarker);
     }
 
     currentSession.annotations = annotations;
+  }
+
+  void _miniMapMarkerClicked(workspace.Marker marker) {
+    // TODO(ericarnold): Marker range should be selected, but we either need
+    // Marker to include col info or we need a way to convert col to char-pos
+    _aceEditor.selection.setSelectionAnchor(
+        marker.lineNum, marker.charStart);
+    _aceEditor.selection.selectTo(marker.lineNum, marker.charEnd);
+    _aceEditor.selection.moveCursorTo(marker.lineNum, 0);
+  }
+
+  void _recreateMiniMap() {
+    html.Element scrollbarElement =
+        _editorElement.getElementsByClassName("ace_scrollbar").first;
+    if (scrollbarElement.style.right != "10px") {
+      scrollbarElement.style.right = "10px";
+    }
+
+    html.Element miniMap = new html.Element.div();
+    miniMap.classes.add("minimap");
+
+    if (_minimapElement != null) {
+      _minimapElement.replaceWith(miniMap);
+    } else {
+      _editorElement.append(miniMap);
+    }
   }
 
   void clearMarkers() => currentSession.clearAnnotations();
@@ -233,17 +287,17 @@ class AceContainer {
 }
 
 class ThemeManager {
-  AceContainer aceContainer;
+  AceManager aceManager;
   PreferenceStore prefs;
   html.Element _label;
 
-  ThemeManager(this.aceContainer, this.prefs, this._label) {
+  ThemeManager(this.aceManager, this.prefs, this._label) {
     prefs.getValue('aceTheme').then((String value) {
       if (value != null) {
-        aceContainer.theme = value;
+        aceManager.theme = value;
         _updateName(value);
       } else {
-        _updateName(aceContainer.theme);
+        _updateName(aceManager.theme);
       }
     });
   }
@@ -259,12 +313,12 @@ class ThemeManager {
   }
 
   void _changeTheme(int direction) {
-    int index = AceContainer.THEMES.indexOf(aceContainer.theme);
-    index = (index + direction) % AceContainer.THEMES.length;
-    String newTheme = AceContainer.THEMES[index];
+    int index = AceManager.THEMES.indexOf(aceManager.theme);
+    index = (index + direction) % AceManager.THEMES.length;
+    String newTheme = AceManager.THEMES[index];
     prefs.setValue('aceTheme', newTheme);
     _updateName(newTheme);
-    aceContainer.theme = newTheme;
+    aceManager.theme = newTheme;
   }
 
   void _updateName(String name) {
@@ -273,14 +327,14 @@ class ThemeManager {
 }
 
 class KeyBindingManager {
-  AceContainer aceContainer;
+  AceManager aceManager;
   PreferenceStore prefs;
   html.Element _label;
 
-  KeyBindingManager(this.aceContainer, this.prefs, this._label) {
+  KeyBindingManager(this.aceManager, this.prefs, this._label) {
     prefs.getValue('keyBinding').then((String value) {
       if (value != null) {
-        aceContainer.setKeyBinding(value);
+        aceManager.setKeyBinding(value);
       }
       _updateName(value);
     });
@@ -297,13 +351,13 @@ class KeyBindingManager {
   }
 
   void _changeBinding(int direction) {
-    aceContainer.getKeyBinding().then((String name) {
-      int index = math.max(AceContainer.KEY_BINDINGS.indexOf(name), 0);
-      index = (index + direction) % AceContainer.KEY_BINDINGS.length;
-      String newBinding = AceContainer.KEY_BINDINGS[index];
+    aceManager.getKeyBinding().then((String name) {
+      int index = math.max(AceManager.KEY_BINDINGS.indexOf(name), 0);
+      index = (index + direction) % AceManager.KEY_BINDINGS.length;
+      String newBinding = AceManager.KEY_BINDINGS[index];
       prefs.setValue('keyBinding', newBinding);
       _updateName(newBinding);
-      aceContainer.setKeyBinding(newBinding);
+      aceManager.setKeyBinding(newBinding);
     });
   }
 

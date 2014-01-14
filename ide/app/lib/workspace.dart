@@ -842,9 +842,9 @@ class Marker {
 
   dynamic getAttribute(String key) => _attributes[key];
 
-  String toString() => '${_severityDescription()}: ${message}, line ${lineNum}';
+  String toString() => '${severityDescription}: ${message}, line ${lineNum}';
 
-  String _severityDescription() {
+  String get severityDescription {
     if (severity == SEVERITY_ERROR) return 'error';
     if (severity == SEVERITY_WARNING) return 'warning';
     if (severity == SEVERITY_INFO) return 'info';

@@ -227,6 +227,37 @@
   margin: 0;
 }
 
+.minimap {
+  right: 0px;
+  width: 10px;
+  bottom: 15px;
+  top: 0px;
+  position: absolute;
+  z-index: 9;
+  /* TODO(ericarnold): Needs a background which inherits editor bg color.*/
+}
+
+.minimap-marker {
+  border-radius: 2px;
+  position: absolute;
+  height: 4px;
+  left: 1px;
+  right: 1px; 
+  background: #DDD;
+}
+
+.minimap-marker:hover {
+  cursor: pointer;
+}
+
+.minimap-marker.error {
+  background: #F55;
+}
+
+.minimap-marker.warning {
+  background: #DD3;
+}
+
 /* TODO(ussuri): None of these worked. Fix.
 .plus-minus-container {
   display: flex;
@@ -243,10 +274,8 @@
     </style>
 
     <spark-toolbar id="toolbar" color="white" lightdom>
-      <spark-icon-button id="openFile" tooltip="Open File..." src="images/open.png">
-      </spark-icon-button>
-      <spark-icon-button id="newFile" tooltip="New File..." src="images/add.png">
-      </spark-icon-button>
+      <spark-button id="newFile" small primary>New File...</spark-button>
+      <spark-button id="openFile" small>Open File...</spark-button>
 
       <span id="saveStatus" class="titleFont"></span>
 
