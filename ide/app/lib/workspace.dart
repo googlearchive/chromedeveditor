@@ -233,7 +233,7 @@ class Workspace implements Container {
         Future.forEach(ids, (id) {
           return chrome.fileSystem.restoreEntry(id)
               .then((entry) => _link(entry, fireEvent: false))
-              .catchError((_e) => print(_e));
+              .catchError((_) => null);
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
         _logger.log(Level.INFO, 'Exception in workspace restore', e);
@@ -249,7 +249,7 @@ class Workspace implements Container {
    */
   Future restoreSyncFs() {
     chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
-      chrome.FileSystem _syncFileSystem = fs;
+      _syncFileSystem = fs;
       _syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
         Future.forEach(entries, (chrome.Entry entry) {
           // TODO: send one event when complete, rather than firing individual
@@ -280,7 +280,7 @@ class Workspace implements Container {
   Future<File> createFileSyncFs(name) {
     _syncFileSystem.root.createFile(name).then((chrome.Entry entry) {
       link(entry, syncable: true).then((resource) => resource);
-    }, onError: (e) => null);
+    }, onError: (_) => null);
   }
 
   Resource restoreResource(String token) {
