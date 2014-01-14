@@ -99,7 +99,7 @@ class SparkOverlay extends Widget {
     if (tabIndex == null) {
       tabIndex = -1;
     }
-    // TODO(ussuri): 'touch-action' is not anywhere else - mistake?
+    // TODO(ussuri): 'touch-action' is not used anywhere else - mistake?
     attributes['touch-action'] = 'none';
   }
 
@@ -109,6 +109,7 @@ class SparkOverlay extends Widget {
   }
 
   void openedChanged() {
+    print("openedChanged");
     renderOpened();
     trackOverlays(this);
     if (!autoCloseDisabled) {
@@ -157,8 +158,10 @@ class SparkOverlay extends Widget {
   }
 
   void renderOpened() {
+    print("renderOpened");
     classes.remove('closing');
     classes.add('revealed');
+    print("    [$classes]");
     // continue styling after delay so display state can change without
     // aborting transitions
     Timer.run(() { continueRenderOpened(); });
@@ -166,27 +169,34 @@ class SparkOverlay extends Widget {
   }
 
   void continueRenderOpened() {
+    print("continueRenderOpened");
     classes.toggle('opened', opened);
     classes.toggle('closing', !opened);
+    print("    [$classes]");
 //    this.animating = this.asyncMethod('completeOpening', null, this.timeout);
   }
 
   void completeOpening() {
+    print("completeOpening");
 //    clearTimeout(this.animating);
     classes.remove('closing');
     classes.toggle('revealed', opened);
+    print("    [$classes]");
     applyFocus();
   }
 
   void openedAnimationEnd(AnimationEvent e) {
+    print("openedAnimationEnd");
     if (!opened) {
       classes.remove('animation');
     }
+    print("    [$classes]");
     // same steps as when a transition ends
     openedTransitionEnd(e);
   }
 
   void openedTransitionEnd(Event e) {
+    print("openedTransitionEnd");
     // TODO(sorvell): Necessary due to
     // https://bugs.webkit.org/show_bug.cgi?id=107892
     // Remove when that bug is addressed.
@@ -198,7 +208,9 @@ class SparkOverlay extends Widget {
   }
 
   void openedAnimationStart(AnimationEvent e) {
+    print("openedAnimationStart");
     classes.add('animation');
+    print("    [$classes]");
     e.stopImmediatePropagation();
     e.preventDefault();
   }
