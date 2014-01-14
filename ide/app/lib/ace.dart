@@ -88,6 +88,8 @@ class AceManager {
 
   ace.Editor _aceEditor;
 
+  workspace.Marker _currentMarker;
+
   static bool get available => js.context['ace'] != null;
 
   StreamSubscription _markerSubscription;
@@ -153,21 +155,41 @@ class AceManager {
     currentSession.annotations = annotations;
   }
 
-  void selectNextMarker() {
+  void selectMarkerFromCurrent(int offset) {
+    if (_currentMarker != null) {
+      List<workspace.Marker> markers = currentFile.getMarkers();
+      if (markers != null && markers.length > 0) {
+        int markerIndex = markers.indexOf(_currentMarker);
+        markerIndex += offset;
+        if (markerIndex > 0 && markerIndex < markers.length) {
+          selectMarker(markers[markerIndex]);
+        } else {
+          selectMarker(_currentMarker);
+        }
+      }
+    }
+  }
 
+  void selectNextMarker() {
+    selectMarkerFromCurrent(1);
   }
 
   void selectPrevMarker() {
-
+    selectMarkerFromCurrent(-1);
   }
 
   void _miniMapMarkerClicked(workspace.Marker marker) {
+    selectMarker(marker);
+  }
+
+  void selectMarker(workspace.Marker marker) {
     // TODO(ericarnold): Marker range should be selected, but we either need
     // Marker to include col info or we need a way to convert col to char-pos
     _aceEditor.selection.setSelectionAnchor(
         marker.lineNum, marker.charStart);
     _aceEditor.selection.selectTo(marker.lineNum, marker.charEnd);
     _aceEditor.selection.moveCursorTo(marker.lineNum, 0);
+    _currentMarker = marker;
   }
 
   void _recreateMiniMap() {
