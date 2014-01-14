@@ -172,11 +172,12 @@ class AceManager {
       } else {
         int markerIndex = markers.indexOf(_currentMarker);
         markerIndex += offset;
-        if (markerIndex >= 0 && markerIndex < markers.length) {
-          _selectMarker(markers[markerIndex]);
-        } else {
-          _selectMarker(_currentMarker);
+        if (markerIndex < 0) {
+          markerIndex = markers.length -1;
+        } else if (markerIndex >= markers.length) {
+          markerIndex = 0;
         }
+        _selectMarker(markers[markerIndex]);
       }
     }
   }
