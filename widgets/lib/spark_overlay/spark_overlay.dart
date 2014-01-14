@@ -104,8 +104,11 @@ class SparkOverlay extends Widget {
   }
 
   /// Toggle the opened state of the overlay.
-  void toggle() {
+  void toggle({bool force: false}) {
     opened = !opened;
+    if (force) {
+      openedChanged();
+    }
   }
 
   void openedChanged() {

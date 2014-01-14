@@ -9,10 +9,11 @@ import 'package:polymer/polymer.dart';
 import '../common/widget.dart';
 import '../spark_menu/spark_menu.dart';
 
-import '../spark_icon_button/spark_icon_button.dart';
-import '../spark_overlay/spark_overlay.dart';
-
 // Ported from Polymer Javascript to Dart code.
+
+// TODO(ussuri): Temporary. See the comment below.
+import '../spark_overlay/spark_overlay.dart';
+bool isDart2js() => identical(1, 1.0);
 
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends Widget {
@@ -26,11 +27,6 @@ class SparkMenuButton extends Widget {
 
   SparkMenuButton.created(): super.created();
 
-  void enteredView() {
-    ($['button'] as SparkIconButton).deliverChanges();
-//    ($['button'] as SparkIconButton).src = src;
-  }
-
   //* Toggle the opened state of the dropdown.
   void toggle() {
     print("toggle");
@@ -38,12 +34,18 @@ class SparkMenuButton extends Widget {
     menu.clearSelection();
     opened = !opened;
     // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
-    // in 'opened'. Just binding to it via {{opened}} in HTML doesn't work in
-    // deployed code in Chrome.
-//    ($['button'] as SparkIconButton).active = opened;
-//    ($['overlay'] as SparkOverlay).opened = opened;
-//    ($['overlay'] as SparkOverlay).toggleForce();
-    ($['overlay'] as SparkOverlay).deliverChanges();
+    // in 'opened' when run as deployed code. Just binding via {{opened}} alone
+    // isn't detected and the menu doesn't open (again, in deployed code -
+    // undeployed works without this).
+    if (isDart2js()) {
+      ($['overlay'] as SparkOverlay).toggle(force: true);
+      // Both of these alternatives worked too, although worse than the above.
+      // The first few clicks didn't quite open the menu, and then there was
+      // desynchronization between the button's 'active' state and the overlay's
+      // 'opened' state.
+      // ($['overlay'] as SparkOverlay).deliverChanges();
+      // Observable.dirtyCheck();
+    }
   }
 
   //* Returns the selected item.
