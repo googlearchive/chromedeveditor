@@ -229,10 +229,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   // Parts of ctor:
   //
 
-  Future<chrome.FileSystem> getSyncFileSystem() {
-    return chrome.syncFileSystem.requestFileSystem();
-  }
-
   void initAnalytics() {
     analytics.getService('Spark').then((service) {
       // Init the analytics tracker and send a page view for the main page.
@@ -1034,7 +1030,7 @@ class _GitCloneJob extends Job {
 
     Completer completer = new Completer();
 
-    getSyncFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
+     getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
 
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         spark._gitDir = dir;
