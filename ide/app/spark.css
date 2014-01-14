@@ -2,7 +2,6 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-
 @import url("assets/font-awesome/css/font-awesome.min.css");
 @import url("packages/bootjack/css/bootstrap.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
@@ -83,7 +82,7 @@ body {
 }
 
 .fileview-filename-container:hover .filename {
-  
+
 }
 
 .ace_gutter-cell {
