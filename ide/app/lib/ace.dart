@@ -155,10 +155,20 @@ class AceManager {
     currentSession.annotations = annotations;
   }
 
+  void selectNextMarker() {
+    _selectMarkerFromCurrent(1);
+  }
+
+  void selectPrevMarker() {
+    _selectMarkerFromCurrent(-1);
+  }
+
   void _selectMarkerFromCurrent(int offset) {
-    if (_currentMarker != null) {
-      List<workspace.Marker> markers = currentFile.getMarkers();
-      if (markers != null && markers.length > 0) {
+    List<workspace.Marker> markers = currentFile.getMarkers();
+    if (markers != null && markers.length > 0) {
+      if (_currentMarker == null) {
+        _selectMarker(markers[0]);
+      } else {
         int markerIndex = markers.indexOf(_currentMarker);
         markerIndex += offset;
         if (markerIndex >= 0 && markerIndex < markers.length) {
@@ -168,14 +178,6 @@ class AceManager {
         }
       }
     }
-  }
-
-  void selectNextMarker() {
-    _selectMarkerFromCurrent(1);
-  }
-
-  void selectPrevMarker() {
-    _selectMarkerFromCurrent(-1);
   }
 
   void _miniMapMarkerClicked(workspace.Marker marker) {
