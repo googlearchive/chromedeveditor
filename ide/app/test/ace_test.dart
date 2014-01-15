@@ -46,6 +46,8 @@ class MockAceManager implements AceManager {
   void setKeyBinding(String name) { }
   void setMarkers(List<workspace.Marker> markers) { }
   void clearMarkers() { }
+  void selectNextMarker() { }
+  void selectPrevMarker() { }
 }
 
 class MockAceEditor implements TextEditor {

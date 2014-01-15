@@ -362,6 +362,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void createActions() {
     _actionManager = new ActionManager();
 
+    actionManager.registerAction(new NextMarkerAction(this));
+    actionManager.registerAction(new PrevMarkerAction(this));
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileOpenAction(this));
@@ -936,6 +938,28 @@ class FileExitAction extends SparkAction {
     spark.close().then((_) {
       chrome.app.window.current().close();
     });
+  }
+}
+
+class PrevMarkerAction extends SparkAction {
+  PrevMarkerAction(Spark spark) : super(
+      spark, "marker-prev", "Previous Marker") {
+    defaultBinding("ctrl-shift-p");
+  }
+
+  void _invoke([Object context]) {
+    spark._aceManager.selectPrevMarker();
+  }
+}
+
+class NextMarkerAction extends SparkAction {
+  NextMarkerAction(Spark spark) : super(
+      spark, "marker-next", "Next Marker") {
+    defaultBinding("ctrl-p");
+  }
+
+  void _invoke([Object context]) {
+    spark._aceManager.selectNextMarker();
   }
 }
 

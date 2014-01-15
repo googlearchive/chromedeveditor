@@ -88,6 +88,8 @@ class AceManager {
 
   ace.Editor _aceEditor;
 
+  workspace.Marker _currentMarker;
+
   static bool get available => js.context['ace'] != null;
 
   StreamSubscription _markerSubscription;
@@ -153,13 +155,45 @@ class AceManager {
     currentSession.annotations = annotations;
   }
 
+  void selectNextMarker() {
+    _selectMarkerFromCurrent(1);
+  }
+
+  void selectPrevMarker() {
+    _selectMarkerFromCurrent(-1);
+  }
+
+  void _selectMarkerFromCurrent(int offset) {
+    // TODO(ericarnold): This should be based upon the current cursor position.
+    List<workspace.Marker> markers = currentFile.getMarkers();
+    if (markers != null && markers.length > 0) {
+      if (_currentMarker == null) {
+        _selectMarker(markers[0]);
+      } else {
+        int markerIndex = markers.indexOf(_currentMarker);
+        markerIndex += offset;
+        if (markerIndex < 0) {
+          markerIndex = markers.length -1;
+        } else if (markerIndex >= markers.length) {
+          markerIndex = 0;
+        }
+        _selectMarker(markers[markerIndex]);
+      }
+    }
+  }
+
   void _miniMapMarkerClicked(workspace.Marker marker) {
+    _selectMarker(marker);
+  }
+
+  void _selectMarker(workspace.Marker marker) {
     // TODO(ericarnold): Marker range should be selected, but we either need
     // Marker to include col info or we need a way to convert col to char-pos
     _aceEditor.selection.setSelectionAnchor(
         marker.lineNum, marker.charStart);
     _aceEditor.selection.selectTo(marker.lineNum, marker.charEnd);
     _aceEditor.selection.moveCursorTo(marker.lineNum, 0);
+    _currentMarker = marker;
   }
 
   void _recreateMiniMap() {
