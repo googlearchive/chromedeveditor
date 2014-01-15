@@ -1784,9 +1784,12 @@ define('api',['commands/clone', 'commands/commit', 'commands/init', 'commands/pu
     PUSH_NO_REMOTE: errutils.PUSH_NO_REMOTE,
 
     getFs : function(success) {
-      chrome.syncFileSystem.requestFileSystem(function(fs) {
+      window.webkitRequestFileSystem(window.TEMPORARY, 5 * 1024 * 1024 * 1024, function(fs) {
         success(fs);
       });
+//      chrome.syncFileSystem.requestFileSystem(function(fs) {
+//        success(fs);
+//      });
     },
 
     /**

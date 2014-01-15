@@ -31,6 +31,7 @@ import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
 import 'lib/jobs.dart';
 import 'lib/preferences.dart' as preferences;
+import 'lib/scm.dart' as scm;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
@@ -365,29 +366,20 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileOpenAction(this));
+    actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
+    actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
+    actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
+    actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
+    actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
+    actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
+    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
+    actionManager.registerAction(new RunTestsAction(this));
+    actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
+    actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new FolderOpenAction(this));
-    actionManager.registerAction(new FolderNewAction(
-        this, getDialogElement('#folderNewDialog')));
-    actionManager.registerAction(new FileNewAction(
-        this, getDialogElement('#fileNewDialog')));
-    actionManager.registerAction(new FileRenameAction(
-        this, getDialogElement('#renameDialog')));
-    actionManager.registerAction(new FileDeleteAction(
-        this, getDialogElement('#deleteDialog')));
-    actionManager.registerAction(new GitCloneAction(
-        this, getDialogElement("#gitCloneDialog")));
-    actionManager.registerAction(new GitCommitAction(
-        this, getDialogElement("#gitCommitDialog")));
-    actionManager.registerAction(new GitBranchAction(
-        this, getDialogElement("#gitBranchDialog")));
-    actionManager.registerAction(new GitCheckoutAction(
-        this, getDialogElement("#gitCheckoutDialog")));
-    actionManager.registerAction(new RunTestsAction(this));
-    actionManager.registerAction(new AboutSparkAction(
-        this, getDialogElement('#aboutDialog')));
 
     actionManager.registerKeyListener();
   }
@@ -397,6 +389,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         (_) => actionManager.getAction('file-open').invoke());
     getUIElement("#newFile").onClick.listen(
         (_) => actionManager.getAction('file-new-as').invoke());
+    getUIElement("#gitClone").onClick.listen(
+        (_) => actionManager.getAction('git-clone').invoke());
   }
 
   void buildMenu() {
@@ -652,6 +646,17 @@ abstract class SparkAction extends Action {
     }
     List<ws.Resource> resources = object as List<ws.Resource>;
     return resources.length == 1;
+  }
+
+  /**
+   * Returns true if `object` is a list with a single item and this item is a
+   * [Project].
+   */
+  bool _isProject(object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    return object.length == 1 && object.first is ws.Project;
   }
 
   /**
@@ -980,6 +985,7 @@ class FolderOpenAction extends SparkAction {
 
   void _invoke([Object context]) => spark.openFolder();
 }
+
 // TODO(grv) : This should be the resposibility of workspace.
 class _SyncFsProjectLoadJob extends Job {
 
@@ -1044,8 +1050,7 @@ class _GitCloneJob extends Job {
 
     Completer completer = new Completer();
 
-    getSyncFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
-
+    getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         spark._gitDir = dir;
         GitOptions options = new GitOptions();
@@ -1081,6 +1086,7 @@ class GitBranchAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+
     _show();
   }
 
@@ -1161,7 +1167,8 @@ class _GitCommitJob extends Job {
   }
 }
 
-class GitCheckoutAction extends SparkActionWithDialog {
+class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project _project;
   SelectElement _branchSelectElement;
 
   GitCheckoutAction(Spark spark, Element dialog)
@@ -1169,21 +1176,23 @@ class GitCheckoutAction extends SparkActionWithDialog {
     _branchSelectElement = getElement("#gitCheckout");
   }
 
-  void _invoke([Object context]) {
+  void _invoke([List context]) {
+    _project = context.first;
+    print(_project);
+    // TODO: use the _project as the git repo
     ObjectStore store = spark._currentGitStore;
 
-    store.getCurrentBranch().then((currentBranch) {
-     (getElement('#currentBranchName') as InputElement).value = currentBranch;
-     store.getLocalBranches().then((List<String> branches) {
-       branches.sort((String a, String b) {
-         return a.toLowerCase().compareTo(b.toLowerCase());
-       });
-       branches.forEach((branchName) {
-         _branchSelectElement.append(new OptionElement(data: branchName, value: branchName));
-       });
+    store.getCurrentBranch().then((String currentBranch) {
+      (getElement('#currentBranchName') as InputElement).value = currentBranch;
 
-     });
-     _show();
+      store.getLocalBranches().then((List<String> branches) {
+        branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        for (String branchName in branches) {
+          _branchSelectElement.append(new OptionElement(data: branchName, value: branchName));
+        }
+      });
+
+      _show();
     });
   }
 
@@ -1194,6 +1203,10 @@ class GitCheckoutAction extends SparkActionWithDialog {
     _GitCheckoutJob job = new _GitCheckoutJob(branchName, spark);
     spark.jobManager.schedule(job);
   }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isProject(context) && scm.isUnderScm(context.first);
 }
 
 class _GitCheckoutJob extends Job {
