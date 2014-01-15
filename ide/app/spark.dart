@@ -149,7 +149,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     initSplitView();
     initSaveStatusListener();
-    initSyncFs();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -247,11 +246,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void initWorkspace() {
     _workspace = new ws.Workspace(localPrefs);
-  }
-
-  void initSyncFs() {
-   // _SyncFsProjectLoadJob job = new _SyncFsProjectLoadJob(this);
-   // this.jobManager.schedule(job);
   }
 
   void createEditorComponents() {
@@ -398,7 +392,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     getUIElement("#openFile").onClick.listen(
         (_) => actionManager.getAction('file-open').invoke());
     getUIElement("#newFile").onClick.listen(
-        (_) => actionManager.getAction('file-new-as').invoke());
+        (_) => actionManager.getAction('file-new').invoke());
   }
 
   void buildMenu() {
@@ -568,6 +562,8 @@ class PlatformInfo {
   PlatformInfo._(this.os, this.arch, this.naclArch);
 
   String toString() => "${os}, ${arch}, ${naclArch}";
+
+  bool get isCros => os == 'cros';
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
@@ -585,6 +581,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
           spark.aceManager.focus();
         }
       });
+      spark.workspace.restoreSyncFs();
     });
   }
 
@@ -790,6 +787,14 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
        folder = folders.first;
        _nameElement.value = '';
        _show();
+     } else {
+       // create new file in sync fs on chrome os
+       if (spark.platformInfo.isCros && spark.workspace.syncFsIsAvailable) {
+          _nameElement.value = '';
+          _show();
+       } else { // use file save as for local fs
+          spark.newFileAs();
+       }
      }
    }
 
@@ -797,15 +802,25 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     var name = _nameElement.value;
     if (name.isNotEmpty) {
-      folder.createNewFile(name).then((file) {
-        // Delay a bit to allow the files view to process the new file event.
-        // TODO: This is due to a race condition in when the files view receives
-        // the resource creation event; we should remove the possibility for
-        // this to occur.
-        Timer.run(() {
-          spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+      if (folder != null) {
+        folder.createNewFile(name).then((file) {
+          // Delay a bit to allow the files view to process the new file event.
+          // TODO: This is due to a race condition in when the files view receives
+          // the resource creation event; we should remove the possibility for
+          // this to occur.
+          Timer.run(() {
+            spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+          });
         });
-      });
+      } else {
+        spark.workspace.createFileSyncFs(name).then((file) {
+          if (file != null) {
+            Timer.run(() {
+              spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            });
+          }
+        });
+      }
     }
   }
 
@@ -1004,34 +1019,7 @@ class FolderOpenAction extends SparkAction {
 
   void _invoke([Object context]) => spark.openFolder();
 }
-// TODO(grv) : This should be the resposibility of workspace.
-class _SyncFsProjectLoadJob extends Job {
 
-  Spark spark;
-
-  _SyncFsProjectLoadJob(this.spark)
-      : super("Loading Syncfs Projects …");
-
-  Future<Job> run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
-
-    Completer completer = new Completer();
-
-    getSyncFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
-      fs.root.createReader().readEntries().then((List<Entry> entries) {
-        Future.forEach(entries, (Entry entry) {
-          if (entry.isDirectory) {
-            spark.workspace.link(entry);
-          }
-        }).then((_){
-          spark.workspace.save();
-          completer.complete(this);
-        });
-      });
-    });
-    return completer.future;
-  }
-}
 
 class GitCloneAction extends SparkActionWithDialog {
   InputElement _projectNameElement;
@@ -1068,7 +1056,7 @@ class _GitCloneJob extends Job {
 
     Completer completer = new Completer();
 
-    getSyncFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
+     getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
 
       return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
         spark._gitDir = dir;
