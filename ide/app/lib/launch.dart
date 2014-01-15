@@ -11,7 +11,7 @@ library launch;
 import 'workspace.dart';
 
 /**
- *  Manages all the launches and calls the appropriate deletegate
+ *  Manages all the launches and calls the appropriate delegate
  */
 class LaunchManager {
 
@@ -58,6 +58,7 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
 
   void run(Resource resource) {
     //TODO: implement this
+    print('TODO: run project ${resource.project}');
   }
 
 }
@@ -71,6 +72,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 
   void run(Resource resource) {
     //TODO: implement this
+    print('TODO: run project ${resource.project}');
   }
 }
 
