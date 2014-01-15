@@ -265,10 +265,10 @@ class LooseObject {
 
       this.data = data.sublist(i + 1, data.length);
     } else {
-      i = data.indexOf(new String.fromCharCode(0));
-      header = data.substring(0, i);
+      i = buf.indexOf(new String.fromCharCode(0));
+      header = buf.substring(0, i);
       // move past null terminator but keep zlib header
-      this.data = data.substring(i + 1, data.length);
+      this.data = buf.substring(i + 1, buf.length);
     }
     List<String> parts = header.split(' ');
     this._type = parts[0];
