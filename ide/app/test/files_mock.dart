@@ -10,11 +10,11 @@ library spark.files_mock;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:chrome_gen/chrome_app.dart';
+import 'package:chrome/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
 import 'package:path/path.dart' as path;
 
-export 'package:chrome_gen/chrome_app.dart'
+export 'package:chrome/chrome_app.dart'
   show FileEntry, DirectoryEntry, ChromeFileEntry;
 
 /**

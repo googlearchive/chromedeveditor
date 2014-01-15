@@ -9,9 +9,9 @@ import 'dart:convert' show JSON;
 import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
-import 'package:chrome_gen/chrome_app.dart' as chrome;
-import 'package:logging/logging.dart';
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:dquery/dquery.dart';
+import 'package:logging/logging.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';

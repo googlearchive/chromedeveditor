@@ -49,7 +49,7 @@ class Compiler {
     return new Future.value(new CompilerResult._());
   }
 
-  Future<CompilerResult> compile(/*chrome_gen.FileEntry*/ entry) {
+  Future<CompilerResult> compile(/*chrome.FileEntry*/ entry) {
     // TODO: implement
 
     return new Future.value(new CompilerResult._());

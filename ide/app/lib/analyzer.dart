@@ -17,7 +17,7 @@ import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:path/path.dart' as path;
 
 import 'sdk.dart' as spark;

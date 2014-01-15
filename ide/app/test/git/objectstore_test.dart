@@ -6,7 +6,7 @@ library spark.git_objectstore_test;
 
 import 'dart:async';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import '../../lib/git/file_operations.dart';
