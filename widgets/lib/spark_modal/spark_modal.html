@@ -10,7 +10,14 @@
     on-click="{{tapHandler}}"
     on-keydown="{{keydownHandler}}">
   <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
+    <style>
+      @import url("packages/spark_widgets/spark_modal/spark_modal.css");
+    </style>
+
     <shadow></shadow>
   </template>
+
   <script type="application/dart" src="spark_modal.dart"></script>
 </polymer-element>

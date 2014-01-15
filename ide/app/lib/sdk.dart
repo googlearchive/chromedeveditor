@@ -20,7 +20,7 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:typed_data' as typed_data;
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 
 /**
  * Return the contents of the file at the given path. The path is relative to

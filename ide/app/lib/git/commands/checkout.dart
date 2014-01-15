@@ -7,7 +7,7 @@ library git.commands.checkout;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../constants.dart';
 import '../file_operations.dart';

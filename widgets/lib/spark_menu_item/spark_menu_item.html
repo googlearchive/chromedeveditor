@@ -16,30 +16,10 @@
 
 <polymer-element name="spark-menu-item" attributes="src label iconsize">
   <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
     <style>
-      .labelText {
-        margin: 0 5px;
-      }
-
-      spark-icon, .labelText, .labelText > * {
-        display: inline-block;
-        vertical-align: middle;
-      }
-
-      :host:hover {
-        color: black;
-        opacity: 1 !important;
-        border: 1px solid #ccc;
-        background: #eee;
-      }
-
-      /* TODO(ussuri): remove all styles below once :host works in Dartium */
-      spark-menu-item:hover {
-        color: black;
-        opacity: 1 !important;
-        border: 1px solid #ccc;
-        background: #eee;
-      }
+      @import url("packages/spark_widgets/spark_menu_item/spark_menu_item.css");
     </style>
 
     <spark-icon src="{{src}}" size="{{iconsize}}"></spark-icon>

@@ -22,28 +22,10 @@
 
 <polymer-element name="spark-icon" attributes="src tooltip size">
   <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
     <style>
-      :host {
-        display: inline-block;
-        vertical-align: middle;
-      }
-
-      /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
-      @host {
-        * {
-          display: inline-block;
-          vertical-align: middle;
-        }
-      }
-
-      #icon {
-        width: 24px;
-        height: 24px;
-        cursor: pointer;
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: 100% 100%;
-      }
+      @import url("packages/spark_widgets/spark_icon/spark_icon.css");
     </style>
 
     <div id="icon"

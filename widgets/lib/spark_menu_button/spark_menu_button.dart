@@ -28,9 +28,9 @@ class SparkMenuButton extends Widget {
 
   //* Toggle the opened state of the dropdown.
   void toggle() {
-    SparkMenu menu = $['overlayMenu'];
-    menu.clearSelection();
+    ($['overlayMenu'] as SparkMenu).clearSelection();
     opened = !opened;
+
     // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
     // in 'opened' when run as deployed code. Just binding via {{opened}} alone
     // isn't detected and the menu doesn't open.
@@ -40,9 +40,5 @@ class SparkMenuButton extends Widget {
   }
 
   //* Returns the selected item.
-  String get selection {
-    var menu = $['overlayMenu'];
-    assert(menu != null);
-    return menu.selection;
-  }
+  String get selection => ($['overlayMenu'] as SparkMenu).selection;
 }

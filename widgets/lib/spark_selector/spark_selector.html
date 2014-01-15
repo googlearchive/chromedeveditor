@@ -25,9 +25,7 @@
  * to style the selected element.
  *
  *     <style>
- *       .item.selected {
- *         background: #eee;
- *       }
+      @import url("packages/./spark_selector/spark_selector.css");
  *     </style>
  *     ...
  *     <spark-selector>
@@ -61,42 +59,12 @@
                 activateEvent">
 
   <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
     <style>
-      :host {
-        display: block;
-        border: 1px solid #ccc;
-        border-bottom: none;
-        -webkit-user-select: none;
-      }
-
-      :host > * {
-        height: 40px;
-        line-height: 40px;
-        padding: 0 20px;
-        border-bottom: 1px solid #ccc;
-      }
-
-      :host > .selected {
-        background: #eee;
-      }
-
-      /* TODO(ussuri): remove all styles below once :host works in Dartium */
-      spark-selector {
-        display: block;
-        border: 1px solid #ccc;
-        border-bottom: none;
-        -webkit-user-select: none;
-      }
-      spark-selector > * {
-        height: 40px;
-        line-height: 40px;
-        padding: 0 20px;
-        border-bottom: 1px solid #ccc;
-      }
-      spark-selector > .selected {
-        background: #eee;
-      }
+      @import url("packages/spark_widgets/spark_selector/spark_selector.css");
     </style>
+
     <spark-selection id="selection" multi="{{multi}}" on-select="{{selectionSelect}}">
     </spark-selection>
 

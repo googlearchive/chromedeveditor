@@ -103,6 +103,18 @@ class FilesController implements TreeViewDelegate {
     selectFile(_files[0], forceOpen: forceOpen);
   }
 
+  void setFolderExpanded(Container resource) {
+    List parents = _collectParents(resource, []);
+
+    parents.forEach((Container container) {
+      if (!_treeView.isNodeExpanded(container.path)) {
+        _treeView.setNodeExpanded(container.path, true);
+      }
+    });
+
+    _treeView.setNodeExpanded(resource.path, true);
+  }
+
   /**
    * Listen for selection change events.
    */
@@ -652,6 +664,8 @@ class FilesController implements TreeViewDelegate {
       // to close the dropdown. For example dropdown.toggle() won't work.
       menuContainer.classes.remove('open');
       cancelEvent(event);
+
+      _treeView.focus();
     }
 
     // When the user clicks outside the menu, we'll close it.
