@@ -470,4 +470,12 @@ class TreeView implements ListViewDelegate {
   TreeViewDragImage privateDragImage(MouseEvent event) {
     return _delegate.treeViewDragImage(this, selection, event);
   }
+
+  /**
+   * This method will focus the tree view. The key input will be handled by
+   * the tree view once the list view has the focus.
+   */
+  void focus() {
+    _listView.focus();
+  }
 }

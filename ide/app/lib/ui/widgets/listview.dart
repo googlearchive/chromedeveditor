@@ -197,7 +197,7 @@ class ListView {
    */
   void _onClicked(int rowIndex, Event event) {
     _extendedSelectionRow = -1;
-    _container.focus();
+    focus();
 
     if (!_delegate.listViewRowClicked(event, rowIndex)) {
       // If listViewRowClicked returns false, don't handle.
@@ -414,6 +414,13 @@ class ListView {
 
   ListViewCell cellForRow(int rowIndex) {
     return _rows[rowIndex].cell;
+  }
+
+  /**
+   * This method will focus the list view.
+   */
+  void focus() {
+    _container.focus();
   }
 
   bool get dropEnabled => _dropEnabled;
