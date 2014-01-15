@@ -26,8 +26,15 @@
     </style>
 
     <spark-toolbar id="toolbar" color="white" lightdom>
-      <spark-button id="newFile" small primary>New File...</spark-button>
-      <spark-button id="openFile" small>Open File...</spark-button>
+      <spark-button id="newFile" small>
+        <i class="fa fa-file"></i> New File...
+      </spark-button>
+      <spark-button id="openFile" small>
+        <i class="fa fa-folder-open"></i> Open File...
+      </spark-button>
+      <spark-button id="runButton" small>
+        <i class="fa fa-play"></i> Run
+      </spark-button>
 
       <span id="saveStatus" class="titleFont"></span>
 

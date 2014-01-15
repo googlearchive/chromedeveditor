@@ -11,12 +11,13 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/spark_overlay/spark_overlay.dart' as widgets;
+import 'packages/spark_widgets/spark_button/spark_button.dart';
+import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
 import 'packages/spark_widgets/spark_splitter/spark_splitter.dart';
 
-import 'spark_polymer_ui.dart';
-
 import 'spark.dart';
+import 'spark_polymer_ui.dart';
+import 'lib/actions.dart';
 
 void main() {
   isTestMode().then((testMode) {
@@ -30,7 +31,7 @@ void main() {
 }
 
 class SparkPolymerDialog implements SparkDialog {
-  widgets.SparkOverlay _dialogElement;
+  SparkOverlay _dialogElement;
 
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement {
@@ -122,7 +123,13 @@ class SparkPolymer extends Spark {
   void createActions() => super.createActions();
 
   @override
-  void initToolbar() => super.initToolbar();
+  void initToolbar() {
+    super.initToolbar();
+
+    _bindButtonToAction('openFile', 'file-open');
+    _bindButtonToAction('newFile', 'file-new');
+    _bindButtonToAction('runButton', 'application-run');
+  }
 
   @override
   void buildMenu() {}
@@ -134,5 +141,17 @@ class SparkPolymer extends Spark {
   @override
   void onSplitViewUpdate(int position) {
     syncPrefs.setValue('splitViewPosition', position.toString());
+  }
+
+  void _bindButtonToAction(String buttonId, String actionId) {
+    SparkButton button = getUIElement('#${buttonId}');
+    Action action = actionManager.getAction(actionId);
+    action.onChange.listen((_) {
+      button.active = action.enabled;
+    });
+    button.onClick.listen((_) {
+      if (action.enabled) action.invoke();
+    });
+    button.active = action.enabled;
   }
 }
