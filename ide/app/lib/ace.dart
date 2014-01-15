@@ -189,10 +189,7 @@ class AceManager {
   void _selectMarker(workspace.Marker marker) {
     // TODO(ericarnold): Marker range should be selected, but we either need
     // Marker to include col info or we need a way to convert col to char-pos
-    _aceEditor.selection.setSelectionAnchor(
-        marker.lineNum, marker.charStart);
-    _aceEditor.selection.selectTo(marker.lineNum, marker.charEnd);
-    _aceEditor.selection.moveCursorTo(marker.lineNum, 0);
+    _aceEditor.gotoLine(marker.lineNum);
     _currentMarker = marker;
   }
 
