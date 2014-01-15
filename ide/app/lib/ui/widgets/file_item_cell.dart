@@ -28,7 +28,7 @@ class FileItemCell implements ListViewCell {
     String name = _resource.name;
     if (_resource is Project) {
       if (scm.isUnderScm(_resource)) {
-        // TODO: get branch name
+        // TODO: get branch name from the scm provider
         String branchName = '';
         String decoration = '[<i class="fa fa-code-fork"></i>${branchName}]';
         name = '${name} <span class="text-muted">${decoration}</span>';

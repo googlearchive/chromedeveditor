@@ -104,13 +104,11 @@ class FilesController implements TreeViewDelegate {
   }
 
   void setFolderExpanded(Container resource) {
-    List parents = _collectParents(resource, []);
-
-    parents.forEach((Container container) {
+    for (Container container in _collectParents(resource, [])) {
       if (!_treeView.isNodeExpanded(container.path)) {
         _treeView.setNodeExpanded(container.path, true);
       }
-    });
+    }
 
     _treeView.setNodeExpanded(resource.path, true);
   }
@@ -502,7 +500,7 @@ class FilesController implements TreeViewDelegate {
     if (_childrenCache[nodeUID] == null) {
       Container container = _filesMap[nodeUID];
       _childrenCache[nodeUID] = container.getChildren().
-          where((r) => !_filterResource(r)).map((r) => r.path).toList();
+          where(_showResource).map((r) => r.path).toList();
       _childrenCache[nodeUID].sort(
           (String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
     }
@@ -551,7 +549,7 @@ class FilesController implements TreeViewDelegate {
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
-    event.changes.where((d) => !_filterResource(d.resource)).forEach((change) {
+    event.changes.where((d) => _showResource(d.resource)).forEach((change) {
       if (change.type == EventType.ADD) {
         var resource = change.resource;
         if (resource.isTopLevel) {
@@ -581,8 +579,11 @@ class FilesController implements TreeViewDelegate {
   /**
    * Returns whether the given resource should be filtered from the Files view.
    */
-  bool _filterResource(Resource resource) {
-    return resource is Folder && resource.name == '.git';
+  bool _showResource(Resource resource) {
+    if (resource is Folder && resource.name == '.git') {
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -603,7 +604,7 @@ class FilesController implements TreeViewDelegate {
     _filesMap[resource.path] = resource;
     if (resource is Container) {
       resource.getChildren().forEach((child) {
-        if (!_filterResource(child)) {
+        if (_showResource(child)) {
           _recursiveAddResource(child);
         }
       });
