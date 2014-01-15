@@ -500,10 +500,11 @@ class FilesController implements TreeViewDelegate {
 
   void _cacheChildren(String nodeUID) {
     if (_childrenCache[nodeUID] == null) {
-      _childrenCache[nodeUID] =
-          (_filesMap[nodeUID] as Container).getChildren().
-          map((Resource resource) => resource.path).toList();
-      _childrenCache[nodeUID].sort((String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      Container container = _filesMap[nodeUID];
+      _childrenCache[nodeUID] = container.getChildren().
+          where((r) => !_filterResource(r)).map((r) => r.path).toList();
+      _childrenCache[nodeUID].sort(
+          (String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
     }
   }
 
@@ -550,7 +551,7 @@ class FilesController implements TreeViewDelegate {
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
-    event.changes.forEach((change) {
+    event.changes.where((d) => !_filterResource(d.resource)).forEach((change) {
       if (change.type == EventType.ADD) {
         var resource = change.resource;
         if (resource.isTopLevel) {
@@ -578,6 +579,13 @@ class FilesController implements TreeViewDelegate {
   }
 
   /**
+   * Returns whether the given resource should be filtered from the Files view.
+   */
+  bool _filterResource(Resource resource) {
+    return resource is Folder && resource.name == '.git';
+  }
+
+  /**
    * Traverse all the created [FileItemCell]s, calling `updateFileStatus()`.
    */
   void _processMarkerChange() {
@@ -595,7 +603,9 @@ class FilesController implements TreeViewDelegate {
     _filesMap[resource.path] = resource;
     if (resource is Container) {
       resource.getChildren().forEach((child) {
-        _recursiveAddResource(child);
+        if (!_filterResource(child)) {
+          _recursiveAddResource(child);
+        }
       });
     }
   }

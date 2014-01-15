@@ -13,7 +13,15 @@ import '../common/widget.dart';
 @CustomTag('spark-button')
 class SparkButton extends Widget {
   @published bool primary = false;
-  @published bool active = true;
+
+  // TODO: changing this field does not cause the btnClasses to be re-calculated
+  bool _active = true;
+  @published bool get active => _active;
+  set active(bool value) {
+    _active = value;
+    getShadowDomElement('button').className = btnClasses;
+  }
+
   @published bool large = false;
   @published bool small = false;
 

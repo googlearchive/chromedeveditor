@@ -28,7 +28,10 @@ class FileItemCell implements ListViewCell {
     String name = _resource.name;
     if (_resource is Project) {
       if (scm.isUnderScm(_resource)) {
-        name = '<i class="fa fa-code-fork"></i> ${name}';
+        // TODO: get branch name
+        String branchName = '';
+        String decoration = '[<i class="fa fa-code-fork"></i>${branchName}]';
+        name = '${name} <span class="text-muted">${decoration}</span>';
       }
     }
     _element.querySelector('.filename').innerHtml = name;

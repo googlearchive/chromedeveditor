@@ -367,26 +367,22 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
+    actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
+    actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new ResourceCloseAction(this));
 
     actionManager.registerKeyListener();
   }
 
   void initToolbar() {
-    getUIElement("#openFile").onClick.listen(
-        (_) => actionManager.getAction('file-open').invoke());
-    getUIElement("#newFile").onClick.listen(
-        (_) => actionManager.getAction('file-new-as').invoke());
-    getUIElement("#gitClone").onClick.listen(
-        (_) => actionManager.getAction('git-clone').invoke());
+
   }
 
   void buildMenu() {
@@ -961,6 +957,44 @@ class FileExitAction extends SparkAction {
     spark.close().then((_) {
       chrome.app.window.current().close();
     });
+  }
+}
+
+class ApplicationRunAction extends SparkAction implements ContextAction {
+  ApplicationRunAction(Spark spark) : super(
+      spark, "application-run", "Run Application") {
+    defaultBinding("ctrl-r");
+
+    enabled = false;
+
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+  }
+
+  void _invoke([context]) {
+    ws.Resource resource;
+
+    if (context == null) {
+      resource = spark.focusManager.currentResource;
+    } else {
+      resource = context.first;
+    }
+
+    // TODO(devoncarew): launch something
+    print('TODO: run project ${resource.project}');
+  }
+
+  String get category => 'application';
+
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+
+  bool _appliesTo(ws.Resource resource) {
+    // TODO(devoncarew): we need a list of launch types - query them to see if
+    // the resource is launchable
+    return resource.project != null;
+  }
+
+  void _updateEnablement(ws.Resource resource) {
+    enabled = _appliesTo(resource);
   }
 }
 
