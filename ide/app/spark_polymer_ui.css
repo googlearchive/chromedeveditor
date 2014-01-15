@@ -238,6 +238,10 @@
   background: #DD3;
 }
 
+.minimap-marker.info {
+  background: #02F;
+}
+
 /* TODO(ussuri): None of these worked. Fix.
 .plus-minus-container {
   display: flex;
