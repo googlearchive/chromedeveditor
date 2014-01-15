@@ -145,7 +145,7 @@ class AceManager {
           currentSession.documentToScreenRow(marker.lineNum, 0) / numberLines * 100.0;
 
       html.Element minimapMarker = new html.Element.div();
-      minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
+      minimapMarker.classes.add("minimap-marker info");
       minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
       minimapMarker.onClick.listen((_) => _miniMapMarkerClicked(marker));
 
@@ -308,7 +308,7 @@ class AceManager {
   String _convertMarkerSeverity(int markerSeverity) {
     switch (markerSeverity) {
       case workspace.Marker.SEVERITY_ERROR:
-        return ace.Annotation.ERROR;
+        return ace.Annotation.INFO;
       case workspace.Marker.SEVERITY_WARNING:
         return ace.Annotation.WARNING;
       case workspace.Marker.SEVERITY_INFO:
