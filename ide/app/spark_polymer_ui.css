@@ -93,6 +93,7 @@ https://code.google.com/p/dart/issues/detail?id=14382 is fixed
 #fileViewArea .listview-container {
   bottom: 0;
   left: 0;
+  outline: 0;
   overflow-x: auto;
   overflow-y: auto;
   position: absolute;
