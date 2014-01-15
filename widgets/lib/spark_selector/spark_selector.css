@@ -1,0 +1,40 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+ *       .item.selected {
+ *         background: #eee;
+ *       }
+:host {
+  display: block;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  -webkit-user-select: none;
+}
+
+:host > * {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+:host > .selected {
+  background: #eee;
+}
+
+/* TODO(ussuri): remove all styles below once :host works in Dartium */
+spark-selector {
+  display: block;
+  border: 1px solid #ccc;
+  border-bottom: none;
+  -webkit-user-select: none;
+}
+spark-selector > * {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+  border-bottom: 1px solid #ccc;
+}
+spark-selector > .selected {
+  background: #eee;
+}

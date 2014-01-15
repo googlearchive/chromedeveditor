@@ -12,17 +12,10 @@
 
 <polymer-element name="spark-selection" attributes="multi">
   <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
     <style>
-      :host {
-        display: none !important;
-      }
-
-      /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
-      @host {
-        * {
-          display: none !important;
-        }
-      }
+      @import url("packages/spark_widgets/spark_selection/spark_selection.css");
     </style>
   </template>
 

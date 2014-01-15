@@ -1,0 +1,55 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+/*@polyfill spark-menu-item */
+::content spark-menu-item {
+  display: block;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 40px;
+  line-height: 35px;
+  padding: 0 10px;
+  margin: 10px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  font-family: Helvetica, Sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #555;
+}
+
+/* TODO(sorvell): please note, styling broken due to:
+https://code.google.com/p/chromium/issues/detail?id=229667
+*/
+/*@polyfill spark-menu-item.selected */
+::content spark-menu-item.selected {
+  background: #f2f2f2;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+/* TODO(ussuri): Remove the below styles once Dartium has support for ::content */
+
+/*@polyfill spark-menu-item */
+shadow::-webkit-distributed(spark-menu-item) {
+  display: block;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 40px;
+  line-height: 35px;
+  padding: 0 10px;
+  margin: 10px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  font-family: Helvetica, Sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: #555;
+}
+
+/*@polyfill spark-menu-item.selected */
+shadow::-webkit-distributed(spark-menu-item.selected) {
+  background: #f2f2f2;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
