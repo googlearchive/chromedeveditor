@@ -2,11 +2,6 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-/*
-TODO(sergeygs): move the <style> contents from *.html to here after
-https://code.google.com/p/dart/issues/detail?id=14382 is fixed
-*/
-
 @import url("packages/bootjack/css/bootstrap.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("lib/ui/widgets/listview.css");
@@ -227,7 +222,7 @@ https://code.google.com/p/dart/issues/detail?id=14382 is fixed
   position: absolute;
   height: 4px;
   left: 1px;
-  right: 1px; 
+  right: 1px;
   background: #DDD;
 }
 
@@ -256,3 +251,7 @@ https://code.google.com/p/dart/issues/detail?id=14382 is fixed
   margin: 0;
 }
 */
+
+.toolbar {
+  background-color: white;
+}
