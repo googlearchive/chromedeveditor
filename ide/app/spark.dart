@@ -560,6 +560,8 @@ class PlatformInfo {
   PlatformInfo._(this.os, this.arch, this.naclArch);
 
   String toString() => "${os}, ${arch}, ${naclArch}";
+
+  bool get isCros => os == 'cros';
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
@@ -785,7 +787,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
        _show();
      } else {
        // create new file in sync fs on chrome os
-       if (spark.platformInfo.os == 'cros' && spark.workspace.syncFsIsAvailable) {
+       if (spark.platformInfo.isCros && spark.workspace.syncFsIsAvailable) {
           _nameElement.value = '';
           _show();
        } else { // use file save as for local fs

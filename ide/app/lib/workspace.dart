@@ -197,13 +197,13 @@ class Workspace implements Container {
 
   List<File> getFiles() {
     var list = _localChildren.where((c) => c is File).toList();
-    list.addAll(_syncChildren.where((c) => c is File).toList());
+    list.addAll(_syncChildren.where((c) => c is File));
     return list;
   }
 
   List<Project> getProjects() {
     var projects = _localChildren.where((c) => c is Project).toList();
-    projects.addAll(_syncChildren.where((c) => c is Project).toList());
+    projects.addAll(_syncChildren.where((c) => c is Project));
     return projects;
   }
 
