@@ -24,8 +24,8 @@
   display: inline-block;
 }
 
-.fileview-filename-container .fileStatus.error {
-  background: #F55;
+.fileview-filename-container .fileStatus {
+  background: #DDD;
   border-radius: 2px;
   position: absolute;
   top: 2px;
@@ -34,14 +34,16 @@
   width: 4px;
 }
 
+.fileview-filename-container .fileStatus.error {
+  background: #F55;
+}
+
 .fileview-filename-container .fileStatus.warning {
   background: #DD3;
-  border-radius: 2px;
-  position: absolute;
-  top: 2px;
-  right: 1px;
-  height: 16px;
-  width: 4px;
+}
+
+.fileview-filename-container .fileStatus.info {
+  background: #02F;
 }
 
 .fileview-filename-container .menu {
