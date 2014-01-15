@@ -30,6 +30,7 @@ import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
 import 'lib/jobs.dart';
+import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
@@ -91,6 +92,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   final bool developerMode;
 
   final JobManager jobManager = new JobManager();
+  final LaunchManager launchManager = new LaunchManager();
+
   ActivitySpinner _activitySpinner;
 
   AceManager _aceManager;
@@ -100,6 +103,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   BuilderManager _buildManager;
   EditorManager _editorManager;
   EditorArea _editorArea;
+
+
 
   final EventBus eventBus = new EventBus();
 
@@ -973,8 +978,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
       resource = context.first;
     }
 
-    // TODO(devoncarew): launch something
-    print('TODO: run project ${resource.project}');
+   spark.launchManager.run(resource);
   }
 
   String get category => 'application';
@@ -982,9 +986,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
-    // TODO(devoncarew): we need a list of launch types - query them to see if
-    // the resource is launchable
-    return resource.project != null;
+    return resource.project != null && spark.launchManager.canRun(resource);
   }
 
   void _updateEnablement(ws.Resource resource) {
