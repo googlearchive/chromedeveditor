@@ -11,6 +11,7 @@
 -->
 
 <link rel="import" href="../../../packages/spark_widgets/spark_icon_button/spark_icon_button.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_icon_button/spark_button.html"/>
 <link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="../../../packages/spark_widgets/spark_menu/spark_menu.html"/>
 
@@ -29,9 +30,9 @@
       @import url("packages/spark_widgets/spark_menu_button/spark_menu_button.css");
     </style>
 
-    <spark-icon-button id="button" touch-action="none" on-click="{{toggle}}"
-        src="{{src}}" active="{{opened}}">
-    </spark-icon-button>
+    <spark-button id="button" small touch-action="none" on-click="{{toggle}}">
+      <img src="images/menu.png">
+    </spark-button>
 
     <div responsive="{{responsive}}" valign="{{valign}}">
       <spark-overlay id="overlay" class="slideup" opened="{{opened}}" modal
