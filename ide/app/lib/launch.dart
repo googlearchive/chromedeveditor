@@ -96,7 +96,8 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
 
   void run(Resource resource) {
     _currentProject = resource.project;
-    chrome.app.window.create('launch_page.html',
+    // use htm extension for launch page, other polymer build tries to pick it up.
+    chrome.app.window.create('launch_page.htm',
         new chrome.CreateWindowOptions(id: 'runWindow', width: 600, height: 800))
       .then((_) {},
           onError: (e) => _logger.log(Level.INFO, 'Error launching Dart web app', e));
@@ -167,7 +168,7 @@ class StaticResourcesServlet extends PicoServlet {
 }
 
 /**
- * Server that redirects to the landing page for the project that is run.
+ * Servlet that redirects to the landing page for the project that was run.
  */
 class ProjectRedirectServlet extends PicoServlet {
 
