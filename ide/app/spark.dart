@@ -254,6 +254,14 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     _workspace = new ws.Workspace(localPrefs);
   }
 
+  /**
+   * Returns the path separator specific to os.
+   */
+  String getPathSeparator() {
+    // TODO(grv) : Add check of os and return accordingly.
+    return '/';
+  }
+
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement());
     _aceThemeManager = new ThemeManager(
@@ -484,7 +492,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     });
   }
 
-  Future selectFolder() {
+  /**
+   * Allows a user to select a folder on disk. Returns the selected folder
+   * entry. Returns null in case the user cancels the action.
+   */
+  Future<chrome.ChromeFileEntry> selectFolder() {
     Completer completer = new Completer();
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_DIRECTORY);
@@ -1083,11 +1095,15 @@ class GitCloneAction extends SparkActionWithDialog {
   void _invoke([Object context]) {
     _dialog.element.querySelector("#selectCloneFolder").onClick.listen((_) {
       spark.selectFolder().then((entry) {
-        chrome.fileSystem.getDisplayPath(entry).then((path) {
-          _cloneDir = entry;
-          (_dialog.element.querySelector("#cloneFolderPath")
-              as InputElement).value = path;
-        });
+        if (entry != null) {
+          chrome.fileSystem.getDisplayPath(entry).then((path) {
+            _cloneDir = entry;
+            path = path + spark.getPathSeparator()
+                + _repoUrlElement.value.split('/').last;
+            (_dialog.element.querySelector("#cloneFolderPath")
+                as InputElement).value = path;
+          });
+        }
       });
     });
     _show();
@@ -1203,8 +1219,9 @@ class _GitCloneJob extends Job {
   _GitCloneJob(this.url, this.cloneDir, this.spark)
       : super("Cloning …") {
     projectName = url.split('/').last;
-    if (!url.endsWith('.git'))
+    if (!url.endsWith('.git')) {
       url = url + '.git';
+    }
   }
 
   Future<Job> run(ProgressMonitor monitor) {
