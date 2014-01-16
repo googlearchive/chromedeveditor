@@ -1084,7 +1084,6 @@ class GitCloneAction extends SparkActionWithDialog {
     _dialog.element.querySelector("#selectCloneFolder").onClick.listen((_) {
       spark.selectFolder().then((entry) {
         chrome.fileSystem.getDisplayPath(entry).then((path) {
-          print(path);
           _cloneDir = entry;
           (_dialog.element.querySelector("#cloneFolderPath")
               as InputElement).value = path;
@@ -1097,7 +1096,7 @@ class GitCloneAction extends SparkActionWithDialog {
   void _commit() {
     // TODO(grv): add verify checks.
     _GitCloneJob job = new _GitCloneJob(
-        "abc.git", _repoUrlElement.value, _cloneDir, spark);
+        _repoUrlElement.value, _cloneDir, spark);
     spark.jobManager.schedule(job);
   }
 }
@@ -1201,18 +1200,20 @@ class _GitCloneJob extends Job {
   Spark spark;
   chrome.DirectoryEntry cloneDir;
 
-  _GitCloneJob(this.projectName, this.url, this.cloneDir, this.spark)
-      : super("Cloning …");
+  _GitCloneJob(this.url, this.cloneDir, this.spark)
+      : super("Cloning …") {
+    projectName = url.split('/').last;
+    if (!url.endsWith('.git'))
+      url = url + '.git';
+  }
 
   Future<Job> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     Completer completer = new Completer();
 
-    print('cloning');
-    cloneDir.createDirectory('sparkd.git').then((chrome.DirectoryEntry dir) {
+    cloneDir.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
 
-       print('comes here');
       GitOptions options = new GitOptions();
       options.root = dir;
       options.repoUrl = url;
