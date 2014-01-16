@@ -303,7 +303,6 @@ class AceManager {
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
 
-      // Setup handlers once.
       if (_markerSubscription == null) {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
