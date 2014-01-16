@@ -18,7 +18,7 @@
   cursor: pointer;
 }
 
-:host(.on) {
+:host.on {
   border: 1px solid #4584f2;
 }
 

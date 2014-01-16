@@ -11,7 +11,7 @@
   background-color: #F7F7F7;
 }
 
-:host(.horizontal) {
+:host.horizontal {
     width: auto;
     height: 6px;
     cursor: row-resize;
@@ -20,5 +20,5 @@
 :host:hover {
 }
 
-:host(.active) {
+:host.active {
 }
