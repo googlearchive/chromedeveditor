@@ -10,7 +10,10 @@
  */
 -->
 
-<polymer-element name="spark-selection" attributes="multi">
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
+<polymer-element name="spark-selection" extends="spark-widget"
+    attributes="multi">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->

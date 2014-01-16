@@ -5,8 +5,8 @@
   display: inline-block;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  width: 44px;
-  height: 44px;
+  width: 30px;
+  height: 30px;
 }
 
 /* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
@@ -15,9 +15,13 @@
     display: inline-block;
     box-sizing: border-box;
     -moz-box-sizing: border-box;
-    width: 44px;
-    height: 44px;
+    width: 30px;
+    height: 30px;
   }
+}
+
+spark-button button {
+  padding: 0;
 }
 
 #overlay {

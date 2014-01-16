@@ -314,8 +314,7 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   runDartScript(context, 'packages/polymer/deploy.dart',
       arguments: ['--out', '../../${destDir.path}'],
       packageRoot: 'packages',
-      workingDirectory: sourceDir.path,
-      vmNewGenHeapMB: 128, vmOldGenHeapMB: 4096);
+      workingDirectory: sourceDir.path);
 }
 
 void _dart2jsCompile(GrinderContext context, Directory target, String filePath,

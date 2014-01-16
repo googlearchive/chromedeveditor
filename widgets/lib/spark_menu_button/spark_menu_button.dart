@@ -6,7 +6,7 @@ library spark_widgets.menu_button;
 
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 import '../spark_menu/spark_menu.dart';
 
 // Ported from Polymer Javascript to Dart code.
@@ -15,7 +15,7 @@ import '../spark_menu/spark_menu.dart';
 import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-menu-button")
-class SparkMenuButton extends Widget {
+class SparkMenuButton extends SparkWidget {
   @published String src = "";
   @published dynamic selected;
   @published String valueattr = "";

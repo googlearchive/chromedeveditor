@@ -8,10 +8,10 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 
 @CustomTag('spark-button')
-class SparkButton extends Widget {
+class SparkButton extends SparkWidget {
   @published bool primary = false;
 
   // TODO: changing this field does not cause the btnClasses to be re-calculated
@@ -31,7 +31,7 @@ class SparkButton extends Widget {
     List classes = [
         CSS_BUTTON,
         primary ? CSS_PRIMARY : CSS_DEFAULT,
-        active ? Widget.CSS_ENABLED : Widget.CSS_DISABLED
+        active ? SparkWidget.CSS_ENABLED : SparkWidget.CSS_DISABLED
     ];
 
     if (large) classes.add(CSS_LARGE);
@@ -47,13 +47,4 @@ class SparkButton extends Widget {
   static const CSS_SMALL = "btn-sm";
 
   SparkButton.created() : super.created();
-
-  void focus() {
-    // Only the first found element that has 'focused' attribute on it will be
-    // actually focused; if there are more than one, the rest will be ignored.
-    Element elementToFocus = this.getShadowDomElement('[focused]');
-    if (elementToFocus != null) {
-      elementToFocus.focus();
-    }
-  }
 }
