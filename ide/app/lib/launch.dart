@@ -6,7 +6,7 @@
  * Launch services
  */
 
-library launch;
+library spark.launch;
 
 import 'workspace.dart';
 
@@ -54,7 +54,9 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
   DartWebAppLaunchDelegate();
 
   // for now launching only web/index.html
-  bool canRun(Resource resource) => resource.name == 'index.html' && resource.parent.name == 'web';
+  bool canRun(Resource resource) {
+    return resource.project != null && resource.project.getChildPath('web/index.html') is File;
+  }
 
   void run(Resource resource) {
     //TODO: implement this
@@ -68,7 +70,11 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
  */
 class ChromeAppLaunchDelegate extends LaunchDelegate {
 
-  bool canRun(Resource resource) => resource.name == 'manifest.json';
+  bool canRun(Resource resource) {
+    return resource.project != null &&
+        ( resource.project.getChildPath('manifest.json') is File
+          || resource.project.getChildPath('app/manifest.json') is File);
+  }
 
   void run(Resource resource) {
     //TODO: implement this

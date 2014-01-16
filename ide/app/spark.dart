@@ -986,7 +986,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
-    return resource.project != null && spark.launchManager.canRun(resource);
+    return spark.launchManager.canRun(resource);
   }
 
   void _updateEnablement(ws.Resource resource) {
