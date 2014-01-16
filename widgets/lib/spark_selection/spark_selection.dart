@@ -6,12 +6,12 @@ library spark_widgets.selection;
 
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 
 // Ported from Polymer Javascript to Dart code.
 
 @CustomTag("spark-selection")
-class SparkSelection extends Widget {
+class SparkSelection extends SparkWidget {
   @published bool multi = false;
 
   final List _selection = [];

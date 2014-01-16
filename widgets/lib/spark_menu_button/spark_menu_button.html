@@ -10,11 +10,12 @@
  */
 -->
 
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 <link rel="import" href="../../../packages/spark_widgets/spark_button/spark_button.html"/>
 <link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="../../../packages/spark_widgets/spark_menu/spark_menu.html"/>
 
-<polymer-element name="spark-menu-button"
+<polymer-element name="spark-menu-button" extends="spark-widget"
     attributes="src,
                 selected,
                 valueattr,

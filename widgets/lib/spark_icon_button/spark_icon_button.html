@@ -16,9 +16,11 @@
  */
 -->
 
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 <link rel="import" href="../../../packages/spark_widgets/spark_icon/spark_icon.html">
 
-<polymer-element name="spark-icon-button" attributes="src tooltip active">
+<polymer-element name="spark-icon-button" extends="spark-widget"
+    attributes="src tooltip active">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->

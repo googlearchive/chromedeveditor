@@ -8,7 +8,7 @@ import 'dart:html';
 import 'dart:math';
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 
 // Ported from Polymer Javascript to Dart code.
 
@@ -16,7 +16,7 @@ import '../common/widget.dart';
 //               handler in the template to toggle the state - this shouldn't
 //               be needed.
 @CustomTag("spark-toggle-button")
-class SparkToggleButton extends Widget {
+class SparkToggleButton extends SparkWidget {
   /// Gets or sets the state, true is ON and false is OFF.
   @observable bool value = false;
 

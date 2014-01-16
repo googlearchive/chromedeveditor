@@ -6,11 +6,11 @@ library spark_widgets.toolbar;
 
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-toolbar")
-class SparkToolbar extends Widget {
+class SparkToolbar extends SparkWidget {
   @published bool responsive = false;
   @published bool touch = false;
 
