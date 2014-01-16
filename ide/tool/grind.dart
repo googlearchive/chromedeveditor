@@ -311,11 +311,17 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
 
+
+  var userVmOldGenHeapMB = _getGrindConfig('dart_gen_heap_size');
+  if (userVmOldGenHeapMB == null) {
+    userVmOldGenHeapMB = 4096;
+  }
+
   runDartScript(context, 'packages/polymer/deploy.dart',
       arguments: ['--out', '../../${destDir.path}'],
       packageRoot: 'packages',
       workingDirectory: sourceDir.path,
-      vmNewGenHeapMB: 128, vmOldGenHeapMB: 4096);
+      vmNewGenHeapMB: 128, vmOldGenHeapMB: userVmOldGenHeapMB);
 }
 
 void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
@@ -727,4 +733,15 @@ class ByteWriter {
   void writeBytes(List<int> data) => _bytes.addAll(data);
 
   List<int> toBytes() => _bytes;
+}
+
+dynamic _getGrindConfig(String item) {
+  try {
+    File file = joinFile(Directory.current, ['tool', 'config.json']);
+    String json = file.readAsStringSync();
+    Map info = JSON.decode(json);
+    return info['$item'];
+  } catch (exception, stackTrace) {
+    return null;
+  }
 }

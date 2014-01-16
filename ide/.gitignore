@@ -15,3 +15,4 @@ app/spark_test.dart.precompiled.js
 build/
 dist/
 docs/
+tool/config.json
