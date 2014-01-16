@@ -728,3 +728,11 @@ class ByteWriter {
 
   List<int> toBytes() => _bytes;
 }
+
+String _getGrindConfig(String item) {
+  File file = joinFile(Directory.current, ['tool', 'config.json']),
+  String json = file.readAsStringSync();
+  Map info = JSON.decode(json);
+  result = info['$item'];
+  return result;
+}
