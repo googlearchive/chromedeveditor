@@ -25,7 +25,6 @@
 }
 
 .fileview-filename-container .fileStatus {
-  background: #DDD;
   border-radius: 2px;
   position: absolute;
   top: 2px;
@@ -43,7 +42,7 @@
 }
 
 .fileview-filename-container .fileStatus.info {
-  background: #02F;
+  background: #9CC;
 }
 
 .fileview-filename-container .menu {
@@ -187,7 +186,7 @@
   -moz-user-select: none;
   overflow: hidden;
   background: white;
-  padding:30px 42px;
+  padding: 30px 42px;
   outline: 1px solid rgba(0,0,0,0.2);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
@@ -244,7 +243,7 @@
 }
 
 .minimap-marker.info {
-  background: #02F;
+  background: #9CC;
 }
 
 /* TODO(ussuri): None of these worked. Fix.
