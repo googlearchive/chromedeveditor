@@ -26,15 +26,9 @@
     </style>
 
     <spark-toolbar id="toolbar" lightdom>
-      <spark-button id="newFile" small>
-        <i class="fa fa-file"></i> New File...
-      </spark-button>
-      <spark-button id="openFile" small>
-        <i class="fa fa-folder-open"></i> Open File...
-      </spark-button>
-      <spark-button id="runButton" small>
-        <i class="fa fa-play"></i> Run
-      </spark-button>
+      <spark-button id="gitClone" small primary>Git Clone...</spark-button>
+      <spark-button id="openFolder" small>Open Folder...</spark-button>
+      <spark-button id="runButton" small><i class="fa fa-play"></i> Run</spark-button>
 
       <span id="saveStatus" class="titleFont"></span>
 
@@ -53,6 +47,8 @@
           <spark-menu-item action-id="file-open" iconsize=0 label="Open File...">
           </spark-menu-item>
           <spark-menu-item action-id="folder-open" iconsize=0 label="Open Folder...">
+          </spark-menu-item>
+          <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
           </spark-menu-item>
           <spark-menu-item id="changeTheme" iconsize=0 label="Theme:">
             <span></span>
@@ -79,14 +75,6 @@
             </span>
           </spark-menu-item>
           <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">
-          </spark-menu-item>
-          <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
-          </spark-menu-item>
-          <spark-menu-item action-id="git-commit" iconsize=0 label="Git Commit...">
-          </spark-menu-item>
-          <spark-menu-item action-id="git-branch" iconsize=0 label="Git Branch...">
-          </spark-menu-item>
-          <spark-menu-item action-id="git-checkout" iconsize=0 label="Git Checkout...">
           </spark-menu-item>
           <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
           </spark-menu-item>

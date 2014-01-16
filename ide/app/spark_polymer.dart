@@ -126,8 +126,8 @@ class SparkPolymer extends Spark {
   void initToolbar() {
     super.initToolbar();
 
-    _bindButtonToAction('openFile', 'file-open');
-    _bindButtonToAction('newFile', 'file-new');
+    _bindButtonToAction('gitClone', 'git-clone');
+    _bindButtonToAction('openFolder', 'folder-open');
     _bindButtonToAction('runButton', 'application-run');
   }
 
