@@ -977,8 +977,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
     } else {
       resource = context.first;
     }
-
-   spark.launchManager.run(resource);
+    spark.launchManager.run(resource);
   }
 
   String get category => 'application';
