@@ -254,6 +254,14 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     _workspace = new ws.Workspace(localPrefs);
   }
 
+  /**
+   * Returns the path separator specific to os.
+   */
+  String getPathSeparator() {
+    // TODO(grv) : Add check of os and return accordingly.
+    return '/';
+  }
+
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement());
     _aceThemeManager = new ThemeManager(
@@ -471,11 +479,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void openFolder() {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.ChromeFileEntry entry = res.entry;
-
+    selectFolder().then((chrome.ChromeFileEntry entry) {
       if (entry != null) {
         workspace.link(entry).then((file) {
           Timer.run(() {
@@ -485,7 +489,21 @@ class Spark extends SparkModel implements FilesControllerDelegate {
           workspace.save();
         });
       }
+    });
+  }
+
+  /**
+   * Allows a user to select a folder on disk. Returns the selected folder
+   * entry. Returns null in case the user cancels the action.
+   */
+  Future<chrome.ChromeFileEntry> selectFolder() {
+    Completer completer = new Completer();
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      completer.complete(res.entry);
     }).catchError((e) => null);
+    return completer.future;
   }
 
   void onSplitViewUpdate(int position) { }
@@ -1066,23 +1084,35 @@ class FolderOpenAction extends SparkAction {
 /* Git operations */
 
 class GitCloneAction extends SparkActionWithDialog {
-  InputElement _projectNameElement;
   InputElement _repoUrlElement;
+  chrome.DirectoryEntry _cloneDir;
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    _projectNameElement = getElement("#gitProjectName");
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
   }
 
   void _invoke([Object context]) {
+    _dialog.element.querySelector("#selectCloneFolder").onClick.listen((_) {
+      spark.selectFolder().then((entry) {
+        if (entry != null) {
+          chrome.fileSystem.getDisplayPath(entry).then((path) {
+            _cloneDir = entry;
+            path = path + spark.getPathSeparator()
+                + _repoUrlElement.value.split('/').last;
+            (_dialog.element.querySelector("#cloneFolderPath")
+                as InputElement).value = path;
+          });
+        }
+      });
+    });
     _show();
   }
 
   void _commit() {
     // TODO(grv): add verify checks.
     _GitCloneJob job = new _GitCloneJob(
-        _projectNameElement.value, _repoUrlElement.value, spark);
+        _repoUrlElement.value, _cloneDir, spark);
     spark.jobManager.schedule(job);
   }
 }
@@ -1184,39 +1214,42 @@ class _GitCloneJob extends Job {
   String projectName;
   String url;
   Spark spark;
+  chrome.DirectoryEntry cloneDir;
 
-  _GitCloneJob(this.projectName, this.url, this.spark)
-      : super("Cloning …");
+  _GitCloneJob(this.url, this.cloneDir, this.spark)
+      : super("Cloning …") {
+    projectName = url.split('/').last;
+    if (!url.endsWith('.git')) {
+      url = url + '.git';
+    }
+  }
 
   Future<Job> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     Completer completer = new Completer();
 
-    getGitTestFileSystem().then((/*chrome_files.CrFileSystem*/ fs) {
-      return fs.root.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
-        spark._gitDir = dir;
-        GitOptions options = new GitOptions();
-        options.root = dir;
-        options.repoUrl = url;
-        options.depth = 1;
-        options.store = new ObjectStore(dir);
-        spark._currentGitStore = options.store;
-        Clone clone = new Clone(options);
-        return options.store.init().then((_) {
-          return clone.clone().then((_) {
-            return spark.workspace.link(dir).then((folder) {
-              Timer.run(() {
-                spark._filesController.selectFile(folder);
-                spark._filesController.setFolderExpanded(folder);
-              });
-              spark.workspace.save();
+    cloneDir.createDirectory(projectName).then((chrome.DirectoryEntry dir) {
+
+      GitOptions options = new GitOptions();
+      options.root = dir;
+      options.repoUrl = url;
+      options.depth = 1;
+      options.store = new ObjectStore(dir);
+      spark._currentGitStore = options.store;
+      Clone clone = new Clone(options);
+      return options.store.init().then((_) {
+        return clone.clone().then((_) {
+          return spark.workspace.link(dir).then((folder) {
+            Timer.run(() {
+              spark._filesController.selectFile(folder);
+              spark._filesController.setFolderExpanded(folder);
             });
+            spark.workspace.save();
           });
         });
       });
     }).whenComplete(() => completer.complete(this));
-
     return completer.future;
   }
 }
