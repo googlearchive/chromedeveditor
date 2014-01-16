@@ -65,3 +65,11 @@
     background-position: 0 -132px;
   }
 }
+
+button {
+  outline: none;
+}
+
+button:active {
+  border: 1px solid #aaa;
+}
