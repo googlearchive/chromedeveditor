@@ -6,8 +6,7 @@ description: A Chrome app based development environment.
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  ace:
-    path: /Users/ericarnold/src/ace.dart
+  ace: '>=0.1.7 <0.2.0'
   analyzer: '>=0.10.1 <0.11.0'
   archive: 1.0.8
   bootjack: any
@@ -31,4 +30,4 @@ dev_dependencies:
 transformers:
 - polymer:
     entry_points: web/spark_polymer.html
-    csp: 'true'
+    csp: true
