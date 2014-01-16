@@ -152,7 +152,7 @@ class AceManager {
       _minimapElement.append(minimapMarker);
     }
 
-    currentSession.annotations = annotations;
+    currentSession.setAnnotations(annotations);
   }
 
   void selectNextMarker() {
