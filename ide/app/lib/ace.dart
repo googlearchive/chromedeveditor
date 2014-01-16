@@ -292,9 +292,13 @@ class AceManager {
       // TODO(ericarnold): Markers aren't shown until file is edited.  Fix.
       setMarkers(currentFile.getMarkers());
 
+      // Setup handlers once.
       if (_markerSubscription == null) {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
+        currentSession.onChangeFold.listen((_) {
+          setMarkers(currentFile.getMarkers());
+        });
       }
     }
   }
