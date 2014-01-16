@@ -90,6 +90,8 @@ class AceManager {
 
   workspace.Marker _currentMarker;
 
+  StreamSubscription<ace.FoldChangeEvent> _foldListenerSubscription;
+
   static bool get available => js.context['ace'] != null;
 
   StreamSubscription _markerSubscription;
@@ -272,6 +274,11 @@ class AceManager {
   ace.EditSession get currentSession => _aceEditor.session;
 
   void switchTo(ace.EditSession session, [workspace.File file]) {
+    if (_foldListenerSubscription != null) {
+      _foldListenerSubscription.cancel();
+      _foldListenerSubscription = null;
+    }
+
     if (session == null) {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.readOnly = true;
@@ -281,6 +288,13 @@ class AceManager {
       if (_aceEditor.readOnly) {
         _aceEditor.readOnly = false;
       }
+
+      _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
+        setMarkers(file.getMarkers());
+      });
+
+      // TODO(ericarnold): Markers aren't shown until file is edited.  Fix.
+      setMarkers(file.getMarkers());
     }
 
     // Setup the code completion options for the current file type.
@@ -289,16 +303,10 @@ class AceManager {
       _aceEditor.setOption(
           'enableBasicAutocompletion', path.extension(file.name) != '.dart');
 
-      // TODO(ericarnold): Markers aren't shown until file is edited.  Fix.
-      setMarkers(currentFile.getMarkers());
-
       // Setup handlers once.
       if (_markerSubscription == null) {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
-        currentSession.onChangeFold.listen((_) {
-          setMarkers(currentFile.getMarkers());
-        });
       }
     }
   }
