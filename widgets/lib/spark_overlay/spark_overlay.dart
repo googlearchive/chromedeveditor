@@ -8,11 +8,11 @@ import 'dart:async';
 import 'dart:html';
 import 'package:polymer/polymer.dart';
 
-import '../common/widget.dart';
+import '../common/spark_widget.dart';
 
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-overlay")
-class SparkOverlay extends Widget {
+class SparkOverlay extends SparkWidget {
   // TODO(sorvell): need keyhelper component.
   static final int ESCAPE_KEY = 27;
 

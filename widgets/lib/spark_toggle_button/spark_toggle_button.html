@@ -19,7 +19,10 @@
  // TODO(terry): Remove the on-click when touch is working shouldn't be needed.
 -->
 
-<polymer-element name="spark-toggle-button" attributes="value"
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
+<polymer-element name="spark-toggle-button" extends="spark-widget"
+    attributes="value"
     on-click="{{toggle}}"
     on-tap="{{toggle}}"
     on-trackstart="{{trackStart}}"

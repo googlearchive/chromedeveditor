@@ -24,8 +24,7 @@
   display: inline-block;
 }
 
-.fileview-filename-container .fileStatus.error {
-  background: #F55;
+.fileview-filename-container .fileStatus {
   border-radius: 2px;
   position: absolute;
   top: 2px;
@@ -34,14 +33,16 @@
   width: 4px;
 }
 
+.fileview-filename-container .fileStatus.error {
+  background: #F55;
+}
+
 .fileview-filename-container .fileStatus.warning {
   background: #DD3;
-  border-radius: 2px;
-  position: absolute;
-  top: 2px;
-  right: 1px;
-  height: 16px;
-  width: 4px;
+}
+
+.fileview-filename-container .fileStatus.info {
+  background: #9CC;
 }
 
 .fileview-filename-container .menu {
@@ -75,9 +76,12 @@
 }
 
 #splitview {
+  bottom: 0;
   display: flex;
-  height: 100%;
-  width: 100%;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 40px;
 }
 
 #fileViewArea {
@@ -182,7 +186,7 @@
   -moz-user-select: none;
   overflow: hidden;
   background: white;
-  padding:30px 42px;
+  padding: 30px 42px;
   outline: 1px solid rgba(0,0,0,0.2);
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
@@ -238,6 +242,10 @@
   background: #DD3;
 }
 
+.minimap-marker.info {
+  background: #9CC;
+}
+
 /* TODO(ussuri): None of these worked. Fix.
 .plus-minus-container {
   display: flex;
@@ -252,6 +260,8 @@
 }
 */
 
-.toolbar {
-  background-color: white;
+#toolbar {
+  left: 0;
+  position: absolute;
+  right: 0;
 }

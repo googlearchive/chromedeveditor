@@ -11,6 +11,7 @@ library spark.ui.widgets.fileitem_cell;
 import 'dart:html';
 
 import 'listview_cell.dart';
+import '../../scm.dart' as scm;
 import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
@@ -24,7 +25,16 @@ class FileItemCell implements ListViewCell {
         (querySelector('#fileview-filename-template') as TemplateElement).content;
     DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.fileview-filename-container');
-    _element.querySelector('.filename').text = _resource.name;
+    String name = _resource.name;
+    if (_resource is Project) {
+      if (scm.isUnderScm(_resource)) {
+        // TODO: get branch name from the scm provider
+        String branchName = '';
+        String decoration = '[<i class="fa fa-code-fork"></i>${branchName}]';
+        name = '${name} <span class="text-muted">${decoration}</span>';
+      }
+    }
+    _element.querySelector('.filename').innerHtml = name;
     acceptDrop = false;
     updateFileStatus();
   }
