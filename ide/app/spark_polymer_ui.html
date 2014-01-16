@@ -178,8 +178,11 @@
         <h4 class="modal-title">New Git Project</h4>
       </div>
       <div class="modal-body">
-        Project Name: <input id="gitProjectName" type="text" focused><br/><br/>
         Repository URL: <input id="gitRepoUrl" type="text">
+        <br/><br/>
+        <input id="cloneFolderPath" type="text" value="Git Clone Folder" 
+            disabled><br/><br/>
+        <spark-button id="selectCloneFolder"> Select Folder</spark-button>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
