@@ -41,7 +41,8 @@ class Commit {
         }
 
         if (entry.isDirectory) {
-          return walkFiles(entry as DirectoryEntry, store).then((String sha) {
+          return walkFiles(entry as chrome.DirectoryEntry, store).then(
+              (String sha) {
             if (sha != null) {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
                   false));
