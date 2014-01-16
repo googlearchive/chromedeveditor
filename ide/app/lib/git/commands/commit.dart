@@ -7,7 +7,7 @@ library git.commands.commit;
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../file_operations.dart';
 import '../object.dart';
@@ -126,7 +126,7 @@ class Commit {
         dateString += offsetStr;
         StringBuffer commitContent = new StringBuffer();
         commitContent.write('tree ${sha}\n');
-        if (parent != null && parent.length) {
+        if (parent != null && parent.length > 0) {
           commitContent.write('parent ${parent}');
           if (parent[parent.length -1] != '\n') {
             commitContent.write('\n');

@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:typed_data';
 
-import 'package:chrome_gen/src/common_exp.dart' as chrome;
+import 'package:chrome/src/common_exp.dart' as chrome;
 
 import 'object_utils.dart';
 
@@ -16,7 +16,7 @@ import 'object_utils.dart';
  * Encapsulates a Gitobject
  *
  * TODO(grv): Add unittests.
- **/
+ */
 abstract class GitObject {
 
   /**
@@ -265,10 +265,10 @@ class LooseObject {
 
       this.data = data.sublist(i + 1, data.length);
     } else {
-      i = data.indexOf(new String.fromCharCode(0));
-      header = data.substring(0, i);
+      i = buf.indexOf(new String.fromCharCode(0));
+      header = buf.substring(0, i);
       // move past null terminator but keep zlib header
-      this.data = data.substring(i + 1, data.length);
+      this.data = buf.substring(i + 1, buf.length);
     }
     List<String> parts = header.split(' ');
     this._type = parts[0];

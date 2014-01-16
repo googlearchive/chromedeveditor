@@ -1,0 +1,45 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+:host {
+  display: block;
+  width: 6px;
+  border-left: 1px solid #DDD;
+  border-right: 1px solid #DDD;
+  cursor: col-resize;
+  background-color: #F7F7F7;
+}
+
+:host(.horizontal) {
+    width: auto;
+    height: 6px;
+    cursor: row-resize;
+}
+
+:host:hover {
+}
+
+:host(.active) {
+}
+
+/* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
+@host {
+  * {
+    display: block;
+    width: 6px;
+    border-left: 1px solid #DDD;
+    border-right: 1px solid #DDD;
+    cursor: col-resize;
+    background-color: #F7F7F7;
+  }
+
+  .horizontal {
+    width: auto;
+    height: 6px;
+    cursor: row-resize;
+  }
+
+  :hover, .active {
+
+  }
+}

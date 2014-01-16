@@ -10,7 +10,7 @@ import 'dart:core';
 import 'dart:html';
 import 'dart:typed_data';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'objectstore.dart';
 import 'upload_pack_parser.dart';

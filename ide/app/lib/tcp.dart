@@ -9,20 +9,20 @@
  * See also:
  *
  * * [developer.chrome.com/apps/socket.html](http://developer.chrome.com/apps/socket.html)
- * * [dart-gde.github.io/chrome_gen.dart/app/chrome.socket.html](http://dart-gde.github.io/chrome_gen.dart/app/chrome.socket.html)
+ * * [dart-gde.github.io/chrome.dart/app/chrome.socket.html](http://dart-gde.github.io/chrome.dart/app/chrome.socket.html)
  */
 library spark.tcp;
 
 import 'dart:async';
 
-import 'package:chrome_gen/chrome_app.dart' as chrome;
-export 'package:chrome_gen/chrome_app.dart' show SocketInfo;
+import 'package:chrome/chrome_app.dart' as chrome;
+export 'package:chrome/chrome_app.dart' show SocketInfo;
 
 const LOCAL_HOST = '127.0.0.1';
 
 // TODO(devoncarew): these classes are fairly generic; explore contributing them
-// to package:chrome_gen, or to a new utility library for chrome functionalty
-// built on chrome_gen? chrome_util?
+// to package:chrome, or to a new utility library for chrome functionalty
+// built on chrome? chrome_util?
 
 /**
  * An [Exception] implementation for socket errors.

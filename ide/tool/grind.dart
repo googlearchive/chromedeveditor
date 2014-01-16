@@ -96,13 +96,9 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  _dart2jsCompile(context, joinDir(destDir, ['web']),
+  _dart2jsCompile(
+      context, joinDir(destDir, ['web']),
       'spark_polymer.html_bootstrap.dart', true);
-  _dart2jsCompile(context, joinDir(destDir, ['web']),
-      'spark_polymer_ui.html_bootstrap.dart', true);
-  _runCommandSync(
-      context,
-      "perl -i -pe 's/spark_polymer\\.html_bootstrap\\.dart\\.js/spark_polymer\\.html_bootstrap\\.dart\\.precompiled\\.js/' ${destDir.path}/web/spark_polymer.html");
   _runCommandSync(
       context,
       'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
@@ -305,10 +301,12 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   copyDirectory(getDir('../widgets'), joinDir(BUILD_DIR, ['widgets']), context);
 
   // Copy the app directory to target/web.
-  copyFile(new File('pubspec.yaml'), sourceDir);
-  copyFile(new File('pubspec.lock'), sourceDir);
-  copyDirectory(new Directory('app'), joinDir(sourceDir, ['web']), context);
+  copyFile(getFile('pubspec.yaml'), sourceDir);
+  copyFile(getFile('pubspec.lock'), sourceDir);
+  copyDirectory(getDir('app'), joinDir(sourceDir, ['web']), context);
+
   deleteEntity(joinFile(destDir, ['web', 'spark_polymer.dart.precompiled.js']), context);
+
   deleteEntity(getDir('${sourceDir.path}/web/packages'), context);
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
@@ -346,7 +344,10 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
         context);
   }
 
-  _printSize(context,  joinFile(target, ['${filePath}.precompiled.js']));
+  final Link link = new Link(joinFile(target, ['${filePath}.js']).path);
+  link.createSync('./${filePath}.precompiled.js');
+
+  _printSize(context, joinFile(target, ['${filePath}.precompiled.js']));
 }
 
 /**

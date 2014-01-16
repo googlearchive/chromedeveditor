@@ -13,7 +13,6 @@ import '../common/spark_widget.dart';
 class SparkToolbar extends SparkWidget {
   @published bool responsive = false;
   @published bool touch = false;
-  @published String color = "whitesmoke";
 
   SparkToolbar.created(): super.created();
 

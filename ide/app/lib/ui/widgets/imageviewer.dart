@@ -10,9 +10,11 @@ library spark.editors.image;
 import 'dart:async';
 import 'dart:html' as html;
 import 'dart:math' as math;
+
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' show CryptoUtils;
-import 'package:chrome_gen/chrome_app.dart' as chrome;
 import 'package:mime/mime.dart' as mime;
+
 import '../utils/html_utils.dart';
 import '../../workspace.dart';
 

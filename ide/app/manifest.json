@@ -41,7 +41,8 @@
     "syncFileSystem",
     "storage",
     "webview",
-    "contextMenus"
+    "contextMenus",
+    "app.window"
   ],
   "file_handlers": {
     "text": {
