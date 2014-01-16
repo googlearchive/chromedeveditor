@@ -77,9 +77,12 @@
 }
 
 #splitview {
+  bottom: 0;
   display: flex;
-  height: 100%;
-  width: 100%;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 46px;
 }
 
 #fileViewArea {
@@ -258,6 +261,8 @@
 }
 */
 
-.toolbar {
-  background-color: white;
+#toolbar {
+  left: 0;
+  position: absolute;
+  right: 0;
 }
