@@ -24,31 +24,32 @@ const int SERVER_PORT = 4040;
 final Logger _logger = new Logger('spark.launch');
 
 /**
- * The last project that was launched
- */
-Project _currentProject;
-
-Workspace _workspace;
-
-/**
  *  Manages all the launches and calls the appropriate delegate
  */
 class LaunchManager {
 
-  List<LaunchDelegate> _delegates = [ new DartWebAppLaunchDelegate(),
-                                      new ChromeAppLaunchDelegate()
-                                     ];
+  List<LaunchDelegate> _delegates = [];
 
   PicoServer _server;
+  /**
+   * The last project that was launched
+   */
+  Project _currentProject;
+  Project get currentProject => _currentProject;
 
-  LaunchManager(Workspace workspace) {
-    _workspace = workspace;
+  Workspace _workspace;
+  Workspace get workspace => _workspace;
+
+  LaunchManager(this._workspace) {
+
+    _delegates.add(new DartWebAppLaunchDelegate(this));
+    _delegates.add(new ChromeAppLaunchDelegate());
 
     PicoServer.createServer(SERVER_PORT).then((server) {
       _server = server;
-      _server.addServlet(new ProjectRedirectServlet());
+      _server.addServlet(new ProjectRedirectServlet(this));
       _server.addServlet(new StaticResourcesServlet());
-      _server.addServlet(new WorkspacePicoServlet());
+      _server.addServlet(new WorkspaceServlet(this));
     });
   }
 
@@ -89,13 +90,17 @@ abstract class LaunchDelegate {
  */
 class DartWebAppLaunchDelegate extends LaunchDelegate {
 
+  LaunchManager _launchManager;
+
+  DartWebAppLaunchDelegate(this._launchManager);
+
   // for now launching only web/index.html
   bool canRun(Resource resource) {
     return resource.project != null && resource.project.getChildPath('web/index.html') is File;
   }
 
   void run(Resource resource) {
-    _currentProject = resource.project;
+    _launchManager._currentProject = resource.project;
     // use htm extension for launch page, otherwise polymer build tries to pick it up.
     chrome.app.window.create('launch_page.htm',
         new chrome.CreateWindowOptions(id: 'runWindow', width: 600, height: 800))
@@ -124,11 +129,16 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 /**
  * A servlet that can serve files from any of the [Project]s in the [Workspace]
  */
-class WorkspacePicoServlet extends PicoServlet {
+class WorkspaceServlet extends PicoServlet {
+
+  LaunchManager _launchManager;
+
+  WorkspaceServlet(this._launchManager);
 
   bool canServe(HttpRequest request) {
     if (request.uri.pathSegments.length <= 1) return false;
-    var projectNamesList = _workspace.getProjects().map((project) => project.name).toList();
+    var projectNamesList = _launchManager.workspace.getProjects()
+                              .map((project) => project.name).toList();
     return projectNamesList.contains(request.uri.pathSegments[0]);
   }
 
@@ -138,7 +148,7 @@ class WorkspacePicoServlet extends PicoServlet {
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
-    Resource resource = _workspace.getChildPath(path);
+    Resource resource = _launchManager.workspace.getChildPath(path);
 
     return (resource as File).getContents().then((String string) {
       response.setContent(string);
@@ -175,6 +185,10 @@ class ProjectRedirectServlet extends PicoServlet {
   String HTML_REDIRECT =
       '<meta http-equiv="refresh" content="0; url=http://127.0.0.1:$SERVER_PORT/';
 
+  LaunchManager _launchManager;
+
+  ProjectRedirectServlet(this._launchManager);
+
   bool canServe(HttpRequest request) {
     return request.uri.path == '/';
   }
@@ -182,7 +196,7 @@ class ProjectRedirectServlet extends PicoServlet {
   Future<HttpResponse> serve(HttpRequest request) {
     HttpResponse response = new HttpResponse.ok();
     // TODO: for now landing page is hardcoded to project/web/index.html
-    String string ='$HTML_REDIRECT${_currentProject.name}/web/index.html">';
+    String string ='$HTML_REDIRECT${_launchManager.currentProject.name}/web/index.html">';
     response.setContent(string);
     response.setContentTypeFrom('redirect.html');
     return new Future.value(response);
@@ -194,6 +208,7 @@ class ProjectRedirectServlet extends PicoServlet {
  * Return the contents of the file at the given path. The path is relative to
  * the Chrome app's directory.
  */
+//TODO: move to utils
 Future<List<int>> _getContentsBinary(String path) {
   String url = chrome.runtime.getURL(path);
 
