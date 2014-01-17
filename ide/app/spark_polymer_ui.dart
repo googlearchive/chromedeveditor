@@ -18,8 +18,10 @@ class SparkPolymerUI extends SparkWidget {
   void onMenuSelected(Event event, var detail) {
     final actionId = detail['item'];
     final action = SparkModel.instance.actionManager.getAction(actionId);
-    assert(action != null);
-    action.invoke();
+    // action can be null when selecting theme or key menu option.
+    if (action != null) {
+      action.invoke();
+    }
   }
 
   void onThemeMinus(Event e) {

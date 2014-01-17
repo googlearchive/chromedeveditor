@@ -132,12 +132,7 @@ class SparkPolymer extends Spark {
   }
 
   @override
-  void buildMenu() {
-    getUIElement('#themePlus').onClick.listen((e) => aceThemeManager.inc(e));
-    getUIElement('#themeMinus').onClick.listen((e)  => aceThemeManager.dec(e));
-    getUIElement('#keysPlus').onClick.listen((e) => aceKeysManager.inc(e));
-    getUIElement('#keysMinus').onClick.listen((e)  => aceKeysManager.dec(e));
-  }
+  void buildMenu() {}
 
   //
   // - End parts of the parent's ctor.
