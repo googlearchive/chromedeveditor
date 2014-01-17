@@ -22,7 +22,6 @@ spark-button button {
   margin-left: 8px;
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
-  overflow: hidden;
 }
 
 [valign=right] #overlay {
