@@ -17,8 +17,5 @@
     cursor: row-resize;
 }
 
-:host:hover {
-}
-
-:host.active {
+:host:hover, :host.active {
 }
