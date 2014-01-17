@@ -162,7 +162,9 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       // content of the workspace from other applications.
       // For that reason, when the user switch back to Spark, we want to check
       // whether the content of the workspace changed.
-      // TODO(devoncarew): this is causing issues in the workspace
+      // TODO(devoncarew): This is causing workspace corruption issues. Our
+      // refresh method really needs to weave deltas back into the existing
+      // workspace model.
       //workspace.refresh();
     });
 
