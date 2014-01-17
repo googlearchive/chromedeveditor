@@ -94,6 +94,7 @@ class FilesController implements TreeViewDelegate {
       _delegate.selectInEditor(file, forceOpen: forceOpen);
     }
     _selectionController.add(file);
+    _treeView.scrollIntoView(file.path);
   }
 
   void selectFirstFile({bool forceOpen: false}) {
