@@ -26,7 +26,6 @@ import 'lib/git/commands/branch.dart';
 import 'lib/git/commands/checkout.dart';
 import 'lib/git/commands/clone.dart';
 import 'lib/git/commands/commit.dart';
-import 'lib/git/git.dart';
 import 'lib/git/objectstore.dart';
 import 'lib/git/options.dart';
 import 'lib/jobs.dart';
