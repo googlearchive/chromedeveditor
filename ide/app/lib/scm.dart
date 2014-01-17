@@ -128,6 +128,12 @@ class GitScmProvider extends ScmProvider {
 
     return _operations[project];
   }
+
+  // TODO: remove this
+  void createMetaDataFor(Project project, ObjectStore store) {
+    GitScmProjectOperations operations = getOperationsFor(project);
+    operations._objectStore = store;
+  }
 }
 
 /**
@@ -138,6 +144,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   GitScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
+
+    // TODO: This ctor of ObjectStore does not properly populate the git metadata.
     _objectStore = new ObjectStore(project.entry);
   }
 

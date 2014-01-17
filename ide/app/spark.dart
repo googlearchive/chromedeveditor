@@ -1274,10 +1274,13 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
     store.getCurrentBranch().then((String currentBranch) {
       (getElement('#currentBranchName') as InputElement).value = currentBranch;
 
+      _branchSelectElement.length = 0;
+
       store.getLocalBranches().then((List<String> branches) {
         branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
         for (String branchName in branches) {
-          _branchSelectElement.append(new OptionElement(data: branchName, value: branchName));
+          _branchSelectElement.append(
+              new OptionElement(data: branchName, value: branchName));
         }
       });
 
@@ -1326,6 +1329,12 @@ class _GitCloneJob extends Job {
       return options.store.init().then((_) {
         return clone.clone().then((_) {
           return spark.workspace.link(dir).then((folder) {
+            // TODO: We're explicitly having to push this specific instance of
+            // the object store into the project's scm metadata. This shouldn't
+            // be necessary.
+            scm.GitScmProvider gitScmProvider = scm.getProviderType('git');
+            gitScmProvider.createMetaDataFor(folder, options.store);
+
             Timer.run(() {
               spark._filesController.selectFile(folder);
               spark._filesController.setFolderExpanded(folder);
