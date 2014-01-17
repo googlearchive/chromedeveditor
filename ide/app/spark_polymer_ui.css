@@ -265,3 +265,8 @@
   position: absolute;
   right: 0;
 }
+
+#toolbarRight {
+  padding-right: 16px;
+}
+}
