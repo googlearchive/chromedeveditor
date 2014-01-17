@@ -256,7 +256,7 @@
   margin-left: 15px;
 }
 
-.menu-button {
+spark-menu-item .menu-button {
   background-color: #3a84c3;
   border-radius: 5px;
   color: #fff;
