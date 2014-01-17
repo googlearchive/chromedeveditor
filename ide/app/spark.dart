@@ -1099,6 +1099,9 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    _cloneDir = null;
+    (_dialog.element.querySelector("#cloneFolderPath")
+        as InputElement).value = 'Git Clone Folder Path';
     _dialog.element.querySelector("#selectCloneFolder").onClick.listen((_) {
       spark.selectFolder().then((entry) {
         if (entry != null) {
@@ -1116,10 +1119,12 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    // TODO(grv): add verify checks.
-    _GitCloneJob job = new _GitCloneJob(
-        _repoUrlElement.value, _cloneDir, spark);
-    spark.jobManager.schedule(job);
+    // TODO(grv): add verify checks and report errors.
+    if (_cloneDir != null) {
+      _GitCloneJob job = new _GitCloneJob(
+          _repoUrlElement.value, _cloneDir, spark);
+      spark.jobManager.schedule(job);
+    }
   }
 }
 
