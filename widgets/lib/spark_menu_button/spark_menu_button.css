@@ -18,7 +18,7 @@ spark-button button {
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-left: 22px;
+  margin-left: 14px;
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
 }
@@ -40,11 +40,13 @@ spark-button button {
   border-color: transparent transparent #cfcfcf transparent;
   border-style: solid;
   border-width: 8px;
+  cursor: pointer;
 }
 
 .arrow-inner {
   border-bottom-color: white;
   margin-top: -15px;
+  top:1px;
 }
 
 [valign=right] .arrow {
