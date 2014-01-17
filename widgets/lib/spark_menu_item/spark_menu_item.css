@@ -4,16 +4,16 @@
 
 .labelText {
   margin: 0 5px;
+  position: relative;
+  top: 6px;
 }
 
 spark-icon, .labelText, .labelText > * {
   display: inline-block;
-  vertical-align: middle;
 }
 
 :host:hover {
-  color: black;
+  color: #fff;
   opacity: 1 !important;
-  border: 1px solid #ccc;
-  background: #eee;
+  background: #3a84c3;
 }

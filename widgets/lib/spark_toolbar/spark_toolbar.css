@@ -24,8 +24,7 @@
   border-bottom: 0;
 }
 
-/*@polyfill .toolbar > *:not(spark-toolbar) */
-::content :not(spark-toolbar) {
+::content > * {
   margin: 0 4px;
 }
 
