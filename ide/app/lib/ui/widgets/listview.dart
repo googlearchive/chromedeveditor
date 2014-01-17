@@ -299,6 +299,10 @@ class ListView {
     }
   }
 
+  void scrollIntoRow(int rowIndex, [ScrollAlignment align]) {
+    _rows[rowIndex].cell.element.parent.scrollIntoView(align);
+  }
+
   /**
    * Callback on a double click.
    */
