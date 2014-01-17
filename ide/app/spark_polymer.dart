@@ -54,6 +54,22 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
+  void openFolder() {
+    backdropShowing = true;
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () => (super.openFolder()));
+  }
+
+  void set backdropShowing(bool showing) {
+    var appModal = querySelector("#modalBackdrop");
+    appModal.style.display = showing ? "block" : "none";
+  }
+
+  bool get backdropShowing {
+    var appModal = querySelector("#modalBackdrop");
+    appModal.style.display == "none";
+  }
+
   SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode);
