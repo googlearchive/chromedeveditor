@@ -93,7 +93,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   final bool developerMode;
 
   final JobManager jobManager = new JobManager();
-  final LaunchManager launchManager = new LaunchManager();
 
   ActivitySpinner _activitySpinner;
 
@@ -104,6 +103,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   BuilderManager _buildManager;
   EditorManager _editorManager;
   EditorArea _editorArea;
+  LaunchManager _launchManager;
 
 
 
@@ -138,7 +138,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     });
 
     initWorkspace();
-
     initActivitySpinner();
 
     createEditorComponents();
@@ -155,6 +154,9 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     initSplitView();
     initSaveStatusListener();
+
+    initLaunchManager();
+
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -177,6 +179,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   ws.Workspace get workspace => _workspace;
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
+  LaunchManager get launchManager => _launchManager;
 
   preferences.PreferenceStore get localPrefs => _localPrefs;
   preferences.PreferenceStore get syncPrefs => _syncPrefs;
@@ -252,6 +255,10 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void initWorkspace() {
     _workspace = new ws.Workspace(localPrefs);
+  }
+
+  void initLaunchManager() {
+    _launchManager = new LaunchManager(_workspace);
   }
 
   /**
