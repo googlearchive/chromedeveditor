@@ -11,11 +11,11 @@
   background-color: #F7F7F7;
 }
 
-:host.horizontal {
+:host(.horizontal), /*BUG #733*/:host.horizontal {
     width: auto;
     height: 6px;
     cursor: row-resize;
 }
 
-:host:hover, :host.active {
+:host:hover, :host(.active), /*BUG #733*/:host.active {
 }
