@@ -1,11 +1,7 @@
 *.swo
 *.swp
-.files
 .settings/
 app/app.json
-app/sdk/dart-sdk.bin
-app/sdk/lib/
-app/sdk/version
 app/spark.dart.js
 app/spark.dart.precompiled.js
 app/spark_polymer.dart.js
