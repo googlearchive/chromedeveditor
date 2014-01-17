@@ -1100,6 +1100,8 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     _cloneDir = null;
+    (_dialog.element.querySelector("#cloneFolderPath")
+        as InputElement).value = 'Git Clone Folder Path';
     _dialog.element.querySelector("#selectCloneFolder").onClick.listen((_) {
       spark.selectFolder().then((entry) {
         if (entry != null) {
