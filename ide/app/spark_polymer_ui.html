@@ -53,25 +53,15 @@
           <spark-menu-item id="changeTheme" iconsize=0 label="Theme:">
             <span></span>
             <span class="plus-minus-container">
-              <label class="plus-minus-spacer"></label>
-              <spark-button class="plus-minus" on-click="{{onThemeMinus}}">
-                <strong>-</strong>
-              </spark-button>
-              <spark-button class="plus-minus" on-click="{{onThemePlus}}">
-                <strong>+</strong>
-              </spark-button>
+              <a href="#" id="themeMinus" class="menu-button" on-click="{{onThemeMinus}}">-</a>
+              <a href="#" id="themePlus" class="menu-button" on-click="{{onThemePlus}}">+</a>
             </span>
           </spark-menu-item>
           <spark-menu-item id="changeKeys" iconsize=0 label="Keys:">
             <span></span>
             <span class="plus-minus-container">
-              <label class="plus-minus-spacer"></label>
-              <spark-button class="plus-minus" on-click="{{onKeysMinus}}">
-                <strong>-</strong>
-              </spark-button>
-              <spark-button class="plus-minus" on-click="{{onKeysPlus}}">
-                <strong>+</strong>
-              </spark-button>
+              <a href="#" id="keysMinus" class="menu-button" on-click="{{onKeysMinus}}">-</a>
+              <a href="#" id="keysPlus" class="menu-button" on-click="{{onKeysPlus}}">+</a>
             </span>
           </spark-menu-item>
           <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">

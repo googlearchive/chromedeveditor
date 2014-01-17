@@ -246,22 +246,27 @@
   background: #9CC;
 }
 
-/* TODO(ussuri): None of these worked. Fix.
-.plus-minus-container {
-  display: flex;
-}
-
-.plus-minus-spacer {
-  flex: 1;
-}
-
-.plus-minus {
-  margin: 0;
-}
-*/
-
 #toolbar {
   left: 0;
   position: absolute;
   right: 0;
+}
+
+.plus-minus-container {
+  margin-left: 15px;
+}
+
+spark-menu-item .menu-button {
+  background-color: #3a84c3;
+  border-radius: 5px;
+  color: #fff;
+  display: span;
+  overflow: hidden;
+  padding: 3px 8px;
+}
+
+spark-menu-item:hover .menu-button {
+  background-color: #fff;
+  color: #3a84c3;
+  text-decoration: none;
 }

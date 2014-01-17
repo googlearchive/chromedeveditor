@@ -17,8 +17,9 @@ spark-button button {
 #overlay {
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-left: 22px;
+  margin-left: 8px;
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
 }
@@ -60,9 +61,11 @@ spark-button button {
 }
 
 #overlayMenu {
+  border: none;
   display: block;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
+  margin: 5px 0;
 }
 
 /* TODO(ffu): adding responsive class won't work in native; to work in native
@@ -86,7 +89,6 @@ container */
     bottom: 0;
     left: 0;
     margin: 0;
-    border-bottom: 0;
     box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
   }
 
