@@ -10,6 +10,9 @@ library spark.scm;
 
 import 'dart:async';
 
+import 'package:chrome/chrome_app.dart' as chrome;
+
+import 'git/objectstore.dart';
 import 'workspace.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
@@ -79,6 +82,8 @@ abstract class ScmProjectOperations {
 
   ScmProjectOperations(this.provider, this.project);
 
+  chrome.DirectoryEntry get entry => project.entry;
+
   /**
    * Return the SCM status for the given file or folder.
    */
@@ -129,12 +134,17 @@ class GitScmProvider extends ScmProvider {
  * The Git SCM project operations implementation.
  */
 class GitScmProjectOperations extends ScmProjectOperations {
+  ObjectStore _objectStore;
 
   GitScmProjectOperations(ScmProvider provider, Project project) :
-    super(provider, project);
+    super(provider, project) {
+    _objectStore = new ObjectStore(project.entry);
+  }
 
   Future<FileStatus> getFileStatus(Resource resource) {
     // TODO: how to retrieve the git file status?
     return new Future.error('unimplemented - getFileStatus()');
   }
+
+  ObjectStore getObjectStore() => _objectStore;
 }
