@@ -48,18 +48,18 @@ We address this by using script based positioning =(
   It is then made visibility: visible when it is opened.
 */
 
-:host(.revealed) {
+:host(.revealed), /*BUG #733*/:host.revealed {
   display: block;
   visibility: hidden;
 }
 
-:host(.revealed.opened) {
+:host(.revealed.opened), /*BUG #733*/:host.revealed.opened {
   opacity: 1;
   display: block;
   visibility: visible;
 }
 
-:host(.revealed.closing) {
+:host(.revealed.closing), /*BUG #733*/:host.revealed.closing {
   display: block;
   visibility: visible;
 }
@@ -72,28 +72,28 @@ We address this by using script based positioning =(
   NOTE: if a rule such as a media query changes an overlay from using a css
   animation to a transition, the animation class must be altered or removed.
 */
-:host(.animation) {
+:host(.animation), /*BUG #733*/:host.animation {
   -webkit-transition: none;
   transition: none;
 }
 
-:host(.spark-overlay-fade) {
+:host(.spark-overlay-fade), /*BUG #733*/:host.spark-overlay-fade {
   opacity: 0;
   -webkit-transition: all 0.218s;
   transition: all 0.218s;
 }
 
-:host(.spark-overlay-fade.opened) {
+:host(.spark-overlay-fade.opened), /*BUG #733*/:host.spark-overlay-fade.opened {
   opacity: 1;
 }
 
-:host(.spark-overlay-scale-slideup) {
+:host(.spark-overlay-scale-slideup), /*BUG #733*/:host.spark-overlay-scale-slideup {
   opacity: 0.0;
   -webkit-transform: scale(1.05);
   transform: scale(1.05);
 }
 
-:host(.spark-overlay-scale-slideup.opened) {
+:host(.spark-overlay-scale-slideup.opened), /*BUG #733*/:host.spark-overlay-scale-slideup.opened {
   opacity: 1.0;
   -webkit-transform: scale(1.0);
   transform: scale(1.0);
@@ -101,7 +101,7 @@ We address this by using script based positioning =(
   transition: all 0.218s;
 }
 
-:host(.spark-overlay-scale-slideup.closing) {
+:host(.spark-overlay-scale-slideup.closing), /*BUG #733*/:host.spark-overlay-scale-slideup.closing {
   opacity: 0;
   -webkit-transform: translateY(-100%);
   transform: translateY(-100%);
@@ -109,7 +109,7 @@ We address this by using script based positioning =(
   transition: all 0.4s;
 }
 
-:host(.spark-overlay-shake.opened) {
+:host(.spark-overlay-shake.opened), /*BUG #733*/:host.spark-overlay-shake.opened {
   -webkit-animation-duration: 0.5s;
   -webkit-animation-fill-mode: both;
   -webkit-animation-name: spark-overlay-shakeFadeIn;
@@ -118,117 +118,13 @@ We address this by using script based positioning =(
   animation-name: spark-overlay-shakeFadeIn;
 }
 
-:host(.spark-overlay-shake.closing) {
+:host(.spark-overlay-shake.closing), /*BUG #733*/:host.spark-overlay-shake.closing {
   -webkit-animation-duration: 0.5s;
   -webkit-animation-fill-mode: both;
   -webkit-animation-name: spark-overlay-shakeFadeOut;
   animation-duration: 0.5s;
   animation-fill-mode: both;
   animation-name: spark-overlay-shakeFadeOut;
-}
-
-/* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
-@host {
-  * {
-    position: fixed;
-    z-index: 1000;
-    outline: none;
-    display: none;
-    opacity: 0.99;
-    -webkit-transition: opacity 0.001s;
-    transition: opacity 0.001s;
-  }
-
-  /*
-    The revealed class exists because it's necessary to 'show' a node
-    before applying a transition. When an overlay is opened, it is
-    immediately revealed (display: block) and then asynchronously the
-    opened or closing classes are added.
-
-    Because we don't want to actually show the node before a transition
-    or animation is applied, when the node is
-    revealed, it is made display: block but visibility: hidden.
-    It is then made visibility: visible when it is opened.
-  */
-
-  .revealed {
-    display: block;
-    visibility: hidden;
-  }
-
-  .revealed.opened {
-    opacity: 1;
-    display: block;
-    visibility: visible;
-  }
-
-  .revealed.closing {
-    display: block;
-    visibility: visible;
-  }
-
-  /*
-    When an animation is detected (via an animationstart event) this class
-    is applied to remove any transition. This ensures only 1 animation end event
-    will be processed.
-
-    NOTE: if a rule such as a media query changes an overlay from using a css
-    animation to a transition, the animation class must be altered or removed.
-  */
-  .animation {
-    -webkit-transition: none;
-    transition: none;
-  }
-
-  .spark-overlay-fade {
-    opacity: 0;
-    -webkit-transition: all 0.218s;
-    transition: all 0.218s;
-  }
-
-  .spark-overlay-fade.opened {
-    opacity: 1;
-  }
-
-  .spark-overlay-scale-slideup {
-    opacity: 0.0;
-    -webkit-transform: scale(1.05);
-    transform: scale(1.05);
-  }
-
-  .spark-overlay-scale-slideup.opened {
-    opacity: 1.0;
-    -webkit-transform: scale(1.0);
-    transform: scale(1.0);
-    -webkit-transition: all 0.218s;
-    transition: all 0.218s;
-  }
-
-  .spark-overlay-scale-slideup.closing {
-    opacity: 0;
-    -webkit-transform: translateY(-100%);
-    transform: translateY(-100%);
-    -webkit-transition: all 0.4s;
-    transition: all 0.4s;
-  }
-
-  .spark-overlay-shake.opened {
-    -webkit-animation-duration: 0.5s;
-    -webkit-animation-fill-mode: both;
-    -webkit-animation-name: spark-overlay-shakeFadeIn;
-    animation-duration: 0.5s;
-    animation-fill-mode: both;
-    animation-name: spark-overlay-shakeFadeIn;
-  }
-
-  .spark-overlay-shake.closing {
-    -webkit-animation-duration: 0.5s;
-    -webkit-animation-fill-mode: both;
-    -webkit-animation-name: spark-overlay-shakeFadeOut;
-    animation-duration: 0.5s;
-    animation-fill-mode: both;
-    animation-name: spark-overlay-shakeFadeOut;
-  }
 }
 
 @-webkit-keyframes spark-overlay-shakeFadeIn {

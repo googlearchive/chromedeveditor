@@ -1,23 +1,13 @@
 /* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
+
 :host {
   display: inline-block;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   width: 30px;
   height: 30px;
-}
-
-/* TODO(ussuri): Remove the @host block once :host is supported by Dartium */
-@host {
-  * {
-    display: inline-block;
-    box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    width: 30px;
-    height: 30px;
-  }
 }
 
 spark-button button {
@@ -103,7 +93,7 @@ container */
   [responsive=true] #overlay.slideup {
     -webkit-transform: translateY(100%);
     transform: translateY(100%);
-    /* override spark-overlay @host rule style */
+    /* override spark-overlay :host rule style */
     -webkit-transition: -webkit-transform 0.218s !important;
     transition: -webkit-transform 0.218s !important;
   }

@@ -1,6 +1,7 @@
 /* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
+
 .toolbar {
   display: -webkit-box;
   display: -webkit-flex;
@@ -36,21 +37,6 @@
   flex: 1;
 }
 
-/* TODO(ussuri): Remove the below 2 styles once Dartium supports ::content */
-
-/*@polyfill .toolbar > *:not(spark-toolbar) */
-::-webkit-distributed(:not(spark-toolbar)) {
-  margin: 0 4px;
-}
-
-/*@polyfill .toolbar > .flex */
-::-webkit-distributed(.flex) {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-}
-
 /* TODO(ffu): ad hoc, replace with a more thoughtful set of responsive rules */
 @media screen and (max-width: 800px) {
   .toolbar[responsive=true] {
@@ -69,8 +55,4 @@
     display: none;
   }
 
-  /* TODO(ussuri): Remove the below style once Dartium supports ::content */
-  ::-webkit-distributed(.hidden-narrow) {
-    display: none;
-  }
 }
