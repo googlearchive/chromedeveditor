@@ -22,12 +22,6 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
-import 'lib/git/commands/branch.dart';
-import 'lib/git/commands/checkout.dart';
-import 'lib/git/commands/clone.dart';
-import 'lib/git/commands/commit.dart';
-import 'lib/git/objectstore.dart';
-import 'lib/git/options.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
@@ -1221,7 +1215,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     // TODO(grv): add verify checks.
     _GitBranchJob job = new _GitBranchJob(
-        gitOperations, _branchNameElement.value, spark);
+        gitOperations, _branchNameElement.value);
     spark.jobManager.schedule(job);
   }
 
@@ -1284,6 +1278,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
             _branchSelectElement.append(
                 new OptionElement(data: branchName, value: branchName));
           }
+          _branchSelectElement.selectedIndex = branches.indexOf(currentBranch);
         });
         _show();
       });
@@ -1319,36 +1314,25 @@ class _GitCloneJob extends Job {
     }
   }
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
+    return spark.projectLocationManager.createNewFolder(projectName).then((chrome.DirectoryEntry dir) {
+      scm.ScmProvider scmProvider = scm.getProviderType('git');
 
-    spark.projectLocationManager.createNewFolder(projectName).then((chrome.DirectoryEntry dir) {
-      GitOptions options = new GitOptions(
-          root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
-
-      Clone clone = new Clone(options);
-      return options.store.init().then((_) {
-        return clone.clone().then((_) {
-          return spark.workspace.link(dir).then((folder) {
-            // TODO: We're explicitly having to push this specific instance of
-            // the object store into the project's scm metadata. This shouldn't
-            // be necessary.
-            scm.GitScmProvider gitScmProvider = scm.getProviderType('git');
-            gitScmProvider.createMetaDataFor(folder, options.store);
-
-            Timer.run(() {
-              spark._filesController.selectFile(folder);
-              spark._filesController.setFolderExpanded(folder);
-            });
-            spark.workspace.save();
+      return scmProvider.clone(url, dir).then((_) {
+        return spark.workspace.link(dir).then((project) {
+          Timer.run(() {
+            spark._filesController.selectFile(project);
+            spark._filesController.setFolderExpanded(project);
           });
+          spark.workspace.save();
         });
       });
-    }).whenComplete(() => completer.complete(this));
-
-    return completer.future;
+    }).catchError((e) {
+      // TODO:
+      print(e);
+    });
   }
 }
 
@@ -1356,29 +1340,18 @@ class _GitBranchJob extends Job {
   scm.GitScmProjectOperations gitOperations;
   String _branchName;
   String url;
-  Spark spark;
 
-  _GitBranchJob(this.gitOperations, this._branchName, this.spark)
-      : super("Branch …");
+  _GitBranchJob(this.gitOperations, this._branchName) : super("Branch …");
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
-    GitOptions options = new GitOptions();
-    options.root = gitOperations.entry;
-    options.branchName = _branchName;
-    gitOperations.getObjectStore().then((store) {
-      options.store = store;
-      Branch.branch(options).then((entry) {
-        Checkout.checkout(options);
-        // TODO(grv) : checkout the new branch.
-      }, onError: (e) {
-        print(e);
-      }).whenComplete(() => completer.complete(this));
+    return gitOperations.createBranch(_branchName).then((_) {
+      return gitOperations.checkoutBranch(_branchName);
+    }).catchError((e) {
+      // TODO:
+      print(e);
     });
-
-    return completer.future;
   }
 }
 
@@ -1389,23 +1362,16 @@ class _GitCommitJob extends Job {
 
   _GitCommitJob(this.gitOperations, this._commitMessage, this.spark) : super("Commit …");
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
-    GitOptions options = new GitOptions();
-    options.root = gitOperations.entry;
-    options.commitMessage = _commitMessage;
-    gitOperations.getObjectStore().then((store) {
-      options.store = store;
-      Commit.commit(options).then((_) {
-        // TODO(grv) : add status line API for transitory success messages.
-        print('commit successful.');
+    return gitOperations.commit(_commitMessage).then((_) {
+      // TODO: show success message
 
-      }).whenComplete(() => completer.complete(this));
+    }).catchError((e) {
+      // TODO:
+      print(e);
     });
-
-    return completer.future;
   }
 }
 
@@ -1417,21 +1383,16 @@ class _GitCheckoutJob extends Job {
   _GitCheckoutJob(this.gitOperations, this._branchName, this.spark)
       : super("Checkout …");
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
-    GitOptions options = new GitOptions();
-    options.root = gitOperations.entry;
-    options.branchName = _branchName;
-    gitOperations.getObjectStore().then((store) {
-      options.store = store;
-      Checkout.checkout(options).then((_) {
-        // TODO : add UI notification.
-        print('checkout successful');
-      }).whenComplete(() => completer.complete(this));
+    return gitOperations.checkoutBranch(_branchName).then((_) {
+      // TODO : add UI notification.
+
+    }).catchError((e) {
+      // TODO:
+      print(e);
     });
-    return completer.future;
   }
 }
 
