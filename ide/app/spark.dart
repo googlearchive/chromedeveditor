@@ -1275,7 +1275,9 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
     gitOperations.getObjectStore().then((store) {
       store.getCurrentBranch().then((String currentBranch) {
         (getElement('#currentBranchName') as InputElement).value = currentBranch;
+
         _branchSelectElement.length = 0;
+
         store.getLocalBranches().then((List<String> branches) {
           branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
           for (String branchName in branches) {
