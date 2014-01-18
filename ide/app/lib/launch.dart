@@ -25,7 +25,6 @@ final Logger _logger = new Logger('spark.launch');
  * Manages all the launches and calls the appropriate delegate.
  */
 class LaunchManager {
-
   List<LaunchDelegate> _delegates = [];
 
   PicoServer _server;
@@ -130,8 +129,8 @@ class WorkspaceServlet extends PicoServlet {
 
   bool canServe(HttpRequest request) {
     if (request.uri.pathSegments.length <= 1) return false;
-    var projectNamesList = _launchManager.workspace.getProjects()
-                              .map((project) => project.name).toList();
+    var projectNamesList =
+        _launchManager.workspace.getProjects().map((project) => project.name);
     return projectNamesList.contains(request.uri.pathSegments[0]);
   }
 
@@ -143,7 +142,9 @@ class WorkspaceServlet extends PicoServlet {
     }
     Resource resource = _launchManager.workspace.getChildPath(path);
 
+    // TODO: Verify that the resource is a File.
     return (resource as File).getContents().then((String string) {
+      // TODO: Should this be served up as bytes instead?
       response.setContent(string);
       response.setContentTypeFrom(resource.name);
       return new Future.value(response);
@@ -162,8 +163,7 @@ class StaticResourcesServlet extends PicoServlet {
   Future<HttpResponse> serve(HttpRequest request) {
     HttpResponse response = new HttpResponse.ok();
     return _getContentsBinary('images/favicon.ico').then((List<int> bytes) {
-      response.setContentStream(
-          new Stream.fromIterable(bytes));
+      response.setContentStream(new Stream.fromIterable([bytes]));
       response.setContentTypeFrom('favicon.ico');
       return new Future.value(response);
     });
