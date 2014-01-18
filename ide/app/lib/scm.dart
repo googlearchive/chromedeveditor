@@ -165,18 +165,16 @@ class GitScmProvider extends ScmProvider {
  */
 class GitScmProjectOperations extends ScmProjectOperations {
   ObjectStore _objectStore;
-  Completer<ObjectStore> _objectStoreCompleter = new Completer();
 
   GitScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
 
     _objectStore = new ObjectStore(project.entry);
-    _objectStore.init()
-      .then((_) => _objectStoreCompleter.complete(_objectStore))
-      .catchError((e) => _objectStoreCompleter.completeError(e));
+    _objectStore.init();
   }
 
-  Future<ObjectStore> getObjectStore() => _objectStoreCompleter.future;
+  // TODO: Change to get a plain getter?
+  Future<ObjectStore> getObjectStore() => new Future.value(_objectStore);
 
   Future<FileStatus> getFileStatus(Resource resource) {
     return new Future.error('unimplemented - getFileStatus()');

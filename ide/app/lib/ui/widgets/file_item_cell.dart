@@ -25,16 +25,15 @@ class FileItemCell implements ListViewCell {
         (querySelector('#fileview-filename-template') as TemplateElement).content;
     DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.fileview-filename-container');
-    String name = _resource.name;
     if (_resource is Project) {
       if (scm.isUnderScm(_resource)) {
-        // TODO: get branch name from the scm provider
-        String branchName = '';
-        String decoration = '[<i class="fa fa-code-fork"></i>${branchName}]';
-        name = '${name} <span class="text-muted">${decoration}</span>';
+        updateFileInfo();
+
+        // TODO: Listen for updates to the branch name.
+        scm.getScmOperationsFor(_resource).getBranchName().then(updateFileInfo);
       }
     }
-    _element.querySelector('.filename').innerHtml = name;
+    fileNameElement.innerHtml = _resource.name;
     acceptDrop = false;
     updateFileStatus();
   }
@@ -47,9 +46,26 @@ class FileItemCell implements ListViewCell {
 
   set highlighted(bool value) => _highlighted = value;
 
+  Element get fileNameElement => _element.querySelector('.nameField');
+
+  Element get fileInfoElement => _element.querySelector('.infoField');
+
   Element get fileStatusElement => _element.querySelector('.fileStatus');
 
   Element get gitStatusElement => _element.querySelector('.gitStatus');
+
+  void updateFileInfo([String branchName]) {
+    String decoration;
+    final String repoIcon = '<i class="fa fa-code-fork"></i>';
+
+    if (branchName == null) {
+      decoration = '${repoIcon}';
+    } else {
+      decoration = '${repoIcon} [${branchName}]';
+    }
+
+    fileInfoElement.innerHtml = decoration;
+  }
 
   void updateFileStatus() {
     Element element = fileStatusElement;
