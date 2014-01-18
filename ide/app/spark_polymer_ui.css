@@ -270,3 +270,7 @@ spark-menu-item:hover .menu-button {
   color: #3a84c3;
   text-decoration: none;
 }
+
+#toolbarRight {
+  padding-right: 16px;
+}
