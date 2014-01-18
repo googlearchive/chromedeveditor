@@ -150,9 +150,15 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future<FileStatus> getFileStatus(Resource resource) {
-    // TODO: how to retrieve the git file status?
     return new Future.error('unimplemented - getFileStatus()');
   }
 
-  ObjectStore getObjectStore() => _objectStore;
+  Future<ObjectStore> getObjectStore() {
+    if (_objectStore.objectDir == null) {
+      return _objectStore.init().then((_) {
+        return _objectStore;
+      });
+    }
+    return new Future.value(_objectStore);
+  }
 }
