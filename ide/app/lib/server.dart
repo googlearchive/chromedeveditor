@@ -11,6 +11,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:intl/intl.dart' as intl;
+import 'package:logging/logging.dart';
 import 'package:mime/mime.dart' as mime;
 
 import 'tcp.dart' as tcp;
@@ -19,6 +20,8 @@ const int DEFAULT_HTTP_PORT = 80;
 
 final intl.DateFormat RFC_1123_DATE_FORMAT =
     new intl.Intl().date('EEE, dd MMM yyyy HH:mm:ss z');
+
+final Logger _logger = new Logger('spark.server');
 
 // TODO(devoncarew): support HEAD requests
 
@@ -62,6 +65,8 @@ class PicoServer {
 
   void _serveClient(tcp.TcpClient client) {
     HttpRequest._parse(client).then((HttpRequest request) {
+      _logger.info('<== ${request}');
+
       for (PicoServlet servlet in _servlets) {
         if (servlet.canServe(request)) {
           _serve(servlet, client, request);
@@ -81,7 +86,9 @@ class PicoServer {
 
   void _serve(PicoServlet servlet, tcp.TcpClient client, HttpRequest request) {
     servlet.serve(request).then((HttpResponse response) {
+      _logger.info('==> ${response}');
       response._send(client).then((_) {
+        // TODO: Try and re-use the connection.
         client.dispose();
       });
     });
@@ -140,13 +147,15 @@ class HttpRequest {
           if (request != null) {
             completer.complete(request);
           } else {
-            completer.completeError(null);
+            completer.completeError(new HttpException('error parsing request'));
           }
 
           break;
         }
       }
-    }, onDone: () => completer.completeError(null));
+    }, onError: (e) {
+      completer.completeError(e);
+    });
 
     return completer.future;
   }
