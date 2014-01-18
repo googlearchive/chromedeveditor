@@ -137,7 +137,7 @@ class WorkspaceServlet extends PicoServlet {
   bool canServe(HttpRequest request) {
     if (request.uri.pathSegments.length <= 1) return false;
     var projectNamesList =
-              _launchManager.workspace.getProjects().map((project) => project.name);
+        _launchManager.workspace.getProjects().map((project) => project.name);
     return projectNamesList.contains(request.uri.pathSegments[0]);
   }
 
