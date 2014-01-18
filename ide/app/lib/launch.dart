@@ -14,6 +14,7 @@ import 'dart:typed_data' as typed_data;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
+import 'compiler.dart';
 import 'server.dart';
 import 'workspace.dart';
 
@@ -25,9 +26,12 @@ final Logger _logger = new Logger('spark.launch');
  * Manages all the launches and calls the appropriate delegate.
  */
 class LaunchManager {
+
   List<LaunchDelegate> _delegates = [];
 
   PicoServer _server;
+
+  Dart2JsServlet _dart2jsServlet;
 
   /**
    * The last project that was launched
@@ -46,6 +50,8 @@ class LaunchManager {
       _server = server;
       _server.addServlet(new ProjectRedirectServlet(this));
       _server.addServlet(new StaticResourcesServlet());
+      _dart2jsServlet = new Dart2JsServlet(this);
+      _server.addServlet(_dart2jsServlet);
       _server.addServlet(new WorkspaceServlet(this));
     });
   }
@@ -64,6 +70,7 @@ class LaunchManager {
 
   void dispose() {
     _server.dispose();
+    _dart2jsServlet.dispose();
   }
 }
 
@@ -129,26 +136,28 @@ class WorkspaceServlet extends PicoServlet {
 
   bool canServe(HttpRequest request) {
     if (request.uri.pathSegments.length <= 1) return false;
-    var projectNamesList =
-        _launchManager.workspace.getProjects().map((project) => project.name);
+    var projectNamesList = _launchManager.workspace.getProjects()
+                              .map((project) => project.name).toList();
     return projectNamesList.contains(request.uri.pathSegments[0]);
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
     HttpResponse response = new HttpResponse.ok();
+
     String path = request.uri.path;
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
     Resource resource = _launchManager.workspace.getChildPath(path);
-
-    // TODO: Verify that the resource is a File.
-    return (resource as File).getContents().then((String string) {
-      // TODO: Should this be served up as bytes instead?
-      response.setContent(string);
-      response.setContentTypeFrom(resource.name);
-      return new Future.value(response);
-    });
+    if (resource != null) {
+      return (resource as File).getBytes().then((chrome.ArrayBuffer buffer) {
+        response.setContentBytes(buffer.getBytes());
+        response.setContentTypeFrom(resource.name);
+        return new Future.value(response);
+      }, onError: (_) => new Future.value(response));
+    } else {
+      new Future.value(new HttpResponse.notFound());
+    }
   }
 }
 
@@ -163,7 +172,8 @@ class StaticResourcesServlet extends PicoServlet {
   Future<HttpResponse> serve(HttpRequest request) {
     HttpResponse response = new HttpResponse.ok();
     return _getContentsBinary('images/favicon.ico').then((List<int> bytes) {
-      response.setContentStream(new Stream.fromIterable([bytes]));
+      response.setContentStream(
+          new Stream.fromIterable(bytes));
       response.setContentTypeFrom('favicon.ico');
       return new Future.value(response);
     });
@@ -194,6 +204,54 @@ class ProjectRedirectServlet extends PicoServlet {
     return new Future.value(response);
   }
 }
+
+/**
+ * Servlet that compiles and serves up the JavaScript for Dart sources.
+ */
+class Dart2JsServlet extends PicoServlet {
+  LaunchManager _launchManager;
+  Compiler _compiler;
+
+  Dart2JsServlet(this._launchManager){
+    Compiler.createCompiler().then((c) {
+      _compiler = c;
+    });
+  }
+
+  bool canServe(HttpRequest request) {
+    if (request.uri.pathSegments.length <= 1) return false;
+    String path = request.uri.pathSegments.last;
+    return (path.endsWith('dart.js') && path.length > 'dart.js'.length);
+  }
+
+  Future<HttpResponse> serve(HttpRequest request) {
+    HttpResponse response = new HttpResponse.ok();
+    String path = request.uri.path;
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    // remove the .js to get to the dart file
+    path = path.substring(0, path.length - 3);
+    Resource resource = _launchManager.workspace.getChildPath(path);
+
+    if (resource != null) {
+    return (resource as File).getContents().then((String string) {
+      return _compiler.compileString(string).then((CompilerResult result) {
+        response.setContent(result.output);
+        response.setContentTypeFrom('resource.js');
+        return new Future.value(response);
+      });
+    });
+    } else {
+      return new Future.value(new HttpResponse.notFound());
+    }
+  }
+
+  void dispose() {
+    _compiler.dispose();
+  }
+}
+
 
 /**
  * Return the contents of the file at the given path. The path is relative to
