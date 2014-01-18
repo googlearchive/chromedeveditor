@@ -155,7 +155,7 @@ class WorkspaceServlet extends PicoServlet {
         response.setContentBytes(buffer.getBytes());
         response.setContentTypeFrom(resource.name);
         return new Future.value(response);
-      }, onError: (_) => new Future.value(response));
+      }, onError: (_) => new Future.value(new HttpResponse.notFound()));
     } else {
       new Future.value(new HttpResponse.notFound());
     }
