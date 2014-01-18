@@ -150,6 +150,7 @@ class WorkspaceServlet extends PicoServlet {
     }
     Resource resource = _launchManager.workspace.getChildPath(path);
     if (resource != null) {
+      // TODO: Verify that the resource is a File.
       return (resource as File).getBytes().then((chrome.ArrayBuffer buffer) {
         response.setContentBytes(buffer.getBytes());
         response.setContentTypeFrom(resource.name);
@@ -172,8 +173,7 @@ class StaticResourcesServlet extends PicoServlet {
   Future<HttpResponse> serve(HttpRequest request) {
     HttpResponse response = new HttpResponse.ok();
     return _getContentsBinary('images/favicon.ico').then((List<int> bytes) {
-      response.setContentStream(
-          new Stream.fromIterable(bytes));
+      response.setContentStream(new Stream.fromIterable([bytes]));
       response.setContentTypeFrom('favicon.ico');
       return new Future.value(response);
     });
