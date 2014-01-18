@@ -173,40 +173,29 @@ class GitScmProjectOperations extends ScmProjectOperations {
     _objectStore.init();
   }
 
-  // TODO: Change to get a plain getter?
-  Future<ObjectStore> getObjectStore() => new Future.value(_objectStore);
-
   Future<FileStatus> getFileStatus(Resource resource) {
     return new Future.error('unimplemented - getFileStatus()');
   }
 
-  Future<String> getBranchName() =>
-      getObjectStore().then((store) => store.getCurrentBranch());
+  Future<String> getBranchName() => _objectStore.getCurrentBranch();
 
-  Future<List<String>> getAllBranchNames() =>
-      getObjectStore().then((store) => store.getLocalBranches());
+  Future<List<String>> getAllBranchNames() => _objectStore.getLocalBranches();
 
   Future createBranch(String branchName) {
-    return getObjectStore().then((store) {
-      GitOptions options = new GitOptions(
-          root: entry, branchName: branchName, store: store);
-      return Branch.branch(options);
-    });
+    GitOptions options = new GitOptions(
+        root: entry, branchName: branchName, store: _objectStore);
+    return Branch.branch(options);
   }
 
   Future checkoutBranch(String branchName) {
-    return getObjectStore().then((store) {
-      GitOptions options = new GitOptions(
-          root: entry, branchName: branchName, store: store);
-      return Checkout.checkout(options);
-    });
+    GitOptions options = new GitOptions(
+        root: entry, branchName: branchName, store: _objectStore);
+    return Checkout.checkout(options);
   }
 
   Future commit(String commitMessage) {
-    return getObjectStore().then((store) {
-      GitOptions options = new GitOptions(
-          root: entry, store: store, commitMessage: commitMessage);
-      return Commit.commit(options);
-    });
+    GitOptions options = new GitOptions(
+        root: entry, store: _objectStore, commitMessage: commitMessage);
+    return Commit.commit(options);
   }
 }

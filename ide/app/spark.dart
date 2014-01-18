@@ -1256,40 +1256,38 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   scm.GitScmProjectOperations gitOperations;
-  SelectElement _branchSelectElement;
+  SelectElement _selectElement;
 
   GitCheckoutAction(Spark spark, Element dialog)
       : super(spark, "git-checkout", "Git Checkout…", dialog) {
-    _branchSelectElement = getElement("#gitCheckout");
+    _selectElement = getElement("#gitCheckout");
   }
 
   void _invoke([List context]) {
     project = context.first;
     gitOperations = scm.getScmOperationsFor(project);
-    gitOperations.getObjectStore().then((store) {
-      store.getCurrentBranch().then((String currentBranch) {
-        (getElement('#currentBranchName') as InputElement).value = currentBranch;
+    gitOperations.getBranchName().then((currentBranchName) {
+      (getElement('#currentBranchName') as InputElement).value = currentBranchName;
 
-        _branchSelectElement.length = 0;
+      // Clear out the old Select options.
+      _selectElement.length = 0;
 
-        store.getLocalBranches().then((List<String> branches) {
-          branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-          for (String branchName in branches) {
-            _branchSelectElement.append(
-                new OptionElement(data: branchName, value: branchName));
-          }
-          _branchSelectElement.selectedIndex = branches.indexOf(currentBranch);
-        });
-        _show();
+      gitOperations.getAllBranchNames().then((List<String> branchNames) {
+        branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        for (String branchName in branchNames) {
+          _selectElement.append(
+              new OptionElement(data: branchName, value: branchName));
+        }
+        _selectElement.selectedIndex = branchNames.indexOf(currentBranchName);
       });
+      _show();
     });
-
   }
 
   void _commit() {
     // TODO(grv): add verify checks.
-    String branchName = _branchSelectElement.options[
-        _branchSelectElement.selectedIndex].value;
+    String branchName = _selectElement.options[
+        _selectElement.selectedIndex].value;
     _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
     spark.jobManager.schedule(job);
   }
