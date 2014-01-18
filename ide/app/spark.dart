@@ -1272,23 +1272,21 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   void _invoke([List context]) {
     project = context.first;
     gitOperations = scm.getScmOperationsFor(project);
-    ObjectStore store = gitOperations.getObjectStore();
-
-    store.getCurrentBranch().then((String currentBranch) {
-      (getElement('#currentBranchName') as InputElement).value = currentBranch;
-
-      _branchSelectElement.length = 0;
-
-      store.getLocalBranches().then((List<String> branches) {
-        branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-        for (String branchName in branches) {
-          _branchSelectElement.append(
-              new OptionElement(data: branchName, value: branchName));
-        }
+    gitOperations.getObjectStore().then((store) {
+      store.getCurrentBranch().then((String currentBranch) {
+        (getElement('#currentBranchName') as InputElement).value = currentBranch;
+        _branchSelectElement.length = 0;
+        store.getLocalBranches().then((List<String> branches) {
+          branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+          for (String branchName in branches) {
+            _branchSelectElement.append(
+                new OptionElement(data: branchName, value: branchName));
+          }
+        });
+        _show();
       });
-
-      _show();
     });
+
   }
 
   void _commit() {
@@ -1368,13 +1366,15 @@ class _GitBranchJob extends Job {
     GitOptions options = new GitOptions();
     options.root = gitOperations.entry;
     options.branchName = _branchName;
-    options.store = gitOperations.getObjectStore();
-    Branch.branch(options).then((entry) {
-      Checkout.checkout(options);
-      // TODO(grv) : checkout the new branch.
-    }, onError: (e) {
-      print(e);
-    }).whenComplete(() => completer.complete(this));
+    gitOperations.getObjectStore().then((store) {
+      options.store = store;
+      Branch.branch(options).then((entry) {
+        Checkout.checkout(options);
+        // TODO(grv) : checkout the new branch.
+      }, onError: (e) {
+        print(e);
+      }).whenComplete(() => completer.complete(this));
+    });
 
     return completer.future;
   }
@@ -1394,12 +1394,15 @@ class _GitCommitJob extends Job {
     GitOptions options = new GitOptions();
     options.root = gitOperations.entry;
     options.commitMessage = _commitMessage;
-    options.store = gitOperations.getObjectStore();
-    Commit.commit(options).then((_) {
-      // TODO(grv) : add status line API for transitory success messages.
-      print('commit successful.');
+    gitOperations.getObjectStore().then((store) {
+      options.store = store;
+      Commit.commit(options).then((_) {
+        // TODO(grv) : add status line API for transitory success messages.
+        print('commit successful.');
 
-    }).whenComplete(() => completer.complete(this));
+      }).whenComplete(() => completer.complete(this));
+    });
+
     return completer.future;
   }
 }
@@ -1419,11 +1422,13 @@ class _GitCheckoutJob extends Job {
     GitOptions options = new GitOptions();
     options.root = gitOperations.entry;
     options.branchName = _branchName;
-    options.store = gitOperations.getObjectStore();
-    Checkout.checkout(options).then((_) {
-      // TODO : add UI notification.
-      print('checkout successful');
-    }).whenComplete(() => completer.complete(this));
+    gitOperations.getObjectStore().then((store) {
+      options.store = store;
+      Checkout.checkout(options).then((_) {
+        // TODO : add UI notification.
+        print('checkout successful');
+      }).whenComplete(() => completer.complete(this));
+    });
     return completer.future;
   }
 }

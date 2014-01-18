@@ -154,5 +154,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return new Future.error('unimplemented - getFileStatus()');
   }
 
-  ObjectStore getObjectStore() => _objectStore;
+  Future<ObjectStore> getObjectStore() {
+    if (_objectStore.objectDir == null) {
+      return _objectStore.init().then((_) {
+        return _objectStore;
+      });
+    }
+    return new Future.value(_objectStore);
+  }
 }
