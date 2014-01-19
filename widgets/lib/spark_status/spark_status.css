@@ -1,0 +1,51 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+:host {
+  display: inline-block;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+.throbber {
+	opacity: 0;
+  display: inline-block;
+  color: #aaa;
+  min-width: 24px;
+  min-height: 24px;
+  font-size: 24px;
+  vertical-align: middle;
+  transition: opacity 0.15s linear;
+  background-repeat: no-repeat;
+  background-image: url("throbber2.gif");
+  background-position: 0 0;
+}
+
+.throbber.spinning {
+  opacity: 1;
+}
+
+.label {
+	text-overflow: ellipsis;
+  font-family: Helvetica, Sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #aaa;
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+
+.default {
+	
+}
+
+.progressStyle {
+  font-style: italic;	
+}
+
+.temporary {
+	
+}
