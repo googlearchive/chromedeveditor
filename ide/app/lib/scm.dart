@@ -12,8 +12,13 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import 'git/objectstore.dart';
 import 'workspace.dart';
+import 'git/objectstore.dart';
+import 'git/options.dart';
+import 'git/commands/branch.dart';
+import 'git/commands/checkout.dart';
+import 'git/commands/clone.dart';
+import 'git/commands/commit.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 
@@ -71,6 +76,11 @@ abstract class ScmProvider {
    * Return the [ScmProjectOperations] cooresponding to the given [Project].
    */
   ScmProjectOperations getOperationsFor(Project project);
+
+  /**
+   * Clone the repo at the given url into the given directory.
+   */
+  Future clone(String url, chrome.DirectoryEntry dir);
 }
 
 /**
@@ -88,6 +98,16 @@ abstract class ScmProjectOperations {
    * Return the SCM status for the given file or folder.
    */
   Future<FileStatus> getFileStatus(Resource resource);
+
+  Future<String> getBranchName();
+
+  Future<List<String>> getAllBranchNames();
+
+  Future createBranch(String branchName);
+
+  Future checkoutBranch(String branchName);
+
+  Future commit(String commitMessage);
 }
 
 /**
@@ -129,10 +149,14 @@ class GitScmProvider extends ScmProvider {
     return _operations[project];
   }
 
-  // TODO: remove this
-  void createMetaDataFor(Project project, ObjectStore store) {
-    GitScmProjectOperations operations = getOperationsFor(project);
-    operations._objectStore = store;
+  Future clone(String url, chrome.DirectoryEntry dir) {
+    GitOptions options = new GitOptions(
+        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
+
+    return options.store.init().then((_) {
+      Clone clone = new Clone(options);
+      return clone.clone();
+    });
   }
 }
 
@@ -140,25 +164,53 @@ class GitScmProvider extends ScmProvider {
  * The Git SCM project operations implementation.
  */
 class GitScmProjectOperations extends ScmProjectOperations {
+  Completer<ObjectStore> _completer;
   ObjectStore _objectStore;
 
   GitScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
 
-    // TODO: This ctor of ObjectStore does not properly populate the git metadata.
+    _completer = new Completer();
+
     _objectStore = new ObjectStore(project.entry);
+    _objectStore.init()
+      .then((_) => _completer.complete(_objectStore))
+      .catchError((e) => _completer.completeError(e));
   }
 
   Future<FileStatus> getFileStatus(Resource resource) {
     return new Future.error('unimplemented - getFileStatus()');
   }
 
-  Future<ObjectStore> getObjectStore() {
-    if (_objectStore.objectDir == null) {
-      return _objectStore.init().then((_) {
-        return _objectStore;
-      });
-    }
-    return new Future.value(_objectStore);
+  Future<String> getBranchName() =>
+      objectStore.then((store) => store.getCurrentBranch());
+
+  Future<List<String>> getAllBranchNames() =>
+      objectStore.then((store) => store.getLocalBranches());
+
+  Future createBranch(String branchName) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(
+          root: entry, branchName: branchName, store: store);
+      return Branch.branch(options);
+    });
   }
+
+  Future checkoutBranch(String branchName) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(
+          root: entry, branchName: branchName, store: store);
+      return Checkout.checkout(options);
+    });
+  }
+
+  Future commit(String commitMessage) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(
+          root: entry, store: store, commitMessage: commitMessage);
+      return Commit.commit(options);
+    });
+  }
+
+  Future<ObjectStore> get objectStore => _completer.future;
 }
