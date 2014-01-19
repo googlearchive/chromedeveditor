@@ -298,8 +298,6 @@ class Pack {
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
-      print('numObjects: ${numObjects}');
-
       for (int i = 0; i < numObjects; ++i) {
         PackObject object = _matchObjectAtOffset(_offset);
         object.crc = getCrc32(data.sublist(object.offset, _offset));

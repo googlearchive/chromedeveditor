@@ -15,6 +15,7 @@
   font-size: 14px;
   cursor: default;
   white-space: nowrap;
+  min-width: 160px;
 }
 
 ::content spark-menu-item:hover {

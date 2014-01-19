@@ -8,6 +8,7 @@
  */
 library spark.editorarea;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'editors.dart';
@@ -68,26 +69,23 @@ class EditorArea extends TabView {
 
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
-  final Element _filenameLabel;
 
   bool _allowsLabelBar = true;
 
+  StreamController<String> _nameController = new StreamController.broadcast();
+
   EditorArea(Element parentElement,
-             this._filenameLabel,
              this.editorProvider,
-             {allowsLabelBar: true})
+             {bool allowsLabelBar: true})
       : super(parentElement) {
-    onClose.listen((EditorTab tab) {
-      closeFile(tab.file);
-    });
+    onClose.listen((EditorTab tab) => closeFile(tab.file));
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
   }
 
-  set showLabelBar(bool showLabelBar) {
-    super.showLabelBar = showLabelBar;
-    _filenameLabel.classes.toggle('hidden', showLabelBar);
-  }
+  bool get shouldDisplayName => tabs.length == 1;
+
+  Stream<String> get onNameChange => _nameController.stream;
 
   bool get allowsLabelBar => _allowsLabelBar;
   set allowsLabelBar(bool value) {
@@ -133,15 +131,14 @@ class EditorArea extends TabView {
                   {bool forceOpen: false, bool switchesTab: true,
                   bool replaceCurrent: true, bool forceFocus: false}) {
     if (_tabOfFile.containsKey(file)) {
-      _filenameLabel.text = file.name;
       EditorTab tab = _tabOfFile[file];
       if (switchesTab) tab.select(forceFocus: forceFocus);
+      _nameController.add(file.name);
       return;
     }
 
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
-      _filenameLabel.text = file.name;
 
       if (_imageFileType.hasMatch(file.name)) {
         ImageViewer viewer = new ImageViewer(file);
@@ -158,6 +155,8 @@ class EditorArea extends TabView {
       }
 
       if (forceFocus) tab.select(forceFocus: forceFocus);
+
+      _nameController.add(file.name);
     }
   }
 
@@ -168,6 +167,7 @@ class EditorArea extends TabView {
       remove(tab);
       tab.close();
       editorProvider.close(file);
+      _nameController.add(selectedTab == null ? null : selectedTab.label);
     }
   }
 
@@ -177,6 +177,7 @@ class EditorArea extends TabView {
     if (_tabOfFile.containsKey(file)) {
       EditorTab tab = _tabOfFile[file];
       tab.label = file.name;
+      _nameController.add(selectedTab.label);
     }
   }
 }
