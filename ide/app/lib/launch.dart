@@ -230,7 +230,6 @@ class Dart2JsServlet extends PicoServlet {
   }
 
   bool canServe(HttpRequest request) {
-    if (request.uri.pathSegments.length <= 1) return false;
     String path = request.uri.path;
     if (path.endsWith('.dart.js')) {
       if (path.startsWith('/')) {
@@ -239,7 +238,6 @@ class Dart2JsServlet extends PicoServlet {
       // check if there is a corresponding dart file
       var dartFileName = path.substring(0, path.length - 3);
       Resource resource = _launchManager.workspace.getChildPath(dartFileName);
-      print('$path ${resource != null} $dartFileName');
       return resource != null;
     }
     return false;
