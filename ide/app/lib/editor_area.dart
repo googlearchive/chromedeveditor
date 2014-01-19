@@ -69,7 +69,6 @@ class EditorArea extends TabView {
 
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
-  Element _filenameLabel;
 
   bool _allowsLabelBar = true;
 
