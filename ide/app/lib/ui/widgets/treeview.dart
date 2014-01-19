@@ -222,6 +222,14 @@ class TreeView implements ListViewDelegate {
     setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID), animated: animated);
   }
 
+  void scrollIntoNode(String nodeUID, [ScrollAlignment align]) {
+    TreeViewRow row = _rowsMap[nodeUID];
+
+    if (row != null) {
+      _listView.scrollIntoRow(row.rowIndex, align);
+    }
+  }
+
   List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
 
   set selection(List<String> selection) {

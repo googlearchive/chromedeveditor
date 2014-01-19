@@ -38,7 +38,7 @@
       <spark-overlay id="overlay" class="slideup" opened="{{opened}}" modal
           autoCloseDisabled on-activate="{{toggle}}">
         <div class="arrow"></div>
-        <div class="arrow arrow-inner"></div>
+        <div class="arrow arrow-inner" on-click="{{toggle}}"></div>
         <spark-menu id="overlayMenu"
             selected="{{selected}}"
             valueattr="{{valueattr}}">
