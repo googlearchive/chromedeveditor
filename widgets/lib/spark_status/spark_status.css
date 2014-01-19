@@ -6,20 +6,22 @@
   display: inline-block;
   white-space: nowrap;
   padding-top: 2px;
+  margin-left: 0;
+  padding-left: 0;
 }
 
 .throbber {
 	opacity: 0;
   display: inline-block;
   color: #aaa;
-  min-width: 24px;
-  min-height: 24px;
+  min-width: 26px;
+  min-height: 26px;
   font-size: 24px;
   vertical-align: middle;
   transition: opacity 0.15s linear;
   background-repeat: no-repeat;
-  background-image: url("throbber2.gif");
-  background-position: 0 0;
+  background-image: url("throbber3.gif");
+  background-position: -3px -3px;
 }
 
 .throbber.spinning {
@@ -36,16 +38,18 @@
   max-width: 200px;
   overflow: hidden;
   vertical-align: middle;
+  margin-left: 0;
+  padding-left: 0;
 }
 
 .default {
-	
+
 }
 
 .progressStyle {
-  font-style: italic;	
+  font-style: italic;
 }
 
 .temporary {
-	
+
 }

@@ -12,6 +12,7 @@
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
+<link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <!--link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html"-->
@@ -30,13 +31,11 @@
       <spark-button id="openFolder" small>Open Folder...</spark-button>
       <spark-button id="runButton" small><i class="fa fa-play"></i> Run</spark-button>
 
+      <spark-status id="sparkStatus"></spark-status>
+      
       <span id="saveStatus" class="titleFont"></span>
 
       <div id="toolbarRight" class="titleFont">
-        <span id="editedFilename"></span>
-
-        <i id="activitySpinner" class="fa fa-spinner fa-spin"></i>
-
         <spark-menu-button id="hotdogMenuNew"
             src="images/menu.png"
             responsive="true"
@@ -153,7 +152,7 @@
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal"
             aria-hidden="true">&times;</spark-button>
-        <h4 class="modal-title">New Git Project</h4>
+        <h4 class="modal-title">Clone Git Repository</h4>
       </div>
       <div class="modal-body">
         Repository URL: <input id="gitRepoUrl" type="text">
@@ -195,7 +194,7 @@
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal"
             aria-hidden="true">&times;</spark-button>
-        <h4 class="modal-title">New Branch</h4>
+        <h4 class="modal-title">Create Branch</h4>
       </div>
       <div class="modal-body">
         New Branch Name: <input id="gitBranchName" type="text" focused><br/><br/>
@@ -206,7 +205,7 @@
         </spark-button>
         <spark-button id="gitBranchButton" overlay-toggle primary
           data-dismiss="modal">
-          Create branch
+          Create Branch
         </spark-button>
       </div>
     </spark-modal><!-- /.modal -->
@@ -261,7 +260,7 @@
     </spark-modal><!-- /.modal -->
 
     <!-- Setting dialog -->
-    <spark-modal id="settingDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="settingsDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal"
             aria-hidden="true">&times;</spark-button>
@@ -269,8 +268,8 @@
       </div>
       <div class="modal-body">
         <div id="changeTheme">
-          Theme :
-          <span></span>
+          <span class="settings-title">Editor theme:</span>
+          <span class="settings-label"></span>
           <span class="plus-minus-container">
             <a href="#" id="themeMinus" class="plus-minus-button" on-click="{{onThemeMinus}}">-</a>
             <a href="#" id="themePlus" class="plus-minus-button" on-click="{{onThemePlus}}">+</a>
@@ -278,8 +277,8 @@
         </div>
         <br/>
         <div id="changeKeys">
-          Keybinding :
-          <span></span>
+          <span class="settings-title">Key bindings:</span>          
+          <span class="settings-label"></span>
           <span class="plus-minus-container">
             <a href="#" id="keysMinus" class="plus-minus-button" on-click="{{onKeysMinus}}">-</a>
             <a href="#" id="keysPlus" class="plus-minus-button" on-click="{{onKeysPlus}}">+</a>

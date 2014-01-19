@@ -36,5 +36,8 @@ abstract class SparkModel extends Application {
 
   ActionManager get actionManager;
 
+  void showSuccessMessage(String message);
+  void showErrorMessage(String title, String message);
+
   void onSplitViewUpdate(int position);
 }
