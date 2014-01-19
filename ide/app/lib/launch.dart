@@ -14,6 +14,7 @@ import 'dart:typed_data' as typed_data;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
+import 'compiler.dart';
 import 'server.dart';
 import 'workspace.dart';
 
@@ -25,9 +26,8 @@ final Logger _logger = new Logger('spark.launch');
  * Manages all the launches and calls the appropriate delegate.
  */
 class LaunchManager {
-  List<LaunchDelegate> _delegates = [];
 
-  PicoServer _server;
+  List<LaunchDelegate> _delegates = [];
 
   /**
    * The last project that was launched
@@ -42,12 +42,6 @@ class LaunchManager {
     _delegates.add(new DartWebAppLaunchDelegate(this));
     _delegates.add(new ChromeAppLaunchDelegate());
 
-    PicoServer.createServer(SERVER_PORT).then((server) {
-      _server = server;
-      _server.addServlet(new ProjectRedirectServlet(this));
-      _server.addServlet(new StaticResourcesServlet());
-      _server.addServlet(new WorkspaceServlet(this));
-    });
   }
 
   /**
@@ -63,7 +57,7 @@ class LaunchManager {
   }
 
   void dispose() {
-    _server.dispose();
+    _delegates.forEach((delegate) => delegate.dispose());
   }
 }
 
@@ -78,15 +72,30 @@ abstract class LaunchDelegate {
   bool canRun(Resource resource);
 
   void run(Resource resource);
+
+  void dispose();
 }
 
 /**
  * Launcher for running Dart web apps.
  */
 class DartWebAppLaunchDelegate extends LaunchDelegate {
-  LaunchManager _launchManager;
 
-  DartWebAppLaunchDelegate(this._launchManager);
+  PicoServer _server;
+  LaunchManager _launchManager;
+  Dart2JsServlet _dart2jsServlet;
+
+  DartWebAppLaunchDelegate(this._launchManager) {
+    _dart2jsServlet = new Dart2JsServlet(_launchManager);
+
+    PicoServer.createServer(SERVER_PORT).then((server) {
+      _server = server;
+      _server.addServlet(new ProjectRedirectServlet(_launchManager));
+      _server.addServlet(new StaticResourcesServlet());
+      _server.addServlet(_dart2jsServlet);
+      _server.addServlet(new WorkspaceServlet(_launchManager));
+    });
+  }
 
   // For now launching only web/index.html.
   bool canRun(Resource resource) {
@@ -100,6 +109,11 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
         new chrome.CreateWindowOptions(id: 'runWindow', width: 600, height: 800))
       .then((_) {},
           onError: (e) => _logger.log(Level.INFO, 'Error launching Dart web app', e));
+  }
+
+  void dispose() {
+    _server.dispose();
+    _dart2jsServlet.dispose();
   }
 }
 
@@ -116,6 +130,10 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
   void run(Resource resource) {
     //TODO: implement this
     print('TODO: run project ${resource.project}');
+  }
+
+  void dispose() {
+
   }
 }
 
@@ -136,19 +154,22 @@ class WorkspaceServlet extends PicoServlet {
 
   Future<HttpResponse> serve(HttpRequest request) {
     HttpResponse response = new HttpResponse.ok();
+
     String path = request.uri.path;
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
     Resource resource = _launchManager.workspace.getChildPath(path);
-
-    // TODO: Verify that the resource is a File.
-    return (resource as File).getContents().then((String string) {
-      // TODO: Should this be served up as bytes instead?
-      response.setContent(string);
-      response.setContentTypeFrom(resource.name);
-      return new Future.value(response);
-    });
+    if (resource != null) {
+      // TODO: Verify that the resource is a File.
+      return (resource as File).getBytes().then((chrome.ArrayBuffer buffer) {
+        response.setContentBytes(buffer.getBytes());
+        response.setContentTypeFrom(resource.name);
+        return new Future.value(response);
+      }, onError: (_) => new Future.value(new HttpResponse.notFound()));
+    } else {
+      new Future.value(new HttpResponse.notFound());
+    }
   }
 }
 
@@ -194,6 +215,55 @@ class ProjectRedirectServlet extends PicoServlet {
     return new Future.value(response);
   }
 }
+
+/**
+ * Servlet that compiles and serves up the JavaScript for Dart sources.
+ */
+class Dart2JsServlet extends PicoServlet {
+  LaunchManager _launchManager;
+  Compiler _compiler;
+
+  Dart2JsServlet(this._launchManager){
+    Compiler.createCompiler().then((c) {
+      _compiler = c;
+    });
+  }
+
+  bool canServe(HttpRequest request) {
+    String path = request.uri.path;
+    return (path.endsWith('.dart.js') && _getResource(path) != null);
+  }
+
+  Resource _getResource(String path) {
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    // check if there is a corresponding dart file
+    var dartFileName = path.substring(0, path.length - 3);
+    return _launchManager.workspace.getChildPath(dartFileName);
+  }
+
+  Future<HttpResponse> serve(HttpRequest request) {
+    HttpResponse response = new HttpResponse.ok();
+
+    Resource resource = _getResource(request.uri.path);
+
+    return (resource as File).getContents().then((String string) {
+      // TODO: compiler should also accept files
+      return _compiler.compileString(string).then((CompilerResult result) {
+        response.setContent(result.output);
+        response.setContentTypeFrom('resource.js');
+        return new Future.value(response);
+      });
+    });
+
+  }
+
+  void dispose() {
+    _compiler.dispose();
+  }
+}
+
 
 /**
  * Return the contents of the file at the given path. The path is relative to

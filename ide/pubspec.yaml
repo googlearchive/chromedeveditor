@@ -1,8 +1,8 @@
 name: spark
-author: Chrome Team <apps-dev@chromium.org>
 version: 0.1.4-dev
-homepage: https://github.com/GoogleChrome/spark
+author: Chrome Team <apps-dev@chromium.org>
 description: A Chrome app based development environment.
+homepage: https://github.com/GoogleChrome/spark
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
@@ -11,7 +11,7 @@ dependencies:
   archive: 1.0.8
   bootjack: any
   browser: any
-  chrome: '>=0.4.0 <0.5.0'
+  chrome: '>=0.4.2 <0.5.0'
   cipher: '>=0.4.0 <0.5.0'
   compiler_unsupported: 0.7.0
   crypto: any
@@ -31,4 +31,4 @@ dev_dependencies:
 transformers:
 - polymer:
     entry_points: web/spark_polymer.html
-    csp: true
+    csp: 'true'

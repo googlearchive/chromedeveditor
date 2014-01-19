@@ -686,7 +686,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
   Future applicationClosed(Application application) {
     spark.editorManager.persistState();
-
+    spark.launchManager.dispose();
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
   }
