@@ -164,38 +164,53 @@ class GitScmProvider extends ScmProvider {
  * The Git SCM project operations implementation.
  */
 class GitScmProjectOperations extends ScmProjectOperations {
+  Completer<ObjectStore> _completer;
   ObjectStore _objectStore;
 
   GitScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
 
+    _completer = new Completer();
+
     _objectStore = new ObjectStore(project.entry);
-    _objectStore.init();
+    _objectStore.init()
+      .then((_) => _completer.complete(_objectStore))
+      .catchError((e) => _completer.completeError(e));
   }
 
   Future<FileStatus> getFileStatus(Resource resource) {
     return new Future.error('unimplemented - getFileStatus()');
   }
 
-  Future<String> getBranchName() => _objectStore.getCurrentBranch();
+  Future<String> getBranchName() =>
+      objectStore.then((store) => store.getCurrentBranch());
 
-  Future<List<String>> getAllBranchNames() => _objectStore.getLocalBranches();
+  Future<List<String>> getAllBranchNames() =>
+      objectStore.then((store) => store.getLocalBranches());
 
   Future createBranch(String branchName) {
-    GitOptions options = new GitOptions(
-        root: entry, branchName: branchName, store: _objectStore);
-    return Branch.branch(options);
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(
+          root: entry, branchName: branchName, store: store);
+      return Branch.branch(options);
+    });
   }
 
   Future checkoutBranch(String branchName) {
-    GitOptions options = new GitOptions(
-        root: entry, branchName: branchName, store: _objectStore);
-    return Checkout.checkout(options);
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(
+          root: entry, branchName: branchName, store: store);
+      return Checkout.checkout(options);
+    });
   }
 
   Future commit(String commitMessage) {
-    GitOptions options = new GitOptions(
-        root: entry, store: _objectStore, commitMessage: commitMessage);
-    return Commit.commit(options);
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(
+          root: entry, store: store, commitMessage: commitMessage);
+      return Commit.commit(options);
+    });
   }
+
+  Future<ObjectStore> get objectStore => _completer.future;
 }
