@@ -391,6 +391,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new RunTestsAction(this));
+    actionManager.registerAction(new SettingAction(this, getDialogElement('#settingDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
@@ -1450,6 +1451,27 @@ class AboutSparkAction extends SparkActionWithDialog {
       checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
 
       getElement('#aboutVersion').text = spark.appVersion;
+
+      _initialized = true;
+    }
+
+    _show();
+  }
+
+  void _commit() {
+    // Nothing to do for this dialog.
+  }
+}
+
+
+class SettingAction extends SparkActionWithDialog {
+  bool _initialized = false;
+
+  SettingAction(Spark spark, Element dialog)
+      : super(spark, "settings", "Setting", dialog);
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
 
       _initialized = true;
     }
