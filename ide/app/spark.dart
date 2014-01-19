@@ -22,12 +22,6 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
-import 'lib/git/commands/branch.dart';
-import 'lib/git/commands/checkout.dart';
-import 'lib/git/commands/clone.dart';
-import 'lib/git/commands/commit.dart';
-import 'lib/git/objectstore.dart';
-import 'lib/git/options.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
@@ -391,6 +385,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new RunTestsAction(this));
+    actionManager.registerAction(new SettingAction(this, getDialogElement('#settingDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
@@ -691,7 +686,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
   Future applicationClosed(Application application) {
     spark.editorManager.persistState();
-
+    spark.launchManager.dispose();
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
   }
@@ -1221,7 +1216,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     // TODO(grv): add verify checks.
     _GitBranchJob job = new _GitBranchJob(
-        gitOperations, _branchNameElement.value, spark);
+        gitOperations, _branchNameElement.value);
     spark.jobManager.schedule(job);
   }
 
@@ -1262,39 +1257,38 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   scm.GitScmProjectOperations gitOperations;
-  SelectElement _branchSelectElement;
+  SelectElement _selectElement;
 
   GitCheckoutAction(Spark spark, Element dialog)
       : super(spark, "git-checkout", "Git Checkout…", dialog) {
-    _branchSelectElement = getElement("#gitCheckout");
+    _selectElement = getElement("#gitCheckout");
   }
 
   void _invoke([List context]) {
     project = context.first;
     gitOperations = scm.getScmOperationsFor(project);
-    gitOperations.getObjectStore().then((store) {
-      store.getCurrentBranch().then((String currentBranch) {
-        (getElement('#currentBranchName') as InputElement).value = currentBranch;
+    gitOperations.getBranchName().then((currentBranchName) {
+      (getElement('#currentBranchName') as InputElement).value = currentBranchName;
 
-        _branchSelectElement.length = 0;
+      // Clear out the old Select options.
+      _selectElement.length = 0;
 
-        store.getLocalBranches().then((List<String> branches) {
-          branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-          for (String branchName in branches) {
-            _branchSelectElement.append(
-                new OptionElement(data: branchName, value: branchName));
-          }
-        });
-        _show();
+      gitOperations.getAllBranchNames().then((List<String> branchNames) {
+        branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+        for (String branchName in branchNames) {
+          _selectElement.append(
+              new OptionElement(data: branchName, value: branchName));
+        }
+        _selectElement.selectedIndex = branchNames.indexOf(currentBranchName);
       });
+      _show();
     });
-
   }
 
   void _commit() {
     // TODO(grv): add verify checks.
-    String branchName = _branchSelectElement.options[
-        _branchSelectElement.selectedIndex].value;
+    String branchName = _selectElement.options[
+        _selectElement.selectedIndex].value;
     _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
     spark.jobManager.schedule(job);
   }
@@ -1319,36 +1313,25 @@ class _GitCloneJob extends Job {
     }
   }
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
+    return spark.projectLocationManager.createNewFolder(projectName).then((chrome.DirectoryEntry dir) {
+      scm.ScmProvider scmProvider = scm.getProviderType('git');
 
-    spark.projectLocationManager.createNewFolder(projectName).then((chrome.DirectoryEntry dir) {
-      GitOptions options = new GitOptions(
-          root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
-
-      Clone clone = new Clone(options);
-      return options.store.init().then((_) {
-        return clone.clone().then((_) {
-          return spark.workspace.link(dir).then((folder) {
-            // TODO: We're explicitly having to push this specific instance of
-            // the object store into the project's scm metadata. This shouldn't
-            // be necessary.
-            scm.GitScmProvider gitScmProvider = scm.getProviderType('git');
-            gitScmProvider.createMetaDataFor(folder, options.store);
-
-            Timer.run(() {
-              spark._filesController.selectFile(folder);
-              spark._filesController.setFolderExpanded(folder);
-            });
-            spark.workspace.save();
+      return scmProvider.clone(url, dir).then((_) {
+        return spark.workspace.link(dir).then((project) {
+          Timer.run(() {
+            spark._filesController.selectFile(project);
+            spark._filesController.setFolderExpanded(project);
           });
+          spark.workspace.save();
         });
       });
-    }).whenComplete(() => completer.complete(this));
-
-    return completer.future;
+    }).catchError((e) {
+      // TODO:
+      print(e);
+    });
   }
 }
 
@@ -1356,29 +1339,18 @@ class _GitBranchJob extends Job {
   scm.GitScmProjectOperations gitOperations;
   String _branchName;
   String url;
-  Spark spark;
 
-  _GitBranchJob(this.gitOperations, this._branchName, this.spark)
-      : super("Branch …");
+  _GitBranchJob(this.gitOperations, this._branchName) : super("Branch …");
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
-    GitOptions options = new GitOptions();
-    options.root = gitOperations.entry;
-    options.branchName = _branchName;
-    gitOperations.getObjectStore().then((store) {
-      options.store = store;
-      Branch.branch(options).then((entry) {
-        Checkout.checkout(options);
-        // TODO(grv) : checkout the new branch.
-      }, onError: (e) {
-        print(e);
-      }).whenComplete(() => completer.complete(this));
+    return gitOperations.createBranch(_branchName).then((_) {
+      return gitOperations.checkoutBranch(_branchName);
+    }).catchError((e) {
+      // TODO:
+      print(e);
     });
-
-    return completer.future;
   }
 }
 
@@ -1389,23 +1361,16 @@ class _GitCommitJob extends Job {
 
   _GitCommitJob(this.gitOperations, this._commitMessage, this.spark) : super("Commit …");
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
-    GitOptions options = new GitOptions();
-    options.root = gitOperations.entry;
-    options.commitMessage = _commitMessage;
-    gitOperations.getObjectStore().then((store) {
-      options.store = store;
-      Commit.commit(options).then((_) {
-        // TODO(grv) : add status line API for transitory success messages.
-        print('commit successful.');
+    return gitOperations.commit(_commitMessage).then((_) {
+      // TODO: show success message
 
-      }).whenComplete(() => completer.complete(this));
+    }).catchError((e) {
+      // TODO:
+      print(e);
     });
-
-    return completer.future;
   }
 }
 
@@ -1417,21 +1382,16 @@ class _GitCheckoutJob extends Job {
   _GitCheckoutJob(this.gitOperations, this._branchName, this.spark)
       : super("Checkout …");
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    Completer completer = new Completer();
-    GitOptions options = new GitOptions();
-    options.root = gitOperations.entry;
-    options.branchName = _branchName;
-    gitOperations.getObjectStore().then((store) {
-      options.store = store;
-      Checkout.checkout(options).then((_) {
-        // TODO : add UI notification.
-        print('checkout successful');
-      }).whenComplete(() => completer.complete(this));
+    return gitOperations.checkoutBranch(_branchName).then((_) {
+      // TODO : add UI notification.
+
+    }).catchError((e) {
+      // TODO:
+      print(e);
     });
-    return completer.future;
   }
 }
 
@@ -1450,6 +1410,27 @@ class AboutSparkAction extends SparkActionWithDialog {
       checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
 
       getElement('#aboutVersion').text = spark.appVersion;
+
+      _initialized = true;
+    }
+
+    _show();
+  }
+
+  void _commit() {
+    // Nothing to do for this dialog.
+  }
+}
+
+
+class SettingAction extends SparkActionWithDialog {
+  bool _initialized = false;
+
+  SettingAction(Spark spark, Element dialog)
+      : super(spark, "settings", "Setting", dialog);
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
 
       _initialized = true;
     }

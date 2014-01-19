@@ -252,11 +252,11 @@
   right: 0;
 }
 
-.plus-minus-container {
+#settingDialog .plus-minus-container {
   margin-left: 15px;
 }
 
-spark-menu-item .menu-button {
+#settingDialog .plus-minus-button {
   background-color: #3a84c3;
   border-radius: 5px;
   color: #fff;
@@ -265,9 +265,14 @@ spark-menu-item .menu-button {
   padding: 3px 8px;
 }
 
-spark-menu-item:hover .menu-button {
-  background-color: #fff;
-  color: #3a84c3;
+#settingDialog .plus-minus-button:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+#settingDialog .plus-minus-button:active {
+  background-color: #19197A;
+  color: #fff;
   text-decoration: none;
 }
 

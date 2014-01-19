@@ -50,19 +50,7 @@
           </spark-menu-item>
           <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
           </spark-menu-item>
-          <spark-menu-item id="changeTheme" iconsize=0 label="Theme:">
-            <span></span>
-            <span class="plus-minus-container">
-              <a href="#" id="themeMinus" class="menu-button" on-click="{{onThemeMinus}}">-</a>
-              <a href="#" id="themePlus" class="menu-button" on-click="{{onThemePlus}}">+</a>
-            </span>
-          </spark-menu-item>
-          <spark-menu-item id="changeKeys" iconsize=0 label="Keys:">
-            <span></span>
-            <span class="plus-minus-container">
-              <a href="#" id="keysMinus" class="menu-button" on-click="{{onKeysMinus}}">-</a>
-              <a href="#" id="keysPlus" class="menu-button" on-click="{{onKeysPlus}}">+</a>
-            </span>
+          <spark-menu-item action-id="settings" iconsize=0 label="Settings...">
           </spark-menu-item>
           <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">
           </spark-menu-item>
@@ -241,7 +229,7 @@
         </spark-button>
         <spark-button id="gitCheckoutButton" overlay-toggle primary
           data-dismiss="modal">
-          Ok
+          Checkout
         </spark-button>
       </div>
     </spark-modal><!-- /.modal -->
@@ -271,6 +259,40 @@
         </spark-button>
       </div>
     </spark-modal><!-- /.modal -->
+
+    <!-- Setting dialog -->
+    <spark-modal id="settingDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
+        <h4 class="modal-title">Settings</h4>
+      </div>
+      <div class="modal-body">
+        <div id="changeTheme">
+          Theme :
+          <span></span>
+          <span class="plus-minus-container">
+            <a href="#" id="themeMinus" class="plus-minus-button" on-click="{{onThemeMinus}}">-</a>
+            <a href="#" id="themePlus" class="plus-minus-button" on-click="{{onThemePlus}}">+</a>
+          </span>
+        </div>
+        <br/>
+        <div id="changeKeys">
+          Keybinding :
+          <span></span>
+          <span class="plus-minus-container">
+            <a href="#" id="keysMinus" class="plus-minus-button" on-click="{{onKeysMinus}}">-</a>
+            <a href="#" id="keysPlus" class="plus-minus-button" on-click="{{onKeysPlus}}">+</a>
+          </span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal -->
+
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>
