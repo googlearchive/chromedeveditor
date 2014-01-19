@@ -20,11 +20,11 @@ import '../common/spark_widget.dart';
  *
  * The progress message is generally used with the spinner control. The
  * temporary message automatically clears itself after a brief period. The
- * control shows, preferentially in this order:
+ * control shows, preferentially in this order, the:
  *
- * * the temporary message, if any
- * * the progress message, if any
- * * the default message, if any
+ * * temporary message, if any
+ * * or progress message, if any
+ * * or default message, if any
  */
 @CustomTag('spark-status')
 class SparkStatus extends SparkWidget {
