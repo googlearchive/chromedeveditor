@@ -232,26 +232,24 @@ class Dart2JsServlet extends PicoServlet {
   bool canServe(HttpRequest request) {
     String path = request.uri.path;
     if (path.endsWith('.dart.js')) {
-      if (path.startsWith('/')) {
-        path = path.substring(1);
-      }
-      // check if there is a corresponding dart file
-      var dartFileName = path.substring(0, path.length - 3);
-      Resource resource = _launchManager.workspace.getChildPath(dartFileName);
-      return resource != null;
+      return _getResource(path) != null;
     }
     return false;
   }
 
-  Future<HttpResponse> serve(HttpRequest request) {
-    HttpResponse response = new HttpResponse.ok();
-    String path = request.uri.path;
+  Resource _getResource(String path) {
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
+    // check if there is a corresponding dart file
+    var dartFileName = path.substring(0, path.length - 3);
+    return _launchManager.workspace.getChildPath(dartFileName);
+  }
 
-    path = path.substring(0, path.length - 3);
-    Resource resource = _launchManager.workspace.getChildPath(path);
+  Future<HttpResponse> serve(HttpRequest request) {
+    HttpResponse response = new HttpResponse.ok();
+
+    Resource resource = _getResource(request.uri.path);
 
     return (resource as File).getContents().then((String string) {
       // TODO: compiler should also accept files
