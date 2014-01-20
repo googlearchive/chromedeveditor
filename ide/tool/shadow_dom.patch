@@ -25,7 +25,7 @@
    scopeRules: function(cssRules, name, typeExtension) {
      var cssText = '';
 +    if (cssRules == null) {
-+      return cssText
++      return cssText;
 +    }
      Array.prototype.forEach.call(cssRules, function(rule) {
        if (rule.selectorText && (rule.style && rule.style.cssText)) {
