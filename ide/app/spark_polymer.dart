@@ -202,12 +202,15 @@ class SparkPolymer extends Spark {
     super.initToolbar();
 
     _bindButtonToAction('gitClone', 'git-clone');
-    _bindButtonToAction('openFolder', 'folder-open');
+    _bindButtonToAction('newProject', 'project-new');
     _bindButtonToAction('runButton', 'application-run');
   }
 
   @override
-  void buildMenu() {}
+  void buildMenu() {
+    // TODO: hide the 'run-tests' menu item if not in developer mode
+
+  }
 
   //
   // - End parts of the parent's ctor.
