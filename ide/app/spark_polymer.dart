@@ -38,8 +38,7 @@ class SparkPolymerDialog implements SparkDialog {
       : _dialogElement = dialogElement {
     // TODO(ussuri): Encapsulate backdrop in SparkOverlay.
     _dialogElement.on['opened'].listen((event) {
-      var appModal = querySelector("#modalBackdrop");
-      appModal.style.display = event.detail ? "block" : "none";
+      SparkPolymer.backdropShowing = event.detail;
     });
   }
 
@@ -54,6 +53,55 @@ class SparkPolymerDialog implements SparkDialog {
 
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
+
+  Future<bool> invokeSystemDialog(dialogFuture) {
+    backdropShowing = true;
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () =>
+            (dialogFuture.whenComplete(() =>
+                backdropShowing = false)));
+  }
+
+  Future<bool> _beforeSystemModal() {
+    Completer completer = new Completer();
+    backdropShowing = true;
+
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () {
+          completer.complete();
+        });
+
+    return completer.future;
+  }
+
+  Future<bool> _systemModalComplete() {
+    backdropShowing = false;
+  }
+
+  Future<bool> openFolder() {
+    _beforeSystemModal().then((_) =>
+        super.openFolder().whenComplete(() => _systemModalComplete()));
+  }
+
+  Future<bool> openFile() {
+    _beforeSystemModal().then((_) =>
+        super.openFile().whenComplete(() => _systemModalComplete()));
+  }
+
+  Future<bool> newFileAs() {
+    _beforeSystemModal().then((_) =>
+        super.newFileAs().whenComplete(() => _systemModalComplete()));
+  }
+
+  static set backdropShowing(bool showing) {
+    var appModal = querySelector("#modalBackdrop");
+    appModal.style.display = showing ? "block" : "none";
+  }
+
+  static bool get backdropShowing {
+    var appModal = querySelector("#modalBackdrop");
+    return (appModal.style.display != "none");
+  }
 
   SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,

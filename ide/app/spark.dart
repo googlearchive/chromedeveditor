@@ -421,10 +421,10 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   /**
    * Allow for creating a new file using the Save as dialog.
    */
-  void newFileAs() {
+  Future<bool> newFileAs() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.SAVE_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
@@ -433,13 +433,13 @@ class Spark extends SparkModel implements FilesControllerDelegate {
           workspace.save();
         });
       }
-    }).catchError((e) => null);
+    });
   }
 
-  void openFile() {
+  Future<bool> openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
@@ -448,11 +448,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
           workspace.save();
         });
       }
-    }).catchError((e) => null);
+    });
   }
 
-  void openFolder() {
-    _selectFolder().then((chrome.ChromeFileEntry entry) {
+  Future<bool> openFolder() {
+    return _selectFolder().then((chrome.ChromeFileEntry entry) {
       if (entry != null) {
         workspace.link(entry).then((file) {
           Timer.run(() {
@@ -686,7 +686,7 @@ Future<chrome.ChromeFileEntry> _selectFolder({String suggestedName}) {
   if (suggestedName != null) options.suggestedName = suggestedName;
   chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
     completer.complete(res.entry);
-  }).catchError((e) => null);
+  }).catchError((e) => completer.complete(null));
   return completer.future;
 }
 
@@ -868,7 +868,9 @@ class FileOpenAction extends SparkAction {
     defaultBinding("ctrl-o");
   }
 
-  void _invoke([Object context]) => spark.openFile();
+  void _invoke([Object context]) {
+    spark.openFile();
+  }
 }
 
 class FileNewAction extends SparkActionWithDialog implements ContextAction {
@@ -931,7 +933,9 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
 class FileNewAsAction extends SparkAction {
   FileNewAsAction(Spark spark) : super(spark, "file-new-as", "New File…");
 
-  void _invoke([Object context]) => spark.newFileAs();
+  void _invoke([Object context]) {
+    spark.newFileAs();
+  }
 }
 
 class FileSaveAction extends SparkAction {
@@ -1150,7 +1154,9 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
 class FolderOpenAction extends SparkAction {
   FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
 
-  void _invoke([Object context]) => spark.openFolder();
+  void _invoke([Object context]) {
+    spark.openFolder();
+  }
 }
 
 /* Git operations */
