@@ -107,10 +107,13 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
   void run(Resource resource) {
     _launchManager._currentProject = resource.project;
     // Use htm extension for launch page, otherwise polymer build tries to pick it up.
-    chrome.app.window.create('launch_page.htm',
-        new chrome.CreateWindowOptions(id: 'runWindow', width: 600, height: 800))
-      .then((_) {},
-          onError: (e) => _logger.log(Level.INFO, 'Error launching Dart web app', e));
+    var options = new chrome.CreateWindowOptions(
+        id: 'runWindow',
+        width: 800, height: 540,
+        minWidth: 800, minHeight: 540);
+    chrome.app.window.create('launch_page.htm', options).catchError((e) {
+      _logger.log(Level.INFO, 'Error launching Dart web app', e);
+    });
   }
 
   void dispose() {
