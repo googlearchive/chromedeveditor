@@ -12,6 +12,7 @@ import 'dart:html' as html;
 import 'dart:typed_data' as typed_data;
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'compiler.dart';
@@ -21,6 +22,8 @@ import 'workspace.dart';
 const int SERVER_PORT = 4040;
 
 final Logger _logger = new Logger('spark.launch');
+
+final NumberFormat _NF = new NumberFormat.decimalPattern();
 
 /**
  * Manages all the launches and calls the appropriate delegate.
@@ -41,7 +44,6 @@ class LaunchManager {
   LaunchManager(this._workspace) {
     _delegates.add(new DartWebAppLaunchDelegate(this));
     _delegates.add(new ChromeAppLaunchDelegate());
-
   }
 
   /**
@@ -207,14 +209,24 @@ class ProjectRedirectServlet extends PicoServlet {
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    HttpResponse response = new HttpResponse.ok();
-    // TODO: for now landing page is hardcoded to project/web/index.html
-    String string ='$HTML_REDIRECT${_launchManager.currentProject.name}/web/index.html">';
-    response.setContent(string);
-    response.setContentTypeFrom('redirect.html');
+    // TODO: For now the landing page is hardcoded to project/web/index.html.
+    String url = 'http://127.0.0.1:$SERVER_PORT/${_projectName}/web/index.html';
+
+    // Issue a 302 redirect.
+    HttpResponse response = new HttpResponse(statusCode: HttpStatus.FOUND);
+    response.headers.set(HttpHeaders.LOCATION, url);
+    response.headers.set(HttpHeaders.CONTENT_LENGTH, 0);
+
     return new Future.value(response);
   }
+
+  String get _projectName => _launchManager.currentProject.name;
 }
+
+// 3 successive launches; dart2js warms up quite a bit.
+// [INFO] spark.launch: compiled /solar/web/solar.dart in 6,446 ms
+// [INFO] spark.launch: compiled /solar/web/solar.dart in 2,928 ms
+// [INFO] spark.launch: compiled /solar/web/solar.dart in 2,051 ms
 
 /**
  * Servlet that compiles and serves up the JavaScript for Dart sources.
@@ -248,22 +260,25 @@ class Dart2JsServlet extends PicoServlet {
 
     Resource resource = _getResource(request.uri.path);
 
+    Stopwatch stopwatch = new Stopwatch();
+    stopwatch.start();
+
     return (resource as File).getContents().then((String string) {
       // TODO: compiler should also accept files
       return _compiler.compileString(string).then((CompilerResult result) {
+        _logger.info('compiled ${resource.path} in '
+            '${_NF.format(stopwatch.elapsedMilliseconds)} ms');
         response.setContent(result.output);
-        response.setContentTypeFrom('resource.js');
+        response.setContentTypeFrom(request.uri.path);
         return new Future.value(response);
       });
     });
-
   }
 
   void dispose() {
     _compiler.dispose();
   }
 }
-
 
 /**
  * Return the contents of the file at the given path. The path is relative to
