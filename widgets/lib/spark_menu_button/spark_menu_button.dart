@@ -5,6 +5,7 @@
 library spark_widgets.menu_button;
 
 import 'package:polymer/polymer.dart';
+import 'dart:html';
 
 import '../common/spark_widget.dart';
 import '../spark_menu/spark_menu.dart';
@@ -23,6 +24,7 @@ class SparkMenuButton extends SparkWidget {
   @published bool responsive = false;
   @published String valign = "center";
   @published String selectedClass = "";
+  var subscription = null;
 
   SparkMenuButton.created(): super.created();
 
@@ -30,13 +32,29 @@ class SparkMenuButton extends SparkWidget {
   void toggle() {
     ($['overlayMenu'] as SparkMenu).clearSelection();
     opened = !opened;
-
+    var appModal = querySelector("#menuBackdrop");
+    if (appModal != null) {
+      appModal.style.display = opened ? "block" : "none";
+      if (opened) {
+        assert(subscription == null);
+        subscription = appModal.onClick.listen((e) {
+          toggle();
+        });
+      } else if (subscription != null) {
+        subscription.cancel();
+        subscription = null;
+      }
+    }
     // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
     // in 'opened' when run as deployed code. Just binding via {{opened}} alone
     // isn't detected and the menu doesn't open.
     if (IS_DART2JS) {
       ($['overlay'] as SparkOverlay).opened = opened;
     }
+  }
+
+  void onClickOutsideMenu() {
+    toggle();
   }
 
   //* Returns the selected item.
