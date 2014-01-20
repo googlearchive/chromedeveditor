@@ -166,7 +166,7 @@
   left: 50%;
   width: 512px;
   margin-left: -256px;
-  border-radius:2px;
+  border-radius: 5px;
 }
 
 .spark-overlay-scale-slideup input {
