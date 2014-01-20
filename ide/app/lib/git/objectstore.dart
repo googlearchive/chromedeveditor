@@ -281,15 +281,14 @@ class ObjectStore {
           }
 
           return null;
-      }).then((_) {
-
-        if ((limit != null && commits.length >= limit) ||
-            nextLevel.length == 0) {
-          return new Future.value(new CommitGraph(commits, nextLevel));
-        } else {
-          return walkLevel(nextLevel);
-        }
-      });
+        }).then((_) {
+          if ((limit != null && commits.length >= limit) ||
+              nextLevel.length == 0) {
+            return new Future.value(new CommitGraph(commits, nextLevel));
+          } else {
+            return walkLevel(nextLevel);
+          }
+        });
       });
     }
     return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
