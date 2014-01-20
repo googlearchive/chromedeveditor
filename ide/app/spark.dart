@@ -421,10 +421,10 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   /**
    * Allow for creating a new file using the Save as dialog.
    */
-  void newFileAs() {
+  Future<bool> newFileAs() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.SAVE_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
@@ -433,13 +433,13 @@ class Spark extends SparkModel implements FilesControllerDelegate {
           workspace.save();
         });
       }
-    }).catchError((e) => null);
+    });
   }
 
-  void openFile() {
+  Future<bool> openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
@@ -448,7 +448,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
           workspace.save();
         });
       }
-    }).catchError((e) => null);
+    });
   }
 
   Future<bool> openFolder() {
@@ -868,7 +868,9 @@ class FileOpenAction extends SparkAction {
     defaultBinding("ctrl-o");
   }
 
-  void _invoke([Object context]) => spark.openFile();
+  void _invoke([Object context]) {
+    spark.openFile();
+  }
 }
 
 class FileNewAction extends SparkActionWithDialog implements ContextAction {
@@ -931,7 +933,9 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
 class FileNewAsAction extends SparkAction {
   FileNewAsAction(Spark spark) : super(spark, "file-new-as", "New File…");
 
-  void _invoke([Object context]) => spark.newFileAs();
+  void _invoke([Object context]) {
+    spark.newFileAs();
+  }
 }
 
 class FileSaveAction extends SparkAction {

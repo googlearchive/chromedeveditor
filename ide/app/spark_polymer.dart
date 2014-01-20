@@ -62,6 +62,22 @@ class SparkPolymer extends Spark {
                 backdropShowing = false)));
   }
 
+  Future<bool> openFile() {
+    backdropShowing = true;
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () =>
+            (super.openFile().whenComplete(() =>
+                backdropShowing = false)));
+  }
+
+  Future<bool> newFileAs() {
+    backdropShowing = true;
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () =>
+            (super.openFile().whenComplete(() =>
+                backdropShowing = false)));
+  }
+
   static set backdropShowing(bool showing) {
     var appModal = querySelector("#modalBackdrop");
     appModal.style.display = showing ? "block" : "none";
