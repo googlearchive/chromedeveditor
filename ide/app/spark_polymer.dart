@@ -85,7 +85,7 @@ class SparkPolymer extends Spark {
 
   static bool get backdropShowing {
     var appModal = querySelector("#modalBackdrop");
-    appModal.style.display == "none";
+    return (appModal.style.display != "none");
   }
 
   SparkPolymer._(bool developerMode)
