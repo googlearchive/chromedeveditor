@@ -253,7 +253,7 @@ class ObjectStore {
   }
 
 
-  Future<CommitGraph> getCommitGraph(List<String> headShas, int limit) {
+  Future<CommitGraph> getCommitGraph(List<String> headShas, [int limit]) {
     List<CommitObject> commits = [];
     Map<String, bool> seen = {};
 
@@ -283,7 +283,8 @@ class ObjectStore {
           return null;
       }).then((_) {
 
-        if (commits.length >= limit || nextLevel.length == 0) {
+        if ((limit != null && commits.length >= limit) ||
+            nextLevel.length == 0) {
           return new Future.value(new CommitGraph(commits, nextLevel));
         } else {
           return walkLevel(nextLevel);
