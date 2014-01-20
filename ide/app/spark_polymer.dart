@@ -54,28 +54,43 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future<bool> openFolder() {
+  Future<bool> invokeSystemDialog(dialogFuture) {
     backdropShowing = true;
     Timer timer =
         new Timer(new Duration(milliseconds: 100), () =>
-            (super.openFolder().whenComplete(() =>
+            (dialogFuture.whenComplete(() =>
                 backdropShowing = false)));
+  }
+
+  Future<bool> _beforeSystemModal() {
+    Completer completer = new Completer();
+    backdropShowing = true;
+
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () {
+          completer.complete();
+        });
+
+    return completer.future;
+  }
+
+  Future<bool> _systemModalComplete() {
+    backdropShowing = false;
+  }
+
+  Future<bool> openFolder() {
+    _beforeSystemModal().then((_) =>
+        super.openFolder().whenComplete(() => _systemModalComplete()));
   }
 
   Future<bool> openFile() {
-    backdropShowing = true;
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () =>
-            (super.openFile().whenComplete(() =>
-                backdropShowing = false)));
+    _beforeSystemModal().then((_) =>
+        super.openFile().whenComplete(() => _systemModalComplete()));
   }
 
   Future<bool> newFileAs() {
-    backdropShowing = true;
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () =>
-            (super.openFile().whenComplete(() =>
-                backdropShowing = false)));
+    _beforeSystemModal().then((_) =>
+        super.newFileAs().whenComplete(() => _systemModalComplete()));
   }
 
   static set backdropShowing(bool showing) {
