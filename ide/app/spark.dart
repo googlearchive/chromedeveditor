@@ -6,7 +6,7 @@ library spark;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:html';
+import 'dart:html' hide File;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -350,6 +350,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
+    actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ApplicationRunAction(this));
@@ -372,38 +373,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void buildMenu() {
-    UListElement ul = getUIElement('#hotdogMenu ul');
 
-    ul.children.add(createMenuItem(actionManager.getAction('file-open')));
-    ul.children.add(createMenuItem(actionManager.getAction('folder-open')));
-
-    ul.children.add(createMenuSeparator());
-
-    // Theme control.
-    Element theme = ul.querySelector('#changeTheme');
-    ul.children.remove(theme);
-    ul.children.add(theme);
-    ul.querySelector('#themeLeft').onClick.listen((e) => aceThemeManager.dec(e));
-    ul.querySelector('#themeRight').onClick.listen((e) => aceThemeManager.inc(e));
-
-    // Key binding control.
-    Element keys = ul.querySelector('#changeKeys');
-    ul.children.remove(keys);
-    ul.children.add(keys);
-    ul.querySelector('#keysLeft').onClick.listen((e) => aceKeysManager.dec(e));
-    ul.querySelector('#keysRight').onClick.listen((e) => aceKeysManager.inc(e));
-
-    if (developerMode) {
-      ul.children.add(createMenuSeparator());
-      ul.children.add(createMenuItem(actionManager.getAction('run-tests')));
-      ul.children.add(createMenuItem(actionManager.getAction('git-clone')));
-      ul.children.add(createMenuItem(actionManager.getAction('git-commit')));
-      ul.children.add(createMenuItem(actionManager.getAction('git-branch')));
-      ul.children.add(createMenuItem(actionManager.getAction('git-checkout')));
-    }
-
-    ul.children.add(createMenuSeparator());
-    ul.children.add(createMenuItem(actionManager.getAction('help-about')));
   }
 
   //
@@ -872,32 +842,31 @@ class FileOpenAction extends SparkAction {
 }
 
 class FileNewAction extends SparkActionWithDialog implements ContextAction {
-   InputElement _nameElement;
-   ws.Folder folder;
+  InputElement _nameElement;
+  ws.Folder folder;
 
-   FileNewAction(Spark spark, Element dialog)
-     : super(spark, "file-new", "New File…", dialog) {
-       defaultBinding("ctrl-n");
-       _nameElement = _triggerOnReturn("#fileNewName");
-   }
+  FileNewAction(Spark spark, Element dialog)
+      : super(spark, "file-new", "New File…", dialog) {
+    defaultBinding("ctrl-n");
+    _nameElement = _triggerOnReturn("#fileName");
+  }
 
-   void _invoke([List<ws.Folder> folders]) {
-     if (folders != null && folders.isNotEmpty) {
-       folder = folders.first;
-       _nameElement.value = '';
-       _show();
-     } else {
-       // create new file in sync fs on chrome os
-       if (spark.platformInfo.isCros && spark.workspace.syncFsIsAvailable) {
-          _nameElement.value = '';
-          _show();
-       } else { // use file save as for local fs
-          spark.newFileAs();
-       }
-     }
-   }
+  void _invoke([List<ws.Folder> folders]) {
+    if (folders != null && folders.isNotEmpty) {
+      folder = folders.first;
+      _nameElement.value = '';
+      _show();
+    } else {
+      // create new file in sync fs on chrome os
+      if (spark.platformInfo.isCros && spark.workspace.syncFsIsAvailable) {
+        _nameElement.value = '';
+        _show();
+      } else { // use file save as for local fs
+        spark.newFileAs();
+      }
+    }
+  }
 
-  // called when user validates the dialog
   void _commit() {
     var name = _nameElement.value;
     if (name.isNotEmpty) {
@@ -1112,24 +1081,23 @@ class NextMarkerAction extends SparkAction {
 }
 
 class FolderNewAction extends SparkActionWithDialog implements ContextAction {
-   InputElement _nameElement;
-   ws.Folder folder;
+  InputElement _nameElement;
+  ws.Folder folder;
 
-   FolderNewAction(Spark spark, Element dialog)
-     : super(spark, "folder-new", "New Folder…", dialog) {
-     defaultBinding("ctrl-shift-n");
-     _nameElement = _triggerOnReturn("#folderName");
-   }
+  FolderNewAction(Spark spark, Element dialog)
+      : super(spark, "folder-new", "New Folder…", dialog) {
+    defaultBinding("ctrl-shift-n");
+    _nameElement = _triggerOnReturn("#folderName");
+  }
 
-   void _invoke([List<ws.Folder> folders]) {
-     if (folders != null && folders.isNotEmpty) {
-       folder = folders.first;
-       _nameElement.value = '';
-       _show();
-     }
-   }
+  void _invoke([List<ws.Folder> folders]) {
+    if (folders != null && folders.isNotEmpty) {
+      folder = folders.first;
+      _nameElement.value = '';
+      _show();
+    }
+  }
 
-  // called when user validates the dialog
   void _commit() {
     var name = _nameElement.value;
     if (name.isNotEmpty) {
@@ -1145,6 +1113,38 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   String get category => 'folder';
 
   bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+class NewProjectAction extends SparkActionWithDialog {
+  InputElement _nameElement;
+  ws.Folder folder;
+
+  NewProjectAction(Spark spark, Element dialog)
+      : super(spark, "project-new", "New Project…", dialog) {
+    _nameElement = _triggerOnReturn("#name");
+  }
+
+  void _invoke([context]) {
+    _nameElement.value = '';
+    _show();
+  }
+
+  void _commit() {
+    var name = _nameElement.value.trim();
+    if (name.isNotEmpty) {
+      spark.projectLocationManager.createNewFolder(name)
+          .then((chrome.DirectoryEntry dir) {
+        return spark.workspace.link(dir).then((project) {
+          spark.showSuccessMessage('Created ${project.name}');
+          Timer.run(() {
+            spark._filesController.selectFile(project);
+            spark._filesController.setFolderExpanded(project);
+          });
+          spark.workspace.save();
+        });
+      });
+    }
+  }
 }
 
 class FolderOpenAction extends SparkAction {

@@ -28,6 +28,7 @@
 
     <spark-toolbar id="toolbar" lightdom>
       <spark-button id="gitClone" small primary>Git Clone...</spark-button>
+      <spark-button id="newProject" small>New Project...</spark-button>
       <spark-button id="openFolder" small>Open Folder...</spark-button>
       <spark-button id="runButton" small><i class="fa fa-play"></i> Run</spark-button>
 
@@ -48,6 +49,8 @@
           <spark-menu-item action-id="folder-open" iconsize=0 label="Open Folder...">
           </spark-menu-item>
           <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
+          </spark-menu-item>
+          <spark-menu-item action-id="project-new" iconsize=0 label="New Project...">
           </spark-menu-item>
           <spark-menu-item action-id="settings" iconsize=0 label="Settings...">
           </spark-menu-item>
@@ -113,25 +116,25 @@
       </div>
     </spark-overlay>
 
-     <!-- New File dialog -->
-     <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
-       <div class="modal-body">
-         <p>
-           File name: <input id="fileNewName" type="text" focused>
-         </p>
-       </div>
-       <div class="modal-footer">
-         <spark-button overlay-toggle data-dismiss="modal">
-           Cancel
-         </spark-button>
-         <spark-button id="fileNewOkButton" overlay-toggle primary
-             data-dismiss="modal">
-           Create
-         </spark-button>
-       </div>
-     </spark-overlay>
+    <!-- New File dialog -->
+    <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <p>
+          File name: <input id="fileName" type="text" focused>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="fileNewOkButton" overlay-toggle primary
+            data-dismiss="modal">
+          Create
+        </spark-button>
+      </div>
+    </spark-overlay>
 
-     <!-- New Folder dialog -->
+    <!-- New Folder dialog -->
     <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <p>
@@ -139,11 +142,34 @@
         </p>
       </div>
       <div class="modal-footer">
-        <spark-button data-dismiss="modal">
+        <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="folderNewOkButton" primary
-            data-dismiss="modal">Create</spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Create
+        </spark-button>
+      </div>
+    </spark-overlay>
+
+    <!-- New Project dialog -->
+    <spark-overlay id="newProjectDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <spark-button overlay-toggle class="close" data-dismiss="modal"
+            aria-hidden="true">&times;</spark-button>
+        <h4 class="modal-title">New Project</h4>
+      </div>
+      <div class="modal-body">
+        <p>
+          Project name: <input id="name" type="text" focused>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Create
+        </spark-button>
       </div>
     </spark-overlay>
 
