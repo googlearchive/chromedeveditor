@@ -230,7 +230,7 @@ class SparkOverlay extends SparkWidget {
   // scrim.
   void captureHandler(MouseEvent e) {
     // TODO(terry): Hack to work around lightdom or event.path not yet working.
-    if (!autoCloseDisabled && !pointInOverlay(this, e.client)) {
+    if (!autoCloseDisabled && !isPointInOverlay(e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;
       e.stopImmediatePropagation();
       e.preventDefault();
@@ -239,8 +239,8 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  bool pointInOverlay(SparkOverlay overlay, Point xyGlobal) {
-    return overlay.offset.containsPoint(xyGlobal);
+  bool isPointInOverlay(Point xyGlobal) {
+    return super.getBoundingClientRect().containsPoint(xyGlobal);
   }
 
   void keydownHandler(KeyboardEvent e) {
