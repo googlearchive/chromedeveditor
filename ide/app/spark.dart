@@ -451,8 +451,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     }).catchError((e) => null);
   }
 
-  void openFolder() {
-    _selectFolder().then((chrome.ChromeFileEntry entry) {
+  Future<bool> openFolder() {
+    return _selectFolder().then((chrome.ChromeFileEntry entry) {
       if (entry != null) {
         workspace.link(entry).then((file) {
           Timer.run(() {
@@ -1150,7 +1150,9 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
 class FolderOpenAction extends SparkAction {
   FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
 
-  void _invoke([Object context]) => spark.openFolder();
+  void _invoke([Object context]) {
+    spark.openFolder();
+  }
 }
 
 /* Git operations */

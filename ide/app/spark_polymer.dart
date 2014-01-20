@@ -38,8 +38,7 @@ class SparkPolymerDialog implements SparkDialog {
       : _dialogElement = dialogElement {
     // TODO(ussuri): Encapsulate backdrop in SparkOverlay.
     _dialogElement.on['opened'].listen((event) {
-      var appModal = querySelector("#modalBackdrop");
-      appModal.style.display = event.detail ? "block" : "none";
+      SparkPolymer.backdropShowing = event.detail;
     });
   }
 
@@ -55,18 +54,22 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  void openFolder() {
+  Future<bool> openFolder() {
     backdropShowing = true;
+    /*%TRACE3*/ print("(4> 1/19/14): backdropShowing = true!"); // TRACE%
     Timer timer =
-        new Timer(new Duration(milliseconds: 100), () => (super.openFolder()));
+        new Timer(new Duration(milliseconds: 100), () => (super.openFolder().then((_) {
+          /*%TRACE3*/ print("(4> 1/19/14): backdropShowing!"); // TRACE%
+          backdropShowing = false;
+        })));
   }
 
-  void set backdropShowing(bool showing) {
+  static set backdropShowing(bool showing) {
     var appModal = querySelector("#modalBackdrop");
     appModal.style.display = showing ? "block" : "none";
   }
 
-  bool get backdropShowing {
+  static bool get backdropShowing {
     var appModal = querySelector("#modalBackdrop");
     appModal.style.display == "none";
   }
