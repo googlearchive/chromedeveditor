@@ -686,7 +686,7 @@ Future<chrome.ChromeFileEntry> _selectFolder({String suggestedName}) {
   if (suggestedName != null) options.suggestedName = suggestedName;
   chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
     completer.complete(res.entry);
-  }).catchError((e) => null);
+  }).catchError((e) => completer.complete(null));
   return completer.future;
 }
 
