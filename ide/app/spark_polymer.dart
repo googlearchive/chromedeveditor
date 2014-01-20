@@ -155,7 +155,6 @@ class SparkPolymer extends Spark {
 
     _bindButtonToAction('gitClone', 'git-clone');
     _bindButtonToAction('newProject', 'project-new');
-    _bindButtonToAction('openFolder', 'folder-open');
     _bindButtonToAction('runButton', 'application-run');
   }
 

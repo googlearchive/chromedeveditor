@@ -29,7 +29,6 @@
     <spark-toolbar id="toolbar" lightdom>
       <spark-button id="gitClone" small primary>Git Clone...</spark-button>
       <spark-button id="newProject" small>New Project...</spark-button>
-      <spark-button id="openFolder" small>Open Folder...</spark-button>
       <spark-button id="runButton" small><i class="fa fa-play"></i> Run</spark-button>
 
       <spark-status id="sparkStatus"></spark-status>
@@ -48,14 +47,18 @@
           </spark-menu-item>
           <spark-menu-item action-id="folder-open" iconsize=0 label="Open Folder...">
           </spark-menu-item>
-          <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
-          </spark-menu-item>
           <spark-menu-item action-id="project-new" iconsize=0 label="New Project...">
           </spark-menu-item>
+          <!-- TODO: separator -->
+          <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
+          </spark-menu-item>
+          <!-- TODO: separator -->
           <spark-menu-item action-id="settings" iconsize=0 label="Settings...">
           </spark-menu-item>
+          <!-- TODO: separator -->
           <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">
           </spark-menu-item>
+          <!-- TODO: separator -->
           <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
           </spark-menu-item>
         </spark-menu-button>
