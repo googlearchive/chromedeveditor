@@ -58,9 +58,8 @@ class SparkPolymer extends Spark {
     backdropShowing = true;
     Timer timer =
         new Timer(new Duration(milliseconds: 100), () =>
-            (super.openFolder().whenComplete(() {
-          backdropShowing = false;
-        })));
+            (super.openFolder().whenComplete(() =>
+                backdropShowing = false)));
   }
 
   static set backdropShowing(bool showing) {
