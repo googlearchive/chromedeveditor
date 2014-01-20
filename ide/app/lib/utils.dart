@@ -17,6 +17,20 @@ String capitalize(String s) {
   return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
 }
 
+/**
+ * Returns a reasonable approximation of the given string converted into title
+ * case. All words are capitolized with the exception of short ones.
+ */
+String toTitleCase(String s) {
+  return s.split(' ').map((word) {
+    if (word.length <= 2 || word == 'and' || word == 'the') {
+      return word;
+    } else {
+      return capitalize(word);
+    }
+  }).join(' ');
+}
+
 AudioContext _ctx;
 
 void beep() {
