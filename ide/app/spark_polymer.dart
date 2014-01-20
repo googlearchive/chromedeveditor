@@ -56,10 +56,9 @@ class SparkPolymer extends Spark {
 
   Future<bool> openFolder() {
     backdropShowing = true;
-    /*%TRACE3*/ print("(4> 1/19/14): backdropShowing = true!"); // TRACE%
     Timer timer =
-        new Timer(new Duration(milliseconds: 100), () => (super.openFolder().then((_) {
-          /*%TRACE3*/ print("(4> 1/19/14): backdropShowing!"); // TRACE%
+        new Timer(new Duration(milliseconds: 100), () =>
+            (super.openFolder().whenComplete(() {
           backdropShowing = false;
         })));
   }
