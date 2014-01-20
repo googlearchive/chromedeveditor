@@ -103,11 +103,11 @@ class SparkSplitter extends SparkWidget {
 
   void _addBackgroundHandle() {
     if (_isHorizontal) {
-      classes.add('horizontal-background-handle');
-      classes.remove('background-handle');
+      classes.add('horizontal-handle');
+      classes.remove('vertical-handle');
     } else {
-      classes.remove('horizontal-background-handle');
-      classes.add('background-handle');
+      classes.remove('horizontal-handle');
+      classes.add('vertical-handle');
     }
   }
 
