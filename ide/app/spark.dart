@@ -12,6 +12,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:dquery/dquery.dart';
 import 'package:logging/logging.dart';
+import 'packages/spark_widgets/spark_status/spark_status.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
@@ -86,8 +87,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   final bool developerMode;
 
   final JobManager jobManager = new JobManager();
-
-  ActivitySpinner _activitySpinner;
+  SparkStatus statusComponent;
 
   AceManager _aceManager;
   ThemeManager _aceThemeManager;
@@ -122,12 +122,12 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     addParticipant(new _SparkSetupParticipant(this));
 
     // TODO: this event is not being fired. A bug with chrome apps / Dartium?
+    // Possibly this: https://github.com/dart-gde/chrome.dart/issues/115
     chrome.app.window.onClosed.listen((_) {
       close();
     });
 
     initWorkspace();
-    initActivitySpinner();
 
     createEditorComponents();
     initEditorArea();
@@ -145,7 +145,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     initSaveStatusListener();
 
     initLaunchManager();
-
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -264,26 +263,13 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement());
     _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme span'));
+        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys span'));
+        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
     _editorArea = new EditorArea(
-        getUIElement('#editorArea'),
-        getUIElement('#editedFilename'),
-        editorManager,
-        allowsLabelBar: true);
-  }
-
-  void initActivitySpinner() {
-    _activitySpinner = new ActivitySpinner(this, '#activitySpinner');
-    _activitySpinner.setShowing(false);
-
-    // TODO: This might cause the spinner to "blink" between jobs.
-    jobManager.onChange.listen((JobManagerEvent event) {
-      _activitySpinner.setShowing(!event.finished);
-    });
+        getUIElement('#editorArea'), editorManager, allowsLabelBar: true);
   }
 
   void initEditorManager() {
@@ -350,20 +336,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void initSaveStatusListener() {
-    Element element = getUIElement('#saveStatus');
-    Timer timer = new Timer(new Duration(seconds: 0), () => null);
-
-    eventBus.onEvent('fileModified').listen((_) {
-      //element.text = 'text modified…';
-      element.text = '';
-      timer.cancel();
-    });
-
-    eventBus.onEvent('filesSaved').listen((_) {
-      element.text = 'all changes saved';
-      timer.cancel();
-      timer = new Timer(new Duration(seconds: 3), () => (element.text = ''));
-    });
+    // Overridden in spark_polymer.dart.
   }
 
   void createActions() {
@@ -385,7 +358,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new RunTestsAction(this));
-    actionManager.registerAction(new SettingAction(this, getDialogElement('#settingDialog')));
+    actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
@@ -490,6 +463,16 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         });
       }
     });
+  }
+
+  void showSuccessMessage(String message) {
+    statusComponent.temporaryMessage = message;
+  }
+
+  void showErrorMessage(String title, String message) {
+    // TODO: Implement.
+
+    print('${title}: ${message}');
   }
 
   void onSplitViewUpdate(int position) { }
@@ -711,19 +694,6 @@ bool _isCros() {
   return (SparkModel.instance as Spark).platformInfo.isCros;
 }
 
-// TODO: This should be moved into the ui/ directory.
-class ActivitySpinner {
-  Element element;
-
-  ActivitySpinner(Spark spark, String elementId) {
-    element = spark.getUIElement(elementId);
-  }
-
-  void setShowing(bool showing) {
-    element.style.opacity = showing ? '1' : '0';
-  }
-}
-
 /**
  * The abstract parent class of Spark related actions.
  */
@@ -774,6 +744,13 @@ abstract class SparkAction extends Action {
     }
     return object.length == 1 && object.first is ws.Project;
   }
+
+  /**
+   * Returns true if `context` is a list with a single item, the item is a
+   * [Project], and that project is under SCM.
+   */
+  bool _isScmProject(context) =>
+      _isProject(context) && scm.isUnderScm(context.first);
 
   /**
    * Returns true if `object` is a list with a single item and this item is a
@@ -1192,7 +1169,17 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    _GitCloneJob job = new _GitCloneJob(_repoUrlElement.value, spark);
+    String url = _repoUrlElement.value;
+    if (!url.endsWith('.git')) {
+      url = url + '.git';
+    }
+
+    String projectName = url.split('/').last;
+    if (projectName.endsWith('.git')) {
+      projectName = projectName.substring(0, projectName.length - 4);
+    }
+
+    _GitCloneJob job = new _GitCloneJob(url, projectName, spark);
     spark.jobManager.schedule(job);
   }
 }
@@ -1222,7 +1209,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
   String get category => 'git';
 
-  bool appliesTo(context) => _isProject(context) && scm.isUnderScm(context.first);
+  bool appliesTo(context) => _isScmProject(context);
 }
 
 class GitCommitAction extends SparkActionWithDialog implements ContextAction {
@@ -1251,7 +1238,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   String get category => 'git';
 
-  bool appliesTo(context) => _isProject(context) && scm.isUnderScm(context.first);
+  bool appliesTo(context) => _isScmProject(context);
 }
 
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
@@ -1295,32 +1282,29 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
 
   String get category => 'git';
 
-  bool appliesTo(context) => _isProject(context) && scm.isUnderScm(context.first);
+  bool appliesTo(context) => _isScmProject(context);
 }
 
 class _GitCloneJob extends Job {
-  String projectName;
   String url;
+  String _projectName;
   Spark spark;
 
-  _GitCloneJob(this.url, this.spark) : super("Cloning …") {
-    projectName = url.split('/').last;
-    if (projectName.endsWith('.git')) {
-      projectName = projectName.substring(0, projectName.length - 4);
-    }
-    if (!url.endsWith('.git')) {
-      url = url + '.git';
-    }
+  _GitCloneJob(this.url, String projectName, this.spark)
+      : super("Cloning ${projectName}…") {
+    _projectName = projectName;
   }
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return spark.projectLocationManager.createNewFolder(projectName).then((chrome.DirectoryEntry dir) {
+    return spark.projectLocationManager.createNewFolder(_projectName)
+        .then((chrome.DirectoryEntry dir) {
       scm.ScmProvider scmProvider = scm.getProviderType('git');
 
       return scmProvider.clone(url, dir).then((_) {
         return spark.workspace.link(dir).then((project) {
+          spark.showSuccessMessage('Cloned into ${project.name}');
           Timer.run(() {
             spark._filesController.selectFile(project);
             spark._filesController.setFolderExpanded(project);
@@ -1329,8 +1313,7 @@ class _GitCloneJob extends Job {
         });
       });
     }).catchError((e) {
-      // TODO:
-      print(e);
+      spark.showErrorMessage('Error cloning ${_projectName}', e.toString());
     });
   }
 }
@@ -1340,16 +1323,21 @@ class _GitBranchJob extends Job {
   String _branchName;
   String url;
 
-  _GitBranchJob(this.gitOperations, this._branchName) : super("Branch …");
+  _GitBranchJob(this.gitOperations, String branchName)
+      : super("Creating ${branchName}…") {
+    _branchName = branchName;
+  }
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     return gitOperations.createBranch(_branchName).then((_) {
-      return gitOperations.checkoutBranch(_branchName);
+      return gitOperations.checkoutBranch(_branchName).then((_) {
+        SparkModel.instance.showSuccessMessage('Created ${_branchName}');
+      });
     }).catchError((e) {
-      // TODO:
-      print(e);
+      SparkModel.instance.showErrorMessage(
+          'Error creating branch ${_branchName}', e.toString());
     });
   }
 }
@@ -1359,17 +1347,16 @@ class _GitCommitJob extends Job {
   String _commitMessage;
   Spark spark;
 
-  _GitCommitJob(this.gitOperations, this._commitMessage, this.spark) : super("Commit …");
+  _GitCommitJob(this.gitOperations, this._commitMessage, this.spark)
+      : super("Committing…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     return gitOperations.commit(_commitMessage).then((_) {
-      // TODO: show success message
-
+      spark.showSuccessMessage('Committed changes.');
     }).catchError((e) {
-      // TODO:
-      print(e);
+      spark.showErrorMessage('Error committing changes', e.toString());
     });
   }
 }
@@ -1379,18 +1366,18 @@ class _GitCheckoutJob extends Job {
   String _branchName;
   Spark spark;
 
-  _GitCheckoutJob(this.gitOperations, this._branchName, this.spark)
-      : super("Checkout …");
+  _GitCheckoutJob(this.gitOperations, String branchName, this.spark)
+      : super("Switching to ${branchName}…") {
+    _branchName = branchName;
+  }
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     return gitOperations.checkoutBranch(_branchName).then((_) {
-      // TODO : add UI notification.
-
+      spark.showSuccessMessage('Switched to branch ${_branchName}');
     }).catchError((e) {
-      // TODO:
-      print(e);
+      spark.showErrorMessage('Error switching to ${_branchName}', e.toString());
     });
   }
 }
@@ -1423,11 +1410,11 @@ class AboutSparkAction extends SparkActionWithDialog {
 }
 
 
-class SettingAction extends SparkActionWithDialog {
+class SettingsAction extends SparkActionWithDialog {
   bool _initialized = false;
 
-  SettingAction(Spark spark, Element dialog)
-      : super(spark, "settings", "Setting", dialog);
+  SettingsAction(Spark spark, Element dialog)
+      : super(spark, "settings", "Settings", dialog);
 
   void _invoke([Object context]) {
     if (!_initialized) {

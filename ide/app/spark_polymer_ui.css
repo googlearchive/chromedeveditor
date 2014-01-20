@@ -140,24 +140,9 @@
   background-color: rgba(0, 0, 0, 0);
 }
 
-#editedFilename {
-  color: #aaa;
-  display: inline-block;
-  margin: 0 6px 0 0;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: middle;
-  white-space: nowrap;
-}
-
 .titleFont {
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
-}
-
-#editedFilename.hidden {
-  opacity: 0;
 }
 
 /** Dialog Stuff */
@@ -203,14 +188,6 @@
   background-image: url("assets/images/info_icon.png");
 }
 
-#activitySpinner {
-  opacity: 1;
-  font-size: 18pt;
-  vertical-align: middle;
-  color: #777;
-  margin: 0;
-}
-
 .minimap {
   right: 0px;
   width: 10px;
@@ -247,16 +224,29 @@
 }
 
 #toolbar {
-  left: 0;
   position: absolute;
+  left: 0;
   right: 0;
 }
 
-#settingDialog .plus-minus-container {
+#settingsDialog .settings-title {
+  display: inline-block;
+  width: 80px;
+  white-space: nowrap;
+}
+
+#settingsDialog .settings-label {
+	display: inline-block;
+	width: 100px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#settingsDialog .plus-minus-container {
   margin-left: 15px;
 }
 
-#settingDialog .plus-minus-button {
+#settingsDialog .plus-minus-button {
   background-color: #3a84c3;
   border-radius: 5px;
   color: #fff;
@@ -265,17 +255,17 @@
   padding: 3px 8px;
 }
 
-#settingDialog .plus-minus-button:hover {
+#settingsDialog .plus-minus-button:hover {
   color: #fff;
   text-decoration: none;
 }
 
-#settingDialog .plus-minus-button:active {
+#settingsDialog .plus-minus-button:active {
   background-color: #19197A;
   color: #fff;
   text-decoration: none;
 }
 
 #toolbarRight {
-  padding-right: 16px;
+
 }

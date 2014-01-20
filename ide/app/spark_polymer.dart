@@ -18,6 +18,7 @@ import 'packages/spark_widgets/spark_splitter/spark_splitter.dart';
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
+import 'lib/jobs.dart';
 
 void main() {
   isTestMode().then((testMode) {
@@ -103,9 +104,6 @@ class SparkPolymer extends Spark {
   void createEditorComponents() => super.createEditorComponents();
 
   @override
-  void initActivitySpinner() => super.initActivitySpinner();
-
-  @override
   void initEditorManager() => super.initEditorManager();
 
   @override
@@ -124,7 +122,36 @@ class SparkPolymer extends Spark {
   }
 
   @override
-  void initSaveStatusListener() => super.initSaveStatusListener();
+  void initSaveStatusListener() {
+    super.initSaveStatusListener();
+
+    statusComponent = getUIElement('#sparkStatus');
+
+    // Listen for save events.
+    eventBus.onEvent('filesSaved').listen((_) {
+      statusComponent.temporaryMessage = 'all changes saved';
+    });
+
+    // Listen for job manager events.
+    jobManager.onChange.listen((JobManagerEvent event) {
+      if (event.started) {
+          statusComponent.spinning = true;
+          statusComponent.progressMessage = event.job.name;
+      } else if (event.finished) {
+        statusComponent.spinning = false;
+        statusComponent.progressMessage = null;
+      }
+    });
+
+    // Listen for editing area name change events.
+    editorArea.onNameChange.listen((name) {
+      if (editorArea.shouldDisplayName) {
+        statusComponent.defaultMessage = name;
+      } else {
+        statusComponent.defaultMessage = null;
+      }
+    });
+  }
 
   @override
   void initFilesController() => super.initFilesController();
