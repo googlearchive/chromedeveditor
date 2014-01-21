@@ -91,7 +91,7 @@ class ScmManager {
 
   void _fireStatusChangeFor(Project project) {
     if (_operations[project] != null) {
-      _operations[project].fireStatusChangeEvent();
+      _operations[project]._fireStatusChangeEvent();
     }
   }
 }
@@ -153,11 +153,7 @@ abstract class ScmProjectOperations {
 
   Future commit(String commitMessage);
 
-  /**
-   * An implementation method; this should generally not be called by clients of
-   * this API.
-   */
-  void fireStatusChangeEvent();
+  void _fireStatusChangeEvent();
 }
 
 /**
@@ -273,7 +269,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   Future<ObjectStore> get objectStore => _completer.future;
 
-  void fireStatusChangeEvent() => _statusController.add(this);
+  void _fireStatusChangeEvent() => _statusController.add(this);
 }
 
 /**
