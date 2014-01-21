@@ -17,5 +17,13 @@
     cursor: row-resize;
 }
 
+.vertical-handle {
+    background: url('handle_vert.png') no-repeat center;
+}
+
+.horizontal-handle {
+    background: url('handle_horiz.png') no-repeat center;
+}
+
 :host:hover, :host(.active), /*BUG #733*/:host.active {
 }
