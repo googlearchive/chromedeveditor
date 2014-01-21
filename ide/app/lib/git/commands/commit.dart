@@ -52,22 +52,23 @@ class Commit {
           });
         } else {
           return Status.getFileStatus(store, entry).then((StatusEntry status) {
-            store.index.updateIndexForEntry(status);
-            status = store.index.getStatusForEntry(entry);
+            return store.index.updateIndexForEntry(status).then((_) {
+              status = store.index.getStatusForEntry(entry);
 
-            if (status.type != FileStatusType.COMMITTED) {
-              return entry.readBytes().then((chrome.ArrayBuffer buf) {
-                return store.writeRawObject('blob', new Uint8List.fromList(
-                    buf.getBytes()));
-              }).then((String sha) {
-                store.index.commitEntry(status);
-                treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
+              if (status.type != FileStatusType.COMMITTED) {
+                return entry.readBytes().then((chrome.ArrayBuffer buf) {
+                  return store.writeRawObject('blob', new Uint8List.fromList(
+                      buf.getBytes()));
+                }).then((String sha) {
+                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
+                      true));
+                  return store.index.commitEntry(status).then((_) => null);
+                });
+              } else {
+                treeEntries.add(new TreeEntry(entry.name, shaToBytes(status.sha),
                     true));
-              });
-            } else {
-              treeEntries.add(new TreeEntry(entry.name, shaToBytes(status.sha),
-                  true));
-            }
+              }
+            });
           });
         }
       }).then((_) {

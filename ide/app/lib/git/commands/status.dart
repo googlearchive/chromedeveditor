@@ -26,7 +26,10 @@ class Status {
     entry.getMetadata().then((data) {
       // TODO(grv) : check the modification time when it is available.
       getShaForEntry(entry, 'blob').then((String sha) {
-        StatusEntry status = new StatusEntry(entry.fullPath, sha, data.size);
+        StatusEntry status = new StatusEntry();
+        status.path = entry.fullPath;
+        status.sha = sha;
+        status.size = data.size;
         store.index.updateIndexForEntry(status);
         completer.complete(store.index.getStatusForEntry(entry));
       });

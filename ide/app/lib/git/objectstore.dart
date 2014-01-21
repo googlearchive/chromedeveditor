@@ -102,7 +102,7 @@ class ObjectStore {
 
   Index index;
 
-  get root => _rootDir;
+  chrome.DirectoryEntry get root => _rootDir;
 
   ObjectStore(chrome.DirectoryEntry root) {
     _rootDir = root;

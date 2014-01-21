@@ -5,11 +5,10 @@
 library git.commands.index;
 
 import 'dart:async';
-import 'dart:typed_data';
-
-import 'dart:html';
+import 'dart:convert';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:serialization/serialization.dart';
 
 import 'constants.dart';
 import '../file_operations.dart';
@@ -27,15 +26,15 @@ class Index {
 
   ObjectStore _store;
 
-  Map<String, StatusEntry> _statusIdx = {};
+  StatusMap _statusIdx = new StatusMap();
 
-  get statusMap => _statusIdx;
+  get statusMap => _statusIdx.map;
 
   Index(this._store);
 
-  void updateIndexForEntry(StatusEntry status) {
+  Future updateIndexForEntry(StatusEntry status) {
 
-    StatusEntry oldStatus = _statusIdx[status.path];
+    StatusEntry oldStatus = _statusIdx.map[status.path];
 
     if (oldStatus != null) {
       status.headSha = oldStatus.headSha;
@@ -72,27 +71,30 @@ class Index {
       status.headSha = status.sha;
       status.type = FileStatusType.UNTRACKED;
     }
-    _statusIdx[status.path] = status;
+    _statusIdx.map[status.path] = status;
+    return writeIndex();
   }
 
-  void commitEntry(StatusEntry status) {
+  Future commitEntry(StatusEntry status) {
     status.headSha = status.sha;
     status.type = FileStatusType.COMMITTED;
-    _statusIdx[status.path] = status;
+    _statusIdx.map[status.path] = status;
+    return writeIndex();
   }
 
   StatusEntry getStatusForEntry(chrome.ChromeFileEntry entry)
-      => _statusIdx[entry.fullPath];
+      => _statusIdx.map[entry.fullPath];
 
-  // TODO(grv) : remove this after index file implementation.
   Future init() {
+    return readIndex();
+  }
+  // TODO(grv) : remove this after index file implementation.
+  Future _init() {
     return walkFilesAndUpdateIndex(_store.root).then((_) {
-      _statusIdx.forEach((String key, StatusEntry status) {
+      _statusIdx.map.forEach((String key, StatusEntry status) {
         status.type = FileStatusType.COMMITTED;
-
-        return new Future.value();
+        return writeIndex();
       });
-      print('successfully update index.');
     });
   }
 
@@ -105,14 +107,37 @@ class Index {
    * Reads the index file and loads it.
    */
   Future readIndex() {
-    return null;
+    return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
+        (chrome.DirectoryEntry entry) {
+      return entry.getFile('index2').then((chrome.ChromeFileEntry entry) {
+        return entry.readText().then((String content) {
+          print(content);
+          JsonDecoder decoder = new JsonDecoder(null);
+          var out = decoder.convert(content);
+          var serialization = new Serialization();
+          _statusIdx = serialization.read(out);
+        });
+      }, onError: (e) {
+        return _init();
+      });
+    });
   }
 
   /**
    * Writes into the index file the current index.
    */
   Future writeIndex() {
-    return null;
+    var serialization = new Serialization();
+    var output = serialization.write(_statusIdx);
+    var serialization2 = new Serialization();
+
+    JsonEncoder encoder = new JsonEncoder();
+    String out = encoder.convert(output);
+
+    return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
+        (chrome.DirectoryEntry entry) {
+      return FileOps.createFileWithContent(entry, 'index2', out, 'Text');
+    });
   }
 
   /**
@@ -140,10 +165,11 @@ class Index {
         } else {
           return getShaForEntry(entry, 'blob').then((String sha) {
             return entry.getMetadata().then((data) {
-              StatusEntry status = new StatusEntry(entry.fullPath, sha,
-                  data.size);
-               updateIndexForEntry(status);
-               return new Future.value();
+              StatusEntry status = new StatusEntry();
+              status.path = entry.fullPath;
+              status.sha = sha;
+              status.size = data.size;
+               return updateIndexForEntry(status);
             });
           });
         }
@@ -166,11 +192,15 @@ class StatusEntry {
   int modificationTime;
   String type;
 
-  StatusEntry(this.path, this.sha, this.size);
+  StatusEntry();
 
   /**
    * Return true if the [entry] is same as [this].
    */
   bool compareTo(StatusEntry entry) =>
     (entry.path == path && entry.sha == sha && entry.size == size);
+}
+
+class StatusMap {
+  Map<String,StatusEntry> map = {};
 }
