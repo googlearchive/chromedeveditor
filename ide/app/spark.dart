@@ -1197,7 +1197,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
   GitBranchAction(Spark spark, Element dialog)
       : super(spark, "git-branch", "Git Branch…", dialog) {
-    _branchNameElement = getElement("#gitBranchName");
+    _branchNameElement = _triggerOnReturn("#gitBranchName");
   }
 
   void _invoke([context]) {
@@ -1231,6 +1231,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   void _invoke([context]) {
     project = context.first;
     gitOperations = scm.getScmOperationsFor(project);
+    _commitMessageElement.value = '';
 
     _show();
   }
@@ -1360,7 +1361,7 @@ class _GitCommitJob extends Job {
     monitor.start(name, 1);
 
     return gitOperations.commit(_commitMessage).then((_) {
-      spark.showSuccessMessage('Committed changes.');
+      spark.showSuccessMessage('Committed changes');
     }).catchError((e) {
       spark.showErrorMessage('Error committing changes', e.toString());
     });
