@@ -68,6 +68,13 @@ class PackEntry {
   PackEntry(this.pack, this.packIdx);
 }
 
+class CommitPushEntry {
+  List<CommitObject> commits = [];
+  GitRef ref;
+
+  CommitPushEntry(this.commits, this.ref);
+}
+
 class FindPackedObjectResult {
   Pack pack;
   int offset;
@@ -313,7 +320,8 @@ class ObjectStore {
   }
 
 
-  Future getCommitsForPush(List<GitRef> baseRefs, Map<String, String> remoteHeads) {
+  Future<CommitPushEntry> getCommitsForPush(List<GitRef> baseRefs,
+      Map<String, String> remoteHeads) {
     // special case of empty remote.
     if (baseRefs.length == 1 && baseRefs[0].sha == HEAD_MASTER_SHA) {
       baseRefs[0].name = HEAD_MASTER_REF_PATH;
@@ -323,7 +331,7 @@ class ObjectStore {
     GitRef remoteRef, headRef;
     return getHeadRef().then((String headRefName) {
       remoteRef = baseRefs.firstWhere((GitRef ref) => ref.name == headRefName);
-      Map<String, bool> remoteShas;
+      Map<String, bool> remoteShas = {};
       // Didn't find a remote branch for the local branch.
       if (remoteHeads.isNotEmpty) {
         remoteRef.name = 'headRef';
@@ -344,6 +352,10 @@ class ObjectStore {
           remoteRef.head = sha;
           remoteRef.sha = sha;
 
+          print('before get commits');
+          window.console.log(remoteRef);
+          window.console.log(remoteShas);
+          window.console.log(sha);
          //TODO handle case of new branch with no commits.
 
           // At present local merge commits are not supported. Thus, look for
@@ -351,6 +363,7 @@ class ObjectStore {
           return _getCommits(remoteRef, remoteShas, sha);
 
         }, onError: (e) {
+          print('some error');
           // no commits to push.
           // TODO throw error.
         });
@@ -358,10 +371,10 @@ class ObjectStore {
     });
   }
 
-  Future _getCommits(GitRef remoteRef, Map<String, bool> remoteShas,
+  Future<CommitPushEntry> _getCommits(GitRef remoteRef, Map<String, bool> remoteShas,
       String sha) {
     var commits = [];
-    Future getNextCommit(String sha) {
+    Future<CommitPushEntry> getNextCommit(String sha) {
 
       //TODO return retrieveObject result
       return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commitObj) {
@@ -369,20 +382,23 @@ class ObjectStore {
         Completer completer = new Completer();
         commits.add({ObjectTypes.COMMIT: commitObj, "raw": rawObj});
         if (commitObj.parents.length > 1) {
+          print('it is non fast');
           // this means a local merge commit.
           _nonFastForward();
           completer.completeError("");
         } else if (commitObj.parents.length == 0 ||
             commitObj.parents[0] == remoteRef.sha || remoteShas[commitObj.parents[0]]) {
-          //TODO callback commits, remoteRef;
-          completer.complete();
+          print('comes here');
+          completer.complete(new CommitPushEntry(commits, remoteRef));
         } else {
+          print('getting next commit.');
           return getNextCommit(commitObj.parents[0]);
         }
 
         return completer.future;
 
       }, onError: (e) {
+        print('iins');
         _nonFastForward();
       });
     }

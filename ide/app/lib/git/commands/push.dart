@@ -12,12 +12,14 @@ import '../options.dart';
 import '../pack.dart';
 import '../utils.dart';
 
+import 'dart:html';
+
 /**
  * This class implements the git push command.
  */
 class Push {
 
-  Future push(GitOptions options) {
+  static Future push(GitOptions options) {
     ObjectStore store = options.store;
     String username = options.username;
     String password = options.password;
@@ -33,6 +35,7 @@ class Push {
     return store.getConfig().then((GitConfig config) {
       String url = config.url != null ? config.url : options.repoUrl;
 
+      url = 'https://github.com/gaurave/test-app.git';
       if (url == null) {
         // TODO throw push_no_remote.
         return null;
@@ -41,9 +44,12 @@ class Push {
       HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
           password);
       return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
+        print('fetched refs');
         return store.getCommitsForPush(refs, config.remoteHeads).then(
             (commits) {
               GitRef ref;
+              window.console.log(commits);
+              return new Future.value();
           return Pack.buildPack(commits, store).then((packData) {
             return fetcher.pushRefs([ref], packData, remotePushProgress).then(
                 (_) {

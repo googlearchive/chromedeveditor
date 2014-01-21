@@ -19,6 +19,7 @@ import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
+import 'git/commands/push.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 
@@ -197,10 +198,23 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future checkoutBranch(String branchName) {
+
+    print('in checkout');
+    return push();
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
       return Checkout.checkout(options);
+    });
+  }
+
+  Future push() {
+
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      options.username = 'gaurave';
+      options.password = 'aiabti123';
+      return Push.push(options);
     });
   }
 
