@@ -82,7 +82,7 @@ class Index {
     return writeIndex();
   }
 
-  StatusEntry getStatusForEntry(chrome.ChromeFileEntry entry)
+  StatusEntry getStatusForEntry(chrome.Entry entry)
       => _statusIdx.map[entry.fullPath];
 
   Future init() {
