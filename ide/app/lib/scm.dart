@@ -41,17 +41,26 @@ ScmProvider getProviderType(String type) =>
     _providers.firstWhere((p) => p.id == type, orElse: () => null);
 
 /**
- * Returns the [ScmProjectOperations] for the given project, or `null` if the
- * project is not under SCM.
+ * TODO:
  */
-ScmProjectOperations getScmOperationsFor(Project project) {
-  for (ScmProvider provider in _providers) {
-    if (provider.isUnderScm(project)) {
-      return provider.getOperationsFor(project);
-    }
-  }
+class ScmManager {
+  final Workspace workspace;
 
-  return null;
+  ScmManager(this.workspace);
+
+  /**
+   * Returns the [ScmProjectOperations] for the given project, or `null` if the
+   * project is not under SCM.
+   */
+  ScmProjectOperations getScmOperationsFor(Project project) {
+    for (ScmProvider provider in _providers) {
+      if (provider.isUnderScm(project)) {
+        return provider.getOperationsFor(project);
+      }
+    }
+
+    return null;
+  }
 }
 
 /**
@@ -73,9 +82,9 @@ abstract class ScmProvider {
   bool isUnderScm(Project project);
 
   /**
-   * Return the [ScmProjectOperations] cooresponding to the given [Project].
+   * Create an [ScmProjectOperations] instance for the given [Project].
    */
-  ScmProjectOperations getOperationsFor(Project project);
+  ScmProjectOperations createOperationsFor(Project project);
 
   /**
    * Clone the repo at the given url into the given directory.
@@ -97,7 +106,9 @@ abstract class ScmProjectOperations {
   /**
    * Return the SCM status for the given file or folder.
    */
-  Future<FileStatus> getFileStatus(Resource resource);
+  FileStatus getFileStatus(Resource resource);
+
+  Stream<ScmProjectOperations> get onStatusChange;
 
   Future<String> getBranchName();
 
@@ -114,9 +125,9 @@ abstract class ScmProjectOperations {
  * The possible SCM file statuses (`committed`, `dirty`, or `unknown`).
  */
 class FileStatus {
-  final FileStatus COMITTED = new FileStatus._('comitted');
-  final FileStatus DIRTY = new FileStatus._('dirty');
-  final FileStatus UNKNOWN = new FileStatus._('unknown');
+  static final FileStatus COMITTED = new FileStatus._('comitted');
+  static final FileStatus DIRTY = new FileStatus._('dirty');
+  static final FileStatus UNKNOWN = new FileStatus._('unknown');
 
   final String _status;
 
@@ -139,7 +150,7 @@ class GitScmProvider extends ScmProvider {
     return project.getChild('.git') is Folder;
   }
 
-  ScmProjectOperations getOperationsFor(Project project) {
+  ScmProjectOperations createOperationsFor(Project project) {
     if (_operations[project] == null) {
       if (isUnderScm(project)) {
         _operations[project] = new GitScmProjectOperations(this, project);
@@ -166,6 +177,8 @@ class GitScmProvider extends ScmProvider {
 class GitScmProjectOperations extends ScmProjectOperations {
   Completer<ObjectStore> _completer;
   ObjectStore _objectStore;
+  StreamController<ScmProjectOperations> _statusController =
+      new StreamController.broadcast();
 
   GitScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
@@ -178,9 +191,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
       .catchError((e) => _completer.completeError(e));
   }
 
-  Future<FileStatus> getFileStatus(Resource resource) {
-    return new Future.error('unimplemented - getFileStatus()');
+  FileStatus getFileStatus(Resource resource) {
+    // TODO:
+    return FileStatus.UNKNOWN;
   }
+
+  Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
   Future<String> getBranchName() =>
       objectStore.then((store) => store.getCurrentBranch());
