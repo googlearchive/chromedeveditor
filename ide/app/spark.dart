@@ -94,7 +94,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
   ScmManager scmManager;
-  BuilderManager _buildManager;
   EditorManager _editorManager;
   EditorArea _editorArea;
   LaunchManager _launchManager;
@@ -159,6 +158,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       //workspace.refresh();
     });
 
+    // Add a Dart builder.
     addBuilder(new DartBuilder());
   }
 
@@ -248,6 +248,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void initWorkspace() {
     _workspace = new ws.Workspace(localPrefs);
+    _workspace.createBuilderManager(jobManager);
   }
 
   void initScmManager() {
@@ -387,11 +388,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   //
 
   void addBuilder(Builder builder) {
-    if (_buildManager == null) {
-      _buildManager = new BuilderManager(workspace, jobManager);
-    }
-
-    _buildManager.builders.add(builder);
+    workspace.builderManager.builders.add(builder);
   }
 
   /**

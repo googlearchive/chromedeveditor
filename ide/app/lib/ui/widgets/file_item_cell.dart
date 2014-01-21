@@ -45,8 +45,8 @@ class FileItemCell implements ListViewCell {
 
   Element get gitStatusElement => _element.querySelector('.gitStatus');
 
-  void setFileInfoText(String infoText) {
-    fileInfoElement.innerHtml = infoText;
+  void setFileInfo(String infoString) {
+    fileInfoElement.innerHtml = infoString;
   }
 
   void updateFileStatus() {

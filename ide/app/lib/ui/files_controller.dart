@@ -30,7 +30,7 @@ class FilesController implements TreeViewDelegate {
   TreeView _treeView;
   // Workspace that references all the resources.
   Workspace _workspace;
-  // TODO:
+  // The SCMManager is used to help us decorate files with their SCM status.
   ScmManager _scmManager;
   // List of top-level resources.
   List<Resource> _files;
@@ -626,7 +626,7 @@ class FilesController implements TreeViewDelegate {
         scmOperations.getBranchName().then((branchName) {
           final String repoIcon = '<i class="fa fa-code-fork"></i>';
           if (branchName == null) branchName = '';
-          fileItemCell.setFileInfoText('${repoIcon} [${branchName}]');
+          fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
         });
       } else {
         FileStatus status = scmOperations.getFileStatus(resource);

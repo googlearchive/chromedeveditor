@@ -12,6 +12,8 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'builder.dart';
+import 'jobs.dart';
 import 'workspace.dart';
 import 'git/objectstore.dart';
 import 'git/options.dart';
@@ -43,7 +45,10 @@ ScmProvider getProviderType(String type) =>
     _providers.firstWhere((p) => p.id == type, orElse: () => null);
 
 /**
- * TODO:
+ * This class manages SCM information for a given [Workspace]. It is used to
+ * create and retrieve [ScmProjectOperations] for [Project]s. It also listens
+ * to the workspace for resource change events and fires cooresponding SCM
+ * change events.
  */
 class ScmManager {
   final Workspace workspace;
@@ -51,7 +56,10 @@ class ScmManager {
   Map<Project, ScmProjectOperations> _operations = {};
   StreamController<ScmProjectOperations> _controller = new StreamController.broadcast();
 
-  ScmManager(this.workspace);
+  ScmManager(this.workspace) {
+    // Add a workspace builder to listen for resource change events.
+    workspace.builderManager.builders.add(new _ScmBuilder(this));
+  }
 
   /**
    * Returns the [ScmProjectOperations] for the given project, or `null` if the
@@ -80,6 +88,12 @@ class ScmManager {
   }
 
   Stream<ScmProjectOperations> get onStatusChange => _controller.stream;
+
+  void _fireStatusChangeFor(Project project) {
+    if (_operations[project] != null) {
+      _operations[project].fireStatusChangeEvent();
+    }
+  }
 }
 
 /**
@@ -138,6 +152,12 @@ abstract class ScmProjectOperations {
   Future checkoutBranch(String branchName);
 
   Future commit(String commitMessage);
+
+  /**
+   * An implementation method; this should generally not be called by clients of
+   * this API.
+   */
+  void fireStatusChangeEvent();
 }
 
 /**
@@ -233,6 +253,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
           root: entry, branchName: branchName, store: store);
       return Checkout.checkout(options).then((_) {
         _statusController.add(this);
+
+        // We changed files on disk - let the workspace know to re-scan the
+        // project and fire any necessary resource change events.
+        Timer.run(() => project.refresh());
       });
     });
   }
@@ -248,4 +272,25 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future<ObjectStore> get objectStore => _completer.future;
+
+  void fireStatusChangeEvent() => _statusController.add(this);
+}
+
+/**
+ * A builder that translates resource change events into SCM status change
+ * events.
+ */
+class _ScmBuilder extends Builder {
+  final ScmManager scmManager;
+
+  _ScmBuilder(this.scmManager);
+
+  Future build(ResourceChangeEvent changes, ProgressMonitor monitor) {
+    // Get a list of all changed projects and fire SCM change events for them.
+    for (Project project in changes.modifiedProjects) {
+      scmManager._fireStatusChangeFor(project);
+    }
+
+    return new Future.value();
+  }
 }
