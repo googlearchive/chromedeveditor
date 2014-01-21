@@ -6,7 +6,7 @@ library git.commands.constants;
 
 /**
  * This class represents the possible states of the files in the git
- *  repository.
+ * repository.
  */
 class FileStatusType {
   static const String UNTRACKED = "UNTRACKED";

@@ -19,7 +19,7 @@ import '../utils.dart';
 /**
  * This class implements git index. It reads the index file which saves the
  * meta data of the files in the repository. This data is used to find the
- * modified files efficiently.
+ * modified files in the working tree efficiently.
  *
  * TODO(grv) : Implment the interface.
  */
