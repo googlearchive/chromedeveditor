@@ -1,4 +1,4 @@
-// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -20,15 +20,15 @@ import '../utils.dart';
  * meta data of the files in the repository. This data is used to find the
  * modified files in the working tree efficiently.
  *
- * TODO(grv) : Implment the interface.
+ * TODO(grv) : Implement the interface.
  */
 class Index {
 
-  ObjectStore _store;
+  final ObjectStore _store;
 
   StatusMap _statusIdx = new StatusMap();
 
-  get statusMap => _statusIdx.map;
+  Map<String, StatusEntry> get statusMap => _statusIdx.map;
 
   Index(this._store);
 
@@ -111,7 +111,6 @@ class Index {
         (chrome.DirectoryEntry entry) {
       return entry.getFile('index2').then((chrome.ChromeFileEntry entry) {
         return entry.readText().then((String content) {
-          print(content);
           JsonDecoder decoder = new JsonDecoder(null);
           var out = decoder.convert(content);
           var serialization = new Serialization();
