@@ -6,7 +6,7 @@
  * A TabView associated with opened documents. It sends request to an
  * [EditorProvider] to create/refresh editors.
  */
-library spark.editorarea;
+library spark.editor_area;
 
 import 'dart:async';
 import 'dart:html';
