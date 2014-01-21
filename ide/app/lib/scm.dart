@@ -25,8 +25,10 @@ final List<ScmProvider> _providers = [new GitScmProvider()];
 /**
  * Returns `true` if the given project is under SCM.
  */
-bool isUnderScm(Project project) =>
-    _providers.any((provider) => provider.isUnderScm(project));
+bool isUnderScm(Project project) {
+  return project != null
+      && _providers.any((provider) => provider.isUnderScm(project));
+}
 
 /**
  * Return all the SCM providers known to the system.
@@ -46,6 +48,9 @@ ScmProvider getProviderType(String type) =>
 class ScmManager {
   final Workspace workspace;
 
+  Map<Project, ScmProjectOperations> _operations = {};
+  StreamController<ScmProjectOperations> _controller = new StreamController.broadcast();
+
   ScmManager(this.workspace);
 
   /**
@@ -53,14 +58,28 @@ class ScmManager {
    * project is not under SCM.
    */
   ScmProjectOperations getScmOperationsFor(Project project) {
-    for (ScmProvider provider in _providers) {
-      if (provider.isUnderScm(project)) {
-        return provider.getOperationsFor(project);
+    if (project == null) return null;
+
+    if (_operations[project] == null) {
+      for (ScmProvider provider in getProviders()) {
+        if (provider.isUnderScm(project)) {
+          _operations[project] = provider.createOperationsFor(project);
+
+          if (_operations[project] != null) {
+            // TODO: Save the stream subscription, cancel it if the project is
+            // deleted.
+            _operations[project].onStatusChange.listen((e) => _controller.add(e));
+          }
+
+          break;
+        }
       }
     }
 
-    return null;
+    return _operations[project];
   }
+
+  Stream<ScmProjectOperations> get onStatusChange => _controller.stream;
 }
 
 /**
@@ -140,8 +159,6 @@ class FileStatus {
  * The Git SCM provider.
  */
 class GitScmProvider extends ScmProvider {
-  Map<Project, ScmProjectOperations> _operations = {};
-
   GitScmProvider();
 
   String get id => 'git';
@@ -151,13 +168,11 @@ class GitScmProvider extends ScmProvider {
   }
 
   ScmProjectOperations createOperationsFor(Project project) {
-    if (_operations[project] == null) {
-      if (isUnderScm(project)) {
-        _operations[project] = new GitScmProjectOperations(this, project);
-      }
+    if (isUnderScm(project)) {
+      return new GitScmProjectOperations(this, project);
     }
 
-    return _operations[project];
+    return null;
   }
 
   Future clone(String url, chrome.DirectoryEntry dir) {
@@ -216,7 +231,9 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
-      return Checkout.checkout(options);
+      return Checkout.checkout(options).then((_) {
+        _statusController.add(this);
+      });
     });
   }
 
@@ -224,7 +241,9 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, store: store, commitMessage: commitMessage);
-      return Commit.commit(options);
+      return Commit.commit(options).then((_) {
+        _statusController.add(this);
+      });
     });
   }
 

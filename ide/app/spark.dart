@@ -26,7 +26,7 @@ import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
-import 'lib/scm.dart' as scm;
+import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
@@ -93,6 +93,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
+  ScmManager scmManager;
   BuilderManager _buildManager;
   EditorManager _editorManager;
   EditorArea _editorArea;
@@ -128,6 +129,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     });
 
     initWorkspace();
+    initScmManager();
 
     createEditorComponents();
     initEditorArea();
@@ -248,6 +250,10 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     _workspace = new ws.Workspace(localPrefs);
   }
 
+  void initScmManager() {
+    scmManager = new ScmManager(_workspace);
+  }
+
   void initLaunchManager() {
     _launchManager = new LaunchManager(_workspace);
   }
@@ -308,7 +314,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, this, getUIElement('#fileViewArea'));
+        workspace, scmManager, this, getUIElement('#fileViewArea'));
     _filesController.onSelectionChange.listen((resource) {
       focusManager.setCurrentResource(resource);
     });
@@ -720,7 +726,7 @@ abstract class SparkAction extends Action {
    * [Project], and that project is under SCM.
    */
   bool _isScmProject(context) =>
-      _isProject(context) && scm.isUnderScm(context.first);
+      _isProject(context) && isUnderScm(context.first);
 
   /**
    * Returns true if `object` is a list with a single item and this item is a
@@ -1192,7 +1198,7 @@ class GitCloneAction extends SparkActionWithDialog {
 
 class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
-  scm.GitScmProjectOperations gitOperations;
+  GitScmProjectOperations gitOperations;
   InputElement _branchNameElement;
 
   GitBranchAction(Spark spark, Element dialog)
@@ -1202,7 +1208,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
   void _invoke([context]) {
     project = context.first;
-    gitOperations = scm.getScmOperationsFor(project);
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
     _show();
   }
 
@@ -1220,7 +1226,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
 class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
-  scm.GitScmProjectOperations gitOperations;
+  GitScmProjectOperations gitOperations;
   InputElement _commitMessageElement;
 
   GitCommitAction(Spark spark, Element dialog)
@@ -1230,7 +1236,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _invoke([context]) {
     project = context.first;
-    gitOperations = scm.getScmOperationsFor(project);
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
 
     _show();
   }
@@ -1249,7 +1255,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
-  scm.GitScmProjectOperations gitOperations;
+  GitScmProjectOperations gitOperations;
   SelectElement _selectElement;
 
   GitCheckoutAction(Spark spark, Element dialog)
@@ -1259,7 +1265,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
 
   void _invoke([List context]) {
     project = context.first;
-    gitOperations = scm.getScmOperationsFor(project);
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
     gitOperations.getBranchName().then((currentBranchName) {
       (getElement('#currentBranchName') as InputElement).value = currentBranchName;
 
@@ -1306,7 +1312,7 @@ class _GitCloneJob extends Job {
 
     return spark.projectLocationManager.createNewFolder(_projectName)
         .then((chrome.DirectoryEntry dir) {
-      scm.ScmProvider scmProvider = scm.getProviderType('git');
+      ScmProvider scmProvider = getProviderType('git');
 
       return scmProvider.clone(url, dir).then((_) {
         return spark.workspace.link(dir).then((project) {
@@ -1325,7 +1331,7 @@ class _GitCloneJob extends Job {
 }
 
 class _GitBranchJob extends Job {
-  scm.GitScmProjectOperations gitOperations;
+  GitScmProjectOperations gitOperations;
   String _branchName;
   String url;
 
@@ -1349,7 +1355,7 @@ class _GitBranchJob extends Job {
 }
 
 class _GitCommitJob extends Job {
-  scm.GitScmProjectOperations gitOperations;
+  GitScmProjectOperations gitOperations;
   String _commitMessage;
   Spark spark;
 
@@ -1368,7 +1374,7 @@ class _GitCommitJob extends Job {
 }
 
 class _GitCheckoutJob extends Job {
-  scm.GitScmProjectOperations gitOperations;
+  GitScmProjectOperations gitOperations;
   String _branchName;
   Spark spark;
 
