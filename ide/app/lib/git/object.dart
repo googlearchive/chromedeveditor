@@ -222,6 +222,20 @@ class CommitObject extends GitObject {
     str += _message;
     return str;
   }
+
+  /**
+   * Returns the commit object as a map for easy advanced formatting instead
+   * of toString().
+   */
+  Map<String, String> toMap() {
+    return {
+            "commit": _sha,
+            "author_name": author.name,
+            "author_email": author.email,
+            "date": author.date.toString(),
+            "message": _message
+           };
+  }
 }
 
 /**

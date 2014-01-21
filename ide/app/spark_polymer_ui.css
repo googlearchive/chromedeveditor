@@ -158,11 +158,6 @@
   width: 100%;
 }
 
-#deleteDialog, #renameDialog, #gitCloneDialog, #gitBranchDialog,
-    #gitCommitDialog, #gitCheckoutDialog {
-  width: 412px;
-}
-
 .spark-overlay-scale-slideup {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -229,17 +224,14 @@
   right: 0;
 }
 
-#settingsDialog .settings-title {
-  display: inline-block;
-  width: 80px;
-  white-space: nowrap;
-}
-
 #settingsDialog .settings-label {
 	display: inline-block;
-	width: 100px;
+	width: 130px;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	background: #EEE;
+	border: 1px solid #DDD;
+	padding: 2px 5px;
 }
 
 #settingsDialog .plus-minus-container {

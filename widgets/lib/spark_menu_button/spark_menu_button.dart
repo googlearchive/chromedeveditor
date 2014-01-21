@@ -4,6 +4,8 @@
 
 library spark_widgets.menu_button;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -36,6 +38,15 @@ class SparkMenuButton extends SparkWidget {
     // isn't detected and the menu doesn't open.
     if (IS_DART2JS) {
       ($['overlay'] as SparkOverlay).opened = opened;
+    }
+  }
+
+  //* Handle the on-opened event from the dropdown. It will be fired e.g. when
+  //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+  void onOpened(CustomEvent e) {
+    // Autoclosing is the only event we're interested in.
+    if (e.detail == false) {
+      opened = false;
     }
   }
 

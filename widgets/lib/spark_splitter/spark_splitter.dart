@@ -22,6 +22,8 @@ class SparkSplitter extends SparkWidget {
   /// 2) which sibling will be continuously auto-resized when the splitter is
   ///    dragged.
   @published String direction = 'left';
+  /// The split bar has a background image.
+  @published bool handle = false;
   /// Locks the split bar so it can't be dragged.
   @published bool locked = false;
   /// Get notified of position changes.
@@ -94,6 +96,19 @@ class SparkSplitter extends SparkWidget {
     _target =
         _isTargetNextSibling ? nextElementSibling : previousElementSibling;
     classes.toggle('horizontal', _isHorizontal);
+    if (handle) {
+      _addBackgroundHandle();
+    }
+  }
+
+  void _addBackgroundHandle() {
+    if (_isHorizontal) {
+      classes.add('horizontal-handle');
+      classes.remove('vertical-handle');
+    } else {
+      classes.remove('horizontal-handle');
+      classes.add('vertical-handle');
+    }
   }
 
   /// Cache the current size of the target.
