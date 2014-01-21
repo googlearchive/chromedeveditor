@@ -158,11 +158,6 @@
   width: 100%;
 }
 
-#deleteDialog, #renameDialog, #gitCloneDialog, #gitBranchDialog,
-    #gitCommitDialog, #gitCheckoutDialog {
-  /*width: 412px;*/
-}
-
 .spark-overlay-scale-slideup {
   box-sizing: border-box;
   -moz-box-sizing: border-box;

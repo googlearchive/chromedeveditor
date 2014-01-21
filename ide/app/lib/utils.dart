@@ -19,7 +19,7 @@ String capitalize(String s) {
 
 /**
  * Returns a reasonable approximation of the given string converted into title
- * case. All words are capitolized with the exception of short ones.
+ * case. All words are capitalized with the exception of short ones.
  */
 String toTitleCase(String s) {
   return s.split(' ').map((word) {
