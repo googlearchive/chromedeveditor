@@ -10,7 +10,25 @@
   -moz-box-sizing: border-box;
   padding: 0 10px;
   border: none;
-  height: 30px;
+  min-height: 30px;
+  font-family: Helvetica, Sans-serif;
+  font-size: 14px;
+  cursor: default;
+  white-space: nowrap;
+  min-width: 160px;
+}
+
+::content spark-menu-separator {
+  min-height: 2px;
+  background:#777;
+  border-bottom: 1px solid #BBB;
+  margin: 10px 0px;
+  
+  display: block;
+  box-sizing: border-box;
+  color: #000;
+  -moz-box-sizing: border-box;
+  padding: 0 10px;
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
   cursor: default;
