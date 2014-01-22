@@ -134,17 +134,16 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
   }
 
   void run(Resource resource) {
-    _loadApp(resource).then((_) {
+    print ('TODO: run chromeApps is not supported yet.');
+    return;
+    /*_loadApp(resource).then((_) {
       _getAppId(resource.project.name).then((String id) {
         _launchApp(id);
       });
-    });
-    print('TODO: run project ${resource.project}');
+    });*/
   }
 
   Future<String> _loadApp(Resource resource) {
-    return new Future.value('-1');
-    /*
     Completer completer = new Completer();
     callback(String id) {
       completer.complete(id);
@@ -152,12 +151,12 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 
     js.JsObject obj = js.context['chrome']['developerPrivate'];
     obj.callMethod('LoadDirectory', [resource.project.entry, callback]);
-    return completer.future;*/
+    return completer.future;
   }
 
   void _launchApp(String id) {
     js.JsObject obj = js.context['chrome']['management'];
-    obj.callMethod('launchApp');
+    obj.callMethod('launchApp', [id]);
   }
 
   /**
@@ -165,11 +164,9 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
    *  the app_id.
    */
   Future<String> _getAppId(String name) {
-    print(name);
     Completer completer = new Completer();
     callback(List result) {
       for (int i = 0; i < result.length; ++i) {
-        print(result[i]['path']);
         if (result[i]['is_unpacked'] && (result[i]['path'] as String).endsWith(
             name)) {
           completer.complete(result[i]['id']);
