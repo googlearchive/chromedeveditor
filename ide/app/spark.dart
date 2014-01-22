@@ -449,6 +449,29 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   List<ws.Resource> _getSelection() => _filesController.getSelection();
 
+  ws.Folder _getFolder([List<ws.Resource> resources]) {
+    if (resources != null && resources.isNotEmpty) {
+      if (resources.first.isFile) {
+        return resources.first.parent;
+      } else {
+        return resources.first;
+      }
+
+    } else {
+      if (focusManager.currentResource != null) {
+       ws.Resource resource = focusManager.currentResource;
+       if (resource.isFile) {
+         if (resource.project != null) {
+           return resource.parent;
+         }
+       } else {
+         return resource;
+       }
+      }
+    }
+    return null;
+  }
+
   void _closeOpenEditor(ws.Resource resource) {
     if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorArea.closeFile(resource);
@@ -746,6 +769,17 @@ abstract class SparkAction extends Action {
   }
 
   /**
+   * Returns true if `object` is a top-level [File].
+   */
+  bool _isTopLevelFile(Object object) {
+    if (!_isResourceList(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    return resources.first.project == null;
+  }
+
+  /**
    * Returns true if `object` is a list of File.
    */
   bool _isFileList(Object object) {
@@ -853,19 +887,11 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     _nameElement = _triggerOnReturn("#fileName");
   }
 
-  void _invoke([List<ws.Folder> folders]) {
-    if (folders != null && folders.isNotEmpty) {
-      folder = folders.first;
+  void _invoke([List<ws.Resource> resources]) {
+    folder = spark._getFolder();
+    if (folder != null) {
       _nameElement.value = '';
       _show();
-    } else {
-      // create new file in sync fs on chrome os
-      if (spark.platformInfo.isCros && spark.workspace.syncFsIsAvailable) {
-        _nameElement.value = '';
-        _show();
-      } else { // use file save as for local fs
-        spark.newFileAs();
-      }
     }
   }
 
@@ -882,21 +908,13 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
             spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
           });
         });
-      } else {
-        spark.workspace.createFileSyncFs(name).then((file) {
-          if (file != null) {
-            Timer.run(() {
-              spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
-            });
-          }
-        });
       }
     }
   }
 
   String get category => 'folder';
 
-  bool appliesTo(Object object) => _isSingleFolder(object);
+  bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevelFile(object);
 }
 
 class FileNewAsAction extends SparkAction {
@@ -1095,11 +1113,9 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _invoke([List<ws.Folder> folders]) {
-    if (folders != null && folders.isNotEmpty) {
-      folder = folders.first;
-      _nameElement.value = '';
-      _show();
-    }
+    folder = spark._getFolder();
+    _nameElement.value = '';
+    _show();
   }
 
   void _commit() {
