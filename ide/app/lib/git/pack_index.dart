@@ -8,6 +8,8 @@ library git.pack.index;
 import 'dart:core';
 import 'dart:typed_data';
 
+import 'utils.dart';
+
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'pack.dart';
@@ -67,6 +69,7 @@ class PackIndex {
 
   PackIndex(ByteBuffer buffer) {
 
+    print('in packIndex');
     _data = new ByteData.view(buffer);
 
     // load the index into memory
@@ -78,6 +81,7 @@ class PackIndex {
       throw "Bad pack index header. Only version 2 is supported.";
     }
 
+    print('valid packIndex');
     int byteOffset = 8;
     int numObjects = _data.getUint32(byteOffset + (255 * 4));
 
@@ -86,9 +90,14 @@ class PackIndex {
     int shaTableLen = numObjects * 20;
     _shaList = new Uint8List.view(buffer, byteOffset, shaTableLen);
 
+    _shaList.forEach((shaBytes) {
+      print(shaBytesToString(shaBytes));
+    });
+
     // skip past shas and the CRC vals.
     byteOffset += shaTableLen + (numObjects * 4);
 
+    print(numObjects);
     _offsetsOffset = byteOffset;
     _numObjects = numObjects;
   }
@@ -142,6 +151,7 @@ class PackIndex {
       return -1;
     }
 
+    print(shaBytesToString(sha));
     return _data.getUint32(_offsetsOffset + (index * 4));
   }
 

@@ -15,6 +15,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'file_operations.dart';
+import 'commands/index.dart';
 import 'object.dart';
 import 'object_utils.dart';
 import 'pack.dart';
@@ -106,8 +107,13 @@ class ObjectStore {
 
   List<PackEntry> packs = [];
 
+  Index index;
+
+  chrome.DirectoryEntry get root => _rootDir;
+
   ObjectStore(chrome.DirectoryEntry root) {
     _rootDir = root;
+    index = new Index(this);
   }
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
@@ -126,8 +132,12 @@ class ObjectStore {
             Iterable<chrome.Entry> packEntries = entries.where((e)
                 => e.name.endsWith('.pack'));
 
+            print('comes before packEntries');
+            print(packEntries.length);
             return Future.forEach(packEntries, (chrome.Entry entry) {
               _readPackEntry(packDir, entry);
+            }).then((_) {
+              return index.init();
             });
           });
         });
@@ -208,9 +218,12 @@ class ObjectStore {
       sha.substring(0, 2) + '/' + sha.substring(2));
 
   FindPackedObjectResult _findPackedObject(Uint8List shaBytes) {
+    print(packs.length);
+    window.console.log(packs);
     for (var i = 0; i < packs.length; ++i) {
       int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
+      print(offset);
       if (offset != -1) {
         return new FindPackedObjectResult(packs[i].pack, offset);
       }
@@ -250,6 +263,8 @@ class ObjectStore {
       });
     }, onError:(e) {
       try {
+        print('comes in packed');
+        print(shaBytesToString(shaBytes));
         FindPackedObjectResult obj = this._findPackedObject(shaBytes);
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
         return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType);
@@ -260,7 +275,7 @@ class ObjectStore {
   }
 
 
-  Future<CommitGraph> getCommitGraph(List<String> headShas, int limit) {
+  Future<CommitGraph> getCommitGraph(List<String> headShas, [int limit]) {
     List<CommitObject> commits = [];
     Map<String, bool> seen = {};
 
@@ -288,14 +303,14 @@ class ObjectStore {
           }
 
           return null;
-      }).then((_) {
-
-        if (commits.length >= limit || nextLevel.length == 0) {
-          return new Future.value(new CommitGraph(commits, nextLevel));
-        } else {
-          return walkLevel(nextLevel);
-        }
-      });
+        }).then((_) {
+          if ((limit != null && commits.length >= limit) ||
+              nextLevel.length == 0) {
+            return new Future.value(new CommitGraph(commits, nextLevel));
+          } else {
+            return walkLevel(nextLevel);
+          }
+        });
       });
     }
     return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
@@ -378,9 +393,14 @@ class ObjectStore {
 
       //TODO return retrieveObject result
       return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commitObj) {
-        var rawObj;
+
         Completer completer = new Completer();
-        commits.add({ObjectTypes.COMMIT: commitObj, "raw": rawObj});
+        commits.add(commitObj);
+        print(commitObj.parents.length);
+        print(commitObj.parents[0]);
+        print(remoteRef.sha);
+        window.console.log(remoteShas);
+
         if (commitObj.parents.length > 1) {
           print('it is non fast');
           // this means a local merge commit.
@@ -398,6 +418,7 @@ class ObjectStore {
         return completer.future;
 
       }, onError: (e) {
+        window.console.log(e);
         print('iins');
         _nonFastForward();
       });
@@ -438,8 +459,9 @@ class ObjectStore {
         gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
       this.objectDir = objectDir;
       return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
-          'ref: refs/heads/master\n', 'Text').then((entry) => entry,
-          onError: (e) {
+          'ref: refs/heads/master\n', 'Text').then((entry)  {
+            return index.init();
+          }, onError: (e) {
             print(e);
             throw e;
           });
@@ -586,8 +608,6 @@ class ObjectStore {
   Future<Entry> updateLastChange(GitConfig config) {
     Future<Entry> doUpdate(GitConfig config) {
       return new Future.value();
-      config.time = new DateTime.now();
-      return setConfig(config);
     }
     if (config != null) {
       return doUpdate(config);

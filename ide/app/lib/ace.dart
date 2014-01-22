@@ -361,7 +361,7 @@ class ThemeManager {
   }
 
   void _updateName(String name) {
-    _label.text = utils.capitalize(name.replaceAll('_', ' '));
+    _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
   }
 }
 
@@ -401,6 +401,6 @@ class KeyBindingManager {
   }
 
   void _updateName(String name) {
-    _label.text = (name == null ? 'default' : utils.capitalize(name));
+    _label.text = (name == null ? 'Default' : utils.capitalize(name));
   }
 }

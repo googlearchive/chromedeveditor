@@ -23,7 +23,8 @@ abstract class GitObject {
    * Constructs a GitObject of the given type. [content] can be of type [String]
    * or [Uint8List].
    */
-  static GitObject make(String sha, String type, content) {
+  static GitObject make(String sha, String type, content,
+                        [LooseObject rawObj]) {
     switch (type) {
       case ObjectTypes.BLOB:
         return new BlobObject(sha, content);
@@ -31,7 +32,7 @@ abstract class GitObject {
       case "Tree":
         return new TreeObject(sha, content);
       case ObjectTypes.COMMIT:
-        return new CommitObject(sha, content);
+        return new CommitObject(sha, content, rawObj);
       case ObjectTypes.TAG:
         return new TagObject(sha, content);
       default:
@@ -157,7 +158,10 @@ class CommitObject extends GitObject {
   String _message;
   String treeSha;
 
-  CommitObject(String sha, var data) {
+  // raw commit object. This is needed in building pack files.
+  LooseObject rawObj;
+
+  CommitObject(String sha, var data, [this.rawObj]) {
     this._type = ObjectTypes.COMMIT;
     this._sha = sha;
 
@@ -221,6 +225,20 @@ class CommitObject extends GitObject {
     str += "Date:  " + author.date.toString() + "\n\n";
     str += _message;
     return str;
+  }
+
+  /**
+   * Returns the commit object as a map for easy advanced formatting instead
+   * of toString().
+   */
+  Map<String, String> toMap() {
+    return {
+            "commit": _sha,
+            "author_name": author.name,
+            "author_email": author.email,
+            "date": author.date.toString(),
+            "message": _message
+           };
   }
 }
 
