@@ -15,6 +15,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'file_operations.dart';
+import 'commands/index.dart';
 import 'object.dart';
 import 'object_utils.dart';
 import 'pack.dart';
@@ -99,8 +100,13 @@ class ObjectStore {
 
   List<PackEntry> packs = [];
 
+  Index index;
+
+  chrome.DirectoryEntry get root => _rootDir;
+
   ObjectStore(chrome.DirectoryEntry root) {
     _rootDir = root;
+    index = new Index(this);
   }
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
@@ -121,6 +127,8 @@ class ObjectStore {
 
             return Future.forEach(packEntries, (chrome.Entry entry) {
               _readPackEntry(packDir, entry);
+            }).then((_) {
+              return index.init();
             });
           });
         });
@@ -422,8 +430,9 @@ class ObjectStore {
         gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
       this.objectDir = objectDir;
       return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
-          'ref: refs/heads/master\n', 'Text').then((entry) => entry,
-          onError: (e) {
+          'ref: refs/heads/master\n', 'Text').then((entry)  {
+            return index.init();
+          }, onError: (e) {
             print(e);
             throw e;
           });
@@ -570,8 +579,6 @@ class ObjectStore {
   Future<Entry> updateLastChange(GitConfig config) {
     Future<Entry> doUpdate(GitConfig config) {
       return new Future.value();
-      config.time = new DateTime.now();
-      return setConfig(config);
     }
     if (config != null) {
       return doUpdate(config);
