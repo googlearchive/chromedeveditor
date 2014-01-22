@@ -94,7 +94,7 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle primary focused data-dismiss="modal">
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
           Delete
         </spark-button>
       </div>
@@ -109,7 +109,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <spark-button id="errorClose" overlay-toggle primary focused data-dismiss="modal">
+        <spark-button id="errorClose" overlay-toggle primary autofocus data-dismiss="modal">
           Close
         </spark-button>
       </div>
@@ -120,7 +120,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="renameFileName">New name</label>
-          <input id="renameFileName" type="text" class="form-control" focused>
+          <input id="renameFileName" type="text" class="form-control" autofocus>
         </div>
       </div>
       <div class="modal-footer">
@@ -138,7 +138,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="fileName">New file name</label>
-          <input id="fileName" type="text" class="form-control" focused>
+          <input id="fileName" type="text" class="form-control" autofocus>
         </div>
       </div>
       <div class="modal-footer">
@@ -156,7 +156,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="folderName">New folder name</label>
-          <input id="folderName" type="text" class="form-control" focused>
+          <input id="folderName" type="text" class="form-control" autofocus>
         </div>
       </div>
       <div class="modal-footer">
@@ -180,7 +180,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="name">Project name</label>
-          <input id="name" type="text" class="form-control" focused>
+          <input id="name" type="text" class="form-control" autofocus>
         </div>
       </div>
       <div class="modal-footer">
@@ -205,7 +205,7 @@
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
           <input id="gitRepoUrl" type="text" class="form-control" 
-              placeholder="https://github.com/foo/bar.git" focused>
+              placeholder="https://github.com/foo/bar.git" autofocus>
         </div>
       </div>
       <div class="modal-footer">
@@ -230,7 +230,7 @@
         <div class="form-group">
           <label for="commitMessage">Commit message</label>
           <textarea id="commitMessage" type="text" class="form-control"
-              rows="3" focused></textarea>
+              rows="3" autofocus></textarea>
           <span class="help-block">Enter a brief description of the changes.</span>
         </div>
       </div>
@@ -255,7 +255,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitBranchName">New branch name</label>
-          <input id="gitBranchName" type="text" class="form-control" focused>
+          <input id="gitBranchName" type="text" class="form-control" autofocus>
           <span class="help-block">Create a new git branch.</span>
         </div>
       </div>
