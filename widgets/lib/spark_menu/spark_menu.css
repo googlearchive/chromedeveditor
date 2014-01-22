@@ -6,34 +6,29 @@
 ::content spark-menu-item {
   display: block;
   box-sizing: border-box;
-  color: #000;
   -moz-box-sizing: border-box;
-  padding: 0 10px;
-  border: none;
   min-height: 30px;
+  min-width: 160px;
+  padding: 0 10px;
+  color: #000;
+  border: none;
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
   cursor: default;
   white-space: nowrap;
-  min-width: 160px;
 }
 
 ::content spark-menu-separator {
-  min-height: 2px;
-  background:#777;
-  border-bottom: 1px solid #BBB;
-  margin: 10px 0px;
-  
   display: block;
   box-sizing: border-box;
-  color: #000;
   -moz-box-sizing: border-box;
-  padding: 0 10px;
-  font-family: Helvetica, Sans-serif;
-  font-size: 14px;
-  cursor: default;
-  white-space: nowrap;
+  min-height: 2px;
   min-width: 160px;
+  margin: 5px 0px;
+  padding: 0 10px;
+  background-color: #CCC;
+  border-bottom: 1px solid #EEE;
+  cursor: default;
 }
 
 ::content spark-menu-item:hover {
