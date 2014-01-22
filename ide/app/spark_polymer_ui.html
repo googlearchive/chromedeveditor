@@ -100,6 +100,21 @@
       </div>
     </spark-modal>
 
+    <!-- Error dialog -->
+    <spark-modal id="errorDialog" class="spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <div class="form-group">
+          <label id="errorTitle"></label>
+          <div id="errorMessage" class="help-block"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button id="errorClose" overlay-toggle primary focused data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal>
+
     <!-- Rename File dialog -->
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
