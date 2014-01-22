@@ -25,6 +25,7 @@
     "https://github.com/*",
     "clipboardRead",
     "clipboardWrite",
+    "developerPrivate",
     {
       "fileSystem": [
         "write",
@@ -38,6 +39,7 @@
         "tcp-listen"
       ]
     },
+    "management",
     "syncFileSystem",
     "storage",
     "webview",
