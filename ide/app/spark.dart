@@ -456,7 +456,6 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       } else {
         return resources.first;
       }
-
     } else {
       if (focusManager.currentResource != null) {
        ws.Resource resource = focusManager.currentResource;
