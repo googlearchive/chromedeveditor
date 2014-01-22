@@ -12,21 +12,6 @@ spark-icon, .labelText, .labelText > * {
   display: inline-block;
 }
 
-:host.separator, /**/:host(.separator) {
-  background-color: red;
-  height: 3px;
-}
-
-.separatorLine {
-  height:1px;
-  background:#717171;
-  border-bottom:1px solid #313030;
-}
-
-.separator .labelText {
-  display: none;
-}
-
 :host:hover {
   color: #fff;
   opacity: 1 !important;
