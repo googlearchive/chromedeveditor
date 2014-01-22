@@ -134,7 +134,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
   }
 
   void run(Resource resource) {
-    print ('TODO: run chromeApps is not supported yet.');
+    print('TODO: run project ${resource.project}');
     return;
     /*_loadApp(resource).then((_) {
       _getAppId(resource.project.name).then((String id) {
