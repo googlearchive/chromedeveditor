@@ -94,8 +94,7 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="deleteOkButton" overlay-toggle primary focused
-            data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Delete
         </spark-button>
       </div>
@@ -104,16 +103,16 @@
     <!-- Rename File dialog -->
     <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
-        <p>
-          File name: <input id="renameFileName" type="text" focused>
-        </p>
+        <div class="form-group">
+          <label for="renameFileName">New name</label>
+          <input id="renameFileName" type="text" class="form-control" focused>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="renameOkButton" overlay-toggle primary
-            data-dismiss="modal">
+        <spark-button overlay-toggle primary data-dismiss="modal">
           Rename
         </spark-button>
       </div>
@@ -122,16 +121,16 @@
     <!-- New File dialog -->
     <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
-        <p>
-          File name: <input id="fileName" type="text" focused>
-        </p>
+        <div class="form-group">
+          <label for="fileName">New file name</label>
+          <input id="fileName" type="text" class="form-control" focused>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="fileNewOkButton" overlay-toggle primary
-            data-dismiss="modal">
+        <spark-button overlay-toggle primary data-dismiss="modal">
           Create
         </spark-button>
       </div>
@@ -140,9 +139,10 @@
     <!-- New Folder dialog -->
     <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
-        <p>
-          Folder name: <input id="folderName" type="text" focused>
-        </p>
+        <div class="form-group">
+          <label for="folderName">New folder name</label>
+          <input id="folderName" type="text" class="form-control" focused>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
@@ -157,14 +157,16 @@
     <!-- New Project dialog -->
     <spark-overlay id="newProjectDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
-        <spark-button overlay-toggle class="close" data-dismiss="modal"
-            aria-hidden="true">&times;</spark-button>
+        <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
+          &times;
+        </spark-button>
         <h4 class="modal-title">New Project</h4>
       </div>
       <div class="modal-body">
-        <p>
-          Project name: <input id="name" type="text" focused>
-        </p>
+        <div class="form-group">
+          <label for="name">Project name</label>
+          <input id="name" type="text" class="form-control" focused>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
@@ -179,19 +181,23 @@
     <!-- Git Clone dialog -->
     <spark-modal id="gitCloneDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
-        <spark-button overlay-toggle class="close" data-dismiss="modal"
-            aria-hidden="true">&times;</spark-button>
+        <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
+          &times;
+        </spark-button>
         <h4 class="modal-title">Clone Git Project</h4>
       </div>
       <div class="modal-body">
-        Repository URL: <input id="gitRepoUrl" type="text">
+        <div class="form-group">
+          <label for="gitRepoUrl">Repository URL</label>
+          <input id="gitRepoUrl" type="text" class="form-control" 
+              placeholder="https://github.com/foo/bar.git" focused>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="gitCloneButton" overlay-toggle primary
-          data-dismiss="modal">
+        <spark-button overlay-toggle primary data-dismiss="modal">
           Clone
         </spark-button>
       </div>
@@ -200,19 +206,24 @@
     <!-- Git Commit dialog -->
     <spark-modal id="gitCommitDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
-        <spark-button overlay-toggle class="close" data-dismiss="modal"
-            aria-hidden="true">&times;</spark-button>
+        <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
+          &times;
+        </spark-button>
         <h4 class="modal-title">Git Commit</h4>
       </div>
       <div class="modal-body">
-        Commit Message: <input id="commitMessage" type="text" focused><br/><br/>
+        <div class="form-group">
+          <label for="commitMessage">Commit message</label>
+          <textarea id="commitMessage" type="text" class="form-control"
+              rows="3" focused></textarea>
+          <span class="help-block">Enter a brief description of the changes.</span>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="gitCommitButton" overlay-toggle primary
-          data-dismiss="modal">
+        <spark-button overlay-toggle primary data-dismiss="modal">
           Commit
         </spark-button>
       </div>
@@ -221,19 +232,23 @@
     <!-- Git Branch dialog -->
     <spark-modal id="gitBranchDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
-        <spark-button overlay-toggle class="close" data-dismiss="modal"
-            aria-hidden="true">&times;</spark-button>
+        <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
+          &times;
+        </spark-button>
         <h4 class="modal-title">Create Branch</h4>
       </div>
       <div class="modal-body">
-        New Branch Name: <input id="gitBranchName" type="text" focused><br/><br/>
+        <div class="form-group">
+          <label for="gitBranchName">New branch name</label>
+          <input id="gitBranchName" type="text" class="form-control" focused>
+          <span class="help-block">Create a new git branch.</span>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="gitBranchButton" overlay-toggle primary
-          data-dismiss="modal">
+        <spark-button overlay-toggle primary data-dismiss="modal">
           Create Branch
         </spark-button>
       </div>
@@ -242,21 +257,26 @@
     <!-- Git Checkout dialog -->
     <spark-modal id="gitCheckoutDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
-        <spark-button overlay-toggle class="close" data-dismiss="modal"
-            aria-hidden="true">&times;</spark-button>
+        <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
+          &times;
+        </spark-button>
         <h4 class="modal-title">Git Checkout</h4>
       </div>
       <div class="modal-body">
-        Current Branch Name: <input id="currentBranchName" type="text" disabled>
-        <br/><br/>
-        <select id="gitCheckout"></select>
+        <div class="form-group">
+          <label for="currentBranchName">Current branch</label>
+          <input id="currentBranchName" type="text" class="form-control" disabled>
+        </div>
+        <div class="form-group">
+          <label for="gitCheckout">Switch to branch</label>
+          <select id="gitCheckout" class="form-control"></select>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="gitCheckoutButton" overlay-toggle primary
-          data-dismiss="modal">
+        <spark-button overlay-toggle primary data-dismiss="modal">
           Checkout
         </spark-button>
       </div>
@@ -265,20 +285,24 @@
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
-        <spark-button overlay-toggle class="close" data-dismiss="modal"
-            aria-hidden="true">&times;</spark-button>
+        <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
+          &times;
+        </spark-button>
         <h4 class="modal-title">Spark</h4>
       </div>
       <div class="modal-body">
-        <dl>
-          <dt>A Chrome Apps based development environment</dt>
-          <dd>version <span id="aboutVersion"></span></dd>
-        </dl>
-        <div class="checkbox">
-          <label>
-            <input id="analyticsCheck" type="checkbox">
-              Allow Spark to collect anonymous usage statistics
-          </label>
+        <div class="form-group">
+          <span class="help-block">
+            A Chrome Apps based development environment (v<span id="aboutVersion"></span>)
+          </span>
+        </div>
+        <div class="form-group">
+	        <div class="checkbox">
+	          <label>
+	            <input id="analyticsCheck" type="checkbox">
+	                Allow Spark to collect anonymous usage statistics
+	          </label>
+	        </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -291,28 +315,40 @@
     <!-- Setting dialog -->
     <spark-modal id="settingsDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
-        <spark-button overlay-toggle class="close" data-dismiss="modal"
-            aria-hidden="true">&times;</spark-button>
+        <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
+          &times;
+        </spark-button>
         <h4 class="modal-title">Settings</h4>
       </div>
       <div class="modal-body">
-        <div id="changeTheme">
-          <span class="settings-title">Editor theme:</span>
-          <span class="settings-label"></span>
-          <span class="plus-minus-container">
-            <a href="#" id="themeMinus" class="plus-minus-button" on-click="{{onThemeMinus}}">-</a>
-            <a href="#" id="themePlus" class="plus-minus-button" on-click="{{onThemePlus}}">+</a>
-          </span>
+        <div class="form-group">
+	        <div id="changeTheme">
+	          <label class="settings-title">Editor theme</label>
+            <div>
+		          <span class="settings-label"></span>
+		          <span class="plus-minus-container">
+		            <a href="#" id="themeMinus" class="plus-minus-button" 
+		                on-click="{{onThemeMinus}}"><i class="fa fa-caret-left"></i></a>
+		            <a href="#" id="themePlus" class="plus-minus-button"
+		                on-click="{{onThemePlus}}"><i class="fa fa-caret-right"></i></a>
+		          </span>
+		        </div>
+          </div>
         </div>
-        <br/>
-        <div id="changeKeys">
-          <span class="settings-title">Key bindings:</span>          
-          <span class="settings-label"></span>
-          <span class="plus-minus-container">
-            <a href="#" id="keysMinus" class="plus-minus-button" on-click="{{onKeysMinus}}">-</a>
-            <a href="#" id="keysPlus" class="plus-minus-button" on-click="{{onKeysPlus}}">+</a>
-          </span>
-        </div>
+        <div class="form-group">
+	        <div id="changeKeys">
+	          <label class="settings-title">Key bindings</label>
+	          <div>
+		          <span class="settings-label"></span>
+		          <span class="plus-minus-container">
+		            <a href="#" id="keysMinus" class="plus-minus-button"
+		                on-click="{{onKeysMinus}}"><i class="fa fa-caret-left"></i></a>
+		            <a href="#" id="keysPlus" class="plus-minus-button"
+		                on-click="{{onKeysPlus}}"><i class="fa fa-caret-right"></i></a>
+		          </span>
+		        </div>
+	        </div>
+	      </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary autofocus data-dismiss="modal">
