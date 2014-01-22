@@ -11,29 +11,20 @@ library spark.ui.widgets.fileitem_cell;
 import 'dart:html';
 
 import 'listview_cell.dart';
-import '../../scm.dart' as scm;
 import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
-  Resource _resource;
+  final Resource resource;
   Element _element;
   bool _highlighted;
   bool acceptDrop;
 
-  FileItemCell(this._resource) {
+  FileItemCell(this.resource) {
     DocumentFragment template =
         (querySelector('#fileview-filename-template') as TemplateElement).content;
     DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.fileview-filename-container');
-    if (_resource is Project) {
-      if (scm.isUnderScm(_resource)) {
-        updateFileInfo();
-
-        // TODO: Listen for updates to the branch name.
-        scm.getScmOperationsFor(_resource).getBranchName().then(updateFileInfo);
-      }
-    }
-    fileNameElement.innerHtml = _resource.name;
+    fileNameElement.innerHtml = resource.name;
     acceptDrop = false;
     updateFileStatus();
   }
@@ -54,29 +45,25 @@ class FileItemCell implements ListViewCell {
 
   Element get gitStatusElement => _element.querySelector('.gitStatus');
 
-  void updateFileInfo([String branchName]) {
-    String decoration;
-    final String repoIcon = '<i class="fa fa-code-fork"></i>';
-
-    if (branchName == null) {
-      decoration = '${repoIcon}';
-    } else {
-      decoration = '${repoIcon} [${branchName}]';
-    }
-
-    fileInfoElement.innerHtml = decoration;
+  void setFileInfo(String infoString) {
+    fileInfoElement.innerHtml = infoString;
   }
 
   void updateFileStatus() {
     Element element = fileStatusElement;
     element.classes.removeAll(['warning', 'error']);
 
-    int severity = _resource.findMaxProblemSeverity();
+    int severity = resource.findMaxProblemSeverity();
 
     if (severity == Marker.SEVERITY_ERROR) {
       element.classes.add('error');
     } else if (severity == Marker.SEVERITY_WARNING) {
       element.classes.add('warning');
     }
+  }
+
+  void setGitStatus({bool dirty: false}) {
+    // TODO: Implement.
+
   }
 }
