@@ -6,16 +6,29 @@
 ::content spark-menu-item {
   display: block;
   box-sizing: border-box;
-  color: #000;
   -moz-box-sizing: border-box;
+  min-height: 30px;
+  min-width: 160px;
   padding: 0 10px;
+  color: #000;
   border: none;
-  height: 30px;
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
   cursor: default;
   white-space: nowrap;
+}
+
+::content spark-menu-separator {
+  display: block;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  min-height: 2px;
   min-width: 160px;
+  margin: 5px 0px;
+  padding: 0 10px;
+  background-color: #CCC;
+  border-bottom: 1px solid #EEE;
+  cursor: default;
 }
 
 ::content spark-menu-item:hover {
