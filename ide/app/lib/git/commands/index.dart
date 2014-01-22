@@ -25,15 +25,15 @@ class Index {
 
   final ObjectStore _store;
 
-  Map<String, StatusEntry> _statusIdx = {};
+  Map<String, FileStatus> _statusIdx = {};
 
-  Map<String, StatusEntry> get statusMap => _statusIdx;
+  Map<String, FileStatus> get statusMap => _statusIdx;
 
   Index(this._store);
 
-  Future updateIndexForEntry(StatusEntry status) {
+  Future updateIndexForEntry(FileStatus status) {
 
-    StatusEntry oldStatus = _statusIdx[status.path];
+    FileStatus oldStatus = _statusIdx[status.path];
 
     if (oldStatus != null) {
       status.headSha = oldStatus.headSha;
@@ -74,14 +74,14 @@ class Index {
     return writeIndex();
   }
 
-  Future commitEntry(StatusEntry status) {
+  Future commitEntry(FileStatus status) {
     status.headSha = status.sha;
     status.type = FileStatusType.COMMITTED;
     _statusIdx[status.path] = status;
     return writeIndex();
   }
 
-  StatusEntry getStatusForEntry(chrome.Entry entry)
+  FileStatus getStatusForEntry(chrome.Entry entry)
       => _statusIdx[entry.fullPath];
 
   Future init() {
@@ -91,7 +91,7 @@ class Index {
   // TODO(grv) : remove this after index file implementation.
   Future _init() {
     return walkFilesAndUpdateIndex(_store.root).then((_) {
-      _statusIdx.forEach((String key, StatusEntry status) {
+      _statusIdx.forEach((String key, FileStatus status) {
         status.type = FileStatusType.COMMITTED;
         return writeIndex();
       });
@@ -159,7 +159,7 @@ class Index {
         } else {
           return getShaForEntry(entry, 'blob').then((String sha) {
             return entry.getMetadata().then((data) {
-              StatusEntry status = new StatusEntry();
+              FileStatus status = new FileStatus();
               status.path = entry.fullPath;
               status.sha = sha;
               status.size = data.size;
@@ -173,10 +173,10 @@ class Index {
     });
   }
 
-  Map<String, StatusEntry> _parseIndex(Map m) {
-    Map<String, StatusEntry> result = {};
+  Map<String, FileStatus> _parseIndex(Map m) {
+    Map<String, FileStatus> result = {};
     m.forEach((String key, Map statusMap) {
-      StatusEntry status = new StatusEntry();
+      FileStatus status = new FileStatus();
       status.headSha = statusMap['headSha'];
       status.sha = statusMap['sha'];
       status.modificationTime = statusMap['modificationTime'];
@@ -190,8 +190,8 @@ class Index {
 
   Map statusIdxToMap() {
     Map m = {};
-    _statusIdx.forEach((String key, StatusEntry StatusEntry) {
-      m[key] = StatusEntry.toMap();
+    _statusIdx.forEach((String key, FileStatus status) {
+      m[key] = status.toMap();
     });
     return m;
   }
@@ -201,7 +201,7 @@ class Index {
  * Represents the metadata of a file used to identify if the file is
  * modified or not.
  */
-class StatusEntry {
+class FileStatus {
   String path;
   String headSha;
   String sha;
@@ -209,9 +209,9 @@ class StatusEntry {
   int modificationTime;
   String type;
 
-  StatusEntry();
+  FileStatus();
 
-  StatusEntry.fromMap(Map m) {
+  FileStatus.fromMap(Map m) {
     path = m['path'];
     headSha = m['headSha'];
     sha = m['sha'];
@@ -223,8 +223,8 @@ class StatusEntry {
   /**
    * Return true if the [entry] is same as [this].
    */
-  bool compareTo(StatusEntry entry) =>
-    (entry.path == path && entry.sha == sha && entry.size == size);
+  bool compareTo(FileStatus status) =>
+    (status.path == path && status.sha == sha && status.size == size);
 
   Map toMap() {
     return {

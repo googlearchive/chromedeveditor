@@ -14,19 +14,19 @@ import '../utils.dart';
 
 class Status {
 
-  static Future<Map<String, StatusEntry>> getFileStatuses(ObjectStore store) {
+  static Future<Map<String, FileStatus>> getFileStatuses(ObjectStore store) {
     return store.index.updateIndex().then((_) {
       return store.index.statusMap;
     });
   }
 
-  static Future<StatusEntry> getFileStatus(ObjectStore store,
+  static Future<FileStatus> getFileStatus(ObjectStore store,
       chrome.ChromeFileEntry entry) {
     Completer completer = new Completer();
     entry.getMetadata().then((data) {
       // TODO(grv) : check the modification time when it is available.
       getShaForEntry(entry, 'blob').then((String sha) {
-        StatusEntry status = new StatusEntry();
+        FileStatus status = new FileStatus();
         status.path = entry.fullPath;
         status.sha = sha;
         status.size = data.size;

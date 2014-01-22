@@ -51,7 +51,7 @@ class Commit {
        }
           });
         } else {
-          return Status.getFileStatus(store, entry).then((StatusEntry status) {
+          return Status.getFileStatus(store, entry).then((FileStatus status) {
             return store.index.updateIndexForEntry(status).then((_) {
               status = store.index.getStatusForEntry(entry);
 
