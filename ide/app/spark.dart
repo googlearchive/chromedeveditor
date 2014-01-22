@@ -458,14 +458,14 @@ class Spark extends SparkModel implements FilesControllerDelegate {
       }
     } else {
       if (focusManager.currentResource != null) {
-       ws.Resource resource = focusManager.currentResource;
-       if (resource.isFile) {
-         if (resource.project != null) {
-           return resource.parent;
-         }
-       } else {
-         return resource;
-       }
+        ws.Resource resource = focusManager.currentResource;
+        if (resource.isFile) {
+          if (resource.project != null) {
+            return resource.parent;
+          }
+        } else {
+          return resource;
+        }
       }
     }
     return null;
@@ -887,7 +887,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    folder = spark._getFolder();
+    folder = spark._getFolder(resources);
     if (folder != null) {
       _nameElement.value = '';
       _show();
@@ -1112,7 +1112,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _invoke([List<ws.Folder> folders]) {
-    folder = spark._getFolder();
+    folder = spark._getFolder(folders);
     _nameElement.value = '';
     _show();
   }
