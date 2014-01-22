@@ -21,5 +21,15 @@ class SparkMenuItem extends SparkWidget {
   /// Specifies the label for the menu item.
   @published String label = "";
 
-  SparkMenuItem.created(): super.created();
+  /// Specifies the label for the menu item.
+  @published bool separator = false;
+
+  SparkMenuItem.created() : super.created() {
+  }
+
+  void enteredView() {
+    if (separator) {
+      this.classes.add("separator");
+    }
+  }
 }
