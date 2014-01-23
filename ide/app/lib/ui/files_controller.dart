@@ -711,13 +711,6 @@ class FilesController implements TreeViewDelegate {
       // to close the dropdown. For example dropdown.toggle() won't work.
       menuContainer.classes.remove('open');
       cancelEvent(event);
-
-      // TODO(ericarnold): Remove once bootjack is dropped.
-      // Check if we're using polymer
-      var topUI = html.document.querySelector('#topUi');
-      if (topUI == null || topUI.parent.tagName != "BODY") {
-          _treeView.focus();
-      }
     }
 
     // When the user clicks outside the menu, we'll close it.
