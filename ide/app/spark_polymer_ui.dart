@@ -22,10 +22,6 @@ class SparkPolymerUI extends SparkWidget {
     if (action != null) {
       action.invoke();
     }
-
-//    this.onFocus.listen((_) {
-//      /*%TRACE3*/ print("(4> 1/22/14): onFocus!"); // TRACE%
-//    });
   }
 
   void onThemeMinus(Event e) {

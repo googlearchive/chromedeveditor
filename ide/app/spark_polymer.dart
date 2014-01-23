@@ -43,7 +43,6 @@ class SparkPolymerDialog implements SparkDialog {
   }
 
   void show() {
-    /*%TRACE3*/ print("(4> 1/22/14): poly show!"); // TRACE%
     if (!_dialogElement.opened) {
       _dialogElement.toggle();
       _dialogElement.applyFocus();
