@@ -74,7 +74,7 @@ abstract class ListViewDelegate {
    * occurs.  Returning false will cancel futher key handling.
    */
   bool listViewKeyDown(KeyboardEvent event);
-  
+
   /**
    * This method is called on dragenter and dragover.
    * Return 'copy', 'move', 'link' or 'none'.
