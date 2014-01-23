@@ -6,7 +6,15 @@
 
 <link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 
-<polymer-element name="spark-modal" extends="spark-overlay"
+<polymer-element name="spark-modal"
+    extends="spark-overlay"
+    autoCloseDisabled
+    on-webkitAnimationStart="{{openedAnimationStart}}"
+    on-animationStart="{{openedAnimationStart}}"
+    on-webkitAnimationEnd="{{openedAnimationEnd}}"
+    on-animationEnd="{{openedAnimationEnd}}"
+    on-webkitTransitionEnd="{{openedTransitionEnd}}"
+    on-transitionEnd="{{openedTransitionEnd}}"
     on-click="{{tapHandler}}"
     on-keydown="{{keydownHandler}}">
   <template>

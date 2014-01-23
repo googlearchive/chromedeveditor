@@ -32,7 +32,7 @@
       <spark-button id="runButton" small><i class="fa fa-play"></i> Run</spark-button>
 
       <spark-status id="sparkStatus"></spark-status>
-      
+
       <span id="saveStatus" class="titleFont"></span>
 
       <div id="toolbarRight" class="titleFont">
@@ -116,7 +116,7 @@
     </spark-modal>
 
     <!-- Rename File dialog -->
-    <spark-overlay id="renameDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="renameDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label for="renameFileName">New name</label>
@@ -131,10 +131,10 @@
           Rename
         </spark-button>
       </div>
-    </spark-overlay>
+    </spark-modal>
 
     <!-- New File dialog -->
-    <spark-overlay id="fileNewDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="fileNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label for="fileName">New file name</label>
@@ -149,10 +149,10 @@
           Create
         </spark-button>
       </div>
-    </spark-overlay>
+    </spark-modal>
 
     <!-- New Folder dialog -->
-    <spark-overlay id="folderNewDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="folderNewDialog" class="spark-overlay-scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label for="folderName">New folder name</label>
@@ -167,10 +167,10 @@
           Create
         </spark-button>
       </div>
-    </spark-overlay>
+    </spark-modal>
 
     <!-- New Project dialog -->
-    <spark-overlay id="newProjectDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="newProjectDialog" class="spark-overlay-scale-slideup">
       <div class="modal-header">
         <spark-button overlay-toggle class="close" data-dismiss="modal" aria-hidden="true">
           &times;
@@ -191,7 +191,7 @@
           Create
         </spark-button>
       </div>
-    </spark-overlay>
+    </spark-modal>
 
     <!-- Git Clone dialog -->
     <spark-modal id="gitCloneDialog" class="spark-overlay-scale-slideup">
@@ -204,7 +204,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
-          <input id="gitRepoUrl" type="text" class="form-control" 
+          <input id="gitRepoUrl" type="text" class="form-control"
               placeholder="https://github.com/foo/bar.git" autofocus>
         </div>
       </div>
@@ -342,7 +342,7 @@
             <div>
 		          <span class="settings-label"></span>
 		          <span class="plus-minus-container">
-		            <a href="#" id="themeMinus" class="plus-minus-button" 
+		            <a href="#" id="themeMinus" class="plus-minus-button"
 		                on-click="{{onThemeMinus}}"><i class="fa fa-caret-left"></i></a>
 		            <a href="#" id="themePlus" class="plus-minus-button"
 		                on-click="{{onThemePlus}}"><i class="fa fa-caret-right"></i></a>
