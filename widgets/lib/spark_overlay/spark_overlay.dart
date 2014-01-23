@@ -161,6 +161,8 @@ class SparkOverlay extends SparkWidget {
   // an ancestory becoming display: none; file bug.
   void applyFocus() {
     var focusNode = getFocusNode();
+    /*%TRACE3*/ print("(4> 1/22/14): focusNode: " + focusNode.toString()); // TRACE%
+    /*%TRACE3*/ print("(4> 1/22/14): opened: " + opened.toString()); // TRACE%
     if (opened) {
       focusNode.focus();
     } else {
@@ -189,6 +191,7 @@ class SparkOverlay extends SparkWidget {
     classes.remove('closing');
     classes.toggle('revealed', opened);
     applyFocus();
+    /*%TRACE3*/ print("(4> 1/22/14): applyFocus!"); // TRACE%
   }
 
   void openedAnimationEnd(AnimationEvent e) {
