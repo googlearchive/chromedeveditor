@@ -711,6 +711,8 @@ class FilesController implements TreeViewDelegate {
       // to close the dropdown. For example dropdown.toggle() won't work.
       menuContainer.classes.remove('open');
       cancelEvent(event);
+
+      _treeView.focus();
     }
 
     // When the user clicks outside the menu, we'll close it.

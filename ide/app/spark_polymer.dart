@@ -45,7 +45,7 @@ class SparkPolymerDialog implements SparkDialog {
   void show() {
     if (!_dialogElement.opened) {
       _dialogElement.toggle();
-      _dialogElement.applyFocus();
+      Timer.run(() => _dialogElement.applyFocus());
     }
   }
 
