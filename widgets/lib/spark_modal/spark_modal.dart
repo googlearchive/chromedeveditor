@@ -14,12 +14,4 @@ import '../spark_overlay/spark_overlay.dart';
 @CustomTag("spark-modal")
 class SparkModal extends SparkOverlay {
   SparkModal.created(): super.created();
-
-  @override
-  void captureHandler(MouseEvent e) {
-    if (!isPointInOverlay(e.client)) {
-      e.stopImmediatePropagation();
-      e.preventDefault();
-    }
-  }
 }
