@@ -442,10 +442,23 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     statusComponent.temporaryMessage = message;
   }
 
-  void showErrorMessage(String title, String message) {
-    // TODO: Implement.
+  SparkDialog _errorDialog;
 
-    print('${title}: ${message}');
+  /**
+   * Show a model error dialog.
+   */
+  void showErrorMessage(String title, String message) {
+    if (_errorDialog == null) {
+      _errorDialog = createDialog(getDialogElement('#errorDialog'));
+      _errorDialog.element.querySelector("[primary]").onClick.listen((_) {
+        querySelector("#modalBackdrop").style.display = "none";
+      });
+    }
+
+    _errorDialog.element.querySelector('#errorTitle').innerHtml = title;
+    _errorDialog.element.querySelector('#errorMessage').text = message;
+
+    _errorDialog.show();
   }
 
   void onSplitViewUpdate(int position) { }
