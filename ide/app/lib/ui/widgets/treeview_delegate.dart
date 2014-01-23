@@ -50,7 +50,7 @@ abstract class TreeViewDelegate {
 
   /**
    * The implementation of this method will be triggered when a node is
-   * clicked.  Returning false will cancel further selection operations. 
+   * clicked.  Returning false will cancel further selection operations.
    */
   bool treeViewRowClicked(Event event, String uid);
 
