@@ -6,9 +6,11 @@ library git.commands.commit;
 
 import 'dart:async';
 import 'dart:typed_data';
-
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'constants.dart';
+import 'index.dart';
+import 'status.dart';
 import '../file_operations.dart';
 import '../object.dart';
 import '../object_utils.dart';
@@ -46,17 +48,28 @@ class Commit {
             if (sha != null) {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
                   false));
-            }
+       }
           });
         } else {
-          return entry.readBytes().then(
-              (chrome.ArrayBuffer buf) {
-                return store.writeRawObject('blob', new Uint8List.fromList(
-                    buf.getBytes()));
-              }).then((String sha) {
-                treeEntries.add(
-                    new TreeEntry(entry.name, shaToBytes(sha), true));
-              });
+          return Status.getFileStatus(store, entry).then((FileStatus status) {
+            return store.index.updateIndexForEntry(status).then((_) {
+              status = store.index.getStatusForEntry(entry);
+
+              if (status.type != FileStatusType.COMMITTED) {
+                return entry.readBytes().then((chrome.ArrayBuffer buf) {
+                  return store.writeRawObject('blob', new Uint8List.fromList(
+                      buf.getBytes()));
+                }).then((String sha) {
+                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
+                      true));
+                  return store.index.commitEntry(status).then((_) => null);
+                });
+              } else {
+                treeEntries.add(new TreeEntry(entry.name, shaToBytes(status.sha),
+                    true));
+              }
+            });
+          });
         }
       }).then((_) {
         treeEntries.sort((TreeEntry a, TreeEntry b) {

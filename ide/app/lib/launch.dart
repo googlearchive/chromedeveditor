@@ -9,6 +9,7 @@ library spark.launch;
 
 import 'dart:async';
 import 'dart:html' as html;
+import 'dart:js' as js;
 import 'dart:typed_data' as typed_data;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -133,8 +134,50 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
   }
 
   void run(Resource resource) {
-    //TODO: implement this
     print('TODO: run project ${resource.project}');
+    return;
+    /*_loadApp(resource).then((_) {
+      _getAppId(resource.project.name).then((String id) {
+        _launchApp(id);
+      });
+    });*/
+  }
+
+  Future<String> _loadApp(Resource resource) {
+    Completer completer = new Completer();
+    callback(String id) {
+      completer.complete(id);
+    }
+
+    js.JsObject obj = js.context['chrome']['developerPrivate'];
+    obj.callMethod('LoadDirectory', [resource.project.entry, callback]);
+    return completer.future;
+  }
+
+  void _launchApp(String id) {
+    js.JsObject obj = js.context['chrome']['management'];
+    obj.callMethod('launchApp', [id]);
+  }
+
+  /**
+   * TODO(grv) : This is a temporary function until loadDirectory returns
+   *  the app_id.
+   */
+  Future<String> _getAppId(String name) {
+    Completer completer = new Completer();
+    callback(List result) {
+      for (int i = 0; i < result.length; ++i) {
+        if (result[i]['is_unpacked'] && (result[i]['path'] as String).endsWith(
+            name)) {
+          completer.complete(result[i]['id']);
+          return;
+        }
+      };
+      completer.complete(null);
+    }
+    js.JsObject obj = js.context['chrome']['developerPrivate'];
+    obj.callMethod('getItemsInfo', [false, false, callback]);
+    return completer.future;
   }
 
   void dispose() {
