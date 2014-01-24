@@ -109,12 +109,15 @@
 }
 
 .tabview-tablabel-closebutton {
-  opacity: 0.2;
   display: none;
+  font-size: 12px;
+  height: 15px;
+  opacity: 0.2;
+  outline: none;
   position: absolute;
-  top: 3px;
+  top: 5px;
   right: 4px;
-  font-size: 16px;
+  width: 15px;
 }
 
 .tabview-tablabel-closable .tabview-tablabel-closebutton {
