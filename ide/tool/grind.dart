@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
+import 'package:polymer/builder.dart' as polymer;
 
 import 'webstore_client.dart';
 
@@ -34,8 +35,10 @@ void main([List<String> args]) {
   defineTask('mode-notest', taskFunction: (c) => _changeMode(useTestMode: false));
   defineTask('mode-test', taskFunction: (c) => _changeMode(useTestMode: true));
 
+  defineTask('lint', taskFunction: lint, depends: ['setup']);
+
   defineTask('compile', taskFunction: compile, depends : ['setup']);
-  defineTask('deploy', taskFunction: deploy, depends : ['setup']);
+  defineTask('deploy', taskFunction: deploy, depends : ['lint']);
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
@@ -74,6 +77,13 @@ void setup(GrinderContext context) {
 
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
+}
+
+/**
+ * Runt Polymer lint on the Polymer entry point.
+ */
+void lint(context) {
+  polymer.lint(entryPoints: ['app/spark_polymer.html']);
 }
 
 /**

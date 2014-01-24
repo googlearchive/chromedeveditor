@@ -2,24 +2,15 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'package:grinder/grinder.dart' as grind;
-import 'package:polymer/builder.dart' as polymer;
+import 'package:grinder/grinder.dart' as grinder;
 
 import 'tool/grind.dart' as grind;
 
 void main() {
-  new grind.Grinder()
-    ..addTask(new grind.GrinderTask(
-        'update', taskFunction: update))
-    ..addTask(new grind.GrinderTask(
-        'lint', taskFunction: lint, depends: ['update']))
+  new grinder.Grinder()
+    ..addTask(new grinder.GrinderTask(
+        'update', taskFunction: grind.setup))
+    ..addTask(new grinder.GrinderTask(
+        'lint', taskFunction: grind.lint, depends: ['update']))
     ..start(['lint']);
-}
-
-void update(context) {
-  grind.setup(context);
-}
-
-void lint(context) {
-  polymer.lint(entryPoints: ['app/spark_polymer.html']);
 }
