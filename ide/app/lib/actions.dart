@@ -170,7 +170,9 @@ Map<String, int> _bindingMap = {
   "F11": KeyCode.F11,
   "F12": KeyCode.F12,
 
-  "TAB": KeyCode.TAB
+  "TAB": KeyCode.TAB,
+  "[" : KeyCode.OPEN_SQUARE_BRACKET,
+  "]" : KeyCode.CLOSE_SQUARE_BRACKET
 };
 
 /**
@@ -194,7 +196,7 @@ class KeyBinding {
       modifiers.add(_codeFor(str));
     }
 
-    keyCode = _codeFor(codes[codes.length - 1]);
+    keyCode = _codeFor(codes.last);
   }
 
   /**

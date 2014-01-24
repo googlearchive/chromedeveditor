@@ -244,14 +244,14 @@ class TabView {
   void gotoPreviousTab() {
     if (tabs.length < 2) return;
     int index = tabs.indexOf(selectedTab);
-    if (index == 0) return;
+    if (index == 0) index = tabs.length;
     selectedTab = tabs[index - 1];
   }
 
   void gotoNextTab() {
     if (tabs.length < 2) return;
     int index = tabs.indexOf(selectedTab);
-    if (index == tabs.length - 1) return;
+    if (index == tabs.length - 1) index = -1;
     selectedTab = tabs[index + 1];
   }
 
