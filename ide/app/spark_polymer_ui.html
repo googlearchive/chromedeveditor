@@ -9,6 +9,7 @@
 <link rel="import" href="packages/spark_widgets/spark_icon_button/spark_icon_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
+<link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
@@ -312,12 +313,12 @@
           </span>
         </div>
         <div class="form-group">
-	        <div class="checkbox">
-	          <label>
-	            <input id="analyticsCheck" type="checkbox">
-	                Allow Spark to collect anonymous usage statistics
-	          </label>
-	        </div>
+          <div class="checkbox">
+            <label>
+              <input id="analyticsCheck" type="checkbox">
+                Allow Spark to collect anonymous usage statistics
+            </label>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -337,33 +338,33 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-	        <div id="changeTheme">
-	          <label class="settings-title">Editor theme</label>
+          <div id="changeTheme">
+            <label class="settings-title">Editor theme</label>
             <div>
-		          <span class="settings-label"></span>
-		          <span class="plus-minus-container">
-		            <a href="#" id="themeMinus" class="plus-minus-button"
-		                on-click="{{onThemeMinus}}"><i class="fa fa-caret-left"></i></a>
-		            <a href="#" id="themePlus" class="plus-minus-button"
-		                on-click="{{onThemePlus}}"><i class="fa fa-caret-right"></i></a>
-		          </span>
-		        </div>
+              <span class="settings-label"></span>
+              <span class="plus-minus-container">
+                <a href="#" id="themeMinus" class="plus-minus-button"
+                    on-click="{{onThemeMinus}}"><i class="fa fa-caret-left"></i></a>
+                <a href="#" id="themePlus" class="plus-minus-button"
+                    on-click="{{onThemePlus}}"><i class="fa fa-caret-right"></i></a>
+              </span>
+            </div>
           </div>
         </div>
         <div class="form-group">
-	        <div id="changeKeys">
-	          <label class="settings-title">Key bindings</label>
-	          <div>
-		          <span class="settings-label"></span>
-		          <span class="plus-minus-container">
-		            <a href="#" id="keysMinus" class="plus-minus-button"
-		                on-click="{{onKeysMinus}}"><i class="fa fa-caret-left"></i></a>
-		            <a href="#" id="keysPlus" class="plus-minus-button"
-		                on-click="{{onKeysPlus}}"><i class="fa fa-caret-right"></i></a>
-		          </span>
-		        </div>
-	        </div>
-	      </div>
+          <div id="changeKeys">
+            <label class="settings-title">Key bindings</label>
+            <div>
+              <span class="settings-label"></span>
+              <span class="plus-minus-container">
+                <a href="#" id="keysMinus" class="plus-minus-button"
+                    on-click="{{onKeysMinus}}"><i class="fa fa-caret-left"></i></a>
+                <a href="#" id="keysPlus" class="plus-minus-button"
+                    on-click="{{onKeysPlus}}"><i class="fa fa-caret-right"></i></a>
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary autofocus data-dismiss="modal">
