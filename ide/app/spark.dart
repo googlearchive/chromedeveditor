@@ -1053,8 +1053,7 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
 
 class TabPreviousAction extends SparkAction {
   TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {
-    defaultBinding("ctrl-shift-tab");
-    macBinding("macctrl-shift-tab");
+    defaultBinding("ctrl-shift-[");
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoPreviousTab();
@@ -1062,8 +1061,7 @@ class TabPreviousAction extends SparkAction {
 
 class TabNextAction extends SparkAction {
   TabNextAction(Spark spark) : super(spark, "tab-next", "Next Tab") {
-    defaultBinding("ctrl-tab");
-    macBinding("macctrl-tab");
+    defaultBinding("ctrl-shift-]");
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoNextTab();
