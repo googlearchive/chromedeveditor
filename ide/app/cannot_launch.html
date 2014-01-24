@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<html>
+  <head>
+    <link rel="stylesheet" href="cannot_launch.css">
+    <script src="cannot_launch.js" type="text/javascript"></script>
+    <!-- Make polymer deploy happy by adding the following script tag.
+         The caveat is that CSP will choke on it but will just show a
+         warning. -->
+    <script type="application/dart">
+      /* export "package:polymer/init.dart"; */
+    </script>
+  </head>
+
+  <body>
+    <div>
+      <h1>Cannot launch</h1>
+      <div id="message">
+      Please check whether 'Enable experimental Web Platform features' is enabled
+      in chrome://flags.
+      </div>
+      <div id="footer">
+        <button id="close-button">Close</button>
+      </div>
+    </div>
+  </body>
+</html>

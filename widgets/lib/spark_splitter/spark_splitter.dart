@@ -28,6 +28,8 @@ class SparkSplitter extends SparkWidget {
   @published bool locked = false;
   /// Get notified of position changes.
   @published SplitterUpdateFunction onUpdate;
+  // Get the thickness size of split bar.
+  @published int size = 6;
 
   /**
    * Return the current splitter location.
@@ -98,8 +100,20 @@ class SparkSplitter extends SparkWidget {
     _target =
         _isTargetNextSibling ? nextElementSibling : previousElementSibling;
     classes.toggle('horizontal', _isHorizontal);
+    _setThickness();
     if (handle) {
       _addBackgroundHandle();
+    }
+  }
+
+  void _setThickness() {
+    final sizeStr = '${size}px';
+    if (_isHorizontal) {
+      this.style.height = sizeStr;
+      this.style.width = "auto";
+    } else {
+      this.style.height = "auto";
+      this.style.width = sizeStr;
     }
   }
 
