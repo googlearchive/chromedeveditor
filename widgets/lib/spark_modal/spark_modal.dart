@@ -4,7 +4,6 @@
 
 library spark_widgets.modal;
 
-import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../spark_overlay/spark_overlay.dart';
