@@ -83,7 +83,7 @@
 }
 
 .tabview-tablabel-active {
-  background: -webkit-linear-gradient(bottom, #DDD, white);
+  background: -webkit-linear-gradient(bottom, #EEE, white);
   border: 1px solid #DDD;
   border-bottom: 1px solid #EEE;
   margin-top: 5px;
@@ -93,12 +93,12 @@
 }
 
 .tabview-tablabel:hover {
-  background: #F3F3F3;
+/*  background: #F8F8F8;*/
+  background: -webkit-linear-gradient(bottom, white, #f8f8f8);
 }
 
 .tabview-tablabel-active:hover {
-  background: -webkit-linear-gradient(bottom, #CCC, white);
-  border-bottom: 1px solid #CCC;
+  background: -webkit-linear-gradient(bottom, #EEE, #f8f8f8);
 }
 
 .tabview-tablabel-caption {

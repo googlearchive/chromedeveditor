@@ -16,17 +16,18 @@ import 'package:crypto/crypto.dart' show CryptoUtils;
 import 'package:mime/mime.dart' as mime;
 
 import '../utils/html_utils.dart';
+import '../../editors.dart';
 import '../../workspace.dart';
 
 /**
  * A simple image viewer.
  */
-class ImageViewer {
+class ImageViewer implements Editor {
   /// The image element
   final html.ImageElement _image = new html.ImageElement();
 
   /// The root element to put the editor in.
-  final html.Element rootElement = new html.DivElement();
+  final html.Element _rootElement = new html.DivElement();
 
   /// Associated file.
   final File _file;
@@ -44,10 +45,10 @@ class ImageViewer {
   ImageViewer(this._file) {
     _image.draggable = false;
     html.window.onResize.listen((_) => resize());
-    rootElement.classes.add('imageeditor-root');
-    rootElement.append(_image);
-    rootElement.onMouseWheel.listen(_handleMouseWheel);
-    rootElement.onScroll.listen((_) => _updateOffset());
+    _rootElement.classes.add('imageeditor-root');
+    _rootElement.append(_image);
+    _rootElement.onMouseWheel.listen(_handleMouseWheel);
+    _rootElement.onScroll.listen((_) => _updateOffset());
     _loadFile();
   }
 
@@ -60,8 +61,11 @@ class ImageViewer {
     });
   }
 
-  double get _width => rootElement.clientWidth.toDouble();
-  double get _height => rootElement.clientHeight.toDouble();
+  html.Element get element => _rootElement;
+  File get file => _file;
+
+  double get _width => _rootElement.clientWidth.toDouble();
+  double get _height => _rootElement.clientHeight.toDouble();
   double get _imageWidth => _image.naturalWidth * _scale;
   double get _imageHeight => _image.naturalHeight * _scale;
 
@@ -118,11 +122,11 @@ class ImageViewer {
     double top = _height / 2 - _imageHeight / 2 + _dy;
 
     if (_imageWidth > _width) {
-      _dx = -rootElement.scrollLeft - _width / 2 + _imageWidth / 2;
+      _dx = -_rootElement.scrollLeft - _width / 2 + _imageWidth / 2;
     }
 
     if (_imageHeight > _height) {
-      _dy = -rootElement.scrollTop - _height / 2 + _imageHeight / 2;
+      _dy = -_rootElement.scrollTop - _height / 2 + _imageHeight / 2;
     }
   }
 
@@ -148,10 +152,10 @@ class ImageViewer {
     _image.style.height = '${_imageHeight.round()}px';
 
     _image.style.left = '${math.max(0, left.round())}px';
-    rootElement.scrollLeft = math.max(0, -left.round());
+    _rootElement.scrollLeft = math.max(0, -left.round());
 
     _image.style.top = '${math.max(0, top.round())}px';
-    rootElement.scrollTop = math.max(0, -top.round());
+    _rootElement.scrollTop = math.max(0, -top.round());
   }
 
   void _handleMouseWheel(html.WheelEvent e) {
@@ -188,13 +192,24 @@ class ImageViewer {
     int x = e.offset.x;
     int y = e.offset.y;
     html.Element parent = e.target as html.Element;
-    while (parent != rootElement) {
+    while (parent != _rootElement) {
       x += parent.offsetLeft - parent.scrollLeft;
       y += parent.offsetTop - parent.scrollTop;
       parent = parent.offsetParent;
     }
-    x -= parent.scrollLeft + rootElement.clientWidth / 2;
-    y -= parent.scrollTop + rootElement.clientHeight / 2;
+    x -= parent.scrollLeft + _rootElement.clientWidth / 2;
+    y -= parent.scrollTop + _rootElement.clientHeight / 2;
     return new html.Point(x, y);
   }
+
+  void focus() {}
+
+  StreamController _dirtyController = new StreamController.broadcast();
+  Stream get onDirtyChange => _dirtyController.stream;
+  bool get dirty => false;
+  Future save() {
+    return new Future.value();
+  }
+
+  void activate() {}
 }
