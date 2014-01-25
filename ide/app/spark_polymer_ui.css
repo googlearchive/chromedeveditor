@@ -81,6 +81,19 @@
   margin: 3px -4px;
 }
 
+.ace_gutter-tooltip-label-error {
+  color: #F55;
+}
+
+.ace_gutter-tooltip-label-warning {
+  color: #DD3;
+}
+
+.ace_gutter-tooltip-label-info {
+  color: #9CC;
+}
+
+
 #splitview {
   bottom: 0;
   display: flex;
