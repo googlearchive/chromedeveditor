@@ -131,16 +131,24 @@ class AceManager {
     int numberLines = currentSession.screenLength;
 
     _recreateMiniMap();
+    Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
+      String markerHtml = marker.message;
+      int aceRow = marker.lineNum - 1; // Ace uses 0-based lines.
+      var existingAnnotation = annotationByRow[aceRow];
+      if (existingAnnotation != null) {
+        markerHtml = "${existingAnnotation.html}<div class=\"ace_gutter-tooltip-divider\"></div>$markerHtml";
+        annotations.remove(existingAnnotation);
+      }
       var annotation = new ace.Annotation(
-          text: marker.message,
-          row: marker.lineNum - 1, // Ace uses 0-based lines.
+          html: markerHtml,
+          row: aceRow,
           type: annotationType);
       annotations.add(annotation);
+      annotationByRow[aceRow] = annotation;
 
-      // TODO(ericarnold): This won't update on code folds.  Fix
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
       double markerPos =

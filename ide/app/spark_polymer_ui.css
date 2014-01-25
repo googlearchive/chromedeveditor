@@ -75,6 +75,12 @@
   color: #aaa;
 }
 
+.ace_gutter-tooltip-divider {
+  background-color: gray;
+  height: 1px;
+  margin: 3px -4px;
+}
+
 #splitview {
   bottom: 0;
   display: flex;
