@@ -2,3 +2,15 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+:host {
+  display: block;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  min-height: 2px;
+  min-width: 160px;
+  margin: 5px 0px;
+  padding: 0 10px;
+  background-color: #CCC;
+  border-bottom: 1px solid #EEE;
+  cursor: default;
+}

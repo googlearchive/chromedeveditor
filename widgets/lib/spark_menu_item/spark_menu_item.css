@@ -2,6 +2,21 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+:host {
+  display: block;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  min-height: 30px;
+  min-width: 160px;
+  padding: 0 10px;
+  color: #000;
+  border: none;
+  font-family: Helvetica, Sans-serif;
+  font-size: 14px;
+  cursor: default;
+  white-space: nowrap;
+}
+
 .labelText {
   margin: 0 5px;
   position: relative;
