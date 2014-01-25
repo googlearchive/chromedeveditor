@@ -372,7 +372,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new TabPreviousAction(this));
     actionManager.registerAction(new TabNextAction(this));
-    actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
 
     actionManager.registerKeyListener();
@@ -1065,6 +1065,18 @@ class TabNextAction extends SparkAction {
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoNextTab();
+}
+
+class TabLastAction extends SparkAction {
+  TabLastAction(Spark spark) : super(spark, "tab-last", "Last Tab") {
+    defaultBinding("ctrl-9");
+  }
+
+  void _invoke([Object context]) {
+    if (spark.editorArea.tabs.isNotEmpty) {
+      spark.editorArea.selectedTab = spark.editorArea.tabs.last;
+    }
+  }
 }
 
 class FileCloseAction extends SparkAction {
