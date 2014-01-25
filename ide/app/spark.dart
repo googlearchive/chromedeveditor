@@ -1295,7 +1295,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
-  InputElement _commitMessageElement;
+  TextAreaElement _commitMessageElement;
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Git Commit…", dialog) {
