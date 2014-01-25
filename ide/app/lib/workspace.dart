@@ -468,7 +468,8 @@ abstract class Container extends Resource {
   List<Resource> getChildren() => _localChildren;
 
   List<Marker> getMarkers() {
-    return traverse().where((r) => r is File).expand((f) => f.getMarkers());
+    return traverse().where((r) => r is File)
+        .expand((f) => f.getMarkers()).toList();
   }
 
   void clearMarkers() {

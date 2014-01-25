@@ -103,7 +103,7 @@ class ActionManager {
    */
   Iterable<Action> getActions() => _actionMap.values;
 
-  void handleKeyEvent(KeyEvent event) {
+  void handleKeyEvent(KeyboardEvent event) {
     if (!event.altKey && !event.ctrlKey && !event.metaKey) {
       return;
     }
@@ -202,7 +202,7 @@ class KeyBinding {
   /**
    * Returns whether this binding matches the given key event.
    */
-  bool matches(KeyEvent event) {
+  bool matches(KeyboardEvent event) {
     if (event.keyCode != keyCode) {
       return false;
     }
@@ -364,7 +364,7 @@ abstract class Action {
     }
   }
 
-  bool matchesEvent(KeyEvent event) {
+  bool matchesEvent(KeyboardEvent event) {
     return binding == null ? false : binding.matches(event);
   }
 
