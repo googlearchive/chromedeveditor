@@ -126,13 +126,13 @@ class AceManager {
     return null;
   }
 
-  String _formatAnnotationItemText(String text, [String type = null]) {
+  String _formatAnnotationItemText(String text, [String type]) {
     String labelHtml = "";
     if (type != null) {
       String typeText = type.substring(0, 1).toUpperCase() + type.substring(1);
-      labelHtml = "<span class=ace_gutter-tooltip-label-$type>$typeText</span>";
+      labelHtml = "<span class=ace_gutter-tooltip-label-$type>$typeText: </span>";
     }
-    return "$labelHtml: $text";
+    return "$labelHtml$text";
   }
 
   void setMarkers(List<workspace.Marker> markers) {
