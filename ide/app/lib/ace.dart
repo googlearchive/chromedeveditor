@@ -126,6 +126,14 @@ class AceManager {
     return null;
   }
 
+  String _formatAnnotationItemText(String text, [String type = null]) {
+    String iconHtml = "";
+    if (type != null) {
+      iconHtml = "<img src=\"assets/images/${type}_icon.png\"/>";
+    }
+    return "$iconHtml $text";
+  }
+
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
     int numberLines = currentSession.screenLength;
@@ -135,14 +143,23 @@ class AceManager {
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
-      String markerHtml = marker.message;
-      int aceRow = marker.lineNum - 1; // Ace uses 0-based lines.
+
+      // Style the marker with the annotation type.
+      String markerHtml = _formatAnnotationItemText(marker.message,
+          annotationType);
+
+      // Ace uses 0-based lines.
+      int aceRow = marker.lineNum - 1;
+
+      // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
       if (existingAnnotation != null) {
-        markerHtml = "${existingAnnotation.html}<div class=\"ace_gutter-tooltip-divider\"></div>$markerHtml";
+        markerHtml = existingAnnotation.html
+            + "<div class=\"ace_gutter-tooltip-divider\"></div>$markerHtml";
         annotations.remove(existingAnnotation);
       }
-      var annotation = new ace.Annotation(
+
+      ace.Annotation annotation = new ace.Annotation(
           html: markerHtml,
           row: aceRow,
           type: annotationType);
