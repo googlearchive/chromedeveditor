@@ -16,7 +16,10 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_icon/spark_icon.html">
 
 <polymer-element name="spark-menu-item" extends="spark-widget"
-    attributes="src label iconsize">
+    attributes="src label iconsize"
+    on-mouseover="{{hover_style}}"
+    on-mouseout="{{clean_hover_style}}"
+    on-click="{{clean_hover_style}}">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->

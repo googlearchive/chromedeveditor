@@ -12,8 +12,11 @@ spark-icon, .labelText, .labelText > * {
   display: inline-block;
 }
 
-:host:hover {
-  color: #fff;
+.highlight {
   opacity: 1 !important;
   background: #3a84c3;
+}
+
+.highlight .labelText {
+  color: #fff;
 }
