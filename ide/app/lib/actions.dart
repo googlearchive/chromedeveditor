@@ -103,7 +103,7 @@ class ActionManager {
    */
   Iterable<Action> getActions() => _actionMap.values;
 
-  void handleKeyEvent(KeyEvent event) {
+  void handleKeyEvent(KeyboardEvent event) {
     if (!event.altKey && !event.ctrlKey && !event.metaKey) {
       return;
     }

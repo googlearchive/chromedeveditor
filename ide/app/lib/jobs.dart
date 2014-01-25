@@ -88,7 +88,7 @@ class JobManagerEvent {
   final double progress;
 
   JobManagerEvent(this.manager, this.job,
-      {this.started, this.finished, this.indeterminate, this.progress: 1.0});
+      {this.started: false, this.finished: false, this.indeterminate: false, this.progress: 1.0});
 
   String toString() {
     if (started) {
