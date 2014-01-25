@@ -11,6 +11,7 @@ library spark.editor_area;
 import 'dart:async';
 import 'dart:html';
 
+import 'ace.dart' as ace;
 import 'editors.dart';
 import 'ui/widgets/tabview.dart';
 import 'ui/widgets/imageviewer.dart';
@@ -51,10 +52,17 @@ class AceEditorTab extends EditorTab {
 /// An [EditorTab] that contains an [ImageViewerTab].
 class ImageViewerTab extends EditorTab {
   final ImageViewer imageViewer;
+  final EditorProvider provider;
 
-  ImageViewerTab(EditorArea parent, this.imageViewer, Resource file)
+  ImageViewerTab(EditorArea parent, this.provider, this.imageViewer, Resource file)
     : super(parent, file) {
-    page = imageViewer.rootElement;
+    page = imageViewer.element;
+  }
+
+  void activate() {
+    provider.activate(imageViewer);
+    super.activate();
+    resize();
   }
 
   void resize() => imageViewer.resize();
@@ -140,12 +148,13 @@ class EditorArea extends TabView {
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
 
-      if (_imageFileType.hasMatch(file.name)) {
-        ImageViewer viewer = new ImageViewer(file);
-        tab = new ImageViewerTab(this, viewer, file);
-      } else {
-        Editor editor = editorProvider.createEditorForFile(file);
+      Editor editor = editorProvider.createEditorForFile(file);
+      if (editor is ace.TextEditor) {
         tab = new AceEditorTab(this, editorProvider, editor, file);
+      } else if (editor is ImageViewer) {
+        tab = new ImageViewerTab(this, editorProvider, editor, file);
+      } else {
+        assert(editor is ace.TextEditor || editor is ImageViewer);
       }
 
       if (replaceCurrent) {
