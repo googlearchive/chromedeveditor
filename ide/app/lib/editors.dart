@@ -156,6 +156,8 @@ class EditorManager implements EditorProvider {
         }
       }
 
+      _editorMap[file] = null;
+
       persistState();
     }
   }

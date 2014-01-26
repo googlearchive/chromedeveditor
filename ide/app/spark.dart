@@ -370,6 +370,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
+    actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
     actionManager.registerAction(new TabNextAction(this));
     actionManager.registerAction(new SpecificTabAction(this));
@@ -1129,8 +1130,8 @@ class TabLastAction extends SparkAction {
   }
 }
 
-class FileCloseAction extends SparkAction {
-  FileCloseAction(Spark spark) : super(spark, "file-close", "Close") {
+class TabCloseAction extends SparkAction {
+  TabCloseAction(Spark spark) : super(spark, "tab-close", "Close") {
     defaultBinding("ctrl-w");
   }
 
