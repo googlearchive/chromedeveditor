@@ -10,6 +10,8 @@ library spark.actions;
 import 'dart:async';
 import 'dart:html';
 
+import 'utils.dart';
+
 /**
  * Create a blank, separator menu item.
  */
@@ -152,7 +154,7 @@ class ActionManager {
  */
 Map<String, int> _bindingMap = {
   "META": KeyCode.META,
-  "CTRL": _isMac() ? KeyCode.META : KeyCode.CTRL,
+  "CTRL": isMac() ? KeyCode.META : KeyCode.CTRL,
   "MACCTRL": KeyCode.CTRL,
   "ALT": KeyCode.ALT,
   "SHIFT": KeyCode.SHIFT,
@@ -251,7 +253,7 @@ class KeyBinding {
 
     desc.add(_descriptionOf(keyCode));
 
-    if (_isMac() && modifiers.length == 1 && modifiers.first == KeyCode.META) {
+    if (isMac() && modifiers.length == 1 && modifiers.first == KeyCode.META) {
       return desc.join();
     } else {
       return desc.join('+');
@@ -268,7 +270,7 @@ class KeyBinding {
 
   String _descriptionOf(int code) {
     if (code == KeyCode.META) {
-      if (_isMac()) {
+      if (isMac()) {
         return '⌘'; // "Cmd";
       } else {
         return "Meta";
@@ -306,7 +308,7 @@ abstract class Action {
 
   String id;
   String name;
-  KeyBinding binding;
+  List<KeyBinding> bindings = [];
 
   bool _enabled = true;
 
@@ -316,8 +318,8 @@ abstract class Action {
    * Set a default (cross-platform) binding.
    */
   void defaultBinding(String str) {
-    if (binding == null) {
-      binding = new KeyBinding(str);
+    if (bindings.isEmpty) {
+      bindings.add(new KeyBinding(str));
     }
   }
 
@@ -325,8 +327,8 @@ abstract class Action {
    * Set a Linux (and Linux-OS like) specific binding.
    */
   void linuxBinding(String str) {
-    if (_isLinuxLike()) {
-      binding = new KeyBinding(str);
+    if (isLinuxLike()) {
+      bindings.add(new KeyBinding(str));
     }
   }
 
@@ -334,8 +336,8 @@ abstract class Action {
    * Set a Mac specific binding.
    */
   void macBinding(String str) {
-    if (_isMac()) {
-      binding = new KeyBinding(str);
+    if (isMac()) {
+      bindings.add(new KeyBinding(str));
     }
   }
 
@@ -343,8 +345,8 @@ abstract class Action {
    * Set a Windows specific binding.
    */
   void winBinding(String str) {
-    if (_isWin()) {
-      binding = new KeyBinding(str);
+    if (isWin()) {
+      bindings.add(new KeyBinding(str));
     }
   }
 
@@ -365,7 +367,7 @@ abstract class Action {
   }
 
   bool matchesEvent(KeyboardEvent event) {
-    return binding == null ? false : binding.matches(event);
+    return bindings.any((binding) => binding.matches(event));
   }
 
   /**
@@ -374,7 +376,7 @@ abstract class Action {
   Stream<Action> get onChange => _controller.stream;
 
   String getBindingDescription() {
-    return binding == null ? null : binding.getDescription();
+    return bindings.isEmpty ? null : bindings.first.getDescription();
   }
 
   String toString() => 'Action: ${name}';
@@ -401,15 +403,6 @@ abstract class ContextAction extends Action {
    * particular circumstance the action is disabled.
    */
   bool appliesTo(Object object);
-}
-
-bool _isMac() => _platform().indexOf('mac') != -1;
-bool _isWin() => _platform().indexOf('win') != -1;
-bool _isLinuxLike() => !_isMac() && !_isWin();
-
-String _platform() {
-  String str = window.navigator.platform;
-  return (str != null) ? str.toLowerCase() : '';
 }
 
 String _toTitleCase(String str) {

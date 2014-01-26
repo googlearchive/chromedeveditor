@@ -31,7 +31,7 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
-import 'lib/utils.dart';
+import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
@@ -183,7 +183,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   // - End SparkModel interface.
   //
 
-  String get appName => i18n('app_name');
+  String get appName => utils.i18n('app_name');
 
   String get appVersion => chrome.runtime.getManifest()['version'];
 
@@ -372,6 +372,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
     actionManager.registerAction(new TabPreviousAction(this));
     actionManager.registerAction(new TabNextAction(this));
+    actionManager.registerAction(new SpecificTabAction(this));
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
 
@@ -1053,7 +1054,12 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
 
 class TabPreviousAction extends SparkAction {
   TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {
-    defaultBinding("ctrl-shift-[");
+    bindings.add(new KeyBinding('ctrl-shift-['));
+    if (utils.isMac()) {
+      bindings.add(new KeyBinding('macctrl-shift-tab'));
+    } else {
+      bindings.add(new KeyBinding('ctrl-shift-tab'));
+    }
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoPreviousTab();
@@ -1061,10 +1067,54 @@ class TabPreviousAction extends SparkAction {
 
 class TabNextAction extends SparkAction {
   TabNextAction(Spark spark) : super(spark, "tab-next", "Next Tab") {
-    defaultBinding("ctrl-shift-]");
+    bindings.add(new KeyBinding('ctrl-shift-]'));
+    if (utils.isMac()) {
+      bindings.add(new KeyBinding('macctrl-tab'));
+    } else {
+      bindings.add(new KeyBinding('ctrl-tab'));
+    }
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoNextTab();
+}
+
+class SpecificTabAction extends SparkAction {
+  _SpecificTabKeyBinding _binding;
+
+  SpecificTabAction(Spark spark) : super(spark, "tab-goto", "Goto Tab") {
+    _binding = new _SpecificTabKeyBinding();
+    bindings.add(_binding);
+  }
+
+  void _invoke([Object context]) {
+    if (_binding.index < 1 && _binding.index > spark.editorArea.tabs.length) {
+      return;
+    }
+
+    // Ctrl-1 to Ctrl-8. The user types in a 1-based key event; we convert that
+    // into a 0-based into into the tabs.
+    spark.editorArea.selectedTab = spark.editorArea.tabs[_binding.index - 1];
+  }
+}
+
+class _SpecificTabKeyBinding extends KeyBinding {
+  final int ONE_CODE = '1'.codeUnitAt(0);
+  final int EIGHT_CODE = '8'.codeUnitAt(0);
+
+  int index = -1;
+
+  _SpecificTabKeyBinding() : super('ctrl-1');
+
+  bool matches(KeyboardEvent event) {
+    // If the user typed in a 1 to an 8, change this binding to match that key.
+    // To match completely, the user will need to have used the `ctrl` modifier.
+    if (event.keyCode >= ONE_CODE && event.keyCode <= EIGHT_CODE) {
+      keyCode = event.keyCode;
+      index = keyCode - ONE_CODE + 1;
+    }
+
+    return super.matches(event);
+  }
 }
 
 class TabLastAction extends SparkAction {
@@ -1522,7 +1572,7 @@ class RunTestsAction extends SparkAction {
 void _handleUncaughtException(error, StackTrace stackTrace) {
   // We don't log the error object itself because of PII concerns.
   String errorDesc = error != null ? error.runtimeType.toString() : '';
-  String desc = '${errorDesc}\n${minimizeStackTrace(stackTrace)}'.trim();
+  String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
 }
