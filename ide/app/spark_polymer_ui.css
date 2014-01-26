@@ -10,11 +10,14 @@
 @import url("lib/ui/widgets/imageviewer.css");
 
 #saveStatus {
-  flex: 1;
   color: #aaa;
   margin-left: 6px;
   vertical-align: bottom;
   white-space: nowrap;
+}
+
+#searchBox {
+  flex: 1;
 }
 
 .fileview-filename-container {

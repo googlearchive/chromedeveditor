@@ -1,0 +1,66 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+#text-box {
+  outline: none;
+  border-radius: 12px;
+  border: 1px solid #cccccc;
+  padding: 2px 3px 2px 0px;
+  width: 100%;
+  font-size: 14px;
+}
+
+#text-box:focus {
+  border-color: #aaaaaa;
+}
+
+.suggest-item-list {
+  padding: 5px 0;
+}
+
+.suggest-item {
+  padding: 7px 20px;
+  font-size: 14px;
+}
+
+[highlighted=true].suggest-item {
+  background-color: #3a84c3;
+  color: white;
+}
+
+#loading-indicator {
+    position: relative;
+    height: 3px;
+    overflow: hidden;
+}
+
+#r0 {
+    position: absolute;
+    height: 100%;
+    width: 200%;
+    -webkit-animation-duration: 2s;
+    -webkit-animation-name: move;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+}
+
+@-webkit-keyframes move {
+    from {
+        left: -100%;
+    }
+    to {
+        left: 0;
+    }
+}
+
+#r1,#r2,#r3,#r4,#r5,#r6,#r7,#r8 {
+    height: 100%;
+    width: 12.5%;
+    float: left;
+}
+
+#r1,#r5 { background-color: #166bec; }
+#r2,#r6 { background-color: #d94530; }
+#r3,#r7 { background-color: #019d5a; }
+#r4,#r8 { background-color: #ffba03; }
