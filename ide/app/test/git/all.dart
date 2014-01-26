@@ -37,7 +37,6 @@ void defineTests() {
   git_objectstore_test.defineTests();
   git_pack_test.defineTests();
   git_pack_index_test.defineTests();
-  git_test.defineTests();
   git_utils_test.defineTests();
   zlib_test.defineTests();
 }
