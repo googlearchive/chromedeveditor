@@ -13,16 +13,9 @@ import 'spark_model.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
-  SparkPolymerUI.created() : super.created();
+  @observable bool developerMode = false;
 
-  void buildTestMenu() {
-    var menu = getShadowDomElement('#mainMenu');
-    menu.appendHtml(
-        """
-        <spark-menu-separator></spark-menu-separator>
-        <spark-menu-item action-id=\"run-tests\" iconsize=0 label=\"Run Tests\"></spark-menu-item>
-        """);
-  }
+  SparkPolymerUI.created() : super.created();
 
   void onMenuSelected(Event event, var detail) {
     final actionId = detail['item'];
