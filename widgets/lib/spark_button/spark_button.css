@@ -11,3 +11,7 @@ button {
 button:active {
   border: 1px solid #aaa;
 }
+
+button:focus {
+  outline: auto 5px -webkit-focus-ring-color;
+}
