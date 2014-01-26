@@ -126,21 +126,47 @@ class AceManager {
     return null;
   }
 
+  String _formatAnnotationItemText(String text, [String type]) {
+    String labelHtml = "";
+    if (type != null) {
+      String typeText = type.substring(0, 1).toUpperCase() + type.substring(1);
+      labelHtml = "<span class=ace_gutter-tooltip-label-$type>$typeText: </span>";
+    }
+    return "$labelHtml$text";
+  }
+
   void setMarkers(List<workspace.Marker> markers) {
     List<ace.Annotation> annotations = [];
     int numberLines = currentSession.screenLength;
 
     _recreateMiniMap();
+    Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
-      var annotation = new ace.Annotation(
-          text: marker.message,
-          row: marker.lineNum - 1, // Ace uses 0-based lines.
+
+      // Style the marker with the annotation type.
+      String markerHtml = _formatAnnotationItemText(marker.message,
+          annotationType);
+
+      // Ace uses 0-based lines.
+      int aceRow = marker.lineNum - 1;
+
+      // If there is an existing annotation, delete it and combine into one.
+      var existingAnnotation = annotationByRow[aceRow];
+      if (existingAnnotation != null) {
+        markerHtml = existingAnnotation.html
+            + "<div class=\"ace_gutter-tooltip-divider\"></div>$markerHtml";
+        annotations.remove(existingAnnotation);
+      }
+
+      ace.Annotation annotation = new ace.Annotation(
+          html: markerHtml,
+          row: aceRow,
           type: annotationType);
       annotations.add(annotation);
+      annotationByRow[aceRow] = annotation;
 
-      // TODO(ericarnold): This won't update on code folds.  Fix
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
       double markerPos =

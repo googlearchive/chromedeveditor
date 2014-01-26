@@ -58,6 +58,7 @@ class SparkPolymerDialog implements SparkDialog {
 
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
+  bool _developerMode;
 
   Future<bool> invokeSystemDialog(dialogFuture) {
     backdropShowing = true;
@@ -110,6 +111,7 @@ class SparkPolymer extends Spark {
 
   SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
+        _developerMode = developerMode,
         super(developerMode);
 
   @override
@@ -213,8 +215,9 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    // TODO: hide the 'run-tests' menu item if not in developer mode
-
+    if (_developerMode) {
+      _ui.buildTestMenu();
+    }
   }
 
   //

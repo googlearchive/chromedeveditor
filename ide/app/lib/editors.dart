@@ -16,6 +16,7 @@ import 'ace.dart' as ace;
 import 'event_bus.dart';
 import 'preferences.dart';
 import 'workspace.dart';
+import 'ui/widgets/imageviewer.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 500;
@@ -60,7 +61,10 @@ class EditorManager implements EditorProvider {
   final PreferenceStore _prefs;
   final EventBus _eventBus;
 
-  final int PREFS_EDITORSTATES_VERSION = 1;
+  static final int PREFS_EDITORSTATES_VERSION = 1;
+
+  static final int EDITOR_TYPE_IMAGE = 1;
+  static final int EDITOR_TYPE_TEXT = 2;
 
   // List of files opened in a tab.
   final List<_EditorState> _openedEditorStates = [];
@@ -74,6 +78,9 @@ class EditorManager implements EditorProvider {
 
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
+
+  static final RegExp _imageFileType =
+      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
 
   // TODO: Investigate dependency injection OR overridable singletons. We're
   // passing around too many ctor vars.
@@ -229,12 +236,18 @@ class EditorManager implements EditorProvider {
           if (state != _currentState) {
             return;
           }
-          // TODO: this explicit casting to AceEditor will go away in a future refactoring
-          (_editorMap[currentFile] as ace.TextEditor).setSession(state.session);
-          _selectedController.add(currentFile);
-          _aceContainer.switchTo(state.session, state.file);
-          _aceContainer.cursorPosition = state.cursorPosition;
-          persistState();
+          if (editorType(state.file.name) == EDITOR_TYPE_IMAGE) {
+            _selectedController.add(currentFile);
+            persistState();
+          } else {
+            // TODO: this explicit casting to AceEditor will go away in a future refactoring
+            ace.TextEditor textEditor = _editorMap[currentFile];
+            textEditor.setSession(state.session);
+            _selectedController.add(currentFile);
+            _aceContainer.switchTo(state.session, state.file);
+            _aceContainer.cursorPosition = state.cursorPosition;
+            persistState();
+          }
         });
       }
     }
@@ -270,10 +283,24 @@ class EditorManager implements EditorProvider {
     }
   }
 
+  int editorType(String filename) {
+    if (_imageFileType.hasMatch(filename)) {
+      return EDITOR_TYPE_IMAGE;
+    } else {
+      return EDITOR_TYPE_TEXT;
+    }
+  }
+
   // EditorProvider
   Editor createEditorForFile(File file) {
-    ace.TextEditor editor =
-        _editorMap[file] != null ? _editorMap[file] : new ace.TextEditor(_aceContainer, file);
+    Editor editor = _editorMap[file];
+    assert(editor == null);
+    if (editorType(file.name) == EDITOR_TYPE_IMAGE) {
+      editor = new ImageViewer(file);
+    } else {
+      editor = new ace.TextEditor(_aceContainer, file);
+    }
+
     _editorMap[file] = editor;
     openFile(file);
     editor.onDirtyChange.listen((_) {
@@ -346,11 +373,17 @@ class _EditorState {
     if (hasSession) {
       return new Future.value(this);
     } else {
-      return file.getContents().then((text) {
-        session = manager._aceContainer.createEditSession(text, file.name);
-        session.scrollTop = scrollTop;
-        return this;
-      });
+      if (manager.editorType(file.name) == EditorManager.EDITOR_TYPE_IMAGE) {
+        return file.getContents().then((text) {
+          return this;
+        });
+      } else {
+        return file.getContents().then((text) {
+          session = manager._aceContainer.createEditSession(text, file.name);
+          session.scrollTop = scrollTop;
+          return this;
+        });
+      }
     }
   }
 }
