@@ -13,7 +13,6 @@ import 'commands/merge_test.dart' as git_commands_merge_test;
 import 'commands/pull_test.dart' as git_commands_pull_test;
 import 'commands/push_test.dart' as git_commands_push_test;
 import 'file_operations_test.dart' as git_file_operations_test;
-import 'git_test.dart' as git_test;
 import 'object_test.dart' as git_object_test;
 import 'objectstore_test.dart' as git_objectstore_test;
 import 'pack_test.dart' as git_pack_test;
@@ -38,7 +37,6 @@ void defineTests() {
   git_objectstore_test.defineTests();
   git_pack_test.defineTests();
   git_pack_index_test.defineTests();
-  git_test.defineTests();
   git_utils_test.defineTests();
   zlib_test.defineTests();
 }
