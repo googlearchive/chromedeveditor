@@ -30,7 +30,7 @@ abstract class GitObject {
         return new BlobObject(sha, content);
       case ObjectTypes.TREE:
       case "Tree":
-        return new TreeObject(sha, content);
+        return new TreeObject(sha, content, rawObj);
       case ObjectTypes.COMMIT:
         return new CommitObject(sha, content, rawObj);
       case ObjectTypes.TAG:
@@ -87,9 +87,12 @@ class ParseError extends Error {
 class TreeObject extends GitObject {
 
   List<TreeEntry> entries;
+  LooseObject rawObj;
 
-  TreeObject( [String sha, Uint8List data]) : super(sha, data) {
+  TreeObject( [String sha, Uint8List data, LooseObject rawObj])
+      : super(sha, data) {
     this._type = ObjectTypes.TREE;
+    this.rawObj  = rawObj;
     _parse();
   }
 
@@ -161,9 +164,10 @@ class CommitObject extends GitObject {
   // raw commit object. This is needed in building pack files.
   LooseObject rawObj;
 
-  CommitObject(String sha, var data, [this.rawObj]) {
+  CommitObject(String sha, var data, [rawObj]) {
     this._type = ObjectTypes.COMMIT;
     this._sha = sha;
+    this.rawObj = rawObj;
 
     if (data is Uint8List) {
       this.data = UTF8.decode(data);
@@ -255,8 +259,14 @@ class TagObject extends GitObject {
  * A loose git object.
  */
 class LooseObject {
-  int _size;
-  String _type;
+  int size;
+  int type;
+
+  static Map<String, int> _typeMap = {
+    ObjectTypes.COMMIT : 1,
+    ObjectTypes.TREE : 2,
+    ObjectTypes.BLOB : 3
+  };
 
   // Represents either an ArrayBuffer or a string representation of byte
   //stream.
@@ -289,7 +299,7 @@ class LooseObject {
       this.data = buf.substring(i + 1, buf.length);
     }
     List<String> parts = header.split(' ');
-    this._type = parts[0];
-    this._size = int.parse(parts[1]);
+    this.type = _typeMap[parts[0]];
+    this.size = int.parse(parts[1]);
   }
 }
