@@ -33,7 +33,6 @@ class Push {
     return store.getConfig().then((GitConfig config) {
       String url = config.url != null ? config.url : options.repoUrl;
 
-      url = 'https://github.com/gaurave/test-app.git';
       if (url == null) {
         // TODO throw push_no_remote.
         return null;

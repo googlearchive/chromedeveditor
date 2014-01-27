@@ -377,20 +377,20 @@ class ObjectStore {
           return _getCommits(remoteRef, remoteShas, sha);
 
         }, onError: (e) {
-          print('some error');
           // no commits to push.
-          // TODO throw error.
+          throw "no commits to push.";
         });
       });
     });
   }
 
-  Future<CommitPushEntry> _getCommits(GitRef remoteRef, Map<String, bool> remoteShas,
-      String sha) {
+  Future<CommitPushEntry> _getCommits(GitRef remoteRef, Map<String, bool>
+      remoteShas, String sha) {
     var commits = [];
     Future<CommitPushEntry> getNextCommit(String sha) {
 
-      return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commitObj) {
+      return retrieveObject(sha, ObjectTypes.COMMIT).then((
+          CommitObject commitObj) {
 
         Completer completer = new Completer();
         commits.add(commitObj);

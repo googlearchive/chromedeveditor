@@ -8,8 +8,6 @@ library git.pack.index;
 import 'dart:core';
 import 'dart:typed_data';
 
-import 'utils.dart';
-
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'pack.dart';
