@@ -11,7 +11,7 @@ dependencies:
   archive: 1.0.8
   bootjack: any
   browser: any
-  chrome: '>=0.4.2 <0.5.0'
+  chrome: '>=0.4.5 <0.5.0'
   cipher: '>=0.4.0 <0.5.0'
   compiler_unsupported: 0.7.0
   crypto: any
