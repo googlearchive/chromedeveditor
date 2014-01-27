@@ -57,7 +57,7 @@ class SparkSuggestBox extends SparkWidget {
   /// the [oracle].
   @observable bool isLoading;
   /// Is the suggestion list popup visible?
-  @observable bool suggestionsOpened;
+  @observable bool suggestionsOpened = false;
 
   StreamSubscription _oracleSub;
 
