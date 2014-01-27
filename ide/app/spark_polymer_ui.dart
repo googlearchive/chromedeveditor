@@ -25,8 +25,6 @@ class SparkPolymerUI extends SparkWidget {
             f, forceOpen: true, replaceCurrent: false, switchesTab: true));
   }
 
-  SparkPolymerUI.created() : super.created();
-
   void onMenuSelected(Event event, var detail) {
     final actionId = detail['item'];
     final action = SparkModel.instance.actionManager.getAction(actionId);
