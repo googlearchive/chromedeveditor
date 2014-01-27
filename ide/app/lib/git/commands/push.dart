@@ -17,7 +17,7 @@ import '../utils.dart';
  */
 class Push {
 
-  Future push(GitOptions options) {
+  static Future push(GitOptions options) {
     ObjectStore store = options.store;
     String username = options.username;
     String password = options.password;
@@ -43,13 +43,18 @@ class Push {
       return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
         return store.getCommitsForPush(refs, config.remoteHeads).then(
             (commits) {
-              GitRef ref;
-          return Pack.buildPack(commits, store).then((packData) {
-            return fetcher.pushRefs([ref], packData, remotePushProgress).then(
-                (_) {
-                  config.remoteHeads[ref.name] = ref.head;
-                  config.url = url;
-                  return store.setConfig(config);
+          if (commits == null) {
+            // no commits to push.
+            // TODO(grv) : throw Custom exceptions.
+            throw "no commits to push.";
+          }
+          PackBuilder builder = new PackBuilder(commits.commits, store);
+          return builder.build().then((packData) {
+            return fetcher.pushRefs([commits.ref], packData,
+                remotePushProgress).then((_) {
+              config.remoteHeads[commits.ref.name] = commits.ref.head;
+              config.url = url;
+              return store.setConfig(config);
             });
           });
         });

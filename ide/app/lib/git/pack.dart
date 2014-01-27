@@ -7,15 +7,19 @@ library git.pack;
 import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
+import 'dart:html';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
 
+import 'file_operations.dart';
 import 'object.dart';
 import 'objectstore.dart';
+import 'utils.dart';
 import 'zlib.dart';
 
 /**
@@ -420,13 +424,138 @@ class Pack {
 
     return resultData;
   }
+}
 
-  static Future buildPack(List<CommitObject> commits, repo) {
-   // TODO(grv) : implement
+class PackBuilder {
 
-    throw "to be implemented";
+  List<CommitObject> _commits;
+  ObjectStore _store;
+  List _packed;
+  Map<String, bool> _visited;
+
+
+  PackBuilder(this._commits, this._store) {
+    _packed = [];
+    _visited = {};
+  }
+
+  Future build() {
+    return Future.forEach(_commits, (CommitObject commit) {
+      _packIt(commit.rawObj);
+      return _walkTree(commit.treeSha);
+    }).then((_) {
+      return _finishPack();
+    });
+  }
+
+  Uint8List _packTypeSizeBits(int type, int size) {
+    int typeBits = type;
+    int shifter = size;
+    List<int> bytes = [];
+    int idx = 0;
+
+    bytes.add((typeBits << 4) | (shifter & 0xf));
+    shifter = (shifter >> 4);
+
+    while (shifter != 0) {
+      bytes[idx] |= 0x80;
+      bytes.add((shifter & 0x7f));
+      idx++;
+      shifter >>= 7;
+    }
+    return new Uint8List.fromList(bytes);
+  }
+
+  void _packIt(LooseObject object) {
+
+    var buf = object.data;
+    List<int> data;
+    if  (buf is chrome.ArrayBuffer) {
+      data = new Uint8List(buf);
+    } else if (buf is Uint8List) {
+      data = buf;
+    } else {
+      // assume it's a string.
+      data = UTF8.encoder.convert(buf);
+    }
+    ByteBuffer compressed;
+    compressed = new Uint8List.fromList(Zlib.deflate(data).buffer
+        .getBytes()).buffer;
+    _packed.add(_packTypeSizeBits(object.type, data.length));
+    _packed.add(compressed);
+  }
+
+  Future _finishPack() {
+
+    List packedObjects = [];
+    Uint8List buf = new Uint8List(12);
+    ByteData dataView = new ByteData.view(buf.buffer);
+
+    // 'PACK'
+    dataView.setUint32(0, 0x5041434b);
+    // version
+    dataView.setUint32(4, 2);
+    // numer of packed objects.
+    dataView.setUint32(8, (_packed.length / 2).floor());
+
+    _packed.insert(0, dataView);
+
+    return FileOps.readBlob(new Blob(_packed), 'ArrayBuffer').then(
+        (Uint8List data) {
+      List<int> sha = getSha(data, true);
+      List<Uint8List> finalPack = [];
+      finalPack.add(data);
+      finalPack.add(new Uint8List.fromList(sha));
+      return FileOps.readBlob(new Blob(finalPack), 'ArrayBuffer');
+    });
+  }
+
+  Future _walkTree(String treeSha) {
+    if (_visited[treeSha]) {
+      return new Future.value();
+    }
+
+    _visited[treeSha] = true;
+    List<int> shaBytes = shaToBytes(treeSha);
+    // assumes that if it's packed, the remote knows about the object since
+    // all stored packes come from the remote.
+    try {
+      _store.findPackedObject(shaBytes);
+      return new Future.value();
+    } catch (e) {
+      return _packTree(treeSha);
+    };
+  }
+
+  Future _packTree(String treeSha) {
+    return _store.retrieveObject(treeSha, 'Tree').then((TreeObject tree) {
+      return Future.forEach(tree.entries, (TreeEntry entry) {
+        String nextSha = shaBytesToString(entry.sha);
+        if (entry.isBlob) {
+          if (_visited[nextSha]) {
+            return new Future.value();
+          } else {
+            _visited[nextSha] = true;
+            try {
+              _store.findPackedObject(entry.sha);
+              return new Future.value();
+            } catch (e) {
+              return _store.retrieveObject(nextSha, 'Raw').then((object) {
+                return _packIt(object);
+              });
+            }
+          }
+        } else {
+          return _walkTree(nextSha);
+        }
+
+      }).then((_) {
+        return _packIt(tree.rawObj);
+      });
+    });
   }
 }
+
 
 /**
  * Defines a delta data object.

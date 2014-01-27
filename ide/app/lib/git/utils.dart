@@ -85,6 +85,21 @@ Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
 }
 
 /**
+ * Return sha for the given data.
+ */
+
+dynamic getSha(dynamic data, [bool asBytes]) {
+  crypto.SHA1 sha1 = new crypto.SHA1();
+  sha1.add(data);
+  Uint8List sha = sha1.close();
+  if (asBytes) {
+    return sha;
+  } else {
+    return shaBytesToString(sha);
+  }
+}
+
+/**
  * An empty function.
  */
 void nopFunction() => null;
