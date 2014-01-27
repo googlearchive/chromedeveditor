@@ -140,21 +140,19 @@ class Index {
    */
    Future<String> walkFilesAndUpdateIndex(chrome.DirectoryEntry root) {
 
-    return FileOps.listFiles(root).then(
-        (List<chrome.ChromeFileEntry> entries) {
+    return FileOps.listFiles(root).then((List<chrome.ChromeFileEntry> entries) {
       if (entries.isEmpty) {
         return new Future.value();
       }
 
-      return Future.forEach(entries, (chrome.ChromeFileEntry entry) {
+      return Future.forEach(entries, (chrome.Entry entry) {
         if (entry.name == '.git') {
           return new Future.value();
         }
 
         if (entry.isDirectory) {
-          return walkFilesAndUpdateIndex(entry as chrome.DirectoryEntry)
-              .then((String sha) {
-                return new Future.value();
+          return walkFilesAndUpdateIndex(entry as chrome.DirectoryEntry).then((String sha) {
+            return new Future.value();
           });
         } else {
           return getShaForEntry(entry, 'blob').then((String sha) {
@@ -163,7 +161,7 @@ class Index {
               status.path = entry.fullPath;
               status.sha = sha;
               status.size = data.size;
-               return updateIndexForEntry(status);
+                return updateIndexForEntry(status);
             });
           });
         }
