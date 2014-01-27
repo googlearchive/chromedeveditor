@@ -8,12 +8,22 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
+import 'package:spark_widgets/spark_suggest/spark_suggest_box.dart';
 
 import 'spark_model.dart';
+import 'lib/search.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
   @observable bool developerMode = false;
+  @observable SuggestOracle searchOracle;
+
+  SparkPolymerUI.created() : super.created() {
+    searchOracle = new SearchOracle(
+        () => SparkModel.instance.workspace,
+        (f) => SparkModel.instance.editorArea.selectFile(
+            f, forceOpen: true, replaceCurrent: false, switchesTab: true));
+  }
 
   SparkPolymerUI.created() : super.created();
 

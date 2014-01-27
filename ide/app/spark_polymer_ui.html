@@ -14,6 +14,7 @@
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
+<link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <!--link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html"-->
@@ -35,6 +36,10 @@
       <spark-status id="sparkStatus"></spark-status>
 
       <span id="saveStatus" class="titleFont"></span>
+
+      <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
+          placeholder="Search...">
+      </spark-suggest-box>
 
       <div id="toolbarRight" class="titleFont">
         <spark-menu-button id="mainMenu"

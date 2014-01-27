@@ -22,6 +22,7 @@ import 'git/all.dart' as git_all_test;
 import 'preferences_test.dart' as preferences_test;
 import 'scm_test.dart' as scm_test;
 import 'sdk_test.dart' as sdk_test;
+import 'search_test.dart' as search_test;
 import 'server_test.dart' as server_test;
 import 'tcp_test.dart' as tcp_test;
 import 'utils_test.dart' as utils_test;
@@ -46,6 +47,7 @@ void defineTests() {
   preferences_test.defineTests();
   scm_test.defineTests();
   sdk_test.defineTests();
+  search_test.defineTests();
   server_test.defineTests();
   tcp_test.defineTests();
   utils_test.defineTests();

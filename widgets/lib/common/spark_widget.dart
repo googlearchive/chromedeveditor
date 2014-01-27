@@ -16,6 +16,12 @@ class SparkWidget extends PolymerElement {
   static const CSS_ENABLED = "enabled";
   static const CSS_DISABLED = "disabled";
 
+  // Popular key codes
+  static const DOWN_KEY = 40;
+  static const UP_KEY = 38;
+  static const ENTER_KEY = 13;
+  static const ESCAPE_KEY = 27;
+
   SparkWidget.created() : super.created();
 
   @override
