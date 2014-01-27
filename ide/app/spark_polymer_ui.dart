@@ -15,7 +15,7 @@ import 'lib/search.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
-
+  @observable bool developerMode = false;
   @observable SuggestOracle searchOracle;
 
   SparkPolymerUI.created() : super.created() {
@@ -25,14 +25,7 @@ class SparkPolymerUI extends SparkWidget {
             f, forceOpen: true, replaceCurrent: false, switchesTab: true));
   }
 
-  void buildTestMenu() {
-    var menu = getShadowDomElement('#mainMenu');
-    menu.appendHtml(
-        """
-        <spark-menu-separator></spark-menu-separator>
-        <spark-menu-item action-id=\"run-tests\" iconsize=0 label=\"Run Tests\"></spark-menu-item>
-        """);
-  }
+  SparkPolymerUI.created() : super.created();
 
   void onMenuSelected(Event event, var detail) {
     final actionId = detail['item'];

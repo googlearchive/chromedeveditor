@@ -61,6 +61,11 @@
           <spark-menu-separator></spark-menu-separator>
           <spark-menu-item action-id="settings" iconsize=0 label="Settings...">
           </spark-menu-item>
+          <template if="{{developerMode}}">
+            <spark-menu-separator></spark-menu-separator>
+            <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">
+            </spark-menu-item>
+          </template>
           <spark-menu-separator></spark-menu-separator>
           <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
           </spark-menu-item>
