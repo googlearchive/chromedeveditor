@@ -42,7 +42,12 @@ class SparkPolymerDialog implements SparkDialog {
     });
   }
 
-  void show() => _dialogElement.toggle();
+  void show() {
+    if (!_dialogElement.opened) {
+      _dialogElement.toggle();
+      Timer.run(() => _dialogElement.applyFocus());
+    }
+  }
 
   // TODO(ussuri): Currently, this never gets called (the dialog closes in
   // another way). Make symmetrical when merging Polymer and non-Polymer.
@@ -53,6 +58,7 @@ class SparkPolymerDialog implements SparkDialog {
 
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
+  bool _developerMode;
 
   Future<bool> invokeSystemDialog(dialogFuture) {
     backdropShowing = true;
@@ -105,6 +111,7 @@ class SparkPolymer extends Spark {
 
   SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
+        _developerMode = developerMode,
         super(developerMode);
 
   @override
@@ -208,8 +215,9 @@ class SparkPolymer extends Spark {
 
   @override
   void buildMenu() {
-    // TODO: hide the 'run-tests' menu item if not in developer mode
-
+    if (_developerMode) {
+      _ui.buildTestMenu();
+    }
   }
 
   //

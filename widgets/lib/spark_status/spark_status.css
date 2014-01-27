@@ -11,7 +11,7 @@
 }
 
 .throbber {
-	opacity: 0;
+  opacity: 0;
   display: inline-block;
   color: #aaa;
   min-width: 26px;
@@ -29,7 +29,7 @@
 }
 
 .label {
-	text-overflow: ellipsis;
+  text-overflow: ellipsis;
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -43,7 +43,6 @@
 }
 
 .default {
-
 }
 
 .progressStyle {
@@ -51,5 +50,4 @@
 }
 
 .temporary {
-
 }

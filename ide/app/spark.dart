@@ -370,6 +370,9 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
+    actionManager.registerAction(new TabPreviousAction(this));
+    actionManager.registerAction(new TabNextAction(this));
+    actionManager.registerAction(new FileCloseAction(this));
     actionManager.registerAction(new FileExitAction(this));
 
     actionManager.registerKeyListener();
@@ -1048,6 +1051,34 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isTopLevel(object);
 }
 
+class TabPreviousAction extends SparkAction {
+  TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {
+    defaultBinding("ctrl-shift-[");
+  }
+
+  void _invoke([Object context]) => spark.editorArea.gotoPreviousTab();
+}
+
+class TabNextAction extends SparkAction {
+  TabNextAction(Spark spark) : super(spark, "tab-next", "Next Tab") {
+    defaultBinding("ctrl-shift-]");
+  }
+
+  void _invoke([Object context]) => spark.editorArea.gotoNextTab();
+}
+
+class FileCloseAction extends SparkAction {
+  FileCloseAction(Spark spark) : super(spark, "file-close", "Close") {
+    defaultBinding("ctrl-w");
+  }
+
+  void _invoke([Object context]) {
+    if (spark.editorArea.selectedTab != null) {
+      spark.editorArea.remove(spark.editorArea.selectedTab);
+    }
+  }
+}
+
 class FileExitAction extends SparkAction {
   FileExitAction(Spark spark) : super(spark, "file-exit", "Quit") {
     macBinding("ctrl-q");
@@ -1252,7 +1283,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
-  InputElement _commitMessageElement;
+  TextAreaElement _commitMessageElement;
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Git Commit…", dialog) {

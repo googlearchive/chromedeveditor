@@ -4,7 +4,6 @@
 
 :host {
   display: block;
-  width: 6px;
   border-left: 1px solid #DDD;
   border-right: 1px solid #DDD;
   cursor: col-resize;
@@ -12,17 +11,15 @@
 }
 
 :host(.horizontal), /*BUG #733*/:host.horizontal {
-    width: auto;
-    height: 6px;
-    cursor: row-resize;
+  cursor: row-resize;
 }
 
 .vertical-handle {
-    background: url('handle_vert.png') no-repeat center;
+  background: url('handle_vert.png') no-repeat center;
 }
 
 .horizontal-handle {
-    background: url('handle_horiz.png') no-repeat center;
+  background: url('handle_horiz.png') no-repeat center;
 }
 
 :host:hover, :host(.active), /*BUG #733*/:host.active {

@@ -230,12 +230,14 @@ class SparkOverlay extends SparkWidget {
   // scrim.
   void captureHandler(MouseEvent e) {
     // TODO(terry): Hack to work around lightdom or event.path not yet working.
-    if (!autoCloseDisabled && !isPointInOverlay(e.client)) {
+    if (!isPointInOverlay(e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;
       e.stopImmediatePropagation();
       e.preventDefault();
 
-      autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
+      if (!autoCloseDisabled) {
+        autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
+      }
     }
   }
 

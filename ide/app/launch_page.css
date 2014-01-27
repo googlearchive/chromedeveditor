@@ -1,0 +1,71 @@
+/* Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Lucida Grande, Arial, sans-serif;
+}
+
+#controls {
+  padding: 3px;
+  border-bottom: solid 1px #ccc;
+}
+
+#controls button,
+#controls input {
+  font-size: 14px;
+  line-height: 24px;
+  border-radius: 2px;
+  padding: 0 6px;
+}
+
+button,
+button[disabled]:hover {
+  border: solid 1px transparent;
+  background: transparent;
+}
+
+button:hover {
+  border-color: #ccc;
+  background: -webkit-linear-gradient(top, #f2f2f2 0%, #cccccc 99%);
+}
+
+#controls #reload {
+  font-size: 20px;
+}
+
+#location {
+  border: solid 1px #ccc;
+  padding: 2px;
+  width: 100%;
+  -webkit-box-sizing: border-box;
+}
+
+#controls {
+  display: -webkit-flex;
+  -webit-flex-direction: column;
+}
+
+#controls #location-form {
+  -webkit-flex: 1;
+  display: -webkit-flex;
+  -webit-flex-direction: column;
+}
+
+#controls #center-column {
+  -webkit-flex: 1;
+}
+
+/* The reload button turns into a spinning trobber */
+.loading #reload {
+  -webkit-animation: spinner-animation .5s infinite linear;
+  -webkit-transform-origin: 50% 55.5%;
+}
+
+@-webkit-keyframes spinner-animation {
+  0% { -webkit-transform: rotate(0deg); }
+  100% {-webkit-transform: rotate(360deg); }
+}
+

@@ -18,7 +18,7 @@ import 'package:crypto/crypto.dart' as crypto;
  */
 Uint8List shaToBytes(String sha) {
   List<int> bytes = [];
-  for (var i = 0; i < sha.length; i+=2) {
+  for (var i = 0; i < sha.length; i += 2) {
     bytes.add(int.parse('0x' + sha[i] + sha[i+1]));
   }
   return new Uint8List.fromList(bytes);
@@ -27,7 +27,7 @@ Uint8List shaToBytes(String sha) {
 /**
  * Converts [shaBytes] to HEX string.
  */
-String shaBytesToString(Uint8List shaBytes) {
+String shaBytesToString(List shaBytes) {
   String sha = "";
   shaBytes.forEach((int byte) {
     String shaPart = byte.toRadixString(16);
