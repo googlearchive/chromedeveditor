@@ -12,8 +12,6 @@ import '../options.dart';
 import '../pack.dart';
 import '../utils.dart';
 
-import 'dart:html';
-
 /**
  * This class implements the git push command.
  */
@@ -44,18 +42,20 @@ class Push {
       HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
           password);
       return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
-        print('fetched refs');
         return store.getCommitsForPush(refs, config.remoteHeads).then(
             (commits) {
-              GitRef ref;
-              window.console.log(commits);
-              return new Future.value();
-          return Pack.buildPack(commits, store).then((packData) {
-            return fetcher.pushRefs([ref], packData, remotePushProgress).then(
-                (_) {
-                  config.remoteHeads[ref.name] = ref.head;
-                  config.url = url;
-                  return store.setConfig(config);
+          if (commits == null) {
+            // no commits to push.
+            // TODO(grv) : throw Custom exceptions.
+            throw "no commits to push.";
+          }
+          PackBuilder builder = new PackBuilder(commits.commits, store);
+          return builder.build().then((packData) {
+            return fetcher.pushRefs([commits.ref], packData,
+                remotePushProgress).then((_) {
+              config.remoteHeads[commits.ref.name] = commits.ref.head;
+              config.url = url;
+              return store.setConfig(config);
             });
           });
         });

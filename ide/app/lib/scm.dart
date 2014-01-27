@@ -245,9 +245,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future checkoutBranch(String branchName) {
-
-    print('in checkout');
-    return push();
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
@@ -262,7 +259,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future push() {
-
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       options.username = 'gaurave';
