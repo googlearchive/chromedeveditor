@@ -152,6 +152,21 @@ class AceManager {
       // Ace uses 0-based lines.
       int aceRow = marker.lineNum - 1;
 
+
+      var countingOffset = 0;
+      for (var line = 0; line <= aceRow; line++) {
+        countingOffset += currentSession.getRowLength(line);
+      }
+
+      if (countingOffset < marker.charStart) {
+        // TODO(ericarnold): uh oh
+      }
+
+      int aceColumn = marker.charStart - countingOffset;
+
+      // TODO(ericarnold): TEMP
+      markerHtml += "($aceColumn)";
+
       // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
       if (existingAnnotation != null) {
@@ -170,7 +185,8 @@ class AceManager {
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
       double markerPos =
-          currentSession.documentToScreenRow(marker.lineNum, 0) / numberLines * 100.0;
+          currentSession.documentToScreenRow(marker.lineNum, aceColumn)
+          / numberLines * 100.0;
 
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
