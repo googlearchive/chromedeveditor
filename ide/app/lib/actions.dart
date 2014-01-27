@@ -315,38 +315,20 @@ abstract class Action {
   Action(this.id, this.name);
 
   /**
-   * Set a default (cross-platform) binding.
+   * Add a key binding to this [Action] instance. If an OS specific key binding
+   * is provided, and we're on the indicated platform, then that key binding
+   * will be used. Otherwise, the [defaultBinding] will be used.
    */
-  void defaultBinding(String str) {
-    if (bindings.isEmpty) {
-      bindings.add(new KeyBinding(str));
-    }
-  }
-
-  /**
-   * Set a Linux (and Linux-OS like) specific binding.
-   */
-  void linuxBinding(String str) {
-    if (isLinuxLike()) {
-      bindings.add(new KeyBinding(str));
-    }
-  }
-
-  /**
-   * Set a Mac specific binding.
-   */
-  void macBinding(String str) {
-    if (isMac()) {
-      bindings.add(new KeyBinding(str));
-    }
-  }
-
-  /**
-   * Set a Windows specific binding.
-   */
-  void winBinding(String str) {
-    if (isWin()) {
-      bindings.add(new KeyBinding(str));
+  void addBinding(String defaultBinding,
+                  {String macBinding, String linuxBinding, String winBinding}) {
+    if (macBinding != null && isMac()) {
+      bindings.add(new KeyBinding(macBinding));
+    } else if (winBinding != null && isWin()) {
+      bindings.add(new KeyBinding(winBinding));
+    } else if (linuxBinding != null && isLinuxLike()) {
+      bindings.add(new KeyBinding(linuxBinding));
+    } else {
+      bindings.add(new KeyBinding(defaultBinding));
     }
   }
 

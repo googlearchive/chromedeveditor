@@ -889,7 +889,7 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
 
 class FileOpenAction extends SparkAction {
   FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
-    defaultBinding("ctrl-o");
+    addBinding("ctrl-o");
   }
 
   void _invoke([Object context]) {
@@ -903,7 +903,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
 
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File…", dialog) {
-    defaultBinding("ctrl-n");
+    addBinding("ctrl-n");
     _nameElement = _triggerOnReturn("#fileName");
   }
 
@@ -947,7 +947,7 @@ class FileNewAsAction extends SparkAction {
 
 class FileSaveAction extends SparkAction {
   FileSaveAction(Spark spark) : super(spark, "file-save", "Save") {
-    defaultBinding("ctrl-s");
+    addBinding("ctrl-s");
   }
 
   void _invoke([Object context]) => spark.editorManager.saveAll();
@@ -1055,12 +1055,8 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
 
 class TabPreviousAction extends SparkAction {
   TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {
-    bindings.add(new KeyBinding('ctrl-shift-['));
-    if (utils.isMac()) {
-      bindings.add(new KeyBinding('macctrl-shift-tab'));
-    } else {
-      bindings.add(new KeyBinding('ctrl-shift-tab'));
-    }
+    addBinding('ctrl-shift-[');
+    addBinding('ctrl-shift-tab', macBinding: 'macctrl-shift-tab');
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoPreviousTab();
@@ -1068,12 +1064,8 @@ class TabPreviousAction extends SparkAction {
 
 class TabNextAction extends SparkAction {
   TabNextAction(Spark spark) : super(spark, "tab-next", "Next Tab") {
-    bindings.add(new KeyBinding('ctrl-shift-]'));
-    if (utils.isMac()) {
-      bindings.add(new KeyBinding('macctrl-tab'));
-    } else {
-      bindings.add(new KeyBinding('ctrl-tab'));
-    }
+    addBinding('ctrl-shift-]');
+    addBinding('ctrl-tab', macBinding: 'macctrl-tab');
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoNextTab();
@@ -1120,7 +1112,7 @@ class _SpecificTabKeyBinding extends KeyBinding {
 
 class TabLastAction extends SparkAction {
   TabLastAction(Spark spark) : super(spark, "tab-last", "Last Tab") {
-    defaultBinding("ctrl-9");
+    addBinding("ctrl-9");
   }
 
   void _invoke([Object context]) {
@@ -1132,7 +1124,7 @@ class TabLastAction extends SparkAction {
 
 class TabCloseAction extends SparkAction {
   TabCloseAction(Spark spark) : super(spark, "tab-close", "Close") {
-    defaultBinding("ctrl-w");
+    addBinding("ctrl-w");
   }
 
   void _invoke([Object context]) {
@@ -1144,8 +1136,7 @@ class TabCloseAction extends SparkAction {
 
 class FileExitAction extends SparkAction {
   FileExitAction(Spark spark) : super(spark, "file-exit", "Quit") {
-    macBinding("ctrl-q");
-    winBinding("ctrl-shift-f4");
+    addBinding('ctrl-q', linuxBinding: 'ctrl-shift-q');
   }
 
   void _invoke([Object context]) {
@@ -1158,7 +1149,7 @@ class FileExitAction extends SparkAction {
 class ApplicationRunAction extends SparkAction implements ContextAction {
   ApplicationRunAction(Spark spark) : super(
       spark, "application-run", "Run Application") {
-    defaultBinding("ctrl-r");
+    addBinding("ctrl-r");
 
     enabled = false;
 
@@ -1192,7 +1183,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 class PrevMarkerAction extends SparkAction {
   PrevMarkerAction(Spark spark) : super(
       spark, "marker-prev", "Previous Marker") {
-    defaultBinding("ctrl-shift-p");
+    addBinding("ctrl-shift-p");
   }
 
   void _invoke([Object context]) {
@@ -1203,7 +1194,9 @@ class PrevMarkerAction extends SparkAction {
 class NextMarkerAction extends SparkAction {
   NextMarkerAction(Spark spark) : super(
       spark, "marker-next", "Next Marker") {
-    defaultBinding("ctrl-p");
+    // TODO: we probably don't want to bind to 'print'. Perhaps there's a good
+    // keybinding we can borrow from chrome?
+    addBinding("ctrl-p");
   }
 
   void _invoke([Object context]) {
@@ -1217,7 +1210,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
 
   FolderNewAction(Spark spark, Element dialog)
       : super(spark, "folder-new", "New Folder…", dialog) {
-    defaultBinding("ctrl-shift-n");
+    addBinding("ctrl-shift-n");
     _nameElement = _triggerOnReturn("#folderName");
   }
 
