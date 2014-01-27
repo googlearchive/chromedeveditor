@@ -9,6 +9,7 @@
   padding: 2px 3px 2px 0px;
   width: 100%;
   font-size: 14px;
+  font-family: Helvetica;
 }
 
 #text-box:focus {

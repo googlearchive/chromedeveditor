@@ -17,7 +17,10 @@
 }
 
 #searchBox {
-  flex: 1;
+  display: inline-block;
+  max-width: 250px;
+  position: relative;
+  top: 6px;
 }
 
 .fileview-filename-container {
@@ -281,5 +284,12 @@
 }
 
 #toolbarRight {
+  position: absolute;
+  right: 0;
+}
 
+#mainMenu {
+  position: relative;
+  top: 3px;
+}
 }
