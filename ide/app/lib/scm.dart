@@ -261,8 +261,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future push() {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
-      options.username = 'gaurave';
-      options.password = 'aiabti123';
       return Push.push(options);
     });
   }
