@@ -174,8 +174,8 @@ class SparkPolymer extends Spark {
     // Listen for job manager events.
     jobManager.onChange.listen((JobManagerEvent event) {
       if (event.started) {
-          statusComponent.spinning = true;
-          statusComponent.progressMessage = event.job.name;
+        statusComponent.spinning = true;
+        statusComponent.progressMessage = event.job.name;
       } else if (event.finished) {
         statusComponent.spinning = false;
         statusComponent.progressMessage = null;
@@ -184,11 +184,8 @@ class SparkPolymer extends Spark {
 
     // Listen for editing area name change events.
     editorArea.onNameChange.listen((name) {
-      if (editorArea.shouldDisplayName) {
-        statusComponent.defaultMessage = name;
-      } else {
-        statusComponent.defaultMessage = null;
-      }
+      statusComponent.defaultMessage =
+          editorArea.shouldDisplayName ? name : null;
     });
   }
 
