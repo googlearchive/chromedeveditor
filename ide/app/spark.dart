@@ -36,6 +36,7 @@ import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
+import 'services/services.dart';
 
 import 'spark_model.dart';
 
@@ -88,6 +89,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   final bool developerMode;
 
+  final Services services = new Services();
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
 
