@@ -86,7 +86,7 @@ class Commit {
     if (parent.isEmpty) {
       return null;
     } else {
-      return store.retrieveObject(parent, ObjectTypes.COMMIT).then(
+      return store.retrieveObject(parent, ObjectTypes.COMMIT_STR).then(
           (CommitObject parentCommit) {
         String oldTree = parentCommit.treeSha;
         if (oldTree == sha) {
@@ -123,21 +123,10 @@ class Commit {
       String refName) {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
-    String name = options.name;
-    String email = options.email;
-    String commitMsg = options.commitMessage;
-
-    if (name == null) {
-      name = "";
-    }
-
-    if (email == null) {
-      email = "";
-    }
-
-    if (commitMsg == null) {
-      commitMsg = "";
-    }
+    String name = options.name == null ? "" : options.name;
+    String email = options.email == null ? "" : options.email;
+    String commitMsg = options.commitMessage == null ? ""
+        : options.commitMessage;
 
     return walkFiles(dir, store).then((String sha) {
       return checkTreeChanged(store, parent, sha).then((_) {
@@ -158,17 +147,12 @@ class Commit {
           }
         }
 
-        commitContent.write('author ${name}');
-        commitContent.write(' <${email}> ');
-        commitContent.write(dateString);
-        commitContent.write('\n');
-        commitContent.write('committer ${name}');
-        commitContent.write(' <${email}> ');
-        commitContent.write(dateString);
+        commitContent.write('author ${name} <${email}> ${dateString}\n');
+        commitContent.write('committer ${name} <${email}> ${dateString}');
         commitContent.write('\n\n${commitMsg}\n');
 
         return store.writeRawObject(
-            ObjectTypes.COMMIT, commitContent.toString()).then(
+            ObjectTypes.COMMIT_STR, commitContent.toString()).then(
                 (String commitSha) {
           return FileOps.createFileWithContent(dir, '.git/${refName}',
               commitSha + '\n', 'Text').then((_) {

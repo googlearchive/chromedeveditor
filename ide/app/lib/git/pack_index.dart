@@ -10,7 +10,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart' as crypto;
 
-import 'pack.dart';
+import 'object.dart';
 
 /**
  * This class partially parses the data contained in a pack-*.idx file, and
@@ -148,7 +148,7 @@ class PackIndex {
   /**
    * Creates a pack file index and returns the bytestream.
    */
-  static Uint8List writePackIndex(List<PackObject> objects, List<int> packSha) {
+  static Uint8List writePackIndex(List<PackedObject> objects, List<int> packSha) {
     int size = 4 + 4 + (256 * 4) + (objects.length * 20) + (objects.length * 4)
         + (objects.length * 4) + (20 * 2);
 
@@ -189,21 +189,21 @@ class PackIndex {
     byteOffset += (256 * 4);
 
     // Write list of shas.
-    objects.forEach((PackObject obj) {
+    objects.forEach((PackedObject obj) {
       for (int j = 0; j < 20; ++j) {
         data.setUint8(byteOffset++, obj.sha[j]);
       }
     });
 
     // Write list of crcs.
-    objects.forEach((PackObject obj) {
+    objects.forEach((PackedObject obj) {
       data.setUint32(byteOffset, obj.crc);
       byteOffset +=4;
     });
 
     // Write list of offsets. Only upto 32 bit long offsets are supported.
     // TODO(grv) : add support for longer offsets(maybe).
-    objects.forEach((PackObject obj) {
+    objects.forEach((PackedObject obj) {
       data.setUint32(byteOffset, obj.offset);
       byteOffset += 4;
     });

@@ -78,7 +78,7 @@ class Clone {
 
   Future _createCurrentTreeFromPack(chrome.DirectoryEntry dir, ObjectStore store,
       String headSha) {
-    return store.retrieveObject(headSha, ObjectTypes.COMMIT).then((commit) {
+    return store.retrieveObject(headSha, ObjectTypes.COMMIT_STR).then((commit) {
           return ObjectUtils.expandTree(dir, store, commit.treeSha);
     });
   }

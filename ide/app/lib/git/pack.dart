@@ -18,50 +18,10 @@ import 'package:utf/utf.dart';
 
 import 'file_operations.dart';
 import 'object.dart';
+import 'object_utils.dart';
 import 'objectstore.dart';
 import 'utils.dart';
 import 'zlib.dart';
-
-/**
- * Encapsulates a git pack object.
- */
-class PackObject {
-  List<int> sha;
-  String baseSha;
-  int crc;
-  int offset;
-  int type;
-  int desiredOffset;
-  Uint8List data;
-}
-
-class PackedTypes {
-  static const COMMIT = 1;
-  static const TREE = 2;
-  static const BLOB = 3;
-  static const TAG = 4;
-  static const OFS_DELTA = 6;
-  static const REF_DELTA = 7;
-
-  static String getTypeString(int type) {
-    switch(type) {
-      case COMMIT:
-        return "commit";
-      case TREE:
-        return "tree";
-      case BLOB:
-        return "blob";
-      case TAG:
-        return "tag";
-      case OFS_DELTA:
-        return "ofs_delta";
-      case REF_DELTA:
-        return "ref_delta";
-      default:
-        throw "unsupported pack type.";
-    }
-  }
-}
 
 /**
  * Encapsulates a pack object header.
@@ -87,7 +47,7 @@ class Pack {
   Uint8List data;
   int _offset = 0;
   ObjectStore _store;
-  List<PackObject> objects = [];
+  List<PackedObject> objects = [];
 
   Pack(Uint8List data, store) {
     this.data = data;
@@ -145,9 +105,8 @@ class Pack {
   /**
    * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(int type, Uint8List contentData) {
-    List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
-        + " ${contentData.length}\u0000");
+  List<int> getObjectHash(String type, Uint8List contentData) {
+    List<int> header = encodeUtf8(type + " ${contentData.length}\u0000");
 
     Uint8List fullContent = new Uint8List(header.length + contentData.length);
 
@@ -204,23 +163,23 @@ class Pack {
     return header.offset - offsetDelta;
   }
 
-  Future expandDeltifiedObject(PackObject object) {
+  Future expandDeltifiedObject(PackedObject object) {
     Completer completer = new Completer();
 
-    PackObject doExpand(PackObject baseObj, PackObject deltaObj) {
+    PackedObject doExpand(PackedObject baseObj, PackedObject deltaObj) {
       deltaObj.type = baseObj.type;
       deltaObj.data = applyDelta(baseObj.data, deltaObj.data);
       deltaObj.sha = getObjectHash(deltaObj.type, deltaObj.data);
       return deltaObj;
     }
 
-    if (object.type == PackedTypes.OFS_DELTA) {
-      PackObject baseObj = _matchObjectAtOffset(object.desiredOffset);
+    if (object.type == ObjectTypes.OFS_DELTA_STR) {
+      PackedObject baseObj = _matchObjectAtOffset(object.desiredOffset);
       switch (baseObj.type) {
-        case PackedTypes.OFS_DELTA:
-        case PackedTypes.REF_DELTA:
+        case ObjectTypes.OFS_DELTA_STR:
+        case ObjectTypes.REF_DELTA_STR:
           return expandDeltifiedObject(baseObj).then((
-              PackObject expandedObject) => doExpand(expandedObject, object));
+              PackedObject expandedObject) => doExpand(expandedObject, object));
         default:
           completer.complete(doExpand(baseObj, object));
       }
@@ -243,18 +202,18 @@ class Pack {
   }
 
 
-  PackObject _matchObjectData(PackObjectHeader header) {
+  PackedObject _matchObjectData(PackObjectHeader header) {
 
-    PackObject object = new PackObject();
+    PackedObject object = new PackedObject();
 
     object.offset = header.offset;
-    object.type = header.type;
+    object.type = ObjectTypes.getTypeString(header.type);
 
     switch (header.type) {
-      case PackedTypes.OFS_DELTA:
+      case ObjectTypes.OFS_DELTA:
         object.desiredOffset = findDeltaBaseOffset(header);
         break;
-      case PackedTypes.REF_DELTA:
+      case ObjectTypes.REF_DELTA:
         Uint8List shaBytes = _peek(20);
         _advance(20);
         object.baseSha = shaBytes.map((int byte) {
@@ -272,20 +231,20 @@ class Pack {
     return object;
   }
 
-  Future<PackObject> matchAndExpandObjectAtOffset(int startOffset,
+  Future<PackedObject> matchAndExpandObjectAtOffset(int startOffset,
       String dataType) {
-    PackObject object = _matchObjectAtOffset(startOffset);
+    PackedObject object = _matchObjectAtOffset(startOffset);
 
     switch (object.type) {
-      case PackedTypes.OFS_DELTA:
-      case PackedTypes.REF_DELTA:
+      case ObjectTypes.OFS_DELTA_STR:
+      case ObjectTypes.REF_DELTA_STR:
         return expandDeltifiedObject(object);
       default:
         return new Future.value(object);
     }
   }
 
-  PackObject _matchObjectAtOffset(int startOffset) {
+  PackedObject _matchObjectAtOffset(int startOffset) {
     _offset = startOffset;
     return _matchObjectData(_getObjectHeader());
   }
@@ -296,20 +255,20 @@ class Pack {
 
     try {
       int numObjects;
-      List<PackObject> deferredObjects = [];
+      List<PackedObject> deferredObjects = [];
 
       _matchPrefix();
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
       for (int i = 0; i < numObjects; ++i) {
-        PackObject object = _matchObjectAtOffset(_offset);
+        PackedObject object = _matchObjectAtOffset(_offset);
         object.crc = getCrc32(data.sublist(object.offset, _offset));
 
         // hold on to the data for delta style objects.
         switch (object.type) {
-          case PackedTypes.OFS_DELTA:
-          case PackedTypes.REF_DELTA:
+          case ObjectTypes.OFS_DELTA_STR:
+          case ObjectTypes.REF_DELTA_STR:
             deferredObjects.add(object);
             break;
           default:
@@ -320,8 +279,8 @@ class Pack {
         }
         objects.add(object);
       }
-      return Future.forEach(deferredObjects, (PackObject obj) {
-        return expandDeltifiedObject(obj).then((PackObject deltifiedObj) {
+      return Future.forEach(deferredObjects, (PackedObject obj) {
+        return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
           deltifiedObj.data = null;
           // TODO(grv) : add progress.
         });
@@ -410,7 +369,8 @@ class Pack {
         // TODO(grv) : check if this is a version 2 packfile and apply
         // copyFromResult if so.
         copyFromResult = (opcode & 0x01);
-        Uint8List sublist = baseData.sublist(copyOffset, copyOffset + copyLength);
+        Uint8List sublist = baseData.sublist(copyOffset,
+            copyOffset + copyLength);
         resultData.setAll(resultOffset, sublist);
         resultOffset += sublist.length;
       } else if ((opcode & 0x80) == 0) {
@@ -448,7 +408,7 @@ class PackBuilder {
     });
   }
 
-  Uint8List _packTypeSizeBits(int type, int size) {
+  List<int> _packTypeSizeBits(int type, int size) {
     int typeBits = type;
     int shifter = size;
     List<int> bytes = [];
@@ -463,7 +423,7 @@ class PackBuilder {
       idx++;
       shifter >>= 7;
     }
-    return new Uint8List.fromList(bytes);
+    return bytes;
   }
 
   void _packIt(LooseObject object) {
@@ -481,7 +441,8 @@ class PackBuilder {
     ByteBuffer compressed;
     compressed = new Uint8List.fromList(Zlib.deflate(data).buffer
         .getBytes()).buffer;
-    _packed.add(_packTypeSizeBits(object.type, data.length));
+    _packed.add(_packTypeSizeBits(ObjectTypes.getType(object.type),
+        data.length));
     _packed.add(compressed);
   }
 
