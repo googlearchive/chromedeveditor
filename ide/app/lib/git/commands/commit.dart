@@ -147,7 +147,7 @@ class Commit {
           }
         }
 
-        commitContent.write('author ${name} <${email} ${dateString}\n');
+        commitContent.write('author ${name} <${email}> ${dateString}\n');
         commitContent.write('committer ${name} <${email}> ${dateString}');
         commitContent.write('\n\n${commitMsg}\n');
 
