@@ -161,7 +161,8 @@ class ObjectStore {
   }
 
   Future<String> getHeadRef() {
-    return _rootDir.getFile(gitPath + HEAD_PATH).then((chrome.ChromeFileEntry entry) {
+    return _rootDir.getFile(gitPath + HEAD_PATH).then(
+        (chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
         String content = UTF8.decode(buffer.getBytes());
         // get rid of the initial 'ref: ' plus newline at end.
@@ -233,7 +234,8 @@ class ObjectStore {
   }
 
   Future<GitObject> retrieveObject(String sha, String objType) {
-    String dataType = (objType == ObjectTypes.COMMIT_STR ? "Text" : "ArrayBuffer");
+    String dataType = (objType == ObjectTypes.COMMIT_STR ? "Text"
+        : "ArrayBuffer");
     return retrieveRawObject(sha, dataType).then((object) {
       if (objType == 'Raw') {
         return object;
@@ -294,7 +296,8 @@ class ObjectStore {
 
         seen[sha] = true;
 
-        return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((CommitObject commitObj) {
+        return retrieveObject(sha, ObjectTypes.COMMIT_STR).then(
+            (CommitObject commitObj) {
           nextLevel.addAll(commitObj.parents);
           int i = commits.length - 1;
           for (; i >= 0; i--) {
@@ -329,11 +332,12 @@ class ObjectStore {
   Future<CommitObject> _checkRemoteHead(GitRef remoteRef) {
     // Check if the remote head exists in the local repo.
     if (remoteRef.sha != HEAD_MASTER_SHA) {
-      return retrieveObject(remoteRef.sha, ObjectTypes.COMMIT_STR).then((obj) => obj,
-          onError: (e) {
-            //TODO support non-fast forward.
-            _nonFastForward();
-            throw(e);
+      return retrieveObject(remoteRef.sha, ObjectTypes.COMMIT_STR).then(
+          (obj) => obj,
+        onError: (e) {
+          //TODO support non-fast forward.
+          _nonFastForward();
+          throw(e);
       });
     }
     return new Future.value();
@@ -461,7 +465,8 @@ class ObjectStore {
   }
 
   Future<TreeObject> _getTreeFromCommitSha(String sha) {
-    return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((CommitObject commit) {
+    return retrieveObject(sha, ObjectTypes.COMMIT_STR).then(
+        (CommitObject commit) {
      return  retrieveObject(commit.treeSha, ObjectTypes.TREE_STR).then(
          (rawObject) => rawObject);
     });

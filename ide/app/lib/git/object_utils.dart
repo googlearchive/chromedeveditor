@@ -48,7 +48,7 @@ abstract class ObjectTypes {
       case REF_DELTA:
         return REF_DELTA_STR;
       default:
-        throw "unsupported pack type.";
+        throw "unsupported pack type ${type}.";
     }
   }
 
@@ -67,7 +67,7 @@ abstract class ObjectTypes {
       case REF_DELTA_STR:
         return REF_DELTA;
       default:
-        throw "unsupported pack type.";
+        throw "unsupported pack type ${type}.";
     }
   }
 }
@@ -80,10 +80,12 @@ abstract class ObjectUtils {
   /**
    * Expands a git blob object into a file and writes on disc.
    */
-  static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir, ObjectStore store,
-      String fileName, String blobSha) {
-    return store.retrieveObject(blobSha, ObjectTypes.BLOB_STR).then((BlobObject blob) {
-      return FileOps.createFileWithContent(dir, fileName, blob.data, ObjectTypes.BLOB_STR);
+  static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir,
+      ObjectStore store, String fileName, String blobSha) {
+    return store.retrieveObject(blobSha, ObjectTypes.BLOB_STR).then(
+        (BlobObject blob) {
+      return FileOps.createFileWithContent(dir, fileName, blob.data,
+          ObjectTypes.BLOB_STR);
     });
   }
 

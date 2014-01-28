@@ -62,8 +62,6 @@ class TreeEntry {
   TreeEntry(this.name, this.sha, this.isBlob);
 }
 
-
-
 /**
  * Error thrown for a parse failure.
  */
@@ -296,7 +294,7 @@ class LooseObject extends GitObject {
 /**
  * Encapsulates a git pack object.
  */
-class PackObject extends GitObject {
+class PackedObject extends GitObject {
   List<int> sha;
   String baseSha;
   int crc;

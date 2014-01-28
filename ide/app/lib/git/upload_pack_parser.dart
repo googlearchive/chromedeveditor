@@ -11,6 +11,7 @@ import 'dart:html';
 import 'dart:typed_data';
 
 import 'file_operations.dart';
+import 'object.dart';
 import 'objectstore.dart';
 import 'pack.dart';
 
@@ -23,7 +24,7 @@ class PktLine {
 }
 
 class PackParseResult {
-  List<PackObject> objects;
+  List<PackedObject> objects;
   String shallow;
   List<String> common;
   Uint8List data;

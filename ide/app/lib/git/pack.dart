@@ -47,7 +47,7 @@ class Pack {
   Uint8List data;
   int _offset = 0;
   ObjectStore _store;
-  List<PackObject> objects = [];
+  List<PackedObject> objects = [];
 
   Pack(Uint8List data, store) {
     this.data = data;
@@ -163,10 +163,10 @@ class Pack {
     return header.offset - offsetDelta;
   }
 
-  Future expandDeltifiedObject(PackObject object) {
+  Future expandDeltifiedObject(PackedObject object) {
     Completer completer = new Completer();
 
-    PackObject doExpand(PackObject baseObj, PackObject deltaObj) {
+    PackedObject doExpand(PackedObject baseObj, PackedObject deltaObj) {
       deltaObj.type = baseObj.type;
       deltaObj.data = applyDelta(baseObj.data, deltaObj.data);
       deltaObj.sha = getObjectHash(deltaObj.type, deltaObj.data);
@@ -174,12 +174,12 @@ class Pack {
     }
 
     if (object.type == ObjectTypes.OFS_DELTA_STR) {
-      PackObject baseObj = _matchObjectAtOffset(object.desiredOffset);
+      PackedObject baseObj = _matchObjectAtOffset(object.desiredOffset);
       switch (baseObj.type) {
         case ObjectTypes.OFS_DELTA_STR:
         case ObjectTypes.REF_DELTA_STR:
           return expandDeltifiedObject(baseObj).then((
-              PackObject expandedObject) => doExpand(expandedObject, object));
+              PackedObject expandedObject) => doExpand(expandedObject, object));
         default:
           completer.complete(doExpand(baseObj, object));
       }
@@ -202,9 +202,9 @@ class Pack {
   }
 
 
-  PackObject _matchObjectData(PackObjectHeader header) {
+  PackedObject _matchObjectData(PackObjectHeader header) {
 
-    PackObject object = new PackObject();
+    PackedObject object = new PackedObject();
 
     object.offset = header.offset;
     object.type = ObjectTypes.getTypeString(header.type);
@@ -231,9 +231,9 @@ class Pack {
     return object;
   }
 
-  Future<PackObject> matchAndExpandObjectAtOffset(int startOffset,
+  Future<PackedObject> matchAndExpandObjectAtOffset(int startOffset,
       String dataType) {
-    PackObject object = _matchObjectAtOffset(startOffset);
+    PackedObject object = _matchObjectAtOffset(startOffset);
 
     switch (object.type) {
       case ObjectTypes.OFS_DELTA_STR:
@@ -244,7 +244,7 @@ class Pack {
     }
   }
 
-  PackObject _matchObjectAtOffset(int startOffset) {
+  PackedObject _matchObjectAtOffset(int startOffset) {
     _offset = startOffset;
     return _matchObjectData(_getObjectHeader());
   }
@@ -255,14 +255,14 @@ class Pack {
 
     try {
       int numObjects;
-      List<PackObject> deferredObjects = [];
+      List<PackedObject> deferredObjects = [];
 
       _matchPrefix();
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
       for (int i = 0; i < numObjects; ++i) {
-        PackObject object = _matchObjectAtOffset(_offset);
+        PackedObject object = _matchObjectAtOffset(_offset);
         object.crc = getCrc32(data.sublist(object.offset, _offset));
 
         // hold on to the data for delta style objects.
@@ -279,8 +279,8 @@ class Pack {
         }
         objects.add(object);
       }
-      return Future.forEach(deferredObjects, (PackObject obj) {
-        return expandDeltifiedObject(obj).then((PackObject deltifiedObj) {
+      return Future.forEach(deferredObjects, (PackedObject obj) {
+        return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
           deltifiedObj.data = null;
           // TODO(grv) : add progress.
         });
@@ -369,7 +369,8 @@ class Pack {
         // TODO(grv) : check if this is a version 2 packfile and apply
         // copyFromResult if so.
         copyFromResult = (opcode & 0x01);
-        Uint8List sublist = baseData.sublist(copyOffset, copyOffset + copyLength);
+        Uint8List sublist = baseData.sublist(copyOffset,
+            copyOffset + copyLength);
         resultData.setAll(resultOffset, sublist);
         resultOffset += sublist.length;
       } else if ((opcode & 0x80) == 0) {
