@@ -1,14 +1,14 @@
-import 'package:serialization/serialization.dart';
-
 import 'dart:isolate';
 import 'dart:async';
+import 'dart:convert';
+
 
 class Services {
   final String workerPath = 'services/services_isolate.dart';
+  SendPort sendPort;
 
   Services() {
     final ReceivePort receivePort = new ReceivePort();
-    SendPort sendPort;
 
     receivePort.listen((parameter) {
       if (sendPort == null) {
@@ -22,38 +22,48 @@ class Services {
     Uri workerUri = Uri.parse(workerPath);
 
     Isolate.spawnUri(workerUri, [], receivePort.sendPort).then((isolate) {
-      Say command = new Say();
-      command.message = 'Marco';
-      // TODO(ericarnold): Sending shared-code object instances is supported
-      //    only by dartvm not by dart2js.  If / when that changes, we can
-      //    remove Serialization dependency.
-      //    See https://api.dartlang.org/docs/channels/stable/latest/dart_isolate/SendPort.html#send
-      var serialization = new Serialization()
-          ..addRule(new SayRule());
-      Map output = serialization.write(command);
+      TestMessage command = new TestMessage('Marco')
+        ..volume = 11;
 
-      Timer.run(() => sendPort.send(output));
+      Timer.run(() => sendCommand(command));
     });
+  }
+
+  sendCommand(Command command) {
+    sendPort.send({"id": command.commandId, "data": command.serialize()});
   }
 }
 
 abstract class Command {
+  String get commandId;
+  String serialize();
+  Command();
+  Command.serialized(String serializedData);
 }
 
-class Say extends Command{
+// TODO(ericarnold): Testing.  Remove.
+class TestMessage extends Command{
   String message;
   int volume;
-  String toString() {
-    return message + ((volume >= 11) ? "!" : "");
-  }
-}
 
-class SayRule extends CustomRule {
-  bool appliesTo(instance, Writer w) => instance.runtimeType == Say;
-  getState(Say instance) => [instance.message, instance.volume];
-  create(state) => new Say();
-  setState(Say a, List state) {
-    a.message = state[0];
-    a.volume = state[1];
+  TestMessage(this.message);
+
+  TestMessage.serialized(String serializedData) {
+    var data = JSON.decode(serializedData);
+    this.message = data.message;
+    this.volume = data.volume;
+  }
+
+  String get commandId => "message";
+
+  String toString() {
+    return message + ((volume > 10) ? "!" : "");
+  }
+
+  String serialize() {
+    return JSON.encode({
+      "message": message,
+      "volume": volume
+    });
   }
 }

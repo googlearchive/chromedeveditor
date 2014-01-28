@@ -1,29 +1,44 @@
 import 'dart:isolate';
 
-import 'package:serialization/serialization.dart';
-
 import 'services.dart';
 
 main(List<String> args, SendPort sendPort) {
-  final servicesIsolate = new ServicesIsolate();
+  final servicesIsolate = new ServicesIsolate(sendPort);
 
-  ReceivePort receivePort = new ReceivePort();
-  sendPort.send(receivePort.sendPort);
 
-  receivePort.listen((message) {
-    message.
-//    switch (message) {
-//      // TODO(ericarnold): Testing.  Remove.
-//      case "say":
-//        servicesIsolate.say(mesage);
-//    }
-    sendPort.send('$message - From isolate: "Polo!"');
-  });
 }
 
 class ServicesIsolate {
-  ServicesIsolate();
+  SendPort sendPort;
 
+  ServicesIsolate(this.sendPort) {
+    ReceivePort receivePort = new ReceivePort();
+    sendPort.send(receivePort.sendPort);
+
+    receivePort.listen((command) {
+      performCommand(command);
+    });
+  }
+
+  sendCommand(Command command) {
+    sendPort.send({"id": command.commandId, "data": command.serialize()});
+  }
+
+
+  void performCommand(command) {
+    String commandId = command.commandId;
+    String serializedData = command.data;
+
+    switch (commandId) {
+      // TODO(ericarnold): Testing.  Remove.
+      case "message":
+        TestMessage message = new TestMessage.serialized(serializedData);
+        if (message.toString() == 'Marco!') {
+          sendCommand(new TestMessage('Polo')..volume = 11);
+        }
+        break;
+    }
+  }
   // TODO(ericarnold): Testing.  Remove.
   say(String message) {
     return "Polo!";
