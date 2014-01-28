@@ -434,12 +434,12 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   Future<bool> openFolder() {
-    return _selectFolder().then((chrome.ChromeFileEntry entry) {
+    return _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
-        workspace.link(entry).then((file) {
+        workspace.link(entry).then((resource) {
           Timer.run(() {
-            _filesController.selectFile(file);
-            _filesController.setFolderExpanded(file);
+            _filesController.selectFile(resource);
+            _filesController.setFolderExpanded(resource);
           });
           workspace.save();
         });
@@ -696,7 +696,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
  * Allows a user to select a folder on disk. Returns the selected folder
  * entry. Returns `null` in case the user cancels the action.
  */
-Future<chrome.ChromeFileEntry> _selectFolder({String suggestedName}) {
+Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
   Completer completer = new Completer();
   chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
       type: chrome.ChooseEntryType.OPEN_DIRECTORY);
@@ -1573,6 +1573,9 @@ void _handleUncaughtException(error, StackTrace stackTrace) {
   String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
+
+  window.console.error(error.toString());
+  window.console.error(stackTrace.toString());
 }
 
 bool get _isTrackingPermitted =>

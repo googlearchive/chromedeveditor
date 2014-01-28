@@ -224,6 +224,9 @@ class AceManager {
   }
 
   void _recreateMiniMap() {
+    if (_editorElement == null) {
+      return;
+    }
     html.Element scrollbarElement =
         _editorElement.getElementsByClassName("ace_scrollbar").first;
     if (scrollbarElement.style.right != "10px") {
