@@ -175,7 +175,6 @@ class CommitObject extends GitObject {
       // TODO: Clarify this exception.
       throw "Data is in incompatible format.";
     }
-
     _parseData();
   }
 

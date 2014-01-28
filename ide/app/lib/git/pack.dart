@@ -408,7 +408,7 @@ class PackBuilder {
     });
   }
 
-  Uint8List _packTypeSizeBits(int type, int size) {
+  List<int> _packTypeSizeBits(int type, int size) {
     int typeBits = type;
     int shifter = size;
     List<int> bytes = [];
@@ -423,7 +423,7 @@ class PackBuilder {
       idx++;
       shifter >>= 7;
     }
-    return new Uint8List.fromList(bytes);
+    return bytes;
   }
 
   void _packIt(LooseObject object) {
