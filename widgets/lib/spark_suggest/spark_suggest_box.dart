@@ -9,6 +9,7 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
+import '../spark_overlay/spark_overlay.dart';
 import '../common/spark_widget.dart';
 
 /**
@@ -56,31 +57,31 @@ class SparkSuggestBox extends SparkWidget {
   /// Whether we're loading suggestions. `true` as long as we're subscribed to
   /// the [oracle].
   @observable bool isLoading;
-  /// Is the suggestion list popup visible?
-  @observable bool suggestionsOpened = false;
 
   StreamSubscription _oracleSub;
 
   SparkSuggestBox.created() : super.created();
+
+  SparkOverlay get _popup => $['suggestion-list-overlay'];
 
   /// Shows the suggestion list popup with the given suggestions.
   void _showSuggestions(List<Suggestion> update) {
     suggestions.clear();
     suggestions.addAll(update);
     selectionIndex = 0;
-    suggestionsOpened = true;
+    _popup.opened = true;
   }
 
   /// Hides the suggestion list popup and clears the suggestion list.
   void _hideSuggestions() {
     suggestions.clear();
     selectionIndex = -1;
-    suggestionsOpened = false;
+    _popup.opened = false;
   }
 
   inputKeyUp(KeyboardEvent e) {
     if (e.keyCode == SparkWidget.DOWN_KEY) {
-      if (suggestionsOpened) {
+      if (_popup.opened) {
         // List of suggestions already visible. Simply advance the selection.
         selectionIndex++;
         _clampSelectionIndex();
@@ -92,7 +93,7 @@ class SparkSuggestBox extends SparkWidget {
       selectionIndex--;
       _clampSelectionIndex();
     } else if (e.keyCode == SparkWidget.ENTER_KEY) {
-      if (suggestionsOpened && selectionIndex > -1) {
+      if (_popup.opened && selectionIndex > -1) {
         _selectSuggestion(selectionIndex);
       } else {
         suggest();
