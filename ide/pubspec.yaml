@@ -6,7 +6,7 @@ homepage: https://github.com/GoogleChrome/spark
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  ace: '>=0.2.0 <0.3.0'
+  ace: '>=0.3.0 <0.4.0'
   analyzer: '>=0.10.1 <0.11.0'
   archive: 1.0.8
   bootjack: any
