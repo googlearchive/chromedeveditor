@@ -104,6 +104,15 @@ class SparkSuggestBox extends SparkWidget {
     }
   }
 
+  void inputFocus() {
+    InputElement textBox = $['text-box'];
+    if (textBox.value.length == 0) {
+      return;
+    }
+
+    suggest();
+  }
+
   void suggest() {
     InputElement textBox = $['text-box'];
     _cleanupSubscriptions();

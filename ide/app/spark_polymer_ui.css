@@ -20,7 +20,7 @@
   display: inline-block;
   max-width: 250px;
   position: relative;
-  top: 6px;
+  top: 4px;
 }
 
 .fileview-filename-container {
@@ -291,5 +291,4 @@
 #mainMenu {
   position: relative;
   top: 3px;
-}
 }

@@ -139,34 +139,31 @@ class Index {
    * working tree.
    */
    Future<String> walkFilesAndUpdateIndex(chrome.DirectoryEntry root) {
+     return FileOps.listFiles(root).then((List<chrome.ChromeFileEntry> entries) {
+       if (entries.isEmpty) {
+         return new Future.value();
+       }
 
-    return FileOps.listFiles(root).then(
-        (List<chrome.ChromeFileEntry> entries) {
-      if (entries.isEmpty) {
-        return new Future.value();
-      }
+       return Future.forEach(entries, (chrome.Entry entry) {
+         if (entry.name == '.git') {
+           return new Future.value();
+         }
 
-      return Future.forEach(entries, (chrome.ChromeFileEntry entry) {
-        if (entry.name == '.git') {
-          return new Future.value();
-        }
-
-        if (entry.isDirectory) {
-          return walkFilesAndUpdateIndex(entry as chrome.DirectoryEntry)
-              .then((String sha) {
-                return new Future.value();
-          });
-        } else {
-          return getShaForEntry(entry, 'blob').then((String sha) {
-            return entry.getMetadata().then((data) {
-              FileStatus status = new FileStatus();
-              status.path = entry.fullPath;
-              status.sha = sha;
-              status.size = data.size;
+         if (entry.isDirectory) {
+           return walkFilesAndUpdateIndex(entry as chrome.DirectoryEntry).then((String sha) {
+             return new Future.value();
+           });
+         } else {
+           return getShaForEntry(entry, 'blob').then((String sha) {
+             return entry.getMetadata().then((data) {
+               FileStatus status = new FileStatus();
+               status.path = entry.fullPath;
+               status.sha = sha;
+               status.size = data.size;
                return updateIndexForEntry(status);
-            });
-          });
-        }
+             });
+           });
+         }
       }).then((_) {
         return new Future.value();
       });

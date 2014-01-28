@@ -21,6 +21,7 @@ import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
+import 'git/commands/push.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 
@@ -254,6 +255,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
       });
+    });
+  }
+
+  Future push() {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Push.push(options);
     });
   }
 

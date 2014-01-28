@@ -4,12 +4,13 @@
 
 #text-box {
   outline: none;
-  border-radius: 12px;
+  border-radius: 3px;
   border: 1px solid #cccccc;
   padding: 2px 3px 2px 0px;
   width: 100%;
   font-size: 14px;
   font-family: Helvetica;
+  height: 31px;
 }
 
 #text-box:focus {
@@ -17,7 +18,10 @@
 }
 
 .suggest-item-list {
+  border: 1px solid #ddd;
   padding: 5px 0;
+  max-height: 250px;
+  overflow-y: scroll;
 }
 
 .suggest-item {
