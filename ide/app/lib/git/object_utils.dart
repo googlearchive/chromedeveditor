@@ -18,10 +18,58 @@ import 'utils.dart';
  *
  */
 abstract class ObjectTypes {
-  static const String BLOB = "blob";
-  static const String TREE = "tree";
-  static const String COMMIT = "commit";
-  static const String TAG = "tag";
+
+  static const String BLOB_STR = "blob";
+  static const String TREE_STR = "tree";
+  static const String COMMIT_STR = "commit";
+  static const String TAG_STR = "tag";
+  static const String OFS_DELTA_STR = "ofs_delta";
+  static const String REF_DELTA_STR = "ref_delta";
+
+  static const int COMMIT = 1;
+  static const int TREE = 2;
+  static const int BLOB = 3;
+  static const int TAG = 4;
+  static const int OFS_DELTA = 6;
+  static const int REF_DELTA = 7;
+
+  static String getTypeString(int type) {
+    switch(type) {
+      case COMMIT:
+        return COMMIT_STR;
+      case TREE:
+        return TREE_STR;
+      case BLOB:
+        return BLOB_STR;
+      case TAG:
+        return TAG_STR;
+      case OFS_DELTA:
+        return OFS_DELTA_STR;
+      case REF_DELTA:
+        return REF_DELTA_STR;
+      default:
+        throw "unsupported pack type ${type}.";
+    }
+  }
+
+  static int getType(String type) {
+    switch(type) {
+      case COMMIT_STR:
+        return COMMIT;
+      case TREE_STR:
+        return TREE;
+      case BLOB_STR:
+        return BLOB;
+      case TAG_STR:
+        return TAG;
+      case OFS_DELTA_STR:
+        return OFS_DELTA;
+      case REF_DELTA_STR:
+        return REF_DELTA;
+      default:
+        throw "unsupported pack type ${type}.";
+    }
+  }
 }
 
 /**
@@ -32,10 +80,12 @@ abstract class ObjectUtils {
   /**
    * Expands a git blob object into a file and writes on disc.
    */
-  static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir, ObjectStore store,
-      String fileName, String blobSha) {
-    return store.retrieveObject(blobSha, ObjectTypes.BLOB).then((BlobObject blob) {
-      return FileOps.createFileWithContent(dir, fileName, blob.data, ObjectTypes.BLOB);
+  static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir,
+      ObjectStore store, String fileName, String blobSha) {
+    return store.retrieveObject(blobSha, ObjectTypes.BLOB_STR).then(
+        (BlobObject blob) {
+      return FileOps.createFileWithContent(dir, fileName, blob.data,
+          ObjectTypes.BLOB_STR);
     });
   }
 

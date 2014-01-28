@@ -210,7 +210,7 @@ class Merge {
             }
           });
         } else {
-          return store.retrieveObjectList(shas, ObjectTypes.TREE).then(
+          return store.retrieveObjectList(shas, ObjectTypes.TREE_STR).then(
               (List<TreeObject> trees) {
             return mergeTrees(store, trees[0], trees[1], trees[2]).then(
                 (String mergedSha) {
