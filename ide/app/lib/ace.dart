@@ -145,8 +145,10 @@ class AceManager {
     Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
 
     List<int> offsetAt = [];
+    int offsetCount = 0;
     for (var line = 0; line <= currentSession.screenLength; line++) {
-      offsetAt.add(currentSession.getLine(line).length + 2);
+      offsetCount += currentSession.getLine(line).length + 1;
+      offsetAt.add(offsetCount);
     }
 
     for (workspace.Marker marker in markers) {
@@ -158,10 +160,7 @@ class AceManager {
 
       // Ace uses 0-based lines.
       int aceRow = marker.lineNum - 1;
-      int aceColumn = marker.charStart - offsetAt[aceRow];
-
-      // TODO(ericarnold): TEMP
-      markerHtml += "($aceColumn" + " - " + marker.charStart.toString() + ")";
+      int aceColumn = marker.charStart - offsetAt[aceRow - 1];
 
       // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
