@@ -18,7 +18,10 @@
 }
 
 .suggest-item-list {
+  border: 1px solid #ddd;
   padding: 5px 0;
+  max-height: 250px;
+  overflow-y: scroll;
 }
 
 .suggest-item {
