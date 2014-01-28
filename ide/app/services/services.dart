@@ -1,69 +1,34 @@
 import 'dart:isolate';
 import 'dart:async';
-import 'dart:convert';
 
+main() {
+  var s = new Services('services_isolate.dart');
+}
 
 class Services {
-  final String workerPath = 'services/services_isolate.dart';
-  SendPort sendPort;
+  int counter = 0;
 
-  Services() {
-    final ReceivePort receivePort = new ReceivePort();
+  Services([String workerPath = 'services/services_isolate.dart']) {
+    print("Services instantiated!");
+    SendPort sendPort;
 
-    receivePort.listen((parameter) {
+    ReceivePort receivePort = new ReceivePort();
+    receivePort.listen((msg) {
+      print("Spark never gets here!");
       if (sendPort == null) {
-        sendPort = parameter;
+        sendPort = msg;
+        new Timer.periodic(const Duration(seconds: 1), (t) {
+          print("Sending Message!");
+          sendPort.send('From app: ${counter++}');
+        });
       } else {
-        String message = parameter;
-        print('$message\n');
+        print('Received from isolate: $msg\n');
       }
     });
 
-    Uri workerUri = Uri.parse(workerPath);
 
-    Isolate.spawnUri(workerUri, [], receivePort.sendPort).then((isolate) {
-      TestMessage command = new TestMessage('Marco')
-        ..volume = 11;
-
-      Timer.run(() => sendCommand(command));
-    });
-  }
-
-  sendCommand(Command command) {
-    sendPort.send({"id": command.commandId, "data": command.serialize()});
-  }
-}
-
-abstract class Command {
-  String get commandId;
-  String serialize();
-  Command();
-  Command.serialized(String serializedData);
-}
-
-// TODO(ericarnold): Testing.  Remove.
-class TestMessage extends Command{
-  String message;
-  int volume;
-
-  TestMessage(this.message);
-
-  TestMessage.serialized(String serializedData) {
-    var data = JSON.decode(serializedData);
-    this.message = data.message;
-    this.volume = data.volume;
-  }
-
-  String get commandId => "message";
-
-  String toString() {
-    return message + ((volume > 10) ? "!" : "");
-  }
-
-  String serialize() {
-    return JSON.encode({
-      "message": message,
-      "volume": volume
+    Isolate.spawnUri(Uri.parse(workerPath), [], receivePort.sendPort).then((isolate) {
+      print('Isolate spawned');
     });
   }
 }
