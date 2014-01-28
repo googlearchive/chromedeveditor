@@ -93,18 +93,19 @@ class EditorArea extends TabView {
     showLabelBar = false;
 
     _workspace.onResourceChange.listen((event) {
-            bool hasDeletes = event.changes.any(
-                (d) => d.isDelete && d.resource.isFile);
-            if (hasDeletes) {
-         //     _processEvent(event);
-            }
-          });
+      bool hasDeletes = event.changes.any(
+          (d) => d.isDelete && d.resource.isFile);
+      if (hasDeletes) {
+        _processEvent(event);
+      }
+    });
   }
 
-//  void _processEvent(ResourceChangeEvent event) {
-//      event.changes.where((change) => change.resource.isFile)
-//        .forEach((change) => closeFile(change.resource));
-//    }
+  void _processEvent(ResourceChangeEvent event) {
+    event.changes
+      .where((change) => change.isDelete && change.resource.isFile)
+      .forEach((change) => closeFile(change.resource));
+  }
 
   bool get shouldDisplayName => tabs.length == 1;
 
