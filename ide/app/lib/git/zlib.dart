@@ -37,8 +37,9 @@ class Zlib {
     js.JsObject inflater = new js.JsObject(
         _zlib['Inflate'], [_listToJs(data), options]);
     inflater['verify'] = true;
-    js.JsObject buffer = inflater.callMethod('decompress');
-    return new ZlibResult(chrome.ArrayBuffer.create(buffer), inflater['ip']);
+    var buffer = inflater.callMethod('decompress');
+    return new ZlibResult(
+        new chrome.ArrayBuffer.fromProxy(buffer), inflater['ip']);
   }
 
   /**

@@ -37,11 +37,11 @@
         type="search"
         focused
         placeholder="{{placeholder}}"
-        on-keyup="{{inputKeyUp}}" />
+        on-keyup="{{inputKeyUp}}"
+        on-focus="{{inputFocus}}" />
 
     <spark-overlay
         id="suggestion-list-overlay"
-        opened="{{suggestionsOpened}}"
         class="spark-overlay-scale-slideup">
       <div class="suggest-item-list">
         <template if="{{isLoading}}">

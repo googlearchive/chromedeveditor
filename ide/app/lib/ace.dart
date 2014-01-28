@@ -13,6 +13,7 @@ import 'dart:js' as js;
 import 'dart:math' as math;
 
 import 'package:ace/ace.dart' as ace;
+import 'package:ace/proxy.dart';
 import 'package:path/path.dart' as path;
 
 import 'workspace.dart' as workspace;
@@ -98,6 +99,7 @@ class AceManager {
   workspace.File currentFile;
 
   AceManager(this.parentElement) {
+    ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;

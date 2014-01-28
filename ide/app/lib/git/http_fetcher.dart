@@ -17,18 +17,6 @@ import 'upload_pack_parser.dart';
 
 final int COMMIT_LIMIT = 32;
 
-class RefPath {
-  String name;
-  String sha;
-  String head;
-
-  RefPath(this.name, this.sha, this.head);
-
-  getPktLine() => '${sha} ${head} ${name}';
-
-  toString() => getPktLine();
-}
-
 /**
  *
  * TODO(grv) : Add unittests.
@@ -58,11 +46,12 @@ class HttpFetcher {
 
   Future<List<GitRef>> fetchUploadRefs() => _fetchRefs('git-upload-pack');
 
-  Future pushRefs(List<RefPath> refPaths, chrome.ArrayBuffer packData,
+  Future pushRefs(List<GitRef> refPaths, chrome.ArrayBuffer packData,
       progress) {
     Completer completer = new Completer();
     String url = _makeUri('/git-receive-pack', {});
     Blob body = _pushRequest(refPaths, packData);
+
     HttpRequest xhr = getNewHttpRequest();
     xhr.open("POST", url, async: true , user: username , password: password);
     xhr.onLoad.listen((event) {
@@ -73,7 +62,7 @@ class HttpFetcher {
             return completer.complete();
           } else {
             //TODO better error handling.
-            throw "unpack error";
+            completer.completeError("unpack error");
           }
         } else {
           _ajaxErrorHandler({"url": url, "type": "POST"}, xhr);
@@ -183,15 +172,18 @@ class HttpFetcher {
         if (xhr.status == 200) {
           return completer.complete(xhr.responseText);
         } else {
-          _ajaxErrorHandler({'url': url, 'type': 'GET'}, xhr);
+          completer.completeError(xhr.response);
         }
       }
     });
 
-    xhr.onError.listen((_) => _ajaxErrorHandler({'url': url, 'type': 'GET'},
-        xhr));
-    xhr.onAbort.listen((_) => _ajaxErrorHandler({'url': url, 'type': 'GET'},
-        xhr));
+    xhr.onError.listen((_) {
+      completer.completeError(xhr.response);
+    });
+
+    xhr.onAbort.listen((_) {
+      completer.completeError(xhr.response);
+    });
     xhr.send();
     return completer.future;
   }
@@ -201,8 +193,8 @@ class HttpFetcher {
     Map<String, String> options = urlOptions;
     options.addAll(extraOptions);
     if (options.isNotEmpty) {
-      List<String> keys = options.keys;
-      List<String> optionStrings = keys.map((String key) {
+      Iterable<String> keys = options.keys;
+      Iterable<String> optionStrings = keys.map((String key) {
         return key + "=" + Uri.encodeQueryComponent(options[key]);
       });
       return uri + "?" + optionStrings.join("&");
@@ -247,9 +239,9 @@ class HttpFetcher {
     return hex;
   }
 
-  Blob _pushRequest(List<RefPath> refPaths, chrome.ArrayBuffer packData) {
+  Blob _pushRequest(List<GitRef> refPaths, packData) {
     List blobParts = [];
-    String header = refPaths[0].getPktLine() + '\0report-status\n';
+    String header = refPaths[0].getPktLine() + '\u0000report-status\n';
     header = _padWithZeros(header.length + 4) + header;
     blobParts.add(header);
 
@@ -260,7 +252,7 @@ class HttpFetcher {
     }
 
     blobParts.add('0000');
-    blobParts.add(new Uint8List.fromList(packData.getBytes()));
+    blobParts.add(new Uint8List.fromList(packData));
     return new Blob(blobParts);
   }
 

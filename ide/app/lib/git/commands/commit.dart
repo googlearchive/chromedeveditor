@@ -127,6 +127,18 @@ class Commit {
     String email = options.email;
     String commitMsg = options.commitMessage;
 
+    if (name == null) {
+      name = "";
+    }
+
+    if (email == null) {
+      email = "";
+    }
+
+    if (commitMsg == null) {
+      commitMsg = "";
+    }
+
     return walkFiles(dir, store).then((String sha) {
       return checkTreeChanged(store, parent, sha).then((_) {
         DateTime now = new DateTime.now();
@@ -146,8 +158,8 @@ class Commit {
           }
         }
 
-        commitContent.write('author ${name} ');
-        commitContent.write(' <$email> ');
+        commitContent.write('author ${name}');
+        commitContent.write(' <${email}> ');
         commitContent.write(dateString);
         commitContent.write('\n');
         commitContent.write('committer ${name}');
