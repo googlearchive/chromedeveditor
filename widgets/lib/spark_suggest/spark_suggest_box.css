@@ -9,7 +9,7 @@
   padding: 2px 3px 2px 0px;
   width: 100%;
   font-size: 14px;
-  font-family: Helvetica;
+  font-family: Helvetica, sans-serif;
   height: 31px;
 }
 
@@ -27,6 +27,10 @@
 .suggest-item {
   padding: 7px 20px;
   font-size: 14px;
+}
+
+.text-muted {
+	color: #999999;
 }
 
 [highlighted=true].suggest-item {

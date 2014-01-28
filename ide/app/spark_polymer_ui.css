@@ -9,16 +9,9 @@
 @import url("lib/ui/widgets/tabview.css");
 @import url("lib/ui/widgets/imageviewer.css");
 
-#saveStatus {
-  color: #aaa;
-  margin-left: 6px;
-  vertical-align: bottom;
-  white-space: nowrap;
-}
-
 #searchBox {
   display: inline-block;
-  max-width: 250px;
+  width: 250px;
   position: relative;
   top: 4px;
 }

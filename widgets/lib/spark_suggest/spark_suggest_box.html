@@ -68,7 +68,10 @@
               highlighted="{{s.index == selectionIndex}}"
               on-mouseover="{{mouseOverItem}}"
               on-click="{{mouseClickedItem}}">
-            {{s.value.displayLabel}}
+            {{s.value.label}}
+            <template if="{{s.value.hasDetails}}">
+              <span class="text-muted">[{{s.value.details}}]</span>
+            </template>
           </div>
         </template>
       </div>
