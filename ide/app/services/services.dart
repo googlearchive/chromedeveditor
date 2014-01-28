@@ -1,34 +1,69 @@
 import 'dart:isolate';
 import 'dart:async';
+import 'dart:convert';
 
-main() {
-  var s = new Services('services_isolate.dart');
-}
 
 class Services {
-  int counter = 0;
+  final String workerPath = 'services/services_isolate.dart';
+  SendPort sendPort;
 
-  Services([String workerPath = 'services/services_isolate.dart']) {
-    print("Services instantiated!");
-    SendPort sendPort;
+  Services() {
+    final ReceivePort receivePort = new ReceivePort();
 
-    ReceivePort receivePort = new ReceivePort();
-    receivePort.listen((msg) {
-      print("Spark never gets here!");
+    receivePort.listen((parameter) {
       if (sendPort == null) {
-        sendPort = msg;
-        new Timer.periodic(const Duration(seconds: 1), (t) {
-          print("Sending Message!");
-          sendPort.send('From app: ${counter++}');
-        });
+        sendPort = parameter;
       } else {
-        print('Received from isolate: $msg\n');
+        String message = parameter;
+        print('$message\n');
       }
     });
 
+    Uri workerUri = Uri.parse(workerPath);
 
-    Isolate.spawnUri(Uri.parse(workerPath), [], receivePort.sendPort).then((isolate) {
-      print('Isolate spawned');
+    Isolate.spawnUri(workerUri, [], receivePort.sendPort).then((isolate) {
+      TestMessage command = new TestMessage('Marco')
+        ..volume = 11;
+
+      Timer.run(() => sendCommand(command));
+    });
+  }
+
+  sendCommand(Command command) {
+    sendPort.send({"id": command.commandId, "data": command.serialize()});
+  }
+}
+
+abstract class Command {
+  String get commandId;
+  String serialize();
+  Command();
+  Command.serialized(String serializedData);
+}
+
+// TODO(ericarnold): Testing.  Remove.
+class TestMessage extends Command{
+  String message;
+  int volume;
+
+  TestMessage(this.message);
+
+  TestMessage.serialized(String serializedData) {
+    var data = JSON.decode(serializedData);
+    this.message = data.message;
+    this.volume = data.volume;
+  }
+
+  String get commandId => "message";
+
+  String toString() {
+    return message + ((volume > 10) ? "!" : "");
+  }
+
+  String serialize() {
+    return JSON.encode({
+      "message": message,
+      "volume": volume
     });
   }
 }
