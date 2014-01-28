@@ -153,7 +153,7 @@ class AceManager {
 
       // Ace uses 0-based lines.
       ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
-      int aceRow = marker.lineNum - 1;
+      int aceRow = charPoint.row;
       int aceColumn = charPoint.column;
 
       // If there is an existing annotation, delete it and combine into one.
