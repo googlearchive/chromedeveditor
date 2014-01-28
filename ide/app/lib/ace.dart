@@ -144,13 +144,6 @@ class AceManager {
     _recreateMiniMap();
     Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
 
-    List<int> offsetAt = [];
-    int offsetCount = 0;
-    for (var line = 0; line <= currentSession.screenLength; line++) {
-      offsetCount += currentSession.getLine(line).length + 1;
-      offsetAt.add(offsetCount);
-    }
-
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
 
@@ -159,8 +152,9 @@ class AceManager {
           annotationType);
 
       // Ace uses 0-based lines.
+      ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
       int aceRow = marker.lineNum - 1;
-      int aceColumn = marker.charStart - offsetAt[aceRow - 1];
+      int aceColumn = charPoint.column;
 
       // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
