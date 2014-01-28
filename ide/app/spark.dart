@@ -1571,6 +1571,9 @@ void _handleUncaughtException(error, StackTrace stackTrace) {
   String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
+
+  window.console.error(error.toString());
+  window.console.error(stackTrace.toString());
 }
 
 bool get _isTrackingPermitted =>
