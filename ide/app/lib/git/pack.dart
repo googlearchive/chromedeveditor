@@ -18,50 +18,10 @@ import 'package:utf/utf.dart';
 
 import 'file_operations.dart';
 import 'object.dart';
+import 'object_utils.dart';
 import 'objectstore.dart';
 import 'utils.dart';
 import 'zlib.dart';
-
-/**
- * Encapsulates a git pack object.
- */
-class PackObject {
-  List<int> sha;
-  String baseSha;
-  int crc;
-  int offset;
-  int type;
-  int desiredOffset;
-  Uint8List data;
-}
-
-class PackedTypes {
-  static const COMMIT = 1;
-  static const TREE = 2;
-  static const BLOB = 3;
-  static const TAG = 4;
-  static const OFS_DELTA = 6;
-  static const REF_DELTA = 7;
-
-  static String getTypeString(int type) {
-    switch(type) {
-      case COMMIT:
-        return "commit";
-      case TREE:
-        return "tree";
-      case BLOB:
-        return "blob";
-      case TAG:
-        return "tag";
-      case OFS_DELTA:
-        return "ofs_delta";
-      case REF_DELTA:
-        return "ref_delta";
-      default:
-        throw "unsupported pack type.";
-    }
-  }
-}
 
 /**
  * Encapsulates a pack object header.
@@ -145,9 +105,8 @@ class Pack {
   /**
    * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(int type, Uint8List contentData) {
-    List<int> header = encodeUtf8(PackedTypes.getTypeString(type)
-        + " ${contentData.length}\u0000");
+  List<int> getObjectHash(String type, Uint8List contentData) {
+    List<int> header = encodeUtf8(type + " ${contentData.length}\u0000");
 
     Uint8List fullContent = new Uint8List(header.length + contentData.length);
 
@@ -214,11 +173,11 @@ class Pack {
       return deltaObj;
     }
 
-    if (object.type == PackedTypes.OFS_DELTA) {
+    if (object.type == ObjectTypes.OFS_DELTA_STR) {
       PackObject baseObj = _matchObjectAtOffset(object.desiredOffset);
       switch (baseObj.type) {
-        case PackedTypes.OFS_DELTA:
-        case PackedTypes.REF_DELTA:
+        case ObjectTypes.OFS_DELTA_STR:
+        case ObjectTypes.REF_DELTA_STR:
           return expandDeltifiedObject(baseObj).then((
               PackObject expandedObject) => doExpand(expandedObject, object));
         default:
@@ -248,13 +207,13 @@ class Pack {
     PackObject object = new PackObject();
 
     object.offset = header.offset;
-    object.type = header.type;
+    object.type = ObjectTypes.getTypeString(header.type);
 
     switch (header.type) {
-      case PackedTypes.OFS_DELTA:
+      case ObjectTypes.OFS_DELTA:
         object.desiredOffset = findDeltaBaseOffset(header);
         break;
-      case PackedTypes.REF_DELTA:
+      case ObjectTypes.REF_DELTA:
         Uint8List shaBytes = _peek(20);
         _advance(20);
         object.baseSha = shaBytes.map((int byte) {
@@ -277,8 +236,8 @@ class Pack {
     PackObject object = _matchObjectAtOffset(startOffset);
 
     switch (object.type) {
-      case PackedTypes.OFS_DELTA:
-      case PackedTypes.REF_DELTA:
+      case ObjectTypes.OFS_DELTA_STR:
+      case ObjectTypes.REF_DELTA_STR:
         return expandDeltifiedObject(object);
       default:
         return new Future.value(object);
@@ -308,8 +267,8 @@ class Pack {
 
         // hold on to the data for delta style objects.
         switch (object.type) {
-          case PackedTypes.OFS_DELTA:
-          case PackedTypes.REF_DELTA:
+          case ObjectTypes.OFS_DELTA_STR:
+          case ObjectTypes.REF_DELTA_STR:
             deferredObjects.add(object);
             break;
           default:
@@ -481,7 +440,8 @@ class PackBuilder {
     ByteBuffer compressed;
     compressed = new Uint8List.fromList(Zlib.deflate(data).buffer
         .getBytes()).buffer;
-    _packed.add(_packTypeSizeBits(object.type, data.length));
+    _packed.add(_packTypeSizeBits(ObjectTypes.getType(object.type),
+        data.length));
     _packed.add(compressed);
   }
 

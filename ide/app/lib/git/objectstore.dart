@@ -39,9 +39,9 @@ class GitRef {
 
   GitRef(this.sha, this.name, [this.type, this.remote]);
 
-  getPktLine() => '${sha} ${head} ${name}';
+  String getPktLine() => '${sha} ${head} ${name}';
 
-  toString() => getPktLine();
+  String toString() => getPktLine();
 }
 
 class GitConfig {
@@ -220,7 +220,7 @@ class ObjectStore {
   Future<chrome.FileEntry> _findLooseObject(String sha) => objectDir.getFile(
       sha.substring(0, 2) + '/' + sha.substring(2));
 
-  FindPackedObjectResult findPackedObject(Uint8List shaBytes) {
+  FindPackedObjectResult findPackedObject(List<int> shaBytes) {
     for (var i = 0; i < packs.length; ++i) {
       int offset = packs[i].packIdx.getObjectOffset(shaBytes);
 
@@ -232,8 +232,8 @@ class ObjectStore {
     return throw("Not found.");
   }
 
-  Future retrieveObject(String sha, String objType) {
-    String dataType = (objType == ObjectTypes.COMMIT ? "Text" : "ArrayBuffer");
+  Future<GitObject> retrieveObject(String sha, String objType) {
+    String dataType = (objType == ObjectTypes.COMMIT_STR ? "Text" : "ArrayBuffer");
     return retrieveRawObject(sha, dataType).then((object) {
       if (objType == 'Raw') {
         return object;
@@ -245,7 +245,7 @@ class ObjectStore {
     });
   }
 
-  Future retrieveRawObject(dynamic sha, String dataType) {
+  Future<GitObject> retrieveRawObject(dynamic sha, String dataType) {
     Uint8List shaBytes;
     if (sha is Uint8List) {
       shaBytes = sha;
@@ -294,7 +294,7 @@ class ObjectStore {
 
         seen[sha] = true;
 
-        return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commitObj) {
+        return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((CommitObject commitObj) {
           nextLevel.addAll(commitObj.parents);
           int i = commits.length - 1;
           for (; i >= 0; i--) {
@@ -329,7 +329,7 @@ class ObjectStore {
   Future<CommitObject> _checkRemoteHead(GitRef remoteRef) {
     // Check if the remote head exists in the local repo.
     if (remoteRef.sha != HEAD_MASTER_SHA) {
-      return retrieveObject(remoteRef.sha, ObjectTypes.COMMIT).then((obj) => obj,
+      return retrieveObject(remoteRef.sha, ObjectTypes.COMMIT_STR).then((obj) => obj,
           onError: (e) {
             //TODO support non-fast forward.
             _nonFastForward();
@@ -389,7 +389,7 @@ class ObjectStore {
     var commits = [];
     Future<CommitPushEntry> getNextCommit(String sha) {
 
-      return retrieveObject(sha, ObjectTypes.COMMIT).then((
+      return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((
           CommitObject commitObj) {
 
         Completer completer = new Completer();
@@ -461,8 +461,8 @@ class ObjectStore {
   }
 
   Future<TreeObject> _getTreeFromCommitSha(String sha) {
-    return retrieveObject(sha, ObjectTypes.COMMIT).then((CommitObject commit) {
-     return  retrieveObject(commit.treeSha, ObjectTypes.TREE).then(
+    return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((CommitObject commit) {
+     return  retrieveObject(commit.treeSha, ObjectTypes.TREE_STR).then(
          (rawObject) => rawObject);
     });
   }
@@ -579,7 +579,7 @@ class ObjectStore {
       blobParts.add(tree.sha);
     });
 
-    return writeRawObject(ObjectTypes.TREE, new Blob(blobParts));
+    return writeRawObject(ObjectTypes.TREE_STR, new Blob(blobParts));
   }
 
   Future<GitConfig> getConfig() {
