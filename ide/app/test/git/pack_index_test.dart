@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
+import '../../lib/git/object.dart';
 import '../../lib/git/pack.dart';
 import '../../lib/git/pack_index.dart';
 
@@ -55,7 +56,7 @@ defineTests() {
     test('packIndexParse', () {
       return initPack().then((Pack pack) {
         return initPackIndex().then((PackIndex packIdx) {
-          pack.objects.forEach((PackObject obj) {
+          pack.objects.forEach((PackedObject obj) {
             // asserts the object found by index has correct offset.
             expect(obj.offset,packIdx.getObjectOffset(obj.sha));
           });
