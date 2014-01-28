@@ -58,7 +58,7 @@ class Checkout {
           return Conditions.checkForUncommittedChanges(root, store).then(
               (GitConfig config) {
             return _cleanWorkingDir(root).then((_) {
-              return store.retrieveObject(branchSha, ObjectTypes.COMMIT).then(
+              return store.retrieveObject(branchSha, ObjectTypes.COMMIT_STR).then(
                   (CommitObject commit) {
                 return ObjectUtils.expandTree(root, store, commit.treeSha)
                     .then((_) {

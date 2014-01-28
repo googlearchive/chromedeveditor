@@ -33,7 +33,7 @@ import 'lib/tests.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
-import 'lib/utils.dart';
+import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
 
@@ -185,7 +185,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   // - End SparkModel interface.
   //
 
-  String get appName => i18n('app_name');
+  String get appName => utils.i18n('app_name');
 
   String get appVersion => chrome.runtime.getManifest()['version'];
 
@@ -372,9 +372,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
+    actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
     actionManager.registerAction(new TabNextAction(this));
-    actionManager.registerAction(new FileCloseAction(this));
+    actionManager.registerAction(new SpecificTabAction(this));
+    actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
 
     actionManager.registerKeyListener();
@@ -430,12 +432,12 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   Future<bool> openFolder() {
-    return _selectFolder().then((chrome.ChromeFileEntry entry) {
+    return _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
-        workspace.link(entry).then((file) {
+        workspace.link(entry).then((resource) {
           Timer.run(() {
-            _filesController.selectFile(file);
-            _filesController.setFolderExpanded(file);
+            _filesController.selectFile(resource);
+            _filesController.setFolderExpanded(resource);
           });
           workspace.save();
         });
@@ -692,7 +694,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
  * Allows a user to select a folder on disk. Returns the selected folder
  * entry. Returns `null` in case the user cancels the action.
  */
-Future<chrome.ChromeFileEntry> _selectFolder({String suggestedName}) {
+Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
   Completer completer = new Completer();
   chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
       type: chrome.ChooseEntryType.OPEN_DIRECTORY);
@@ -889,7 +891,7 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
 
 class FileOpenAction extends SparkAction {
   FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
-    defaultBinding("ctrl-o");
+    addBinding("ctrl-o");
   }
 
   void _invoke([Object context]) {
@@ -903,7 +905,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
 
   FileNewAction(Spark spark, Element dialog)
       : super(spark, "file-new", "New File…", dialog) {
-    defaultBinding("ctrl-n");
+    addBinding("ctrl-n");
     _nameElement = _triggerOnReturn("#fileName");
   }
 
@@ -947,7 +949,7 @@ class FileNewAsAction extends SparkAction {
 
 class FileSaveAction extends SparkAction {
   FileSaveAction(Spark spark) : super(spark, "file-save", "Save") {
-    defaultBinding("ctrl-s");
+    addBinding("ctrl-s");
   }
 
   void _invoke([Object context]) => spark.editorManager.saveAll();
@@ -1055,7 +1057,8 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
 
 class TabPreviousAction extends SparkAction {
   TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {
-    defaultBinding("ctrl-shift-[");
+    addBinding('ctrl-shift-[');
+    addBinding('ctrl-shift-tab', macBinding: 'macctrl-shift-tab');
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoPreviousTab();
@@ -1063,15 +1066,67 @@ class TabPreviousAction extends SparkAction {
 
 class TabNextAction extends SparkAction {
   TabNextAction(Spark spark) : super(spark, "tab-next", "Next Tab") {
-    defaultBinding("ctrl-shift-]");
+    addBinding('ctrl-shift-]');
+    addBinding('ctrl-tab', macBinding: 'macctrl-tab');
   }
 
   void _invoke([Object context]) => spark.editorArea.gotoNextTab();
 }
 
-class FileCloseAction extends SparkAction {
-  FileCloseAction(Spark spark) : super(spark, "file-close", "Close") {
-    defaultBinding("ctrl-w");
+class SpecificTabAction extends SparkAction {
+  _SpecificTabKeyBinding _binding;
+
+  SpecificTabAction(Spark spark) : super(spark, "tab-goto", "Goto Tab") {
+    _binding = new _SpecificTabKeyBinding();
+    bindings.add(_binding);
+  }
+
+  void _invoke([Object context]) {
+    if (_binding.index < 1 && _binding.index > spark.editorArea.tabs.length) {
+      return;
+    }
+
+    // Ctrl-1 to Ctrl-8. The user types in a 1-based key event; we convert that
+    // into a 0-based into into the tabs.
+    spark.editorArea.selectedTab = spark.editorArea.tabs[_binding.index - 1];
+  }
+}
+
+class _SpecificTabKeyBinding extends KeyBinding {
+  final int ONE_CODE = '1'.codeUnitAt(0);
+  final int EIGHT_CODE = '8'.codeUnitAt(0);
+
+  int index = -1;
+
+  _SpecificTabKeyBinding() : super('ctrl-1');
+
+  bool matches(KeyboardEvent event) {
+    // If the user typed in a 1 to an 8, change this binding to match that key.
+    // To match completely, the user will need to have used the `ctrl` modifier.
+    if (event.keyCode >= ONE_CODE && event.keyCode <= EIGHT_CODE) {
+      keyCode = event.keyCode;
+      index = keyCode - ONE_CODE + 1;
+    }
+
+    return super.matches(event);
+  }
+}
+
+class TabLastAction extends SparkAction {
+  TabLastAction(Spark spark) : super(spark, "tab-last", "Last Tab") {
+    addBinding("ctrl-9");
+  }
+
+  void _invoke([Object context]) {
+    if (spark.editorArea.tabs.isNotEmpty) {
+      spark.editorArea.selectedTab = spark.editorArea.tabs.last;
+    }
+  }
+}
+
+class TabCloseAction extends SparkAction {
+  TabCloseAction(Spark spark) : super(spark, "tab-close", "Close") {
+    addBinding("ctrl-w");
   }
 
   void _invoke([Object context]) {
@@ -1083,8 +1138,7 @@ class FileCloseAction extends SparkAction {
 
 class FileExitAction extends SparkAction {
   FileExitAction(Spark spark) : super(spark, "file-exit", "Quit") {
-    macBinding("ctrl-q");
-    winBinding("ctrl-shift-f4");
+    addBinding('ctrl-q', linuxBinding: 'ctrl-shift-q');
   }
 
   void _invoke([Object context]) {
@@ -1097,7 +1151,7 @@ class FileExitAction extends SparkAction {
 class ApplicationRunAction extends SparkAction implements ContextAction {
   ApplicationRunAction(Spark spark) : super(
       spark, "application-run", "Run Application") {
-    defaultBinding("ctrl-r");
+    addBinding("ctrl-r");
 
     enabled = false;
 
@@ -1131,7 +1185,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 class PrevMarkerAction extends SparkAction {
   PrevMarkerAction(Spark spark) : super(
       spark, "marker-prev", "Previous Marker") {
-    defaultBinding("ctrl-shift-p");
+    addBinding("ctrl-shift-p");
   }
 
   void _invoke([Object context]) {
@@ -1142,7 +1196,9 @@ class PrevMarkerAction extends SparkAction {
 class NextMarkerAction extends SparkAction {
   NextMarkerAction(Spark spark) : super(
       spark, "marker-next", "Next Marker") {
-    defaultBinding("ctrl-p");
+    // TODO: we probably don't want to bind to 'print'. Perhaps there's a good
+    // keybinding we can borrow from chrome?
+    addBinding("ctrl-p");
   }
 
   void _invoke([Object context]) {
@@ -1156,7 +1212,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
 
   FolderNewAction(Spark spark, Element dialog)
       : super(spark, "folder-new", "New Folder…", dialog) {
-    defaultBinding("ctrl-shift-n");
+    addBinding("ctrl-shift-n");
     _nameElement = _triggerOnReturn("#folderName");
   }
 
@@ -1512,7 +1568,7 @@ class RunTestsAction extends SparkAction {
 void _handleUncaughtException(error, StackTrace stackTrace) {
   // We don't log the error object itself because of PII concerns.
   String errorDesc = error != null ? error.runtimeType.toString() : '';
-  String desc = '${errorDesc}\n${minimizeStackTrace(stackTrace)}'.trim();
+  String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
 }

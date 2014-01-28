@@ -26,14 +26,14 @@ abstract class GitObject {
   static GitObject make(String sha, String type, content,
                         [LooseObject rawObj]) {
     switch (type) {
-      case ObjectTypes.BLOB:
+      case ObjectTypes.BLOB_STR:
         return new BlobObject(sha, content);
-      case ObjectTypes.TREE:
+      case ObjectTypes.TREE_STR:
       case "Tree":
         return new TreeObject(sha, content, rawObj);
-      case ObjectTypes.COMMIT:
+      case ObjectTypes.COMMIT_STR:
         return new CommitObject(sha, content, rawObj);
-      case ObjectTypes.TAG:
+      case ObjectTypes.TAG_STR:
         return new TagObject(sha, content);
       default:
         throw new ArgumentError("Unsupported git object type: ${type}");
@@ -43,7 +43,7 @@ abstract class GitObject {
   GitObject([this._sha, this.data]);
 
   // The type of git object.
-  String _type;
+  String type;
   dynamic data;
   String _sha;
 
@@ -61,8 +61,6 @@ class TreeEntry {
 
   TreeEntry(this.name, this.sha, this.isBlob);
 }
-
-
 
 /**
  * Error thrown for a parse failure.
@@ -91,7 +89,7 @@ class TreeObject extends GitObject {
 
   TreeObject( [String sha, Uint8List data, LooseObject rawObj])
       : super(sha, data) {
-    this._type = ObjectTypes.TREE;
+    this.type = ObjectTypes.TREE_STR;
     this.rawObj  = rawObj;
     _parse();
   }
@@ -134,7 +132,7 @@ class TreeObject extends GitObject {
 class BlobObject extends GitObject {
 
   BlobObject(String sha, String data) : super(sha, data) {
-    this._type = ObjectTypes.BLOB;
+    this.type = ObjectTypes.BLOB_STR;
   }
 }
 
@@ -165,7 +163,7 @@ class CommitObject extends GitObject {
   LooseObject rawObj;
 
   CommitObject(String sha, var data, [rawObj]) {
-    this._type = ObjectTypes.COMMIT;
+    this.type = ObjectTypes.COMMIT_STR;
     this._sha = sha;
     this.rawObj = rawObj;
 
@@ -177,7 +175,6 @@ class CommitObject extends GitObject {
       // TODO: Clarify this exception.
       throw "Data is in incompatible format.";
     }
-
     _parseData();
   }
 
@@ -251,26 +248,15 @@ class CommitObject extends GitObject {
  */
 class TagObject extends GitObject {
   TagObject(String sha, String data) : super(sha, data) {
-    this._type = ObjectTypes.TAG;
+    this.type = ObjectTypes.TAG_STR;
   }
 }
 
 /**
  * A loose git object.
  */
-class LooseObject {
+class LooseObject extends GitObject {
   int size;
-  int type;
-
-  static Map<String, int> _typeMap = {
-    ObjectTypes.COMMIT : 1,
-    ObjectTypes.TREE : 2,
-    ObjectTypes.BLOB : 3
-  };
-
-  // Represents either an ArrayBuffer or a string representation of byte
-  //stream.
-  dynamic data;
 
   LooseObject(buf) {
     _parse(buf);
@@ -299,7 +285,18 @@ class LooseObject {
       this.data = buf.substring(i + 1, buf.length);
     }
     List<String> parts = header.split(' ');
-    this.type = _typeMap[parts[0]];
+    this.type = parts[0];
     this.size = int.parse(parts[1]);
   }
+}
+
+/**
+ * Encapsulates a git pack object.
+ */
+class PackedObject extends GitObject {
+  List<int> sha;
+  String baseSha;
+  int crc;
+  int offset;
+  int desiredOffset;
 }

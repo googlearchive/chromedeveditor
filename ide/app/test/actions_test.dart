@@ -83,7 +83,7 @@ class MockAction extends Action {
   bool wasCalled = false;
 
   MockAction(): super('mock-action', 'Mock Action') {
-    defaultBinding('alt-o');
+    addBinding('alt-o');
   }
 
   invoke([Object context]) => wasCalled = true;

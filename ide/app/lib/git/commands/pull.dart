@@ -123,7 +123,7 @@ class Pull {
                 shaBytesToString(mergeEntry['new'].sha));
           } else {
             return store.retrieveObjectList([mergeEntry['old'].sha,
-                mergeEntry['new'].sha], ObjectTypes.TREE).then(
+                mergeEntry['new'].sha], ObjectTypes.TREE_STR).then(
                 (List<TreeObject> trees) {
               TreeDiffResult treeDiff2 = Merge.diffTree(trees[0], trees[1]);
               return dir.createDirectory(mergeEntry['new'].name).then(
