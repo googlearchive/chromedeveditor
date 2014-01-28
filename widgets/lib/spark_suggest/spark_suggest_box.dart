@@ -57,7 +57,7 @@ class SparkSuggestBox extends SparkWidget {
   /// the [oracle].
   @observable bool isLoading;
   /// Is the suggestion list popup visible?
-  @observable bool suggestionsOpened;
+  @observable bool suggestionsOpened = false;
 
   StreamSubscription _oracleSub;
 
@@ -102,6 +102,14 @@ class SparkSuggestBox extends SparkWidget {
     } else {
       suggest();
     }
+  }
+
+  void inputFocus() {
+    InputElement textBox = $['text-box'];
+    if (textBox.value.length == 0)
+      return;
+
+    suggest();
   }
 
   void suggest() {

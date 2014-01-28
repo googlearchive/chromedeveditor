@@ -58,7 +58,6 @@ class SparkPolymerDialog implements SparkDialog {
 
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
-  bool _developerMode;
 
   Future<bool> invokeSystemDialog(dialogFuture) {
     backdropShowing = true;
@@ -111,8 +110,9 @@ class SparkPolymer extends Spark {
 
   SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
-        _developerMode = developerMode,
-        super(developerMode);
+        super(developerMode) {
+    _ui.developerMode = developerMode;
+  }
 
   @override
   Element getUIElement(String selectors) => _ui.getShadowDomElement(selectors);
@@ -174,8 +174,8 @@ class SparkPolymer extends Spark {
     // Listen for job manager events.
     jobManager.onChange.listen((JobManagerEvent event) {
       if (event.started) {
-          statusComponent.spinning = true;
-          statusComponent.progressMessage = event.job.name;
+        statusComponent.spinning = true;
+        statusComponent.progressMessage = event.job.name;
       } else if (event.finished) {
         statusComponent.spinning = false;
         statusComponent.progressMessage = null;
@@ -184,11 +184,8 @@ class SparkPolymer extends Spark {
 
     // Listen for editing area name change events.
     editorArea.onNameChange.listen((name) {
-      if (editorArea.shouldDisplayName) {
-        statusComponent.defaultMessage = name;
-      } else {
-        statusComponent.defaultMessage = null;
-      }
+      statusComponent.defaultMessage =
+          editorArea.shouldDisplayName ? name : null;
     });
   }
 
@@ -214,11 +211,7 @@ class SparkPolymer extends Spark {
   }
 
   @override
-  void buildMenu() {
-    if (_developerMode) {
-      _ui.buildTestMenu();
-    }
-  }
+  void buildMenu() => super.buildMenu();
 
   //
   // - End parts of the parent's ctor.

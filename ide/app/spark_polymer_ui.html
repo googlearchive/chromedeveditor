@@ -15,7 +15,6 @@
 <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_box.html">
-<link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_list.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <!--link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html"-->
@@ -38,11 +37,10 @@
 
       <span id="saveStatus" class="titleFont"></span>
 
-      <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
-          placeholder="Search...">
-      </spark-suggest-box>
-
       <div id="toolbarRight" class="titleFont">
+        <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
+            placeholder="Search">
+        </spark-suggest-box>
         <spark-menu-button id="mainMenu"
             src="images/menu.png"
             responsive="true"
@@ -62,6 +60,11 @@
           <spark-menu-separator></spark-menu-separator>
           <spark-menu-item action-id="settings" iconsize=0 label="Settings...">
           </spark-menu-item>
+          <template if="{{developerMode}}">
+            <spark-menu-separator></spark-menu-separator>
+            <spark-menu-item action-id="run-tests" iconsize=0 label="Run Tests">
+            </spark-menu-item>
+          </template>
           <spark-menu-separator></spark-menu-separator>
           <spark-menu-item action-id="help-about" iconsize=0 label="About Spark">
           </spark-menu-item>

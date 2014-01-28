@@ -21,6 +21,7 @@
 -->
 
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 
 <polymer-element name="spark-suggest-box" extends="spark-widget"
     attributes="oracle placeholder">
@@ -36,7 +37,8 @@
         type="search"
         focused
         placeholder="{{placeholder}}"
-        on-keyup="{{inputKeyUp}}" />
+        on-keyup="{{inputKeyUp}}"
+        on-focus="{{inputFocus}}" />
 
     <spark-overlay
         id="suggestion-list-overlay"
