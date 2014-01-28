@@ -193,8 +193,8 @@ class HttpFetcher {
     Map<String, String> options = urlOptions;
     options.addAll(extraOptions);
     if (options.isNotEmpty) {
-      List<String> keys = options.keys;
-      List<String> optionStrings = keys.map((String key) {
+      Iterable<String> keys = options.keys;
+      Iterable<String> optionStrings = keys.map((String key) {
         return key + "=" + Uri.encodeQueryComponent(options[key]);
       });
       return uri + "?" + optionStrings.join("&");
