@@ -4,6 +4,7 @@
 
 library spark.utils;
 
+import 'dart:html' as html;
 import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -30,6 +31,10 @@ String toTitleCase(String s) {
     }
   }).join(' ');
 }
+
+bool isMac() => _platform().indexOf('mac') != -1;
+bool isWin() => _platform().indexOf('win') != -1;
+bool isLinuxLike() => !isMac() && !isWin();
 
 AudioContext _ctx;
 
@@ -201,4 +206,9 @@ String _minimizeLine(String line) {
  */
 String _removeExtPrefix(String str) {
   return str.replaceFirst(new RegExp("chrome-extension://[a-z0-9]+/"), "");
+}
+
+String _platform() {
+  String str = html.window.navigator.platform;
+  return (str != null) ? str.toLowerCase() : '';
 }
