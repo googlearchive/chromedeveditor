@@ -1597,7 +1597,11 @@ class SettingsAction extends SparkActionWithDialog {
 }
 
 class RunTestsAction extends SparkAction {
-  RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests");
+  RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
+    if (spark.developerMode) {
+      addBinding('ctrl-shift-alt-t');
+    }
+  }
 
   _invoke([Object context]) => spark._testDriver.runTests();
 }
