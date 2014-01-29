@@ -278,7 +278,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
     _editorArea = new EditorArea(
-        getUIElement('#editorArea'), editorManager, allowsLabelBar: true);
+        getUIElement('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
   }
 
   void initEditorManager() {
