@@ -114,7 +114,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   PlatformInfo _platformInfo;
   TestDriver _testDriver;
   ProjectLocationManager projectLocationManager;
-  
+
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions;
 
@@ -553,12 +553,13 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   //
   // - End implementation of FilesControllerDelegate interface.
   //
-  
+
   //
   // Implementation of AceManagerDelegate interface:
   //
-  
+
   void setAlwaysShowAsText(String extension, bool enabled) {
+    // Allow to change the preference only when it's been loaded.
     if (_textFileExtensions != null) {
       if (enabled) {
         _textFileExtensions.add(extension);
@@ -568,7 +569,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       _syncPrefs.setValue('textFileExtensions', JSON.encode(_textFileExtensions.toList()));
     }
   }
-  
+
   bool canShowFileAsText(String filename) {
     String extension = path.extension(filename);
     return _textFileExtensions.contains(extension);

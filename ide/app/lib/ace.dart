@@ -23,6 +23,8 @@ import 'utils.dart' as utils;
 
 export 'package:ace/ace.dart' show EditSession;
 
+import '../packages/spark_widgets/spark_button/spark_button.dart';
+
 class TextEditor extends Editor {
   final AceManager aceManager;
   final workspace.File file;
@@ -142,7 +144,6 @@ class AceManager {
     List<ace.Annotation> annotations = [];
     int numberLines = currentSession.screenLength;
 
-    //_recreateDialog();
     _recreateMiniMap();
     Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
 
@@ -245,18 +246,24 @@ class AceManager {
     }
   }
 
+  /**
+   * Show an overlay dialog to tell the user that a binary file cannot be
+   * shown.
+   */
   void createDialog(String filename) {
     if (_editorElement == null) {
       return;
     }
     html.Element dialog = _editorElement.querySelector('.editor-dialog');
     if (dialog != null) {
+      // Dialog already exists.
       return;
     }
 
     dialog = new html.Element.div();
     dialog.classes.add("editor-dialog");
 
+    // Add an overlay dialog using the template #editor-dialog.
     html.DocumentFragment template =
         (html.querySelector('#editor-dialog') as html.TemplateElement).content;
     html.DocumentFragment templateClone = template.clone(true);
@@ -264,6 +271,7 @@ class AceManager {
     element.classes.remove('editor-dialog');
     dialog.append(element);
 
+    // Set actions of the dialog.
     SparkButton button = dialog.querySelector('.view-as-text-button');
     button.onClick.listen((_) {
       dialog.classes.add("transition-hidden");
@@ -276,10 +284,9 @@ class AceManager {
     });
 
     if (delegate.canShowFileAsText(filename)) {
-      //html.Element dialog = _editorElement.querySelector('.editor-dialog');
       dialog.classes.add('hidden');
     }
-    
+
     _editorElement.append(dialog);
   }
 
@@ -477,6 +484,13 @@ class KeyBindingManager {
 }
 
 abstract class AceManagerDelegate {
+  /**
+   * Mark the files with the given file extension as editable in text format.
+   */
   void setAlwaysShowAsText(String extension, bool enabled);
+
+  /**
+   * Returns true if the file with the given filename can be edited as text.
+   */
   bool canShowFileAsText(String filename);
 }
