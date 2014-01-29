@@ -291,8 +291,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
         List<String> extensions = JSON.decode(value);
         _textFileExtensions.addAll(extensions);
       }
-      _textFileExtensions.addAll(['.dart', '.js', '.html', '.css', '.txt',
-          '.cmake', '.c', '.h', '.hpp', '.cpp', '.java']);
+      _textFileExtensions.addAll(['.txt', '.cmake']);
     });
   }
 
@@ -572,7 +571,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   bool canShowFileAsText(String filename) {
     String extension = path.extension(filename);
-    return _textFileExtensions.contains(extension);
+    return _aceManager.isFileExtensionEditable(extension) ||
+        _textFileExtensions.contains(extension);
   }
   //
   // - End implementation of AceManagerDelegate interface.

@@ -119,6 +119,13 @@ class AceManager {
     theme = THEMES[0];
   }
 
+  bool isFileExtensionEditable(String extension) {
+    if (extension.startsWith('.')) {
+      extension = extension.substring(1);
+    }
+    return ace.Mode.extensionMap[extension] != null;
+  }
+
   html.Element get _editorElement => parentElement.parent;
 
   html.Element get _minimapElement {
