@@ -89,7 +89,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   final bool developerMode;
 
-  final Services services = new Services();
+  Services services;
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
 
@@ -116,6 +116,8 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   ProjectLocationManager projectLocationManager;
 
   Spark(this.developerMode) {
+    initServices();
+
     document.title = appName;
 
     _localPrefs = preferences.localStore;
@@ -164,6 +166,12 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     // Add a Dart builder.
     addBuilder(new DartBuilder());
+  }
+
+  initServices() {
+    services = new Services()..onReady.listen((_){
+      services.pingService.ping("foo");
+    });
   }
 
   //
