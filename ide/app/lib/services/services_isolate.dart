@@ -20,7 +20,6 @@ class ServicesIsolate {
   ServiceHandler handler;
 
   ServicesIsolate(this.sendPort) {
-    print("This statement makes me crash"); // Remove this and isolate runs.
     ReceivePort receivePort = new ReceivePort();
     sendPort.send(receivePort.sendPort);
     handler = new ServiceHandler.worker(receivePort, sendPort);
