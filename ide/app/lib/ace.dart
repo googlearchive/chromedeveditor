@@ -86,6 +86,7 @@ class AceManager {
    * The container for the Ace editor.
    */
   final html.Element parentElement;
+  final AceManagerDelegate delegate;
 
   ace.Editor _aceEditor;
 
@@ -98,7 +99,7 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
 
-  AceManager(this.parentElement) {
+  AceManager(this.parentElement, this.delegate) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -141,6 +142,7 @@ class AceManager {
     List<ace.Annotation> annotations = [];
     int numberLines = currentSession.screenLength;
 
+    //_recreateDialog();
     _recreateMiniMap();
     Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
 
@@ -241,6 +243,44 @@ class AceManager {
     } else {
       _editorElement.append(miniMap);
     }
+  }
+
+  void createDialog(String filename) {
+    if (_editorElement == null) {
+      return;
+    }
+    html.Element dialog = _editorElement.querySelector('.editor-dialog');
+    if (dialog != null) {
+      return;
+    }
+
+    dialog = new html.Element.div();
+    dialog.classes.add("editor-dialog");
+
+    html.DocumentFragment template =
+        (html.querySelector('#editor-dialog') as html.TemplateElement).content;
+    html.DocumentFragment templateClone = template.clone(true);
+    html.Element element = templateClone.querySelector('.editor-dialog');
+    element.classes.remove('editor-dialog');
+    dialog.append(element);
+
+    SparkButton button = dialog.querySelector('.view-as-text-button');
+    button.onClick.listen((_) {
+      dialog.classes.add("transition-hidden");
+    });
+    html.Element link = dialog.querySelector('.always-view-as-text-button');
+    link.onClick.listen((_) {
+      dialog.classes.add("transition-hidden");
+      String extention = path.extension(currentFile.name);
+      delegate.setAlwaysShowAsText(extention, true);
+    });
+
+    if (delegate.canShowFileAsText(filename)) {
+      //html.Element dialog = _editorElement.querySelector('.editor-dialog');
+      dialog.classes.add('hidden');
+    }
+    
+    _editorElement.append(dialog);
   }
 
   void clearMarkers() => currentSession.clearAnnotations();
@@ -434,4 +474,9 @@ class KeyBindingManager {
   void _updateName(String name) {
     _label.text = (name == null ? 'Default' : utils.capitalize(name));
   }
+}
+
+abstract class AceManagerDelegate {
+  void setAlwaysShowAsText(String extension, bool enabled);
+  bool canShowFileAsText(String filename);
 }
