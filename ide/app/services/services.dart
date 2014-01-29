@@ -10,12 +10,11 @@ class Services {
   final ReceivePort receivePort = new ReceivePort();
 
   Services() {
-    handler = new ServiceHandler(receivePort);
+    handler = new ServiceHandler.owner(receivePort);
     handler.listenForSendPort(workerPath).then((_){
       new Timer.periodic(const Duration(seconds: 1), (t) {
-        print("Sending Message!");
+        print("Sending 'Marco!'");
         TestMessage command = new TestMessage.yell('Marco');
-
         handler.sendCommand(command);
       });
     });
@@ -29,13 +28,12 @@ class ServiceHandler {
 
   Future listenForSendPort(String workerPath) {
     Completer completer = new Completer();
-    receivePort.listen((msg) {
-      /*%TRACE3*/ print("(4> 1/28/14): listen!"); // TRACE%
+    receivePort.listen((parameter) {
       if (sendPort == null) {
-        sendPort = msg;
+        sendPort = parameter;
         completer.complete();
       } else {
-        performCommand(msg);
+        performCommand(parameter);
       }
     });
 
@@ -45,28 +43,51 @@ class ServiceHandler {
     return completer.future;
   }
 
-  ServiceHandler(this.receivePort, [this.sendPort]) {
-    if (sendPort != null) {
-      receivePort.listen((command) {
-        performCommand(command);
-      });
-    }
+  bool isWorker = false;
+  ServiceHandler.worker(this.receivePort, this.sendPort) {
+    isWorker = true;
+    receivePort.listen((command) {
+      performCommand(command);
+    });
   }
 
+  ServiceHandler.owner(this.receivePort);
+
   sendCommand(Command command) {
-    sendPort.send({"id": command.commandId, "data": command.serialize()});
+    sendPort.send({
+        "response": false,
+        "id": command.commandId,
+        "data": command.serialize()});
   }
 
   void performCommand(command) {
+    bool isResponse = command["response"];
     String commandId = command["id"];
     String serializedData = command["data"];
 
     switch (commandId) {
       // TODO(ericarnold): Testing.  Remove.
       case "message":
-        sendCommand(new TestMessage.serialized(serializedData).respond());
+        handleCommand(new TestMessage.serialized(serializedData), isResponse);
         break;
     }
+  }
+
+  handleCommand(Command command, bool isResponse) {
+    if (isResponse) {
+      // TODO(ericarnold): Complete a future
+      print("response: " + command.toString());
+    } else {
+      sendResponse(command);
+    }
+  }
+
+  sendResponse(Command command) {
+    Command responseObject = command.respond();
+    sendPort.send({
+        "response": true,
+        "id": responseObject.commandId,
+        "data": responseObject.serialize()});
   }
 }
 
@@ -84,7 +105,9 @@ class TestMessage extends Command{
   int volume;
 
   TestMessage();
-  TestMessage.yell(this.message);
+  TestMessage.yell(this.message) {
+    this.volume = 11;
+  }
 
   TestMessage.serialized(String serializedData) {
     var data = JSON.decode(serializedData);
@@ -93,7 +116,7 @@ class TestMessage extends Command{
   }
 
   TestMessage respond() {
-    if (message == 'Marco!') {
+    if (toString() == 'Marco!') {
       return new TestMessage.yell('Polo');
     }
   }
