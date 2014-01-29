@@ -249,6 +249,9 @@ class AceManager {
   /**
    * Show an overlay dialog to tell the user that a binary file cannot be
    * shown.
+   *
+   * TODO(dvh): move this logic to editors/editor_area.
+   * See https://github.com/dart-lang/spark/issues/906
    */
   void createDialog(String filename) {
     if (_editorElement == null) {
