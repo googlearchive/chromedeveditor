@@ -4,8 +4,7 @@
 library spark.services;
 
 import 'dart:isolate';
-
-import 'services.dart';
+import 'dart:async';
 
 void main(List<String> args, SendPort sendPort) {
   final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
@@ -17,12 +16,22 @@ void main(List<String> args, SendPort sendPort) {
  */
 class ServicesIsolate {
   final SendPort sendPort;
-  ServiceHandler handler;
 
   ServicesIsolate(this.sendPort) {
     ReceivePort receivePort = new ReceivePort();
     sendPort.send(receivePort.sendPort);
-    handler = new ServiceHandler.worker(receivePort, sendPort);
+
+    receivePort.listen((arg) {
+      performAction(arg["id"], arg["data"]);
+    });
+  }
+
+  Future<String> performAction(String id, Map data) {
+    switch(id) {
+      case "ping":
+        sendPort.send('pong: $data');
+        break;
+    }
   }
 }
 
