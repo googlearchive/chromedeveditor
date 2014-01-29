@@ -18,8 +18,8 @@ import '../common/spark_widget.dart';
  * `this` suggestion.
  */
 class Suggestion {
-  @observable final String label;
-  @observable final String details;
+  final String label;
+  final String details;
 
   final Function onSelected;
 
