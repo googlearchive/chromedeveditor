@@ -22,6 +22,15 @@ body {
   width: 100%;
 }
 
+#topUi.veiled {
+  opacity: 0;
+}
+
+#topUi.unveiled {
+  opacity: 1;
+  transition: opacity 300ms;
+}
+
 #modalBackdrop {
   display:none;
   position: absolute;

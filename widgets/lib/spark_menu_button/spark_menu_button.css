@@ -20,7 +20,7 @@ spark-button button {
   border-radius: 3px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   margin-left: 14px;
-  margin-top: 8px;
+  margin-top: 12px;
   -webkit-transform: translateX(-50%);
   transform: translateX(-50%);
 }

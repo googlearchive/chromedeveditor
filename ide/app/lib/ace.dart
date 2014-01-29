@@ -162,7 +162,9 @@ class AceManager {
           annotationType);
 
       // Ace uses 0-based lines.
-      int aceRow = marker.lineNum - 1;
+      ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
+      int aceRow = charPoint.row;
+      int aceColumn = charPoint.column;
 
       // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
@@ -182,7 +184,8 @@ class AceManager {
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
       double markerPos =
-          currentSession.documentToScreenRow(marker.lineNum, 0) / numberLines * 100.0;
+          currentSession.documentToScreenRow(marker.lineNum, aceColumn)
+          / numberLines * 100.0;
 
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
