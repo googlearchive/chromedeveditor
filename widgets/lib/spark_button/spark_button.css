@@ -13,5 +13,5 @@ button:active {
 }
 
 button:focus {
-  outline: auto 5px -webkit-focus-ring-color;
+  outline: -webkit-focus-ring-color solid 1px;
 }

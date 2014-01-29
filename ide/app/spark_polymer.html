@@ -35,6 +35,23 @@
     </div>
   </template>
 
+  <!-- template for Editor Dialog -->
+  <template id="editor-dialog" >
+    <div class="editor-dialog">
+      <div>
+        <div class="editor-dialog-message" style="">
+          <div>Spark can't show the content of files of this type.</div>
+        </div>
+        <div>
+          <spark-button class="view-as-text-button">Edit as text</spark-button>
+        </div>
+      </div>
+      <div class="always-view-as-text-button">
+        <a href="#">Always edit this kind of files as text</a>
+      </div>
+    </div>
+  </template>
+
   <!-- analytics includes -->
   <script src="analytics/google-analytics-bundle.js"></script>
 
@@ -53,9 +70,12 @@
 </head>
 
 <body>
-  <!-- Main UI -->
-  <spark-polymer-ui id="topUi"></spark-polymer-ui>
-  <!-- app_modal used to make app appear modal. -->
+  <!-- Top-level UI element. -->
+  <!-- BUG: Polymer's own .polymer-veiled class: doesn't work - it gets removed
+       too soon, and doesn't prevent FOUC at all.
+       TODO(sergeygs): switch to Polymer's way once it's fixed.-->
+  <spark-polymer-ui id="topUi" class="veiled"></spark-polymer-ui>
+  <!-- A backdrop veil used to make app appear modal when displaying dialogs. -->
   <div id="modalBackdrop"></div>
 </body>
 

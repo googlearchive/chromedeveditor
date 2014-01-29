@@ -112,6 +112,13 @@ class SparkPolymer extends Spark {
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode) {
     _ui.developerMode = developerMode;
+
+    // Prevent FOUC in our own way. Polymer recommended ways don't work
+    // (bug pending).
+    polymer.Polymer.onReady.then((_) {
+      // BUG: Without this delay, FOUC still happens. Probably a Polymer bug.
+      new Timer(new Duration(milliseconds: 500), unveil);
+    });
   }
 
   @override
@@ -232,5 +239,10 @@ class SparkPolymer extends Spark {
       if (action.enabled) action.invoke();
     });
     button.active = action.enabled;
+  }
+
+  void unveil() {
+    _ui.classes.remove('veiled');
+    _ui.classes.add('unveiled');
   }
 }

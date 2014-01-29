@@ -58,9 +58,6 @@ class SparkSuggestBox extends SparkWidget {
   @observable final suggestions = new ObservableList();
   /// Currently highlighted (but not yet selected) suggestion
   @observable int selectionIndex = -1;
-  /// Whether we're loading suggestions. `true` as long as we're subscribed to
-  /// the [oracle].
-  @observable bool isLoading;
 
   StreamSubscription _oracleSub;
 
@@ -121,7 +118,6 @@ class SparkSuggestBox extends SparkWidget {
   void suggest() {
     InputElement textBox = $['text-box'];
     _cleanupSubscriptions();
-    isLoading = true;
     _oracleSub = oracle.getSuggestions(textBox.value)
         .listen((List<Suggestion> update) {
           if (update != null && update.isNotEmpty) {
@@ -136,7 +132,6 @@ class SparkSuggestBox extends SparkWidget {
     if (_oracleSub != null) {
       _oracleSub.cancel();
       _oracleSub = null;
-      isLoading = false;
     }
   }
 

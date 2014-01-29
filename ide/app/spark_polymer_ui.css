@@ -172,7 +172,7 @@
   border-radius: 5px;
 }
 
-.spark-overlay-scale-slideup input {
+.spark-overlay-scale-slideup input[type="text"] {
   width: 100%;
 }
 
@@ -284,4 +284,46 @@
 #mainMenu {
   position: relative;
   top: 3px;
+}
+
+.editor-dialog {
+  background-color: white;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 10;
+  opacity: 1;
+  transition: opacity 250ms;
+  text-align: center; font-family: Helvetica; font-size: 13px;
+}
+
+.editor-dialog .editor-dialog-message {
+  margin-top: 40px; margin-bottom: 20px; font-size: 20px; color: #888;
+}
+
+.always-view-as-text-button {
+  position: absolute; bottom: 20px; right: 20px; color: #ccc;
+}
+
+.editor-dialog a {
+  text-decoration: none;
+  color: #ccc;
+}
+
+.editor-dialog a:hover {
+  text-decoration: underline;
+  color: #888;
+}
+
+.editor-dialog.transition-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+spark-modal a.close {
+  width: 21px;
+  height: 21px;
+  text-align: center;  
 }
