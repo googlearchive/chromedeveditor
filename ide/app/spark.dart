@@ -12,6 +12,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:dquery/dquery.dart';
 import 'package:logging/logging.dart';
+import 'package:path/path.dart' as path;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_status/spark_status.dart';
@@ -82,7 +83,8 @@ Zone createSparkZone() {
   return Zone.current.fork(specification: specification);
 }
 
-class Spark extends SparkModel implements FilesControllerDelegate {
+class Spark extends SparkModel implements FilesControllerDelegate,
+    AceManagerDelegate {
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
@@ -112,6 +114,9 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   PlatformInfo _platformInfo;
   TestDriver _testDriver;
   ProjectLocationManager projectLocationManager;
+
+  // Extensions of files that will be shown as text.
+  Set<String> _textFileExtensions;
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -270,7 +275,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   }
 
   void createEditorComponents() {
-    _aceManager = new AceManager(new DivElement());
+    _aceManager = new AceManager(new DivElement(), this);
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(
@@ -279,6 +284,15 @@ class Spark extends SparkModel implements FilesControllerDelegate {
         workspace, aceManager, localPrefs, eventBus);
     _editorArea = new EditorArea(
         getUIElement('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
+
+    _syncPrefs.getValue('textFileExtensions').then((String value) {
+      _textFileExtensions = new Set();
+      if (value != null) {
+        List<String> extensions = JSON.decode(value);
+        _textFileExtensions.addAll(extensions);
+      }
+      _textFileExtensions.addAll(['.txt', '.cmake']);
+    });
   }
 
   void initEditorManager() {
@@ -537,6 +551,31 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
   //
   // - End implementation of FilesControllerDelegate interface.
+  //
+
+  //
+  // Implementation of AceManagerDelegate interface:
+  //
+
+  void setAlwaysShowAsText(String extension, bool enabled) {
+    // Allow to change the preference only when it's been loaded.
+    if (_textFileExtensions != null) {
+      if (enabled) {
+        _textFileExtensions.add(extension);
+      } else {
+        _textFileExtensions.remove(extension);
+      }
+      _syncPrefs.setValue('textFileExtensions', JSON.encode(_textFileExtensions.toList()));
+    }
+  }
+
+  bool canShowFileAsText(String filename) {
+    String extension = path.extension(filename);
+    return _aceManager.isFileExtensionEditable(extension) ||
+        _textFileExtensions.contains(extension);
+  }
+  //
+  // - End implementation of AceManagerDelegate interface.
   //
 }
 
