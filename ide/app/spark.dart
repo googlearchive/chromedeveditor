@@ -30,13 +30,13 @@ import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/scm.dart';
 import 'lib/tests.dart';
+import 'lib/services/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
 import 'test/all.dart' as all_tests;
-import 'services/services.dart';
 
 import 'spark_model.dart';
 

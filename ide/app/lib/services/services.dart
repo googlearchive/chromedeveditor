@@ -11,7 +11,7 @@ import 'dart:convert';
  * Defines a class which contains services and handles their communication.
  */
 class Services {
-  final String _workerPath = 'services/services_isolate.dart';
+  final String _workerPath = 'lib/services/services_isolate.dart';
   ServiceHandler _handler;
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
