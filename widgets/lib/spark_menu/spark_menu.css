@@ -30,7 +30,3 @@
   border-bottom: 1px solid #EEE;
   cursor: default;
 }
-
-::content spark-menu-item:hover {
-  color: #fff;
-}

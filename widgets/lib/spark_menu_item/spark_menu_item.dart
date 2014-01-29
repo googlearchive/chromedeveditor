@@ -21,5 +21,13 @@ class SparkMenuItem extends SparkWidget {
   /// Specifies the label for the menu item.
   @published String label = "";
 
+  void hover_style() {
+    classes.add('highlight');
+  }
+
+  void clean_hover_style() {
+    classes.remove('highlight');
+  }
+
   SparkMenuItem.created(): super.created();
 }
