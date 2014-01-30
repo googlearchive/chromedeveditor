@@ -11,7 +11,7 @@ import 'dart:isolate';
  * Defines a class which contains services and manages their communication.
  */
 class Services {
-  int _serviceCallId = 0;
+  int _topCallId = 0;
   Map<int, Completer> _serviceCallCompleters = {};
   final String _workerPath = 'lib/services/services_impl.dart';
   SendPort _sendPort;
@@ -41,17 +41,15 @@ class Services {
 
   Future<String> ping() {
     Completer<String> completer = new Completer();
+    int callId = _topCallId;
+    _serviceCallCompleters[callId] = completer;
     if (_ready) {
-      return _ping(completer);
+      _sendPort.send(callId);
     } else {
-      _onWorkerReady.listen((_)=>_ping(completer));
+      _onWorkerReady.listen((_)=>_sendPort.send(callId));
     }
-    _serviceCallCompleters[_serviceCallId] = completer;
+    _topCallId += 1;
     return completer.future;
-  }
-
-  _ping(Completer completer) {
-    _sendPort.send(_serviceCallId++);
   }
 
   Future pong(int id) {
