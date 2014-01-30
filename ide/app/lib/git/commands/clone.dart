@@ -130,7 +130,7 @@ class Clone {
 
   Future<chrome.Entry> _createInitialConfig(String shallow,
       GitRef localHeadRef) {
-    GitConfig config = _options.store.config;
+    Config config = _options.store.config;
     config.url = _options.repoUrl;
     config.time = new DateTime.now();
 

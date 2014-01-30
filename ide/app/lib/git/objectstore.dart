@@ -90,7 +90,7 @@ class ObjectStore {
 
   List<PackEntry> packs = [];
 
-  GitConfig config;
+  Config config;
 
   Index index;
 
@@ -121,7 +121,7 @@ class ObjectStore {
               _readPackEntry(packDir, entry);
             }).then((_) {
               return index.init().then((_) {
-                return readConfig().then((GitConfig config) {
+                return readConfig().then((Config config) {
                   this.config = config;
                   return new Future.value();
                 });
@@ -572,11 +572,11 @@ class ObjectStore {
     return writeRawObject(ObjectTypes.TREE_STR, new Blob(blobParts));
   }
 
-  Future<GitConfig> readConfig() {
+  Future<Config> readConfig() {
     return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
-        (String configStr) => new GitConfig(configStr),
+        (String configStr) => new Config(configStr),
       // TODO: handle errors / build default GitConfig.
-      onError: (e) => new GitConfig());
+      onError: (e) => new Config());
   }
 
   Future<Entry> writeConfig() {

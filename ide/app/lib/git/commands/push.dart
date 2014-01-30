@@ -31,7 +31,7 @@ class Push {
       remotePushProgress = nopFunction;
     }
 
-    GitConfig config = store.config;
+    Config config = store.config;
     String url = config.url != null ? config.url : options.repoUrl;
 
     if (url == null) {

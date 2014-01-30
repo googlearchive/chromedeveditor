@@ -6,14 +6,14 @@ library git.config;
 
 import 'dart:convert';
 
-class GitConfig {
+class Config {
 
   String url;
   String shallow;
   Map<String, String> remoteHeads = {};
   DateTime time;
 
-  GitConfig([String configStr]) {
+  Config([String configStr]) {
     if (configStr != null) {
       fromJson(configStr);
     }
