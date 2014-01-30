@@ -40,7 +40,7 @@ class Tab {
         ..type = 'button';
     _closeButton.appendHtml('&times;');
     _closeButton.onClick.listen((e) {
-      tabView.remove(this);
+      tabView.remove(this, layoutNow: false);
       e.stopPropagation();
       e.preventDefault();
     });
@@ -130,6 +130,10 @@ class TabView {
 
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
+  bool _tabItemsLayoutListenerEnabled;
+  int _lastLayoutWidth = 0;
+  StreamSubscription<MouseEvent> _tabViewContainerMouseOutStream;
+  StreamSubscription<MouseEvent> _documentMouseOutStream;
 
   TabView(this.parentElement) {
     List<Element> originalElements = parentElement.children.toList();
@@ -162,6 +166,10 @@ class TabView {
         tab.label = element.attributes['data-title'];
       }
     });
+
+    window.onResize.listen((e) {
+      _layoutTabItemsOnResize();
+    });
   }
 
   Tab get selectedTab => _selectedTab;
@@ -180,10 +188,12 @@ class TabView {
   Tab add(Tab tab, {bool switchesTab: true}) {
     tabs.add(tab);
     _tabViewWorkspace.children.add(tab._pageContainer);
+    tab._label.style.width = '0';
     _tabBarScrollable.children.add(tab._label);
     if (switchesTab) {
       selectedTab = tab;
     }
+    _layoutTabItems();
     return tab;
   }
 
@@ -192,15 +202,85 @@ class TabView {
       add(tab, switchesTab: switchesTab);
     } else {
       int index = tabs.indexOf(tabToReplace);
-      remove(tabToReplace, switchesTab: false);
+      // Use same width as the tab we are replacing.
+      tab._label.style.width = tabToReplace._label.style.width;
+      // Set layoutNow to false to avoid triggering a layout.
+      remove(tabToReplace, switchesTab: false, layoutNow: false);
       tabs.insert(index, tab);
       _tabViewWorkspace.children.insert(index, tab._pageContainer);
       _tabBarScrollable.children.insert(index, tab._label);
       if (switchesTab) {
         selectedTab = tab;
       }
+      _layoutTabItems();
     }
     return tab;
+  }
+
+  void _layoutTabItemsOnResize() {
+    if (_lastLayoutWidth == _tabViewContainer.clientWidth) {
+      return;
+    }
+    _lastLayoutWidth = _tabViewContainer.clientWidth;
+    _layoutTabItems();
+  }
+
+  void _scheduleLayoutTabItems() {
+    if (_tabItemsLayoutListenerEnabled) {
+      return;
+    }
+    _tabItemsLayoutListenerEnabled = true;
+    _tabViewContainerMouseOutStream = _tabViewContainer.onMouseOut.listen((e) {
+      _layoutTabItems();
+    });
+    _documentMouseOutStream = document.onMouseOut.listen((e) {
+      _layoutTabItems();
+    });
+  }
+
+  void _layoutTabItems() {
+    final int tabBarHorizontalMargin = 30;
+    int remainingWidth =
+        (_tabBarScrollable.clientWidth - tabBarHorizontalMargin);
+    int remainingTabs = tabs.length;
+    if (remainingTabs == 0) {
+      // There's no tab to layout.
+      return;
+    }
+
+    // deltaWidth is the difference between the real size of the widget and
+    // the size we set to CSS width property.
+    final int deltaWidth = 4;
+    // maxTabItemWidth is the maximum size of a tab item.
+    final int maxTabItemWidth = 150;
+    bool hideCloseButton = false;
+    if ((remainingWidth / remainingTabs).ceil() < 60) {
+      hideCloseButton = true;
+    }
+
+    // Distribute size over items and make sure we fill all the remaining space.
+    tabs.forEach((Tab tab) {
+      int width = (remainingWidth / remainingTabs).ceil() - deltaWidth;
+      if (width > maxTabItemWidth) {
+        width = maxTabItemWidth;
+      }
+      tab._label.style.width = '${width}px';
+      remainingWidth -= width + deltaWidth;
+      remainingTabs --;
+      if (hideCloseButton) {
+        tab._label.classes.add('hide-close-button');
+      } else {
+        tab._label.classes.remove('hide-close-button');
+      }
+    });
+
+    if (_tabItemsLayoutListenerEnabled) {
+      _tabViewContainerMouseOutStream.cancel();
+      _tabViewContainerMouseOutStream = null;
+      _documentMouseOutStream.cancel();
+      _documentMouseOutStream = null;
+      _tabItemsLayoutListenerEnabled = false;
+    }
   }
 
   void scrollIntoView(Tab tab) {
@@ -215,7 +295,7 @@ class TabView {
       }
   }
 
-  bool remove(Tab tab, {bool switchesTab: true}) {
+  bool remove(Tab tab, {bool switchesTab: true, bool layoutNow: true}) {
     if (tab._label.parent == null) return false;
     var beforeCloseEvent = new TabBeforeCloseEvent(tab);
     _onBeforeCloseStreamController.add(beforeCloseEvent);
@@ -238,6 +318,13 @@ class TabView {
     if (_selectedTab != null) _selectedTab.validatePage();
 
     _onCloseStreamController.add(tab);
+
+    if (layoutNow) {
+      _layoutTabItems();
+    } else {
+      _scheduleLayoutTabItems();
+    }
+
     return true;
   }
 
