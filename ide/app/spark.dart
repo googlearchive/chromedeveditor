@@ -31,6 +31,7 @@ import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/scm.dart';
 import 'lib/tests.dart';
+import 'lib/services/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
@@ -90,6 +91,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   final bool developerMode;
 
+  Services services;
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
 
@@ -119,6 +121,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   Set<String> _textFileExtensions;
 
   Spark(this.developerMode) {
+    initServices();
+
     document.title = appName;
 
     _localPrefs = preferences.localStore;
@@ -167,6 +171,11 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     // Add a Dart builder.
     addBuilder(new DartBuilder());
+  }
+
+  initServices() {
+    services = new Services();
+    services.ping().then((result) => print(result));
   }
 
   //
