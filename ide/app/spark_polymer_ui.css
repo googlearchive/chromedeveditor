@@ -6,8 +6,6 @@
 
 @import url("lib/ui/widgets/listview.css");
 @import url("lib/ui/widgets/treeview.css");
-@import url("lib/ui/widgets/tabview.css");
-@import url("lib/ui/widgets/imageviewer.css");
 
 @import url("assets/font-awesome/css/font-awesome.min.css");
 
@@ -79,28 +77,6 @@
 
 }
 
-.ace_gutter-cell {
-  color: #aaa;
-}
-
-.ace_gutter-tooltip-divider {
-  background-color: gray;
-  height: 1px;
-  margin: 3px -4px;
-}
-
-.ace_gutter-tooltip-label-error {
-  color: #F55;
-}
-
-.ace_gutter-tooltip-label-warning {
-  color: #DD3;
-}
-
-.ace_gutter-tooltip-label-info {
-  color: #9CC;
-}
-
 #splitview {
   bottom: 0;
   display: flex;
@@ -137,12 +113,6 @@
 
 #fileViewArea .listview-dragover.listview-dragover-active {
   border: 2px solid #aaf;
-}
-
-#editorArea {
-  flex: 1;
-  overflow: hidden;
-  position: relative;
 }
 
 #file-item-context-menu {
@@ -197,56 +167,14 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.2);
 }
 
-.ace_gutter-cell.ace_error {
-  background-image: url("assets/images/error_icon.png");
-}
-
-.ace_gutter-cell.ace_warning {
-  background-image: url("assets/images/warning_icon.png");
-}
-
-.ace_gutter-cell.ace_info {
-  background-image: url("assets/images/info_icon.png");
-}
-
-.minimap {
-  right: 0px;
-  width: 10px;
-  bottom: 15px;
-  top: 0px;
-  position: absolute;
-  z-index: 9;
-  /* TODO(ericarnold): Needs a background which inherits editor bg color.*/
-}
-
-.minimap-marker {
-  border-radius: 2px;
-  position: absolute;
-  height: 4px;
-  left: 1px;
-  right: 1px;
-  background: #DDD;
-}
-
-.minimap-marker:hover {
-  cursor: pointer;
-}
-
-.minimap-marker.error {
-  background: #F55;
-}
-
-.minimap-marker.warning {
-  background: #DD3;
-}
-
-.minimap-marker.info {
-  background: #9CC;
-}
-
 #toolbar {
   position: absolute;
   left: 0;
+  right: 0;
+}
+
+#toolbarRight {
+  position: absolute;
   right: 0;
 }
 
@@ -284,48 +212,7 @@
   text-decoration: none;
 }
 
-#toolbarRight {
-  position: absolute;
-  right: 0;
-}
-
 #mainMenu {
   position: relative;
   top: 3px;
-}
-
-.editor-dialog {
-  background-color: white;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  top: 0;
-  z-index: 10;
-  opacity: 1;
-  transition: opacity 250ms;
-  text-align: center; font-family: Helvetica; font-size: 13px;
-}
-
-.editor-dialog .editor-dialog-message {
-  margin-top: 40px; margin-bottom: 20px; font-size: 20px; color: #888;
-}
-
-.always-view-as-text-button {
-  position: absolute; bottom: 20px; right: 20px; color: #ccc;
-}
-
-.editor-dialog a {
-  text-decoration: none;
-  color: #ccc;
-}
-
-.editor-dialog a:hover {
-  text-decoration: underline;
-  color: #888;
-}
-
-.editor-dialog.transition-hidden {
-  opacity: 0;
-  pointer-events: none;
 }

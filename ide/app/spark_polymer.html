@@ -74,7 +74,10 @@
   <!-- BUG: Polymer's own .polymer-veiled class: doesn't work - it gets removed
        too soon, and doesn't prevent FOUC at all.
        TODO(sergeygs): switch to Polymer's way once it's fixed.-->
-  <spark-polymer-ui id="topUi" class="veiled"></spark-polymer-ui>
+  <spark-polymer-ui id="topUi" class="veiled">
+    <div id="editorArea"></div>
+  </spark-polymer-ui>
+
   <!-- A backdrop veil used to make app appear modal when displaying dialogs. -->
   <div id="modalBackdrop"></div>
 </body>

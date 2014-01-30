@@ -73,17 +73,13 @@
       </div>
     </spark-toolbar>
 
-    <!-- Temporarily switch back to div: most recent polymer-flex-panel
-      requires working external CSS linking.
-      TODO(ussuri): revert once external CSS linking is available
-      (don't forget to remove 'display: flex' in the CSS). -->
-    <!--polymer-flex-panel id="splitview"-->
     <div id="splitview">
-      <div id="fileViewArea" min-size="100"></div>
+      <div id="fileViewArea"></div>
+
       <spark-splitter id="splitter" direction="left" onUpdate="{{onSplitterUpdate}}">
       </spark-splitter>
-      <div id="editorArea" min-size="200"></div>
-    <!--/polymer-flex-panel-->
+
+      <content select="#editorArea"></content>
     </div>
 
     <!-- File context menu -->
