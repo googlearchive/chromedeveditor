@@ -6,6 +6,7 @@ library git.commands.log;
 
 import 'dart:async';
 
+import '../constants.dart';
 import '../object.dart';
 import '../objectstore.dart';
 
@@ -14,43 +15,73 @@ import '../objectstore.dart';
  * commit objects in order to avoid retrieving the entire log in a single call.
  */
 class Log {
-  List<String> _nextHeadSha;
+  String _branch;
+  CommitGraph _graph;
+  int _increment;
+  List<String> _nextHeadShas;
+  ObjectStore _store;
 
   /**
-   * Returns a list of CommitObjects.
-   * store: ObjectStore from which to get commits.
-   * branch: Branch from which to get commits. If null or empty the current
-   * HEAD will be used.
-   * length: Maximum number of commits to list. If null all commits will be
-   * listed.
+   * Sets up the Log object. Optional param branch specifies a branch
+   * other than the current head. Optional increment specifies a number of
+   * commits to return with each successive call (defaults to 1).
    */
-  Future<List<CommitObject>> log(ObjectStore store, int length, [String branch]) {
-    Future<List<CommitObject>> listCommits(List<String> headSha) {
-      return store.getCommitGraph(headSha, length).then(
-          (CommitGraph graph) {
-        List<CommitObject> commits = graph.commits;
-        if (commits.length > 0) {
-          CommitObject next = commits[commits.length - 1];
-          _nextHeadSha = next.parents;
-        }
-        return commits;
-      });
-    }
+  Log(this._store, {String branch, int increment: 1}) {
+    _branch = branch;
+    _increment = increment;
+  }
 
-    if (_nextHeadSha != null && length != null)
-      return listCommits(_nextHeadSha);
-
-    if (branch == null || branch.isEmpty) {
-      return store.getHeadSha().then(
-          (String headSha) => listCommits([headSha]));
-    }
+  /**
+   * Internal function for discovering the first sha to examine for commits.
+   */
+  static Future<String> _getBaseSha(ObjectStore store, String branch) {
+    if (branch == null || branch.isEmpty)
+      return store.getHeadSha();
     return store.getAllHeads().then((List<String> branches) {
-      if (!branches.contains(branch)) {
-        // TODO: Improve error handling.
+      // TODO: Improve error handling.
+      if (!branches.contains(branch))
         throw "No such branch exists.";
-      }
-      return store.getHeadForRef('refs/heads/$branch').then(
-          (String headSha) => listCommits([headSha]));
+      return store.getHeadForRef('${REFS_HEADS}${branch}');
+    });
+  }
+
+  /**
+   * Internal function for listing commits and storing the next sha to be
+   * examined.
+   */
+  Future<List<CommitObject>> _listCommits() {
+    return _store.getCommitGraph(_nextHeadShas, _increment).then(
+        (CommitGraph graph) {
+      if (graph.commits.length > 0)
+        _nextHeadShas = graph.commits.last.parents;
+      return graph.commits;
+    });
+  }
+
+  /**
+   * getNextCommits() is a state based function for successively retrieving
+   * a list of commit objects in small chunks.
+   */
+  Future<List<CommitObject>> getNextCommits() {
+    if (_nextHeadShas != null)
+      return _listCommits();
+    return _getBaseSha(_store, _branch).then((String baseSha) {
+      _nextHeadShas = [baseSha];
+      return _listCommits();
+    });
+  }
+
+  /**
+   * getAllCommits() is a static function for retrieving a list of all
+   * commit objects above a branch head. Passing in an optional limit
+   * variable will return at most that many commit objects.
+   */
+  static Future<List<CommitObject>> getAllCommits(
+      ObjectStore store, String branch, {int limit}) {
+    return _getBaseSha(store, branch).then((String baseSha) {
+      return store.getCommitGraph([baseSha], limit).then((CommitGraph graph) {
+        return graph.commits;
+      });
     });
   }
 }
