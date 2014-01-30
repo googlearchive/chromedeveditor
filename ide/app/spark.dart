@@ -448,6 +448,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       if (entry != null) {
         workspace.link(entry).then((file) {
           _selectFile(file);
+          _aceManager.focus();
           workspace.save();
         });
       }
@@ -976,6 +977,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // this to occur.
           Timer.run(() {
             spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._aceManager.focus();
           });
         });
       }
