@@ -2,16 +2,14 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+@import url("../common/spark_widget.css");
+
 :host {
   display: inline-block;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   width: 30px;
   height: 30px;
-}
-
-spark-button button {
-  padding: 0;
 }
 
 #overlay {

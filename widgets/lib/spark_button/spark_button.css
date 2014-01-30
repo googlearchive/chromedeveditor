@@ -4,16 +4,16 @@
 
 @import url("../common/spark_widget.css");
 
-button {
+#button {
   outline: none;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Helvetica, sans-serif;
   font-size: 13px;
 }
 
-button:active {
+#button:active {
   border: 1px solid #aaa;
 }
 
-button:focus {
+#button:focus {
   outline: -webkit-focus-ring-color solid 1px;
 }
