@@ -24,6 +24,12 @@ class SparkWidget extends PolymerElement {
 
   SparkWidget.created() : super.created();
 
+  // TODO(ussuri): Temporarily leave for experiments. Remove soon: unsupported
+  // at least from Chrome M34.
+  @deprecated
+  @override
+  bool get applyAuthorStyles => false;
+
   String joinClasses(List<String> cls) => cls.join(" ");
 
   Element getShadowDomElement(String selectors) =>
