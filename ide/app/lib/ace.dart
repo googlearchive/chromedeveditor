@@ -23,6 +23,8 @@ import 'utils.dart' as utils;
 
 export 'package:ace/ace.dart' show EditSession;
 
+import '../packages/spark_widgets/spark_button/spark_button.dart';
+
 class TextEditor extends Editor {
   final AceManager aceManager;
   final workspace.File file;
@@ -86,6 +88,7 @@ class AceManager {
    * The container for the Ace editor.
    */
   final html.Element parentElement;
+  final AceManagerDelegate delegate;
 
   ace.Editor _aceEditor;
 
@@ -98,7 +101,7 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
 
-  AceManager(this.parentElement) {
+  AceManager(this.parentElement, this.delegate) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -114,6 +117,13 @@ class AceManager {
 
     // Fallback
     theme = THEMES[0];
+  }
+
+  bool isFileExtensionEditable(String extension) {
+    if (extension.startsWith('.')) {
+      extension = extension.substring(1);
+    }
+    return ace.Mode.extensionMap[extension] != null;
   }
 
   html.Element get _editorElement => parentElement.parent;
@@ -152,7 +162,9 @@ class AceManager {
           annotationType);
 
       // Ace uses 0-based lines.
-      int aceRow = marker.lineNum - 1;
+      ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
+      int aceRow = charPoint.row;
+      int aceColumn = charPoint.column;
 
       // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
@@ -172,7 +184,8 @@ class AceManager {
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
       double markerPos =
-          currentSession.documentToScreenRow(marker.lineNum, 0) / numberLines * 100.0;
+          currentSession.documentToScreenRow(marker.lineNum, aceColumn)
+          / numberLines * 100.0;
 
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
@@ -241,6 +254,53 @@ class AceManager {
     } else {
       _editorElement.append(miniMap);
     }
+  }
+
+  /**
+   * Show an overlay dialog to tell the user that a binary file cannot be
+   * shown.
+   *
+   * TODO(dvh): move this logic to editors/editor_area.
+   * See https://github.com/dart-lang/spark/issues/906
+   */
+  void createDialog(String filename) {
+    if (_editorElement == null) {
+      return;
+    }
+    html.Element dialog = _editorElement.querySelector('.editor-dialog');
+    if (dialog != null) {
+      // Dialog already exists.
+      return;
+    }
+
+    dialog = new html.Element.div();
+    dialog.classes.add("editor-dialog");
+
+    // Add an overlay dialog using the template #editor-dialog.
+    html.DocumentFragment template =
+        (html.querySelector('#editor-dialog') as html.TemplateElement).content;
+    html.DocumentFragment templateClone = template.clone(true);
+    html.Element element = templateClone.querySelector('.editor-dialog');
+    element.classes.remove('editor-dialog');
+    dialog.append(element);
+
+    // Set actions of the dialog.
+    SparkButton button = dialog.querySelector('.view-as-text-button');
+    button.onClick.listen((_) {
+      dialog.classes.add("transition-hidden");
+    });
+    html.Element link = dialog.querySelector('.always-view-as-text-button');
+    link.onClick.listen((_) {
+      dialog.classes.add("transition-hidden");
+      String extention = path.extension(currentFile.name);
+      delegate.setAlwaysShowAsText(extention, true);
+    });
+
+    if (delegate.canShowFileAsText(filename)) {
+      dialog.classes.add('hidden');
+    }
+
+    _editorElement.append(dialog);
   }
 
   void clearMarkers() => currentSession.clearAnnotations();
@@ -434,4 +494,16 @@ class KeyBindingManager {
   void _updateName(String name) {
     _label.text = (name == null ? 'Default' : utils.capitalize(name));
   }
+}
+
+abstract class AceManagerDelegate {
+  /**
+   * Mark the files with the given file extension as editable in text format.
+   */
+  void setAlwaysShowAsText(String extension, bool enabled);
+
+  /**
+   * Returns true if the file with the given filename can be edited as text.
+   */
+  bool canShowFileAsText(String filename);
 }
