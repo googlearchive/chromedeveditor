@@ -156,7 +156,7 @@ class EditorManager implements EditorProvider {
         }
       }
 
-      _editorMap[file] = null;
+      _editorMap.remove(file);
 
       persistState();
     }
@@ -233,6 +233,10 @@ class EditorManager implements EditorProvider {
         _aceContainer.switchTo(null);
         persistState();
       } else {
+        // Clear text content of ACE editor.
+        _aceContainer.switchTo(null);
+
+        // Then load content.
         state.withSession().then((state) {
           // Test if other state have been set before this state is appiled.
           if (state != _currentState) {
@@ -314,6 +318,7 @@ class EditorManager implements EditorProvider {
   void activate(Editor editor) {
     _EditorState state = _getStateFor(editor.file);
     _switchState(state);
+    _aceContainer.createDialog(editor.file.name);
     _aceContainer.setMarkers(editor.file.getMarkers());
   }
 }
@@ -376,10 +381,9 @@ class _EditorState {
       return new Future.value(this);
     } else {
       if (manager.editorType(file.name) == EditorManager.EDITOR_TYPE_IMAGE) {
-        return file.getContents().then((text) {
-          return this;
-        });
+        return new Future.value(this);
       } else {
+        // TODO(dvh): don't load if the user cannot see the content.
         return file.getContents().then((text) {
           session = manager._aceContainer.createEditSession(text, file.name);
           session.scrollTop = scrollTop;

@@ -26,6 +26,7 @@ class MockAceManager implements AceManager {
   /// The element to put the editor in.
   final Element parentElement = null;
   workspace.File currentFile = null;
+  AceManagerDelegate delegate = null;
 
   MockAceManager();
 
@@ -48,6 +49,8 @@ class MockAceManager implements AceManager {
   void clearMarkers() { }
   void selectNextMarker() { }
   void selectPrevMarker() { }
+  void createDialog(String filename) { }
+  bool isFileExtensionEditable(String extension) => false;
 }
 
 class MockAceEditor implements TextEditor {
