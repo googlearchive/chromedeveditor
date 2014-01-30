@@ -2,12 +2,14 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-@import url("packages/bootjack/css/bootstrap.css");
-@import url("packages/bootjack/css/bootstrap-theme.css");
+@import url("packages/spark_widgets/common/spark_widget.css");
+
 @import url("lib/ui/widgets/listview.css");
 @import url("lib/ui/widgets/treeview.css");
 @import url("lib/ui/widgets/tabview.css");
 @import url("lib/ui/widgets/imageviewer.css");
+
+@import url("assets/font-awesome/css/font-awesome.min.css");
 
 #saveStatus {
   color: #aaa;
@@ -98,7 +100,6 @@
 .ace_gutter-tooltip-label-info {
   color: #9CC;
 }
-
 
 #splitview {
   bottom: 0;
@@ -267,7 +268,7 @@
   background-color: #3a84c3;
   border-radius: 5px;
   color: #fff;
-  display: span;
+  display: inline;
   overflow: hidden;
   padding: 3px 8px;
 }
@@ -327,10 +328,4 @@
 .editor-dialog.transition-hidden {
   opacity: 0;
   pointer-events: none;
-}
-
-spark-modal a.close {
-  width: 21px;
-  height: 21px;
-  text-align: center;  
 }
