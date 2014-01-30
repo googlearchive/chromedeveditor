@@ -658,13 +658,22 @@ class Folder extends Container {
         }
       }
 
+      List<Future> futures = [];
+
       // Check for added files.
       for (int i = newNames.length - 1; i >= 0; i--) {
         String name = newNames[i];
 
         if (!currentNames.contains(name)) {
-          // TODO: handle folders too!
-          Resource resource = new File(this, entries[i]);
+          Resource resource;
+
+          if (entries[i].isFile) {
+            resource = new File(this, entries[i]);
+          } else {
+            resource = new Folder(this, entries[i]);
+            futures.add(workspace._gatherChildren(resource));
+          }
+
           _localChildren.add(resource);
           _fireResourceEvent(new ChangeDelta(resource, EventType.ADD));
         }
@@ -677,6 +686,8 @@ class Folder extends Container {
         } else if (resource is Folder) {
           return resource._refresh();
         }
+      }).then((_) {
+        return Future.wait(futures);
       });
     });
   }

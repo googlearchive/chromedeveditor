@@ -14,12 +14,13 @@ import 'dart:math' as math;
 
 import 'package:ace/ace.dart' as ace;
 import 'package:ace/proxy.dart';
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
-import 'workspace.dart' as workspace;
 import 'editors.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
+import 'workspace.dart' as workspace;
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -29,13 +30,16 @@ class TextEditor extends Editor {
   final AceManager aceManager;
   final workspace.File file;
 
+  StreamSubscription _aceSubscription;
   StreamController _dirtyController = new StreamController.broadcast();
 
   ace.EditSession _session;
 
+  String _lastSavedHash;
+
   void setSession(ace.EditSession value) {
     _session = value;
-    _session.onChange.listen((_) => dirty = true);
+    _aceSubscription = _session.onChange.listen((_) => dirty = true);
   }
 
   bool _dirty = false;
@@ -64,11 +68,54 @@ class TextEditor extends Editor {
 
   void focus() => aceManager.focus();
 
+  void fileContentsChanged() {
+    if (_session != null) {
+      // Check that we didn't cause this change event.
+      file.getContents().then((String text) {
+        String fileContentsHash = _calcMD5(text);
+
+        if (fileContentsHash != _lastSavedHash) {
+          _lastSavedHash = fileContentsHash;
+          _replaceContents(text);
+        }
+      });
+    }
+  }
+
   Future save() {
+    // We store a hash of the contents when saving. When we get a change
+    // notification (in fileContentsChanged()), we compare the last write to the
+    // contents on disk.
     if (_dirty) {
-      return file.setContents(_session.value).then((_) => dirty = false);
+      String text = _session.value;
+      _lastSavedHash = _calcMD5(text);
+      return file.setContents(text).then((_) => dirty = false);
     } else {
       return new Future.value();
+    }
+  }
+
+  /**
+   * Replace the editor's contents with the given text. Make sure that we don't
+   * fire a change event.
+   */
+  void _replaceContents(String newContents) {
+    _aceSubscription.cancel();
+
+    try {
+      // Restore the cursor position and scroll location.
+      int scrollTop = _session.scrollTop;
+      html.Point cursorPos = null;
+      if (aceManager.currentFile == file) {
+        cursorPos = aceManager.cursorPosition;
+      }
+      _session.value = newContents;
+      _session.scrollTop = scrollTop;
+      if (cursorPos != null) {
+        aceManager.cursorPosition = cursorPos;
+      }
+    } finally {
+      _aceSubscription = _session.onChange.listen((_) => dirty = true);
     }
   }
 }
@@ -506,4 +553,10 @@ abstract class AceManagerDelegate {
    * Returns true if the file with the given filename can be edited as text.
    */
   bool canShowFileAsText(String filename);
+}
+
+String _calcMD5(String text) {
+  crypto.MD5 md5 = new crypto.MD5();
+  md5.add(text.codeUnits);
+  return crypto.CryptoUtils.bytesToHex(md5.close());
 }

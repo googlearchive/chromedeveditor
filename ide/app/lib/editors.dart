@@ -49,6 +49,7 @@ abstract class Editor {
   void activate();
   void resize();
   void focus();
+  void fileContentsChanged();
   Future save();
 }
 

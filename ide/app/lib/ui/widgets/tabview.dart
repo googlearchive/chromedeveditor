@@ -90,7 +90,7 @@ class Tab {
     tabView.scrollIntoView(this);
   }
 
-  void select({bool forceFocus}) {
+  void select({bool forceFocus: false}) {
     tabView.selectedTab = this;
 
     if (forceFocus) focus();

@@ -371,3 +371,12 @@ defineTests() {
     });
   });
 }
+
+DirectoryEntry _createSampleProject() {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry project = fs.createDirectory('sample_project');
+  fs.createFile('/web/index.html');
+  fs.createFile('/web/sample.dart');
+  fs.createFile('/wen/sample.css');
+  return project;
+}

@@ -9,7 +9,7 @@
 library spark.editor_area;
 
 import 'dart:async';
-import 'dart:html';
+import 'dart:html' hide File;
 
 import 'ace.dart' as ace;
 import 'editors.dart';
@@ -26,6 +26,11 @@ abstract class EditorTab extends Tab {
   }
 
   void resize();
+
+  /**
+   * Notify the Editor that the file contents have changed on disk.
+   */
+  void fileContentsChanged();
 }
 
 /// An [EditorTab] that contains an [AceEditor].
@@ -47,6 +52,8 @@ class AceEditorTab extends EditorTab {
   void focus() => editor.focus();
 
   void resize() => editor.resize();
+
+  void fileContentsChanged() => editor.fileContentsChanged();
 }
 
 /// An [EditorTab] that contains an [ImageViewerTab].
@@ -66,6 +73,8 @@ class ImageViewerTab extends EditorTab {
   }
 
   void resize() => imageViewer.resize();
+
+  void fileContentsChanged() => imageViewer.fileContentsChanged();
 }
 
 /**
@@ -92,19 +101,15 @@ class EditorArea extends TabView {
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
 
-    _workspace.onResourceChange.listen((event) {
-      bool hasDeletes = event.changes.any(
-          (d) => d.isDelete && d.resource.isFile);
-      if (hasDeletes) {
-        _processEvent(event);
+    _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+      for (ChangeDelta delta in event.changes) {
+        if (delta.isDelete && delta.resource.isFile) {
+          closeFile(delta.resource);
+        } else if (delta.isChange && delta.resource.isFile) {
+          _updateFile(delta.resource);
+        }
       }
     });
-  }
-
-  void _processEvent(ResourceChangeEvent event) {
-    event.changes
-      .where((change) => change.isDelete && change.resource.isFile)
-      .forEach((change) => closeFile(change.resource));
   }
 
   bool get shouldDisplayName => tabs.length == 1;
@@ -192,9 +197,9 @@ class EditorArea extends TabView {
   }
 
   /// Closes the tab.
-  void closeFile(Resource file) {
-    if (_tabOfFile.containsKey(file)) {
-      EditorTab tab = _tabOfFile[file];
+  void closeFile(File file) {
+    EditorTab tab = _tabOfFile[file];
+    if (tab != null) {
       remove(tab);
       tab.close();
       editorProvider.close(file);
@@ -209,6 +214,13 @@ class EditorArea extends TabView {
       EditorTab tab = _tabOfFile[file];
       tab.label = file.name;
       _nameController.add(selectedTab.label);
+    }
+  }
+
+  void _updateFile(File file) {
+    EditorTab tab = _tabOfFile[file];
+    if (tab != null) {
+      tab.fileContentsChanged();
     }
   }
 }
