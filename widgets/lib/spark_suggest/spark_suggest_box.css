@@ -26,23 +26,20 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   margin-left: -2px;
   margin-top: 12px;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
-}
-
-#suggestion-item-list {
   padding: 5px 0;
   width: 400px;
   max-height: 350px;
   overflow-y: scroll;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
 }
 
-.suggest-item {
+.suggestion-item {
   padding: 7px 20px;
   font-size: 14px;
 }
 
-[highlighted=true].suggest-item {
+.suggestion-item[highlighted=true] {
   background-color: #3a84c3;
   color: white;
 }
