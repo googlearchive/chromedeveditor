@@ -116,8 +116,7 @@ class Spark extends SparkModel implements FilesControllerDelegate {
   ProjectLocationManager projectLocationManager;
 
   Spark(this.developerMode) {
-    services = new Services();
-    services.ping().then((result) => print(result));
+    initServices();
 
     document.title = appName;
 
@@ -167,6 +166,11 @@ class Spark extends SparkModel implements FilesControllerDelegate {
 
     // Add a Dart builder.
     addBuilder(new DartBuilder());
+  }
+
+  initServices() {
+    services = new Services();
+    services.ping().then((result) => print(result));
   }
 
   //
