@@ -51,9 +51,8 @@ class Pull {
     Function fetchProgress;
     // TODO add fetchProgress chunker.
 
-    return Status.isWorkingTreeClean(store).then(
-        (GitConfig config) {
-      String url = config.url;
+    return Status.isWorkingTreeClean(store).then((_) {
+      String url = store.config.url;
 
       HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
           password);
@@ -77,7 +76,7 @@ class Pull {
               // TODO throw PULL_UP_TO_DATE;
               throw "pull up to date.";
             }, onError: (e) {
-              return _handleMerge(branchRef, branchRef, config, fetcher);
+              return _handleMerge(branchRef, branchRef, fetcher);
             });
           } else {
             //TODO better error handling.
@@ -159,22 +158,20 @@ class Pull {
     });
   }
 
-  Future _createAndUpdateRef(GitRef branchRef, GitRef wantRef,
-      GitConfig config) {
+  Future _createAndUpdateRef(GitRef branchRef, GitRef wantRef) {
     return FileOps.createFileWithContent(root, '.git/${wantRef.name}',
         wantRef.sha, 'Text').then((_) {
       store.getTreesFromCommits([wantRef.localHead, wantRef.sha]).then(
           (List<TreeObject> trees) {
         return _updateWorkingTree(root, store, trees[0], trees[1]).then((_) {
-          config.remoteHeads[branchRef.name] = branchRef.sha;
-          return store.updateLastChange(config);
+          store.config.remoteHeads[branchRef.name] = branchRef.sha;
+          return store.writeConfig();
         });
       });
     });
   }
 
-  Future _handleMerge(GitRef branchRef, GitRef wantRef,
-      GitConfig config, HttpFetcher fetcher) {
+  Future _handleMerge(GitRef branchRef, GitRef wantRef, HttpFetcher fetcher) {
 
     // Get the sha from the ref name.
     return store.getHeadForRef(branchRef.name).then((String sha) {
@@ -182,8 +179,8 @@ class Pull {
       return store.getCommitGraph([sha], 32).then((CommitGraph graph) {
         List<String> haveRefs = graph.commits.map((CommitObject commit)
             => commit.treeSha);
-        return fetcher.fetchRef([wantRef.sha], haveRefs, config.shallow, null,
-            graph.nextLevel, null, progress).then((PackParseResult result) {
+        return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
+            null, graph.nextLevel, null, progress).then((PackParseResult result) {
           // fast forward merge.
           if (result.common.indexOf(wantRef.localHead) != null) {
 
@@ -204,7 +201,7 @@ class Pull {
               store.objectDir = objectsDir;
               PackIndex packIdx = new PackIndex(packIdxData.buffer);
               store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));
-              return _createAndUpdateRef(branchRef, wantRef, config);
+              return _createAndUpdateRef(branchRef, wantRef);
             });
           } else {
             // non-fast-forward merge.

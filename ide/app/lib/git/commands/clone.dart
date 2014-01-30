@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
+import '../config.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
 import '../objectstore.dart';
@@ -127,8 +128,9 @@ class Clone {
     });
   }
 
-  Future _createInitialConfig(String shallow, GitRef localHeadRef) {
-    GitConfig config = new GitConfig();
+  Future<chrome.Entry> _createInitialConfig(String shallow,
+      GitRef localHeadRef) {
+    GitConfig config = _options.store.config;
     config.url = _options.repoUrl;
     config.time = new DateTime.now();
 
@@ -139,7 +141,7 @@ class Clone {
     if (localHeadRef != null) {
       config.remoteHeads[localHeadRef.name]= localHeadRef.sha;
     }
-    return _options.store.setConfig(config);
+    return _options.store.writeConfig();
   }
 
   Future _createPackFiles(chrome.DirectoryEntry objectsDir, String packName,
@@ -183,7 +185,9 @@ class Clone {
               //TODO add progress
               //progress({pct: 95, msg: "Building file tree from pack. Be patient..."});
               return _createCurrentTreeFromPack(_options.root, _options.store,
-                  localHeadRef.sha);
+                  localHeadRef.sha).then((_) {
+                _createInitialConfig(result.shallow, localHeadRef);
+              });
             });
           });
         });
