@@ -94,6 +94,13 @@ class MockFileSystem implements FileSystem {
 
     return entry;
   }
+
+  void touchFile(String path) {
+    _MockEntry entry = getEntry(path);
+    assert(entry != null);
+    entry._modificationTime = new DateTime.fromMillisecondsSinceEpoch(
+        entry._modificationTime.millisecondsSinceEpoch + 1);
+  }
 }
 
 abstract class _MockEntry implements Entry {

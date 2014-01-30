@@ -216,6 +216,69 @@ defineTests() {
       });
     });
 
+    test('project refresh, add file', () {
+      var workspace = new ws.Workspace();
+      var projectDir = _createSampleProject();
+      return workspace.link(projectDir).then((ws.Project project) {
+        projectDir.filesystem.createFile('/${project.name}/foo.txt');
+        Completer completer = new Completer();
+        workspace.onResourceChange.listen((ws.ResourceChangeEvent event) {
+          try {
+            expect(event.changes.length, 1);
+            expect(event.changes[0].isAdd, true);
+            expect(event.changes[0].resource.name, 'foo.txt');
+            completer.complete();
+          } catch (e) {
+            completer.completeError(e);
+          }
+        });
+        project.refresh();
+        return completer.future;
+      });
+    });
+
+    test('project refresh, delete file', () {
+      var workspace = new ws.Workspace();
+      var projectDir = _createSampleProject();
+      return workspace.link(projectDir).then((ws.Project project) {
+        projectDir.filesystem.removeFile('/${project.name}/bar.txt');
+        Completer completer = new Completer();
+        workspace.onResourceChange.listen((ws.ResourceChangeEvent event) {
+          try {
+            expect(event.changes.length, 1);
+            expect(event.changes[0].isDelete, true);
+            expect(event.changes[0].resource.name, 'bar.txt');
+            completer.complete();
+          } catch (e) {
+            completer.completeError(e);
+          }
+        });
+        project.refresh();
+        return completer.future;
+      });
+    });
+
+    test('project refresh, changed file', () {
+      var workspace = new ws.Workspace();
+      var projectDir = _createSampleProject();
+      return workspace.link(projectDir).then((ws.Project project) {
+        projectDir.filesystem.touchFile('${project.name}/bar.txt');
+        Completer completer = new Completer();
+        workspace.onResourceChange.listen((ws.ResourceChangeEvent event) {
+          try {
+            expect(event.changes.length, 1);
+            expect(event.changes[0].isChange, true);
+            expect(event.changes[0].resource.name, 'bar.txt');
+            completer.complete();
+          } catch (e) {
+            completer.completeError(e);
+          }
+        });
+        project.refresh();
+        return completer.future;
+      });
+    });
+
     test("walk children performs a pre-order traversal", () {
       MockFileSystem fs = new MockFileSystem();
       ws.Workspace workspace = new ws.Workspace();
@@ -372,11 +435,12 @@ defineTests() {
   });
 }
 
-DirectoryEntry _createSampleProject() {
+DirectoryEntry _createSampleProject([String projectName = 'sample_project']) {
   MockFileSystem fs = new MockFileSystem();
-  DirectoryEntry project = fs.createDirectory('sample_project');
-  fs.createFile('/web/index.html');
-  fs.createFile('/web/sample.dart');
-  fs.createFile('/wen/sample.css');
+  DirectoryEntry project = fs.createDirectory(projectName);
+  fs.createFile('${projectName}/bar.txt');
+  fs.createFile('${projectName}/web/index.html');
+  fs.createFile('${projectName}/web/sample.dart');
+  fs.createFile('${projectName}/web/sample.css');
   return project;
 }
