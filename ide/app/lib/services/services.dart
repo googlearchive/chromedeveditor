@@ -1,6 +1,7 @@
 // Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+
 library spark.services;
 
 import 'dart:async';
@@ -10,73 +11,29 @@ import 'dart:isolate';
  * Defines a class which contains services and manages their communication.
  */
 class Services {
-  IsolateHandler _isolateHandler;
-
-  // Services
-  PingService pingService;
-
-  Services() {
-    _isolateHandler = new IsolateHandler();
-    _isolateHandler.onWorkerReady.listen((_){
-      // Initialize each service
-      pingService = new PingService(_isolateHandler);
-    });
-  }
-
-  Stream get onReady => _isolateHandler.onWorkerReady;
-}
-
-/*
- * A simple service for pinging the worker
- */
-class PingService extends Service{
-  PingService(IsolateHandler handler) : super(handler);
-
-  String get serviceId => "ping";
-
-  Future ping(String message) {
-    sendAction(message);
-  }
-}
-
-/*
- * Defines an abstract service with a unique service id.  This class hides the
- * isolate communication.
- */
-abstract class Service {
-  String get serviceId;
-  IsolateHandler _isolateHandler;
-  Service(this._isolateHandler);
-
-  // TODO(ericarnold): This will need to return a future to complete when action
-  // is done.
-  Future sendAction(String message) {
-    _isolateHandler.sendAction(serviceId, message);
-  }
-}
-
-/**
- * Defines a class which handles all isolate setup and communication
- */
-class IsolateHandler {
+  int _serviceCallId = 0;
+  Map<int, Completer> _serviceCallCompleters = {};
   final String _workerPath = 'lib/services/services_impl.dart';
-
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
   StreamController _readyController = new StreamController.broadcast();
+  bool _ready = false;
 
-  IsolateHandler() {
-    _startIsolate().then((_)=>_isolateReady());
+  Services() {
+    _startIsolate();
   }
+
+  Stream get _onWorkerReady => _readyController.stream;
 
   Future _startIsolate() {
     Completer completer = new Completer();
     _receivePort.listen((arg) {
       if (_sendPort == null) {
         _sendPort = arg;
-        completer.complete();
+        _readyController.add(null);
+        _readyController.close();
       } else {
-        print('Received from isolate: $arg\n');
+        pong(arg);
       }
     });
 
@@ -85,20 +42,25 @@ class IsolateHandler {
     return completer.future;
   }
 
-  void _isolateReady() {
-    _readyController.add(null);
-    _readyController.close();
+  Future pong(int id) {
+    Completer completer = _serviceCallCompleters[id];
+    _serviceCallCompleters.remove(id);
+    completer.complete("pong");
   }
 
-  Stream get onWorkerReady => _readyController.stream;
-
-  // TODO(ericarnold): Complete a future / stream.
-  Future sendAction(String id, [String data = ""]) {
-    _sendPort.send({"id": id, "data": data});
+  Future<String> ping() {
+    Completer<String> completer = new Completer();
+    if (_ready) {
+      return _ping(completer);
+    } else {
+      _onWorkerReady.listen((_)=>_ping(completer));
+    }
+    _serviceCallCompleters[_serviceCallId] = completer;
+    return completer.future;
   }
 
-  void sendResponse(String id, String data) {
-    // TODO(ericarnold): Implement
+  _ping(Completer completer) {
+    _sendPort.send(_serviceCallId++);
   }
 }
 
