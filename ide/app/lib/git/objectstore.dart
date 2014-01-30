@@ -99,6 +99,7 @@ class ObjectStore {
   ObjectStore(chrome.DirectoryEntry root) {
     _rootDir = root;
     index = new Index(this);
+    config = new Config();
   }
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
@@ -576,7 +577,7 @@ class ObjectStore {
     return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
         (String configStr) => new Config(configStr),
       // TODO: handle errors / build default GitConfig.
-      onError: (e) => new Config());
+      onError: (e) => this.config);
   }
 
   Future<Entry> writeConfig() {

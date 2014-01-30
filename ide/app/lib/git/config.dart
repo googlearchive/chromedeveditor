@@ -23,7 +23,11 @@ class Config {
     url = m['url'];
     shallow = m['shallow'];
     remoteHeads = m['remoteHeads'];
-    time = m['time'];
+    if (m['time']) {
+      time = new DateTime.fromMillisecondsSinceEpoch(m['time']);
+    } else {
+      time = new DateTime.now();
+    }
   }
 
   Map toMap() {
@@ -31,7 +35,7 @@ class Config {
       'url': url,
       'shallow': shallow,
       'remoteHeads' : remoteHeads,
-      'time' : time,
+      'time' : time.millisecondsSinceEpoch,
     };
   }
 
