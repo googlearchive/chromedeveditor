@@ -20,7 +20,7 @@ import '../pack.dart';
 import '../pack_index.dart';
 import '../upload_pack_parser.dart';
 import '../utils.dart';
-import 'conditions.dart';
+import 'status.dart';
 import 'merge.dart';
 
 /**
@@ -51,7 +51,7 @@ class Pull {
     Function fetchProgress;
     // TODO add fetchProgress chunker.
 
-    return Conditions.checkForUncommittedChanges(root, store).then(
+    return Status.isWorkingTreeClean(store).then(
         (GitConfig config) {
       String url = config.url;
 
