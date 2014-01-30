@@ -31,7 +31,7 @@ import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/scm.dart';
 import 'lib/tests.dart';
-import 'services.dart';
+import 'lib/services/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
