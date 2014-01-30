@@ -26,7 +26,6 @@ class Services {
   Stream get _onWorkerReady => _readyController.stream;
 
   Future _startIsolate() {
-    Completer completer = new Completer();
     _receivePort.listen((arg) {
       if (_sendPort == null) {
         _sendPort = arg;
@@ -38,14 +37,6 @@ class Services {
     });
 
     Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
-
-    return completer.future;
-  }
-
-  Future pong(int id) {
-    Completer completer = _serviceCallCompleters[id];
-    _serviceCallCompleters.remove(id);
-    completer.complete("pong");
   }
 
   Future<String> ping() {
@@ -62,5 +53,12 @@ class Services {
   _ping(Completer completer) {
     _sendPort.send(_serviceCallId++);
   }
+
+  Future pong(int id) {
+    Completer completer = _serviceCallCompleters[id];
+    _serviceCallCompleters.remove(id);
+    completer.complete("pong");
+  }
+
 }
 
