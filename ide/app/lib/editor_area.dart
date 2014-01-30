@@ -186,11 +186,6 @@ class EditorArea extends TabView {
     }
   }
 
-  void set selectedTab(Tab tab) {
-    super.selectedTab = tab;
-    if (tab != null) (tab as EditorTab).focus();
-  }
-
   /// Closes the tab.
   void closeFile(Resource file) {
     if (_tabOfFile.containsKey(file)) {
