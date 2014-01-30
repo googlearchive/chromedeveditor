@@ -107,7 +107,14 @@ void deploy(GrinderContext context) {
 
   _dart2jsCompile(
       context, joinDir(destDir, ['web']),
+      'services_impl.dart', true);
+  copyFile(getFile('services_impl.precompile.js'),
+      getFile('services_impl.js'));
+  print("done with services");
+  _dart2jsCompile(
+      context, joinDir(destDir, ['web']),
       'spark_polymer.html_bootstrap.dart', true);
+
   _runCommandSync(
       context,
       'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
