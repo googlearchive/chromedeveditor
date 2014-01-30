@@ -74,27 +74,21 @@ class SparkOverlay extends SparkWidget {
   SparkOverlay.created(): super.created() {
     _captureHandler = captureHandler;
     _resizeHandler = resizeHandler;
+    changes.where(SparkWidget.symbolChanged(#opened)).listen((_) {
+      // TODO(ussuri): Getter/setter were needed to fix the Menu and Modal not
+      // working in the deployed code. With a simple `@published bool opened`,
+      // writes to it via data binding or direct assignment elsewhere here
+      // were not detected (didn't invoke [openedChanged]).
+      openedChanged();
+    });
   }
-
-  bool _opened = false;
 
   /**
    * Set opened to true to show an overlay and to false to hide it.
    * A spark-overlay may be made intially opened by setting its opened
    * attribute.
    */
-  @published bool get opened => _opened;
-
-  @published set opened(bool val) {
-    if (_opened != val) {
-      _opened = val;
-      // TODO(ussuri): Getter/setter were needed to fix the Menu and Modal not
-      // working in the deployed code. With a simple `@published bool opened`,
-      // writes to it via data binding or direct assignment elsewhere here
-      // were not detected (didn't invoke [openedChanged]).
-      openedChanged();
-    }
-  }
+  @published bool opened = false;
 
   /**
    * By default an overlay will close automatically if the user taps outside
@@ -128,7 +122,6 @@ class SparkOverlay extends SparkWidget {
       enableCaptureHandler(opened);
     }
     enableResizeHandler(opened);
-    asyncFire('opened', detail: opened);
   }
 
   void enableResizeHandler(inEnable) {

@@ -54,31 +54,31 @@ class SparkSuggestBox extends SparkWidget {
   @observable final suggestions = new ObservableList();
   /// Currently highlighted (but not yet selected) suggestion
   @observable int selectionIndex = -1;
+  /// Whether the suggestions popup is visible
+  @observable bool suggestionsOpened = false;
 
   StreamSubscription _oracleSub;
 
   SparkSuggestBox.created() : super.created();
-
-  SparkOverlay get _popup => $['suggestion-list-overlay'];
 
   /// Shows the suggestion list popup with the given suggestions.
   void _showSuggestions(List<Suggestion> update) {
     suggestions.clear();
     suggestions.addAll(update);
     selectionIndex = 0;
-    _popup.opened = true;
+    suggestionsOpened = true;
   }
 
   /// Hides the suggestion list popup and clears the suggestion list.
   void _hideSuggestions() {
     suggestions.clear();
     selectionIndex = -1;
-    _popup.opened = false;
+    suggestionsOpened = false;
   }
 
   inputKeyUp(KeyboardEvent e) {
     if (e.keyCode == SparkWidget.DOWN_KEY) {
-      if (_popup.opened) {
+      if (suggestionsOpened) {
         // List of suggestions already visible. Simply advance the selection.
         selectionIndex++;
         _clampSelectionIndex();
@@ -90,7 +90,7 @@ class SparkSuggestBox extends SparkWidget {
       selectionIndex--;
       _clampSelectionIndex();
     } else if (e.keyCode == SparkWidget.ENTER_KEY) {
-      if (_popup.opened && selectionIndex > -1) {
+      if (suggestionsOpened && selectionIndex > -1) {
         _selectSuggestion(selectionIndex);
       } else {
         suggest();
