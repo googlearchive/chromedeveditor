@@ -29,7 +29,7 @@
   top: 40px;
 }
 
-.spark-overlay-scale-slideup {
+.dialog {
   top: 72px;
   left: 50%;
   width: 512px;
@@ -37,11 +37,11 @@
   border-radius: 5px;
 }
 
-.spark-overlay-scale-slideup input[type="text"] {
+.dialog input[type="text"] {
   width: 100%;
 }
 
-.spark-overlay-scale-slideup {
+.dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   font-family: Arial, Helvetica, sans-serif;
