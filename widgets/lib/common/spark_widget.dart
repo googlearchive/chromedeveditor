@@ -22,6 +22,16 @@ class SparkWidget extends PolymerElement {
   static const ENTER_KEY = 13;
   static const ESCAPE_KEY = 27;
 
+  /**
+   * Use this to filter change events on symbol.
+   *
+   * Example:
+   *
+   *     changes.listen.where(symbolChanged(#myProperty).listen(...);
+   */
+  static Function symbolChanged(Symbol sym) => (List<ChangeRecord> cl) =>
+      cl.firstWhere((cr) => cr.name == sym, orElse: () => null) != null;
+
   SparkWidget.created() : super.created();
 
   @override

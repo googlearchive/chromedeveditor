@@ -42,7 +42,8 @@
 
     <spark-overlay
         id="suggestion-list-overlay"
-        class="spark-overlay-scale-slideup">
+        class="spark-overlay-scale-slideup"
+        opened="{{suggestionsOpened}}">
       <div class="suggest-item-list">
         <template repeat="{{s in suggestions | enumerate}}">
           <!--
