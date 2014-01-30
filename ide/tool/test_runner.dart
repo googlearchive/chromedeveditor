@@ -176,7 +176,14 @@ String _dartiumPath() {
 
   String sep = Platform.pathSeparator;
   String os = Platform.operatingSystem;
-  String path = "${sdkDir.path}${sep}..${sep}chromium${sep}${m[os]}";
+  String dartSdkPath = sdkDir.path;
+
+  // Truncate any trailing /s
+  if (dartSdkPath.endsWith("/")) {
+    dartSdkPath = dartSdkPath.substring(0, dartSdkPath.length - 1);
+  }
+
+  String path = "${dartSdkPath}${sep}..${sep}chromium${sep}${m[os]}";
 
   if (FileSystemEntity.isFileSync(path)) {
     return new File(path).absolute.path;
