@@ -156,7 +156,7 @@ class EditorManager implements EditorProvider {
         }
       }
 
-      _editorMap[file] = null;
+      _editorMap.remove(file);
 
       persistState();
     }
