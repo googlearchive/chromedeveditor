@@ -331,7 +331,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, scmManager, this, getUIElement('#fileViewArea'));
+        workspace, scmManager, this, querySelector('#fileViewArea'));
     _filesController.onSelectionChange.listen((resource) {
       focusManager.setCurrentResource(resource);
     });

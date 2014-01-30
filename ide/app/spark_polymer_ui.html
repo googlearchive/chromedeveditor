@@ -38,7 +38,7 @@
 
       <span id="saveStatus" class="titleFont"></span>
 
-      <div id="toolbarRight" class="titleFont">
+      <div id="toolbarRight">
         <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
             placeholder="Search">
         </spark-suggest-box>
@@ -74,7 +74,7 @@
     </spark-toolbar>
 
     <div id="splitview">
-      <div id="fileViewArea"></div>
+      <content select="#fileViewArea"></content>
 
       <spark-splitter id="splitter" direction="left" onUpdate="{{onSplitterUpdate}}">
       </spark-splitter>
