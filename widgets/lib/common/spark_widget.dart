@@ -24,9 +24,6 @@ class SparkWidget extends PolymerElement {
 
   SparkWidget.created() : super.created();
 
-  @override
-  bool get applyAuthorStyles => true;
-
   String joinClasses(List<String> cls) => cls.join(" ");
 
   Element getShadowDomElement(String selectors) =>
