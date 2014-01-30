@@ -544,7 +544,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     }
   }
 
-  Element getContextMenuContainer() => getUIElement('#file-item-context-menu');
+  Element getContextMenuContainer() => querySelector('#file-item-context-menu');
 
   List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
       actionManager.getContextActions(resources);
