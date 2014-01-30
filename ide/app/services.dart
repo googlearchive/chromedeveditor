@@ -13,7 +13,7 @@ import 'dart:isolate';
 class Services {
   int _topCallId = 0;
   Map<int, Completer> _serviceCallCompleters = {};
-  final String _workerPath = 'lib/services/services_impl.dart';
+  final String _workerPath = 'services_impl.dart';
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
   StreamController _readyController = new StreamController.broadcast();
