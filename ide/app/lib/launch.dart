@@ -112,7 +112,7 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
         id: 'runWindow',
         width: 800, height: 570,
         minWidth: 800, minHeight: 570);
-    chrome.app.window.create('launch_page.htm', options).catchError((e) {
+    chrome.app.window.create('launch_page/launch_page.htm', options).catchError((e) {
       _logger.log(Level.INFO, 'Error launching Dart web app', e);
     });
   }

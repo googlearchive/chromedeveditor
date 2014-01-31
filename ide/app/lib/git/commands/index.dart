@@ -89,12 +89,15 @@ class Index {
   }
 
   // TODO(grv) : remove this after index file implementation.
-  Future _init() {
+  Future reset() {
     return walkFilesAndUpdateIndex(_store.root).then((_) {
       _statusIdx.forEach((String key, FileStatus status) {
-        status.type = FileStatusType.COMMITTED;
-        return writeIndex();
+        if (status.type != FileStatusType.UNTRACKED) {
+          status.type = FileStatusType.COMMITTED;
+        }
+        status.headSha = status.sha;
       });
+      return writeIndex();
     });
   }
 
@@ -115,7 +118,7 @@ class Index {
           _statusIdx = _parseIndex(out);
         });
       }, onError: (e) {
-        return _init();
+        return reset();
       });
     });
   }

@@ -15,7 +15,7 @@ import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
 import '../options.dart';
-import 'conditions.dart';
+import 'status.dart';
 
 /**
  * This class implments the git checkout command.
@@ -55,15 +55,14 @@ class Checkout {
         (String branchSha) {
       return store.getHeadSha().then((String currentSha) {
         if (currentSha != branchSha) {
-          return Conditions.checkForUncommittedChanges(root, store).then(
-              (GitConfig config) {
+          return Status.isWorkingTreeClean(store).then((_) {
             return _cleanWorkingDir(root).then((_) {
               return store.retrieveObject(branchSha, ObjectTypes.COMMIT_STR).then(
                   (CommitObject commit) {
                 return ObjectUtils.expandTree(root, store, commit.treeSha)
                     .then((_) {
-                  return store.setHeadRef(REFS_HEADS + branch, '').then((_) {
-                    return store.updateLastChange(config);
+                  store.index.reset().then((_) {
+                    return store.setHeadRef(REFS_HEADS + branch, '');
                   });
                 });
               });

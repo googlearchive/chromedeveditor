@@ -48,15 +48,15 @@ body {
 }
 
 .ace_gutter-cell.ace_error {
-  background-image: url("assets/images/error_icon.png");
+  background-image: url("images/error_icon.png");
 }
 
 .ace_gutter-cell.ace_warning {
-  background-image: url("assets/images/warning_icon.png");
+  background-image: url("images/warning_icon.png");
 }
 
 .ace_gutter-cell.ace_info {
-  background-image: url("assets/images/info_icon.png");
+  background-image: url("images/info_icon.png");
 }
 
 .ace_gutter-tooltip-divider {

@@ -132,8 +132,8 @@ class EditorArea extends TabView {
   }
 
   // TabView
-  bool remove(EditorTab tab, {bool switchesTab: true}) {
-    if (super.remove(tab, switchesTab: switchesTab)) {
+  bool remove(EditorTab tab, {bool switchesTab: true, bool layoutNow: true}) {
+    if (super.remove(tab, switchesTab: switchesTab, layoutNow: layoutNow)) {
       _tabOfFile.remove(tab.file);
       editorProvider.close(tab.file);
       showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
@@ -184,11 +184,6 @@ class EditorArea extends TabView {
 
       _nameController.add(file.name);
     }
-  }
-
-  void set selectedTab(Tab tab) {
-    super.selectedTab = tab;
-    if (tab != null) (tab as EditorTab).focus();
   }
 
   /// Closes the tab.

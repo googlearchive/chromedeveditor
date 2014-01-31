@@ -14,6 +14,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
+import 'config.dart';
 import 'file_operations.dart';
 import 'commands/index.dart';
 import 'object.dart';
@@ -42,29 +43,6 @@ class GitRef {
   String getPktLine() => '${sha} ${head} ${name}';
 
   String toString() => getPktLine();
-}
-
-class GitConfig {
-
-  String url;
-  String shallow;
-  Map<String, String> remoteHeads = {};
-  DateTime time;
-
-  dynamic _jsonObject;
-
-
-  GitConfig([String configStr]) {
-    if (configStr != null) {
-      // TODO(grv) : store and restore git config.
-      //_jsonObject = JSON.decode(configStr);
-    }
-  }
-
-  String toString() {
-    //TODO return Json Object string.
-    return "";
-  }
 }
 
 class PackEntry {
@@ -112,6 +90,8 @@ class ObjectStore {
 
   List<PackEntry> packs = [];
 
+  Config config;
+
   Index index;
 
   chrome.DirectoryEntry get root => _rootDir;
@@ -119,6 +99,7 @@ class ObjectStore {
   ObjectStore(chrome.DirectoryEntry root) {
     _rootDir = root;
     index = new Index(this);
+    config = new Config();
   }
 
   loadWith(chrome.DirectoryEntry objectDir, List<PackEntry> packs) {
@@ -140,7 +121,12 @@ class ObjectStore {
             return Future.forEach(packEntries, (chrome.Entry entry) {
               _readPackEntry(packDir, entry);
             }).then((_) {
-              return index.init();
+              return index.init().then((_) {
+                return readConfig().then((Config config) {
+                  this.config = config;
+                  return new Future.value();
+                });
+              });
             });
           });
         });
@@ -587,27 +573,16 @@ class ObjectStore {
     return writeRawObject(ObjectTypes.TREE_STR, new Blob(blobParts));
   }
 
-  Future<GitConfig> getConfig() {
+  Future<Config> readConfig() {
     return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
-        (String configStr) => new GitConfig(configStr),
+        (String configStr) => new Config(configStr),
       // TODO: handle errors / build default GitConfig.
-      onError: (e) => new GitConfig());
+      onError: (e) => this.config);
   }
 
-  Future<Entry> setConfig(GitConfig config) {
-    String configStr = config.toString();
+  Future<Entry> writeConfig() {
+    String configStr = config.toJson();
     return FileOps.createFileWithContent(_rootDir, '.git/config.json',
         configStr, 'Text');
-  }
-
-  Future<Entry> updateLastChange(GitConfig config) {
-    Future<Entry> doUpdate(GitConfig config) {
-      return new Future.value();
-    }
-    if (config != null) {
-      return doUpdate(config);
-    }
-    return new Future.value();
-    //return this.getConfig().then((GitConfig config) => doUpdate(config));
   }
 }
