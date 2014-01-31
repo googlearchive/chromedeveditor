@@ -11,7 +11,7 @@
   padding: 2px 3px 2px 0px;
   width: 100%;
   font-size: 14px;
-  font-family: Helvetica, Sans-serif;
+  font-family: Helvetica, sans-serif;
   height: 31px;
 }
 
@@ -42,4 +42,8 @@
 .suggestion-item[highlighted=true] {
   background-color: #3a84c3;
   color: white;
+}
+
+.text-muted {
+	color: #999999;
 }

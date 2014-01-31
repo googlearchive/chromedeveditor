@@ -28,7 +28,6 @@
       @import url("spark_polymer_ui.css");
     </style>
 
-
     <spark-toolbar id="toolbar" lightdom>
       <spark-button id="gitClone" small primary>Git Clone...</spark-button>
       <spark-button id="newProject" small>New Project...</spark-button>
@@ -36,12 +35,11 @@
 
       <spark-status id="sparkStatus"></spark-status>
 
-      <span id="saveStatus" class="titleFont"></span>
-
       <div id="toolbarRight">
         <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
             placeholder="Search">
         </spark-suggest-box>
+
         <spark-menu-button id="mainMenu"
             src="images/menu.png"
             responsive="true"

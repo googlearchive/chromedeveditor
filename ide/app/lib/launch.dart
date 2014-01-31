@@ -17,6 +17,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'compiler.dart';
+import 'utils.dart';
 import 'server.dart';
 import 'workspace.dart';
 
@@ -135,12 +136,14 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 
   void run(Resource resource) {
     print('TODO: run project ${resource.project}');
-    return;
-    /*_loadApp(resource).then((_) {
+    if (!isDart2js()) {
+      return;
+    }
+    _loadApp(resource).then((_) {
       _getAppId(resource.project.name).then((String id) {
         _launchApp(id);
       });
-    });*/
+    });
   }
 
   Future<String> _loadApp(Resource resource) {
