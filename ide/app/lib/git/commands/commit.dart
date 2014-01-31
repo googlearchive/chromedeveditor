@@ -156,7 +156,7 @@ class Commit {
                 (String commitSha) {
           return FileOps.createFileWithContent(dir, '.git/${refName}',
               commitSha + '\n', 'Text').then((_) {
-                return store.updateLastChange(null).then((_) => commitSha);
+                return store.writeConfig().then((_) => commitSha);
           });
         });
       });

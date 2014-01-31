@@ -2,6 +2,8 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+@import url("../common/spark_widget.css");
+
 #text-box {
   outline: none;
   border-radius: 3px;
@@ -9,7 +11,7 @@
   padding: 2px 3px 2px 0px;
   width: 100%;
   font-size: 14px;
-  font-family: Helvetica;
+  font-family: Helvetica, sans-serif;
   height: 31px;
 }
 
@@ -17,19 +19,31 @@
   border-color: #aaaaaa;
 }
 
-.suggest-item-list {
-  border: 1px solid #ddd;
+#suggestion-list-overlay {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  margin-left: 55px;
+  margin-top: 12px;
   padding: 5px 0;
-  max-height: 250px;
+  width: 400px;
+  max-height: 350px;
   overflow-y: scroll;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
 }
 
-.suggest-item {
+.suggestion-item {
   padding: 7px 20px;
   font-size: 14px;
 }
 
-[highlighted=true].suggest-item {
+.suggestion-item[highlighted=true] {
   background-color: #3a84c3;
   color: white;
+}
+
+.text-muted {
+	color: #999999;
 }

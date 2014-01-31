@@ -35,12 +35,11 @@
 
       <spark-status id="sparkStatus"></spark-status>
 
-      <span id="saveStatus" class="titleFont"></span>
-
-      <div id="toolbarRight" class="titleFont">
+      <div id="toolbarRight">
         <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
             placeholder="Search">
         </spark-suggest-box>
+
         <spark-menu-button id="mainMenu"
             src="images/menu.png"
             responsive="true"
@@ -72,28 +71,17 @@
       </div>
     </spark-toolbar>
 
-    <!-- Temporarily switch back to div: most recent polymer-flex-panel
-      requires working external CSS linking.
-      TODO(ussuri): revert once external CSS linking is available
-      (don't forget to remove 'display: flex' in the CSS). -->
-    <!--polymer-flex-panel id="splitview"-->
     <div id="splitview">
-      <div id="fileViewArea" min-size="100"></div>
+      <content select="#fileViewArea"></content>
+
       <spark-splitter id="splitter" direction="left" onUpdate="{{onSplitterUpdate}}">
       </spark-splitter>
-      <div id="editorArea" min-size="200"></div>
-    <!--/polymer-flex-panel-->
-    </div>
 
-    <!-- File context menu -->
-    <div id="file-item-context-menu" class="dropdown">
-      <div class="backdrop"></div>
-      <ul class="dropdown-menu" role="menu">
-      </ul>
+      <content select="#editorArea"></content>
     </div>
 
     <!-- Delete File dialog -->
-    <spark-modal id="deleteDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="deleteDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-body">
         <p id="message"></p>
       </div>
@@ -108,7 +96,7 @@
     </spark-modal>
 
     <!-- Error dialog -->
-    <spark-modal id="errorDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="errorDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label id="errorTitle"></label>
@@ -123,7 +111,7 @@
     </spark-modal>
 
     <!-- Rename File dialog -->
-    <spark-modal id="renameDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="renameDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Rename</h4>
@@ -145,7 +133,7 @@
     </spark-modal>
 
     <!-- New File dialog -->
-    <spark-modal id="fileNewDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="fileNewDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">New File</h4>
@@ -167,7 +155,7 @@
     </spark-modal>
 
     <!-- New Folder dialog -->
-    <spark-modal id="folderNewDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="folderNewDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">New Folder</h4>
@@ -189,7 +177,7 @@
     </spark-modal>
 
     <!-- New Project dialog -->
-    <spark-modal id="newProjectDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="newProjectDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">New Project</h4>
@@ -211,7 +199,7 @@
     </spark-modal>
 
     <!-- Git Clone dialog -->
-    <spark-modal id="gitCloneDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="gitCloneDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Clone Git Project</h4>
@@ -234,7 +222,7 @@
     </spark-modal><!-- /.modal -->
 
     <!-- Git Commit dialog -->
-    <spark-modal id="gitCommitDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="gitCommitDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Git Commit</h4>
@@ -258,7 +246,7 @@
     </spark-modal><!-- /.modal -->
 
     <!-- Git Branch dialog -->
-    <spark-modal id="gitBranchDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="gitBranchDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Create Branch</h4>
@@ -281,7 +269,7 @@
     </spark-modal><!-- /.modal -->
 
     <!-- Git Checkout dialog -->
-    <spark-modal id="gitCheckoutDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="gitCheckoutDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Git Checkout</h4>
@@ -307,7 +295,7 @@
     </spark-modal><!-- /.modal -->
 
     <!-- About dialog -->
-    <spark-modal id="aboutDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="aboutDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Spark</h4>
@@ -335,7 +323,7 @@
     </spark-modal><!-- /.modal -->
 
     <!-- Setting dialog -->
-    <spark-modal id="settingsDialog" class="spark-overlay-scale-slideup">
+    <spark-modal id="settingsDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Settings</h4>

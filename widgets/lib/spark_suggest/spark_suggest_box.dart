@@ -13,15 +13,19 @@ import '../spark_overlay/spark_overlay.dart';
 import '../common/spark_widget.dart';
 
 /**
- * A single suggestion supplied by a [SuggestOracle]. Provides a [displayLabel]
+ * A single suggestion supplied by a [SuggestOracle]. Provides a [label]
  * and an [onSelected] callback. [onSelected] is called when the user chooses
  * `this` suggestion.
  */
 class Suggestion {
-  final String displayLabel;
+  final String label;
+  final String details;
+
   final Function onSelected;
 
-  Suggestion(this.displayLabel, {this.onSelected});
+  Suggestion(this.label, {this.details, this.onSelected});
+
+  bool get hasDetails => details != null && details.isNotEmpty;
 }
 
 /**

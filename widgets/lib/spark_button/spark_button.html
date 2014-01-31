@@ -7,7 +7,7 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-button" extends="spark-widget"
-    attributes="primary active large small">
+    attributes="primary active large small noPadding">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
@@ -15,7 +15,15 @@
       @import url("packages/spark_widgets/spark_button/spark_button.css");
     </style>
 
-    <button type="button" focused class="{{btnClasses}}">
+    <template if="{{noPadding}}">
+      <style>
+        #button {
+          padding: 0;
+        }
+      </style>
+    </template>
+
+    <button id="button" type="button" focused class="{{btnClasses}}">
       <content></content>
     </button>
   </template>

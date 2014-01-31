@@ -31,6 +31,7 @@ import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/scm.dart';
 import 'lib/tests.dart';
+import 'lib/services/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/widgets/splitview.dart';
@@ -90,6 +91,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   final bool developerMode;
 
+  Services services;
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
 
@@ -119,6 +121,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   Set<String> _textFileExtensions;
 
   Spark(this.developerMode) {
+    initServices();
+
     document.title = appName;
 
     _localPrefs = preferences.localStore;
@@ -164,6 +168,11 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     // Add a Dart builder.
     addBuilder(new DartBuilder());
+  }
+
+  initServices() {
+    services = new Services();
+    services.ping().then((result) => print(result));
   }
 
   //
@@ -280,7 +289,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
     _editorArea = new EditorArea(
-        getUIElement('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
+        querySelector('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
 
     _syncPrefs.getValue('textFileExtensions').then((String value) {
       _textFileExtensions = new Set();
@@ -328,7 +337,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, scmManager, this, getUIElement('#fileViewArea'));
+        workspace, scmManager, this, querySelector('#fileViewArea'));
     _filesController.onSelectionChange.listen((resource) {
       focusManager.setCurrentResource(resource);
     });
@@ -437,6 +446,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       if (entry != null) {
         workspace.link(entry).then((file) {
           _selectFile(file);
+          _aceManager.focus();
           workspace.save();
         });
       }
@@ -542,7 +552,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     }
   }
 
-  Element getContextMenuContainer() => getUIElement('#file-item-context-menu');
+  Element getContextMenuContainer() => querySelector('#file-item-context-menu');
 
   List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
       actionManager.getContextActions(resources);
@@ -965,6 +975,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // this to occur.
           Timer.run(() {
             spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._aceManager.focus();
           });
         });
       }

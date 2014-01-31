@@ -37,7 +37,6 @@ void main([List<String> args]) {
 
   defineTask('lint', taskFunction: lint, depends: ['setup']);
 
-  defineTask('compile', taskFunction: compile, depends : ['setup']);
   defineTask('deploy', taskFunction: deploy, depends : ['lint']);
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
@@ -87,15 +86,6 @@ void lint(context) {
 }
 
 /**
- * Compile the Spark non-Polymer entry-point. This step will be removed soon in
- * favor of the Polymer-oriented [deploy].
- */
-@deprecated
-void compile(GrinderContext context) {
-  _dart2jsCompile(context, new Directory('app'), 'spark.dart');
-}
-
-/**
  * Copy all source to `build/deploy`. Do a polymer deploy to `build/deploy-out`.
  * This builds the regular (non-test) version of the app.
  */
@@ -105,9 +95,18 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  _dart2jsCompile(
-      context, joinDir(destDir, ['web']),
+  Directory deployWeb = joinDir(destDir, ['web']);
+
+  // Compile the main Spark app.
+  _dart2jsCompile(context, deployWeb,
       'spark_polymer.html_bootstrap.dart', true);
+
+  // Compile the services entry-point.
+  _dart2jsCompile(context, deployWeb, 'services_impl.dart', true);
+  _copyFileWithNewName(
+      joinFile(deployWeb, ['services_impl.dart.precompiled.js']),
+      deployWeb, 'services_impl.dart.js', context);
+
   _runCommandSync(
       context,
       'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
@@ -356,12 +355,21 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
                      [bool removeSymlinks = false]) {
   _patchDartJsInterop(context);
 
-  runSdkBinary(context, 'dart2js', arguments: [
-     joinDir(target, [filePath]).path,
-     '--package-root=packages',
-     '--suppress-warnings',
-     '--suppress-hints',
-     '--out=' + joinDir(target, ['${filePath}.js']).path]);
+  File scriptFile = joinFile(sdkDir, ['bin', _execName('dart2js')]);
+
+  // Run dart2js with a custom heap size.
+  _runProcess(context, scriptFile.path,
+      arguments: [
+        joinDir(target, [filePath]).path,
+        '--package-root=packages',
+        '--suppress-warnings',
+        '--suppress-hints',
+        '--out=' + joinDir(target, ['${filePath}.js']).path
+      ],
+      environment: {
+        'DART_VM_OPTIONS': '--old_gen_heap_size=2048'
+      }
+  );
 
   // clean up unnecessary (and large) files
   deleteEntity(joinFile(target, ['${filePath}.js']), context);
@@ -584,6 +592,16 @@ void _delete(String path, [GrinderContext context]) {
   }
 }
 
+void _copyFileWithNewName(File srcFile, Directory destDir, String destFileName,
+                          [GrinderContext context]) {
+  File destFile = joinFile(destDir, [destFileName]);
+  if (context != null) {
+    context.log('copying ${srcFile.path} to ${destFile.path}');
+  }
+  destDir.createSync(recursive: true);
+  destFile.writeAsBytesSync(srcFile.readAsBytesSync());
+}
+
 void _runCommandSync(GrinderContext context, String command, {String cwd}) {
   context.log(command);
 
@@ -613,6 +631,44 @@ String _getCommandOutput(String command) {
   } else {
     return Process.runSync('/bin/sh', ['-c', command]).stdout.trim();
   }
+}
+
+/**
+ * Run the given executable, with optional arguments and working directory.
+ */
+void _runProcess(GrinderContext context, String executable,
+    {List<String> arguments : const [],
+     bool quiet: false,
+     String workingDirectory,
+     Map<String, String> environment}) {
+  context.log("${executable} ${arguments.join(' ')}");
+
+  ProcessResult result = Process.runSync(
+      executable, arguments, workingDirectory: workingDirectory,
+      environment: environment);
+
+  if (!quiet) {
+    if (result.stdout != null && !result.stdout.isEmpty) {
+      context.log(result.stdout.trim());
+    }
+  }
+
+  if (result.stderr != null && !result.stderr.isEmpty) {
+    context.log(result.stderr);
+  }
+
+  if (result.exitCode != 0) {
+    throw new GrinderException(
+        "${executable} failed with a return code of ${result.exitCode}");
+  }
+}
+
+String _execName(String name) {
+  if (Platform.isWindows) {
+    return name == 'dart' ? 'dart.exe' : '${name}.bat';
+  }
+
+  return name;
 }
 
 /**
