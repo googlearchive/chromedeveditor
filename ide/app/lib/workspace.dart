@@ -774,8 +774,6 @@ class Project extends Folder {
    * change events as necessary.
    */
   Future refresh() {
-    print('refreshing ${name}');
-
     workspace.pauseResourceEvents();
 
     return _refresh().whenComplete(() {
