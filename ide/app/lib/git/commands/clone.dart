@@ -134,7 +134,7 @@ class Clone {
     config.url = _options.repoUrl;
     config.time = new DateTime.now();
 
-    if (_options.depth > 0 && shallow != null) {
+    if (_options.depth != null && shallow != null) {
       config.shallow = shallow;
     }
 
