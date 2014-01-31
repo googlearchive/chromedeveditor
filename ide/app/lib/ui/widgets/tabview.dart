@@ -132,8 +132,7 @@ class TabView {
   Tab _selectedTab;
   bool _tabItemsLayoutListenerEnabled = false;
   int _lastLayoutWidth = 0;
-  StreamSubscription<MouseEvent> _tabViewContainerMouseOutStream;
-  StreamSubscription<MouseEvent> _documentMouseOutStream;
+  StreamSubscription<MouseEvent> _tabBarMouseLeaveStream;
 
   TabView(this.parentElement) {
     List<Element> originalElements = parentElement.children.toList();
@@ -230,10 +229,7 @@ class TabView {
       return;
     }
     _tabItemsLayoutListenerEnabled = true;
-    _tabViewContainerMouseOutStream = _tabViewContainer.onMouseOut.listen((e) {
-      _layoutTabItems();
-    });
-    _documentMouseOutStream = document.onMouseOut.listen((e) {
+    _tabBarMouseLeaveStream = _tabBar.onMouseLeave.listen((e) {
       _layoutTabItems();
     });
   }
@@ -275,10 +271,8 @@ class TabView {
     });
 
     if (_tabItemsLayoutListenerEnabled) {
-      _tabViewContainerMouseOutStream.cancel();
-      _tabViewContainerMouseOutStream = null;
-      _documentMouseOutStream.cancel();
-      _documentMouseOutStream = null;
+      _tabBarMouseLeaveStream.cancel();
+      _tabBarMouseLeaveStream = null;
       _tabItemsLayoutListenerEnabled = false;
     }
   }
