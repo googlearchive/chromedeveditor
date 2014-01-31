@@ -105,19 +105,30 @@ void deploy(GrinderContext context) {
 
   _polymerDeploy(context, sourceDir, destDir);
 
-  _dart2jsCompile(
-      context, joinDir(destDir, ['web']),
-      'services_impl.dart', true);
-  copyFile(getFile('services_impl.precompile.js'),
-      getFile('services_impl.js'));
+  Directory deployWeb = joinDir(destDir, ['web']);
+  _dart2jsCompile(context, deployWeb, 'services_impl.dart', true);
+  _copyFileWithNewName(
+      joinFile(deployWeb, ['services_impl.dart.precompiled.js']),
+      deployWeb, 'services_impl.dart.js', context);
   print("done with services");
-  _dart2jsCompile(
-      context, joinDir(destDir, ['web']),
+  _dart2jsCompile(context, deployWeb,
       'spark_polymer.html_bootstrap.dart', true);
 
   _runCommandSync(
       context,
       'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
+}
+
+// Left out from grinder package due to plans to deprecate it in favor of hop.
+void _copyFileWithNewName(File srcFile, Directory destDir, String destFilename,
+                    GrinderContext context) {
+  File destFile = joinFile(destDir, [destFilename]);
+
+  if (context != null) {
+    context.log('copying ${srcFile.path} to ${destFile.path}');
+  }
+  destDir.createSync(recursive: true);
+  destFile.writeAsBytesSync(srcFile.readAsBytesSync());
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
