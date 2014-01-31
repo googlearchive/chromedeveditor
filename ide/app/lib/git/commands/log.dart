@@ -17,13 +17,17 @@ import '../objectstore.dart';
 class Log {
   String _branch;
   CommitGraph _graph;
+
+  // Integer specifying the number of commits to return with each successive
+  // call to getNextCommits.
   int _increment;
+
   List<String> _nextHeadShas;
   ObjectStore _store;
 
   /**
-   * Sets up the Log object. Optional param branch specifies a branch
-   * other than the current head. Optional increment specifies a number of
+   * Sets up the Log object. Optional [branch] specifies a branch
+   * other than the current head. Optional [increment] specifies a number of
    * commits to return with each successive call (defaults to 1).
    */
   Log(this._store, {String branch, int increment: 1}) {
@@ -59,8 +63,8 @@ class Log {
   }
 
   /**
-   * getNextCommits() is a state based function for successively retrieving
-   * a list of commit objects in small chunks.
+   * A state based function for successively retrieving a list of commit
+   * objects in small chunks.
    */
   Future<List<CommitObject>> getNextCommits() {
     if (_nextHeadShas != null)
@@ -72,9 +76,9 @@ class Log {
   }
 
   /**
-   * getAllCommits() is a static function for retrieving a list of all
-   * commit objects above a branch head. Passing in an optional limit
-   * variable will return at most that many commit objects.
+   * A static function for retrieving a list of all commit objects above a
+   * branch head. Passing in an optional limit variable will return at most
+   * that many commit objects.
    */
   static Future<List<CommitObject>> getAllCommits(
       ObjectStore store, String branch, {int limit}) {
