@@ -7,6 +7,8 @@ library git.commands.pull;
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'dart:html';
+
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
@@ -58,11 +60,7 @@ class Pull {
           password);
 
       // get current branch.
-      return FileOps.readFile(root, '.git/HEAD', 'Text').then(
-          (String headStr) {
-
-        // get rid of the initial 'ref: ' and newline at end.
-        String headRefName = headStr.substring(5).trim();
+      return store.getHeadRef().then((String headRefName) {
         return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
           GitRef branchRef = refs.firstWhere((GitRef ref) =>
               ref.name == headRefName);
@@ -148,10 +146,10 @@ class Pull {
       ByteBuffer packBuffer, ByteBuffer packIdxBuffer) {
     return FileOps.createDirectoryRecursive(root, '.git/objects').then(
         (chrome.DirectoryEntry objectsDir) {
-      return FileOps.createFileWithContent(root, 'pack/${packName}.pack',
-          packBuffer, 'ArrayBuffer').then((_) {
-        return FileOps.createFileWithContent(root, 'pack/${packName}.idx',
-            packIdxBuffer, 'ArrayBuffer').then((_) {
+      return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
+          packBuffer, 'blob').then((_) {
+        return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.idx',
+            packIdxBuffer, 'blob').then((_) {
           return new Future.value(objectsDir);
         });
       });
@@ -187,15 +185,18 @@ class Pull {
             Uint8List packSha = result.data.sublist(result.data.length - 20);
             Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
                 packSha);
+
             // Get a veiw of the sorted shas.
-            Uint8List sortedShas = packIdxData.sublist(4 + 4 + (256 * 4),
-                result.objects.length * 20);
+            int offset = 4 + 4 + (256 * 4);
+            Uint8List sortedShas = packIdxData.sublist(offset,
+                offset + result.objects.length * 20);
 
             crypto.SHA1 sha1 = new crypto.SHA1();
             sha1.add(sortedShas);
             String packNameSha = shaBytesToString(sha1.close());
 
             String packName = 'pack-${packNameSha}';
+
             return _createPackFiles(packName, result.data.buffer,
                 packIdxData.buffer).then((objectsDir) {
               store.objectDir = objectsDir;
