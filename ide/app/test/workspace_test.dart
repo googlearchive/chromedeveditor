@@ -205,7 +205,6 @@ defineTests() {
         fs.removeFile('/myProject/myApp.css');
         fs.createFile('/myProject/myDir/test2.html');
         return workspace.refresh().then((_) {
-          //dir = project.getChild('myDir');
           expect(project.getChildren().length, 5);
           expect(dir.getChildren().length, 4);
         });
