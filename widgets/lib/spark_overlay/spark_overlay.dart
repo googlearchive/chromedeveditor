@@ -122,6 +122,7 @@ class SparkOverlay extends SparkWidget {
       enableCaptureHandler(opened);
     }
     enableResizeHandler(opened);
+    asyncFire('opened', detail: opened);
   }
 
   void enableResizeHandler(inEnable) {
@@ -229,7 +230,10 @@ class SparkOverlay extends SparkWidget {
       e.preventDefault();
 
       if (!autoCloseDisabled) {
-        autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
+        autoCloseTask = new Timer(Duration.ZERO, () {
+          opened = false;
+          openedChanged();
+        });
       }
     }
   }
