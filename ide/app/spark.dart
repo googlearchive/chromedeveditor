@@ -292,7 +292,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
     _editorArea = new EditorArea(
-        getUIElement('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
+        querySelector('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
 
     _syncPrefs.getValue('textFileExtensions').then((String value) {
       _textFileExtensions = new Set();
@@ -340,7 +340,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, scmManager, this, getUIElement('#fileViewArea'));
+        workspace, scmManager, this, querySelector('#fileViewArea'));
     _filesController.onSelectionChange.listen((resource) {
       focusManager.setCurrentResource(resource);
     });
@@ -554,7 +554,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     }
   }
 
-  Element getContextMenuContainer() => getUIElement('#file-item-context-menu');
+  Element getContextMenuContainer() => querySelector('#file-item-context-menu');
 
   List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
       actionManager.getContextActions(resources);

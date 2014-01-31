@@ -43,24 +43,22 @@
     <spark-overlay
         id="suggestion-list-overlay"
         class="spark-overlay-scale-slideup">
-      <div class="suggest-item-list">
-        <template repeat="{{s in suggestions | enumerate}}">
-          <!--
-            TODO: Consider reusing existing component, e.g. spark-selection
-          -->
-          <div
-              item-index="{{s.index}}"
-              class="suggest-item"
-              highlighted="{{s.index == selectionIndex}}"
-              on-mouseover="{{mouseOverItem}}"
-              on-click="{{mouseClickedItem}}">
-            {{s.value.label}}
-            <template if="{{s.value.hasDetails}}">
-              <span class="text-muted">[{{s.value.details}}]</span>
-            </template>
-          </div>
-        </template>
-      </div>
+      <template repeat="{{s in suggestions | enumerate}}">
+        <!--
+          TODO: Consider reusing existing component, e.g. spark-selection
+        -->
+        <div
+            class="suggestion-item"
+            item-index="{{s.index}}"
+            highlighted="{{s.index == selectionIndex}}"
+            on-mouseover="{{mouseOverItem}}"
+            on-click="{{mouseClickedItem}}">
+          {{s.value.label}}
+          <template if="{{s.value.hasDetails}}">
+            <span class="text-muted">[{{s.value.details}}]</span>
+          </template>
+        </div>
+      </template>
     </spark-overlay>
   </template>
 

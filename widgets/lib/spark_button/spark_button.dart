@@ -24,6 +24,7 @@ class SparkButton extends SparkWidget {
 
   @published bool large = false;
   @published bool small = false;
+  @published bool noPadding = false;
 
   String get actionId => attributes['action-id'];
 

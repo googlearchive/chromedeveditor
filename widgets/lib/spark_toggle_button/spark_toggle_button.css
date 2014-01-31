@@ -2,6 +2,8 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+@import url("../common/spark_widget.css");
+
 :host {
   display: inline-block;
   position: relative;
@@ -53,7 +55,7 @@
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   text-align: center;
-  font-family: 'Helvetica Neue', Helvetica, Arial, 'open sans', sans-serif;
+  font-family: Helvetica, Sans-serif;
   font-size: 10px;
 }
 
