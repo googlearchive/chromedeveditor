@@ -4,7 +4,6 @@
 
 library git_file_operations_test;
 
-import 'dart:async';
 import 'dart:convert';
 import 'dart:html';
 import 'dart:typed_data';
