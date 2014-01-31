@@ -204,12 +204,8 @@ defineTests() {
         fs.createFile('/myProject/myApp2.css');
         fs.removeFile('/myProject/myApp.css');
         fs.createFile('/myProject/myDir/test2.html');
-        return workspace.refresh().then((e) {
-          // Instance of /myProject/myDir might have changed because of
-          // refresh(), then we request it again.
-          // TODO(dvh): indentity of objects needs to be preserved by
-          // workspace.refresh().
-          dir = project.getChild('myDir');
+        return workspace.refresh().then((_) {
+          //dir = project.getChild('myDir');
           expect(project.getChildren().length, 5);
           expect(dir.getChildren().length, 4);
         });

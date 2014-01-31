@@ -156,13 +156,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
-      // content of the workspace from other applications.
-      // For that reason, when the user switch back to Spark, we want to check
-      // whether the content of the workspace changed.
-      // TODO(devoncarew): This is causing workspace corruption issues. Our
-      // refresh method really needs to weave deltas back into the existing
-      // workspace model.
-      //workspace.refresh();
+      // content of the workspace from other applications. For that reason, when
+      // the user switch back to Spark, we want to check whether the content of
+      // the workspace changed.
+      workspace.refresh();
     });
 
     // Add a Dart builder.

@@ -389,24 +389,10 @@ class Workspace implements Container {
    * and will update the content of the workspace if needed.
    */
   Future refresh() {
-    Set<String> existing = new Set();
-    _fillSetWithResource(existing, this);
-    Set<String> current = new Set();
-    List futures = [];
-    for (Resource resource in getChildren()) {
-      futures.add(_gatherPaths(current, resource.entry));
-    }
-    return Future.wait(futures).then((e) {
-      Set<String> union = new Set();
-      union.addAll(current);
-      union.addAll(existing);
-      // We compare the list of paths.
-      if (union.length != current.length ||
-          current.length != existing.length) {
-        return _reloadContents();
-      } else {
-        return new Future.value();
-      }
+    List<Project> projects = getProjects().toList();
+
+    return Future.forEach(projects, (Project project) {
+      return _runInTimer(() => project.refresh());
     });
   }
 
@@ -788,6 +774,8 @@ class Project extends Folder {
    * change events as necessary.
    */
   Future refresh() {
+    print('refreshing ${name}');
+
     workspace.pauseResourceEvents();
 
     return _refresh().whenComplete(() {
@@ -1009,4 +997,22 @@ class MarkerDelta {
   bool get isDelete => type == EventType.DELETE;
 
   String toString() => '${type}: ${marker}';
+}
+
+/**
+ * Run the given closure in a timer task.
+ */
+Future _runInTimer(var closure) {
+  Completer completer = new Completer();
+
+  Timer.run(() {
+    var result = closure();
+    if (result is Future) {
+      result.whenComplete(() => completer.complete());
+    } else {
+      completer.complete();
+    }
+  });
+
+  return completer.future;
 }
