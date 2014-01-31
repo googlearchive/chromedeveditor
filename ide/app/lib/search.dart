@@ -53,6 +53,7 @@ class SearchOracle implements SuggestOracle {
       string != null && _cleanse(string).contains(searchText);
 
   Suggestion _makeSuggestionFromResource(Resource res) =>
-      new Suggestion('${res.name} (${res.parent.path})',
+      new Suggestion(res.name,
+          details: res.parent.path,
           onSelected: () => _fileOpener(res));
 }

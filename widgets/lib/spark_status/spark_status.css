@@ -30,8 +30,8 @@
 
 .label {
   text-overflow: ellipsis;
-  font-family: Helvetica, Sans-serif;
   font-size: 14px;
+  font-family: Helvetica, sans-serif;
   font-weight: 500;
   color: #aaa;
   white-space: nowrap;

@@ -6,6 +6,7 @@ library spark.search_test;
 
 import 'dart:async';
 
+import 'package:spark_widgets/spark_suggest/spark_suggest_box.dart';
 import 'package:unittest/unittest.dart';
 
 import '../lib/search.dart';
@@ -38,36 +39,41 @@ defineTests() {
     whenReady(test()) => () => ws.link(rootDir).then((_) => test());
 
     test('should find single matching file', whenReady(() {
-      oracle.getSuggestions('spark').listen(expectAsync1((list) {
+      oracle.getSuggestions('spark').listen(expectAsync1((List<Suggestion> list) {
         expect(list, hasLength(1));
-        expect(list[0].displayLabel, 'Spark.DART (/root)');
+        expect(list[0].label, 'Spark.DART');
+        expect(list[0].details, '/root');
       }));
     }));
 
     test('should find all matching files', whenReady(() {
-      oracle.getSuggestions('multi').listen(expectAsync1((list) {
+      oracle.getSuggestions('multi').listen(expectAsync1((List<Suggestion> list) {
         expect(list, hasLength(2));
-        expect(list[0].displayLabel, 'multi1.dart (/root)');
-        expect(list[1].displayLabel, 'multi2.dart (/root)');
+        expect(list[0].label, 'multi1.dart');
+        expect(list[0].details, '/root');
+        expect(list[1].label, 'multi2.dart');
+        expect(list[1].details, '/root');
       }));
     }));
 
     test('should ignore case', whenReady(() {
-      oracle.getSuggestions('SP').listen(expectAsync1((list) {
+      oracle.getSuggestions('SP').listen(expectAsync1((List<Suggestion> list) {
         expect(list, hasLength(1));
-        expect(list[0].displayLabel, 'Spark.DART (/root)');
+        expect(list[0].label, 'Spark.DART');
+        expect(list[0].details, '/root');
       }));
     }));
 
     test('should ignore underscores', whenReady(() {
-      oracle.getSuggestions('ih-asunder_dashes').listen(expectAsync1((list) {
+      oracle.getSuggestions('ih-asunder_dashes').listen(expectAsync1((List<Suggestion> list) {
         expect(list, hasLength(1));
-        expect(list[0].displayLabel, 'i_has-underdashes.txt (/root)');
+        expect(list[0].label, 'i_has-underdashes.txt');
+        expect(list[0].details, '/root');
       }));
     }));
 
     test('should not return non-matching suggestions', whenReady(() {
-      oracle.getSuggestions('does_not_match').listen(expectAsync1((list) {
+      oracle.getSuggestions('does_not_match').listen(expectAsync1((List list) {
         expect(list, hasLength(0));
       }));
     }));
