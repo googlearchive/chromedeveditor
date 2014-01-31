@@ -160,13 +160,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
-      // content of the workspace from other applications.
-      // For that reason, when the user switch back to Spark, we want to check
-      // whether the content of the workspace changed.
-      // TODO(devoncarew): This is causing workspace corruption issues. Our
-      // refresh method really needs to weave deltas back into the existing
-      // workspace model.
-      //workspace.refresh();
+      // content of the workspace from other applications. For that reason, when
+      // the user switch back to Spark, we want to check whether the content of
+      // the workspace changed.
+      workspace.refresh();
     });
 
     // Add a Dart builder.
@@ -385,6 +382,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
+    actionManager.registerAction(new ResourceRefreshAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
@@ -1232,6 +1230,30 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 }
 
+class ResourceRefreshAction extends SparkAction implements ContextAction {
+  ResourceRefreshAction(Spark spark) : super(
+      spark, "resource-refresh", "Refresh") {
+    addBinding('f5');
+  }
+
+  void _invoke([context]) {
+    List<ws.Resource> resources;
+
+    if (context == null) {
+      resources = [spark.focusManager.currentResource];
+    } else {
+      resources = context;
+    }
+
+    ResourceRefreshJob job = new ResourceRefreshJob(resources);
+    spark.jobManager.schedule(job);
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(context) => _isResourceList(context) && !_isTopLevelFile(context);
+}
+
 class PrevMarkerAction extends SparkAction {
   PrevMarkerAction(Spark spark) : super(
       spark, "marker-prev", "Previous Marker") {
@@ -1556,6 +1578,39 @@ class _GitCheckoutJob extends Job {
     }).catchError((e) {
       spark.showErrorMessage('Error switching to ${_branchName}', e.toString());
     });
+  }
+}
+
+class ResourceRefreshJob extends Job {
+  final List<ws.Project> resources;
+
+  ResourceRefreshJob(this.resources) : super('Refreshing…');
+
+  Future run(ProgressMonitor monitor) {
+    List<ws.Project> projects = resources.map((r) => r.project).toSet().toList();
+
+    monitor.start('', projects.length);
+
+    Completer completer = new Completer();
+
+    var consumeProject;
+    consumeProject = () {
+      ws.Project project = projects.removeAt(0);
+
+      project.refresh().whenComplete(() {
+        monitor.worked(1);
+
+        if (projects.isEmpty) {
+          completer.complete();
+        } else {
+          Timer.run(consumeProject);
+        }
+      });
+    };
+
+    Timer.run(consumeProject);
+
+    return completer.future;
   }
 }
 
