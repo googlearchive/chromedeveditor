@@ -130,7 +130,7 @@ class TabView {
 
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
-  bool _tabItemsLayoutListenerEnabled;
+  bool _tabItemsLayoutListenerEnabled = false;
   int _lastLayoutWidth = 0;
   StreamSubscription<MouseEvent> _tabViewContainerMouseOutStream;
   StreamSubscription<MouseEvent> _documentMouseOutStream;
