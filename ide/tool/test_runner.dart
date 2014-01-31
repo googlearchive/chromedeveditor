@@ -179,7 +179,7 @@ String _dartiumPath() {
   String dartSdkPath = sdkDir.path;
 
   // Truncate any trailing /s
-  if (dartSdkPath.endsWith("/")) {
+  if (dartSdkPath.endsWith(sep)) {
     dartSdkPath = dartSdkPath.substring(0, dartSdkPath.length - 1);
   }
 
