@@ -356,12 +356,21 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
                      [bool removeSymlinks = false]) {
   _patchDartJsInterop(context);
 
-  runSdkBinary(context, 'dart2js', arguments: [
-     joinDir(target, [filePath]).path,
-     '--package-root=packages',
-     '--suppress-warnings',
-     '--suppress-hints',
-     '--out=' + joinDir(target, ['${filePath}.js']).path]);
+  File scriptFile = joinFile(sdkDir, ['bin', _execName('dart2js')]);
+
+  // Run dart2js with a custom heap size.
+  _runProcess(context, scriptFile.path,
+      arguments: [
+        joinDir(target, [filePath]).path,
+        '--package-root=packages',
+        '--suppress-warnings',
+        '--suppress-hints',
+        '--out=' + joinDir(target, ['${filePath}.js']).path
+      ],
+      environment: {
+        'DART_VM_OPTIONS': '--old_gen_heap_size=2048'
+      }
+  );
 
   // clean up unnecessary (and large) files
   deleteEntity(joinFile(target, ['${filePath}.js']), context);
@@ -613,6 +622,44 @@ String _getCommandOutput(String command) {
   } else {
     return Process.runSync('/bin/sh', ['-c', command]).stdout.trim();
   }
+}
+
+/**
+ * Run the given executable, with optional arguments and working directory.
+ */
+void _runProcess(GrinderContext context, String executable,
+    {List<String> arguments : const [],
+     bool quiet: false,
+     String workingDirectory,
+     Map<String, String> environment}) {
+  context.log("${executable} ${arguments.join(' ')}");
+
+  ProcessResult result = Process.runSync(
+      executable, arguments, workingDirectory: workingDirectory,
+      environment: environment);
+
+  if (!quiet) {
+    if (result.stdout != null && !result.stdout.isEmpty) {
+      context.log(result.stdout.trim());
+    }
+  }
+
+  if (result.stderr != null && !result.stderr.isEmpty) {
+    context.log(result.stderr);
+  }
+
+  if (result.exitCode != 0) {
+    throw new GrinderException(
+        "${executable} failed with a return code of ${result.exitCode}");
+  }
+}
+
+String _execName(String name) {
+  if (Platform.isWindows) {
+    return name == 'dart' ? 'dart.exe' : '${name}.bat';
+  }
+
+  return name;
 }
 
 /**
