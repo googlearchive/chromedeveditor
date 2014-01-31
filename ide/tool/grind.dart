@@ -110,7 +110,6 @@ void deploy(GrinderContext context) {
   _copyFileWithNewName(
       joinFile(deployWeb, ['services_impl.dart.precompiled.js']),
       deployWeb, 'services_impl.dart.js', context);
-  print("done with services");
   _dart2jsCompile(context, deployWeb,
       'spark_polymer.html_bootstrap.dart', true);
 
@@ -121,7 +120,7 @@ void deploy(GrinderContext context) {
 
 // Left out from grinder package due to plans to deprecate it in favor of hop.
 void _copyFileWithNewName(File srcFile, Directory destDir, String destFilename,
-                    GrinderContext context) {
+      GrinderContext context) {
   File destFile = joinFile(destDir, [destFilename]);
 
   if (context != null) {
