@@ -2,9 +2,14 @@
 if [ "$DRONE" = "true" ]; then
   sudo apt-get -y -q install zip
   sudo start xvfb
+  export HAS_DARTIUM=true
 fi
 
-# Setup the build environment.
+# Display installed versions.
+dart --version
+/usr/bin/google-chrome --version
+
+# Get our packages.
 pub get 
 
 # Build the archive.
@@ -14,17 +19,17 @@ else
   ./grind archive
 fi
 
-# Disable polymer deploy on drone.io for now.
-#./grind deploy-test
-
 ./grind mode-test
 
-# Run tests on dartium.
-dart tool/test_runner.dart --dartium
-
-# Run tests on chrome.
-if [ "$DRONE" = "true" ]; then
-  # Show the version of Chrome installed on drone.io.
-  /usr/bin/google-chrome --version
+# Run tests the Dart version of the app.
+if [ "$HAS_DARTIUM" = "true" ]; then
+  dart tool/test_runner.dart --dartium
 fi
-dart tool/test_runner.dart --chrome
+
+# Run tests on the dart2js version of the app.
+if [ "$DRONE" = "true" ]; then
+  # TODO: For now, dartium is a stand-in for chrome on drone.io.
+  dart tool/test_runner.dart --dartium --appPath=build/deploy-out/web
+else
+  dart tool/test_runner.dart --chrome
+fi
