@@ -5,18 +5,7 @@
 @import url("../common/spark_widget.css");
 
 #text-box {
-  outline: none;
-  border-radius: 3px;
-  border: 1px solid #cccccc;
-  padding: 2px 4px 2px 4px;
-  width: 100%;
-  font-size: 14px;
-  font-family: Helvetica, sans-serif;
   height: 31px;
-}
-
-#text-box:focus {
-  border-color: #aaaaaa;
 }
 
 #suggestion-list-overlay {
