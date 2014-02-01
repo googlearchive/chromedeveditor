@@ -344,6 +344,8 @@ class Workspace implements Container {
 
     return dir.createReader().readEntries().then((entries) {
       for (chrome.Entry ent in entries) {
+        if (_isGitFolder(ent)) continue;
+
         if (ent.isFile) {
           var file = new File(container, ent);
           container._localChildren.add(file);
@@ -406,9 +408,7 @@ class Workspace implements Container {
       return entry.createReader().readEntries().then((entries) {
         List futures = [];
         for (chrome.Entry ent in entries) {
-          if (ent.name == '.git') {
-            continue;
-          }
+          if (_isGitFolder(ent)) continue;
           futures.add(_gatherPaths(paths, ent));
         }
         return Future.wait(futures);
@@ -1013,4 +1013,13 @@ Future _runInTimer(var closure) {
   });
 
   return completer.future;
+}
+
+bool _isGitFolder(chrome.Entry entry) {
+  return false;
+//  if (entry != null && entry.isDirectory && entry.name == '.git') {
+//    return true;
+//  } else {
+//    return false;
+//  }
 }

@@ -21,6 +21,7 @@ dependencies:
   mime: any
   path: any
   polymer: '>=0.9.2'
+  shadow_dom: 0.9.1
   spark_widgets:
     path: ../widgets
   unittest: any
