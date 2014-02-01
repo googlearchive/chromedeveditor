@@ -50,7 +50,6 @@ class UploadPackParser {
     var packFileParser;
     String remoteLine = "";
     bool gotAckorNak = false;
-    String ackRegex = "ACK ([0-9a-fA-F]{40}) common";
     List<String> common = [];
 
     String pktLineStr = _getPktLine(pktLine);
@@ -63,9 +62,10 @@ class UploadPackParser {
 
     while (pktLineStr == "NAK\n" || (pktLineStr.length > 3
         && pktLineStr.substring(0,3) == "ACK")) {
+      RegExp ackRegex = new RegExp(r"ACK ([0-9a-fA-F]{40}) common");
       List<Match> matches = ackRegex.allMatches(pktLineStr);
       if (matches.isNotEmpty) {
-        common.add(matches[1].group(0));
+        common.add(matches.first.group(1));
       }
       pktLine = _nextPktLine();
       pktLineStr = _getPktLine(pktLine);
