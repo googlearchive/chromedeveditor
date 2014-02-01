@@ -59,8 +59,10 @@ class Merge {
     List merges = [];
 
     while (true) {
-      TreeEntry newEntry = newEntries[newIdx];
-      TreeEntry oldEntry = newEntries[oldIdx];
+      TreeEntry newEntry = newIdx < newEntries.length ? newEntries[newIdx]
+          : null;
+      TreeEntry oldEntry = oldIdx < oldEntries.length ? oldEntries[oldIdx]
+          : null;
 
       if (newEntry == null) {
         if (oldEntry == null ) {

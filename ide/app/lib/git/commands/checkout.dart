@@ -61,7 +61,7 @@ class Checkout {
                   (CommitObject commit) {
                 return ObjectUtils.expandTree(root, store, commit.treeSha)
                     .then((_) {
-                  store.index.reset().then((_) {
+                  store.index.reset(false).then((_) {
                     return store.setHeadRef(REFS_HEADS + branch, '');
                   });
                 });

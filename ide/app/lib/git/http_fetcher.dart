@@ -98,15 +98,16 @@ class HttpFetcher {
 
     xhr.onLoad.listen((event) {
       ByteBuffer buffer = xhr.response;
-      if (haveRefs != null) {
-        Uint8List data = new Uint8List.view(buffer, 4, 3);
-        if (moreHaves.isNotEmpty && UTF8.decode(data.toList()) == "NAK") {
+      Uint8List data = new Uint8List.view(buffer, 4, 3);
+      if (haveRefs != null && UTF8.decode(data.toList()) == "NAK") {
+        if (moreHaves.isNotEmpty) {
           //TODO handle case of more haves.
           //store.getCommitGraph(headShas, COMMIT_LIMIT).then((obj) {
           //});
         } else if (noCommon) {
           noCommon();
         }
+        completer.completeError("error in git pull");
       } else {
 
         if (packProgress != null) {
@@ -115,17 +116,20 @@ class HttpFetcher {
 
         // TODO add UploadPackParser class.
         UploadPackParser parser = getUploadPackParser();
-        parser.parse(buffer, store, packProgress).then((PackParseResult obj) {
+        return parser.parse(buffer, store, packProgress).then(
+            (PackParseResult obj) {
            completer.complete(obj);
         });
       }
     });
 
-    xhr.onError.listen((_) => _ajaxErrorHandler({'url': url, 'type': 'POST'},
-        xhr));
+    xhr.onError.listen((_) {
+      completer.completeError(xhr.response);
+    });
 
-    xhr.onAbort.listen((_) => _ajaxErrorHandler({'url': url, 'type': 'POST'},
-        xhr));
+    xhr.onAbort.listen((_) {
+      completer.completeError(xhr.response);
+    });
 
     xhr.send(body);
     return completer.future;
