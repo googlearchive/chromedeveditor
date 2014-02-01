@@ -11,6 +11,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import '../config.dart';
+import '../constants.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
 import '../objectstore.dart';
@@ -35,6 +36,17 @@ class Clone {
     }
   }
 
+  Future _writeRefs(chrome.DirectoryEntry dir, List<GitRef> refs) {
+    return Future.forEach(refs, (GitRef ref) {
+      String refName = ref.name.split('/').last;
+      if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
+        return new Future.value();
+      }
+      String path = REFS_REMOTE_HEADS + ref.name.split('/').last;
+      return FileOps.createFileWithContent(dir, path, ref.sha, "Text");
+    });
+  }
+
   Future clone() {
 
     HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
@@ -51,27 +63,29 @@ class Clone {
           GitRef remoteHeadRef, localHeadRef;
           String remoteHead;
 
-          refs.forEach((GitRef ref) {
-            if (ref.name == "HEAD") {
-              remoteHead = ref.sha;
-            } else if (ref.name == "refs/heads/" + _options.branchName) {
-              localHeadRef = ref;
-            } else if (ref.name.indexOf("refs/heads/") == 0) {
-              if (ref.sha == remoteHead) {
-                remoteHeadRef = ref;
+          return _writeRefs(gitDir, refs).then((_) {
+            refs.forEach((GitRef ref) {
+              if (ref.name == "HEAD") {
+                remoteHead = ref.sha;
+              } else if (ref.name == REFS_HEADS + _options.branchName) {
+                localHeadRef = ref;
+              } else if (ref.name.indexOf(REFS_HEADS) == 0) {
+                if (ref.sha == remoteHead) {
+                  remoteHeadRef = ref;
+                }
+              }
+            });
+
+            if (localHeadRef == null) {
+              if (_options.branchName == null) {
+                //REMOTE_BRANCH_NOT_FOUND;
+                return null;
+              } else {
+                localHeadRef = remoteHeadRef;
               }
             }
+            return _processClone(gitDir, localHeadRef, fetcher);
           });
-
-          if (localHeadRef == null) {
-            if (_options.branchName == null) {
-              //REMOTE_BRANCH_NOT_FOUND;
-              return null;
-            } else {
-              localHeadRef = remoteHeadRef;
-            }
-          }
-          return _processClone(gitDir, localHeadRef, fetcher);
         });
       });
     });
