@@ -55,8 +55,7 @@ void main([List<String> args = const []]) {
   if (results['chrome'] || results['chrome-stable']) {
     //appPath = 'app';
     appPath = 'build/deploy-out/web';
-    //browserPath = _chromeStablePath();
-    browserPath = _dartiumPath();
+    browserPath = _chromeStablePath();
   }
 
   if (results['chrome-dev']) {
@@ -66,13 +65,13 @@ void main([List<String> args = const []]) {
     browserPath = _dartiumPath();
   }
 
-//  if (results['appPath'] != null) {
-//    appPath = results['appPath'];
-//  }
-//
-//  if (results['browserPath'] != null) {
-//    browserPath = results['browserPath'];
-//  }
+  if (results['appPath'] != null) {
+    appPath = results['appPath'];
+  }
+
+  if (results['browserPath'] != null) {
+    browserPath = results['browserPath'];
+  }
 
   if (appPath == null || browserPath == null) {
     _printUsage(parser);
@@ -150,8 +149,8 @@ ArgParser _createArgsParser() {
       help: 'show more logs when running unit tests in chrome',
       negatable: false);
 
-//  parser.addOption('appPath', help: 'the application path to run');
-//  parser.addOption('browserPath', help: 'the path to chrome');
+  parser.addOption('appPath', help: 'the application path to run');
+  parser.addOption('browserPath', help: 'the path to chrome');
 
   return parser;
 }
