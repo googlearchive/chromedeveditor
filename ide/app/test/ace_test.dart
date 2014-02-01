@@ -71,9 +71,11 @@ class MockAceEditor implements TextEditor {
 
   Stream get onDirtyChange => null;
 
-  Future save() { }
+  Future save() => new Future.value();
 
   void setSession(ace.EditSession value) { }
+
+  void fileContentsChanged() { }
 }
 
 class MockEditSession implements EditSession {

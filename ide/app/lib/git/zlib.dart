@@ -47,7 +47,8 @@ class Zlib {
    */
   static ZlibResult deflate(List<int> data) {
     js.JsObject deflater = new js.JsObject(_zlib['Deflate'], [_listToJs(data)]);
-    js.JsObject buffer = deflater.callMethod('compress');
+    // TODO: This should be a JsObject, but Dartium returns an Uint8List.
+    var buffer = deflater.callMethod('compress');
     return new ZlibResult(chrome.ArrayBuffer.create(buffer));
   }
 

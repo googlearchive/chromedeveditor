@@ -17,6 +17,7 @@ import '../common/spark_widget.dart';
  * and an [onSelected] callback. [onSelected] is called when the user chooses
  * `this` suggestion.
  */
+@reflectable
 class Suggestion {
   final String label;
   final String details;

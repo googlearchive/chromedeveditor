@@ -37,7 +37,6 @@ void main([List<String> args]) {
 
   defineTask('lint', taskFunction: lint, depends: ['setup']);
 
-  defineTask('compile', taskFunction: compile, depends : ['setup']);
   defineTask('deploy', taskFunction: deploy, depends : ['lint']);
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
@@ -87,15 +86,6 @@ void lint(context) {
 }
 
 /**
- * Compile the Spark non-Polymer entry-point. This step will be removed soon in
- * favor of the Polymer-oriented [deploy].
- */
-@deprecated
-void compile(GrinderContext context) {
-  _dart2jsCompile(context, new Directory('app'), 'spark.dart');
-}
-
-/**
  * Copy all source to `build/deploy`. Do a polymer deploy to `build/deploy-out`.
  * This builds the regular (non-test) version of the app.
  */
@@ -106,28 +96,20 @@ void deploy(GrinderContext context) {
   _polymerDeploy(context, sourceDir, destDir);
 
   Directory deployWeb = joinDir(destDir, ['web']);
+
+  // Compile the main Spark app.
+  _dart2jsCompile(context, deployWeb,
+      'spark_polymer.html_bootstrap.dart', true);
+
+  // Compile the services entry-point.
   _dart2jsCompile(context, deployWeb, 'services_impl.dart', true);
   _copyFileWithNewName(
       joinFile(deployWeb, ['services_impl.dart.precompiled.js']),
       deployWeb, 'services_impl.dart.js', context);
-  _dart2jsCompile(context, deployWeb,
-      'spark_polymer.html_bootstrap.dart', true);
 
   _runCommandSync(
       context,
       'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
-}
-
-// Left out from grinder package due to plans to deprecate it in favor of hop.
-void _copyFileWithNewName(File srcFile, Directory destDir, String destFilename,
-      GrinderContext context) {
-  File destFile = joinFile(destDir, [destFilename]);
-
-  if (context != null) {
-    context.log('copying ${srcFile.path} to ${destFile.path}');
-  }
-  destDir.createSync(recursive: true);
-  destFile.writeAsBytesSync(srcFile.readAsBytesSync());
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -608,6 +590,16 @@ void _delete(String path, [GrinderContext context]) {
   } else {
     deleteEntity(getDir(path), context);
   }
+}
+
+void _copyFileWithNewName(File srcFile, Directory destDir, String destFileName,
+                          [GrinderContext context]) {
+  File destFile = joinFile(destDir, [destFileName]);
+  if (context != null) {
+    context.log('copying ${srcFile.path} to ${destFile.path}');
+  }
+  destDir.createSync(recursive: true);
+  destFile.writeAsBytesSync(srcFile.readAsBytesSync());
 }
 
 void _runCommandSync(GrinderContext context, String command, {String cwd}) {

@@ -49,6 +49,7 @@ abstract class Editor {
   void activate();
   void resize();
   void focus();
+  void fileContentsChanged();
   Future save();
 }
 
@@ -88,6 +89,15 @@ class EditorManager implements EditorProvider {
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
+      });
+      _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+        for (ChangeDelta delta in event.changes) {
+          if (delta.isDelete && delta.resource.isFile) {
+            _handleFileDeleted(delta.resource);
+          } else if (delta.isChange && delta.resource.isFile) {
+            _handleFileChanged(delta.resource);
+          }
+        }
       });
     });
   }
@@ -245,7 +255,7 @@ class EditorManager implements EditorProvider {
           if (editorType(state.file.name) == EDITOR_TYPE_IMAGE) {
             _selectedController.add(currentFile);
             persistState();
-          } else {
+          } else if (_editorMap[currentFile] != null) {
             // TODO: this explicit casting to AceEditor will go away in a future refactoring
             ace.TextEditor textEditor = _editorMap[currentFile];
             textEditor.setSession(state.session);
@@ -294,6 +304,33 @@ class EditorManager implements EditorProvider {
       return EDITOR_TYPE_IMAGE;
     } else {
       return EDITOR_TYPE_TEXT;
+    }
+  }
+
+  void _handleFileDeleted(File file) {
+    // If the file is open in an editor, the editor will take care of closing.
+    if (_editorMap.containsKey(file)) {
+      return;
+    }
+
+    String key = file.path;
+
+    if (_savedEditorStates.containsKey(key)) {
+      _savedEditorStates.remove(key);
+    }
+  }
+
+  void _handleFileChanged(File file) {
+    // If the file is open in an editor, the editor will take care of updating.
+    if (_editorMap.containsKey(file)) {
+      return;
+    }
+
+    String key = file.path;
+
+    if (_savedEditorStates.containsKey(key)) {
+      // Update the saved state.
+      _savedEditorStates[key].handleFileChanged();
     }
   }
 
@@ -390,6 +427,14 @@ class _EditorState {
           return this;
         });
       }
+    }
+  }
+
+  void handleFileChanged() {
+    if (session != null) {
+      file.getContents().then((String text) {
+        session.value = text;
+      });
     }
   }
 }
