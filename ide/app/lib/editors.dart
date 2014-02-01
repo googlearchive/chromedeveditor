@@ -255,7 +255,7 @@ class EditorManager implements EditorProvider {
           if (editorType(state.file.name) == EDITOR_TYPE_IMAGE) {
             _selectedController.add(currentFile);
             persistState();
-          } else {
+          } else if (_editorMap[currentFile] != null) {
             // TODO: this explicit casting to AceEditor will go away in a future refactoring
             ace.TextEditor textEditor = _editorMap[currentFile];
             textEditor.setSession(state.session);

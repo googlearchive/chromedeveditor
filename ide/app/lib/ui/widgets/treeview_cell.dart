@@ -5,7 +5,6 @@
 library spark.ui.widgets.treeview_cell;
 
 import 'dart:html';
-import 'dart:async';
 import 'dart:convert' show JSON;
 
 import 'listview_cell.dart';

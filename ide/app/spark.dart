@@ -10,7 +10,6 @@ import 'dart:html' hide File;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:dquery/dquery.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 
