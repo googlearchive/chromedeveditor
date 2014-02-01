@@ -39,6 +39,7 @@
         "tcp-listen"
       ]
     },
+    "management",
     "syncFileSystem",
     "storage",
     "webview",
