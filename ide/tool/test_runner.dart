@@ -55,8 +55,8 @@ void main([List<String> args = const []]) {
   if (results['chrome'] || results['chrome-stable']) {
     //appPath = 'app';
     appPath = 'build/deploy-out/web';
-    //browserPath = _chromeStablePath();
-    browserPath = _dartiumPath();
+    browserPath = _chromeStablePath();
+    //browserPath = _dartiumPath();
   }
 
   if (results['chrome-dev']) {
