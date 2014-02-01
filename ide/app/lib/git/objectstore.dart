@@ -121,12 +121,7 @@ class ObjectStore {
             return Future.forEach(packEntries, (chrome.Entry entry) {
               _readPackEntry(packDir, entry);
             }).then((_) {
-              return index.init().then((_) {
-                return readConfig().then((Config config) {
-                  this.config = config;
-                  return new Future.value();
-                });
-              });
+              return _initHelper();
             });
           });
         });
@@ -440,13 +435,22 @@ class ObjectStore {
       this.objectDir = objectDir;
       return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
           'ref: refs/heads/master\n', 'Text').then((entry)  {
-            return index.init();
+            return _initHelper();
           }, onError: (e) {
             print(e);
             throw e;
           });
     }, onError: (e) {
       throw e;
+    });
+  }
+
+  Future _initHelper() {
+    return index.init().then((_) {
+      return readConfig().then((Config config) {
+        this.config = config;
+        return new Future.value();
+      });
     });
   }
 

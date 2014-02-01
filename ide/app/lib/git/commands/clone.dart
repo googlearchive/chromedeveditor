@@ -186,7 +186,10 @@ class Clone {
               //progress({pct: 95, msg: "Building file tree from pack. Be patient..."});
               return _createCurrentTreeFromPack(_options.root, _options.store,
                   localHeadRef.sha).then((_) {
-                _createInitialConfig(result.shallow, localHeadRef);
+                return _createInitialConfig(result.shallow, localHeadRef)
+                    .then((_) {
+                  return _options.store.index.reset(true);
+                });
               });
             });
           });
