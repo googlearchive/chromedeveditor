@@ -21,6 +21,7 @@ import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
+import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
@@ -194,7 +195,7 @@ class GitScmProvider extends ScmProvider {
 
   Future clone(String url, chrome.DirectoryEntry dir) {
     GitOptions options = new GitOptions(
-        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
+        root: dir, repoUrl: url, store: new ObjectStore(dir));
 
     return options.store.init().then((_) {
       Clone clone = new Clone(options);
@@ -262,6 +263,14 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       return Push.push(options);
+    });
+  }
+
+  Future pull() {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      Pull pull = new Pull(options);
+      return pull.pull();
     });
   }
 

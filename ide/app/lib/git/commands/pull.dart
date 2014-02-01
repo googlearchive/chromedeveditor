@@ -7,8 +7,6 @@ library git.commands.pull;
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'dart:html';
-
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
@@ -180,7 +178,7 @@ class Pull {
         return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
             null, graph.nextLevel, null, progress).then((PackParseResult result) {
           // fast forward merge.
-          if (result.common.indexOf(wantRef.localHead) != null) {
+          if (result.common.indexOf(wantRef.localHead) != -1) {
 
             Uint8List packSha = result.data.sublist(result.data.length - 20);
             Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
