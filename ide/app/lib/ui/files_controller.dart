@@ -193,7 +193,7 @@ class FilesController implements TreeViewDelegate {
     if (resource is File) {
       bool altKeyPressed = event.altKey;
       bool shiftKeyPressed = event.shiftKey;
-      bool ctrlKeyPressed = event.ctrlKey || event.metaKey;
+      bool ctrlKeyPressed = event.ctrlKey;
 
       // Open in editor only if alt key or no modifier key is down.  If alt key
       // is pressed, it will open a new tab.
@@ -623,11 +623,10 @@ class FilesController implements TreeViewDelegate {
 
     if (scmOperations != null) {
       if (resource is Project) {
-        scmOperations.getBranchName().then((branchName) {
-          final String repoIcon = '<i class="fa fa-code-fork"></i>';
-          if (branchName == null) branchName = '';
-          fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
-        });
+        String branchName = scmOperations.getBranchName();
+        final String repoIcon = '<span class="glyphicon glyphicon-random small"></span>';
+        if (branchName == null) branchName = '';
+        fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
       } else {
         FileStatus status = scmOperations.getFileStatus(resource);
         // TODO: We'll need to add a few more status states.
@@ -654,18 +653,6 @@ class FilesController implements TreeViewDelegate {
         _recursiveRemoveResource(child);
       });
     }
-  }
-
-  /**
-   * Shows the context menu under the menu disclosure button.
-   */
-  void _showMenu(FileItemCell cell,
-                 html.Element disclosureButton,
-                 Resource resource) {
-    // Position the context menu at the expected location.
-    html.Point position = getAbsolutePosition(disclosureButton);
-    position += new html.Point(0, disclosureButton.clientHeight - 2);
-    _showMenuAtLocation(cell, position, resource);
   }
 
   /**

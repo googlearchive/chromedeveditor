@@ -274,9 +274,6 @@ void createSdk(GrinderContext context) {
  * Delete all generated artifacts.
  */
 void clean(GrinderContext context) {
-  // Delete the sdk archive.
-  _delete('app/sdk/dart-sdk.bin');
-
   // Delete any compiled js output.
   for (FileSystemEntity entity in getDir('app').listSync()) {
     if (entity is File) {
@@ -353,8 +350,6 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
 
 void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
                      [bool removeSymlinks = false]) {
-  _patchDartJsInterop(context);
-
   File scriptFile = joinFile(sdkDir, ['bin', _execName('dart2js')]);
 
   // Run dart2js with a custom heap size.
@@ -390,25 +385,6 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
   link.createSync('./${filePath}.precompiled.js');
 
   _printSize(context, joinFile(target, ['${filePath}.precompiled.js']));
-}
-
-/**
- * This patches the dart:js library to fix dartbug.com/15193.
- */
-void _patchDartJsInterop(GrinderContext context) {
-  final matchString = 'if (dartProxy == null) {';
-  final replaceString = 'if (dartProxy == null || !_isLocalObject(o)) {';
-
-  File file = joinFile(sdkDir, ['lib', 'js', 'dart2js', 'js_dart2js.dart']);
-
-  String contents = file.readAsStringSync();
-
-  // This depends on the SDK files being writeable.
-  if (contents.contains(matchString)) {
-    context.log('Patching dart:js ${fileName(file)}');
-
-    file.writeAsStringSync(contents.replaceFirst(matchString, replaceString));
-  }
 }
 
 void _changeMode({bool useTestMode: true}) {

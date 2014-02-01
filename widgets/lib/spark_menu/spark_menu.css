@@ -27,11 +27,12 @@
   -moz-box-sizing: border-box;
   min-height: 2px;
   min-width: 160px;
-  margin: 5px 0px;
+  margin: 2px 0px;
   padding: 0 10px;
-  background-color: #CCC;
-  border-bottom: 1px solid #EEE;
+  background-color: #EEE;
+  border-bottom: 1px solid #FEFEFE;
   cursor: default;
+  color: #CCC;
 }
 
 /*@polyfill spark-menu-separator:hover */
