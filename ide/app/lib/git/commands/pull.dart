@@ -51,10 +51,14 @@ class Pull {
           return store.getRemoteHeadForRef(headRefName).then(
               (String remoteSha) {
             if (remoteSha == localSha) {
-              throw "branch is up-to-date.";
+              throw "Branch is up-to-date.";
             }
-            return _checkFastForward(remoteSha, localSha).then((isFastForward) {
-              if (isFastForward) {
+            return store.getCommonAncestor([remoteSha, localSha]).then(
+                (commonSha) {
+              if (commonSha == remoteSha) {
+                // Branch up-to-date. Nothing to do.
+                throw "Branch up-to-date. Nothing to do.";
+              } else if (commonSha == localSha) {
                 // Move the localHead to remoteHead, and checkout.
                 return FileOps.createFileWithContent(root,
                     '.git/${headRefName}', remoteSha, 'Text').then((_) {
@@ -64,25 +68,17 @@ class Pull {
                   });
                 });
               } else {
-                return store.getCommonAncestor([remoteSha, localSha]).then((sha) {
                   throw "non-fast-forward merge is not yet supported.";
-                });
               }
             });
           });
         });
       });
     }
-
     return fetch.fetch().then((_) {
       return merge();
-    });
-  }
-
-  Future<bool> _checkFastForward(String remoteSha, String localSha) {
-    return store.getCommitGraph([remoteSha], 10000).then(
-        (CommitGraph graph) {
-      return graph.commits.any((commit) => commit.sha == localSha);
+    }).catchError((e) {
+      return merge();
     });
   }
 }
