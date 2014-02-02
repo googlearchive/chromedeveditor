@@ -10,7 +10,6 @@ import 'dart:html' hide File;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:dquery/dquery.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 
@@ -1453,22 +1452,22 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   void _invoke([List context]) {
     project = context.first;
     gitOperations = spark.scmManager.getScmOperationsFor(project);
-    gitOperations.getBranchName().then((currentBranchName) {
-      (getElement('#currentBranchName') as InputElement).value = currentBranchName;
+    String currentBranchName = gitOperations.getBranchName();
+    (getElement('#currentBranchName') as InputElement).value = currentBranchName;
 
-      // Clear out the old Select options.
-      _selectElement.length = 0;
+    // Clear out the old select options.
+    _selectElement.length = 0;
 
-      gitOperations.getAllBranchNames().then((List<String> branchNames) {
-        branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-        for (String branchName in branchNames) {
-          _selectElement.append(
-              new OptionElement(data: branchName, value: branchName));
-        }
-        _selectElement.selectedIndex = branchNames.indexOf(currentBranchName);
-      });
-      _show();
+    gitOperations.getAllBranchNames().then((List<String> branchNames) {
+      branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      for (String branchName in branchNames) {
+        _selectElement.append(
+            new OptionElement(data: branchName, value: branchName));
+      }
+      _selectElement.selectedIndex = branchNames.indexOf(currentBranchName);
     });
+
+    _show();
   }
 
   void _commit() {

@@ -4,8 +4,6 @@
 
 library spark.search_test;
 
-import 'dart:async';
-
 import 'package:spark_widgets/spark_suggest/spark_suggest_box.dart';
 import 'package:unittest/unittest.dart';
 

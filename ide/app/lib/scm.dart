@@ -21,6 +21,7 @@ import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
+import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
@@ -137,14 +138,14 @@ abstract class ScmProjectOperations {
 
   chrome.DirectoryEntry get entry => project.entry;
 
+  String getBranchName();
+
   /**
    * Return the SCM status for the given file or folder.
    */
   FileStatus getFileStatus(Resource resource);
 
   Stream<ScmProjectOperations> get onStatusChange;
-
-  Future<String> getBranchName();
 
   Future<List<String>> getAllBranchNames();
 
@@ -194,7 +195,7 @@ class GitScmProvider extends ScmProvider {
 
   Future clone(String url, chrome.DirectoryEntry dir) {
     GitOptions options = new GitOptions(
-        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
+        root: dir, repoUrl: url, store: new ObjectStore(dir));
 
     return options.store.init().then((_) {
       Clone clone = new Clone(options);
@@ -212,6 +213,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
   StreamController<ScmProjectOperations> _statusController =
       new StreamController.broadcast();
 
+  String _branchName;
+
   GitScmProjectOperations(ScmProvider provider, Project project) :
     super(provider, project) {
 
@@ -219,8 +222,29 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
     _objectStore = new ObjectStore(project.entry);
     _objectStore.init()
-      .then((_) => _completer.complete(_objectStore))
-      .catchError((e) => _completer.completeError(e));
+      .then((_) {
+        _completer.complete(_objectStore);
+
+        // Populate the branch name.
+        getBranchName();
+      }).catchError((e) => _completer.completeError(e));
+  }
+
+  String getBranchName() {
+    // We return the current idea of the branch name immediately. We also ask
+    // git for the actual branch name asynchronously. If the two differ, we fire
+    // a changed event so listeners who were returned the old name can update
+    // themselves.
+    objectStore.then((store) {
+      return store.getCurrentBranch();
+    }).then((String name) {
+      if (name != _branchName) {
+        _branchName = name;
+        _statusController.add(this);
+      }
+    });
+
+    return _branchName;
   }
 
   FileStatus getFileStatus(Resource resource) {
@@ -229,9 +253,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
-
-  Future<String> getBranchName() =>
-      objectStore.then((store) => store.getCurrentBranch());
 
   Future<List<String>> getAllBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
@@ -262,6 +283,14 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       return Push.push(options);
+    });
+  }
+
+  Future pull() {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      Pull pull = new Pull(options);
+      return pull.pull();
     });
   }
 

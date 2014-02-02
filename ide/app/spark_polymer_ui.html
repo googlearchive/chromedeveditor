@@ -31,7 +31,9 @@
     <spark-toolbar id="toolbar" lightdom>
       <spark-button id="gitClone" small primary>Git Clone...</spark-button>
       <spark-button id="newProject" small>New Project...</spark-button>
-      <spark-button id="runButton" small><i class="fa fa-play"></i> Run</spark-button>
+      <spark-button id="runButton" small>
+        <span class="glyphicon glyphicon-play"></span> Run
+      </spark-button>
 
       <spark-status id="sparkStatus"></spark-status>
 
@@ -51,9 +53,9 @@
           </spark-menu-item>
           <spark-menu-item action-id="folder-open" iconsize=0 label="Open Folder...">
           </spark-menu-item>
+          <spark-menu-separator></spark-menu-separator>
           <spark-menu-item action-id="project-new" iconsize=0 label="New Project...">
           </spark-menu-item>
-          <spark-menu-separator></spark-menu-separator>
           <spark-menu-item action-id="git-clone" iconsize=0 label="Git Clone...">
           </spark-menu-item>
           <spark-menu-separator></spark-menu-separator>
@@ -336,9 +338,13 @@
               <span class="settings-label"></span>
               <span class="plus-minus-container">
                 <a href="#" id="themeMinus" class="plus-minus-button"
-                    on-click="{{onThemeMinus}}"><i class="fa fa-caret-left"></i></a>
+                    on-click="{{onThemeMinus}}">
+                  <span class="glyphicon glyphicon-chevron-left"></span>
+                </a>
                 <a href="#" id="themePlus" class="plus-minus-button"
-                    on-click="{{onThemePlus}}"><i class="fa fa-caret-right"></i></a>
+                    on-click="{{onThemePlus}}">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
               </span>
             </div>
           </div>
@@ -350,9 +356,13 @@
               <span class="settings-label"></span>
               <span class="plus-minus-container">
                 <a href="#" id="keysMinus" class="plus-minus-button"
-                    on-click="{{onKeysMinus}}"><i class="fa fa-caret-left"></i></a>
+                    on-click="{{onKeysMinus}}">
+                  <span class="glyphicon glyphicon-chevron-left"></span>
+                </a>
                 <a href="#" id="keysPlus" class="plus-minus-button"
-                    on-click="{{onKeysPlus}}"><i class="fa fa-caret-right"></i></a>
+                    on-click="{{onKeysPlus}}">
+                  <span class="glyphicon glyphicon-chevron-right"></span>
+                </a>
               </span>
             </div>
           </div>

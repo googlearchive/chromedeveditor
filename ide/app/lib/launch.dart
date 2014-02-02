@@ -98,6 +98,9 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
       _server.addServlet(new StaticResourcesServlet());
       _server.addServlet(_dart2jsServlet);
       _server.addServlet(new WorkspaceServlet(_launchManager));
+    }).catchError((error) {
+      // TODO: We could fallback to binding to any port.
+      _logger.severe('Error starting up embedded server', error);
     });
   }
 
@@ -119,7 +122,9 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
   }
 
   void dispose() {
-    _server.dispose();
+    if (_server != null) {
+      _server.dispose();
+    }
     _dart2jsServlet.dispose();
   }
 }

@@ -5,3 +5,4 @@
 library git.constants;
 
 const String REFS_HEADS = 'refs/heads/';
+const String REFS_REMOTE_HEADS = 'refs/remotes/origin/';

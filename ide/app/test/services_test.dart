@@ -4,7 +4,6 @@
 
 library spark.services_test;
 
-import 'dart:async';
 import 'dart:isolate';
 
 import 'package:unittest/unittest.dart';
@@ -35,7 +34,6 @@ defineTests() {
       expect(mockSendPort.wasSent, isNotNull);
     });
   });
-
 }
 
 class MockSendPort extends SendPort {
