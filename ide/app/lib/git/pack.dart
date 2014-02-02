@@ -169,7 +169,7 @@ class Pack {
     PackedObject doExpand(PackedObject baseObj, PackedObject deltaObj) {
       deltaObj.type = baseObj.type;
       deltaObj.data = applyDelta(baseObj.data, deltaObj.data);
-      deltaObj.sha = getObjectHash(deltaObj.type, deltaObj.data);
+      deltaObj.shaBytes = getObjectHash(deltaObj.type, deltaObj.data);
       return deltaObj;
     }
 
@@ -272,7 +272,7 @@ class Pack {
             deferredObjects.add(object);
             break;
           default:
-            object.sha = getObjectHash(object.type, object.data);
+            object.shaBytes = getObjectHash(object.type, object.data);
             object.data = null;
             // TODO(grv) : add progress.
             break;

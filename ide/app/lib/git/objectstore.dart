@@ -15,6 +15,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'config.dart';
+import 'constants.dart';
 import 'file_operations.dart';
 import 'commands/index.dart';
 import 'object.dart';
@@ -168,6 +169,12 @@ class ObjectStore {
 
   Future<String> getHeadForRef(String headRefName) {
     return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
+      .then((String content) => content.substring(0, 40));
+  }
+
+  Future<String> getRemoteHeadForRef(String headRefName) {
+    String path = gitPath + REFS_REMOTE_HEADS + headRefName.split('/').last;
+    return FileOps.readFile(_rootDir, path, "Text")
       .then((String content) => content.substring(0, 40));
   }
 
