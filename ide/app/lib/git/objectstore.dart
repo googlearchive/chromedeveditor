@@ -312,6 +312,43 @@ class ObjectStore {
     return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
   }
 
+  Future<String> getCommonAncestor(List<String> headShas) {
+    List<CommitObject> commits = [];
+    Map<String, int> seen = {};
+
+    String ancestor;
+    Future walkLevel(List<String> shas) {
+      List<String> nextLevel = [];
+      return Future.forEach(shas, (String sha) {
+        // Already found the lowest common ancestor.
+        if (ancestor != null) {
+          return null;
+        }
+
+        if (seen[sha] != null) {
+          seen[sha]++;
+          if (seen[sha] == headShas.length) {
+            ancestor = sha;
+          }
+          return null;
+        }
+
+        seen[sha] = 1;
+
+        return retrieveObject(sha, ObjectTypes.COMMIT_STR).then(
+            (CommitObject commitObj) {
+          nextLevel.addAll(commitObj.parents);
+        }).then((_) {
+          if (nextLevel.length == 0) {
+            throw "error in finding common ancestor.";
+          } else {
+            return walkLevel(nextLevel);
+          }
+        });
+      });
+    }
+    return walkLevel(headShas).then((_) => ancestor);
+  }
 
   _nonFastForward() {
     //TODO throw some error.
