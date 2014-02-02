@@ -64,7 +64,9 @@ class Pull {
                   });
                 });
               } else {
-                throw "non-fast-forward merge is not yet supported.";
+                return store.getCommonAncestor([remoteSha, localSha]).then((sha) {
+                  throw "non-fast-forward merge is not yet supported.";
+                });
               }
             });
           });

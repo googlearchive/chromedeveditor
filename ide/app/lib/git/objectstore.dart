@@ -299,7 +299,7 @@ class ObjectStore {
           }
 
           return null;
-        }).then((_) {
+        }, onError: (e) => null).then((_) {
           if ((limit != null && commits.length >= limit) ||
               nextLevel.length == 0) {
             return new Future.value(new CommitGraph(commits, nextLevel));
