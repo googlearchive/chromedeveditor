@@ -294,7 +294,7 @@ class LooseObject extends GitObject {
  * Encapsulates a git pack object.
  */
 class PackedObject extends GitObject {
-  List<int> sha;
+  List<int> shaBytes;
   String baseSha;
   int crc;
   int offset;
