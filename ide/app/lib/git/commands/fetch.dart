@@ -7,8 +7,6 @@ library git.commands.pull;
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'dart:html';
-
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
@@ -71,7 +69,6 @@ class Fetch {
             return store.getRemoteHeadForRef(headRefName).then((sha) {
               if (sha == branchRef.sha) {
                 // Branch is uptodate
-                // TODO throw PULL_UP_TO_DATE;
                 throw "fetch up to date.";
               } else {
                 return _handleFetch(branchRef, branchRef, fetcher);
