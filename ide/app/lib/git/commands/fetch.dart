@@ -72,8 +72,6 @@ class Fetch {
               } else {
                 return _handleFetch(branchRef, branchRef, fetcher);
               }
-            }, onError: (e) {
-
             });
           } else {
             //TODO better error handling.

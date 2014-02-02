@@ -14,6 +14,7 @@ import '../object_utils.dart';
 import '../objectstore.dart';
 import '../options.dart';
 import '../utils.dart';
+import 'checkout.dart';
 import 'fetch.dart';
 import 'merge.dart';
 
@@ -46,13 +47,47 @@ class Pull {
     // TODO add fetchProgress chunker.
 
     Fetch fetch = new Fetch(options);
-    return fetch.fetch().then((_) {
+
+    Future merge() {
       return store.getHeadRef().then((String headRefName) {
         return store.getHeadForRef(headRefName).then((String localSha) {
-          return store.getRemoteHeadForRef(headRefName).then((String remoteSha) {
+          return store.getRemoteHeadForRef(headRefName).then(
+              (String remoteSha) {
+            if (remoteSha == localSha) {
+              throw "branch is up-to-date.";
+            }
+            return _checkFastForward(remoteSha, localSha).then((isFastForward) {
+              if (isFastForward) {
+                // Move the localHead to remoteHead, and checkout.
+                return FileOps.createFileWithContent(root,
+                    '.git/${headRefName}', remoteSha, 'Text').then((_) {
+                  return store.getCurrentBranch().then((branch) {
+                    options.branchName = branch;
+                    return Checkout.checkout(options, true);
+                  });
+                });
+              } else {
+                throw "non-fast-forward merge is not yet supported.";
+                //return _createAndUpdateRef(headRefName, localSha, remoteSha);
+              }
+            });
           });
         });
       });
+    }
+
+    return fetch.fetch().then((_) {
+      return merge();
+    }, onError: (e) {
+      // TODO(grv) : check the error type and take action accordingly.
+      return merge();
+    });
+  }
+
+  Future<bool> _checkFastForward(String remoteSha, String localSha) {
+    return store.getCommitGraph([remoteSha], 10000).then(
+        (CommitGraph graph) {
+      return graph.commits.any((commit) => commit.sha == localSha);
     });
   }
 
@@ -100,10 +135,10 @@ class Pull {
         return Future.forEach(treeDiff.merges, (mergeEntry) {
           if (mergeEntry['new'].isBlob) {
             return ObjectUtils.expandBlob(dir, store, mergeEntry['new'].name,
-                shaBytesToString(mergeEntry['new'].sha));
+                shaBytesToString(mergeEntry['new'].shaBytes));
           } else {
-            return store.retrieveObjectList([mergeEntry['old'].sha,
-                mergeEntry['new'].sha], ObjectTypes.TREE_STR).then(
+            return store.retrieveObjectList([mergeEntry['old'].shaBytes,
+                mergeEntry['new'].shaBytes], ObjectTypes.TREE_STR).then(
                 (List<TreeObject> trees) {
               TreeDiffResult treeDiff2 = Merge.diffTree(trees[0], trees[1]);
               return dir.createDirectory(mergeEntry['new'].name).then(
