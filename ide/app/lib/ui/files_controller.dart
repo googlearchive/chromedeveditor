@@ -588,7 +588,7 @@ class FilesController implements TreeViewDelegate {
    */
   bool _showResource(Resource resource) {
     if (resource is Folder && resource.name == '.git') {
-      //return false;
+      return false;
     }
     return true;
   }

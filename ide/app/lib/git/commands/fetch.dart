@@ -35,7 +35,6 @@ class Fetch {
   ObjectStore store;
   Function progress;
 
-
   Fetch(this.options){
     root = options.root;
     store = options.store;
@@ -114,7 +113,6 @@ class Fetch {
 
     // Get the sha from the ref name.
     return store.getRemoteHeadForRef(branchRef.name).then((String sha) {
-      print(sha);
       branchRef.localHead = sha;
       return store.getCommitGraph([sha], 32).then((CommitGraph graph) {
         List<String> haveRefs = graph.commits.map((CommitObject commit)
