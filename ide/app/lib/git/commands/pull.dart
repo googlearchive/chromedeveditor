@@ -9,14 +9,11 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../file_operations.dart';
-import '../object.dart';
-import '../object_utils.dart';
 import '../objectstore.dart';
 import '../options.dart';
 import '../utils.dart';
 import 'checkout.dart';
 import 'fetch.dart';
-import 'merge.dart';
 
 /**
  * A git pull command implmentation.
@@ -68,7 +65,6 @@ class Pull {
                 });
               } else {
                 throw "non-fast-forward merge is not yet supported.";
-                //return _createAndUpdateRef(headRefName, localSha, remoteSha);
               }
             });
           });
@@ -88,67 +84,6 @@ class Pull {
     return store.getCommitGraph([remoteSha], 10000).then(
         (CommitGraph graph) {
       return graph.commits.any((commit) => commit.sha == localSha);
-    });
-  }
-
-  Future _createAndUpdateRef(String refName, String localSha,
-      String remoteSha) {
-    return FileOps.createFileWithContent(root, '.git/${refName}', remoteSha,
-        'Text').then((_) {
-      store.getTreesFromCommits([localSha, remoteSha]).then(
-          (List<TreeObject> trees) {
-        return _applyDiffTree(root, Merge.diffTree(trees[0], trees[1]),
-            store).then((_) {
-          store.config.remoteHeads[refName] = remoteSha;
-          return store.writeConfig();
-        });
-      });
-    });
-  }
-
-  static Future _applyDiffTree(chrome.DirectoryEntry dir,
-      TreeDiffResult  treeDiff, ObjectStore store) {
-    return Future.forEach(treeDiff.removes, (TreeEntry treeEntry) {
-      if (treeEntry.isBlob) {
-        return dir.getFile(treeEntry.name).then((chrome.FileEntry entry) {
-          return entry.remove();
-        });
-      } else {
-        return dir.getDirectory(treeEntry.name).then(
-            (chrome.DirectoryEntry entry) {
-          return entry.removeRecursively();
-        });
-      }
-    }).then((_) {
-      return Future.forEach(treeDiff.adds, (TreeEntry treeEntry) {
-        if (treeEntry.isBlob) {
-          return ObjectUtils.expandBlob(dir, store, treeEntry.name,
-              shaBytesToString(treeEntry.sha));
-        } else {
-          return dir.createDirectory(treeEntry.name).then(
-              (chrome.DirectoryEntry dirEntry) {
-            return ObjectUtils.expandTree(dirEntry, store,
-                shaBytesToString(treeEntry.sha));
-          });
-        }
-      }).then((_) {
-        return Future.forEach(treeDiff.merges, (mergeEntry) {
-          if (mergeEntry['new'].isBlob) {
-            return ObjectUtils.expandBlob(dir, store, mergeEntry['new'].name,
-                shaBytesToString(mergeEntry['new'].shaBytes));
-          } else {
-            return store.retrieveObjectList([mergeEntry['old'].shaBytes,
-                mergeEntry['new'].shaBytes], ObjectTypes.TREE_STR).then(
-                (List<TreeObject> trees) {
-              TreeDiffResult treeDiff2 = Merge.diffTree(trees[0], trees[1]);
-              return dir.createDirectory(mergeEntry['new'].name).then(
-                  (chrome.DirectoryEntry dirEntry) {
-                return _applyDiffTree(dirEntry, treeDiff2, store);
-              });
-            });
-          }
-        });
-      });
     });
   }
 }
