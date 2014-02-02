@@ -693,6 +693,11 @@ class FilesController implements TreeViewDelegate {
     bootjack.Dropdown dropdown = bootjack.Dropdown.wire(contextMenu);
     dropdown.toggle();
 
+    html.Element backdrop = menuContainer.querySelector('.backdrop');
+    // Move context menu if it will show cropped.
+    if (contextMenu.offsetHeight + position.y > backdrop.offsetHeight)
+      contextMenu.style.top = '${position.y - contextMenu.offsetHeight}px';
+
     void _closeContextMenu(html.Event event) {
       // We workaround an issue with bootstrap/boojack: There's no other way
       // to close the dropdown. For example dropdown.toggle() won't work.
@@ -703,7 +708,6 @@ class FilesController implements TreeViewDelegate {
     }
 
     // When the user clicks outside the menu, we'll close it.
-    html.Element backdrop = menuContainer.querySelector('.backdrop');
     backdrop.onClick.listen((event) {
       _closeContextMenu(event);
     });
