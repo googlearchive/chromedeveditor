@@ -410,6 +410,9 @@ class AceManager {
 
   ace.EditSession get currentSession => _aceEditor.session;
 
+  // TODO(ericarnold): Deleteme.  testing
+  static Map<ace.EditSession, String> filenameBySession = {};
+
   void switchTo(ace.EditSession session, [workspace.File file]) {
     if (_foldListenerSubscription != null) {
       _foldListenerSubscription.cancel();
@@ -420,6 +423,15 @@ class AceManager {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
       _aceEditor.readOnly = true;
     } else {
+
+      if (!filenameBySession.containsKey(session)) {
+        String filename = file == null ? 'no file' : file.name ;
+        print("Haven't seen this session before.  I will call you '${filename}'");
+        filenameBySession[session] = filename;
+      } else {
+        print("Ah, session ${filenameBySession[session]} again ...");
+      }
+
       _aceEditor.session = session;
 
       if (_aceEditor.readOnly) {
@@ -448,6 +460,7 @@ class AceManager {
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
+    /*%TRACE3*/ print("(4> 2/1/14): _handleMarkerChange!"); // TRACE%
     if (event.hasChangesFor(currentFile)) {
       setMarkers(currentFile.getMarkers());
     }
