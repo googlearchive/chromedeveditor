@@ -33,14 +33,14 @@ class TreeDiffResult {
  */
 class Merge {
 
-  bool shasEqual(List<int> sha1, List<int> sha2) {
+  static bool shasEqual(List<int> sha1, List<int> sha2) {
     for (var i = 0; i < sha1.length; ++i) {
       if (sha1[i] != sha2[i]) return false;
     }
     return true;
   }
 
-  dynamic _diff3(blob1, blob2, blob3) {
+  static dynamic _diff3(blob1, blob2, blob3) {
     return new Uint8List(0);
   }
 
@@ -90,8 +90,8 @@ class Merge {
     return new TreeDiffResult(adds, removes, merges);
   }
 
-  Future mergeTrees(ObjectStore store, TreeObject ourTree, TreeObject baseTree,
-      TreeObject theirTree) {
+  static Future mergeTrees(ObjectStore store, TreeObject ourTree,
+      TreeObject baseTree, TreeObject theirTree) {
     List<TreeEntry> finalTree = [];
     List merges = [];
     var next = null;

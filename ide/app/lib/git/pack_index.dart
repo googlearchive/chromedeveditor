@@ -156,8 +156,8 @@ class PackIndex {
 
     objects.sort((obj1, obj2) {
       for (int i = 0; i < 20; ++i) {
-        if (obj1.sha[i] != obj2.sha[i]) {
-          return obj1.sha[i] - obj2.sha[i];
+        if (obj1.shaBytes[i] != obj2.shaBytes[i]) {
+          return obj1.shaBytes[i] - obj2.shaBytes[i];
         }
       }
       // Should never reach here.
@@ -174,7 +174,7 @@ class PackIndex {
     int current = 0;
 
     for (int i = 0; i < objects.length; ++i) {
-      int next = objects[i].sha[0];
+      int next = objects[i].shaBytes[0];
       if (next != current) {
         for (int j = current; j < next; ++j) {
           data.setUint32(byteOffset + (j * 4), i);
@@ -191,7 +191,7 @@ class PackIndex {
     // Write list of shas.
     objects.forEach((PackedObject obj) {
       for (int j = 0; j < 20; ++j) {
-        data.setUint8(byteOffset++, obj.sha[j]);
+        data.setUint8(byteOffset++, obj.shaBytes[j]);
       }
     });
 

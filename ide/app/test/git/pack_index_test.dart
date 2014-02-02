@@ -58,7 +58,7 @@ defineTests() {
         return initPackIndex().then((PackIndex packIdx) {
           pack.objects.forEach((PackedObject obj) {
             // asserts the object found by index has correct offset.
-            expect(obj.offset,packIdx.getObjectOffset(obj.sha));
+            expect(obj.offset,packIdx.getObjectOffset(obj.shaBytes));
           });
         });
       });

@@ -15,6 +15,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
 import 'config.dart';
+import 'constants.dart';
 import 'file_operations.dart';
 import 'commands/index.dart';
 import 'object.dart';
@@ -171,6 +172,12 @@ class ObjectStore {
       .then((String content) => content.substring(0, 40));
   }
 
+  Future<String> getRemoteHeadForRef(String headRefName) {
+    String path = gitPath + REFS_REMOTE_HEADS + headRefName.split('/').last;
+    return FileOps.readFile(_rootDir, path, "Text")
+      .then((String content) => content.substring(0, 40));
+  }
+
   Future<List<String>> getLocalBranches() => getAllHeads();
 
   /**
@@ -292,19 +299,63 @@ class ObjectStore {
           }
 
           return null;
-        }).then((_) {
-          if ((limit != null && commits.length >= limit) ||
-              nextLevel.length == 0) {
-            return new Future.value(new CommitGraph(commits, nextLevel));
-          } else {
-            return walkLevel(nextLevel);
-          }
-        });
+        }).catchError((e) => null);
+      }).then((_) {
+        if ((limit != null && commits.length >= limit) ||
+            nextLevel.length == 0) {
+          return new Future.value(new CommitGraph(commits, nextLevel));
+        } else {
+          return walkLevel(nextLevel);
+        }
       });
     }
     return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
   }
 
+  Future<String> getCommonAncestor(List<String> headShas) {
+    List<CommitObject> commits = [];
+    Map<String, int> seen = {};
+
+    String ancestor;
+    Future<String> walkLevel(List<String> shas) {
+    List<String> nextLevel = [];
+      return Future.forEach(shas, (String sha) {
+        // Already found the lowest common ancestor.
+        if (ancestor != null) {
+          return null;
+        }
+
+        if (seen[sha] != null) {
+          seen[sha]++;
+          if (seen[sha] == headShas.length) {
+            ancestor = sha;
+          }
+          return null;
+        }
+
+        seen[sha] = 1;
+
+        return retrieveObject(sha, ObjectTypes.COMMIT_STR).then(
+            (CommitObject commitObj) {
+          nextLevel.addAll(commitObj.parents);
+        }).catchError((e) => null);
+      }).then((_) {
+        if (nextLevel.length == 0) {
+          if (ancestor == null) {
+            throw "error in finding common ancestor.";
+          } else {
+            return ancestor;
+          }
+        } else {
+          if (ancestor != null) {
+            return ancestor;
+          }
+          return walkLevel(nextLevel);
+        }
+      });
+    }
+    return walkLevel(headShas);
+  }
 
   _nonFastForward() {
     //TODO throw some error.

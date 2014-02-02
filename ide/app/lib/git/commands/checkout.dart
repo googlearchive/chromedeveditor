@@ -45,8 +45,10 @@ class Checkout {
   /**
    * Switches the workspace to a given git branch.
    * Throws a BRANCH_NOT_FOUND error if the branch does not exist.
+   *
+   * TODO(grv) : Support checkout of single file, commit heads etc.
    */
-  static Future checkout(GitOptions options) {
+  static Future checkout(GitOptions options, [bool force=false]) {
     chrome.DirectoryEntry root = options.root;
     ObjectStore store = options.store;
     String branch = options.branchName;
@@ -54,7 +56,7 @@ class Checkout {
     return store.getHeadForRef(REFS_HEADS + branch).then(
         (String branchSha) {
       return store.getHeadSha().then((String currentSha) {
-        if (currentSha != branchSha) {
+        if (currentSha != branchSha || force) {
           return Status.isWorkingTreeClean(store).then((_) {
             return _cleanWorkingDir(root).then((_) {
               return store.retrieveObject(branchSha, ObjectTypes.COMMIT_STR).then(
