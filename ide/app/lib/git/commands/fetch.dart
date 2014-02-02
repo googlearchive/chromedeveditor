@@ -23,7 +23,7 @@ import '../utils.dart';
 import 'status.dart';
 
 /**
- * A git fetch command implmentation.
+ * A git fetch command implementation.
  *
  * TODO add unittests.
 */
@@ -117,7 +117,7 @@ class Fetch {
             => commit.treeSha);
         return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
             null, graph.nextLevel, null, progress).then((PackParseResult result) {
-          Uint8List packSha = result.data.sublist(result.data.length - 20);
+          List<int> packSha = result.data.sublist(result.data.length - 20);
           Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
               packSha);
 
