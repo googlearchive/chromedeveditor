@@ -40,12 +40,12 @@ abstract class GitObject {
     }
   }
 
-  GitObject([this._sha, this.data]);
+  GitObject([this.sha, this.data]);
 
   // The type of git object.
   String type;
   dynamic data;
-  String _sha;
+  String sha;
 
   String toString() => data.toString();
 }
@@ -164,7 +164,7 @@ class CommitObject extends GitObject {
 
   CommitObject(String sha, var data, [rawObj]) {
     this.type = ObjectTypes.COMMIT_STR;
-    this._sha = sha;
+    this.sha = sha;
     this.rawObj = rawObj;
 
     if (data is Uint8List) {
@@ -221,7 +221,7 @@ class CommitObject extends GitObject {
   }
 
   String toString() {
-    String str = "commit " + _sha + "\n";
+    String str = "commit " + sha + "\n";
     str += "Author: " + author.name + " <" + author.email + ">\n";
     str += "Date:  " + author.date.toString() + "\n\n";
     str += _message;
@@ -234,7 +234,7 @@ class CommitObject extends GitObject {
    */
   Map<String, String> toMap() {
     return {
-            "commit": _sha,
+            "commit": sha,
             "author_name": author.name,
             "author_email": author.email,
             "date": author.date.toString(),
