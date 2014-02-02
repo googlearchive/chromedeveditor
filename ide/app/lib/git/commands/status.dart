@@ -6,8 +6,6 @@ library git.commands.status;
 
 import 'dart:async';
 
-import 'dart:html';
-
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
@@ -50,7 +48,6 @@ class Status {
     return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED,
         FileStatusType.STAGED]).then((r) {
       if (!r.isEmpty) {
-        window.console.log(r);
         //TODO(grv) : throw custom exception.
         throw "Uncommitted changes in the working tree.";
       }

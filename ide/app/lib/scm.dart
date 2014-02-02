@@ -267,7 +267,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future checkoutBranch(String branchName) {
-    return fetch();
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
