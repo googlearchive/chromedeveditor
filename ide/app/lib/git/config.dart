@@ -23,7 +23,7 @@ class Config {
     url = m['url'];
     shallow = m['shallow'];
     remoteHeads = m['remoteHeads'];
-    if (m['time']) {
+    if (m['time'] != null) {
       time = new DateTime.fromMillisecondsSinceEpoch(m['time']);
     } else {
       time = new DateTime.now();
