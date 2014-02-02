@@ -299,14 +299,14 @@ class ObjectStore {
           }
 
           return null;
-        }, onError: (e) => null).then((_) {
-          if ((limit != null && commits.length >= limit) ||
-              nextLevel.length == 0) {
-            return new Future.value(new CommitGraph(commits, nextLevel));
-          } else {
-            return walkLevel(nextLevel);
-          }
-        });
+        }).catchError((e) => null);
+      }).then((_) {
+        if ((limit != null && commits.length >= limit) ||
+            nextLevel.length == 0) {
+          return new Future.value(new CommitGraph(commits, nextLevel));
+        } else {
+          return walkLevel(nextLevel);
+        }
       });
     }
     return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
@@ -317,8 +317,8 @@ class ObjectStore {
     Map<String, int> seen = {};
 
     String ancestor;
-    Future walkLevel(List<String> shas) {
-      List<String> nextLevel = [];
+    Future<String> walkLevel(List<String> shas) {
+    List<String> nextLevel = [];
       return Future.forEach(shas, (String sha) {
         // Already found the lowest common ancestor.
         if (ancestor != null) {
@@ -338,16 +338,23 @@ class ObjectStore {
         return retrieveObject(sha, ObjectTypes.COMMIT_STR).then(
             (CommitObject commitObj) {
           nextLevel.addAll(commitObj.parents);
-        }).then((_) {
-          if (nextLevel.length == 0) {
+        }).catchError((e) => null);
+      }).then((_) {
+        if (nextLevel.length == 0) {
+          if (ancestor == null) {
             throw "error in finding common ancestor.";
           } else {
-            return walkLevel(nextLevel);
+            return ancestor;
           }
-        });
+        } else {
+          if (ancestor != null) {
+            return ancestor;
+          }
+          return walkLevel(nextLevel);
+        }
       });
     }
-    return walkLevel(headShas).then((_) => ancestor);
+    return walkLevel(headShas);
   }
 
   _nonFastForward() {

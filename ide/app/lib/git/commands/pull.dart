@@ -76,9 +76,6 @@ class Pull {
 
     return fetch.fetch().then((_) {
       return merge();
-    }, onError: (e) {
-      // TODO(grv) : check the error type and take action accordingly.
-      return merge();
     });
   }
 
