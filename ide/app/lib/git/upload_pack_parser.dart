@@ -63,7 +63,7 @@ class UploadPackParser {
     while (pktLineStr == "NAK\n" || (pktLineStr.length > 3
         && pktLineStr.substring(0,3) == "ACK")) {
       RegExp ackRegex = new RegExp(r"ACK ([0-9a-fA-F]{40}) common");
-      List<Match> matches = ackRegex.allMatches(pktLineStr);
+      Iterable<Match> matches = ackRegex.allMatches(pktLineStr);
       if (matches.isNotEmpty) {
         common.add(matches.first.group(1));
       }
