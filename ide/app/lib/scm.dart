@@ -196,7 +196,7 @@ class GitScmProvider extends ScmProvider {
 
   Future clone(String url, chrome.DirectoryEntry dir) {
     GitOptions options = new GitOptions(
-        root: dir, repoUrl: url, store: new ObjectStore(dir));
+        root: dir, repoUrl: url, depth:1, store: new ObjectStore(dir));
 
     return options.store.init().then((_) {
       Clone clone = new Clone(options);
