@@ -21,6 +21,7 @@ import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
+import 'git/commands/fetch.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 
@@ -266,6 +267,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future checkoutBranch(String branchName) {
+    return fetch();
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
@@ -283,6 +285,14 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       return Push.push(options);
+    });
+  }
+
+  Future fetch() {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      Fetch fetch = new Fetch(new GitOptions(root: entry, store: store));
+      return fetch.fetch();
     });
   }
 
