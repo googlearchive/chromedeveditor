@@ -46,7 +46,7 @@ class Status {
    */
   static Future isWorkingTreeClean(ObjectStore store) {
     return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED,
-        FileStatusType.STAGED, FileStatusType.UNTRACKED]).then((r) {
+        FileStatusType.STAGED]).then((r) {
       if (!r.isEmpty) {
         //TODO(grv) : throw custom exception.
         throw "Uncommitted changes in the working tree.";
