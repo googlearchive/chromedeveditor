@@ -131,7 +131,7 @@ class TreeObject extends GitObject {
  */
 class BlobObject extends GitObject {
 
-  BlobObject(String sha, String data) : super(sha, data) {
+  BlobObject(String sha, Uint8List data) : super(sha, data) {
     this.type = ObjectTypes.BLOB_STR;
   }
 }
