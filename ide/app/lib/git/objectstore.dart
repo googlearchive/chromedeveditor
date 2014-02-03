@@ -262,7 +262,18 @@ class ObjectStore {
       try {
         FindPackedObjectResult obj = this.findPackedObject(shaBytes);
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
-        return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType);
+        return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType).then(
+            (PackedObject packed) {
+          if (dataType == 'Text') {
+            return FileOps.readBlob(new Blob([packed.data]), 'Text').then(
+                (String data) {
+              packed.data = data;
+              return packed;
+            });
+          } else {
+            return packed;
+          }
+        });
       } catch (e) {
         throw "Can't find object with SHA " + sha;
       }
@@ -465,10 +476,10 @@ class ObjectStore {
     return getNextCommit(sha);
   }
 
-  Future retrieveObjectBlobsAsString(List<String> shas) {
-    List blobs = [];
+  Future<List<LooseObject>> retrieveObjectBlobsAsString(List<String> shas) {
+    List<LooseObject> blobs = [];
     return Future.forEach(shas, (String sha) {
-      retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
+      return retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
     }).then((_) => blobs);
   }
 
