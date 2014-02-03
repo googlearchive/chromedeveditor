@@ -81,8 +81,6 @@ class SparkSplitter extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _isTargetNextSibling = direction == 'right' || direction == 'down';
-
     // TODO(sergeygs): Perhaps switch to using onDrag* instead of onMouse* once
     // support for drag-and-drop in shadow DOM is fixed. It is less important
     // here, because the element is not actually supposed to be dropped onto
@@ -96,6 +94,7 @@ class SparkSplitter extends SparkWidget {
   /// Triggered when [direction] is externally changed.
   // NOTE: The name must be exactly like this -- do not change.
   void directionChanged() {
+    _isTargetNextSibling = direction == 'right' || direction == 'down';
     _isHorizontal = direction == 'up' || direction == 'down';
     _target =
         _isTargetNextSibling ? nextElementSibling : previousElementSibling;

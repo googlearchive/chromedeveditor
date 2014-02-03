@@ -22,6 +22,14 @@ class SparkSplitView extends SparkWidget {
   /// Constructor.
   SparkSplitView.created() : super.created();
 
+  @override
+  void enteredView() {
+    super.enteredView();
+    // The rest of the code might work even if there are more than 2 children,
+    // but would create hard-to-understand results on the client side.
+    assert(children.length == 2);
+  }
+
   /**
    * Set the current splitter location.
    */

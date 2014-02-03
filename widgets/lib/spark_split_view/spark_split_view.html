@@ -36,6 +36,7 @@
       @import url("packages/spark_widgets/spark_split_view/spark_split_view.css");
     </style>
 
+    <!-- NOTE: The Dart side verifies that there is exactly 2 children -->
     <content select=":nth-child(1)"></content>
     <spark-splitter
         id="splitter"
@@ -45,7 +46,6 @@
         locked="{{locked}}"
         onUpdate="{{onUpdate}}">
     </spark-splitter>
-    <!-- Should select all remaining nodes starting with 2nd -->
     <content select=":nth-child(2)"></content>
   </template>
 
