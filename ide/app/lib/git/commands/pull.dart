@@ -73,7 +73,8 @@ class Pull {
                 var shas = [localSha, commonSha, remoteSha];
                 return store.getTreesFromCommits(shas).then((trees) {
                   return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
-                      .then((finalTree) {
+                      .then((String finalTree) {
+                        // TODO(grv) : Create a merge commit.
                   }).catchError((e) {
                     throw "Error duing merging.";
                   });
