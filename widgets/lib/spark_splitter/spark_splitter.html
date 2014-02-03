@@ -10,7 +10,7 @@
  * of the sibling elements. Use the property "direction" to indicate
  * the orientation of the split and which sibling to resize:
  *   "left":  vertical split,   left sibling
- *   "rigth": vertical split,   right sibling
+ *   "right": vertical split,   right sibling
  *   "up":    horizontal split, upper sibling
  *   "down":  horizontal split, lower sibling
  *
@@ -33,7 +33,7 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-splitter" extends="spark-widget"
-    attributes="direction handle locked onUpdate size">
+    attributes="direction size handle locked onUpdate">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->

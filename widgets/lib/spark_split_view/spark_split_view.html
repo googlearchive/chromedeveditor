@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ * spark-split-view inserts a split bar between two nodes provided by inner
+ * HTML, which, when dragged, will resize one of them.
+ * Use the property "direction" to indicate the orientation of the split and
+ * which of the inner nodes to resize:
+ *   "left":  vertical split,   left node
+ *   "right": vertical split,   right node
+ *   "up":    horizontal split, upper node
+ *   "down":  horizontal split, lower node
+ *
+ * spark-split-view will automatically assign flex layout to the inner HTML and
+ * make the passive node flex:1, so it can autoadjust while the active one
+ * (the target) is being resized.
+ *
+ * Examples:
+ *
+ *     <spark-split-view direction="left">
+ *       <div>left</div>
+ *       <div>right</div>
+ *     </spark-split-view>
+ */
+-->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_splitter/spark_splitter.html"/>
+
+<polymer-element name="spark-split-view" extends="spark-widget"
+    attributes="direction splitterSize splitterHandle locked onUpdate">
+  <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
+    <style>
+      @import url("packages/spark_widgets/spark_split_view/spark_split_view.css");
+    </style>
+
+    <!-- NOTE: The Dart side verifies that there is exactly 2 children -->
+    <content select=":nth-child(1)"></content>
+    <spark-splitter
+        id="splitter"
+        direction="{{direction}}"
+        size="{{splitterSize}}"
+        handle="{{splitterHandle}}"
+        locked="{{locked}}"
+        onUpdate="{{onUpdate}}">
+    </spark-splitter>
+    <content select=":nth-child(2)"></content>
+  </template>
+
+  <script type="application/dart" src="spark_split_view.dart"></script>
+</polymer-element>

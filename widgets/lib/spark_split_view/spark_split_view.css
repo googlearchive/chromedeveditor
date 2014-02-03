@@ -1,0 +1,43 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+
+:host {
+  display: flex;
+}
+
+[direction="left"], [direction="right"] ~ :host {
+  flex-flow: row;
+}
+
+[direction="up"], [direction="down"] ~ :host {
+  flex-flow: column;
+}
+
+::content > * {
+  position: relative;
+}
+
+/* If the resizing target is to the left or up, make the other one flex so
+   it auto-adjusts.
+*/
+[direction="left"] ~ content[select=":nth-child(2)"]::content > * {
+  flex: 1;
+}
+
+[direction="up"] ~ content[select=":nth-child(2)"]::content > * {
+  flex: 1;
+}
+
+/* If the resizing target is to the right or down, make the other one flex so
+   it auto-adjusts.
+*/
+[direction="right"] ~ content[select=":nth-child(1)"]::content > * {
+  flex: 1;
+}
+
+[direction="down"] ~ content[select=":nth-child(1)"]::content > * {
+  flex: 1;
+}

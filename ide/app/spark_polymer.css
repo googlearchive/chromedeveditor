@@ -38,9 +38,7 @@ body {
 }
 
 #editorArea {
-  flex: 1;
   overflow: hidden;
-  position: relative;
 }
 
 .ace_gutter-cell {
@@ -202,7 +200,6 @@ body {
 }
 
 #fileViewArea {
-  position: relative;
   width: 300px;
 }
 

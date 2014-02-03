@@ -12,7 +12,7 @@
 <link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
-<link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
+<link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
@@ -73,14 +73,12 @@
       </div>
     </spark-toolbar>
 
-    <div id="splitview">
-      <content select="#fileViewArea"></content>
-
-      <spark-splitter id="splitter" direction="left" onUpdate="{{onSplitterUpdate}}">
-      </spark-splitter>
-
-      <content select="#editorArea"></content>
-    </div>
+    <spark-split-view
+        id="splitView"
+        direction="left" splitterSize="6" splitterHandle="false"
+        onUpdate="{{onSplitterUpdate}}">
+      <content></content>
+    </spark-split-view>
 
     <!-- Delete File dialog -->
     <spark-modal id="deleteDialog" class="dialog spark-overlay-scale-slideup">
