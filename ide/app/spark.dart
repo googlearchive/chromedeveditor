@@ -600,7 +600,7 @@ class PlatformInfo {
  */
 class ProjectLocationManager {
   preferences.PreferenceStore _prefs;
-  chrome.DirectoryEntry _projectLocation;
+  LocationResult _projectLocation;
 
   /**
    * Create a ProjectLocationManager asynchronously, restoring the default
@@ -613,7 +613,7 @@ class ProjectLocationManager {
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return new ProjectLocationManager._(prefs, entry);
+        return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
       });
     });
   }
