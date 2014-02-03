@@ -22,9 +22,9 @@ class SparkSplitter extends SparkWidget {
   ///    dragged.
   @published String direction = 'left';
   /// Height or width of the split bar, depending on the direction.
-  @published int size = 6;
+  @published int size = 8;
   /// Whether to show a drag handle image within the split bar.
-  @published bool handle = false;
+  @published bool handle = true;
   /// Whether to lock the split bar so it can't be dragged.
   @published bool locked = false;
   /// Get notified of position changes.
