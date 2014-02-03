@@ -14,7 +14,7 @@ import '../options.dart';
 import '../utils.dart';
 import 'checkout.dart';
 import 'fetch.dart';
-//import 'merge.dart';
+import 'merge.dart';
 
 /**
  * A git pull command implmentation.
@@ -70,13 +70,14 @@ class Pull {
                 });
               } else {
                 // TODO(grv) : support non-fast forward merge.
-                /*var shas = [localSha, commonSha, remoteSha];
+                var shas = [localSha, commonSha, remoteSha];
                 return store.getTreesFromCommits(shas).then((trees) {
                   return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
                       .then((finalTree) {
+                  }).catchError((e) {
+                    throw "Error duing merging.";
                   });
-                });*/
-                throw "non-fast-forward merge is not yet supported.";
+                });
               }
             });
           });
