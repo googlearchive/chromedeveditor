@@ -64,13 +64,13 @@
 }
 
 #settingsDialog .settings-label {
-	display: inline-block;
-	width: 130px;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	background: #EEE;
-	border: 1px solid #DDD;
-	padding: 2px 5px;
+  display: inline-block;
+  width: 130px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #EEE;
+  border: 1px solid #DDD;
+  padding: 2px 5px;
 }
 
 #settingsDialog .plus-minus-container {

@@ -60,7 +60,7 @@ class WebStoreClient {
   Future uploadItem(String filename) {
     File file = new File(filename);
     List<int> data = file.readAsBytesSync();
-  
+
     HttpClient client = new HttpClient();
     return client.openUrl('PUT', Uri.parse("https://www.googleapis.com/upload/chromewebstore/v1.1/items/${_appID}"))
         .then((HttpClientRequest request) {
