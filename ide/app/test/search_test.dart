@@ -34,7 +34,8 @@ defineTests() {
           (f) { fail('Should not have reached this line'); });
     });
 
-    whenReady(test()) => () => ws.link(rootDir).then((_) => test());
+    whenReady(test()) =>
+        () => ws.link(createWsRoot(rootDir)).then((_) => test());
 
     test('should find single matching file', whenReady(() {
       oracle.getSuggestions('spark').listen(expectAsync1((List<Suggestion> list) {

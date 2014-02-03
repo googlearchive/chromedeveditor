@@ -16,7 +16,7 @@ import '../lib/workspace.dart';
 defineTests() {
   group('builder', () {
     test('change event triggers builder', () {
-      var workspace = new Workspace();
+      Workspace workspace = new Workspace();
       var jobManager = new JobManager();
       var buildManager = new BuilderManager(workspace, jobManager);
 
@@ -24,14 +24,14 @@ defineTests() {
       buildManager.builders.add(new MockBuilder(completer));
 
       MockFileSystem fs = new MockFileSystem();
-      var fileEntry = fs.createFile('test.txt');
-      workspace.link(fileEntry);
+      FileEntry fileEntry = fs.createFile('test.txt');
+      workspace.link(createWsRoot(fileEntry));
 
       return completer.future;
     });
 
     test('events coalesced', () {
-      var workspace = new Workspace();
+      Workspace workspace = new Workspace();
       var jobManager = new JobManager();
       var buildManager = new BuilderManager(workspace, jobManager);
 
@@ -39,17 +39,17 @@ defineTests() {
       buildManager.builders.add(new MockBuilder(completer, 2));
 
       MockFileSystem fs = new MockFileSystem();
-      var fileEntry1 = fs.createFile('test1.txt');
-      var fileEntry2 = fs.createFile('test2.txt');
+      FileEntry fileEntry1 = fs.createFile('test1.txt');
+      FileEntry fileEntry2 = fs.createFile('test2.txt');
 
-      workspace.link(fileEntry1);
-      workspace.link(fileEntry2);
+      workspace.link(createWsRoot(fileEntry1));
+      workspace.link(createWsRoot(fileEntry2));
 
       return completer.future;
     });
 
     test('multiple builders', () {
-      var workspace = new Workspace();
+      Workspace workspace = new Workspace();
       var jobManager = new JobManager();
       var buildManager = new BuilderManager(workspace, jobManager);
 
@@ -59,8 +59,8 @@ defineTests() {
       buildManager.builders.add(new MockBuilder(completer2));
 
       MockFileSystem fs = new MockFileSystem();
-      var fileEntry = fs.createFile('test.txt');
-      workspace.link(fileEntry);
+      FileEntry fileEntry = fs.createFile('test.txt');
+      workspace.link(createWsRoot(fileEntry));
 
       return Future.wait([completer1.future, completer2.future]);
     });

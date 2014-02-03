@@ -93,11 +93,6 @@ class SparkPolymer extends Spark {
         super.openFile().whenComplete(() => _systemModalComplete()));
   }
 
-  Future<bool> newFileAs() {
-    _beforeSystemModal().then((_) =>
-        super.newFileAs().whenComplete(() => _systemModalComplete()));
-  }
-
   static set backdropShowing(bool showing) {
     var appModal = querySelector("#modalBackdrop");
     appModal.style.display = showing ? "block" : "none";
