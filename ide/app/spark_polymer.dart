@@ -13,7 +13,7 @@ import 'package:polymer/polymer.dart' as polymer;
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_button/spark_button.dart';
 import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
-import 'packages/spark_widgets/spark_splitter/spark_splitter.dart';
+import 'packages/spark_widgets/spark_split_view/spark_split_view.dart';
 
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
@@ -161,7 +161,7 @@ class SparkPolymer extends Spark {
       if (position != null) {
         int value = int.parse(position, onError: (_) => 0);
         if (value != 0) {
-          (getUIElement('#splitter') as SparkSplitter).targetSize = value;
+          (getUIElement('#splitView') as SparkSplitView).targetSize = value;
         }
       }
     });

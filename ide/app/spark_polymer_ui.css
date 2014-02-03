@@ -13,11 +13,10 @@
   top: 4px;
 }
 
-#splitview {
-  bottom: 0;
-  display: flex;
-  left: 0;
+#splitView {
   position: absolute;
+  bottom: 0;
+  left: 0;
   right: 0;
   top: 40px;
 }
