@@ -10,7 +10,7 @@ dart --version
 /usr/bin/google-chrome --version
 
 # Get our packages.
-pub get 
+pub get
 
 # Build the archive.
 if test x$DRONE_BRANCH = xmaster -o x$FORCE_NIGHTLY = xyes ; then
