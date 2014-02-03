@@ -109,11 +109,11 @@ class ObjectStore {
   }
 
   Future load() {
-    return _rootDir.createDirectory(GIT_FOLDER_PATH).then((gitDir) {
-      return gitDir.createDirectory(OBJECT_FOLDER_PATH).then((objectsDir) {
+    return _rootDir.getDirectory(GIT_FOLDER_PATH).then((gitDir) {
+      return gitDir.getDirectory(OBJECT_FOLDER_PATH).then((objectsDir) {
 
         objectDir = objectsDir;
-        return objectsDir.createDirectory('pack').then((
+        return objectsDir.getDirectory('pack').then((
             chrome.DirectoryEntry packDir) {
           return FileOps.listFiles(packDir).then((List<chrome.Entry> entries) {
             Iterable<chrome.Entry> packEntries = entries.where((e)
