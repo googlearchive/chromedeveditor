@@ -86,6 +86,11 @@ class Clone {
             }
             return _processClone(gitDir, localHeadRef, fetcher);
           });
+        }, onError: (e) {
+          // Clean-up git directory and then re-throw error.
+          _options.root.getDirectory(".git").then(
+              (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively());
+          throw "unable to load remote repo";
         });
       });
     });
