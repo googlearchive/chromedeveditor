@@ -92,7 +92,7 @@ class Merge {
     return new TreeDiffResult(adds, removes, merges);
   }
 
-  static Future mergeTrees(ObjectStore store, TreeObject ourTree,
+  static Future<String> mergeTrees(ObjectStore store, TreeObject ourTree,
       TreeObject baseTree, TreeObject theirTree) {
     List<TreeEntry> finalTree = [];
     List merges = [];
@@ -210,9 +210,7 @@ class Merge {
               conflicts.add(item);
               return conflicts;
             } else {
-              // TODO (grv) : do not write until the merge is successful.
-              return store.writeRawObject('blob', diffResult.text).then(
-                  (String sha) {
+              return getShaForString(diffResult.text, 'blob').then((String sha) {
                 item.ours.sha = shaToBytes(sha);
                 finalTree.add(item.ours);
                 return [];
