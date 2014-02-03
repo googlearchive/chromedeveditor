@@ -23,7 +23,7 @@ abstract class GitObject {
    * Constructs a GitObject of the given type. [content] can be of type [String]
    * or [Uint8List].
    */
-  static GitObject make(String sha, String type, content,
+  static GitObject make(String sha, String type, var content,
                         [LooseObject rawObj]) {
     switch (type) {
       case ObjectTypes.BLOB_STR:
@@ -131,7 +131,7 @@ class TreeObject extends GitObject {
  */
 class BlobObject extends GitObject {
 
-  BlobObject(String sha, Uint8List data) : super(sha, data) {
+  BlobObject(String sha, var data) : super(sha, data) {
     this.type = ObjectTypes.BLOB_STR;
   }
 }
