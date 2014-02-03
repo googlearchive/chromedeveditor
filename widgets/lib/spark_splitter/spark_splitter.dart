@@ -98,10 +98,10 @@ class SparkSplitter extends SparkWidget {
     _isHorizontal = direction == 'up' || direction == 'down';
     _target =
         _isTargetNextSibling ? nextElementSibling : previousElementSibling;
-    // If we're enclosed in another element and sandwitched between its
-    // <content> tags, we delve into the distributed nodes of the <content>
-    // to find the true target to resize.
-    if (_target is ContentElement) {
+    // If we're enclosed in another element and sandwiched between its
+    // <content> tags, we recursively delve into the distributed nodes of
+    // the target <content> in order to find the true target to resize.
+    while (_target is ContentElement) {
       final List<Node> distrNodes =
           (_target as ContentElement).getDistributedNodes();
       _target = _isTargetNextSibling ? distrNodes.first : distrNodes.last;

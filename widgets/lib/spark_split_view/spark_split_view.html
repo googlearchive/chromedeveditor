@@ -11,9 +11,13 @@
  * Use the property "direction" to indicate the orientation of the split and
  * which of the inner nodes to resize:
  *   "left":  vertical split,   left node
- *   "rigth": vertical split,   right node
+ *   "right": vertical split,   right node
  *   "up":    horizontal split, upper node
  *   "down":  horizontal split, lower node
+ *
+ * spark-split-view will automatically assign flex layout to the inner HTML and
+ * make the passive node flex:1, so it can autoadjust while the active one
+ * (the target) is being resized.
  *
  * Examples:
  *
