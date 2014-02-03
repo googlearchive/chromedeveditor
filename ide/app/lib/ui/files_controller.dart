@@ -688,10 +688,19 @@ class FilesController implements TreeViewDelegate {
     // Position the context menu at the expected location.
     contextMenu.style.left = '${position.x}px';
     contextMenu.style.top = '${position.y}px';
+    // Hide until we get correct top position.
+    contextMenu.style.visibility = "hidden";
 
-    // Show the menu.
     bootjack.Dropdown dropdown = bootjack.Dropdown.wire(contextMenu);
     dropdown.toggle();
+
+    html.Element backdrop = menuContainer.querySelector('.backdrop');
+    // Move context menu if it will show cropped.
+    if (contextMenu.offsetHeight + position.y > backdrop.offsetHeight)
+      contextMenu.style.top = '${position.y - contextMenu.offsetHeight}px';
+
+    // Show the menu.
+    contextMenu.style.visibility = "visible";
 
     void _closeContextMenu(html.Event event) {
       // We workaround an issue with bootstrap/boojack: There's no other way
@@ -703,7 +712,6 @@ class FilesController implements TreeViewDelegate {
     }
 
     // When the user clicks outside the menu, we'll close it.
-    html.Element backdrop = menuContainer.querySelector('.backdrop');
     backdrop.onClick.listen((event) {
       _closeContextMenu(event);
     });
