@@ -466,7 +466,7 @@ class ObjectStore {
   }
 
   Future retrieveObjectBlobsAsString(List<String> shas) {
-    List blobs;
+    List blobs = [];
     return Future.forEach(shas, (String sha) {
       retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
     }).then((_) => blobs);
