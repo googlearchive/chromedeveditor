@@ -38,49 +38,68 @@ String shaBytesToString(List shaBytes) {
 }
 
 Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
+  return entry.readBytes().then((chrome.ArrayBuffer content) => _getShaForData(
+      content, type));
+}
+
+Future<String> getShaForString(String data, String type) {
+  return _getShaForData(data, type);
+}
+
+Future<String> _getShaForData(dynamic content, String type) {
   Completer completer = new Completer();
-  entry.readBytes().then((chrome.ArrayBuffer content) {
-    List<dynamic> blobParts = [];
+  List<dynamic> blobParts = [];
 
-    Uint8List data = new Uint8List.fromList(content.getBytes());
-    int size = data.length;
+  int size = 0;
+  if (content is Uint8List) {
+    size = content.length;
+  } else if (content is Blob) {
+    size = content.size;
+  } else if (content is String) {
+    size = content.length;
+  } else {
+    // TODO: Check expected types here.
+    throw "Unexpected content type.";
+  }
 
-    String header = '${type} ${size}' ;
-    blobParts.add(header);
-    blobParts.add(new Uint8List.fromList([0]));
-    blobParts.add(data);
+  Uint8List data = new Uint8List.fromList(content.getBytes());
 
-    var reader = new JsObject(context['FileReader']);
+  String header = '${type} ${size}' ;
+  blobParts.add(header);
+  blobParts.add(new Uint8List.fromList([0]));
+  blobParts.add(data);
 
-    reader['onloadend'] = (var event) {
-      var result = reader['result'];
-      crypto.SHA1 sha1 = new crypto.SHA1();
-      Uint8List resultList;
+  var reader = new JsObject(context['FileReader']);
 
-      if (result is JsObject) {
-        var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
-        resultList = new Uint8List.fromList(arrBuf.getBytes());
-      } else if (result is ByteBuffer) {
-        resultList = new Uint8List.view(result);
-      } else if (result is Uint8List) {
-        resultList = result;
-      } else {
-        // TODO: Check expected types here.
-        throw "Unexpected result type.";
-      }
+  reader['onloadend'] = (var event) {
+    var result = reader['result'];
+    crypto.SHA1 sha1 = new crypto.SHA1();
+    Uint8List resultList;
 
-      Uint8List data = new Uint8List.fromList(resultList);
-      sha1.add(data);
-      Uint8List digest = new Uint8List.fromList(sha1.close());
-      completer.complete(shaBytesToString(digest));
-    };
+    if (result is JsObject) {
+      var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
+      resultList = new Uint8List.fromList(arrBuf.getBytes());
+    } else if (result is ByteBuffer) {
+      resultList = new Uint8List.view(result);
+    } else if (result is Uint8List) {
+      resultList = result;
+    } else {
+      // TODO: Check expected types here.
+      throw "Unexpected result type.";
+    }
 
-    reader['onerror'] = (var domError) {
-      completer.completeError(domError);
-    };
+    Uint8List data = new Uint8List.fromList(resultList);
+    sha1.add(data);
+    Uint8List digest = new Uint8List.fromList(sha1.close());
+    completer.complete(shaBytesToString(digest));
+  };
 
-    reader.callMethod('readAsArrayBuffer', [new Blob(blobParts)]);
-  });
+  reader['onerror'] = (var domError) {
+    completer.completeError(domError);
+  };
+
+  reader.callMethod('readAsArrayBuffer', [new Blob(blobParts)]);
+
   return completer.future;
 }
 
