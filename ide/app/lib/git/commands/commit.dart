@@ -130,14 +130,7 @@ class Commit {
 
     return walkFiles(dir, store).then((String sha) {
       return checkTreeChanged(store, parent, sha).then((_) {
-        DateTime now = new DateTime.now();
-        String dateString =
-            (now.millisecondsSinceEpoch / 1000).floor().toString();
-        int offset = (now.timeZoneOffset.inHours).floor();
-        int absOffset = offset.abs().floor();
-        String offsetStr = ' ' + (offset < 0 ? '-' : '+');
-        offsetStr += (absOffset < 10 ? '0' : '') + '${absOffset}00';
-        dateString += offsetStr;
+        String dateString = getCurrentTimeAsString();
         StringBuffer commitContent = new StringBuffer();
         commitContent.write('tree ${sha}\n');
         if (parent != null && parent.length > 0) {
