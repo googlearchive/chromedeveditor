@@ -142,6 +142,21 @@ Future cleanWorkingDir(chrome.DirectoryEntry root) {
 }
 
 /**
+ * Returns the current time as a string in timezone offeset format.
+ */
+String getCurrentTimeAsString() {
+  DateTime now = new DateTime.now();
+  String dateString =
+      (now.millisecondsSinceEpoch / 1000).floor().toString();
+  int offset = (now.timeZoneOffset.inHours).floor();
+  int absOffset = offset.abs().floor();
+  String offsetStr = ' ' + (offset < 0 ? '-' : '+');
+  offsetStr += (absOffset < 10 ? '0' : '') + '${absOffset}00';
+  dateString += offsetStr;
+  return dateString;
+}
+
+/**
  * An empty function.
  */
 void nopFunction() => null;
