@@ -13,6 +13,8 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
 
+import 'file_operations.dart';
+
 /**
  * Convertes [sha] string to sha bytes.
  */
@@ -97,6 +99,27 @@ dynamic getSha(dynamic data, [bool asBytes]) {
   } else {
     return shaBytesToString(sha);
   }
+}
+
+
+/**
+ * Clears the given working directory.
+ */
+Future cleanWorkingDir(chrome.DirectoryEntry root) {
+  return FileOps.listFiles(root).then((List<chrome.DirectoryEntry> entries) {
+    return Future.forEach(entries, (chrome.Entry entry) {
+      if (entry.isDirectory) {
+        chrome.DirectoryEntry dirEntry = entry;
+        // Do not remove the .git directory.
+        if (entry.name == '.git') {
+          return null;
+        }
+        return dirEntry.removeRecursively();
+      } else {
+        return entry.remove();
+      }
+    });
+  });
 }
 
 /**
