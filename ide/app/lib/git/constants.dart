@@ -4,5 +4,6 @@
 
 library git.constants;
 
+const String LOGS_DIR = '.git/logs/';
 const String REFS_HEADS = 'refs/heads/';
 const String REFS_REMOTE_HEADS = 'refs/remotes/origin/';
