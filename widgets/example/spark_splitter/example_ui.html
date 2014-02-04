@@ -3,17 +3,32 @@
 <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
 <polymer-element name="example-ui">
   <template>
-    <!-- TODO: left right splitter does not work. -->
-    <div class="flexbox">
-     <div>left</div>
+    <div style="display:flex; width:400px; height:200px">
+     <div style="width:200px; background-color:blue">left (resize target)</div>
      <spark-splitter direction="left"></spark-splitter>
-     <div flex>right</div>
+     <div style="background-color:green; flex:1">right</div>
     </div>
-    <!-- TODO: disable text selection at the splitter -->
-    <div class="flexbox column">
-     <div>top</div>
-     <spark-splitter direction="up"></spark-splitter>
-     <div flex>bottom</div>
+
+    <div style="display:flex; width:400px; height:200px">
+     <div style="background-color:blue; flex:1">left</div>
+     <spark-splitter direction="right"></spark-splitter>
+     <div style="width:200px; background-color:green">right (resize target)</div>
+    </div>
+
+    <br><br>
+
+    <div style="display:flex; flex-flow:row">
+      <div style="display:flex; flex-flow:column; width:200px; height:400px">
+       <div style="height:200px; background-color:red">top (resize target)</div>
+       <spark-splitter direction="up"></spark-splitter>
+       <div style="background-color:yellow; flex:1">bottom</div>
+      </div>
+
+      <div style="display:flex; flex-flow:column; width:200px; height:400px">
+       <div style="background-color:red; flex:1">top</div>
+       <spark-splitter direction="down"></spark-splitter>
+       <div style="height:200px; background-color:yellow">bottom (resize target)</div>
+      </div>
     </div>
   </template>
   <script type="application/dart" src="example_ui.dart"></script>
