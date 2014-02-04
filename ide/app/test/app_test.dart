@@ -65,7 +65,7 @@ defineTests() {
     setUp(() {
       MockFileSystem fs = new MockFileSystem();
       fs.createFile('/myProject/test.txt');
-      return workspace.link(fs.getEntry('myProject')).then((Project p) {
+      return workspace.link(createWsRoot(fs.getEntry('myProject'))).then((Project p) {
         project = p;
         file = p.getChild('test.txt');
       });

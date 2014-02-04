@@ -306,13 +306,13 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       editorManager.files.forEach((file) {
         editorArea.selectFile(file, forceOpen: true, switchesTab: false);
       });
-      localPrefs.getValue('lastFileSelection').then((String filePath) {
+      localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
-        if (filePath == null) {
+        if (fileUuid == null) {
           editorArea.tabs[0].select();
           return;
         }
-        ws.Resource resource = workspace.restoreResource(filePath);
+        ws.Resource resource = workspace.restoreResource(fileUuid);
         if (resource == null) {
           editorArea.tabs[0].select();
           return;
@@ -329,7 +329,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       if (!_filesController.isFileSelected(tab.file)) {
         _filesController.selectFile(tab.file);
       }
-      localPrefs.setValue('lastFileSelection', tab.file.path);
+      localPrefs.setValue('lastFileSelection', tab.file.uuid);
       focusManager.setEditedFile(tab.file);
     });
   }
@@ -373,7 +373,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new NextMarkerAction(this));
     actionManager.registerAction(new PrevMarkerAction(this));
     actionManager.registerAction(new FileOpenInTabAction(this));
-    actionManager.registerAction(new FileNewAsAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
@@ -418,24 +417,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     workspace.builderManager.builders.add(builder);
   }
 
-  /**
-   * Allow for creating a new file using the Save as dialog.
-   */
-  Future<bool> newFileAs() {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.SAVE_FILE);
-    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.ChromeFileEntry entry = res.entry;
-
-      if (entry != null) {
-        workspace.link(entry).then((file) {
-          _selectFile(file);
-          workspace.save();
-        });
-      }
-    });
-  }
-
   Future<bool> openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
@@ -443,7 +424,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
-        workspace.link(entry).then((file) {
+        workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
           _selectFile(file);
           _aceManager.focus();
           workspace.save();
@@ -455,7 +436,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   Future<bool> openFolder() {
     return _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
-        workspace.link(entry).then((resource) {
+        workspace.link(new ws.FolderRoot(entry)).then((ws.Resource resource) {
           Timer.run(() {
             _filesController.selectFile(resource);
             _filesController.setFolderExpanded(resource);
@@ -619,7 +600,7 @@ class PlatformInfo {
  */
 class ProjectLocationManager {
   preferences.PreferenceStore _prefs;
-  chrome.DirectoryEntry _projectLocation;
+  LocationResult _projectLocation;
 
   /**
    * Create a ProjectLocationManager asynchronously, restoring the default
@@ -632,7 +613,7 @@ class ProjectLocationManager {
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return new ProjectLocationManager._(prefs, entry);
+        return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
       });
     });
   }
@@ -644,7 +625,7 @@ class ProjectLocationManager {
    * will be the sync filesystem. This method can return `null` if the user
    * cancels the folder selection dialog.
    */
-  Future<chrome.DirectoryEntry> getProjectLocation() {
+  Future<LocationResult> getProjectLocation() {
     if (_projectLocation != null) {
       return new Future.value(_projectLocation);
     }
@@ -652,7 +633,8 @@ class ProjectLocationManager {
     // On Chrome OS, use the sync filesystem.
     if (_isCros()) {
       return chrome.syncFileSystem.requestFileSystem().then((fs) {
-        return fs.root;
+        var entry = fs.root;
+        return new LocationResult(entry, entry, true);
       });
     }
 
@@ -666,7 +648,7 @@ class ProjectLocationManager {
 
       _projectLocation = entry;
       _prefs.setValue('projectFolder', chrome.fileSystem.retainEntry(entry));
-      return _projectLocation;
+      return new LocationResult(entry, entry, false);
     });
   }
 
@@ -676,26 +658,51 @@ class ProjectLocationManager {
    * example, if `defaultName` already exists, the created folder might be named
    * something like `defaultName-1` instead.
    */
-  Future<chrome.DirectoryEntry> createNewFolder(String defaultName) {
-    return getProjectLocation().then((root) {
+  Future<LocationResult> createNewFolder(String defaultName) {
+    return getProjectLocation().then((LocationResult root) {
       return _create(root, defaultName, 1);
     });
   }
 
-  Future<chrome.DirectoryEntry> _create(
-      chrome.DirectoryEntry parent, String baseName, int count) {
+  Future<LocationResult> _create(
+      LocationResult location, String baseName, int count) {
     String name = count == 1 ? baseName : '${baseName}-${count}';
 
-    return parent.createDirectory(name, exclusive: true).then((dir) {
-      return dir;
+    return location.parent.createDirectory(name, exclusive: true).then((dir) {
+      return new LocationResult(location.parent, dir, location.isSync);
     }).catchError((_) {
       if (count > 20) {
         return null;
       } else {
-        return _create(parent, baseName, count + 1);
+        return _create(location, baseName, count + 1);
       }
     });
   }
+}
+
+class LocationResult {
+  /**
+   * The parent Entry. This can be useful for persistng the info across
+   * sessions.
+   */
+  final chrome.DirectoryEntry parent;
+
+  /**
+   * The created location.
+   */
+  final chrome.DirectoryEntry entry;
+
+  /**
+   * Whether the entry was created in the sync filesystem.
+   */
+  final bool isSync;
+
+  LocationResult(this.parent, this.entry, this.isSync);
+
+  /**
+   * The name of the created entry.
+   */
+  String get name => entry.name;
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
@@ -984,14 +991,6 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   String get category => 'folder';
 
   bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevelFile(object);
-}
-
-class FileNewAsAction extends SparkAction {
-  FileNewAsAction(Spark spark) : super(spark, "file-new-as", "New File…");
-
-  void _invoke([Object context]) {
-    spark.newFileAs();
-  }
 }
 
 class FileSaveAction extends SparkAction {
@@ -1327,9 +1326,16 @@ class NewProjectAction extends SparkActionWithDialog {
   void _commit() {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name)
-          .then((chrome.DirectoryEntry dir) {
-        return spark.workspace.link(dir).then((project) {
+      spark.projectLocationManager.createNewFolder(name).then((LocationResult location) {
+        ws.WorkspaceRoot root;
+
+        if (location.isSync) {
+          root = new ws.SyncFolderRoot(location.entry);
+        } else {
+          root = new ws.FolderChildRoot(location.parent, location.entry);
+        }
+
+        return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
           Timer.run(() {
             spark._filesController.selectFile(project);
@@ -1496,12 +1502,19 @@ class _GitCloneJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return spark.projectLocationManager.createNewFolder(_projectName)
-        .then((chrome.DirectoryEntry dir) {
+    return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
       ScmProvider scmProvider = getProviderType('git');
 
-      return scmProvider.clone(url, dir).then((_) {
-        return spark.workspace.link(dir).then((project) {
+      return scmProvider.clone(url, location.entry).then((_) {
+        ws.WorkspaceRoot root;
+
+        if (location.isSync) {
+          root = new ws.SyncFolderRoot(location.entry);
+        } else {
+          root = new ws.FolderChildRoot(location.parent, location.entry);
+        }
+
+        return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Cloned into ${project.name}');
           Timer.run(() {
             spark._filesController.selectFile(project);

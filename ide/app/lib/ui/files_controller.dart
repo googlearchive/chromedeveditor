@@ -77,7 +77,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   bool isFileSelected(Resource file) {
-    return _treeView.selection.contains(file.path);
+    return _treeView.selection.contains(file.uuid);
   }
 
   void selectFile(Resource file, {bool forceOpen: false}) {
@@ -88,17 +88,17 @@ class FilesController implements TreeViewDelegate {
     List parents = _collectParents(file, []);
 
     parents.forEach((Container container) {
-      if (!_treeView.isNodeExpanded(container.path)) {
-        _treeView.setNodeExpanded(container.path, true);
+      if (!_treeView.isNodeExpanded(container.uuid)) {
+        _treeView.setNodeExpanded(container.uuid, true);
       }
     });
 
-    _treeView.selection = [file.path];
+    _treeView.selection = [file.uuid];
     if (file is File) {
       _delegate.selectInEditor(file, forceOpen: forceOpen);
     }
     _selectionController.add(file);
-    _treeView.scrollIntoNode(file.path, html.ScrollAlignment.CENTER);
+    _treeView.scrollIntoNode(file.uuid, html.ScrollAlignment.CENTER);
   }
 
   void selectFirstFile({bool forceOpen: false}) {
@@ -110,12 +110,12 @@ class FilesController implements TreeViewDelegate {
 
   void setFolderExpanded(Container resource) {
     for (Container container in _collectParents(resource, [])) {
-      if (!_treeView.isNodeExpanded(container.path)) {
-        _treeView.setNodeExpanded(container.path, true);
+      if (!_treeView.isNodeExpanded(container.uuid)) {
+        _treeView.setNodeExpanded(container.uuid, true);
       }
     }
 
-    _treeView.setNodeExpanded(resource.path, true);
+    _treeView.setNodeExpanded(resource.uuid, true);
   }
 
   /**
@@ -146,7 +146,7 @@ class FilesController implements TreeViewDelegate {
 
   String treeViewChild(TreeView view, String nodeUID, int childIndex) {
     if (nodeUID == null) {
-      return _files[childIndex].path;
+      return _files[childIndex].uuid;
     } else {
       _cacheChildren(nodeUID);
       return _childrenCache[nodeUID][childIndex];
@@ -267,7 +267,7 @@ class FilesController implements TreeViewDelegate {
     Set<String> ancestorsUIDs = new Set();
     Resource currentNode = destination;
     while (currentNode != null) {
-      ancestorsUIDs.add(currentNode.path);
+      ancestorsUIDs.add(currentNode.uuid);
       currentNode = currentNode.parent;
     }
     // Make sure that source items are not one of them.
@@ -506,7 +506,7 @@ class FilesController implements TreeViewDelegate {
     if (_childrenCache[nodeUID] == null) {
       Container container = _filesMap[nodeUID];
       _childrenCache[nodeUID] = container.getChildren().
-          where(_showResource).map((r) => r.path).toList();
+          where(_showResource).map((r) => r.uuid).toList();
       _childrenCache[nodeUID].sort(
           (String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
     }
@@ -636,7 +636,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _recursiveAddResource(Resource resource) {
-    _filesMap[resource.path] = resource;
+    _filesMap[resource.uuid] = resource;
     if (resource is Container) {
       resource.getChildren().forEach((child) {
         if (_showResource(child)) {
@@ -647,7 +647,7 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _recursiveRemoveResource(Resource resource) {
-    _filesMap.remove(resource.path);
+    _filesMap.remove(resource.uuid);
     if (resource is Container) {
       resource.getChildren().forEach((child) {
         _recursiveRemoveResource(child);
@@ -671,8 +671,8 @@ class FilesController implements TreeViewDelegate {
   void _showMenuAtLocation(FileItemCell cell,
                            html.Point position,
                            Resource resource) {
-    if (!_treeView.selection.contains(resource.path)) {
-      _treeView.selection = [resource.path];
+    if (!_treeView.selection.contains(resource.uuid)) {
+      _treeView.selection = [resource.uuid];
     }
 
     html.Element menuContainer = _delegate.getContextMenuContainer();

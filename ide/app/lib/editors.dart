@@ -112,7 +112,7 @@ class EditorManager implements EditorProvider {
 
   void _insertState(_EditorState state) {
     _openedEditorStates.add(state);
-    _savedEditorStates[state.file.persistToToken()] = state;
+    _savedEditorStates[state.file.uuid] = state;
   }
 
   bool _removeState(_EditorState state) => _openedEditorStates.remove(state);
@@ -126,7 +126,7 @@ class EditorManager implements EditorProvider {
     _EditorState state = _getStateFor(file);
 
     if (state == null) {
-      state = _savedEditorStates[file.persistToToken()];
+      state = _savedEditorStates[file.uuid];
       if (state == null) {
         state = new _EditorState.fromFile(this, file);
       }
@@ -182,7 +182,7 @@ class EditorManager implements EditorProvider {
     //     ensure that the format is valid.
     Map savedMap = {};
     savedMap['openedTabs'] =
-        _openedEditorStates.map((_EditorState s) => s.file.persistToToken()).
+        _openedEditorStates.map((_EditorState s) => s.file.uuid).
         toList();
     List<Map> filesState = [];
     _savedEditorStates.forEach((String key, _EditorState value) {
@@ -313,7 +313,7 @@ class EditorManager implements EditorProvider {
       return;
     }
 
-    String key = file.path;
+    String key = file.uuid;
 
     if (_savedEditorStates.containsKey(key)) {
       _savedEditorStates.remove(key);
@@ -326,7 +326,7 @@ class EditorManager implements EditorProvider {
       return;
     }
 
-    String key = file.path;
+    String key = file.uuid;
 
     if (_savedEditorStates.containsKey(key)) {
       // Update the saved state.
@@ -406,7 +406,7 @@ class _EditorState {
    */
   Map toMap() {
     Map m = {};
-    m['file'] = file.persistToToken();
+    m['file'] = file.uuid;
     m['scrollTop'] = scrollTop;
     m['column'] = cursorPosition.x;
     m['row'] = cursorPosition.y;
