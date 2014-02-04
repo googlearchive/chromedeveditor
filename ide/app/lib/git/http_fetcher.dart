@@ -53,13 +53,13 @@ class HttpFetcher {
     Blob body = _pushRequest(refPaths, packData);
 
     HttpRequest xhr = getNewHttpRequest();
-    xhr.open("POST", url, async: true , user: username , password: password);
+    xhr.open("POST", url, async: true , user: username, password: password);
     xhr.onLoad.listen((event) {
       if (xhr.readyState == 4) {
         if (xhr.status == 200) {
           String msg = xhr.response;
           if (msg.indexOf('000eunpack ok') == 0) {
-            return completer.complete();
+            completer.complete();
           } else {
             //TODO better error handling.
             completer.completeError("unpack error");
@@ -69,13 +69,12 @@ class HttpFetcher {
         }
       }
     });
-
     xhr.setRequestHeader('Content-Type',
         'application/x-git-receive-pack-request');
     String bodySize = (body.size / 1024).toStringAsFixed(2);
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
-      progress();
+      // progress();
     });
     xhr.send(body);
     return completer.future;

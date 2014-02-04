@@ -45,7 +45,6 @@ class Push {
       return store.getCommitsForPush(refs, config.remoteHeads).then(
           (commits) {
         if (commits == null) {
-          // no commits to push.
           // TODO(grv) : throw Custom exceptions.
           throw "no commits to push.";
         }
