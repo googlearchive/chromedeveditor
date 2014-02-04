@@ -35,7 +35,7 @@ class Logger {
   }
 
   static Future _createAndGetFile(chrome.DirectoryEntry root, String path) {
-    root.getFile(path).then((entry) => entry)
+    return root.getFile(path).then((entry) => entry)
       .catchError((e) {
       return FileOps.createFileWithContent(root, path, '', 'Text');
     });
