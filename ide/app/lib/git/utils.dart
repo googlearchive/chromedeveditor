@@ -123,7 +123,12 @@ Future cleanWorkingDir(chrome.DirectoryEntry root) {
 }
 
 /**
- * Returns the current time as a string in timezone offeset format.
+ * Returns the current time as a string in git internal time format.
+ *
+ * It is <unix timestamp> <time zone offset>, where <unix timestamp> is the
+ * number of seconds since the UNIX epoch. <time zone offset> is a positive
+ * or negative offset from UTC. For example CET (which is 2 hours ahead UTC)
+ * is +0200.
  */
 String getCurrentTimeAsString() {
   DateTime now = new DateTime.now();
