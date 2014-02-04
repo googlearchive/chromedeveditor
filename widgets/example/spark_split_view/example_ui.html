@@ -1,0 +1,31 @@
+<!doctype html>
+
+<link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
+<polymer-element name="example-ui">
+  <template>
+    <spark-split-view direction="left">
+      <div style="width:200px; background-color:blue">left (resize target)</div>
+      <div style="background-color:green">right</div>
+    </spark-split-view>
+
+    <spark-split-view direction="right">
+      <div style="background-color:blue">left</div>
+      <div style="width:200px; background-color:green">right (resize target)</div>
+    </spark-split-view>
+
+    <br><br>
+
+    <div style="display:flex; flex-flow:row">
+      <spark-split-view direction="up">
+       <div style="height:200px; background-color:red">top (resize target)</div>
+       <div style="background-color:yellow">bottom</div>
+      </spark-split-view>
+
+      <spark-split-view direction="down">
+       <div style="background-color:red">top</div>
+       <div style="height:200px; background-color:yellow">bottom (resize target)</div>
+      </spark-split-view>
+    </div>
+  </template>
+  <script type="application/dart" src="example_ui.dart"></script>
+</polymer-element>
