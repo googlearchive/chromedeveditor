@@ -671,7 +671,7 @@ class ProjectLocationManager {
     return location.parent.createDirectory(name, exclusive: true).then((dir) {
       return new LocationResult(location.parent, dir, location.isSync);
     }).catchError((_) {
-      if (count > 20) {
+      if (count > 50) {
         return null;
       } else {
         return _create(location, baseName, count + 1);
@@ -1503,6 +1503,8 @@ class _GitCloneJob extends Job {
     monitor.start(name, 1);
 
     return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
+      if (location == null) new Future.value();
+
       ScmProvider scmProvider = getProviderType('git');
 
       return scmProvider.clone(url, location.entry).then((_) {

@@ -759,7 +759,7 @@ abstract class WorkspaceRoot {
     } else if (m['type'] == 'folder') {
       return new FolderRoot._(m);
     } else if (m['type'] == 'folderChild') {
-      return new FolderRoot._(m);
+      return new FolderChildRoot._(m);
     } else {
       return null;
     }
@@ -833,6 +833,8 @@ class FolderRoot extends WorkspaceRoot {
   }
 
   Map persistState() {
+    if (token == null) return null;
+
     return {
       'type': 'folder',
       'token': token
@@ -873,7 +875,7 @@ class FolderChildRoot extends WorkspaceRoot {
 
   Map persistState() {
     return {
-      'type': 'folder',
+      'type': 'folderChild',
       'parentToken': parentToken,
       'name': name
     };
