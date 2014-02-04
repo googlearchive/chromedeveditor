@@ -7,6 +7,7 @@ library git.commands.merge;
 import 'dart:async';
 import 'dart:typed_data';
 
+import '../diff3.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
@@ -16,6 +17,7 @@ class MergeItem {
   TreeEntry ours;
   TreeEntry base;
   TreeEntry theirs;
+  String conflictText;
   bool isConflict;
 
   MergeItem(this.ours, this.base, this.theirs, [this.isConflict = false]);
@@ -90,7 +92,7 @@ class Merge {
     return new TreeDiffResult(adds, removes, merges);
   }
 
-  static Future mergeTrees(ObjectStore store, TreeObject ourTree,
+  static Future<String> mergeTrees(ObjectStore store, TreeObject ourTree,
       TreeObject baseTree, TreeObject theirTree) {
     List<TreeEntry> finalTree = [];
     List merges = [];
@@ -145,6 +147,8 @@ class Merge {
                   == next.isBlob)) {
                 if (shasEqual(next.sha, baseEntry.sha)) {
                   finalTree.add(theirEntry);
+                } else if (shasEqual(baseEntry.sha, theirEntry.sha)){
+                  finalTree.add(next);
                 } else {
                   merges.add(new MergeItem(next, baseEntry, theirEntry));
                 }
@@ -199,15 +203,17 @@ class Merge {
         if (item.ours.isBlob) {
           return store.retrieveObjectBlobsAsString(shas).then(
               (List<LooseObject> blobs) {
-            var newBlob = _diff3(blobs[0].data, blobs[1].data, blobs[2].data);
-            if (newBlob.conflict) {
-              conflicts.add(newBlob);
-              return null;
+            Diff3Result diffResult = Diff3.diff(blobs[0].data,
+                blobs[1].data, blobs[2].data);
+            if (diffResult.conflict) {
+              item.conflictText = diffResult.text;
+              conflicts.add(item);
+              return conflicts;
             } else {
-              return store.writeRawObject('blob', '').then((String sha) {
+              return getShaForString(diffResult.text, 'blob').then((String sha) {
                 item.ours.sha = shaToBytes(sha);
                 finalTree.add(item.ours);
-                return null;
+                return [];
               });
             }
           });
@@ -221,7 +227,7 @@ class Merge {
               return null;
             }, onError: (List<MergeItem> newConflicts) {
               conflicts.addAll(newConflicts);
-              return null;
+              return [];
             });
           });
         }
@@ -229,7 +235,6 @@ class Merge {
       if (conflicts.isEmpty) {
         return store.writeTree(finalTree);
       } else {
-        //TODO error(conflicts);
         return new Future.error(conflicts);
       }
     });
