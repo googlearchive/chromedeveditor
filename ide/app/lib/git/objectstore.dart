@@ -262,7 +262,18 @@ class ObjectStore {
       try {
         FindPackedObjectResult obj = this.findPackedObject(shaBytes);
         dataType = dataType == 'Raw' ? 'ArrayBuffer' : dataType;
-        return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType);
+        return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType).then(
+            (PackedObject packed) {
+          if (dataType == 'Text') {
+            return FileOps.readBlob(new Blob([packed.data]), 'Text').then(
+                (String data) {
+              packed.data = data;
+              return packed;
+            });
+          } else {
+            return packed;
+          }
+        });
       } catch (e) {
         throw "Can't find object with SHA " + sha;
       }
@@ -312,32 +323,45 @@ class ObjectStore {
     return walkLevel(headShas).then((_) => new CommitGraph(commits, []));
   }
 
+  /**
+   * Returns the lowest common ancestor for the given [headShas].
+   */
   Future<String> getCommonAncestor(List<String> headShas) {
     List<CommitObject> commits = [];
-    Map<String, int> seen = {};
+    Map<String, List> seen = {};
+
+    List nodes = [];
+    headShas.forEach((headSha) {
+      nodes.add({"sha": headSha, "head" : headSha});
+    });
 
     String ancestor;
-    Future<String> walkLevel(List<String> shas) {
-    List<String> nextLevel = [];
-      return Future.forEach(shas, (String sha) {
+    Future<String> walkLevel(List nodes) {
+    List<Map> nextLevel = [];
+      return Future.forEach(nodes, (Map node) {
         // Already found the lowest common ancestor.
         if (ancestor != null) {
           return null;
         }
 
+        String sha = node["sha"];
         if (seen[sha] != null) {
-          seen[sha]++;
-          if (seen[sha] == headShas.length) {
-            ancestor = sha;
+          if (!seen[sha].any((String head) => node["head"] == head)) {
+            seen[sha].add(node["head"]);
+            if (seen[sha].length == headShas.length) {
+              ancestor = sha;
+            }
           }
           return null;
         }
 
-        seen[sha] = 1;
+        seen[sha] = [node["head"]];
 
         return retrieveObject(sha, ObjectTypes.COMMIT_STR).then(
             (CommitObject commitObj) {
-          nextLevel.addAll(commitObj.parents);
+          commitObj.parents.forEach((String parent) {
+            nextLevel.add({"sha" : parent, "head" : node["head"]});
+          });
         }).catchError((e) => null);
       }).then((_) {
         if (nextLevel.length == 0) {
@@ -354,7 +378,7 @@ class ObjectStore {
         }
       });
     }
-    return walkLevel(headShas);
+    return walkLevel(nodes);
   }
 
   _nonFastForward() {
@@ -452,10 +476,10 @@ class ObjectStore {
     return getNextCommit(sha);
   }
 
-  Future retrieveObjectBlobsAsString(List<String> shas) {
-    List blobs;
+  Future<List<LooseObject>> retrieveObjectBlobsAsString(List<String> shas) {
+    List<LooseObject> blobs = [];
     return Future.forEach(shas, (String sha) {
-      retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
+      return retrieveRawObject(sha, 'Text').then((blob) => blobs.add(blob));
     }).then((_) => blobs);
   }
 

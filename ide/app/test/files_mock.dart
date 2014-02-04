@@ -15,7 +15,9 @@ import 'package:mime/mime.dart' as mime;
 import 'package:path/path.dart' as path;
 
 export 'package:chrome/chrome_app.dart'
-  show FileEntry, DirectoryEntry, ChromeFileEntry;
+  show Entry, FileEntry, DirectoryEntry, ChromeFileEntry;
+
+import '../lib/workspace.dart' as workspace;
 
 /**
  * A mutable, memory resident file system.
@@ -101,6 +103,28 @@ class MockFileSystem implements FileSystem {
     entry._modificationTime = new DateTime.fromMillisecondsSinceEpoch(
         entry._modificationTime.millisecondsSinceEpoch + 1);
   }
+}
+
+MockWorkspaceRoot createWsRoot(Entry entry) => new MockWorkspaceRoot(entry);
+
+class MockWorkspaceRoot extends workspace.WorkspaceRoot {
+  MockWorkspaceRoot(Entry entry) {
+    this.entry = entry;
+  }
+
+  workspace.Resource createResource(workspace.Workspace ws) {
+    if (entry is FileEntry) {
+      return new workspace.LooseFile(ws, this);
+    } else {
+      return new workspace.Project(ws, this);
+    }
+  }
+
+  String get id => entry.name;
+
+  Map persistState() => {};
+
+  Future restore() => new Future.value();
 }
 
 abstract class _MockEntry implements Entry {
