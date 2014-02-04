@@ -1,0 +1,18 @@
+<!doctype html>
+
+<link rel="import" href="packages/spark_widgets/spark_menu/spark_menu.html">
+<link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
+<polymer-element name="example-ui">
+  <template>
+    <!-- TODO: SparkSelector::valueToSelection(value) does not support non
+    integer selected values. -->
+    <spark-menu selected="email">
+      <spark-menu-item name="post" src="/widgets/example/assets/add.png">Post a Comment</spark-menu-item>
+      <spark-menu-separator></spark-menu-separator>
+      <spark-menu-item name="share" src="/widgets/example/assets/add.png">Share Link</spark-menu-item>
+      <spark-menu-item name="email" src="/widgets/example/assets/add.png">Email Link</spark-menu-item>
+      <spark-menu-item name="favorite" src="/widgets/example/assets/add.png">Add to Favorites</spark-menu-item>
+    </spark-menu>
+  </template>
+  <script type="application/dart" src="example_ui.dart"></script>
+</polymer-element>

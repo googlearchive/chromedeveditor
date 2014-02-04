@@ -5,18 +5,18 @@ import 'package:polymer/polymer.dart';
 
 @CustomTag('widget-examples')
 class Examples extends PolymerElement {
-  final links = ['spark-button',
-                 'spark-icon',
-                 'spark-icon-button',
-                 'spark-menu',
-                 'spark-menu-button',
-                 'spark-menu-item',
-                 'spark-overlay',
-                 'spark-selection',
-                 'spark-selector',
-                 'spark-splitter',
-                 'spark-toggle-button',
-                 'spark-toolbar'];
+  final links = ['spark_button',
+                 'spark_icon',
+                 'spark_icon_button',
+                 'spark_menu',
+                 'spark_menu_button',
+                 'spark_menu_item',
+                 'spark_overlay',
+                 'spark_selection',
+                 'spark_selector',
+                 'spark_splitter',
+                 'spark_toggle_button',
+                 'spark_toolbar'];
 
   factory Examples() => new Element.tag('Examples');
 

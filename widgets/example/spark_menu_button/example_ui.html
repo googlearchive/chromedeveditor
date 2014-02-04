@@ -1,0 +1,16 @@
+<!doctype html>
+
+<link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
+<polymer-element name="example-ui">
+  <template>
+    <!-- TODO: throws Exception: Class 'HtmlElement' has no instance method 'select'.
+    issue is with SparkSelector::valueToSelection(value); -->
+    <spark-menu selected="email">
+      <spark-menu-button name="post" src="/widgets/example/assets/add.png">Post a Comment</spark-menu-item>
+      <spark-menu-button name="share" src="/widgets/example/assets/add.png">Share Link</spark-menu-item>
+      <spark-menu-button name="email" src="/widgets/example/assets/add.png">Email Link</spark-menu-item>
+      <spark-menu-button name="favorite" src="/widgets/example/assets/add.png">Add to Favorites</spark-menu-item>
+    </spark-menu>
+  </template>
+  <script type="application/dart" src="example_ui.dart"></script>
+</polymer-element>
