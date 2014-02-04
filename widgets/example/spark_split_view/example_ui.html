@@ -3,27 +3,31 @@
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <polymer-element name="example-ui">
   <template>
-    <spark-split-view direction="left">
-      <div style="width:200px; background-color:blue">left (resize target)</div>
+    <spark-split-view direction="left" style="width:400px; height:100px">
+      <div style="background-color:blue; width:200px">left (resize target)</div>
       <div style="background-color:green">right</div>
     </spark-split-view>
 
-    <spark-split-view direction="right">
+    <div style="height:20px"></div>
+
+    <spark-split-view direction="right" style="width:400px; height:100px">
       <div style="background-color:blue">left</div>
-      <div style="width:200px; background-color:green">right (resize target)</div>
+      <div style="background-color:green; width:200px">right (resize target)</div>
     </spark-split-view>
 
     <br><br>
 
     <div style="display:flex; flex-flow:row">
-      <spark-split-view direction="up">
-       <div style="height:200px; background-color:red">top (resize target)</div>
-       <div style="background-color:yellow">bottom</div>
+      <spark-split-view direction="up" style="width:400px; height:200px">
+        <div style="background-color:red; height:100px">top (resize target)</div>
+        <div style="background-color:yellow">bottom</div>
       </spark-split-view>
 
-      <spark-split-view direction="down">
-       <div style="background-color:red">top</div>
-       <div style="height:200px; background-color:yellow">bottom (resize target)</div>
+      <div style="width:20px"></div>
+
+      <spark-split-view direction="down" style="width:400px; height:200px">
+        <div style="background-color:red">top</div>
+        <div style="background-color:yellow; height:100px">bottom (resize target)</div>
       </spark-split-view>
     </div>
   </template>
