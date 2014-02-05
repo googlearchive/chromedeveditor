@@ -40,33 +40,21 @@ String shaBytesToString(List shaBytes) {
 }
 
 Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
-  return entry.readBytes().then((chrome.ArrayBuffer content) => _getShaForData(
-      content, type));
+  return entry.readBytes().then(
+      (chrome.ArrayBuffer content) => _getShaForData(content.getBytes(), type));
 }
 
 Future<String> getShaForString(String data, String type) {
-  return _getShaForData(data, type);
+  return _getShaForData(data.codeUnits, type);
 }
 
-Future<String> _getShaForData(dynamic content, String type) {
+Future<String> _getShaForData(List<int> content, String type) {
   Completer completer = new Completer();
   List<dynamic> blobParts = [];
 
-  int size = 0;
-  if (content is Uint8List) {
-    size = content.length;
-  } else if (content is Blob) {
-    size = content.size;
-  } else if (content is String) {
-    size = content.length;
-  } else {
-    // TODO: Check expected types here.
-    throw "Unexpected content type.";
-  }
+  Uint8List data = new Uint8List.fromList(content);
 
-  Uint8List data = new Uint8List.fromList(content.getBytes());
-
-  String header = '${type} ${size}' ;
+  String header = '${type} ${content.length}' ;
   blobParts.add(header);
   blobParts.add(new Uint8List.fromList([0]));
   blobParts.add(data);

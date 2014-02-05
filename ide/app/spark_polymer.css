@@ -157,21 +157,40 @@ body {
   border-radius: 2px;
   position: absolute;
   top: 2px;
-  right: 1px;
+  right: 7px;
   height: 16px;
-  width: 4px;
+  width: 0;
+  transition: width 0.4s;
 }
 
 .fileview-filename-container .fileStatus.error {
-  background: #F55;
+  width: 5px;
+	background: #F55;
 }
 
 .fileview-filename-container .fileStatus.warning {
-  background: #DD3;
+  width: 5px;
+	background: #DD3;
 }
 
 .fileview-filename-container .fileStatus.info {
-  background: #9CC;
+  width: 5px;
+	background: #9CC;
+}
+
+.fileview-filename-container .gitStatus {
+  border-radius: 2px;
+  position: absolute;
+  top: 2px;
+  right: 1px;
+  height: 16px;
+  width: 0;
+  transition: width 0.4s;
+}
+
+.fileview-filename-container .gitStatus.dirty {
+  width: 5px;
+	background: #00688B;
 }
 
 .fileview-filename-container .menu {

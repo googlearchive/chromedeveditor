@@ -207,6 +207,10 @@ class FileStatus {
   String sha;
   int size;
   int modificationTime;
+
+  /**
+   * [type] is one of [FileStatusType].
+   */
   String type;
 
   FileStatus();
@@ -236,4 +240,6 @@ class FileStatus {
       'type' : type
     };
   }
+
+  String toString() => '[${path} ${type}]';
 }

@@ -24,6 +24,7 @@ import 'git/commands/commit.dart';
 import 'git/commands/fetch.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
+import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 
@@ -163,13 +164,14 @@ abstract class ScmProjectOperations {
  * The possible SCM file statuses (`committed`, `dirty`, or `unknown`).
  */
 class FileStatus {
-  static final FileStatus COMITTED = new FileStatus._('comitted');
-  static final FileStatus DIRTY = new FileStatus._('dirty');
-  static final FileStatus UNKNOWN = new FileStatus._('unknown');
+  static const FileStatus UNTRACKED = const FileStatus._('untracked');
+  static const FileStatus MODIFIED = const FileStatus._('modified');
+  static const FileStatus STAGED = const FileStatus._('staged');
+  static const FileStatus COMMITTED = const FileStatus._('committed');
 
   final String _status;
 
-  FileStatus._(this._status);
+  const FileStatus._(this._status);
 
   String toString() => _status;
 }
@@ -249,8 +251,21 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   FileStatus getFileStatus(Resource resource) {
-    // TODO:
-    return FileStatus.UNKNOWN;
+    if (resource is File) {
+      //objectStore.then((store) => Status.getFileStatus(store, resource.entry));
+
+      objectStore.then((store) {
+        Status.getFileStatuses(store).then((Map m) {
+          print(m);
+        });
+      }).catchError(print);
+
+      // TODO:
+      return FileStatus.UNTRACKED;
+    } else {
+      // TODO:
+      return FileStatus.UNTRACKED;
+    }
   }
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;

@@ -627,11 +627,10 @@ class FilesController implements TreeViewDelegate {
         final String repoIcon = '<span class="glyphicon glyphicon-random small"></span>';
         if (branchName == null) branchName = '';
         fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
-      } else {
-        FileStatus status = scmOperations.getFileStatus(resource);
-        // TODO: We'll need to add a few more status states.
-        fileItemCell.setGitStatus(dirty: (status == FileStatus.DIRTY));
       }
+
+      FileStatus status = scmOperations.getFileStatus(resource);
+      fileItemCell.setGitStatus(dirty: (status != FileStatus.COMMITTED));
     }
   }
 
