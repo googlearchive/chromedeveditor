@@ -4,6 +4,8 @@
 
 library spark_widgets.split_view;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -25,9 +27,17 @@ class SparkSplitView extends SparkWidget {
   @override
   void enteredView() {
     super.enteredView();
-    // The rest of the code might work even if there are more than 2 children,
-    // but would create hard-to-understand results on the client side.
-    assert(children.length == 2);
+    // Make sure there are exactly 2 children inserted in the instantiation
+    // site. When we're enclosed in another element and passed down its
+    // <content>, we need to dive into that <content> to look at its distributed
+    // nodes.
+    assert(children.length == 2 ||
+           (children.length == 1 &&
+            children[0] is ContentElement &&
+            (children[0] as ContentElement)
+                .getDistributedNodes().where((n) => n is Element).length == 2
+           )
+    );
   }
 
   /**
