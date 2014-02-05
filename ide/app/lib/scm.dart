@@ -267,6 +267,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future checkoutBranch(String branchName) {
+    print('comes in checkout');
+    return pull();
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
@@ -296,6 +298,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future pull() {
+    print('comes in pull');
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Pull pull = new Pull(options);
