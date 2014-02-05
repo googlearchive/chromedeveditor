@@ -59,38 +59,18 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future<bool> invokeSystemDialog(dialogFuture) {
-    backdropShowing = true;
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () =>
-            (dialogFuture.whenComplete(() =>
-                backdropShowing = false)));
-  }
-
-  Future<bool> _beforeSystemModal() {
-    Completer completer = new Completer();
-    backdropShowing = true;
-
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () {
-          completer.complete();
-        });
-
-    return completer.future;
-  }
-
-  Future<bool> _systemModalComplete() {
-    backdropShowing = false;
-  }
-
   Future<bool> openFolder() {
-    _beforeSystemModal().then((_) =>
-        super.openFolder().whenComplete(() => _systemModalComplete()));
+    return _beforeSystemModal()
+        .then((_) => super.openFolder())
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
   }
 
-  Future<bool> openFile() {
-    _beforeSystemModal().then((_) =>
-        super.openFile().whenComplete(() => _systemModalComplete()));
+  Future openFile() {
+    return _beforeSystemModal()
+        .then((_) => super.openFile())
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
   }
 
   static set backdropShowing(bool showing) {
@@ -239,5 +219,21 @@ class SparkPolymer extends Spark {
   void unveil() {
     _ui.classes.remove('veiled');
     _ui.classes.add('unveiled');
+  }
+
+  Future<bool> _beforeSystemModal() {
+    Completer completer = new Completer();
+    backdropShowing = true;
+
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () {
+          completer.complete();
+        });
+
+    return completer.future;
+  }
+
+  void _systemModalComplete() {
+    backdropShowing = false;
   }
 }

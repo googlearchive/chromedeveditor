@@ -459,7 +459,7 @@ class AceManager {
         return ace.Annotation.ERROR;
       case workspace.Marker.SEVERITY_WARNING:
         return ace.Annotation.WARNING;
-      case workspace.Marker.SEVERITY_INFO:
+      default:
         return ace.Annotation.INFO;
     }
   }

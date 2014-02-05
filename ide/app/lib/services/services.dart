@@ -36,7 +36,7 @@ class Services {
       }
     });
 
-    Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
+    return Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
   }
 
   Future<String> ping() {
@@ -56,6 +56,7 @@ class Services {
     Completer completer = _serviceCallCompleters[id];
     _serviceCallCompleters.remove(id);
     completer.complete("pong");
+    return completer.future;
   }
 
 }

@@ -417,7 +417,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     workspace.builderManager.builders.add(builder);
   }
 
-  Future<bool> openFile() {
+  Future openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
     return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
@@ -433,7 +433,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
   }
 
-  Future<bool> openFolder() {
+  Future openFolder() {
     return _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
         workspace.link(new ws.FolderRoot(entry)).then((ws.Resource resource) {
@@ -733,6 +733,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
       spark._testDriver = new TestDriver(
           all_tests.defineTests, spark.jobManager, connectToTestListener: true);
     }
+    return new Future.value();
   }
 
   Future applicationClosed(Application application) {
@@ -740,6 +741,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     spark.launchManager.dispose();
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
+    return new Future.value();
   }
 }
 

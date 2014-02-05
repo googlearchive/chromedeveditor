@@ -102,7 +102,6 @@ void runApp(String browserPath, String appPath, {bool verbose: false}) {
   }
 
   if (Platform.isMacOS) {
-    // TODO: does this work on OSes other then mac?
     args.add('--no-startup-window');
   }
 
@@ -205,13 +204,14 @@ String _chromeStablePath() {
       }
     }
   }
+
+  throw 'unable to locate Chrome; ${Platform.operatingSystem} not yet supported';
 }
 
 String _chromeDevPath() {
   if (Platform.isLinux) {
     return '/usr/bin/google-chrome-unstable';
   } else {
-    // TODO:
     throw 'unable to locate Chrome dev; ${Platform.operatingSystem} not yet supported';
   }
 }
