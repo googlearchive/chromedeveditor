@@ -136,7 +136,7 @@ class SparkPolymer extends Spark {
       if (position != null) {
         int value = int.parse(position, onError: (_) => 0);
         if (value != 0) {
-          (getUIElement('#splitView') as SparkSplitView).targetSize = value;
+          (getUIElement('#splitView') as dynamic).targetSize = value;
         }
       }
     });
