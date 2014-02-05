@@ -227,6 +227,10 @@ class Workspace implements Container {
 
   Stream<MarkerChangeEvent> get onMarkerChange => _markerController.stream;
 
+  void checkResource(Resource resource) {
+    _fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
+  }
+
   void _fireResourceEvent(ChangeDelta delta) {
     if (_resourcePauseCount == 0) {
       _resourceController.add(new ResourceChangeEvent.fromSingle(delta));

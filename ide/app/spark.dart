@@ -287,7 +287,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
-    _editorArea = new EditorArea(
+    _editorManager.onNewFileOpened.listen((_){
+      _workspace.checkResource(_editorManager.currentFile);
+    });
+   _editorArea = new EditorArea(
         querySelector('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
 
     _syncPrefs.getValue('textFileExtensions').then((String value) {
