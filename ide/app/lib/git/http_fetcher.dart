@@ -74,7 +74,9 @@ class HttpFetcher {
     String bodySize = (body.size / 1024).toStringAsFixed(2);
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
-      // progress();
+      if (progress != null) {
+        progress();
+      }
     });
     xhr.send(body);
     return completer.future;
