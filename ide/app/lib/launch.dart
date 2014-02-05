@@ -215,7 +215,9 @@ class WorkspaceServlet extends PicoServlet {
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
+
     Resource resource = _launchManager.workspace.getChildPath(path);
+
     if (resource != null) {
       // TODO: Verify that the resource is a File.
       return (resource as File).getBytes().then((chrome.ArrayBuffer buffer) {
@@ -224,7 +226,7 @@ class WorkspaceServlet extends PicoServlet {
         return new Future.value(response);
       }, onError: (_) => new Future.value(new HttpResponse.notFound()));
     } else {
-      new Future.value(new HttpResponse.notFound());
+      return new Future.value(new HttpResponse.notFound());
     }
   }
 }
