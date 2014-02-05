@@ -227,6 +227,7 @@ class Workspace implements Container {
 
   Stream<MarkerChangeEvent> get onMarkerChange => _markerController.stream;
 
+  // TODO(ericarnold): We can remove this method once we analyze whole projects.
   void checkResource(Resource resource) {
     _fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
   }
