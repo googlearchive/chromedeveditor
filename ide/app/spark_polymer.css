@@ -155,6 +155,7 @@ body {
 
 .fileview-filename-container .fileStatus {
   border-radius: 2px;
+  background: #999;
   position: absolute;
   top: 2px;
   right: 7px;
@@ -164,7 +165,7 @@ body {
 }
 
 .fileview-filename-container .fileStatus.error {
-  width: 5px;
+	width: 5px;
 	background: #F55;
 }
 
@@ -180,6 +181,7 @@ body {
 
 .fileview-filename-container .gitStatus {
   border-radius: 2px;
+  background: #999;
   position: absolute;
   top: 2px;
   right: 1px;
@@ -190,7 +192,7 @@ body {
 
 .fileview-filename-container .gitStatus.dirty {
   width: 5px;
-	background: #00688B;
+	background: #008ab8;
 }
 
 .fileview-filename-container .menu {

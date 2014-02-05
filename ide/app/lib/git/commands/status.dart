@@ -29,19 +29,17 @@ class Status {
    */
   static Future<FileStatus> getFileStatus(ObjectStore store,
       chrome.ChromeFileEntry entry) {
-    Completer completer = new Completer();
-    entry.getMetadata().then((data) {
+    return entry.getMetadata().then((data) {
       // TODO(grv) : check the modification time when it is available.
-      getShaForEntry(entry, 'blob').then((String sha) {
+      return getShaForEntry(entry, 'blob').then((String sha) {
         FileStatus status = new FileStatus();
         status.path = entry.fullPath;
         status.sha = sha;
         status.size = data.size;
         store.index.updateIndexForEntry(status);
-        completer.complete(store.index.getStatusForEntry(entry));
+        return store.index.getStatusForEntry(entry);
       });
     });
-    return completer.future;
   }
 
   /**

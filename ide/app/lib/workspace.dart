@@ -40,6 +40,7 @@ class Workspace implements Container {
 
   chrome.Entry get _entry => null;
   set _entry(chrome.Entry value) => null;
+  Map<String, dynamic> _metadata;
   chrome.Entry get entry => null;
 
   List<WorkspaceRoot> _roots = [];
@@ -386,6 +387,12 @@ class Workspace implements Container {
     });
   }
 
+  dynamic getMetadata(String key, [dynamic defaultValue]) => defaultValue;
+
+  void setMetadata(String key, dynamic data) { }
+
+  bool isScmPrivate() => false;
+
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     _roots.removeWhere((root) => root.resource == resource);
     if (fireEvent) {
@@ -464,6 +471,8 @@ abstract class Resource {
   Container _parent;
   chrome.Entry _entry;
 
+  Map<String, dynamic> _metadata;
+
   Resource(this._parent, this._entry);
 
   String get name => _entry.name;
@@ -528,6 +537,41 @@ abstract class Resource {
   int findMaxProblemSeverity();
 
   /**
+   * Get arbitrary metadata associated with this resource.
+   */
+  dynamic getMetadata(String key, [dynamic defaultValue]) {
+    if (_metadata == null) {
+      return defaultValue;
+    } else {
+      var val = _metadata[key];
+      return val == null ? defaultValue : val;
+    }
+  }
+
+  /**
+   * Associate arbitrary metadata with this resource.
+   */
+  void setMetadata(String key, dynamic data) {
+    if (_metadata == null) {
+      _metadata = {};
+    }
+
+    var currentVal = _metadata[key];
+
+    if (data != currentVal) {
+      // TODO: In the future, we may want to fire metadata change events that
+      // clients can listen for.
+      _metadata[key] = data;
+    }
+  }
+
+  /**
+   * Returns whether the given resource should be considered hidden SCM
+   * meta-data.
+   */
+  bool isScmPrivate() => false;
+
+  /**
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
    */
@@ -535,8 +579,12 @@ abstract class Resource {
 
   static Iterable<Resource> _workspaceTraversal(Resource r) {
     if (r is Container) {
-      return [ [r], r.getChildren().expand(_workspaceTraversal) ]
-             .expand((i) => i);
+      if (r.isScmPrivate()) {
+        return [];
+      } else {
+        return
+            [[r], r.getChildren().expand(_workspaceTraversal)].expand((i) => i);
+      }
     } else {
       return [r];
     }
@@ -574,6 +622,8 @@ class Folder extends Container {
   Future delete() {
     return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
   }
+
+  bool isScmPrivate() => name == '.git' || name == '.svn';
 
   Future _refresh() {
     return _dirEntry.createReader().readEntries().then((List<chrome.Entry> entries) {
@@ -961,6 +1011,10 @@ class ResourceChangeEvent {
       .map((delta) => delta.resource.project)
       .toSet()
       .where((project) => project != null);
+
+  List<ChangeDelta> getChangesFor(Project project) {
+    return changes.where((c) => c.resource.project == project).toList();
+  }
 }
 
 /**
