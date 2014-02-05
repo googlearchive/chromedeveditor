@@ -258,14 +258,16 @@ class Workspace implements Container {
 
         List<Map> data = JSON.decode(s);
 
+        List<WorkspaceRoot> roots = [];
+
         for (Map m in data) {
           WorkspaceRoot root = WorkspaceRoot.restoreRoot(m);
-          if (root != null) _roots.add(root);
+          if (root != null) roots.add(root);
         }
 
-        Future.forEach(_roots, (WorkspaceRoot root) {
+        Future.forEach(roots, (WorkspaceRoot root) {
           return root.restore().then((_) {
-            root.resource = root.createResource(this);
+            return link(root, fireEvent: false);
           });
         }).whenComplete(() {
           resumeResourceEvents();
@@ -333,7 +335,7 @@ class Workspace implements Container {
     }
 
     WorkspaceRoot root = _roots.firstWhere(
-        (r) => r.id == uuid, orElse: () => null);
+        (r) => r.id == first, orElse: () => null);
 
     if (root == null) return null;
     if (rest == null) return root.resource;
