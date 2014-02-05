@@ -291,7 +291,7 @@ class ObjectStore {
 
       return Future.forEach(shas, (String sha) {
         Completer completer = new Completer();
-        if (seen[sha]) return null;
+        if (seen[sha] != null) return null;
 
         seen[sha] = true;
 
