@@ -53,18 +53,20 @@ Future<String> _getShaForData(dynamic content, String type) {
   List<dynamic> blobParts = [];
 
   int size = 0;
+  dynamic data = content;
   if (content is Uint8List) {
     size = content.length;
   } else if (content is Blob) {
     size = content.size;
   } else if (content is String) {
     size = content.length;
+  } else if (content is chrome.ArrayBuffer) {
+    size = content.getBytes().length;
+    data = new Uint8List.fromList(content.getBytes());
   } else {
     // TODO: Check expected types here.
     throw "Unexpected content type.";
   }
-
-  Uint8List data = new Uint8List.fromList(content.getBytes());
 
   String header = '${type} ${size}' ;
   blobParts.add(header);
