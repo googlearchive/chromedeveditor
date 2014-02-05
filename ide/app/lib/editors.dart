@@ -62,6 +62,9 @@ class EditorManager implements EditorProvider {
   final PreferenceStore _prefs;
   final EventBus _eventBus;
 
+  StreamController _newFileOpenedController = new StreamController.broadcast();
+  Stream get onNewFileOpened => _newFileOpenedController.stream;
+
   static final int PREFS_EDITORSTATES_VERSION = 1;
 
   static final int EDITOR_TYPE_IMAGE = 1;
@@ -245,6 +248,10 @@ class EditorManager implements EditorProvider {
       } else {
         // Clear text content of ACE editor.
         _aceContainer.switchTo(null);
+
+        if (!state.hasSession) {
+          _newFileOpenedController.add(null);
+        }
 
         // Then load content.
         state.withSession().then((state) {
