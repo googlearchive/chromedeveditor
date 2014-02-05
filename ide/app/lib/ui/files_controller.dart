@@ -668,13 +668,13 @@ class FilesController implements TreeViewDelegate {
   /**
    * Position the context menu at the expected location.
    */
-  void _poistionContextMenu(html.Point clickPoint, html.Element contextMenu) {
+  void _positionContextMenu(html.Point clickPoint, html.Element contextMenu) {
     var topUi = html.document.querySelector("#topUi");
-    final int seperatorHeight = 19;
+    final int separatorHeight = 19;
     final int itemHeight = 26;
     int estimatedHeight = 12; // Start with value padding and border.
     contextMenu.children.forEach((child) {
-      estimatedHeight += child.className == "divider" ? seperatorHeight : itemHeight;
+      estimatedHeight += child.className == "divider" ? separatorHeight : itemHeight;
     });
 
     contextMenu.style.left = '${clickPoint.x}px';
@@ -704,7 +704,7 @@ class FilesController implements TreeViewDelegate {
     // Get all applicable actions.
     List<ContextAction> actions = _delegate.getActionsFor(resources);
     fillContextMenu(contextMenu, actions, resources);
-    _poistionContextMenu(position, contextMenu);
+    _positionContextMenu(position, contextMenu);
 
     // Show the menu.
     bootjack.Dropdown dropdown = bootjack.Dropdown.wire(contextMenu);
