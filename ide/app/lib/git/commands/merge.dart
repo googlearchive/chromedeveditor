@@ -122,7 +122,7 @@ class Merge {
         TreeEntry top = (indices[i] < treeEntries.length) ?
             treeEntries[indices[i]] : null;
 
-        if (next == null || (top && top.name.compareTo(next.name) < 0)) {
+        if (next == null || (top != null && top.name.compareTo(next.name) < 0)) {
           next = top;
           nextX = i;
         }
