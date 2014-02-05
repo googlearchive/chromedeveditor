@@ -210,7 +210,8 @@ class Merge {
               conflicts.add(item);
               return conflicts;
             } else {
-              return getShaForString(diffResult.text, 'blob').then((String sha) {
+              return store.writeRawObject('blob', diffResult.text).then(
+                  (String sha) {
                 item.ours.shaBytes = shaToBytes(sha);
                 finalTree.add(item.ours);
                 return [];
