@@ -403,9 +403,7 @@ class PackBuilder {
     return Future.forEach(_commits, (CommitObject commit) {
       _packIt(commit.rawObj);
       return _walkTree(commit.treeSha);
-    }).then((_) {
-      return _finishPack();
-    });
+    }).then((_) => _finishPack());
   }
 
   List<int> _packTypeSizeBits(int type, int size) {
@@ -427,7 +425,6 @@ class PackBuilder {
   }
 
   void _packIt(LooseObject object) {
-
     var buf = object.data;
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
@@ -441,13 +438,12 @@ class PackBuilder {
     ByteBuffer compressed;
     compressed = new Uint8List.fromList(Zlib.deflate(data).buffer
         .getBytes()).buffer;
-    _packed.add(_packTypeSizeBits(ObjectTypes.getType(object.type),
-        data.length));
+    _packed.add(new Uint8List.fromList(
+        _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);
   }
 
   Future _finishPack() {
-
     List packedObjects = [];
     Uint8List buf = new Uint8List(12);
     ByteData dataView = new ByteData.view(buf.buffer);
@@ -501,18 +497,15 @@ class PackBuilder {
               _store.findPackedObject(entry.shaBytes);
               return new Future.value();
             } catch (e) {
-              return _store.retrieveObject(nextSha, 'Raw').then((object) {
-                return _packIt(object);
-              });
+              return _store.retrieveObject(nextSha, 'Raw').then(
+                  (object) => _packIt(object));
             }
           }
         } else {
           return _walkTree(nextSha);
         }
 
-      }).then((_) {
-        return _packIt(tree.rawObj);
-      });
+      }).then((_) => _packIt(tree.rawObj));
     });
   }
 }
