@@ -12,7 +12,6 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'file_operations.dart';
 import 'object.dart';
 import 'objectstore.dart';
-import 'utils.dart';
 
 /**
  *
@@ -96,13 +95,12 @@ abstract class ObjectUtils {
       String treeSha) {
     return store.retrieveObject(treeSha, "Tree").then((GitObject tree) {
       return Future.forEach((tree as TreeObject).entries, (TreeEntry entry) {
-        String sha = shaBytesToString(entry.shaBytes);
         if (entry.isBlob) {
-          return expandBlob(dir, store, entry.name, sha);
+          return expandBlob(dir, store, entry.name, entry.sha);
         } else {
           return dir.createDirectory(entry.name).then(
               (chrome.DirectoryEntry newDir) {
-            return expandTree(newDir, store, sha);
+            return expandTree(newDir, store, entry.sha);
           });
         }
       });

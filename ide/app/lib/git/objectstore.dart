@@ -646,7 +646,7 @@ class ObjectStore {
     treeEntries.forEach((TreeEntry tree) {
       blobParts.add((tree.isBlob ? '100644 ' : '40000 ') + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
-      blobParts.add(tree.sha);
+      blobParts.add(tree.shaBytes);
     });
 
     return writeRawObject(ObjectTypes.TREE_STR, new Blob(blobParts));
