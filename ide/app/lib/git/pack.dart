@@ -491,14 +491,14 @@ class PackBuilder {
   Future _packTree(String treeSha) {
     return _store.retrieveObject(treeSha, 'Tree').then((TreeObject tree) {
       return Future.forEach(tree.entries, (TreeEntry entry) {
-        String nextSha = shaBytesToString(entry.sha);
+        String nextSha = shaBytesToString(entry.shaBytes);
         if (entry.isBlob) {
           if (_visited[nextSha]) {
             return new Future.value();
           } else {
             _visited[nextSha] = true;
             try {
-              _store.findPackedObject(entry.sha);
+              _store.findPackedObject(entry.shaBytes);
               return new Future.value();
             } catch (e) {
               return _store.retrieveObject(nextSha, 'Raw').then((object) {

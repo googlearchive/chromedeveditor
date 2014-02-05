@@ -11,6 +11,7 @@ import 'dart:typed_data';
 import 'package:chrome/src/common_exp.dart' as chrome;
 
 import 'object_utils.dart';
+import 'utils.dart';
 
 /**
  * Encapsulates a Gitobject
@@ -56,10 +57,12 @@ abstract class GitObject {
 class TreeEntry {
 
   String name;
-  Uint8List sha;
+  Uint8List shaBytes;
   bool isBlob;
 
-  TreeEntry(this.name, this.sha, this.isBlob);
+  String get sha => shaBytesToString(shaBytes);
+
+  TreeEntry(this.name, this.shaBytes, this.isBlob);
 }
 
 /**

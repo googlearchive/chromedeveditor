@@ -96,7 +96,7 @@ abstract class ObjectUtils {
       String treeSha) {
     return store.retrieveObject(treeSha, "Tree").then((GitObject tree) {
       return Future.forEach((tree as TreeObject).entries, (TreeEntry entry) {
-        String sha = shaBytesToString(entry.sha);
+        String sha = shaBytesToString(entry.shaBytes);
         if (entry.isBlob) {
           return expandBlob(dir, store, entry.name, sha);
         } else {
