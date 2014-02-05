@@ -22,7 +22,7 @@
 // SOFTWARE.
 
 var Diff = {
-  newLines : /\r(\n)?|\n(\r)?/,
+  newLines : /\n/,
     longest_common_subsequence: function(file1, file2) {
         /* Text diff algorithm following Hunt and McIlroy 1976.
          * J. W. Hunt and M. D. McIlroy, An algorithm for differential file
