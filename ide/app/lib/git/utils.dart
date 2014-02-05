@@ -59,6 +59,8 @@ Future<String> _getShaForData(dynamic content, String type) {
     size = content.size;
   } else if (content is String) {
     size = content.length;
+  } else if (content is chrome.ArrayBuffer) {
+    size = content.getBytes().length;
   } else {
     // TODO: Check expected types here.
     throw "Unexpected content type.";
