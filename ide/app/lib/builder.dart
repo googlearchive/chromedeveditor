@@ -49,7 +49,6 @@ class BuilderManager {
   }
 
   void _startTimer() {
-    /*%TRACE3*/ print("(4> 2/2/14): _startTimer!"); // TRACE%
     if (_timer != null) {
       _timer.cancel();
     }

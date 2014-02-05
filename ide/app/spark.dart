@@ -128,7 +128,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _syncPrefs = preferences.syncStore;
 
     initAnalytics();
-    print("initAnalytics");
 
     addParticipant(new _SparkSetupParticipant(this));
 

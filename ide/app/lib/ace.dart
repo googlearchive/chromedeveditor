@@ -377,17 +377,6 @@ class AceManager {
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
-
-    _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
-
-    if (!filenameBySession.containsKey(session)) {
-      String filename = "A" + (sessionId++).toString();
-      print("Haven't seen this session before.  I will call you '${filename}'");
-      filenameBySession[session] = filename;
-    } else {
-      print("Hmm, session ${filenameBySession[session]} again ...");
-    }
-
     _applyCustomSession(session, fileName);
     return session;
   }
@@ -423,7 +412,7 @@ class AceManager {
 
   // TODO(ericarnold): Deleteme.  testing
   static Map<ace.EditSession, String> filenameBySession = {};
-  static int sessionId = 0;
+
   void switchTo(ace.EditSession session, [workspace.File file]) {
     if (_foldListenerSubscription != null) {
       _foldListenerSubscription.cancel();
