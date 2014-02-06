@@ -15,27 +15,31 @@ import '../utils.dart';
 
 class Status {
 
+  /**
+   * Returns a map from the file path to the file status.
+   */
   static Future<Map<String, FileStatus>> getFileStatuses(ObjectStore store) {
     return store.index.updateIndex().then((_) {
       return store.index.statusMap;
     });
   }
 
+  /**
+   * Return the status for an individual file entry.
+   */
   static Future<FileStatus> getFileStatus(ObjectStore store,
       chrome.ChromeFileEntry entry) {
-    Completer completer = new Completer();
-    entry.getMetadata().then((data) {
+    return entry.getMetadata().then((data) {
       // TODO(grv) : check the modification time when it is available.
-      getShaForEntry(entry, 'blob').then((String sha) {
+      return getShaForEntry(entry, 'blob').then((String sha) {
         FileStatus status = new FileStatus();
         status.path = entry.fullPath;
         status.sha = sha;
         status.size = data.size;
         store.index.updateIndexForEntry(status);
-        completer.complete(store.index.getStatusForEntry(entry));
+        return store.index.getStatusForEntry(entry);
       });
     });
-    return completer.future;
   }
 
   /**
@@ -67,7 +71,7 @@ class Status {
       ObjectStore store, List<String> types) {
     return store.index.updateIndex().then((_) {
       Map result = {};
-      store.index.statusMap.forEach((k,v) {
+      store.index.statusMap.forEach((k, v) {
         if (types.any((type) => v.type == type)) {
           result[k] = v;
         }

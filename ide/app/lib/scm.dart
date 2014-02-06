@@ -21,9 +21,12 @@ import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
+import 'git/commands/constants.dart';
 import 'git/commands/fetch.dart';
+import 'git/commands/index.dart' as index;
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
+import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 
@@ -92,9 +95,9 @@ class ScmManager {
 
   Stream<ScmProjectOperations> get onStatusChange => _controller.stream;
 
-  void _fireStatusChangeFor(Project project) {
+  void _updateStatusFor(Project project, List<ChangeDelta> changes) {
     if (_operations[project] != null) {
-      _operations[project]._fireStatusChangeEvent();
+      _operations[project].updateForChanges(changes);
     }
   }
 }
@@ -156,22 +159,38 @@ abstract class ScmProjectOperations {
 
   Future commit(String commitMessage);
 
-  void _fireStatusChangeEvent();
+  void updateForChanges(List<ChangeDelta> changes);
 }
 
 /**
- * The possible SCM file statuses (`committed`, `dirty`, or `unknown`).
+ * The possible SCM file statuses (`untracked`, `modified`, `staged`, or
+ * `committed`).
  */
 class FileStatus {
-  static final FileStatus COMITTED = new FileStatus._('comitted');
-  static final FileStatus DIRTY = new FileStatus._('dirty');
-  static final FileStatus UNKNOWN = new FileStatus._('unknown');
+  static const FileStatus UNTRACKED = const FileStatus._('untracked');
+  static const FileStatus MODIFIED = const FileStatus._('modified');
+  static const FileStatus STAGED = const FileStatus._('staged');
+  static const FileStatus COMMITTED = const FileStatus._('committed');
 
-  final String _status;
+  final String status;
 
-  FileStatus._(this._status);
+  const FileStatus._(this.status);
 
-  String toString() => _status;
+  factory FileStatus.createFrom(String value) {
+    if (value == 'committed') return FileStatus.COMMITTED;
+    if (value == 'modified') return FileStatus.MODIFIED;
+    if (value == 'staged') return FileStatus.STAGED;
+    return FileStatus.UNTRACKED;
+  }
+
+  factory FileStatus.fromIndexStatus(String status) {
+    if (status == FileStatusType.COMMITTED) return FileStatus.COMMITTED;
+    if (status == FileStatusType.MODIFIED) return FileStatus.MODIFIED;
+    if (status == FileStatusType.STAGED) return FileStatus.STAGED;
+    return FileStatus.UNTRACKED;
+  }
+
+  String toString() => status;
 }
 
 /**
@@ -228,6 +247,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
         // Populate the branch name.
         getBranchName();
+
+        // TODO(devoncarew): this is only necessary currently because the
+        // resource metadata is not persisted across sessions. Once it is, we
+        // can remove this manual refresh.
+        // Update the SCM status for the files.
+        _refreshStatus();
       }).catchError((e) => _completer.completeError(e));
   }
 
@@ -249,8 +274,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   FileStatus getFileStatus(Resource resource) {
-    // TODO:
-    return FileStatus.UNKNOWN;
+    return new FileStatus.createFrom(resource.getMetadata('scmStatus'));
   }
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
@@ -308,14 +332,34 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(
           root: entry, store: store, commitMessage: commitMessage);
       return Commit.commit(options).then((_) {
-        _statusController.add(this);
+        _refreshStatus();
       });
     });
   }
 
   Future<ObjectStore> get objectStore => _completer.future;
 
-  void _fireStatusChangeEvent() => _statusController.add(this);
+  void updateForChanges(List<ChangeDelta> changes) {
+    // TODO(devoncarew): Call _refreshStatus() with the minimal set of changes
+    // from the `changes` param.
+
+    _refreshStatus();
+  }
+
+  void _refreshStatus() {
+    // Get a list of all files in the project.
+    Iterable<File> files = project.traverse().where((r) => r is File);
+
+    // For each file, request the SCM status asynchronously.
+    objectStore.then((ObjectStore store) {
+      Future.forEach(files, (File file) {
+        return Status.getFileStatus(store, file.entry).then((index.FileStatus status) {
+          file.setMetadata('scmStatus',
+              new FileStatus.fromIndexStatus(status.type).status);
+        });
+      }).then((_) => _statusController.add(this));
+    });
+  }
 }
 
 /**
@@ -330,7 +374,7 @@ class _ScmBuilder extends Builder {
   Future build(ResourceChangeEvent changes, ProgressMonitor monitor) {
     // Get a list of all changed projects and fire SCM change events for them.
     for (Project project in changes.modifiedProjects) {
-      scmManager._fireStatusChangeFor(project);
+      scmManager._updateStatusFor(project, changes.getChangesFor(project));
     }
 
     return new Future.value();

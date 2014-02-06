@@ -587,7 +587,7 @@ class FilesController implements TreeViewDelegate {
    * Returns whether the given resource should be filtered from the Files view.
    */
   bool _showResource(Resource resource) {
-    if (resource is Folder && resource.name == '.git') {
+    if (resource.isScmPrivate()) {
       return false;
     }
     return true;
@@ -627,10 +627,13 @@ class FilesController implements TreeViewDelegate {
         final String repoIcon = '<span class="glyphicon glyphicon-random small"></span>';
         if (branchName == null) branchName = '';
         fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
-      } else {
+      }
+
+      // TODO(devoncarew): for now, just show git status for files. We need to
+      // also implement this for folders.
+      if (resource is File) {
         FileStatus status = scmOperations.getFileStatus(resource);
-        // TODO: We'll need to add a few more status states.
-        fileItemCell.setGitStatus(dirty: (status == FileStatus.DIRTY));
+        fileItemCell.setGitStatus(dirty: (status != FileStatus.COMMITTED));
       }
     }
   }
