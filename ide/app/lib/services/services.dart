@@ -21,15 +21,19 @@ class Services {
 
   // Fires when the isolate communication has been established.
   Stream onReady;
-
-  // Services:
-  ExampleService exampleService;
-  // ExampleService exampleService
+  Map<String, Service> _services = {};
 
   Services() {
     _isolateHandler = new _IsolateHandler();
-    exampleService = new ExampleService(_isolateHandler);
+    registerService(new ExampleService(this, _isolateHandler));
   }
+
+  Service getService(String serviceId) => _services[serviceId];
+
+  void registerService(Service service) {
+    _services[service.serviceId] = service;
+  }
+
 }
 
 /**
@@ -39,11 +43,12 @@ class Services {
 abstract class Service {
   static int _topCallId = 0;
 
+  Services _services;
   _IsolateHandler _isolateHandler;
 
   String get serviceId;
 
-  Service(this._isolateHandler);
+  Service(this._services, this._isolateHandler);
 
   String _getNewCallId() => "host_${_topCallId++}";
 
@@ -61,7 +66,8 @@ abstract class Service {
 class ExampleService extends Service {
   String serviceId = "example";
 
-  ExampleService(_IsolateHandler handler) : super(handler);
+  ExampleService(Services services, _IsolateHandler handler)
+      : super(services, handler);
 }
 
 /**
@@ -70,7 +76,8 @@ class ExampleService extends Service {
  */
 class ChromeService extends Service {
   String serviceId = "chrome";
-  ChromeService(_IsolateHandler handler) : super(handler);
+  ChromeService(Services services, _IsolateHandler handler)
+      : super(services, handler);
 
   // For incoming (non-requested) actions.
   void _receiveAction(ActionEvent event) {
