@@ -6,6 +6,7 @@ library spark.services;
 
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:convert';
 
 import '../utils.dart';
 
@@ -26,6 +27,7 @@ class Services {
   Services() {
     _isolateHandler = new _IsolateHandler();
     registerService(new ExampleService(this, _isolateHandler));
+    registerService(new PingService(this, _isolateHandler));
   }
 
   Future<String> ping() => _isolateHandler.ping();
@@ -57,6 +59,15 @@ abstract class Service {
   // and invokes the Future once response has been received.
   Future<ServiceActionEvent> _sendAction(String actionId, [Map data]) {
     // TODO(ericarnold): Implement
+    String callId = _getNewCallId();
+
+    return _isolateHandler.onceIsolateReady.then((_){
+      _isolateHandler.sendAction(serviceId, actionId, callId);
+      return _isolateHandler.onIsolateResponse(callId).first;
+    }).then((ActionEvent event){
+      print("pong");
+      return new Future.value("poong");
+    });
   }
 }
 
@@ -64,11 +75,18 @@ abstract class Service {
  * Special service for handling Chrome app calls that the isolate
  * cannot handle on its own.
  */
-class ExampleService extends Service {
-  String serviceId = "example";
+class PingService extends Service {
+  String serviceId = "ping";
 
   ExampleService(Services services, _IsolateHandler handler)
       : super(services, handler);
+  PingService(Services services, _IsolateHandler handler) : super(handler);
+
+  Future<String> ping() {
+    return _sendAction("ping").then((ActionEvent event) {
+      return new Future.value("pogo");
+    });
+  }
 }
 
 /**
@@ -98,12 +116,24 @@ class _IsolateHandler {
   Map<int, Completer> _serviceCallCompleters = {};
 
   final String _workerPath = 'services_impl.dart';
+
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
 
   // Fired when isolate responds to message
   Stream<ServiceActionEvent> onIsolateResponse(String callId) {
     // TODO(ericarnold): Implement
+    StreamSubscription subscription;
+    StreamController<ActionEvent> controller =
+        new StreamController<ActionEvent>();
+    subscription = onIsolateMessage.listen((ActionEvent event){
+      if (event.response && event.callId == callId) {
+        subscription.cancel();
+        controller..add(event)..close();
+      }
+    });
+
+    return controller.stream;
   }
 
   StreamController<ServiceActionEvent> _messageController =
@@ -126,6 +156,7 @@ class _IsolateHandler {
     // TODO(ericarnold): Implement
   }
 
+
   Future _startIsolate() {
     _receivePort.listen((arg) {
       if (_sendPort == null) {
@@ -134,6 +165,16 @@ class _IsolateHandler {
       } else {
         // TODO(ericarnold): Temporary (encode ping command once implemented)
         _pong(arg);
+
+        // implemented ...
+        String data = arg["data"];
+        Map dataMap = null;
+        if (data != null) {
+          dataMap = JSON.decode(data);
+        }
+        ActionEvent event = new ActionEvent(
+            arg["serviceId"], arg["actionId"], arg["callId"], dataMap);
+        messageController..add(event);
       }
     });
 
@@ -160,11 +201,12 @@ class _IsolateHandler {
     return completer.future;
   }
 
-
+  // TODO(ericarnold): Complete a future / stream.
   Future<ServiceActionEvent> sendAction(String serviceId, String actionId,
       String callId, [String data = ""]) {
-    // TODO(ericarnold): Implement
     // TODO(ericarnold): implement callId response
+    _sendPort.send(
+        {"serviceId": serviceId, "actionId": actionId, "data": data});
   }
 
   void sendResponse(ServiceActionEvent event, String data) {
