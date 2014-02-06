@@ -7,6 +7,7 @@ class ActionEvent {
   String serviceId;
   String actionId;
   String callId;
+  bool response = false;
   Map data;
   ActionEvent(this.serviceId, this.actionId, this.callId, this.data);
 }
