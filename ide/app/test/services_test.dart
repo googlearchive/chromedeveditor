@@ -19,6 +19,12 @@ defineTests() {
     setUp(() {
       services = new Services();
     });
+
+    test('ping', () {
+      return services.ping().then((result) {
+        expect(result, equals("pong"));
+      });
+    });
   });
 
   group('services_impl', () {
