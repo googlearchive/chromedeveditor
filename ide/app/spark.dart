@@ -616,6 +616,8 @@ class ProjectLocationManager {
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
+      }).catchError((e) {
+        return new ProjectLocationManager._(prefs, null);
       });
     });
   }
