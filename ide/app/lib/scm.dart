@@ -163,7 +163,8 @@ abstract class ScmProjectOperations {
 }
 
 /**
- * The possible SCM file statuses (`committed`, `dirty`, or `unknown`).
+ * The possible SCM file statuses (`untracked`, `modified`, `staged`, or
+ * `committed`).
  */
 class FileStatus {
   static const FileStatus UNTRACKED = const FileStatus._('untracked');

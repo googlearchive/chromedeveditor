@@ -228,6 +228,11 @@ class Workspace implements Container {
 
   Stream<MarkerChangeEvent> get onMarkerChange => _markerController.stream;
 
+  // TODO(ericarnold): We can remove this method once we analyze whole projects.
+  void checkResource(Resource resource) {
+    _fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
+  }
+
   void _fireResourceEvent(ChangeDelta delta) {
     if (_resourcePauseCount == 0) {
       _resourceController.add(new ResourceChangeEvent.fromSingle(delta));
@@ -471,6 +476,11 @@ abstract class Resource {
   Container _parent;
   chrome.Entry _entry;
 
+  /**
+   * This map stores arbitrary metadata that clients can get and set on the
+   * resource. In the future, this metadata will automatically be persisted
+   * with the resource, and available across session restarts.
+   */
   Map<String, dynamic> _metadata;
 
   Resource(this._parent, this._entry);

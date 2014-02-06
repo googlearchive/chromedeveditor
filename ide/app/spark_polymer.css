@@ -154,14 +154,16 @@ body {
 }
 
 .fileview-filename-container .fileStatus {
-  border-radius: 2px;
   background: #999;
+	border-radius: 2px;
+
   position: absolute;
   top: 2px;
   right: 7px;
   height: 16px;
-  width: 0;
+
   transition: width 0.4s;
+  width: 0;
 }
 
 .fileview-filename-container .fileStatus.error {

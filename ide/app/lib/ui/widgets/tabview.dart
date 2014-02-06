@@ -40,7 +40,8 @@ class Tab {
         ..type = 'button';
     _closeButton.appendHtml('&times;');
     _closeButton.onClick.listen((e) {
-      tabView.remove(this, layoutNow: false);
+      bool layoutNow = (this == tabView.tabs.last);
+      tabView.remove(this, layoutNow: layoutNow);
       e.stopPropagation();
       e.preventDefault();
     });
