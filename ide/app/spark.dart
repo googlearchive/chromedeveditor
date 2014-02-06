@@ -171,7 +171,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   initServices() {
     services = new Services();
-    services.ping().then((result) => print(result));
   }
 
   //
