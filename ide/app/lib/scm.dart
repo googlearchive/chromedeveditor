@@ -339,9 +339,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<ObjectStore> get objectStore => _completer.future;
 
   void updateForChanges(List<ChangeDelta> changes) {
-    // TODO:
-
-    //_statusController.add(this);
+    // TODO(devoncarew): Call _refreshStatus() with the minimal set of changes
+    // from the `changes` param.
 
     _refreshStatus();
   }
@@ -359,26 +358,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
         });
       }).then((_) => _statusController.add(this));
     });
-  }
-
-  void _updateScmStatus(Resource r) {
-
-//    if (resource is File) {
-//      //objectStore.then((store) => Status.getFileStatus(store, resource.entry));
-//
-//      objectStore.then((store) {
-//        Status.getFileStatuses(store).then((Map m) {
-//          print(m);
-//        });
-//      }).catchError(print);
-//
-//      // TODO:
-//      return FileStatus.UNTRACKED;
-//    } else {
-//      // TODO:
-//      return FileStatus.UNTRACKED;
-//    }
-
   }
 }
 
