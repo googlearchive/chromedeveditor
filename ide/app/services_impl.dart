@@ -49,7 +49,9 @@ class ServicesIsolate {
     _sendPort.send(receivePort.sendPort);
 
     receivePort.listen((arg) {
-      String data = arg["data"];
+      _sendPort.send(arg);
+
+      //String data = arg["data"];
       // TODO(ericarnold): differntiate between host and response messages ...
       //hostMessageController.add(new ActionEvent(
       //    arg["serviceId"], arg["actionId"], arg["callId"], JSON.decode(data)));
