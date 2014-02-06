@@ -7,57 +7,118 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'action_event.dart';
+
 /**
  * Defines a class which contains services and manages their communication.
  */
 class Services {
-  int _topCallId = 0;
-  Map<int, Completer> _serviceCallCompleters = {};
+  // TODO(ericarnold): instantiate each Service
+  // TODO(ericarnold): send messages for workers to be instantiated (either
+  //         immediately, on-demand, or manually).
+
+  _IsolateHandler _isolateHandler;
+
+  // Fires when the isolate communication has been established.
+  Stream onReady;
+
+  // Services:
+  ExampleService exampleService;
+  // ExampleService exampleService
+
+  Services() {
+    _isolateHandler = new _IsolateHandler();
+    exampleService = new ExampleService(_isolateHandler);
+  }
+}
+
+/**
+ * Abstract service with unique serviceId.  Hides communication with the
+ * isolate from the actual Service.
+ */
+abstract class Service {
+  static int _topCallId = 0;
+
+  _IsolateHandler _isolateHandler;
+
+  String get serviceId;
+
+  Service(this._isolateHandler);
+
+  String _getNewCallId() => "host_${_topCallId++}";
+
+  // Wraps up actionId and data into an ActionEvent and sends it to the isolate
+  // and invokes the Future once response has been received.
+  Future<ActionEvent> _sendAction(String actionId, [Map data]) {
+    // TODO(ericarnold): Implement
+  }
+}
+
+/**
+ * Special service for handling Chrome app calls that the isolate
+ * cannot handle on its own.
+ */
+class ExampleService extends Service {
+  String serviceId = "example";
+
+  ExampleService(_IsolateHandler handler) : super(handler);
+}
+
+/**
+ * Special service for handling Chrome app calls that the isolate
+ * cannot handle on its own.
+ */
+class ChromeService extends Service {
+  String serviceId = "chrome";
+  ChromeService(_IsolateHandler handler) : super(handler);
+
+  // For incoming (non-requested) actions.
+  void _receiveAction(ActionEvent event) {
+    // TODO(ericarnold): Implement
+  }
+
+  void _sendResponse(ActionEvent event) {
+    // TODO(ericarnold): Implement
+  }
+}
+
+/**
+ * Defines a class which handles all isolate setup and communication
+ */
+class _IsolateHandler {
   final String _workerPath = 'services_impl.dart';
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
-  StreamController _readyController = new StreamController.broadcast();
-  bool _ready = false;
 
-  Services() {
-    _startIsolate();
+  // Fired when isolate responds to message
+  Stream<ActionEvent> onIsolateResponse(String callId) {
+    // TODO(ericarnold): Implement
   }
 
-  Stream get _onWorkerReady => _readyController.stream;
+  // Fired when isolate originates a message
+  Stream onIsolateMessage;
+
+  // Future to fire once, when isolate is started and ready to receive messages.
+  // Usage: onceIsolateReady.then() => // do stuff
+  Future onceIsolateReady;
+
+  _IsolateHandler() {
+    // TODO(ericarnold): Implement
+  }
 
   Future _startIsolate() {
-    _receivePort.listen((arg) {
-      if (_sendPort == null) {
-        _sendPort = arg;
-        _readyController.add(null);
-        _readyController.close();
-      } else {
-        pong(arg);
-      }
-    });
-
-    return Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
+    StreamController<ActionEvent> messageController =
+        new StreamController<ActionEvent>.broadcast();
   }
 
-  Future<String> ping() {
-    Completer<String> completer = new Completer();
-    int callId = _topCallId;
-    _serviceCallCompleters[callId] = completer;
-    if (_ready) {
-      _sendPort.send(callId);
-    } else {
-      _onWorkerReady.listen((_)=>_sendPort.send(callId));
-    }
-    _topCallId += 1;
-    return completer.future;
+  Future<ActionEvent> sendAction(String serviceId, String actionId,
+      String callId, [String data = ""]) {
+    // TODO(ericarnold): Implement
+    // TODO(ericarnold): implement callId response
   }
 
-  Future pong(int id) {
-    Completer completer = _serviceCallCompleters[id];
-    _serviceCallCompleters.remove(id);
-    completer.complete("pong");
-    return completer.future;
+  void sendResponse(ActionEvent event, String data) {
+    // TODO(ericarnold): Implement
   }
-
 }
 
