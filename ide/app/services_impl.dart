@@ -15,6 +15,9 @@ import 'lib/compiler.dart';
  * for use in running long-running / heaving tasks.
  */
 void main(List<String> args, SendPort sendPort) {
+  // For use with top level print() helper function.
+  _printSendPort = sendPort;
+
   final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
 }
 
@@ -22,108 +25,92 @@ void main(List<String> args, SendPort sendPort) {
  * Defines a handler for all worker-side service implementations.
  */
 class ServicesIsolate {
-  WorkerHandler _handler;
-  CompilerServiceImpl compiler;
+  final SendPort _sendPort;
 
-  ServicesIsolate(SendPort sendPort) {
-    _handler = new WorkerHandler(sendPort)
-        ..onMessage.listen(handleMessage);
+  // Fired when host responds to message
+  Stream<ActionEvent> _onResponseMessage;
 
-    // For use with top level print() helper function.
-    _globalHandler = _handler;
+  // Fired when host originates a message
+  Stream<ActionEvent> _onHostMessage ;
+
+  // Services:
+  // ExampleServiceImpl example;
+
+  ServicesIsolate(this._sendPort) {
+    StreamController<ActionEvent> hostMessageController =
+        new StreamController<ActionEvent>.broadcast();
+    StreamController<ActionEvent> responseMessageController =
+        new StreamController<ActionEvent>.broadcast();
+
+    _onHostMessage = hostMessageController.stream;
+    _onResponseMessage = responseMessageController.stream;
+
+    ReceivePort receivePort = new ReceivePort();
+    _sendPort.send(receivePort.sendPort);
+
+    receivePort.listen((arg) {
+      String data = arg["data"];
+      // TODO(ericarnold): differntiate between host and response messages ...
+      //hostMessageController.add(new ActionEvent(
+      //    arg["serviceId"], arg["actionId"], arg["callId"], JSON.decode(data)));
+      //responseMessageController.add(new ActionEvent(
+      //    arg["serviceId"], arg["actionId"], arg["callId"], JSON.decode(data)));
+    });
   }
 
-  handleMessage(ActionEvent event) {
-    print("handleMessage");
-    // Service implementations:
-    switch(event.serviceId) {
-      case "ping":
-        switch(event.actionId) {
-          case "ping":
-            _handler.sendResponse(
-                event.serviceId, "pong", event.data["message"]);
-            break;
-        }
-        break;
 
-      case "compiler":
-        switch(event.actionId) {
-          case "instantiate":
-            compiler = new CompilerServiceImpl()..onReady.listen((String state){
-              _handler.sendResponse(
-                  event.serviceId, event.actionId, {"state": state});
-            });
-            break;
-        }
-        break;
-    }
+  _handleMessage(ActionEvent event) {
+    // TODO(ericarnold): Initialize each requested ServiceImpl subclass as
+    //    requested by the sender and add listeners to them to facilitate
+    //    two-way communication.
+    // TODO(ericarnold): Route ActionEvent by serviceId to the appropriate
+    //    ServiceImpl instance.
+  }
+
+
+  // Sends a response message.
+  Future<ActionEvent> _sendResponse(ActionEvent event, Map data,
+      [bool expectResponse = false]) {
+    _sendPort.send({
+      "serviceId": event.serviceId,
+      "actionId": event.actionId,
+      "callId": event.callId,
+      "data": JSON.encode(data)});
+  }
+
+  // Sends action to host.  Returns a future if expectResponse is true.
+  Future<ActionEvent> _sendAction(String serviceId, String actionId, Map data,
+      [bool expectResponse = false]) {
+    // TODO(ericarnold):
+    // - Create call id
+    // - send message
+    // - implement on other end
   }
 }
 
-class CompilerServiceImpl {
-  Compiler _compiler;
-
-  StreamController<String> _readyController =
-      new StreamController<String>.broadcast();
-
-  CompilerServiceImpl() {
-    Compiler.createCompiler().then((c) {
-      _compiler = c;
-      _readyController.add("ready");
-      _readyController.close();
-    });
-  }
-  Stream<String> get onReady => _readyController.stream;
+// Provides an abstract class and helper code for service implementations.
+class ServiceImpl {
+  // TODO(ericarnold): Handle Instantiation messages
+  // TODO(ericarnold): Handles each ActionEvent sent to it and provides
+  // a uniform way for subclasses to route messages by actionId.
 }
 
 /**
  * Defines a received action event.
  */
-// TODO(ericarnold): Extend Event?
-// TODO(ericarnold): This should be shared between ServiceIsolate and Service.
 class ActionEvent {
+  // TODO(ericarnold): Extend Event?
+  // TODO(ericarnold): This should be shared between ServiceIsolate and Service.
   String serviceId;
   String actionId;
+  String callId;
   Map data;
-  ActionEvent(this.serviceId, this.actionId, this.data);
-}
-
-/**
- * Defines a class which handles all isolate communcation
- */
-class WorkerHandler {
-  final SendPort _sendPort;
-  StreamController<ActionEvent> _messageStreamController =
-      new StreamController<ActionEvent>.broadcast();
-
-  WorkerHandler(this._sendPort) {
-    ReceivePort receivePort = new ReceivePort();
-    _sendPort.send(receivePort.sendPort);
-
-    receivePort.listen((arg) {
-
-      String data = arg["data"];
-      _messageStreamController.add(new ActionEvent(
-          arg["serviceId"], arg["actionId"], JSON.decode(data)));
-    });
-  }
-
-  Stream<ActionEvent> get onMessage => _messageStreamController.stream;
-
-  void sendResponse(String serviceId, String actionId, Map data) {
-    _sendPort.send({
-        "serviceId": serviceId,
-        "actionId": actionId,
-        "data": JSON.encode(data)});
-  }
-
-  void sendAction(String serviceId, String actionId, Map data) {
-    // TODO(ericarnold): Implement
-  }
+  ActionEvent(this.serviceId, this.actionId, this.callId, this.data);
 }
 
 // Prints are crashing isolate, so this will take over for the time being.
-WorkerHandler _globalHandler;
+SendPort _printSendPort;
 void print(String message) {
-  _globalHandler.sendResponse("ping", "pong", {"message": message});
+  // Host will know it's a print because it's a simple string instead of a map
+  _printSendPort.send("print $message");
 }
