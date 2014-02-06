@@ -97,6 +97,10 @@ class ServiceImpl {
   // a uniform way for subclasses to route messages by actionId.
 }
 
+class PingServiceImpl extends ServiceImpl {
+
+}
+
 // Prints are crashing isolate, so this will take over for the time being.
 SendPort _printSendPort;
 void print(String message) {
