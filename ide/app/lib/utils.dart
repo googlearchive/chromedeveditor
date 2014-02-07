@@ -225,6 +225,25 @@ class ServiceActionEvent {
   String callId;
   bool response = false;
   Map data;
+
   ServiceActionEvent(this.serviceId, this.actionId, this.callId, this.data);
+
+  ServiceActionEvent.fromMap(Map map) {
+    serviceId = map["serviceId"];
+    actionId = map["actionId"];
+    callId = map["callId"];
+    data = map["data"];
+    response = map["response"];
+  }
+
+  Map toMap() {
+    return {
+      "serviceId": serviceId,
+      "actionId": actionId,
+      "callId": callId,
+      "response": response,
+      "data": data
+    };
+  }
 }
 

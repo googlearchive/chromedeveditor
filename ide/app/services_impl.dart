@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 library spark.services_impl;
 
-import 'dart:convert';
 import 'dart:async';
 import 'dart:isolate';
 
@@ -48,7 +47,14 @@ class ServicesIsolate {
     _sendPort.send(receivePort.sendPort);
 
     receivePort.listen((arg) {
-      _sendPort.send(arg);
+      if (arg is int) {
+        _sendPort.send(arg);
+      } else {
+        ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
+        ServiceImpl service = getService(event.serviceId);
+        service.handleEvent(event);
+      }
+//      _sendPort.send(arg);
 
       //String data = arg["data"];
       // TODO(ericarnold): differntiate between host and response messages ...
@@ -59,6 +65,10 @@ class ServicesIsolate {
     });
   }
 
+  ServiceImpl getService(String serviceId) {
+    // TODO(ericarnold): Implement
+    return new ExampleServiceImpl(this);
+  }
 
   _handleMessage(ServiceActionEvent event) {
     // TODO(ericarnold): Initialize each requested ServiceImpl subclass as
@@ -72,11 +82,9 @@ class ServicesIsolate {
   // Sends a response message.
   Future<ServiceActionEvent> _sendResponse(ServiceActionEvent event, Map data,
       [bool expectResponse = false]) {
-    _sendPort.send({
-      "serviceId": event.serviceId,
-      "actionId": event.actionId,
-      "callId": event.callId,
-      "data": JSON.encode(data)});
+    event.response = true;
+    var eventMap = event.toMap();
+    _sendPort.send(eventMap);
   }
 
   // Sends action to host.  Returns a future if expectResponse is true.
@@ -89,20 +97,41 @@ class ServicesIsolate {
   }
 }
 
+class ExampleServiceImpl extends ServiceImpl {
+  String get serviceId => "example";
+  ExampleServiceImpl(ServicesIsolate isolate) : super(isolate);
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    switch (event.actionId) {
+      case "test":
+        _sendResponse(event, {"a":"b"});
+        break;
+    }
+    // TODO(ericarnold): Implement
+  }
+}
+
+
 // Provides an abstract class and helper code for service implementations.
-class ServiceImpl {
+abstract class ServiceImpl {
+  ServicesIsolate _isolate;
+  String get serviceId => null;
   // TODO(ericarnold): Handle Instantiation messages
   // TODO(ericarnold): Handles each ActionEvent sent to it and provides
   // a uniform way for subclasses to route messages by actionId.
-}
+  ServiceImpl(this._isolate);
 
-class PingServiceImpl extends ServiceImpl {
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
 
+  _sendResponse(ServiceActionEvent event, Map data,
+      [bool expectResponse = false]) {
+    _isolate._sendResponse(event, data, expectResponse);
+  }
 }
 
 // Prints are crashing isolate, so this will take over for the time being.
 SendPort _printSendPort;
-void print(String message) {
+void print(var message) {
   // Host will know it's a print because it's a simple string instead of a map
-  _printSendPort.send("print $message");
+  _printSendPort.send("$message");
 }
