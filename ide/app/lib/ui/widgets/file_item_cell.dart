@@ -63,7 +63,7 @@ class FileItemCell implements ListViewCell {
   }
 
   void setGitStatus({bool dirty: false}) {
-    // TODO: Implement.
-
+    Element element = gitStatusElement;
+    element.classes.toggle('dirty', dirty);
   }
 }

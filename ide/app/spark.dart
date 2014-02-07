@@ -171,7 +171,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   initServices() {
     services = new Services();
-    services.ping().then((result) => print(result));
   }
 
   //
@@ -287,7 +286,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
-    _editorArea = new EditorArea(
+    _editorManager.onNewFileOpened.listen((_){
+      _workspace.checkResource(_editorManager.currentFile);
+    });
+   _editorArea = new EditorArea(
         querySelector('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
 
     _syncPrefs.getValue('textFileExtensions').then((String value) {
@@ -417,7 +419,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     workspace.builderManager.builders.add(builder);
   }
 
-  Future<bool> openFile() {
+  Future openFile() {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
     return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
@@ -433,7 +435,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
   }
 
-  Future<bool> openFolder() {
+  Future openFolder() {
     return _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
         workspace.link(new ws.FolderRoot(entry)).then((ws.Resource resource) {
@@ -614,6 +616,8 @@ class ProjectLocationManager {
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
+      }).catchError((e) {
+        return new ProjectLocationManager._(prefs, null);
       });
     });
   }
@@ -733,6 +737,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
       spark._testDriver = new TestDriver(
           all_tests.defineTests, spark.jobManager, connectToTestListener: true);
     }
+    return new Future.value();
   }
 
   Future applicationClosed(Application application) {
@@ -740,6 +745,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     spark.launchManager.dispose();
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
+    return new Future.value();
   }
 }
 

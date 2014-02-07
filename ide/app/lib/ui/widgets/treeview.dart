@@ -325,6 +325,7 @@ class TreeView implements ListViewDelegate {
     }
 
     cancelEvent(event);
+    return false;
   }
 
   void listViewContextMenu(ListView view,

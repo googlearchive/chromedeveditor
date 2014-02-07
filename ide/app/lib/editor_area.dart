@@ -176,7 +176,7 @@ class EditorArea extends TabView {
       } else if (editor is ImageViewer) {
         tab = new ImageViewerTab(this, editorProvider, editor, file);
       } else {
-        assert(editor is ace.TextEditor || editor is ImageViewer);
+        assert(false);
       }
 
       if (replaceCurrent) {

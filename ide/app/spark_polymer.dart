@@ -13,7 +13,6 @@ import 'package:polymer/polymer.dart' as polymer;
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_button/spark_button.dart';
 import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
-import 'packages/spark_widgets/spark_split_view/spark_split_view.dart';
 
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
@@ -59,38 +58,18 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future<bool> invokeSystemDialog(dialogFuture) {
-    backdropShowing = true;
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () =>
-            (dialogFuture.whenComplete(() =>
-                backdropShowing = false)));
-  }
-
-  Future<bool> _beforeSystemModal() {
-    Completer completer = new Completer();
-    backdropShowing = true;
-
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () {
-          completer.complete();
-        });
-
-    return completer.future;
-  }
-
-  Future<bool> _systemModalComplete() {
-    backdropShowing = false;
-  }
-
   Future<bool> openFolder() {
-    _beforeSystemModal().then((_) =>
-        super.openFolder().whenComplete(() => _systemModalComplete()));
+    return _beforeSystemModal()
+        .then((_) => super.openFolder())
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
   }
 
-  Future<bool> openFile() {
-    _beforeSystemModal().then((_) =>
-        super.openFile().whenComplete(() => _systemModalComplete()));
+  Future openFile() {
+    return _beforeSystemModal()
+        .then((_) => super.openFile())
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
   }
 
   static set backdropShowing(bool showing) {
@@ -156,7 +135,7 @@ class SparkPolymer extends Spark {
       if (position != null) {
         int value = int.parse(position, onError: (_) => 0);
         if (value != 0) {
-          (getUIElement('#splitView') as SparkSplitView).targetSize = value;
+          (getUIElement('#splitView') as dynamic).targetSize = value;
         }
       }
     });
@@ -239,5 +218,21 @@ class SparkPolymer extends Spark {
   void unveil() {
     _ui.classes.remove('veiled');
     _ui.classes.add('unveiled');
+  }
+
+  Future<bool> _beforeSystemModal() {
+    Completer completer = new Completer();
+    backdropShowing = true;
+
+    Timer timer =
+        new Timer(new Duration(milliseconds: 100), () {
+          completer.complete();
+        });
+
+    return completer.future;
+  }
+
+  void _systemModalComplete() {
+    backdropShowing = false;
   }
 }
