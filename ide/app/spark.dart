@@ -399,6 +399,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new SpecificTabAction(this));
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new SearchAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1313,6 +1314,19 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   String get category => 'folder';
 
   bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+/// Transfers the focus to the search box
+class SearchAction extends SparkAction {
+
+  SearchAction(Spark spark) : super(spark, 'search', 'Search') {
+    addBinding('ctrl-shift-f');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    spark.getUIElement('#searchBox').focus();
+  }
 }
 
 class NewProjectAction extends SparkActionWithDialog {
