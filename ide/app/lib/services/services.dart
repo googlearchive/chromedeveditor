@@ -6,7 +6,6 @@ library spark.services;
 
 import 'dart:async';
 import 'dart:isolate';
-import 'dart:convert';
 
 import '../utils.dart';
 
@@ -19,15 +18,11 @@ class Services {
   //         immediately, on-demand, or manually).
 
   _IsolateHandler _isolateHandler;
-
-  // Fires when the isolate communication has been established.
-  Stream onReady;
   Map<String, Service> _services = {};
 
   Services() {
     _isolateHandler = new _IsolateHandler();
     registerService(new ExampleService(this, _isolateHandler));
-    registerService(new PingService(this, _isolateHandler));
   }
 
   Future<String> ping() => _isolateHandler.ping();
@@ -54,18 +49,19 @@ abstract class Service {
   Service(this._services, this._isolateHandler);
 
   String _getNewCallId() => "host_${_topCallId++}";
+  ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
+    String callId = _getNewCallId();
+    return new ServiceActionEvent(serviceId, actionId, callId, data);
+  }
 
   // Wraps up actionId and data into an ActionEvent and sends it to the isolate
   // and invokes the Future once response has been received.
   Future<ServiceActionEvent> _sendAction(String actionId, [Map data]) {
     // TODO(ericarnold): Implement
-    String callId = _getNewCallId();
 
-    return _isolateHandler.onceIsolateReady.then((_){
-      _isolateHandler.sendAction(serviceId, actionId, callId);
-      return _isolateHandler.onIsolateResponse(callId).first;
-    }).then((ServiceActionEvent event){
-      print("pong");
+    return _isolateHandler.onceIsolateReady
+        .then((_) => _isolateHandler.sendAction(_createNewEvent(actionId)))
+        .then((ServiceActionEvent event) {
       return new Future.value("poong");
     });
   }
@@ -77,20 +73,10 @@ class ExampleService extends Service {
 
   ExampleService(Services services, _IsolateHandler handler)
       : super(services, handler);
-}
 
-/**
- * Special service for handling Chrome app calls that the isolate
- * cannot handle on its own.
- */
-class PingService extends Service {
-  String serviceId = "ping";
-
-  PingService(Services services, _IsolateHandler handler) : super(services, handler);
-
-  Future<String> ping() {
-    return _sendAction("ping").then((ServiceActionEvent event) {
-      return new Future.value("pogo");
+  Future<String> test() {
+    return _sendAction("test").then((ServiceActionEvent event) {
+      return new Future.value("test response");
     });
   }
 }
@@ -158,8 +144,6 @@ class _IsolateHandler {
     onIsolateMessage = _messageController.stream;
     onceIsolateReady = _readyController.stream.first;
     _startIsolate();
-
-    // TODO(ericarnold): Implement
   }
 
 
@@ -176,14 +160,7 @@ class _IsolateHandler {
           // String: handle as print
           print ("Worker: $arg");
         } else {
-          // implemented ...
-          String data = arg["data"];
-          Map dataMap = null;
-          if (data != null) {
-            dataMap = JSON.decode(data);
-          }
-          ServiceActionEvent event = new ServiceActionEvent(
-              arg["serviceId"], arg["actionId"], arg["callId"], dataMap);
+          ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
           _messageController..add(event);
         }
       }
@@ -213,11 +190,10 @@ class _IsolateHandler {
   }
 
   // TODO(ericarnold): Complete a future / stream.
-  Future<ServiceActionEvent> sendAction(String serviceId, String actionId,
-      String callId, [String data = ""]) {
+  Future<ServiceActionEvent> sendAction(ServiceActionEvent event) {
     // TODO(ericarnold): implement callId response
-    _sendPort.send(
-        {"serviceId": serviceId, "actionId": actionId, "data": data});
+    _sendPort.send(event.toMap());
+    return onIsolateResponse(event.callId).first;
   }
 
   void sendResponse(ServiceActionEvent event, String data) {
