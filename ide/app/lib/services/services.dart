@@ -71,6 +71,13 @@ abstract class Service {
   }
 }
 
+
+class ExampleService extends Service {
+  String serviceId = "example";
+  ExampleService(Services services, _IsolateHandler handler)
+      : super(services, handler);
+}
+
 /**
  * Special service for handling Chrome app calls that the isolate
  * cannot handle on its own.
@@ -78,12 +85,10 @@ abstract class Service {
 class PingService extends Service {
   String serviceId = "ping";
 
-  ExampleService(Services services, _IsolateHandler handler)
-      : super(services, handler);
-  PingService(Services services, _IsolateHandler handler) : super(handler);
+  PingService(Services services, _IsolateHandler handler) : super(services, handler);
 
   Future<String> ping() {
-    return _sendAction("ping").then((ActionEvent event) {
+    return _sendAction("ping").then((ServiceActionEvent event) {
       return new Future.value("pogo");
     });
   }
