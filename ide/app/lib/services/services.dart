@@ -64,7 +64,7 @@ abstract class Service {
     return _isolateHandler.onceIsolateReady.then((_){
       _isolateHandler.sendAction(serviceId, actionId, callId);
       return _isolateHandler.onIsolateResponse(callId).first;
-    }).then((ActionEvent event){
+    }).then((ServiceActionEvent event){
       print("pong");
       return new Future.value("poong");
     });
@@ -74,6 +74,7 @@ abstract class Service {
 
 class ExampleService extends Service {
   String serviceId = "example";
+
   ExampleService(Services services, _IsolateHandler handler)
       : super(services, handler);
 }
@@ -129,9 +130,9 @@ class _IsolateHandler {
   Stream<ServiceActionEvent> onIsolateResponse(String callId) {
     // TODO(ericarnold): Implement
     StreamSubscription subscription;
-    StreamController<ActionEvent> controller =
-        new StreamController<ActionEvent>();
-    subscription = onIsolateMessage.listen((ActionEvent event){
+    StreamController<ServiceActionEvent> controller =
+        new StreamController<ServiceActionEvent>();
+    subscription = onIsolateMessage.listen((ServiceActionEvent event){
       if (event.response && event.callId == callId) {
         subscription.cancel();
         controller..add(event)..close();
@@ -168,18 +169,23 @@ class _IsolateHandler {
         _sendPort = arg;
         _readyController..add(null)..close();
       } else {
-        // TODO(ericarnold): Temporary (encode ping command once implemented)
-        _pong(arg);
-
-        // implemented ...
-        String data = arg["data"];
-        Map dataMap = null;
-        if (data != null) {
-          dataMap = JSON.decode(data);
+        if (arg is int) {
+          // int: handle as ping
+          _pong(arg);
+        } else if (arg is String) {
+          // String: handle as print
+          print ("Worker: $arg");
+        } else {
+          // implemented ...
+          String data = arg["data"];
+          Map dataMap = null;
+          if (data != null) {
+            dataMap = JSON.decode(data);
+          }
+          ServiceActionEvent event = new ServiceActionEvent(
+              arg["serviceId"], arg["actionId"], arg["callId"], dataMap);
+          _messageController..add(event);
         }
-        ActionEvent event = new ActionEvent(
-            arg["serviceId"], arg["actionId"], arg["callId"], dataMap);
-        messageController..add(event);
       }
     });
 
