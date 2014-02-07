@@ -82,7 +82,7 @@ class Merge {
         removes.add(oldEntry);
         oldIdx++;
       } else {
-        if (newEntry.sha != oldEntry.sha) {
+        if (newEntry.shaBytes != oldEntry.shaBytes) {
           merges.add({'new': newEntry, 'old':oldEntry});
         }
         oldIdx++;
@@ -122,7 +122,7 @@ class Merge {
         TreeEntry top = (indices[i] < treeEntries.length) ?
             treeEntries[indices[i]] : null;
 
-        if (next == null || (top && top.name.compareTo(next.name) < 0)) {
+        if (next == null || (top != null && top.name.compareTo(next.name) < 0)) {
           next = top;
           nextX = i;
         }
@@ -135,7 +135,7 @@ class Merge {
           TreeEntry theirEntry = allTrees[2][indices[2]];
           TreeEntry baseEntry = allTrees[1][indices[1]];
           if (theirEntry.name == next.name) {
-            if (!shasEqual(theirEntry.sha, next.sha)) {
+            if (!shasEqual(theirEntry.shaBytes, next.shaBytes)) {
               if (baseEntry.name != next.name) {
                 baseEntry = new TreeEntry(null, null, false);
                 if (next.isBlob) {
@@ -145,9 +145,9 @@ class Merge {
               }
               if (next.isBlob == theirEntry.isBlob && (baseEntry.isBlob
                   == next.isBlob)) {
-                if (shasEqual(next.sha, baseEntry.sha)) {
+                if (shasEqual(next.shaBytes, baseEntry.shaBytes)) {
                   finalTree.add(theirEntry);
-                } else if (shasEqual(baseEntry.sha, theirEntry.sha)){
+                } else if (shasEqual(baseEntry.shaBytes, theirEntry.shaBytes)){
                   finalTree.add(next);
                 } else {
                   merges.add(new MergeItem(next, baseEntry, theirEntry));
@@ -160,7 +160,7 @@ class Merge {
               finalTree.add(next);
             }
           } else if(baseEntry.name == next.name) {
-            if (!shasEqual(baseEntry.sha, next.sha)) {
+            if (!shasEqual(baseEntry.shaBytes, next.shaBytes)) {
               // deleted from theirs but changed in ours. Delete/modfify
               // conflict.
               conflicts.add(new MergeItem(next, baseEntry, null, true));
@@ -172,8 +172,8 @@ class Merge {
 
         case 1:
           TreeEntry theirEntry = allTrees[2][indices[2]];
-          if (next.name == theirEntry.name && !shasEqual(next.sha,
-              theirEntry.sha)) {
+          if (next.name == theirEntry.name && !shasEqual(next.shaBytes,
+              theirEntry.shaBytes)) {
             // deleted from ours but changed in theirs. Delete/modify conflict.
             conflicts.add(new MergeItem(null, next, theirEntry, true));
           }
@@ -210,8 +210,9 @@ class Merge {
               conflicts.add(item);
               return conflicts;
             } else {
-              return getShaForString(diffResult.text, 'blob').then((String sha) {
-                item.ours.sha = shaToBytes(sha);
+              return store.writeRawObject('blob', diffResult.text).then(
+                  (String sha) {
+                item.ours.shaBytes = shaToBytes(sha);
                 finalTree.add(item.ours);
                 return [];
               });
@@ -222,7 +223,7 @@ class Merge {
               (List<TreeObject> trees) {
             return mergeTrees(store, trees[0], trees[1], trees[2]).then(
                 (String mergedSha) {
-              item.ours.sha = shaToBytes(mergedSha);
+              item.ours.shaBytes = shaToBytes(mergedSha);
               finalTree.add(item.ours);
               return null;
             }, onError: (List<MergeItem> newConflicts) {

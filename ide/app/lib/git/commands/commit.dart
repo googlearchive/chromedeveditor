@@ -119,40 +119,47 @@ class Commit {
     });
   }
 
-  static Future _createCommitFromWorkingTree(GitOptions options, String parent,
+  static Future createCommit(GitOptions options, String parent, String treeSha,
       String refName) {
-    chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
-    String name = options.name == null ? "" : options.name;
-    String email = options.email == null ? "" : options.email;
-    String commitMsg = options.commitMessage == null ? ""
-        : options.commitMessage;
 
-    return walkFiles(dir, store).then((String sha) {
-      return checkTreeChanged(store, parent, sha).then((_) {
-        String dateString = getCurrentTimeAsString();
-        StringBuffer commitContent = new StringBuffer();
-        commitContent.write('tree ${sha}\n');
-        if (parent != null && parent.length > 0) {
-          commitContent.write('parent ${parent}');
-          if (parent[parent.length -1] != '\n') {
-            commitContent.write('\n');
-          }
+    return checkTreeChanged(store, parent, treeSha).then((_) {
+      String dateString = getCurrentTimeAsString();
+      StringBuffer commitContent = new StringBuffer();
+      commitContent.write('tree ${treeSha}\n');
+      if (parent != null && parent.length > 0) {
+        commitContent.write('parent ${parent}');
+        if (parent[parent.length -1] != '\n') {
+          commitContent.write('\n');
         }
+      }
 
-        commitContent.write('author ${name} <${email}> ${dateString}\n');
-        commitContent.write('committer ${name} <${email}> ${dateString}');
-        commitContent.write('\n\n${commitMsg}\n');
+      String name = options.name == null ? "" : options.name;
+      String email = options.email == null ? "" : options.email;
+      String commitMsg = options.commitMessage == null ? ""
+          : options.commitMessage;
+      commitContent.write('author ${name} <${email}> ${dateString}\n');
+      commitContent.write('committer ${name} <${email}> ${dateString}');
+      commitContent.write('\n\n${commitMsg}\n');
 
-        return store.writeRawObject(
-            ObjectTypes.COMMIT_STR, commitContent.toString()).then(
-                (String commitSha) {
-          return FileOps.createFileWithContent(dir, '.git/${refName}',
-              commitSha + '\n', 'Text').then((_) {
-                return store.writeConfig().then((_) => commitSha);
-          });
+      return store.writeRawObject(ObjectTypes.COMMIT_STR,
+          commitContent.toString()).then((String commitSha) {
+        return FileOps.createFileWithContent(options.root, '.git/${refName}',
+            commitSha + '\n', 'Text').then((_) {
+              print(refName);
+              print(commitSha);
+          return store.writeConfig().then((_) => commitSha);
         });
       });
+    });
+  }
+
+  static Future _createCommitFromWorkingTree(GitOptions options, String parent,
+      String refName) {
+    ObjectStore store = options.store;
+
+    return walkFiles(options.root, store).then((String sha) {
+      return createCommit(options, parent, sha, refName);
     });
   }
 }

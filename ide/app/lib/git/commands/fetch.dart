@@ -114,7 +114,7 @@ class Fetch {
       branchRef.localHead = sha;
       return store.getCommitGraph([sha], 32).then((CommitGraph graph) {
         List<String> haveRefs = graph.commits.map((CommitObject commit)
-            => commit.treeSha);
+            => commit.treeSha).toList();
         return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
             null, graph.nextLevel, null, progress).then((PackParseResult result) {
           List<int> packSha = result.data.sublist(result.data.length - 20);

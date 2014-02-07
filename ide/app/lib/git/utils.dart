@@ -55,6 +55,7 @@ Future<String> _getShaForData(List<int> content, String type) {
   Uint8List data = new Uint8List.fromList(content);
 
   String header = '${type} ${content.length}';
+
   blobParts.add(header);
   blobParts.add(new Uint8List.fromList([0]));
   blobParts.add(data);

@@ -4,6 +4,8 @@
 
 library git.commands.constants;
 
+const String MERGE_BRANCH_COMMIT_MSG = "Merge branch master into ";
+
 /**
  * This class represents the possible states of the files in the git
  * repository.

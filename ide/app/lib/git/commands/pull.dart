@@ -13,6 +13,8 @@ import '../objectstore.dart';
 import '../options.dart';
 import '../utils.dart';
 import 'checkout.dart';
+import 'commit.dart';
+import 'constants.dart';
 import 'fetch.dart';
 import 'merge.dart';
 
@@ -69,12 +71,20 @@ class Pull {
                   });
                 });
               } else {
-                // TODO(grv) : support non-fast forward merge.
                 var shas = [localSha, commonSha, remoteSha];
                 return store.getTreesFromCommits(shas).then((trees) {
                   return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
-                      .then((String finalTree) {
-                        // TODO(grv) : Create a merge commit.
+                      .then((String finalTreeSha) {
+                    return store.getCurrentBranch().then((branch) {
+                      options.branchName = branch;
+                      options.commitMessage = MERGE_BRANCH_COMMIT_MSG
+                        + options.branchName;
+                      // Create a merge commit by default.
+                      return Commit.createCommit(options, localSha, finalTreeSha,
+                           headRefName).then((_) {
+                        return Checkout.checkout(options, true);
+                      });
+                    });
                   }).catchError((e) {
                     throw "Error duing merging.";
                   });
