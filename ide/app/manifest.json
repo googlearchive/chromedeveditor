@@ -33,6 +33,7 @@
         "directory"
       ]
     },
+    "management",
     {
       "socket": [
         "tcp-connect",

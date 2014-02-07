@@ -158,7 +158,8 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     }
 
     js.JsObject obj = js.context['chrome']['developerPrivate'];
-    obj.callMethod('LoadDirectory', [resource.project.entry, callback]);
+    obj.callMethod('loadDirectory', [(resource.project.entry as
+        chrome.ChromeObject).jsProxy, callback]);
     return completer.future;
   }
 
