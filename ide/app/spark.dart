@@ -33,6 +33,7 @@ import 'lib/tests.dart';
 import 'lib/services/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
+import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
@@ -388,6 +389,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
+    actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
@@ -1495,6 +1497,41 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(context) => _isScmProject(context);
 }
 
+class GitPushAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project project;
+  GitScmProjectOperations gitOperations;
+  DivElement _commitsList;
+
+  GitPushAction(Spark spark, Element dialog)
+      : super(spark, "git-push", "Git Push…", dialog) {
+    _commitsList = getElement('#gitCommitList');
+  }
+
+  void _invoke([context]) {
+    project = context.first;
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
+    gitOperations.getPendingCommits().then((List<CommitInfo> commits) {
+      // fill commits.
+      commits.forEach((CommitInfo info) {
+        CommitMessageView commitView = new CommitMessageView();
+        commitView.commitInfo = info;
+        _commitsList.children.add(commitView);
+      });
+    });
+
+    _show();
+  }
+
+  void _commit() {
+    _GitPushJob job = new _GitPushJob(gitOperations, spark);
+    spark.jobManager.schedule(job);
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isScmProject(context);
+}
+
 class _GitCloneJob extends Job {
   String url;
   String _projectName;
@@ -1597,6 +1634,25 @@ class _GitCheckoutJob extends Job {
       spark.showSuccessMessage('Switched to branch ${_branchName}');
     }).catchError((e) {
       spark.showErrorMessage('Error switching to ${_branchName}', e.toString());
+    });
+  }
+}
+
+class _GitPushJob extends Job {
+  GitScmProjectOperations gitOperations;
+  Spark spark;
+
+  _GitPushJob(this.gitOperations, this.spark)
+      : super("Pushing changes…") {
+  }
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    return gitOperations.push().then((_) {
+      spark.showSuccessMessage('Changes pushed successfully');
+    }).catchError((e) {
+      spark.showErrorMessage('Error while pushing changes', e.toString());
     });
   }
 }

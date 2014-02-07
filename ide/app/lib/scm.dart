@@ -194,6 +194,17 @@ class FileStatus {
 }
 
 /**
+ * The SCM commit information.
+ */
+class CommitInfo {
+  String identifier;
+  String authorName;
+  String authorEmail;
+  DateTime date;
+  String message;
+}
+
+/**
  * The Git SCM provider.
  */
 class GitScmProvider extends ScmProvider {
@@ -333,6 +344,22 @@ class GitScmProjectOperations extends ScmProjectOperations {
           root: entry, store: store, commitMessage: commitMessage);
       return Commit.commit(options).then((_) {
         _refreshStatus();
+      });
+    });
+  }
+
+  Future<List<CommitInfo>> getPendingCommits() {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Push.getPendingCommits(options).then((commits) {
+        return commits.map((item) {
+          CommitInfo result = new CommitInfo();
+          String identifier = item.sha;
+          result.authorName = item.author.name;
+          result.authorEmail = item.author.email;
+          result.date = item.author.date;
+          result.message = item.message;
+        });
       });
     });
   }

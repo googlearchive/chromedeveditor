@@ -16,6 +16,7 @@
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
+<link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 
 <!--link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html"-->
 
@@ -294,6 +295,27 @@
       </div>
     </spark-modal><!-- /.modal -->
 
+    <!-- Git Push dialog -->
+    <spark-modal id="gitPushDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Git Push</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+           <div id="gitCommitList"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Push
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal -->
+    
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
