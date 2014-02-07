@@ -230,6 +230,8 @@ class Workspace implements Container {
 
   // TODO(ericarnold): We can remove this method once we analyze whole projects.
   void checkResource(Resource resource) {
+    // TODO(devoncarew): temporarily disabled while we investigate a performance
+    // issue
     //_fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
   }
 
