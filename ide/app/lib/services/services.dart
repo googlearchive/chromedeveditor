@@ -103,8 +103,6 @@ class _IsolateHandler {
 
   // Fired when isolate responds to message
   Stream<ServiceActionEvent> onIsolateResponse(String callId) {
-    onIsolateMessage = _messageController.stream;
-    onceIsolateReady = _readyController.stream.first;
     // TODO(ericarnold): Implement
   }
 
@@ -121,6 +119,10 @@ class _IsolateHandler {
   Future onceIsolateReady;
 
   _IsolateHandler() {
+    onIsolateMessage = _messageController.stream;
+    onceIsolateReady = _readyController.stream.first;
+    _startIsolate();
+
     // TODO(ericarnold): Implement
   }
 
@@ -130,7 +132,8 @@ class _IsolateHandler {
         _sendPort = arg;
         _readyController..add(null)..close();
       } else {
-        pong(arg);
+        // TODO(ericarnold): Temporary (encode ping command once implemented)
+        _pong(arg);
       }
     });
 
@@ -150,7 +153,7 @@ class _IsolateHandler {
     return completer.future;
   }
 
-  Future pong(int id) {
+  Future _pong(int id) {
     Completer completer = _serviceCallCompleters[id];
     _serviceCallCompleters.remove(id);
     completer.complete("pong");
