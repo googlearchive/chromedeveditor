@@ -252,7 +252,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // resource metadata is not persisted across sessions. Once it is, we
         // can remove this manual refresh.
         // Update the SCM status for the files.
-        _refreshStatus();
+        _refreshStatus(project: project);
       }).catchError((e) => _completer.completeError(e));
   }
 
@@ -274,7 +274,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   FileStatus getFileStatus(Resource resource) {
-    return new FileStatus.createFrom(resource.getMetadata('scmStatus'));
+    return new FileStatus.createFrom(
+        resource.getMetadata('scmStatus', 'committed'));
   }
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
@@ -332,7 +333,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(
           root: entry, store: store, commitMessage: commitMessage);
       return Commit.commit(options).then((_) {
-        _refreshStatus();
+        _refreshStatus(project: project);
       });
     });
   }
@@ -340,15 +341,21 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<ObjectStore> get objectStore => _completer.future;
 
   void updateForChanges(List<ChangeDelta> changes) {
-    // TODO(devoncarew): Call _refreshStatus() with the minimal set of changes
-    // from the `changes` param.
-
-    _refreshStatus();
+    _refreshStatus(files: changes
+        .where((d) => d.type != EventType.DELETE && d.resource is File)
+        .map((d) => d.resource));
   }
 
-  void _refreshStatus() {
+  /**
+   * Refresh either the entire given project, or the given list of files.
+   */
+  void _refreshStatus({Project project, Iterable<File> files}) {
+    assert(project != null || files != null);
+
     // Get a list of all files in the project.
-    Iterable<File> files = project.traverse().where((r) => r is File);
+    if (project != null) {
+      files = project.traverse().where((r) => r is File);
+    }
 
     // For each file, request the SCM status asynchronously.
     objectStore.then((ObjectStore store) {

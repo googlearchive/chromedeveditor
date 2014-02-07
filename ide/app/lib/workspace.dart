@@ -230,7 +230,7 @@ class Workspace implements Container {
 
   // TODO(ericarnold): We can remove this method once we analyze whole projects.
   void checkResource(Resource resource) {
-    _fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
+    //_fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
   }
 
   void _fireResourceEvent(ChangeDelta delta) {
