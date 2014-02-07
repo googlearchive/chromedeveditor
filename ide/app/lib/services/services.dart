@@ -28,12 +28,13 @@ class Services {
     registerService(new ExampleService(this, _isolateHandler));
   }
 
+  Future<String> ping() => _isolateHandler.ping();
+
   Service getService(String serviceId) => _services[serviceId];
 
   void registerService(Service service) {
     _services[service.serviceId] = service;
   }
-
 }
 
 /**
@@ -93,14 +94,24 @@ class ChromeService extends Service {
  * Defines a class which handles all isolate setup and communication
  */
 class _IsolateHandler {
+  int _topCallId = 0;
+  Map<int, Completer> _serviceCallCompleters = {};
+
   final String _workerPath = 'services_impl.dart';
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
 
   // Fired when isolate responds to message
   Stream<ServiceActionEvent> onIsolateResponse(String callId) {
+    onIsolateMessage = _messageController.stream;
+    onceIsolateReady = _readyController.stream.first;
     // TODO(ericarnold): Implement
   }
+
+  StreamController<ServiceActionEvent> _messageController =
+      new StreamController<ServiceActionEvent>.broadcast();
+
+  StreamController _readyController = new StreamController.broadcast();
 
   // Fired when isolate originates a message
   Stream onIsolateMessage;
@@ -114,9 +125,38 @@ class _IsolateHandler {
   }
 
   Future _startIsolate() {
-    StreamController<ServiceActionEvent> messageController =
-        new StreamController<ServiceActionEvent>.broadcast();
+    _receivePort.listen((arg) {
+      if (_sendPort == null) {
+        _sendPort = arg;
+        _readyController..add(null)..close();
+      } else {
+        pong(arg);
+      }
+    });
+
+    return Isolate.spawnUri(Uri.parse(_workerPath), [], _receivePort.sendPort);
   }
+
+  Future<String> ping() {
+    Completer<String> completer = new Completer();
+    int callId = _topCallId;
+    _serviceCallCompleters[callId] = completer;
+
+    onceIsolateReady.then((_){
+      _sendPort.send(callId);
+    });
+
+    _topCallId += 1;
+    return completer.future;
+  }
+
+  Future pong(int id) {
+    Completer completer = _serviceCallCompleters[id];
+    _serviceCallCompleters.remove(id);
+    completer.complete("pong");
+    return completer.future;
+  }
+
 
   Future<ServiceActionEvent> sendAction(String serviceId, String actionId,
       String callId, [String data = ""]) {
