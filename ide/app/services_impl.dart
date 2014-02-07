@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:isolate';
 
-import 'lib/services/action_event.dart';
+import 'lib/utils.dart';
 
 /**
  * This is a separate application spawned by Spark (via Services) as an isolate
@@ -27,19 +27,19 @@ class ServicesIsolate {
   final SendPort _sendPort;
 
   // Fired when host responds to message
-  Stream<ActionEvent> _onResponseMessage;
+  Stream<ServiceActionEvent> _onResponseMessage;
 
   // Fired when host originates a message
-  Stream<ActionEvent> _onHostMessage ;
+  Stream<ServiceActionEvent> _onHostMessage ;
 
   // Services:
   // ExampleServiceImpl example;
 
   ServicesIsolate(this._sendPort) {
-    StreamController<ActionEvent> hostMessageController =
-        new StreamController<ActionEvent>.broadcast();
-    StreamController<ActionEvent> responseMessageController =
-        new StreamController<ActionEvent>.broadcast();
+    StreamController<ServiceActionEvent> hostMessageController =
+        new StreamController<ServiceActionEvent>.broadcast();
+    StreamController<ServiceActionEvent> responseMessageController =
+        new StreamController<ServiceActionEvent>.broadcast();
 
     _onHostMessage = hostMessageController.stream;
     _onResponseMessage = responseMessageController.stream;
@@ -60,7 +60,7 @@ class ServicesIsolate {
   }
 
 
-  _handleMessage(ActionEvent event) {
+  _handleMessage(ServiceActionEvent event) {
     // TODO(ericarnold): Initialize each requested ServiceImpl subclass as
     //    requested by the sender and add listeners to them to facilitate
     //    two-way communication.
@@ -70,7 +70,7 @@ class ServicesIsolate {
 
 
   // Sends a response message.
-  Future<ActionEvent> _sendResponse(ActionEvent event, Map data,
+  Future<ServiceActionEvent> _sendResponse(ServiceActionEvent event, Map data,
       [bool expectResponse = false]) {
     _sendPort.send({
       "serviceId": event.serviceId,
@@ -80,7 +80,7 @@ class ServicesIsolate {
   }
 
   // Sends action to host.  Returns a future if expectResponse is true.
-  Future<ActionEvent> _sendAction(String serviceId, String actionId, Map data,
+  Future<ServiceActionEvent> _sendAction(String serviceId, String actionId, Map data,
       [bool expectResponse = false]) {
     // TODO(ericarnold):
     // - Create call id

@@ -7,7 +7,7 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'action_event.dart';
+import '../utils.dart';
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -54,7 +54,7 @@ abstract class Service {
 
   // Wraps up actionId and data into an ActionEvent and sends it to the isolate
   // and invokes the Future once response has been received.
-  Future<ActionEvent> _sendAction(String actionId, [Map data]) {
+  Future<ServiceActionEvent> _sendAction(String actionId, [Map data]) {
     // TODO(ericarnold): Implement
   }
 }
@@ -80,11 +80,11 @@ class ChromeService extends Service {
       : super(services, handler);
 
   // For incoming (non-requested) actions.
-  void _receiveAction(ActionEvent event) {
+  void _receiveAction(ServiceActionEvent event) {
     // TODO(ericarnold): Implement
   }
 
-  void _sendResponse(ActionEvent event) {
+  void _sendResponse(ServiceActionEvent event) {
     // TODO(ericarnold): Implement
   }
 }
@@ -98,7 +98,7 @@ class _IsolateHandler {
   final ReceivePort _receivePort = new ReceivePort();
 
   // Fired when isolate responds to message
-  Stream<ActionEvent> onIsolateResponse(String callId) {
+  Stream<ServiceActionEvent> onIsolateResponse(String callId) {
     // TODO(ericarnold): Implement
   }
 
@@ -114,17 +114,17 @@ class _IsolateHandler {
   }
 
   Future _startIsolate() {
-    StreamController<ActionEvent> messageController =
-        new StreamController<ActionEvent>.broadcast();
+    StreamController<ServiceActionEvent> messageController =
+        new StreamController<ServiceActionEvent>.broadcast();
   }
 
-  Future<ActionEvent> sendAction(String serviceId, String actionId,
+  Future<ServiceActionEvent> sendAction(String serviceId, String actionId,
       String callId, [String data = ""]) {
     // TODO(ericarnold): Implement
     // TODO(ericarnold): implement callId response
   }
 
-  void sendResponse(ActionEvent event, String data) {
+  void sendResponse(ServiceActionEvent event, String data) {
     // TODO(ericarnold): Implement
   }
 }
