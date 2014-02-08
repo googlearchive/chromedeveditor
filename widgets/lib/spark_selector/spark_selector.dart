@@ -51,10 +51,10 @@ class SparkSelector extends SparkSelection {
   @published String valueattr = 'name';
 
   /// Specifies the CSS class to be used to add to the selected element.
-  @published String selectedClass = 'selected';
+  @published String selectedClass = '';
 
   /// Specifies the property to be used to set on the selected element.
-  @published String selectedProperty = 'active';
+  @published String selectedProperty = '';
 
   /* Returns the currently selected element. In multi-selection this returns
    * an array of selected elements.
@@ -197,21 +197,21 @@ class SparkSelector extends SparkSelection {
 
   int valueToIndex(var value) {
     var allItems = items;
-    // find an item with value == value and return it's index
+    // Find an item with value == value and return it's index:
     for (var i = 0; i < allItems.length; i++) {
       var c = allItems[i];
       if (valueForNode(c) == value) {
         return i;
       }
     }
-    // if no item found, the value itself is probably the index
+    // If no item found, the value itself is probably the index:
     return (value is num) ? value : int.parse(value);
   }
 
   String valueForNode(Element node) =>
       node.attributes.containsKey(valueattr) ? node.attributes[valueattr] : "";
 
-  // events fired from <polymer-selection> object
+  // Events fired from <polymer-selection> object.
   void selectionSelect(e, detail) {
     updateSelectedItem();
     var detailItem = detail['item'];
@@ -222,14 +222,18 @@ class SparkSelector extends SparkSelection {
 
   void applySelection(Element item, bool isSelected) {
     if (selectedClass.isNotEmpty) {
-      item.classes.toggle(selectedClass);
+      item.classes.toggle(selectedClass, isSelected);
     }
     if (selectedProperty.isNotEmpty) {
-      item.classes.add(selectedProperty);
+      if (isSelected) {
+        item.attributes[selectedProperty] = '';
+      } else {
+        item.attributes.remove(selectedProperty);
+      }
     }
   }
 
-  // event fired from host
+  // Event fired from host.
   activateHandler(e) {
     if (!notap) {
       var i = findDistributedTarget(e.target, items);

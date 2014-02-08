@@ -14,12 +14,19 @@ import '../common/spark_widget.dart';
 class SparkMenuItem extends SparkWidget {
   /// URL image for the icon associated with this menu item.
   @published String src = "";
-
   /// Size of the icon.
   @published String iconsize = "24";
-
   /// Specifies the label for the menu item.
   @published String label = "";
 
-  SparkMenuItem.created(): super.created();
+  @observable bool isHovered = false;
+
+  SparkMenuItem.created(): super.created() {
+    // BUG: Use mouse events instead of :hover because Chrome fails to remove
+    // :hover from an element after it's clicked and programmatically moved from
+    // under the mouse, as is the case with our auto-closing spark-menu.
+    bindCssClass(this, 'highlighted', this, 'isHovered');
+    onMouseOver.listen((_) => isHovered = true);
+    onMouseOut.listen((_) => isHovered = false);
+  }
 }
