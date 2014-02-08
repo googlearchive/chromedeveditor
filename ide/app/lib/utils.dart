@@ -245,5 +245,12 @@ class ServiceActionEvent {
       "data": data
     };
   }
+
+  ServiceActionEvent createReponse(Map data) {
+    ServiceActionEvent response = new ServiceActionEvent(
+        serviceId, actionId, callId, data);
+    response.response = true;
+    return response;
+  }
 }
 

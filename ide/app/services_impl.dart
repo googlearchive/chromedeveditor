@@ -53,7 +53,11 @@ class ServicesIsolate {
       } else {
         ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
         ServiceImpl service = getService(event.serviceId);
-        service.handleEvent(event);
+        service.handleEvent(event).then((ServiceActionEvent responseEvent){
+          if (responseEvent != null) {
+            _sendResponse(responseEvent);
+          }
+        });
       }
 //      _sendPort.send(arg);
 
@@ -81,10 +85,14 @@ class ServicesIsolate {
 
 
   // Sends a response message.
-  Future<ServiceActionEvent> _sendResponse(ServiceActionEvent event, Map data,
-      [bool expectResponse = false]) {
+  Future<ServiceActionEvent> _sendResponse(ServiceActionEvent event, [Map data,
+      bool expectResponse = false]) {
+    // TODO(ericarnold): implement expectResponse
     event.response = true;
     var eventMap = event.toMap();
+    if (data != null) {
+      eventMap['data'] = data;
+    }
     _sendPort.send(eventMap);
   }
 
@@ -104,8 +112,14 @@ class ExampleServiceImpl extends ServiceImpl {
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
-      case "test":
-        _sendResponse(event, {"a":"b"});
+      case "shortTest":
+        return new Future.value(event.createReponse(
+            {"response": "short test response ${event.callId}"}));
+        break;
+      case "longTest":
+        return new Future.delayed(const Duration(milliseconds: 1000))
+            .then((_) => event.createReponse(
+              {"response": "long test response ${event.callId}"}));
         break;
     }
     // TODO(ericarnold): Implement
@@ -123,11 +137,6 @@ abstract class ServiceImpl {
   ServiceImpl(this._isolate);
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
-
-  _sendResponse(ServiceActionEvent event, Map data,
-      [bool expectResponse = false]) {
-    _isolate._sendResponse(event, data, expectResponse);
-  }
 }
 
 // Prints are crashing isolate, so this will take over for the time being.
