@@ -4,6 +4,7 @@
 
 library spark_widgets.modal;
 
+import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../spark_overlay/spark_overlay.dart';
@@ -12,5 +13,15 @@ import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-modal")
 class SparkModal extends SparkOverlay {
+  @override
+  void keydownHandler(KeyboardEvent e) {
+    final int ESCAPE_KEY = 27;
+    if (e.keyCode == ESCAPE_KEY) {
+      this.opened = false;
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    }
+  }
+
   SparkModal.created(): super.created();
 }
