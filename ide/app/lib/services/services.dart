@@ -74,11 +74,18 @@ class ExampleService extends Service {
   ExampleService(Services services, _IsolateHandler handler)
       : super(services, handler);
 
-  Future<String> test() {
-    return _sendAction("test").then((ServiceActionEvent event) {
-      return new Future.value("test response");
+  Future<String> shortTest() {
+    return _sendAction("shortTest").then((ServiceActionEvent event) {
+      return new Future.value(event.data['response']);
     });
   }
+
+  Future<String> longTest() {
+    return _sendAction("longTest").then((ServiceActionEvent event) {
+      return new Future.value(event.data['response']);
+    });
+  }
+
 }
 
 /**
