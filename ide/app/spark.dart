@@ -171,17 +171,16 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   initServices() {
     services = new Services();
-    services.ping().then((result) => print(result));
     ExampleService exampleService = services.getService("example");
 
     // Test 1 (slow A) starts
-    exampleService.longTest().then((str) => print(str));
+    exampleService.longTest("1").then((str) => print(str));
     // Test 2 (fast) starts
-    exampleService.shortTest().then((str) => print(str));
+    exampleService.shortTest("2").then((str) => print(str));
     // Test 2 should end
     new Future.delayed(const Duration(milliseconds: 500)).then((_){
       // Test 3 (slow B) starts
-      exampleService.longTest().then((str) => print(str));
+      exampleService.longTest("3").then((str) => print(str));
     });
     // Test 1 should end
     // Test 3 should end

@@ -13,16 +13,13 @@ import '../utils.dart';
  * Defines a class which contains services and manages their communication.
  */
 class Services {
-  // TODO(ericarnold): instantiate each Service
-  // TODO(ericarnold): send messages for workers to be instantiated (either
-  //         immediately, on-demand, or manually).
-
   _IsolateHandler _isolateHandler;
   Map<String, Service> _services = {};
 
   Services() {
     _isolateHandler = new _IsolateHandler();
     registerService(new ExampleService(this, _isolateHandler));
+    registerService(new ChromeServiceImpl(this, _isolateHandler));
   }
 
   Future<String> ping() => _isolateHandler.ping();
@@ -57,13 +54,15 @@ abstract class Service {
   // Wraps up actionId and data into an ActionEvent and sends it to the isolate
   // and invokes the Future once response has been received.
   Future<ServiceActionEvent> _sendAction(String actionId, [Map data]) {
-    // TODO(ericarnold): Implement
-
     return _isolateHandler.onceIsolateReady
-        .then((_) => _isolateHandler.sendAction(_createNewEvent(actionId)))
-        .then((ServiceActionEvent event) {
-      return new Future.value("poong");
-    });
+        .then((_) => _isolateHandler.sendAction(
+            _createNewEvent(actionId, data)));
+  }
+
+  void _sendResponse(ServiceActionEvent event, [Map data]) {
+    ServiceActionEvent responseEvent = event.createReponse(data);
+    _isolateHandler.onceIsolateReady
+        .then((_) => _isolateHandler.sendAction(responseEvent));
   }
 }
 
@@ -74,14 +73,16 @@ class ExampleService extends Service {
   ExampleService(Services services, _IsolateHandler handler)
       : super(services, handler);
 
-  Future<String> shortTest() {
-    return _sendAction("shortTest").then((ServiceActionEvent event) {
+  Future<String> shortTest(String name) {
+    return _sendAction("shortTest", {"name": name})
+        .then((ServiceActionEvent event) {
       return new Future.value(event.data['response']);
     });
   }
 
-  Future<String> longTest() {
-    return _sendAction("longTest").then((ServiceActionEvent event) {
+  Future<String> longTest(String name) {
+    return _sendAction("longTest", {"name": name})
+        .then((ServiceActionEvent event) {
       return new Future.value(event.data['response']);
     });
   }
@@ -92,18 +93,29 @@ class ExampleService extends Service {
  * Special service for handling Chrome app calls that the isolate
  * cannot handle on its own.
  */
-class ChromeService extends Service {
+class ChromeServiceImpl extends Service {
   String serviceId = "chrome";
-  ChromeService(Services services, _IsolateHandler handler)
-      : super(services, handler);
 
-  // For incoming (non-requested) actions.
-  void _receiveAction(ServiceActionEvent event) {
-    // TODO(ericarnold): Implement
+  ChromeServiceImpl(Services services, _IsolateHandler handler)
+      : super(services, handler) {
+    handler.onIsolateMessage.listen((ServiceActionEvent event){
+      if (event.serviceId == serviceId) {
+        _receiveAction(event);
+      }
+    });
   }
 
-  void _sendResponse(ServiceActionEvent event) {
-    // TODO(ericarnold): Implement
+  // For incoming (non-requested) actions.
+  Future<ServiceActionEvent> _receiveAction(ServiceActionEvent event) {
+    switch(event.actionId) {
+      case "delay":
+        int milliseconds = event.data['ms'];
+        new Future.delayed(new Duration(milliseconds: milliseconds))
+            .then((_) {
+              ServiceActionEvent response = event.createReponse(null);
+              _sendResponse(response);
+            });
+    }
   }
 }
 
@@ -119,9 +131,18 @@ class _IsolateHandler {
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
 
+  // Fired when isolate originates a message
+  Stream onIsolateMessage;
+  StreamController<ServiceActionEvent> _messageController =
+      new StreamController<ServiceActionEvent>.broadcast();
+
+  // Future to fire once, when isolate is started and ready to receive messages.
+  // Usage: onceIsolateReady.then() => // do stuff
+  Future onceIsolateReady;
+  StreamController _readyController = new StreamController.broadcast();
+
   // Fired when isolate responds to message
   Stream<ServiceActionEvent> onIsolateResponse(String callId) {
-    // TODO(ericarnold): Implement
     StreamSubscription subscription;
     StreamController<ServiceActionEvent> controller =
         new StreamController<ServiceActionEvent>();
@@ -135,24 +156,11 @@ class _IsolateHandler {
     return controller.stream;
   }
 
-  StreamController<ServiceActionEvent> _messageController =
-      new StreamController<ServiceActionEvent>.broadcast();
-
-  StreamController _readyController = new StreamController.broadcast();
-
-  // Fired when isolate originates a message
-  Stream onIsolateMessage;
-
-  // Future to fire once, when isolate is started and ready to receive messages.
-  // Usage: onceIsolateReady.then() => // do stuff
-  Future onceIsolateReady;
-
   _IsolateHandler() {
     onIsolateMessage = _messageController.stream;
     onceIsolateReady = _readyController.stream.first;
     _startIsolate();
   }
-
 
   Future _startIsolate() {
     _receivePort.listen((arg) {
@@ -196,15 +204,9 @@ class _IsolateHandler {
     return completer.future;
   }
 
-  // TODO(ericarnold): Complete a future / stream.
   Future<ServiceActionEvent> sendAction(ServiceActionEvent event) {
-    // TODO(ericarnold): implement callId response
     _sendPort.send(event.toMap());
     return onIsolateResponse(event.callId).first;
-  }
-
-  void sendResponse(ServiceActionEvent event, String data) {
-    // TODO(ericarnold): Implement
   }
 }
 
