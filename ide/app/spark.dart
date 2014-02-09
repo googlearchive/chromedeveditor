@@ -1338,8 +1338,7 @@ class FocusMainMenuAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    var nike = spark.getUIElement('#mainMenu');
-        nike.focus();
+    spark.getUIElement('#mainMenu').focus();
   }
 }
 
