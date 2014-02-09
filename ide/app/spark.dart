@@ -400,6 +400,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new SearchAction(this));
+    actionManager.registerAction(new FocusMainMenuAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1326,6 +1327,19 @@ class SearchAction extends SparkAction {
   @override
   void _invoke([Object context]) {
     spark.getUIElement('#searchBox').focus();
+  }
+}
+
+class FocusMainMenuAction extends SparkAction {
+  FocusMainMenuAction(Spark spark)
+      : super(spark, 'focusMainMenu', 'FocusMainMenu') {
+    addBinding('f10');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    var nike = spark.getUIElement('#mainMenu');
+        nike.focus();
   }
 }
 

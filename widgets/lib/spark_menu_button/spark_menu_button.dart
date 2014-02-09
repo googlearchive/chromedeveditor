@@ -50,6 +50,26 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
+  void keydownHandler(KeyboardEvent e) {
+    switch (e.keyCode) {
+      case SparkWidget.ESCAPE_KEY:
+        opened = false;
+        ($['overlayMenu'] as SparkMenu).clearSelection();
+        break;
+      case SparkWidget.UP_KEY:
+      case SparkWidget.DOWN_KEY:
+        if (!opened)
+          opened = true;
+        // TODO(sunglim): Move focus to next menu item.
+        break;
+      default:
+        break;
+    }
+
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }
+
   //* Returns the selected item.
   String get selection => ($['overlayMenu'] as SparkMenu).selection;
 }
