@@ -10,7 +10,6 @@ import 'dart:async';
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_suggest/spark_suggest_box.dart';
-import 'package:spark_widgets/spark_menu_item/spark_menu_item.dart';
 
 import 'spark_model.dart';
 import 'lib/search.dart';
@@ -25,7 +24,7 @@ class SparkPolymerUI extends SparkWidget {
         () => SparkModel.instance.workspace,
         (f) => SparkModel.instance.editorArea.selectFile(
             f, forceOpen: true, replaceCurrent: false, switchesTab: true));
-    Timer.run(() => bindHotkeyText());
+    Timer.run(() => bindKeybindingDesc());
   }
 
   void onMenuSelected(Event event, var detail) {
@@ -57,12 +56,12 @@ class SparkPolymerUI extends SparkWidget {
     SparkModel.instance.onSplitViewUpdate(position);
   }
 
-  void bindHotkeyText() {
+  void bindKeybindingDesc() {
     var items = getShadowDomElement('#mainMenu').querySelectorAll('spark-menu-item');
     items.forEach((menuItem) {
-      String actionId = item.attributes['action-id'];
+      String actionId = menuItem.attributes['action-id'];
       var action = SparkModel.instance.actionManager.getAction(actionId);
-      action.bindings.forEach((key) => menuItem.description = key.getDescription());
+      action.bindings.forEach((keyBind) => menuItem.description = keyBind.getDescription());
     });
   }
 }
