@@ -16,13 +16,12 @@
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
   white-space: nowrap;
-  text-shadow: alpha(0, 0, 0, 0.2) 0px -1px -0px;
 }
 
 :host(.highlighted), /*BUG #733*/ :host.highlighted {
   background-color: #3a84c3;
 }
 
-:host(.highlighted) > #text, /*BUG #733*/ :host.highlighted #text {
+:host(.highlighted) #text, /*BUG #733*/ :host.highlighted #text {
   color: white;
 }
