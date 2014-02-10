@@ -140,18 +140,17 @@ class _IsolateHandler {
   StreamController _readyController = new StreamController.broadcast();
 
   // Fired when isolate responds to message
-  Stream<ServiceActionEvent> onIsolateResponse(String callId) {
-    StreamSubscription subscription;
-    StreamController<ServiceActionEvent> controller =
-        new StreamController<ServiceActionEvent>();
-    subscription = onIsolateMessage.listen((ServiceActionEvent event){
+  Future<ServiceActionEvent> onIsolateResponse(String callId) {
+    Completer<ServiceActionEvent> completer =
+        new Completer<ServiceActionEvent>();
+
+    onIsolateMessage.listen((ServiceActionEvent event){
       if (event.response && event.callId == callId) {
-        subscription.cancel();
-        controller..add(event)..close();
+        completer.complete(event);
       }
     });
 
-    return controller.stream;
+    return completer.future;
   }
 
   _IsolateHandler() {
@@ -208,7 +207,7 @@ class _IsolateHandler {
 
   Future<ServiceActionEvent> sendAction(ServiceActionEvent event) {
     _sendPort.send(event.toMap());
-    return onIsolateResponse(event.callId).first;
+    return onIsolateResponse(event.callId);
   }
 }
 
