@@ -133,8 +133,6 @@ class _IsolateHandler {
 
   // Fired when isolate originates a message
   Stream onIsolateMessage;
-  StreamController<ServiceActionEvent> _messageController =
-      new StreamController<ServiceActionEvent>.broadcast();
 
   // Future to fire once, when isolate is started and ready to receive messages.
   // Usage: onceIsolateReady.then() => // do stuff
@@ -157,12 +155,16 @@ class _IsolateHandler {
   }
 
   _IsolateHandler() {
-    onIsolateMessage = _messageController.stream;
     onceIsolateReady = _readyController.stream.first;
     _startIsolate();
   }
 
   Future _startIsolate() {
+    StreamController<ServiceActionEvent> _messageController =
+        new StreamController<ServiceActionEvent>.broadcast();
+
+    onIsolateMessage = _messageController.stream;
+
     _receivePort.listen((arg) {
       if (_sendPort == null) {
         _sendPort = arg;
@@ -176,7 +178,7 @@ class _IsolateHandler {
           print ("Worker: $arg");
         } else {
           ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
-          _messageController..add(event);
+          _messageController.add(event);
         }
       }
     });
