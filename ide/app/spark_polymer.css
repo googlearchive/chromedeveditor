@@ -28,13 +28,23 @@ body {
   width: 100%;
 }
 
-#topUi.veiled {
-  opacity: 0;
-}
-
-#topUi.unveiled {
+#splashScreen {
+  background: #F7F7F7;
+  background-image: url("images/spark_512.png");
+  background-position: center;
+  background-repeat: no-repeat;
   opacity: 1;
   transition: opacity 300ms;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+#splashScreen.closeSplash {
+  opacity: 0;
 }
 
 #editorArea {

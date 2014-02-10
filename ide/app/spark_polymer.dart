@@ -216,8 +216,14 @@ class SparkPolymer extends Spark {
   }
 
   void unveil() {
-    _ui.classes.remove('veiled');
-    _ui.classes.add('unveiled');
+    DivElement element = document.querySelector('#splashScreen');
+
+    if (element != null) {
+      element.classes.add('closeSplash');
+      new Timer(new Duration(milliseconds: 300), () {
+        element.parent.children.remove(element);
+      });
+    }
   }
 
   Future<bool> _beforeSystemModal() {
