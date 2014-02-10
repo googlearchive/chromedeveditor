@@ -24,7 +24,7 @@
       @import url("packages/spark_widgets/spark_menu_item/spark_menu_item.css");
     </style>
 
-    <template if="{{icon.isNotEmpty || iconSize != 0}}">
+    <template if="{{hasIcon}}">
       <spark-icon src="{{icon}}" size="{{iconSize}}"></spark-icon>
     </template>
 
