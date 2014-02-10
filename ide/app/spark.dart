@@ -1332,7 +1332,7 @@ class SearchAction extends SparkAction {
 
 class FocusMainMenuAction extends SparkAction {
   FocusMainMenuAction(Spark spark)
-      : super(spark, 'focusMainMenu', 'FocusMainMenu') {
+      : super(spark, 'focusMainMenu', 'Focus Main Menu') {
     addBinding('f10');
   }
 

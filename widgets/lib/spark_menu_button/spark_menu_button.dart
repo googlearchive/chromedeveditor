@@ -54,12 +54,12 @@ class SparkMenuButton extends SparkWidget {
     switch (e.keyCode) {
       case SparkWidget.ESCAPE_KEY:
         opened = false;
-        ($['overlayMenu'] as SparkMenu).clearSelection();
         break;
       case SparkWidget.UP_KEY:
       case SparkWidget.DOWN_KEY:
-        if (!opened)
+        if (!opened) {
           opened = true;
+        }
         // TODO(sunglim): Move focus to next menu item.
         break;
       default:
