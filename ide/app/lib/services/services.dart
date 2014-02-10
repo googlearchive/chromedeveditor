@@ -165,8 +165,7 @@ class _IsolateHandler {
 
           if (event.response == true) {
             Completer<ServiceActionEvent> completer =
-                _serviceCallCompleters[event.callId];
-            _serviceCallCompleters.remove(completer);
+                _serviceCallCompleters.remove(event.callId);
             completer.complete(event);
           } else {
             _messageController.add(event);
@@ -193,8 +192,7 @@ class _IsolateHandler {
   }
 
   Future _pong(int id) {
-    Completer completer = _serviceCallCompleters["ping_$id"];
-    _serviceCallCompleters.remove(id);
+    Completer completer = _serviceCallCompleters.remove("ping_$id");
     completer.complete("pong");
     return completer.future;
   }
