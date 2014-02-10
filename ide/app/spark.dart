@@ -1349,7 +1349,6 @@ class NewProjectAction extends SparkActionWithDialog {
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
     _nameElement = _triggerOnReturn("#name");
-    addBinding('ctrl-shift-n');
   }
 
   void _invoke([context]) {
