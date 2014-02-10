@@ -31,23 +31,22 @@ class ServicesIsolate {
 
   // Fired when host responds to message
   Stream<ServiceActionEvent> onResponseMessage;
+
   ChromeService chromeService;
 
-  Stream<ServiceActionEvent> _onResponseByCallId(String callId) {
-    StreamController<ServiceActionEvent> controller =
-        new StreamController<ServiceActionEvent>();
-    StreamSubscription subscription;
-    subscription = onResponseMessage.listen((ServiceActionEvent event) {
+  Future<ServiceActionEvent> _onResponseByCallId(String callId) {
+    Completer<ServiceActionEvent> completer =
+        new Completer<ServiceActionEvent>();
+    onResponseMessage.listen((ServiceActionEvent event) {
       try {
         if (event.callId == callId) {
-          subscription.cancel();
-          controller..add(event)..close();
+          completer.complete(event);
         }
       } catch(e) {
         print("exception: $e ${e.stackTrace}");
       }
     });
-    return controller.stream;
+    return completer.future;
   }
 
 
@@ -122,7 +121,7 @@ class ServicesIsolate {
       [bool expectResponse = false]) {
     var eventMap = event.toMap();
     _sendPort.send(eventMap);
-    return _onResponseByCallId(event.callId).first;
+    return _onResponseByCallId(event.callId);
   }
 }
 
@@ -134,17 +133,20 @@ class ExampleServiceImpl extends ServiceImpl {
     switch (event.actionId) {
       case "shortTest":
         return new Future.value(event.createReponse(
-            {"response": "short test response ${event.data['name']}"}));
+            {"response": "short${event.data['name']}"}));
         break;
       case "longTest":
         return _isolate.chromeService.delay(1000).then((_){
           return new Future.value(event.createReponse(
-              {"response": "short test response ${event.data['name']}"}));
+              {"response": "long${event.data['name']}"}));
         });
     }
   }
 }
 
+/**
+ * Special service for calling back to chrome.
+ */
 class ChromeService {
   static int _topCallId = 0;
   ServicesIsolate _isolate;

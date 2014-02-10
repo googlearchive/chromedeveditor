@@ -4,6 +4,7 @@
 
 library spark.services_test;
 
+import 'dart:async';
 import 'dart:isolate';
 
 import 'package:unittest/unittest.dart';
@@ -24,6 +25,33 @@ defineTests() {
       return services.ping().then((result) {
         expect(result, equals("pong"));
       });
+    });
+
+    test('example service order', () {
+      ExampleService exampleService = services.getService("example");
+      Completer completer = new Completer();
+      List<String> orderedResponses = [];
+
+      // Test 1 (slow A) starts
+      exampleService.longTest("1").then((str) {
+        orderedResponses.add(str);
+      });
+
+      // Test 2 (fast) starts
+      exampleService.shortTest("2").then((str) {
+        orderedResponses.add(str);
+      });
+
+      // Test 2 should end
+      return new Future.delayed(const Duration(milliseconds: 500)).then((_){
+        // Test 3 (slow B) starts
+        return exampleService.longTest("3").then((str) {
+          orderedResponses.add(str);
+        });
+      }).then((_) =>
+          expect(orderedResponses, equals(["short2", "long1", "long3"])));
+      // Test 1 should end
+      // Test 3 should end
     });
   });
 
