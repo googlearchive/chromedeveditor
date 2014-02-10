@@ -24,7 +24,23 @@ class SparkMenuItem extends SparkWidget {
   /// Description for this menu, ususually used for HotKey description.
   @published String description = "";
 
-  SparkMenuItem.created(): super.created();
+  @observable bool isHovered = false;
+
+  SparkMenuItem.created(): super.created() {
+    // BUG: Use mouse events instead of :hover because Chrome fails to remove
+    // :hover from an element after it's clicked and programmatically moved from
+    // under the mouse, as is the case with our auto-closing spark-menu.
+    if (IS_DART2JS) {
+      // TODO: bindCssClass() doesn't work after dart2js. Keeping it only
+      // because widgets are a Polymer testing ground - investigate/file bug.
+      onMouseOver.listen((_) { classes.add('highlighted'); });
+      onMouseOut.listen((_) { classes.remove('highlighted'); });
+    } else {
+      bindCssClass(this, 'highlighted', this, 'isHovered');
+      onMouseOver.listen((_) => isHovered = true);
+      onMouseOut.listen((_) => isHovered = false);
+    }
+  }
 
   @override
   void enteredView() {
