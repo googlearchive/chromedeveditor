@@ -242,7 +242,7 @@ class ServiceActionEvent {
       "actionId": actionId,
       "callId": callId,
       // TODO(ericarnold): We can probably subclass SAE into Response specific.
-      "response": response,
+      "response": response == true,
       "data": data
     };
   }
