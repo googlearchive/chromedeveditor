@@ -36,8 +36,6 @@ class Services {
  * isolate from the actual Service.
  */
 abstract class Service {
-  static int _topCallId = 0;
-
   Services _services;
   _IsolateHandler _isolateHandler;
 
@@ -45,10 +43,8 @@ abstract class Service {
 
   Service(this._services, this._isolateHandler);
 
-  String _getNewCallId() => "host_${_topCallId++}";
   ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
-    String callId = _getNewCallId();
-    return new ServiceActionEvent(serviceId, actionId, callId, data);
+    return new ServiceActionEvent(serviceId, actionId, data);
   }
 
   // Wraps up actionId and data into an ActionEvent and sends it to the isolate
@@ -62,7 +58,7 @@ abstract class Service {
   void _sendResponse(ServiceActionEvent event, [Map data]) {
     ServiceActionEvent responseEvent = event.createReponse(data);
     _isolateHandler.onceIsolateReady
-        .then((_) => _isolateHandler.sendAction(responseEvent));
+        .then((_) => _isolateHandler.sendResponse(responseEvent));
   }
 }
 
@@ -124,7 +120,7 @@ class ChromeServiceImpl extends Service {
  */
 class _IsolateHandler {
   int _topCallId = 0;
-  Map<int, Completer> _serviceCallCompleters = {};
+  Map<String, Completer> _serviceCallCompleters = {};
 
   final String _workerPath = 'services_impl.dart';
 
@@ -139,10 +135,21 @@ class _IsolateHandler {
   Future onceIsolateReady;
   StreamController _readyController = new StreamController.broadcast();
 
+  _IsolateHandler() {
+    onceIsolateReady = _readyController.stream.first;
+    _startIsolate();
+  }
+
+  String _getCallId(String callId) => "host_${callId}";
+  String _getNewCallId() => "host_${_getCallId(_topCallId++)}";
+
   // Fired when isolate responds to message
   Future<ServiceActionEvent> onIsolateResponse(String callId) {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
+
+    _serviceCallCompleters[callId] = completer;
+
 
     onIsolateMessage.listen((ServiceActionEvent event){
       if (event.response && event.callId == callId) {
@@ -151,11 +158,6 @@ class _IsolateHandler {
     });
 
     return completer.future;
-  }
-
-  _IsolateHandler() {
-    onceIsolateReady = _readyController.stream.first;
-    _startIsolate();
   }
 
   Future _startIsolate() {
@@ -187,8 +189,9 @@ class _IsolateHandler {
 
   Future<String> ping() {
     Completer<String> completer = new Completer();
+
     int callId = _topCallId;
-    _serviceCallCompleters[callId] = completer;
+    _serviceCallCompleters["ping_$callId"] = completer;
 
     onceIsolateReady.then((_){
       _sendPort.send(callId);
@@ -199,13 +202,19 @@ class _IsolateHandler {
   }
 
   Future _pong(int id) {
-    Completer completer = _serviceCallCompleters[id];
+    Completer completer = _serviceCallCompleters["ping_$id"];
     _serviceCallCompleters.remove(id);
     completer.complete("pong");
     return completer.future;
   }
 
   Future<ServiceActionEvent> sendAction(ServiceActionEvent event) {
+    event.makeRespondable(_getNewCallId());
+    _sendPort.send(event.toMap());
+    return onIsolateResponse(event.callId);
+  }
+
+  Future<ServiceActionEvent> sendResponse(ServiceActionEvent event) {
     _sendPort.send(event.toMap());
     return onIsolateResponse(event.callId);
   }

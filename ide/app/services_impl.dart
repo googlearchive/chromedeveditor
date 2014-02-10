@@ -23,6 +23,7 @@ void main(List<String> args, SendPort sendPort) {
  * Defines a handler for all worker-side service implementations.
  */
 class ServicesIsolate {
+  int _topCallId = 0;
   final SendPort _sendPort;
 
   // Fired when host originates a message
@@ -59,6 +60,7 @@ class ServicesIsolate {
 
     onResponseMessage = responseMessageController.stream;
     onHostMessage = hostMessageController.stream;
+
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
@@ -115,9 +117,14 @@ class ServicesIsolate {
     _sendPort.send(eventMap);
   }
 
+  String _getNewCallId() => "iso_${_topCallId++}";
+
   // Sends action to host.  Returns a future if expectResponse is true.
   Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
       [bool expectResponse = false]) {
+
+    event.makeRespondable(_getNewCallId());
+
     var eventMap = event.toMap();
     _sendPort.send(eventMap);
     return _onResponseByCallId(event.callId);
@@ -147,17 +154,13 @@ class ExampleServiceImpl extends ServiceImpl {
  * Special service for calling back to chrome.
  */
 class ChromeService {
-  static int _topCallId = 0;
   ServicesIsolate _isolate;
 
   ChromeService(this._isolate);
 
-  String _getNewCallId() => "iso_${_topCallId++}";
   ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
-    String callId = _getNewCallId();
-    return new ServiceActionEvent("chrome", actionId, callId, data);
+    return new ServiceActionEvent("chrome", actionId, data);
   }
-
 
   Future<ServiceActionEvent> delay(int milliseconds) {
     ServiceActionEvent delayEvent =
@@ -169,20 +172,11 @@ class ChromeService {
 
 // Provides an abstract class and helper code for service implementations.
 abstract class ServiceImpl {
-  static int _topCallId = 0;
-
   ServicesIsolate _isolate;
 
   ServiceImpl(this._isolate);
 
   String get serviceId => null;
-
-  String _getNewCallId() => "iso_${_topCallId++}";
-
-  ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
-    String callId = _getNewCallId();
-    return new ServiceActionEvent(serviceId, actionId, callId, data);
-  }
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
 }
