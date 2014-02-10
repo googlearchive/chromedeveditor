@@ -18,7 +18,7 @@
 <polymer-element name="spark-menu-button" extends="spark-widget"
     attributes="src,
                 selected,
-                valueattr,
+                valueAttr,
                 opened,
                 responsive,
                 valign">
@@ -39,10 +39,10 @@
           on-activate="{{toggle}}" on-opened="{{onOpened}}">
         <div class="arrow"></div>
         <div class="arrow arrow-inner" on-click="{{toggle}}"></div>
-        <spark-menu id="overlayMenu"
+        <spark-menu id="overlay-menu"
             selected="{{selected}}"
-            valueattr="{{valueattr}}">
-          <content select="*"></content>
+            valueAttr="{{valueAttr}}">
+          <content></content>
         </spark-menu>
       </spark-overlay>
     </div>

@@ -9,8 +9,9 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
-import '../spark_overlay/spark_overlay.dart';
 import '../common/spark_widget.dart';
+import '../spark_menu/spark_menu.dart';
+import '../spark_menu_item/spark_menu_item.dart';
 
 /**
  * A single suggestion supplied by a [SuggestOracle]. Provides a [label]
@@ -55,29 +56,30 @@ class SparkSuggestBox extends SparkWidget {
   @published String placeholder;
   /// Provies suggestions for `this` suggest box.
   @published SuggestOracle oracle;
+
   /// Currently displayed suggestions.
   @observable final suggestions = new ObservableList();
   /// Currently highlighted (but not yet selected) suggestion
-  @observable int selectionIndex = -1;
+//  @observable int selectionIndex = -1;
 
   StreamSubscription _oracleSub;
 
   SparkSuggestBox.created() : super.created();
 
-  SparkOverlay get _popup => $['suggestion-list-overlay'];
+  SparkMenu get _popup => $['suggestion-list-overlay'];
 
   /// Shows the suggestion list popup with the given suggestions.
   void _showSuggestions(List<Suggestion> update) {
     suggestions.clear();
     suggestions.addAll(update);
-    selectionIndex = 0;
+//    selectionIndex = 0;
     _popup.opened = true;
   }
 
   /// Hides the suggestion list popup and clears the suggestion list.
   void _hideSuggestions() {
     suggestions.clear();
-    selectionIndex = -1;
+//    selectionIndex = -1;
     _popup.opened = false;
   }
 
@@ -85,23 +87,23 @@ class SparkSuggestBox extends SparkWidget {
     if (e.keyCode == SparkWidget.DOWN_KEY) {
       if (_popup.opened) {
         // List of suggestions already visible. Simply advance the selection.
-        selectionIndex++;
-        _clampSelectionIndex();
+//        selectionIndex++;
+//        _clampSelectionIndex();
       } else {
         // Look for suggestions
         suggest();
       }
-    } else if (e.keyCode == SparkWidget.UP_KEY) {
-      selectionIndex--;
-      _clampSelectionIndex();
-    } else if (e.keyCode == SparkWidget.ENTER_KEY) {
-      if (_popup.opened && selectionIndex > -1) {
-        _selectSuggestion(selectionIndex);
-      } else {
-        suggest();
-      }
-    } else if (e.keyCode == SparkWidget.ESCAPE_KEY) {
-      _hideSuggestions();
+//    } else if (e.keyCode == SparkWidget.UP_KEY) {
+//      selectionIndex--;
+//      _clampSelectionIndex();
+//    } else if (e.keyCode == SparkWidget.ENTER_KEY) {
+//      if (_popup.opened && selectionIndex > -1) {
+//        _selectSuggestion(selectionIndex);
+//      } else {
+//        suggest();
+//      }
+//    } else if (e.keyCode == SparkWidget.ESCAPE_KEY) {
+//      _hideSuggestions();
     } else {
       suggest();
     }
@@ -136,29 +138,30 @@ class SparkSuggestBox extends SparkWidget {
     }
   }
 
-  int _itemIndexForEvent(Event evt) {
-    Element itemDiv = evt.currentTarget;
-    return int.parse(itemDiv.attributes['item-index']);
-  }
+//  int _itemIndexForEvent(Event evt) {
+//    Element itemDiv = evt.currentTarget;
+//    return int.parse(itemDiv.attributes['item-index']);
+//  }
 
   void _selectSuggestion(int index) {
     suggestions[index].onSelected();
     _hideSuggestions();
   }
 
-  void mouseOverItem(MouseEvent evt) {
-    selectionIndex = _itemIndexForEvent(evt);
-  }
+//  void mouseOverItem(MouseEvent evt) {
+//    selectionIndex = _itemIndexForEvent(evt);
+//  }
+//
+//  void mouseClickedItem(MouseEvent evt) {
+//    _selectSuggestion(_itemIndexForEvent(evt));
+//  }
 
-  void mouseClickedItem(MouseEvent evt) {
-    _selectSuggestion(_itemIndexForEvent(evt));
-  }
-
-  void _clampSelectionIndex() {
-    if (selectionIndex < -1) {
-      selectionIndex = -1;
-    } else if (selectionIndex > suggestions.length - 1) {
-      selectionIndex = suggestions.length - 1;
-    }
-  }
+//  void _clampSelectionIndex() {
+//    if (selectionIndex < -1) {
+//      selectionIndex = -1;
+//    } else if (selectionIndex > suggestions.length - 1) {
+//      selectionIndex = suggestions.length - 1;
+//    }
+//  }
 }
+

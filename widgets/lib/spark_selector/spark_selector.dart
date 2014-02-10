@@ -18,11 +18,11 @@ import '../spark_selection/spark_selection.dart';
  * of the item element.
  *
  * If you want a specific attribute value of the element to be
- * used instead of index, set "valueattr" to that attribute name.
+ * used instead of index, set "valueAttr" to that attribute name.
  *
  * Example:
  *
- *     <polymer-selector valueattr="label" selected="foo">
+ *     <polymer-selector valueAttr="label" selected="foo">
  *       <div label="foo"></div>
  *       <div label="bar"></div>
  *       <div label="zot"></div>
@@ -32,7 +32,7 @@ import '../spark_selection/spark_selection.dart';
  *
  * Example:
  *
- *     <polymer-selector id="selector" valueattr="label" multi>
+ *     <polymer-selector id="selector" valueAttr="label" multi>
  *       <div label="foo"></div>
  *       <div label="bar"></div>
  *       <div label="zot"></div>
@@ -48,7 +48,7 @@ class SparkSelector extends SparkSelection {
   @published bool multi = false;
 
   /// Specifies the attribute to be used for "selected" attribute.
-  @published String valueattr = 'name';
+  @published String valueAttr = 'name';
 
   /// Specifies the CSS class to be used to add to the selected element.
   @published String selectedClass = 'selected';
@@ -72,7 +72,7 @@ class SparkSelector extends SparkSelection {
   // TODO(terry): Should be tap when PointerEvents are supported.
   @published String activateEvent = 'click';
 
-  @published bool notap = false;
+  @published bool noTap = false;
 
   @published dynamic selectedModel = null;
 
@@ -209,7 +209,7 @@ class SparkSelector extends SparkSelection {
   }
 
   String valueForNode(Element node) =>
-      node.attributes.containsKey(valueattr) ? node.attributes[valueattr] : "";
+      node.attributes.containsKey(valueAttr) ? node.attributes[valueattr] : "";
 
   // events fired from <polymer-selection> object
   void selectionSelect(e, detail) {
@@ -231,7 +231,7 @@ class SparkSelector extends SparkSelection {
 
   // event fired from host
   activateHandler(e) {
-    if (!notap) {
+    if (!noTap) {
       var i = findDistributedTarget(e.target, items);
       if (i >= 0) {
         Element item = items[i];

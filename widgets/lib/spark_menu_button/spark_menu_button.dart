@@ -20,7 +20,7 @@ import '../spark_overlay/spark_overlay.dart';
 class SparkMenuButton extends SparkWidget {
   @published String src = "";
   @published dynamic selected;
-  @published String valueattr = "";
+  @published String valueAttr = "";
   @published bool opened = false;
   @published bool responsive = false;
   @published String valign = "center";
@@ -30,7 +30,7 @@ class SparkMenuButton extends SparkWidget {
 
   //* Toggle the opened state of the dropdown.
   void toggle() {
-    ($['overlayMenu'] as SparkMenu).clearSelection();
+    ($['overlay-menu'] as SparkMenu).clearSelection();
     opened = !opened;
 
     // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
@@ -51,5 +51,5 @@ class SparkMenuButton extends SparkWidget {
   }
 
   //* Returns the selected item.
-  String get selection => ($['overlayMenu'] as SparkMenu).selection;
+  String get selection => ($['overlay-menu'] as SparkMenu).selection;
 }

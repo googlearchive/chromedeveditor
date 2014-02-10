@@ -23,16 +23,6 @@
   transform: translateX(-50%);
 }
 
-.suggestion-item {
-  padding: 7px 20px;
-  font-size: 14px;
-}
-
-.suggestion-item[highlighted=true] {
-  background-color: #3a84c3;
-  color: white;
-}
-
 .text-muted {
   color: #999999;
 }
