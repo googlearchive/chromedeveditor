@@ -4,38 +4,22 @@
 
 @import url("../common/spark_widget.css");
 
+/*@polyfill spark-menu-item, spark-menu-separator */
+::content spark-menu-item, ::content spark-menu-separator {
+  display: block;
+  min-width: 160px;
+  cursor: default;
+  box-sizing: border-box;
+}
+
 /*@polyfill spark-menu-item */
 ::content spark-menu-item {
-  display: block;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
   min-height: 30px;
-  min-width: 160px;
-  padding: 0 10px;
-  color: #000;
   border: none;
-  font-family: Helvetica, Sans-serif;
-  font-size: 14px;
-  cursor: default;
-  white-space: nowrap;
 }
 
 /*@polyfill spark-menu-separator */
 ::content spark-menu-separator {
-  display: block;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  min-height: 2px;
-  min-width: 160px;
+  height: 2px;
   margin: 2px 0px;
-  padding: 0 10px;
-  background-color: #EEE;
-  border-bottom: 1px solid #FEFEFE;
-  cursor: default;
-  color: #CCC;
-}
-
-/*@polyfill spark-menu-separator:hover */
-::content spark-menu-item:hover {
-  color: #fff;
 }

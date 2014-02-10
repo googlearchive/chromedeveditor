@@ -4,6 +4,8 @@
 
 library spark_widgets.selection;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -14,7 +16,7 @@ import '../common/spark_widget.dart';
 class SparkSelection extends SparkWidget {
   @published bool multi = false;
 
-  final List _selection = [];
+  final List<Element> _selection = [];
 
   SparkSelection.created(): super.created();
 
@@ -27,12 +29,12 @@ class SparkSelection extends SparkWidget {
     _selection.clear();
   }
 
-  get selection =>
+  dynamic get selection =>
       multi ? _selection : _selection.isNotEmpty ? _selection[0] : null;
 
   bool isSelected(inItem) => _selection.contains(inItem);
 
-  void setItemSelected(inItem, inIsSelected) {
+  void setItemSelected(Element inItem, bool inIsSelected) {
     if (inItem != null) {
       if (inIsSelected) {
         _selection.add(inItem);
@@ -45,7 +47,7 @@ class SparkSelection extends SparkWidget {
     }
   }
 
-  void select(inItem) {
+  void select(Element inItem) {
     if (multi) {
       toggle(inItem);
     } else if (selection != inItem) {
@@ -54,7 +56,7 @@ class SparkSelection extends SparkWidget {
     }
   }
 
-  void toggle(inItem) {
+  void toggle(Element inItem) {
     setItemSelected(inItem, !isSelected(inItem));
   }
 }
