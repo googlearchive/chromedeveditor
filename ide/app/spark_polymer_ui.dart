@@ -57,10 +57,10 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void bindKeybindingDesc() {
-    var items = getShadowDomElement('#mainMenu').querySelectorAll('spark-menu-item');
+    final items = getShadowDomElement('#mainMenu').querySelectorAll('spark-menu-item');
     items.forEach((menuItem) {
-      String actionId = menuItem.attributes['action-id'];
-      var action = SparkModel.instance.actionManager.getAction(actionId);
+      final actionId = menuItem.attributes['action-id'];
+      final action = SparkModel.instance.actionManager.getAction(actionId);
       action.bindings.forEach((keyBind) => menuItem.description = keyBind.getDescription());
     });
   }
