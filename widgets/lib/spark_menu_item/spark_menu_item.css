@@ -6,12 +6,14 @@
 
 .labelText {
   margin: 0 5px;
+  min-width: 200px;
   position: relative;
   top: 6px;
 }
 
 .descriptionText {
   color: #bdbdbd;
+  float: right;
 }
 
 spark-icon, .labelText, .labelText > * {
