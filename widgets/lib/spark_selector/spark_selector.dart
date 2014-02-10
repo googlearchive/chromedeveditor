@@ -209,7 +209,7 @@ class SparkSelector extends SparkSelection {
   }
 
   String valueForNode(Element node) =>
-      node.attributes.containsKey(valueAttr) ? node.attributes[valueattr] : "";
+      node.attributes.containsKey(valueAttr) ? node.attributes[valueAttr] : "";
 
   // events fired from <polymer-selection> object
   void selectionSelect(e, detail) {

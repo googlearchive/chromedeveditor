@@ -16,7 +16,7 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_menu/spark_menu.html"/>
 
 <polymer-element name="spark-menu-button" extends="spark-widget"
-    attributes="src,
+    attributes="icon,
                 selected,
                 valueAttr,
                 opened,
@@ -31,7 +31,7 @@
     </style>
 
     <spark-button id="button" small noPadding touch-action="none" on-click="{{toggle}}">
-      <img src="{{src}}">
+      <img src="{{icon}}">
     </spark-button>
 
     <div responsive="{{responsive}}" valign="{{valign}}">

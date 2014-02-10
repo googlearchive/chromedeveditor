@@ -31,10 +31,15 @@
       @import url("packages/spark_widgets/spark_icon/spark_icon.css");
     </style>
 
-    <div id="icon"
-        style="background-image:url({{src}}); width:{{size}}px; height:{{size}}px"
-        title="{{tooltip}}">
-    </div>
+    <style>
+      #icon {
+        background-image: url({{src}});
+        width: {{size}}px;
+        height: {{size}}px;
+      }
+    </style>
+
+    <div id="icon" title="{{tooltip}}"></div>
   </template>
 
   <script type="application/dart" src="spark_icon.dart"></script>
