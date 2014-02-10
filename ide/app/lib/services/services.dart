@@ -79,14 +79,14 @@ class ExampleService extends Service {
   Future<String> shortTest(String name) {
     return _sendAction("shortTest", {"name": name})
         .then((ServiceActionEvent event) {
-      return new Future.value(event.data['response']);
+      return event.data['response'];
     });
   }
 
   Future<String> longTest(String name) {
     return _sendAction("longTest", {"name": name})
         .then((ServiceActionEvent event) {
-      return new Future.value(event.data['response']);
+      return event.data['response'];
     });
   }
 
