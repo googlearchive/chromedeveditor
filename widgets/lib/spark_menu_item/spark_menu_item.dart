@@ -13,11 +13,16 @@ import '../common/spark_widget.dart';
 @CustomTag("spark-menu-item")
 class SparkMenuItem extends SparkWidget {
   /// URL image for the icon associated with this menu item.
-  @published String src = "";
+  @published String icon = "";
+
   /// Size of the icon.
-  @published String iconsize = "24";
+  @published int iconSize = 0;
+
   /// Specifies the label for the menu item.
   @published String label = "";
+
+  /// Description for this menu, ususually used for HotKey description.
+  @published String description = "";
 
   @observable bool isHovered = false;
 
@@ -34,6 +39,14 @@ class SparkMenuItem extends SparkWidget {
       bindCssClass(this, 'highlighted', this, 'isHovered');
       onMouseOver.listen((_) => isHovered = true);
       onMouseOut.listen((_) => isHovered = false);
+    }
+  }
+
+  @override
+  void enteredView() {
+    super.enteredView();
+    if (icon.isNotEmpty && iconSize == 0) {
+      iconSize = 24;
     }
   }
 }

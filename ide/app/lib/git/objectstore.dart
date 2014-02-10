@@ -414,9 +414,7 @@ class ObjectStore {
       Map<String, bool> remoteShas = {};
       // Didn't find a remote branch for the local branch.
       if (remoteRef == null) {
-        remoteRef.name = 'headRef';
-        remoteRef.sha = HEAD_MASTER_SHA;
-
+        remoteRef = new GitRef(HEAD_MASTER_SHA, headRefName);
         remoteHeads.forEach((String headName, String sha) {
           remoteShas[sha] = true;
         });

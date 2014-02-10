@@ -16,7 +16,7 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_icon/spark_icon.html">
 
 <polymer-element name="spark-menu-item" extends="spark-widget"
-    attributes="src label iconsize">
+    attributes="icon iconSize label description">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
@@ -24,11 +24,14 @@
       @import url("packages/spark_widgets/spark_menu_item/spark_menu_item.css");
     </style>
 
-    <spark-icon id="icon" src="{{src}}" size="{{iconsize}}"></spark-icon>
+    <template if="{{icon.isNotEmpty || iconSize != 0}}">
+      <spark-icon src="{{icon}}" size="{{iconSize}}"></spark-icon>
+    </template>
 
     <div id="text">
       <span>{{label}}</span>
       <content></content>
+      <span id="descriptionText">{{description}}</span>
     </div>
   </template>
 

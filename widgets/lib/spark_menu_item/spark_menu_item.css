@@ -18,6 +18,10 @@
   white-space: nowrap;
 }
 
+#descriptionText {
+  color: #bdbdbd;
+}
+
 :host(.highlighted), /*BUG #733*/ :host.highlighted {
   background-color: #3a84c3;
 }
