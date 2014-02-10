@@ -4,24 +4,30 @@
 
 @import url("../common/spark_widget.css");
 
-.labelText {
-  margin: 0 5px;
-  min-width: 200px;
-  position: relative;
-  top: 6px;
+#icon, #text, #text > *, ::content {
+  display: inline-block;
 }
 
-.descriptionText {
+#text {
+  position: relative;
+  top: 6px;
+  padding: 0 10px;
+  color: #000;
+  font-family: Helvetica, Sans-serif;
+  font-size: 14px;
+  min-width: 220px;
+  white-space: nowrap;
+}
+
+#descriptionText {
   color: #bdbdbd;
   float: right;
 }
 
-spark-icon, .labelText, .labelText > * {
-  display: inline-block;
+:host(.highlighted), /*BUG #733*/ :host.highlighted {
+  background-color: #3a84c3;
 }
 
-:host:hover {
-  color: #fff;
-  opacity: 1 !important;
-  background: #3a84c3;
+:host(.highlighted) #text, /*BUG #733*/ :host.highlighted #text {
+  color: white;
 }
