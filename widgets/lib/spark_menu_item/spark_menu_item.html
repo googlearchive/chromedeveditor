@@ -16,7 +16,7 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_icon/spark_icon.html">
 
 <polymer-element name="spark-menu-item" extends="spark-widget"
-    attributes="src label iconsize">
+    attributes="description src label iconsize">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
@@ -29,6 +29,7 @@
     <div class="labelText">
       <span>{{label}}</span>
       <content></content>
+      <span class="descriptionText">{{description}}</span>
     </div>
   </template>
 

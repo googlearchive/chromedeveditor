@@ -5,6 +5,7 @@
 library spark_polymer.ui;
 
 import 'dart:html';
+import 'dart:async';
 
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
@@ -23,6 +24,7 @@ class SparkPolymerUI extends SparkWidget {
         () => SparkModel.instance.workspace,
         (f) => SparkModel.instance.editorArea.selectFile(
             f, forceOpen: true, replaceCurrent: false, switchesTab: true));
+    Timer.run(() => bindKeybindingDesc());
   }
 
   void onMenuSelected(Event event, var detail) {
@@ -52,5 +54,14 @@ class SparkPolymerUI extends SparkWidget {
 
   void onSplitterUpdate(int position) {
     SparkModel.instance.onSplitViewUpdate(position);
+  }
+
+  void bindKeybindingDesc() {
+    var items = getShadowDomElement('#mainMenu').querySelectorAll('spark-menu-item');
+    items.forEach((menuItem) {
+      String actionId = menuItem.attributes['action-id'];
+      var action = SparkModel.instance.actionManager.getAction(actionId);
+      action.bindings.forEach((keyBind) => menuItem.description = keyBind.getDescription());
+    });
   }
 }

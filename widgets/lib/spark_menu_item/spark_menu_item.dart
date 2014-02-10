@@ -21,5 +21,8 @@ class SparkMenuItem extends SparkWidget {
   /// Specifies the label for the menu item.
   @published String label = "";
 
+  /// Description for this menu, ususually used for HotKey description.
+  @observable String description = "";
+
   SparkMenuItem.created(): super.created();
 }
