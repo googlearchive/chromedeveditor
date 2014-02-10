@@ -15,11 +15,18 @@ import '../utils.dart';
 class Services {
   _IsolateHandler _isolateHandler;
   Map<String, Service> _services = {};
+  ChromeServiceImpl _chromeService;
 
   Services() {
     _isolateHandler = new _IsolateHandler();
     registerService(new ExampleService(this, _isolateHandler));
-    registerService(new ChromeServiceImpl(this, _isolateHandler));
+    _chromeService = new ChromeServiceImpl(this, _isolateHandler);
+
+    _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event){
+      if (event.serviceId == "chrome") {
+        _chromeService.handleEvent(event);
+      }
+    });
   }
 
   Future<String> ping() => _isolateHandler.ping();
@@ -93,16 +100,10 @@ class ChromeServiceImpl extends Service {
   String serviceId = "chrome";
 
   ChromeServiceImpl(Services services, _IsolateHandler handler)
-      : super(services, handler) {
-    handler.onIsolateMessage.listen((ServiceActionEvent event){
-      if (event.serviceId == serviceId) {
-        _receiveAction(event);
-      }
-    });
-  }
+      : super(services, handler);
 
   // For incoming (non-requested) actions.
-  Future<ServiceActionEvent> _receiveAction(ServiceActionEvent event) {
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch(event.actionId) {
       case "delay":
         int milliseconds = event.data['ms'];
@@ -128,7 +129,7 @@ class _IsolateHandler {
   final ReceivePort _receivePort = new ReceivePort();
 
   // Fired when isolate originates a message
-  Stream onIsolateMessage;
+  Stream<ServiceActionEvent> onIsolateMessage;
 
   // Future to fire once, when isolate is started and ready to receive messages.
   // Usage: onceIsolateReady.then() => // do stuff
@@ -140,25 +141,7 @@ class _IsolateHandler {
     _startIsolate();
   }
 
-  String _getCallId(String callId) => "host_${callId}";
-  String _getNewCallId() => "host_${_getCallId(_topCallId++)}";
-
-  // Fired when isolate responds to message
-  Future<ServiceActionEvent> onIsolateResponse(String callId) {
-    Completer<ServiceActionEvent> completer =
-        new Completer<ServiceActionEvent>();
-
-    _serviceCallCompleters[callId] = completer;
-
-
-    onIsolateMessage.listen((ServiceActionEvent event){
-      if (event.response && event.callId == callId) {
-        completer.complete(event);
-      }
-    });
-
-    return completer.future;
-  }
+  String _getNewCallId() => "host_${_topCallId++}";
 
   Future _startIsolate() {
     StreamController<ServiceActionEvent> _messageController =
@@ -179,7 +162,15 @@ class _IsolateHandler {
           print ("Worker: $arg");
         } else {
           ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
-          _messageController.add(event);
+
+          if (event.response == true) {
+            Completer<ServiceActionEvent> completer =
+                _serviceCallCompleters[event.callId];
+            _serviceCallCompleters.remove(completer);
+            completer.complete(event);
+          } else {
+            _messageController.add(event);
+          }
         }
       }
     });
@@ -209,14 +200,18 @@ class _IsolateHandler {
   }
 
   Future<ServiceActionEvent> sendAction(ServiceActionEvent event) {
+    Completer<ServiceActionEvent> completer =
+        new Completer<ServiceActionEvent>();
+
     event.makeRespondable(_getNewCallId());
+    _serviceCallCompleters[event.callId] = completer;
     _sendPort.send(event.toMap());
-    return onIsolateResponse(event.callId);
+
+    return completer.future;
   }
 
-  Future<ServiceActionEvent> sendResponse(ServiceActionEvent event) {
+  void sendResponse(ServiceActionEvent event) {
     _sendPort.send(event.toMap());
-    return onIsolateResponse(event.callId);
   }
 }
 
