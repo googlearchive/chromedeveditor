@@ -413,13 +413,12 @@ class ObjectStore {
       try {
         remoteRef = baseRefs.firstWhere((GitRef ref) => ref.name == headRefName);
       } catch (e) {
-        print('error: ${e}');
+        // Ignore exception raised when firstWhere() failed.
       }
       Map<String, bool> remoteShas = {};
       // Didn't find a remote branch for the local branch.
       if (remoteRef == null) {
-        remoteRef = new GitRef(HEAD_MASTER_SHA, HEAD_MASTER_REF_PATH);
-
+        remoteRef = new GitRef(HEAD_MASTER_SHA, headRefName);
         remoteHeads.forEach((String headName, String sha) {
           remoteShas[sha] = true;
         });

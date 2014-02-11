@@ -1,9 +1,9 @@
 // Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-library spark.services;
 
-import 'dart:convert';
+library spark.services_impl;
+
 import 'dart:async';
 import 'dart:isolate';
 
@@ -24,81 +24,167 @@ void main(List<String> args, SendPort sendPort) {
  * Defines a handler for all worker-side service implementations.
  */
 class ServicesIsolate {
+  int _topCallId = 0;
   final SendPort _sendPort;
 
-  // Fired when host responds to message
-  Stream<ServiceActionEvent> _onResponseMessage;
-
   // Fired when host originates a message
-  Stream<ServiceActionEvent> _onHostMessage ;
+  Stream<ServiceActionEvent> onHostMessage ;
 
-  // Services:
-  // ExampleServiceImpl example;
+  // Fired when host responds to message
+  Stream<ServiceActionEvent> onResponseMessage;
+
+  ChromeService chromeService;
+
+  Future<ServiceActionEvent> _onResponseByCallId(String callId) {
+    Completer<ServiceActionEvent> completer =
+        new Completer<ServiceActionEvent>();
+    onResponseMessage.listen((ServiceActionEvent event) {
+      try {
+        if (event.callId == callId) {
+          completer.complete(event);
+        }
+      } catch(e) {
+        print("exception: $e ${e.stackTrace}");
+      }
+    });
+    return completer.future;
+  }
+
 
   ServicesIsolate(this._sendPort) {
+    chromeService = new ChromeService(this);
+
     StreamController<ServiceActionEvent> hostMessageController =
         new StreamController<ServiceActionEvent>.broadcast();
     StreamController<ServiceActionEvent> responseMessageController =
         new StreamController<ServiceActionEvent>.broadcast();
 
-    _onHostMessage = hostMessageController.stream;
-    _onResponseMessage = responseMessageController.stream;
+    onResponseMessage = responseMessageController.stream;
+    onHostMessage = hostMessageController.stream;
+
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
 
     receivePort.listen((arg) {
-      _sendPort.send(arg);
+      try {
+        if (arg is int) {
+          _sendPort.send(arg);
+        } else {
+          ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
+          if (event.response) {
+            responseMessageController.add(event);
+          } else {
+            hostMessageController.add(event);
+          }
+        }
+      } catch(e) {
+        print("exception: $e ${e.stackTrace}");
+      }
+    });
 
-      //String data = arg["data"];
-      // TODO(ericarnold): differntiate between host and response messages ...
-      //hostMessageController.add(new ActionEvent(
-      //    arg["serviceId"], arg["actionId"], arg["callId"], JSON.decode(data)));
-      //responseMessageController.add(new ActionEvent(
-      //    arg["serviceId"], arg["actionId"], arg["callId"], JSON.decode(data)));
+    onHostMessage.listen((ServiceActionEvent event) {
+      try {
+        _handleMessage(event);
+      } catch(e) {
+        print("exception: $e ${e.stackTrace}");
+      }
+    });
+  }
+
+  ServiceImpl getService(String serviceId) {
+    return new ExampleServiceImpl(this);
+  }
+
+  _handleMessage(ServiceActionEvent event) {
+    ServiceImpl service = getService(event.serviceId);
+    service.handleEvent(event).then((ServiceActionEvent responseEvent){
+      if (responseEvent != null) {
+        _sendResponse(responseEvent);
+      }
     });
   }
 
 
-  _handleMessage(ServiceActionEvent event) {
-    // TODO(ericarnold): Initialize each requested ServiceImpl subclass as
-    //    requested by the sender and add listeners to them to facilitate
-    //    two-way communication.
-    // TODO(ericarnold): Route ActionEvent by serviceId to the appropriate
-    //    ServiceImpl instance.
-  }
-
-
   // Sends a response message.
-  Future<ServiceActionEvent> _sendResponse(ServiceActionEvent event, Map data,
-      [bool expectResponse = false]) {
-    _sendPort.send({
-      "serviceId": event.serviceId,
-      "actionId": event.actionId,
-      "callId": event.callId,
-      "data": JSON.encode(data)});
+  Future<ServiceActionEvent> _sendResponse(ServiceActionEvent event, [Map data,
+      bool expectResponse = false]) {
+    // TODO(ericarnold): implement expectResponse
+    event.response = true;
+    var eventMap = event.toMap();
+    if (data != null) {
+      eventMap['data'] = data;
+    }
+    _sendPort.send(eventMap);
   }
+
+  String _getNewCallId() => "iso_${_topCallId++}";
 
   // Sends action to host.  Returns a future if expectResponse is true.
-  Future<ServiceActionEvent> _sendAction(String serviceId, String actionId, Map data,
+  Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
       [bool expectResponse = false]) {
-    // TODO(ericarnold):
-    // - Create call id
-    // - send message
-    // - implement on other end
+
+    event.makeRespondable(_getNewCallId());
+
+    var eventMap = event.toMap();
+    _sendPort.send(eventMap);
+    return _onResponseByCallId(event.callId);
+  }
+}
+
+class ExampleServiceImpl extends ServiceImpl {
+  String get serviceId => "example";
+  ExampleServiceImpl(ServicesIsolate isolate) : super(isolate);
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    switch (event.actionId) {
+      case "shortTest":
+        return new Future.value(event.createReponse(
+            {"response": "short${event.data['name']}"}));
+        break;
+      case "longTest":
+        return _isolate.chromeService.delay(1000).then((_){
+          return new Future.value(event.createReponse(
+              {"response": "long${event.data['name']}"}));
+        });
+    }
+  }
+}
+
+/**
+ * Special service for calling back to chrome.
+ */
+class ChromeService {
+  ServicesIsolate _isolate;
+
+  ChromeService(this._isolate);
+
+  ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
+    return new ServiceActionEvent("chrome", actionId, data);
+  }
+
+  Future<ServiceActionEvent> delay(int milliseconds) {
+    ServiceActionEvent delayEvent =
+        _createNewEvent("delay", {"ms": milliseconds});
+    delayEvent.serviceId = "chrome";
+    return _isolate._sendAction(delayEvent);
   }
 }
 
 // Provides an abstract class and helper code for service implementations.
-class ServiceImpl {
-  // TODO(ericarnold): Handle Instantiation messages
-  // TODO(ericarnold): Handles each ActionEvent sent to it and provides
-  // a uniform way for subclasses to route messages by actionId.
+abstract class ServiceImpl {
+  ServicesIsolate _isolate;
+
+  ServiceImpl(this._isolate);
+
+  String get serviceId => null;
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
 }
 
 // Prints are crashing isolate, so this will take over for the time being.
 SendPort _printSendPort;
-void print(String message) {
+void print(var message) {
   // Host will know it's a print because it's a simple string instead of a map
-  _printSendPort.send("print $message");
+  _printSendPort.send("$message");
 }

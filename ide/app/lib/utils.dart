@@ -222,9 +222,49 @@ class ServiceActionEvent {
   // TODO(ericarnold): This should be shared between ServiceIsolate and Service.
   String serviceId;
   String actionId;
-  String callId;
   bool response = false;
   Map data;
-  ServiceActionEvent(this.serviceId, this.actionId, this.callId, this.data);
+
+  String _callId;
+  String get callId => _callId;
+
+  ServiceActionEvent(this.serviceId, this.actionId, this.data);
+
+  ServiceActionEvent.fromMap(Map map) {
+    serviceId = map["serviceId"];
+    actionId = map["actionId"];
+    _callId = map["callId"];
+    data = map["data"];
+    response = map["response"];
+  }
+
+  ServiceActionEvent._asResponse(this.serviceId, this.actionId, this._callId,
+      this.data);
+
+  Map toMap() {
+    return {
+      "serviceId": serviceId,
+      "actionId": actionId,
+      "callId": callId,
+      // TODO(ericarnold): We can probably subclass SAE into Response specific.
+      "response": response == true,
+      "data": data
+    };
+  }
+
+  ServiceActionEvent createReponse(Map data) {
+    ServiceActionEvent response = new ServiceActionEvent._asResponse(
+        serviceId, actionId, callId, data);
+    response.response = true;
+    return response;
+  }
+
+  makeRespondable(String callId) {
+    if (this._callId == null) {
+      this._callId = callId;
+    } else {
+      throw "ServiceActionEvent is already respondable";
+    }
+  }
 }
 
