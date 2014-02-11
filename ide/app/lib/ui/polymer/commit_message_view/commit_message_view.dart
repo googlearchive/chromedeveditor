@@ -7,14 +7,15 @@ library spark_widgets.button;
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
+import 'package:spark_widgets/common/spark_widget.dart';
 
 import '../../../scm.dart';
 
-@CustomTag('spark-button')
-class CommitMessageView extends PolymerElement {
-  @published CommitInfo commitInfo;
+@CustomTag('commit-message-view')
+class CommitMessageView extends SparkWidget {
+  @observable CommitInfo commitInfo;
 
-  factory CommitMessageView() => (new Element.tag('commit-message-view')) as CommitMessageView;
+  factory CommitMessageView() => new Element.tag('commit-message-view');
 
   CommitMessageView.created() : super.created();
 }

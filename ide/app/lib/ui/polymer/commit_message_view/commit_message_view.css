@@ -2,8 +2,16 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
+:host {
+  margin: 15px;
+}
+
 #author-info {
-  
+  display: flex;
+}
+
+#author {
+  -webkit-flex: 0 1 auto;
 }
 
 #author-name {
@@ -15,12 +23,13 @@
 }
 
 #date {
-  display: inline;
+  -webkit-flex: 1 1 auto;
+  text-align: right;
 }
 
 #message {
 }
 
 #identifier {
-  font-weight: bold;
+  color: #ccc;
 }

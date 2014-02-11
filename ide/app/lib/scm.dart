@@ -11,6 +11,7 @@ library spark.scm;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:intl/intl.dart';
 
 import 'builder.dart';
 import 'jobs.dart';
@@ -157,7 +158,9 @@ abstract class ScmProjectOperations {
 
   Future checkoutBranch(String branchName);
 
-  Future commit(String commitMessage);
+  Future commit(String userName, String userEmail, String commitMessage);
+
+  Future push(String username, String password);
 
   void updateForChanges(List<ChangeDelta> changes);
 }
@@ -202,6 +205,10 @@ class CommitInfo {
   String authorEmail;
   DateTime date;
   String message;
+
+  String _getDateString() => date == null ? '' : new DateFormat.yMd("en_US").format(date);
+  String _getTimeString() => date == null ? '' : new DateFormat("Hm", "en_US").format(date);
+  String get dateString => '${_getDateString()} ${_getTimeString()}';
 }
 
 /**
@@ -315,9 +322,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future push() {
+  Future push(String username, String password) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(root: entry, store: store);
+      GitOptions options = new GitOptions(root: entry, store: store,
+          username: username, password: password);
       return Push.push(options);
     });
   }
@@ -338,10 +346,11 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future commit(String commitMessage) {
+  Future commit(String userName, String userEmail, String commitMessage) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
-          root: entry, store: store, commitMessage: commitMessage);
+          root: entry, store: store, commitMessage: commitMessage,
+          name: userName, email: userEmail);
       return Commit.commit(options).then((_) {
         _refreshStatus();
       });
@@ -354,11 +363,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
       return Push.getPendingCommits(options).then((commits) {
         return commits.map((item) {
           CommitInfo result = new CommitInfo();
-          String identifier = item.sha;
+          result.identifier = item.sha;
           result.authorName = item.author.name;
           result.authorEmail = item.author.email;
           result.date = item.author.date;
           result.message = item.message;
+          return result;
         });
       });
     });

@@ -13,13 +13,15 @@
     </style>
 
     <div>
-      <div id="identifier">{{commitInfo.identifier}}</div>
-      <div id="author-info">
-        <div id="author-name">{{commitInfo.authorName}}</div>
-        <div id="author-email">{{commitInfo.authorEmail}}</div>
-        <div id="author-date">{{commitInfo.date.toString()}}</div>
-      </div>
       <div id="message">{{commitInfo.message}}</div>
+      <div id="author-info">
+        <div id="author">
+          <div id="author-name">{{commitInfo.authorName}}</div>
+          <div id="author-email">&lt;{{commitInfo.authorEmail}}&gt;</div>
+        </div>
+        <div id="author-date">{{commitInfo.dateString}}</div>
+      </div>
+      <div id="identifier">{{commitInfo.identifier}}</div>
     </div>
   </template>
 
