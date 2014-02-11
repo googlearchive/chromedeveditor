@@ -40,4 +40,5 @@ abstract class SparkModel extends Application {
   void showErrorMessage(String title, String message);
 
   void onSplitViewUpdate(int position);
+  void setGitSettingsResetDoneVisible(bool visible);
 }

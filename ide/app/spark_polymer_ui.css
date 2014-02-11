@@ -97,6 +97,10 @@
   text-decoration: none;
 }
 
+#gitResetSettingsDone {
+  margin-left: 15px;
+}
+
 #mainMenu {
   position: relative;
   top: 3px;

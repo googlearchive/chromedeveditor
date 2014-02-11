@@ -478,6 +478,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void onSplitViewUpdate(int position) { }
 
+  void setGitSettingsResetDoneVisible(bool enabled) {
+    getUIElement('#gitResetSettingsDone').hidden = !enabled;
+  }
+
   List<ws.Resource> _getSelection() => _filesController.getSelection();
 
   ws.Folder _getFolder([List<ws.Resource> resources]) {
@@ -1837,6 +1841,7 @@ class SettingsAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
+    spark.setGitSettingsResetDoneVisible(false);
     _show();
   }
 
