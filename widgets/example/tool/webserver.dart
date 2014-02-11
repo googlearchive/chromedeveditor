@@ -5,8 +5,17 @@
 import 'dart:io';
 
 void main(List<String> arguments) {
-  int port = arguments.isNotEmpty ? int.parse(arguments[0]) : 8080;;
+  int port = arguments.isNotEmpty ? int.parse(arguments[0]) : 8080;
   _run(port);
+}
+
+void _sendResponse(HttpRequest request, File file) {
+  file.openRead()
+      .pipe(request.response)
+      .catchError((e) {
+        request.response.write(e.toString());
+        request.response.close();
+      });
 }
 
 void _sendNotFound(HttpResponse response) {
@@ -24,7 +33,7 @@ String _getHomePath() {
 void _run(int port) {
   HttpServer.bind('127.0.0.1', port).then((HttpServer server) {
     print("Open Dartium with http://127.0.0.1:${port}");
-    print("Server listening..");
+    print("Server listening...");
     server.listen((HttpRequest request) {
       final String homeDirectory = _getHomePath();
       final String requestedPath = request.uri.toFilePath();
@@ -34,12 +43,7 @@ void _run(int port) {
       final File file = new File(resultPath);
       file.exists().then((bool found) {
         if (found) {
-          file.openRead()
-              .pipe(request.response)
-              .catchError((e) {
-                request.response.write(e.toString());
-                request.response.close();
-              });
+          _sendResponse(request, file);
         } else {
           _sendNotFound(request.response);
         }
