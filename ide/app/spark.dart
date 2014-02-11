@@ -1450,13 +1450,11 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         _needsFillNameEmail = false;
         _gitName = info['name'];
         _gitEmail = info['email'];
-        print('${_gitName} ${_gitEmail}');
       } else {
         _needsFillNameEmail = true;
       }
       getElement('#gitUserInfo').classes.toggle('hidden', !_needsFillNameEmail);
       gitOperations = spark.scmManager.getScmOperationsFor(project);
-      print('gitop: ${gitOperations}');
       _commitMessageElement.value = '';
       _userNameElement.value = '';
       _userEmailElement.value = '';
@@ -1596,7 +1594,6 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
           _gitPassword = info['password'];
           _push();
         }).catchError((_) {
-          // Could not authenticate or the user cancelled.
           print('cancelled authentication');
         });
       });
@@ -1735,7 +1732,6 @@ class _GitPushJob extends Job {
     return gitOperations.push(username, password).then((_) {
       spark.showSuccessMessage('Changes pushed successfully');
     }).catchError((e) {
-      print(e);
       spark.showErrorMessage('Error while pushing changes', e.toString());
     });
   }
