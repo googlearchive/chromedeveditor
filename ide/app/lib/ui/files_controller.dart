@@ -662,10 +662,9 @@ class FilesController implements TreeViewDelegate {
    * Shows the context menu at the location of the mouse event.
    */
   void _showMenuForEvent(FileItemCell cell,
-                         html.Event event,
+                         html.MouseEvent event,
                          Resource resource) {
-    html.Point position = getEventAbsolutePosition(event);
-    _showMenuAtLocation(cell, position, resource);
+    _showMenuAtLocation(cell, event.client, resource);
   }
 
   /**
