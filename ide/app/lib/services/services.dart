@@ -104,6 +104,9 @@ class ChromeServiceImpl extends Service {
 
   // For incoming (non-requested) actions.
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    Completer<ServiceActionEvent> completer =
+        new Completer<ServiceActionEvent>();
+
     switch(event.actionId) {
       case "delay":
         int milliseconds = event.data['ms'];
@@ -111,8 +114,14 @@ class ChromeServiceImpl extends Service {
             .then((_) {
               ServiceActionEvent response = event.createReponse(null);
               _sendResponse(response);
+              completer.complete(response);
             });
+        break;
+      default:
+        throw "Unknown action '${event.actionId}' sent to Chrome service.";
     }
+
+    return completer.future;
   }
 }
 
