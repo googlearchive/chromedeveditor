@@ -681,7 +681,7 @@ class FilesController implements TreeViewDelegate {
 
     contextMenu.style.left = '${clickPoint.x}px';
     if (estimatedHeight + clickPoint.y > topUi.offsetHeight) {
-      contextMenu.style.top = '${clickPoint.y - estimatedHeight}px';
+      contextMenu.style.top = '${topUi.offsetHeight - estimatedHeight}px';
     } else {
       contextMenu.style.top = '${clickPoint.y}px';
     }
