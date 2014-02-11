@@ -96,18 +96,23 @@ class ServicesIsolate {
     return new ExampleServiceImpl(this);
   }
 
-  _handleMessage(ServiceActionEvent event) {
+  Future<ServiceActionEvent> _handleMessage(ServiceActionEvent event) {
+    Completer<ServiceActionEvent> completer =
+        new Completer<ServiceActionEvent>();
+
     ServiceImpl service = getService(event.serviceId);
     service.handleEvent(event).then((ServiceActionEvent responseEvent){
       if (responseEvent != null) {
         _sendResponse(responseEvent);
+        completer.complete();
       }
     });
+    return completer.future;
   }
 
 
   // Sends a response message.
-  Future<ServiceActionEvent> _sendResponse(ServiceActionEvent event, [Map data,
+  void _sendResponse(ServiceActionEvent event, [Map data,
       bool expectResponse = false]) {
     // TODO(ericarnold): implement expectResponse
     event.response = true;
@@ -147,6 +152,8 @@ class ExampleServiceImpl extends ServiceImpl {
           return new Future.value(event.createReponse(
               {"response": "long${event.data['name']}"}));
         });
+      default:
+        throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
   }
 }
