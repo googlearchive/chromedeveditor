@@ -1503,7 +1503,6 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _startJob() {
-    print('gitop2: ${gitOperations}');
     // TODO(grv): add verify checks.
     _GitCommitJob job = new _GitCommitJob(
         gitOperations, _gitName, _gitEmail, _commitMessageElement.value, spark);
@@ -1616,12 +1615,13 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     if (_needsUsernamePassword) {
       Timer.run(() {
+        // In a timer to let the previous dialog dismiss properly.
         GitAuthenticationDialog.request(spark).then((info) {
           _gitUsername = info['username'];
           _gitPassword = info['password'];
           _push();
         }).catchError((_) {
-          print('cancelled authentication');
+          // Cancelled authentication: do nothing.
         });
       });
     } else {
