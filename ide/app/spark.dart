@@ -400,6 +400,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new SearchAction(this));
+    actionManager.registerAction(new FocusMainMenuAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1329,6 +1330,18 @@ class SearchAction extends SparkAction {
   }
 }
 
+class FocusMainMenuAction extends SparkAction {
+  FocusMainMenuAction(Spark spark)
+      : super(spark, 'focusMainMenu', 'Focus Main Menu') {
+    addBinding('f10');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    spark.getUIElement('#mainMenu').focus();
+  }
+}
+
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElement;
   ws.Folder folder;
@@ -1336,7 +1349,6 @@ class NewProjectAction extends SparkActionWithDialog {
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
     _nameElement = _triggerOnReturn("#name");
-    addBinding('ctrl-shift-n');
   }
 
   void _invoke([context]) {

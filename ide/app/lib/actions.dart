@@ -105,8 +105,17 @@ class ActionManager {
    */
   Iterable<Action> getActions() => _actionMap.values;
 
+  bool _isSingleKeyEvent(int keyCode) {
+    final Set<int> _allowedKey = new Set.from(
+      [KeyCode.F1, KeyCode.F2, KeyCode.F3, KeyCode.F4, KeyCode.F5, KeyCode.F6,
+       KeyCode.F7, KeyCode.F8, KeyCode.F9, KeyCode.F10, KeyCode.F11,
+       KeyCode.F12]);
+    return _allowedKey.contains(keyCode);
+  }
+
   void handleKeyEvent(KeyboardEvent event) {
-    if (!event.altKey && !event.ctrlKey && !event.metaKey) {
+    if (!event.altKey && !event.ctrlKey && !event.metaKey &&
+        !_isSingleKeyEvent(event.keyCode)) {
       return;
     }
 
