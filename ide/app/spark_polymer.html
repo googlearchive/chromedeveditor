@@ -71,11 +71,11 @@
 </head>
 
 <body>
+  <!-- Splash screen. -->
+  <div id="splashScreen"></div>
+
   <!-- Top-level UI element. -->
-  <!-- BUG: Polymer's own .polymer-veiled class: doesn't work - it gets removed
-       too soon, and doesn't prevent FOUC at all.
-       TODO(sergeygs): switch to Polymer's way once it's fixed.-->
-  <spark-polymer-ui id="topUi" class="veiled">
+  <spark-polymer-ui id="topUi">
     <div id="fileViewArea"></div>
     <div id="editorArea"></div>
   </spark-polymer-ui>
