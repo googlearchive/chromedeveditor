@@ -159,7 +159,7 @@ class CommitObject extends GitObject {
   Author author;
   Author committer;
   String _encoding;
-  String _message;
+  String message;
   String treeSha;
 
   // raw commit object. This is needed in building pack files.
@@ -205,7 +205,7 @@ class CommitObject extends GitObject {
 
     lines.removeRange(0, i +2);
 
-    _message = lines.join("\n");
+    message = lines.join("\n");
   }
 
   Author _parseAuthor(String input) {
@@ -227,7 +227,7 @@ class CommitObject extends GitObject {
     String str = "commit " + sha + "\n";
     str += "Author: " + author.name + " <" + author.email + ">\n";
     str += "Date:  " + author.date.toString() + "\n\n";
-    str += _message;
+    str += message;
     return str;
   }
 
@@ -241,7 +241,7 @@ class CommitObject extends GitObject {
             "author_name": author.name,
             "author_email": author.email,
             "date": author.date.toString(),
-            "message": _message
+            "message": message
            };
   }
 }

@@ -64,4 +64,10 @@ class SparkPolymerUI extends SparkWidget {
       action.bindings.forEach((keyBind) => menuItem.description = keyBind.getDescription());
     });
   }
+
+  void onResetGit() {
+    SparkModel.instance.syncPrefs.setValue('git-auth-info', null);
+    SparkModel.instance.syncPrefs.setValue('git-user-info', null);
+    SparkModel.instance.setGitSettingsResetDoneVisible(true);
+  }
 }

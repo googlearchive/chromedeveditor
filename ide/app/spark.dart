@@ -33,6 +33,7 @@ import 'lib/tests.dart';
 import 'lib/services/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
+import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
@@ -388,6 +389,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
+    actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
@@ -475,6 +477,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void onSplitViewUpdate(int position) { }
+
+  void setGitSettingsResetDoneVisible(bool enabled) {
+    getUIElement('#gitResetSettingsDone').hidden = !enabled;
+  }
 
   List<ws.Resource> _getSelection() => _filesController.getSelection();
 
@@ -1452,24 +1458,58 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
   TextAreaElement _commitMessageElement;
+  InputElement _userNameElement;
+  InputElement _userEmailElement;
+  bool _needsFillNameEmail;
+  String _gitName;
+  String _gitEmail;
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Git Commit…", dialog) {
     _commitMessageElement = getElement("#commitMessage");
+    _userNameElement = getElement('#gitName');
+    _userEmailElement = getElement('#gitEmail');
   }
 
   void _invoke([context]) {
     project = context.first;
-    gitOperations = spark.scmManager.getScmOperationsFor(project);
-    _commitMessageElement.value = '';
-
-    _show();
+    spark.syncPrefs.getValue("git-user-info").then((String value) {
+      _gitName = null;
+      _gitEmail = null;
+      if (value != null) {
+        Map<String,String> info = JSON.decode(value);
+        _needsFillNameEmail = false;
+        _gitName = info['name'];
+        _gitEmail = info['email'];
+      } else {
+        _needsFillNameEmail = true;
+      }
+      getElement('#gitUserInfo').classes.toggle('hidden', !_needsFillNameEmail);
+      gitOperations = spark.scmManager.getScmOperationsFor(project);
+      _commitMessageElement.value = '';
+      _userNameElement.value = '';
+      _userEmailElement.value = '';
+      _show();
+    });
   }
 
   void _commit() {
+    if (_needsFillNameEmail) {
+      _gitName = _userNameElement.value;
+      _gitEmail = _userEmailElement.value;
+      String encoded = JSON.encode({'name': _gitName, 'email': _gitEmail});
+      spark.syncPrefs.setValue("git-user-info", encoded).then((_) {
+        _startJob();
+      });
+    } else {
+      _startJob();
+    }
+  }
+
+  void _startJob() {
     // TODO(grv): add verify checks.
     _GitCommitJob job = new _GitCommitJob(
-        gitOperations, _commitMessageElement.value, spark);
+        gitOperations, _gitName, _gitEmail, _commitMessageElement.value, spark);
     spark.jobManager.schedule(job);
   }
 
@@ -1515,6 +1555,82 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
         _selectElement.selectedIndex].value;
     _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
     spark.jobManager.schedule(job);
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isScmProject(context);
+}
+
+class GitPushAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project project;
+  GitScmProjectOperations gitOperations;
+  DivElement _commitsList;
+  String _gitUsername;
+  String _gitPassword;
+  bool _needsUsernamePassword;
+
+  GitPushAction(Spark spark, Element dialog)
+      : super(spark, "git-push", "Git Push…", dialog) {
+    _commitsList = getElement('#gitCommitList');
+  }
+
+  void _invoke([context]) {
+    project = context.first;
+
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
+    gitOperations.getPendingCommits().then((List<CommitInfo> commits) {
+      // Fill commits.
+      _commitsList.innerHtml = '';
+      String summaryString = commits.length == 1 ? "1 commit" : "${commits.length} commits";
+      Element title = document.createElement("h1");
+      title.appendText(summaryString);
+      _commitsList.append(title);
+      commits.forEach((CommitInfo info) {
+        CommitMessageView commitView = new CommitMessageView();
+        commitView.commitInfo = info;
+        _commitsList.children.add(commitView);
+      });
+
+      spark.syncPrefs.getValue("git-auth-info").then((String value) {
+        _gitUsername = null;
+        _gitPassword = null;
+        if (value != null) {
+          Map<String,String> info = JSON.decode(value);
+          _needsUsernamePassword = false;
+          _gitUsername = info['username'];
+          _gitPassword = info['password'];
+        }
+        else {
+          _needsUsernamePassword = true;
+        }
+        _show();
+      });
+    }).catchError((e) {
+      spark.showErrorMessage('Push failed', 'No commits to push');
+    });
+  }
+
+  void _push() {
+    _GitPushJob job = new _GitPushJob(gitOperations, _gitUsername, _gitPassword, spark);
+    spark.jobManager.schedule(job);
+  }
+
+  void _commit() {
+    if (_needsUsernamePassword) {
+      Timer.run(() {
+        // In a timer to let the previous dialog dismiss properly.
+        GitAuthenticationDialog.request(spark).then((info) {
+          _gitUsername = info['username'];
+          _gitPassword = info['password'];
+          _push();
+        }).catchError((_) {
+          // Cancelled authentication: do nothing.
+        });
+      });
+    } else {
+      _push();
+    }
   }
 
   String get category => 'git';
@@ -1591,15 +1707,18 @@ class _GitBranchJob extends Job {
 class _GitCommitJob extends Job {
   GitScmProjectOperations gitOperations;
   String _commitMessage;
+  String _userName;
+  String _userEmail;
   Spark spark;
 
-  _GitCommitJob(this.gitOperations, this._commitMessage, this.spark)
-      : super("Committing…");
+  _GitCommitJob(this.gitOperations, this._userName, this._userEmail,
+      this._commitMessage, this.spark) : super("Committing…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return gitOperations.commit(_commitMessage).then((_) {
+    return gitOperations.commit(_userName, _userEmail, _commitMessage).
+        then((_) {
       spark.showSuccessMessage('Committed changes');
     }).catchError((e) {
       spark.showErrorMessage('Error committing changes', e.toString());
@@ -1624,6 +1743,27 @@ class _GitCheckoutJob extends Job {
       spark.showSuccessMessage('Switched to branch ${_branchName}');
     }).catchError((e) {
       spark.showErrorMessage('Error switching to ${_branchName}', e.toString());
+    });
+  }
+}
+
+class _GitPushJob extends Job {
+  GitScmProjectOperations gitOperations;
+  Spark spark;
+  String username;
+  String password;
+
+  _GitPushJob(this.gitOperations, this.username, this.password, this.spark)
+      : super("Pushing changes…") {
+  }
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    return gitOperations.push(username, password).then((_) {
+      spark.showSuccessMessage('Changes pushed successfully');
+    }).catchError((e) {
+      spark.showErrorMessage('Error while pushing changes', e.toString());
     });
   }
 }
@@ -1701,6 +1841,7 @@ class SettingsAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
+    spark.setGitSettingsResetDoneVisible(false);
     _show();
   }
 
@@ -1717,6 +1858,51 @@ class RunTestsAction extends SparkAction {
   }
 
   _invoke([Object context]) => spark._testDriver.runTests();
+}
+
+class GitAuthenticationDialog extends SparkActionWithDialog {
+  Completer completer;
+  static GitAuthenticationDialog _instance;
+  bool _initialized = false;
+
+  GitAuthenticationDialog(spark, dialogElement)
+      : super(spark, "git-authentication", "Authenticate", dialogElement);
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
+      _dialog.element.querySelector(".cancel-button").onClick.listen((_) => _cancel());
+      _initialized = true;
+    }
+
+    spark.setGitSettingsResetDoneVisible(false);
+    _show();
+  }
+
+  void _commit() {
+    String username = (getElement('#gitUsername') as InputElement).value;
+    String password = (getElement('#gitPassword') as InputElement).value;
+    String encoded = JSON.encode({'username': username, 'password': password});
+    spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
+      completer.complete({'username': username, 'password': password});
+      completer = null;
+    });
+  }
+
+  void _cancel() {
+    completer.completeError("cancelled");
+    completer = null;
+  }
+
+  static Future request(Spark spark) {
+    if (_instance == null) {
+      _instance = new GitAuthenticationDialog(spark,
+          spark.getDialogElement('#gitAuthenticationDialog'));
+    }
+    assert(_instance.completer != null);
+    _instance.completer = new Completer();
+    _instance.invoke();
+    return _instance.completer.future;
+  }
 }
 
 // analytics code

@@ -97,7 +97,56 @@
   text-decoration: none;
 }
 
+#gitResetSettingsDone {
+  margin-left: 15px;
+}
+
 #mainMenu {
   position: relative;
   top: 3px;
+}
+
+#gitPushDialog .modal-body {
+  margin: 0;
+  padding: 0;
+}
+
+#gitPushDialog .form-group {
+  margin: 0;
+}
+
+#gitPushDialog .modal-footer {
+  margin: 0;
+}
+
+#gitCommitList {
+  max-height: 250px;
+  overflow: scroll;
+  padding: 0 20px;  
+}
+
+#gitCommitList h1 {
+  font-size: 15px;
+  margin-top: 20px;
+  margin-bottom: 0px;
+}
+
+#gitUserInfo.hidden {
+  display: none;
+}
+
+.input-label {
+  display: flex;
+  margin: 10px 0;
+}
+
+.input-label label {
+  -webkit-flex: 0 1 auto;
+  width: 150px;
+  position: relative;
+  top: 9px;
+}
+
+.input-label input {
+  -webkit-flex: 1 1 auto;
 }
