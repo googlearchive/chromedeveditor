@@ -187,9 +187,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
       return;
     }
 
-    var dirProxy = (launchContainer.entry as dynamic).jsProxy;
-
-    dev_private.developerPrivate.loadDirectory(dirProxy).then((String appId) {
+    dev_private.developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
       // TODO: Use returned appId once that returns the correct results.
       _getAppId(launchContainer.name).then((String id) {
         _launchApp(id);
