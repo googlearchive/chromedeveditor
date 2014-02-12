@@ -13,9 +13,4 @@ import '../spark_selector/spark_selector.dart';
 @CustomTag("spark-menu")
 class SparkMenu extends SparkSelector {
   SparkMenu.created(): super.created();
-
-  // TODO(terry): Work around because changed events aren't handled up the
-  //              sub-chain.
-  void selectedChanged() => super.selectedChanged();
-  void selectionSelect(e, detail) => super.onSelectionSelect(e, detail);
 }

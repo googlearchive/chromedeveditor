@@ -22,7 +22,6 @@ class SparkMenuButton extends SparkWidget {
   @published bool opened = false;
   @published bool responsive = false;
   @published String valign = "center";
-  @published String selectedClass = "";
 
   SparkMenuButton.created(): super.created();
 
@@ -67,7 +66,4 @@ class SparkMenuButton extends SparkWidget {
     e.stopImmediatePropagation();
     e.preventDefault();
   }
-
-  //* Returns the selected item.
-  String get selection => ($['overlayMenu'] as SparkMenu).selection;
 }

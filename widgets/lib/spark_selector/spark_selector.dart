@@ -8,6 +8,7 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
+import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_selection/spark_selection.dart';
 
 // Ported from Polymer Javascript to Dart code.
@@ -41,12 +42,12 @@ import 'package:spark_widgets/spark_selection/spark_selection.dart';
  *     ($['selector'] as SparkSelector).selected = ['foo', 'zot'];
  */
 @CustomTag("spark-selector")
-class SparkSelector extends SparkSelection {
+class SparkSelector extends SparkWidget {
   /// The initially selected elements. This can be any of the following:
   /// 1)...
   /// [selected] can also be used after the initial instantiation to force a
   /// particular selection.
-  @published dynamic selected = null;
+  @published dynamic selected;
 
   /// If true, multiple selections are allowed.
   @published bool multi = false;
@@ -54,14 +55,15 @@ class SparkSelector extends SparkSelection {
   /// The attribute to be used as an item's "value".
   @published String valueattr = 'name';
 
+  /// The CSS selector to choose the selectable subset of elements passed from
+  /// the light DOM into the <content> insertion point.
+  @published String selectableFilter;
+
   /// The CSS class to add to the selected element.
   @published String selectedClass = '';
   /// The attribute to set on the selected element.
   @published String selectedProperty = '';
 
-  /// The CSS selector to choose the selectable subset of elements passed from
-  /// the light DOM into the <content> insertion point.
-  @published String selectableItem = null;
 
   // TODO(terry): Should be tap when PointerEvents are supported.
   @published String activateEvent = 'click';
@@ -75,10 +77,12 @@ class SparkSelector extends SparkSelection {
   void enteredView() {
     super.enteredView();
 
-    _items = ($['items'] as ContentElement).getDistributedNodes();
-    if (selectableItem != null) {
-      _items.removeWhere((Element e) => !e.matches(selectableItem));
+    _items = SparkWidget.expandCascadingContentNodes($['items']);
+//    _items = ($['items'] as ContentElement).getDistributedNodes();
+    if (selectableFilter != null) {
+      _items.removeWhere((Element e) => !e.matches(selectableFilter));
     }
+
     _selection = $['selection'] as SparkSelection;
 
     addEventListener(activateEvent, onActivate);

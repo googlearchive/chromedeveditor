@@ -43,4 +43,14 @@ class SparkWidget extends PolymerElement {
       elementToFocus.focus();
     }
   }
+
+  List<Node> getExpandedDistributedNodes(String contentSelector) {
+    ContentElement content = shadowRoot.querySelector(contentSelector);
+    return expandCascadingContentNodes(content);
+  }
+
+  static List<Node> expandCascadingContentNodes(ContentElement content) {
+    return content.getDistributedNodes().expand((e) =>
+        e is ContentElement ? expandCascadingContentNodes(e) : e);
+  }
 }
