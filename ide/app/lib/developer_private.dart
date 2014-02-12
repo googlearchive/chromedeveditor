@@ -16,7 +16,7 @@ import 'package:chrome/src/common.dart';
 final ChromeDeveloperPrivate developerPrivate = new ChromeDeveloperPrivate._();
 
 class ChromeDeveloperPrivate {
-  static final JsObject _developerPrivate = context['chrome']['browserAction'];
+  static final JsObject _developerPrivate = context['chrome']['developerPrivate'];
 
   ChromeDeveloperPrivate._();
 
@@ -31,6 +31,9 @@ class ChromeDeveloperPrivate {
     return completer.future;
   }
 
+  /**
+   * Returns the info about all installed apps and extensions.
+   */
   Future<List> getItemsInfo() {
     var completer = new ChromeCompleter<String>.oneArg(listify);
     _developerPrivate.callMethod(
