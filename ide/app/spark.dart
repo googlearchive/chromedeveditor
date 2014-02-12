@@ -388,6 +388,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
+    actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -833,6 +834,28 @@ abstract class SparkAction extends Action {
    */
   bool _isScmProject(context) =>
       _isProject(context) && isUnderScm(context.first);
+
+  /**
+   * Returns true if `context` is a list with of items, all in the same project,
+   * and that project is under SCM.
+   */
+  bool _isUnderScmProject(context) {
+    if (context is! List) return false;
+    if (context.isEmpty) return false;
+
+    ws.Project project = context.first.project;
+
+    if (!isUnderScm(project)) return false;
+
+    for (var resource in context) {
+      var resProject = resource.project;
+      if (resProject == null || resProject != project) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 
   /**
    * Returns true if `object` is a list with a single item and this item is a
@@ -1636,6 +1659,37 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   String get category => 'git';
 
   bool appliesTo(context) => _isScmProject(context);
+}
+
+class GitResolveConflictsAction extends SparkAction implements ContextAction {
+  GitResolveConflictsAction(Spark spark) :
+      super(spark, "git-resolve-conflicts", "Resolve Conflicts");
+
+  void _invoke([context]) {
+    // TODO:
+    ws.Resource file = _getResource(context);
+
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isUnderScmProject(context) &&
+      _isSingleResource(context) && _fileHasConflicts(context);
+
+  bool _fileHasConflicts(context) {
+    ws.Resource file = _getResource(context);
+
+    // TODO:
+    return file != null;
+  }
+
+  ws.Resource _getResource(context) {
+    if (context is List) {
+      return context.isNotEmpty ? context.first : null;
+    } else {
+      return null;
+    }
+  }
 }
 
 class _GitCloneJob extends Job {
