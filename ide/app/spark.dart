@@ -1860,62 +1860,48 @@ class RunTestsAction extends SparkAction {
   _invoke([Object context]) => spark._testDriver.runTests();
 }
 
-class GitAuthenticationDialog {
-  SparkDialog _dialog;
-  Spark _spark;
-  Completer _completer;
+class GitAuthenticationDialog extends SparkActionWithDialog {
+  Completer completer;
   static GitAuthenticationDialog _instance;
-  StreamSubscription _loginSubscription;
-  StreamSubscription _cancelSubscription;
+  bool _initialized = false;
 
-  GitAuthenticationDialog(this._spark, this._completer) {
-    Element dialogElement = _spark.getDialogElement('#gitAuthenticationDialog');
-    _dialog = _spark.createDialog(dialogElement);
-    _loginSubscription = _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
-    _cancelSubscription = _dialog.element.querySelector(".cancel-button").onClick.listen((_) => _cancel());
-  }
+  GitAuthenticationDialog(spark, dialogElement)
+      : super(spark, "git-authentication", "Authenticate", dialogElement);
 
-  void _unregister() {
-    _loginSubscription.cancel();
-    _cancelSubscription.cancel();
+  void _invoke([Object context]) {
+    if (!_initialized) {
+      _dialog.element.querySelector(".cancel-button").onClick.listen((_) => _cancel());
+      _initialized = true;
+    }
+
+    spark.setGitSettingsResetDoneVisible(false);
+    _show();
   }
 
   void _commit() {
     String username = (getElement('#gitUsername') as InputElement).value;
     String password = (getElement('#gitPassword') as InputElement).value;
     String encoded = JSON.encode({'username': username, 'password': password});
-    _spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
-      _completer.complete({'username': username, 'password': password});
-      _unregister();
+    spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
+      completer.complete({'username': username, 'password': password});
+      completer = null;
     });
   }
-
-  Element getElement(String selectors) =>
-      _dialog.element.querySelector(selectors);
-
-  Element _triggerOnReturn(String selectors) {
-    var element = _dialog.element.querySelector(selectors);
-    element.onKeyDown.listen((event) {
-      if (event.keyCode == KeyCode.ENTER) {
-        _commit();
-        _dialog.hide();
-      }
-    });
-    return element;
-  }
-
-  void _show() => _dialog.show();
 
   void _cancel() {
-    _completer.completeError("cancelled");
-    _unregister();
+    completer.completeError("cancelled");
+    completer = null;
   }
 
   static Future request(Spark spark) {
-    Completer completer = new Completer();
-    GitAuthenticationDialog dialog = new GitAuthenticationDialog(spark, completer);
-    dialog._show();
-    return completer.future;
+    if (_instance == null) {
+      _instance = new GitAuthenticationDialog(spark,
+          spark.getDialogElement('#gitAuthenticationDialog'));
+    }
+    assert(_instance.completer != null);
+    _instance.completer = new Completer();
+    _instance.invoke();
+    return _instance.completer.future;
   }
 }
 

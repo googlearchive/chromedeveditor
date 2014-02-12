@@ -11,7 +11,7 @@
 }
 
 #author {
-  -webkit-flex: 0 1 auto;
+  flex: 0 1 auto;
 }
 
 #author-name {
@@ -23,7 +23,7 @@
 }
 
 #date {
-  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
   text-align: right;
 }
 
