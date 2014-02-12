@@ -82,6 +82,10 @@ class SparkSuggestBox extends SparkWidget {
     suggestions.clear();
     suggestions.addAll(update);
     toggle(true);
+    shadowRoot.querySelectorAll('.unresolved').forEach((Element e) {
+      print(e);
+      e.classes.remove('unresolved');
+    });
   }
 
   /// Hides the suggestion list popup and clears the suggestion list.
@@ -150,5 +154,9 @@ class SparkSuggestBox extends SparkWidget {
     if (e.detail == false) {
       opened = false;
     }
+  }
+
+  void onSelected(Event event, var detail) {
+    print(detail);
   }
 }
