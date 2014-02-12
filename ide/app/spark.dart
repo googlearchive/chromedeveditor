@@ -476,15 +476,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   Future openFolder() {
     return _selectFolder().then((chrome.DirectoryEntry entry) {
-      if (entry != null) {
-        workspace.link(new ws.FolderRoot(entry)).then((ws.Resource resource) {
-          Timer.run(() {
-            _filesController.selectFile(resource);
-            _filesController.setFolderExpanded(resource);
-          });
-          workspace.save();
-        });
-      }
+      _OpenFolderJob job = new _OpenFolderJob(entry, this);
+      jobManager.schedule(job);
     });
   }
 
@@ -1662,6 +1655,39 @@ class _GitCheckoutJob extends Job {
     }).catchError((e) {
       spark.showErrorMessage('Error switching to ${_branchName}', e.toString());
     });
+  }
+}
+
+
+class _OpenFolderJob extends Job {
+  Spark spark;
+  chrome.DirectoryEntry _entry;
+
+  _OpenFolderJob(chrome.DirectoryEntry entry, this.spark)
+      : super("Opening ${entry}…") {
+    _entry = entry;
+  }
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    if (_entry != null) {
+      return spark.workspace.link(
+          new ws.FolderRoot(_entry)).then((ws.Resource resource) {
+        Timer.run(() {
+          spark._filesController.selectFile(resource);
+          spark._filesController.setFolderExpanded(resource);
+        });
+        spark.workspace.save();
+      }).then((_) {
+        spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
+      }).catchError((e) {
+        spark.showErrorMessage('Error opening folder ${_entry.fullPath}',
+            e.toString());
+      });
+    }
+
+    return null;
   }
 }
 
