@@ -1627,7 +1627,7 @@ class _OpenFolderJob extends Job {
   chrome.DirectoryEntry _entry;
 
   _OpenFolderJob(chrome.DirectoryEntry entry, this.spark)
-      : super("Opening ${entry}…") {
+      : super("Opening ${entry.fullPath}…") {
     _entry = entry;
   }
 
@@ -1641,7 +1641,7 @@ class _OpenFolderJob extends Job {
           spark._filesController.selectFile(resource);
           spark._filesController.setFolderExpanded(resource);
         });
-        spark.workspace.save();
+        return spark.workspace.save();
       }).then((_) {
         spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
       }).catchError((e) {
