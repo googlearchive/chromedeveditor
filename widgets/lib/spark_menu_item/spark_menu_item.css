@@ -15,11 +15,13 @@
   color: #000;
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
+  min-width: 220px;
   white-space: nowrap;
 }
 
 #descriptionText {
   color: #bdbdbd;
+  float: right;
 }
 
 :host(.highlighted), /*BUG #733*/ :host.highlighted {
