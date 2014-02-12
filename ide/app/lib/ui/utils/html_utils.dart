@@ -7,6 +7,26 @@ library spark.ui.utils.html_utils;
 import 'dart:html';
 
 /**
+ * Returns position of the element within the page.
+ */
+Point getAbsolutePosition(Element element) {
+  Point result = new Point(0, 0);
+  while (element != null) {
+    result += element.offset.topLeft;
+    result -= new Point(element.scrollLeft, element.scrollTop);
+    element = element.offsetParent;
+  }
+  return result;
+}
+
+/**
+ * Returns position of the mouse cursor within the page.
+ */
+Point getEventAbsolutePosition(MouseEvent event) {
+  return getAbsolutePosition(event.target) + event.offset;
+}
+
+/**
  * Returns true if the mouse cursor is inside an element.
  * `marginX` and `marginY` will define a vertical and horizontal margin to
  * increase the size of the matching area.
