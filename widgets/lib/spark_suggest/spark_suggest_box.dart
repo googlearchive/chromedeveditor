@@ -29,6 +29,7 @@ class Suggestion {
 
   String get formatDetails => details != null ? "[$details]" : "";
 
+  // TODO: Why are these invoked by Polymer???
   set formatDetails(String v) => print("WHY? details=$v");
   set label(String v) => print("WHY? label=$v");
 }
