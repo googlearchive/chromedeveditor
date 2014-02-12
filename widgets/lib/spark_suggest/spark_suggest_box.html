@@ -51,11 +51,14 @@
         on-activate="{{toggle}}"
         on-opened="{{onOpened}}">
 
-      <spark-menu id="suggestion-list-menu" valueattr="label" selected=0>
+      <spark-menu
+          id="suggestion-list-menu"
+          valueattr="label"
+          selected=0
+          on-activated="{{onSelected}}">
         <template repeat="{{s in suggestions}}">
           <spark-menu-item
-              label="label" description="[description]">
-              <!--label="{{s.label}}" description="{{s.formatDetails}}"-->
+              class="unresolved" label="{{s.label}}" description="{{s.formatDetails}}">
           </spark-menu-item>
         </template>
       </spark-menu>
