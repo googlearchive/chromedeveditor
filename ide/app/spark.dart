@@ -167,6 +167,43 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     // Add a Dart builder.
     addBuilder(new DartBuilder());
+
+    ws.Resource folderResource;
+    return;
+    new Future.delayed(const Duration(milliseconds: 1000)).then((_){
+//      _testDriver.runTests();
+
+//      return _selectFolder(suggestedName: "/Users/ericarnold/Documents/projects/Spark/testing/sandbox/huge/").then((chrome.DirectoryEntry entry) {
+//        if (entry != null) {
+//          return workspace.link(new ws.FolderRoot(entry)).then((ws.Resource resource) {
+//            Timer.run(() {
+//              _filesController.selectFile(resource);
+//              _filesController.setFolderExpanded(resource);
+//              folderResource = resource;
+//            });
+//            return workspace.save();
+//          });
+//        }
+//      });
+
+//      return _selectFolder(suggestedName: "/Users/ericarnold/Documents/projects/Spark/testing/sandbox/huge/").then((chrome.DirectoryEntry entry) {
+//        _OpenFolderJob job = new _OpenFolderJob(entry, this);
+//        jobManager.schedule(job);
+//      });
+    }).then((_){
+      return new Future.delayed(const Duration(seconds: 1));
+    }).then((_){
+      print("closing ...");
+      workspace.unlink(folderResource);
+      if (folderResource is ws.File) {
+        _closeOpenEditor(folderResource);
+      } else if (folderResource is ws.Project) {
+        folderResource.traverse().forEach(_closeOpenEditor);
+      }
+
+      workspace.save();
+
+    });
   }
 
   initServices() {
