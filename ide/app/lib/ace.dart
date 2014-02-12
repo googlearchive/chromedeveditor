@@ -24,8 +24,6 @@ import 'workspace.dart' as workspace;
 
 export 'package:ace/ace.dart' show EditSession;
 
-import '../packages/spark_widgets/spark_button/spark_button.dart';
-
 class TextEditor extends Editor {
   final AceManager aceManager;
   final workspace.File file;
@@ -332,7 +330,7 @@ class AceManager {
     dialog.append(element);
 
     // Set actions of the dialog.
-    SparkButton button = dialog.querySelector('.view-as-text-button');
+    html.ButtonElement button = dialog.querySelector('.view-as-text-button');
     button.onClick.listen((_) {
       dialog.classes.add("transition-hidden");
       focus();
