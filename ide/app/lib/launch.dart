@@ -134,18 +134,18 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
  */
 class ChromeAppLaunchDelegate extends LaunchDelegate {
   bool canRun(Resource resource) {
-    return resource.project != null &&
-        ( resource.project.getChildPath('manifest.json') is File
-          || resource.project.getChildPath('app/manifest.json') is File);
+    Container appContainer = resource.applicationContainer();
+    return appContainer != null;
   }
 
   void run(Resource resource) {
-    print('TODO: run project ${resource.project}');
     if (!isDart2js()) {
+      print('TODO: run project ${resource.project}');
       return;
     }
-    _loadApp(resource).then((_) {
-      _getAppId(resource.project.name).then((String id) {
+    Container appContainer = resource.applicationContainer();
+    _loadApp(appContainer).then((_) {
+      _getAppId(appContainer.name).then((String id) {
         _launchApp(id);
       });
     });
@@ -158,7 +158,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     }
 
     js.JsObject obj = js.context['chrome']['developerPrivate'];
-    obj.callMethod('loadDirectory', [(resource.project.entry as
+    obj.callMethod('loadDirectory', [(resource.entry as
         chrome.ChromeObject).jsProxy, callback]);
     return completer.future;
   }

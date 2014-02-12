@@ -399,6 +399,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new SpecificTabAction(this));
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#WebStorePublishDialog')));
 
     actionManager.registerKeyListener();
   }
@@ -1690,6 +1691,92 @@ class RunTestsAction extends SparkAction {
   }
 
   _invoke([Object context]) => spark._testDriver.runTests();
+}
+
+class WebStorePublishAction extends SparkActionWithDialog {
+  bool _initialized = false;
+  static final int NEWAPP = 1;
+  static final int EXISTING = 2;
+
+  WebStorePublishAction(Spark spark, Element dialog)
+      : super(spark, "webstore-publish", "Publish to WebStore", dialog);
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
+      _enableInput();
+      (getElement('input[value=new]') as InputElement).onChange.listen((e) {
+        _enableInput();
+      });
+      (getElement('input[value=existing]') as InputElement).onChange.listen((e) {
+        _enableInput();
+      });
+      _initialized = true;
+    }
+
+    _show();
+  }
+
+  void _enableInput() {
+    int type = NEWAPP;
+    if ((getElement('input[value=new]') as InputElement).checked) {
+      type = NEWAPP;
+    }
+    if ((getElement('input[value=existing]') as InputElement).checked) {
+      type = EXISTING;
+    }
+    InputElement appIdInput = getElement('#appID');
+    appIdInput.disabled = (type != EXISTING);
+    if (type == EXISTING) {
+      appIdInput.focus();
+    }
+  }
+
+  void _commit() {
+    List<ws.Resource> resources = spark._filesController.getSelection();
+    if (resources.length > 0) {
+      ws.Resource resource = resources.first;
+      resource.getZippedApplication().then((List<int> zippedData) {
+        print('zipped size: ${zippedData.length}');
+        chrome.identity.getAuthToken(new chrome.TokenDetails(interactive: true)).then((String token) {
+          print('got auth ${token}');
+          _uploadToWebStore(token, null, zippedData).then((String appid) {
+            print('uploaded ${token}');
+            _publishToWebStore(token, appid);
+          });
+        });
+      });
+    }
+  }
+
+  Future<String> _uploadToWebStore(String token, String appid, List<int> data) {
+    /*
+    curl \
+    -H "Authorization: Bearer $TOKEN"  \
+    -H "x-goog-api-version: 2" \
+    -X POST \
+    -T $FILE_NAME \
+    https://www.googleapis.com/upload/chromewebstore/v1.1/items
+*/
+    var request = new HttpRequest();
+    request.open('POST', 'https://www.googleapis.com/upload/chromewebstore/v1.1/items');
+    request.responseType = '*/*';
+    request.setRequestHeader('Authorization', 'Bearer ${token}');
+    request.setRequestHeader('x-goog-api-version', '2');
+    request.onLoad.listen((event) => print(
+        'Request complete ${event.target.reponseText}'));
+    request.onError.listen((event) {
+      print('got error');
+    });
+    request.send(data);
+
+    return Future.value();
+  }
+
+  Future _publishToWebStore(String token, String appid) {
+
+  }
+
+  bool appliesTo(context) => true;
 }
 
 // analytics code
