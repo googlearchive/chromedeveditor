@@ -25,38 +25,37 @@ class SparkSelection extends SparkWidget {
     clear();
   }
 
-  void clear() {
-    _selection.clear();
-  }
-
   dynamic get selection =>
       multi ? _selection : _selection.isNotEmpty ? _selection[0] : null;
 
-  bool isSelected(inItem) => _selection.contains(inItem);
+  bool isSelected(Element inItem) => _selection.contains(inItem);
 
-  void setItemSelected(Element inItem, bool inIsSelected) {
-    if (inItem != null) {
-      if (inIsSelected) {
-        _selection.add(inItem);
-      } else {
-        _selection.remove(inItem);
-      }
-      // TODO(sjmiles): consider replacing with summary
-      // notifications (asynchronous job)
-      asyncFire('select', detail: {'isSelected': inIsSelected, 'item': inItem});
+  void _setSelected(Element inItem, bool inIsSelected) {
+    if (inItem == null) return;
+
+    if (inIsSelected) {
+      _selection.add(inItem);
+    } else {
+      _selection.remove(inItem);
     }
+    // TODO(sjmiles): consider replacing with summary notifications (async job).
+    asyncFire('select', detail: {'item': inItem, 'isSelected': inIsSelected});
   }
 
   void select(Element inItem) {
     if (multi) {
       toggle(inItem);
     } else if (selection != inItem) {
-      setItemSelected(selection, false);
-      setItemSelected(inItem, true);
+      _setSelected(selection, false);
+      _setSelected(inItem, true);
     }
   }
 
   void toggle(Element inItem) {
-    setItemSelected(inItem, !isSelected(inItem));
+    _setSelected(inItem, !isSelected(inItem));
+  }
+
+  void clear() {
+    _selection.clear();
   }
 }

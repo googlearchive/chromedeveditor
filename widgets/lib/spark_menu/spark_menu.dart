@@ -16,8 +16,6 @@ class SparkMenu extends SparkSelector {
 
   // TODO(terry): Work around because changed events aren't handled up the
   //              sub-chain.
-  void targetChanged(old) => super.targetChanged(old);
-  void selectedItemChanged() => super.selectedItemChanged();
   void selectedChanged() => super.selectedChanged();
-  void selectionSelect(e, detail) => super.selectionSelect(e, detail);
+  void selectionSelect(e, detail) => super.onSelectionSelect(e, detail);
 }

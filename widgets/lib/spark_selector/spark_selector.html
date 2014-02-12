@@ -54,11 +54,7 @@
                 valueattr,
                 selectedClass,
                 selectedProperty,
-                selectedItem,
-                selectedModel,
-                notap,
-                target,
-                itemsSelector,
+                selectableItem,
                 activateEvent">
 
   <template>
@@ -68,7 +64,7 @@
       @import url("packages/spark_widgets/spark_selector/spark_selector.css");
     </style>
 
-    <spark-selection id="selection" multi="{{multi}}" on-select="{{selectionSelect}}">
+    <spark-selection id="selection" multi="{{multi}}" on-select="{{onSelectionSelect}}">
     </spark-selection>
 
     <content id="items" select="*"></content>

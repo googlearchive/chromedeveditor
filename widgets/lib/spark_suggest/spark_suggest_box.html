@@ -21,10 +21,12 @@
 -->
 
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_menu/spark_menu.html">
+<link rel="import" href="../../../packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 
 <polymer-element name="spark-suggest-box" extends="spark-widget"
-    attributes="oracle placeholder">
+    attributes="oracle placeholder opened">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
@@ -43,23 +45,20 @@
 
     <spark-overlay
         id="suggestion-list-overlay"
-        class="spark-overlay-scale-slideup">
-      <template repeat="{{s in suggestions | enumerate}}">
-        <!--
-          TODO: Consider reusing existing component, e.g. spark-selection
-        -->
-        <div
-            class="suggestion-item"
-            item-index="{{s.index}}"
-            highlighted="{{s.index == selectionIndex}}"
-            on-mouseover="{{mouseOverItem}}"
-            on-click="{{mouseClickedItem}}">
-          {{s.value.label}}
-          <template if="{{s.value.hasDetails}}">
-            <span class="text-muted">[{{s.value.details}}]</span>
-          </template>
-        </div>
-      </template>
+        modal
+        class="spark-overlay-scale-slideup"
+        opened="{{opened}}"
+        on-activate="{{toggle}}"
+        on-opened="{{onOpened}}">
+
+      <spark-menu id="suggestion-list-menu" valueattr="label" selected=0>
+        <template repeat="{{s in suggestions}}">
+          <spark-menu-item
+              label="label" description="[description]">
+              <!--label="{{s.label}}" description="{{s.formatDetails}}"-->
+          </spark-menu-item>
+        </template>
+      </spark-menu>
     </spark-overlay>
   </template>
 

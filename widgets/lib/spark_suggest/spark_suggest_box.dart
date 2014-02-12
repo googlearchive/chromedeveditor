@@ -9,8 +9,9 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
-import '../spark_overlay/spark_overlay.dart';
-import '../common/spark_widget.dart';
+import 'package:spark_widgets/common/spark_widget.dart';
+import 'package:spark_widgets/spark_menu/spark_menu.dart';
+import 'package:spark_widgets/spark_overlay/spark_overlay.dart';
 
 /**
  * A single suggestion supplied by a [SuggestOracle]. Provides a [label]
@@ -26,7 +27,10 @@ class Suggestion {
 
   Suggestion(this.label, {this.details, this.onSelected});
 
-  bool get hasDetails => details != null && details.isNotEmpty;
+  String get formatDetails => details != null ? "[$details]" : "";
+
+  set formatDetails(String v) => print("WHY? details=$v");
+  set label(String v) => print("WHY? label=$v");
 }
 
 /**
@@ -55,71 +59,59 @@ class SparkSuggestBox extends SparkWidget {
   @published String placeholder;
   /// Provies suggestions for `this` suggest box.
   @published SuggestOracle oracle;
+  /// Open state of the overlay.
+  @published bool opened = false;
+
   /// Currently displayed suggestions.
   @observable final suggestions = new ObservableList();
-  /// Currently highlighted (but not yet selected) suggestion
-  @observable int selectionIndex = -1;
 
   StreamSubscription _oracleSub;
 
   SparkSuggestBox.created() : super.created();
 
-  SparkOverlay get _popup => $['suggestion-list-overlay'];
+  @override
+  void enteredView() {
+    super.enteredView();
+    _textBox = $['text-box'];
+  }
+
+  InputElement _textBox;
 
   /// Shows the suggestion list popup with the given suggestions.
   void _showSuggestions(List<Suggestion> update) {
     suggestions.clear();
     suggestions.addAll(update);
-    selectionIndex = 0;
-    _popup.opened = true;
+    toggle(true);
   }
 
   /// Hides the suggestion list popup and clears the suggestion list.
   void _hideSuggestions() {
     suggestions.clear();
-    selectionIndex = -1;
-    _popup.opened = false;
+    toggle(false);
   }
 
   inputKeyUp(KeyboardEvent e) {
-    if (e.keyCode == SparkWidget.DOWN_KEY) {
-      if (_popup.opened) {
-        // List of suggestions already visible. Simply advance the selection.
-        selectionIndex++;
-        _clampSelectionIndex();
-      } else {
-        // Look for suggestions
-        suggest();
-      }
-    } else if (e.keyCode == SparkWidget.UP_KEY) {
-      selectionIndex--;
-      _clampSelectionIndex();
-    } else if (e.keyCode == SparkWidget.ENTER_KEY) {
-      if (_popup.opened && selectionIndex > -1) {
-        _selectSuggestion(selectionIndex);
-      } else {
+    if (e.keyCode == SparkWidget.DOWN_KEY ||
+        e.keyCode == SparkWidget.UP_KEY ||
+        e.keyCode == SparkWidget.ENTER_KEY) {
+      if (!opened) {
         suggest();
       }
     } else if (e.keyCode == SparkWidget.ESCAPE_KEY) {
-      _hideSuggestions();
     } else {
       suggest();
     }
   }
 
   void inputFocus() {
-    InputElement textBox = $['text-box'];
-    if (textBox.value.length == 0) {
-      return;
+    if (_textBox.value.length != 0) {
+      suggest();
     }
-
-    suggest();
   }
 
   void suggest() {
-    InputElement textBox = $['text-box'];
     _cleanupSubscriptions();
-    _oracleSub = oracle.getSuggestions(textBox.value)
+    _oracleSub = oracle.getSuggestions(_textBox.value)
         .listen((List<Suggestion> update) {
           if (update != null && update.isNotEmpty) {
             _showSuggestions(update);
@@ -136,29 +128,27 @@ class SparkSuggestBox extends SparkWidget {
     }
   }
 
-  int _itemIndexForEvent(Event evt) {
-    Element itemDiv = evt.currentTarget;
-    return int.parse(itemDiv.attributes['item-index']);
+  //* Toggle the opened state of the dropdown.
+  void toggle([bool inOpened]) {
+    final oldOpened = opened;
+    opened = inOpened != null ? inOpened : !opened;
+    if (opened != oldOpened) {
+      ($['suggestion-list-menu'] as SparkMenu).clearSelection();
+      // TODO(ussuri): A temporary plug to make spark-overlay see changes
+      // in 'opened' when run as deployed code. Just binding via {{opened}}
+      // alone isn't detected and the menu doesn't open.
+      if (IS_DART2JS) {
+        ($['suggestion-list-overlay'] as SparkOverlay).opened = opened;
+      }
+    }
   }
 
-  void _selectSuggestion(int index) {
-    suggestions[index].onSelected();
-    _hideSuggestions();
-  }
-
-  void mouseOverItem(MouseEvent evt) {
-    selectionIndex = _itemIndexForEvent(evt);
-  }
-
-  void mouseClickedItem(MouseEvent evt) {
-    _selectSuggestion(_itemIndexForEvent(evt));
-  }
-
-  void _clampSelectionIndex() {
-    if (selectionIndex < -1) {
-      selectionIndex = -1;
-    } else if (selectionIndex > suggestions.length - 1) {
-      selectionIndex = suggestions.length - 1;
+  //* Handle the on-opened event from the dropdown. It will be fired e.g. when
+  //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+  void onOpened(CustomEvent e) {
+    // Autoclosing is the only event we're interested in.
+    if (e.detail == false) {
+      opened = false;
     }
   }
 }
