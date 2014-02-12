@@ -381,6 +381,8 @@ class _MockFile extends _MockBlob implements File {
 
   _MockFile(this.entry);
 
+  int get lastModified => lastModifiedDate.millisecondsSinceEpoch;
+
   DateTime get lastModifiedDate => entry._modificationTime;
 
   String get name => entry.name;
