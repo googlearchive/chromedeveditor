@@ -42,7 +42,7 @@ import 'package:spark_widgets/spark_selection/spark_selection.dart';
  *     ($['selector'] as SparkSelector).selected = ['foo', 'zot'];
  */
 @CustomTag("spark-selector")
-class SparkSelector extends SparkSelection {
+class SparkSelector extends SparkWidget {
   /// The initially selected elements. This can be any of the following:
   /// 1)...
   /// [selected] can also be used after the initial instantiation to force a
