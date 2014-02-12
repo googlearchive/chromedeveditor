@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'compiler.dart';
+import 'developer_private.dart' as dev_private;
 import 'utils.dart';
 import 'server.dart';
 import 'workspace.dart';
@@ -186,8 +187,11 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
       return;
     }
 
-    _loadApp(launchContainer).then((_) {
-      _getAppId(launchContainer.project.name).then((String id) {
+    var dirProxy = (launchContainer.entry as dynamic).jsProxy;
+
+    dev_private.developerPrivate.loadDirectory(dirProxy).then((String appId) {
+      // TODO: Use returned appId once that returns the correct results.
+      _getAppId(launchContainer.name).then((String id) {
         _launchApp(id);
       });
     });
