@@ -26,6 +26,12 @@ body {
 #topUi {
   height: 100%;
   width: 100%;
+  opacity: 1;
+  transition: opacity 300ms;  
+}
+
+#topUi:unresolved {
+  opacity: 0;
 }
 
 #splashScreen {
@@ -35,7 +41,7 @@ body {
   background-repeat: no-repeat;
   opacity: 1;
   transition: opacity 300ms;
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   top: 0;
