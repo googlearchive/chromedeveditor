@@ -1,14 +1,20 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <html>
   <head>
     <title>spark-button</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <link rel="import" href="example_ui.html">
+    <link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
   </head>
   <body>
-    <example-ui></example-ui>
+    <spark-button id="defaultBtn">Default</spark-button>
+    <spark-button id="primaryBtn" primary>Primary</spark-button>
+    <spark-button id="large" large>Large</spark-button>
+    <spark-button id="small" small>Small</spark-button>
+    <spark-button id="nopadding" nopadding>Nopadding</spark-button>
+    <spark-button id="nopadding">0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789</spark-button>
+    <spark-button id="nopadding"></spark-button>
   </body>
   <script type="application/dart">export "package:polymer/init.dart";</script>
 </html>
