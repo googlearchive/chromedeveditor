@@ -158,6 +158,38 @@ class ExampleServiceImpl extends ServiceImpl {
   }
 }
 
+
+class CompilerServiceImpl extends ServiceImpl {
+  String get serviceId => "compiler";
+
+  Compiler _compiler;
+
+  Stream<String> get onReady;
+
+  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate) {
+    StreamController<String> _readyController =
+        new StreamController<String>.broadcast();
+    onReady = _readyController.stream;
+
+    Compiler.createCompiler().then((c) {
+      _compiler = c;
+      _readyController.add("ready");
+      _readyController.close();
+    });
+  }
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    switch (event.actionId) {
+      case "instantiate":
+        compiler = new CompilerServiceImpl()..onReady.listen((String state){
+          _handler.sendResponse(
+              event.serviceId, event.actionId, {"state": state});
+        });
+        break;
+    }
+  }
+}
+
 /**
  * Special service for calling back to chrome.
  */
