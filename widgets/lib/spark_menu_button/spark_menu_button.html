@@ -41,7 +41,6 @@
           modal
           class="spark-overlay-scale-slideup"
           opened="{{opened}}"
-          on-activate="{{toggle}}"
           on-opened="{{onOpened}}">
 
         <div class="arrow"></div>
@@ -49,7 +48,8 @@
 
         <spark-menu id="overlayMenu"
             selected="{{selected}}"
-            valueattr="{{valueattr}}">
+            valueattr="{{valueattr}}"
+            on-activate="{{toggle}}">
           <content></content>
         </spark-menu>
       </spark-overlay>

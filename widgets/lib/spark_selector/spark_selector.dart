@@ -81,11 +81,8 @@ class SparkSelector extends SparkWidget {
     if (selectableFilter != null) {
       _items.removeWhere((Element e) => !e.matches(selectableFilter));
     }
-
-    _selection = $['selection'] as SparkSelection;
-
+    _selection = $['selection'];
     addEventListener(activateEvent, onActivate);
-
     selectedChanged();
   }
 
