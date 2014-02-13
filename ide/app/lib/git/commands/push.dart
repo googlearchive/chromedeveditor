@@ -8,6 +8,7 @@ import 'dart:async';
 
 import '../config.dart';
 import '../http_fetcher.dart';
+import '../object.dart';
 import '../objectstore.dart';
 import '../options.dart';
 import '../pack.dart';
@@ -58,6 +59,22 @@ class Push {
           });
         });
       });
+    });
+  }
+
+  static Future<List<CommitObject>> getPendingCommits(GitOptions options) {
+    ObjectStore store = options.store;
+    Config config = store.config;
+    // TODO(dvh): we need to be able to get pending commits from other local
+    // branches to push to other branches than master.
+    GitRef ref = new GitRef(ObjectStore.HEAD_MASTER_SHA, null);
+    return store.getCommitsForPush([ref], config.remoteHeads).
+        then((CommitPushEntry commits) {
+      if (commits == null) {
+        // TODO(grv) : throw Custom exceptions.
+        throw "no commits to push.";
+      }
+      return commits.commits;
     });
   }
 }

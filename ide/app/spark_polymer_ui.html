@@ -16,6 +16,7 @@
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
+<link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 
 <!--link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html"-->
 
@@ -229,7 +230,19 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="commitMessage">Commit message</label>
+          <div id="gitUserInfo">
+            <div class="input-label">
+              <label for="gitName">Your Name</label>
+              <input id="gitName" type="text" class="form-control"
+                  placeholder="John Doe" autofocus>
+            </div>
+            <div class="input-label">
+              <label for="gitEmail">Email</label>
+              <input id="gitEmail" type="text" class="form-control"
+                  placeholder="johndoe@gmail.com" autofocus>
+            </div>
+          </div>
+          <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"
               rows="3" autofocus></textarea>
           <span class="help-block">Enter a brief description of the changes.</span>
@@ -294,6 +307,27 @@
       </div>
     </spark-modal><!-- /.modal -->
 
+    <!-- Git Push dialog -->
+    <spark-modal id="gitPushDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Git Push</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+           <div id="gitCommitList"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Push
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal -->
+    
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
@@ -365,6 +399,15 @@
             </div>
           </div>
         </div>
+        <div class="form-group">
+          <label class="settings-title">Git</label>
+          <div>
+            <spark-button on-click="{{onResetGit}}">
+              Reset Git Settings
+            </spark-button>
+            <span id="gitResetSettingsDone">Done</span>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary autofocus data-dismiss="modal">
@@ -373,6 +416,37 @@
       </div>
     </spark-modal><!-- /.modal -->
 
+    <!-- Git authentication dialog -->
+    <spark-modal id="gitAuthenticationDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Git Authentication</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <div id="gitUserInfo">
+            <div class="input-label">
+              <label for="gitUsername">User name</label>
+              <input id="gitUsername" type="text" class="form-control"
+                  placeholder="johndoe" autofocus>
+            </div>
+            <div class="input-label">
+              <label for="gitPassword">Password</label>
+              <input id="gitPassword" type="password" class="form-control"
+                  placeholder="Required" autofocus>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal" class="cancel-button">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Login
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal -->
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>
