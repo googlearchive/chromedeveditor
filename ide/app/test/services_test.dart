@@ -57,7 +57,7 @@ defineTests() {
     test('compiler basic test', () {
       CompilerService compilerService = services.getService("compiler");
 
-      compilerService.start().then((_) {
+      return compilerService.start().then((_) {
         // TODO(ericarnold): What's a better way to do this?
         expect(true, equals(true));
       });
