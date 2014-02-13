@@ -50,10 +50,20 @@ defineTests() {
         });
       }).then((_) =>
           expect(orderedResponses, equals(["short2", "long1", "long3"])));
-      // Test 1 should end
-      // Test 3 should end
+          // Test 1 should end
+          // Test 3 should end
+    });
+
+    test('compiler basic test', () {
+      CompilerService compilerService = services.getService("example");
+
+      compilerService.start().then((_) {
+        // TODO(ericarnold): What's a better way to do this?
+        expect(true, equals(true));
+      });
     });
   });
+
 
   group('services_impl', () {
     test('setup', () {
