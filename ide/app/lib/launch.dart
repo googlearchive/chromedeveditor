@@ -14,6 +14,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'apps/app_utils.dart';
 import 'compiler.dart';
 import 'developer_private.dart' as dev_private;
 import 'utils.dart';
@@ -36,7 +37,7 @@ class LaunchManager {
   Workspace get workspace => _workspace;
 
   LaunchManager(this._workspace) {
-    // The order of regristration here matters.
+    // The order of registration here matters.
     _delegates.add(new ChromeAppLaunchDelegate());
     _delegates.add(new DartWebAppLaunchDelegate(this));
   }
@@ -176,11 +177,11 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
  */
 class ChromeAppLaunchDelegate extends LaunchDelegate {
   bool canRun(Resource resource) {
-    return getLaunchResourceFor(resource) != null;
+    return getAppContainerFor(resource) != null;
   }
 
   void run(Resource resource) {
-    Container launchContainer = getLaunchResourceFor(resource);
+    Container launchContainer = getAppContainerFor(resource);
 
     if (!isDart2js()) {
       _logger.warning("Can't launch on Dartium currently...");
@@ -193,40 +194,6 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
         _launchApp(id);
       });
     });
-  }
-
-  Resource getLaunchResourceFor(Resource resource) {
-    if (resource.project == null) return null;
-
-    // Look in the current container(s).
-    Container container = resource.parent;
-    if (resource is Container) {
-      container = resource;
-    }
-
-    while (container != null && container is! Workspace) {
-      if (hasManifest(container)) {
-        return container;
-      }
-      container = container.parent;
-    }
-
-    // Look in the project root.
-    if (hasManifest(resource.project)) {
-      return resource.project;
-    }
-
-    // Look in app/.
-    if (resource.project.getChild('app') is Container) {
-      Container app = resource.project.getChild('app');
-      if (hasManifest(app)) return app;
-    }
-
-    return null;
-  }
-
-  bool hasManifest(Container container) {
-    return container.getChild('manifest.json') is File;
   }
 
   Future<String> _loadApp(Container container) {
