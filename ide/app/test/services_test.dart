@@ -55,7 +55,7 @@ defineTests() {
     });
 
     test('compiler basic test', () {
-      CompilerService compilerService = services.getService("example");
+      CompilerService compilerService = services.getService("compiler");
 
       compilerService.start().then((_) {
         // TODO(ericarnold): What's a better way to do this?
