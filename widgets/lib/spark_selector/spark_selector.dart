@@ -77,8 +77,7 @@ class SparkSelector extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _items = SparkWidget.expandCascadingContentNodes($['items']);
-//    _items = ($['items'] as ContentElement).getDistributedNodes();
+    _items = SparkWidget.expandCascadingContents($['items']);
     if (selectableFilter != null) {
       _items.removeWhere((Element e) => !e.matches(selectableFilter));
     }
