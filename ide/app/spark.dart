@@ -439,8 +439,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   Future openFolder() {
     return _selectFolder().then((chrome.DirectoryEntry entry) {
-      _OpenFolderJob job = new _OpenFolderJob(entry, this);
-      jobManager.schedule(job);
+      if (entry != null) {
+        _OpenFolderJob job = new _OpenFolderJob(entry, this);
+        jobManager.schedule(job);
+      }
     });
   }
 
