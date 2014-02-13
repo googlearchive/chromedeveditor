@@ -1634,23 +1634,19 @@ class _OpenFolderJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    if (_entry != null) {
-      return spark.workspace.link(
-          new ws.FolderRoot(_entry)).then((ws.Resource resource) {
-        Timer.run(() {
-          spark._filesController.selectFile(resource);
-          spark._filesController.setFolderExpanded(resource);
-        });
-        return spark.workspace.save();
-      }).then((_) {
-        spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
-      }).catchError((e) {
-        spark.showErrorMessage('Error opening folder ${_entry.fullPath}',
-            e.toString());
+    return spark.workspace.link(
+        new ws.FolderRoot(_entry)).then((ws.Resource resource) {
+      Timer.run(() {
+        spark._filesController.selectFile(resource);
+        spark._filesController.setFolderExpanded(resource);
       });
-    }
-
-    return null;
+      return spark.workspace.save();
+    }).then((_) {
+      spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
+    }).catchError((e) {
+      spark.showErrorMessage('Error opening folder ${_entry.fullPath}',
+          e.toString());
+    });
   }
 }
 
