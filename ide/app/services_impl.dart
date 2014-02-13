@@ -35,6 +35,7 @@ class ServicesIsolate {
   Stream<ServiceActionEvent> onResponseMessage;
 
   ChromeService chromeService;
+  Map<String, ServiceImpl> _serviceImplsById = {};
 
   Future<ServiceActionEvent> _onResponseByCallId(String callId) {
     Completer<ServiceActionEvent> completer =
@@ -63,6 +64,8 @@ class ServicesIsolate {
     onResponseMessage = responseMessageController.stream;
     onHostMessage = hostMessageController.stream;
 
+    // Register Service implementations
+    _registerServiceImpl(new CompilerServiceImpl(this));
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
@@ -96,8 +99,13 @@ class ServicesIsolate {
     });
   }
 
-  ServiceImpl getService(String serviceId) {
-    return new ExampleServiceImpl(this);
+  void _registerServiceImpl(ServiceImpl serviceImplementation) {
+    _serviceImplsById[serviceImplementation.serviceId] =
+        serviceImplementation;
+  }
+
+  ServiceImpl getServiceImpl(String serviceId) {
+    return _serviceImplsById[serviceId];
   }
 
   Future<ServiceActionEvent> _handleMessage(ServiceActionEvent event) {
@@ -105,7 +113,7 @@ class ServicesIsolate {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
-    ServiceImpl service = getService(event.serviceId);
+    ServiceImpl service = getServiceImpl(event.serviceId);
     /*%TRACE3*/ print("""(4> 2/13/14): event.serviceId: ${event.serviceId}"""); // TRACE%
     /*%TRACE3*/ print("""(4> 2/13/14): service: ${service}"""); // TRACE%
     service.handleEvent(event).then((ServiceActionEvent responseEvent){
