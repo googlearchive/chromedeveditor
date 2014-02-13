@@ -19,6 +19,7 @@ class Services {
 
   Services() {
     _isolateHandler = new _IsolateHandler();
+    registerService(new CompilerService(this, _isolateHandler));
     registerService(new ExampleService(this, _isolateHandler));
     _chromeService = new ChromeServiceImpl(this, _isolateHandler);
 
@@ -69,6 +70,16 @@ abstract class Service {
   }
 }
 
+class CompilerService extends Service {
+  String serviceId = "compiler";
+
+  CompilerService(Services services, _IsolateHandler handler)
+      : super(services, handler);
+
+  Future start() {
+    return _sendAction("start").then((_) => null);
+  }
+}
 
 class ExampleService extends Service {
   String serviceId = "example";
@@ -89,7 +100,6 @@ class ExampleService extends Service {
       return event.data['response'];
     });
   }
-
 }
 
 /**

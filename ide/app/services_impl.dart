@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'lib/utils.dart';
+import 'lib/compiler.dart';
 
 /**
  * This is a separate application spawned by Spark (via Services) as an isolate
@@ -163,29 +164,25 @@ class CompilerServiceImpl extends ServiceImpl {
   String get serviceId => "compiler";
 
   Compiler _compiler;
+  Completer<ServiceActionEvent> _readyCompleter =
+      new Completer<ServiceActionEvent>();
 
-  Stream<String> get onReady;
+  Future<ServiceActionEvent> get onceReady => _readyCompleter.future;
 
-  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate) {
-    StreamController<String> _readyController =
-        new StreamController<String>.broadcast();
-    onReady = _readyController.stream;
-
-    Compiler.createCompiler().then((c) {
-      _compiler = c;
-      _readyController.add("ready");
-      _readyController.close();
-    });
-  }
+  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate);
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
-      case "instantiate":
-        compiler = new CompilerServiceImpl()..onReady.listen((String state){
-          _handler.sendResponse(
-              event.serviceId, event.actionId, {"state": state});
+      case "start":
+        return Compiler.createCompiler().then((Compiler newCompler) {
+          ServiceActionEvent responseEvent = event.createReponse(null);
+          _compiler = newCompler;
+          _readyCompleter.complete();
+          return responseEvent;
         });
         break;
+      default:
+        throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
   }
 }
