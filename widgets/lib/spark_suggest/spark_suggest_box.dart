@@ -30,8 +30,8 @@ class Suggestion {
   String get formatDetails => details != null ? "[$details]" : "";
 
   // TODO: Why are these invoked by Polymer???
-  set formatDetails(String v) => print("WHY? details=$v");
-  set label(String v) => print("WHY? label=$v");
+  set formatDetails(String v) => print("ASSIGN details=$v");
+  set label(String v) => print("ASSIGN label=$v");
 }
 
 /**
@@ -83,10 +83,9 @@ class SparkSuggestBox extends SparkWidget {
     suggestions.clear();
     suggestions.addAll(update);
     toggle(true);
-    shadowRoot.querySelectorAll('.unresolved').forEach((Element e) {
-      print(e);
-      e.classes.remove('unresolved');
-    });
+//    shadowRoot.querySelectorAll('.unresolved').forEach((Element e) {
+//      e.classes.remove('unresolved');
+//    });
   }
 
   /// Hides the suggestion list popup and clears the suggestion list.
