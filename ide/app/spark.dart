@@ -389,6 +389,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitResolveConflictsAction(this));
+    actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -1467,8 +1468,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    _GitBranchJob job = new _GitBranchJob(
-        gitOperations, _branchNameElement.value);
+    _GitBranchJob job = new _GitBranchJob(gitOperations, _branchNameElement.value);
     spark.jobManager.schedule(job);
   }
 
@@ -1663,12 +1663,16 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
 class GitResolveConflictsAction extends SparkAction implements ContextAction {
   GitResolveConflictsAction(Spark spark) :
-      super(spark, "git-resolve-conflicts", "Resolve Conflicts");
+      super(spark, "git-resolve-conflicts", "Git Resolve Conflicts");
 
   void _invoke([context]) {
-    // TODO:
     ws.Resource file = _getResource(context);
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(file.project);
 
+    // TODO:
+    //operations.markResolved(file);
+    print("resolve conflicts for ${file}");
   }
 
   String get category => 'git';
@@ -1678,9 +1682,10 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
 
   bool _fileHasConflicts(context) {
     ws.Resource file = _getResource(context);
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(file.project);
 
-    // TODO:
-    return file != null;
+    return operations.getFileStatus(file) == FileStatus.UNMERGED;
   }
 
   ws.Resource _getResource(context) {
@@ -1689,6 +1694,41 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
     } else {
       return null;
     }
+  }
+}
+
+class GitRevertChangesAction extends SparkAction implements ContextAction {
+  GitRevertChangesAction(Spark spark) :
+      super(spark, "git-revert-changes", "Git Revert Changes…");
+
+  void _invoke([List resources]) {
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(resources.first.project);
+
+    // TODO: show a yes/no dialog
+
+    // TODO: implement
+    //operations.revert(resources);
+    print("revert changes");
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isUnderScmProject(context) &&
+      _filesAreModified(context);
+
+  bool _filesAreModified(List resources) {
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(resources.first.project);
+
+    for (ws.Resource resource in resources) {
+      // TODO: Should we also check UNTRACKED?
+      if (operations.getFileStatus(resource) != FileStatus.MODIFIED) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
 

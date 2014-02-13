@@ -173,6 +173,7 @@ class FileStatus {
   static const FileStatus UNTRACKED = const FileStatus._('untracked');
   static const FileStatus MODIFIED = const FileStatus._('modified');
   static const FileStatus STAGED = const FileStatus._('staged');
+  static const FileStatus UNMERGED = const FileStatus._('unmerged');
   static const FileStatus COMMITTED = const FileStatus._('committed');
 
   final String status;
@@ -183,6 +184,7 @@ class FileStatus {
     if (value == 'committed') return FileStatus.COMMITTED;
     if (value == 'modified') return FileStatus.MODIFIED;
     if (value == 'staged') return FileStatus.STAGED;
+    if (value == 'unmerged') return FileStatus.UNMERGED;
     return FileStatus.UNTRACKED;
   }
 
@@ -190,6 +192,7 @@ class FileStatus {
     if (status == FileStatusType.COMMITTED) return FileStatus.COMMITTED;
     if (status == FileStatusType.MODIFIED) return FileStatus.MODIFIED;
     if (status == FileStatusType.STAGED) return FileStatus.STAGED;
+    if (status == FileStatusType.UNMERGED) return FileStatus.UNMERGED;
     return FileStatus.UNTRACKED;
   }
 
