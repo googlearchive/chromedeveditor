@@ -44,17 +44,16 @@ class SparkWidget extends PolymerElement {
     }
   }
 
-  List<Node> getExpandedDistributedNodes(String contentSelector) {
+  Iterable<Node> getExpandedDistributedNodes(String contentSelector) {
     final ContentElement content = shadowRoot.querySelector(contentSelector);
     return expandCascadingContents(content);
   }
 
-  static List<Node> expandCascadingContents(ContentElement content) {
+  static Iterable<Node> expandCascadingContents(ContentElement content) {
     final List<Node> dn = content.getDistributedNodes();
     final fdn = dn.where((Element e) => e.localName != "template");
     final edn = fdn.expand(
         (Element e) => e is ContentElement ? expandCascadingContents(e) : [e]);
-    final List<Node> ednl = edn.toList(growable: true);
-    return ednl;
+    return edn;
   }
 }

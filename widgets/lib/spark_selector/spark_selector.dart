@@ -68,7 +68,6 @@ class SparkSelector extends SparkWidget {
   // TODO(terry): Should be tap when PointerEvents are supported.
   @published String activateEvent = 'click';
 
-  List<Element> _items;
   SparkSelection _selection;
 
   SparkSelector.created() : super.created();
@@ -77,13 +76,18 @@ class SparkSelector extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _items = SparkWidget.expandCascadingContents($['items']);
-    if (selectableFilter != null) {
-      _items.removeWhere((Element e) => !e.matches(selectableFilter));
-    }
     _selection = $['selection'];
     addEventListener(activateEvent, onActivate);
     selectedChanged();
+  }
+
+
+  Iterable<Element> getItems() {
+    Iterable<Element> nodes = SparkWidget.expandCascadingContents($['items']);
+    if (selectableFilter != null) {
+      nodes = nodes.where((Element e) => e.matches(selectableFilter));
+    }
+    return nodes;
   }
 
   void selectedChanged() {
@@ -102,22 +106,23 @@ class SparkSelector extends SparkWidget {
   }
 
   void _updateSelection(var value) {
-    final index = _valueToIndex(value);
-    if (index >= 0) {
+    final i = _valueToIndex(value);
+    if (i >= 0) {
       // [_selection] will fire 1 or 2 [onSelectSelected] calls in response
       // to this. 1 call will be fired either when [multi] is on, corresponding
       // to the just-toggled item, or when [multi] is off and the previously
       // selected single item has just got unselected; 2 calls will be fired
       // when [multi] is off and the just-selected item is different from the
       // previous one (1st call for the unselected, 2nd call for the selected).
-      _selection.select(_items[index]);
+      _selection.select(getItems().elementAt(i));
     }
   }
 
   int _valueToIndex(var value) {
     // Find an item with value == value and return it's index:
-    for (var i = 0; i < _items.length; i++) {
-      if (_valueForNode(_items[i]) == value) {
+    final List<Element> items = getItems().toList(growable: false);
+    for (var i = 0; i < items.length; i++) {
+      if (_valueForNode(items[i]) == value) {
         return i;
       }
     }
@@ -149,16 +154,17 @@ class SparkSelector extends SparkWidget {
 
   // Event fired from host.
   void onActivate(Event e) {
-    var i = _items.indexOf(e.target);
+    final List<Element> items = getItems().toList(growable: false);
+    var i = items.indexOf(e.target);
     if (i >= 0) {
-      final String value = _valueForNode(_items[i]);
+      final String value = _valueForNode(items[i]);
       // By name or by id.
       final s = value != null ? value : i;
       _addRemoveSelected(s);
     }
   }
 
-  void _addRemoveSelected(value) {
+  void _addRemoveSelected(var value) {
     // All changes to [selected] below will trigger [selectedChanged()].
     if (multi) {
       if (selected == null) {
