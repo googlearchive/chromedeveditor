@@ -7,7 +7,9 @@ library spark.ui.polymer.commit_message_view;
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
-import 'package:spark_widgets/common/spark_widget.dart';
+
+// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
+import '../../../../packages/spark_widgets/common/spark_widget.dart';
 
 import '../../../scm.dart';
 
