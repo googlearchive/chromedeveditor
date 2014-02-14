@@ -23,6 +23,7 @@ Logger _logger = new Logger('spark.tests');
  */
 class TestDriver {
   final JobManager _jobManager;
+  StreamSubscription _logListener;
 
   Function _defineTestsFn;
   Element _testDiv;
@@ -32,19 +33,21 @@ class TestDriver {
 
   TestDriver(this._defineTestsFn, this._jobManager, {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
-    _logger.onRecord.listen((record) => print(record.toString()));
 
     if (connectToTestListener) {
       _connectToListener();
     }
-
-    _createTestUI();
   }
 
   /**
    * Run the tests and return back whether they passed.
    */
   Future<bool> runTests() {
+    if (_logListener == null) {
+      _logListener = _logger.onRecord.listen((record) => print(record.toString()));
+      _createTestUI();
+    }
+
     _testDiv.style.display = 'inline';
     _statusDiv.style.background = 'rgb(84, 180, 84)';
     _statusDiv.text = '';

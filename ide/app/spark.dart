@@ -30,6 +30,7 @@ import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/scm.dart';
 import 'lib/tests.dart';
+import 'lib/utils.dart';
 import 'lib/services/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
@@ -85,7 +86,7 @@ Zone createSparkZone() {
 }
 
 class Spark extends SparkModel implements FilesControllerDelegate,
-    AceManagerDelegate {
+    AceManagerDelegate, Notifier {
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
@@ -251,8 +252,11 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
       // Track logged exceptions.
       Logger.root.onRecord.listen((LogRecord r) {
-        if (r.level >= Level.SEVERE && r.loggerName != 'spark.tests') {
-          _handleUncaughtException(r.error, r.stackTrace);
+        if (r.loggerName != 'spark.tests') {
+          print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
+          if (r.level >= Level.SEVERE) {
+            _handleUncaughtException(r.error, r.stackTrace);
+          }
         }
       });
     });
@@ -268,7 +272,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initLaunchManager() {
-    _launchManager = new LaunchManager(_workspace);
+    _launchManager = new LaunchManager(_workspace, this);
   }
 
   /**
@@ -453,6 +457,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   SparkDialog _errorDialog;
+
+  void showMessage(String title, String message) {
+    showErrorMessage(title, message);
+  }
 
   /**
    * Show a model error dialog.
@@ -727,7 +735,6 @@ class _SparkSetupParticipant extends LifecycleParticipant {
           spark.aceManager.focus();
         }
       });
-      spark.workspace.restoreSyncFs();
     }).then((_) {
       return ProjectLocationManager.restoreManager(spark.localPrefs).then((manager) {
         spark.projectLocationManager = manager;
@@ -1938,8 +1945,8 @@ void _handleUncaughtException(error, StackTrace stackTrace) {
 
   _analyticsTracker.sendException(desc);
 
-  window.console.error(error.toString());
-  window.console.error(stackTrace.toString());
+  window.console.error(error);
+  window.console.error(stackTrace);
 }
 
 bool get _isTrackingPermitted =>
