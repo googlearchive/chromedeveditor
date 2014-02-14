@@ -32,6 +32,7 @@ class TestDriver {
 
   TestDriver(this._defineTestsFn, this._jobManager, {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
+    unittest.unittestConfiguration.timeout = new Duration(seconds: 20);
     _logger.onRecord.listen((record) => print(record.toString()));
 
     if (connectToTestListener) {
