@@ -29,14 +29,11 @@ import "../services_impl.dart";
  * the Chrome app's directory.
  */
 Future<List<int>> _getContentsBinary(String path) {
-  /*%TRACE3*/ print("(4> 2/13/14): _getContentsBinary!"); // TRACE%
   return ServicesIsolate.instance.chromeService.getURL(path)
       .then((String url) => html.HttpRequest.request(
       url, responseType: 'arraybuffer'))
   .then((request) {
-    /*%TRACE3*/ print("(4> 2/13/14): arraybuffer').then((request!"); // TRACE%
     typed_data.ByteBuffer buffer = request.response;
-    /*%TRACE3*/ print("(4> 2/13/14): Uint8List.view(buffer!"); // TRACE%
     return new typed_data.Uint8List.view(buffer);
   });
 }
@@ -57,7 +54,6 @@ class DartSdk extends SdkDirectory {
    */
   static Future<DartSdk> createSdk() {
     return _getContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
-      /*%TRACE3*/ print("(4> 2/13/14): then((List<int> contents!"); // TRACE%
       return new DartSdk._withContents(contents);
     }).catchError((e) {
       return new DartSdk._fromVersion('');

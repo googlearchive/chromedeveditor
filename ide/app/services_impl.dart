@@ -75,17 +75,14 @@ class ServicesIsolate {
     _sendPort.send(receivePort.sendPort);
 
     receivePort.listen((arg) {
-      /*%TRACE3*/ print("(4> 2/13/14): listen!"); // TRACE%
       try {
         if (arg is int) {
           _sendPort.send(arg);
         } else {
-          /*%TRACE3*/ print("(4> 2/13/14): else!"); // TRACE%
           ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
           if (event.response) {
             responseMessageController.add(event);
           } else {
-            /*%TRACE3*/ print("(4> 2/13/14): hostMessageController!"); // TRACE%
             hostMessageController.add(event);
           }
         }
@@ -113,21 +110,16 @@ class ServicesIsolate {
   }
 
   Future<ServiceActionEvent> _handleMessage(ServiceActionEvent event) {
-    /*%TRACE3*/ print("(4> 2/13/14): _handleMessage!"); // TRACE%
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
     ServiceImpl service = getServiceImpl(event.serviceId);
-    /*%TRACE3*/ print("""(4> 2/13/14): event.serviceId: ${event.serviceId}"""); // TRACE%
-    /*%TRACE3*/ print("""(4> 2/13/14): service: ${service}"""); // TRACE%
     service.handleEvent(event).then((ServiceActionEvent responseEvent){
       if (responseEvent != null) {
         _sendResponse(responseEvent);
-        /*%TRACE3*/ print("""(4> 2/13/14): completer: ${completer}"""); // TRACE%
         completer.complete();
       }
     });
-    /*%TRACE3*/ print("""(4> 2/13/14): completer.future: ${completer.future}"""); // TRACE%
     return completer.future;
   }
 
@@ -192,7 +184,6 @@ class CompilerServiceImpl extends ServiceImpl {
   CompilerServiceImpl(ServicesIsolate isolate) : super(isolate);
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
-    /*%TRACE3*/ print("(4> 2/13/14): handleEvent!"); // TRACE%
     switch (event.actionId) {
       case "start":
         /*%TRACE3*/ print("(4> 2/13/14): start!"); // TRACE%
