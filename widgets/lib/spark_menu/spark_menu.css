@@ -4,6 +4,13 @@
 
 @import url("../common/spark_widget.css");
 
+:host {
+  border: none;
+  display: block;
+  box-sizing: border-box;
+  margin: 5px 0;
+}
+
 /*@polyfill spark-menu-item, spark-menu-separator */
 ::content spark-menu-item, ::content spark-menu-separator {
   display: block;
