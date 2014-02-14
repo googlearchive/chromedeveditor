@@ -33,25 +33,25 @@ import 'workspace_test.dart' as workspace_test;
  * Place all new tests here.
  */
 void defineTests() {
-//  ace_test.defineTests();
-//  actions_test.defineTests();
-//  analytics_test.defineTests();
-//  analyzer_test.defineTests();
-//  app_test.defineTests();
-//  builder_test.defineTests();
-//  compiler_test.defineTests();
-//  editors_test.defineTests();
-//  event_bus_test.defineTests();
-//  files_test.defineTests();
-//  jobs_test.defineTests();
-//  git_all_test.defineTests();
-//  preferences_test.defineTests();
-//  scm_test.defineTests();
-//  sdk_test.defineTests();
-//  search_test.defineTests();
-//  server_test.defineTests();
+  ace_test.defineTests();
+  actions_test.defineTests();
+  analytics_test.defineTests();
+  analyzer_test.defineTests();
+  app_test.defineTests();
+  builder_test.defineTests();
+  compiler_test.defineTests();
+  editors_test.defineTests();
+  event_bus_test.defineTests();
+  files_test.defineTests();
+  jobs_test.defineTests();
+  git_all_test.defineTests();
+  preferences_test.defineTests();
+  scm_test.defineTests();
+  sdk_test.defineTests();
+  search_test.defineTests();
+  server_test.defineTests();
   services_test.defineTests();
-//  tcp_test.defineTests();
-//  utils_test.defineTests();
-//  workspace_test.defineTests();
+  tcp_test.defineTests();
+  utils_test.defineTests();
+  workspace_test.defineTests();
 }
