@@ -4,8 +4,10 @@
 
 library spark.search_test;
 
-import 'package:spark_widgets/spark_suggest/spark_suggest_box.dart';
 import 'package:unittest/unittest.dart';
+
+// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
+import '../packages/spark_widgets/spark_suggest/spark_suggest_box.dart';
 
 import '../lib/search.dart';
 import '../lib/workspace.dart';

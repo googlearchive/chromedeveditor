@@ -5,7 +5,9 @@
 library spark.services_impl;
 
 import 'dart:async';
+import 'dart:html' as html;
 import 'dart:isolate';
+import 'dart:typed_data' as typed_data;
 
 import 'lib/utils.dart';
 import 'lib/compiler.dart';
@@ -237,6 +239,20 @@ abstract class ServiceImpl {
   String get serviceId => null;
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
+}
+
+/**
+ * Return the contents of the file at the given path. The path is relative to
+ * the Chrome app's directory.
+ */
+Future<List<int>> _getContentsBinary(String path) {
+  return ServicesIsolate.instance.chromeService.getURL(path)
+      .then((String url) => html.HttpRequest.request(
+      url, responseType: 'arraybuffer'))
+  .then((request) {
+    typed_data.ByteBuffer buffer = request.response;
+    return new typed_data.Uint8List.view(buffer);
+  });
 }
 
 // Prints are crashing isolate, so this will take over for the time being.

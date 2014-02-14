@@ -17,26 +17,6 @@ library spark.sdk;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html' as html;
-import 'dart:typed_data' as typed_data;
-
-//import 'package:chrome/chrome_app.dart' as chrome;
-
-import "../services_impl.dart";
-
-/**
- * Return the contents of the file at the given path. The path is relative to
- * the Chrome app's directory.
- */
-Future<List<int>> _getContentsBinary(String path) {
-  return ServicesIsolate.instance.chromeService.getURL(path)
-      .then((String url) => html.HttpRequest.request(
-      url, responseType: 'arraybuffer'))
-  .then((request) {
-    typed_data.ByteBuffer buffer = request.response;
-    return new typed_data.Uint8List.view(buffer);
-  });
-}
 
 /**
  * This class represents the Dart SDK as build into Spark. It allows you to
@@ -53,7 +33,7 @@ class DartSdk extends SdkDirectory {
    * objects.
    */
   static Future<DartSdk> createSdk() {
-    return _getContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
+    return getAppContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
       return new DartSdk._withContents(contents);
     }).catchError((e) {
       return new DartSdk._fromVersion('');
