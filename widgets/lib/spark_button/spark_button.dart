@@ -12,12 +12,15 @@ import '../common/spark_widget.dart';
 class SparkButton extends SparkWidget {
   @published bool primary = false;
 
-  // TODO: changing this field does not cause the btnClasses to be re-calculated
   bool _active = true;
   @published bool get active => _active;
   set active(bool value) {
     _active = value;
-    getShadowDomElement('button').className = btnClasses;
+      if (_active) {
+        getShadowDomElement('button').classes.remove(SparkWidget.CSS_DISABLED);
+      } else {
+        getShadowDomElement('button').classes.add(SparkWidget.CSS_DISABLED);
+      }
   }
 
   @published bool large = false;
@@ -30,11 +33,15 @@ class SparkButton extends SparkWidget {
     List classes = [
         CSS_BUTTON,
         primary ? CSS_PRIMARY : CSS_DEFAULT,
-        active ? SparkWidget.CSS_ENABLED : SparkWidget.CSS_DISABLED
+        active ? "" : SparkWidget.CSS_DISABLED
     ];
 
-    if (large) classes.add(CSS_LARGE);
-    if (small) classes.add(CSS_SMALL);
+    if (large) {
+      classes.add(CSS_LARGE);
+    }
+    if (small) {
+      classes.add(CSS_SMALL);
+    }
 
     return joinClasses(classes);
   }
