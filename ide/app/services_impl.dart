@@ -196,7 +196,7 @@ class CompilerServiceImpl extends ServiceImpl {
     switch (event.actionId) {
       case "start":
         /*%TRACE3*/ print("(4> 2/13/14): start!"); // TRACE%
-        return start();
+        return start().then((_) => new Future.value(event.createReponse(null)));
         break;
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
@@ -232,7 +232,7 @@ class ChromeService {
   Future<ServiceActionEvent> delay(int milliseconds) =>
       _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
 
-  Future<ServiceActionEvent> getURL(String path) =>
+  Future<String> getURL(String path) =>
       _isolate._sendAction(_createNewEvent("getURL", {"path": path}))
       .then((ServiceActionEvent event) => event.data['url']);
 }
