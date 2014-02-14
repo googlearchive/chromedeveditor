@@ -10,10 +10,10 @@ import 'dart:isolate';
 import 'package:unittest/unittest.dart';
 
 import '../lib/services/services.dart';
-import '../services_impl.dart';
+import '../services_impl.dart' as impl;
 
 Services services;
-ServicesIsolate servicesIsolate;
+impl.ServicesIsolate servicesIsolate;
 
 defineTests() {
   group('services', () {
@@ -68,8 +68,15 @@ defineTests() {
   group('services_impl', () {
     test('setup', () {
       MockSendPort mockSendPort = new MockSendPort();
-      servicesIsolate = new ServicesIsolate(mockSendPort);
+      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
       expect(mockSendPort.wasSent, isNotNull);
+    });
+    test('compiler start', () {
+      MockSendPort mockSendPort = new MockSendPort();
+      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
+      impl.CompilerServiceImpl compilerImpl =
+          servicesIsolate.getServiceImpl("compiler");
+      });
     });
   });
 }

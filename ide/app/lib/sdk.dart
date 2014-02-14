@@ -22,12 +22,15 @@ import 'dart:typed_data' as typed_data;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import "../services_impl.dart";
+
 /**
  * Return the contents of the file at the given path. The path is relative to
  * the Chrome app's directory.
  */
 Future<List<int>> _getContentsBinary(String path) {
   /*%TRACE3*/ print("(4> 2/13/14): _getContentsBinary!"); // TRACE%
+  String url = _chromeService.getURL(path).then;
 
   /*%TRACE3*/ print("(4> 2/13/14): return new typed_data.Uint8List.view!"); // TRACE%
   return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {

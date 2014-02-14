@@ -64,8 +64,9 @@ class ServicesIsolate {
     onResponseMessage = responseMessageController.stream;
     onHostMessage = hostMessageController.stream;
 
-    // Register Service implementations
+    // Register each ServiceImpl:
     _registerServiceImpl(new CompilerServiceImpl(this));
+    _registerServiceImpl(new ExampleServiceImpl(this));
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
@@ -191,16 +192,25 @@ class CompilerServiceImpl extends ServiceImpl {
     /*%TRACE3*/ print("(4> 2/13/14): handleEvent!"); // TRACE%
     switch (event.actionId) {
       case "start":
-        return Compiler.createCompiler().then((Compiler newCompler) {
-          ServiceActionEvent responseEvent = event.createReponse(null);
-          _compiler = newCompler;
-          _readyCompleter.complete();
-          return responseEvent;
-        });
+        /*%TRACE3*/ print("(4> 2/13/14): start!"); // TRACE%
+        return start();
         break;
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
+  }
+
+  Future start() {
+    return Compiler.createCompiler().then((Compiler newCompler) {
+      /*%TRACE3*/ print("(4> 2/13/14): then!"); // TRACE%
+//      ServiceActionEvent responseEvent = event.createReponse(null);
+      _compiler = newCompler;
+      _readyCompleter.complete();
+//      return responseEvent;
+      return null;
+    }).catchError((error){
+      /*%TRACE3*/ print("""(4> 2/13/14): error: ${error}"""); // TRACE%
+    });
   }
 }
 
