@@ -9,9 +9,9 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
-import 'package:spark_widgets/common/spark_widget.dart';
-import 'package:spark_widgets/spark_menu/spark_menu.dart';
-import 'package:spark_widgets/spark_overlay/spark_overlay.dart';
+import '../common/spark_widget.dart';
+import '../spark_menu/spark_menu.dart';
+import '../spark_overlay/spark_overlay.dart';
 
 /**
  * A single suggestion supplied by a [SuggestOracle]. Provides a [label]

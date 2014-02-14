@@ -8,8 +8,8 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
-import 'package:spark_widgets/common/spark_widget.dart';
-import 'package:spark_widgets/spark_menu/spark_menu.dart';
+import '../common/spark_widget.dart';
+import '../spark_menu/spark_menu.dart';
 
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
