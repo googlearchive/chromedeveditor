@@ -396,7 +396,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new FileDeleteAction(this, getDialogElement('#deleteDialog')));
+    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
     actionManager.registerAction(new TabNextAction(this));
@@ -476,6 +476,36 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _errorDialog.element.querySelector('#errorMessage').text = message;
 
     _errorDialog.show();
+  }
+
+  SparkDialog _okCancelDialog;
+  Completer<bool> _okCancelCompleter;
+
+  Future<bool> askUserOkCancel(String message, {String okButtonLabel: 'OK'}) {
+    if (_okCancelDialog == null) {
+      _okCancelDialog = createDialog(getDialogElement('#okCancelDialog'));
+      _okCancelDialog.element.querySelector('#okText').onClick.listen((_) {
+        if (_okCancelCompleter != null) {
+          _okCancelCompleter.complete(true);
+          _okCancelCompleter = null;
+        }
+      });
+      _okCancelDialog.element.on['opened'].listen((event) {
+        if (event.detail == false) {
+          if (_okCancelCompleter != null) {
+            _okCancelCompleter.complete(false);
+            _okCancelCompleter = null;
+          }
+        }
+      });
+    }
+
+    _okCancelDialog.element.querySelector('#okCancelMessage').text = message;
+    _okCancelDialog.element.querySelector('#okText').text = okButtonLabel;
+
+    _okCancelCompleter = new Completer();
+    _okCancelDialog.show();
+    return _okCancelCompleter.future;
   }
 
   void onSplitViewUpdate(int position) { }
@@ -1039,43 +1069,34 @@ class FileSaveAction extends SparkAction {
   void _invoke([Object context]) => spark.editorManager.saveAll();
 }
 
-class FileDeleteAction extends SparkActionWithDialog implements ContextAction {
-  List<ws.Resource> _resources;
-  // TODO: Add _messageElement.
-
-  FileDeleteAction(Spark spark, Element dialog)
-      : super(spark, "file-delete", "Delete", dialog);
+class FileDeleteAction extends SparkAction implements ContextAction {
+  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
       var sel = spark._filesController.getSelection();
-      if (sel.isNotEmpty) {
-        _resources = sel;
-        _setMessageAndShow();
+      if (sel.isEmpty) return;
+      resources = sel;
+    }
+
+    String message;
+
+    if (resources.length == 1) {
+      message = "Are you sure you want to delete '${resources.first.name}'?";
+    } else {
+      message = "Are you sure you want to delete ${resources.length} files?";
+    }
+
+    spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
+      if (val) {
+        try {
+          spark.workspace.pauseResourceEvents();
+          resources.forEach((ws.Resource resource) => resource.delete());
+        } finally {
+          spark.workspace.resumeResourceEvents();
+        }
       }
-    } else {
-      _resources = resources;
-      _setMessageAndShow();
-    }
-  }
-
-  void _setMessageAndShow() {
-    if (_resources.length == 1) {
-      getElement("#message").text =
-          "Are you sure you want to delete '${_resources.first.name}'?";
-    } else {
-      getElement("#message").text =
-          "Are you sure you want to delete ${_resources.length} files?";
-    }
-
-    _show();
-  }
-
-  void _commit() {
-    _resources.forEach((ws.Resource resource) {
-      resource.delete();
     });
-    _resources = null;
   }
 
   String get category => 'resource-delete';
@@ -1670,9 +1691,7 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
     ScmProjectOperations operations =
         spark.scmManager.getScmOperationsFor(file.project);
 
-    // TODO:
-    //operations.markResolved(file);
-    print("resolve conflicts for ${file}");
+    operations.markResolved(file);
   }
 
   String get category => 'git';
@@ -1684,7 +1703,6 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
     ws.Resource file = _getResource(context);
     ScmProjectOperations operations =
         spark.scmManager.getScmOperationsFor(file.project);
-
     return operations.getFileStatus(file) == FileStatus.UNMERGED;
   }
 
@@ -1705,11 +1723,17 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
     ScmProjectOperations operations =
         spark.scmManager.getScmOperationsFor(resources.first.project);
 
-    // TODO: show a yes/no dialog
+    String text = (resources.length == 1 ?
+        resources.first.name :
+        '${resources.length} resources');
+    text = 'Revert changes for ${text}?';
 
-    // TODO: implement
-    //operations.revert(resources);
-    print("revert changes");
+    // Show a yes/no dialog.
+    spark.askUserOkCancel(text, okButtonLabel: 'Revert').then((bool val) {
+      if (val) {
+        operations.revertChanges(resources);
+      }
+    });
   }
 
   String get category => 'git';
