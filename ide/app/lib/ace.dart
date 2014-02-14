@@ -509,7 +509,7 @@ class KeyBindingManager {
   html.Element _label;
 
   KeyBindingManager(this.aceManager, this.prefs, this._label) {
-    prefs.getValue('keyBinding').then((String value) {
+    prefs.getValue('keyBindings').then((String value) {
       if (value != null) {
         aceManager.setKeyBinding(value);
       }
@@ -532,7 +532,7 @@ class KeyBindingManager {
       int index = math.max(AceManager.KEY_BINDINGS.indexOf(name), 0);
       index = (index + direction) % AceManager.KEY_BINDINGS.length;
       String newBinding = AceManager.KEY_BINDINGS[index];
-      prefs.setValue('keyBinding', newBinding);
+      prefs.setValue('keyBindings', newBinding);
       _updateName(newBinding);
       aceManager.setKeyBinding(newBinding);
     });

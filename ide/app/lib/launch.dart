@@ -11,12 +11,13 @@ import 'dart:async';
 import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:chrome/gen/management.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'apps/app_utils.dart';
 import 'compiler.dart';
-import 'developer_private.dart' as dev_private;
+import 'developer_private.dart';
 import 'utils.dart';
 import 'server.dart';
 import 'workspace.dart';
@@ -188,29 +189,19 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
       return;
     }
 
-    dev_private.developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
+    developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
       // TODO: Use returned appId once that returns the correct results.
-      _getAppId(launchContainer.name).then((String id) {
-        _launchApp(id);
+      return _getAppId(launchContainer.name).then((String id) {
+        if (management.available) {
+          return management.launchApp(id);
+        } else {
+          _logger.info('chrome.management API not available');
+        }
       });
+    }).catchError((e) {
+      // TODO: display the error to the user
+      _logger.severe('Error launching Chrome app', e);
     });
-  }
-
-  Future<String> _loadApp(Container container) {
-    Completer completer = new Completer();
-    callback(String id) {
-      completer.complete(id);
-    }
-
-    js.JsObject obj = js.context['chrome']['developerPrivate'];
-    obj.callMethod('loadDirectory', [(container.entry as
-        chrome.ChromeObject).jsProxy, callback]);
-    return completer.future;
-  }
-
-  void _launchApp(String id) {
-    js.JsObject obj = js.context['chrome']['management'];
-    obj.callMethod('launchApp', [id]);
   }
 
   /**
