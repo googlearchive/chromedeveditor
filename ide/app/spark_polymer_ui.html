@@ -33,7 +33,9 @@
       <spark-button id="runButton" small primary>
         <span class="glyphicon glyphicon-play"></span> Run
       </spark-button>
-      <spark-button id="pushButton" small>Push to Mobile</spark-button>
+      <spark-button id="pushButton" small>
+        <span class="glyphicon glyphicon-phone"></span> Deploy...
+      </spark-button>
       <spark-button id="newProject" small>New Project...</spark-button>
       <spark-button id="gitClone" small>Git Clone...</spark-button>
 
@@ -203,7 +205,7 @@
     <spark-modal id="pushDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
-        <h4 class="modal-title">Push to Mobile</h4>
+        <h4 class="modal-title">Deploy to Mobile</h4>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -216,7 +218,7 @@
           Cancel
         </spark-button>
         <spark-button overlay-toggle primary data-dismiss="modal">
-          Push
+          Deploy
         </spark-button>
       </div>
     </spark-modal>

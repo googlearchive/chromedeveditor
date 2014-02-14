@@ -5,15 +5,13 @@
 library spark.harness_push;
 
 import 'dart:async';
-import 'dart:html';
-import 'dart:typed_data';
 
 import 'package:archive/archive.dart' as archive;
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../spark_model.dart';
 import 'jobs.dart';
-import 'workspace.dart' as ws;
+import 'workspace.dart';
 
 class HarnessPush {
   /**
@@ -35,21 +33,19 @@ class HarnessPush {
    * [Chrome ADT](https://github.com/MobileChromeApps/harness) on Android,
    * and that tool doesn't care about the CRX metadata, this is not a problem.
    */
-  static Future push(String target, ProgressMonitor monitor) {
-    ws.Project project = SparkModel.instance.workspace.getProjects().first;
-    if (project == null) {
-      return new Future.error(new ArgumentError(
-            'Could not find project to push'));
+  static Future push(Container appContainer, String target,
+                     ProgressMonitor monitor) {
+    if (appContainer == null) {
+      return new Future.error(new ArgumentError('Could not find app to push'));
     }
 
     archive.Archive arch = new archive.Archive();
-    return _recursiveArchive(arch, project, '' /* path prefix */)
-        .then((_) {
+    return _recursiveArchive(arch, appContainer).then((_) {
       monitor.worked(3);
       List<int> httpRequest = [];
       // Build the HTTP request headers.
       String boundary = "--------------------------------a921a8f557cf";
-      String header = "POST /push?name=${project.name}&type=crx HTTP/1.1\r\n"
+      String header = "POST /push?name=${appContainer.name}&type=crx HTTP/1.1\r\n"
           + "User-Agent: Spark IDE\r\n"
           + "Host: ${target}:2424\r\n"
           + "Content-Type: multipart/form-data; boundary=$boundary\r\n";
@@ -67,8 +63,7 @@ class HarnessPush {
       // - The signature length (0).
       // Since the App Harness/Chrome ADT on the other end doesn't check
       // the signature or key, we don't bother sending them.
-      body.addAll(
-          [67, 114, 50, 52, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+      body.addAll([67, 114, 50, 52, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
       // Now follows the actual zip data.
       body.addAll(new archive.ZipEncoder().encode(arch));
@@ -118,25 +113,22 @@ class HarnessPush {
     });
   }
 
-  static _recursiveArchive(archive.Archive arch, ws.Resource parent,
-      String prefix) {
-    List<ws.Resource> children = (parent as ws.Container).getChildren();
+  static _recursiveArchive(archive.Archive arch, Container parent,
+      [String prefix = '']) {
     List<Future> futures = [];
 
-    for (ws.Resource child in children) {
-      if (child is ws.File) {
-        futures.add((child as ws.File).getBytes().then((buf) {
+    for (Resource child in parent.getChildren()) {
+      if (child is File) {
+        futures.add(child.getBytes().then((buf) {
           List<int> data = buf.getBytes();
-          arch.addFile(new archive.File(prefix + child.name, data.length,
+          arch.addFile(new archive.File('${prefix}${child.name}', data.length,
               data));
         }));
-      } else if (child is ws.Folder) {
-        futures.add(_recursiveArchive(arch, child, prefix + child.name + '/'));
+      } else if (child is Folder) {
+        futures.add(_recursiveArchive(arch, child, '${prefix}${child.name}/'));
       }
     }
 
     return Future.wait(futures);
   }
 }
-
-
