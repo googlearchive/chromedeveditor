@@ -188,7 +188,6 @@ class CompilerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
       case "start":
-        /*%TRACE3*/ print("(4> 2/13/14): start!"); // TRACE%
         return start().then((_) => new Future.value(event.createReponse(null)));
         break;
       default:
@@ -198,7 +197,6 @@ class CompilerServiceImpl extends ServiceImpl {
 
   Future start() {
     return Compiler.createCompiler().then((Compiler newCompler) {
-      /*%TRACE3*/ print("(4> 2/13/14): then!"); // TRACE%
 //      ServiceActionEvent responseEvent = event.createReponse(null);
       _compiler = newCompler;
       _readyCompleter.complete();
@@ -215,6 +213,21 @@ class CompilerServiceImpl extends ServiceImpl {
  */
 class ChromeService {
   ServicesIsolate _isolate;
+
+  /**
+   * Return the contents of the file at the given path. The path is relative to
+   * the Chrome app's directory.
+   */
+  static Future<List<int>> getAppContentsBinary(String path) {
+    return ServicesIsolate.instance.chromeService.getURL(path)
+        .then((String url) => html.HttpRequest.request(
+        url, responseType: 'arraybuffer'))
+    .then((request) {
+      typed_data.ByteBuffer buffer = request.response;
+      return new typed_data.Uint8List.view(buffer);
+    });
+  }
+
 
   ChromeService(this._isolate);
 
@@ -239,20 +252,6 @@ abstract class ServiceImpl {
   String get serviceId => null;
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
-}
-
-/**
- * Return the contents of the file at the given path. The path is relative to
- * the Chrome app's directory.
- */
-Future<List<int>> _getContentsBinary(String path) {
-  return ServicesIsolate.instance.chromeService.getURL(path)
-      .then((String url) => html.HttpRequest.request(
-      url, responseType: 'arraybuffer'))
-  .then((request) {
-    typed_data.ByteBuffer buffer = request.response;
-    return new typed_data.Uint8List.view(buffer);
-  });
 }
 
 // Prints are crashing isolate, so this will take over for the time being.
