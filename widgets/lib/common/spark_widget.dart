@@ -50,9 +50,9 @@ class SparkWidget extends PolymerElement {
   }
 
   static List<Node> expandCascadingContents(ContentElement content) {
-    return content
-        .getDistributedNodes()
-        .expand((e) => e is ContentElement ? expandCascadingContents(e) : [e])
-        .toList(growable: true);
+    final List<Node> dn = content.getDistributedNodes();
+    final edn = dn.expand((e) => e is ContentElement ? expandCascadingContents(e) : [e]);
+    final List<Node> ednl = edn.toList(growable: true);
+    return ednl;
   }
 }
