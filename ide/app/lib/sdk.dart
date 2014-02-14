@@ -22,6 +22,8 @@ import 'dart:typed_data' as typed_data;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import "../services_impl.dart";
+
 /**
  * Return the contents of the file at the given path. The path is relative to
  * the Chrome app's directory.
@@ -43,17 +45,18 @@ class DartSdk extends SdkDirectory {
   String _version;
   List<int> _contents;
   SdkDirectory _libDirectory;
+  ChromeService _chromeService;
 
   /**
    * Create a return a [DartSdk]. Generally, an application will only have one
    * of these object's instantiated. They are however relatively lightweight
    * objects.
    */
-  static Future<DartSdk> createSdk() {
+  static Future<DartSdk> createSdk(ChromeService chromeService) {
     return _getContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
-      return new DartSdk._withContents(contents);
+      return new DartSdk._withContents(chromeService, contents);
     }).catchError((e) {
-      return new DartSdk._fromVersion('');
+      return new DartSdk._fromVersion(chromeService, '');
     });
   }
 
@@ -61,11 +64,13 @@ class DartSdk extends SdkDirectory {
 
   DartSdk get sdk => this;
 
-  DartSdk._withContents(this._contents): super._(null, 'sdk') {
+  DartSdk._withContents(this._chromeService, this._contents)
+      : super._(null, 'sdk') {
     _parseArchive();
   }
 
-  DartSdk._fromVersion(this._version): super._(null, 'sdk') {
+  DartSdk._fromVersion(this._chromeService, this._version)
+      : super._(null, 'sdk') {
     _libDirectory = _getCreateDir('lib');
   }
 

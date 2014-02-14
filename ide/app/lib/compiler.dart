@@ -14,6 +14,8 @@ import 'package:compiler_unsupported/compiler.dart' as compiler;
 export 'package:compiler_unsupported/compiler.dart' show Diagnostic;
 
 import 'sdk.dart';
+import "../services_impl.dart";
+
 
 // TODO: we should be tracking compilation times and sizes
 
@@ -36,8 +38,8 @@ class Compiler {
   /**
    * Create and return a [Compiler] instance. These are heavy-weight objects.
    */
-  static Future<Compiler> createCompiler() {
-    return DartSdk.createSdk().then((DartSdk sdk) => new Compiler._(sdk));
+  static Future<Compiler> createCompiler(ChromeService chromeService) {
+    return DartSdk.createSdk(chromeService).then((DartSdk sdk) => new Compiler._(sdk));
   }
 
   Compiler._(this._sdk);
