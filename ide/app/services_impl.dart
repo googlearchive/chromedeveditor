@@ -50,7 +50,7 @@ class ServicesIsolate {
           completer.complete(event);
         }
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("Service error: $e ${e.stackTrace}");
       }
     });
     return completer.future;
@@ -89,7 +89,7 @@ class ServicesIsolate {
           }
         }
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
 
@@ -97,7 +97,7 @@ class ServicesIsolate {
       try {
         _handleMessage(event);
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
   }
@@ -190,6 +190,19 @@ class CompilerServiceImpl extends ServiceImpl {
       case "start":
         return start().then((_) => new Future.value(event.createReponse(null)));
         break;
+      case "dispose":
+        try {
+          _compiler.dispose();
+        } catch(error) {
+          // TODO(ericarnold): Return error which service will throw
+          print("Chrome service error: $error ${error.stackTrace}");
+        }
+
+        return new Future.value(event.createReponse(null));
+        break;
+      case "start":
+        return start().then((_) => new Future.value(event.createReponse(null)));
+        break;
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
@@ -203,7 +216,8 @@ class CompilerServiceImpl extends ServiceImpl {
 //      return responseEvent;
       return null;
     }).catchError((error){
-      /*%TRACE3*/ print("""(4> 2/13/14): error: ${error}"""); // TRACE%
+      // TODO(ericarnold): Return error which service will throw
+      print("Chrome service error: $error ${error.stackTrace}");
     });
   }
 }

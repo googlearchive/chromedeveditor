@@ -15,11 +15,12 @@ import 'package:chrome/gen/management.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'compiler.dart';
 import 'apps/app_utils.dart';
-import 'services/services.dart';
 import 'developer_private.dart';
-import 'utils.dart';
 import 'server.dart';
+import 'services/services.dart';
+import 'utils.dart';
 import 'workspace.dart';
 
 const int SERVER_PORT = 4040;

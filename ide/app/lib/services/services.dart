@@ -85,9 +85,15 @@ class CompilerService extends Service {
   }
 
   Future<CompilerResult> compileString(String string) {
-    return _sendAction("compileString").then((CompilerResult result) => (_){
-
+    return _sendAction("compileString")
+        .then((ServiceActionEvent result) {
+      CompilerResult response;
+      return response;
     });
+  }
+
+  Future dispose() {
+    return _sendAction("dispose").then((_) => null);
   }
 }
 
