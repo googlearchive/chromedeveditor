@@ -16,7 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'apps/app_utils.dart';
-import 'compiler.dart';
+import 'services/services.dart';
 import 'developer_private.dart';
 import 'utils.dart';
 import 'server.dart';
@@ -37,7 +37,9 @@ class LaunchManager {
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace) {
+  Services _services;
+
+  LaunchManager(this._services, this._workspace) {
     // The order of registration here matters.
     _delegates.add(new ChromeAppLaunchDelegate());
     _delegates.add(new DartWebAppLaunchDelegate(this));
@@ -326,12 +328,13 @@ class ProjectRedirectServlet extends PicoServlet {
  */
 class Dart2JsServlet extends PicoServlet {
   LaunchManager _launchManager;
-  Compiler _compiler;
+  Services _services;
+  CompilerService _compilerService;
 
   Dart2JsServlet(this._launchManager){
-    Compiler.createCompiler().then((c) {
-      _compiler = c;
-    });
+    _services = _launchManager._services;
+    _compilerService = _services.getService("compiler");
+    _compilerService.start();
   }
 
   bool canServe(HttpRequest request) {
@@ -358,7 +361,7 @@ class Dart2JsServlet extends PicoServlet {
 
     return (resource as File).getContents().then((String string) {
       // TODO: compiler should also accept files
-      return _compiler.compileString(string).then((CompilerResult result) {
+      return _compilerService.compileString(string).then((CompilerResult result) {
         _logger.info('compiled ${resource.path} in '
             '${_NF.format(stopwatch.elapsedMilliseconds)} ms');
         response.setContent(result.output);
@@ -369,6 +372,6 @@ class Dart2JsServlet extends PicoServlet {
   }
 
   void dispose() {
-    _compiler.dispose();
+    _compilerService.dispose();
   }
 }

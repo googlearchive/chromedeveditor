@@ -10,6 +10,7 @@ import 'dart:isolate';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../utils.dart';
+import '../compiler.dart';
 
 
 /**
@@ -81,6 +82,12 @@ class CompilerService extends Service {
 
   Future start() {
     return _sendAction("start").then((_) => null);
+  }
+
+  Future<CompilerResult> compileString(String string) {
+    return _sendAction("compileString").then((CompilerResult result) => (_){
+
+    });
   }
 }
 
