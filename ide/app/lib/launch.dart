@@ -8,15 +8,15 @@
 library spark.launch;
 
 import 'dart:async';
-import 'dart:html' as html;
 import 'dart:js' as js;
-import 'dart:typed_data' as typed_data;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'apps/app_utils.dart';
 import 'compiler.dart';
+import 'developer_private.dart' as dev_private;
 import 'utils.dart';
 import 'server.dart';
 import 'workspace.dart';
@@ -31,21 +31,15 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
  * Manages all the launches and calls the appropriate delegate.
  */
 class LaunchManager {
-
   List<LaunchDelegate> _delegates = [];
-
-  /**
-   * The last project that was launched
-   */
-  Project _currentProject;
-  Project get currentProject => _currentProject;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
   LaunchManager(this._workspace) {
-    _delegates.add(new DartWebAppLaunchDelegate(this));
+    // The order of registration here matters.
     _delegates.add(new ChromeAppLaunchDelegate());
+    _delegates.add(new DartWebAppLaunchDelegate(this));
   }
 
   /**
@@ -84,17 +78,18 @@ abstract class LaunchDelegate {
  * Launcher for running Dart web apps.
  */
 class DartWebAppLaunchDelegate extends LaunchDelegate {
-
   PicoServer _server;
   LaunchManager _launchManager;
   Dart2JsServlet _dart2jsServlet;
+  ProjectRedirectServlet _redirectServlet;
 
   DartWebAppLaunchDelegate(this._launchManager) {
     _dart2jsServlet = new Dart2JsServlet(_launchManager);
+    _redirectServlet = new ProjectRedirectServlet(_launchManager);
 
     PicoServer.createServer(SERVER_PORT).then((server) {
       _server = server;
-      _server.addServlet(new ProjectRedirectServlet(_launchManager));
+      _server.addServlet(_redirectServlet);
       _server.addServlet(new StaticResourcesServlet());
       _server.addServlet(_dart2jsServlet);
       _server.addServlet(new WorkspaceServlet(_launchManager));
@@ -106,12 +101,60 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
 
   // For now launching only web/index.html.
   bool canRun(Resource resource) {
-    return resource.project != null && resource.project.getChildPath('web/index.html') is File;
+    return getLaunchResourceFor(resource) != null;
+  }
+
+  Resource getLaunchResourceFor(Resource resource) {
+    if (resource.project == null) return null;
+
+    // We can always launch .htm and .html files.
+    if (resource is File) {
+      if (resource.name.endsWith('.html') || resource.name.endsWith('.htm')) {
+        return resource;
+      }
+    }
+
+    // Check to see if there is a launchable file in the current folder.
+    Container parent;
+    if (resource is Container) {
+      parent = resource;
+    } else {
+      parent = resource.parent;
+    }
+
+    if (getLaunchResourceIn(parent) != null) {
+      return getLaunchResourceIn(parent);
+    }
+
+    // Check for a launchable file in web/.
+    if (resource.project.getChild('web') is Container) {
+      return getLaunchResourceIn(resource.project.getChild('web'));
+    }
+
+    return null;
+  }
+
+  Resource getLaunchResourceIn(Container container) {
+    if (container.getChild('index.html') is File) {
+      return container.getChild('index.html');
+    }
+
+    for (Resource resource in container.getChildren()) {
+      if (resource is File) {
+        if (resource.name.endsWith('.html') || resource.name.endsWith('.htm')) {
+          return resource;
+        }
+      }
+    }
+
+    return null;
   }
 
   void run(Resource resource) {
-    _launchManager._currentProject = resource.project;
-    // Use htm extension for launch page, otherwise polymer build tries to pick it up.
+    _redirectServlet._launchFile = getLaunchResourceFor(resource);
+
+    // Use `.htm` extension for launch page, otherwise the polymer build tries
+    // to pick it up.
     var options = new chrome.CreateWindowOptions(
         id: 'runWindow',
         width: 800, height: 570,
@@ -134,31 +177,33 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
  */
 class ChromeAppLaunchDelegate extends LaunchDelegate {
   bool canRun(Resource resource) {
-    return resource.project != null &&
-        ( resource.project.getChildPath('manifest.json') is File
-          || resource.project.getChildPath('app/manifest.json') is File);
+    return getAppContainerFor(resource) != null;
   }
 
   void run(Resource resource) {
-    print('TODO: run project ${resource.project}');
+    Container launchContainer = getAppContainerFor(resource);
+
     if (!isDart2js()) {
+      _logger.warning("Can't launch on Dartium currently...");
       return;
     }
-    _loadApp(resource).then((_) {
-      _getAppId(resource.project.name).then((String id) {
+
+    dev_private.developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
+      // TODO: Use returned appId once that returns the correct results.
+      _getAppId(launchContainer.name).then((String id) {
         _launchApp(id);
       });
     });
   }
 
-  Future<String> _loadApp(Resource resource) {
+  Future<String> _loadApp(Container container) {
     Completer completer = new Completer();
     callback(String id) {
       completer.complete(id);
     }
 
     js.JsObject obj = js.context['chrome']['developerPrivate'];
-    obj.callMethod('loadDirectory', [(resource.project.entry as
+    obj.callMethod('loadDirectory', [(container.entry as
         chrome.ChromeObject).jsProxy, callback]);
     return completer.future;
   }
@@ -169,8 +214,8 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
   }
 
   /**
-   * TODO(grv) : This is a temporary function until loadDirectory returns
-   *  the app_id.
+   * TODO(grv): This is a temporary function until loadDirectory returns the
+   * app_id.
    */
   Future<String> _getAppId(String name) {
     Completer completer = new Completer();
@@ -242,7 +287,7 @@ class StaticResourcesServlet extends PicoServlet {
 
   Future<HttpResponse> serve(HttpRequest request) {
     HttpResponse response = new HttpResponse.ok();
-    return _getContentsBinary('images/favicon.ico').then((List<int> bytes) {
+    return getAppContentsBinary('images/favicon.ico').then((List<int> bytes) {
       response.setContentStream(new Stream.fromIterable([bytes]));
       response.setContentTypeFrom('favicon.ico');
       return new Future.value(response);
@@ -258,6 +303,7 @@ class ProjectRedirectServlet extends PicoServlet {
       '<meta http-equiv="refresh" content="0; url=http://127.0.0.1:$SERVER_PORT/';
 
   LaunchManager _launchManager;
+  Resource _launchFile;
 
   ProjectRedirectServlet(this._launchManager);
 
@@ -266,8 +312,7 @@ class ProjectRedirectServlet extends PicoServlet {
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    // TODO: For now the landing page is hardcoded to project/web/index.html.
-    String url = 'http://127.0.0.1:$SERVER_PORT/${_projectName}/web/index.html';
+    String url = 'http://127.0.0.1:$SERVER_PORT${launchPath}';
 
     // Issue a 302 redirect.
     HttpResponse response = new HttpResponse(statusCode: HttpStatus.FOUND);
@@ -277,7 +322,7 @@ class ProjectRedirectServlet extends PicoServlet {
     return new Future.value(response);
   }
 
-  String get _projectName => _launchManager.currentProject.name;
+  String get launchPath => _launchFile.path;
 }
 
 // 3 successive launches; dart2js warms up quite a bit.
@@ -335,18 +380,4 @@ class Dart2JsServlet extends PicoServlet {
   void dispose() {
     _compiler.dispose();
   }
-}
-
-/**
- * Return the contents of the file at the given path. The path is relative to
- * the Chrome app's directory.
- */
-//TODO: move to utils
-Future<List<int>> _getContentsBinary(String path) {
-  String url = chrome.runtime.getURL(path);
-
-  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
-    typed_data.ByteBuffer buffer = request.response;
-    return new typed_data.Uint8List.view(buffer);
-  });
 }

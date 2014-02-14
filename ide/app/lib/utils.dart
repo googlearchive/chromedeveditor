@@ -4,7 +4,9 @@
 
 library spark.utils;
 
+import 'dart:async';
 import 'dart:html' as html;
+import 'dart:typed_data' as typed_data;
 import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -54,6 +56,19 @@ void beep() {
  * Return whether the current runtime is dart2js (vs Dartium).
  */
 bool isDart2js() => identical(1, 1.0);
+
+/**
+ * Return the contents of the file at the given path. The path is relative to
+ * the Chrome app's directory.
+ */
+Future<List<int>> getAppContentsBinary(String path) {
+  String url = chrome.runtime.getURL(path);
+
+  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
+    typed_data.ByteBuffer buffer = request.response;
+    return new typed_data.Uint8List.view(buffer);
+  });
+}
 
 /**
  * A simple class to do `print()` profiling. It is used to profile a single

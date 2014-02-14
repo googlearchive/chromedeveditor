@@ -4,30 +4,30 @@
 <polymer-element name="example-ui">
   <template>
     <div style="display:flex; width:400px; height:200px">
-     <div style="width:200px; background-color:blue">left (resize target)</div>
-     <spark-splitter direction="left"></spark-splitter>
-     <div style="background-color:green; flex:1">right</div>
+      <div style="width:200px; background-color:lightblue">left (resize target)</div>
+      <spark-splitter direction="left"></spark-splitter>
+      <div style="background-color:lightgreen; flex:1">right</div>
     </div>
 
     <div style="display:flex; width:400px; height:200px">
-     <div style="background-color:blue; flex:1">left</div>
-     <spark-splitter direction="right"></spark-splitter>
-     <div style="width:200px; background-color:green">right (resize target)</div>
+      <div style="background-color:lightblue; flex:1">left</div>
+      <spark-splitter direction="right"></spark-splitter>
+      <div style="width:200px; background-color:lightgreen">right (resize target)</div>
     </div>
 
     <br><br>
 
     <div style="display:flex; flex-flow:row">
       <div style="display:flex; flex-flow:column; width:200px; height:400px">
-       <div style="height:200px; background-color:red">top (resize target)</div>
-       <spark-splitter direction="up"></spark-splitter>
-       <div style="background-color:yellow; flex:1">bottom</div>
+        <div style="height:200px; background-color:orange">top (resize target)</div>
+        <spark-splitter direction="up"></spark-splitter>
+        <div style="background-color:yellow; flex:1">bottom</div>
       </div>
 
       <div style="display:flex; flex-flow:column; width:200px; height:400px">
-       <div style="background-color:red; flex:1">top</div>
-       <spark-splitter direction="down"></spark-splitter>
-       <div style="height:200px; background-color:yellow">bottom (resize target)</div>
+        <div style="background-color:orange; flex:1">top</div>
+        <spark-splitter direction="down"></spark-splitter>
+        <div style="height:200px; background-color:yellow">bottom (resize target)</div>
       </div>
     </div>
   </template>
