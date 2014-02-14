@@ -90,18 +90,18 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
   Dart2JsServlet _dart2jsServlet;
 
   DartWebAppLaunchDelegate(this._launchManager) {
-    _dart2jsServlet = new Dart2JsServlet(_launchManager);
-
-    PicoServer.createServer(SERVER_PORT).then((server) {
-      _server = server;
-      _server.addServlet(new ProjectRedirectServlet(_launchManager));
-      _server.addServlet(new StaticResourcesServlet());
-      _server.addServlet(_dart2jsServlet);
-      _server.addServlet(new WorkspaceServlet(_launchManager));
-    }).catchError((error) {
-      // TODO: We could fallback to binding to any port.
-      _logger.severe('Error starting up embedded server', error);
-    });
+//    _dart2jsServlet = new Dart2JsServlet(_launchManager);
+//
+//    PicoServer.createServer(SERVER_PORT).then((server) {
+//      _server = server;
+//      _server.addServlet(new ProjectRedirectServlet(_launchManager));
+//      _server.addServlet(new StaticResourcesServlet());
+//      _server.addServlet(_dart2jsServlet);
+//      _server.addServlet(new WorkspaceServlet(_launchManager));
+//    }).catchError((error) {
+//      // TODO: We could fallback to binding to any port.
+//      _logger.severe('Error starting up embedded server', error);
+//    });
   }
 
   // For now launching only web/index.html.
