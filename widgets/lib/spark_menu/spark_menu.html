@@ -25,7 +25,9 @@
 
 <link rel="import" href="../../../packages/spark_widgets/spark_selector/spark_selector.html">
 
-<polymer-element name="spark-menu" extends="spark-selector">
+<polymer-element name="spark-menu" extends="spark-selector"
+    multi="false"
+    selectableFilter="spark-menu-item">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
