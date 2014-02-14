@@ -76,7 +76,13 @@ defineTests() {
       servicesIsolate = new impl.ServicesIsolate(mockSendPort);
       impl.CompilerServiceImpl compilerImpl =
           servicesIsolate.getServiceImpl("compiler");
+      compilerImpl.start().whenComplete((){
+        /*%TRACE3*/ print("(4> 2/13/14): whenComplete!"); // TRACE%
+
       });
+      /*%TRACE3*/ print("""(4> 2/13/14): compilerImpl: ${compilerImpl}"""); // TRACE%
+
+//      expect(mockSendPort.wasSent, isNotNull);
     });
   });
 }
