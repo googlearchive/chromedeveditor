@@ -36,6 +36,8 @@ class ServicesIsolate {
 
   ChromeService chromeService;
   Map<String, ServiceImpl> _serviceImplsById = {};
+  static ServicesIsolate _instance;
+  static ServicesIsolate get instance => _instance;
 
   Future<ServiceActionEvent> _onResponseByCallId(String callId) {
     Completer<ServiceActionEvent> completer =
@@ -54,6 +56,7 @@ class ServicesIsolate {
 
 
   ServicesIsolate(this._sendPort) {
+    _instance = this;
     chromeService = new ChromeService(this);
 
     StreamController<ServiceActionEvent> hostMessageController =
@@ -226,12 +229,12 @@ class ChromeService {
     return new ServiceActionEvent("chrome", actionId, data);
   }
 
-  Future<ServiceActionEvent> delay(int milliseconds) {
-    ServiceActionEvent delayEvent =
-        _createNewEvent("delay", {"ms": milliseconds});
-    delayEvent.serviceId = "chrome";
-    return _isolate._sendAction(delayEvent);
-  }
+  Future<ServiceActionEvent> delay(int milliseconds) =>
+      _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
+
+  Future<ServiceActionEvent> getURL(String path) =>
+      _isolate._sendAction(_createNewEvent("getURL", {"path": path}))
+      .then((ServiceActionEvent event) => event.data['url']);
 }
 
 // Provides an abstract class and helper code for service implementations.
@@ -249,5 +252,7 @@ abstract class ServiceImpl {
 SendPort _printSendPort;
 void print(var message) {
   // Host will know it's a print because it's a simple string instead of a map
-  _printSendPort.send("$message");
+  if (_printSendPort != null) {
+    _printSendPort.send("$message");
+  }
 }

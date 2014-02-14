@@ -20,7 +20,7 @@ import 'dart:convert';
 import 'dart:html' as html;
 import 'dart:typed_data' as typed_data;
 
-import 'package:chrome/chrome_app.dart' as chrome;
+//import 'package:chrome/chrome_app.dart' as chrome;
 
 import "../services_impl.dart";
 
@@ -30,10 +30,10 @@ import "../services_impl.dart";
  */
 Future<List<int>> _getContentsBinary(String path) {
   /*%TRACE3*/ print("(4> 2/13/14): _getContentsBinary!"); // TRACE%
-  String url = _chromeService.getURL(path).then;
-
-  /*%TRACE3*/ print("(4> 2/13/14): return new typed_data.Uint8List.view!"); // TRACE%
-  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
+  return ServicesIsolate.instance.chromeService.getURL(path)
+      .then((String url) => html.HttpRequest.request(
+      url, responseType: 'arraybuffer'))
+  .then((request) {
     /*%TRACE3*/ print("(4> 2/13/14): arraybuffer').then((request!"); // TRACE%
     typed_data.ByteBuffer buffer = request.response;
     /*%TRACE3*/ print("(4> 2/13/14): Uint8List.view(buffer!"); // TRACE%

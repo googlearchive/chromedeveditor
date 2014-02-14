@@ -7,7 +7,10 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:chrome/chrome_app.dart' as chrome;
+
 import '../utils.dart';
+
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -113,25 +116,22 @@ class ChromeServiceImpl extends Service {
       : super(services, handler);
 
   // For incoming (non-requested) actions.
-  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+  void handleEvent(ServiceActionEvent event) {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
     switch(event.actionId) {
       case "delay":
-        int milliseconds = event.data['ms'];
-        new Future.delayed(new Duration(milliseconds: milliseconds))
-            .then((_) {
-              ServiceActionEvent response = event.createReponse(null);
-              _sendResponse(response);
-              completer.complete(response);
-            });
+        new Future.delayed(new Duration(milliseconds: event.data['ms']))
+            .then((_) => _sendResponse(event.createReponse(null)));
+        break;
+      case "getURL":
+        _sendResponse(event.createReponse({"url": chrome.runtime.getURL(
+            event.data['path'])}));
         break;
       default:
         throw "Unknown action '${event.actionId}' sent to Chrome service.";
     }
-
-    return completer.future;
   }
 }
 
