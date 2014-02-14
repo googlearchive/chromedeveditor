@@ -120,7 +120,7 @@ abstract class Job {
 }
 
 /**
- * TODO:
+ * A simple [Job]. It finishes when the given [Completer] completes.
  */
 class ProgressJob extends Job {
   Completer _completer;

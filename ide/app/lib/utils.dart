@@ -74,14 +74,14 @@ Future<List<int>> getAppContentsBinary(String path) {
 }
 
 /**
- * TODO:
+ * A [Notifier] is used to present the user with a message.
  */
 abstract class Notifier {
   void showMessage(String title, String message);
 }
 
 /**
- * TODO:
+ * A [Notifier] implementation that just logs the given [title] and [message].
  */
 class NullNotifier implements Notifier {
   void showMessage(String title, String message) {
