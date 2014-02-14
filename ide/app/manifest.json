@@ -23,6 +23,7 @@
   "permissions": [
     "https://www.google-analytics.com/",
     "https://github.com/*",
+    "http://*/push",
     "clipboardRead",
     "clipboardWrite",
     "developerPrivate",

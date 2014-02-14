@@ -33,6 +33,7 @@
       <spark-button id="runButton" small primary>
         <span class="glyphicon glyphicon-play"></span> Run
       </spark-button>
+      <spark-button id="pushButton" small>Push to Mobile</spark-button>
       <spark-button id="newProject" small>New Project...</spark-button>
       <spark-button id="gitClone" small>Git Clone...</spark-button>
 
@@ -194,6 +195,28 @@
         </spark-button>
         <spark-button overlay-toggle primary data-dismiss="modal">
           Create
+        </spark-button>
+      </div>
+    </spark-modal>
+
+    <!-- Harness Push dialog -->
+    <spark-modal id="pushDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Push to Mobile</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="pushUrl">Target Host</label>
+          <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Push
         </spark-button>
       </div>
     </spark-modal>

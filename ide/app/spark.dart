@@ -25,6 +25,7 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
+import 'lib/harness_push.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
@@ -385,6 +386,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ResourceRefreshAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
+    actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
@@ -1387,6 +1389,37 @@ class FolderOpenAction extends SparkAction {
 
   void _invoke([Object context]) {
     spark.openFolder();
+  }
+}
+
+class ApplicationPushAction extends SparkActionWithDialog {
+  InputElement _pushUrlElement;
+
+  ApplicationPushAction(Spark spark, Element dialog)
+      : super(spark, "application-push", "Push to Mobile", dialog) {
+    _pushUrlElement = _triggerOnReturn("#pushUrl");
+  }
+
+  void _invoke([Object context]) {
+    _show();
+  }
+
+  void _commit() {
+    String url = _pushUrlElement.value;
+    // TODO(braden): Input validation.
+    spark.jobManager.schedule(new _HarnessPushJob(url));
+  }
+}
+
+
+class _HarnessPushJob extends Job {
+  String _url;
+
+  _HarnessPushJob(this._url) : super('Pushing to mobile…');
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 10);
+    return HarnessPush.push(_url, monitor);
   }
 }
 
