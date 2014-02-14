@@ -55,9 +55,11 @@
           id="suggestion-list-menu"
           valueattr="label"
           on-activate="{{onSelected}}">
-        <template repeat="{{s in suggestions}}">
+        <template repeat="{{s in suggestions | enumerate}}">
           <spark-menu-item
-              label="{{s.label}}" description="{{s.formatDetails}}">
+              index="{{s.index}}"
+              label="{{s.value.label}}"
+              description="{{s.value.formatDetails}}">
           </spark-menu-item>
         </template>
       </spark-menu>
