@@ -18,6 +18,7 @@ library spark.sdk;
 import 'dart:async';
 import 'dart:convert';
 import '../services_impl.dart';
+import 'utils.dart';
 
 /**
  * This class represents the Dart SDK as build into Spark. It allows you to
@@ -34,11 +35,12 @@ class DartSdk extends SdkDirectory {
    * objects.
    */
   static Future<DartSdk> createSdk() {
-    return ChromeService.getAppContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
-      return new DartSdk._withContents(contents);
-    }).catchError((e) {
-      return new DartSdk._fromVersion('');
-    });
+    return getAppContentsBinary('sdk/dart-sdk.bin')
+        .then((List<int> contents) {
+          return new DartSdk._withContents(contents);
+        }).catchError((e) {
+          return new DartSdk._fromVersion('');
+        });
   }
 
   String get version => _version;

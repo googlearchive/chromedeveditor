@@ -11,6 +11,8 @@ import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import '../services_impl.dart';
+
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
@@ -62,12 +64,22 @@ bool isDart2js() => identical(1, 1.0);
  * the Chrome app's directory.
  */
 Future<List<int>> getAppContentsBinary(String path) {
-  String url = chrome.runtime.getURL(path);
+  Future<String> urlFuture;
 
-  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
-    typed_data.ByteBuffer buffer = request.response;
-    return new typed_data.Uint8List.view(buffer);
-  });
+  if (ServicesIsolate.instance != null) {
+    urlFuture = ChromeService.getAppContentsBinary('sdk/dart-sdk.bin');
+  } else {
+    urlFuture = chrome.runtime.getURL(path);
+  }
+
+
+
+  return urlFuture.then((String url) {
+        html.HttpRequest.request(url, responseType: 'arraybuffer');
+      }).then((request) {
+        typed_data.ByteBuffer buffer = request.response;
+        return new typed_data.Uint8List.view(buffer);
+      });
 }
 
 /**
