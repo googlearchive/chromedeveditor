@@ -213,10 +213,8 @@ class CompilerServiceImpl extends ServiceImpl {
 
   Future _start() {
     return Compiler.createCompiler().then((Compiler newCompler) {
-//      ServiceActionEvent responseEvent = event.createReponse(null);
       _compiler = newCompler;
       _readyCompleter.complete();
-//      return responseEvent;
       return null;
     }).catchError((error){
       // TODO(ericarnold): Return error which service will throw

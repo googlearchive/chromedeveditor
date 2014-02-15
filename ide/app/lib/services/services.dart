@@ -75,17 +75,24 @@ abstract class Service {
 }
 
 class CompilerService extends Service {
+  Completer _readyCompleter = new Completer();
+
   String serviceId = "compiler";
+  Future onceReady;
 
   CompilerService(Services services, _IsolateHandler handler)
-      : super(services, handler);
+      : super(services, handler) {
+    onceReady = _readyCompleter.future;
+  }
 
   Future start() {
-    return _sendAction("start").then((_) => null);
+    return _isolateHandler.onceIsolateReady
+        .then((_) => _sendAction("start"))
+        .then((_) => _readyCompleter.complete());
   }
 
   Future<CompilerResult> compileString(String string) {
-    return _sendAction("compileString")
+    return onceReady.then((_) => _sendAction("compileString"))
         .then((ServiceActionEvent result) {
       CompilerResult response = new CompilerResult.fromMap(result.data);
       return response;
@@ -93,7 +100,8 @@ class CompilerService extends Service {
   }
 
   Future dispose() {
-    return _sendAction("dispose").then((_) => null);
+    return onceReady.then((_) => _sendAction("dispose"))
+        .then((_) => null);
   }
 }
 
