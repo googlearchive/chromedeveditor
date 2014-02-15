@@ -87,7 +87,7 @@ class CompilerService extends Service {
   Future<CompilerResult> compileString(String string) {
     return _sendAction("compileString")
         .then((ServiceActionEvent result) {
-      CompilerResult response;
+      CompilerResult response = new CompilerResult.fromMap(result.data);
       return response;
     });
   }

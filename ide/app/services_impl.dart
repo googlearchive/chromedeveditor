@@ -188,7 +188,7 @@ class CompilerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
       case "start":
-        return start().then((_) => new Future.value(event.createReponse(null)));
+        return _start().then((_) => new Future.value(event.createReponse(null)));
         break;
       case "dispose":
         try {
@@ -200,15 +200,18 @@ class CompilerServiceImpl extends ServiceImpl {
 
         return new Future.value(event.createReponse(null));
         break;
-      case "start":
-        return start().then((_) => new Future.value(event.createReponse(null)));
+      case "compileString":
+        return _compiler.compileString(event.data['string'])
+            .then((CompilerResult result)  {
+              return new Future.value(event.createReponse(result.toMap()));
+            });
         break;
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
   }
 
-  Future start() {
+  Future _start() {
     return Compiler.createCompiler().then((Compiler newCompler) {
 //      ServiceActionEvent responseEvent = event.createReponse(null);
       _compiler = newCompler;
