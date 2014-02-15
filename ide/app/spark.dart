@@ -398,6 +398,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
+    actionManager.registerAction(new ProjectInfoAction(this, getDialogElement("#projectInfoDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
@@ -1597,6 +1598,35 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(context) => _isScmProject(context);
 }
 
+class ProjectInfoAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project project;
+  GitScmProjectOperations gitOperations;
+  HtmlElement _htmlElement;
+
+  ProjectInfoAction(Spark spark, Element dialog)
+      : super(spark, "Project info", "Project Info…", dialog) {
+    _htmlElement = getElement("#configUrl .config-label");
+  }
+
+  void _invoke([List context]) {
+    project = context.first;
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
+    gitOperations.getConfigMap().then((Map map) {
+      final String repoUrl = map['url'];
+      _htmlElement.setInnerHtml(repoUrl);
+    });
+
+    _show();
+  }
+
+  void _commit() {
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isScmProject(context);
+}
+
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
@@ -2009,7 +2039,6 @@ class AboutSparkAction extends SparkActionWithDialog {
     // Nothing to do for this dialog.
   }
 }
-
 
 class SettingsAction extends SparkActionWithDialog {
   bool _initialized = false;

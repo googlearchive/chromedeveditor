@@ -123,7 +123,7 @@
 #gitCommitList {
   max-height: 250px;
   overflow: scroll;
-  padding: 0 20px;  
+  padding: 0 20px;
 }
 
 #gitCommitList h1 {
@@ -150,4 +150,10 @@
 
 .input-label input {
   -webkit-flex: 1 1 auto;
+}
+
+#gitConfigDialog .config-name {
+  width: 80px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
