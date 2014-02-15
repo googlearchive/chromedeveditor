@@ -5,7 +5,9 @@
 library spark.services_impl;
 
 import 'dart:async';
+import 'dart:html' as html;
 import 'dart:isolate';
+import 'dart:typed_data' as typed_data;
 
 import 'lib/utils.dart';
 import 'lib/compiler.dart';
@@ -48,7 +50,7 @@ class ServicesIsolate {
           completer.complete(event);
         }
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("Service error: $e ${e.stackTrace}");
       }
     });
     return completer.future;
@@ -87,7 +89,7 @@ class ServicesIsolate {
           }
         }
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
 
@@ -95,7 +97,7 @@ class ServicesIsolate {
       try {
         _handleMessage(event);
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
   }
@@ -186,24 +188,39 @@ class CompilerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
       case "start":
-        /*%TRACE3*/ print("(4> 2/13/14): start!"); // TRACE%
-        return start().then((_) => new Future.value(event.createReponse(null)));
+        return _start().then((_) => new Future.value(event.createReponse(null)));
+        break;
+      case "dispose":
+        try {
+          _compiler.dispose();
+        } catch(error) {
+          // TODO(ericarnold): Return error which service will throw
+          print("Chrome service error: $error ${error.stackTrace}");
+        }
+
+        return new Future.value(event.createReponse(null));
+        break;
+      case "compileString":
+        return _compiler.compileString(event.data['string'])
+            .then((CompilerResult result)  {
+              return new Future.value(event.createReponse(result.toMap()));
+            });
         break;
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
   }
 
-  Future start() {
+  Future _start() {
     return Compiler.createCompiler().then((Compiler newCompler) {
-      /*%TRACE3*/ print("(4> 2/13/14): then!"); // TRACE%
 //      ServiceActionEvent responseEvent = event.createReponse(null);
       _compiler = newCompler;
       _readyCompleter.complete();
 //      return responseEvent;
       return null;
     }).catchError((error){
-      /*%TRACE3*/ print("""(4> 2/13/14): error: ${error}"""); // TRACE%
+      // TODO(ericarnold): Return error which service will throw
+      print("Chrome service error: $error ${error.stackTrace}");
     });
   }
 }
@@ -213,6 +230,21 @@ class CompilerServiceImpl extends ServiceImpl {
  */
 class ChromeService {
   ServicesIsolate _isolate;
+
+  /**
+   * Return the contents of the file at the given path. The path is relative to
+   * the Chrome app's directory.
+   */
+  static Future<List<int>> getAppContentsBinary(String path) {
+    return ServicesIsolate.instance.chromeService.getURL(path)
+        .then((String url) => html.HttpRequest.request(
+        url, responseType: 'arraybuffer'))
+    .then((request) {
+      typed_data.ByteBuffer buffer = request.response;
+      return new typed_data.Uint8List.view(buffer);
+    });
+  }
+
 
   ChromeService(this._isolate);
 

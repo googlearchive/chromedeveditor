@@ -6,7 +6,8 @@ library spark.search;
 
 import 'dart:async';
 
-import 'package:spark_widgets/spark_suggest/spark_suggest_box.dart';
+// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
+import '../packages/spark_widgets/spark_suggest/spark_suggest_box.dart';
 
 import 'workspace.dart';
 
