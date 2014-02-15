@@ -9,19 +9,13 @@
 }
 
 /* BUG #733 */
-:host[direction="left"], :host[direction="right"] {
-  flex-flow: row;
-}
-
-/* BUG #733 */
-:host[direction="up"], :host[direction="down"] {
-  flex-flow: column;
-}
-
+:host[direction="left"], :host[direction="right"],
 :host([direction="left"]), :host([direction="right"]) {
   flex-flow: row;
 }
 
+/* BUG #733 */
+:host[direction="up"], :host[direction="down"],
 :host([direction="up"]), :host([direction="down"]) {
   flex-flow: column;
 }
