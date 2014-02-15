@@ -4,40 +4,38 @@
 
 @import url("../common/spark_widget.css");
 
-:host {
+#enclosure {
   display: flex;
+  height: 100%;
+  width: 100%;
 }
 
-:host[direction="left"], :host[direction="right"] {
+#enclosure[direction="left"], #enclosure[direction="right"] {
   flex-flow: row;
 }
 
-:host[direction="up"], :host[direction="down"] {
+#enclosure[direction="up"], #enclosure[direction="down"] {
   flex-flow: column;
-}
-
-::content > * {
-  position: relative;
 }
 
 /* If the resizing target is to the left or up, make the other one flex so
    it auto-adjusts.
 */
-#marker[direction="left"] ~ content[select=":nth-child(2)"]::content > * {
+#enclosure[direction="left"] > content[select=":nth-child(2)"]::content > * {
   flex: 1;
 }
 
-#marker[direction="up"] ~ content[select=":nth-child(2)"]::content > * {
+#enclosure[direction="up"] > content[select=":nth-child(2)"]::content > * {
   flex: 1;
 }
 
 /* If the resizing target is to the right or down, make the other one flex so
    it auto-adjusts.
 */
-#marker[direction="right"] ~ content[select=":nth-child(1)"]::content > * {
+#enclosure[direction="right"] > content[select=":nth-child(1)"]::content > * {
   flex: 1;
 }
 
-#marker[direction="down"] ~ content[select=":nth-child(1)"]::content > * {
+#enclosure[direction="down"] > content[select=":nth-child(1)"]::content > * {
   flex: 1;
 }
