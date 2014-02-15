@@ -190,26 +190,25 @@ class _IsolateHandler {
     onIsolateMessage = _messageController.stream;
 
     _receivePort.listen((arg) {
-      if (_sendPort == null) {
+      if (arg is String) {
+        // String: handle as print
+        print ("Worker: $arg");
+        return;
+      } else if (_sendPort == null) {
         _sendPort = arg;
         _readyController..add(null)..close();
+      } else if (arg is int) {
+        // int: handle as ping
+        _pong(arg);
       } else {
-        if (arg is int) {
-          // int: handle as ping
-          _pong(arg);
-        } else if (arg is String) {
-          // String: handle as print
-          print ("Worker: $arg");
-        } else {
-          ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
+        ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
 
-          if (event.response == true) {
-            Completer<ServiceActionEvent> completer =
-                _serviceCallCompleters.remove(event.callId);
-            completer.complete(event);
-          } else {
-            _messageController.add(event);
-          }
+        if (event.response == true) {
+          Completer<ServiceActionEvent> completer =
+              _serviceCallCompleters.remove(event.callId);
+          completer.complete(event);
+        } else {
+          _messageController.add(event);
         }
       }
     });
