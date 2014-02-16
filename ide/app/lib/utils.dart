@@ -12,8 +12,6 @@ import 'dart:web_audio';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
-import 'jobs.dart';
-
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
