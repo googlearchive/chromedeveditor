@@ -125,7 +125,7 @@ class HarnessPush {
       if (child is ws.File) {
         futures.add(child.getBytes().then((buf) {
           List<int> data = buf.getBytes();
-          arch.addFile(new archive.File(prefix + child.name, data.length,
+          arch.addFile(new archive.ArchiveFile(prefix + child.name, data.length,
               data));
         }));
       } else if (child is ws.Folder) {
