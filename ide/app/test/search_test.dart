@@ -40,7 +40,7 @@ defineTests() {
         () => ws.link(createWsRoot(rootDir)).then((_) => test());
 
     test('should find single matching file', whenReady(() {
-      oracle.getSuggestions('spark').listen(expectAsync1((List<Suggestion> list) {
+      oracle.getSuggestions('spark').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(1));
         expect(list[0].label, 'Spark.DART');
         expect(list[0].details, '/root');
@@ -48,7 +48,7 @@ defineTests() {
     }));
 
     test('should find all matching files', whenReady(() {
-      oracle.getSuggestions('multi').listen(expectAsync1((List<Suggestion> list) {
+      oracle.getSuggestions('multi').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(2));
         expect(list[0].label, 'multi1.dart');
         expect(list[0].details, '/root');
@@ -58,7 +58,7 @@ defineTests() {
     }));
 
     test('should ignore case', whenReady(() {
-      oracle.getSuggestions('SP').listen(expectAsync1((List<Suggestion> list) {
+      oracle.getSuggestions('SP').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(1));
         expect(list[0].label, 'Spark.DART');
         expect(list[0].details, '/root');
@@ -66,7 +66,7 @@ defineTests() {
     }));
 
     test('should ignore underscores', whenReady(() {
-      oracle.getSuggestions('ih-asunder_dashes').listen(expectAsync1((List<Suggestion> list) {
+      oracle.getSuggestions('ih-asunder_dashes').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(1));
         expect(list[0].label, 'i_has-underdashes.txt');
         expect(list[0].details, '/root');
@@ -74,16 +74,16 @@ defineTests() {
     }));
 
     test('should not return non-matching suggestions', whenReady(() {
-      oracle.getSuggestions('does_not_match').listen(expectAsync1((List list) {
+      oracle.getSuggestions('does_not_match').listen(expectAsync((List list) {
         expect(list, hasLength(0));
       }));
     }));
 
     test('should not return anything on empty/null text', whenReady(() {
-      oracle.getSuggestions('').listen(expectAsync1((list) {
+      oracle.getSuggestions('').listen(expectAsync((list) {
         expect(list, hasLength(0));
       }));
-      oracle.getSuggestions(null).listen(expectAsync1((list) {
+      oracle.getSuggestions(null).listen(expectAsync((list) {
         expect(list, hasLength(0));
       }));
     }));
