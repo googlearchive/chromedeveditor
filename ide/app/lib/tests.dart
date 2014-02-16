@@ -131,7 +131,7 @@ class _TestJob extends Job {
     // TODO: Count tests for future progress bar.
     monitor.start(name, 1);
 
-    unittest.rerunTests();
+    unittest.runTests();
 
     return testCompleter.future.then((_) => this);
   }

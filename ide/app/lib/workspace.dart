@@ -18,7 +18,6 @@ import 'package:logging/logging.dart';
 import 'builder.dart';
 import 'jobs.dart';
 import 'preferences.dart';
-import 'utils.dart';
 
 final Logger _logger = new Logger('spark.workspace');
 

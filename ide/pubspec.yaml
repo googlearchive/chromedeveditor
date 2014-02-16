@@ -24,7 +24,7 @@ dependencies:
   shadow_dom: 0.9.1
   spark_widgets:
     path: ../widgets
-  unittest: any
+  unittest: '>=0.10.0'
   uuid: any
 dev_dependencies:
   args: any
