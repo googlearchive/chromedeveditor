@@ -470,18 +470,16 @@
       </div>
     </spark-modal>
 
-    <!-- Project info dialog -->
-    <spark-modal id="projectInfoDialog" class="dialog spark-overlay-scale-slideup">
+    <!-- Project properties dialog -->
+    <spark-modal id="projectPropertiesDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
-        <h4 class="modal-title">Project Info</h4>
+        <h4 class="modal-title">Project Properties</h4>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <div id="configUrl">
-            <span class="config-name">Url : </span>
-            <span class="config-label"></span>
-          </div>
+          <label for="propertyUrl">Url</label>
+          <p id="propertyUrl" class="property-value"></span>
         </div>
       </div>
       <div class="modal-footer">

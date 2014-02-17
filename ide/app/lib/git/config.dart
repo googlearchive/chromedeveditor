@@ -29,7 +29,7 @@ class Config {
     }
   }
 
-  Map toMap() {
+  Map<String, dynamic> toMap() {
     return {
       'url': url,
       'shallow': shallow,

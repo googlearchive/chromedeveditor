@@ -285,7 +285,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
       }).catchError((e) => _completer.completeError(e));
   }
 
-  Future<Map> getConfigMap() {
+  Future<Map<String, dynamic>> getConfigMap() {
     return objectStore.then((store) {
       return store.readConfig().then((Config config) {
         return config.toMap();
