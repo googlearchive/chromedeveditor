@@ -1,6 +1,5 @@
 library examples;
 
-import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 @CustomTag('widget-examples')
