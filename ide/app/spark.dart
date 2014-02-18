@@ -402,6 +402,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
+    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
@@ -1623,6 +1624,56 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(context) => _isScmProject(context);
 }
 
+class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project project;
+  HtmlElement _propertiesElement;
+
+  ProjectPropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'project-properties', 'Project Properties…', dialog) {
+    _propertiesElement = getElement('#projectPropertiesDialog .form-group');
+  }
+
+  void _invoke([List context]) {
+    project = context.first;
+    _propertiesElement.innerHtml = '';
+    _buildProperties();
+
+    _show();
+  }
+
+  void _buildProperties() {
+    _addProperty('Name', project.name);
+    GitScmProjectOperations gitOperations =
+        spark.scmManager.getScmOperationsFor(project);
+    if (gitOperations != null) {
+      gitOperations.getConfigMap().then((Map<String, dynamic> map) {
+        final String repoUrl = map['url'];
+        _addProperty('URL', repoUrl);
+      }).catchError((e) {
+        _addProperty('URL', 'Fetching failed: ' + e.toString());
+      });;
+    }
+  }
+
+  void _addProperty(String key, String value) {
+    LabelElement label = new LabelElement()
+        ..className = 'col-sm-2'
+        ..text = key;
+
+    Element element = new Element.tag('p')
+        ..className = 'property-value'
+        ..text = value;
+    _propertiesElement.children.addAll([label, element]);
+  }
+
+  void _commit() {
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(context) => _isProject(context);
+}
+
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
@@ -2035,7 +2086,6 @@ class AboutSparkAction extends SparkActionWithDialog {
     // Nothing to do for this dialog.
   }
 }
-
 
 class SettingsAction extends SparkActionWithDialog {
   bool _initialized = false;

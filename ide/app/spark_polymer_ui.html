@@ -244,7 +244,7 @@
           Clone
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Commit dialog -->
     <spark-modal id="gitCommitDialog" class="dialog spark-overlay-scale-slideup">
@@ -280,7 +280,7 @@
           Commit
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Branch dialog -->
     <spark-modal id="gitBranchDialog" class="dialog spark-overlay-scale-slideup">
@@ -303,7 +303,7 @@
           Create Branch
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Checkout dialog -->
     <spark-modal id="gitCheckoutDialog" class="dialog spark-overlay-scale-slideup">
@@ -329,7 +329,7 @@
           Checkout
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Push dialog -->
     <spark-modal id="gitPushDialog" class="dialog spark-overlay-scale-slideup">
@@ -350,8 +350,8 @@
           Push
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
-    
+    </spark-modal>
+
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
@@ -378,7 +378,7 @@
           Close
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Setting dialog -->
     <spark-modal id="settingsDialog" class="dialog spark-overlay-scale-slideup">
@@ -438,7 +438,7 @@
           Close
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git authentication dialog -->
     <spark-modal id="gitAuthenticationDialog" class="dialog spark-overlay-scale-slideup">
@@ -470,7 +470,24 @@
           Login
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
+
+    <!-- Project properties dialog -->
+    <spark-modal id="projectPropertiesDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Project Properties</h4>
+      </div>
+      <div class="modal-body">
+        <div id="properties" class="form-group">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal>
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>

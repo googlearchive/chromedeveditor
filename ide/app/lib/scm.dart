@@ -17,6 +17,7 @@ import 'package:logging/logging.dart';
 import 'builder.dart';
 import 'jobs.dart';
 import 'workspace.dart';
+import 'git/config.dart';
 import 'git/objectstore.dart';
 import 'git/options.dart';
 import 'git/commands/branch.dart';
@@ -282,6 +283,14 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // Update the SCM status for the files.
         _refreshStatus(project: project);
       }).catchError((e) => _completer.completeError(e));
+  }
+
+  Future<Map<String, dynamic>> getConfigMap() {
+    return objectStore.then((store) {
+      return store.readConfig().then((Config config) {
+        return config.toMap();
+      });
+    });
   }
 
   String getBranchName() {
