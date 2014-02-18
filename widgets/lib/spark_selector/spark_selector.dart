@@ -136,6 +136,9 @@ class SparkSelector extends SparkWidget {
   // Events fired from <polymer-selection> object.
   void onSelectionSelect(e, detail) {
     _renderSelection(detail['item'], detail['isSelected']);
+    if (valueattr != null) {
+      detail['value'] = _valueForNode(detail['item']);
+    }
     asyncFire('activate', detail: detail, canBubble: true);
   }
 
