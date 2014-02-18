@@ -4,7 +4,7 @@
 
 @import url("../common/spark_widget.css");
 
-#icon, #text, #text > *, ::content {
+:host {
   display: inline-block;
 }
 
@@ -15,13 +15,14 @@
   color: #000;
   font-family: Helvetica, Sans-serif;
   font-size: 14px;
-  min-width: 220px;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 #descriptionText {
   color: #bdbdbd;
   float: right;
+  overflow: hidden;
 }
 
 :host(.highlighted), /*BUG #733*/ :host.highlighted {
