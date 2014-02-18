@@ -156,8 +156,10 @@ class SparkSuggestBox extends SparkWidget {
   }
 
   void onMenuSelected(Event event, var detail) {
-    final int index = int.parse(detail['value']);
-    suggestions[index].onSelected();
-    _hideSuggestions();
+    if (detail['isSelected']) {
+      final int index = int.parse(detail['value']);
+      suggestions[index].onSelected();
+      _hideSuggestions();
+    }
   }
 }
