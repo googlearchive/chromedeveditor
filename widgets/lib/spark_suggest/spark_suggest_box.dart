@@ -151,7 +151,7 @@ class SparkSuggestBox extends SparkWidget {
   void onOverlayOpened(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {
-      opened = false;
+      _hideSuggestions();
     }
   }
 
