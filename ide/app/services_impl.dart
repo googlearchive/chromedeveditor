@@ -9,8 +9,8 @@ import 'dart:html' as html;
 import 'dart:isolate';
 import 'dart:typed_data' as typed_data;
 
-import 'lib/utils.dart';
 import 'lib/compiler.dart';
+import 'lib/utils.dart';
 
 /**
  * This is a separate application spawned by Spark (via Services) as an isolate

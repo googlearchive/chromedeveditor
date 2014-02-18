@@ -9,8 +9,8 @@ import 'dart:isolate';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import '../utils.dart';
 import '../compiler.dart';
+import '../utils.dart';
 
 
 /**
