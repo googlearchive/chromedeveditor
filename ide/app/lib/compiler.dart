@@ -131,11 +131,7 @@ class CompilerResult {
   }
 
   Map toMap() {
-    List responseProblems = [];
-
-    for (CompilerProblem problem in problems) {
-      responseProblems.add(problem.toMap());
-    }
+    List responseProblems = problems.map((p) => p.toMap()).toList();
 
     return {
       "compileMilliseconds": compileTime.inMilliseconds,
@@ -192,6 +188,8 @@ class CompilerProblem {
       "begin": begin,
       "end": end,
       "message": message,
+      // TODO(ericarnold): Depending on how it's being used,
+      //   consider storing uri as a String.
       "uri": (uri == null) ?
           "" : uri.path,
       "kind": {
