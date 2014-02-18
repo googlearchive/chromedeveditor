@@ -101,8 +101,8 @@ class SparkSelector extends SparkWidget {
       }
     }
 
+    _selection.clear();
     if (multi) {
-      _selection.clear();
       for (var s in selected) {
         _updateSelection(s);
       }
