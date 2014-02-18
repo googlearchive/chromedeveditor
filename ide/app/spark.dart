@@ -2089,7 +2089,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 
 // analytics code
 
-void _handleUncaughtException(error, StackTrace stackTrace) {
+void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
   String errorDesc = error != null ? error.runtimeType.toString() : '';
   String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
@@ -2097,7 +2097,9 @@ void _handleUncaughtException(error, StackTrace stackTrace) {
   _analyticsTracker.sendException(desc);
 
   window.console.error(error);
-  window.console.error(stackTrace);
+  if (stackTrace != null) {
+    window.console.error(stackTrace);
+  }
 }
 
 bool get _isTrackingPermitted =>
