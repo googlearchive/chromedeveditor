@@ -92,6 +92,16 @@ class SparkSelector extends SparkWidget {
 
   void selectedChanged() {
     if (multi) {
+      if (selected == null) {
+        selected = [];
+      } else if (selected is String) {
+        selected = (selected as String).split(" ");
+      } else if (selected is int) {
+        selected = [selected];
+      }
+    }
+
+    if (multi) {
       _selection.clear();
       for (var s in selected) {
         _updateSelection(s);
@@ -170,15 +180,11 @@ class SparkSelector extends SparkWidget {
   void _addRemoveSelected(var value) {
     // All changes to [selected] below will trigger [selectedChanged()].
     if (multi) {
-      if (selected == null) {
-        selected = [value];
+      final int i = selected.indexOf(value);
+      if (i >= 0) {
+        selected.remove(i);
       } else {
-        final int i = selected.indexOf(value);
-        if (i >= 0) {
-          selected.remove(i);
-        } else {
-          selected.add(value);
-        }
+        selected.add(value);
       }
     } else {
       selected = value;
