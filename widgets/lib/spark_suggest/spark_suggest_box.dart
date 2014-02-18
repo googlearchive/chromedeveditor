@@ -99,6 +99,8 @@ class SparkSuggestBox extends SparkWidget {
         suggest();
       }
     } else if (e.keyCode == SparkWidget.ESCAPE_KEY) {
+      _textBox.value = "";
+      _hideSuggestions();
     } else {
       suggest();
     }
