@@ -51,8 +51,9 @@ class SparkWidget extends PolymerElement {
 
   static Iterable<Node> expandCascadingContents(ContentElement content) {
     final List<Node> dn = content.getDistributedNodes();
-    final fdn = dn.where((Element e) => e.localName != "template");
-    final edn = fdn.expand(
+    final Iterable<Node> fdn = dn.where(
+        (Element e) => e.localName != "template");
+    final Iterable<Node> edn = fdn.expand(
         (Element e) => e is ContentElement ? expandCascadingContents(e) : [e]);
     return edn;
   }

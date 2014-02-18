@@ -102,7 +102,7 @@ class SparkSplitter extends SparkWidget {
     // <content> tags, we recursively delve into the distributed nodes of
     // the target <content> in order to find the true target to resize.
     if (_target is ContentElement) {
-      final List<Node> distrNodes =
+      final Iterable<Node> distrNodes =
           SparkWidget.expandCascadingContents(_target);
       _target = _isTargetNextSibling ? distrNodes.first : distrNodes.last;
     }
