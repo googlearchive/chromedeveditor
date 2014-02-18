@@ -10,6 +10,7 @@ import 'dart:typed_data' as typed_data;
 import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:logging/logging.dart';
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
@@ -68,6 +69,22 @@ Future<List<int>> getAppContentsBinary(String path) {
     typed_data.ByteBuffer buffer = request.response;
     return new typed_data.Uint8List.view(buffer);
   });
+}
+
+/**
+ * A [Notifier] is used to present the user with a message.
+ */
+abstract class Notifier {
+  void showMessage(String title, String message);
+}
+
+/**
+ * A [Notifier] implementation that just logs the given [title] and [message].
+ */
+class NullNotifier implements Notifier {
+  void showMessage(String title, String message) {
+    Logger.root.info('${title}:${message}');
+  }
 }
 
 /**

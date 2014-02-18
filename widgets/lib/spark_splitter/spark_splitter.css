@@ -16,11 +16,11 @@
   cursor: row-resize;
 }
 
-.vertical-handle {
+:host(.vertical-handle), /*BUG #733*/:host.vertical-handle {
   background: url('handle_vert.png') no-repeat center;
 }
 
-.horizontal-handle {
+:host(.horizontal-handle), /*BUG #733*/:host.horizontal-handle  {
   background: url('handle_horiz.png') no-repeat center;
 }
 

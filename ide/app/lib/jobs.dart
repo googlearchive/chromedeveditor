@@ -120,6 +120,20 @@ abstract class Job {
 }
 
 /**
+ * A simple [Job]. It finishes when the given [Completer] completes.
+ */
+class ProgressJob extends Job {
+  Completer _completer;
+
+  ProgressJob(String name, this._completer) : super(name);
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name);
+    return _completer.future;
+  }
+}
+
+/**
  * Outlines a progress monitor with given [title] (the title of the progress
  * monitor), and [maxWork] (the [work] value determining when progress is
  * complete).  A maxWork of 0 indicates that progress cannot be determined.

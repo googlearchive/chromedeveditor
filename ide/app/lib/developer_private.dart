@@ -32,13 +32,14 @@ class ChromeDeveloperPrivate {
   }
 
   /**
-   * Returns the info about all installed apps and extensions.
+   * Returns information of all the extensions and apps installed. Set
+   * [include_disabled] to true to include disabled items; set
+   * [include_terminated] to true to include terminated items.
    */
-  Future<List> getItemsInfo() {
+  Future<List<Map>> getItemsInfo(bool include_disabled, bool include_terminated) {
     var completer = new ChromeCompleter<String>.oneArg(listify);
-    _developerPrivate.callMethod(
-        'getItemsInfo', [false, false, completer.callback]);
+    _developerPrivate.callMethod('getItemsInfo',
+        [include_disabled, include_terminated, completer.callback]);
     return completer.future;
   }
-
 }

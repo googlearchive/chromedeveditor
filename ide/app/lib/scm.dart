@@ -12,6 +12,7 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 
 import 'builder.dart';
 import 'jobs.dart';
@@ -30,6 +31,8 @@ import 'git/commands/push.dart';
 import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
+
+final Logger _logger = new Logger('spark.scm');
 
 /**
  * Returns `true` if the given project is under SCM.
@@ -158,6 +161,10 @@ abstract class ScmProjectOperations {
 
   Future checkoutBranch(String branchName);
 
+  void markResolved(Resource resource);
+
+  Future revertChanges(List<Resource> resources);
+
   Future commit(String userName, String userEmail, String commitMessage);
 
   Future push(String username, String password);
@@ -173,6 +180,7 @@ class FileStatus {
   static const FileStatus UNTRACKED = const FileStatus._('untracked');
   static const FileStatus MODIFIED = const FileStatus._('modified');
   static const FileStatus STAGED = const FileStatus._('staged');
+  static const FileStatus UNMERGED = const FileStatus._('unmerged');
   static const FileStatus COMMITTED = const FileStatus._('committed');
 
   final String status;
@@ -183,6 +191,7 @@ class FileStatus {
     if (value == 'committed') return FileStatus.COMMITTED;
     if (value == 'modified') return FileStatus.MODIFIED;
     if (value == 'staged') return FileStatus.STAGED;
+    if (value == 'unmerged') return FileStatus.UNMERGED;
     return FileStatus.UNTRACKED;
   }
 
@@ -190,6 +199,7 @@ class FileStatus {
     if (status == FileStatusType.COMMITTED) return FileStatus.COMMITTED;
     if (status == FileStatusType.MODIFIED) return FileStatus.MODIFIED;
     if (status == FileStatusType.STAGED) return FileStatus.STAGED;
+    if (status == FileStatusType.UNMERGED) return FileStatus.UNMERGED;
     return FileStatus.UNTRACKED;
   }
 
@@ -320,6 +330,28 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
       });
+    });
+  }
+
+  void markResolved(Resource resource) {
+    // TODO: implement
+    _logger.info('Implement markResolved()');
+
+    // When finished, fire an SCM changed event.
+    _statusController.add(this);
+  }
+
+  Future revertChanges(List<Resource> resources) {
+    // TODO: implement
+    _logger.info('Implement revertChanges()');
+
+    // This future is just a stand-in for the actual async implementation.
+    Future f = new Future.value();
+
+    return f.then((_) {
+      // We changed files on disk - let the workspace know to re-scan the
+      // project and fire any necessary resource change events.
+      Timer.run(() => project.refresh());
     });
   }
 
