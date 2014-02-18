@@ -20,11 +20,6 @@ class SparkSelection extends SparkWidget {
 
   SparkSelection.created(): super.created();
 
-  void ready() {
-    super.ready();
-    clear();
-  }
-
   dynamic get selection =>
       multi ? _selection : _selection.isNotEmpty ? _selection[0] : null;
 
@@ -38,6 +33,7 @@ class SparkSelection extends SparkWidget {
     } else {
       _selection.remove(inItem);
     }
+
     // TODO(sjmiles): consider replacing with summary notifications (async job).
     asyncFire('select', detail: {'item': inItem, 'isSelected': inIsSelected});
   }

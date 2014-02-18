@@ -109,11 +109,6 @@ class SparkOverlay extends SparkWidget {
 
   void ready() {
     style.visibility = "visible";
-    if (tabIndex == null) {
-      tabIndex = -1;
-    }
-    // TODO(ussuri): 'touch-action' is not used anywhere else - mistake?
-    attributes['touch-action'] = 'none';
   }
 
   /// Toggle the opened state of the overlay.
@@ -140,15 +135,10 @@ class SparkOverlay extends SparkWidget {
   }
 
   void enableCaptureHandler(inEnable) {
-    // TODO(terry): Need to use overlay docfrag document doesn't map to that.
-    //              However, we should use getShadowRoot or lightdom or the
-    //              event.path when those work we should be able to use
-    //              var doc = getShadowRoot('spark-overlay');
-    var doc = document;
     if (inEnable) {
-      doc.addEventListener(captureEventType, _captureHandler, true);
+      document.addEventListener(captureEventType, _captureHandler, true);
     } else {
-      doc.removeEventListener(captureEventType, _captureHandler, true);
+      document.removeEventListener(captureEventType, _captureHandler, true);
     }
   }
 
@@ -226,10 +216,7 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  // TODO(sorvell): This approach will not work with modal. For this we need a
-  // scrim.
   void captureHandler(MouseEvent e) {
-    // TODO(terry): Hack to work around lightdom or event.path not yet working.
     if (!isPointInOverlay(e.client)) {
       // TODO(terry): How to cancel the event e.cancelable = true;
       e.stopImmediatePropagation();

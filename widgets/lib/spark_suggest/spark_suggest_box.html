@@ -40,8 +40,9 @@
         class="form-control"
         focused
         placeholder="{{placeholder}}"
-        on-keyup="{{inputKeyUp}}"
-        on-focus="{{inputFocus}}" />
+        on-keyup="{{onInputKeyUp}}"
+        on-focus="{{onInputFocused}}"
+    />
 
     <spark-overlay
         id="suggestion-list-overlay"
@@ -49,12 +50,12 @@
         class="spark-overlay-scale-slideup"
         opened="{{opened}}"
         on-activate="{{toggle}}"
-        on-opened="{{onOpened}}">
+        on-opened="{{onOverlayOpened}}">
 
       <spark-menu
           id="suggestion-list-menu"
           valueattr="label"
-          on-activate="{{onSelected}}">
+          on-activate="{{onMenuSelected}}">
         <template repeat="{{s in suggestions | enumerate}}">
           <spark-menu-item
               index="{{s.index}}"

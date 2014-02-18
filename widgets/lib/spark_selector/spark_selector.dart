@@ -53,7 +53,7 @@ class SparkSelector extends SparkWidget {
   @published bool multi = false;
 
   /// The attribute to be used as an item's "value".
-  @published String valueattr = 'name';
+  @published String valueattr;
 
   /// The CSS selector to choose the selectable subset of elements passed from
   /// the light DOM into the <content> insertion point.
@@ -63,7 +63,6 @@ class SparkSelector extends SparkWidget {
   @published String selectedClass = '';
   /// The attribute to set on the selected element.
   @published String selectedProperty = '';
-
 
   // TODO(terry): Should be tap when PointerEvents are supported.
   @published String activateEvent = 'click';
@@ -77,8 +76,9 @@ class SparkSelector extends SparkWidget {
     super.enteredView();
 
     _selection = $['selection'];
-    addEventListener(activateEvent, onActivate);
     selectedChanged();
+
+    addEventListener(activateEvent, onActivate);
   }
 
 
@@ -106,7 +106,7 @@ class SparkSelector extends SparkWidget {
   }
 
   void _updateSelection(var value) {
-    final i = _valueToIndex(value);
+    final int i = _valueToIndex(value);
     if (i >= 0) {
       // [_selection] will fire 1 or 2 [onSelectSelected] calls in response
       // to this. 1 call will be fired either when [multi] is on, corresponding
@@ -118,22 +118,22 @@ class SparkSelector extends SparkWidget {
     }
   }
 
-  int _valueToIndex(var value) {
-    // Find an item with value == value and return it's index:
+  /// Find an item with valueattr == value and return it's index.
+  int _valueToIndex(String value) {
     final List<Element> items = getItems().toList(growable: false);
-    for (var i = 0; i < items.length; i++) {
+    for (int i = 0; i < items.length; i++) {
       if (_valueForNode(items[i]) == value) {
         return i;
       }
     }
     // If no item found, the value itself is probably the index:
-    return (value is num) ? value : (value is String) ? int.parse(value) : -1;
+    return (value is int) ? value : (value is String) ? int.parse(value) : -1;
   }
 
   String _valueForNode(Element node) =>
       node.attributes.containsKey(valueattr) ? node.attributes[valueattr] : null;
 
-  // Events fired from <polymer-selection> object.
+  /// Events fired from <polymer-selection> object.
   void onSelectionSelect(e, detail) {
     _renderSelection(detail['item'], detail['isSelected']);
     if (valueattr != null) {
@@ -158,7 +158,7 @@ class SparkSelector extends SparkWidget {
   // Event fired from host.
   void onActivate(Event e) {
     final List<Element> items = getItems().toList(growable: false);
-    var i = items.indexOf(e.target);
+    final int i = items.indexOf(e.target);
     if (i >= 0) {
       final String value = _valueForNode(items[i]);
       // By name or by id.

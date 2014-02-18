@@ -66,6 +66,10 @@ class SparkSuggestBox extends SparkWidget {
   /// Currently displayed suggestions.
   @observable final suggestions = new ObservableList();
 
+  InputElement _textBox;
+  SparkMenu _menu;
+  SparkOverlay _overlay;
+
   StreamSubscription _oracleSub;
 
   SparkSuggestBox.created() : super.created();
@@ -73,10 +77,11 @@ class SparkSuggestBox extends SparkWidget {
   @override
   void enteredView() {
     super.enteredView();
-    _textBox = $['text-box'];
-  }
 
-  InputElement _textBox;
+    _textBox = $['text-box'];
+    _menu = $['suggestion-list-menu'];
+    _overlay = $['suggestion-list-overlay'];
+  }
 
   /// Shows the suggestion list popup with the given suggestions.
   void _showSuggestions(List<Suggestion> update) {
@@ -94,7 +99,7 @@ class SparkSuggestBox extends SparkWidget {
     toggle(false);
   }
 
-  inputKeyUp(KeyboardEvent e) {
+  void onInputKeyUp(KeyboardEvent e) {
     if (e.keyCode == SparkWidget.DOWN_KEY ||
         e.keyCode == SparkWidget.UP_KEY ||
         e.keyCode == SparkWidget.ENTER_KEY) {
@@ -107,7 +112,7 @@ class SparkSuggestBox extends SparkWidget {
     }
   }
 
-  void inputFocus() {
+  void onInputFocused(Event e) {
     if (_textBox.value.length != 0) {
       suggest();
     }
@@ -137,26 +142,26 @@ class SparkSuggestBox extends SparkWidget {
     final oldOpened = opened;
     opened = inOpened != null ? inOpened : !opened;
     if (opened != oldOpened) {
-      ($['suggestion-list-menu'] as SparkMenu).clearSelection();
+      _menu.clearSelection();
       // TODO(ussuri): A temporary plug to make spark-overlay see changes
       // in 'opened' when run as deployed code. Just binding via {{opened}}
       // alone isn't detected and the menu doesn't open.
       if (IS_DART2JS) {
-        ($['suggestion-list-overlay'] as SparkOverlay).opened = opened;
+        _overlay.opened = opened;
       }
     }
   }
 
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
-  //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
-  void onOpened(CustomEvent e) {
+  //* mouse is clicked outside the dropdown (with autoCloseDisabled == false).
+  void onOverlayOpened(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {
       opened = false;
     }
   }
 
-  void onSelected(Event event, var detail) {
+  void onMenuSelected(Event event, var detail) {
     final item = detail['item'];
     final int index = int.parse(item.attributes['index']);
     suggestions[index].onSelected();
