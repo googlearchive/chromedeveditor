@@ -151,10 +151,3 @@
 .input-label input {
   -webkit-flex: 1 1 auto;
 }
-
-#projectPropertiesDialog .property-value {
-  float: right;
-  min-width: 400px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}

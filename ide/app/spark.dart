@@ -398,11 +398,11 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
-    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new ResourceCloseAction(this));
+    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1599,29 +1599,51 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 }
 
 class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
-  HtmlElement _htmlElement;
+  ws.Project project;
+  HtmlElement _propertiesElement;
 
   ProjectPropertiesAction(Spark spark, Element dialog)
-      : super(spark, "project-properties", "Project Properties…", dialog) {
-    _htmlElement = getElement("#propertyUrl");
+      : super(spark, 'project-properties', 'Project Properties…', dialog) {
+    _propertiesElement = getElement('#projectPropertiesDialog .form-group');
   }
 
   void _invoke([List context]) {
-    ws.Project project = context.first;
-    GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(project);
-    gitOperations.getConfigMap().then((Map<String, dynamic> map) {
-      final String repoUrl = map['url'];
-      _htmlElement.setInnerHtml(repoUrl);
-    });
+    project = context.first;
+    _propertiesElement.innerHtml = '';
+    _buildProperties();
 
     _show();
+  }
+
+  void _buildProperties() {
+    _addProperty('Name', project.name);
+    GitScmProjectOperations gitOperations =
+        spark.scmManager.getScmOperationsFor(project);
+    if (gitOperations != null) {
+      gitOperations.getConfigMap().then((Map<String, dynamic> map) {
+        final String repoUrl = map['url'];
+        _addProperty('URL', repoUrl);
+      }).catchError((e) {
+        _addProperty('URL', 'Fetching failed: ' + e.toString());
+      });;
+    }
+  }
+
+  void _addProperty(String key, String value) {
+    LabelElement label = new LabelElement()
+        ..className = 'col-sm-2'
+        ..text = key;
+
+    Element element = new Element.tag('p')
+        ..className = 'property-value'
+        ..text = value;
+    _propertiesElement.children.addAll([label, element]);
   }
 
   void _commit() {
   }
 
-  String get category => 'git';
+  String get category => 'resource';
 
   bool appliesTo(context) => _isProject(context);
 }
