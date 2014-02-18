@@ -401,7 +401,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
-    actionManager.registerAction(new ResourceCloseAction(this));
+    // The top-level 'Close' action is removed for now: #1037.
+    //actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
