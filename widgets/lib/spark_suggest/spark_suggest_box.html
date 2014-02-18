@@ -49,18 +49,17 @@
         modal
         class="spark-overlay-scale-slideup"
         opened="{{opened}}"
-        on-activate="{{toggle}}"
         on-opened="{{onOverlayOpened}}">
 
       <spark-menu
           id="suggestion-list-menu"
-          valueattr="label"
+          valueattr="index"
           on-activate="{{onMenuSelected}}">
         <template repeat="{{s in suggestions | enumerate}}">
           <spark-menu-item
               index="{{s.index}}"
               label="{{s.value.label}}"
-              description="{{s.value.formatDetails}}">
+              description="{{s.value.details}}">
           </spark-menu-item>
         </template>
       </spark-menu>

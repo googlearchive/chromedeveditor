@@ -20,18 +20,13 @@ import '../spark_overlay/spark_overlay.dart';
  */
 @reflectable
 class Suggestion {
-  final String label;
-  final String details;
+  String label;
+  String details;
 
-  final Function onSelected;
+  Function onSelected;
 
-  Suggestion(this.label, {this.details, this.onSelected});
-
-  String get formatDetails => details != null ? "[$details]" : "";
-
-  // TODO: Why are these invoked by Polymer???
-  set formatDetails(String v) => print("ASSIGN details=$v");
-  set label(String v) => print("ASSIGN label=$v");
+  Suggestion(this.label, {String details, this.onSelected})
+      : details = details.isNotEmpty ? "[$details]" : "";
 }
 
 /**
@@ -75,8 +70,8 @@ class SparkSuggestBox extends SparkWidget {
   SparkSuggestBox.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void ready() {
+    super.ready();
 
     _textBox = $['text-box'];
     _menu = $['suggestion-list-menu'];
@@ -88,9 +83,6 @@ class SparkSuggestBox extends SparkWidget {
     suggestions.clear();
     suggestions.addAll(update);
     toggle(true);
-//    shadowRoot.querySelectorAll('.unresolved').forEach((Element e) {
-//      e.classes.remove('unresolved');
-//    });
   }
 
   /// Hides the suggestion list popup and clears the suggestion list.
@@ -162,8 +154,7 @@ class SparkSuggestBox extends SparkWidget {
   }
 
   void onMenuSelected(Event event, var detail) {
-    final item = detail['item'];
-    final int index = int.parse(item.attributes['index']);
+    final int index = int.parse(detail['value']);
     suggestions[index].onSelected();
     _hideSuggestions();
   }
