@@ -41,6 +41,10 @@ import 'test/all.dart' as all_tests;
 
 import 'spark_model.dart';
 
+
+import 'lib/compiler.dart';
+
+
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 
 void main() {
@@ -270,6 +274,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   void initLaunchManager() {
     _launchManager = new LaunchManager(
         services.getService("compiler"), _workspace);
+    CompilerService compilerService = services.getService("compiler");
+
   }
 
   /**

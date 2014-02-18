@@ -68,6 +68,7 @@ class Compiler {
         result._diagnosticHandler,
         [],
         result._outputProvider).then((String str) {
+          /*%TRACE3*/ print("(4> 2/18/14): then!"); // TRACE%
       result._compileTime = new DateTime.now().difference(startTime);
       return result;
     });
