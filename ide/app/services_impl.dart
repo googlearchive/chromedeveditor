@@ -121,6 +121,8 @@ class ServicesIsolate {
         _sendResponse(responseEvent);
         completer.complete();
       }
+    }).catchError((e) {
+      print("service error: $e ${e.stackTrace}");
     });
     return completer.future;
   }
