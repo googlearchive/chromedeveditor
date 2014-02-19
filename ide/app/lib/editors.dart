@@ -86,8 +86,6 @@ class EditorManager implements EditorProvider {
   static final RegExp _imageFileType =
       new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
 
-  // TODO: Investigate dependency injection OR overridable singletons. We're
-  // passing around too many ctor vars.
   EditorManager(this._workspace, this._aceContainer, this._prefs, this._eventBus) {
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
@@ -97,6 +95,8 @@ class EditorManager implements EditorProvider {
         for (ChangeDelta delta in event.changes) {
           if (delta.isDelete && delta.resource.isFile) {
             _handleFileDeleted(delta.resource);
+          } else if (delta.isDelete && delta.resource is Container) {
+            _handleContainerDeleted(delta.resource);
           } else if (delta.isChange && delta.resource.isFile) {
             _handleFileChanged(delta.resource);
           }
@@ -324,6 +324,16 @@ class EditorManager implements EditorProvider {
 
     if (_savedEditorStates.containsKey(key)) {
       _savedEditorStates.remove(key);
+    }
+  }
+
+  void _handleContainerDeleted(Container container) {
+    List<File> files = this.files.toList();
+
+    for (File file in files) {
+      if (file.containedBy(container)) {
+        _handleFileDeleted(file);
+      }
     }
   }
 
