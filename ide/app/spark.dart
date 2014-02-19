@@ -20,6 +20,7 @@ import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
+import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
 import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
@@ -401,8 +402,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
-    actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    // The top-level 'Close' action is removed for now: #1037.
+    //actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1262,9 +1264,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   ApplicationRunAction(Spark spark) : super(
       spark, "application-run", "Run Application") {
     addBinding("ctrl-r");
-
     enabled = false;
-
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
   }
 
@@ -1445,34 +1445,60 @@ class FolderOpenAction extends SparkAction {
   }
 }
 
-class ApplicationPushAction extends SparkActionWithDialog {
+class ApplicationPushAction extends SparkActionWithDialog implements ContextAction {
   InputElement _pushUrlElement;
+  ws.Container deployContainer;
 
   ApplicationPushAction(Spark spark, Element dialog)
-      : super(spark, "application-push", "Push to Mobile", dialog) {
+      : super(spark, "application-push", "Deploy to Mobile", dialog) {
     _pushUrlElement = _triggerOnReturn("#pushUrl");
+    enabled = false;
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
   }
 
-  void _invoke([Object context]) {
+  void _invoke([context]) {
+    ws.Resource resource;
+
+    if (context == null) {
+      resource = spark.focusManager.currentResource;
+    } else {
+      resource = context.first;
+    }
+
+    deployContainer = getAppContainerFor(resource);
+
     _show();
+  }
+
+  String get category => 'application';
+
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+
+  bool _appliesTo(ws.Resource resource) {
+    return getAppContainerFor(resource) != null;
+  }
+
+  void _updateEnablement(ws.Resource resource) {
+    enabled = _appliesTo(resource);
   }
 
   void _commit() {
     String url = _pushUrlElement.value;
     // TODO(braden): Input validation.
-    spark.jobManager.schedule(new _HarnessPushJob(url));
+    spark.jobManager.schedule(new _HarnessPushJob(deployContainer, url));
   }
 }
 
-
 class _HarnessPushJob extends Job {
-  String _url;
+  final ws.Container deployContainer;
+  final String _url;
 
-  _HarnessPushJob(this._url) : super('Pushing to mobile…');
+  _HarnessPushJob(this.deployContainer, this._url) :
+    super('Deploying to mobile…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 10);
-    return HarnessPush.push(_url, monitor);
+    return HarnessPush.push(deployContainer, _url, monitor);
   }
 }
 
@@ -2139,7 +2165,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 
 // analytics code
 
-void _handleUncaughtException(error, StackTrace stackTrace) {
+void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
   String errorDesc = error != null ? error.runtimeType.toString() : '';
   String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
@@ -2147,7 +2173,9 @@ void _handleUncaughtException(error, StackTrace stackTrace) {
   _analyticsTracker.sendException(desc);
 
   window.console.error(error);
-  window.console.error(stackTrace);
+  if (stackTrace != null) {
+    window.console.error(stackTrace);
+  }
 }
 
 bool get _isTrackingPermitted =>
