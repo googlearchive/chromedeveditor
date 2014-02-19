@@ -190,9 +190,11 @@ class CompilerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
       case "start":
+        // TODO(ericarnold): Start should happen automatically on use.
         return _start().then((_) => new Future.value(event.createReponse(null)));
         break;
       case "dispose":
+        // TODO(ericarnold): Displose should be managed by isolate
         try {
           _compiler.dispose();
         } catch(error) {
