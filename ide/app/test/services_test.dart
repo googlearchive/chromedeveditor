@@ -11,6 +11,8 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/services/services.dart';
 import '../services_impl.dart' as impl;
+import '../lib/compiler.dart';
+
 
 Services services;
 impl.ServicesIsolate servicesIsolate;
@@ -58,8 +60,15 @@ defineTests() {
       CompilerService compilerService = services.getService("compiler");
 
       return compilerService.start().then((_) {
+        compilerService.compileString(
+            """void main() { print("foo"); }""")
+            .then((CompilerResult result){
+              /*%TRACE3*/ print("""(4> 2/18/14): result.problems: ${result.problems}"""); // TRACE%
+              /*%TRACE3*/ print("""(4> 2/18/14): result.getSuccess: ${result.getSuccess}"""); // TRACE%
+              /*%TRACE3*/ print("""(4> 2/18/14): result.output: ${result.output}"""); // TRACE%
+              expect(true, equals(true));
+            });
         // TODO(ericarnold): What's a better way to do this?
-        expect(true, equals(true));
       });
     });
   });
