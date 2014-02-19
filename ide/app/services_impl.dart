@@ -203,11 +203,8 @@ class CompilerServiceImpl extends ServiceImpl {
         return new Future.value(event.createReponse(null));
         break;
       case "compileString":
-        /*%TRACE3*/ print("(4> 2/18/14): compileString!"); // TRACE%
-        /*%TRACE3*/ print("""(4> 2/18/14): event.data['string']: ${event.data['string']}"""); // TRACE%
         return _compiler.compileString(event.data['string'])
             .then((CompilerResult result)  {
-              /*%TRACE3*/ print("(4> 2/18/14): CompilerResult result!"); // TRACE%
               return new Future.value(event.createReponse(result.toMap()));
             });
         break;
