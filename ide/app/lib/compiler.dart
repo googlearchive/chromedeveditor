@@ -120,6 +120,25 @@ class CompilerResult {
       return new _NullSink('$name.$extension');
     }
   }
+
+  CompilerResult.fromMap(Map data) {
+    _compileTime = new Duration(milliseconds: data['compileMilliseconds']);
+    _output = new StringBuffer(data['output']);
+
+    for (Map problem in data['problems']) {
+      problems.add(new CompilerProblem.fromMap(problem));
+    }
+  }
+
+  Map toMap() {
+    List responseProblems = problems.map((p) => p.toMap()).toList();
+
+    return {
+      "compileMilliseconds": compileTime.inMilliseconds,
+      "output": output,
+      "problems": responseProblems,
+    };
+  }
 }
 
 /**
@@ -155,6 +174,29 @@ class CompilerProblem {
     } else {
       return "${kind} ${uri}: ${message}";
     }
+  }
+
+  CompilerProblem.fromMap(Map data) :
+    begin = data['begin'],
+    end = data['end'],
+    message = data['message'],
+    uri = new Uri.file(data['uri']),
+    kind = new compiler.Diagnostic(data['ordinal'], data['name']);
+
+  Map toMap() {
+    return {
+      "begin": begin,
+      "end": end,
+      "message": message,
+      // TODO(ericarnold): Depending on how it's being used,
+      //   consider storing uri as a String.
+      "uri": (uri == null) ?
+          "" : uri.path,
+      "kind": {
+        "name": kind.name,
+        "ordinal": kind.ordinal,
+      }
+    };
   }
 }
 

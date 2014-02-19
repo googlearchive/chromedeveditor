@@ -5,8 +5,11 @@
 library spark.services_impl;
 
 import 'dart:async';
+import 'dart:html' as html;
 import 'dart:isolate';
+import 'dart:typed_data' as typed_data;
 
+import 'lib/compiler.dart';
 import 'lib/utils.dart';
 
 /**
@@ -34,6 +37,9 @@ class ServicesIsolate {
   Stream<ServiceActionEvent> onResponseMessage;
 
   ChromeService chromeService;
+  Map<String, ServiceImpl> _serviceImplsById = {};
+  static ServicesIsolate _instance;
+  static ServicesIsolate get instance => _instance;
 
   Future<ServiceActionEvent> _onResponseByCallId(String callId) {
     Completer<ServiceActionEvent> completer =
@@ -44,7 +50,7 @@ class ServicesIsolate {
           completer.complete(event);
         }
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("Service error: $e ${e.stackTrace}");
       }
     });
     return completer.future;
@@ -52,6 +58,7 @@ class ServicesIsolate {
 
 
   ServicesIsolate(this._sendPort) {
+    _instance = this;
     chromeService = new ChromeService(this);
 
     StreamController<ServiceActionEvent> hostMessageController =
@@ -62,6 +69,9 @@ class ServicesIsolate {
     onResponseMessage = responseMessageController.stream;
     onHostMessage = hostMessageController.stream;
 
+    // Register each ServiceImpl:
+    _registerServiceImpl(new CompilerServiceImpl(this));
+    _registerServiceImpl(new ExampleServiceImpl(this));
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
@@ -79,7 +89,7 @@ class ServicesIsolate {
           }
         }
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
 
@@ -87,25 +97,32 @@ class ServicesIsolate {
       try {
         _handleMessage(event);
       } catch(e) {
-        print("exception: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
   }
 
-  ServiceImpl getService(String serviceId) {
-    return new ExampleServiceImpl(this);
+  void _registerServiceImpl(ServiceImpl serviceImplementation) {
+    _serviceImplsById[serviceImplementation.serviceId] =
+        serviceImplementation;
+  }
+
+  ServiceImpl getServiceImpl(String serviceId) {
+    return _serviceImplsById[serviceId];
   }
 
   Future<ServiceActionEvent> _handleMessage(ServiceActionEvent event) {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
-    ServiceImpl service = getService(event.serviceId);
+    ServiceImpl service = getServiceImpl(event.serviceId);
     service.handleEvent(event).then((ServiceActionEvent responseEvent){
       if (responseEvent != null) {
         _sendResponse(responseEvent);
         completer.complete();
       }
+    }).catchError((e) {
+      print("service error: $e ${e.stackTrace}");
     });
     return completer.future;
   }
@@ -158,11 +175,78 @@ class ExampleServiceImpl extends ServiceImpl {
   }
 }
 
+
+class CompilerServiceImpl extends ServiceImpl {
+  String get serviceId => "compiler";
+
+  Compiler _compiler;
+  Completer<ServiceActionEvent> _readyCompleter =
+      new Completer<ServiceActionEvent>();
+
+  Future<ServiceActionEvent> get onceReady => _readyCompleter.future;
+
+  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate);
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    switch (event.actionId) {
+      case "start":
+        // TODO(ericarnold): Start should happen automatically on use.
+        return _start().then((_) => new Future.value(event.createReponse(null)));
+        break;
+      case "dispose":
+        // TODO(ericarnold): Displose should be managed by isolate
+        try {
+          _compiler.dispose();
+        } catch(error) {
+          // TODO(ericarnold): Return error which service will throw
+          print("Chrome service error: $error ${error.stackTrace}");
+        }
+
+        return new Future.value(event.createReponse(null));
+        break;
+      case "compileString":
+        return _compiler.compileString(event.data['string'])
+            .then((CompilerResult result)  {
+              return new Future.value(event.createReponse(result.toMap()));
+            });
+        break;
+      default:
+        throw "Unknown action '${event.actionId}' sent to $serviceId service.";
+    }
+  }
+
+  Future _start() {
+    return Compiler.createCompiler().then((Compiler newCompler) {
+      _compiler = newCompler;
+      _readyCompleter.complete();
+      return null;
+    }).catchError((error){
+      // TODO(ericarnold): Return error which service will throw
+      print("Chrome service error: $error ${error.stackTrace}");
+    });
+  }
+}
+
 /**
  * Special service for calling back to chrome.
  */
 class ChromeService {
   ServicesIsolate _isolate;
+
+  /**
+   * Return the contents of the file at the given path. The path is relative to
+   * the Chrome app's directory.
+   */
+  static Future<List<int>> getAppContentsBinary(String path) {
+    return ServicesIsolate.instance.chromeService.getURL(path)
+        .then((String url) => html.HttpRequest.request(
+        url, responseType: 'arraybuffer'))
+    .then((request) {
+      typed_data.ByteBuffer buffer = request.response;
+      return new typed_data.Uint8List.view(buffer);
+    });
+  }
+
 
   ChromeService(this._isolate);
 
@@ -170,12 +254,12 @@ class ChromeService {
     return new ServiceActionEvent("chrome", actionId, data);
   }
 
-  Future<ServiceActionEvent> delay(int milliseconds) {
-    ServiceActionEvent delayEvent =
-        _createNewEvent("delay", {"ms": milliseconds});
-    delayEvent.serviceId = "chrome";
-    return _isolate._sendAction(delayEvent);
-  }
+  Future<ServiceActionEvent> delay(int milliseconds) =>
+      _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
+
+  Future<String> getURL(String path) =>
+      _isolate._sendAction(_createNewEvent("getURL", {"path": path}))
+      .then((ServiceActionEvent event) => event.data['url']);
 }
 
 // Provides an abstract class and helper code for service implementations.
@@ -193,5 +277,7 @@ abstract class ServiceImpl {
 SendPort _printSendPort;
 void print(var message) {
   // Host will know it's a print because it's a simple string instead of a map
-  _printSendPort.send("$message");
+  if (_printSendPort != null) {
+    _printSendPort.send("$message");
+  }
 }

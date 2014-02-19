@@ -10,10 +10,10 @@ import 'dart:isolate';
 import 'package:unittest/unittest.dart';
 
 import '../lib/services/services.dart';
-import '../services_impl.dart';
+import '../services_impl.dart' as impl;
 
 Services services;
-ServicesIsolate servicesIsolate;
+impl.ServicesIsolate servicesIsolate;
 
 defineTests() {
   group('services', () {
@@ -50,17 +50,34 @@ defineTests() {
         });
       }).then((_) =>
           expect(orderedResponses, equals(["short2", "long1", "long3"])));
-      // Test 1 should end
-      // Test 3 should end
+          // Test 1 should end
+          // Test 3 should end
+    });
+
+    test('compiler basic test', () {
+      CompilerService compilerService = services.getService("compiler");
+
+      return compilerService.start().then((_) {
+        // TODO(ericarnold): What's a better way to do this?
+        expect(true, equals(true));
+      });
     });
   });
+
 
   group('services_impl', () {
     test('setup', () {
       MockSendPort mockSendPort = new MockSendPort();
-      servicesIsolate = new ServicesIsolate(mockSendPort);
+      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
       expect(mockSendPort.wasSent, isNotNull);
     });
+    //test('compiler start', () {
+    //  MockSendPort mockSendPort = new MockSendPort();
+    //  servicesIsolate = new impl.ServicesIsolate(mockSendPort);
+    //  impl.CompilerServiceImpl compilerImpl =
+    //      servicesIsolate.getServiceImpl("compiler");
+    //  });
+    //});
   });
 }
 
