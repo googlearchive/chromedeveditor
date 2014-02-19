@@ -146,7 +146,7 @@ class ChromeServiceImpl extends Service {
         new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
             (_) => _sendResponse(event));
         break;
-      case "getAppContentsBinary":
+      case "getAppContents":
         String path = event.data['path'];
         getAppContentsBinary(path).then(
             (List<int> contents) => _sendResponse(event, {"contents": contents.toList()}));

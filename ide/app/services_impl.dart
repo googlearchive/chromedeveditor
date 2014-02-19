@@ -204,7 +204,7 @@ class CompilerServiceImpl extends ServiceImpl {
   }
 
   Future _start() {
-    _isolate.chromeService.getAppContentsBinary('sdk/dart-sdk.bin').then((List<int> sdkContents) {
+    _isolate.chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
       sdk = DartSdk.createSdkFromContents(sdkContents);
       compiler = Compiler.createCompilerFrom(sdk);
       _readyCompleter.complete();
@@ -227,8 +227,8 @@ class ChromeService {
    * Return the contents of the file at the given path. The path is relative to
    * the Chrome app's directory.
    */
-  Future<List<int>> getAppContentsBinary(String path) {
-    return _isolate._sendAction(_createNewEvent("getAppContentsBinary", {"path": path}))
+  Future<List<int>> getAppContents(String path) {
+    return _isolate._sendAction(_createNewEvent("getAppContents", {"path": path}))
         .then((ServiceActionEvent event) => event.data['contents']);
   }
 
