@@ -47,7 +47,7 @@ class ServicesIsolate {
           completer.complete(event);
         }
       } catch(e) {
-        print_("Service error: $e ${e.stackTrace}");
+        print("Service error: $e ${e.stackTrace}");
       }
     });
     return completer.future;
@@ -84,7 +84,7 @@ class ServicesIsolate {
           }
         }
       } catch(e) {
-        print_("service error: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
 
@@ -92,7 +92,7 @@ class ServicesIsolate {
       try {
         _handleMessage(event);
       } catch(e) {
-        print_("service error: $e ${e.stackTrace}");
+        print("service error: $e ${e.stackTrace}");
       }
     });
   }
@@ -117,7 +117,7 @@ class ServicesIsolate {
         completer.complete();
       }
     }).catchError((e) {
-      print_("service error: $e ${e.stackTrace}");
+      print("service error: $e ${e.stackTrace}");
     });
     return completer.future;
   }
@@ -210,7 +210,7 @@ class CompilerServiceImpl extends ServiceImpl {
       _readyCompleter.complete();
     }).catchError((error){
       // TODO(ericarnold): Return error which service will throw
-      print_("Chrome service error: $error ${error.stackTrace}");
+      print("Chrome service error: $error ${error.stackTrace}");
     });
 
     return _readyCompleter.future;
@@ -256,7 +256,7 @@ abstract class ServiceImpl {
 // Prints are crashing isolate, so this will take over for the time being.
 SendPort _printSendPort;
 
-void print_(var message) {
+void print(var message) {
   // Host will know it's a print because it's a simple string instead of a map
   if (_printSendPort != null) {
     _printSendPort.send("$message");

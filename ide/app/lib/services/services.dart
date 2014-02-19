@@ -252,4 +252,3 @@ class _IsolateHandler {
     _sendPort.send(event.toMap());
   }
 }
-
