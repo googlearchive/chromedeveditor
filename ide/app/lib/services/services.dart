@@ -7,11 +7,10 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:chrome/chrome_app.dart' as chrome;
-
 import '../compiler.dart';
 import '../utils.dart';
 
+export '../compiler.dart' show CompilerResult;
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -144,12 +143,13 @@ class ChromeServiceImpl extends Service {
 
     switch(event.actionId) {
       case "delay":
-        new Future.delayed(new Duration(milliseconds: event.data['ms']))
-            .then((_) => _sendResponse(event.createReponse(null)));
+        new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
+            (_) => _sendResponse(event));
         break;
-      case "getURL":
-        _sendResponse(event.createReponse({"url": chrome.runtime.getURL(
-            event.data['path'])}));
+      case "getAppContents":
+        String path = event.data['path'];
+        getAppContentsBinary(path).then(
+            (List<int> contents) => _sendResponse(event, {"contents": contents.toList()}));
         break;
       default:
         throw "Unknown action '${event.actionId}' sent to Chrome service.";
@@ -252,4 +252,3 @@ class _IsolateHandler {
     _sendPort.send(event.toMap());
   }
 }
-
