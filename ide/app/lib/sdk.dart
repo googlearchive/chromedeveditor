@@ -17,7 +17,6 @@ library spark.sdk;
 
 import 'dart:async';
 import 'dart:convert';
-import '../services_impl.dart';
 import 'utils.dart';
 
 /**
@@ -35,15 +34,15 @@ class DartSdk extends SdkDirectory {
    * objects.
    */
   static Future<DartSdk> createSdk() {
-    // TODO(ericarnold): We'll want to allow the SDK to exist on both sides of
-    //   the wire. On the DOM side, we'll want it for showing dart: sources to
-    //   the user.
-    return getAppContentsBinary('sdk/dart-sdk.bin')
-        .then((List<int> contents) {
-          return new DartSdk._withContents(contents);
-        }).catchError((e) {
-          return new DartSdk._fromVersion('');
-        });
+    return getAppContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
+      return new DartSdk._withContents(contents);
+    }).catchError((e) {
+      return new DartSdk._fromVersion('');
+    });
+  }
+
+  static DartSdk createSdkFromContents(List<int> contents) {
+    return new DartSdk._withContents(contents);
   }
 
   String get version => _version;
