@@ -15,11 +15,10 @@ import 'package:chrome/gen/management.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
-import 'compiler.dart';
 import 'apps/app_utils.dart';
+import 'compiler.dart';
 import 'developer_private.dart';
 import 'server.dart';
-import 'services/services.dart';
 import 'utils.dart';
 import 'workspace.dart';
 
@@ -38,9 +37,7 @@ class LaunchManager {
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  CompilerService _compiler;
-
-  LaunchManager(this._compiler, this._workspace) {
+  LaunchManager(this._workspace) {
     // The order of registration here matters.
     _delegates.add(new ChromeAppLaunchDelegate());
     _delegates.add(new DartWebAppLaunchDelegate(this));
