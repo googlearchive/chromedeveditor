@@ -4,22 +4,17 @@
 
 library spark.services_test;
 
+import 'dart:async';
 import 'dart:isolate';
 
 import 'package:unittest/unittest.dart';
 
 import '../lib/services/services.dart';
-import '../services_impl.dart';
-
-Services services;
-ServicesIsolate servicesIsolate;
 
 defineTests() {
-  group('services', () {
-    setUp(() {
-      services = new Services();
-    });
+  Services services = new Services();
 
+  group('services', () {
     test('ping', () {
       return services.ping().then((result) {
         expect(result, equals("pong"));
@@ -27,13 +22,84 @@ defineTests() {
     });
   });
 
-  group('services_impl', () {
-    test('setup', () {
-      MockSendPort mockSendPort = new MockSendPort();
-      servicesIsolate = new ServicesIsolate(mockSendPort);
-      expect(mockSendPort.wasSent, isNotNull);
+  group('services example', () {
+    test('service order', () {
+      ExampleService exampleService = services.getService("example");
+      Completer completer = new Completer();
+      List<String> orderedResponses = [];
+
+      // Test 1 (slow A) starts
+      exampleService.longTest("1").then((str) {
+        orderedResponses.add(str);
+      });
+
+      // Test 2 (fast) starts
+      exampleService.shortTest("2").then((str) {
+        orderedResponses.add(str);
+      });
+
+      // Test 2 should end
+      return new Future.delayed(const Duration(milliseconds: 500)).then((_){
+        // Test 3 (slow B) starts
+        return exampleService.longTest("3").then((str) {
+          orderedResponses.add(str);
+        });
+      }).then((_) =>
+          expect(orderedResponses, equals(["short2", "long1", "long3"])));
+          // Test 1 should end
+          // Test 3 should end
+    });
+
+    test('basic test', () {
+      CompilerService compilerService = services.getService("compiler");
+
+      return compilerService.start().then((_) {
+        // TODO(ericarnold): What's a better way to do this?
+        expect(true, equals(true));
+      });
     });
   });
+
+  group('services compiler', () {
+    test('hello world', () {
+      final String str = "void main() { print('hello world'); }";
+
+      CompilerService compiler = services.getService("compiler");
+
+      return compiler.compileString(str).then((CompilerResult result) {
+        expect(result.getSuccess(), true);
+        expect(result.output.length, greaterThan(100));
+      });
+    });
+
+    test('syntax error', () {
+      // Missing semi-colon.
+      final String str = "void main() { print('hello world') }";
+
+      CompilerService compiler = services.getService("compiler");
+
+      return compiler.compileString(str).then((CompilerResult result) {
+        expect(result.getSuccess(), false);
+        expect(result.problems.length, 1);
+        expect(result.output, null);
+      });
+    });
+  });
+
+//  group('services_impl', () {
+//    test('setup', () {
+//      MockSendPort mockSendPort = new MockSendPort();
+//      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
+//      expect(mockSendPort.wasSent, isNotNull);
+//    });
+//    //test('compiler start', () {
+//    //  MockSendPort mockSendPort = new MockSendPort();
+//    //  servicesIsolate = new impl.ServicesIsolate(mockSendPort);
+//    //  impl.CompilerServiceImpl compilerImpl =
+//    //      servicesIsolate.getServiceImpl("compiler");
+//    //  });
+//    //});
+//  });
 }
 
 class MockSendPort extends SendPort {

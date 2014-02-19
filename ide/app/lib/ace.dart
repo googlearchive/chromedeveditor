@@ -24,8 +24,6 @@ import 'workspace.dart' as workspace;
 
 export 'package:ace/ace.dart' show EditSession;
 
-import '../packages/spark_widgets/spark_button/spark_button.dart';
-
 class TextEditor extends Editor {
   final AceManager aceManager;
   final workspace.File file;
@@ -332,7 +330,7 @@ class AceManager {
     dialog.append(element);
 
     // Set actions of the dialog.
-    SparkButton button = dialog.querySelector('.view-as-text-button');
+    html.ButtonElement button = dialog.querySelector('.view-as-text-button');
     button.onClick.listen((_) {
       dialog.classes.add("transition-hidden");
       focus();
@@ -511,7 +509,7 @@ class KeyBindingManager {
   html.Element _label;
 
   KeyBindingManager(this.aceManager, this.prefs, this._label) {
-    prefs.getValue('keyBinding').then((String value) {
+    prefs.getValue('keyBindings').then((String value) {
       if (value != null) {
         aceManager.setKeyBinding(value);
       }
@@ -534,7 +532,7 @@ class KeyBindingManager {
       int index = math.max(AceManager.KEY_BINDINGS.indexOf(name), 0);
       index = (index + direction) % AceManager.KEY_BINDINGS.length;
       String newBinding = AceManager.KEY_BINDINGS[index];
-      prefs.setValue('keyBinding', newBinding);
+      prefs.setValue('keyBindings', newBinding);
       _updateName(newBinding);
       aceManager.setKeyBinding(newBinding);
     });

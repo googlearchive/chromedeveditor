@@ -11,10 +11,13 @@ library spark.scm;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 
 import 'builder.dart';
 import 'jobs.dart';
 import 'workspace.dart';
+import 'git/config.dart';
 import 'git/objectstore.dart';
 import 'git/options.dart';
 import 'git/commands/branch.dart';
@@ -29,6 +32,8 @@ import 'git/commands/push.dart';
 import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
+
+final Logger _logger = new Logger('spark.scm');
 
 /**
  * Returns `true` if the given project is under SCM.
@@ -157,7 +162,13 @@ abstract class ScmProjectOperations {
 
   Future checkoutBranch(String branchName);
 
-  Future commit(String commitMessage);
+  void markResolved(Resource resource);
+
+  Future revertChanges(List<Resource> resources);
+
+  Future commit(String userName, String userEmail, String commitMessage);
+
+  Future push(String username, String password);
 
   void updateForChanges(List<ChangeDelta> changes);
 }
@@ -170,6 +181,7 @@ class FileStatus {
   static const FileStatus UNTRACKED = const FileStatus._('untracked');
   static const FileStatus MODIFIED = const FileStatus._('modified');
   static const FileStatus STAGED = const FileStatus._('staged');
+  static const FileStatus UNMERGED = const FileStatus._('unmerged');
   static const FileStatus COMMITTED = const FileStatus._('committed');
 
   final String status;
@@ -180,6 +192,7 @@ class FileStatus {
     if (value == 'committed') return FileStatus.COMMITTED;
     if (value == 'modified') return FileStatus.MODIFIED;
     if (value == 'staged') return FileStatus.STAGED;
+    if (value == 'unmerged') return FileStatus.UNMERGED;
     return FileStatus.UNTRACKED;
   }
 
@@ -187,10 +200,26 @@ class FileStatus {
     if (status == FileStatusType.COMMITTED) return FileStatus.COMMITTED;
     if (status == FileStatusType.MODIFIED) return FileStatus.MODIFIED;
     if (status == FileStatusType.STAGED) return FileStatus.STAGED;
+    if (status == FileStatusType.UNMERGED) return FileStatus.UNMERGED;
     return FileStatus.UNTRACKED;
   }
 
   String toString() => status;
+}
+
+/**
+ * The SCM commit information.
+ */
+class CommitInfo {
+  String identifier;
+  String authorName;
+  String authorEmail;
+  DateTime date;
+  String message;
+
+  String _getDateString() => date == null ? '' : new DateFormat.yMd("en_US").format(date);
+  String _getTimeString() => date == null ? '' : new DateFormat("Hm", "en_US").format(date);
+  String get dateString => '${_getDateString()} ${_getTimeString()}';
 }
 
 /**
@@ -252,8 +281,16 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // resource metadata is not persisted across sessions. Once it is, we
         // can remove this manual refresh.
         // Update the SCM status for the files.
-        _refreshStatus();
+        _refreshStatus(project: project);
       }).catchError((e) => _completer.completeError(e));
+  }
+
+  Future<Map<String, dynamic>> getConfigMap() {
+    return objectStore.then((store) {
+      return store.readConfig().then((Config config) {
+        return config.toMap();
+      });
+    });
   }
 
   String getBranchName() {
@@ -274,7 +311,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   FileStatus getFileStatus(Resource resource) {
-    return new FileStatus.createFrom(resource.getMetadata('scmStatus'));
+    return new FileStatus.createFrom(
+        resource.getMetadata('scmStatus', 'committed'));
   }
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
@@ -304,9 +342,32 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future push() {
+  void markResolved(Resource resource) {
+    // TODO: implement
+    _logger.info('Implement markResolved()');
+
+    // When finished, fire an SCM changed event.
+    _statusController.add(this);
+  }
+
+  Future revertChanges(List<Resource> resources) {
+    // TODO: implement
+    _logger.info('Implement revertChanges()');
+
+    // This future is just a stand-in for the actual async implementation.
+    Future f = new Future.value();
+
+    return f.then((_) {
+      // We changed files on disk - let the workspace know to re-scan the
+      // project and fire any necessary resource change events.
+      Timer.run(() => project.refresh());
+    });
+  }
+
+  Future push(String username, String password) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(root: entry, store: store);
+      GitOptions options = new GitOptions(root: entry, store: store,
+          username: username, password: password);
       return Push.push(options);
     });
   }
@@ -327,12 +388,30 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future commit(String commitMessage) {
+  Future commit(String userName, String userEmail, String commitMessage) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
-          root: entry, store: store, commitMessage: commitMessage);
+          root: entry, store: store, commitMessage: commitMessage,
+          name: userName, email: userEmail);
       return Commit.commit(options).then((_) {
-        _refreshStatus();
+        _refreshStatus(project: project);
+      });
+    });
+  }
+
+  Future<List<CommitInfo>> getPendingCommits() {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Push.getPendingCommits(options).then((commits) {
+        return commits.map((item) {
+          CommitInfo result = new CommitInfo();
+          result.identifier = item.sha;
+          result.authorName = item.author.name;
+          result.authorEmail = item.author.email;
+          result.date = item.author.date;
+          result.message = item.message;
+          return result;
+        });
       });
     });
   }
@@ -340,15 +419,21 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<ObjectStore> get objectStore => _completer.future;
 
   void updateForChanges(List<ChangeDelta> changes) {
-    // TODO(devoncarew): Call _refreshStatus() with the minimal set of changes
-    // from the `changes` param.
-
-    _refreshStatus();
+    _refreshStatus(files: changes
+        .where((d) => d.type != EventType.DELETE && d.resource is File)
+        .map((d) => d.resource));
   }
 
-  void _refreshStatus() {
+  /**
+   * Refresh either the entire given project, or the given list of files.
+   */
+  void _refreshStatus({Project project, Iterable<File> files}) {
+    assert(project != null || files != null);
+
     // Get a list of all files in the project.
-    Iterable<File> files = project.traverse().where((r) => r is File);
+    if (project != null) {
+      files = project.traverse().where((r) => r is File);
+    }
 
     // For each file, request the SCM status asynchronously.
     objectStore.then((ObjectStore store) {

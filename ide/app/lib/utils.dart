@@ -4,10 +4,13 @@
 
 library spark.utils;
 
+import 'dart:async';
 import 'dart:html' as html;
+import 'dart:typed_data' as typed_data;
 import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:logging/logging.dart';
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
@@ -54,6 +57,35 @@ void beep() {
  * Return whether the current runtime is dart2js (vs Dartium).
  */
 bool isDart2js() => identical(1, 1.0);
+
+/**
+ * Return the contents of the file at the given path. The path is relative to
+ * the Chrome app's directory.
+ */
+Future<List<int>> getAppContentsBinary(String path) {
+  String url = chrome.runtime.getURL(path);
+
+  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
+    typed_data.ByteBuffer buffer = request.response;
+    return new typed_data.Uint8List.view(buffer);
+  });
+}
+
+/**
+ * A [Notifier] is used to present the user with a message.
+ */
+abstract class Notifier {
+  void showMessage(String title, String message);
+}
+
+/**
+ * A [Notifier] implementation that just logs the given [title] and [message].
+ */
+class NullNotifier implements Notifier {
+  void showMessage(String title, String message) {
+    Logger.root.info('${title}:${message}');
+  }
+}
 
 /**
  * A simple class to do `print()` profiling. It is used to profile a single
@@ -213,7 +245,6 @@ String _platform() {
   return (str != null) ? str.toLowerCase() : '';
 }
 
-
 /**
  * Defines a received action event.
  */
@@ -222,9 +253,48 @@ class ServiceActionEvent {
   // TODO(ericarnold): This should be shared between ServiceIsolate and Service.
   String serviceId;
   String actionId;
-  String callId;
   bool response = false;
   Map data;
-  ServiceActionEvent(this.serviceId, this.actionId, this.callId, this.data);
-}
 
+  String _callId;
+  String get callId => _callId;
+
+  ServiceActionEvent(this.serviceId, this.actionId, this.data);
+
+  ServiceActionEvent.fromMap(Map map) {
+    serviceId = map["serviceId"];
+    actionId = map["actionId"];
+    _callId = map["callId"];
+    data = map["data"];
+    response = map["response"];
+  }
+
+  ServiceActionEvent._asResponse(this.serviceId, this.actionId, this._callId,
+      this.data);
+
+  Map toMap() {
+    return {
+      "serviceId": serviceId,
+      "actionId": actionId,
+      "callId": callId,
+      // TODO(ericarnold): We can probably subclass SAE into Response specific.
+      "response": response == true,
+      "data": data
+    };
+  }
+
+  ServiceActionEvent createReponse(Map data) {
+    ServiceActionEvent response = new ServiceActionEvent._asResponse(
+        serviceId, actionId, callId, data);
+    response.response = true;
+    return response;
+  }
+
+  void makeRespondable(String callId) {
+    if (this._callId == null) {
+      this._callId = callId;
+    } else {
+      throw "ServiceActionEvent is already respondable";
+    }
+  }
+}

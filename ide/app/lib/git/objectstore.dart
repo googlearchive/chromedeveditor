@@ -410,13 +410,15 @@ class ObjectStore {
     // find the remote branch corresponding to the local one.
     GitRef remoteRef, headRef;
     return getHeadRef().then((String headRefName) {
-      remoteRef = baseRefs.firstWhere((GitRef ref) => ref.name == headRefName);
+      try {
+        remoteRef = baseRefs.firstWhere((GitRef ref) => ref.name == headRefName);
+      } catch (e) {
+        // Ignore exception raised when firstWhere() failed.
+      }
       Map<String, bool> remoteShas = {};
       // Didn't find a remote branch for the local branch.
       if (remoteRef == null) {
-        remoteRef.name = 'headRef';
-        remoteRef.sha = HEAD_MASTER_SHA;
-
+        remoteRef = new GitRef(HEAD_MASTER_SHA, headRefName);
         remoteHeads.forEach((String headName, String sha) {
           remoteShas[sha] = true;
         });

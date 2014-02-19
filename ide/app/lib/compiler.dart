@@ -40,6 +40,10 @@ class Compiler {
     return DartSdk.createSdk().then((DartSdk sdk) => new Compiler._(sdk));
   }
 
+  static Compiler createCompilerFrom(DartSdk sdk) {
+    return new Compiler._(sdk);
+  }
+
   Compiler._(this._sdk);
 
   /**
@@ -120,6 +124,25 @@ class CompilerResult {
       return new _NullSink('$name.$extension');
     }
   }
+
+  CompilerResult.fromMap(Map data) {
+    _compileTime = new Duration(milliseconds: data['compileMilliseconds']);
+    _output = data['output'];
+
+    for (Map problem in data['problems']) {
+      problems.add(new CompilerProblem.fromMap(problem));
+    }
+  }
+
+  Map toMap() {
+    List responseProblems = problems.map((p) => p.toMap()).toList();
+
+    return {
+      "compileMilliseconds": compileTime.inMilliseconds,
+      "output": output,
+      "problems": responseProblems,
+    };
+  }
 }
 
 /**
@@ -155,6 +178,34 @@ class CompilerProblem {
     } else {
       return "${kind} ${uri}: ${message}";
     }
+  }
+
+  CompilerProblem.fromMap(Map data) :
+    begin = data['begin'],
+    end = data['end'],
+    message = data['message'],
+    uri = new Uri.file(data['uri']),
+    kind = _diagnosticFrom(data['kind']);
+
+  Map toMap() {
+    return {
+      "begin": begin,
+      "end": end,
+      "message": message,
+      // TODO(ericarnold): Depending on how it's being used,
+      //   consider storing uri as a String.
+      "uri": (uri == null) ? "" : uri.path,
+      "kind": kind.name
+    };
+  }
+
+  static compiler.Diagnostic _diagnosticFrom(String name) {
+    if (name == 'warning') return compiler.Diagnostic.WARNING;
+    if (name == 'hint') return compiler.Diagnostic.HINT;
+    if (name == 'into') return compiler.Diagnostic.INFO;
+    if (name == 'verbose info') return compiler.Diagnostic.VERBOSE_INFO;
+    if (name == 'crash') return compiler.Diagnostic.CRASH;
+    return compiler.Diagnostic.ERROR;
   }
 }
 

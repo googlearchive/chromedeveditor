@@ -12,6 +12,7 @@ import '../lib/utils.dart';
 defineTests() {
   group('analyzer.', () {
     test('ChromeDartSdk exists', () {
+
       return createSdk().then((ChromeDartSdk sdk) {
         expect(sdk, isNotNull);
         expect(sdk.sdkVersion.length, greaterThan(0));

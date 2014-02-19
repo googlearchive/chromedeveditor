@@ -26,15 +26,31 @@ body {
 #topUi {
   height: 100%;
   width: 100%;
+  opacity: 1;
+  transition: opacity 300ms;  
 }
 
-#topUi.veiled {
+#topUi:unresolved {
   opacity: 0;
 }
 
-#topUi.unveiled {
+#splashScreen {
+  background: #F7F7F7;
+  background-image: url("images/spark_512.png");
+  background-position: center;
+  background-repeat: no-repeat;
   opacity: 1;
   transition: opacity 300ms;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+#splashScreen.closeSplash {
+  opacity: 0;
 }
 
 #editorArea {
@@ -85,15 +101,23 @@ body {
   z-index: 10;
   opacity: 1;
   transition: opacity 250ms;
-  text-align: center; font-family: Helvetica; font-size: 13px;
+  text-align: center;
+  font-family: Helvetica;
+  font-size: 13px;
 }
 
 .editor-dialog .editor-dialog-message {
-  margin-top: 40px; margin-bottom: 20px; font-size: 20px; color: #888;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  font-size: 20px;
+  color: #888;
 }
 
 .always-view-as-text-button {
-  position: absolute; bottom: 20px; right: 20px; color: #ccc;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  color: #ccc;
 }
 
 .editor-dialog a {
@@ -223,6 +247,7 @@ body {
 }
 
 #fileViewArea {
+  /* Default value overridden from the stored preferences programmatically. */
   width: 300px;
 }
 

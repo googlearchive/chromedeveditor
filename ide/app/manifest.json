@@ -22,8 +22,9 @@
   },
   "permissions": [
     "https://www.google-analytics.com/",
-    "https://github.com/*",
     "https://www.googleapis.com/upload/chromewebstore/v1.1/items",
+    "https://github.com/*",
+    "http://*/push",
     "identity",
     "clipboardRead",
     "clipboardWrite",

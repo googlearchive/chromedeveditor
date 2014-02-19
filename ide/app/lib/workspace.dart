@@ -231,7 +231,9 @@ class Workspace implements Container {
 
   // TODO(ericarnold): We can remove this method once we analyze whole projects.
   void checkResource(Resource resource) {
-    _fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
+    // TODO(devoncarew): temporarily disabled while we investigate a performance
+    // issue
+    //_fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
   }
 
   void _fireResourceEvent(ChangeDelta delta) {
@@ -254,17 +256,13 @@ class Workspace implements Container {
    * Read the workspace data from storage and restore entries.
    */
   Future restore() {
-    _store.getValue('workspaceRoots').then((s) {
-      if (s == null) {
-        _whenAvailable.complete(this);
-        return null;
-      }
+    Stopwatch stopwatch = new Stopwatch()..start();
 
+    _store.getValue('workspaceRoots').then((rootsString) {
       try {
         pauseResourceEvents();
 
-        List<Map> data = JSON.decode(s);
-
+        List<Map> data = (rootsString == null ? [] : JSON.decode(rootsString));
         List<WorkspaceRoot> roots = [];
 
         for (Map m in data) {
@@ -277,10 +275,12 @@ class Workspace implements Container {
             return link(root, fireEvent: false);
           });
         }).whenComplete(() {
+          _logger.info('Workspace restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
+          _restoreSyncFs();
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
-        _logger.log(Level.INFO, 'Exception in workspace restore', e);
+        _logger.warning('Exception in workspace restore', e);
         _whenAvailable.complete(this);
       }
     });
@@ -307,21 +307,28 @@ class Workspace implements Container {
   /**
    * Read the sync file system and restore entries.
    */
-  Future restoreSyncFs() {
+  Future _restoreSyncFs() {
+    Stopwatch stopwatch = new Stopwatch()..start();
+    Completer completer = new Completer();
+
     chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
       _syncFileSystem = fs;
-      _syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
+      return _syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
         pauseResourceEvents();
-        Future.forEach(entries, (chrome.Entry entry) {
+        return Future.forEach(entries, (chrome.Entry entry) {
           return link(new SyncFolderRoot(entry));
         }).whenComplete(() {
+          _logger.info('SyncFS restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
         }).then((_) => _whenAvailableSyncFs.complete(this));
       });
     }, onError: (e) {
-        _logger.log(Level.INFO, 'Exception in workspace restore sync file system', e);
+        _logger.warning('Exception in workspace restore sync file system', e);
         _whenAvailableSyncFs.complete(this);
-    });
+    }).whenComplete(() => completer.complete());
+
+    _builderManager.jobManager.schedule(
+        new ProgressJob('Opening sync filesystem…', completer));
 
     return whenAvailableSyncFs();
   }

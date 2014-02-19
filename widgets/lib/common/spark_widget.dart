@@ -8,7 +8,7 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
-bool IS_DART2JS = identical(1, 1.0);
+const bool IS_DART2JS = identical(1, 1.0);
 
 // NOTE: This SparkWidget element is not intended to use directly.
 @CustomTag('spark-widget')

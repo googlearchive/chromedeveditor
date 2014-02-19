@@ -5,10 +5,13 @@
 library spark_polymer.ui;
 
 import 'dart:html';
+import 'dart:async';
 
 import 'package:polymer/polymer.dart';
-import 'package:spark_widgets/common/spark_widget.dart';
-import 'package:spark_widgets/spark_suggest/spark_suggest_box.dart';
+
+// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
+import 'packages/spark_widgets/common/spark_widget.dart';
+import 'packages/spark_widgets/spark_suggest/spark_suggest_box.dart';
 
 import 'spark_model.dart';
 import 'lib/search.dart';
@@ -23,6 +26,7 @@ class SparkPolymerUI extends SparkWidget {
         () => SparkModel.instance.workspace,
         (f) => SparkModel.instance.editorArea.selectFile(
             f, forceOpen: true, replaceCurrent: false, switchesTab: true));
+    Timer.run(() => bindKeybindingDesc());
   }
 
   void onMenuSelected(Event event, var detail) {
@@ -52,5 +56,20 @@ class SparkPolymerUI extends SparkWidget {
 
   void onSplitterUpdate(int position) {
     SparkModel.instance.onSplitViewUpdate(position);
+  }
+
+  void bindKeybindingDesc() {
+    final items = getShadowDomElement('#mainMenu').querySelectorAll('spark-menu-item');
+    items.forEach((menuItem) {
+      final actionId = menuItem.attributes['action-id'];
+      final action = SparkModel.instance.actionManager.getAction(actionId);
+      action.bindings.forEach((keyBind) => menuItem.description = keyBind.getDescription());
+    });
+  }
+
+  void onResetGit() {
+    SparkModel.instance.syncPrefs.setValue('git-auth-info', null);
+    SparkModel.instance.syncPrefs.setValue('git-user-info', null);
+    SparkModel.instance.setGitSettingsResetDoneVisible(true);
   }
 }

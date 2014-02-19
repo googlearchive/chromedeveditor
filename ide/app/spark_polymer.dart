@@ -189,6 +189,7 @@ class SparkPolymer extends Spark {
     _bindButtonToAction('gitClone', 'git-clone');
     _bindButtonToAction('newProject', 'project-new');
     _bindButtonToAction('runButton', 'application-run');
+    _bindButtonToAction('pushButton', 'application-push');
   }
 
   @override
@@ -216,8 +217,16 @@ class SparkPolymer extends Spark {
   }
 
   void unveil() {
-    _ui.classes.remove('veiled');
-    _ui.classes.add('unveiled');
+    // TODO(devoncarew) We'll want to switch over to using the polymer
+    // 'unresolved' or 'polymer-unveil' attributes, once these start working.
+    DivElement element = document.querySelector('#splashScreen');
+
+    if (element != null) {
+      element.classes.add('closeSplash');
+      new Timer(new Duration(milliseconds: 300), () {
+        element.parent.children.remove(element);
+      });
+    }
   }
 
   Future<bool> _beforeSystemModal() {

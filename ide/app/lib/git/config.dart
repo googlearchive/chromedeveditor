@@ -7,7 +7,6 @@ library git.config;
 import 'dart:convert';
 
 class Config {
-
   String url;
   String shallow;
   Map<String, String> remoteHeads = {};

@@ -1,6 +1,5 @@
 library examples;
 
-import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 @CustomTag('widget-examples')
@@ -12,13 +11,11 @@ class Examples extends PolymerElement {
                  'spark_menu_button',
                  'spark_menu_item',
                  'spark_overlay',
-                 'spark_selection',
                  'spark_selector',
+                 'spark_split_view',
                  'spark_splitter',
                  'spark_toggle_button',
                  'spark_toolbar'];
-
-  factory Examples() => new Element.tag('Examples');
 
   Examples.created() : super.created();
 }

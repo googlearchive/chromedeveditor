@@ -13,13 +13,42 @@ import '../common/spark_widget.dart';
 @CustomTag("spark-menu-item")
 class SparkMenuItem extends SparkWidget {
   /// URL image for the icon associated with this menu item.
-  @published String src = "";
+  @published String icon = "";
 
   /// Size of the icon.
-  @published String iconsize = "24";
+  @published int iconSize = 0;
 
   /// Specifies the label for the menu item.
   @published String label = "";
 
-  SparkMenuItem.created(): super.created();
+  /// Description for this menu, usually used for a keybinding description.
+  @published String description = "";
+
+  @reflectable bool get hasIcon => icon.isNotEmpty || iconSize != 0;
+
+  @observable bool isHovered = false;
+
+  SparkMenuItem.created(): super.created() {
+    // BUG: Use mouse events instead of :hover because Chrome fails to remove
+    // :hover from an element after it's clicked and programmatically moved from
+    // under the mouse, as is the case with our auto-closing spark-menu.
+    if (IS_DART2JS) {
+      // TODO: bindCssClass() doesn't work after dart2js. Keeping it only
+      // because widgets are a Polymer testing ground - investigate/file bug.
+      onMouseOver.listen((_) { classes.add('highlighted'); });
+      onMouseOut.listen((_) { classes.remove('highlighted'); });
+    } else {
+      bindCssClass(this, 'highlighted', this, 'isHovered');
+      onMouseOver.listen((_) => isHovered = true);
+      onMouseOut.listen((_) => isHovered = false);
+    }
+  }
+
+  @override
+  void enteredView() {
+    super.enteredView();
+    if (icon.isNotEmpty && iconSize == 0) {
+      iconSize = 24;
+    }
+  }
 }
