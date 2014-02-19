@@ -388,8 +388,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
-    actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
-    actionManager.registerAction(new ResourceRefreshAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
@@ -402,9 +400,11 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
-    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
+    actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
+    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1629,45 +1629,47 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAc
   HtmlElement _propertiesElement;
 
   ProjectPropertiesAction(Spark spark, Element dialog)
-      : super(spark, 'project-properties', 'Project Properties…', dialog) {
-    _propertiesElement = getElement('#projectPropertiesDialog .form-group');
+      : super(spark, 'project-properties', 'Properties…', dialog) {
+    _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
   }
 
   void _invoke([List context]) {
     project = context.first;
     _propertiesElement.innerHtml = '';
-    _buildProperties();
-
-    _show();
+    _buildProperties().then((_) => _show());
   }
 
-  void _buildProperties() {
-    _addProperty('Name', project.name);
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'File Name', project.name);
+
     GitScmProjectOperations gitOperations =
         spark.scmManager.getScmOperationsFor(project);
+
     if (gitOperations != null) {
-      gitOperations.getConfigMap().then((Map<String, dynamic> map) {
+      return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
         final String repoUrl = map['url'];
-        _addProperty('URL', repoUrl);
+        _addProperty(_propertiesElement, 'Git Repository', repoUrl);
       }).catchError((e) {
-        _addProperty('URL', 'Fetching failed: ' + e.toString());
-      });;
+        _addProperty(_propertiesElement, 'Git Repository',
+            '<error retrieving Git data>');
+      });
+    } else {
+      return new Future.value();
     }
   }
 
-  void _addProperty(String key, String value) {
-    LabelElement label = new LabelElement()
-        ..className = 'col-sm-2'
-        ..text = key;
+  void _addProperty(HtmlElement parent, String key, String value) {
+    Element div = new DivElement()..classes.add('form-group');
+    parent.children.add(div);
 
-    Element element = new Element.tag('p')
-        ..className = 'property-value'
-        ..text = value;
-    _propertiesElement.children.addAll([label, element]);
+    Element label = new LabelElement()..text = key;
+    Element element = new ParagraphElement()..text = value
+        ..className = 'form-control-static';
+
+    div.children.addAll([label, element]);
   }
 
-  void _commit() {
-  }
+  void _commit() { }
 
   String get category => 'resource';
 
