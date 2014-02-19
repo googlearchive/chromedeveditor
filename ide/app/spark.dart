@@ -275,16 +275,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _launchManager = new LaunchManager(
         services.getService("compiler"), _workspace);
     CompilerService compilerService = services.getService("compiler");
-//    compilerService.start().then((_) {
-//      compilerService.compileString(
-//          """void main() { print("foo"); }""")
-//          .then((CompilerResult result){
-//            /*%TRACE3*/ print("""(4> 2/18/14): result.problems: ${result.problems}"""); // TRACE%
-//            /*%TRACE3*/ print("""(4> 2/18/14): result.getSuccess: ${result.getSuccess}"""); // TRACE%
-//            /*%TRACE3*/ print("""(4> 2/18/14): result.output: ${result.output}"""); // TRACE%
-//          });
-//      // TODO(ericarnold): What's a better way to do this?
-//    });
 
   }
 
