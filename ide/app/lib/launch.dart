@@ -18,8 +18,8 @@ import 'package:logging/logging.dart';
 import 'apps/app_utils.dart';
 import 'compiler.dart';
 import 'developer_private.dart';
-import 'server.dart';
 import 'utils.dart';
+import 'server.dart';
 import 'workspace.dart';
 
 const int SERVER_PORT = 4040;
