@@ -7,10 +7,10 @@ library spark.harness_push;
 import 'dart:async';
 
 import 'package:archive/archive.dart' as archive;
-import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../spark_model.dart';
 import 'jobs.dart';
+import 'tcp.dart';
 import 'workspace.dart';
 
 class HarnessPush {
@@ -80,36 +80,32 @@ class HarnessPush {
       httpRequest.addAll(body);
 
       monitor.worked(1);
-      chrome.ArrayBuffer payload = new chrome.ArrayBuffer.fromBytes(
-          httpRequest);
-      // Now create a chrome.socket and send it.
-      int socketId;
-      return chrome.socket.create(chrome.SocketType.TCP).then((createInfo) {
-        if (chrome.runtime.lastError != null) {
-          throw 'Error creating socket';
+
+      TcpClient client;
+      return TcpClient.createClient(target, 2424).then((TcpClient _client) {
+        client = _client;
+        client.sink.add(httpRequest);
+        return client.stream.timeout(new Duration(minutes: 1)).first;
+      }).then((List<int> responseBytes) {
+        String response = new String.fromCharCodes(responseBytes);
+        List<String> lines = response.split('\n');
+        if (lines == null || lines.length == 0) {
+          throw 'Bad response from push server';
         }
-        socketId = createInfo.socketId;
-        return chrome.socket.connect(socketId, target, 2424);
-      }).then((_) {
-        if (chrome.runtime.lastError != null) {
-          throw 'Connection error: ${chrome.runtime.lastError.toString()}';
+
+        if (lines[0].contains('200')) {
+          SparkModel.instance.showSuccessMessage('Successfully pushed');
+          monitor.worked(2);
+        } else {
+          throw lines[0];
         }
-        return chrome.socket.write(socketId, payload);
-      }).then((chrome.SocketWriteInfo writeInfo) {
-        if (chrome.runtime.lastError != null) {
-          throw 'Failed to write to socket.';
-        }
-        print('Successfully pushed! (${writeInfo.bytesWritten} bytes)');
-        monitor.worked(2);
-      }).catchError((e) {
-        SparkModel.instance.showErrorMessage('Push failure', e);
       }).whenComplete(() {
-        if (socketId != null) {
-          chrome.socket.disconnect(socketId);
-          chrome.socket.destroy(socketId);
+        if (client != null) {
+          client.dispose();
         }
-        SparkModel.instance.showSuccessMessage('Push successful');
       });
+    }).catchError((e) {
+      SparkModel.instance.showErrorMessage('Push failure', e.toString());
     });
   }
 
