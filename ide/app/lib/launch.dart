@@ -359,8 +359,8 @@ class Dart2JsServlet extends PicoServlet {
           /*%TRACE3*/ print("""(4> 2/18/14): result.problems: ${result.problems}"""); // TRACE%
           /*%TRACE3*/ print("""(4> 2/18/14): result.getSuccess: ${result.getSuccess}"""); // TRACE%
           /*%TRACE3*/ print("""(4> 2/18/14): result.output: ${result.output}"""); // TRACE%
-        }).catchError((e) {
-          /*%TRACE3*/ print("(4> 2/18/14): catchError!"); // TRACE%
+        }).catchError((Error e) {
+          /*%TRACE3*/ print("(4> 2/18/14): catchError $e\n ${e.stackTrace}"); // TRACE%
         });
   }
 
