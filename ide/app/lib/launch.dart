@@ -20,6 +20,7 @@ import 'developer_private.dart';
 import 'jobs.dart';
 import 'utils.dart';
 import 'server.dart';
+import 'services/services.dart';
 import 'workspace.dart';
 
 const int SERVER_PORT = 4040;
@@ -34,11 +35,12 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 class LaunchManager {
   List<LaunchDelegate> _delegates = [];
   Notifier _notifier;
+  CompilerService _compiler;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace, [this._notifier]) {
+  LaunchManager(this._workspace, this._compiler, [this._notifier]) {
     if (_notifier == null) {
       _notifier = new NullNotifier();
     }
