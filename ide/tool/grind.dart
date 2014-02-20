@@ -103,13 +103,15 @@ void deploy(GrinderContext context) {
 
   // Compile the services entry-point.
   _dart2jsCompile(context, deployWeb, 'services_impl.dart', true);
-  _copyFileWithNewName(
-      joinFile(deployWeb, ['services_impl.dart.precompiled.js']),
-      deployWeb, 'services_impl.dart.js', context);
 
-  _runCommandSync(
-      context,
-      'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
+  if (Platform.isWindows) {
+    context.log(
+        'TODO: manually patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
+  } else {
+    _runCommandSync(
+        context,
+        'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
+  }
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -381,10 +383,10 @@ void _dart2jsCompile(GrinderContext context, Directory target, String filePath,
         context);
   }
 
-  final Link link = new Link(joinFile(target, ['${filePath}.js']).path);
-  link.createSync('./${filePath}.precompiled.js');
+  _rename(joinFile(target, ['${filePath}.precompiled.js']).path,
+          joinFile(target, ['${filePath}.js']).path, context);
 
-  _printSize(context, joinFile(target, ['${filePath}.precompiled.js']));
+  _printSize(context, joinFile(target, ['${filePath}.js']));
 }
 
 void _changeMode({bool useTestMode: true}) {
@@ -566,6 +568,14 @@ void _delete(String path, [GrinderContext context]) {
   } else {
     deleteEntity(getDir(path), context);
   }
+}
+
+void _rename(String srcPath, String destPath, [GrinderContext context]) {
+   if (context != null) {
+     context.log('rename ${srcPath} to ${destPath}');
+   }
+   File srcFile = new File(srcPath);
+   srcFile.renameSync(destPath);
 }
 
 void _copyFileWithNewName(File srcFile, Directory destDir, String destFileName,
