@@ -7,10 +7,10 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import '../compiler.dart';
+import 'compiler.dart';
 import '../utils.dart';
 
-export '../compiler.dart' show CompilerResult;
+export 'compiler.dart' show CompilerResult;
 
 /**
  * Defines a class which contains services and manages their communication.

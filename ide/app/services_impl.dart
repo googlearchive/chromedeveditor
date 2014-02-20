@@ -11,7 +11,7 @@ library spark.services_impl;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'lib/compiler.dart';
+import 'lib/services/compiler.dart';
 import 'lib/sdk.dart';
 import 'lib/utils.dart';
 

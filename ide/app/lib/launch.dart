@@ -15,7 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'apps/app_utils.dart';
-import 'compiler.dart';
+import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
 import 'utils.dart';

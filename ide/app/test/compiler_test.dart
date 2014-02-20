@@ -6,7 +6,7 @@ library spark.compiler_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/compiler.dart';
+import '../lib/services/compiler.dart';
 
 defineTests() {
   group('compiler', () {
