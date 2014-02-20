@@ -345,12 +345,21 @@ class ProjectRedirectServlet extends PicoServlet {
  */
 class Dart2JsServlet extends PicoServlet {
   LaunchManager _launchManager;
-  Compiler _compiler;
+  CompilerService _compiler;
 
   Dart2JsServlet(this._launchManager){
-    Compiler.createCompiler().then((c) {
-      _compiler = c;
-    });
+    _compiler = _launchManager._compiler;
+    _compiler.start()
+        .then((_) {
+          /*%TRACE3*/ print("(4> 2/18/14): then!"); // TRACE%
+          return _compiler.compileString("""void main() { print("foo"); }""");
+        }).then((CompilerResult result){
+          /*%TRACE3*/ print("""(4> 2/18/14): result.problems: ${result.problems}"""); // TRACE%
+          /*%TRACE3*/ print("""(4> 2/18/14): result.getSuccess: ${result.getSuccess}"""); // TRACE%
+          /*%TRACE3*/ print("""(4> 2/18/14): result.output: ${result.output}"""); // TRACE%
+        }).catchError((e) {
+          /*%TRACE3*/ print("(4> 2/18/14): catchError!"); // TRACE%
+        });
   }
 
   bool canServe(HttpRequest request) {
