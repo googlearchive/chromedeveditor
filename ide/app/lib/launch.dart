@@ -351,17 +351,8 @@ class Dart2JsServlet extends PicoServlet {
 
   Dart2JsServlet(this._launchManager){
     _compiler = _launchManager._compiler;
-    _compiler.start()
-        .then((_) {
-          /*%TRACE3*/ print("(4> 2/18/14): then!"); // TRACE%
-          return _compiler.compileString("""void main() { print("foo"); }""");
-        }).then((CompilerResult result){
-          /*%TRACE3*/ print("""(4> 2/18/14): result.problems: ${result.problems}"""); // TRACE%
-          /*%TRACE3*/ print("""(4> 2/18/14): result.getSuccess: ${result.getSuccess}"""); // TRACE%
-          /*%TRACE3*/ print("""(4> 2/18/14): result.output: ${result.output}"""); // TRACE%
-        }).catchError((Error e) {
-          /*%TRACE3*/ print("(4> 2/18/14): catchError $e\n ${e.stackTrace}"); // TRACE%
-        });
+    // TODO(ericarnold): Compiler should auto-start
+    _compiler.start();
   }
 
   bool canServe(HttpRequest request) {
