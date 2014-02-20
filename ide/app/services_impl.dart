@@ -12,7 +12,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'lib/services/compiler.dart';
-import 'lib/sdk.dart';
+import 'lib/dart/sdk.dart';
 import 'lib/utils.dart';
 
 void main(List<String> args, SendPort sendPort) {

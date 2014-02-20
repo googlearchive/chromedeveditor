@@ -13,7 +13,7 @@ import 'dart:html' as html;
 import 'package:compiler_unsupported/compiler.dart' as compiler;
 export 'package:compiler_unsupported/compiler.dart' show Diagnostic;
 
-import '../sdk.dart';
+import '../dart/sdk.dart';
 
 // TODO: we should be tracking compilation times and sizes
 
