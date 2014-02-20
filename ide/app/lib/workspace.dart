@@ -535,8 +535,8 @@ abstract class Resource {
    * Returns whether the given container is a parent of the current resource.
    */
   bool containedBy(Container container) {
-    if (container == null || container is Workspace) return false;
     if (this == container) return true;
+    if (container == null || container is Workspace) return false;
     if (_parent == container) return true;
     if (_parent == null) return false;
     return _parent.containedBy(container);
@@ -802,8 +802,6 @@ class Project extends Folder {
   Project get project => this;
 
   String get uuid => '${_root.id}';
-
-  bool containedBy(Container container) => container == this;
 
   /**
    * Check the files on disk for changes that we don't know about. Fire resource
