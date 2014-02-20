@@ -35,12 +35,15 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 class LaunchManager {
   List<LaunchDelegate> _delegates = [];
   Notifier _notifier;
+  Services _services;
   CompilerService _compiler;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace, this._compiler, [this._notifier]) {
+  LaunchManager(this._workspace, this._services, [this._notifier]) {
+    _compiler = _services.getService("compiler");
+
     if (_notifier == null) {
       _notifier = new NullNotifier();
     }
