@@ -127,7 +127,8 @@ class CompilerResult {
 
   CompilerResult.fromMap(Map data) {
     _compileTime = new Duration(milliseconds: data['compileMilliseconds']);
-    _output = data['output'];
+    String outputString = data['output'];
+    _output = (outputString == null) ? null : new StringBuffer(outputString);
 
     for (Map problem in data['problems']) {
       problems.add(new CompilerProblem.fromMap(problem));
