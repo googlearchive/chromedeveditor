@@ -11,8 +11,7 @@ library spark.services_impl;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'lib/services/compiler.dart';
-import 'lib/dart/sdk.dart';
+import 'lib/services/compiler_service.dart';
 import 'lib/utils.dart';
 
 void main(List<String> args, SendPort sendPort) {
@@ -169,54 +168,6 @@ class ExampleServiceImpl extends ServiceImpl {
   }
 }
 
-
-class CompilerServiceImpl extends ServiceImpl {
-  String get serviceId => "compiler";
-
-  DartSdk sdk;
-  Compiler compiler;
-
-  Completer<ServiceActionEvent> _readyCompleter =
-      new Completer<ServiceActionEvent>();
-
-  Future<ServiceActionEvent> get onceReady => _readyCompleter.future;
-
-  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate);
-
-  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
-    switch (event.actionId) {
-      case "start":
-        // TODO(ericarnold): Start should happen automatically on use.
-        return _start().then((_) => new Future.value(event.createReponse(null)));
-        break;
-      case "dispose":
-        return new Future.value(event.createReponse(null));
-        break;
-      case "compileString":
-        return compiler.compileString(event.data['string'])
-            .then((CompilerResult result)  {
-              return new Future.value(event.createReponse(result.toMap()));
-            });
-        break;
-      default:
-        throw "Unknown action '${event.actionId}' sent to $serviceId service.";
-    }
-  }
-
-  Future _start() {
-    _isolate.chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
-      sdk = DartSdk.createSdkFromContents(sdkContents);
-      compiler = Compiler.createCompilerFrom(sdk);
-      _readyCompleter.complete();
-    }).catchError((error){
-      // TODO(ericarnold): Return error which service will throw
-      print("Chrome service error: $error ${error.stackTrace}");
-    });
-
-    return _readyCompleter.future;
-  }
-}
-
 /**
  * Special service for calling back to chrome.
  */
@@ -256,7 +207,8 @@ abstract class ServiceImpl {
 // Prints are crashing isolate, so this will take over for the time being.
 SendPort _printSendPort;
 
-void print(var message) {
+void print(var message) => sendPrint(message);
+void sendPrint(var message) {
   // Host will know it's a print because it's a simple string instead of a map
   if (_printSendPort != null) {
     _printSendPort.send("$message");
