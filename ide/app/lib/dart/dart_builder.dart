@@ -24,10 +24,6 @@ class DartBuilder extends Builder {
 
     Completer completer = new Completer();
 
-    analyzer.createSdk().then((int sdkId) {
-      return Future.forEach(dartFiles, (file) => _processFile(sdkId, file))
-    }).then((_) => completer.complete());
-
     createSdk().then((ChromeDartSdk sdk) {
       Future.forEach(dartFiles, (file) => _processFile(sdk, file)).then((_) {
         completer.complete();
@@ -40,11 +36,11 @@ class DartBuilder extends Builder {
   /**
    * Create markers for a `.dart` file.
    */
-  Future _processFile(int sdkId, File file) {
+  Future _processFile(ChromeDartSdk sdk, File file) {
     return file.getContents().then((String contents) {
-      return analyzer.analyzeString(sdkId, contents, performResolution: false);
-    }).then((AnalyzerResult result) {
-      file.workspace.pauseMarkerStream();
+      return analyzeString(sdk, contents, performResolution: false).then((AnalyzerResult result) {
+        file.workspace.pauseMarkerStream();
+
         try {
           file.clearMarkers();
 
