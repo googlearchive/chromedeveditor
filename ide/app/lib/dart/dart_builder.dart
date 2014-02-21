@@ -22,15 +22,6 @@ class DartBuilder extends Builder {
 
     if (dartFiles.isEmpty) return new Future.value();
 
-    Completer completer = new Completer();
-
-    createSdk().then((ChromeDartSdk sdk) {
-      Future.forEach(dartFiles, (file) => _processFile(sdk, file)).then((_) {
-        completer.complete();
-      });
-    });
-
-    return completer.future;
   }
 
   /**

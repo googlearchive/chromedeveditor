@@ -11,6 +11,7 @@ library spark.services_impl;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'lib/services/analyzer.dart';
 import 'lib/services/compiler.dart';
 import 'lib/dart/sdk.dart';
 import 'lib/utils.dart';
@@ -234,6 +235,45 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
         break;
   }
+
+  Future build() {
+    Completer completer = new Completer();
+
+    createSdk().then((ChromeDartSdk sdk) {
+      Future.forEach(dartFiles, (file) => _processFile(sdk, file)).then((_) {
+        completer.complete();
+      });
+    });
+
+    return completer.future;
+  }
+
+  /**
+   * Create markers for a `.dart` file.
+   */
+  Future _processFile(ChromeDartSdk sdk, File file) {
+    return file.getContents().then((String contents) {
+      return analyzeString(sdk, contents, performResolution: false).then((AnalyzerResult result) {
+        file.workspace.pauseMarkerStream();
+
+        try {
+          file.clearMarkers();
+
+          for (AnalysisError error in result.errors) {
+            LineInfo_Location location = result.getLineInfo(error);
+
+            file.createMarker(
+                'dart', _convertSeverity(error.errorCode.errorSeverity),
+                error.message, location.lineNumber,
+                error.offset, error.offset + error.length);
+          }
+        } finally {
+          file.workspace.resumeMarkerStream();
+        }
+      });
+    });
+  }
+
 }
 
 /**

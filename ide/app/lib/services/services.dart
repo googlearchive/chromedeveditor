@@ -105,6 +105,47 @@ class CompilerService extends Service {
   }
 }
 
+class AnalyzerService extends Service {
+  Completer _readyCompleter = new Completer();
+
+  String serviceId = "analyzer";
+  Future onceReady;
+
+  AnalyzerService(Services services, _IsolateHandler handler)
+  : super(services, handler) {
+    onceReady = _readyCompleter.future;
+  }
+
+  Future start() {
+    return _isolateHandler.onceIsolateReady
+        .then((_) => _sendAction("start"))
+        .then((_) => _readyCompleter.complete());
+  }
+
+  List<AnalyzerResult> build(Iterable<File> dartFiles) {
+    return onceReady.then((_) =>
+        _sendAction("analyzeString", {"string": string}))
+        .then((ServiceActionEvent result) {
+//          CompilerResult response = new AnalysisResult.fromMap(result.data);
+          return response;
+        });
+  }
+
+  Future<CompilerResult> analyzeString(String string) {
+    return onceReady.then((_) =>
+        _sendAction("analyzeString", {"string": string}))
+        .then((ServiceActionEvent result) {
+//          CompilerResult response = new AnalysisResult.fromMap(result.data);
+          return response;
+        });
+  }
+
+  Future dispose() {
+    return onceReady.then((_) => _sendAction("dispose"))
+        .then((_) => null);
+  }
+}
+
 class ExampleService extends Service {
   String serviceId = "example";
 
