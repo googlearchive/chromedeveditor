@@ -227,6 +227,25 @@ class CompilerServiceImpl extends ServiceImpl {
   }
 }
 
+class AnalyzerServiceImpl extends ServiceImpl {
+  String get serviceId => "analyzer";
+  Analyzer
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    switch (event.actionId) {
+      case "start":
+
+        break;
+      case "analyzeString":
+        analyzer.createSdk().then((int sdkId) {
+          return Future.forEach(dartFiles, (file) => _processFile(sdkId, file))
+        }).then((_) => completer.complete());
+
+
+        break;
+  }
+}
+
 /**
  * Special service for calling back to chrome.
  */
@@ -268,7 +287,7 @@ abstract class ServiceImpl {
 
   ServiceImpl(this._isolate);
 
-  String get serviceId => null;
+  String get serviceId;
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
 }
