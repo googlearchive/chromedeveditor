@@ -12,8 +12,6 @@ import 'dart:web_audio';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
-import '../services_impl.dart';
-
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
@@ -65,16 +63,12 @@ bool isDart2js() => identical(1, 1.0);
  * the Chrome app's directory.
  */
 Future<List<int>> getAppContentsBinary(String path) {
-  Future<String> urlFuture = new Future.value(
-      (ServicesIsolate.instance != null) ?
-      ChromeService.getAppContentsBinary(path) : chrome.runtime.getURL(path));
+  String url = chrome.runtime.getURL(path);
 
-  return urlFuture.then((String url) {
-        return html.HttpRequest.request(url, responseType: 'arraybuffer');
-      }).then((request) {
-        typed_data.ByteBuffer buffer = request.response;
-        return new typed_data.Uint8List.view(buffer);
-      });
+  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
+    typed_data.ByteBuffer buffer = request.response;
+    return new typed_data.Uint8List.view(buffer);
+  });
 }
 
 /**
@@ -251,7 +245,6 @@ String _platform() {
   return (str != null) ? str.toLowerCase() : '';
 }
 
-
 /**
  * Defines a received action event.
  */
@@ -297,7 +290,7 @@ class ServiceActionEvent {
     return response;
   }
 
-  makeRespondable(String callId) {
+  void makeRespondable(String callId) {
     if (this._callId == null) {
       this._callId = callId;
     } else {
@@ -305,4 +298,3 @@ class ServiceActionEvent {
     }
   }
 }
-

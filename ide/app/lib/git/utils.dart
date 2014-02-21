@@ -6,8 +6,6 @@ library git.utils;
 
 import 'dart:async';
 import 'dart:core';
-import 'dart:html';
-import 'dart:js';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -40,64 +38,30 @@ String shaBytesToString(List shaBytes) {
 }
 
 Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
-  return entry.readBytes().then(
-      (chrome.ArrayBuffer content) => _getShaForData(content.getBytes(), type));
+  return entry.readBytes().then((chrome.ArrayBuffer content) {
+    return _getShaStringForData(content.getBytes(), type);
+  });
 }
 
-Future<String> getShaForString(String data, String type) {
-  return _getShaForData(data.codeUnits, type);
+String getShaForString(String data, String type) {
+  return _getShaStringForData(data.codeUnits, type);
 }
 
-Future<String> _getShaForData(List<int> content, String type) {
-  Completer completer = new Completer();
-  List<dynamic> blobParts = [];
+String _getShaStringForData(List<int> content, String type) {
+  List<int> data = [];
 
-  Uint8List data = new Uint8List.fromList(content);
+  data.addAll('${type} ${content.length}'.codeUnits);
+  data.add(0);
+  data.addAll(content);
 
-  String header = '${type} ${content.length}';
-
-  blobParts.add(header);
-  blobParts.add(new Uint8List.fromList([0]));
-  blobParts.add(data);
-
-  var reader = new JsObject(context['FileReader']);
-
-  reader['onloadend'] = (var event) {
-    var result = reader['result'];
-    crypto.SHA1 sha1 = new crypto.SHA1();
-    Uint8List resultList;
-
-    if (result is JsObject) {
-      var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
-      resultList = new Uint8List.fromList(arrBuf.getBytes());
-    } else if (result is ByteBuffer) {
-      resultList = new Uint8List.view(result);
-    } else if (result is Uint8List) {
-      resultList = result;
-    } else {
-      // TODO: Check expected types here.
-      throw "Unexpected result type.";
-    }
-
-    Uint8List data = new Uint8List.fromList(resultList);
-    sha1.add(data);
-    Uint8List digest = new Uint8List.fromList(sha1.close());
-    completer.complete(shaBytesToString(digest));
-  };
-
-  reader['onerror'] = (var domError) {
-    completer.completeError(domError);
-  };
-
-  reader.callMethod('readAsArrayBuffer', [new Blob(blobParts)]);
-
-  return completer.future;
+  crypto.SHA1 sha1 = new crypto.SHA1();
+  sha1.add(data);
+  return shaBytesToString(sha1.close());
 }
 
 /**
  * Return sha for the given data.
  */
-
 dynamic getSha(dynamic data, [bool asBytes]) {
   crypto.SHA1 sha1 = new crypto.SHA1();
   sha1.add(data);

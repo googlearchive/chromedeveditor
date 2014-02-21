@@ -13,7 +13,7 @@ import 'dart:html' as html;
 import 'package:compiler_unsupported/compiler.dart' as compiler;
 export 'package:compiler_unsupported/compiler.dart' show Diagnostic;
 
-import 'sdk.dart';
+import '../dart/sdk.dart';
 
 // TODO: we should be tracking compilation times and sizes
 
@@ -38,6 +38,10 @@ class Compiler {
    */
   static Future<Compiler> createCompiler() {
     return DartSdk.createSdk().then((DartSdk sdk) => new Compiler._(sdk));
+  }
+
+  static Compiler createCompilerFrom(DartSdk sdk) {
+    return new Compiler._(sdk);
   }
 
   Compiler._(this._sdk);
@@ -123,7 +127,8 @@ class CompilerResult {
 
   CompilerResult.fromMap(Map data) {
     _compileTime = new Duration(milliseconds: data['compileMilliseconds']);
-    _output = new StringBuffer(data['output']);
+    String outputString = data['output'];
+    _output = (outputString == null) ? null : new StringBuffer(outputString);
 
     for (Map problem in data['problems']) {
       problems.add(new CompilerProblem.fromMap(problem));
@@ -181,7 +186,7 @@ class CompilerProblem {
     end = data['end'],
     message = data['message'],
     uri = new Uri.file(data['uri']),
-    kind = new compiler.Diagnostic(data['ordinal'], data['name']);
+    kind = _diagnosticFrom(data['kind']);
 
   Map toMap() {
     return {
@@ -190,13 +195,18 @@ class CompilerProblem {
       "message": message,
       // TODO(ericarnold): Depending on how it's being used,
       //   consider storing uri as a String.
-      "uri": (uri == null) ?
-          "" : uri.path,
-      "kind": {
-        "name": kind.name,
-        "ordinal": kind.ordinal,
-      }
+      "uri": (uri == null) ? "" : uri.path,
+      "kind": kind.name
     };
+  }
+
+  static compiler.Diagnostic _diagnosticFrom(String name) {
+    if (name == 'warning') return compiler.Diagnostic.WARNING;
+    if (name == 'hint') return compiler.Diagnostic.HINT;
+    if (name == 'into') return compiler.Diagnostic.INFO;
+    if (name == 'verbose info') return compiler.Diagnostic.VERBOSE_INFO;
+    if (name == 'crash') return compiler.Diagnostic.CRASH;
+    return compiler.Diagnostic.ERROR;
   }
 }
 

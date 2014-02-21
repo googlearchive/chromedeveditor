@@ -15,11 +15,12 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'apps/app_utils.dart';
-import 'compiler.dart';
+import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
 import 'utils.dart';
 import 'server.dart';
+import 'services/services.dart';
 import 'workspace.dart';
 
 const int SERVER_PORT = 4040;
@@ -34,11 +35,15 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
 class LaunchManager {
   List<LaunchDelegate> _delegates = [];
   Notifier _notifier;
+  Services _services;
+  CompilerService _compiler;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace, [this._notifier]) {
+  LaunchManager(this._workspace, this._services, [this._notifier]) {
+    _compiler = _services.getService("compiler");
+
     if (_notifier == null) {
       _notifier = new NullNotifier();
     }
@@ -345,12 +350,12 @@ class ProjectRedirectServlet extends PicoServlet {
  */
 class Dart2JsServlet extends PicoServlet {
   LaunchManager _launchManager;
-  Compiler _compiler;
+  CompilerService _compiler;
 
   Dart2JsServlet(this._launchManager){
-    Compiler.createCompiler().then((c) {
-      _compiler = c;
-    });
+    _compiler = _launchManager._compiler;
+    // TODO(ericarnold): Compiler should auto-start
+    _compiler.start();
   }
 
   bool canServe(HttpRequest request) {

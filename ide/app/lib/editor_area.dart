@@ -105,6 +105,8 @@ class EditorArea extends TabView {
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete && delta.resource.isFile) {
           closeFile(delta.resource);
+        } else if (delta.isDelete && delta.resource is Container) {
+          _handleContainerDeleted(delta.resource);
         } else if (delta.isChange && delta.resource.isFile) {
           _updateFile(delta.resource);
         }
@@ -209,6 +211,16 @@ class EditorArea extends TabView {
       EditorTab tab = _tabOfFile[file];
       tab.label = file.name;
       _nameController.add(selectedTab.label);
+    }
+  }
+
+  void _handleContainerDeleted(Container container) {
+    List<File> files = _tabOfFile.keys.toList();
+
+    for (File file in files) {
+      if (file.containedBy(container)) {
+        closeFile(file);
+      }
     }
   }
 

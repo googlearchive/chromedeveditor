@@ -399,6 +399,8 @@ class Workspace implements Container {
     });
   }
 
+  bool containedBy(Container container) => false;
+
   dynamic getMetadata(String key, [dynamic defaultValue]) => defaultValue;
 
   void setMetadata(String key, dynamic data) { }
@@ -527,6 +529,17 @@ abstract class Resource {
       _fireResourceEvent(new ChangeDelta(this, EventType.ADD));
       workspace.resumeResourceEvents();
     });
+  }
+
+  /**
+   * Returns whether the given container is a parent of the current resource.
+   */
+  bool containedBy(Container container) {
+    if (this == container) return true;
+    if (container == null || container is Workspace) return false;
+    if (_parent == container) return true;
+    if (_parent == null) return false;
+    return _parent.containedBy(container);
   }
 
   /**

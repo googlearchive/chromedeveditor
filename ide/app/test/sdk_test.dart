@@ -6,7 +6,7 @@ library sdk_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/sdk.dart';
+import '../lib/dart/sdk.dart';
 
 defineTests() {
   group('sdk', () {

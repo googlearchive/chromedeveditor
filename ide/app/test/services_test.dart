@@ -10,24 +10,20 @@ import 'dart:isolate';
 import 'package:unittest/unittest.dart';
 
 import '../lib/services/services.dart';
-import '../services_impl.dart' as impl;
-
-Services services;
-impl.ServicesIsolate servicesIsolate;
 
 defineTests() {
-  group('services', () {
-    setUp(() {
-      services = new Services();
-    });
+  Services services = new Services();
 
+  group('services', () {
     test('ping', () {
       return services.ping().then((result) {
         expect(result, equals("pong"));
       });
     });
+  });
 
-    test('example service order', () {
+  group('services example', () {
+    test('service order', () {
       ExampleService exampleService = services.getService("example");
       Completer completer = new Completer();
       List<String> orderedResponses = [];
@@ -54,7 +50,7 @@ defineTests() {
           // Test 3 should end
     });
 
-    test('compiler basic test', () {
+    test('basic test', () {
       CompilerService compilerService = services.getService("compiler");
 
       return compilerService.start().then((_) {
@@ -64,21 +60,46 @@ defineTests() {
     });
   });
 
+  group('services compiler', () {
+    test('hello world', () {
+      final String str = "void main() { print('hello world'); }";
 
-  group('services_impl', () {
-    test('setup', () {
-      MockSendPort mockSendPort = new MockSendPort();
-      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
-      expect(mockSendPort.wasSent, isNotNull);
+      CompilerService compiler = services.getService("compiler");
+
+      return compiler.compileString(str).then((CompilerResult result) {
+        expect(result.getSuccess(), true);
+        expect(result.output.length, greaterThan(100));
+      });
     });
-    //test('compiler start', () {
-    //  MockSendPort mockSendPort = new MockSendPort();
-    //  servicesIsolate = new impl.ServicesIsolate(mockSendPort);
-    //  impl.CompilerServiceImpl compilerImpl =
-    //      servicesIsolate.getServiceImpl("compiler");
-    //  });
-    //});
+
+    test('syntax error', () {
+      // Missing semi-colon.
+      final String str = "void main() { print('hello world') }";
+
+      CompilerService compiler = services.getService("compiler");
+
+      return compiler.compileString(str).then((CompilerResult result) {
+        expect(result.getSuccess(), false);
+        expect(result.problems.length, 1);
+        expect(result.output, null);
+      });
+    });
   });
+
+//  group('services_impl', () {
+//    test('setup', () {
+//      MockSendPort mockSendPort = new MockSendPort();
+//      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
+//      expect(mockSendPort.wasSent, isNotNull);
+//    });
+//    //test('compiler start', () {
+//    //  MockSendPort mockSendPort = new MockSendPort();
+//    //  servicesIsolate = new impl.ServicesIsolate(mockSendPort);
+//    //  impl.CompilerServiceImpl compilerImpl =
+//    //      servicesIsolate.getServiceImpl("compiler");
+//    //  });
+//    //});
+//  });
 }
 
 class MockSendPort extends SendPort {

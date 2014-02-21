@@ -2,20 +2,19 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.services_impl;
-
-import 'dart:async';
-import 'dart:html' as html;
-import 'dart:isolate';
-import 'dart:typed_data' as typed_data;
-
-import 'lib/compiler.dart';
-import 'lib/utils.dart';
-
 /**
  * This is a separate application spawned by Spark (via Services) as an isolate
  * for use in running long-running / heaving tasks.
  */
+library spark.services_impl;
+
+import 'dart:async';
+import 'dart:isolate';
+
+import 'lib/services/compiler.dart';
+import 'lib/dart/sdk.dart';
+import 'lib/utils.dart';
+
 void main(List<String> args, SendPort sendPort) {
   // For use with top level print() helper function.
   _printSendPort = sendPort;
@@ -31,15 +30,13 @@ class ServicesIsolate {
   final SendPort _sendPort;
 
   // Fired when host originates a message
-  Stream<ServiceActionEvent> onHostMessage ;
+  Stream<ServiceActionEvent> onHostMessage;
 
   // Fired when host responds to message
   Stream<ServiceActionEvent> onResponseMessage;
 
   ChromeService chromeService;
   Map<String, ServiceImpl> _serviceImplsById = {};
-  static ServicesIsolate _instance;
-  static ServicesIsolate get instance => _instance;
 
   Future<ServiceActionEvent> _onResponseByCallId(String callId) {
     Completer<ServiceActionEvent> completer =
@@ -56,9 +53,7 @@ class ServicesIsolate {
     return completer.future;
   }
 
-
   ServicesIsolate(this._sendPort) {
-    _instance = this;
     chromeService = new ChromeService(this);
 
     StreamController<ServiceActionEvent> hostMessageController =
@@ -127,7 +122,6 @@ class ServicesIsolate {
     return completer.future;
   }
 
-
   // Sends a response message.
   void _sendResponse(ServiceActionEvent event, [Map data,
       bool expectResponse = false]) {
@@ -179,7 +173,9 @@ class ExampleServiceImpl extends ServiceImpl {
 class CompilerServiceImpl extends ServiceImpl {
   String get serviceId => "compiler";
 
-  Compiler _compiler;
+  DartSdk sdk;
+  Compiler compiler;
+
   Completer<ServiceActionEvent> _readyCompleter =
       new Completer<ServiceActionEvent>();
 
@@ -194,18 +190,10 @@ class CompilerServiceImpl extends ServiceImpl {
         return _start().then((_) => new Future.value(event.createReponse(null)));
         break;
       case "dispose":
-        // TODO(ericarnold): Displose should be managed by isolate
-        try {
-          _compiler.dispose();
-        } catch(error) {
-          // TODO(ericarnold): Return error which service will throw
-          print("Chrome service error: $error ${error.stackTrace}");
-        }
-
         return new Future.value(event.createReponse(null));
         break;
       case "compileString":
-        return _compiler.compileString(event.data['string'])
+        return compiler.compileString(event.data['string'])
             .then((CompilerResult result)  {
               return new Future.value(event.createReponse(result.toMap()));
             });
@@ -216,14 +204,16 @@ class CompilerServiceImpl extends ServiceImpl {
   }
 
   Future _start() {
-    return Compiler.createCompiler().then((Compiler newCompler) {
-      _compiler = newCompler;
+    _isolate.chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
+      sdk = DartSdk.createSdkFromContents(sdkContents);
+      compiler = Compiler.createCompilerFrom(sdk);
       _readyCompleter.complete();
-      return null;
     }).catchError((error){
       // TODO(ericarnold): Return error which service will throw
       print("Chrome service error: $error ${error.stackTrace}");
     });
+
+    return _readyCompleter.future;
   }
 }
 
@@ -256,16 +246,10 @@ class ChromeService {
    * Return the contents of the file at the given path. The path is relative to
    * the Chrome app's directory.
    */
-  static Future<List<int>> getAppContentsBinary(String path) {
-    return ServicesIsolate.instance.chromeService.getURL(path)
-        .then((String url) => html.HttpRequest.request(
-        url, responseType: 'arraybuffer'))
-    .then((request) {
-      typed_data.ByteBuffer buffer = request.response;
-      return new typed_data.Uint8List.view(buffer);
-    });
+  Future<List<int>> getAppContents(String path) {
+    return _isolate._sendAction(_createNewEvent("getAppContents", {"path": path}))
+        .then((ServiceActionEvent event) => event.data['contents']);
   }
-
 
   ChromeService(this._isolate);
 
@@ -275,10 +259,6 @@ class ChromeService {
 
   Future<ServiceActionEvent> delay(int milliseconds) =>
       _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
-
-  Future<String> getURL(String path) =>
-      _isolate._sendAction(_createNewEvent("getURL", {"path": path}))
-      .then((ServiceActionEvent event) => event.data['url']);
 }
 
 // Provides an abstract class and helper code for service implementations.
@@ -294,6 +274,7 @@ abstract class ServiceImpl {
 
 // Prints are crashing isolate, so this will take over for the time being.
 SendPort _printSendPort;
+
 void print(var message) {
   // Host will know it's a print because it's a simple string instead of a map
   if (_printSendPort != null) {
