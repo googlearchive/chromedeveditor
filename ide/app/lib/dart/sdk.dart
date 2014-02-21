@@ -17,7 +17,7 @@ library spark.sdk;
 
 import 'dart:async';
 import 'dart:convert';
-import 'utils.dart';
+import '../utils.dart';
 
 /**
  * This class represents the Dart SDK as build into Spark. It allows you to

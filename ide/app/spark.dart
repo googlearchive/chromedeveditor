@@ -274,7 +274,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initLaunchManager() {
-    _launchManager = new LaunchManager(_workspace, this);
+    _launchManager = new LaunchManager(_workspace, services, this);
   }
 
   /**

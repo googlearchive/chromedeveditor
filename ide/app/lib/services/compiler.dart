@@ -13,7 +13,7 @@ import 'dart:html' as html;
 import 'package:compiler_unsupported/compiler.dart' as compiler;
 export 'package:compiler_unsupported/compiler.dart' show Diagnostic;
 
-import 'sdk.dart';
+import '../dart/sdk.dart';
 
 // TODO: we should be tracking compilation times and sizes
 
@@ -127,7 +127,8 @@ class CompilerResult {
 
   CompilerResult.fromMap(Map data) {
     _compileTime = new Duration(milliseconds: data['compileMilliseconds']);
-    _output = data['output'];
+    String outputString = data['output'];
+    _output = (outputString == null) ? null : new StringBuffer(outputString);
 
     for (Map problem in data['problems']) {
       problems.add(new CompilerProblem.fromMap(problem));
