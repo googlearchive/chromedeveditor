@@ -30,6 +30,10 @@ body {
   transition: opacity 300ms;  
 }
 
+#topUi:unresolved {
+  opacity: 0;
+}
+
 #splashScreen {
   background: #F7F7F7;
   background-image: url("images/spark_512.png");

@@ -12,7 +12,6 @@ import 'dart:collection';
 import 'dart:convert' show JSON;
 import 'dart:math' as math;
 
-import 'package:archive/archive.dart' as archive;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
@@ -411,14 +410,6 @@ class Workspace implements Container {
     if (fireEvent) {
       _fireResourceEvent(new ChangeDelta(resource, EventType.DELETE));
     }
-  }
-
-  Container applicationContainer() {
-    return null;
-  }
-
-  Future<List<int>> getZippedApplication() {
-    return new Future.value();
   }
 }
 
