@@ -21,20 +21,6 @@ export 'package:chrome/chrome_app.dart' show SocketInfo;
 const LOCAL_HOST = '127.0.0.1';
 
 /**
- * A map from client socketIds to StreamControllers. We're notified about
- * incoming data based on the socketId. We want to use that information to
- * notify to correct StreamController.
- */
-Map<int, StreamController> _clientMap = {};
-
-/**
- * A map from server socketIds to StreamControllers. We're notified about
- * incoming `accept` connections based on the socketId. We want to use that
- * information to notify to correct StreamController.
- */
-Map<int, StreamController> _serverMap = {};
-
-/**
  * An [Exception] implementation for socket errors.
  */
 class SocketException implements Exception {
@@ -57,7 +43,12 @@ class SocketException implements Exception {
  *     dispose();
  */
 class TcpClient {
-  static bool _inited = false;
+  /**
+   * A map from client socketIds to StreamControllers. We're notified about
+   * incoming data based on the socketId. We want to use that information to
+   * notify the correct StreamController.
+   */
+  static Map<int, StreamController> _clientMap;
 
   Future _lastWrite = new Future.value();
   final int _socketId;
@@ -82,25 +73,29 @@ class TcpClient {
     });
   }
 
+  static void _initListeners() {
+    _clientMap = {};
+
+    chrome.sockets.tcp.onReceive.listen((chrome.ReceiveInfo info) {
+      StreamController controller = _clientMap[info.socketId];
+      if (controller != null) {
+        controller.add(info.data.getBytes());
+      }
+    });
+
+    chrome.sockets.tcp.onReceiveError.listen((chrome.ReceiveErrorInfo info) {
+      StreamController controller = _clientMap[info.socketId];
+      if (controller != null) {
+        controller.addError(
+            new SocketException("error reading stream: ${info.resultCode}"));
+      }
+    });
+  }
+
   TcpClient._fromSocketId(this._socketId, [bool unpause = false]) {
+    if (_clientMap == null) _initListeners();
+
     _clientMap[_socketId] = new StreamController();
-
-    if (!_inited) {
-      chrome.sockets.tcp.onReceive.listen((chrome.ReceiveInfo info) {
-        StreamController controller = _clientMap[info.socketId];
-        if (controller != null) {
-          controller.add(info.data.getBytes());
-        }
-      });
-
-      chrome.sockets.tcp.onReceiveError.listen((chrome.ReceiveErrorInfo info) {
-        StreamController controller = _clientMap[info.socketId];
-        if (controller != null) {
-          controller.addError(
-              new SocketException("error reading stream: ${info.resultCode}"));
-        }
-      });
-    }
 
     if (unpause) {
       chrome.sockets.tcp.setPaused(_socketId, false);
@@ -147,7 +142,12 @@ class TcpClient {
  *     dispose();
  */
 class TcpServer {
-  static bool _inited = false;
+  /**
+   * A map from server socketIds to StreamControllers. We're notified about
+   * incoming `accept` connections based on the socketId. We want to use that
+   * information to notify the correct StreamController.
+   */
+  static Map<int, StreamController> _serverMap;
 
   final int _socketId;
   final int port;
@@ -168,19 +168,21 @@ class TcpServer {
     });
   }
 
+  static void _initListener() {
+    _serverMap = {};
+
+    chrome.sockets.tcpServer.onAccept.listen((chrome.AcceptInfo info) {
+      StreamController controller = _serverMap[info.socketId];
+      if (controller != null) {
+        controller.add(new TcpClient._fromSocketId(info.clientSocketId, true));
+      }
+    });
+  }
+
   TcpServer._(this._socketId, this.port) {
+    if (_serverMap == null) _initListener();
+
     _serverMap[_socketId] = new StreamController();
-
-    if (!_inited) {
-      _inited = true;
-
-      chrome.sockets.tcpServer.onAccept.listen((chrome.AcceptInfo info) {
-        StreamController controller = _serverMap[info.socketId];
-        if (controller != null) {
-          controller.add(new TcpClient._fromSocketId(info.clientSocketId, true));
-        }
-      });
-    }
   }
 
   Stream<TcpClient> get onAccept => _serverMap[_socketId].stream;
