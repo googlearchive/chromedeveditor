@@ -7,6 +7,8 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:chrome/chrome_app.dart' as chrome;
+
 import 'compiler.dart';
 import '../utils.dart';
 
@@ -151,6 +153,25 @@ class ChromeServiceImpl extends Service {
         getAppContentsBinary(path).then(
             (List<int> contents) => _sendResponse(event, {"contents": contents.toList()}));
         break;
+      case "getFileContents":
+//        String path = event.data['path'];
+//        String rootId = event.data['rootId'];
+//
+//
+//        chrome.fileSystem.chooseEntry(
+//         {
+//         type: ' openWritableFile', accepts:[{
+//         extensions: ['html']
+//         }]
+//         },
+//         function(fileEntry) {
+////... You can call both fileEntry.file() to read or
+////... fileEntry.createWriter() to write
+//         }
+//
+//        (new chrome.DirectoryEntry).getDirectory(path)
+//        chrome.ChromeFileEntry fileEntry = new chrome.ChromeFileEntry
+//        break;
       default:
         throw "Unknown action '${event.actionId}' sent to Chrome service.";
     }
