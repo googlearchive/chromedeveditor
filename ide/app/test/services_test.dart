@@ -9,6 +9,7 @@ import 'dart:isolate';
 
 import 'package:unittest/unittest.dart';
 
+import 'files_mock.dart';
 import '../lib/services/services.dart';
 
 defineTests() {
@@ -56,6 +57,19 @@ defineTests() {
       return compilerService.start().then((_) {
         // TODO(ericarnold): What's a better way to do this?
         expect(true, equals(true));
+      });
+    });
+  });
+
+  group('chrome service', () {
+    test('file read', () {
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('foo.txt', contents: 'bar baz');
+      ChromeFileEntry entry = fs.getEntry('foo.txt');
+      expect(entry, isNotNull);
+      expect(entry.name, 'foo.txt');
+      return entry.readText().then((text) {
+        expect(text, 'bar baz');
       });
     });
   });
