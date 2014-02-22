@@ -151,27 +151,36 @@ class ChromeServiceImpl extends Service {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
-    switch(event.actionId) {
-      case "delay":
-        new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
-            (_) => _sendResponse(event));
-        break;
-      case "getAppContents":
-        String path = event.data['path'];
-        getAppContentsBinary(path)
-            .then((List<int> contents) {
-              return _sendResponse(event, {"contents": contents.toList()});
-            });
-        break;
-      case "getFileContents":
-        String uuid = event.data['uuid'];
-        ws.File restoredFile = _services._workspace.restoreResource(uuid);
-        restoredFile.getContents().then((String contents) =>
-            _sendResponse(event, {"contents": contents}));
-        break;
-      default:
-        throw "Unknown action '${event.actionId}' sent to Chrome service.";
-    }
+    new Future.value(null).then((_){
+      switch(event.actionId) {
+        case "delay":
+          new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
+              (_) => _sendResponse(event));
+          break;
+        case "getAppContents":
+          String path = event.data['path'];
+          getAppContentsBinary(path)
+              .then((List<int> contents) {
+                return _sendResponse(event, {"contents": contents.toList()});
+              });
+          break;
+        case "getFileContents":
+          String uuid = event.data['uuid'];
+          ws.File restoredFile = _services._workspace.restoreResource(uuid);
+          restoredFile.getContents()
+              .then((String contents) =>
+                  _sendResponse(event, {"contents": contents}))
+              .catchError((Error error) => _sendErrorResponse(event, error));
+          break;
+        default:
+          throw "Unknown action '${event.actionId}' sent to Chrome service.";
+      }
+    });
+  }
+
+  void _sendErrorResponse(ServiceActionEvent event, Error error) {
+    _sendResponse(event, {"error": error.toString(),
+        "stacktrace": error.stackTrace});
   }
 }
 
