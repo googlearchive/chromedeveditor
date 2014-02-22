@@ -7,7 +7,7 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'package:chrome/chrome_app.dart' as chrome;
+import '../workspace.dart' as ws;
 
 import 'compiler.dart';
 import '../utils.dart';
@@ -21,8 +21,9 @@ class Services {
   _IsolateHandler _isolateHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
+  ws.Workspace _workspace;
 
-  Services() {
+  Services(this._workspace) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
     registerService(new ExampleService(this, _isolateHandler));
@@ -126,6 +127,13 @@ class ExampleService extends Service {
       return event.data['response'];
     });
   }
+
+  Future<String> readText(ws.File file) {
+    return _sendAction("readText", {"fileUuid": file.uuid})
+        .then((ServiceActionEvent event) {
+          return event.data['contents'];
+        });
+  }
 }
 
 /**
@@ -150,28 +158,17 @@ class ChromeServiceImpl extends Service {
         break;
       case "getAppContents":
         String path = event.data['path'];
-        getAppContentsBinary(path).then(
-            (List<int> contents) => _sendResponse(event, {"contents": contents.toList()}));
+        getAppContentsBinary(path)
+            .then((List<int> contents) {
+              return _sendResponse(event, {"contents": contents.toList()});
+            });
         break;
       case "getFileContents":
-//        String path = event.data['path'];
-//        String rootId = event.data['rootId'];
-//
-//
-//        chrome.fileSystem.chooseEntry(
-//         {
-//         type: ' openWritableFile', accepts:[{
-//         extensions: ['html']
-//         }]
-//         },
-//         function(fileEntry) {
-////... You can call both fileEntry.file() to read or
-////... fileEntry.createWriter() to write
-//         }
-//
-//        (new chrome.DirectoryEntry).getDirectory(path)
-//        chrome.ChromeFileEntry fileEntry = new chrome.ChromeFileEntry
-//        break;
+        String uuid = event.data['uuid'];
+        ws.File restoredFile = _services._workspace.restoreResource(uuid);
+        restoredFile.getContents().then((String contents) =>
+            _sendResponse(event, {"contents": contents}));
+        break;
       default:
         throw "Unknown action '${event.actionId}' sent to Chrome service.";
     }

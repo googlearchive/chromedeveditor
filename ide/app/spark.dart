@@ -178,7 +178,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   initServices() {
-    services = new Services();
+    services = new Services(this.workspace);
   }
 
   //

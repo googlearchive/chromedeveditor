@@ -11,9 +11,12 @@ import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/services/services.dart';
+import '../lib/workspace.dart' as ws;
 
 defineTests() {
-  Services services = new Services();
+  ws.Workspace workspace = new ws.Workspace();
+
+  Services services = new Services(workspace);
 
   group('services', () {
     test('ping', () {
@@ -62,15 +65,15 @@ defineTests() {
   });
 
   group('chrome service', () {
-    test('file read', () {
+    test('resource read', () {
       MockFileSystem fs = new MockFileSystem();
-      fs.createFile('foo.txt', contents: 'bar baz');
-      ChromeFileEntry entry = fs.getEntry('foo.txt');
-      expect(entry, isNotNull);
-      expect(entry.name, 'foo.txt');
-      return entry.readText().then((text) {
-        expect(text, 'bar baz');
-      });
+      FileEntry fileEntry = fs.createFile('test.txt', contents: "some words");
+      String fileUuid;
+      return workspace.link(createWsRoot(fileEntry))
+          .then((ws.File fileResource) {
+            ExampleService exampleService = services.getService("example");
+            return exampleService.readText(fileResource);
+          }).then((String text) => expect(text, equals("some words")));
     });
   });
 

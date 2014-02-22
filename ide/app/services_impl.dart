@@ -158,6 +158,12 @@ class ExampleServiceImpl extends ServiceImpl {
         return new Future.value(event.createReponse(
             {"response": "short${event.data['name']}"}));
         break;
+      case "readText":
+        String fileUuid = event.data['fileUuid'];
+        return _isolate.chromeService.getFileContents(fileUuid)
+            .then((String contents) =>
+                event.createReponse({"contents": contents}));
+        break;
       case "longTest":
         return _isolate.chromeService.delay(1000).then((_){
           return new Future.value(event.createReponse(
@@ -223,6 +229,15 @@ class CompilerServiceImpl extends ServiceImpl {
 class ChromeService {
   ServicesIsolate _isolate;
 
+  ChromeService(this._isolate);
+
+  ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
+    return new ServiceActionEvent("chrome", actionId, data);
+  }
+
+  Future<ServiceActionEvent> delay(int milliseconds) =>
+      _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
+
   /**
    * Return the contents of the file at the given path. The path is relative to
    * the Chrome app's directory.
@@ -232,14 +247,10 @@ class ChromeService {
         .then((ServiceActionEvent event) => event.data['contents']);
   }
 
-  ChromeService(this._isolate);
+  Future<String> getFileContents(String uuid) =>
+    _isolate._sendAction(_createNewEvent("getFileContents", {"uuid": uuid}))
+        .then((ServiceActionEvent event) => event.data["contents"]);
 
-  ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
-    return new ServiceActionEvent("chrome", actionId, data);
-  }
-
-  Future<ServiceActionEvent> delay(int milliseconds) =>
-      _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
 }
 
 // Provides an abstract class and helper code for service implementations.
