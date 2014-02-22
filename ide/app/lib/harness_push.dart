@@ -84,7 +84,7 @@ class HarnessPush {
       TcpClient client;
       return TcpClient.createClient(target, 2424).then((TcpClient _client) {
         client = _client;
-        client.sink.add(httpRequest);
+        client.write(httpRequest);
         return client.stream.timeout(new Duration(minutes: 1)).first;
       }).then((List<int> responseBytes) {
         String response = new String.fromCharCodes(responseBytes);

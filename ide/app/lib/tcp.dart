@@ -20,9 +20,19 @@ export 'package:chrome/chrome_app.dart' show SocketInfo;
 
 const LOCAL_HOST = '127.0.0.1';
 
-// TODO(devoncarew): these classes are fairly generic; explore contributing them
-// to package:chrome, or to a new utility library for chrome functionalty
-// built on chrome? chrome_util?
+/**
+ * A map from client socketIds to StreamControllers. We're notified about
+ * incoming data based on the socketId. We want to use that information to
+ * notify to correct StreamController.
+ */
+Map<int, StreamController> _clientMap = {};
+
+/**
+ * A map from server socketIds to StreamControllers. We're notified about
+ * incoming `accept` connections based on the socketId. We want to use that
+ * information to notify to correct StreamController.
+ */
+Map<int, StreamController> _serverMap = {};
 
 /**
  * An [Exception] implementation for socket errors.
@@ -47,20 +57,19 @@ class SocketException implements Exception {
  *     dispose();
  */
 class TcpClient {
-  final int _socketId;
+  static bool _inited = false;
 
-  StreamController<List<int>> _controller;
-  _SocketEventSink _sink;
-  bool _keepPolling = true;
+  Future _lastWrite = new Future.value();
+  final int _socketId;
 
   static Future<TcpClient> createClient(String host, int port,
       {bool throwOnError: true}) {
-    return chrome.socket.create(chrome.SocketType.TCP).then((chrome.CreateInfo createInfo) {
+    return chrome.sockets.tcp.create().then((chrome.CreateInfo createInfo) {
       int socketId = createInfo.socketId;
 
-      return chrome.socket.connect(socketId, host, port).then((int result) {
+      return chrome.sockets.tcp.connect(socketId, host, port).then((int result) {
         if (result < 0) {
-          chrome.socket.destroy(socketId);
+          chrome.sockets.tcp.close(socketId);
           if (throwOnError) {
             throw new SocketException('unable to connect to ${host} ${port}: ${result}');
           } else {
@@ -73,68 +82,58 @@ class TcpClient {
     });
   }
 
-  TcpClient._fromSocketId(this._socketId) {
-    _controller = new StreamController(
-        onListen: _pollIncoming, onCancel: _stopPolling);
-    _sink = new _SocketEventSink(this);
+  TcpClient._fromSocketId(this._socketId, [bool unpause = false]) {
+    _clientMap[_socketId] = new StreamController();
+
+    if (!_inited) {
+      chrome.sockets.tcp.onReceive.listen((chrome.ReceiveInfo info) {
+        StreamController controller = _clientMap[info.socketId];
+        if (controller != null) {
+          controller.add(info.data.getBytes());
+        }
+      });
+
+      chrome.sockets.tcp.onReceiveError.listen((chrome.ReceiveErrorInfo info) {
+        StreamController controller = _clientMap[info.socketId];
+        if (controller != null) {
+          controller.addError(
+              new SocketException("error reading stream: ${info.resultCode}"));
+        }
+      });
+    }
+
+    if (unpause) {
+      chrome.sockets.tcp.setPaused(_socketId, false);
+    }
   }
 
-  Future<chrome.SocketInfo> getInfo() => chrome.socket.getInfo(_socketId);
+  Future<chrome.SocketInfo> getInfo() => chrome.sockets.tcp.getInfo(_socketId);
 
   /**
    * The read [Stream] for incoming data.
    */
-  Stream<List<int>> get stream => _controller.stream;
+  Stream<List<int>> get stream => _clientMap[_socketId].stream;
 
-  /**
-   * The write [EventSink] for outgoing data.
-   */
-  EventSink<List<int>> get sink => _sink;
+  void write(List<int> event) {
+    _lastWrite = chrome.sockets.tcp.send(
+        _socketId, new chrome.ArrayBuffer.fromBytes(event));
+  }
 
   /**
    * This is a convenience method, fully equivalent to:
    *
-   *     sink.add(str.codeUnits);
+   *     write(str.codeUnits);
    *
    * Note that it does not do UTF8 encoding of the given string. It will
    * truncate any character that does not fit in 8 bits.
    */
-  void writeString(String str) => sink.add(str.codeUnits);
+  void writeString(String str) => write(str.codeUnits);
 
-  void dispose() {
-    _sink.lastWriteComplete.then((_) {
-      chrome.socket.disconnect(_socketId);
-      chrome.socket.destroy(_socketId);
+  Future dispose() {
+    return _lastWrite.then((_) {
+      _clientMap.remove(_socketId);
+      return chrome.sockets.tcp.close(_socketId);
     });
-  }
-
-  void _pollIncoming() {
-    _keepPolling = true;
-
-    chrome.socket.read(_socketId).then((chrome.SocketReadInfo info) {
-      if (info.resultCode < 0) {
-        // TODO: get the bsd socket codes
-        if (info.resultCode != -15) {
-          _controller.addError(
-              new SocketException("error reading stream: ${info.resultCode}"));
-        }
-        _controller.close();
-      } else {
-        _controller.add(info.data.getBytes());
-
-        if (_keepPolling) {
-          _pollIncoming();
-        }
-      }
-    }).catchError((error) {
-      _controller.addError(
-          new SocketException("error reading stream: ${error}"));
-      _controller.close();
-    });
-  }
-
-  void _stopPolling() {
-    _keepPolling = false;
   }
 }
 
@@ -148,21 +147,20 @@ class TcpClient {
  *     dispose();
  */
 class TcpServer {
+  static bool _inited = false;
+
   final int _socketId;
   final int port;
 
-  StreamController<TcpClient> _controller;
-
   static Future<TcpServer> createServerSocket([int port = 0]) {
-    return chrome.socket.create(chrome.SocketType.TCP).then((chrome.CreateInfo info) {
+    return chrome.sockets.tcpServer.create().then((chrome.CreateInfo info) {
       int socketId = info.socketId;
-
-      return chrome.socket.listen(socketId, LOCAL_HOST, port, 5).then((int result) {
+      return chrome.sockets.tcpServer.listen(socketId, LOCAL_HOST, port, 5).then((int result) {
         if (result < 0) {
-          chrome.socket.destroy(socketId);
+          chrome.sockets.tcpServer.close(socketId);
           throw new SocketException('unable to listen on port ${port}: ${result}');
         } else {
-          return chrome.socket.getInfo(socketId).then((chrome.SocketInfo info) {
+          return chrome.sockets.tcpServer.getInfo(socketId).then((chrome.SocketInfo info) {
             return new TcpServer._(socketId, info.localPort);
           });
         }
@@ -171,55 +169,27 @@ class TcpServer {
   }
 
   TcpServer._(this._socketId, this.port) {
-    _controller = new StreamController(onListen: _accept);
+    _serverMap[_socketId] = new StreamController();
+
+    if (!_inited) {
+      _inited = true;
+
+      chrome.sockets.tcpServer.onAccept.listen((chrome.AcceptInfo info) {
+        StreamController controller = _serverMap[info.socketId];
+        if (controller != null) {
+          controller.add(new TcpClient._fromSocketId(info.clientSocketId, true));
+        }
+      });
+    }
   }
 
-  Stream<TcpClient> get onAccept => _controller.stream;
+  Stream<TcpClient> get onAccept => _serverMap[_socketId].stream;
 
-  Future<chrome.SocketInfo> getInfo() => chrome.socket.getInfo(_socketId);
+  Future<chrome.SocketInfo> getInfo() =>
+      chrome.sockets.tcpServer.getInfo(_socketId);
 
-  void dispose() {
-    chrome.socket.destroy(_socketId);
-  }
-
-  void _accept() {
-    chrome.socket.accept(_socketId).then((chrome.AcceptInfo info) {
-      if (info.resultCode == 0) {
-        _controller.add(new TcpClient._fromSocketId(info.socketId));
-        _accept();
-      } else {
-        _controller.addError(info.resultCode);
-        _controller.close();
-      }
-    });
-  }
-}
-
-class _SocketEventSink implements EventSink<List<int>> {
-  TcpClient tcpClient;
-
-  Future _lastWrite = new Future.value(null);
-
-  _SocketEventSink(this.tcpClient);
-
-  void add(List<int> event) {
-
-    _lastWrite = chrome.socket.write(
-        tcpClient._socketId,
-        new chrome.ArrayBuffer.fromBytes(event));
-  }
-
-  void addError(errorEvent, [StackTrace stackTrace]) {
-    // TODO(devoncarew): implement this method
-
-  }
-
-  /**
-   * Returns a Future that completes when the most recent write finishes.
-   */
-  Future get lastWriteComplete => _lastWrite;
-
-  void close() {
-    tcpClient.dispose();
+  Future dispose() {
+    _serverMap.remove(_socketId);
+    return chrome.sockets.tcpServer.close(_socketId);
   }
 }

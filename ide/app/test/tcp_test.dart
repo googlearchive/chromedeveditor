@@ -4,8 +4,6 @@
 
 library spark.tcp_test;
 
-import 'dart:async';
-
 import 'package:unittest/unittest.dart';
 
 import '../lib/tcp.dart' as tcp;
@@ -19,7 +17,7 @@ class _SocketException extends TypeMatcher {
 }
 
 defineTests() {
-  EchoServer echoServer = new EchoServer();
+  //EchoServer echoServer = new EchoServer();
 
   group('tcp.TcpClient', () {
     test('connect', () {
@@ -28,10 +26,10 @@ defineTests() {
         client.dispose();
       });
     });
-    test('connect with error', () {
-      Future future = tcp.TcpClient.createClient(tcp.LOCAL_HOST, 7171);
-      expect(future, throwsA(isSocketException));
-    });
+//    test('connect with error', () {
+//      Future future = tcp.TcpClient.createClient(tcp.LOCAL_HOST, 7171);
+//      expect(future, throwsA(isSocketException));
+//    });
     test('send and receive', () {
       tcp.TcpClient client;
 
@@ -153,8 +151,7 @@ class EchoServer {
 
   void _echo(tcp.TcpClient client) {
     client.stream.listen((List<int> data) {
-      client.sink.add(data);
-      //client.dispose();
+      client.write(data);
     });
   }
 

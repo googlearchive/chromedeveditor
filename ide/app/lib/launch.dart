@@ -355,7 +355,7 @@ class Dart2JsServlet extends PicoServlet {
 
   bool canServe(HttpRequest request) {
     String path = request.uri.path;
-    return (path.endsWith('.dart.js') && _getResource(path) != null);
+    return path.endsWith('.dart.js') && _getResource(path) != null;
   }
 
   Resource _getResource(String path) {
