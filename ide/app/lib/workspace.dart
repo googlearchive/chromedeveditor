@@ -615,54 +615,6 @@ abstract class Resource {
       return [r];
     }
   }
-
-  Container applicationContainer() {
-    if (this is Container) {
-      Resource manifestResource = (this as Container).getChild('manifest.json');
-      if (manifestResource != null) {
-        return this;
-      }
-    }
-    if (this.parent != null) {
-      return this.parent.applicationContainer();
-    }
-    return null;
-  }
-
-  Future<List<int>> getZippedApplication() {
-    if (applicationContainer() == null) {
-      return new Future.value();
-    }
-
-    archive.Archive arch = new archive.Archive();
-    return _recursiveArchive(arch, this.applicationContainer()).then((e){
-      archive.ZipEncoder encoder = new archive.ZipEncoder();
-      List<int> zipFileData = encoder.encode(arch);
-      return zipFileData;
-    });
-  }
-
-  static Future _recursiveArchive(archive.Archive arch, Resource parent) {
-    List<Resource> children = (parent as Container).getChildren();
-    List<Future> futures = [];
-
-    for (Resource child in children) {
-      if (child is File) {
-        print('Loading file ${child.name}');
-        futures.add(child.getBytes().then((buf) {
-          print('Data retrieved for file ${child.name}.');
-          List<int> data = buf.getBytes();
-          arch.addFile(new archive.File(child.path, data.length,
-              data));
-        }));
-      } else if (child is Folder) {
-        print('Recursing into ${child.name} directory...');
-        futures.add(_recursiveArchive(arch, child));
-      }
-    }
-
-    return Future.wait(futures);
-  }
 }
 
 class Folder extends Container {

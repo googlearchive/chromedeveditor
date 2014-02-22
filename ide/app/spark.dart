@@ -40,6 +40,8 @@ import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
+import 'lib/workspace_utils.dart' as ws_utils;
+import 'lib/webstore_client.dart';
 import 'test/all.dart' as all_tests;
 
 import 'spark_model.dart';
@@ -481,10 +483,42 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       });
     }
 
-    _errorDialog.element.querySelector('#errorTitle').innerHtml = title;
+    _errorDialog.element.querySelector('#errorTitle').text = title;
     _errorDialog.element.querySelector('#errorMessage').text = message;
 
     _errorDialog.show();
+  }
+
+  SparkDialog _publishedAppDialog;
+
+  void showPublishedAppDialog(String appID) {
+    if (_publishedAppDialog == null) {
+      _publishedAppDialog = createDialog(getDialogElement('#webStorePublishedDialog'));
+      _publishedAppDialog.element.querySelector("[primary]").onClick.listen((_) {
+        querySelector("#modalBackdrop").style.display = "none";
+      });
+      _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((_) {
+        window.open('https://chrome.google.com/webstore/detail/${appID}', null);
+        querySelector("#modalBackdrop").style.display = "none";
+      });
+    }
+    _publishedAppDialog.show();
+  }
+
+  SparkDialog _uploadedAppDialog;
+
+  void showUploadedAppDialog(String appID) {
+    if (_uploadedAppDialog == null) {
+      _uploadedAppDialog = createDialog(getDialogElement('#webStoreUploadedDialog'));
+      _uploadedAppDialog.element.querySelector("[primary]").onClick.listen((_) {
+        querySelector("#modalBackdrop").style.display = "none";
+      });
+      _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((_) {
+        window.open('https://chrome.google.com/webstore/developer/edit/${appID}', null);
+        querySelector("#modalBackdrop").style.display = "none";
+      });
+    }
+    _uploadedAppDialog.show();
   }
 
   SparkDialog _okCancelDialog;
@@ -2125,17 +2159,25 @@ class WebStorePublishAction extends SparkActionWithDialog {
   bool _initialized = false;
   static final int NEWAPP = 1;
   static final int EXISTING = 2;
+  int _type = NEWAPP;
+  InputElement _newInput;
+  InputElement _existingInput;
+  InputElement _appIdInput;
 
   WebStorePublishAction(Spark spark, Element dialog)
       : super(spark, "webstore-publish", "Publish to WebStore", dialog);
 
   void _invoke([Object context]) {
     if (!_initialized) {
+      _newInput = getElement('input[value=new]');
+      _existingInput = getElement('input[value=existing]');
+      _appIdInput = getElement('#appID');
       _enableInput();
-      (getElement('input[value=new]') as InputElement).onChange.listen((e) {
+
+      _newInput.onChange.listen((e) {
         _enableInput();
       });
-      (getElement('input[value=existing]') as InputElement).onChange.listen((e) {
+      _existingInput.onChange.listen((e) {
         _enableInput();
       });
       _initialized = true;
@@ -2146,16 +2188,15 @@ class WebStorePublishAction extends SparkActionWithDialog {
 
   void _enableInput() {
     int type = NEWAPP;
-    if ((getElement('input[value=new]') as InputElement).checked) {
+    if (_newInput.checked) {
       type = NEWAPP;
     }
-    if ((getElement('input[value=existing]') as InputElement).checked) {
+    if (_existingInput.checked) {
       type = EXISTING;
     }
-    InputElement appIdInput = getElement('#appID');
-    appIdInput.disabled = (type != EXISTING);
+    _appIdInput.disabled = (type != EXISTING);
     if (type == EXISTING) {
-      appIdInput.focus();
+      _appIdInput.focus();
     }
   }
 
@@ -2163,48 +2204,67 @@ class WebStorePublishAction extends SparkActionWithDialog {
     List<ws.Resource> resources = spark._filesController.getSelection();
     if (resources.length > 0) {
       ws.Resource resource = resources.first;
-      resource.getZippedApplication().then((List<int> zippedData) {
-        print('zipped size: ${zippedData.length}');
-        chrome.identity.getAuthToken(new chrome.TokenDetails(interactive: true)).then((String token) {
-          print('got auth ${token}');
-          _uploadToWebStore(token, null, zippedData).then((String appid) {
-            print('uploaded ${token}');
-            _publishToWebStore(token, appid);
-          });
-        });
-      });
+
+      String appID = null;
+      if (_existingInput.checked) {
+        appID = _appIdInput.value;
+      }
+      _WebStorePublishJob job =
+          new _WebStorePublishJob(spark, getAppContainerFor(resource), appID);
+      spark.jobManager.schedule(job);
     }
   }
 
-  Future<String> _uploadToWebStore(String token, String appid, List<int> data) {
-    /*
-    curl \
-    -H "Authorization: Bearer $TOKEN"  \
-    -H "x-goog-api-version: 2" \
-    -X POST \
-    -T $FILE_NAME \
-    https://www.googleapis.com/upload/chromewebstore/v1.1/items
-*/
-    var request = new HttpRequest();
-    request.open('POST', 'https://www.googleapis.com/upload/chromewebstore/v1.1/items');
-    request.responseType = '*/*';
-    request.setRequestHeader('Authorization', 'Bearer ${token}');
-    request.setRequestHeader('x-goog-api-version', '2');
-    request.onLoad.listen((event) => print(
-        'Request complete ${event.target.reponseText}'));
-    request.onError.listen((event) {
-      print('got error');
+  bool appliesTo(context) {
+    List<ws.Resource> resources = spark._filesController.getSelection();
+    if (resources.length > 0) {
+      ws.Resource resource = resources.first;
+      ws.Container container = getAppContainerFor(resource);
+      return container != null;
+    }
+    return false;
+  }
+}
+
+class _WebStorePublishJob extends Job {
+  ws.Container _container;
+  String _appID;
+  Spark spark;
+
+  _WebStorePublishJob(this.spark, this._container, this._appID)
+      : super("Publishing to Chrome Web Store…");
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, _appID == null ? 5 : 6);
+
+    return ws_utils.archiveContainer(_container).then((List<int> archivedData) {
+      monitor.worked(1);
+      WebStoreClient wsc = new WebStoreClient();
+      return wsc.authenticate().then((_) {
+        monitor.worked(1);
+        return wsc.uploadItem(archivedData, identifier: _appID).then((String uploadedAppID) {
+          monitor.worked(3);
+          if (_appID == null) {
+            spark.showUploadedAppDialog(uploadedAppID);
+            return new Future.value();
+          } else {
+            return wsc.publish(uploadedAppID).then((_) {
+              monitor.worked(1);
+              spark.showPublishedAppDialog(_appID);
+              return new Future.value();
+            }).catchError((e) {
+              monitor.worked(1);
+              spark.showUploadedAppDialog(uploadedAppID);
+              return new Future.value();
+            });
+          }
+        });
+      });
+    }).catchError((e) {
+      spark.showErrorMessage('Error while publishing the application', e.toString());
+      return new Future.value();
     });
-    request.send(data);
-
-    return Future.value();
   }
-
-  Future _publishToWebStore(String token, String appid) {
-
-  }
-
-  bool appliesTo(context) => true;
 }
 
 class GitAuthenticationDialog extends SparkActionWithDialog {

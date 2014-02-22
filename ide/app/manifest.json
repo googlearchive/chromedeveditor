@@ -67,7 +67,7 @@
   "oauth2": {
     "client_id": "514253219606-raqk01c6bg2m9h9vgvm1gph4ppdpi88r.apps.googleusercontent.com",
     "scopes": [
-      "https://www.googleapis.com/upload/chromewebstore"
+      "https://www.googleapis.com/auth/chromewebstore"
     ]
   }
 }
