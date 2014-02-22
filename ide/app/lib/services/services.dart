@@ -128,6 +128,14 @@ class ExampleService extends Service {
     });
   }
 
+  /**
+   * For testing ChromeService.getFileContents on the isolate side.
+   *
+   * Sends a [File] reference (via uuid) to the isolate which then then makes
+   * [ChromeService].[getFileContents()] call with that uuid which should send
+   * back the contents of the file to the isolate, which will return the
+   * contents to us for verification.
+   */
   Future<String> readText(ws.File file) {
     return _sendAction("readText", {"fileUuid": file.uuid})
         .then((ServiceActionEvent event) {
