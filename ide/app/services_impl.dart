@@ -47,7 +47,7 @@ class ServicesIsolate {
           completer.complete(event);
         }
       } catch(e) {
-        print("Service error: $e ${e.stackTrace}");
+        printError("Service error", e);
       }
     });
     return completer.future;
@@ -84,7 +84,7 @@ class ServicesIsolate {
           }
         }
       } catch(e) {
-        print("service error: $e ${e.stackTrace}");
+        printError("Service error", e);
       }
     });
 
@@ -92,7 +92,7 @@ class ServicesIsolate {
       try {
         _handleMessage(event);
       } catch(e) {
-        print("service error: $e ${e.stackTrace}");
+        printError("Service error", e);
       }
     });
   }
@@ -117,7 +117,7 @@ class ServicesIsolate {
         completer.complete();
       }
     }).catchError((e) {
-      print("service error: $e ${e.stackTrace}");
+      printError("Service error", e);
     });
     return completer.future;
   }
@@ -214,9 +214,9 @@ class CompilerServiceImpl extends ServiceImpl {
       sdk = DartSdk.createSdkFromContents(sdkContents);
       compiler = Compiler.createCompilerFrom(sdk);
       _readyCompleter.complete();
-    }).catchError((error){
+    }).catchError((e){
       // TODO(ericarnold): Return error which service will throw
-      print("Chrome service error: $error ${error.stackTrace}");
+      printError("Chrome service error", e);
     });
 
     return _readyCompleter.future;
@@ -286,3 +286,17 @@ void print(var message) {
     _printSendPort.send("$message");
   }
 }
+
+printError(String description, dynamic e) {
+  String stackTrace;
+  try {
+    stackTrace = "\n${e.stackTrace}";
+  } catch(e) {
+    stackTrace = "";
+  }
+
+  print ("$description $e $stackTrace");
+}
+
+
+
