@@ -11,9 +11,14 @@ import 'package:archive/archive.dart' as archive;
 import '../spark_model.dart';
 import 'jobs.dart';
 import 'tcp.dart';
+import 'utils.dart';
 import 'workspace.dart';
 
 class HarnessPush {
+  Notifier _notifier;
+  
+  HarnessPush(this._notifier);
+  
   /**
    * Packages (a subdirectory of) the current project, and sends it via HTTP to
    * a remote host.
@@ -33,7 +38,7 @@ class HarnessPush {
    * [Chrome ADT](https://github.com/MobileChromeApps/harness) on Android,
    * and that tool doesn't care about the CRX metadata, this is not a problem.
    */
-  static Future push(Container appContainer, String target,
+  Future push(Container appContainer, String target,
                      ProgressMonitor monitor) {
     if (appContainer == null) {
       return new Future.error(new ArgumentError('Could not find app to push'));
