@@ -65,12 +65,6 @@ abstract class Application {
     });
   }
 
-  Future restart() {
-    return close().then((_) {
-      return start();
-    });
-  }
-
   /**
    * Terminate the application lifecycle. Call the `CLOSING` and `CLOSED`
    * lifecycle methods on all lifecycle participants. Returns a [Future] which

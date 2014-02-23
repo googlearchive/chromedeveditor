@@ -63,66 +63,32 @@ defineTests() {
       });
     });
 
-    test('clear preference', () {
-      MapPreferencesStore mapStore = new MapPreferencesStore();
-      mapStore.setValue('foo3', 'bar3');
-      mapStore.setValue('foo4', 'bar4');
-      mapStore.setValue('foo5', 'bar5');
-      return mapStore.clear().then((_) {
-        return mapStore.getValue('foo3').then((value) {
+    test('clearSync', () {
+      syncStore.setValue('foo3', 'bar3');
+      syncStore.setValue('foo4', 'bar4');
+      syncStore.setValue('foo5', 'bar5');
+      return syncStore.clear().then((_) {
+        return syncStore.getValue('foo3').then((value) {
           expect(value, null);
-          mapStore.getValue('foo4');
+          syncStore.getValue('foo4');
         }).then((foo4_value) {
           expect(foo4_value, null);
-          mapStore.getValue('foo5');
+          syncStore.getValue('foo5');
         }).then((foo5_value) {
           expect(foo5_value, null);
         });
       });
     });
 
-    test('clear preference3', () {
-      syncStore.setValue('foo3', 'bar3');
-      syncStore.setValue('foo4', 'bar4');
-      syncStore.setValue('foo5', 'bar5');
-        return syncStore.clear().then((_) {
-          return syncStore.getValue('foo3').then((value) {
-            expect(value, null);
-            syncStore.getValue('foo4');
-          }).then((foo4_value) {
-            expect(foo4_value, null);
-            syncStore.getValue('foo5');
-          }).then((foo5_value) {
-            expect(foo5_value, null);
-          });
-        });
-      });
-
-    test('clear preference2', () {
-      localStore.setValue('foo3', 'bar3');
-      localStore.setValue('foo4', 'bar4');
-      localStore.setValue('foo5', 'bar5');
-        return localStore.clear().then((_) {
-          return localStore.getValue('foo3').then((value) {
-            expect(value, null);
-            localStore.getValue('foo4');
-          }).then((foo4_value) {
-            expect(foo4_value, null);
-            localStore.getValue('foo5');
-          }).then((foo5_value) {
-            expect(foo5_value, null);
-          });
-        });
-      });
-
-    test('remove', () {
-      localStore.setValue("foo1", "bar1");
-      return localStore.getValue("foo1").then((String val) {
-        expect(localStore.isDirty, true);
-        expect(val, "bar1");
-        localStore.removeValue(['foo1']);
+    test('removeSync', () {
+      MapPreferencesStore mapStore = new MapPreferencesStore();
+      syncStore.setValue("foo6", "bar6");
+      return syncStore.getValue("foo6").then((String val) {
+        expect(syncStore.isDirty, true);
+        expect(val, "bar6");
+        syncStore.removeValue(['foo6']);
       }).then((_) {
-        localStore.getValue("foo1");
+        syncStore.getValue("foo6");
       }).then((value) {
         expect(value, null);
       });

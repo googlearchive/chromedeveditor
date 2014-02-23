@@ -74,6 +74,10 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onResetPreference() {
+    /*Future<bool> askUserOkCancel(String message, {String okButtonLabel: 'OK'}) {
+    }
+    */
+
     SparkModel.instance.syncPrefs.clear().then((_) {
       // Reboot
     }).catchError((e) {
