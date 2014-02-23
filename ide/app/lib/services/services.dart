@@ -175,20 +175,37 @@ class ChromeServiceImpl extends Service {
         case "getFileContents":
           String uuid = event.data['uuid'];
           ws.File restoredFile = _services._workspace.restoreResource(uuid);
+          if (restoredFile == null) {
+            // TODO(ericarnold): Turn into an Exception subclass.
+            throw new Exception("Could not restore file with uuid $uuid");
+          }
+
           restoredFile.getContents()
               .then((String contents) =>
-                  _sendResponse(event, {"contents": contents}))
-              .catchError((Error error) => _sendErrorResponse(event, error));
+                  _sendResponse(event, {"contents": contents}));
           break;
         default:
           throw "Unknown action '${event.actionId}' sent to Chrome service.";
       }
-    });
+    })
+    .catchError((error) => _sendErrorResponse(event, error));
   }
 
-  void _sendErrorResponse(ServiceActionEvent event, Error error) {
-    _sendResponse(event, {"error": error.toString(),
-        "stacktrace": error.stackTrace});
+  void _sendErrorResponse(ServiceActionEvent event, e) {
+    String stackTrace;
+    try {
+      stackTrace = e.stackTrace.toString();
+    } catch(e) {
+      stackTrace = "";
+    }
+
+    ServiceActionEvent responseEvent = event.createReponse({
+        "error": e.toString(),
+        "stackTrace": stackTrace});
+
+    responseEvent.error = true;
+    _isolateHandler.onceIsolateReady
+        .then((_) => _isolateHandler.sendResponse(responseEvent));
   }
 }
 

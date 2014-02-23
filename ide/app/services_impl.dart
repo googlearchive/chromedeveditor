@@ -236,21 +236,34 @@ class ChromeService {
   }
 
   Future<ServiceActionEvent> delay(int milliseconds) =>
-      _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
+      _sendAction(_createNewEvent("delay", {"ms": milliseconds}));
 
   /**
    * Return the contents of the file at the given path. The path is relative to
    * the Chrome app's directory.
    */
   Future<List<int>> getAppContents(String path) {
-    return _isolate._sendAction(_createNewEvent("getAppContents", {"path": path}))
+    return _sendAction(_createNewEvent("getAppContents", {"path": path}))
         .then((ServiceActionEvent event) => event.data['contents']);
   }
 
   Future<String> getFileContents(String uuid) =>
-    _isolate._sendAction(_createNewEvent("getFileContents", {"uuid": uuid}))
+    _sendAction(_createNewEvent("getFileContents", {"uuid": uuid}))
         .then((ServiceActionEvent event) => event.data["contents"]);
 
+  Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
+      [bool expectResponse = false]) {
+    return _isolate._sendAction(event, expectResponse)
+        .then((ServiceActionEvent event){
+          if (event.error != true) {
+            return event;
+          } else {
+            String error = event.data['error'];
+            String stackTrace = event.data['stackTrace'];
+            throw "ChromeService error: $error\n$stackTrace";
+          }
+        });
+  }
 }
 
 // Provides an abstract class and helper code for service implementations.

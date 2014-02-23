@@ -69,9 +69,9 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
       FileEntry fileEntry = fs.createFile('test.txt', contents: "some words");
       String fileUuid;
+      ExampleService exampleService = services.getService("example");
       return workspace.link(createWsRoot(fileEntry))
           .then((ws.File fileResource) {
-            ExampleService exampleService = services.getService("example");
             return exampleService.readText(fileResource);
           }).then((String text) => expect(text, equals("some words")));
     });
