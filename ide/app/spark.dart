@@ -1058,6 +1058,8 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
             spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
             spark._aceManager.focus();
           });
+        }).catchError((e) {
+          spark.showErrorMessage("Error Creating File", e.toString());
         });
       }
     }
@@ -1096,12 +1098,13 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
     spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
       if (val) {
-        try {
-          spark.workspace.pauseResourceEvents();
-          resources.forEach((ws.Resource resource) => resource.delete());
-        } finally {
+        spark.workspace.pauseResourceEvents();
+        Future.forEach(resources, (r) => r.delete()).catchError((e) {
+          String ordinality = resources.length == 1 ? "File" : "Files";
+          spark.showErrorMessage("Error Deleting ${ordinality}", e.toString());
+        }).whenComplete(() {
           spark.workspace.resumeResourceEvents();
-        }
+        });
       }
     });
   }
@@ -1130,10 +1133,11 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     if (_nameElement.value.isNotEmpty) {
-      resource.rename(_nameElement.value)
-        .then((value) {
-          spark._renameOpenEditor(resource);
-        });
+      resource.rename(_nameElement.value).then((value) {
+        spark._renameOpenEditor(resource);
+      }).catchError((e) {
+        spark.showErrorMessage("Error During Rename", e.toString());
+      });
     }
   }
 
@@ -1978,7 +1982,6 @@ class _GitCheckoutJob extends Job {
     });
   }
 }
-
 
 class _OpenFolderJob extends Job {
   Spark spark;
