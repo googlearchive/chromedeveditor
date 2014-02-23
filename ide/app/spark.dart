@@ -698,9 +698,9 @@ class ProjectLocationManager {
         return null;
       }
 
-      _projectLocation = entry;
+      _projectLocation = new LocationResult(entry, entry, false);
       _prefs.setValue('projectFolder', chrome.fileSystem.retainEntry(entry));
-      return new LocationResult(entry, entry, false);
+      return _projectLocation;
     });
   }
 
