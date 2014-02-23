@@ -27,21 +27,14 @@ final _ChromeHelper _chromeHelper = new _ChromeHelper();
  * The Workspace is a top-level entity that can contain files and projects. The
  * files that it contains are loose files; they do not have parent projects.
  */
-class Workspace implements Container {
+class Workspace extends Container {
   int _resourcePauseCount = 0;
   List<ChangeDelta> _resourceChangeList = [];
 
   int _markersPauseCount = 0;
   List<MarkerDelta> _makerChangeList = [];
 
-  Container _parent = null;
-
   BuilderManager _builderManager;
-
-  chrome.Entry get _entry => null;
-  set _entry(chrome.Entry value) => null;
-  Map<String, dynamic> _metadata;
-  chrome.Entry get entry => null;
 
   List<WorkspaceRoot> _roots = [];
 
@@ -57,7 +50,7 @@ class Workspace implements Container {
   StreamController<MarkerChangeEvent> _markerController =
       new StreamController.broadcast();
 
-  Workspace([this._store]);
+  Workspace([this._store]) : super(null, null);
 
   Future<Workspace> whenAvailable() => _whenAvailable.future;
   Future<Workspace> whenAvailableSyncFs() => _whenAvailableSyncFs.future;
@@ -70,14 +63,11 @@ class Workspace implements Container {
 
   String get name => null;
   String get path => '';
-  bool get isTopLevel => false;
-  bool get isFile => false;
   String get uuid => '';
 
   Future delete() => new Future.value();
   Future rename(String name) => new Future.value();
 
-  Container get parent => null;
   Project get project => null;
   Workspace get workspace => this;
 
@@ -186,24 +176,6 @@ class Workspace implements Container {
 
   bool isSyncResource(Resource resource) {
     return _roots.any((root) => root is SyncFolderRoot && root.resource == resource);
-  }
-
-  Resource getChild(String name) {
-    return getChildren().firstWhere((c) => c.name == name, orElse: () => null);
-  }
-
-  Resource getChildPath(String childPath) {
-    int index = childPath.indexOf('/');
-    if (index == -1) {
-      return getChild(childPath);
-    } else {
-      Resource child = getChild(childPath.substring(0, index));
-      if (child is Container) {
-        return child.getChildPath(childPath.substring(index + 1));
-      } else {
-        return null;
-      }
-    }
   }
 
   List<Resource> getChildren() {
@@ -401,10 +373,6 @@ class Workspace implements Container {
 
   bool containedBy(Container container) => false;
 
-  dynamic getMetadata(String key, [dynamic defaultValue]) => defaultValue;
-
-  void setMetadata(String key, dynamic data) { }
-
   bool isScmPrivate() => false;
 
   void _removeChild(Resource resource, {bool fireEvent: true}) {
@@ -419,13 +387,7 @@ abstract class Container extends Resource {
   Container(Container parent, chrome.Entry entry) : super(parent, entry);
 
   Resource getChild(String name) {
-    for (Resource resource in getChildren()) {
-      if (resource.name == name) {
-        return resource;
-      }
-    }
-
-    return null;
+    return getChildren().firstWhere((c) => c.name == name, orElse: () => null);
   }
 
   Resource getChildPath(String childPath) {
@@ -510,7 +472,7 @@ abstract class Resource {
    */
   String get uuid => '${parent.uuid}/${name}';
 
-  bool get isTopLevel => _parent is Workspace;
+  bool get isTopLevel => false;
 
   bool get isFile => false;
 
@@ -799,6 +761,10 @@ class Project extends Folder {
     _root = root;
   }
 
+  bool get isTopLevel => true;
+
+  String get path => '/${name}';
+
   Project get project => this;
 
   String get uuid => '${_root.id}';
@@ -825,6 +791,12 @@ class LooseFile extends File {
   LooseFile(Workspace workspace, WorkspaceRoot root) : super(workspace, root.entry) {
     _root = root;
   }
+
+  bool get isTopLevel => true;
+
+  String get path => '/${name}';
+
+  Project get project => null;
 
   String get uuid => '${_root.id}';
 }
