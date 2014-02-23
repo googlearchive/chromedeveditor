@@ -74,24 +74,13 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onResetPreference() {
-    /*Future<bool> askUserOkCancel(String message, {String okButtonLabel: 'OK'}) {
-    }
-    */
-
+    Element resultElement = getShadowDomElement('#preferenceResetSettingsDone');//..text = '';
     SparkModel.instance.syncPrefs.clear().then((_) {
-      // Reboot
+      SparkModel.instance.localPrefs.clear();
     }).catchError((e) {
-      var nike = e;
+      resultElement.text = '<error reset preferences>';
     }).then((_) {
-
-    });
-
-    SparkModel.instance.localPrefs.clear().then((_) {
-       // Reboot
-    }).catchError((e) {
-      var nike = e;
-    }).then((_) {
-
+      resultElement.text = 'Preferences are reset. Restart Spark.';
     });
   }
 }

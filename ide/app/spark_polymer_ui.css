@@ -102,6 +102,11 @@
   margin-left: 15px;
 }
 
+#preferenceResetSettingsDone {
+  color: #F00;
+  font-weight: bold;
+}
+
 #mainMenu {
   position: relative;
   top: 3px;
