@@ -70,10 +70,10 @@ defineTests() {
       return syncStore.clear().then((_) {
         return syncStore.getValue('foo3').then((value) {
           expect(value, null);
-          syncStore.getValue('foo4');
+          return syncStore.getValue('foo4');
         }).then((foo4_value) {
           expect(foo4_value, null);
-          syncStore.getValue('foo5');
+          return syncStore.getValue('foo5');
         }).then((foo5_value) {
           expect(foo5_value, null);
         });
@@ -82,13 +82,13 @@ defineTests() {
 
     test('removeSync', () {
       MapPreferencesStore mapStore = new MapPreferencesStore();
-      syncStore.setValue("foo6", "bar6");
-      return syncStore.getValue("foo6").then((String val) {
+      syncStore.setValue('foo6', 'bar6');
+      return syncStore.getValue('foo6').then((String val) {
         expect(syncStore.isDirty, true);
-        expect(val, "bar6");
-        syncStore.removeValue(['foo6']);
+        expect(val, 'bar6');
+        return syncStore.removeValue(['foo6']);
       }).then((_) {
-        syncStore.getValue("foo6");
+        return syncStore.getValue('foo6');
       }).then((value) {
         expect(value, null);
       });

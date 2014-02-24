@@ -74,7 +74,7 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onResetPreference() {
-    Element resultElement = getShadowDomElement('#preferenceResetSettingsDone')..text = '';
+    Element resultElement = getShadowDomElement('#preferenceResetResult')..text = '';
     SparkModel.instance.syncPrefs.clear().then((_) {
       SparkModel.instance.localPrefs.clear();
     }).catchError((e) {
