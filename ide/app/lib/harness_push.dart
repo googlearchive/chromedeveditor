@@ -12,6 +12,7 @@ import '../spark_model.dart';
 import 'jobs.dart';
 import 'tcp.dart';
 import 'workspace.dart';
+import 'workspace_utils.dart';
 
 class HarnessPush {
   /**
@@ -39,8 +40,7 @@ class HarnessPush {
       return new Future.error(new ArgumentError('Could not find app to push'));
     }
 
-    archive.Archive arch = new archive.Archive();
-    return _recursiveArchive(arch, appContainer).then((_) {
+    return archiveContainer(appContainer).then((List<int> archivedData) {
       monitor.worked(3);
       List<int> httpRequest = [];
       // Build the HTTP request headers.
@@ -66,7 +66,7 @@ class HarnessPush {
       body.addAll([67, 114, 50, 52, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
       // Now follows the actual zip data.
-      body.addAll(new archive.ZipEncoder().encode(arch));
+      body.addAll(archivedData);
       monitor.worked(4);
 
       // Add the trailing boundary.
@@ -107,24 +107,5 @@ class HarnessPush {
     }).catchError((e) {
       SparkModel.instance.showErrorMessage('Push failure', e.toString());
     });
-  }
-
-  static _recursiveArchive(archive.Archive arch, Container parent,
-      [String prefix = '']) {
-    List<Future> futures = [];
-
-    for (Resource child in parent.getChildren()) {
-      if (child is File) {
-        futures.add(child.getBytes().then((buf) {
-          List<int> data = buf.getBytes();
-          arch.addFile(new archive.ArchiveFile('${prefix}${child.name}', data.length,
-              data));
-        }));
-      } else if (child is Folder) {
-        futures.add(_recursiveArchive(arch, child, '${prefix}${child.name}/'));
-      }
-    }
-
-    return Future.wait(futures);
   }
 }

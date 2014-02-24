@@ -40,6 +40,8 @@ import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
+import 'lib/workspace_utils.dart' as ws_utils;
+import 'lib/webstore_client.dart';
 import 'test/all.dart' as all_tests;
 
 import 'spark_model.dart';
@@ -412,6 +414,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new SpecificTabAction(this));
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
 
@@ -475,15 +478,45 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   void showErrorMessage(String title, String message) {
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
-      _errorDialog.element.querySelector("[primary]").onClick.listen((_) {
-        querySelector("#modalBackdrop").style.display = "none";
-      });
+      _errorDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
     }
 
-    _errorDialog.element.querySelector('#errorTitle').innerHtml = title;
+    _errorDialog.element.querySelector('#errorTitle').text = title;
     _errorDialog.element.querySelector('#errorMessage').text = message;
 
     _errorDialog.show();
+  }
+
+  void _hideBackdropOnClick(MouseEvent event) {
+    querySelector("#modalBackdrop").style.display = "none";
+  }
+
+  SparkDialog _publishedAppDialog;
+
+  void showPublishedAppDialog(String appID) {
+    if (_publishedAppDialog == null) {
+      _publishedAppDialog = createDialog(getDialogElement('#webStorePublishedDialog'));
+      _publishedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((MouseEvent event) {
+        window.open('https://chrome.google.com/webstore/detail/${appID}', null);
+        _hideBackdropOnClick(event);
+      });
+    }
+    _publishedAppDialog.show();
+  }
+
+  SparkDialog _uploadedAppDialog;
+
+  void showUploadedAppDialog(String appID) {
+    if (_uploadedAppDialog == null) {
+      _uploadedAppDialog = createDialog(getDialogElement('#webStoreUploadedDialog'));
+      _uploadedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((MouseEvent event) {
+        window.open('https://chrome.google.com/webstore/developer/edit/${appID}', null);
+        _hideBackdropOnClick(event);
+      });
+    }
+    _uploadedAppDialog.show();
   }
 
   SparkDialog _okCancelDialog;
@@ -2118,6 +2151,110 @@ class RunTestsAction extends SparkAction {
   }
 
   _invoke([Object context]) => spark._testDriver.runTests();
+}
+
+class WebStorePublishAction extends SparkActionWithDialog {
+  bool _initialized = false;
+  static final int NEWAPP = 1;
+  static final int EXISTING = 2;
+  int _type = NEWAPP;
+  InputElement _newInput;
+  InputElement _existingInput;
+  InputElement _appIdInput;
+  ws.Resource _resource;
+
+  WebStorePublishAction(Spark spark, Element dialog)
+      : super(spark, "webstore-publish", "Publish to Chrome Web Store", dialog) {
+    enabled = false;
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+  }
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
+      _newInput = getElement('input[value=new]');
+      _existingInput = getElement('input[value=existing]');
+      _appIdInput = getElement('#appID');
+      _enableInput();
+
+      _newInput.onChange.listen((e) => _enableInput());
+      _existingInput.onChange.listen((e) => _enableInput());
+      _initialized = true;
+    }
+
+    _resource = spark.focusManager.currentResource;
+    _show();
+  }
+
+  void _enableInput() {
+    int type = NEWAPP;
+    if (_newInput.checked) {
+      type = NEWAPP;
+    }
+    if (_existingInput.checked) {
+      type = EXISTING;
+    }
+    _appIdInput.disabled = (type != EXISTING);
+    if (type == EXISTING) {
+      _appIdInput.focus();
+    }
+  }
+
+  void _commit() {
+    String appID = null;
+    if (_existingInput.checked) {
+      appID = _appIdInput.value;
+    }
+    _WebStorePublishJob job =
+        new _WebStorePublishJob(spark, getAppContainerFor(_resource), appID);
+    spark.jobManager.schedule(job);
+  }
+
+  void _updateEnablement(ws.Resource resource) {
+    enabled = getAppContainerFor(resource) != null;;
+  }
+}
+
+class _WebStorePublishJob extends Job {
+  ws.Container _container;
+  String _appID;
+  Spark spark;
+
+  _WebStorePublishJob(this.spark, this._container, this._appID)
+      : super("Publishing to Chrome Web Store…");
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, _appID == null ? 5 : 6);
+
+    if (_container == null) {
+      spark.showErrorMessage('Error while publishing the application',
+          'The manifest.json file of the application has not been found.');
+      return null;
+    }
+
+    return ws_utils.archiveContainer(_container).then((List<int> archivedData) {
+      monitor.worked(1);
+      WebStoreClient wsc = new WebStoreClient();
+      return wsc.authenticate().then((_) {
+        monitor.worked(1);
+        return wsc.uploadItem(archivedData, identifier: _appID).then((String uploadedAppID) {
+          monitor.worked(3);
+          if (_appID == null) {
+            spark.showUploadedAppDialog(uploadedAppID);
+          } else {
+            return wsc.publish(uploadedAppID).then((_) {
+              monitor.worked(1);
+              spark.showPublishedAppDialog(_appID);
+            }).catchError((e) {
+              monitor.worked(1);
+              spark.showUploadedAppDialog(uploadedAppID);
+            });
+          }
+        });
+      });
+    }).catchError((e) {
+      spark.showErrorMessage('Error while publishing the application', e.toString());
+    });
+  }
 }
 
 class GitAuthenticationDialog extends SparkActionWithDialog {

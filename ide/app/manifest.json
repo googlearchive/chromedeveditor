@@ -22,8 +22,10 @@
   },
   "permissions": [
     "https://www.google-analytics.com/",
+    "https://www.googleapis.com/upload/chromewebstore/v1.1/items",
     "https://github.com/*",
     "http://*/push",
+    "identity",
     "clipboardRead",
     "clipboardWrite",
     "developerPrivate",
@@ -62,5 +64,11 @@
       ],
       "title": "__MSG_app_name__"
     }
+  },
+  "oauth2": {
+    "client_id": "514253219606-raqk01c6bg2m9h9vgvm1gph4ppdpi88r.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/chromewebstore"
+    ]
   }
 }
