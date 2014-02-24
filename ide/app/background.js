@@ -30,7 +30,6 @@ App.prototype.launch = function(ui_opt) {
     delete this.editorWin_;
   }
 
-/*
   var div = document.createElement('div');
   if (div.createShadowRoot == null) {
     chrome.app.window.create(
@@ -44,7 +43,6 @@ App.prototype.launch = function(ui_opt) {
     });
     return;
   }
-  */
 
   this.editorWin_ = new EditorWindow(this);
 }
