@@ -62,7 +62,7 @@
           </spark-menu-item>
           <spark-menu-item action-id="git-clone" label="Git Clone...">
           </spark-menu-item>
-          <spark-menu-item action-id="webstore-publish" iconsize=0 label="Publish to WebStore">
+          <spark-menu-item action-id="webstore-publish" iconsize=0 label="Publish to Chrome Web Store">
           </spark-menu-item>
           <template if="{{developerMode}}">
             <spark-menu-separator></spark-menu-separator>
@@ -475,10 +475,10 @@
     </spark-modal>
 
     <!-- Publish on webstore -->
-    <spark-modal id="WebStorePublishDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="webStorePublishDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
-        <h4 class="modal-title">Publish to webstore</h4>
+        <h4 class="modal-title">Publish to Chrome Web Store</h4>
       </div>
       <div class="modal-body">
         <div class="form-group">
@@ -546,7 +546,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label>Your application has been uploaded</label>
-          <div class="help-block">Your application has been uploaded on the Chrome Web Store. You still need to fill some meta data in the Developer Dashboard before publishing it.</div>
+          <div class="help-block">Your application has been uploaded on the Chrome Web Store. You still need to fill out some additional information in the Developer Dashboard before publishing it.</div>
         </div>
       </div>
       <div class="modal-footer">

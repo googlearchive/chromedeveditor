@@ -414,7 +414,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new SpecificTabAction(this));
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#WebStorePublishDialog')));
+    actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
 
@@ -478,9 +478,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   void showErrorMessage(String title, String message) {
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
-      _errorDialog.element.querySelector("[primary]").onClick.listen((_) {
-        querySelector("#modalBackdrop").style.display = "none";
-      });
+      _errorDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
     }
 
     _errorDialog.element.querySelector('#errorTitle').text = title;
@@ -489,17 +487,19 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _errorDialog.show();
   }
 
+  void _hideBackdropOnClick(MouseEvent event) {
+    querySelector("#modalBackdrop").style.display = "none";
+  }
+
   SparkDialog _publishedAppDialog;
 
   void showPublishedAppDialog(String appID) {
     if (_publishedAppDialog == null) {
       _publishedAppDialog = createDialog(getDialogElement('#webStorePublishedDialog'));
-      _publishedAppDialog.element.querySelector("[primary]").onClick.listen((_) {
-        querySelector("#modalBackdrop").style.display = "none";
-      });
-      _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((_) {
+      _publishedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((MouseEvent event) {
         window.open('https://chrome.google.com/webstore/detail/${appID}', null);
-        querySelector("#modalBackdrop").style.display = "none";
+        _hideBackdropOnClick(event);
       });
     }
     _publishedAppDialog.show();
@@ -510,12 +510,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   void showUploadedAppDialog(String appID) {
     if (_uploadedAppDialog == null) {
       _uploadedAppDialog = createDialog(getDialogElement('#webStoreUploadedDialog'));
-      _uploadedAppDialog.element.querySelector("[primary]").onClick.listen((_) {
-        querySelector("#modalBackdrop").style.display = "none";
-      });
-      _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((_) {
+      _uploadedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((MouseEvent event) {
         window.open('https://chrome.google.com/webstore/developer/edit/${appID}', null);
-        querySelector("#modalBackdrop").style.display = "none";
+        _hideBackdropOnClick(event);
       });
     }
     _uploadedAppDialog.show();
@@ -2163,9 +2161,13 @@ class WebStorePublishAction extends SparkActionWithDialog {
   InputElement _newInput;
   InputElement _existingInput;
   InputElement _appIdInput;
+  ws.Resource _resource;
 
   WebStorePublishAction(Spark spark, Element dialog)
-      : super(spark, "webstore-publish", "Publish to WebStore", dialog);
+      : super(spark, "webstore-publish", "Publish to Chrome Web Store", dialog) {
+    enabled = false;
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+  }
 
   void _invoke([Object context]) {
     if (!_initialized) {
@@ -2174,15 +2176,12 @@ class WebStorePublishAction extends SparkActionWithDialog {
       _appIdInput = getElement('#appID');
       _enableInput();
 
-      _newInput.onChange.listen((e) {
-        _enableInput();
-      });
-      _existingInput.onChange.listen((e) {
-        _enableInput();
-      });
+      _newInput.onChange.listen((e) => _enableInput());
+      _existingInput.onChange.listen((e) => _enableInput());
       _initialized = true;
     }
 
+    _resource = spark.focusManager.currentResource;
     _show();
   }
 
@@ -2201,28 +2200,17 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    List<ws.Resource> resources = spark._filesController.getSelection();
-    if (resources.length > 0) {
-      ws.Resource resource = resources.first;
-
-      String appID = null;
-      if (_existingInput.checked) {
-        appID = _appIdInput.value;
-      }
-      _WebStorePublishJob job =
-          new _WebStorePublishJob(spark, getAppContainerFor(resource), appID);
-      spark.jobManager.schedule(job);
+    String appID = null;
+    if (_existingInput.checked) {
+      appID = _appIdInput.value;
     }
+    _WebStorePublishJob job =
+        new _WebStorePublishJob(spark, getAppContainerFor(_resource), appID);
+    spark.jobManager.schedule(job);
   }
 
-  bool appliesTo(context) {
-    List<ws.Resource> resources = spark._filesController.getSelection();
-    if (resources.length > 0) {
-      ws.Resource resource = resources.first;
-      ws.Container container = getAppContainerFor(resource);
-      return container != null;
-    }
-    return false;
+  void _updateEnablement(ws.Resource resource) {
+    enabled = getAppContainerFor(resource) != null;;
   }
 }
 
@@ -2237,6 +2225,12 @@ class _WebStorePublishJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, _appID == null ? 5 : 6);
 
+    if (_container == null) {
+      spark.showErrorMessage('Error while publishing the application',
+          'The manifest.json file of the application has not been found.');
+      return null;
+    }
+
     return ws_utils.archiveContainer(_container).then((List<int> archivedData) {
       monitor.worked(1);
       WebStoreClient wsc = new WebStoreClient();
@@ -2246,23 +2240,19 @@ class _WebStorePublishJob extends Job {
           monitor.worked(3);
           if (_appID == null) {
             spark.showUploadedAppDialog(uploadedAppID);
-            return new Future.value();
           } else {
             return wsc.publish(uploadedAppID).then((_) {
               monitor.worked(1);
               spark.showPublishedAppDialog(_appID);
-              return new Future.value();
             }).catchError((e) {
               monitor.worked(1);
               spark.showUploadedAppDialog(uploadedAppID);
-              return new Future.value();
             });
           }
         });
       });
     }).catchError((e) {
       spark.showErrorMessage('Error while publishing the application', e.toString());
-      return new Future.value();
     });
   }
 }
