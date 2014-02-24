@@ -1132,6 +1132,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
         try {
           spark.workspace.pauseResourceEvents();
           resources.forEach((ws.Resource resource) => resource.delete());
+          spark.workspace.save();
         } finally {
           spark.workspace.resumeResourceEvents();
         }
