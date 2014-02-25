@@ -1590,24 +1590,40 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
   }
 
   void _commit() {
-    String url = _pushUrlElement.value;
-    // TODO(braden): Input validation.
-    spark.jobManager.schedule(new _HarnessPushJob(spark, deployContainer, url));
+    String type = getElement('input[name="type"]:checked').id;
+    Job job;
+    if (type == 'adb') {
+      job = new _HarnessPushJob.pushToAdb(spark, deployContainer);
+    } else {
+      String url = _pushUrlElement.value;
+      // TODO(braden): Input validation.
+      job = new _HarnessPushJob.pushToUrl(spark, deployContainer, url);
+    }
+    spark.jobManager.schedule(job);
   }
 }
 
 class _HarnessPushJob extends Job {
   final Spark spark;
   final ws.Container deployContainer;
-  final String _url;
+  String _url;
+  bool _adb = false;
 
-  _HarnessPushJob(this.spark, this.deployContainer, this._url) :
-    super('Deploying to mobile…');
+  _HarnessPushJob.pushToAdb(this.spark, this.deployContainer)
+      : super('Deploying via ADB…') {
+    this._adb = true;
+  }
+
+  _HarnessPushJob.pushToUrl(this.spark, this.deployContainer, this._url)
+      : super('Deploying to mobile…') { }
 
   Future run(ProgressMonitor monitor) {
-    HarnessPush harnessPush = new HarnessPush(deployContainer);
+    HarnessPush harnessPush = new HarnessPush(deployContainer,
+        spark.localPrefs);
 
-    return harnessPush.push(_url, monitor).then((_) {
+    Future push = _adb ? harnessPush.pushADB(monitor) :
+        harnessPush.push(_url, monitor);
+    return push.then((_) {
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
       spark.showMessage('Push failure', e.toString());

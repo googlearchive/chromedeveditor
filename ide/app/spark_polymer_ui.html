@@ -233,8 +233,17 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="pushUrl">Target Host</label>
-          <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+          <div>
+            <input type="radio" name="type" value="push-adb" id="adb" checked />
+            <label for="adb" checked>ADB over USB</label>
+          </div>
+          <div>
+            <input type="radio" name="type" value="push-ip" id="ip" />
+            <label for="ip">Directly over network</label>
+
+            <label for="pushUrl">Target Host</label>
+            <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+          </div>
         </div>
       </div>
       <div class="modal-footer">
