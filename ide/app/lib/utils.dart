@@ -254,6 +254,7 @@ class ServiceActionEvent {
   String serviceId;
   String actionId;
   bool response = false;
+  bool error = false;
   Map data;
 
   String _callId;
@@ -267,6 +268,7 @@ class ServiceActionEvent {
     _callId = map["callId"];
     data = map["data"];
     response = map["response"];
+    error = map["error"];
   }
 
   ServiceActionEvent._asResponse(this.serviceId, this.actionId, this._callId,
@@ -279,6 +281,7 @@ class ServiceActionEvent {
       "callId": callId,
       // TODO(ericarnold): We can probably subclass SAE into Response specific.
       "response": response == true,
+      "error": error == true,
       "data": data
     };
   }
