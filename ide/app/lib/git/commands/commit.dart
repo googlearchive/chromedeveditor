@@ -18,6 +18,8 @@ import '../objectstore.dart';
 import '../options.dart';
 import '../utils.dart';
 
+import 'diff.dart';
+
 /**
  * This class implments the git commit command.
  */
@@ -56,13 +58,16 @@ class Commit {
               status = store.index.getStatusForEntry(entry);
 
               if (status.type != FileStatusType.COMMITTED) {
-                return fileEntry.readBytes().then((chrome.ArrayBuffer buf) {
+                return Diff.DiffFile(store, fileEntry).then((_) {
+
+                });
+                /*return fileEntry.readBytes().then((chrome.ArrayBuffer buf) {
                   return store.writeRawObject(
                       'blob', new Uint8List.fromList(buf.getBytes()));
                 }).then((String sha) {
                   treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
                   return store.index.commitEntry(status).then((_) => null);
-                });
+                });*/
               } else {
                 treeEntries.add(
                     new TreeEntry(entry.name, shaToBytes(status.sha), true));
@@ -76,7 +81,8 @@ class Commit {
           String bName = b.isBlob ? b.name : (b.name + '/');
           return aName.compareTo(bName);
         });
-        return store.writeTree(treeEntries);
+        throw "some error in committing";
+        //return store.writeTree(treeEntries);
       });
     });
   }
