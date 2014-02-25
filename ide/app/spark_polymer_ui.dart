@@ -72,4 +72,15 @@ class SparkPolymerUI extends SparkWidget {
     SparkModel.instance.syncPrefs.setValue('git-user-info', null);
     SparkModel.instance.setGitSettingsResetDoneVisible(true);
   }
+
+  void onResetPreference() {
+    Element resultElement = getShadowDomElement('#preferenceResetResult')..text = '';
+    SparkModel.instance.syncPrefs.clear().then((_) {
+      SparkModel.instance.localPrefs.clear();
+    }).catchError((e) {
+      resultElement.text = '<error reset preferences>';
+    }).then((_) {
+      resultElement.text = 'Preferences are reset. Restart Spark.';
+    });
+  }
 }
