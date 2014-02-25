@@ -174,13 +174,8 @@ class AceManager {
   html.Element get _editorElement => parentElement.parent;
 
   html.Element get _minimapElement {
-    List<html.Node> minimapElements =
-        _editorElement.getElementsByClassName("minimap");
-    if (minimapElements.length == 1) {
-      return minimapElements.first;
-    }
-
-    return null;
+    List element = parentElement.getElementsByClassName("minimap");
+    return element.length == 1 ? element.first : null;
   }
 
   String _formatAnnotationItemText(String text, [String type]) {
@@ -198,6 +193,8 @@ class AceManager {
 
     _recreateMiniMap();
     Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
+
+    html.Element minimap = _minimapElement;
 
     for (workspace.Marker marker in markers) {
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -235,9 +232,9 @@ class AceManager {
       html.Element minimapMarker = new html.Element.div();
       minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
       minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
-      minimapMarker.onClick.listen((_) => _miniMapMarkerClicked(marker));
+      minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
-      _minimapElement.append(minimapMarker);
+      minimap.append(minimapMarker);
     }
 
     currentSession.setAnnotations(annotations);
@@ -270,25 +267,22 @@ class AceManager {
     }
   }
 
-  void _miniMapMarkerClicked(workspace.Marker marker) {
+  void _miniMapMarkerClicked(html.MouseEvent event, workspace.Marker marker) {
+    event.stopPropagation();
+    event.preventDefault();
     _selectMarker(marker);
   }
 
   void _selectMarker(workspace.Marker marker) {
-    // TODO(ericarnold): Marker range should be selected, but we either need
-    // Marker to include col info or we need a way to convert col to char-pos
     _aceEditor.gotoLine(marker.lineNum);
+    _aceEditor.selection.selectLineEnd();
+    _aceEditor.focus();
     _currentMarker = marker;
   }
 
   void _recreateMiniMap() {
-    if (_editorElement == null) {
+    if (parentElement == null) {
       return;
-    }
-    html.Element scrollbarElement =
-        _editorElement.getElementsByClassName("ace_scrollbar").first;
-    if (scrollbarElement.style.right != "10px") {
-      scrollbarElement.style.right = "10px";
     }
 
     html.Element miniMap = new html.Element.div();
@@ -297,7 +291,7 @@ class AceManager {
     if (_minimapElement != null) {
       _minimapElement.replaceWith(miniMap);
     } else {
-      _editorElement.append(miniMap);
+      parentElement.append(miniMap);
     }
   }
 
@@ -428,7 +422,6 @@ class AceManager {
         setMarkers(file.getMarkers());
       });
 
-      // TODO(ericarnold): Markers aren't shown until file is edited.  Fix.
       setMarkers(file.getMarkers());
     }
 

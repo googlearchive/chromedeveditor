@@ -136,19 +136,18 @@ body {
 }
 
 .minimap {
-  right: 0px;
+  right: 15px;
   width: 10px;
-  bottom: 15px;
-  top: 0px;
+  bottom: 0;
+  top: 0;
   position: absolute;
-  z-index: 9;
-  /* TODO(ericarnold): Needs a background which inherits editor bg color.*/
+  /*z-index: 9;*/
 }
 
 .minimap-marker {
   border-radius: 2px;
   position: absolute;
-  height: 4px;
+  height: 6px;
   left: 1px;
   right: 1px;
   background: #DDD;
