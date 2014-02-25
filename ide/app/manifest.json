@@ -37,18 +37,20 @@
       ]
     },
     "management",
-    {
-      "socket": [
-        "tcp-connect",
-        "tcp-listen"
-      ]
-    },
     "syncFileSystem",
     "storage",
     "unlimitedStorage",
     "webview",
     "contextMenus"
   ],
+  "sockets": {
+    "tcp": {
+      "connect": "*"
+    },
+    "tcpServer": {
+      "listen": "127.0.0.1:*"
+    }
+  },
   "file_handlers": {
     "text": {
       "types": [
