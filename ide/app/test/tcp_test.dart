@@ -4,15 +4,17 @@
 
 library spark.tcp_test;
 
+import 'dart:async';
+
 import 'package:unittest/unittest.dart';
 
 import '../lib/tcp.dart' as tcp;
 
 /** A matcher for SocketExceptions. */
-const isSocketException = const _SocketException();
+const isSocketException = const _SocketExceptionMatcher();
 
-class _SocketException extends TypeMatcher {
-  const _SocketException() : super("SocketException");
+class _SocketExceptionMatcher extends TypeMatcher {
+  const _SocketExceptionMatcher() : super("SocketException");
   bool matches(item, Map matchState) => item is tcp.SocketException;
 }
 
@@ -26,10 +28,10 @@ defineTests() {
         client.dispose();
       });
     });
-//    test('connect with error', () {
-//      Future future = tcp.TcpClient.createClient(tcp.LOCAL_HOST, 7171);
-//      expect(future, throwsA(isSocketException));
-//    });
+    test('connect with error', () {
+      Future future = tcp.TcpClient.createClient(tcp.LOCAL_HOST, 7171);
+      expect(future, throwsA(isSocketException));
+    });
     test('send and receive', () {
       tcp.TcpClient client;
 

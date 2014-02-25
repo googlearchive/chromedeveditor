@@ -61,14 +61,16 @@ class TcpClient {
       return chrome.sockets.tcp.connect(socketId, host, port).then((int result) {
         if (result < 0) {
           chrome.sockets.tcp.close(socketId);
-          if (throwOnError) {
-            throw new SocketException('unable to connect to ${host} ${port}: ${result}');
-          } else {
-            return null;
-          }
+          if (!throwOnError) return null;
+          throw new SocketException(
+              'unable to connect to ${host} ${port}: ${result}');
         } else {
           return new TcpClient._fromSocketId(socketId);
         }
+      }).catchError((e) {
+        if (!throwOnError) return null;
+        throw new SocketException(
+            'unable to connect to ${host} ${port}: ${e.toString()}');
       });
     });
   }
