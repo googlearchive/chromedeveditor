@@ -137,9 +137,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     addParticipant(new _SparkSetupParticipant(this));
 
-    // TODO: this event is not being fired. A bug with chrome apps / Dartium?
-    // Possibly this: https://github.com/dart-gde/chrome.dart/issues/115
-    chrome.app.window.onClosed.listen((_) {
+    // This event is not fired when closing the current window. We listen for it
+    // in the vain hope that we will get the event, and we'll be able to clean
+    // up after ourselves slightly better.
+    chrome.app.window.current().onClosed.listen((_) {
       close();
     });
 
@@ -1534,9 +1535,9 @@ class _HarnessPushJob extends Job {
   _HarnessPushJob(this.spark, this.deployContainer, this._url) :
     super('Deploying to mobile…');
 
-  Future run(ProgressMonitor monitor) {    
+  Future run(ProgressMonitor monitor) {
     HarnessPush harnessPush = new HarnessPush(deployContainer);
-    
+
     return harnessPush.push(_url, monitor).then((_) {
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
