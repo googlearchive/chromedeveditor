@@ -24,6 +24,8 @@ dependencies:
   shadow_dom: 0.9.1
   spark_widgets:
     path: ../widgets
+  tavern:
+    git: git://github.com/tapted/tavern.git
   unittest: '>=0.10.0'
   uuid: any
 dev_dependencies:
