@@ -1519,20 +1519,26 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
   void _commit() {
     String url = _pushUrlElement.value;
     // TODO(braden): Input validation.
-    spark.jobManager.schedule(new _HarnessPushJob(deployContainer, url));
+    spark.jobManager.schedule(new _HarnessPushJob(spark, deployContainer, url));
   }
 }
 
 class _HarnessPushJob extends Job {
+  final Spark spark;
   final ws.Container deployContainer;
   final String _url;
 
-  _HarnessPushJob(this.deployContainer, this._url) :
+  _HarnessPushJob(this.spark, this.deployContainer, this._url) :
     super('Deploying to mobile…');
 
-  Future run(ProgressMonitor monitor) {
-    monitor.start(name, 10);
-    return HarnessPush.push(deployContainer, _url, monitor);
+  Future run(ProgressMonitor monitor) {    
+    HarnessPush harnessPush = new HarnessPush(deployContainer);
+    
+    return harnessPush.push(_url, monitor).then((_) {
+      spark.showSuccessMessage('Successfully pushed');
+    }).catchError((e) {
+      spark.showMessage('Push failure', e.toString());
+    });
   }
 }
 
