@@ -332,7 +332,7 @@ class AceManager {
     html.Element link = dialog.querySelector('.always-view-as-text-button');
     link.onClick.listen((_) {
       dialog.classes.add("transition-hidden");
-      delegate.setAlwaysShowAsText(currentFile.name, true);
+      delegate.setShowFileAsText(currentFile.name, true);
       focus();
     });
 
@@ -539,7 +539,7 @@ abstract class AceManagerDelegate {
   /**
    * Mark the files with the given file extension as editable in text format.
    */
-  void setAlwaysShowAsText(String extension, bool enabled);
+  void setShowFileAsText(String extension, bool enabled);
 
   /**
    * Returns true if the file with the given filename can be edited as text.

@@ -621,7 +621,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   // Implementation of AceManagerDelegate interface:
   //
 
-  void setAlwaysShowAsText(String filename, bool enabled) {
+  void setShowFileAsText(String filename, bool enabled) {
     String extension = path.extension(filename);
     if (extension.isEmpty) extension = filename;
 
