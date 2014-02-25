@@ -332,8 +332,7 @@ class AceManager {
     html.Element link = dialog.querySelector('.always-view-as-text-button');
     link.onClick.listen((_) {
       dialog.classes.add("transition-hidden");
-      String extention = path.extension(currentFile.name);
-      delegate.setAlwaysShowAsText(extention, true);
+      delegate.setAlwaysShowAsText(currentFile.name, true);
       focus();
     });
 

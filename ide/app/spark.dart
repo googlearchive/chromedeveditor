@@ -123,7 +123,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   ProjectLocationManager projectLocationManager;
 
   // Extensions of files that will be shown as text.
-  Set<String> _textFileExtensions;
+  Set<String> _textFileExtensions = new Set.from(
+      ['.cmake', '.gitignore', '.lock', '.prefs', '.txt']);
 
   Spark(this.developerMode) {
     initServices();
@@ -279,14 +280,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _launchManager = new LaunchManager(_workspace, services, this);
   }
 
-  /**
-   * Returns the path separator specific to os.
-   */
-  String getPathSeparator() {
-    // TODO(grv) : Add check of os and return accordingly.
-    return '/';
-  }
-
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement(), this);
     _aceThemeManager = new ThemeManager(
@@ -298,16 +291,13 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _editorManager.onNewFileOpened.listen((_){
       _workspace.checkResource(_editorManager.currentFile);
     });
-   _editorArea = new EditorArea(
-        querySelector('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
+    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
+        _workspace, allowsLabelBar: true);
 
     _syncPrefs.getValue('textFileExtensions').then((String value) {
-      _textFileExtensions = new Set();
       if (value != null) {
-        List<String> extensions = JSON.decode(value);
-        _textFileExtensions.addAll(extensions);
+        _textFileExtensions.addAll(JSON.decode(value));
       }
-      _textFileExtensions.addAll(['.txt', '.cmake']);
     });
   }
 
@@ -631,20 +621,24 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   // Implementation of AceManagerDelegate interface:
   //
 
-  void setAlwaysShowAsText(String extension, bool enabled) {
-    // Allow to change the preference only when it's been loaded.
-    if (_textFileExtensions != null) {
-      if (enabled) {
-        _textFileExtensions.add(extension);
-      } else {
-        _textFileExtensions.remove(extension);
-      }
-      _syncPrefs.setValue('textFileExtensions', JSON.encode(_textFileExtensions.toList()));
+  void setAlwaysShowAsText(String filename, bool enabled) {
+    String extension = path.extension(filename);
+    if (extension.isEmpty) extension = filename;
+
+    if (enabled) {
+      _textFileExtensions.add(extension);
+    } else {
+      _textFileExtensions.remove(extension);
     }
+
+    _syncPrefs.setValue('textFileExtensions',
+        JSON.encode(_textFileExtensions.toList()));
   }
 
   bool canShowFileAsText(String filename) {
     String extension = path.extension(filename);
+    if (extension.isEmpty) extension = filename;
+
     return _aceManager.isFileExtensionEditable(extension) ||
         _textFileExtensions.contains(extension);
   }
@@ -1534,9 +1528,9 @@ class _HarnessPushJob extends Job {
   _HarnessPushJob(this.spark, this.deployContainer, this._url) :
     super('Deploying to mobile…');
 
-  Future run(ProgressMonitor monitor) {    
+  Future run(ProgressMonitor monitor) {
     HarnessPush harnessPush = new HarnessPush(deployContainer);
-    
+
     return harnessPush.push(_url, monitor).then((_) {
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
