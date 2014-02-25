@@ -472,6 +472,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     showErrorMessage(title, message);
   }
 
+    // Implemented in a sub-class.
+  void unveil() { }
+
   /**
    * Show a model error dialog.
    */
@@ -799,7 +802,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     // get platform info
     return chrome.runtime.getPlatformInfo().then((Map m) {
       spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
-      spark.workspace.restore().then((value) {
+      return spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
           spark.aceManager.focus();
@@ -809,7 +812,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
       return ProjectLocationManager.restoreManager(spark.localPrefs).then((manager) {
         spark.projectLocationManager = manager;
       });
-    });
+    }).whenComplete(() => spark.unveil());
   }
 
   Future applicationStarted(Application application) {
