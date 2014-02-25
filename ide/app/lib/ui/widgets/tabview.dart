@@ -121,14 +121,16 @@ class TabView {
   DivElement _tabBarScroller;
   DivElement _tabBarScrollable;
   DivElement _tabViewWorkspace;
-
+  bool _labelBarShowing = false;
+  
   StreamController<Tab> _onCloseStreamController =
       new StreamController<Tab>.broadcast(sync: true);
   StreamController<TabBeforeCloseEvent> _onBeforeCloseStreamController =
       new StreamController<TabBeforeCloseEvent>.broadcast(sync: true);
   StreamController<Tab> _onSelectedStreamController =
       new StreamController<Tab>.broadcast(sync: true);
-
+  StreamController<bool> _onLabelBarShown = new StreamController.broadcast();
+  
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
   bool _tabItemsLayoutListenerEnabled = false;
@@ -146,6 +148,12 @@ class TabView {
         e.preventDefault();
         e.stopPropagation();
         _tabBarScroller.scrollLeft +=  e.deltaX.round();
+      }
+    });
+    _tabBar.onTransitionEnd.listen((_) {
+      if (showLabelBar != _labelBarShowing) {
+        _labelBarShowing = showLabelBar;
+        _onLabelBarShown.add(_labelBarShowing);
       }
     });
     _tabBarScrollable = new DivElement()
@@ -167,9 +175,7 @@ class TabView {
       }
     });
 
-    window.onResize.listen((e) {
-      _layoutTabItemsOnResize();
-    });
+    window.onResize.listen((e) => _layoutTabItemsOnResize());
   }
 
   Tab get selectedTab => _selectedTab;
@@ -341,4 +347,5 @@ class TabView {
   Stream<TabBeforeCloseEvent> get onBeforeClose =>
       _onBeforeCloseStreamController.stream;
   Stream<Tab> get onSelected => _onSelectedStreamController.stream;
+  Stream<bool> get onLabelBarShown => _onLabelBarShown.stream;
 }

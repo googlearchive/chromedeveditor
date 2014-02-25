@@ -19,7 +19,7 @@ import 'workspace.dart';
 import 'ui/widgets/imageviewer.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
-final int _DELAY_MS = 500;
+final int _DELAY_MS = 1000;
 
 /**
  * Classes implement this interface provides/refreshes editors for [Resource]s.
