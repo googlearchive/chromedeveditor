@@ -5,6 +5,7 @@
 library spark;
 
 import 'dart:async';
+import 'dart:js' as js;
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
@@ -394,6 +395,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ResourceRefreshAction(this));
+    actionManager.registerAction(new ResourceDiffAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
     actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
@@ -1347,6 +1349,29 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
   bool appliesTo(context) => _isResourceList(context) && !_isTopLevelFile(context);
 }
 
+class ResourceDiffAction extends SparkAction implements ContextAction {
+  ResourceDiffAction(Spark spark) : super(
+      spark, "resource-diff", "Diff") {
+  }
+
+  void _invoke([context]) {
+    List<ws.Resource> resources;
+
+    if (context == null) {
+      resources = [spark.focusManager.currentResource];
+    } else {
+      resources = context;
+    }
+
+    ResourceDiffJob job = new ResourceDiffJob(resources, spark);
+    spark.jobManager.schedule(job);
+  }
+
+  String get category => 'resource';
+
+  bool appliesTo(context) => _isResourceList(context) && !_isTopLevelFile(context);
+}
+
 class PrevMarkerAction extends SparkAction {
   PrevMarkerAction(Spark spark) : super(
       spark, "marker-prev", "Previous Marker") {
@@ -2094,6 +2119,33 @@ class ResourceRefreshJob extends Job {
     };
 
     Timer.run(consumeProject);
+
+    return completer.future;
+  }
+}
+
+
+class ResourceDiffJob extends Job {
+  final List<ws.Project> resources;
+  final Spark spark;
+
+  ResourceDiffJob(this.resources, this.spark) : super('Diffing…');
+
+  Future run(ProgressMonitor monitor) {
+
+    GitScmProjectOperations gitOperations =
+        spark.scmManager.getScmOperationsFor(resources.first.project);
+
+    Completer completer = new Completer();
+
+    Timer.run(() {
+      gitOperations.diff(resources.first.entry).then((contents) {
+        js.JsObject context = js.context['Diff'];
+        context.callMethod('createDiffWindow', [contents[0], contents[1],
+            resources.first.entry.fullPath]);
+        completer.complete();
+      });
+    });
 
     return completer.future;
   }

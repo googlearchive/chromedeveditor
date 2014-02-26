@@ -25,6 +25,7 @@ import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
+import 'git/commands/diff.dart';
 import 'git/commands/fetch.dart';
 import 'git/commands/index.dart' as index;
 import 'git/commands/pull.dart';
@@ -361,6 +362,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
       // We changed files on disk - let the workspace know to re-scan the
       // project and fire any necessary resource change events.
       Timer.run(() => project.refresh());
+    });
+  }
+
+  Future diff(chrome.ChromeFileEntry fileEntry) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Diff.DiffFile(store, fileEntry);
     });
   }
 
