@@ -1,3 +1,5 @@
-class AnalyzerResult {
+class AnalysisResult {
 
+  AnalysisResult.fromMap(Map mapData) {
+  }
 }

@@ -238,32 +238,26 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
-      case "analyzeString":
-        Completer<AnalyzerResult> completer = new Completer();
-        List<String> dartFileUuids = event.data["dartFileUuids"];
-        dartSdkFuture.then((ChromeDartSdk sdk) {
-          return Future.forEach(dartFileUuids, (String fileUuid) =>
-              _processFile(sdk, fileUuid));
-            }).then((_) => completer.complete());
+      case "build":
+        return build(event.data["dartFileUuids"])
+            .then((List<AnalyzerResult>_){
 
-
-        return completer.future;
+            });
+      default:
+        throw new ArgumentError(
+            "Unknown action '${event.actionId}' sent to $serviceId service.");
     }
   }
 
   Future<List<AnalyzerResult>> build(List<String> fileUuids) {
     List<AnalyzerResult> results = [];
 
-    Completer<List<AnalyzerResult>> completer = new Completer();
-
-    createSdk().then((ChromeDartSdk sdk) {
+    return dartSdkFuture.then((ChromeDartSdk sdk) {
       Future.forEach(fileUuids, (String fileUuid) {
           _processFile(sdk, fileUuid)
               .then((AnalyzerResult result) => results.add(result));
-          }).then((_) => completer.complete(results));
+          }).then((_) => results);
     });
-
-    return completer.future;
   }
 
   /**

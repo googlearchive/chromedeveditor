@@ -135,13 +135,12 @@ class AnalyzerService extends Service {
 //        });
 //  }
 
-  Future<CompilerResult> analyzeString(String string,
+  Future<AnalysisResult> analyzeString(String string,
       {bool performResolution}) {
     return onceReady.then((_) =>
-        _sendAction("analyzeString", {"string": string,
-          "performResolution": performResolution}))
+        _sendAction("analyzeString", {"string": string}))
         .then((ServiceActionEvent result) {
-//          CompilerResult response = new AnalysisResult.fromMap(result.data);
+          AnalysisResult response = new AnalysisResult.fromMap(result.data);
           return response;
         });
   }

@@ -6,7 +6,6 @@ library spark.dart_builder;
 
 import 'dart:async';
 
-import '../analyzer.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
@@ -15,7 +14,6 @@ import '../workspace.dart';
  * A [Builder] implementation that drives the Dart analyzer.
  */
 class DartBuilder extends Builder {
-
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     Iterable<File> dartFiles = event.modifiedFiles.where(
         (file) => file.name.endsWith('.dart'));

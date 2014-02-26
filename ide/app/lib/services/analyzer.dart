@@ -20,7 +20,7 @@ import 'package:analyzer/src/generated/source.dart';
 import 'package:path/path.dart' as path;
 
 import '../dart/sdk.dart' as sdk;
-//import '../analyzer_common.dart';
+import '../analyzer_common.dart';
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
@@ -249,11 +249,19 @@ class SdkSource extends Source {
   String toString() => fullName;
 }
 
+class File {
+  String uuid;
+  String name;
+  String fullPath;
+
+  File(this.uuid, this.fullPath, this.name);
+}
+
 /**
  * A [Source] implementation based on HTML FileEntrys.
  */
 class FileSource extends Source {
-  final chrome.ChromeFileEntry file;
+  final File file;
 
   FileSource(this.file);
 

@@ -66,7 +66,7 @@ defineTests() {
     test('analyzer test', () {
       TestService testService = services.getService("example");
 
-      return testService.analyzerTest()
+      return testService.analyzerSdkTest()
           .then((success) => expect(success, isTrue));
     });
 
