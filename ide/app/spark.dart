@@ -409,7 +409,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
-   
+
 
     actionManager.registerKeyListener();
   }
@@ -1367,10 +1367,10 @@ class PubGetAction extends SparkAction implements ContextAction {
   }
 
   String get category => 'pub';
-  
+
   bool _appliesTo(ws.Resource resource) =>  resource is ws.File && resource.name == 'pubspec.yaml';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first); 
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 }
 
 class ResourceRefreshAction extends SparkAction implements ContextAction {
@@ -1936,7 +1936,9 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
     // Show a yes/no dialog.
     spark.askUserOkCancel(text, okButtonLabel: 'Revert').then((bool val) {
       if (val) {
-        operations.revertChanges(resources);
+        operations.revertChanges(resources).then((_) {
+          resources.first.project.refresh();
+        });
       }
     });
   }
