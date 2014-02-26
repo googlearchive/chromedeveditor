@@ -11,8 +11,6 @@ library spark.ui.widgets.treeview;
 import 'dart:collection';
 import 'dart:html';
 
-import 'package:uuid/uuid.dart';
-
 import 'treeview_cell.dart';
 import 'treeview_row.dart';
 import 'listview.dart';
@@ -20,6 +18,7 @@ import 'listview_cell.dart';
 import 'listview_delegate.dart';
 import 'treeview_delegate.dart';
 import '../utils/html_utils.dart';
+import '../../uuid.dart';
 
 class TreeViewDragImage {
   ImageElement image;

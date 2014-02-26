@@ -27,7 +27,6 @@ dependencies:
   tavern:
     git: git://github.com/tapted/tavern.git
   unittest: '>=0.10.0'
-  uuid: any
 dev_dependencies:
   args: any
   grinder: '>=0.5.0 <0.6.0'
