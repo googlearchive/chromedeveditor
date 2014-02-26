@@ -20,7 +20,7 @@ import 'package:analyzer/src/generated/source.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:path/path.dart' as path;
 
-import 'sdk.dart' as spark;
+import 'dart/sdk.dart' as sdk;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
@@ -40,7 +40,7 @@ Future<ChromeDartSdk> createSdk() {
 
   _sdkCompleter = new Completer();
 
-  spark.DartSdk.createSdk().then((spark.DartSdk sdk) {
+  sdk.DartSdk.createSdk().then((sdk.DartSdk sdk) {
     ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
     chromeSdk._parseLibrariesFile();
     _sdkCompleter.complete(chromeSdk);
@@ -112,7 +112,7 @@ class AnalyzerResult {
 class ChromeDartSdk extends DartSdk {
   final AnalysisContext context;
 
-  spark.DartSdk _sdk;
+  sdk.DartSdk _sdk;
   LibraryMap _libraryMap;
 
   ChromeDartSdk._(this._sdk): context = new AnalysisContextImpl() {
@@ -205,7 +205,7 @@ class StringSource extends Source {
  * A [Source] implementation based of a file in the SDK.
  */
 class SdkSource extends Source {
-  final spark.DartSdk _sdk;
+  final sdk.DartSdk _sdk;
   final String fullName;
 
   SdkSource(this._sdk, this.fullName);

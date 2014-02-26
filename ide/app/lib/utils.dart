@@ -10,6 +10,7 @@ import 'dart:typed_data' as typed_data;
 import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:logging/logging.dart';
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
@@ -68,6 +69,22 @@ Future<List<int>> getAppContentsBinary(String path) {
     typed_data.ByteBuffer buffer = request.response;
     return new typed_data.Uint8List.view(buffer);
   });
+}
+
+/**
+ * A [Notifier] is used to present the user with a message.
+ */
+abstract class Notifier {
+  void showMessage(String title, String message);
+}
+
+/**
+ * A [Notifier] implementation that just logs the given [title] and [message].
+ */
+class NullNotifier implements Notifier {
+  void showMessage(String title, String message) {
+    Logger.root.info('${title}:${message}');
+  }
 }
 
 /**
@@ -228,7 +245,6 @@ String _platform() {
   return (str != null) ? str.toLowerCase() : '';
 }
 
-
 /**
  * Defines a received action event.
  */
@@ -238,6 +254,7 @@ class ServiceActionEvent {
   String serviceId;
   String actionId;
   bool response = false;
+  bool error = false;
   Map data;
 
   String _callId;
@@ -251,6 +268,7 @@ class ServiceActionEvent {
     _callId = map["callId"];
     data = map["data"];
     response = map["response"];
+    error = map["error"];
   }
 
   ServiceActionEvent._asResponse(this.serviceId, this.actionId, this._callId,
@@ -263,6 +281,7 @@ class ServiceActionEvent {
       "callId": callId,
       // TODO(ericarnold): We can probably subclass SAE into Response specific.
       "response": response == true,
+      "error": error == true,
       "data": data
     };
   }
@@ -274,7 +293,7 @@ class ServiceActionEvent {
     return response;
   }
 
-  makeRespondable(String callId) {
+  void makeRespondable(String callId) {
     if (this._callId == null) {
       this._callId = callId;
     } else {
@@ -282,4 +301,3 @@ class ServiceActionEvent {
     }
   }
 }
-

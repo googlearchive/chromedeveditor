@@ -8,17 +8,19 @@
 library spark.launch;
 
 import 'dart:async';
-import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:chrome/gen/management.dart';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'apps/app_utils.dart';
-import 'compiler.dart';
-import 'developer_private.dart' as dev_private;
+import 'services/compiler.dart';
+import 'developer_private.dart';
+import 'jobs.dart';
 import 'utils.dart';
 import 'server.dart';
+import 'services/services.dart';
 import 'workspace.dart';
 
 const int SERVER_PORT = 4040;
@@ -32,13 +34,22 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
  */
 class LaunchManager {
   List<LaunchDelegate> _delegates = [];
+  Notifier _notifier;
+  Services _services;
+  CompilerService _compiler;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace) {
+  LaunchManager(this._workspace, this._services, [this._notifier]) {
+    _compiler = _services.getService("compiler");
+
+    if (_notifier == null) {
+      _notifier = new NullNotifier();
+    }
+
     // The order of registration here matters.
-    _delegates.add(new ChromeAppLaunchDelegate());
+    _delegates.add(new ChromeAppLaunchDelegate(this));
     _delegates.add(new DartWebAppLaunchDelegate(this));
   }
 
@@ -50,8 +61,14 @@ class LaunchManager {
   /**
    * Launches the given [Resouce].
    */
-  void run(Resource resource) {
-    _delegates.firstWhere((delegate) => delegate.canRun(resource)).run(resource);
+  Future run(Resource resource) {
+    for (LaunchDelegate delegate in _delegates) {
+      if (delegate.canRun(resource)) {
+        return delegate.run(resource);
+      }
+    }
+
+    return new Future.value();
   }
 
   void dispose() {
@@ -64,12 +81,16 @@ class LaunchManager {
  * delegate.
  */
 abstract class LaunchDelegate {
+  final LaunchManager launchManager;
+
+  LaunchDelegate(this.launchManager);
+
   /**
    * The delegate can launch the given resource
    */
   bool canRun(Resource resource);
 
-  void run(Resource resource);
+  Future run(Resource resource);
 
   void dispose();
 }
@@ -79,20 +100,19 @@ abstract class LaunchDelegate {
  */
 class DartWebAppLaunchDelegate extends LaunchDelegate {
   PicoServer _server;
-  LaunchManager _launchManager;
   Dart2JsServlet _dart2jsServlet;
   ProjectRedirectServlet _redirectServlet;
 
-  DartWebAppLaunchDelegate(this._launchManager) {
-    _dart2jsServlet = new Dart2JsServlet(_launchManager);
-    _redirectServlet = new ProjectRedirectServlet(_launchManager);
+  DartWebAppLaunchDelegate(LaunchManager launchManager) : super(launchManager) {
+    _dart2jsServlet = new Dart2JsServlet(launchManager);
+    _redirectServlet = new ProjectRedirectServlet(launchManager);
 
     PicoServer.createServer(SERVER_PORT).then((server) {
       _server = server;
       _server.addServlet(_redirectServlet);
       _server.addServlet(new StaticResourcesServlet());
       _server.addServlet(_dart2jsServlet);
-      _server.addServlet(new WorkspaceServlet(_launchManager));
+      _server.addServlet(new WorkspaceServlet(launchManager));
     }).catchError((error) {
       // TODO: We could fallback to binding to any port.
       _logger.severe('Error starting up embedded server', error);
@@ -150,7 +170,7 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
     return null;
   }
 
-  void run(Resource resource) {
+  Future run(Resource resource) {
     _redirectServlet._launchFile = getLaunchResourceFor(resource);
 
     // Use `.htm` extension for launch page, otherwise the polymer build tries
@@ -159,8 +179,12 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
         id: 'runWindow',
         width: 800, height: 570,
         minWidth: 800, minHeight: 570);
-    chrome.app.window.create('launch_page/launch_page.htm', options).catchError((e) {
+
+    return chrome.app.window.create('launch_page/launch_page.htm', options).catchError((e) {
       _logger.log(Level.INFO, 'Error launching Dart web app', e);
+
+      launchManager._notifier.showMessage(
+          'Error launching Dart web app', e.toString());
     });
   }
 
@@ -176,41 +200,38 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
  * Launcher for Chrome Apps.
  */
 class ChromeAppLaunchDelegate extends LaunchDelegate {
+  ChromeAppLaunchDelegate(LaunchManager launchManager) : super(launchManager);
+
   bool canRun(Resource resource) {
     return getAppContainerFor(resource) != null;
   }
 
-  void run(Resource resource) {
+  Future run(Resource resource) {
     Container launchContainer = getAppContainerFor(resource);
 
     if (!isDart2js()) {
-      _logger.warning("Can't launch on Dartium currently...");
-      return;
-    }
+      launchManager._notifier.showMessage(
+          'Error launching Chrome app', "Can't launch on Dartium currently...");
+      return new Future.value();
+    } else {
+      return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
+        // TODO: Use the returned appId once it has the correct results.
+        return _getAppId(launchContainer.name).then((String id) {
+          if (id == null) {
+            throw 'Unable to locate an application id.';
+          } else if (!management.available) {
+            throw 'The chrome.management API is not available.';
+          } else {
+            return management.launchApp(id);
+          }
+        });
+      }).catchError((e) {
+        _logger.severe('Error launching Chrome app', e);
 
-    dev_private.developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
-      // TODO: Use returned appId once that returns the correct results.
-      _getAppId(launchContainer.name).then((String id) {
-        _launchApp(id);
+        launchManager._notifier.showMessage(
+            'Error launching Chrome app', e.toString());
       });
-    });
-  }
-
-  Future<String> _loadApp(Container container) {
-    Completer completer = new Completer();
-    callback(String id) {
-      completer.complete(id);
     }
-
-    js.JsObject obj = js.context['chrome']['developerPrivate'];
-    obj.callMethod('loadDirectory', [(container.entry as
-        chrome.ChromeObject).jsProxy, callback]);
-    return completer.future;
-  }
-
-  void _launchApp(String id) {
-    js.JsObject obj = js.context['chrome']['management'];
-    obj.callMethod('launchApp', [id]);
   }
 
   /**
@@ -218,20 +239,14 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
    * app_id.
    */
   Future<String> _getAppId(String name) {
-    Completer completer = new Completer();
-    callback(List result) {
-      for (int i = 0; i < result.length; ++i) {
-        if (result[i]['is_unpacked'] && (result[i]['path'] as String).endsWith(
-            name)) {
-          completer.complete(result[i]['id']);
-          return;
+    return developerPrivate.getItemsInfo(false, false).then((List<ItemInfo> items) {
+      for (ItemInfo item in items) {
+        if (item.is_unpacked && item.path.endsWith(name)) {
+          return item.id;
         }
       };
-      completer.complete(null);
-    }
-    js.JsObject obj = js.context['chrome']['developerPrivate'];
-    obj.callMethod('getItemsInfo', [false, false, callback]);
-    return completer.future;
+      return null;
+    });
   }
 
   void dispose() {
@@ -335,17 +350,17 @@ class ProjectRedirectServlet extends PicoServlet {
  */
 class Dart2JsServlet extends PicoServlet {
   LaunchManager _launchManager;
-  Compiler _compiler;
+  CompilerService _compiler;
 
   Dart2JsServlet(this._launchManager){
-    Compiler.createCompiler().then((c) {
-      _compiler = c;
-    });
+    _compiler = _launchManager._compiler;
+    // TODO(ericarnold): Compiler should auto-start
+    _compiler.start();
   }
 
   bool canServe(HttpRequest request) {
     String path = request.uri.path;
-    return (path.endsWith('.dart.js') && _getResource(path) != null);
+    return path.endsWith('.dart.js') && _getResource(path) != null;
   }
 
   Resource _getResource(String path) {
@@ -362,8 +377,12 @@ class Dart2JsServlet extends PicoServlet {
 
     Resource resource = _getResource(request.uri.path);
 
-    Stopwatch stopwatch = new Stopwatch();
-    stopwatch.start();
+    Stopwatch stopwatch = new Stopwatch()..start();
+
+    Completer completer = new Completer();
+
+    resource.workspace.builderManager.jobManager.schedule(
+        new ProgressJob('Compiling ${resource.name}…', completer));
 
     return (resource as File).getContents().then((String string) {
       // TODO: compiler should also accept files
@@ -374,7 +393,7 @@ class Dart2JsServlet extends PicoServlet {
         response.setContentTypeFrom(request.uri.path);
         return new Future.value(response);
       });
-    });
+    }).whenComplete(() => completer.complete());
   }
 
   void dispose() {

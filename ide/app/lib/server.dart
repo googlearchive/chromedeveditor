@@ -59,8 +59,8 @@ class PicoServer {
 
   Future<tcp.SocketInfo> getInfo() => _server.getInfo();
 
-  void dispose() {
-    _server.dispose();
+  Future dispose() {
+    return _server.dispose();
   }
 
   void _serveClient(tcp.TcpClient client) {
@@ -75,12 +75,14 @@ class PicoServer {
       }
 
       HttpResponse response = new HttpResponse.notFound();
-      response._send(client);
-      client.dispose();
+      response._send(client).then((_) {
+        client.dispose();
+      });
     }).catchError((e) {
       HttpResponse response = new HttpResponse.badRequest();
-      response._send(client);
-      client.dispose();
+      response._send(client).then((_) {
+        client.dispose();
+      });
     });
   }
 
@@ -313,29 +315,32 @@ class HttpResponse {
   Future _send(tcp.TcpClient client) {
     final String eol = '\r\n';
 
+    BytesBuilder builder = new BytesBuilder();
+
     // send http/1.1 ...
-    client.writeString('HTTP/1.1 ${statusCode} ${_calcPhrase}${eol}');
+    builder.add('HTTP/1.1 ${statusCode} ${_calcPhrase}${eol}'.codeUnits);
 
     // send headers
-    BytesBuilder builder = new BytesBuilder();
     (headers as _HttpHeaders)._write(builder);
-    client.sink.add(builder.toBytes());
 
-    client.writeString(eol);
+    builder.add(eol.codeUnits);
 
     // send data
     if (_data != null) {
-      client.sink.add(_data);
+      builder.add(_data);
+      client.write(builder.toBytes());
       return new Future.value();
     } else if (_streamData != null) {
+      client.write(builder.toBytes());
       Completer completer = new Completer();
 
       _streamData.listen((List<int> bytes) {
-        client.sink.add(bytes);
+        client.write(bytes);
       }, onDone: () => completer.complete());
 
       return completer.future;
     } else {
+      client.write(builder.toBytes());
       return new Future.value();
     }
   }

@@ -8,11 +8,15 @@
   display: flex;
 }
 
-:host[direction="left"], :host[direction="right"] {
+/* BUG #733 */
+:host[direction="left"], :host[direction="right"],
+:host([direction="left"]), :host([direction="right"]) {
   flex-flow: row;
 }
 
-:host[direction="up"], :host[direction="down"] {
+/* BUG #733 */
+:host[direction="up"], :host[direction="down"],
+:host([direction="up"]), :host([direction="down"]) {
   flex-flow: column;
 }
 

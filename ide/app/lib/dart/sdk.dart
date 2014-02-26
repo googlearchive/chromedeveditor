@@ -17,8 +17,7 @@ library spark.sdk;
 
 import 'dart:async';
 import 'dart:convert';
-
-import 'utils.dart';
+import '../utils.dart';
 
 /**
  * This class represents the Dart SDK as build into Spark. It allows you to
@@ -40,6 +39,10 @@ class DartSdk extends SdkDirectory {
     }).catchError((e) {
       return new DartSdk._fromVersion('');
     });
+  }
+
+  static DartSdk createSdkFromContents(List<int> contents) {
+    return new DartSdk._withContents(contents);
   }
 
   String get version => _version;

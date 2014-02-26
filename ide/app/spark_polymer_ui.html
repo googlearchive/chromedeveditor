@@ -33,8 +33,11 @@
       <spark-button id="runButton" small primary>
         <span class="glyphicon glyphicon-play"></span> Run
       </spark-button>
-      <spark-button id="gitClone" small>Git Clone...</spark-button>
+      <spark-button id="pushButton" small>
+        <span class="glyphicon glyphicon-phone"></span> Deploy
+      </spark-button>
       <spark-button id="newProject" small>New Project...</spark-button>
+      <spark-button id="gitClone" small>Git Clone...</spark-button>
 
       <spark-status id="sparkStatus"></spark-status>
 
@@ -58,8 +61,7 @@
           </spark-menu-item>
           <spark-menu-item action-id="git-clone" label="Git Clone...">
           </spark-menu-item>
-          <spark-menu-separator></spark-menu-separator>
-          <spark-menu-item action-id="settings" label="Settings...">
+          <spark-menu-item action-id="webstore-publish" iconsize=0 label="Publish to Chrome Web Store">
           </spark-menu-item>
           <template if="{{developerMode}}">
             <spark-menu-separator></spark-menu-separator>
@@ -67,6 +69,8 @@
             </spark-menu-item>
           </template>
           <spark-menu-separator></spark-menu-separator>
+          <spark-menu-item action-id="settings" label="Settings...">
+          </spark-menu-item>
           <spark-menu-item action-id="help-about" label="About Spark">
           </spark-menu-item>
         </spark-menu-button>
@@ -80,21 +84,6 @@
       <content></content>
     </spark-split-view>
 
-    <!-- Delete File dialog -->
-    <spark-modal id="deleteDialog" class="dialog spark-overlay-scale-slideup">
-      <div class="modal-body">
-        <p id="message"></p>
-      </div>
-      <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
-        </spark-button>
-        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
-          Delete
-        </spark-button>
-      </div>
-    </spark-modal>
-
     <!-- Error dialog -->
     <spark-modal id="errorDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-body">
@@ -106,6 +95,21 @@
       <div class="modal-footer">
         <spark-button id="errorClose" overlay-toggle primary autofocus data-dismiss="modal">
           Close
+        </spark-button>
+      </div>
+    </spark-modal>
+
+    <!-- OK / Cancel dialog -->
+    <spark-modal id="okCancelDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <p id="okCancelMessage"></p>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button id="okText" overlay-toggle primary autofocus data-dismiss="modal">
+          OK
         </spark-button>
       </div>
     </spark-modal>
@@ -198,6 +202,28 @@
       </div>
     </spark-modal>
 
+    <!-- Harness Push dialog -->
+    <spark-modal id="pushDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Deploy to Mobile</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="pushUrl">Target Host</label>
+          <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Deploy
+        </spark-button>
+      </div>
+    </spark-modal>
+
     <!-- Git Clone dialog -->
     <spark-modal id="gitCloneDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
@@ -219,7 +245,7 @@
           Clone
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Commit dialog -->
     <spark-modal id="gitCommitDialog" class="dialog spark-overlay-scale-slideup">
@@ -255,7 +281,7 @@
           Commit
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Branch dialog -->
     <spark-modal id="gitBranchDialog" class="dialog spark-overlay-scale-slideup">
@@ -278,7 +304,7 @@
           Create Branch
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Checkout dialog -->
     <spark-modal id="gitCheckoutDialog" class="dialog spark-overlay-scale-slideup">
@@ -304,7 +330,7 @@
           Checkout
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git Push dialog -->
     <spark-modal id="gitPushDialog" class="dialog spark-overlay-scale-slideup">
@@ -325,8 +351,8 @@
           Push
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
-    
+    </spark-modal>
+
     <!-- About dialog -->
     <spark-modal id="aboutDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
@@ -353,7 +379,7 @@
           Close
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Setting dialog -->
     <spark-modal id="settingsDialog" class="dialog spark-overlay-scale-slideup">
@@ -402,18 +428,29 @@
           <label class="settings-title">Git</label>
           <div>
             <spark-button on-click="{{onResetGit}}">
-              Reset Git Settings
+              Clear Git Credentials
             </spark-button>
             <span id="gitResetSettingsDone">Done</span>
           </div>
         </div>
+        <template if="{{developerMode}}">
+          <div class="form-group">
+            <label class="settings-title">Preference</label>
+            <div>
+              <spark-button on-click="{{onResetPreference}}">
+                Reset Preferences
+              </spark-button>
+              <span id="preferenceResetResult"></span>
+            </div>
+          </div>
+        </template>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary autofocus data-dismiss="modal">
           Close
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
     <!-- Git authentication dialog -->
     <spark-modal id="gitAuthenticationDialog" class="dialog spark-overlay-scale-slideup">
@@ -445,7 +482,92 @@
           Login
         </spark-button>
       </div>
+    </spark-modal>
+
+    <!-- Publish on webstore -->
+    <spark-modal id="webStorePublishDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Publish to Chrome Web Store</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <form>
+            <div>
+              <input type="radio" name="type" value="new" id="new-app-radio" checked>
+              <label for="new-app-radio" checked>Create a new application</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="existing" id="existing-app-radio">
+              <label for="existing-app-radio">Upload to an existing application</label>
+            </div>        
+          </form>
+        </div>
+        <div class="form-group">
+          <label for="appID">Enter the ID of the existing application</label>
+          <input id="appID" type="text" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Publish
+        </spark-button>
+      </div>
     </spark-modal><!-- /.modal -->
+    
+    <!-- Project properties dialog -->
+    <spark-modal id="projectPropertiesDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Properties</h4>
+      </div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal>
+    
+    <!-- Chrome WebStore published dialog -->
+    <spark-modal id="webStorePublishedDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Your application has been published</label>
+          <div class="help-block">An updated version of your application has been uploaded and published. You can now see it on the Chrome Web Store.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button id="webStorePublishedAction" overlay-toggle data-dismiss="modal">
+          Open in the WebStore
+        </spark-button>
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal>
+    
+    <!-- Chrome WebStore first upload dialog -->
+    <spark-modal id="webStoreUploadedDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Your application has been uploaded</label>
+          <div class="help-block">Your application has been uploaded on the Chrome Web Store. You still need to fill out some additional information in the Developer Dashboard before publishing it.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button id="webStoreUploadedAction" overlay-toggle data-dismiss="modal">
+          Open in the Developer Dashboard
+        </spark-button>
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal>
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>

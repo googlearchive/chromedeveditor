@@ -255,17 +255,13 @@ class Workspace implements Container {
    * Read the workspace data from storage and restore entries.
    */
   Future restore() {
-    _store.getValue('workspaceRoots').then((s) {
-      if (s == null) {
-        _whenAvailable.complete(this);
-        return null;
-      }
+    Stopwatch stopwatch = new Stopwatch()..start();
 
+    _store.getValue('workspaceRoots').then((rootsString) {
       try {
         pauseResourceEvents();
 
-        List<Map> data = JSON.decode(s);
-
+        List<Map> data = (rootsString == null ? [] : JSON.decode(rootsString));
         List<WorkspaceRoot> roots = [];
 
         for (Map m in data) {
@@ -276,12 +272,17 @@ class Workspace implements Container {
         Future.forEach(roots, (WorkspaceRoot root) {
           return root.restore().then((_) {
             return link(root, fireEvent: false);
+          }).catchError((e) {
+            // Log the error, but don't fail the workspace restore because of it.
+            _logger.warning("Error when restoring ${root}", e);
           });
         }).whenComplete(() {
+          _logger.info('Workspace restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
+          _restoreSyncFs();
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
-        _logger.log(Level.INFO, 'Exception in workspace restore', e);
+        _logger.warning('Exception in workspace restore', e);
         _whenAvailable.complete(this);
       }
     });
@@ -308,21 +309,28 @@ class Workspace implements Container {
   /**
    * Read the sync file system and restore entries.
    */
-  Future restoreSyncFs() {
+  Future _restoreSyncFs() {
+    Stopwatch stopwatch = new Stopwatch()..start();
+    Completer completer = new Completer();
+
     chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
       _syncFileSystem = fs;
-      _syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
+      return _syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
         pauseResourceEvents();
-        Future.forEach(entries, (chrome.Entry entry) {
+        return Future.forEach(entries, (chrome.Entry entry) {
           return link(new SyncFolderRoot(entry));
         }).whenComplete(() {
+          _logger.info('SyncFS restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
         }).then((_) => _whenAvailableSyncFs.complete(this));
       });
     }, onError: (e) {
-        _logger.log(Level.INFO, 'Exception in workspace restore sync file system', e);
+        _logger.warning('Exception in workspace restore sync file system', e);
         _whenAvailableSyncFs.complete(this);
-    });
+    }).whenComplete(() => completer.complete());
+
+    _builderManager.jobManager.schedule(
+        new ProgressJob('Opening sync filesystem…', completer));
 
     return whenAvailableSyncFs();
   }
@@ -393,6 +401,8 @@ class Workspace implements Container {
       return _runInTimer(() => project.refresh());
     });
   }
+
+  bool containedBy(Container container) => false;
 
   dynamic getMetadata(String key, [dynamic defaultValue]) => defaultValue;
 
@@ -522,6 +532,17 @@ abstract class Resource {
       _fireResourceEvent(new ChangeDelta(this, EventType.ADD));
       workspace.resumeResourceEvents();
     });
+  }
+
+  /**
+   * Returns whether the given container is a parent of the current resource.
+   */
+  bool containedBy(Container container) {
+    if (this == container) return true;
+    if (container == null || container is Workspace) return false;
+    if (_parent == container) return true;
+    if (_parent == null) return false;
+    return _parent.containedBy(container);
   }
 
   /**
@@ -869,6 +890,8 @@ class FileRoot extends WorkspaceRoot {
       'token': token
     };
   }
+  
+  String toString() => "FileRoot ${id}";
 }
 
 /**
@@ -904,6 +927,8 @@ class FolderRoot extends WorkspaceRoot {
       'token': token
     };
   }
+  
+  String toString() => "FolderRoot ${id}";
 }
 
 /**
@@ -944,13 +969,14 @@ class FolderChildRoot extends WorkspaceRoot {
       'name': name
     };
   }
+  
+  String toString() => "FolderChildRoot ${parentToken} / ${name}";
 }
 
 /**
  * A workspace root that represents a folder on the sync file system.
  */
 class SyncFolderRoot extends WorkspaceRoot {
-
   SyncFolderRoot(chrome.DirectoryEntry folderEntry) {
     entry = folderEntry;
   }
@@ -964,6 +990,8 @@ class SyncFolderRoot extends WorkspaceRoot {
 
   // We do not persist infomation about the sync filesystem root.
   Map persistState() => null;
+  
+  String toString() => "SyncFolderRoot ${entry.name}";
 }
 
 /**

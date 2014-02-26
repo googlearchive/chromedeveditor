@@ -84,6 +84,7 @@
   display: inline;
   overflow: hidden;
   padding: 3px 8px;
+  margin-right: 6px;
 }
 
 #settingsDialog .plus-minus-button:hover {
@@ -99,6 +100,11 @@
 
 #gitResetSettingsDone {
   margin-left: 15px;
+}
+
+#preferenceResetResult {
+  color: #F00;
+  font-weight: bold;
 }
 
 #mainMenu {
@@ -122,7 +128,7 @@
 #gitCommitList {
   max-height: 250px;
   overflow: scroll;
-  padding: 0 20px;  
+  padding: 0 20px;
 }
 
 #gitCommitList h1 {
@@ -149,4 +155,8 @@
 
 .input-label input {
   -webkit-flex: 1 1 auto;
+}
+
+#webStorePublishDialog label {
+  margin-left: 5px;
 }

@@ -7,7 +7,12 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
+import '../workspace.dart' as ws;
+
+import 'compiler.dart';
 import '../utils.dart';
+
+export 'compiler.dart' show CompilerResult;
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -16,9 +21,11 @@ class Services {
   _IsolateHandler _isolateHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
+  ws.Workspace _workspace;
 
-  Services() {
+  Services(this._workspace) {
     _isolateHandler = new _IsolateHandler();
+    registerService(new CompilerService(this, _isolateHandler));
     registerService(new ExampleService(this, _isolateHandler));
     _chromeService = new ChromeServiceImpl(this, _isolateHandler);
 
@@ -69,6 +76,37 @@ abstract class Service {
   }
 }
 
+class CompilerService extends Service {
+  Completer _readyCompleter = new Completer();
+
+  String serviceId = "compiler";
+  Future onceReady;
+
+  CompilerService(Services services, _IsolateHandler handler)
+      : super(services, handler) {
+    onceReady = _readyCompleter.future;
+  }
+
+  Future start() {
+    return _isolateHandler.onceIsolateReady
+        .then((_) => _sendAction("start"))
+        .then((_) => _readyCompleter.complete());
+  }
+
+  Future<CompilerResult> compileString(String string) {
+    return onceReady.then((_) =>
+        _sendAction("compileString", {"string": string}))
+        .then((ServiceActionEvent result) {
+      CompilerResult response = new CompilerResult.fromMap(result.data);
+      return response;
+    });
+  }
+
+  Future dispose() {
+    return onceReady.then((_) => _sendAction("dispose"))
+        .then((_) => null);
+  }
+}
 
 class ExampleService extends Service {
   String serviceId = "example";
@@ -90,6 +128,20 @@ class ExampleService extends Service {
     });
   }
 
+  /**
+   * For testing ChromeService.getFileContents on the isolate side.
+   *
+   * Sends a [File] reference (via uuid) to the isolate which then then makes
+   * [ChromeService].[getFileContents()] call with that uuid which should send
+   * back the contents of the file to the isolate, which will return the
+   * contents to us for verification.
+   */
+  Future<String> readText(ws.File file) {
+    return _sendAction("readText", {"fileUuid": file.uuid})
+        .then((ServiceActionEvent event) {
+          return event.data['contents'];
+        });
+  }
 }
 
 /**
@@ -103,25 +155,57 @@ class ChromeServiceImpl extends Service {
       : super(services, handler);
 
   // For incoming (non-requested) actions.
-  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+  void handleEvent(ServiceActionEvent event) {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
-    switch(event.actionId) {
-      case "delay":
-        int milliseconds = event.data['ms'];
-        new Future.delayed(new Duration(milliseconds: milliseconds))
-            .then((_) {
-              ServiceActionEvent response = event.createReponse(null);
-              _sendResponse(response);
-              completer.complete(response);
-            });
-        break;
-      default:
-        throw "Unknown action '${event.actionId}' sent to Chrome service.";
+    new Future.value(null).then((_){
+      switch(event.actionId) {
+        case "delay":
+          new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
+              (_) => _sendResponse(event));
+          break;
+        case "getAppContents":
+          String path = event.data['path'];
+          getAppContentsBinary(path)
+              .then((List<int> contents) {
+                return _sendResponse(event, {"contents": contents.toList()});
+              });
+          break;
+        case "getFileContents":
+          String uuid = event.data['uuid'];
+          ws.File restoredFile = _services._workspace.restoreResource(uuid);
+          if (restoredFile == null) {
+            // TODO(ericarnold): Turn into an Exception subclass.
+            throw new Exception("Could not restore file with uuid $uuid");
+          }
+
+          restoredFile.getContents()
+              .then((String contents) =>
+                  _sendResponse(event, {"contents": contents}));
+          break;
+        default:
+          throw "Unknown action '${event.actionId}' sent to Chrome service.";
+      }
+    })
+    .catchError((error) => _sendErrorResponse(event, error));
+  }
+
+  void _sendErrorResponse(ServiceActionEvent event, e) {
+    String stackTrace;
+    try {
+      stackTrace = e.stackTrace.toString();
+    } catch(e) {
+      stackTrace = "";
     }
 
-    return completer.future;
+    ServiceActionEvent responseEvent = event.createReponse({
+        "error": e.toString(),
+        "stackTrace": stackTrace});
+
+    responseEvent.error = true;
+    _isolateHandler.onceIsolateReady
+        .then((_) => _isolateHandler.sendResponse(responseEvent));
   }
 }
 
@@ -159,26 +243,25 @@ class _IsolateHandler {
     onIsolateMessage = _messageController.stream;
 
     _receivePort.listen((arg) {
-      if (_sendPort == null) {
+      if (arg is String) {
+        // String: handle as print
+        print ("Worker: $arg");
+        return;
+      } else if (_sendPort == null) {
         _sendPort = arg;
         _readyController..add(null)..close();
+      } else if (arg is int) {
+        // int: handle as ping
+        _pong(arg);
       } else {
-        if (arg is int) {
-          // int: handle as ping
-          _pong(arg);
-        } else if (arg is String) {
-          // String: handle as print
-          print ("Worker: $arg");
-        } else {
-          ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
+        ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
 
-          if (event.response == true) {
-            Completer<ServiceActionEvent> completer =
-                _serviceCallCompleters.remove(event.callId);
-            completer.complete(event);
-          } else {
-            _messageController.add(event);
-          }
+        if (event.response == true) {
+          Completer<ServiceActionEvent> completer =
+              _serviceCallCompleters.remove(event.callId);
+          completer.complete(event);
+        } else {
+          _messageController.add(event);
         }
       }
     });
@@ -221,4 +304,3 @@ class _IsolateHandler {
     _sendPort.send(event.toMap());
   }
 }
-

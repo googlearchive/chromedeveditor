@@ -8,14 +8,14 @@ environment:
 dependencies:
   ace: '>=0.3.0 <0.4.0'
   analyzer: '>=0.11.0 <0.12.0'
-  archive: 1.0.8
+  archive: '>=1.0.15 <1.1.0'
   bootjack: any
   browser: any
-  chrome: '>=0.4.5 <0.5.0'
-  cipher: '>=0.4.0 <0.5.0'
+  chrome: '>=0.5.1 <0.6.0'
+  cipher: '>=0.5.0 <0.6.0'
   compiler_unsupported: 0.7.0
   crypto: any
-  dquery: 0.5.3+7
+  dquery: '>=0.5.0 <0.6.0'
   intl: any
   logging: any
   mime: any
@@ -24,7 +24,9 @@ dependencies:
   shadow_dom: 0.9.1
   spark_widgets:
     path: ../widgets
-  unittest: any
+  tavern:
+    git: git://github.com/tapted/tavern.git
+  unittest: '>=0.10.0'
   uuid: any
 dev_dependencies:
   args: any

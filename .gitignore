@@ -3,6 +3,7 @@
 *.pem
 *.swo
 *.swp
+*~
 .buildlog
 .DS_Store
 .idea
