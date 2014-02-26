@@ -938,18 +938,6 @@ abstract class SparkAction extends Action {
     List<ws.Resource> resources = object as List;
     return (object as List).first is ws.Folder;
   }
-  
-  /**
-   * Returns true if `object` is a list with a single item and this item is a
-   * [File].
-   */
-  bool _isSingleFile(Object object) {
-    if (!_isSingleResource(object)) {
-      return false;
-    }
-    List<ws.Resource> resources = object as List;
-    return (object as List).first is ws.File;
-  }
 
   /**
    * Returns true if `object` is a list of top-level [Resource].
