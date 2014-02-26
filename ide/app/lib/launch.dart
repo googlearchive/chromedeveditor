@@ -239,10 +239,10 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
    * app_id.
    */
   Future<String> _getAppId(String name) {
-    return developerPrivate.getItemsInfo(false, false).then((List<Map> items) {
-      for (Map item in items) {
-        if (item['is_unpacked'] && item['path'].endsWith(name)) {
-          return item['id'];
+    return developerPrivate.getItemsInfo(false, false).then((List<ItemInfo> items) {
+      for (ItemInfo item in items) {
+        if (item.is_unpacked && item.path.endsWith(name)) {
+          return item.id;
         }
       };
       return null;
@@ -360,7 +360,7 @@ class Dart2JsServlet extends PicoServlet {
 
   bool canServe(HttpRequest request) {
     String path = request.uri.path;
-    return (path.endsWith('.dart.js') && _getResource(path) != null);
+    return path.endsWith('.dart.js') && _getResource(path) != null;
   }
 
   Resource _getResource(String path) {

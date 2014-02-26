@@ -48,6 +48,16 @@ abstract class PreferenceStore {
   Future<String> setValue(String key, String value);
 
   /**
+   * Removes list of items from this [PreferenceStore].
+   */
+  Future removeValue(List<String> keys);
+
+  /**
+   * Removes all preferences from this [PreferenceStore].
+   */
+  Future clear();
+
+  /**
    * Flush any unsaved changes to this [PreferenceStore].
    */
   void flush();
@@ -72,6 +82,16 @@ class MapPreferencesStore implements PreferenceStore {
     _map[key] = value;
     _controller.add(new PreferenceEvent(this, key, value));
     return new Future.value(_map[key]);
+  }
+
+  Future removeValue(List<String> keys) {
+    keys.forEach((key) => _map.remove(key));
+    return new Future.value();
+  }
+
+  Future clear() {
+    _map.clear();
+    return new Future.value();
   }
 
   void flush() {
@@ -121,6 +141,22 @@ class _ChromePreferenceStore implements PreferenceStore {
         return map == null ? null : map[key];
       });
     }
+  }
+
+  /**
+   * Removes list of items.
+   */
+  Future removeValue(List<String> keys) {
+    return _storageArea.remove(keys).then((Map<String, String> map) {
+      keys.forEach((key) => _map.remove(key));
+    });
+  }
+
+  /**
+   * Removes all preferences.
+   */
+  Future clear() {
+    return _storageArea.clear().then((_) => _map.clear());
   }
 
   /**

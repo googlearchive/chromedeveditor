@@ -11,15 +11,15 @@ import 'package:unittest/unittest.dart';
 import '../lib/tcp.dart' as tcp;
 
 /** A matcher for SocketExceptions. */
-const isSocketException = const _SocketException();
+const isSocketException = const _SocketExceptionMatcher();
 
-class _SocketException extends TypeMatcher {
-  const _SocketException() : super("SocketException");
+class _SocketExceptionMatcher extends TypeMatcher {
+  const _SocketExceptionMatcher() : super("SocketException");
   bool matches(item, Map matchState) => item is tcp.SocketException;
 }
 
 defineTests() {
-  EchoServer echoServer = new EchoServer();
+  //EchoServer echoServer = new EchoServer();
 
   group('tcp.TcpClient', () {
     test('connect', () {
@@ -153,8 +153,7 @@ class EchoServer {
 
   void _echo(tcp.TcpClient client) {
     client.stream.listen((List<int> data) {
-      client.sink.add(data);
-      //client.dispose();
+      client.write(data);
     });
   }
 

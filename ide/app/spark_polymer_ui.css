@@ -102,6 +102,11 @@
   margin-left: 15px;
 }
 
+#preferenceResetResult {
+  color: #F00;
+  font-weight: bold;
+}
+
 #mainMenu {
   position: relative;
   top: 3px;
@@ -150,4 +155,8 @@
 
 .input-label input {
   -webkit-flex: 1 1 auto;
+}
+
+#webStorePublishDialog label {
+  margin-left: 5px;
 }

@@ -7,6 +7,8 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
+import '../workspace.dart' as ws;
+
 import 'compiler.dart';
 import '../utils.dart';
 
@@ -19,8 +21,9 @@ class Services {
   _IsolateHandler _isolateHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
+  ws.Workspace _workspace;
 
-  Services() {
+  Services(this._workspace) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
     registerService(new ExampleService(this, _isolateHandler));
@@ -124,6 +127,21 @@ class ExampleService extends Service {
       return event.data['response'];
     });
   }
+
+  /**
+   * For testing ChromeService.getFileContents on the isolate side.
+   *
+   * Sends a [File] reference (via uuid) to the isolate which then then makes
+   * [ChromeService].[getFileContents()] call with that uuid which should send
+   * back the contents of the file to the isolate, which will return the
+   * contents to us for verification.
+   */
+  Future<String> readText(ws.File file) {
+    return _sendAction("readText", {"fileUuid": file.uuid})
+        .then((ServiceActionEvent event) {
+          return event.data['contents'];
+        });
+  }
 }
 
 /**
@@ -141,19 +159,53 @@ class ChromeServiceImpl extends Service {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
-    switch(event.actionId) {
-      case "delay":
-        new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
-            (_) => _sendResponse(event));
-        break;
-      case "getAppContents":
-        String path = event.data['path'];
-        getAppContentsBinary(path).then(
-            (List<int> contents) => _sendResponse(event, {"contents": contents.toList()}));
-        break;
-      default:
-        throw "Unknown action '${event.actionId}' sent to Chrome service.";
+    new Future.value(null).then((_){
+      switch(event.actionId) {
+        case "delay":
+          new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
+              (_) => _sendResponse(event));
+          break;
+        case "getAppContents":
+          String path = event.data['path'];
+          getAppContentsBinary(path)
+              .then((List<int> contents) {
+                return _sendResponse(event, {"contents": contents.toList()});
+              });
+          break;
+        case "getFileContents":
+          String uuid = event.data['uuid'];
+          ws.File restoredFile = _services._workspace.restoreResource(uuid);
+          if (restoredFile == null) {
+            // TODO(ericarnold): Turn into an Exception subclass.
+            throw new Exception("Could not restore file with uuid $uuid");
+          }
+
+          restoredFile.getContents()
+              .then((String contents) =>
+                  _sendResponse(event, {"contents": contents}));
+          break;
+        default:
+          throw "Unknown action '${event.actionId}' sent to Chrome service.";
+      }
+    })
+    .catchError((error) => _sendErrorResponse(event, error));
+  }
+
+  void _sendErrorResponse(ServiceActionEvent event, e) {
+    String stackTrace;
+    try {
+      stackTrace = e.stackTrace.toString();
+    } catch(e) {
+      stackTrace = "";
     }
+
+    ServiceActionEvent responseEvent = event.createReponse({
+        "error": e.toString(),
+        "stackTrace": stackTrace});
+
+    responseEvent.error = true;
+    _isolateHandler.onceIsolateReady
+        .then((_) => _isolateHandler.sendResponse(responseEvent));
   }
 }
 
