@@ -14,14 +14,5 @@ import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-modal")
 class SparkModal extends SparkOverlay {
-  @override
-  void keydownHandler(KeyboardEvent e) {
-    if (e.keyCode == Keys.ESCAPE) {
-      this.opened = false;
-      e.stopImmediatePropagation();
-      e.preventDefault();
-    }
-  }
-
   SparkModal.created(): super.created();
 }

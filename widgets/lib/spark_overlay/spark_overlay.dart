@@ -97,18 +97,57 @@ class SparkOverlay extends SparkWidget {
   }
 
   /**
-   * By default an overlay will close automatically if the user taps outside
-   * it or presses the escape key. Disable this behavior by setting the
-   * autoCloseDisabled property to true.
+   * Prevents other elements in the document from receiving [_captureEventTypes]
+   * events. This essentially disables the rest of the UI while the overlay
+   * is open.
    */
-  @published bool autoCloseDisabled = false;
+  @published bool modal = false;
 
-  // TODO(terry): Should be tap when PointerEvents are supported.
-  static const String captureEventType = 'mousedown';
+  /**
+   * Close the overlay automatically if the user taps outside it or presses
+   * the escape key.
+   */
+  @published bool autoClose = false;
+
+  /**
+   * Events to capture on the [document] level in the capturing event
+   * propagation phase and either block them (with [modal]) or auto-close the
+   * overlay (with [autoClose]).
+   */
+  // TODO(ussuri): This list should be amended with 'tap*' events when
+  // PointerEvents are supported.
+  // NOTE(ussuri): Possible other candidates to consider (note that some
+  // may break e.g. manually applied hovering within the overlay itself):
+  // 'mouseenter',
+  // 'mouseleave',
+  // 'mouseover',
+  // 'mouseout',
+  // 'focusin',
+  // 'focusout',
+  // 'scroll'
+  static final List<String> _modalEventTypes = [
+      'mousedown',
+      'mouseup',
+      'click',
+      'wheel',
+      'dblclick',
+      'contextmenu',
+      'focus',
+      'blur',
+      'keydown'
+  ];
+  static final List<String> _autoCloseEventTypes = [
+      'mousedown',
+      'wheel',
+      'contextmenu',
+  ];
+
   Timer autoCloseTask = null;
 
-  void ready() {
+  @override
+  void enteredView() {
     style.visibility = "visible";
+    enableKeyboardEvents();
   }
 
   /// Toggle the opened state of the overlay.
@@ -119,14 +158,20 @@ class SparkOverlay extends SparkWidget {
   void openedChanged() {
     renderOpened();
     trackOverlays(this);
-    if (!autoCloseDisabled) {
-      enableCaptureHandler(opened);
+
+    _enableResizeHandler(opened);
+
+    if (autoClose || modal) {
+      var eventTypes = new Set<String>();
+      if (modal) eventTypes.addAll(_modalEventTypes);
+      if (autoClose) eventTypes.addAll(_autoCloseEventTypes);
+      _enableCaptureHandler(opened, eventTypes);
     }
-    enableResizeHandler(opened);
+
     asyncFire('opened', detail: opened);
   }
 
-  void enableResizeHandler(inEnable) {
+  void _enableResizeHandler(inEnable) {
     if (inEnable) {
       window.addEventListener('resize', _resizeHandler);
     } else {
@@ -134,12 +179,10 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  void enableCaptureHandler(inEnable) {
-    if (inEnable) {
-      document.addEventListener(captureEventType, _captureHandler, true);
-    } else {
-      document.removeEventListener(captureEventType, _captureHandler, true);
-    }
+  void _enableCaptureHandler(bool enable, Iterable<String> eventTypes) {
+    final Function addRemoveFunc =
+        enable ? document.addEventListener : document.removeEventListener;
+    eventTypes.forEach((et) => addRemoveFunc(et, _captureHandler, true));
   }
 
   getFocusNode() {
@@ -216,13 +259,17 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  void captureHandler(MouseEvent e) {
-    if (!isPointInOverlay(e.client)) {
-      // TODO(terry): How to cancel the event e.cancelable = true;
-      e.stopImmediatePropagation();
-      e.preventDefault();
+  void captureHandler(Event e) {
+    final bool inOverlay =
+        (e is MouseEvent && isPointInOverlay(e.client)) ||
+        this.contains(e.target) ||
+        shadowRoot.contains(e.target);
 
-      if (!autoCloseDisabled) {
+    if (!inOverlay) {
+      if (modal) {
+        e..stopPropagation()..preventDefault();
+      }
+      if (autoClose) {
         autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
       }
     }
@@ -232,11 +279,9 @@ class SparkOverlay extends SparkWidget {
     return super.getBoundingClientRect().containsPoint(xyGlobal);
   }
 
-  void keydownHandler(KeyboardEvent e) {
-    if (!autoCloseDisabled && (e.keyCode == Keys.ESCAPE)) {
-      this.opened = false;
-      e.stopImmediatePropagation();
-      e.preventDefault();
+  void keyDownHandler(KeyboardEvent e) {
+    if (e.keyCode == Keys.ESCAPE) {
+      opened = false;
     }
   }
 
