@@ -29,6 +29,7 @@ import 'git/commands/fetch.dart';
 import 'git/commands/index.dart' as index;
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
+import 'git/commands/revert.dart';
 import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
@@ -351,16 +352,9 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future revertChanges(List<Resource> resources) {
-    // TODO: implement
-    _logger.info('Implement revertChanges()');
-
-    // This future is just a stand-in for the actual async implementation.
-    Future f = new Future.value();
-
-    return f.then((_) {
-      // We changed files on disk - let the workspace know to re-scan the
-      // project and fire any necessary resource change events.
-      Timer.run(() => project.refresh());
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Revert.revert(options, resources.map((e) => e.entry));
     });
   }
 
