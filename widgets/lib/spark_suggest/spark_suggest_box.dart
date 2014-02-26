@@ -10,6 +10,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
+import '../common/keys.dart';
 import '../spark_menu/spark_menu.dart';
 import '../spark_overlay/spark_overlay.dart';
 
@@ -92,13 +93,13 @@ class SparkSuggestBox extends SparkWidget {
   }
 
   void onInputKeyUp(KeyboardEvent e) {
-    if (e.keyCode == SparkWidget.DOWN_KEY ||
-        e.keyCode == SparkWidget.UP_KEY ||
-        e.keyCode == SparkWidget.ENTER_KEY) {
+    if (e.keyCode == Keys.DOWN ||
+        e.keyCode == Keys.UP ||
+        e.keyCode == Keys.ENTER) {
       if (!opened) {
         suggest();
       }
-    } else if (e.keyCode == SparkWidget.ESCAPE_KEY) {
+    } else if (e.keyCode == Keys.ESCAPE) {
       _textBox.value = "";
       _hideSuggestions();
     } else {

@@ -9,6 +9,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
+import '../common/keys.dart';
 import '../spark_selection/spark_selection.dart';
 
 // Ported from Polymer Javascript to Dart code.

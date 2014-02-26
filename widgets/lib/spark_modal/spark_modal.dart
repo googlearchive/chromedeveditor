@@ -7,7 +7,7 @@ library spark_widgets.modal;
 import 'dart:html';
 import 'package:polymer/polymer.dart';
 
-import '../common/spark_widget.dart';
+import '../common/keys.dart';
 import '../spark_overlay/spark_overlay.dart';
 
 // Ported from Polymer Javascript to Dart code.
@@ -16,7 +16,7 @@ import '../spark_overlay/spark_overlay.dart';
 class SparkModal extends SparkOverlay {
   @override
   void keydownHandler(KeyboardEvent e) {
-    if (e.keyCode == SparkWidget.ESCAPE_KEY) {
+    if (e.keyCode == Keys.ESCAPE) {
       this.opened = false;
       e.stopImmediatePropagation();
       e.preventDefault();

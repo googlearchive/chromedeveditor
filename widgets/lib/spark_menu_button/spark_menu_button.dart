@@ -9,8 +9,8 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
+import '../common/keys.dart';
 import '../spark_menu/spark_menu.dart';
-
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
 
@@ -49,11 +49,11 @@ class SparkMenuButton extends SparkWidget {
 
   void keydownHandler(KeyboardEvent e) {
     switch (e.keyCode) {
-      case SparkWidget.ESCAPE_KEY:
+      case Keys.ESCAPE:
         opened = false;
         break;
-      case SparkWidget.UP_KEY:
-      case SparkWidget.DOWN_KEY:
+      case Keys.UP:
+      case Keys.DOWN:
         if (!opened) {
           opened = true;
         }

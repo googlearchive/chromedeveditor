@@ -6,18 +6,18 @@ library spark_widgets.overlay;
 
 import 'dart:async';
 import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
+import '../common/keys.dart';
 
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-overlay")
 class SparkOverlay extends SparkWidget {
-  // TODO(sorvell): need keyhelper component.
-  static final int ESCAPE_KEY = 27;
-
   // Track overlays for z-index and focus managemant.
   static List overlays = [];
+
   static void trackOverlays(inOverlay) {
     if (inOverlay.opened) {
       var z0 = currentOverlayZ();
@@ -233,7 +233,7 @@ class SparkOverlay extends SparkWidget {
   }
 
   void keydownHandler(KeyboardEvent e) {
-    if (!autoCloseDisabled && (e.keyCode == ESCAPE_KEY)) {
+    if (!autoCloseDisabled && (e.keyCode == Keys.ESCAPE)) {
       this.opened = false;
       e.stopImmediatePropagation();
       e.preventDefault();
