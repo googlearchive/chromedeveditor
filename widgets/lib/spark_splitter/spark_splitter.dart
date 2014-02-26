@@ -103,7 +103,7 @@ class SparkSplitter extends SparkWidget {
     // the target <content> in order to find the true target to resize.
     if (_target is ContentElement) {
       final Iterable<Node> distrNodes =
-          SparkWidget.expandCascadingContents(_target);
+          SparkWidget.inlineNestedContentNodes(_target);
       _target = _isTargetNextSibling ? distrNodes.first : distrNodes.last;
     }
     classes.toggle('horizontal', _isHorizontal);

@@ -84,7 +84,7 @@ class SparkSelector extends SparkWidget {
 
 
   Iterable<Element> getItems() {
-    Iterable<Element> nodes = SparkWidget.expandCascadingContents($['items']);
+    Iterable<Element> nodes = SparkWidget.inlineNestedContentNodes($['items']);
     if (selectableFilter != null) {
       nodes = nodes.where((Element e) => e.matches(selectableFilter));
     }
