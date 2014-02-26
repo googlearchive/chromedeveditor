@@ -38,7 +38,7 @@ class SparkWidget extends PolymerElement {
 
   /**
    * Certain kinds of elements, e.g. <div>, by default do not accept keyboard
-   * events. Assinging tabIndex to them makes them keaboard-focusable, and
+   * events. Assinging tabIndex to them makes them keyboard-focusable, and
    * therefore accepting keyboard events.
    */
   void enableKeyboardEvents() {
