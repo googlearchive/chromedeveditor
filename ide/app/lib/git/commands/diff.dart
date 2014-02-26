@@ -5,21 +5,12 @@
 library git.commands.diff;
 
 import 'dart:async';
-import 'dart:typed_data';
+import 'dart:js' as js;
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 
-import '../constants.dart';
-import '../file_operations.dart';
-import '../http_fetcher.dart';
 import '../object.dart';
 import '../objectstore.dart';
-import '../options.dart';
-import '../pack.dart';
-import '../pack_index.dart';
-import '../upload_pack_parser.dart';
-import '../utils.dart';
 import 'index.dart';
 import 'status.dart';
 
@@ -31,21 +22,22 @@ import 'status.dart';
 
 class Diff {
 
-  static Future DiffFile(ObjectStore store, chrome.ChromeFileEntry entry) {
+  /**
+   * Returns a list containing content of head version, current version of the
+   * given file entry.
+   */
+  static Future<List<String>> DiffFile(ObjectStore store,
+      chrome.ChromeFileEntry entry) {
     return Status.getFileStatus(store, entry).then((FileStatus status) {
       if (status.headSha == status.sha) {
-        // TODO(grv): throw error file is up-to-date.
-        print('file unchanged');
-        return new Future.error('file up-to-date');
+        // Should we throw an error here ?
+        //return new Future.error('file up-to-date');
       }
 
       return entry.readText().then((String content) {
         return store.retrieveObjectBlobsAsString([status.headSha]).then(
             (List<LooseObject> headObjects) {
-          print(headObjects.first.data);
-          print("===========");
-          print(content);
-          return new Future.value(content);
+          return new Future.value([headObjects[0].data, content]);
         });
       });
     });
