@@ -6,14 +6,12 @@ library git.commands.revert;
 
 import 'dart:async';
 
-
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../object.dart';
 import '../options.dart';
 import 'index.dart';
 import 'status.dart';
-
 
 /**
  * Reverts a given list of file [entries] to the git head state.
