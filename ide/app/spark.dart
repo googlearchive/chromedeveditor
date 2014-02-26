@@ -690,18 +690,18 @@ class ProjectLocationManager {
   static Future<ProjectLocationManager> restoreManager(preferences.PreferenceStore prefs) {
     return prefs.getValue('projectFolder').then((String folderToken) {
       if (folderToken == null) {
-        return new ProjectLocationManager._(prefs, null);
+        return new ProjectLocationManager._(prefs);
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
       }).catchError((e) {
-        return new ProjectLocationManager._(prefs, null);
+        return new ProjectLocationManager._(prefs);
       });
     });
   }
 
-  ProjectLocationManager._(this._prefs, this._projectLocation);
+  ProjectLocationManager._(this._prefs, [this._projectLocation]);
 
   /**
    * Returns the default location to create new projects in. For Chrome OS, this
@@ -710,7 +710,16 @@ class ProjectLocationManager {
    */
   Future<LocationResult> getProjectLocation() {
     if (_projectLocation != null) {
-      return new Future.value(_projectLocation);
+      // Check if the saved location exists. If so, return it. Otherwise, get a
+      // new location.
+      return _projectLocation.exists().then((bool value) {
+        if (value) {
+          return _projectLocation;
+        } else {
+          _projectLocation = null;
+          return getProjectLocation();
+        }
+      });
     }
 
     // On Chrome OS, use the sync filesystem.
@@ -786,6 +795,16 @@ class LocationResult {
    * The name of the created entry.
    */
   String get name => entry.name;
+
+  Future<bool> exists() {
+    if (isSync) return new Future.value(true);
+
+    return entry.getMetadata().then((_) {
+      return true;
+    }).catchError((e) {
+      return false;
+    });
+  }
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
