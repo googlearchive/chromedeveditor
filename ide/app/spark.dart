@@ -1400,6 +1400,8 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
         Timer.run(() {
           spark._filesController.selectFile(folder);
         });
+      }).catchError((e) {
+        spark.showErrorMessage("Error Creating Folder", e.toString());
       });
     }
   }
@@ -1452,8 +1454,8 @@ class NewProjectAction extends SparkActionWithDialog {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
       spark.projectLocationManager.createNewFolder(name).then((LocationResult location) {
-        if (location == null) return;
-        
+        if (location == null) return new Future.value();
+
         ws.WorkspaceRoot root;
 
         if (location.isSync) {
