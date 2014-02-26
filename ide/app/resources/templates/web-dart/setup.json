@@ -1,0 +1,28 @@
+{
+	"directories": {
+		"packages": {},
+		"web": {
+			"files": [
+				{
+					"source": "css.sparktemplate",
+					"dest": "$sourceName.css"
+				}, {
+					"source": "dart.sparktemplate",
+					"dest": "$sourceName.dart"
+				}, {
+					"source": "html.sparktemplate",
+					"dest": "$sourceName.html"
+				}
+			]
+		}
+	},
+	"files": [
+		{
+			"source": "pubspec.lock.sparktemplate",
+			"dest": "pubspec.lock"
+		}, {
+			"source": "pubspec.yaml.sparktemplate",
+			"dest": "pubspec.yaml"
+		}
+	]
+}
