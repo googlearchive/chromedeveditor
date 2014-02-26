@@ -9,7 +9,6 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
-import '../common/keys.dart';
 import '../spark_menu/spark_menu.dart';
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
@@ -82,14 +81,14 @@ class SparkMenuButton extends SparkWidget {
     }
 
     switch (e.keyCode) {
-      case Keys.UP:
-      case Keys.DOWN:
-      case Keys.PAGE_UP:
-      case Keys.PAGE_DOWN:
-      case Keys.ENTER:
+      case KeyCode.UP:
+      case KeyCode.DOWN:
+      case KeyCode.PAGE_UP:
+      case KeyCode.PAGE_DOWN:
+      case KeyCode.ENTER:
         if (!opened) opened = true;
         break;
-      case Keys.ESCAPE:
+      case KeyCode.ESC:
         if (opened) opened = false;
         break;
       default:

@@ -10,7 +10,6 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
-import '../common/keys.dart';
 import '../spark_menu/spark_menu.dart';
 import '../spark_overlay/spark_overlay.dart';
 
@@ -108,15 +107,15 @@ class SparkSuggestBox extends SparkWidget {
     }
 
     switch (e.keyCode) {
-      case Keys.DOWN:
-      case Keys.UP:
-      case Keys.PAGE_UP:
-      case Keys.PAGE_DOWN:
+      case KeyCode.DOWN:
+      case KeyCode.UP:
+      case KeyCode.PAGE_UP:
+      case KeyCode.PAGE_DOWN:
         if (!opened) {
           _suggest();
         }
         break;
-      case Keys.ENTER:
+      case KeyCode.ENTER:
         if (!opened) {
           _suggest();
         } else {
@@ -125,7 +124,7 @@ class SparkSuggestBox extends SparkWidget {
           // [menuActivateHandler] resulting from [maybeHandleKeyStroke] call.
         }
         break;
-      case Keys.ESCAPE:
+      case KeyCode.ESC:
         _hideSuggestions();
         break;
       default:

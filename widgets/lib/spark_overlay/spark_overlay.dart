@@ -10,7 +10,6 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
-import '../common/keys.dart';
 
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-overlay")
@@ -280,7 +279,7 @@ class SparkOverlay extends SparkWidget {
   }
 
   void keyDownHandler(KeyboardEvent e) {
-    if (e.keyCode == Keys.ESCAPE) {
+    if (e.keyCode == KeyCode.ESC) {
       opened = false;
     }
   }

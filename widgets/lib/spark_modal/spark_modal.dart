@@ -4,10 +4,8 @@
 
 library spark_widgets.modal;
 
-import 'dart:html';
 import 'package:polymer/polymer.dart';
 
-import '../common/keys.dart';
 import '../spark_overlay/spark_overlay.dart';
 
 // Ported from Polymer Javascript to Dart code.

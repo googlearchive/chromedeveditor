@@ -4,13 +4,11 @@
 
 library spark_widgets.selector;
 
-import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
-import '../common/keys.dart';
 import '../spark_selection/spark_selection.dart';
 
 /**
@@ -77,10 +75,10 @@ class SparkSelector extends SparkWidget {
   bool _fireEvents = true;
 
   static final Map<int, int> _keyNavigationDistances = {
-    Keys.UP: -1,
-    Keys.DOWN: 1,
-    Keys.PAGE_UP: -10,
-    Keys.PAGE_DOWN: 10
+    KeyCode.UP: -1,
+    KeyCode.DOWN: 1,
+    KeyCode.PAGE_UP: -10,
+    KeyCode.PAGE_DOWN: 10
   };
 
   SparkSelector.created() : super.created();
@@ -214,7 +212,7 @@ class SparkSelector extends SparkWidget {
       _moveActive(dist);
       return true;
     }
-    if (keyCode == Keys.ENTER) {
+    if (keyCode == KeyCode.ENTER) {
       _commitActiveToSelected();
     }
     return false;
