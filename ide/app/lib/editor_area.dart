@@ -100,7 +100,8 @@ class EditorArea extends TabView {
     onClose.listen((EditorTab tab) => closeFile(tab.file));
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
-
+    onLabelBarShown.listen((_) => resize());
+    
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete && delta.resource.isFile) {

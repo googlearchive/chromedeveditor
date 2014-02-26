@@ -9,10 +9,14 @@ import 'dart:isolate';
 
 import 'package:unittest/unittest.dart';
 
+import 'files_mock.dart';
 import '../lib/services/services.dart';
+import '../lib/workspace.dart' as ws;
 
 defineTests() {
-  Services services = new Services();
+  ws.Workspace workspace = new ws.Workspace();
+
+  Services services = new Services(workspace);
 
   group('services', () {
     test('ping', () {
@@ -57,6 +61,19 @@ defineTests() {
         // TODO(ericarnold): What's a better way to do this?
         expect(true, equals(true));
       });
+    });
+  });
+
+  group('chrome service', () {
+    test('resource read', () {
+      MockFileSystem fs = new MockFileSystem();
+      FileEntry fileEntry = fs.createFile('test.txt', contents: "some words");
+      String fileUuid;
+      ExampleService exampleService = services.getService("example");
+      return workspace.link(createWsRoot(fileEntry))
+          .then((ws.File fileResource) {
+            return exampleService.readText(fileResource);
+          }).then((String text) => expect(text, equals("some words")));
     });
   });
 

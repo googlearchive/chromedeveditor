@@ -48,7 +48,7 @@ class ServicesIsolate {
           completer.complete(event);
         }
       } catch(e) {
-        print("Service error: $e ${e.stackTrace}");
+        printError("Service error", e);
       }
     });
     return completer.future;
@@ -85,7 +85,7 @@ class ServicesIsolate {
           }
         }
       } catch(e) {
-        print("service error: $e ${e.stackTrace}");
+        printError("Service error", e);
       }
     });
 
@@ -93,7 +93,7 @@ class ServicesIsolate {
       try {
         _handleMessage(event);
       } catch(e) {
-        print("service error: $e ${e.stackTrace}");
+        printError("Service error", e);
       }
     });
   }
@@ -118,7 +118,7 @@ class ServicesIsolate {
         completer.complete();
       }
     }).catchError((e) {
-      print("service error: $e ${e.stackTrace}");
+      printError("Service error", e);
     });
     return completer.future;
   }
@@ -158,6 +158,12 @@ class ExampleServiceImpl extends ServiceImpl {
       case "shortTest":
         return new Future.value(event.createReponse(
             {"response": "short${event.data['name']}"}));
+        break;
+      case "readText":
+        String fileUuid = event.data['fileUuid'];
+        return _isolate.chromeService.getFileContents(fileUuid)
+            .then((String contents) =>
+                event.createReponse({"contents": contents}));
         break;
       case "longTest":
         return _isolate.chromeService.delay(1000).then((_){
@@ -209,9 +215,9 @@ class CompilerServiceImpl extends ServiceImpl {
       sdk = DartSdk.createSdkFromContents(sdkContents);
       compiler = Compiler.createCompilerFrom(sdk);
       _readyCompleter.complete();
-    }).catchError((error){
+    }).catchError((e){
       // TODO(ericarnold): Return error which service will throw
-      print("Chrome service error: $error ${error.stackTrace}");
+      printError("Chrome service error", e);
     });
 
     return _readyCompleter.future;
@@ -282,15 +288,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
 class ChromeService {
   ServicesIsolate _isolate;
 
-  /**
-   * Return the contents of the file at the given path. The path is relative to
-   * the Chrome app's directory.
-   */
-  Future<List<int>> getAppContents(String path) {
-    return _isolate._sendAction(_createNewEvent("getAppContents", {"path": path}))
-        .then((ServiceActionEvent event) => event.data['contents']);
-  }
-
   ChromeService(this._isolate);
 
   ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
@@ -298,7 +295,34 @@ class ChromeService {
   }
 
   Future<ServiceActionEvent> delay(int milliseconds) =>
-      _isolate._sendAction(_createNewEvent("delay", {"ms": milliseconds}));
+      _sendAction(_createNewEvent("delay", {"ms": milliseconds}));
+
+  /**
+   * Return the contents of the file at the given path. The path is relative to
+   * the Chrome app's directory.
+   */
+  Future<List<int>> getAppContents(String path) {
+    return _sendAction(_createNewEvent("getAppContents", {"path": path}))
+        .then((ServiceActionEvent event) => event.data['contents']);
+  }
+
+  Future<String> getFileContents(String uuid) =>
+    _sendAction(_createNewEvent("getFileContents", {"uuid": uuid}))
+        .then((ServiceActionEvent event) => event.data["contents"]);
+
+  Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
+      [bool expectResponse = false]) {
+    return _isolate._sendAction(event, expectResponse)
+        .then((ServiceActionEvent event){
+          if (event.error != true) {
+            return event;
+          } else {
+            String error = event.data['error'];
+            String stackTrace = event.data['stackTrace'];
+            throw "ChromeService error: $error\n$stackTrace";
+          }
+        });
+  }
 }
 
 // Provides an abstract class and helper code for service implementations.
@@ -321,3 +345,17 @@ void print(var message) {
     _printSendPort.send("$message");
   }
 }
+
+printError(String description, dynamic e) {
+  String stackTrace;
+  try {
+    stackTrace = "\n${e.stackTrace}";
+  } catch(e) {
+    stackTrace = "";
+  }
+
+  print ("$description $e $stackTrace");
+}
+
+
+

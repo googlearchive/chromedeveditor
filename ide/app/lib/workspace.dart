@@ -272,6 +272,9 @@ class Workspace implements Container {
         Future.forEach(roots, (WorkspaceRoot root) {
           return root.restore().then((_) {
             return link(root, fireEvent: false);
+          }).catchError((e) {
+            // Log the error, but don't fail the workspace restore because of it.
+            _logger.warning("Error when restoring ${root}", e);
           });
         }).whenComplete(() {
           _logger.info('Workspace restore took ${stopwatch.elapsedMilliseconds}ms.');
@@ -887,6 +890,8 @@ class FileRoot extends WorkspaceRoot {
       'token': token
     };
   }
+  
+  String toString() => "FileRoot ${id}";
 }
 
 /**
@@ -922,6 +927,8 @@ class FolderRoot extends WorkspaceRoot {
       'token': token
     };
   }
+  
+  String toString() => "FolderRoot ${id}";
 }
 
 /**
@@ -962,13 +969,14 @@ class FolderChildRoot extends WorkspaceRoot {
       'name': name
     };
   }
+  
+  String toString() => "FolderChildRoot ${parentToken} / ${name}";
 }
 
 /**
  * A workspace root that represents a folder on the sync file system.
  */
 class SyncFolderRoot extends WorkspaceRoot {
-
   SyncFolderRoot(chrome.DirectoryEntry folderEntry) {
     entry = folderEntry;
   }
@@ -982,6 +990,8 @@ class SyncFolderRoot extends WorkspaceRoot {
 
   // We do not persist infomation about the sync filesystem root.
   Map persistState() => null;
+  
+  String toString() => "SyncFolderRoot ${entry.name}";
 }
 
 /**

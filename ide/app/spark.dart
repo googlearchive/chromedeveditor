@@ -40,6 +40,8 @@ import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/workspace.dart' as ws;
+import 'lib/workspace_utils.dart' as ws_utils;
+import 'lib/webstore_client.dart';
 import 'test/all.dart' as all_tests;
 
 import 'spark_model.dart';
@@ -121,7 +123,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   ProjectLocationManager projectLocationManager;
 
   // Extensions of files that will be shown as text.
-  Set<String> _textFileExtensions;
+  Set<String> _textFileExtensions = new Set.from(
+      ['.cmake', '.gitignore', '.lock', '.prefs', '.txt']);
 
   Spark(this.developerMode) {
     initServices();
@@ -135,9 +138,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     addParticipant(new _SparkSetupParticipant(this));
 
-    // TODO: this event is not being fired. A bug with chrome apps / Dartium?
-    // Possibly this: https://github.com/dart-gde/chrome.dart/issues/115
-    chrome.app.window.onClosed.listen((_) {
+    // This event is not fired when closing the current window. We listen for it
+    // in the vain hope that we will get the event, and we'll be able to clean
+    // up after ourselves slightly better.
+    chrome.app.window.current().onClosed.listen((_) {
       close();
     });
 
@@ -174,7 +178,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   initServices() {
-    services = new Services();
+    services = new Services(this.workspace);
   }
 
   //
@@ -277,14 +281,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _launchManager = new LaunchManager(_workspace, services, this);
   }
 
-  /**
-   * Returns the path separator specific to os.
-   */
-  String getPathSeparator() {
-    // TODO(grv) : Add check of os and return accordingly.
-    return '/';
-  }
-
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement(), this);
     _aceThemeManager = new ThemeManager(
@@ -296,16 +292,13 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _editorManager.onNewFileOpened.listen((_){
       _workspace.checkResource(_editorManager.currentFile);
     });
-   _editorArea = new EditorArea(
-        querySelector('#editorArea'), editorManager, _workspace, allowsLabelBar: true);
+    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
+        _workspace, allowsLabelBar: true);
 
     _syncPrefs.getValue('textFileExtensions').then((String value) {
-      _textFileExtensions = new Set();
       if (value != null) {
-        List<String> extensions = JSON.decode(value);
-        _textFileExtensions.addAll(extensions);
+        _textFileExtensions.addAll(JSON.decode(value));
       }
-      _textFileExtensions.addAll(['.txt', '.cmake']);
     });
   }
 
@@ -412,6 +405,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new SpecificTabAction(this));
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
+    actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
 
@@ -469,21 +463,54 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     showErrorMessage(title, message);
   }
 
+    // Implemented in a sub-class.
+  void unveil() { }
+
   /**
    * Show a model error dialog.
    */
   void showErrorMessage(String title, String message) {
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
-      _errorDialog.element.querySelector("[primary]").onClick.listen((_) {
-        querySelector("#modalBackdrop").style.display = "none";
-      });
+      _errorDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
     }
 
-    _errorDialog.element.querySelector('#errorTitle').innerHtml = title;
+    _errorDialog.element.querySelector('#errorTitle').text = title;
     _errorDialog.element.querySelector('#errorMessage').text = message;
 
     _errorDialog.show();
+  }
+
+  void _hideBackdropOnClick(MouseEvent event) {
+    querySelector("#modalBackdrop").style.display = "none";
+  }
+
+  SparkDialog _publishedAppDialog;
+
+  void showPublishedAppDialog(String appID) {
+    if (_publishedAppDialog == null) {
+      _publishedAppDialog = createDialog(getDialogElement('#webStorePublishedDialog'));
+      _publishedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((MouseEvent event) {
+        window.open('https://chrome.google.com/webstore/detail/${appID}', null);
+        _hideBackdropOnClick(event);
+      });
+    }
+    _publishedAppDialog.show();
+  }
+
+  SparkDialog _uploadedAppDialog;
+
+  void showUploadedAppDialog(String appID) {
+    if (_uploadedAppDialog == null) {
+      _uploadedAppDialog = createDialog(getDialogElement('#webStoreUploadedDialog'));
+      _uploadedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((MouseEvent event) {
+        window.open('https://chrome.google.com/webstore/developer/edit/${appID}', null);
+        _hideBackdropOnClick(event);
+      });
+    }
+    _uploadedAppDialog.show();
   }
 
   SparkDialog _okCancelDialog;
@@ -595,20 +622,24 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   // Implementation of AceManagerDelegate interface:
   //
 
-  void setAlwaysShowAsText(String extension, bool enabled) {
-    // Allow to change the preference only when it's been loaded.
-    if (_textFileExtensions != null) {
-      if (enabled) {
-        _textFileExtensions.add(extension);
-      } else {
-        _textFileExtensions.remove(extension);
-      }
-      _syncPrefs.setValue('textFileExtensions', JSON.encode(_textFileExtensions.toList()));
+  void setShowFileAsText(String filename, bool enabled) {
+    String extension = path.extension(filename);
+    if (extension.isEmpty) extension = filename;
+
+    if (enabled) {
+      _textFileExtensions.add(extension);
+    } else {
+      _textFileExtensions.remove(extension);
     }
+
+    _syncPrefs.setValue('textFileExtensions',
+        JSON.encode(_textFileExtensions.toList()));
   }
 
   bool canShowFileAsText(String filename) {
     String extension = path.extension(filename);
+    if (extension.isEmpty) extension = filename;
+
     return _aceManager.isFileExtensionEditable(extension) ||
         _textFileExtensions.contains(extension);
   }
@@ -698,9 +729,9 @@ class ProjectLocationManager {
         return null;
       }
 
-      _projectLocation = entry;
+      _projectLocation = new LocationResult(entry, entry, false);
       _prefs.setValue('projectFolder', chrome.fileSystem.retainEntry(entry));
-      return new LocationResult(entry, entry, false);
+      return _projectLocation;
     });
   }
 
@@ -766,7 +797,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     // get platform info
     return chrome.runtime.getPlatformInfo().then((Map m) {
       spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
-      spark.workspace.restore().then((value) {
+      return spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
           spark.aceManager.focus();
@@ -776,7 +807,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
       return ProjectLocationManager.restoreManager(spark.localPrefs).then((manager) {
         spark.projectLocationManager = manager;
       });
-    });
+    }).whenComplete(() => spark.unveil());
   }
 
   Future applicationStarted(Application application) {
@@ -1058,6 +1089,8 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
             spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
             spark._aceManager.focus();
           });
+        }).catchError((e) {
+          spark.showErrorMessage("Error Creating File", e.toString());
         });
       }
     }
@@ -1096,12 +1129,14 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
     spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
       if (val) {
-        try {
-          spark.workspace.pauseResourceEvents();
-          resources.forEach((ws.Resource resource) => resource.delete());
-        } finally {
+        spark.workspace.pauseResourceEvents();
+        Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
+          String ordinality = resources.length == 1 ? "File" : "Files";
+          spark.showErrorMessage("Error Deleting ${ordinality}", e.toString());
+        }).whenComplete(() {
           spark.workspace.resumeResourceEvents();
-        }
+          spark.workspace.save();
+        });
       }
     });
   }
@@ -1130,10 +1165,11 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     if (_nameElement.value.isNotEmpty) {
-      resource.rename(_nameElement.value)
-        .then((value) {
-          spark._renameOpenEditor(resource);
-        });
+      resource.rename(_nameElement.value).then((value) {
+        spark._renameOpenEditor(resource);
+      }).catchError((e) {
+        spark.showErrorMessage("Error During Rename", e.toString());
+      });
     }
   }
 
@@ -1485,20 +1521,26 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
   void _commit() {
     String url = _pushUrlElement.value;
     // TODO(braden): Input validation.
-    spark.jobManager.schedule(new _HarnessPushJob(deployContainer, url));
+    spark.jobManager.schedule(new _HarnessPushJob(spark, deployContainer, url));
   }
 }
 
 class _HarnessPushJob extends Job {
+  final Spark spark;
   final ws.Container deployContainer;
   final String _url;
 
-  _HarnessPushJob(this.deployContainer, this._url) :
+  _HarnessPushJob(this.spark, this.deployContainer, this._url) :
     super('Deploying to mobile…');
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 10);
-    return HarnessPush.push(deployContainer, _url, monitor);
+    HarnessPush harnessPush = new HarnessPush(deployContainer);
+
+    return harnessPush.push(_url, monitor).then((_) {
+      spark.showSuccessMessage('Successfully pushed');
+    }).catchError((e) {
+      spark.showMessage('Push failure', e.toString());
+    });
   }
 }
 
@@ -1979,7 +2021,6 @@ class _GitCheckoutJob extends Job {
   }
 }
 
-
 class _OpenFolderJob extends Job {
   Spark spark;
   chrome.DirectoryEntry _entry;
@@ -2118,6 +2159,110 @@ class RunTestsAction extends SparkAction {
   }
 
   _invoke([Object context]) => spark._testDriver.runTests();
+}
+
+class WebStorePublishAction extends SparkActionWithDialog {
+  bool _initialized = false;
+  static final int NEWAPP = 1;
+  static final int EXISTING = 2;
+  int _type = NEWAPP;
+  InputElement _newInput;
+  InputElement _existingInput;
+  InputElement _appIdInput;
+  ws.Resource _resource;
+
+  WebStorePublishAction(Spark spark, Element dialog)
+      : super(spark, "webstore-publish", "Publish to Chrome Web Store", dialog) {
+    enabled = false;
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+  }
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
+      _newInput = getElement('input[value=new]');
+      _existingInput = getElement('input[value=existing]');
+      _appIdInput = getElement('#appID');
+      _enableInput();
+
+      _newInput.onChange.listen((e) => _enableInput());
+      _existingInput.onChange.listen((e) => _enableInput());
+      _initialized = true;
+    }
+
+    _resource = spark.focusManager.currentResource;
+    _show();
+  }
+
+  void _enableInput() {
+    int type = NEWAPP;
+    if (_newInput.checked) {
+      type = NEWAPP;
+    }
+    if (_existingInput.checked) {
+      type = EXISTING;
+    }
+    _appIdInput.disabled = (type != EXISTING);
+    if (type == EXISTING) {
+      _appIdInput.focus();
+    }
+  }
+
+  void _commit() {
+    String appID = null;
+    if (_existingInput.checked) {
+      appID = _appIdInput.value;
+    }
+    _WebStorePublishJob job =
+        new _WebStorePublishJob(spark, getAppContainerFor(_resource), appID);
+    spark.jobManager.schedule(job);
+  }
+
+  void _updateEnablement(ws.Resource resource) {
+    enabled = getAppContainerFor(resource) != null;;
+  }
+}
+
+class _WebStorePublishJob extends Job {
+  ws.Container _container;
+  String _appID;
+  Spark spark;
+
+  _WebStorePublishJob(this.spark, this._container, this._appID)
+      : super("Publishing to Chrome Web Store…");
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, _appID == null ? 5 : 6);
+
+    if (_container == null) {
+      spark.showErrorMessage('Error while publishing the application',
+          'The manifest.json file of the application has not been found.');
+      return null;
+    }
+
+    return ws_utils.archiveContainer(_container).then((List<int> archivedData) {
+      monitor.worked(1);
+      WebStoreClient wsc = new WebStoreClient();
+      return wsc.authenticate().then((_) {
+        monitor.worked(1);
+        return wsc.uploadItem(archivedData, identifier: _appID).then((String uploadedAppID) {
+          monitor.worked(3);
+          if (_appID == null) {
+            spark.showUploadedAppDialog(uploadedAppID);
+          } else {
+            return wsc.publish(uploadedAppID).then((_) {
+              monitor.worked(1);
+              spark.showPublishedAppDialog(_appID);
+            }).catchError((e) {
+              monitor.worked(1);
+              spark.showUploadedAppDialog(uploadedAppID);
+            });
+          }
+        });
+      });
+    }).catchError((e) {
+      spark.showErrorMessage('Error while publishing the application', e.toString());
+    });
+  }
 }
 
 class GitAuthenticationDialog extends SparkActionWithDialog {
