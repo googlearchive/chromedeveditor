@@ -14,7 +14,7 @@ import 'index.dart';
 import 'status.dart';
 
 /**
- * Reverts a given list of file [entries] to the git head state.
+ * Reverts a given list of file entries to the git head state.
  */
 class Revert {
   static Future revert(GitOptions options, List<chrome.ChromeFileEntry>
@@ -24,7 +24,7 @@ class Revert {
           (FileStatus status) {
         return options.store.retrieveObjectBlobsAsString([status.headSha]).then(
             (List<LooseObject> objects) {
-              return entry.writeText(objects.first.data);
+          return entry.writeText(objects.first.data);
         });
       });
     });
