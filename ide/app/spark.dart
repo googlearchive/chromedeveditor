@@ -408,6 +408,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
+    actionManager.registerAction(new PubGetAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -937,6 +938,18 @@ abstract class SparkAction extends Action {
     List<ws.Resource> resources = object as List;
     return (object as List).first is ws.Folder;
   }
+  
+  /**
+   * Returns true if `object` is a list with a single item and this item is a
+   * [File].
+   */
+  bool _isSingleFile(Object object) {
+    if (!_isSingleResource(object)) {
+      return false;
+    }
+    List<ws.Resource> resources = object as List;
+    return (object as List).first is ws.File;
+  }
 
   /**
    * Returns true if `object` is a list of top-level [Resource].
@@ -1322,6 +1335,35 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   bool _appliesTo(ws.Resource resource) {
     return spark.launchManager.canRun(resource);
   }
+
+  void _updateEnablement(ws.Resource resource) {
+    enabled = _appliesTo(resource);
+  }
+}
+
+class PubGetAction extends SparkAction implements ContextAction {
+  PubGetAction(Spark spark) : super(
+      spark, "pub-get", "Pub Get") {
+    enabled = false;
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+  }
+
+  void _invoke([context]) {
+    ws.Resource resource;
+
+    if (context == null) {
+      resource = spark.focusManager.currentResource;
+    } else {
+      resource = context.first;
+    }
+    print('TODO: implement this');
+  }
+
+  String get category => 'pub';
+  
+  bool _appliesTo(ws.Resource resource) =>  resource is ws.File && resource.name == 'pubspec.yaml';
+
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first); 
 
   void _updateEnablement(ws.Resource resource) {
     enabled = _appliesTo(resource);

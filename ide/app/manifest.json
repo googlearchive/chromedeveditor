@@ -24,6 +24,7 @@
     "https://www.google-analytics.com/",
     "https://www.googleapis.com/upload/chromewebstore/v1.1/items",
     "https://github.com/*",
+    "https://pub.dartlang.org/*",
     "http://*/push",
     "identity",
     "clipboardRead",
