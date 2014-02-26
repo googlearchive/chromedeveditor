@@ -62,6 +62,8 @@
           </spark-menu-item>
           <spark-menu-item action-id="git-clone" label="Git Clone...">
           </spark-menu-item>
+          <spark-menu-item action-id="webstore-publish" iconsize=0 label="Publish to Chrome Web Store">
+          </spark-menu-item>
           <template if="{{developerMode}}">
             <spark-menu-separator></spark-menu-separator>
             <spark-menu-item action-id="run-tests" label="Run Tests">
@@ -432,6 +434,17 @@
             <span id="gitResetSettingsDone">Done</span>
           </div>
         </div>
+        <template if="{{developerMode}}">
+          <div class="form-group">
+            <label class="settings-title">Preference</label>
+            <div>
+              <spark-button on-click="{{onResetPreference}}">
+                Reset Preferences
+              </spark-button>
+              <span id="preferenceResetResult"></span>
+            </div>
+          </div>
+        </template>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary autofocus data-dismiss="modal">
@@ -472,6 +485,40 @@
       </div>
     </spark-modal>
 
+    <!-- Publish on webstore -->
+    <spark-modal id="webStorePublishDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Publish to Chrome Web Store</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <form>
+            <div>
+              <input type="radio" name="type" value="new" id="new-app-radio" checked>
+              <label for="new-app-radio" checked>Create a new application</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="existing" id="existing-app-radio">
+              <label for="existing-app-radio">Upload to an existing application</label>
+            </div>        
+          </form>
+        </div>
+        <div class="form-group">
+          <label for="appID">Enter the ID of the existing application</label>
+          <input id="appID" type="text" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+          Publish
+        </spark-button>
+      </div>
+    </spark-modal><!-- /.modal -->
+    
     <!-- Project properties dialog -->
     <spark-modal id="projectPropertiesDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
@@ -481,6 +528,42 @@
       <div class="modal-body">
       </div>
       <div class="modal-footer">
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal>
+    
+    <!-- Chrome WebStore published dialog -->
+    <spark-modal id="webStorePublishedDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Your application has been published</label>
+          <div class="help-block">An updated version of your application has been uploaded and published. You can now see it on the Chrome Web Store.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button id="webStorePublishedAction" overlay-toggle data-dismiss="modal">
+          Open in the WebStore
+        </spark-button>
+        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+          Close
+        </spark-button>
+      </div>
+    </spark-modal>
+    
+    <!-- Chrome WebStore first upload dialog -->
+    <spark-modal id="webStoreUploadedDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Your application has been uploaded</label>
+          <div class="help-block">Your application has been uploaded on the Chrome Web Store. You still need to fill out some additional information in the Developer Dashboard before publishing it.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button id="webStoreUploadedAction" overlay-toggle data-dismiss="modal">
+          Open in the Developer Dashboard
+        </spark-button>
         <spark-button overlay-toggle primary autofocus data-dismiss="modal">
           Close
         </spark-button>

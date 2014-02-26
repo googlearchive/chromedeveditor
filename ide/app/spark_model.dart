@@ -41,4 +41,9 @@ abstract class SparkModel extends Application {
 
   void onSplitViewUpdate(int position);
   void setGitSettingsResetDoneVisible(bool visible);
+
+  /**
+   * Hide the splash screen; show the main UI.
+   */
+  void unveil();
 }

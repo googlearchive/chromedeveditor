@@ -21,21 +21,27 @@ import '../lib/tcp.dart' as tcp;
 
 // TODO(devoncarew): test serving a stream response (contentLength == -1)
 
+Future<PicoServer> createServer() {
+  return PicoServer.createServer().then((server) {
+    server.addServlet(new HelloServlet());
+    server.addServlet(new HelloStreamServlet());
+    return server;
+  });
+}
 
 defineTests() {
+  PicoServer server;
+
   group('PicoServer', () {
-    PicoServer server;
-
     setUp(() {
-      return PicoServer.createServer().then((s) {
-        server = s;
-        server.addServlet(new HelloServlet());
-        server.addServlet(new HelloStreamServlet());
-      });
-    });
-
-    tearDown(() {
-      server.dispose();
+      if (server == null) {
+        return PicoServer.createServer().then((s) {
+          server = s;
+          server.addServlet(new HelloServlet());
+          server.addServlet(new HelloStreamServlet());
+          return server;
+        });
+      }
     });
 
     test('bind and dispose', () {
@@ -48,14 +54,12 @@ defineTests() {
       return tcp.TcpClient.createClient(tcp.LOCAL_HOST, server.port).then((c) {
         client = c;
         client.writeString("HEAD /hello.txt HTTP/1.0\r\n\r\n");
-        return client.stream.toList();
-      }).then((List<List<int>> inData) {
-        List<int> data = [];
-        inData.forEach((l) => data.addAll(l));
+        return client.stream.first;
+      }).then((List<int> data) {
         String str = new String.fromCharCodes(data);
         expect(str, startsWith('HTTP/1.1 200 OK\r\n'));
         expect(str, endsWith('Hello world!'));
-        client.dispose();
+        return client.dispose();
       });
     });
 
@@ -69,7 +73,7 @@ defineTests() {
       }).then((List<int> data) {
         String str = new String.fromCharCodes(data);
         expect(str, startsWith('HTTP/1.1 404 Not Found\r\n'));
-        client.dispose();
+        return client.dispose();
       });
     });
   });
