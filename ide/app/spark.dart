@@ -381,6 +381,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
+    actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
@@ -408,7 +409,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
-    actionManager.registerAction(new PubGetAction(this));
+   
 
     actionManager.registerKeyListener();
   }
@@ -1333,7 +1334,6 @@ class PubGetAction extends SparkAction implements ContextAction {
   PubGetAction(Spark spark) : super(
       spark, "pub-get", "Pub Get") {
     enabled = false;
-    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
   }
 
   void _invoke([context]) {
@@ -1344,7 +1344,7 @@ class PubGetAction extends SparkAction implements ContextAction {
     } else {
       resource = context.first;
     }
-    print('TODO: implement this');
+    spark.showMessage('Pub Get','TODO: implement this');
   }
 
   String get category => 'pub';
@@ -1352,10 +1352,6 @@ class PubGetAction extends SparkAction implements ContextAction {
   bool _appliesTo(ws.Resource resource) =>  resource is ws.File && resource.name == 'pubspec.yaml';
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first); 
-
-  void _updateEnablement(ws.Resource resource) {
-    enabled = _appliesTo(resource);
-  }
 }
 
 class ResourceRefreshAction extends SparkAction implements ContextAction {
