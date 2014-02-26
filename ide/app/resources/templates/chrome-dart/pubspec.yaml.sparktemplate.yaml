@@ -1,5 +1,0 @@
-name: _project_name_
-description: A sample Chrome packaged application
-dependencies:
-  browser: any
-  chrome: any
