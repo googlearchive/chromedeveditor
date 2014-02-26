@@ -4,54 +4,62 @@
 
 library spark_widgets.selection;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
-
-// Ported from Polymer Javascript to Dart code.
 
 @CustomTag("spark-selection")
 class SparkSelection extends SparkWidget {
   @published bool multi = false;
 
-  final List<Element> _selection = [];
+  final Set<dynamic> _selection = new Set<dynamic>();
 
   SparkSelection.created(): super.created();
 
   dynamic get selection =>
-      multi ? _selection : _selection.isNotEmpty ? _selection[0] : null;
+      multi ? _selection : _selection.isNotEmpty ? _selection.single : null;
 
-  bool isSelected(Element inItem) => _selection.contains(inItem);
+  bool isSelected(var value) => _selection.contains(value);
 
-  void _setSelected(Element inItem, bool inIsSelected) {
-    if (inItem == null) return;
+  void _setSelected(var value, bool isSelected) {
+    if (value == null) return;
 
-    if (inIsSelected) {
-      _selection.add(inItem);
+    if (isSelected) {
+      _selection.add(value);
     } else {
-      _selection.remove(inItem);
+      _selection.remove(value);
     }
 
     // TODO(sjmiles): consider replacing with summary notifications (async job).
-    asyncFire('select', detail: {'item': inItem, 'isSelected': inIsSelected});
+    asyncFire('select', detail: {'value': value, 'isSelected': isSelected});
   }
 
-  void select(Element inItem) {
+  void init(Set<dynamic> values) {
+    assert(multi || values.length <= 1);
+    // Unselect values that are currently in [_selection] but not in [values].
+    _selection.difference(values).forEach((v) => _setSelected(v, false));
+    // Select values that are in [values] but not currently in [_selection].
+    values.difference(_selection).forEach((v) => _setSelected(v, true));
+  }
+
+  void select(var value) {
     if (multi) {
-      toggle(inItem);
-    } else if (selection != inItem) {
+      toggle(value);
+    } else if (selection != value) {
       _setSelected(selection, false);
-      _setSelected(inItem, true);
+      _setSelected(value, true);
     }
   }
 
-  void toggle(Element inItem) {
-    _setSelected(inItem, !isSelected(inItem));
+  void toggle(var value) {
+    assert(multi);
+    _setSelected(value, !isSelected(value));
   }
 
   void clear() {
-    _selection.clear();
+    // NOTE: This is necessary so that events fire for all the removed values.
+    while (_selection.isNotEmpty) {
+      _setSelected(_selection.first, false);
+    }
   }
 }
