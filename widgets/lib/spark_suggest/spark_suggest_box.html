@@ -40,8 +40,11 @@
         class="form-control"
         focused
         placeholder="{{placeholder}}"
-        on-keyup="{{onInputKeyUp}}"
-        on-focus="{{onInputFocused}}"
+        on-click="{{textBoxClickHandler}}"
+        on-focus="{{textBoxFocusHandler}}"
+        on-blur="{{textBoxBlurHandler}}"
+        on-keydown="{{textBoxKeyDownHandler}}"
+        on-input="{{textBoxInputHandler}}"
     />
 
     <spark-overlay
@@ -49,17 +52,13 @@
         autoClose
         class="spark-overlay-scale-slideup"
         opened="{{opened}}"
-        on-opened="{{onOverlayOpened}}">
+        on-opened="{{overlayOpenedHandler}}">
 
       <spark-menu
           id="suggestion-list-menu"
-          valueattr="index"
-          on-activate="{{onMenuSelected}}">
-        <template repeat="{{s in suggestions | enumerate}}">
-          <spark-menu-item
-              index="{{s.index}}"
-              label="{{s.value.label}}"
-              description="{{s.value.details}}">
+          on-activate="{{menuActivateHandler}}">
+        <template repeat="{{s in suggestions}}">
+          <spark-menu-item label="{{s.label}}" description="{{s.details}}">
           </spark-menu-item>
         </template>
       </spark-menu>

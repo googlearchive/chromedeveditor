@@ -22,7 +22,7 @@
                 opened,
                 responsive,
                 valign"
-    on-keydown="{{keydownHandler}}">
+    on-keydown="{{keyDownHandler}}">
 
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
@@ -32,7 +32,10 @@
     </style>
 
     <spark-button id="button"
-        focused small noPadding touch-action="none" on-click="{{toggle}}">
+        focused small noPadding
+        on-click="{{toggle}}"
+        on-focus="{{open}}"
+        on-blur="{{close}}">
       <img src="{{src}}">
     </spark-button>
 
@@ -44,12 +47,12 @@
           on-opened="{{onOpened}}">
 
         <div class="arrow"></div>
-        <div class="arrow arrow-inner" on-click="{{toggle}}"></div>
+        <div class="arrow arrow-inner" on-click="{{close}}"></div>
 
-        <spark-menu id="overlayMenu"
+        <spark-menu id="menu"
             selected="{{selected}}"
             valueattr="{{valueattr}}"
-            on-activate="{{toggle}}">
+            on-activate="{{menuActivateHandler}}">
           <content></content>
         </spark-menu>
       </spark-overlay>

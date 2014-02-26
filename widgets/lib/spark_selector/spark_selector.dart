@@ -4,6 +4,7 @@
 
 library spark_widgets.selector;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -11,8 +12,6 @@ import 'package:polymer/polymer.dart';
 import '../common/spark_widget.dart';
 import '../common/keys.dart';
 import '../spark_selection/spark_selection.dart';
-
-// Ported from Polymer Javascript to Dart code.
 
 /**
  * Sets and tracks selected element(s) in a list.
@@ -44,31 +43,45 @@ import '../spark_selection/spark_selection.dart';
  */
 @CustomTag("spark-selector")
 class SparkSelector extends SparkWidget {
-  /// The initially selected elements. This can be any of the following:
-  /// 1)...
-  /// [selected] can also be used after the initial instantiation to force a
-  /// particular selection.
-  @published dynamic selected;
-
   /// If true, multiple selections are allowed.
   @published bool multi = false;
+
+  /// The IDs of the initially selected element ([multi]==false) or
+  /// a space-separated list of the initially selected elements
+  /// ([multi]==true). An ID can be either the element's 0-based index or
+  /// the element's value as determined by the [valueattr] property.
+  /// [selected] can also be externally set after the initial instantiation
+  /// to force a particular selection.
+  @published dynamic inSelection;
 
   /// The attribute to be used as an item's "value".
   @published String valueattr;
 
   /// The CSS selector to choose the selectable subset of elements passed from
   /// the light DOM into the <content> insertion point.
-  @published String selectableFilter;
+  @published String itemFilter = '*';
 
-  /// The CSS class to add to the selected element.
+  /// The CSS class to add to an active element (hovered/selected via keyboard).
+  @published String activeClass = '';
+  /// The attribute to add to an active element (hovered/selected via keyboard).
+  @published String activeProperty = '';
+  /// The CSS class to add to a selected element.
   @published String selectedClass = '';
-  /// The attribute to set on the selected element.
+  /// The attribute to set on a selected element.
   @published String selectedProperty = '';
 
-  // TODO(terry): Should be tap when PointerEvents are supported.
-  @published String activateEvent = 'click';
+  SparkSelection selection;
 
-  SparkSelection _selection;
+  List<Element> _items = new List<Element>();
+  Element _active;
+  bool _fireEvents = true;
+
+  static final Map<int, int> _keyNavigationDistances = {
+    Keys.UP: -1,
+    Keys.DOWN: 1,
+    Keys.PAGE_UP: -10,
+    Keys.PAGE_DOWN: 10
+  };
 
   SparkSelector.created() : super.created();
 
@@ -76,119 +89,188 @@ class SparkSelector extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _selection = $['selection'];
-    selectedChanged();
+    selection = $['selection'];
 
-    addEventListener(activateEvent, onActivate);
+    onMouseOver.listen(mouseOverHandler);
+    // TODO(terry): Should be onTap when PointerEvents are supported.
+    onClick.listen(clickHandler);
+    onKeyDown.listen(keyDownHandler);
+
+    // Observe external changes to the lightDOM items inserted in our <content>.
+    new MutationObserver((m, o) => _updateItems())
+        .observe(this, childList: true);
+
+    _updateItems();
   }
 
-
-  Iterable<Element> getItems() {
-    Iterable<Element> nodes = SparkWidget.inlineNestedContentNodes($['items']);
-    if (selectableFilter != null) {
-      nodes = nodes.where((Element e) => e.matches(selectableFilter));
-    }
-    return nodes;
+  void _updateItems() {
+    preventFlashOfUnstyledContent(100);
+    _items =
+        SparkWidget.inlineNestedContentNodes($['items'])
+            .where((Element item) => item.matches(itemFilter))
+                .toList();
+    resetState();
   }
 
-  void selectedChanged() {
-    if (multi) {
-      if (selected == null) {
-        selected = [];
-      } else if (selected is String) {
-        selected = (selected as String).split(" ");
-      } else if (selected is int) {
-        selected = [selected];
-      }
-    }
+  void resetState() {
+    _initSelection();
+    _setActive(null);
+  }
 
-    _selection.clear();
+  void inSelectionChanged() {
+    _initSelection();
+  }
+
+  void _initSelection() {
+    // TODO(ussuri): Initial selection doesn't work e.g. in spark-suggest-box:
+    // the dropdown appears, the items get selected briefly, then the dropdown
+    // closes.
+    List<String> s;
     if (multi) {
-      for (var s in selected) {
-        _updateSelection(s);
-      }
+      s = (inSelection == null) ? [] :
+          (inSelection is List<String>) ? inSelection :
+          (inSelection is String) ? (inSelection as String).split(" ") :
+          (inSelection is int) ? [(inSelection as int).toString()] : null;
     } else {
-      _updateSelection(selected);
+      s = (inSelection == null) ? [] :
+          (inSelection is String) ? [inSelection] :
+          (inSelection is int) ? [(inSelection as int).toString()] : null;
     }
-  }
-
-  void clearSelection() {
-    selected = null;
-  }
-
-  void _updateSelection(var value) {
-    final int i = _valueToIndex(value);
-    if (i >= 0) {
-      // [_selection] will fire 1 or 2 [onSelectSelected] calls in response
-      // to this. 1 call will be fired either when [multi] is on, corresponding
-      // to the just-toggled item, or when [multi] is off and the previously
-      // selected single item has just got unselected; 2 calls will be fired
-      // when [multi] is off and the just-selected item is different from the
-      // previous one (1st call for the unselected, 2nd call for the selected).
-      _selection.select(getItems().elementAt(i));
-    }
+    assert(s != null);
+    _fireEvents = false;
+    selection.init(s.toSet());
+    _fireEvents = true;
   }
 
   /// Find an item with valueattr == value and return it's index.
-  int _valueToIndex(String value) {
-    final List<Element> items = getItems().toList(growable: false);
-    for (int i = 0; i < items.length; i++) {
-      if (_valueForNode(items[i]) == value) {
-        return i;
+  Element _valueToItem(String value) {
+    Element item = _items.firstWhere(
+        (i) => _itemToValue(i) == value, orElse: () => null);
+    if (item == null) {
+      // If no item found, the value itself might be the index:
+      final int idx = int.parse(value, onError: (_) => -1);
+      if (idx >= 0 && idx < _items.length) {
+        item = _items[idx];
       }
     }
-    // If no item found, the value itself is probably the index:
-    return (value is int) ? value : (value is String) ? int.parse(value) : -1;
+    return item;
   }
 
-  String _valueForNode(Element node) =>
-      node.attributes.containsKey(valueattr) ? node.attributes[valueattr] : null;
+  /// Extract the value for an item if [valueattr] is set, or else its index.
+  String _itemToValue(Element item) {
+      return valueattr != null ?
+          item.attributes[valueattr] : _items.indexOf(item).toString();
+  }
 
   /// Events fired from <polymer-selection> object.
-  void onSelectionSelect(e, detail) {
-    _renderSelection(detail['item'], detail['isSelected']);
-    if (valueattr != null) {
-      detail['value'] = _valueForNode(detail['item']);
+  void selectionSelectHandler(CustomEvent e, var detail) {
+    e.stopPropagation();
+
+    final Element item = _valueToItem(detail['value']);
+    if (item != null) {
+      _renderSelected(item, detail['isSelected']);
+
+      detail['item'] = item;
+
+      if (_fireEvents) {
+        asyncFire('activate', detail: detail, canBubble: true);
+      }
     }
-    asyncFire('activate', detail: detail, canBubble: true);
   }
 
-  void _renderSelection(Element item, bool isSelected) {
-    if (selectedClass.isNotEmpty) {
-      item.classes.toggle(selectedClass, isSelected);
-    }
-    if (selectedProperty.isNotEmpty) {
-      if (isSelected) {
-        item.attributes[selectedProperty] = '';
-      } else {
-        item.attributes.remove(selectedProperty);
-      }
+  // Events fired for menu elements when hovered over.
+  void mouseOverHandler(MouseEvent e) {
+    final Element target = e.target;
+    if (_items.contains(target)) {
+      _setActive(target);
     }
   }
 
   // Event fired from host.
-  void onActivate(Event e) {
-    final List<Element> items = getItems().toList(growable: false);
-    final int i = items.indexOf(e.target);
-    if (i >= 0) {
-      final String value = _valueForNode(items[i]);
-      // By name or by id.
-      final s = value != null ? value : i;
-      _addRemoveSelected(s);
+  void clickHandler(Event e) {
+    if (e.target == _active) {
+      _commitActiveToSelected();
+    } else {
+      // This will happen if the user clicks on some element not designated as
+      // an item via [selectableFilter], e.g. on a menu separator.
+      assert(!_items.contains(e.target));
     }
   }
 
-  void _addRemoveSelected(var value) {
-    // All changes to [selected] below will trigger [selectedChanged()].
-    if (multi) {
-      final int i = selected.indexOf(value);
-      if (i >= 0) {
-        selected.remove(i);
-      } else {
-        selected.add(value);
+  void keyDownHandler(KeyboardEvent e) {
+    maybeHandleKeyStroke(e.keyCode);
+  }
+
+  /// This is supposed to be called by an embedder of spark-selector to give
+  /// it a chance to handle keyboard-driven navigation between items and commit
+  /// currently active item to the selection. In the last case, the embedder
+  /// should expect to receive one or more 'activate' events.
+  /// One example is spark-suggest-box, which maintains its text box focused to
+  /// handle input, but wants the dropdown list of suggestions to handle
+  /// navigation and selection on arrows and ENTER.
+  bool maybeHandleKeyStroke(int keyCode) {
+    final dist = _keyNavigationDistances[keyCode];
+    if (dist != null) {
+      _moveActive(dist);
+      return true;
+    }
+    if (keyCode == Keys.ENTER) {
+      _commitActiveToSelected();
+    }
+    return false;
+  }
+
+  void _setActive(Element newActive) {
+    // TODO(ussuri): Figure out correct interaction with [selectedStyle] when
+    // [selectedStyle]==[activeStyle].
+    _renderActive(_active, false);
+    _renderActive(newActive, true);
+    if (newActive != null) {
+      newActive.scrollIntoView(ScrollAlignment.CENTER);
+    }
+    _active = newActive;
+  }
+
+  void _moveActive(int distance) {
+    if (_items.isEmpty) return;
+
+    int activeIdx = _items.indexOf(_active);
+    if (activeIdx == -1) {
+      activeIdx = distance > 0 ? -1 : _items.length;
+    }
+    activeIdx = (activeIdx + distance).clamp(0, _items.length - 1);
+    _setActive(_items[activeIdx]);
+  }
+
+  /// Add the currently active item, if any, to the current selection.
+  void _commitActiveToSelected() {
+    if (_active != null) {
+      // [selection] will trigger 0 or more [selectionSelectHandler] calls
+      // in response to this, depending on which items become newly selected
+      // and which become deselected, in corresponance with the [multi] logic.
+      selection.select(_itemToValue(_active));
+    }
+  }
+
+  void _renderSelected(Element item, bool isSelected) =>
+      _renderClassAndProperty(item, isSelected, selectedClass, selectedProperty);
+
+  void _renderActive(Element item, bool isActive) =>
+      _renderClassAndProperty(item, isActive, activeClass, activeProperty);
+
+  void _renderClassAndProperty(
+      Element item, bool isOn, String cssClass, String property) {
+    if (item != null) {
+      if (cssClass != null && cssClass.isNotEmpty) {
+        item.classes.toggle(cssClass, isOn);
       }
-    } else {
-      selected = value;
+      if (property != null && property.isNotEmpty) {
+        if (isOn) {
+          item.attributes[property] = '';
+        } else {
+          item.attributes.remove(property);
+        }
+      }
     }
   }
 }

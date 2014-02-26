@@ -25,6 +25,22 @@
   border: none;
 }
 
+::content spark-menu-item.selected {
+  background-color: #1a64a3;
+}
+
+::content spark-menu-item.selected ^ * {
+  color: white;
+}
+
+::content spark-menu-item.active {
+  background-color: #3a84c3;
+}
+
+::content spark-menu-item.active ^ * {
+  color: white;
+}
+
 /*@polyfill spark-menu-separator */
 ::content spark-menu-separator {
   height: 2px;

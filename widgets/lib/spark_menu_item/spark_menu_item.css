@@ -24,11 +24,3 @@
   float: right;
   overflow: hidden;
 }
-
-:host(.highlighted), /*BUG #733*/ :host.highlighted {
-  background-color: #3a84c3;
-}
-
-:host(.highlighted) #text, /*BUG #733*/ :host.highlighted #text {
-  color: white;
-}

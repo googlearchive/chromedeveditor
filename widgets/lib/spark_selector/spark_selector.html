@@ -49,14 +49,14 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_selection/spark_selection.html">
 
 <polymer-element name="spark-selector" extends="spark-widget"
-    attributes="selected,
-                multi,
+    attributes="multi,
+                inSelection,
                 valueattr,
-                selectableFilter,
+                itemFilter,
+                activeClass,
+                activeProperty,
                 selectedClass,
-                selectedProperty,
-                activateEvent">
-
+                selectedProperty">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
@@ -64,7 +64,9 @@
       @import url("packages/spark_widgets/spark_selector/spark_selector.css");
     </style>
 
-    <spark-selection id="selection" multi="{{multi}}" on-select="{{onSelectionSelect}}">
+    <spark-selection id="selection"
+        multi="{{multi}}"
+        on-select="{{selectionSelectHandler}}">
     </spark-selection>
 
     <content id="items" select="*"></content>

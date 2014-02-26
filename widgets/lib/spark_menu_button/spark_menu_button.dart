@@ -23,20 +23,41 @@ class SparkMenuButton extends SparkWidget {
   @published bool responsive = false;
   @published String valign = "center";
 
+  SparkOverlay _overlay;
+  SparkMenu _menu;
+
   SparkMenuButton.created(): super.created();
 
-  //* Toggle the opened state of the dropdown.
-  void toggle() {
-    ($['overlayMenu'] as SparkMenu).clearSelection();
-    opened = !opened;
+  @override
+  void enteredView() {
+    super.enteredView();
 
-    // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
-    // in 'opened' when run as deployed code. Just binding via {{opened}} alone
-    // isn't detected and the menu doesn't open.
-    if (IS_DART2JS) {
-      ($['overlay'] as SparkOverlay).opened = opened;
+    _overlay = $['overlay'];
+    _menu = $['menu'];
+  }
+
+  //* Toggle the opened state of the dropdown.
+  void toggle([bool inOpened]) {
+    final bool newOpened = inOpened != null ? inOpened : !opened;
+    if (newOpened != opened) {
+      opened = newOpened;
+      // TODO(ussuri): A temporary plug to make spark-overlay see changes
+      // in 'opened' when run as deployed code. Just binding via {{opened}}
+      // alone isn't detected and the menu doesn't open.
+      if (IS_DART2JS) {
+        _overlay.opened = opened;
+      }
+      if (opened) {
+        // Enforce focused state so the button can accept keyboard events.
+        focus();
+        _menu.resetState();
+      }
     }
   }
+
+  void open() => toggle(true);
+
+  void close() => toggle(false);
 
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
   //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
@@ -47,23 +68,37 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void keydownHandler(KeyboardEvent e) {
+  void menuActivateHandler(CustomEvent e, var details) {
+    if (details['isSelected']) {
+      close();
+    }
+  }
+
+  void keyDownHandler(KeyboardEvent e) {
+    bool stopPropagation = true;
+
+    if (_menu.maybeHandleKeyStroke(e.keyCode)) {
+      e.preventDefault();
+    }
+
     switch (e.keyCode) {
-      case Keys.ESCAPE:
-        opened = false;
-        break;
       case Keys.UP:
       case Keys.DOWN:
-        if (!opened) {
-          opened = true;
-        }
-        // TODO(sunglim): Move focus to next menu item.
+      case Keys.PAGE_UP:
+      case Keys.PAGE_DOWN:
+      case Keys.ENTER:
+        if (!opened) opened = true;
+        break;
+      case Keys.ESCAPE:
+        if (opened) opened = false;
         break;
       default:
+        stopPropagation = false;
         break;
     }
 
-    e.stopImmediatePropagation();
-    e.preventDefault();
+    if (stopPropagation) {
+      e.stopPropagation();
+    }
   }
 }
