@@ -1,3 +1,11 @@
+library spark.project_builder;
+
+import 'dart:async';
+import 'dart:convert' show JSON;
+import 'dart:html' hide File;
+
+import 'package:chrome/chrome_app.dart' as chrome;
+
 class ProjectBuilder {
   DirectoryEntry _destRoot;
   DirectoryEntry _sourceRoot;
@@ -32,14 +40,15 @@ class ProjectBuilder {
 
   Future traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
                   String sourceUri, Map element) {
-    return handleDirectories(destRoot, sourceRoot, sourceUri, element['directories'])
-        .then((_) => handleFiles(destRoot, sourceRoot, sourceUri,
-            element['files']))
+    return handleDirectories(destRoot, sourceRoot, sourceUri,
+        element['directories']).then((_) => handleFiles(destRoot,
+            sourceRoot, sourceUri, element['files']))
         .catchError((e) =>
             print("""error: ${e}"""));
   }
 
-  Future handleDirectories(DirectoryEntry destRoot, DirectoryEntry sourceRoot, String sourceUri,
+  Future handleDirectories(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
+                           String sourceUri,
                            Map directories) {
     if (directories != null) {
       return Future.forEach(directories.keys, (String directoryName) {
@@ -58,7 +67,8 @@ class ProjectBuilder {
     return new Future.value();
   }
 
-  Future handleFiles(DirectoryEntry destRoot, DirectoryEntry sourceRoot, String sourceUri, List files) {
+  Future handleFiles(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
+                     String sourceUri, List files) {
     if (files != null) {
       return Future.forEach(files, (fileElement) {
         String source = fileElement['source'];
