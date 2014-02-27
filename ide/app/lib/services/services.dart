@@ -7,10 +7,10 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import '../workspace.dart' as ws;
-
+import '../analyzer_common.dart';
 import 'compiler.dart';
 import '../utils.dart';
+import '../workspace.dart' as ws;
 
 export 'compiler.dart' show CompilerResult;
 
@@ -26,7 +26,7 @@ class Services {
   Services(this._workspace) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
-    registerService(new ExampleService(this, _isolateHandler));
+    registerService(new TestService(this, _isolateHandler));
     _chromeService = new ChromeServiceImpl(this, _isolateHandler);
 
     _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event){
@@ -125,18 +125,21 @@ class AnalyzerService extends Service {
         .then((_) => _readyCompleter.complete());
   }
 
-  List<AnalyzerResult> build(Iterable<File> dartFiles) {
-    return onceReady.then((_) =>
-        _sendAction("analyzeString", {"string": string}))
-        .then((ServiceActionEvent result) {
-//          CompilerResult response = new AnalysisResult.fromMap(result.data);
-          return response;
-        });
-  }
+  // TODO(ericarnold): Implement
+//  List<AnalyzerResult> build(Iterable<File> dartFiles) {
+//    return onceReady.then((_) =>
+//        _sendAction("analyzeString", {"string": string}))
+//        .then((ServiceActionEvent result) {
+////          CompilerResult response = new AnalysisResult.fromMap(result.data);
+//          return response;
+//        });
+//  }
 
-  Future<CompilerResult> analyzeString(String string) {
+  Future<CompilerResult> analyzeString(String string,
+      {bool performResolution}) {
     return onceReady.then((_) =>
-        _sendAction("analyzeString", {"string": string}))
+        _sendAction("analyzeString", {"string": string,
+          "performResolution": performResolution}))
         .then((ServiceActionEvent result) {
 //          CompilerResult response = new AnalysisResult.fromMap(result.data);
           return response;
@@ -149,10 +152,10 @@ class AnalyzerService extends Service {
   }
 }
 
-class ExampleService extends Service {
+class TestService extends Service {
   String serviceId = "example";
 
-  ExampleService(Services services, _IsolateHandler handler)
+  TestService(Services services, _IsolateHandler handler)
       : super(services, handler);
 
   Future<String> shortTest(String name) {
@@ -179,10 +182,11 @@ class ExampleService extends Service {
    */
   Future<String> readText(ws.File file) {
     return _sendAction("readText", {"fileUuid": file.uuid})
-        .then((ServiceActionEvent event) {
-          return event.data['contents'];
-        });
+        .then((ServiceActionEvent event) => event.data['contents']);
   }
+
+  Future<String> analyzerSdkTest() => _sendAction("analyzerSdkTest")
+      .then((ServiceActionEvent event) => event.data['success']);
 }
 
 /**

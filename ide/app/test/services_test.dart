@@ -26,9 +26,9 @@ defineTests() {
     });
   });
 
-  group('services example', () {
+  group('services implementation tests', () {
     test('service order', () {
-      ExampleService exampleService = services.getService("example");
+      TestService exampleService = services.getService("example");
       Completer completer = new Completer();
       List<String> orderedResponses = [];
 
@@ -62,6 +62,14 @@ defineTests() {
         expect(true, equals(true));
       });
     });
+
+    test('analyzer test', () {
+      TestService testService = services.getService("example");
+
+      return testService.analyzerTest()
+          .then((success) => expect(success, isTrue));
+    });
+
   });
 
   group('chrome service', () {
@@ -69,7 +77,7 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
       FileEntry fileEntry = fs.createFile('test.txt', contents: "some words");
       String fileUuid;
-      ExampleService exampleService = services.getService("example");
+      TestService exampleService = services.getService("example");
       return workspace.link(createWsRoot(fileEntry))
           .then((ws.File fileResource) {
             return exampleService.readText(fileResource);

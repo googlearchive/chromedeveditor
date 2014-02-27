@@ -225,30 +225,42 @@ class CompilerServiceImpl extends ServiceImpl {
 }
 
 class AnalyzerServiceImpl extends ServiceImpl {
+  AnalyzerServiceImpl(ServicesIsolate isolate) : super(isolate);
+
   String get serviceId => "analyzer";
-  Analyzer
+  Future<ChromeDartSdk> _dartSdkFuture;
+  Future<ChromeDartSdk> get dartSdkFuture {
+    if (_dartSdkFuture == null) {
+      _dartSdkFuture = createSdk();
+    }
+    return _dartSdkFuture;
+  }
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
-      case "start":
-
-        break;
       case "analyzeString":
-        analyzer.createSdk().then((int sdkId) {
-          return Future.forEach(dartFiles, (file) => _processFile(sdkId, file))
-        }).then((_) => completer.complete());
+        Completer<AnalyzerResult> completer = new Completer();
+        List<String> dartFileUuids = event.data["dartFileUuids"];
+        dartSdkFuture.then((ChromeDartSdk sdk) {
+          return Future.forEach(dartFileUuids, (String fileUuid) =>
+              _processFile(sdk, fileUuid));
+            }).then((_) => completer.complete());
 
 
-        break;
+        return completer.future;
+    }
   }
 
-  Future build() {
-    Completer completer = new Completer();
+  Future<List<AnalyzerResult>> build(List<String> fileUuids) {
+    List<AnalyzerResult> results = [];
+
+    Completer<List<AnalyzerResult>> completer = new Completer();
 
     createSdk().then((ChromeDartSdk sdk) {
-      Future.forEach(dartFiles, (file) => _processFile(sdk, file)).then((_) {
-        completer.complete();
-      });
+      Future.forEach(fileUuids, (String fileUuid) {
+          _processFile(sdk, fileUuid)
+              .then((AnalyzerResult result) => results.add(result));
+          }).then((_) => completer.complete(results));
     });
 
     return completer.future;
@@ -257,26 +269,29 @@ class AnalyzerServiceImpl extends ServiceImpl {
   /**
    * Create markers for a `.dart` file.
    */
-  Future _processFile(ChromeDartSdk sdk, File file) {
-    return file.getContents().then((String contents) {
-      return analyzeString(sdk, contents, performResolution: false).then((AnalyzerResult result) {
-        file.workspace.pauseMarkerStream();
-
-        try {
-          file.clearMarkers();
-
-          for (AnalysisError error in result.errors) {
-            LineInfo_Location location = result.getLineInfo(error);
-
-            file.createMarker(
-                'dart', _convertSeverity(error.errorCode.errorSeverity),
-                error.message, location.lineNumber,
-                error.offset, error.offset + error.length);
-          }
-        } finally {
-          file.workspace.resumeMarkerStream();
-        }
-      });
+  Future<AnalyzerResult> _processFile(ChromeDartSdk sdk, String fileUuid) {
+    return _isolate.chromeService.getFileContents(fileUuid)
+        .then((String contents) =>
+            analyzeString(sdk, contents, performResolution: false))
+        .then((AnalyzerResult result) {
+            return result;
+            // TODO(ericarnold): Implement outside of service
+//            file.workspace.pauseMarkerStream();
+//        try {
+//          file.clearMarkers();
+//
+//          for (AnalysisError error in result.errors) {
+//            LineInfo_Location location = result.getLineInfo(error);
+//
+//            file.createMarker(
+//                'dart', _convertSeverity(error.errorCode.errorSeverity),
+//                error.message, location.lineNumber,
+//                error.offset, error.offset + error.length);
+//          }
+//        } finally {
+//          file.workspace.resumeMarkerStream();
+//        }
+//      });
     });
   }
 
