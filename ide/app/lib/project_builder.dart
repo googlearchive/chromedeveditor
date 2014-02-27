@@ -72,7 +72,7 @@ class ProjectBuilder {
         String source = fileElement['source'];
         String dest = fileElement['dest'];
         dest = dest.replaceAll("\$sourceName", _sourceName)
-            ..replaceAll("\$projectName", _projectName);
+            .replaceAll("\$projectName", _projectName);
 
         String content;
         print("""copying $sourceUri/${source} to $dest""");
@@ -80,7 +80,7 @@ class ProjectBuilder {
         return HttpRequest.getString("$sourceUri/$source")
             .then((String fileContent) {
               content = fileContent.replaceAll("_Project_name_", _projectName)
-                  ..replaceAll("_source_name_", _sourceName);
+                  .replaceAll("_source_name_", _sourceName);
               return destRoot.createFile(dest);
             }).then((FileEntry newFile) =>
                 chrome.fileSystem.getWritableEntry(newFile))

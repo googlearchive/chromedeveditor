@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     <title>_Project_name_</title>
-    <link rel="stylesheet" href="_project_name_.css">
+    <link rel="stylesheet" href="_source_name_.css">
   </head>
   <body>
     <h1>_Project_name_</h1>
@@ -13,7 +13,7 @@
       <p id="sample_text_id"></p>
     </div>
 
-    <script type="application/dart" src="_project_name_.dart"></script>
+    <script type="application/dart" src="_source_name_.dart"></script>
     <script src="packages/browser/dart.js"></script>
   </body>
 </html>
