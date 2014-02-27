@@ -388,8 +388,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitResolveConflictsAction(this));
-    actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
+    actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
@@ -1593,6 +1593,58 @@ class _HarnessPushJob extends Job {
   }
 }
 
+class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project project;
+  HtmlElement _propertiesElement;
+
+  ProjectPropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'project-properties', 'Properties…', dialog) {
+    _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
+  }
+
+  void _invoke([List context]) {
+    project = context.first;
+    _propertiesElement.innerHtml = '';
+    _buildProperties().then((_) => _show());
+  }
+
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'Name', project.name);
+
+    GitScmProjectOperations gitOperations =
+        spark.scmManager.getScmOperationsFor(project);
+
+    if (gitOperations != null) {
+      return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
+        final String repoUrl = map['url'];
+        _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+      }).catchError((e) {
+        _addProperty(_propertiesElement, 'Git Repository',
+            '<error retrieving Git data>');
+      });
+    } else {
+      return new Future.value();
+    }
+  }
+
+  void _addProperty(HtmlElement parent, String key, String value) {
+    Element div = new DivElement()..classes.add('form-group');
+    parent.children.add(div);
+
+    Element label = new LabelElement()..text = key;
+    Element element = new ParagraphElement()..text = value
+        ..className = 'form-control-static';
+
+    div.children.addAll([label, element]);
+  }
+
+  void _commit() { }
+
+  String get category => 'resource';
+
+  bool appliesTo(context) => _isProject(context);
+}
+
 /* Git operations */
 
 class GitCloneAction extends SparkActionWithDialog {
@@ -1630,7 +1682,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   InputElement _branchNameElement;
 
   GitBranchAction(Spark spark, Element dialog)
-      : super(spark, "git-branch", "Git Branch…", dialog) {
+      : super(spark, "git-branch", "Create Branch…", dialog) {
     _branchNameElement = _triggerOnReturn("#gitBranchName");
   }
 
@@ -1662,14 +1714,14 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   String _gitEmail;
 
   GitCommitAction(Spark spark, Element dialog)
-      : super(spark, "git-commit", "Git Commit…", dialog) {
+      : super(spark, "git-commit", "Commit Changes…", dialog) {
     _commitMessageElement = getElement("#commitMessage");
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
   }
 
   void _invoke([context]) {
-    project = context.first;
+    project = context.first.project;
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -1712,60 +1764,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   String get category => 'git';
 
-  bool appliesTo(context) => _isScmProject(context);
-}
-
-class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
-  ws.Project project;
-  HtmlElement _propertiesElement;
-
-  ProjectPropertiesAction(Spark spark, Element dialog)
-      : super(spark, 'project-properties', 'Properties…', dialog) {
-    _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
-  }
-
-  void _invoke([List context]) {
-    project = context.first;
-    _propertiesElement.innerHtml = '';
-    _buildProperties().then((_) => _show());
-  }
-
-  Future _buildProperties() {
-    _addProperty(_propertiesElement, 'File Name', project.name);
-    _addProperty(_propertiesElement, 'Location', project.entry.fullPath);
-
-    GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(project);
-
-    if (gitOperations != null) {
-      return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
-        final String repoUrl = map['url'];
-        _addProperty(_propertiesElement, 'Git Repository', repoUrl);
-      }).catchError((e) {
-        _addProperty(_propertiesElement, 'Git Repository',
-            '<error retrieving Git data>');
-      });
-    } else {
-      return new Future.value();
-    }
-  }
-
-  void _addProperty(HtmlElement parent, String key, String value) {
-    Element div = new DivElement()..classes.add('form-group');
-    parent.children.add(div);
-
-    Element label = new LabelElement()..text = key;
-    Element element = new ParagraphElement()..text = value
-        ..className = 'form-control-static';
-
-    div.children.addAll([label, element]);
-  }
-
-  void _commit() { }
-
-  String get category => 'resource';
-
-  bool appliesTo(context) => _isProject(context);
+  bool appliesTo(context) => _isUnderScmProject(context);
 }
 
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
@@ -1774,7 +1773,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   SelectElement _selectElement;
 
   GitCheckoutAction(Spark spark, Element dialog)
-      : super(spark, "git-checkout", "Git Checkout…", dialog) {
+      : super(spark, "git-checkout", "Switch Branch…", dialog) {
     _selectElement = getElement("#gitCheckout");
   }
 
@@ -1821,7 +1820,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   bool _needsUsernamePassword;
 
   GitPushAction(Spark spark, Element dialog)
-      : super(spark, "git-push", "Git Push…", dialog) {
+      : super(spark, "git-push", "Push to Origin…", dialog) {
     _commitsList = getElement('#gitCommitList');
   }
 
@@ -1890,7 +1889,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
 class GitResolveConflictsAction extends SparkAction implements ContextAction {
   GitResolveConflictsAction(Spark spark) :
-      super(spark, "git-resolve-conflicts", "Git Resolve Conflicts");
+      super(spark, "git-resolve-conflicts", "Resolve Conflicts");
 
   void _invoke([context]) {
     ws.Resource file = _getResource(context);
@@ -1923,7 +1922,7 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
 
 class GitRevertChangesAction extends SparkAction implements ContextAction {
   GitRevertChangesAction(Spark spark) :
-      super(spark, "git-revert-changes", "Git Revert Changes…");
+      super(spark, "git-revert-changes", "Revert Changes…");
 
   void _invoke([List resources]) {
     ScmProjectOperations operations =
@@ -2317,6 +2316,7 @@ class _WebStorePublishJob extends Job {
   }
 }
 
+// TODO: This does not need to extends SparkActionWithDialog - just dialog.
 class GitAuthenticationDialog extends SparkActionWithDialog {
   Completer completer;
   static GitAuthenticationDialog _instance;
@@ -2373,7 +2373,7 @@ void _handleUncaughtException(error, [StackTrace stackTrace]) {
 
   window.console.error(error);
   if (stackTrace != null) {
-    window.console.error(stackTrace);
+    window.console.error(stackTrace.toString());
   }
 }
 
