@@ -30,6 +30,7 @@ import 'lib/harness_push.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
+import 'lib/project_builder.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
@@ -1507,24 +1508,39 @@ class NewProjectAction extends SparkActionWithDialog {
   void _commit() {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name).then((LocationResult location) {
+      spark.projectLocationManager.createNewFolder(name)
+          .then((LocationResult location) {
         if (location == null) return new Future.value();
 
         ws.WorkspaceRoot root;
+        var locationEntry = location.entry;
 
         if (location.isSync) {
-          root = new ws.SyncFolderRoot(location.entry);
+          root = new ws.SyncFolderRoot(locationEntry);
         } else {
-          root = new ws.FolderChildRoot(location.parent, location.entry);
+          root = new ws.FolderChildRoot(location.parent, locationEntry);
         }
 
-        return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Created ${project.name}');
-          Timer.run(() {
-            spark._filesController.selectFile(project);
-            spark._filesController.setFolderExpanded(project);
+        String type = getElement('input[name="type"]:checked').id;
+
+        return new Future.value().then((_) {
+          switch (type) {
+            case "empty-project":
+              break;
+            case "dart-web-app-radio":
+              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+                  "web-dart", name.toLowerCase(), name);
+              return projectBuilder.build();
+          }
+        }).then((_) {
+          return spark.workspace.link(root).then((ws.Project project) {
+            spark.showSuccessMessage('Created ${project.name}');
+            Timer.run(() {
+              spark._filesController.selectFile(project);
+              spark._filesController.setFolderExpanded(project);
+            });
+            spark.workspace.save();
           });
-          spark.workspace.save();
         });
       });
     }
