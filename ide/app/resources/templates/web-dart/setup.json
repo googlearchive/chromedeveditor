@@ -4,13 +4,13 @@
 		"web": {
 			"files": [
 				{
-					"source": "css.sparktemplate",
+					"source": "source.css_",
 					"dest": "$sourceName.css"
 				}, {
-					"source": "dart.sparktemplate",
+					"source": "source.dart_",
 					"dest": "$sourceName.dart"
 				}, {
-					"source": "html.sparktemplate",
+					"source": "source.html_",
 					"dest": "$sourceName.html"
 				}
 			]
@@ -18,7 +18,7 @@
 	},
 	"files": [
 		{
-			"source": "pubspec.yaml.sparktemplate",
+			"source": "pubspec.yaml_",
 			"dest": "pubspec.yaml"
 		}
 	]
