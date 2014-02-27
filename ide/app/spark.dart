@@ -1513,32 +1513,34 @@ class NewProjectAction extends SparkActionWithDialog {
         if (location == null) return new Future.value();
 
         ws.WorkspaceRoot root;
+        var locationEntry = location.entry;
 
         if (location.isSync) {
-          root = new ws.SyncFolderRoot(location.entry);
+          root = new ws.SyncFolderRoot(locationEntry);
         } else {
-          root = new ws.FolderChildRoot(location.parent, location.entry);
+          root = new ws.FolderChildRoot(location.parent, locationEntry);
         }
 
         String type = getElement('input[name="type"]:checked').id;
 
-        switch (type) {
-          case "empty-project":
-            break;
-          case "dart-web-app-radio":
-            ProjectBuilder projectBuilder = new ProjectBuilder(location.entry,
-                "web-dart", name.toLowerCase(), name);
-            projectBuilder.build();
-            break;
-        }
-
-        return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Created ${project.name}');
-          Timer.run(() {
-            spark._filesController.selectFile(project);
-            spark._filesController.setFolderExpanded(project);
+        return new Future.value().then((_) {
+          switch (type) {
+            case "empty-project":
+              break;
+            case "dart-web-app-radio":
+              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+                  "web-dart", name.toLowerCase(), name);
+              return projectBuilder.build();
+          }
+        }).then((_) {
+          return spark.workspace.link(root).then((ws.Project project) {
+            spark.showSuccessMessage('Created ${project.name}');
+            Timer.run(() {
+              spark._filesController.selectFile(project);
+              spark._filesController.setFolderExpanded(project);
+            });
+            spark.workspace.save();
           });
-          spark.workspace.save();
         });
       });
     }
