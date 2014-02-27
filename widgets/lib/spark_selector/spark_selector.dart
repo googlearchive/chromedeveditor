@@ -70,7 +70,7 @@ class SparkSelector extends SparkWidget {
 
   SparkSelection selection;
 
-  List<Element> _items = new List<Element>();
+  List<Element> _cachedItems;
   Element _active;
   bool _fireEvents = true;
 
@@ -95,19 +95,28 @@ class SparkSelector extends SparkWidget {
     onKeyDown.listen(keyDownHandler);
 
     // Observe external changes to the lightDOM items inserted in our <content>.
-    new MutationObserver((m, o) => _updateItems())
+    new MutationObserver((m, o) => _onNewItems())
         .observe(this, childList: true);
-
-    _updateItems();
   }
 
-  void _updateItems() {
+  void _onNewItems() {
+    // TODO(ussuri): Assigning _items here directly is premature: if the list
+    // contains some <template if=...> for example, the inner contens of the
+    // template will not be expanded at this point - that happens later.
+    // So instead we mark items as dirty and compute them on first access.
+    // Figure out: what's the exactly right moment to compute items.
     preventFlashOfUnstyledContent(100);
-    _items =
-        SparkWidget.inlineNestedContentNodes($['items'])
-            .where((Element item) => item.matches(itemFilter))
-                .toList();
-    resetState();
+    _cachedItems = null;
+  }
+
+  List<Element> get _items {
+    if (_cachedItems == null) {
+      _cachedItems =
+          SparkWidget.inlineNestedContentNodes($['items'])
+              .where((Element item) => item.matches(itemFilter))
+                  .toList();
+    }
+    return _cachedItems;
   }
 
   void resetState() {
