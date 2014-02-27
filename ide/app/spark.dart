@@ -1376,7 +1376,12 @@ class PubGetAction extends SparkAction implements ContextAction {
 class ResourceRefreshAction extends SparkAction implements ContextAction {
   ResourceRefreshAction(Spark spark) : super(
       spark, "resource-refresh", "Refresh") {
-    addBinding('f5');
+    // On Chrome OS, bind to the dedicated refresh key.
+    if (_isCros()) {
+      addBinding('f5', linuxBinding: 'f3');
+    } else {
+      addBinding('f5');
+    }
   }
 
   void _invoke([context]) {
