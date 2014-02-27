@@ -670,6 +670,8 @@ class PlatformInfo {
 
   PlatformInfo._(this.os, this.arch, this.naclArch);
 
+  PlatformInfo.fromMap(Map m) : this._(m['os'], m['arch'], m['nacl_arch']);
+
   String toString() => "${os}, ${arch}, ${naclArch}";
 
   bool get isCros => os == 'cros';
@@ -817,7 +819,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   Future applicationStarting(Application application) {
     // get platform info
     return chrome.runtime.getPlatformInfo().then((Map m) {
-      spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
+      spark._platformInfo = new PlatformInfo.fromMap(m);
       return spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
@@ -1377,11 +1379,13 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
   ResourceRefreshAction(Spark spark) : super(
       spark, "resource-refresh", "Refresh") {
     // On Chrome OS, bind to the dedicated refresh key.
-    if (_isCros()) {
-      addBinding('f5', linuxBinding: 'f3');
-    } else {
-      addBinding('f5');
-    }
+    chrome.runtime.getPlatformInfo().then((Map m) {
+      if (new PlatformInfo.fromMap(m).isCros) {
+        addBinding('f5', linuxBinding: 'f3');
+      } else {
+        addBinding('f5');
+      }
+    });
   }
 
   void _invoke([context]) {
