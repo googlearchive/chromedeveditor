@@ -18,9 +18,6 @@
 	},
 	"files": [
 		{
-			"source": "pubspec.lock.sparktemplate",
-			"dest": "pubspec.lock"
-		}, {
 			"source": "pubspec.yaml.sparktemplate",
 			"dest": "pubspec.yaml"
 		}
