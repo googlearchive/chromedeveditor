@@ -658,7 +658,8 @@ class ProjectBuilder {
   Map _setup;
   String sourceUri;
 
-  ProjectBuilder(String templateId, this._sourceName, this._projectName) {
+  ProjectBuilder(this._destRoot, String templateId, this._sourceName,
+      this._projectName) {
     String templatesPath = 'resources/templates/$templateId';
     sourceUri = chrome.runtime.getURL(templatesPath);
 
@@ -673,20 +674,9 @@ class ProjectBuilder {
     Future setupFuture = HttpRequest.getString("$sourceUri/setup.json")
         .then((String contents) => _setup = JSON.decode(contents));
 
-    return Future.wait([setupFuture, chooseDirectory(), _onceSourceRootReady])
+    return Future.wait([setupFuture, _onceSourceRootReady])
         .then((_){
-          traverseElement(_destRoot, _sourceRoot, sourceUri, _setup);
-        });
-  }
-
-  Future chooseDirectory() {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-
-//    if (suggestedName != null) options.suggestedName = suggestedName;
-    return chrome.fileSystem.chooseEntry(options)
-        .then((chrome.ChooseEntryResult res) {
-          _destRoot = res.entry;
+          return traverseElement(_destRoot, _sourceRoot, sourceUri, _setup);
         });
   }
 
@@ -1558,7 +1548,8 @@ class NewProjectAction extends SparkActionWithDialog {
   void _commit() {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name).then((LocationResult location) {
+      spark.projectLocationManager.createNewFolder(name)
+          .then((LocationResult location) {
         ws.WorkspaceRoot root;
 
         if (location.isSync) {
@@ -1573,7 +1564,7 @@ class NewProjectAction extends SparkActionWithDialog {
           case "empty-project":
             break;
           case "dart-web-app-radio":
-            ProjectBuilder projectBuilder = new ProjectBuilder(
+            ProjectBuilder projectBuilder = new ProjectBuilder(location.entry,
                 "web-dart", name.toLowerCase(), name);
             projectBuilder.build();
             break;
