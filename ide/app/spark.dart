@@ -138,9 +138,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     addParticipant(new _SparkSetupParticipant(this));
 
-    // TODO: this event is not being fired. A bug with chrome apps / Dartium?
-    // Possibly this: https://github.com/dart-gde/chrome.dart/issues/115
-    chrome.app.window.onClosed.listen((_) {
+    // This event is not fired when closing the current window. We listen for it
+    // in the vain hope that we will get the event, and we'll be able to clean
+    // up after ourselves slightly better.
+    chrome.app.window.current().onClosed.listen((_) {
       close();
     });
 
@@ -380,6 +381,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
+    actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
@@ -407,6 +409,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
+
 
     actionManager.registerKeyListener();
   }
@@ -689,18 +692,18 @@ class ProjectLocationManager {
   static Future<ProjectLocationManager> restoreManager(preferences.PreferenceStore prefs) {
     return prefs.getValue('projectFolder').then((String folderToken) {
       if (folderToken == null) {
-        return new ProjectLocationManager._(prefs, null);
+        return new ProjectLocationManager._(prefs);
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
       }).catchError((e) {
-        return new ProjectLocationManager._(prefs, null);
+        return new ProjectLocationManager._(prefs);
       });
     });
   }
 
-  ProjectLocationManager._(this._prefs, this._projectLocation);
+  ProjectLocationManager._(this._prefs, [this._projectLocation]);
 
   /**
    * Returns the default location to create new projects in. For Chrome OS, this
@@ -709,7 +712,16 @@ class ProjectLocationManager {
    */
   Future<LocationResult> getProjectLocation() {
     if (_projectLocation != null) {
-      return new Future.value(_projectLocation);
+      // Check if the saved location exists. If so, return it. Otherwise, get a
+      // new location.
+      return _projectLocation.exists().then((bool value) {
+        if (value) {
+          return _projectLocation;
+        } else {
+          _projectLocation = null;
+          return getProjectLocation();
+        }
+      });
     }
 
     // On Chrome OS, use the sync filesystem.
@@ -785,6 +797,16 @@ class LocationResult {
    * The name of the created entry.
    */
   String get name => entry.name;
+
+  Future<bool> exists() {
+    if (isSync) return new Future.value(true);
+
+    return entry.getMetadata().then((_) {
+      return true;
+    }).catchError((e) {
+      return false;
+    });
+  }
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
@@ -1088,6 +1110,8 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
             spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
             spark._aceManager.focus();
           });
+        }).catchError((e) {
+          spark.showErrorMessage("Error Creating File", e.toString());
         });
       }
     }
@@ -1126,13 +1150,14 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
     spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
       if (val) {
-        try {
-          spark.workspace.pauseResourceEvents();
-          resources.forEach((ws.Resource resource) => resource.delete());
-          spark.workspace.save();
-        } finally {
+        spark.workspace.pauseResourceEvents();
+        Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
+          String ordinality = resources.length == 1 ? "File" : "Files";
+          spark.showErrorMessage("Error Deleting ${ordinality}", e.toString());
+        }).whenComplete(() {
           spark.workspace.resumeResourceEvents();
-        }
+          spark.workspace.save();
+        });
       }
     });
   }
@@ -1161,10 +1186,11 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     if (_nameElement.value.isNotEmpty) {
-      resource.rename(_nameElement.value)
-        .then((value) {
-          spark._renameOpenEditor(resource);
-        });
+      resource.rename(_nameElement.value).then((value) {
+        spark._renameOpenEditor(resource);
+      }).catchError((e) {
+        spark.showErrorMessage("Error During Rename", e.toString());
+      });
     }
   }
 
@@ -1323,6 +1349,30 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 }
 
+class PubGetAction extends SparkAction implements ContextAction {
+  PubGetAction(Spark spark) : super(
+      spark, "pub-get", "Pub Get") {
+    enabled = false;
+  }
+
+  void _invoke([context]) {
+    ws.Resource resource;
+
+    if (context == null) {
+      resource = spark.focusManager.currentResource;
+    } else {
+      resource = context.first;
+    }
+    spark.showMessage('Pub Get','TODO: implement this');
+  }
+
+  String get category => 'pub';
+
+  bool _appliesTo(ws.Resource resource) =>  resource is ws.File && resource.name == 'pubspec.yaml';
+
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+}
+
 class ResourceRefreshAction extends SparkAction implements ContextAction {
   ResourceRefreshAction(Spark spark) : super(
       spark, "resource-refresh", "Refresh") {
@@ -1395,6 +1445,8 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
         Timer.run(() {
           spark._filesController.selectFile(folder);
         });
+      }).catchError((e) {
+        spark.showErrorMessage("Error Creating Folder", e.toString());
       });
     }
   }
@@ -1447,6 +1499,8 @@ class NewProjectAction extends SparkActionWithDialog {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
       spark.projectLocationManager.createNewFolder(name).then((LocationResult location) {
+        if (location == null) return new Future.value();
+
         ws.WorkspaceRoot root;
 
         if (location.isSync) {
@@ -1882,7 +1936,9 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
     // Show a yes/no dialog.
     spark.askUserOkCancel(text, okButtonLabel: 'Revert').then((bool val) {
       if (val) {
-        operations.revertChanges(resources);
+        operations.revertChanges(resources).then((_) {
+          resources.first.project.refresh();
+        });
       }
     });
   }
@@ -1921,7 +1977,7 @@ class _GitCloneJob extends Job {
     monitor.start(name, 1);
 
     return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
-      if (location == null) new Future.value();
+      if (location == null) return new Future.value();
 
       ScmProvider scmProvider = getProviderType('git');
 
@@ -2015,7 +2071,6 @@ class _GitCheckoutJob extends Job {
     });
   }
 }
-
 
 class _OpenFolderJob extends Job {
   Spark spark;
