@@ -2317,7 +2317,7 @@ void _handleUncaughtException(error, [StackTrace stackTrace]) {
 
   window.console.error(error);
   if (stackTrace != null) {
-    window.console.error(stackTrace);
+    window.console.error(stackTrace.toString());
   }
 }
 

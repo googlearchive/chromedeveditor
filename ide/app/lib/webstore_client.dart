@@ -18,7 +18,7 @@ class WebStoreClient {
     return chrome.identity.getAuthToken(new chrome.TokenDetails(interactive: true)).then((String token) {
       _token = token;
     }).catchError((e) {
-      throw "Could not authenticate.";
+      completer.completeError("Could not authenticate.");
     });
   }
 
@@ -40,7 +40,7 @@ class WebStoreClient {
         identifier = responseMap['id'];
         bool success = (responseMap['uploadState'] == 'SUCCESS');
         if (!success) {
-          throw "Upload to webstore failed";
+          completer.completeError("Upload to webstore failed");
         }
       }
       print('Request complete ${request.response}');
