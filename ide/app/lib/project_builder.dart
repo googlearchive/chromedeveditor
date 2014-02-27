@@ -14,12 +14,12 @@ class ProjectBuilder {
   String _sourceName;
   String _projectName;
   Map _setup;
-  String sourceUri;
+  String _sourceUri;
 
   ProjectBuilder(this._destRoot, String templateId, this._sourceName,
       this._projectName) {
     String templatesPath = 'resources/templates/$templateId';
-    sourceUri = chrome.runtime.getURL(templatesPath);
+    _sourceUri = chrome.runtime.getURL(templatesPath);
 
     _onceSourceRootReady = chrome.runtime.getPackageDirectoryEntry()
         .then((DirectoryEntry root) => root.getDirectory(templatesPath))
@@ -29,27 +29,25 @@ class ProjectBuilder {
   Future build() {
     // TODO(ericarnold): Switch all /s to platform specific
 
-    Future setupFuture = HttpRequest.getString("$sourceUri/setup.json")
+    Future setupFuture = HttpRequest.getString("$_sourceUri/setup.json")
         .then((String contents) => _setup = JSON.decode(contents));
 
     return Future.wait([setupFuture, _onceSourceRootReady])
         .then((_){
-          return traverseElement(_destRoot, _sourceRoot, sourceUri, _setup);
+          return traverseElement(_destRoot, _sourceRoot, _sourceUri, _setup);
         });
   }
 
   Future traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                  String sourceUri, Map element) {
+      String sourceUri, Map element) {
     return handleDirectories(destRoot, sourceRoot, sourceUri,
         element['directories']).then((_) => handleFiles(destRoot,
             sourceRoot, sourceUri, element['files']))
-        .catchError((e) =>
-            print("""error: ${e}"""));
+        .catchError((e) => print("""error: ${e}"""));
   }
 
   Future handleDirectories(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                           String sourceUri,
-                           Map directories) {
+      String sourceUri, Map directories) {
     if (directories != null) {
       return Future.forEach(directories.keys, (String directoryName) {
         DirectoryEntry destDirectoryRoot;
@@ -68,7 +66,7 @@ class ProjectBuilder {
   }
 
   Future handleFiles(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                     String sourceUri, List files) {
+      String sourceUri, List files) {
     if (files != null) {
       return Future.forEach(files, (fileElement) {
         String source = fileElement['source'];
@@ -79,26 +77,15 @@ class ProjectBuilder {
         String content;
         print("""copying $sourceUri/${source} to $dest""");
 
-        return sourceRoot.getFile(source)
-            .then((FileEntry file) {
-              return file.copyTo(destRoot, name: dest);
-            });
-
-//        return HttpRequest.getString("$sourceUri/$source")
-//            .then((String fileContent) {
-//              content = fileContent;
-//              return destRoot.createFile(dest);
-//            }).then((FileEntry newFile) =>
-//                chrome.fileSystem.getWritableEntry(newFile))
-//            .then((FileEntry entry) =>
-        // This throws UnimplementedError
-//                entry.createWriter())
-//            .then((FileWriter writer) {
-//              var blob = new Blob([content], 'text/plain');
-//              return writer.write(blob);
-//            }).catchError((error){
-//              print("""Error: $error""");
-//            });
+        return HttpRequest.getString("$sourceUri/$source")
+            .then((String fileContent) {
+              content = fileContent.replaceAll("_Project_name_", _projectName)
+                  ..replaceAll("_source_name_", _sourceName);
+              return destRoot.createFile(dest);
+            }).then((FileEntry newFile) =>
+                chrome.fileSystem.getWritableEntry(newFile))
+            .then((chrome.ChromeFileEntry entry) =>
+                entry.writeText(content));
       });
     }
     return new Future.value(null);
