@@ -1732,6 +1732,7 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAc
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'File Name', project.name);
+    _addProperty(_propertiesElement, 'Location', project.entry.fullPath);
 
     GitScmProjectOperations gitOperations =
         spark.scmManager.getScmOperationsFor(project);
