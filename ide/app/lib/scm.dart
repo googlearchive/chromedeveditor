@@ -13,6 +13,7 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+import 'package:observe/observe.dart';
 
 import 'builder.dart';
 import 'jobs.dart';
@@ -211,6 +212,7 @@ class FileStatus {
 /**
  * The SCM commit information.
  */
+@reflectable
 class CommitInfo {
   String identifier;
   String authorName;
