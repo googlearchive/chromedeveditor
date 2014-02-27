@@ -123,7 +123,10 @@ class SparkOverlay extends SparkWidget {
   // 'mouseout',
   // 'focusin',
   // 'focusout',
-  // 'scroll'
+  // 'scroll',
+  // 'keydown',
+  // 'keypress',
+  // 'keyup'
   static final List<String> _modalEventTypes = [
       'mousedown',
       'mouseup',
@@ -133,7 +136,6 @@ class SparkOverlay extends SparkWidget {
       'contextmenu',
       'focus',
       'blur',
-      'keydown'
   ];
   static final List<String> _autoCloseEventTypes = [
       'mousedown',
@@ -261,6 +263,7 @@ class SparkOverlay extends SparkWidget {
   void captureHandler(Event e) {
     final bool inOverlay =
         (e is MouseEvent && isPointInOverlay(e.client)) ||
+        this == e.target ||
         this.contains(e.target) ||
         shadowRoot.contains(e.target);
 
