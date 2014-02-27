@@ -146,8 +146,6 @@ class Commit {
           commitContent.toString()).then((String commitSha) {
         return FileOps.createFileWithContent(options.root, '.git/${refName}',
             commitSha + '\n', 'Text').then((_) {
-              print(refName);
-              print(commitSha);
           return store.writeConfig().then((_) => commitSha);
         });
       });
