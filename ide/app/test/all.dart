@@ -38,7 +38,7 @@ void defineTests() {
 //  analytics_test.defineTests();
 //  analyzer_test.defineTests();
 //  app_test.defineTests();
-//  builder_test.defineTests();
+  builder_test.defineTests();
 //  compiler_test.defineTests();
 //  editors_test.defineTests();
 //  event_bus_test.defineTests();
@@ -50,7 +50,7 @@ void defineTests() {
 //  sdk_test.defineTests();
 //  search_test.defineTests();
 //  server_test.defineTests();
-  services_test.defineTests();
+//  services_test.defineTests();
 //  tcp_test.defineTests();
 //  utils_test.defineTests();
 //  workspace_test.defineTests();

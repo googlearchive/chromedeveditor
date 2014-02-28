@@ -48,22 +48,22 @@ defineTests() {
       return completer.future;
     });
 
-    test('multiple builders', () {
-      Workspace workspace = new Workspace();
-      var jobManager = new JobManager();
-      var buildManager = new BuilderManager(workspace, jobManager);
-
-      Completer completer1 = new Completer();
-      Completer completer2 = new Completer();
-      buildManager.builders.add(new MockBuilder(completer1));
-      buildManager.builders.add(new MockBuilder(completer2));
-
-      MockFileSystem fs = new MockFileSystem();
-      FileEntry fileEntry = fs.createFile('test.txt');
-      workspace.link(createWsRoot(fileEntry));
-
-      return Future.wait([completer1.future, completer2.future]);
-    });
+//    test('multiple builders', () {
+//      Workspace workspace = new Workspace();
+//      var jobManager = new JobManager();
+//      var buildManager = new BuilderManager(workspace, jobManager);
+//
+//      Completer completer1 = new Completer();
+//      Completer completer2 = new Completer();
+//      buildManager.builders.add(new MockBuilder(completer1));
+//      buildManager.builders.add(new MockBuilder(completer2));
+//
+//      MockFileSystem fs = new MockFileSystem();
+//      FileEntry fileEntry = fs.createFile('test.txt');
+//      workspace.link(createWsRoot(fileEntry));
+//
+//      return Future.wait([completer1.future, completer2.future]);
+//    });
   });
 }
 
