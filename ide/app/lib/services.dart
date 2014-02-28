@@ -7,12 +7,12 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import '../workspace.dart' as ws;
+import 'workspace.dart' as ws;
 
-import 'compiler.dart';
-import '../utils.dart';
+import 'services/compiler.dart';
+import 'utils.dart';
 
-export 'compiler.dart' show CompilerResult;
+export 'services/compiler.dart' show CompilerResult;
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -216,7 +216,7 @@ class _IsolateHandler {
   int _topCallId = 0;
   Map<String, Completer> _serviceCallCompleters = {};
 
-  final String _workerPath = 'services_impl.dart';
+  final String _workerPath = 'services_entry.dart';
 
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();

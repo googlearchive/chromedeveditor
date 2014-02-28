@@ -10,7 +10,7 @@ import 'dart:isolate';
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
-import '../lib/services/services.dart';
+import '../lib/services.dart';
 import '../lib/workspace.dart' as ws;
 
 defineTests() {
