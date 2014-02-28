@@ -40,11 +40,6 @@
       @import url("packages/spark_widgets/spark_split_view/spark_split_view.css");
     </style>
 
-    <!-- HACK: A temporary way to anchor `direction` to something in the
-         shadowRoot to use for conditional styling of <content>. Discussion:
-         https://groups.google.com/forum/#!topic/polymer-dev/NCYrR4OUvDI -->
-    <div id="marker" direction="{{direction}}"></div>
-
     <!-- NOTE: The Dart side verifies that there is exactly 2 children -->
     <content select=":nth-child(1)"></content>
     <spark-splitter
