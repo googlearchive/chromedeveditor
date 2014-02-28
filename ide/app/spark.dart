@@ -1367,7 +1367,7 @@ class PubGetAction extends SparkAction implements ContextAction {
     } else {
       resource = context.first;
     }
-    var pubJob = new _PubGetJob(resource);
+    var pubJob = new PubGetJob(resource);
     spark.jobManager.schedule(pubJob);
   }
 
@@ -2160,7 +2160,9 @@ class PubGetJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
     return _pubspec.entry.getParent().then((parent) {
-      tavern.getDependencies(parent, null);
+      tavern.getDependencies(parent, null).then((value) {
+   //     Logger.root.log(Level.INFO, "pub get", value);
+      });
     });
   }
 }
