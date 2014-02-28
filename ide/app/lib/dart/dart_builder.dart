@@ -6,45 +6,45 @@ library spark.dart_builder;
 
 import 'dart:async';
 
+import '../analyzer_common.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
+import '../services/services.dart';
 
 /**
  * A [Builder] implementation that drives the Dart analyzer.
  */
 class DartBuilder extends Builder {
+  Services services;
+
+  DartBuilder(this.services);
+
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     Iterable<File> dartFiles = event.modifiedFiles.where(
         (file) => file.name.endsWith('.dart'));
 
     if (dartFiles.isEmpty) return new Future.value();
 
-  }
-
-  /**
-   * Create markers for a `.dart` file.
-   */
-  Future _processFile(ChromeDartSdk sdk, File file) {
-    return file.getContents().then((String contents) {
-      return analyzeString(sdk, contents, performResolution: false).then((AnalyzerResult result) {
-        file.workspace.pauseMarkerStream();
-
+    AnalyzerService analyzer = services.getService("analyzer");
+    return analyzer.buildFiles(dartFiles)
+        .then((Map<File, List<AnalysisError>> errorsForFile) {
+      for (File file in errorsForFile.keys) {
         try {
           file.clearMarkers();
 
-          for (AnalysisError error in result.errors) {
-            LineInfo_Location location = result.getLineInfo(error);
+          List<AnalysisError> errors = errorsForFile[file];
 
+          for (AnalysisError error in errors) {
             file.createMarker(
-                'dart', _convertSeverity(error.errorCode.errorSeverity),
-                error.message, location.lineNumber,
+                'dart', _convertSeverity(error.errorSeverity),
+                error.message, error.lineNumber,
                 error.offset, error.offset + error.length);
           }
         } finally {
           file.workspace.resumeMarkerStream();
         }
-      });
+      }
     });
   }
 }

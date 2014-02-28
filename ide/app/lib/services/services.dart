@@ -149,6 +149,10 @@ class AnalyzerService extends Service {
     return onceReady.then((_) => _sendAction("dispose"))
         .then((_) => null);
   }
+
+  Future<Map<ws.File, List<AnalysisError>>>
+      buildFiles(Iterable<ws.File> dartFiles) {
+  }
 }
 
 class TestService extends Service {

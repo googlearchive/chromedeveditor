@@ -20,7 +20,7 @@ import 'package:analyzer/src/generated/source.dart';
 import 'package:path/path.dart' as path;
 
 import '../dart/sdk.dart' as sdk;
-import '../analyzer_common.dart';
+import '../analyzer_common.dart' as common;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';

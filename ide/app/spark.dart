@@ -174,7 +174,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
 
     // Add a Dart builder.
-    addBuilder(new DartBuilder());
+    addBuilder(new DartBuilder(this.services));
   }
 
   initServices() {
