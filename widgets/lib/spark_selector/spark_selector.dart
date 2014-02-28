@@ -100,7 +100,6 @@ class SparkSelector extends SparkWidget {
   }
 
   void _onNewItems() {
-    preventFlashOfUnstyledContent(delay: new Duration(milliseconds: 100));
     // TODO(ussuri): Assigning _items here directly is premature: if the list
     // contains some <template if=...> for example, the inner contens of the
     // template will not be expanded at this point - that happens later.

@@ -21,7 +21,7 @@
 -->
 
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
-<link rel="import" href="../../../packages/spark_widgets/spark_menu/spark_menu.html">
+<link rel="import" href="../../../packages/spark_widgets/spark_selector/spark_selector.html">
 <link rel="import" href="../../../packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 
@@ -34,8 +34,7 @@
       @import url("packages/spark_widgets/spark_suggest/spark_suggest_box.css");
     </style>
 
-    <input
-        id="text-box"
+    <input id="text-box"
         type="search"
         class="form-control"
         focused
@@ -47,21 +46,23 @@
         on-input="{{textBoxInputHandler}}"
     />
 
-    <spark-overlay
-        id="suggestion-list-overlay"
+    <spark-overlay id="suggestion-list-overlay"
         autoClose
         class="spark-overlay-scale-slideup"
         opened="{{opened}}"
         on-opened="{{overlayOpenedHandler}}">
 
-      <spark-menu
-          id="suggestion-list-menu"
+      <spark-selector id="suggestion-list-menu"
+          multi="false"
+          activeProperty="active"
           on-activate="{{menuActivateHandler}}">
         <template repeat="{{s in suggestions}}">
-          <spark-menu-item label="{{s.label}}" description="{{s.details}}">
-          </spark-menu-item>
+          <div class="suggestion-item">
+            {{s.label}}
+            <span class="text-muted">{{s.details}}</span>
+          </div>
         </template>
-      </spark-menu>
+      </spark-selector>
     </spark-overlay>
   </template>
 

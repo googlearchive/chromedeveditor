@@ -10,7 +10,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
-import '../spark_menu/spark_menu.dart';
+import '../spark_selector/spark_selector.dart';
 import '../spark_overlay/spark_overlay.dart';
 
 /**
@@ -62,8 +62,8 @@ class SparkSuggestBox extends SparkWidget {
   @observable final suggestions = new ObservableList<Suggestion>();
 
   InputElement _textBox;
-  SparkMenu _menu;
   SparkOverlay _overlay;
+  SparkSelector _menu;
 
   StreamSubscription _oracleSub;
 
@@ -74,8 +74,8 @@ class SparkSuggestBox extends SparkWidget {
     super.enteredView();
 
     _textBox = $['text-box'];
-    _menu = $['suggestion-list-menu'];
     _overlay = $['suggestion-list-overlay'];
+    _menu = $['suggestion-list-menu'];
   }
 
   /**
