@@ -20,7 +20,7 @@ import 'package:analyzer/src/generated/source.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:path/path.dart' as path;
 
-import 'dart/sdk.dart' as sdk;
+import '../dart/sdk.dart' as sdk;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';

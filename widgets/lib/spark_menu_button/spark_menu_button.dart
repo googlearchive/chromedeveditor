@@ -10,9 +10,6 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 import '../spark_menu/spark_menu.dart';
-
-// Ported from Polymer Javascript to Dart code.
-
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
 
@@ -24,22 +21,42 @@ class SparkMenuButton extends SparkWidget {
   @published bool opened = false;
   @published bool responsive = false;
   @published String valign = "center";
-  @published String selectedClass = "";
+
+  SparkOverlay _overlay;
+  SparkMenu _menu;
 
   SparkMenuButton.created(): super.created();
 
-  //* Toggle the opened state of the dropdown.
-  void toggle() {
-    ($['overlayMenu'] as SparkMenu).clearSelection();
-    opened = !opened;
+  @override
+  void enteredView() {
+    super.enteredView();
 
-    // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
-    // in 'opened' when run as deployed code. Just binding via {{opened}} alone
-    // isn't detected and the menu doesn't open.
-    if (IS_DART2JS) {
-      ($['overlay'] as SparkOverlay).opened = opened;
+    _overlay = $['overlay'];
+    _menu = $['menu'];
+  }
+
+  //* Toggle the opened state of the dropdown.
+  void toggle([bool inOpened]) {
+    final bool newOpened = inOpened != null ? inOpened : !opened;
+    if (newOpened != opened) {
+      opened = newOpened;
+      // TODO(ussuri): A temporary plug to make spark-overlay see changes
+      // in 'opened' when run as deployed code. Just binding via {{opened}}
+      // alone isn't detected and the menu doesn't open.
+      if (IS_DART2JS) {
+        _overlay.opened = opened;
+      }
+      if (opened) {
+        // Enforce focused state so the button can accept keyboard events.
+        focus();
+        _menu.resetState();
+      }
     }
   }
+
+  void open() => toggle(true);
+
+  void close() => toggle(false);
 
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
   //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
@@ -50,26 +67,37 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void keydownHandler(KeyboardEvent e) {
+  void menuActivateHandler(CustomEvent e, var details) {
+    if (details['isSelected']) {
+      close();
+    }
+  }
+
+  void keyDownHandler(KeyboardEvent e) {
+    bool stopPropagation = true;
+
+    if (_menu.maybeHandleKeyStroke(e.keyCode)) {
+      e.preventDefault();
+    }
+
     switch (e.keyCode) {
-      case SparkWidget.ESCAPE_KEY:
-        opened = false;
+      case KeyCode.UP:
+      case KeyCode.DOWN:
+      case KeyCode.PAGE_UP:
+      case KeyCode.PAGE_DOWN:
+      case KeyCode.ENTER:
+        if (!opened) opened = true;
         break;
-      case SparkWidget.UP_KEY:
-      case SparkWidget.DOWN_KEY:
-        if (!opened) {
-          opened = true;
-        }
-        // TODO(sunglim): Move focus to next menu item.
+      case KeyCode.ESC:
+        if (opened) opened = false;
         break;
       default:
+        stopPropagation = false;
         break;
     }
 
-    e.stopImmediatePropagation();
-    e.preventDefault();
+    if (stopPropagation) {
+      e.stopPropagation();
+    }
   }
-
-  //* Returns the selected item.
-  String get selection => ($['overlayMenu'] as SparkMenu).selection;
 }

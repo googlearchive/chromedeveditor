@@ -34,7 +34,7 @@ import 'lib/project_builder.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
-import 'lib/services/services.dart';
+import 'lib/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
@@ -175,7 +175,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
 
     // Add a Dart builder.
-    addBuilder(new DartBuilder());
+    addBuilder(new DartBuilder(this.services));
   }
 
   initServices() {

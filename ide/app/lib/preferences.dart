@@ -164,12 +164,16 @@ class _ChromePreferenceStore implements PreferenceStore {
    * as [value] on success.
    */
   Future<String> setValue(String key, String value) {
-    _map[key] = value;
-    _controller.add(new PreferenceEvent(this, key, value));
+    if (value == null) {
+      return removeValue([key]);
+    } else {
+      _map[key] = value;
+      _controller.add(new PreferenceEvent(this, key, value));
 
-    _startTimer();
+      _startTimer();
 
-    return new Future.value(_map[key]);
+      return new Future.value(_map[key]);
+    }
   }
 
   /**

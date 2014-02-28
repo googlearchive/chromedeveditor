@@ -7,12 +7,13 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import '../workspace.dart' as ws;
+import 'analyzer_common.dart';
+import 'workspace.dart' as ws;
 
-import 'compiler.dart';
-import '../utils.dart';
+import 'services/compiler.dart';
+import 'utils.dart';
 
-export 'compiler.dart' show CompilerResult;
+export 'services/compiler.dart' show CompilerResult;
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -73,6 +74,18 @@ abstract class Service {
     ServiceActionEvent responseEvent = event.createReponse(data);
     _isolateHandler.onceIsolateReady
         .then((_) => _isolateHandler.sendResponse(responseEvent));
+  }
+}
+
+class AnalyzerService extends Service {
+  String serviceId = "analyzer";
+
+  AnalyzerService(Services services, _IsolateHandler handler)
+      : super(services, handler);
+
+  Future<Map<ws.File, List<AnalysisError>>> buildFiles(
+      Iterable<ws.File> dartFiles) {
+    return new Future.value({});
   }
 }
 
@@ -216,7 +229,7 @@ class _IsolateHandler {
   int _topCallId = 0;
   Map<String, Completer> _serviceCallCompleters = {};
 
-  final String _workerPath = 'services_impl.dart';
+  final String _workerPath = 'services_entry.dart';
 
   SendPort _sendPort;
   final ReceivePort _receivePort = new ReceivePort();
@@ -244,9 +257,9 @@ class _IsolateHandler {
 
     _receivePort.listen((arg) {
       if (arg is String) {
+        // TODO: convert this to a logger call?
         // String: handle as print
-        print ("Worker: $arg");
-        return;
+        print(arg);
       } else if (_sendPort == null) {
         _sendPort = arg;
         _readyController..add(null)..close();

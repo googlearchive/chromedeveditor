@@ -4,6 +4,13 @@
 
 @import url("../common/spark_widget.css");
 
+:host {
+  border: none;
+  display: block;
+  box-sizing: border-box;
+  margin: 5px 0;
+}
+
 /*@polyfill spark-menu-item, spark-menu-separator */
 ::content spark-menu-item, ::content spark-menu-separator {
   display: block;
@@ -16,6 +23,22 @@
 ::content spark-menu-item {
   min-height: 30px;
   border: none;
+}
+
+::content spark-menu-item.selected {
+  background-color: #1a64a3;
+}
+
+::content spark-menu-item.selected ^ * {
+  color: white;
+}
+
+::content spark-menu-item.active {
+  background-color: #3a84c3;
+}
+
+::content spark-menu-item.active ^ * {
+  color: white;
 }
 
 /*@polyfill spark-menu-separator */

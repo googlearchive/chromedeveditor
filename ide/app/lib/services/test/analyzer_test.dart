@@ -6,8 +6,8 @@ library spark.analyzer_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/analyzer.dart';
-import '../lib/utils.dart';
+import '../analyzer.dart';
+import '../../utils.dart';
 
 defineTests() {
   group('analyzer.', () {

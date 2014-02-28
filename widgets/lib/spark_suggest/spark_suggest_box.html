@@ -21,10 +21,12 @@
 -->
 
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_selector/spark_selector.html">
+<link rel="import" href="../../../packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
 
 <polymer-element name="spark-suggest-box" extends="spark-widget"
-    attributes="oracle placeholder">
+    attributes="oracle placeholder opened">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
@@ -32,34 +34,35 @@
       @import url("packages/spark_widgets/spark_suggest/spark_suggest_box.css");
     </style>
 
-    <input
-        id="text-box"
+    <input id="text-box"
         type="search"
         class="form-control"
         focused
         placeholder="{{placeholder}}"
-        on-keyup="{{inputKeyUp}}"
-        on-focus="{{inputFocus}}" />
+        on-click="{{textBoxClickHandler}}"
+        on-focus="{{textBoxFocusHandler}}"
+        on-blur="{{textBoxBlurHandler}}"
+        on-keydown="{{textBoxKeyDownHandler}}"
+        on-input="{{textBoxInputHandler}}"
+    />
 
-    <spark-overlay
-        id="suggestion-list-overlay"
-        class="spark-overlay-scale-slideup">
-      <template repeat="{{s in suggestions | enumerate}}">
-        <!--
-          TODO: Consider reusing existing component, e.g. spark-selection
-        -->
-        <div
-            class="suggestion-item"
-            item-index="{{s.index}}"
-            highlighted="{{s.index == selectionIndex}}"
-            on-mouseover="{{mouseOverItem}}"
-            on-click="{{mouseClickedItem}}">
-          {{s.value.label}}
-          <template if="{{s.value.hasDetails}}">
-            <span class="text-muted">[{{s.value.details}}]</span>
-          </template>
-        </div>
-      </template>
+    <spark-overlay id="suggestion-list-overlay"
+        autoClose
+        class="spark-overlay-scale-slideup"
+        opened="{{opened}}"
+        on-opened="{{overlayOpenedHandler}}">
+
+      <spark-selector id="suggestion-list-menu"
+          multi="false"
+          activeProperty="active"
+          on-activate="{{menuActivateHandler}}">
+        <template repeat="{{s in suggestions}}">
+          <div class="suggestion-item">
+            {{s.label}}
+            <span class="text-muted">{{s.details}}</span>
+          </div>
+        </template>
+      </spark-selector>
     </spark-overlay>
   </template>
 

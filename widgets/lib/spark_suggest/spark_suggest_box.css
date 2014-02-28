@@ -23,16 +23,25 @@
   transform: translateX(-50%);
 }
 
+#suggestion-list-menu {
+  border: none;
+  display: block;
+  box-sizing: border-box;
+  margin: 5px 0;
+}
+
 .suggestion-item {
   padding: 7px 20px;
   font-size: 14px;
 }
 
-.suggestion-item[highlighted=true] {
+.suggestion-item[active] {
   background-color: #3a84c3;
   color: white;
 }
 
 .text-muted {
-  color: #999999;
+  color: #bdbdbd;
+  float: right;
+  overflow: hidden;
 }

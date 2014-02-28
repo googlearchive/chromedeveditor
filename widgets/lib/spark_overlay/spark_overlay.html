@@ -40,7 +40,7 @@
  * An element that should close the spark-overlay will automatically do so if it
  * is given the overlay-toggle attribute. Please note that spark-overlay will
  * close whenever the user taps outside it or presses the escape key. The
- * behavior can be turned off via the autoCloseDisabled property.
+ * behavior can be turned on and off via the autoClose property.
  *
  *     <spark-overlay class="spark-overlay-scale-slideup">
  *       <h2>Dialog</h2>
@@ -62,7 +62,7 @@
 
 <polymer-element name="spark-overlay"
          extends="spark-widget"
-         attributes="opened autoCloseDisabled"
+         attributes="opened modal autoClose"
          on-webkitAnimationStart="{{openedAnimationStart}}"
          on-animationStart="{{openedAnimationStart}}"
          on-webkitAnimationEnd="{{openedAnimationEnd}}"
@@ -70,7 +70,7 @@
          on-webkitTransitionEnd="{{openedTransitionEnd}}"
          on-transitionEnd="{{openedTransitionEnd}}"
          on-click="{{tapHandler}}"
-         on-keydown="{{keydownHandler}}">
+         on-keydown="{{keyDownHandler}}">
          <!-- on-tap="{{tapHandler}}" -->
 
   <template>
