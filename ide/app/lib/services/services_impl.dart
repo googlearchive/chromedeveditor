@@ -12,9 +12,6 @@ import '../dart/sdk.dart';
 import '../utils.dart';
 
 void init(SendPort sendPort) {
-  // For use with top level print() helper function.
-  _printSendPort = sendPort;
-
   final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
 }
 
@@ -38,12 +35,8 @@ class ServicesIsolate {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
     onResponseMessage.listen((ServiceActionEvent event) {
-      try {
-        if (event.callId == callId) {
-          completer.complete(event);
-        }
-      } catch(e) {
-        printError("Service error", e);
+      if (event.callId == callId) {
+        completer.complete(event);
       }
     });
     return completer.future;
@@ -68,28 +61,20 @@ class ServicesIsolate {
     _sendPort.send(receivePort.sendPort);
 
     receivePort.listen((arg) {
-      try {
-        if (arg is int) {
-          _sendPort.send(arg);
+      if (arg is int) {
+        _sendPort.send(arg);
+      } else {
+        ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
+        if (event.response) {
+          responseMessageController.add(event);
         } else {
-          ServiceActionEvent event = new ServiceActionEvent.fromMap(arg);
-          if (event.response) {
-            responseMessageController.add(event);
-          } else {
-            hostMessageController.add(event);
-          }
+          hostMessageController.add(event);
         }
-      } catch(e) {
-        printError("Service error", e);
       }
     });
 
     onHostMessage.listen((ServiceActionEvent event) {
-      try {
-        _handleMessage(event);
-      } catch(e) {
-        printError("Service error", e);
-      }
+      _handleMessage(event);
     });
   }
 
@@ -112,8 +97,6 @@ class ServicesIsolate {
         _sendResponse(responseEvent);
         completer.complete();
       }
-    }).catchError((e) {
-      printError("Service error", e);
     });
     return completer.future;
   }
@@ -210,9 +193,6 @@ class CompilerServiceImpl extends ServiceImpl {
       sdk = DartSdk.createSdkFromContents(sdkContents);
       compiler = Compiler.createCompilerFrom(sdk);
       _readyCompleter.complete();
-    }).catchError((e){
-      // TODO(ericarnold): Return error which service will throw
-      printError("Chrome service error", e);
     });
 
     return _readyCompleter.future;
@@ -272,27 +252,3 @@ abstract class ServiceImpl {
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
 }
-
-// Prints are crashing isolate, so this will take over for the time being.
-SendPort _printSendPort;
-
-void print(var message) {
-  // Host will know it's a print because it's a simple string instead of a map
-  if (_printSendPort != null) {
-    _printSendPort.send("$message");
-  }
-}
-
-printError(String description, dynamic e) {
-  String stackTrace;
-  try {
-    stackTrace = "\n${e.stackTrace}";
-  } catch(e) {
-    stackTrace = "";
-  }
-
-  print ("$description $e $stackTrace");
-}
-
-
-

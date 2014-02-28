@@ -244,9 +244,9 @@ class _IsolateHandler {
 
     _receivePort.listen((arg) {
       if (arg is String) {
+        // TODO: convert this to a logger call?
         // String: handle as print
-        print ("Worker: $arg");
-        return;
+        print(arg);
       } else if (_sendPort == null) {
         _sendPort = arg;
         _readyController..add(null)..close();
