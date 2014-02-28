@@ -180,7 +180,7 @@ class AnalyzerService extends Service {
 }
 
 class TestService extends Service {
-  String serviceId = "example";
+  String serviceId = "test";
 
   TestService(Services services, _IsolateHandler handler)
       : super(services, handler);
