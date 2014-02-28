@@ -29,8 +29,8 @@ class SparkMenuItem extends SparkWidget {
   SparkMenuItem.created(): super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void ready() {
+    super.ready();
     if (icon.isNotEmpty && iconSize == 0) {
       iconSize = 24;
     }
