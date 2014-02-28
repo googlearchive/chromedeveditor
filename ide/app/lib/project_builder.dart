@@ -31,23 +31,19 @@ class ProjectBuilder {
   }
 
   Future build() {
-    // TODO(ericarnold): Switch all /s to platform specific
-
     Future setupFuture = HttpRequest.getString("$_sourceUri/setup.json")
         .then((String contents) => _setup = JSON.decode(contents));
 
-    return Future.wait([setupFuture, _onceSourceRootReady])
-        .then((_){
-          return traverseElement(_destRoot, _sourceRoot, _sourceUri, _setup);
-        });
+    return Future.wait([setupFuture, _onceSourceRootReady]).then((_) {
+      return traverseElement(_destRoot, _sourceRoot, _sourceUri, _setup);
+    });
   }
 
   Future traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
       String sourceUri, Map element) {
     return handleDirectories(destRoot, sourceRoot, sourceUri,
-        element['directories']).then((_) => handleFiles(destRoot,
-            sourceRoot, sourceUri, element['files']))
-        .catchError((e) => print("""error: ${e}"""));
+        element['directories']).then((_) =>
+            handleFiles(destRoot, sourceRoot, sourceUri, element['files']));
   }
 
   Future handleDirectories(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
@@ -79,7 +75,6 @@ class ProjectBuilder {
             .replaceAll("\$projectName", _projectName);
 
         String content;
-        print("""copying $sourceUri/${source} to $dest""");
 
         return HttpRequest.getString("$sourceUri/$source")
             .then((String fileContent) {
@@ -88,8 +83,7 @@ class ProjectBuilder {
               return destRoot.createFile(dest);
             }).then((FileEntry newFile) =>
                 chrome.fileSystem.getWritableEntry(newFile))
-            .then((chrome.ChromeFileEntry entry) =>
-                entry.writeText(content));
+            .then((chrome.ChromeFileEntry entry) => entry.writeText(content));
       });
     }
     return new Future.value(null);

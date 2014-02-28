@@ -9,8 +9,8 @@
   <body>
     <h1>_Project_name_</h1>
     
-    <div id="sample_container_id">
-      <p id="sample_text_id"></p>
+    <div id="sampleContainer">
+      <p id="sampleText"></p>
     </div>
 
     <script type="application/dart" src="_source_name_.dart"></script>
