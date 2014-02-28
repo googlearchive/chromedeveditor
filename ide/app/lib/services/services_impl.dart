@@ -7,9 +7,11 @@ library spark.services_impl;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'compiler.dart';
-import '../dart/sdk.dart';
-import '../utils.dart';
+import 'lib/services/analyzer.dart';
+import 'lib/analyzer_common.dart' as common;
+import 'lib/services/compiler.dart';
+import 'lib/dart/sdk.dart';
+import 'lib/utils.dart';
 
 void init(SendPort sendPort) {
   // For use with top level print() helper function.
@@ -63,6 +65,7 @@ class ServicesIsolate {
     // Register each ServiceImpl:
     _registerServiceImpl(new CompilerServiceImpl(this));
     _registerServiceImpl(new ExampleServiceImpl(this));
+    _registerServiceImpl(new AnalyzerServiceImpl(this));
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
@@ -219,6 +222,112 @@ class CompilerServiceImpl extends ServiceImpl {
   }
 }
 
+class AnalyzerServiceImpl extends ServiceImpl {
+  AnalyzerServiceImpl(ServicesIsolate isolate) : super(isolate);
+
+  String get serviceId => "analyzer";
+  Future<ChromeDartSdk> _dartSdkFuture;
+  Future<ChromeDartSdk> get dartSdkFuture {
+    if (_dartSdkFuture == null) {
+      _dartSdkFuture = createSdk();
+    }
+    return _dartSdkFuture;
+  }
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    /*%TRACE3*/ print("(4> 2/27/14): handleEvent!"); // TRACE%
+    switch (event.actionId) {
+      case "buildFiles":
+        return build(event.data["dartFileUuids"])
+            .then((Map<String, List<Map>> errorsPerFile) {
+              /*%TRACE3*/ print("(4> 2/27/14): errorsPerFile!"); // TRACE%
+              return new Future.value(event.createReponse(
+                  {"errors": errorsPerFile}));
+            });
+      default:
+        throw new ArgumentError(
+            "Unknown action '${event.actionId}' sent to $serviceId service.");
+    }
+  }
+
+  Future<Map<String, List<Map>>> build(List<Map> fileUuids) {
+    /*%TRACE3*/ print("(4> 2/27/14): build!"); // TRACE%
+    Map<String, List<Map>> errorsPerFile = {};
+
+    return dartSdkFuture.then((ChromeDartSdk sdk) {
+      /*%TRACE3*/ print("(4> 2/27/14): dartSdkFuture!"); // TRACE%
+      return Future.forEach(fileUuids, (String fileUuid) {
+        /*%TRACE3*/ print("(4> 2/27/14): forEach!"); // TRACE%
+          return _processFile(sdk, fileUuid)
+              .then((AnalyzerResult result) {
+                /*%TRACE3*/ print("(4> 2/27/14): _processFile!"); // TRACE%
+                List<AnalysisError> errors = result.errors;
+                List<Map> responseErrors = [];
+                for (AnalysisError error in errors) {
+                  common.AnalysisError responseError =
+                      new common.AnalysisError();
+                  responseError.message = error.message;
+                  responseError.offset = error.offset;
+                  LineInfo_Location location = result.getLineInfo(error);
+                  responseError.lineNumber = location.lineNumber;
+                  responseError.errorSeverity =
+                      _errorSeverityToInt(error.errorCode.errorSeverity);
+                  responseError.length = error.length;
+                  responseErrors.add(responseError.toMap());
+                }
+
+                return responseErrors;
+              }).then((List<Map> errors) {
+                /*%TRACE3*/ print("(4> 2/27/14): List<Map> errors!"); // TRACE%
+                errorsPerFile[fileUuid] = errors;
+              });
+          });
+    }).then((_) => errorsPerFile);
+  }
+
+  int _errorSeverityToInt(ErrorSeverity severity) {
+    if (severity == ErrorSeverity.ERROR) {
+      return common.ErrorSeverity.ERROR;
+    } else  if (severity == ErrorSeverity.WARNING) {
+      return common.ErrorSeverity.WARNING;
+    } else  if (severity == ErrorSeverity.INFO) {
+      return common.ErrorSeverity.INFO;
+    } else {
+      return common.ErrorSeverity.NONE;
+    }
+  }
+
+  /**
+   * Create markers for a `.dart` file.
+   */
+  Future<AnalyzerResult> _processFile(ChromeDartSdk sdk, String fileUuid) {
+    return _isolate.chromeService.getFileContents(fileUuid)
+        .then((String contents) =>
+            analyzeString(sdk, contents, performResolution: false))
+        .then((AnalyzerResult result) {
+            return result;
+            // TODO(ericarnold): Implement outside of service
+//            file.workspace.pauseMarkerStream();
+//        try {
+//          file.clearMarkers();
+//
+//          for (AnalysisError error in result.errors) {
+//            LineInfo_Location location = result.getLineInfo(error);
+//
+//            file.createMarker(
+//                'dart', _convertSeverity(error.errorCode.errorSeverity),
+//                error.message, location.lineNumber,
+//                error.offset, error.offset + error.length);
+//          }
+//        } finally {
+//          file.workspace.resumeMarkerStream();
+//        }
+//      });
+    });
+  }
+
+}
+
 /**
  * Special service for calling back to chrome.
  */
@@ -268,7 +377,7 @@ abstract class ServiceImpl {
 
   ServiceImpl(this._isolate);
 
-  String get serviceId => null;
+  String get serviceId;
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
 }

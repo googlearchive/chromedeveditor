@@ -17,10 +17,13 @@ import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
-import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:path/path.dart' as path;
 
 import '../dart/sdk.dart' as sdk;
+<<<<<<< HEAD:ide/app/lib/services/analyzer.dart
+=======
+import '../analyzer_common.dart' as common;
+>>>>>>> umop-services-analysis:ide/app/lib/services/analyzer.dart
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
@@ -40,7 +43,7 @@ Future<ChromeDartSdk> createSdk() {
 
   _sdkCompleter = new Completer();
 
-  sdk.DartSdk.createSdk().then((sdk.DartSdk sdk) {
+  sdk.DartSdk.createSdkFromContents().then((sdk.DartSdk sdk) {
     ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
     chromeSdk._parseLibrariesFile();
     _sdkCompleter.complete(chromeSdk);
@@ -249,11 +252,19 @@ class SdkSource extends Source {
   String toString() => fullName;
 }
 
+class File {
+  String uuid;
+  String name;
+  String fullPath;
+
+  File(this.uuid, this.fullPath, this.name);
+}
+
 /**
  * A [Source] implementation based on HTML FileEntrys.
  */
 class FileSource extends Source {
-  final chrome.ChromeFileEntry file;
+  final File file;
 
   FileSource(this.file);
 
