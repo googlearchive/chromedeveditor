@@ -6,7 +6,7 @@ library spark.dart_builder;
 
 import 'dart:async';
 
-import '../analyzer.dart';
+import '../services.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
