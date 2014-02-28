@@ -25,7 +25,7 @@
     "https://www.googleapis.com/upload/chromewebstore/v1.1/items",
     "https://github.com/*",
     "https://pub.dartlang.org/*",
-    "https://www.googleapis.com/upload/chromewebstore/v1.1/items",
+    "https://commondatastorage.googleapis.com/*",
     "http://*/push",
     "identity",
     "clipboardRead",

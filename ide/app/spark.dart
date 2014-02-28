@@ -2149,10 +2149,10 @@ class _GitPushJob extends Job {
   }
 }
 
-class _PubGetJob extends Job {
+class PubGetJob extends Job {
   ws.Resource _pubspec;
 
-  _PubGetJob(ws.Resource pubspec)
+  PubGetJob(ws.Resource pubspec)
       : super('Running pub get ${pubspec.project.name}') {
     _pubspec = pubspec;
   }
