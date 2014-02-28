@@ -29,11 +29,10 @@ class SparkPolymerUI extends SparkWidget {
     Timer.run(() => bindKeybindingDesc());
   }
 
-  void onMenuSelected(Event event, var detail) {
-    final actionId = detail['item'];
-    final action = SparkModel.instance.actionManager.getAction(actionId);
-    // Action can be null when selecting theme or key menu option.
-    if (action != null) {
+  void onMenuSelected(CustomEvent event, var detail) {
+    if (detail['isSelected']) {
+      final actionId = detail['value'];
+      final action = SparkModel.instance.actionManager.getAction(actionId);
       action.invoke();
     }
   }

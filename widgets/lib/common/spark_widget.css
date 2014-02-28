@@ -4,3 +4,11 @@
 
 @import url("../../../packages/bootjack/css/bootstrap.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
+
+:host(.veiled) {
+  opacity: 0;
+}
+
+:host(.unveiled) {
+  opacity: 1;
+}

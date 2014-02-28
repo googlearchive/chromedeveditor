@@ -6,6 +6,7 @@ library spark_widgets.overlay;
 
 import 'dart:async';
 import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -13,11 +14,9 @@ import '../common/spark_widget.dart';
 // Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-overlay")
 class SparkOverlay extends SparkWidget {
-  // TODO(sorvell): need keyhelper component.
-  static final int ESCAPE_KEY = 27;
-
   // Track overlays for z-index and focus managemant.
   static List overlays = [];
+
   static void trackOverlays(inOverlay) {
     if (inOverlay.opened) {
       var z0 = currentOverlayZ();
@@ -97,23 +96,59 @@ class SparkOverlay extends SparkWidget {
   }
 
   /**
-   * By default an overlay will close automatically if the user taps outside
-   * it or presses the escape key. Disable this behavior by setting the
-   * autoCloseDisabled property to true.
+   * Prevents other elements in the document from receiving [_captureEventTypes]
+   * events. This essentially disables the rest of the UI while the overlay
+   * is open.
    */
-  @published bool autoCloseDisabled = false;
+  @published bool modal = false;
 
-  // TODO(terry): Should be tap when PointerEvents are supported.
-  static const String captureEventType = 'mousedown';
+  /**
+   * Close the overlay automatically if the user taps outside it or presses
+   * the escape key.
+   */
+  @published bool autoClose = false;
+
+  /**
+   * Events to capture on the [document] level in the capturing event
+   * propagation phase and either block them (with [modal]) or auto-close the
+   * overlay (with [autoClose]).
+   */
+  // TODO(ussuri): This list should be amended with 'tap*' events when
+  // PointerEvents are supported.
+  // NOTE(ussuri): Possible other candidates to consider (note that some
+  // may break e.g. manually applied hovering within the overlay itself):
+  // 'mouseenter',
+  // 'mouseleave',
+  // 'mouseover',
+  // 'mouseout',
+  // 'focusin',
+  // 'focusout',
+  // 'scroll',
+  // 'keydown',
+  // 'keypress',
+  // 'keyup'
+  static final List<String> _modalEventTypes = [
+      'mousedown',
+      'mouseup',
+      'click',
+      'wheel',
+      'dblclick',
+      'contextmenu',
+      'focus',
+      'blur',
+  ];
+  static final List<String> _autoCloseEventTypes = [
+      'mousedown',
+      'wheel',
+      'contextmenu',
+  ];
+
   Timer autoCloseTask = null;
 
-  void ready() {
+  @override
+  void enteredView() {
     style.visibility = "visible";
-    if (tabIndex == null) {
-      tabIndex = -1;
-    }
-    // TODO(ussuri): 'touch-action' is not used anywhere else - mistake?
-    attributes['touch-action'] = 'none';
+    enableKeyboardEvents();
   }
 
   /// Toggle the opened state of the overlay.
@@ -124,14 +159,20 @@ class SparkOverlay extends SparkWidget {
   void openedChanged() {
     renderOpened();
     trackOverlays(this);
-    if (!autoCloseDisabled) {
-      enableCaptureHandler(opened);
+
+    _enableResizeHandler(opened);
+
+    if (autoClose || modal) {
+      var eventTypes = new Set<String>();
+      if (modal) eventTypes.addAll(_modalEventTypes);
+      if (autoClose) eventTypes.addAll(_autoCloseEventTypes);
+      _enableCaptureHandler(opened, eventTypes);
     }
-    enableResizeHandler(opened);
+
     asyncFire('opened', detail: opened);
   }
 
-  void enableResizeHandler(inEnable) {
+  void _enableResizeHandler(inEnable) {
     if (inEnable) {
       window.addEventListener('resize', _resizeHandler);
     } else {
@@ -139,17 +180,10 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  void enableCaptureHandler(inEnable) {
-    // TODO(terry): Need to use overlay docfrag document doesn't map to that.
-    //              However, we should use getShadowRoot or lightdom or the
-    //              event.path when those work we should be able to use
-    //              var doc = getShadowRoot('spark-overlay');
-    var doc = document;
-    if (inEnable) {
-      doc.addEventListener(captureEventType, _captureHandler, true);
-    } else {
-      doc.removeEventListener(captureEventType, _captureHandler, true);
-    }
+  void _enableCaptureHandler(bool enable, Iterable<String> eventTypes) {
+    final Function addRemoveFunc =
+        enable ? document.addEventListener : document.removeEventListener;
+    eventTypes.forEach((et) => addRemoveFunc(et, _captureHandler, true));
   }
 
   getFocusNode() {
@@ -226,16 +260,18 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  // TODO(sorvell): This approach will not work with modal. For this we need a
-  // scrim.
-  void captureHandler(MouseEvent e) {
-    // TODO(terry): Hack to work around lightdom or event.path not yet working.
-    if (!isPointInOverlay(e.client)) {
-      // TODO(terry): How to cancel the event e.cancelable = true;
-      e.stopImmediatePropagation();
-      e.preventDefault();
+  void captureHandler(Event e) {
+    final bool inOverlay =
+        (e is MouseEvent && isPointInOverlay(e.client)) ||
+        this == e.target ||
+        this.contains(e.target) ||
+        shadowRoot.contains(e.target);
 
-      if (!autoCloseDisabled) {
+    if (!inOverlay) {
+      if (modal) {
+        e..stopPropagation()..preventDefault();
+      }
+      if (autoClose) {
         autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
       }
     }
@@ -245,11 +281,9 @@ class SparkOverlay extends SparkWidget {
     return super.getBoundingClientRect().containsPoint(xyGlobal);
   }
 
-  void keydownHandler(KeyboardEvent e) {
-    if (!autoCloseDisabled && (e.keyCode == ESCAPE_KEY)) {
-      this.opened = false;
-      e.stopImmediatePropagation();
-      e.preventDefault();
+  void keyDownHandler(KeyboardEvent e) {
+    if (e.keyCode == KeyCode.ESC) {
+      opened = false;
     }
   }
 
