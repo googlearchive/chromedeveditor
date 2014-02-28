@@ -59,7 +59,7 @@ class SparkSuggestBox extends SparkWidget {
   @published bool opened = false;
 
   /// Currently displayed suggestions.
-  @observable final suggestions = new ObservableList();
+  @observable final suggestions = new ObservableList<Suggestion>();
 
   InputElement _textBox;
   SparkMenu _menu;
