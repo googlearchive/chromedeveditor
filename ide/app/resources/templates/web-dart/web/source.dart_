@@ -1,5 +1,7 @@
 import 'dart:html';
 
 void main() {
-  querySelector("#sample_text_id").text = "Hello world!";
+  var element = new DivElement();
+  element.text = "Hello world!";
+  document.body.children.add(element);
 }
