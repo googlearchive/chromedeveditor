@@ -40,7 +40,7 @@ Future<ChromeDartSdk> createSdk() {
 
   _sdkCompleter = new Completer();
 
-  sdk.DartSdk.createSdk().then((sdk.DartSdk sdk) {
+  sdk.DartSdk.createSdkFromContents().then((sdk.DartSdk sdk) {
     ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
     chromeSdk._parseLibrariesFile();
     _sdkCompleter.complete(chromeSdk);
