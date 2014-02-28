@@ -176,10 +176,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     // Add a Dart builder.
     addBuilder(new DartBuilder(this.services));
-
-    new Future.delayed(const Duration(milliseconds: 1000)).then((_){
-      _testDriver.runTests();
-    });
   }
 
   initServices() {
@@ -842,6 +838,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     if (spark.developerMode) {
       spark._testDriver = new TestDriver(
           all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+      spark._testDriver.runTests();
     }
     return new Future.value();
   }
