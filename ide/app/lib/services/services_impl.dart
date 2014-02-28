@@ -7,11 +7,11 @@ library spark.services_impl;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'lib/services/analyzer.dart';
-import 'lib/analyzer_common.dart' as common;
-import 'lib/services/compiler.dart';
-import 'lib/dart/sdk.dart';
-import 'lib/utils.dart';
+import 'analyzer.dart';
+import '../analyzer_common.dart' as common;
+import 'compiler.dart';
+import '../dart/sdk.dart';
+import '../utils.dart';
 
 void init(SendPort sendPort) {
   // For use with top level print() helper function.
