@@ -4,7 +4,6 @@
 
 library spark_widgets;
 
-import 'dart:async' show Timer, Duration;
 import 'dart:html' show Node, Element, ContentElement;
 
 import 'package:polymer/polymer.dart';
