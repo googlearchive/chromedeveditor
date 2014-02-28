@@ -102,7 +102,7 @@ void deploy(GrinderContext context) {
       'spark_polymer.html_bootstrap.dart', true);
 
   // Compile the services entry-point.
-  _dart2jsCompile(context, deployWeb, 'services_impl.dart', true);
+  _dart2jsCompile(context, deployWeb, 'services_entry.dart', true);
 
   if (Platform.isWindows) {
     context.log(

@@ -2,20 +2,16 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-/**
- * This is a separate application spawned by Spark (via Services) as an isolate
- * for use in running long-running / heaving tasks.
- */
 library spark.services_impl;
 
 import 'dart:async';
 import 'dart:isolate';
 
-import 'lib/services/compiler.dart';
-import 'lib/dart/sdk.dart';
-import 'lib/utils.dart';
+import 'compiler.dart';
+import '../dart/sdk.dart';
+import '../utils.dart';
 
-void main(List<String> args, SendPort sendPort) {
+void init(SendPort sendPort) {
   // For use with top level print() helper function.
   _printSendPort = sendPort;
 
