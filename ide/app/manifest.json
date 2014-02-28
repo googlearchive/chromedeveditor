@@ -4,7 +4,7 @@
   "short_name": "__MSG_app_name__",
   "description": "__MSG_app_description__",
   "version": "0.6.0",
-  "minimum_chrome_version": "31",
+  "minimum_chrome_version": "33",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
@@ -24,6 +24,7 @@
     "https://www.google-analytics.com/",
     "https://www.googleapis.com/upload/chromewebstore/v1.1/items",
     "https://github.com/*",
+    "https://pub.dartlang.org/*",
     "http://*/push",
     "identity",
     "clipboardRead",

@@ -189,8 +189,31 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="name">Project name</label>
-          <input id="name" type="text" class="form-control" autofocus>
+          <div>
+            <label for="name">Project name</label>
+            <input id="name" type="text" class="form-control" autofocus>
+          </div>
+          <br/>
+          <div>
+            <input type="radio" name="type" value="chrome-dart" id="empty-project" checked>
+            <label for="dart-chrome-app-radio" checked>Create an empty project</label>
+          </div>
+          <div>
+            <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
+            <label for="dart-web-app-radio" checked>Create a new Web App (Dart)</label>
+          </div>
+          <!--div>
+            <input type="radio" name="type" value="web-js" id="js-web-app-radio">
+            <label for="js-web-app-radio" checked>Create a new Web App (JavaScript)</label>
+          </div>
+          <div>
+            <input type="radio" name="type" value="chrome-dart" id="dart-chrome-app-radio">
+            <label for="dart-chrome-app-radio" checked>Create a new Chrome App (Dart)</label>
+          </div>
+          <div>
+            <input type="radio" name="type" value="chrome-js" id="js-chrome-app-radio">
+            <label for="js-chrome-app-radio" checked>Create a new Chrome App (JavaScript)</label>
+          </div-->        
         </div>
       </div>
       <div class="modal-footer">

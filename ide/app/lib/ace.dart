@@ -152,7 +152,6 @@ class AceManager {
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
-    //_aceEditor.setOption('scrollPastEnd', true);
     _aceEditor.readOnly = true;
 
     // Enable code completion.
@@ -162,6 +161,9 @@ class AceManager {
 
     // Fallback
     theme = THEMES[0];
+
+    // Add some additional file extension editors.
+    ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
   }
 
   bool isFileExtensionEditable(String extension) {
