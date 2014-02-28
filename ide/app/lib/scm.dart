@@ -377,6 +377,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   Future pull() {
+    //sample
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Pull pull = new Pull(options);
