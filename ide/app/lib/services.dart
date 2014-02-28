@@ -7,6 +7,7 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'analyzer_common.dart';
 import 'workspace.dart' as ws;
 
 import 'services/compiler.dart';
@@ -73,6 +74,18 @@ abstract class Service {
     ServiceActionEvent responseEvent = event.createReponse(data);
     _isolateHandler.onceIsolateReady
         .then((_) => _isolateHandler.sendResponse(responseEvent));
+  }
+}
+
+class AnalyzerService extends Service {
+  String serviceId = "analyzer";
+
+  AnalyzerService(Services services, _IsolateHandler handler)
+      : super(services, handler);
+
+  Future<Map<ws.File, List<AnalysisError>>> buildFiles(
+      Iterable<ws.File> dartFiles) {
+    return new Future.value({});
   }
 }
 
