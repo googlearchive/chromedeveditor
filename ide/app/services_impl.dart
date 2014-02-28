@@ -69,6 +69,7 @@ class ServicesIsolate {
     // Register each ServiceImpl:
     _registerServiceImpl(new CompilerServiceImpl(this));
     _registerServiceImpl(new ExampleServiceImpl(this));
+    _registerServiceImpl(new AnalyzerServiceImpl(this));
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
