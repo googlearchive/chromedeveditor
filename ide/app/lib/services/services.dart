@@ -26,6 +26,7 @@ class Services {
   Services(this._workspace) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
+    registerService(new AnalyzerService(this, _isolateHandler));
     registerService(new TestService(this, _isolateHandler));
     _chromeService = new ChromeServiceImpl(this, _isolateHandler);
 
@@ -109,21 +110,10 @@ class CompilerService extends Service {
 }
 
 class AnalyzerService extends Service {
-  Completer _readyCompleter = new Completer();
-
   String serviceId = "analyzer";
-  Future onceReady;
 
   AnalyzerService(Services services, _IsolateHandler handler)
-  : super(services, handler) {
-    onceReady = _readyCompleter.future;
-  }
-
-  Future start() {
-    return _isolateHandler.onceIsolateReady
-        .then((_) => _sendAction("start"))
-        .then((_) => _readyCompleter.complete());
-  }
+  : super(services, handler);
 
   // TODO(ericarnold): Implement
 //  List<AnalyzerResult> build(Iterable<File> dartFiles) {
@@ -137,8 +127,7 @@ class AnalyzerService extends Service {
 
   Future<AnalysisResult> analyzeString(String string,
       {bool performResolution}) {
-    return onceReady.then((_) =>
-        _sendAction("analyzeString", {"string": string}))
+    return _sendAction("analyzeString", {"string": string})
         .then((ServiceActionEvent result) {
           AnalysisResult response = new AnalysisResult.fromMap(result.data);
           return response;
@@ -146,14 +135,13 @@ class AnalyzerService extends Service {
   }
 
   Future dispose() {
-    return onceReady.then((_) => _sendAction("dispose"))
+    return _sendAction("dispose")
         .then((_) => null);
   }
 
   Future<Map<ws.File, List<AnalysisError>>>
       buildFiles(Iterable<ws.File> dartFiles) {
-    return onceReady.then((_) => _sendAction("buildFiles",
-        {"files": _filesToUuid(dartFiles)}))
+    return _sendAction("buildFiles", {"files": _filesToUuid(dartFiles)})
     .then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors =
           event.data['errors'];
@@ -174,9 +162,13 @@ class AnalyzerService extends Service {
   ws.File _uuidToFile(String uuid) =>
       _services._workspace.restoreResource(uuid);
 
-  List<String> _filesToUuid(List<ws.File> files) =>
-      files.map((ws.File file) => file.uuid);
-
+  List<String> _filesToUuid(Iterable<ws.File> files) {
+    List<String> uuids = [];
+    for (ws.File file in files) {
+      uuids.add(file.uuid);
+    }
+    return uuids;
+  }
 }
 
 class TestService extends Service {
@@ -214,6 +206,13 @@ class TestService extends Service {
 
   Future<String> analyzerSdkTest() => _sendAction("analyzerSdkTest")
       .then((ServiceActionEvent event) => event.data['success']);
+
+//  Future buildTest() {
+//    AnalyzerService analyzer = _services.getService("analysisService");
+//    analyzer.start().then((_) {
+//      analyzer.buildFiles(dartFiles)
+//    });
+//  }
 }
 
 /**
