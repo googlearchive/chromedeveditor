@@ -19,15 +19,11 @@ import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
 import 'package:path/path.dart' as path;
 
-import '../dart/sdk.dart' as sdk;
-<<<<<<< HEAD:ide/app/lib/services/analyzer.dart
-=======
-import '../analyzer_common.dart' as common;
->>>>>>> umop-services-analysis:ide/app/lib/services/analyzer.dart
-
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
 export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
+
+import '../dart/sdk.dart' as sdk;
 
 // TODO: investigate web workers and isolates
 
@@ -43,7 +39,7 @@ Future<ChromeDartSdk> createSdk() {
 
   _sdkCompleter = new Completer();
 
-  sdk.DartSdk.createSdkFromContents().then((sdk.DartSdk sdk) {
+  sdk.DartSdk.createSdk().then((sdk.DartSdk sdk) {
     ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
     chromeSdk._parseLibrariesFile();
     _sdkCompleter.complete(chromeSdk);

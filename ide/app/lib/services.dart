@@ -77,16 +77,48 @@ abstract class Service {
   }
 }
 
-class AnalyzerService extends Service {
-  String serviceId = "analyzer";
+class TestService extends Service {
+  String serviceId = "test";
 
-  AnalyzerService(Services services, _IsolateHandler handler)
+  TestService(Services services, _IsolateHandler handler)
       : super(services, handler);
 
-  Future<Map<ws.File, List<AnalysisError>>> buildFiles(
-      Iterable<ws.File> dartFiles) {
-    return new Future.value({});
+  Future<String> shortTest(String name) {
+    return _sendAction("shortTest", {"name": name})
+        .then((ServiceActionEvent event) {
+      return event.data['response'];
+    });
   }
+
+  Future<String> longTest(String name) {
+    return _sendAction("longTest", {"name": name})
+        .then((ServiceActionEvent event) {
+      return event.data['response'];
+    });
+  }
+
+  /**
+   * For testing ChromeService.getFileContents on the isolate side.
+   *
+   * Sends a [File] reference (via uuid) to the isolate which then then makes
+   * [ChromeService].[getFileContents()] call with that uuid which should send
+   * back the contents of the file to the isolate, which will return the
+   * contents to us for verification.
+   */
+  Future<String> readText(ws.File file) {
+    return _sendAction("readText", {"fileUuid": file.uuid})
+        .then((ServiceActionEvent event) => event.data['contents']);
+  }
+
+  Future<String> analyzerSdkTest() => _sendAction("analyzerSdkTest")
+      .then((ServiceActionEvent event) => event.data['success']);
+
+//  Future buildTest() {
+//    AnalyzerService analyzer = _services.getService("analysisService");
+//    analyzer.start().then((_) {
+//      analyzer.buildFiles(dartFiles)
+//    });
+//  }
 }
 
 class CompilerService extends Service {
@@ -181,50 +213,6 @@ class AnalyzerService extends Service {
     }
     return uuids;
   }
-}
-
-class TestService extends Service {
-  String serviceId = "test";
-
-  TestService(Services services, _IsolateHandler handler)
-      : super(services, handler);
-
-  Future<String> shortTest(String name) {
-    return _sendAction("shortTest", {"name": name})
-        .then((ServiceActionEvent event) {
-      return event.data['response'];
-    });
-  }
-
-  Future<String> longTest(String name) {
-    return _sendAction("longTest", {"name": name})
-        .then((ServiceActionEvent event) {
-      return event.data['response'];
-    });
-  }
-
-  /**
-   * For testing ChromeService.getFileContents on the isolate side.
-   *
-   * Sends a [File] reference (via uuid) to the isolate which then then makes
-   * [ChromeService].[getFileContents()] call with that uuid which should send
-   * back the contents of the file to the isolate, which will return the
-   * contents to us for verification.
-   */
-  Future<String> readText(ws.File file) {
-    return _sendAction("readText", {"fileUuid": file.uuid})
-        .then((ServiceActionEvent event) => event.data['contents']);
-  }
-
-  Future<String> analyzerSdkTest() => _sendAction("analyzerSdkTest")
-      .then((ServiceActionEvent event) => event.data['success']);
-
-//  Future buildTest() {
-//    AnalyzerService analyzer = _services.getService("analysisService");
-//    analyzer.start().then((_) {
-//      analyzer.buildFiles(dartFiles)
-//    });
-//  }
 }
 
 /**
