@@ -28,24 +28,24 @@ defineTests() {
 
   group('services implementation tests', () {
     test('service order', () {
-      TestService exampleService = services.getService("example");
+      TestService testService = services.getService("test");
       Completer completer = new Completer();
       List<String> orderedResponses = [];
 
       // Test 1 (slow A) starts
-      exampleService.longTest("1").then((str) {
+      testService.longTest("1").then((str) {
         orderedResponses.add(str);
       });
 
       // Test 2 (fast) starts
-      exampleService.shortTest("2").then((str) {
+      testService.shortTest("2").then((str) {
         orderedResponses.add(str);
       });
 
       // Test 2 should end
       return new Future.delayed(const Duration(milliseconds: 500)).then((_){
         // Test 3 (slow B) starts
-        return exampleService.longTest("3").then((str) {
+        return testService.longTest("3").then((str) {
           orderedResponses.add(str);
         });
       }).then((_) =>
