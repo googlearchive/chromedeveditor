@@ -152,7 +152,31 @@ class AnalyzerService extends Service {
 
   Future<Map<ws.File, List<AnalysisError>>>
       buildFiles(Iterable<ws.File> dartFiles) {
+    return onceReady.then((_) => _sendAction("buildFiles",
+        {"files": _filesToUuid(dartFiles)}))
+    .then((ServiceActionEvent event) {
+      Map<String, List<Map>> responseErrors =
+          event.data['errors'];
+
+      Map<ws.File, List<AnalysisError>> errorsPerFile = {};
+
+      for (String uuid in responseErrors.keys) {
+        List<AnalysisError> errors =
+            responseErrors[uuid].map((Map errorData) =>
+            new AnalysisError.fromMap(errorData));
+        errorsPerFile[_uuidToFile(uuid)] = errors;
+      }
+
+      return errorsPerFile;
+    });
   }
+
+  ws.File _uuidToFile(String uuid) =>
+      _services._workspace.restoreResource(uuid);
+
+  List<String> _filesToUuid(List<ws.File> files) =>
+      files.map((ws.File file) => file.uuid);
+
 }
 
 class TestService extends Service {

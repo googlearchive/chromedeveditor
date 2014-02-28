@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'lib/services/analyzer.dart';
+import 'lib/analyzer_common.dart' as common;
 import 'lib/services/compiler.dart';
 import 'lib/dart/sdk.dart';
 import 'lib/utils.dart';
@@ -238,10 +239,11 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
-      case "build":
+      case "buildFiles":
         return build(event.data["dartFileUuids"])
-            .then((List<AnalyzerResult>_){
-
+            .then((Map<String, List<Map>> errorsPerFile) {
+              return new Future.value(event.createReponse(
+                  {"errors": errorsPerFile}));
             });
       default:
         throw new ArgumentError(
@@ -249,15 +251,46 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }
   }
 
-  Future<List<AnalyzerResult>> build(List<String> fileUuids) {
-    List<AnalyzerResult> results = [];
+  Future<Map<String, List<Map>>> build(List<Map> fileUuids) {
+    Map<String, List<Map>> errorsPerFile = {};
 
     return dartSdkFuture.then((ChromeDartSdk sdk) {
-      Future.forEach(fileUuids, (String fileUuid) {
-          _processFile(sdk, fileUuid)
-              .then((AnalyzerResult result) => results.add(result));
-          }).then((_) => results);
-    });
+      return Future.forEach(fileUuids, (String fileUuid) {
+          return _processFile(sdk, fileUuid)
+              .then((AnalyzerResult result) {
+                List<AnalysisError> errors = result.errors;
+                List<Map> responseErrors = [];
+                for (AnalysisError error in errors) {
+                  common.AnalysisError responseError =
+                      new common.AnalysisError();
+                  responseError.message = error.message;
+                  responseError.offset = error.offset;
+                  LineInfo_Location location = result.getLineInfo(error);
+                  responseError.lineNumber = location.lineNumber;
+                  responseError.errorSeverity =
+                      _errorSeverityToInt(error.errorCode.errorSeverity);
+                  responseError.length = error.length;
+                  responseErrors.add(responseError.toMap());
+                }
+
+                return responseErrors;
+              }).then((List<Map> errors) {
+                errorsPerFile[fileUuid] = errors;
+              });
+          });
+    }).then((_) => errorsPerFile);
+  }
+
+  int _errorSeverityToInt(ErrorSeverity severity) {
+    if (severity == ErrorSeverity.ERROR) {
+      return common.ErrorSeverity.ERROR;
+    } else  if (severity == ErrorSeverity.WARNING) {
+      return common.ErrorSeverity.WARNING;
+    } else  if (severity == ErrorSeverity.INFO) {
+      return common.ErrorSeverity.INFO;
+    } else {
+      return common.ErrorSeverity.NONE;
+    }
   }
 
   /**

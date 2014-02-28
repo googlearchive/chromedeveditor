@@ -49,7 +49,7 @@ class DartBuilder extends Builder {
   }
 }
 
-int _convertSeverity(ErrorSeverity sev) {
+int _convertSeverity(int sev) {
   if (sev == ErrorSeverity.ERROR) {
     return Marker.SEVERITY_ERROR;
   } else  if (sev == ErrorSeverity.WARNING) {

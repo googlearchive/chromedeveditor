@@ -10,6 +10,8 @@ class AnalysisError {
   int errorSeverity;
   int length;
 
+  AnalysisError();
+
   AnalysisError.fromMap(Map mapData) {
     message = mapData["message"];
     offset = mapData["offset"];
@@ -18,7 +20,7 @@ class AnalysisError {
     length = mapData["length"];
   }
 
-  Map toMap(Map mapData) {
+  Map toMap() {
     return {
         "message": message,
         "offset": offset,
@@ -30,6 +32,7 @@ class AnalysisError {
 }
 
 class ErrorSeverity {
+  static int NONE = 0;
   static int ERROR = 1;
   static int WARNING = 2;
   static int INFO = 3;
