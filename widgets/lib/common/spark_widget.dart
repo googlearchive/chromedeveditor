@@ -4,7 +4,7 @@
 
 library spark_widgets;
 
-import 'dart:async' show Timer;
+import 'dart:async' show Timer, Duration;
 import 'dart:html' show Node, Element, ContentElement;
 
 import 'package:polymer/polymer.dart';
@@ -48,23 +48,33 @@ class SparkWidget extends PolymerElement {
   }
 
   void veil() {
-    classes..remove('unveiled')..add('veiled');
+    classes..remove('unveiled')..toggle('veiled', true);
   }
 
   void unveil() {
-    classes..remove('veiled')..add('unveiled');
+    classes..remove('veiled')..toggle('unveiled', true);
   }
 
   /**
    * Prevent FOUC (Flash Of Unstyled Content).
    */
-  void preventFlashOfUnstyledContent(int msec) {
+  void preventFlashOfUnstyledContent({Function method,
+                                      Duration delay}) {
     // TODO(ussuri): We use a temporary crude way here. Polymer's avertised
     // machanisms (via :resolved pseudo class as well as older .polymer-veiled
     // class) have failed to work so far, although :unresolved reportedly
     // functions in Chrome 34. Revisit.
     veil();
-    new Timer(new Duration(milliseconds: msec), unveil);
+
+    if (method != null) {
+      method();
+    }
+
+    if (delay != null) {
+      asyncTimer(unveil, delay);
+    } else {
+      unveil();
+    }
   }
 
   /**
