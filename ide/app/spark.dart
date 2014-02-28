@@ -12,7 +12,6 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
-import 'package:tavern/tavern.dart' as tavern;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_status/spark_status.dart';
@@ -125,8 +124,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   ProjectLocationManager projectLocationManager;
 
   // Extensions of files that will be shown as text.
-  Set<String> _textFileExtensions = new Set.from(['.cmake', '.gitignore',
-      '.lock', '.prefs', '.txt']);
+  Set<String> _textFileExtensions = new Set.from(
+      ['.cmake', '.gitignore', '.lock', '.prefs', '.txt']);
 
   Spark(this.developerMode) {
     initServices();
@@ -234,18 +233,19 @@ class Spark extends SparkModel implements FilesControllerDelegate,
    * is overwritten in SparkPolymer, which encapsulates the UI in a top-level
    * Polymer widget, rather than the top-level document's DOM.
    */
-  Element getUIElement(String selectors) => document.querySelector(selectors);
+  Element getUIElement(String selectors) =>
+      document.querySelector(selectors);
 
   /**
    * Should extract a dialog Element from the underlying UI's DOM. This is
    * different from [getUIElement] in that it's not currently overridden in
    * SparkPolymer.
    */
-  Element getDialogElement(String selectors) => document.querySelector(selectors
-      );
+  Element getDialogElement(String selectors) =>
+      document.querySelector(selectors);
 
-  SparkDialog createDialog(Element dialogElement) => new SparkBootjackDialog(
-      dialogElement);
+  SparkDialog createDialog(Element dialogElement) =>
+      new SparkBootjackDialog(dialogElement);
 
   //
   // Parts of ctor:
@@ -284,13 +284,13 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement(), this);
-    _aceThemeManager = new ThemeManager(aceManager, syncPrefs, getUIElement(
-        '#changeTheme .settings-label'));
-    _aceKeysManager = new KeyBindingManager(aceManager, syncPrefs, getUIElement(
-        '#changeKeys .settings-label'));
-    _editorManager = new EditorManager(workspace, aceManager, localPrefs,
-        eventBus);
-    _editorManager.onNewFileOpened.listen((_) {
+    _aceThemeManager = new ThemeManager(
+        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
+    _aceKeysManager = new KeyBindingManager(
+        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+    _editorManager = new EditorManager(
+        workspace, aceManager, localPrefs, eventBus);
+    _editorManager.onNewFileOpened.listen((_){
       _workspace.checkResource(_editorManager.currentFile);
     });
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
@@ -338,8 +338,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initFilesController() {
-    _filesController = new FilesController(workspace, scmManager, this,
-        querySelector('#fileViewArea'));
+    _filesController = new FilesController(
+        workspace, scmManager, this, querySelector('#fileViewArea'));
     _filesController.onSelectionChange.listen((resource) {
       focusManager.setCurrentResource(resource);
     });
@@ -377,42 +377,29 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new PrevMarkerAction(this));
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileOpenAction(this));
-    actionManager.registerAction(new FileNewAction(this, getDialogElement(
-        '#fileNewDialog')));
-    actionManager.registerAction(new FolderNewAction(this, getDialogElement(
-        '#folderNewDialog')));
+    actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
+    actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
-    actionManager.registerAction(new NewProjectAction(this, getDialogElement(
-        '#newProjectDialog')));
+    actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
-    actionManager.registerAction(new ApplicationPushAction(this,
-        getDialogElement('#pushDialog')));
-    actionManager.registerAction(new GitCloneAction(this, getDialogElement(
-        "#gitCloneDialog")));
-    actionManager.registerAction(new GitBranchAction(this, getDialogElement(
-        "#gitBranchDialog")));
-    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement(
-        "#gitCheckoutDialog")));
+    actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
+    actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
+    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitResolveConflictsAction(this));
-    actionManager.registerAction(new GitCommitAction(this, getDialogElement(
-        "#gitCommitDialog")));
+    actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitRevertChangesAction(this));
-    actionManager.registerAction(new GitPushAction(this, getDialogElement(
-        "#gitPushDialog")));
+    actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
-    actionManager.registerAction(new SettingsAction(this, getDialogElement(
-        '#settingsDialog')));
-    actionManager.registerAction(new AboutSparkAction(this, getDialogElement(
-        '#aboutDialog')));
-    actionManager.registerAction(new FileRenameAction(this, getDialogElement(
-        '#renameDialog')));
+    actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
+    actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
+    actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new ProjectPropertiesAction(this,
-        getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -420,8 +407,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new SpecificTabAction(this));
     actionManager.registerAction(new TabLastAction(this));
     actionManager.registerAction(new FileExitAction(this));
-    actionManager.registerAction(new WebStorePublishAction(this,
-        getDialogElement('#webStorePublishDialog')));
+    actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
 
@@ -446,10 +432,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   Future openFile() {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(type:
-        chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
-    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult
-        res) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_WRITABLE_FILE);
+    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
 
       if (entry != null) {
@@ -481,8 +466,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     showErrorMessage(title, message);
   }
 
-  // Implemented in a sub-class.
-  void unveil() {}
+    // Implemented in a sub-class.
+  void unveil() { }
 
   /**
    * Show a model error dialog.
@@ -490,8 +475,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   void showErrorMessage(String title, String message) {
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
-      _errorDialog.element.querySelector("[primary]").onClick.listen(
-          _hideBackdropOnClick);
+      _errorDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
     }
 
     _errorDialog.element.querySelector('#errorTitle').text = title;
@@ -508,12 +492,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void showPublishedAppDialog(String appID) {
     if (_publishedAppDialog == null) {
-      _publishedAppDialog = createDialog(getDialogElement(
-          '#webStorePublishedDialog'));
-      _publishedAppDialog.element.querySelector("[primary]").onClick.listen(
-          _hideBackdropOnClick);
-      _publishedAppDialog.element.querySelector("#webStorePublishedAction"
-          ).onClick.listen((MouseEvent event) {
+      _publishedAppDialog = createDialog(getDialogElement('#webStorePublishedDialog'));
+      _publishedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((MouseEvent event) {
         window.open('https://chrome.google.com/webstore/detail/${appID}', null);
         _hideBackdropOnClick(event);
       });
@@ -525,14 +506,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void showUploadedAppDialog(String appID) {
     if (_uploadedAppDialog == null) {
-      _uploadedAppDialog = createDialog(getDialogElement(
-          '#webStoreUploadedDialog'));
-      _uploadedAppDialog.element.querySelector("[primary]").onClick.listen(
-          _hideBackdropOnClick);
-      _uploadedAppDialog.element.querySelector("#webStoreUploadedAction"
-          ).onClick.listen((MouseEvent event) {
-        window.open(
-            'https://chrome.google.com/webstore/developer/edit/${appID}', null);
+      _uploadedAppDialog = createDialog(getDialogElement('#webStoreUploadedDialog'));
+      _uploadedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((MouseEvent event) {
+        window.open('https://chrome.google.com/webstore/developer/edit/${appID}', null);
         _hideBackdropOnClick(event);
       });
     }
@@ -569,7 +546,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     return _okCancelCompleter.future;
   }
 
-  void onSplitViewUpdate(int position) {}
+  void onSplitViewUpdate(int position) { }
 
   void setGitSettingsResetDoneVisible(bool enabled) {
     getUIElement('#gitResetSettingsDone').hidden = !enabled;
@@ -600,7 +577,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void _closeOpenEditor(ws.Resource resource) {
-    if (resource is ws.File && editorManager.isFileOpened(resource)) {
+    if (resource is ws.File &&  editorManager.isFileOpened(resource)) {
       editorArea.closeFile(resource);
     }
   }
@@ -609,26 +586,29 @@ class Spark extends SparkModel implements FilesControllerDelegate,
    * Refreshes the file name on an opened editor tab.
    */
   void _renameOpenEditor(ws.Resource renamedResource) {
-    if (renamedResource is ws.File && editorManager.isFileOpened(renamedResource
-        )) {
+    if (renamedResource is ws.File && editorManager.isFileOpened(renamedResource)) {
       editorArea.renameFile(renamedResource);
     }
   }
 
   void _selectFile(ws.Resource file) {
-    editorArea.selectFile(file, forceOpen: true, switchesTab: true, forceFocus:
-        true);
+    editorArea.selectFile(file,
+        forceOpen: true, switchesTab: true, forceFocus: true);
   }
 
   //
   // Implementation of FilesControllerDelegate interface:
   //
 
-  void selectInEditor(ws.File file, {bool forceOpen: false, bool replaceCurrent:
-      true, bool switchesTab: true}) {
+  void selectInEditor(ws.File file,
+                      {bool forceOpen: false,
+                       bool replaceCurrent: true,
+                       bool switchesTab: true}) {
     if (forceOpen || editorManager.isFileOpened(file)) {
-      editorArea.selectFile(file, forceOpen: forceOpen, replaceCurrent:
-          replaceCurrent, switchesTab: switchesTab);
+      editorArea.selectFile(file,
+          forceOpen: forceOpen,
+          replaceCurrent: replaceCurrent,
+          switchesTab: switchesTab);
     }
   }
 
@@ -655,8 +635,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       _textFileExtensions.remove(extension);
     }
 
-    _syncPrefs.setValue('textFileExtensions', JSON.encode(
-        _textFileExtensions.toList()));
+    _syncPrefs.setValue('textFileExtensions',
+        JSON.encode(_textFileExtensions.toList()));
   }
 
   bool canShowFileAsText(String filename) {
@@ -691,7 +671,7 @@ class PlatformInfo {
 
   PlatformInfo._(this.os, this.arch, this.naclArch);
 
-  PlatformInfo.fromMap(Map m): this._(m['os'], m['arch'], m['nacl_arch']);
+  PlatformInfo.fromMap(Map m) : this._(m['os'], m['arch'], m['nacl_arch']);
 
   String toString() => "${os}, ${arch}, ${naclArch}";
 
@@ -712,17 +692,14 @@ class ProjectLocationManager {
    * Create a ProjectLocationManager asynchronously, restoring the default
    * project location from the given preferences.
    */
-  static Future<ProjectLocationManager>
-      restoreManager(preferences.PreferenceStore prefs) {
+  static Future<ProjectLocationManager> restoreManager(preferences.PreferenceStore prefs) {
     return prefs.getValue('projectFolder').then((String folderToken) {
       if (folderToken == null) {
         return new ProjectLocationManager._(prefs);
       }
 
-      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry
-          entry) {
-        return new ProjectLocationManager._(prefs, new LocationResult(entry,
-            entry, false));
+      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+        return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
       }).catchError((e) {
         return new ProjectLocationManager._(prefs);
       });
@@ -784,8 +761,8 @@ class ProjectLocationManager {
     });
   }
 
-  Future<LocationResult> _create(LocationResult location, String baseName, int
-      count) {
+  Future<LocationResult> _create(
+      LocationResult location, String baseName, int count) {
     String name = count == 1 ? baseName : '${baseName}-${count}';
 
     return location.parent.createDirectory(name, exclusive: true).then((dir) {
@@ -851,8 +828,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
         }
       });
     }).then((_) {
-      return ProjectLocationManager.restoreManager(spark.localPrefs).then(
-          (manager) {
+      return ProjectLocationManager.restoreManager(spark.localPrefs).then((manager) {
         spark.projectLocationManager = manager;
       });
     }).whenComplete(() => spark.unveil());
@@ -860,8 +836,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
   Future applicationStarted(Application application) {
     if (spark.developerMode) {
-      spark._testDriver = new TestDriver(all_tests.defineTests,
-          spark.jobManager, connectToTestListener: true);
+      spark._testDriver = new TestDriver(
+          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
     }
     return new Future.value();
   }
@@ -881,8 +857,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
  */
 Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
   Completer completer = new Completer();
-  chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(type:
-      chrome.ChooseEntryType.OPEN_DIRECTORY);
+  chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+      type: chrome.ChooseEntryType.OPEN_DIRECTORY);
   if (suggestedName != null) options.suggestedName = suggestedName;
   chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
     completer.complete(res.entry);
@@ -900,7 +876,7 @@ bool _isCros() {
 abstract class SparkAction extends Action {
   Spark spark;
 
-  SparkAction(this.spark, String id, String name): super(id, name);
+  SparkAction(this.spark, String id, String name) : super(id, name);
 
   void invoke([Object context]) {
     // Send an action event with the 'main' event category.
@@ -949,8 +925,8 @@ abstract class SparkAction extends Action {
    * Returns true if `context` is a list with a single item, the item is a
    * [Project], and that project is under SCM.
    */
-  bool _isScmProject(context) => _isProject(context) && isUnderScm(context.first
-      );
+  bool _isScmProject(context) =>
+      _isProject(context) && isUnderScm(context.first);
 
   /**
    * Returns true if `context` is a list with of items, all in the same project,
@@ -1052,8 +1028,10 @@ class SparkBootjackDialog implements SparkDialog {
 abstract class SparkActionWithDialog extends SparkAction {
   SparkDialog _dialog;
 
-  SparkActionWithDialog(Spark spark, String id, String name, Element
-      dialogElement)
+  SparkActionWithDialog(Spark spark,
+                        String id,
+                        String name,
+                        Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
@@ -1061,8 +1039,8 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   void _commit();
 
-  Element getElement(String selectors) => _dialog.element.querySelector(
-      selectors);
+  Element getElement(String selectors) =>
+      _dialog.element.querySelector(selectors);
 
   Element _triggerOnReturn(String selectors) {
     var element = _dialog.element.querySelector(selectors);
@@ -1079,8 +1057,8 @@ abstract class SparkActionWithDialog extends SparkAction {
 }
 
 class FileOpenInTabAction extends SparkAction implements ContextAction {
-  FileOpenInTabAction(Spark spark): super(spark, "file-open-in-tab",
-      "Open in New Tab");
+  FileOpenInTabAction(Spark spark) :
+      super(spark, "file-open-in-tab", "Open in New Tab");
 
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
@@ -1095,7 +1073,7 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
 }
 
 class FileOpenAction extends SparkAction {
-  FileOpenAction(Spark spark): super(spark, "file-open", "Open File…") {
+  FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
     addBinding("ctrl-o");
   }
 
@@ -1144,12 +1122,11 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
 
   String get category => 'folder';
 
-  bool appliesTo(Object object) => _isSingleResource(object) &&
-      !_isTopLevelFile(object);
+  bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevelFile(object);
 }
 
 class FileSaveAction extends SparkAction {
-  FileSaveAction(Spark spark): super(spark, "file-save", "Save") {
+  FileSaveAction(Spark spark) : super(spark, "file-save", "Save") {
     addBinding("ctrl-s");
   }
 
@@ -1157,7 +1134,7 @@ class FileSaveAction extends SparkAction {
 }
 
 class FileDeleteAction extends SparkAction implements ContextAction {
-  FileDeleteAction(Spark spark): super(spark, "file-delete", "Delete");
+  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -1177,8 +1154,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
     spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
       if (val) {
         spark.workspace.pauseResourceEvents();
-        Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e)
-            {
+        Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
           String ordinality = resources.length == 1 ? "File" : "Files";
           spark.showErrorMessage("Error Deleting ${ordinality}", e.toString());
         }).whenComplete(() {
@@ -1204,11 +1180,11 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _invoke([List<ws.Resource> resources]) {
-    if (resources != null && resources.isNotEmpty) {
-      resource = resources.first;
-      _nameElement.value = resource.name;
-      _show();
-    }
+   if (resources != null && resources.isNotEmpty) {
+     resource = resources.first;
+     _nameElement.value = resource.name;
+     _show();
+   }
   }
 
   void _commit() {
@@ -1223,12 +1199,11 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   String get category => 'resource';
 
-  bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(
-      object);
+  bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 
 class ResourceCloseAction extends SparkAction implements ContextAction {
-  ResourceCloseAction(Spark spark): super(spark, "file-close", "Close");
+  ResourceCloseAction(Spark spark) : super(spark, "file-close", "Close");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -1239,10 +1214,8 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
       spark.workspace.unlink(resource);
       if (resource is ws.File) {
         spark._closeOpenEditor(resource);
-      } else {
-        if (resource is ws.Project) {
-          resource.traverse().forEach(spark._closeOpenEditor);
-        }
+      } else if (resource is ws.Project) {
+        resource.traverse().forEach(spark._closeOpenEditor);
       }
     }
 
@@ -1255,7 +1228,7 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
 }
 
 class TabPreviousAction extends SparkAction {
-  TabPreviousAction(Spark spark): super(spark, "tab-prev", "Previous Tab") {
+  TabPreviousAction(Spark spark) : super(spark, "tab-prev", "Previous Tab") {
     addBinding('ctrl-shift-[');
     addBinding('ctrl-shift-tab', macBinding: 'macctrl-shift-tab');
   }
@@ -1264,7 +1237,7 @@ class TabPreviousAction extends SparkAction {
 }
 
 class TabNextAction extends SparkAction {
-  TabNextAction(Spark spark): super(spark, "tab-next", "Next Tab") {
+  TabNextAction(Spark spark) : super(spark, "tab-next", "Next Tab") {
     addBinding('ctrl-shift-]');
     addBinding('ctrl-tab', macBinding: 'macctrl-tab');
   }
@@ -1275,7 +1248,7 @@ class TabNextAction extends SparkAction {
 class SpecificTabAction extends SparkAction {
   _SpecificTabKeyBinding _binding;
 
-  SpecificTabAction(Spark spark): super(spark, "tab-goto", "Goto Tab") {
+  SpecificTabAction(Spark spark) : super(spark, "tab-goto", "Goto Tab") {
     _binding = new _SpecificTabKeyBinding();
     bindings.add(_binding);
   }
@@ -1297,7 +1270,7 @@ class _SpecificTabKeyBinding extends KeyBinding {
 
   int index = -1;
 
-  _SpecificTabKeyBinding(): super('ctrl-1');
+  _SpecificTabKeyBinding() : super('ctrl-1');
 
   bool matches(KeyboardEvent event) {
     // If the user typed in a 1 to an 8, change this binding to match that key.
@@ -1312,7 +1285,7 @@ class _SpecificTabKeyBinding extends KeyBinding {
 }
 
 class TabLastAction extends SparkAction {
-  TabLastAction(Spark spark): super(spark, "tab-last", "Last Tab") {
+  TabLastAction(Spark spark) : super(spark, "tab-last", "Last Tab") {
     addBinding("ctrl-9");
   }
 
@@ -1324,7 +1297,7 @@ class TabLastAction extends SparkAction {
 }
 
 class TabCloseAction extends SparkAction {
-  TabCloseAction(Spark spark): super(spark, "tab-close", "Close") {
+  TabCloseAction(Spark spark) : super(spark, "tab-close", "Close") {
     addBinding("ctrl-w");
   }
 
@@ -1336,7 +1309,7 @@ class TabCloseAction extends SparkAction {
 }
 
 class FileExitAction extends SparkAction {
-  FileExitAction(Spark spark): super(spark, "file-exit", "Quit") {
+  FileExitAction(Spark spark) : super(spark, "file-exit", "Quit") {
     addBinding('ctrl-q', linuxBinding: 'ctrl-shift-q');
   }
 
@@ -1348,8 +1321,8 @@ class FileExitAction extends SparkAction {
 }
 
 class ApplicationRunAction extends SparkAction implements ContextAction {
-  ApplicationRunAction(Spark spark): super(spark, "application-run",
-      "Run Application") {
+  ApplicationRunAction(Spark spark) : super(
+      spark, "application-run", "Run Application") {
     addBinding("ctrl-r");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
@@ -1380,7 +1353,8 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 }
 
 class PubGetAction extends SparkAction implements ContextAction {
-  PubGetAction(Spark spark): super(spark, "pub-get", "Pub Get") {
+  PubGetAction(Spark spark) : super(
+      spark, "pub-get", "Pub Get") {
     enabled = false;
   }
 
@@ -1392,21 +1366,19 @@ class PubGetAction extends SparkAction implements ContextAction {
     } else {
       resource = context.first;
     }
-    var pubJob = new _PubGetJob(resource);
-    spark.jobManager.schedule(pubJob);
+    spark.showMessage('Pub Get','TODO: implement this');
   }
 
   String get category => 'pub';
 
-  bool _appliesTo(ws.Resource resource) => resource is ws.File && resource.name
-      == 'pubspec.yaml';
+  bool _appliesTo(ws.Resource resource) =>  resource is ws.File && resource.name == 'pubspec.yaml';
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 }
 
 class ResourceRefreshAction extends SparkAction implements ContextAction {
-  ResourceRefreshAction(Spark spark): super(spark, "resource-refresh", "Refresh"
-      ) {
+  ResourceRefreshAction(Spark spark) : super(
+      spark, "resource-refresh", "Refresh") {
     // On Chrome OS, bind to the dedicated refresh key.
     chrome.runtime.getPlatformInfo().then((Map m) {
       if (new PlatformInfo.fromMap(m).isCros) {
@@ -1432,13 +1404,12 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
 
   String get category => 'resource';
 
-  bool appliesTo(context) => _isResourceList(context) && !_isTopLevelFile(
-      context);
+  bool appliesTo(context) => _isResourceList(context) && !_isTopLevelFile(context);
 }
 
 class PrevMarkerAction extends SparkAction {
-  PrevMarkerAction(Spark spark): super(spark, "marker-prev", "Previous Marker")
-      {
+  PrevMarkerAction(Spark spark) : super(
+      spark, "marker-prev", "Previous Marker") {
     addBinding("ctrl-shift-p");
   }
 
@@ -1448,7 +1419,8 @@ class PrevMarkerAction extends SparkAction {
 }
 
 class NextMarkerAction extends SparkAction {
-  NextMarkerAction(Spark spark): super(spark, "marker-next", "Next Marker") {
+  NextMarkerAction(Spark spark) : super(
+      spark, "marker-next", "Next Marker") {
     // TODO: we probably don't want to bind to 'print'. Perhaps there's a good
     // keybinding we can borrow from chrome?
     addBinding("ctrl-p");
@@ -1497,7 +1469,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
 /// Transfers the focus to the search box
 class SearchAction extends SparkAction {
 
-  SearchAction(Spark spark): super(spark, 'search', 'Search') {
+  SearchAction(Spark spark) : super(spark, 'search', 'Search') {
     addBinding('ctrl-shift-f');
   }
 
@@ -1536,8 +1508,8 @@ class NewProjectAction extends SparkActionWithDialog {
   void _commit() {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name).then((LocationResult
-          location) {
+      spark.projectLocationManager.createNewFolder(name)
+          .then((LocationResult location) {
         if (location == null) return new Future.value();
 
         ws.WorkspaceRoot root;
@@ -1576,15 +1548,14 @@ class NewProjectAction extends SparkActionWithDialog {
 }
 
 class FolderOpenAction extends SparkAction {
-  FolderOpenAction(Spark spark): super(spark, "folder-open", "Open Folder…");
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
 
   void _invoke([Object context]) {
     spark.openFolder();
   }
 }
 
-class ApplicationPushAction extends SparkActionWithDialog implements
-    ContextAction {
+class ApplicationPushAction extends SparkActionWithDialog implements ContextAction {
   InputElement _pushUrlElement;
   ws.Container deployContainer;
 
@@ -1633,8 +1604,8 @@ class _HarnessPushJob extends Job {
   final ws.Container deployContainer;
   final String _url;
 
-  _HarnessPushJob(this.spark, this.deployContainer, this._url): super(
-      'Deploying to mobile…');
+  _HarnessPushJob(this.spark, this.deployContainer, this._url) :
+    super('Deploying to mobile…');
 
   Future run(ProgressMonitor monitor) {
     HarnessPush harnessPush = new HarnessPush(deployContainer);
@@ -1647,8 +1618,7 @@ class _HarnessPushJob extends Job {
   }
 }
 
-class ProjectPropertiesAction extends SparkActionWithDialog implements
-    ContextAction {
+class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   HtmlElement _propertiesElement;
 
@@ -1688,14 +1658,13 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements
     parent.children.add(div);
 
     Element label = new LabelElement()..text = key;
-    Element element = new ParagraphElement()
-        ..text = value
+    Element element = new ParagraphElement()..text = value
         ..className = 'form-control-static';
 
     div.children.addAll([label, element]);
   }
 
-  void _commit() {}
+  void _commit() { }
 
   String get category => 'resource';
 
@@ -1751,8 +1720,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    _GitBranchJob job = new _GitBranchJob(gitOperations,
-        _branchNameElement.value);
+    _GitBranchJob job = new _GitBranchJob(gitOperations, _branchNameElement.value);
     spark.jobManager.schedule(job);
   }
 
@@ -1784,7 +1752,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _gitName = null;
       _gitEmail = null;
       if (value != null) {
-        Map<String, String> info = JSON.decode(value);
+        Map<String,String> info = JSON.decode(value);
         _needsFillNameEmail = false;
         _gitName = info['name'];
         _gitEmail = info['email'];
@@ -1804,10 +1772,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     if (_needsFillNameEmail) {
       _gitName = _userNameElement.value;
       _gitEmail = _userEmailElement.value;
-      String encoded = JSON.encode({
-        'name': _gitName,
-        'email': _gitEmail
-      });
+      String encoded = JSON.encode({'name': _gitName, 'email': _gitEmail});
       spark.syncPrefs.setValue("git-user-info", encoded).then((_) {
         _startJob();
       });
@@ -1818,8 +1783,8 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _startJob() {
     // TODO(grv): add verify checks.
-    _GitCommitJob job = new _GitCommitJob(gitOperations, _gitName, _gitEmail,
-        _commitMessageElement.value, spark);
+    _GitCommitJob job = new _GitCommitJob(
+        gitOperations, _gitName, _gitEmail, _commitMessageElement.value, spark);
     spark.jobManager.schedule(job);
   }
 
@@ -1842,8 +1807,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
     project = context.first;
     gitOperations = spark.scmManager.getScmOperationsFor(project);
     String currentBranchName = gitOperations.getBranchName();
-    (getElement('#currentBranchName') as InputElement).value =
-        currentBranchName;
+    (getElement('#currentBranchName') as InputElement).value = currentBranchName;
 
     // Clear out the old select options.
     _selectElement.length = 0;
@@ -1851,8 +1815,8 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
     gitOperations.getAllBranchNames().then((List<String> branchNames) {
       branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       for (String branchName in branchNames) {
-        _selectElement.append(new OptionElement(data: branchName, value:
-            branchName));
+        _selectElement.append(
+            new OptionElement(data: branchName, value: branchName));
       }
       _selectElement.selectedIndex = branchNames.indexOf(currentBranchName);
     });
@@ -1862,8 +1826,8 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     // TODO(grv): add verify checks.
-    String branchName =
-        _selectElement.options[_selectElement.selectedIndex].value;
+    String branchName = _selectElement.options[
+        _selectElement.selectedIndex].value;
     _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
     spark.jobManager.schedule(job);
   }
@@ -1893,8 +1857,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
     gitOperations.getPendingCommits().then((List<CommitInfo> commits) {
       // Fill commits.
       _commitsList.innerHtml = '';
-      String summaryString = commits.length == 1 ? "1 commit" :
-          "${commits.length} commits";
+      String summaryString = commits.length == 1 ? "1 commit" : "${commits.length} commits";
       Element title = document.createElement("h1");
       title.appendText(summaryString);
       _commitsList.append(title);
@@ -1908,11 +1871,12 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
         _gitUsername = null;
         _gitPassword = null;
         if (value != null) {
-          Map<String, String> info = JSON.decode(value);
+          Map<String,String> info = JSON.decode(value);
           _needsUsernamePassword = false;
           _gitUsername = info['username'];
           _gitPassword = info['password'];
-        } else {
+        }
+        else {
           _needsUsernamePassword = true;
         }
         _show();
@@ -1923,8 +1887,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _push() {
-    _GitPushJob job = new _GitPushJob(gitOperations, _gitUsername, _gitPassword,
-        spark);
+    _GitPushJob job = new _GitPushJob(gitOperations, _gitUsername, _gitPassword, spark);
     spark.jobManager.schedule(job);
   }
 
@@ -1951,26 +1914,26 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 }
 
 class GitResolveConflictsAction extends SparkAction implements ContextAction {
-  GitResolveConflictsAction(Spark spark): super(spark, "git-resolve-conflicts",
-      "Resolve Conflicts");
+  GitResolveConflictsAction(Spark spark) :
+      super(spark, "git-resolve-conflicts", "Resolve Conflicts");
 
   void _invoke([context]) {
     ws.Resource file = _getResource(context);
-    ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(
-        file.project);
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(file.project);
 
     operations.markResolved(file);
   }
 
   String get category => 'git';
 
-  bool appliesTo(context) => _isUnderScmProject(context) && _isSingleResource(
-      context) && _fileHasConflicts(context);
+  bool appliesTo(context) => _isUnderScmProject(context) &&
+      _isSingleResource(context) && _fileHasConflicts(context);
 
   bool _fileHasConflicts(context) {
     ws.Resource file = _getResource(context);
-    ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(
-        file.project);
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(file.project);
     return operations.getFileStatus(file) == FileStatus.UNMERGED;
   }
 
@@ -1984,14 +1947,15 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
 }
 
 class GitRevertChangesAction extends SparkAction implements ContextAction {
-  GitRevertChangesAction(Spark spark): super(spark, "git-revert-changes",
-      "Revert Changes…");
+  GitRevertChangesAction(Spark spark) :
+      super(spark, "git-revert-changes", "Revert Changes…");
 
   void _invoke([List resources]) {
-    ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(
-        resources.first.project);
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(resources.first.project);
 
-    String text = (resources.length == 1 ? resources.first.name :
+    String text = (resources.length == 1 ?
+        resources.first.name :
         '${resources.length} resources');
     text = 'Revert changes for ${text}?';
 
@@ -2007,12 +1971,12 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
 
   String get category => 'git';
 
-  bool appliesTo(context) => _isUnderScmProject(context) && _filesAreModified(
-      context);
+  bool appliesTo(context) => _isUnderScmProject(context) &&
+      _filesAreModified(context);
 
   bool _filesAreModified(List resources) {
-    ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(
-        resources.first.project);
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(resources.first.project);
 
     for (ws.Resource resource in resources) {
       // TODO: Should we also check UNTRACKED?
@@ -2023,23 +1987,6 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
 
     return true;
   }
-}
-
-class _PubGetJob extends Job {
-  ws.Resource _pubspec;
-
-  _PubGetJob(ws.Resource pubspec)
-      : super('Running pub get ${pubspec.project.name}') {
-    _pubspec = pubspec;
-  }
-
-  Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
-    return _pubspec.entry.getParent().then((parent) {
-      tavern.getDependencies(parent, null);
-    });
-  }
- 
 }
 
 class _GitCloneJob extends Job {
@@ -2055,8 +2002,7 @@ class _GitCloneJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return spark.projectLocationManager.createNewFolder(_projectName).then(
-        (LocationResult location) {
+    return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
       if (location == null) return new Future.value();
 
       ScmProvider scmProvider = getProviderType('git');
@@ -2116,15 +2062,14 @@ class _GitCommitJob extends Job {
   String _userEmail;
   Spark spark;
 
-  
-      _GitCommitJob(this.gitOperations, this._userName, this._userEmail, this._commitMessage, this.spark):
-      super("Committing…");
+  _GitCommitJob(this.gitOperations, this._userName, this._userEmail,
+      this._commitMessage, this.spark) : super("Committing…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return gitOperations.commit(_userName, _userEmail, _commitMessage).then((_)
-        {
+    return gitOperations.commit(_userName, _userEmail, _commitMessage).
+        then((_) {
       spark.showSuccessMessage('Committed changes');
     }).catchError((e) {
       spark.showErrorMessage('Error committing changes', e.toString());
@@ -2165,8 +2110,8 @@ class _OpenFolderJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return spark.workspace.link(new ws.FolderRoot(_entry)).then((ws.Resource
-        resource) {
+    return spark.workspace.link(
+        new ws.FolderRoot(_entry)).then((ws.Resource resource) {
       Timer.run(() {
         spark._filesController.selectFile(resource);
         spark._filesController.setFolderExpanded(resource);
@@ -2188,7 +2133,9 @@ class _GitPushJob extends Job {
   String password;
 
   _GitPushJob(this.gitOperations, this.username, this.password, this.spark)
-      : super("Pushing changes…");
+      : super("Pushing changes…") {
+  }
+
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
@@ -2203,11 +2150,10 @@ class _GitPushJob extends Job {
 class ResourceRefreshJob extends Job {
   final List<ws.Project> resources;
 
-  ResourceRefreshJob(this.resources): super('Refreshing…');
+  ResourceRefreshJob(this.resources) : super('Refreshing…');
 
   Future run(ProgressMonitor monitor) {
-    List<ws.Project> projects = resources.map((r) => r.project).toSet().toList(
-        );
+    List<ws.Project> projects = resources.map((r) => r.project).toSet().toList();
 
     monitor.start('', projects.length);
 
@@ -2283,7 +2229,7 @@ class SettingsAction extends SparkActionWithDialog {
 }
 
 class RunTestsAction extends SparkAction {
-  RunTestsAction(Spark spark): super(spark, "run-tests", "Run Tests") {
+  RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
     if (spark.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
@@ -2303,8 +2249,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
   ws.Resource _resource;
 
   WebStorePublishAction(Spark spark, Element dialog)
-      : super(spark, "webstore-publish", "Publish to Chrome Web Store", dialog)
-          {
+      : super(spark, "webstore-publish", "Publish to Chrome Web Store", dialog) {
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
   }
@@ -2344,14 +2289,13 @@ class WebStorePublishAction extends SparkActionWithDialog {
     if (_existingInput.checked) {
       appID = _appIdInput.value;
     }
-    _WebStorePublishJob job = new _WebStorePublishJob(spark, getAppContainerFor(
-        _resource), appID);
+    _WebStorePublishJob job =
+        new _WebStorePublishJob(spark, getAppContainerFor(_resource), appID);
     spark.jobManager.schedule(job);
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = getAppContainerFor(resource) != null;
-    ;
+    enabled = getAppContainerFor(resource) != null;;
   }
 }
 
@@ -2377,8 +2321,7 @@ class _WebStorePublishJob extends Job {
       WebStoreClient wsc = new WebStoreClient();
       return wsc.authenticate().then((_) {
         monitor.worked(1);
-        return wsc.uploadItem(archivedData, identifier: _appID).then((String
-            uploadedAppID) {
+        return wsc.uploadItem(archivedData, identifier: _appID).then((String uploadedAppID) {
           monitor.worked(3);
           if (_appID == null) {
             spark.showUploadedAppDialog(uploadedAppID);
@@ -2394,8 +2337,7 @@ class _WebStorePublishJob extends Job {
         });
       });
     }).catchError((e) {
-      spark.showErrorMessage('Error while publishing the application',
-          e.toString());
+      spark.showErrorMessage('Error while publishing the application', e.toString());
     });
   }
 }
@@ -2411,8 +2353,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-      _dialog.element.querySelector(".cancel-button").onClick.listen((_) =>
-          _cancel());
+      _dialog.element.querySelector(".cancel-button").onClick.listen((_) => _cancel());
       _initialized = true;
     }
 
@@ -2423,15 +2364,9 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   void _commit() {
     String username = (getElement('#gitUsername') as InputElement).value;
     String password = (getElement('#gitPassword') as InputElement).value;
-    String encoded = JSON.encode({
-      'username': username,
-      'password': password
-    });
+    String encoded = JSON.encode({'username': username, 'password': password});
     spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
-      completer.complete({
-        'username': username,
-        'password': password
-      });
+      completer.complete({'username': username, 'password': password});
       completer = null;
     });
   }
@@ -2443,8 +2378,8 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 
   static Future request(Spark spark) {
     if (_instance == null) {
-      _instance = new GitAuthenticationDialog(spark, spark.getDialogElement(
-          '#gitAuthenticationDialog'));
+      _instance = new GitAuthenticationDialog(spark,
+          spark.getDialogElement('#gitAuthenticationDialog'));
     }
     assert(_instance.completer != null);
     _instance.completer = new Completer();
@@ -2468,8 +2403,8 @@ void _handleUncaughtException(error, [StackTrace stackTrace]) {
   }
 }
 
-bool get _isTrackingPermitted => _analyticsTracker.service.getConfig(
-    ).isTrackingPermitted();
+bool get _isTrackingPermitted =>
+    _analyticsTracker.service.getConfig().isTrackingPermitted();
 
-set _isTrackingPermitted(bool value) => _analyticsTracker.service.getConfig(
-    ).setTrackingPermitted(value);
+set _isTrackingPermitted(bool value) =>
+    _analyticsTracker.service.getConfig().setTrackingPermitted(value);
