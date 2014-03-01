@@ -1499,7 +1499,11 @@ class NewProjectAction extends SparkActionWithDialog {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
       spark.projectLocationManager.createNewFolder(name).then((LocationResult location) {
-        if (location == null) return new Future.value();
+        if (location == null) {
+          spark.showErrorMessage('Error while creating project',
+              'The folder ${_projectName} could not be created');
+          return new Future.value();
+        }
 
         ws.WorkspaceRoot root;
 
@@ -1977,7 +1981,11 @@ class _GitCloneJob extends Job {
     monitor.start(name, 1);
 
     return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
-      if (location == null) return new Future.value();
+      if (location == null) {
+        spark.showErrorMessage('Error while cloning the repository',
+            'The folder ${_projectName} could not be created');
+        return new Future.value();
+      }
 
       ScmProvider scmProvider = getProviderType('git');
 

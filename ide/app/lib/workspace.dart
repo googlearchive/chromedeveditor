@@ -278,6 +278,97 @@ class Workspace extends Container {
 
   bool get syncFsIsAvailable => _syncFileSystem != null;
 
+  // List of files modified by the server.
+  HashMap<String, chrome.Entry> _scheduledSyncFSEntries = new HashMap();
+  // true if a refresh of syncFS is in progress.
+  bool _refreshSyncInProgress = false;
+  // Timer of the delayed refresh.
+  Timer _timerSyncFSRefresh = null;
+
+  /**
+   * Refresh existing roots, add new roots and remove the one that have been
+   * deleted from the server.
+   */
+  Future _refreshSyncFS() {
+    List<Future> futures = [];
+    Map<String, SyncFolderRoot> existingPaths = {};
+    Set<String> newPaths = new Set();
+    // Refreshing existing syncFS roots.
+    for(WorkspaceRoot root in _roots) {
+      if (root is SyncFolderRoot) {
+        futures.add((root.resource as Project).refresh());
+        existingPaths[root.resource.path] = root;
+      }
+    }
+    
+    // Add new roots from syncFS.
+    futures.add(_syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
+      List<Future> newAdditions = [];
+      Set<String> newPaths = new Set();
+      for(chrome.Entry entry in entries) {
+        newPaths.add(entry.fullPath);
+        if (!existingPaths.containsKey(entry.fullPath)) {
+          newAdditions.add(link(new SyncFolderRoot(entry)));
+        }
+      }
+      
+      // Remove deleted syncFS roots.
+      for(String path in existingPaths.keys) {
+        if (!newPaths.contains(path)) {
+          SyncFolderRoot root = existingPaths[path];
+          _roots.remove(root);
+          _fireResourceEvent(new ChangeDelta(root.resource, EventType.DELETE));
+        }
+      }
+
+      return Future.wait(newAdditions);
+    }));
+    
+    return Future.wait(futures);
+  }
+  
+  /**
+   * Perform the refresh and mark refresh as being in progress.
+   */
+  void _refreshSyncFSAfterDelay() {
+    _scheduledSyncFSEntries = {};
+    _refreshSyncInProgress = true;
+    _refreshSyncFS().then((e) {
+      _refreshSyncInProgress = false;
+      // If some files has been changed since, schedule a new refresh.
+      if (_scheduledSyncFSEntries.length > 0) {
+        _scheduleRefreshSyncFS();
+      }
+    });
+  }
+  
+  /**
+   * If a timer has not been created for a refresh of syncFS files, create one.
+   */
+  void _scheduleRefreshSyncFS() {
+    if (_refreshSyncInProgress) {
+      return;
+    }
+
+    if (_timerSyncFSRefresh != null) {
+      return;
+    }
+
+    // Wait for 10 seconds before performing the refresh.
+    _timerSyncFSRefresh = new Timer(new Duration(seconds:10), () {
+      _refreshSyncFSAfterDelay();
+      _timerSyncFSRefresh = null;
+    });
+  }
+
+  /**
+   * Mark a file as being changed by server.
+   */
+  void _scheduleRefreshSyncFSForEntry(chrome.Entry entry) {
+    _scheduledSyncFSEntries[entry.fullPath] = entry;
+    _scheduleRefreshSyncFS();
+  }
+
   /**
    * Read the sync file system and restore entries.
    */
@@ -287,6 +378,14 @@ class Workspace extends Container {
 
     chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
       _syncFileSystem = fs;
+
+      chrome.syncFileSystem.onFileStatusChanged.listen((chrome.FileInfo info) {
+        // Trigger refresh when changes are coming from the server.
+        if (info.direction == chrome.SyncDirection.REMOTE_TO_LOCAL) {
+          _scheduleRefreshSyncFSForEntry(info.fileEntry);
+        }
+      });
+
       return _syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
         pauseResourceEvents();
         return Future.forEach(entries, (chrome.Entry entry) {
@@ -862,7 +961,7 @@ class FileRoot extends WorkspaceRoot {
       'token': token
     };
   }
-  
+
   String toString() => "FileRoot ${id}";
 }
 
@@ -899,7 +998,7 @@ class FolderRoot extends WorkspaceRoot {
       'token': token
     };
   }
-  
+
   String toString() => "FolderRoot ${id}";
 }
 
@@ -941,7 +1040,7 @@ class FolderChildRoot extends WorkspaceRoot {
       'name': name
     };
   }
-  
+
   String toString() => "FolderChildRoot ${parentToken} / ${name}";
 }
 
@@ -962,7 +1061,7 @@ class SyncFolderRoot extends WorkspaceRoot {
 
   // We do not persist infomation about the sync filesystem root.
   Map persistState() => null;
-  
+
   String toString() => "SyncFolderRoot ${entry.name}";
 }
 
