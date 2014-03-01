@@ -206,7 +206,7 @@ class FileStatus {
   String headSha;
   String sha;
   int size;
-  int modificationTime;
+  String modificationTime;
 
   /**
    * [type] is one of [FileStatusType].
