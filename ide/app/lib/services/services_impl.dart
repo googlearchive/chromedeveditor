@@ -244,17 +244,19 @@ class AnalyzerServiceImpl extends ServiceImpl {
                 /*%TRACE3*/ print("(4> 2/27/14): _processFile!"); // TRACE%
                 List<AnalysisError> errors = result.errors;
                 List<Map> responseErrors = [];
-                for (AnalysisError error in errors) {
-                  common.AnalysisError responseError =
-                      new common.AnalysisError();
-                  responseError.message = error.message;
-                  responseError.offset = error.offset;
-                  LineInfo_Location location = result.getLineInfo(error);
-                  responseError.lineNumber = location.lineNumber;
-                  responseError.errorSeverity =
-                      _errorSeverityToInt(error.errorCode.errorSeverity);
-                  responseError.length = error.length;
-                  responseErrors.add(responseError.toMap());
+                if (errors != null) {
+                  for (AnalysisError error in errors) {
+                    common.AnalysisError responseError =
+                        new common.AnalysisError();
+                    responseError.message = error.message;
+                    responseError.offset = error.offset;
+                    LineInfo_Location location = result.getLineInfo(error);
+                    responseError.lineNumber = location.lineNumber;
+                    responseError.errorSeverity =
+                        _errorSeverityToInt(error.errorCode.errorSeverity);
+                    responseError.length = error.length;
+                    responseErrors.add(responseError.toMap());
+                  }
                 }
 
                 return responseErrors;

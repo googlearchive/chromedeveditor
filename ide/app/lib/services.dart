@@ -195,7 +195,7 @@ class AnalyzerService extends Service {
       for (String uuid in responseErrors.keys) {
         List<AnalysisError> errors =
             responseErrors[uuid].map((Map errorData) =>
-            new AnalysisError.fromMap(errorData));
+            new AnalysisError.fromMap(errorData)).toList();
         errorsPerFile[_uuidToFile(uuid)] = errors;
       }
 
@@ -206,13 +206,8 @@ class AnalyzerService extends Service {
   ws.File _uuidToFile(String uuid) =>
       _services._workspace.restoreResource(uuid);
 
-  List<String> _filesToUuid(Iterable<ws.File> files) {
-    List<String> uuids = [];
-    for (ws.File file in files) {
-      uuids.add(file.uuid);
-    }
-    return uuids;
-  }
+  List<String> _filesToUuid(Iterable<ws.File> files) =>
+      files.map((f) => f.uuid).toList();
 }
 
 /**
