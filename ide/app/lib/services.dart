@@ -28,6 +28,7 @@ class Services {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
     registerService(new ExampleService(this, _isolateHandler));
+    registerService(new AnalyzerService(this, _isolateHandler));
     _chromeService = new ChromeServiceImpl(this, _isolateHandler);
 
     _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event){

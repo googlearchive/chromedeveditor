@@ -128,7 +128,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       ['.cmake', '.gitignore', '.lock', '.prefs', '.txt']);
 
   Spark(this.developerMode) {
-    initServices();
 
     document.title = appName;
 
@@ -147,6 +146,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
 
     initWorkspace();
+    initServices();
     initScmManager();
 
     createEditorComponents();
