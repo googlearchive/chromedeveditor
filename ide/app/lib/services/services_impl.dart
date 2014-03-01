@@ -216,12 +216,10 @@ class AnalyzerServiceImpl extends ServiceImpl {
   }
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
-    /*%TRACE3*/ print("(4> 2/27/14): handleEvent!"); // TRACE%
     switch (event.actionId) {
       case "buildFiles":
         return build(event.data["dartFileUuids"])
             .then((Map<String, List<Map>> errorsPerFile) {
-              /*%TRACE3*/ print("(4> 2/27/14): errorsPerFile!"); // TRACE%
               return new Future.value(event.createReponse(
                   {"errors": errorsPerFile}));
             });
@@ -238,7 +236,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
       return Future.forEach(fileUuids, (String fileUuid) {
           return _processFile(sdk, fileUuid)
               .then((AnalyzerResult result) {
-                /*%TRACE3*/ print("(4> 2/27/14): _processFile!"); // TRACE%
                 List<AnalysisError> errors = result.errors;
                 List<Map> responseErrors = [];
                 if (errors != null) {
@@ -258,7 +255,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
                 return responseErrors;
               }).then((List<Map> errors) {
-                /*%TRACE3*/ print("(4> 2/27/14): List<Map> errors!"); // TRACE%
                 errorsPerFile[fileUuid] = errors;
               });
           });
