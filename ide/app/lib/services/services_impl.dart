@@ -282,23 +282,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
             analyzeString(sdk, contents, performResolution: false))
         .then((AnalyzerResult result) {
             return result;
-            // TODO(ericarnold): Implement outside of service
-//            file.workspace.pauseMarkerStream();
-//        try {
-//          file.clearMarkers();
-//
-//          for (AnalysisError error in result.errors) {
-//            LineInfo_Location location = result.getLineInfo(error);
-//
-//            file.createMarker(
-//                'dart', _convertSeverity(error.errorCode.errorSeverity),
-//                error.message, location.lineNumber,
-//                error.offset, error.offset + error.length);
-//          }
-//        } finally {
-//          file.workspace.resumeMarkerStream();
-//        }
-//      });
     });
   }
 
