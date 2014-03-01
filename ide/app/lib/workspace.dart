@@ -660,15 +660,15 @@ class Folder extends Container {
       }
 
       // Check for modified files.
-      return Future.forEach(checkChanged, (Resource resource) {
+      futures.addAll(checkChanged.map((Resource resource) {
         if (resource is File) {
           return resource._refresh();
         } else if (resource is Folder) {
           return resource._refresh();
         }
-      }).then((_) {
-        return Future.wait(futures);
-      });
+      }));
+
+      return Future.wait(futures);
     });
   }
 
@@ -691,6 +691,10 @@ class File extends Resource {
 
   Future setContents(String contents) {
     return _fileEntry.writeText(contents).then((_) {
+      return entry.getMetadata();
+    }).then((/*Metadata*/ metaData) {
+      _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
+    }).then((_) {
       workspace._fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
     });
   }
@@ -862,7 +866,7 @@ class FileRoot extends WorkspaceRoot {
       'token': token
     };
   }
-  
+
   String toString() => "FileRoot ${id}";
 }
 
@@ -899,7 +903,7 @@ class FolderRoot extends WorkspaceRoot {
       'token': token
     };
   }
-  
+
   String toString() => "FolderRoot ${id}";
 }
 
@@ -941,7 +945,7 @@ class FolderChildRoot extends WorkspaceRoot {
       'name': name
     };
   }
-  
+
   String toString() => "FolderChildRoot ${parentToken} / ${name}";
 }
 
@@ -962,7 +966,7 @@ class SyncFolderRoot extends WorkspaceRoot {
 
   // We do not persist infomation about the sync filesystem root.
   Map persistState() => null;
-  
+
   String toString() => "SyncFolderRoot ${entry.name}";
 }
 
