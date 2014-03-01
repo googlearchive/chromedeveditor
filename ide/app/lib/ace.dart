@@ -433,8 +433,8 @@ class AceManager {
     // Setup the code completion options for the current file type.
     if (file != null) {
       currentFile = file;
-      _aceEditor.setOption(
-          'enableBasicAutocompletion', path.extension(file.name) != '.dart');
+//      _aceEditor.setOption(
+//          'enableBasicAutocompletion', path.extension(file.name) != '.dart');
 
       if (_markerSubscription == null) {
         _markerSubscription = file.workspace.onMarkerChange.listen(
