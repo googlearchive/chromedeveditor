@@ -42,7 +42,7 @@ class Status {
         status.path = entry.fullPath;
         status.sha = sha;
         status.size = data.size;
-        status.modificationTime = data.modificationTime;
+        status.modificationTime = data.modificationTime.toString();
         store.index.updateIndexForEntry(status);
         return store.index.getStatusForEntry(entry);
       });
