@@ -11,8 +11,6 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
-typedef void SplitterUpdateFunction(int position);
-
 @CustomTag('spark-splitter')
 class SparkSplitter extends SparkWidget {
   /// Possible values are "left", "right", "up" and "down".
@@ -27,8 +25,6 @@ class SparkSplitter extends SparkWidget {
   @published bool handle = true;
   /// Whether to lock the split bar so it can't be dragged.
   @published bool locked = false;
-  /// Get notified of position changes.
-  @published SplitterUpdateFunction onUpdate;
 
   /**
    * Return the current splitter location.
@@ -190,7 +186,7 @@ class SparkSplitter extends SparkWidget {
     _trackEndSubscr.cancel();
     _trackEndSubscr = null;
 
-    if (onUpdate != null) onUpdate(_targetSize);
+    asyncFire('update', detail: {'targetSize': _targetSize});
 
     // Prevent possible wrong use of the cached value.
     _targetSize = null;

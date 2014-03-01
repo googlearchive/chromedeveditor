@@ -32,7 +32,7 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_splitter/spark_splitter.html"/>
 
 <polymer-element name="spark-split-view" extends="spark-widget"
-    attributes="direction splitterSize splitterHandle locked onUpdate">
+    attributes="direction splitterSize splitterHandle locked">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <!-- link rel="stylesheet" href="xyz.css" -->
@@ -48,7 +48,7 @@
         size="{{splitterSize}}"
         handle="{{splitterHandle}}"
         locked="{{locked}}"
-        onUpdate="{{onUpdate}}">
+        on-update="{{splitterUpdateHandler}}">
     </spark-splitter>
     <content select=":nth-child(2)"></content>
   </template>
