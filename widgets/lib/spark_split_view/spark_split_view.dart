@@ -33,8 +33,7 @@ class SparkSplitView extends SparkWidget {
     assert(children.length == 2 ||
            (children.length == 1 &&
             children[0] is ContentElement &&
-            (children[0] as ContentElement)
-                .getDistributedNodes().where((n) => n is Element).length == 2
+            SparkWidget.inlineNestedContentNodes(children[0]).length == 2
            )
     );
   }
