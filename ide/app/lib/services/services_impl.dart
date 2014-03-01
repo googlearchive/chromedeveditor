@@ -57,7 +57,7 @@ class ServicesIsolate {
 
     // Register each ServiceImpl:
     _registerServiceImpl(new CompilerServiceImpl(this));
-    _registerServiceImpl(new ExampleServiceImpl(this));
+    _registerServiceImpl(new TestServiceImpl(this));
     _registerServiceImpl(new AnalyzerServiceImpl(this));
 
     ReceivePort receivePort = new ReceivePort();
@@ -130,9 +130,9 @@ class ServicesIsolate {
   }
 }
 
-class ExampleServiceImpl extends ServiceImpl {
-  String get serviceId => "example";
-  ExampleServiceImpl(ServicesIsolate isolate) : super(isolate);
+class TestServiceImpl extends ServiceImpl {
+  String get serviceId => "test";
+  TestServiceImpl(ServicesIsolate isolate) : super(isolate);
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
