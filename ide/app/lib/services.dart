@@ -312,8 +312,7 @@ class _IsolateHandler {
       if (arg is String) {
         // TODO: convert this to a logger call?
         // String: handle as print
-        print(arg.replaceAll(new RegExp("chrome-extension://[a-z]*"),
-            "file:///Users/ericarnold/src/spark/ide/app"));
+        print(arg);
       } else if (_sendPort == null) {
         _sendPort = arg;
         _readyController..add(null)..close();
