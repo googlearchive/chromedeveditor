@@ -232,13 +232,10 @@ class AnalyzerServiceImpl extends ServiceImpl {
   }
 
   Future<Map<String, List<Map>>> build(List<Map> fileUuids) {
-    /*%TRACE3*/ print("(4> 2/27/14): build!"); // TRACE%
     Map<String, List<Map>> errorsPerFile = {};
 
     return dartSdkFuture.then((ChromeDartSdk sdk) {
-      /*%TRACE3*/ print("(4> 2/27/14): dartSdkFuture!"); // TRACE%
       return Future.forEach(fileUuids, (String fileUuid) {
-        /*%TRACE3*/ print("(4> 2/27/14): forEach!"); // TRACE%
           return _processFile(sdk, fileUuid)
               .then((AnalyzerResult result) {
                 /*%TRACE3*/ print("(4> 2/27/14): _processFile!"); // TRACE%
