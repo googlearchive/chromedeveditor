@@ -8,10 +8,11 @@
 library spark.all_tests;
 
 import 'analyzer_test.dart' as analyzer_test;
+import '../../services/services_impl.dart';
 
 /**
  * Place all new tests here.
  */
-void defineTests() {
-  analyzer_test.defineTests();
+void defineTests(ServicesIsolate servicesIsolate) {
+  analyzer_test.defineTests(servicesIsolate);
 }

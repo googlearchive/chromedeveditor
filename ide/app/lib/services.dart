@@ -113,12 +113,7 @@ class TestService extends Service {
   Future<String> analyzerSdkTest() => _sendAction("analyzerSdkTest")
       .then((ServiceActionEvent event) => event.data['success']);
 
-//  Future buildTest() {
-//    AnalyzerService analyzer = _services.getService("analysisService");
-//    analyzer.start().then((_) {
-//      analyzer.buildFiles(dartFiles)
-//    });
-//  }
+  // TODO(ericarnold): Include analyzer_tests.
 }
 
 class CompilerService extends Service {
@@ -159,30 +154,6 @@ class AnalyzerService extends Service {
   AnalyzerService(Services services, _IsolateHandler handler)
   : super(services, handler);
 
-  // TODO(ericarnold): Implement
-//  List<AnalyzerResult> build(Iterable<File> dartFiles) {
-//    return onceReady.then((_) =>
-//        _sendAction("analyzeString", {"string": string}))
-//        .then((ServiceActionEvent result) {
-////          CompilerResult response = new AnalysisResult.fromMap(result.data);
-//          return response;
-//        });
-//  }
-
-  Future<AnalysisResult> analyzeString(String string,
-      {bool performResolution}) {
-    return _sendAction("analyzeString", {"string": string})
-        .then((ServiceActionEvent result) {
-          AnalysisResult response = new AnalysisResult.fromMap(result.data);
-          return response;
-        });
-  }
-
-  Future dispose() {
-    return _sendAction("dispose")
-        .then((_) => null);
-  }
-
   Future<Map<ws.File, List<AnalysisError>>>
       buildFiles(Iterable<ws.File> dartFiles) {
     return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
@@ -201,6 +172,11 @@ class AnalyzerService extends Service {
 
       return errorsPerFile;
     });
+  }
+
+  Future dispose() {
+    return _sendAction("dispose")
+        .then((_) => null);
   }
 
   ws.File _uuidToFile(String uuid) =>
