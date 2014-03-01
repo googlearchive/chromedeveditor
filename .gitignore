@@ -11,3 +11,4 @@
 .svn
 packages
 pubspec.lock
+/.settings
