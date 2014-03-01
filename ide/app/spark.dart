@@ -1504,7 +1504,7 @@ class NewProjectAction extends SparkActionWithDialog {
           .then((LocationResult location) {
         if (location == null) {
           spark.showErrorMessage('Error while creating project',
-              'The folder ${_projectName} could not be created');
+              "The folder '${name}' could not be created.");
           return new Future.value();
         }
 
@@ -2001,7 +2001,7 @@ class _GitCloneJob extends Job {
     return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
       if (location == null) {
         spark.showErrorMessage('Error while cloning the repository',
-            'The folder ${_projectName} could not be created');
+            "The folder '${_projectName}' could not be created.");
         return new Future.value();
       }
 
