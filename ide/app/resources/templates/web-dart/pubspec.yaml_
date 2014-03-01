@@ -1,0 +1,4 @@
+name: _Project_name_
+description: A sample web application
+dependencies:
+  browser: any

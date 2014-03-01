@@ -30,12 +30,19 @@ class Status {
   static Future<FileStatus> getFileStatus(ObjectStore store,
       chrome.ChromeFileEntry entry) {
     return entry.getMetadata().then((data) {
+      FileStatus status = store.index.getStatusForEntry(entry);
+      if (status != null && status.modificationTime == data.modificationTime) {
+        // Unchanged file since last update.
+        return status;
+      }
+
       // TODO(grv) : check the modification time when it is available.
       return getShaForEntry(entry, 'blob').then((String sha) {
-        FileStatus status = new FileStatus();
+        status = new FileStatus();
         status.path = entry.fullPath;
         status.sha = sha;
         status.size = data.size;
+        status.modificationTime = data.modificationTime;
         store.index.updateIndexForEntry(status);
         return store.index.getStatusForEntry(entry);
       });

@@ -20,7 +20,7 @@ import 'developer_private.dart';
 import 'jobs.dart';
 import 'utils.dart';
 import 'server.dart';
-import 'services/services.dart';
+import 'services.dart';
 import 'workspace.dart';
 
 const int SERVER_PORT = 4040;

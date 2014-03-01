@@ -22,7 +22,7 @@
                 opened,
                 responsive,
                 valign"
-    on-keydown="{{keydownHandler}}">
+    on-keydown="{{keyDownHandler}}">
 
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
@@ -31,20 +31,29 @@
       @import url("packages/spark_widgets/spark_menu_button/spark_menu_button.css");
     </style>
 
-    <spark-button id="button" focused small noPadding touch-action="none"
-        on-click="{{toggle}}">
+    <spark-button id="button"
+        focused small noPadding
+        on-click="{{toggle}}"
+        on-focus="{{open}}"
+        on-blur="{{close}}">
       <img src="{{src}}">
     </spark-button>
 
     <div responsive="{{responsive}}" valign="{{valign}}">
-      <spark-overlay id="overlay" class="slideup" opened="{{opened}}" modal
-          on-activate="{{toggle}}" on-opened="{{onOpened}}">
+      <spark-overlay id="overlay"
+          autoClose
+          class="spark-overlay-scale-slideup"
+          opened="{{opened}}"
+          on-opened="{{onOpened}}">
+
         <div class="arrow"></div>
-        <div class="arrow arrow-inner" on-click="{{toggle}}"></div>
-        <spark-menu id="overlayMenu"
+        <div class="arrow arrow-inner" on-click="{{close}}"></div>
+
+        <spark-menu id="menu"
             selected="{{selected}}"
-            valueattr="{{valueattr}}">
-          <content select="*"></content>
+            valueattr="{{valueattr}}"
+            on-activate="{{menuActivateHandler}}">
+          <content></content>
         </spark-menu>
       </spark-overlay>
     </div>

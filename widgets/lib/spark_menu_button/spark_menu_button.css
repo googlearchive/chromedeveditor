@@ -7,7 +7,6 @@
 :host {
   display: inline-block;
   box-sizing: border-box;
-  -moz-box-sizing: border-box;
   width: 30px;
   height: 30px;
 }
@@ -60,12 +59,3 @@
   left: -7px;
   margin-left: 10%;
 }
-
-#overlayMenu {
-  border: none;
-  display: block;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  margin: 5px 0;
-}
-

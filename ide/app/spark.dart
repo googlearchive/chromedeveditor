@@ -30,10 +30,11 @@ import 'lib/harness_push.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
+import 'lib/project_builder.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
-import 'lib/services/services.dart';
+import 'lib/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
@@ -174,7 +175,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
 
     // Add a Dart builder.
-    addBuilder(new DartBuilder());
+    addBuilder(new DartBuilder(this.services));
   }
 
   initServices() {
@@ -670,6 +671,8 @@ class PlatformInfo {
 
   PlatformInfo._(this.os, this.arch, this.naclArch);
 
+  PlatformInfo.fromMap(Map m) : this._(m['os'], m['arch'], m['nacl_arch']);
+
   String toString() => "${os}, ${arch}, ${naclArch}";
 
   bool get isCros => os == 'cros';
@@ -817,7 +820,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   Future applicationStarting(Application application) {
     // get platform info
     return chrome.runtime.getPlatformInfo().then((Map m) {
-      spark._platformInfo = new PlatformInfo._(m['os'], m['arch'], m['nacl_arch']);
+      spark._platformInfo = new PlatformInfo.fromMap(m);
       return spark.workspace.restore().then((value) {
         if (spark.workspace.getFiles().length == 0) {
           // No files, just focus the editor.
@@ -1376,7 +1379,14 @@ class PubGetAction extends SparkAction implements ContextAction {
 class ResourceRefreshAction extends SparkAction implements ContextAction {
   ResourceRefreshAction(Spark spark) : super(
       spark, "resource-refresh", "Refresh") {
-    addBinding('f5');
+    // On Chrome OS, bind to the dedicated refresh key.
+    chrome.runtime.getPlatformInfo().then((Map m) {
+      if (new PlatformInfo.fromMap(m).isCros) {
+        addBinding('f5', linuxBinding: 'f3');
+      } else {
+        addBinding('f5');
+      }
+    });
   }
 
   void _invoke([context]) {
@@ -1498,7 +1508,8 @@ class NewProjectAction extends SparkActionWithDialog {
   void _commit() {
     var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name).then((LocationResult location) {
+      spark.projectLocationManager.createNewFolder(name)
+          .then((LocationResult location) {
         if (location == null) {
           spark.showErrorMessage('Error while creating project',
               'The folder ${_projectName} could not be created');
@@ -1506,20 +1517,34 @@ class NewProjectAction extends SparkActionWithDialog {
         }
 
         ws.WorkspaceRoot root;
+        var locationEntry = location.entry;
 
         if (location.isSync) {
-          root = new ws.SyncFolderRoot(location.entry);
+          root = new ws.SyncFolderRoot(locationEntry);
         } else {
-          root = new ws.FolderChildRoot(location.parent, location.entry);
+          root = new ws.FolderChildRoot(location.parent, locationEntry);
         }
 
-        return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Created ${project.name}');
-          Timer.run(() {
-            spark._filesController.selectFile(project);
-            spark._filesController.setFolderExpanded(project);
+        String type = getElement('input[name="type"]:checked').id;
+
+        return new Future.value().then((_) {
+          switch (type) {
+            case "empty-project":
+              break;
+            case "dart-web-app-radio":
+              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+                  "web-dart", name.toLowerCase(), name);
+              return projectBuilder.build();
+          }
+        }).then((_) {
+          return spark.workspace.link(root).then((ws.Project project) {
+            spark.showSuccessMessage('Created ${project.name}');
+            Timer.run(() {
+              spark._filesController.selectFile(project);
+              spark._filesController.setFolderExpanded(project);
+            });
+            spark.workspace.save();
           });
-          spark.workspace.save();
         });
       });
     }
@@ -1614,6 +1639,7 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAc
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', project.name);
+    _addProperty(_propertiesElement, 'Location', project.entry.fullPath);
 
     GitScmProjectOperations gitOperations =
         spark.scmManager.getScmOperationsFor(project);
