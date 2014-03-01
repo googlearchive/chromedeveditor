@@ -45,6 +45,7 @@ abstract class Editor {
   bool get dirty;
 
   Stream get onDirtyChange;
+  Stream get onModification;
 
   void activate();
   void resize();
@@ -282,7 +283,6 @@ class EditorManager implements EditorProvider {
     _eventBus.addEvent('fileModified', currentFile);
 
     if (_timer != null) _timer.cancel();
-
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
   }
 
@@ -363,9 +363,7 @@ class EditorManager implements EditorProvider {
 
     _editorMap[file] = editor;
     openFile(file);
-    editor.onDirtyChange.listen((_) {
-      if (editor.dirty) _startSaveTimer();
-    });
+    editor.onModification.listen((_) => _startSaveTimer());
     return editor;
   }
 

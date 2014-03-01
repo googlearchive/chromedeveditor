@@ -30,6 +30,7 @@ class TextEditor extends Editor {
 
   StreamSubscription _aceSubscription;
   StreamController _dirtyController = new StreamController.broadcast();
+  StreamController _modificationController = new StreamController.broadcast();
 
   ace.EditSession _session;
 
@@ -47,12 +48,14 @@ class TextEditor extends Editor {
   bool get dirty => _dirty;
 
   Stream get onDirtyChange => _dirtyController.stream;
+  Stream get onModification => _modificationController.stream;
 
   set dirty(bool value) {
     if (value != _dirty) {
       _dirty = value;
       _dirtyController.add(value);
     }
+    _modificationController.add(dirty);
   }
 
   html.Element get element => aceManager.parentElement;

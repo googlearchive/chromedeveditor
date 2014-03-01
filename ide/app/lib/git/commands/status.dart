@@ -29,9 +29,10 @@ class Status {
    */
   static Future<FileStatus> getFileStatus(ObjectStore store,
       chrome.ChromeFileEntry entry) {
-    return entry.getMetadata().then((data) {
+    return entry.getMetadata().then((chrome.Metadata data) {
       FileStatus status = store.index.getStatusForEntry(entry);
-      if (status != null && status.modificationTime == data.modificationTime) {
+      if (status != null &&
+          status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
         // Unchanged file since last update.
         return status;
       }
@@ -42,7 +43,7 @@ class Status {
         status.path = entry.fullPath;
         status.sha = sha;
         status.size = data.size;
-        status.modificationTime = data.modificationTime;
+        status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
         store.index.updateIndexForEntry(status);
         return store.index.getStatusForEntry(entry);
       });

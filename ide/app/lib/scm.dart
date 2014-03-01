@@ -20,6 +20,7 @@ import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
 import 'git/objectstore.dart';
+import 'git/object.dart';
 import 'git/options.dart';
 import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
@@ -27,7 +28,6 @@ import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
 import 'git/commands/fetch.dart';
-import 'git/commands/index.dart' as index;
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
@@ -102,9 +102,11 @@ class ScmManager {
 
   Stream<ScmProjectOperations> get onStatusChange => _controller.stream;
 
-  void _updateStatusFor(Project project, List<ChangeDelta> changes) {
+  Future _updateStatusFor(Project project, List<ChangeDelta> changes) {
     if (_operations[project] != null) {
-      _operations[project].updateForChanges(changes);
+      return _operations[project].updateForChanges(changes);
+    } else {
+      return new Future.value();
     }
   }
 }
@@ -172,7 +174,7 @@ abstract class ScmProjectOperations {
 
   Future push(String username, String password);
 
-  void updateForChanges(List<ChangeDelta> changes);
+  Future updateForChanges(List<ChangeDelta> changes);
 }
 
 /**
@@ -356,7 +358,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future revertChanges(List<Resource> resources) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
-      return Revert.revert(options, resources.map((e) => e.entry));
+      return Revert.revert(options, resources.map((e) => e.entry).toList());
     });
   }
 
@@ -398,8 +400,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<List<CommitInfo>> getPendingCommits() {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
-      return Push.getPendingCommits(options).then((commits) {
-        return commits.map((item) {
+      return Push.getPendingCommits(options).then((List commits) {
+        return commits.map((CommitObject item) {
           CommitInfo result = new CommitInfo();
           result.identifier = item.sha;
           result.authorName = item.author.name;
@@ -407,23 +409,24 @@ class GitScmProjectOperations extends ScmProjectOperations {
           result.date = item.author.date;
           result.message = item.message;
           return result;
-        });
+        }).toList();
       });
     });
   }
 
   Future<ObjectStore> get objectStore => _completer.future;
 
-  void updateForChanges(List<ChangeDelta> changes) {
-    _refreshStatus(files: changes
+  Future updateForChanges(List<ChangeDelta> changes) {
+    return _refreshStatus(files: changes
         .where((d) => d.type != EventType.DELETE && d.resource is File)
-        .map((d) => d.resource));
+        .map((d) => d.resource)
+        .where((File f) => f.parent != null && !f.parent.isScmPrivate()));
   }
 
   /**
    * Refresh either the entire given project, or the given list of files.
    */
-  void _refreshStatus({Project project, Iterable<File> files}) {
+  Future _refreshStatus({Project project, Iterable<File> files}) {
     assert(project != null || files != null);
 
     // Get a list of all files in the project.
@@ -432,13 +435,18 @@ class GitScmProjectOperations extends ScmProjectOperations {
     }
 
     // For each file, request the SCM status asynchronously.
-    objectStore.then((ObjectStore store) {
-      Future.forEach(files, (File file) {
-        return Status.getFileStatus(store, file.entry).then((index.FileStatus status) {
+    return objectStore.then((ObjectStore store) {
+      return Future.forEach(files, (File file) {
+        Stopwatch timer = new Stopwatch()..start();
+        return Status.getFileStatus(store, file.entry).then((status) {
           file.setMetadata('scmStatus',
               new FileStatus.fromIndexStatus(status.type).status);
+          _logger.info('calculated scm status for ${file.path} in '
+              '${timer.elapsedMilliseconds}ms');
         });
       }).then((_) => _statusController.add(this));
+    }).catchError((e, st) {
+      _logger.severe("error calculating scm status", e, st);
     });
   }
 }
@@ -454,10 +462,8 @@ class _ScmBuilder extends Builder {
 
   Future build(ResourceChangeEvent changes, ProgressMonitor monitor) {
     // Get a list of all changed projects and fire SCM change events for them.
-    for (Project project in changes.modifiedProjects) {
-      scmManager._updateStatusFor(project, changes.getChangesFor(project));
-    }
-
-    return new Future.value();
+    return Future.forEach(changes.modifiedProjects, (project) {
+      return scmManager._updateStatusFor(project, changes.getChangesFor(project));
+    });
   }
 }
