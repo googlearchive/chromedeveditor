@@ -234,30 +234,30 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     return dartSdkFuture.then((ChromeDartSdk sdk) {
       return Future.forEach(fileUuids, (String fileUuid) {
-          return _processFile(sdk, fileUuid)
-              .then((AnalyzerResult result) {
-                List<AnalysisError> errors = result.errors;
-                List<Map> responseErrors = [];
-                if (errors != null) {
-                  for (AnalysisError error in errors) {
-                    common.AnalysisError responseError =
-                        new common.AnalysisError();
-                    responseError.message = error.message;
-                    responseError.offset = error.offset;
-                    LineInfo_Location location = result.getLineInfo(error);
-                    responseError.lineNumber = location.lineNumber;
-                    responseError.errorSeverity =
-                        _errorSeverityToInt(error.errorCode.errorSeverity);
-                    responseError.length = error.length;
-                    responseErrors.add(responseError.toMap());
-                  }
+        return _processFile(sdk, fileUuid)
+            .then((AnalyzerResult result) {
+              List<AnalysisError> errors = result.errors;
+              List<Map> responseErrors = [];
+              if (errors != null) {
+                for (AnalysisError error in errors) {
+                  common.AnalysisError responseError =
+                      new common.AnalysisError();
+                  responseError.message = error.message;
+                  responseError.offset = error.offset;
+                  LineInfo_Location location = result.getLineInfo(error);
+                  responseError.lineNumber = location.lineNumber;
+                  responseError.errorSeverity =
+                      _errorSeverityToInt(error.errorCode.errorSeverity);
+                  responseError.length = error.length;
+                  responseErrors.add(responseError.toMap());
                 }
+              }
 
-                return responseErrors;
-              }).then((List<Map> errors) {
-                errorsPerFile[fileUuid] = errors;
-              });
-          });
+              return responseErrors;
+            }).then((List<Map> errors) {
+              errorsPerFile[fileUuid] = errors;
+            });
+        });
     }).then((_) => errorsPerFile);
   }
 
