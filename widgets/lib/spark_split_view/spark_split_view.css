@@ -8,14 +8,10 @@
   display: flex;
 }
 
-/* BUG #733 */
-:host[direction="left"], :host[direction="right"],
 :host([direction="left"]), :host([direction="right"]) {
   flex-flow: row;
 }
 
-/* BUG #733 */
-:host[direction="up"], :host[direction="down"],
 :host([direction="up"]), :host([direction="down"]) {
   flex-flow: column;
 }
@@ -27,21 +23,21 @@
 /* If the resizing target is to the left or up, make the other one flex so
    it auto-adjusts.
 */
-#marker[direction="left"] ~ content[select=":nth-child(2)"]::content > * {
+:host([direction="left"]) > content[select=":nth-child(2)"]::content > * {
   flex: 1;
 }
 
-#marker[direction="up"] ~ content[select=":nth-child(2)"]::content > * {
+:host([direction="up"]) > content[select=":nth-child(2)"]::content > * {
   flex: 1;
 }
 
 /* If the resizing target is to the right or down, make the other one flex so
    it auto-adjusts.
 */
-#marker[direction="right"] ~ content[select=":nth-child(1)"]::content > * {
+:host([direction="right"]) > content[select=":nth-child(1)"]::content > * {
   flex: 1;
 }
 
-#marker[direction="down"] ~ content[select=":nth-child(1)"]::content > * {
+:host([direction="down"]) > content[select=":nth-child(1)"]::content > * {
   flex: 1;
 }
