@@ -18,7 +18,7 @@ import '../workspace.dart';
 class DartBuilder extends Builder {
   Services services;
 
-  DartBuilder(services);
+  DartBuilder(this.services);
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     Iterable<File> dartFiles = event.modifiedFiles.where(
