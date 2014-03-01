@@ -12,17 +12,17 @@
   background-color: #F7F7F7;
 }
 
-:host(.horizontal), /*BUG #733*/:host.horizontal {
+:host(.horizontal) {
   cursor: row-resize;
 }
 
-:host(.vertical-handle), /*BUG #733*/:host.vertical-handle {
+:host(.vertical-handle) {
   background: url('handle_vert.png') no-repeat center;
 }
 
-:host(.horizontal-handle), /*BUG #733*/:host.horizontal-handle  {
+:host(.horizontal-handle) {
   background: url('handle_horiz.png') no-repeat center;
 }
 
-:host:hover, :host(.active), /*BUG #733*/:host.active {
+:host:hover, :host(.active) {
 }

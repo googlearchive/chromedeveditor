@@ -80,7 +80,7 @@
     <spark-split-view
         id="splitView"
         direction="left" splitterSize="6" splitterHandle="false"
-        onUpdate="{{onSplitterUpdate}}">
+        on-update="{{onSplitterUpdate}}">
       <content></content>
     </spark-split-view>
 
@@ -212,7 +212,7 @@
           <div>
             <input type="radio" name="type" value="chrome-js" id="js-chrome-app-radio">
             <label for="js-chrome-app-radio" checked>Create a new Chrome App (JavaScript)</label>
-          </div-->        
+          </div-->
         </div>
       </div>
       <div class="modal-footer">
@@ -523,7 +523,7 @@
             <div>
               <input type="radio" name="type" value="existing" id="existing-app-radio">
               <label for="existing-app-radio">Upload to an existing application</label>
-            </div>        
+            </div>
           </form>
         </div>
         <div class="form-group">
@@ -540,7 +540,7 @@
         </spark-button>
       </div>
     </spark-modal><!-- /.modal -->
-    
+
     <!-- Project properties dialog -->
     <spark-modal id="projectPropertiesDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
@@ -555,13 +555,16 @@
         </spark-button>
       </div>
     </spark-modal>
-    
+
     <!-- Chrome WebStore published dialog -->
     <spark-modal id="webStorePublishedDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label>Your application has been published</label>
-          <div class="help-block">An updated version of your application has been uploaded and published. You can now see it on the Chrome Web Store.</div>
+          <div class="help-block">
+            An updated version of your application has been uploaded and
+            published. You can now see it on the Chrome Web Store.
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -573,13 +576,17 @@
         </spark-button>
       </div>
     </spark-modal>
-    
+
     <!-- Chrome WebStore first upload dialog -->
     <spark-modal id="webStoreUploadedDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label>Your application has been uploaded</label>
-          <div class="help-block">Your application has been uploaded on the Chrome Web Store. You still need to fill out some additional information in the Developer Dashboard before publishing it.</div>
+          <div class="help-block">
+            Your application has been uploaded on the Chrome Web Store.
+            You still need to fill out some additional information in the
+            Developer Dashboard before publishing it.
+          </div>
         </div>
       </div>
       <div class="modal-footer">

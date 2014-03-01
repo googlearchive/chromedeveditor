@@ -53,8 +53,8 @@ class SparkPolymerUI extends SparkWidget {
     SparkModel.instance.aceKeysManager.inc(e);
   }
 
-  void onSplitterUpdate(int position) {
-    SparkModel.instance.onSplitViewUpdate(position);
+  void onSplitterUpdate(CustomEvent e, var detail) {
+    SparkModel.instance.onSplitViewUpdate(detail['targetSize']);
   }
 
   void bindKeybindingDesc() {

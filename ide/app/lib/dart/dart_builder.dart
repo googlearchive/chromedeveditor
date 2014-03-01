@@ -6,15 +6,19 @@ library spark.dart_builder;
 
 import 'dart:async';
 
-import '../analyzer.dart';
+import '../analyzer_common.dart';
 import '../builder.dart';
 import '../jobs.dart';
+import '../services.dart';
 import '../workspace.dart';
 
 /**
  * A [Builder] implementation that drives the Dart analyzer.
  */
 class DartBuilder extends Builder {
+  Services services;
+
+  DartBuilder(this.services);
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     Iterable<File> dartFiles = event.modifiedFiles.where(
@@ -22,45 +26,30 @@ class DartBuilder extends Builder {
 
     if (dartFiles.isEmpty) return new Future.value();
 
-    Completer completer = new Completer();
-
-    createSdk().then((ChromeDartSdk sdk) {
-      Future.forEach(dartFiles, (file) => _processFile(sdk, file)).then((_) {
-        completer.complete();
-      });
-    });
-
-    return completer.future;
-  }
-
-  /**
-   * Create markers for a `.dart` file.
-   */
-  Future _processFile(ChromeDartSdk sdk, File file) {
-    return file.getContents().then((String contents) {
-      return analyzeString(sdk, contents, performResolution: false).then((AnalyzerResult result) {
-        file.workspace.pauseMarkerStream();
-
+    AnalyzerService analyzer = services.getService("analyzer");
+    return analyzer.buildFiles(dartFiles)
+        .then((Map<File, List<AnalysisError>> errorsForFile) {
+      for (File file in errorsForFile.keys) {
         try {
           file.clearMarkers();
 
-          for (AnalysisError error in result.errors) {
-            LineInfo_Location location = result.getLineInfo(error);
+          List<AnalysisError> errors = errorsForFile[file];
 
+          for (AnalysisError error in errors) {
             file.createMarker(
-                'dart', _convertSeverity(error.errorCode.errorSeverity),
-                error.message, location.lineNumber,
+                'dart', _convertSeverity(error.errorSeverity),
+                error.message, error.lineNumber,
                 error.offset, error.offset + error.length);
           }
         } finally {
           file.workspace.resumeMarkerStream();
         }
-      });
+      }
     });
   }
 }
 
-int _convertSeverity(ErrorSeverity sev) {
+int _convertSeverity(int sev) {
   if (sev == ErrorSeverity.ERROR) {
     return Marker.SEVERITY_ERROR;
   } else  if (sev == ErrorSeverity.WARNING) {

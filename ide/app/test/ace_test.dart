@@ -70,6 +70,7 @@ class MockAceEditor implements TextEditor {
   set dirty(bool value) { }
 
   Stream get onDirtyChange => null;
+  Stream get onModification => null;
 
   Future save() => new Future.value();
 

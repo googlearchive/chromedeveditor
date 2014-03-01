@@ -35,7 +35,7 @@ import 'lib/project_builder.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
-import 'lib/services/services.dart';
+import 'lib/services.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
@@ -49,15 +49,6 @@ import 'test/all.dart' as all_tests;
 import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
-
-void main() {
-  isTestMode().then((testMode) {
-    createSparkZone().runGuarded(() {
-      Spark spark = new Spark(testMode);
-      spark.start();
-    });
-  });
-}
 
 /**
  * Returns true if app.json contains a test-mode entry set to true. If app.json
@@ -129,8 +120,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       ['.cmake', '.gitignore', '.lock', '.prefs', '.txt']);
 
   Spark(this.developerMode) {
-    initServices();
-
     document.title = appName;
 
     _localPrefs = preferences.localStore;
@@ -148,6 +137,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
 
     initWorkspace();
+    initServices();
     initScmManager();
 
     createEditorComponents();
@@ -176,7 +166,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
 
     // Add a Dart builder.
-    addBuilder(new DartBuilder());
+    addBuilder(new DartBuilder(this.services));
   }
 
   initServices() {
@@ -253,20 +243,22 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   //
 
   void initAnalytics() {
+    // Init the analytics tracker and send a page view for the main page.
     analytics.getService('Spark').then((service) {
-      // Init the analytics tracker and send a page view for the main page.
       _analyticsTracker = service.getTracker(_ANALYTICS_ID);
       _analyticsTracker.sendAppView('main');
+    });
 
-      // Track logged exceptions.
-      Logger.root.onRecord.listen((LogRecord r) {
-        if (r.loggerName != 'spark.tests') {
-          print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
-          if (r.level >= Level.SEVERE) {
-            _handleUncaughtException(r.error, r.stackTrace);
-          }
-        }
-      });
+    // Track logged exceptions.
+    Logger.root.onRecord.listen((LogRecord r) {
+      if (r.loggerName == 'spark.tests') return;
+      if (!developerMode && r.level <= Level.INFO) return;
+
+      print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
+
+      if (r.level >= Level.SEVERE) {
+        _handleUncaughtException(r.error, r.stackTrace);
+      }
     });
   }
 
@@ -1512,7 +1504,11 @@ class NewProjectAction extends SparkActionWithDialog {
     if (name.isNotEmpty) {
       spark.projectLocationManager.createNewFolder(name)
           .then((LocationResult location) {
-        if (location == null) return new Future.value();
+        if (location == null) {
+          spark.showErrorMessage('Error while creating project',
+              'The folder ${_projectName} could not be created');
+          return new Future.value();
+        }
 
         ws.WorkspaceRoot root;
         var locationEntry = location.entry;
@@ -2005,7 +2001,11 @@ class _GitCloneJob extends Job {
     monitor.start(name, 1);
 
     return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
-      if (location == null) return new Future.value();
+      if (location == null) {
+        spark.showErrorMessage('Error while cloning the repository',
+            'The folder ${_projectName} could not be created');
+        return new Future.value();
+      }
 
       ScmProvider scmProvider = getProviderType('git');
 

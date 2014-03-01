@@ -206,6 +206,10 @@ class FileStatus {
   String headSha;
   String sha;
   int size;
+
+  /**
+   * The number of milliseconds since the Unix epoch.
+   */
   int modificationTime;
 
   /**

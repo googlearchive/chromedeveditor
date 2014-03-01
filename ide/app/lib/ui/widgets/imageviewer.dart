@@ -206,6 +206,7 @@ class ImageViewer implements Editor {
 
   StreamController _dirtyController = new StreamController.broadcast();
   Stream get onDirtyChange => _dirtyController.stream;
+  Stream get onModification => _dirtyController.stream;
   bool get dirty => false;
   Future save() {
     return new Future.value();

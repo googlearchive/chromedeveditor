@@ -22,10 +22,16 @@ import 'lib/jobs.dart';
 void main() {
   isTestMode().then((testMode) {
     polymer.initPolymer().run(() {
-      createSparkZone().runGuarded(() {
+      // Don't set up the zone exception handler if we're running in dev mode.
+      if (testMode) {
         SparkPolymer spark = new SparkPolymer._(testMode);
         spark.start();
-      });
+      } else {
+        createSparkZone().runGuarded(() {
+          SparkPolymer spark = new SparkPolymer._(testMode);
+          spark.start();
+        });
+      }
     });
   });
 }
