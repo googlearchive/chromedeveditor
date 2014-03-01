@@ -399,7 +399,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1618,25 +1618,33 @@ class _HarnessPushJob extends Job {
   }
 }
 
-class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
+class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
+  var selectedItem;
   HtmlElement _propertiesElement;
 
-  ProjectPropertiesAction(Spark spark, Element dialog)
+  PropertiesAction(Spark spark, Element dialog)
       : super(spark, 'project-properties', 'Properties…', dialog) {
     _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
   }
 
   void _invoke([List context]) {
-    project = context.first;
+    selectedItem = context.first;
+    project = context.first.project;
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
 
   Future _buildProperties() {
-    _addProperty(_propertiesElement, 'Name', project.name);
-    _addProperty(_propertiesElement, 'Location', project.entry.fullPath);
+    if (selectedItem is ws.Project) {
+      _addProperty(_propertiesElement, 'Type', 'Project');
+    } else if (selectedItem is ws.Folder) {
+      _addProperty(_propertiesElement, 'Type', 'Folder');
+    } else if (selectedItem is ws.File) {
+      _addProperty(_propertiesElement, 'Type', 'File');
+    }
 
+    _addProperty(_propertiesElement, 'Location', selectedItem.entry.fullPath);
     GitScmProjectOperations gitOperations =
         spark.scmManager.getScmOperationsFor(project);
 
@@ -1668,7 +1676,7 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAc
 
   String get category => 'resource';
 
-  bool appliesTo(context) => _isProject(context);
+  bool appliesTo(context) => true;
 }
 
 /* Git operations */
