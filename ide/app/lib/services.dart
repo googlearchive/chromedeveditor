@@ -110,9 +110,6 @@ class TestService extends Service {
         .then((ServiceActionEvent event) => event.data['contents']);
   }
 
-  Future<String> analyzerSdkTest() => _sendAction("analyzerSdkTest")
-      .then((ServiceActionEvent event) => event.data['success']);
-
   // TODO(ericarnold): Include analyzer_tests.
 }
 

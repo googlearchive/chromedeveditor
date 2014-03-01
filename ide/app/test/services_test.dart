@@ -62,14 +62,6 @@ defineTests() {
         expect(true, equals(true));
       });
     });
-
-    test('analyzer test', () {
-      TestService testService = services.getService("test");
-
-      return testService.analyzerSdkTest()
-          .then((success) => expect(success, isTrue));
-    });
-
   });
 
   group('chrome service', () {
