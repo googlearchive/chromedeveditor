@@ -209,7 +209,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Future<ChromeDartSdk> _dartSdkFuture;
   Future<ChromeDartSdk> get dartSdkFuture {
     if (_dartSdkFuture == null) {
-      _dartSdkFuture = createSdk();
+      _dartSdkFuture = _isolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+          .then((List<int> sdkContents) => createSdk(sdkContents));
     }
     return _dartSdkFuture;
   }

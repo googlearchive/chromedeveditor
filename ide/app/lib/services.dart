@@ -185,7 +185,7 @@ class AnalyzerService extends Service {
 
   Future<Map<ws.File, List<AnalysisError>>>
       buildFiles(Iterable<ws.File> dartFiles) {
-    return _sendAction("buildFiles", {"files": _filesToUuid(dartFiles)})
+    return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
     .then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors =
           event.data['errors'];
