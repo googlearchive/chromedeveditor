@@ -112,11 +112,11 @@ class SparkSplitter extends SparkWidget {
   void _setThickness() {
     final sizeStr = '${size}px';
     if (_isHorizontal) {
-      this.style.height = sizeStr;
-      this.style.width = "auto";
+      style.height = sizeStr;
+      style.width = "auto";
     } else {
-      this.style.height = "auto";
-      this.style.width = sizeStr;
+      style.height = "auto";
+      style.width = sizeStr;
     }
   }
 
