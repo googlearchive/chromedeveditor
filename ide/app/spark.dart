@@ -1624,10 +1624,12 @@ class ProjectPropertiesAction extends PropertiesAction {
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Type', 'Project');
     return super._buildProperties().then((_) {
-      _postOrder(selectedItem as ws.Folder);
+      if (gitOperations != null) {
+        _calculateScmStatus(selectedItem as ws.Folder);
+        _addProperty(_propertiesElement, 'Git Status',
+            'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
+      }
 
-      _addProperty(_propertiesElement, 'State',
-          'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
     });
   }
 
@@ -1642,10 +1644,13 @@ class FolderPropertiesAction extends PropertiesAction {
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Type', 'Folder');
     return super._buildProperties().then((_) {
-      _postOrder(selectedItem as ws.Folder);
+      if (gitOperations != null) {
+        _calculateScmStatus(selectedItem as ws.Folder);
 
-      _addProperty(_propertiesElement, 'State',
-          'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
+        _addProperty(_propertiesElement, 'Git Status',
+            'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
+      }
+
     });
   }
 
@@ -1661,7 +1666,7 @@ class FilePropertiesAction extends PropertiesAction {
     _addProperty(_propertiesElement, 'Type', 'File');
     return super._buildProperties().then((_) {
       String state = gitOperations.getFileStatus(selectedItem).toString();
-      _addProperty(_propertiesElement, 'State', state);
+      _addProperty(_propertiesElement, 'Git State', state);
     });
   }
 
@@ -1719,10 +1724,11 @@ abstract class PropertiesAction extends SparkActionWithDialog implements Context
     div.children.addAll([label, element]);
   }
 
-  void _postOrder(ws.Folder folder) {
+  // Calculate sub-folder status by PostOrder.
+  void _calculateScmStatus(ws.Folder folder) {
     folder.getChildren().forEach((resource) {
       if (resource is ws.Folder) {
-         _postOrder(resource);
+        _calculateScmStatus(resource);
       } else if (resource is ws.File) {
         FileStatus status = gitOperations.getFileStatus(resource);
         if (status == FileStatus.MODIFIED) {
