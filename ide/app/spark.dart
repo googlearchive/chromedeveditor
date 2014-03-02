@@ -250,7 +250,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     // Track logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
-      if (r.loggerName == 'spark.tests') return;
       if (!developerMode && r.level <= Level.INFO) return;
 
       print(r.toString() + (r.error != null ? ', ${r.error}' : ''));

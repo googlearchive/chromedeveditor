@@ -44,7 +44,7 @@ class TestDriver {
    */
   Future<bool> runTests() {
     if (_logListener == null) {
-      _logListener = _logger.onRecord.listen((record) => print(record.toString()));
+      //_logListener = _logger.onRecord.listen((record) => print(record.toString()));
       _createTestUI();
     }
 
