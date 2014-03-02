@@ -94,9 +94,9 @@ class SparkWidget extends PolymerElement {
   static Iterable<Node> inlineNestedContentNodes(ContentElement content) {
     final List<Node> dn = content.getDistributedNodes();
     final Iterable<Node> fdn = dn.where(
-        (Element e) => e.localName != "template");
+        (Node e) => (e is Element) && e.localName != "template");
     final Iterable<Node> edn = fdn.expand(
-        (Element e) => e is ContentElement ?
+        (Node e) => e is ContentElement ?
             inlineNestedContentNodes(e) : [e]);
     return edn;
   }

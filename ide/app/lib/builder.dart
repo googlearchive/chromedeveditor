@@ -52,22 +52,24 @@ class BuilderManager {
     if (_timer != null) {
       _timer.cancel();
     }
+
     // Bundle up changes for ~50ms.
     _timer = new Timer(new Duration(milliseconds: 50), _runBuild);
   }
 
   void _runBuild() {
     ResourceChangeEvent event = _combineEvents(_events);
-
     _events.clear();
+
+    _logger.info('starting build for ${event.changes}');
+
     _buildRunning = true;
 
-    Future.forEach(builders, (builder) {
-      Completer completer = new Completer();
-      _BuildJob job = new _BuildJob(event, builder, completer);
-      jobManager.schedule(job);
-      return completer.future;
-    }).then((_) {
+    Completer completer = new Completer();
+    _BuildJob job = new _BuildJob(event, builders.toList(), completer);
+    jobManager.schedule(job);
+
+    completer.future.then((_) {
       _buildRunning = false;
       if (_events.isNotEmpty) {
         _startTimer();
@@ -91,25 +93,26 @@ abstract class Builder {
 
 class _BuildJob extends Job {
   final ResourceChangeEvent event;
-  final Builder builder;
+  final List<Builder> builders;
   final Completer completer;
 
-  _BuildJob(this.event, this.builder, this.completer) : super('Building…');
+  _BuildJob(this.event, this.builders, this.completer) : super('Building…');
 
-  Future<Job> run(ProgressMonitor monitor) {
-    Future f = builder.build(event, monitor);
-    assert(f != null);
-    assert(f is Future);
-    return f.then((_) {
+  Future run(ProgressMonitor monitor) {
+    return Future.forEach(builders, (Builder builder) {
+      Future f = builder.build(event, monitor);
+      assert(f != null);
+      assert(f is Future);
+      return f;
+    }).catchError((e, st) {
+      _logger.severe('Exception from build manager', e, st);
+    }).whenComplete(() {
       completer.complete();
-      return this;
-    }).catchError((e) {
-      _logger.log(Level.SEVERE, 'Exception from builder', e);
-      completer.complete();
-      return this;
     });
   }
 }
+
+// TODO: combine events better -
 
 ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
   List<ChangeDelta> deltas = [];

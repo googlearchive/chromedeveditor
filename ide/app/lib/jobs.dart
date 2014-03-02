@@ -6,6 +6,10 @@ library spark.jobs;
 
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+
+final Logger _logger = new Logger('spark.jobs');
+
 /**
  * A Job manager. This class can be used to schedule jobs, and provides event
  * notification for job progress.
@@ -18,8 +22,8 @@ class JobManager {
   List<Job> _waitingJobs = new List<Job>();
 
   /**
-   * Will schedule a [job] after all other queued jobs.  If no [Job] is
-   * currently waiting, it run [job].
+   * Will schedule a [job] after all other queued jobs. If no [Job] is currently
+   * waiting, [job] will run.
    */
   void schedule(Job job) {
     _waitingJobs.add(job);
@@ -41,22 +45,34 @@ class JobManager {
 
   void _scheduleNextJob() {
     if (!_waitingJobs.isEmpty) {
-      Timer.run(() => _runNextJob());
+      Job job = _waitingJobs.removeAt(0);
+      Timer.run(() => _runNextJob(job));
     }
   }
 
-  void _runNextJob() {
-    _runningJob = _waitingJobs.removeAt(0);
+  void _runNextJob(Job job) {
+    _runningJob = job;
 
     _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
     _jobStarted(_runningJob);
 
-    Future future = _runningJob.run(monitor).whenComplete(() {
-      _jobFinished(_runningJob);
-      _runningJob = null;
+    Stopwatch timer = new Stopwatch()..start();
+    _logger.info("'${_runningJob}' started");
 
+    try {
+      _runningJob.run(monitor).catchError((e, st) {
+        _logger.severe("'${_runningJob}' errored", e, st);
+      }).whenComplete(() {
+        _logger.info("'${_runningJob}' finished in ${timer.elapsedMilliseconds}ms");
+        _jobFinished(_runningJob);
+        _runningJob = null;
+        _scheduleNextJob();
+      });
+    } catch (e, st) {
+      _logger.severe('Error running job ${_runningJob}', e, st);
+      _runningJob = null;
       _scheduleNextJob();
-    });
+    }
   }
 
   void _jobStarted(Job job) {
