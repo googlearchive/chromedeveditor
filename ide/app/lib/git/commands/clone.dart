@@ -21,11 +21,13 @@ import '../pack.dart';
 import '../pack_index.dart';
 import '../upload_pack_parser.dart';
 import '../utils.dart';
+import '../../utils.dart';
 
 /**
  * This class implements the git clone command.
  */
 class Clone {
+  PrintProfiler _stopwatch;
 
   GitOptions _options;
 
@@ -48,6 +50,7 @@ class Clone {
   }
 
   Future clone() {
+    _stopwatch = new PrintProfiler('clone');
 
     HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
         _options.repoUrl, _options.username, _options.password);
@@ -56,6 +59,8 @@ class Clone {
       return  _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
         return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
+          logger.info(_stopwatch.emit('fetchUploadRefs'));
+
           if (refs.isEmpty) {
             return _createInitialConfig(null, null);
           }
@@ -84,6 +89,9 @@ class Clone {
                 localHeadRef = remoteHeadRef;
               }
             }
+
+            logger.info(_stopwatch.emit('_writeRefs'));
+
             return _processClone(gitDir, localHeadRef, fetcher);
           });
         }, onError: (e) {
@@ -91,6 +99,8 @@ class Clone {
           _options.root.getDirectory(".git").then(
               (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively());
           throw "unable to load remote repo";
+        }).whenComplete(() {
+          logger.info(_stopwatch.finish());
         });
       });
     });
@@ -193,21 +203,28 @@ class Clone {
           String packNameSha = shaBytesToString(sha1.close());
 
           String packName = 'pack-${packNameSha}';
+
+          logger.info(_stopwatch.emit('create HEAD'));
+
           return gitDir.createDirectory('objects').then(
               (chrome.DirectoryEntry objectsDir) {
             return _createPackFiles(objectsDir, packName, packData,
                 packIdxData).then((_) {
+              logger.info(_stopwatch.emit('createPackFiles'));
               PackIndex packIdx = new PackIndex(packIdxData.buffer);
               Pack pack = new Pack(packData, _options.store);
-              _options.store.loadWith(objectsDir, [new PackEntry(pack,
-                  packIdx)]);
+              _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
               //TODO add progress
               //progress({pct: 95, msg: "Building file tree from pack. Be patient..."});
               return _createCurrentTreeFromPack(_options.root, _options.store,
                   localHeadRef.sha).then((_) {
+                logger.info(_stopwatch.emit('createCurrentTreeFromPack'));
                 return _createInitialConfig(result.shallow, localHeadRef)
                     .then((_) {
-                  return _options.store.index.reset(true);
+                  logger.info(_stopwatch.emit('createInitialConfig'));
+                  return _options.store.index.reset(true).then((_) {
+                    logger.info(_stopwatch.emit('index.reset()'));
+                  });
                 });
               });
             });

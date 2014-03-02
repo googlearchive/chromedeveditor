@@ -300,7 +300,7 @@ class Workspace extends Container {
         existingPaths[root.resource.path] = root;
       }
     }
-    
+
     // Add new roots from syncFS.
     futures.add(_syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
       List<Future> newAdditions = [];
@@ -311,7 +311,7 @@ class Workspace extends Container {
           newAdditions.add(link(new SyncFolderRoot(entry)));
         }
       }
-      
+
       // Remove deleted syncFS roots.
       for(String path in existingPaths.keys) {
         if (!newPaths.contains(path)) {
@@ -323,10 +323,10 @@ class Workspace extends Container {
 
       return Future.wait(newAdditions);
     }));
-    
+
     return Future.wait(futures);
   }
-  
+
   /**
    * Perform the refresh and mark refresh as being in progress.
    */
@@ -341,7 +341,7 @@ class Workspace extends Container {
       }
     });
   }
-  
+
   /**
    * If a timer has not been created for a refresh of syncFS files, create one.
    */

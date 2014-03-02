@@ -42,7 +42,7 @@ defineTests() {
 
     // This test will time out if zlib deflate is very slow.
     test('speed test', () {
-      PrintProfiler timer = new PrintProfiler('zlib test', quiet: true);
+      PrintProfiler timer = new PrintProfiler('zlib test');
 
       StringBuffer buf = new StringBuffer();
       for (int i = 0; i < 10000; i++) {
