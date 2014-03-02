@@ -391,7 +391,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new FilePropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new FolderPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1614,13 +1616,68 @@ class _HarnessPushJob extends Job {
   }
 }
 
-class PropertiesAction extends SparkActionWithDialog implements ContextAction {
+class ProjectPropertiesAction extends PropertiesAction {
+  ProjectPropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'project-properties', dialog) {
+  }
+
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'Type', 'Project');
+    return super._buildProperties().then((_) {
+      _postOrder(selectedItem as ws.Folder);
+
+      _addProperty(_propertiesElement, 'State',
+          'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
+    });
+  }
+
+  bool appliesTo(context) => _isProject(context);
+}
+
+class FolderPropertiesAction extends PropertiesAction {
+  FolderPropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'folder-properties', dialog) {
+  }
+
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'Type', 'Folder');
+    return super._buildProperties().then((_) {
+      _postOrder(selectedItem as ws.Folder);
+
+      _addProperty(_propertiesElement, 'State',
+          'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
+    });
+  }
+
+  bool appliesTo(context) => _isSingleFolder(context) && !_isProject(context);
+}
+
+class FilePropertiesAction extends PropertiesAction {
+  FilePropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'file-properties', dialog) {
+  }
+
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'Type', 'File');
+    return super._buildProperties().then((_) {
+      String state = gitOperations.getFileStatus(selectedItem).toString();
+      _addProperty(_propertiesElement, 'State', state);
+    });
+  }
+
+  bool appliesTo(context) => _isFileList(context) && _isSingleResource(context);
+}
+
+abstract class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   var selectedItem;
   HtmlElement _propertiesElement;
+  GitScmProjectOperations gitOperations;
+  int modifiedStatusCount;
+  int untrackedStatusCount;
 
-  PropertiesAction(Spark spark, Element dialog)
-      : super(spark, 'project-properties', 'Properties…', dialog) {
+  PropertiesAction(Spark spark, String id, Element dialog)
+      : super(spark, id, 'Properties…', dialog) {
     _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
   }
 
@@ -1628,26 +1685,20 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     selectedItem = context.first;
     project = context.first.project;
     _propertiesElement.innerHtml = '';
+    modifiedStatusCount = 0;
+    untrackedStatusCount = 0;
     _buildProperties().then((_) => _show());
   }
 
   Future _buildProperties() {
-    if (selectedItem is ws.Project) {
-      _addProperty(_propertiesElement, 'Type', 'Project');
-    } else if (selectedItem is ws.Folder) {
-      _addProperty(_propertiesElement, 'Type', 'Folder');
-    } else if (selectedItem is ws.File) {
-      _addProperty(_propertiesElement, 'Type', 'File');
-    }
-
     _addProperty(_propertiesElement, 'Location', selectedItem.entry.fullPath);
-    GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(project);
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
 
     if (gitOperations != null) {
       return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
         final String repoUrl = map['url'];
         _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+        return new Future.value();
       }).catchError((e) {
         _addProperty(_propertiesElement, 'Git Repository',
             '<error retrieving Git data>');
@@ -1666,6 +1717,21 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
         ..className = 'form-control-static';
 
     div.children.addAll([label, element]);
+  }
+
+  void _postOrder(ws.Folder folder) {
+    folder.getChildren().forEach((resource) {
+      if (resource is ws.Folder) {
+         _postOrder(resource);
+      } else if (resource is ws.File) {
+        FileStatus status = gitOperations.getFileStatus(resource);
+        if (status == FileStatus.MODIFIED) {
+          modifiedStatusCount += 1;
+        } else if (status == FileStatus.UNTRACKED) {
+          untrackedStatusCount += 1;
+        }
+      }
+    });
   }
 
   void _commit() { }
