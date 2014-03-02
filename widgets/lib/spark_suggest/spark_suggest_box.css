@@ -6,6 +6,7 @@
 
 #text-box {
   height: 31px;
+  width: 350px;
 }
 
 #suggestion-list-overlay {
@@ -13,26 +14,26 @@
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 3px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-left: 55px;
-  margin-top: 12px;
+  margin-top: 7px;
   padding: 5px 0;
-  width: 400px;
+  width: 350px;
   max-height: 350px;
   overflow-y: scroll;
-  -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
+  overflow-x: hidden;
 }
 
 #suggestion-list-menu {
   border: none;
   display: block;
   box-sizing: border-box;
-  margin: 5px 0;
+  margin: 0 0;
 }
 
 .suggestion-item {
-  padding: 7px 20px;
+  padding: 7px 12px;
   font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .suggestion-item[active] {
@@ -42,6 +43,4 @@
 
 .text-muted {
   color: #bdbdbd;
-  float: right;
-  overflow: hidden;
 }
