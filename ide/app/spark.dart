@@ -382,6 +382,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
+    actionManager.registerAction(new GitPullAction(this, getDialogElement("#gitPullDialog")));
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -1789,6 +1790,37 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(context) => _isUnderScmProject(context);
 }
 
+class GitPullAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project project;
+  GitScmProjectOperations gitOperations;
+
+  GitPullAction(Spark spark, Element dialog)
+      : super(spark, "git-pull", "Pull Changes…", dialog) {
+  }
+
+  void _invoke([context]) {
+    project = context.first.project;
+    spark.syncPrefs.getValue("git-user-info").then((String value) {
+      gitOperations = spark.scmManager.getScmOperationsFor(project);
+      _show();
+    });
+  }
+
+  void _commit() {
+    _startJob();
+  }
+
+  void _startJob() {
+    // TODO(grv): add verify checks.
+    _GitPullJob job = new _GitPullJob(gitOperations, spark);
+    spark.jobManager.schedule(job);
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isUnderScmProject(context);
+}
+
 class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
@@ -2073,6 +2105,23 @@ class _GitCommitJob extends Job {
       spark.showSuccessMessage('Committed changes');
     }).catchError((e) {
       spark.showErrorMessage('Error committing changes', e.toString());
+    });
+  }
+}
+
+class _GitPullJob extends Job {
+  GitScmProjectOperations gitOperations;
+  Spark spark;
+
+  _GitPullJob(this.gitOperations, this.spark) : super("Pulling…");
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    return gitOperations.pull().then((_) {
+      spark.showSuccessMessage('Pull successful!!');
+    }).catchError((e) {
+      spark.showErrorMessage('Error in pulling changes', e.toString());
     });
   }
 }

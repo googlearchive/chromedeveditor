@@ -328,6 +328,30 @@
         </spark-button>
       </div>
     </spark-modal>
+    
+        <!-- Git Pull dialog -->
+    <spark-modal id="gitPullDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Git Pull</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="gitPullBranchName">Pull from Branch</label>
+          <input id="gitPullBranchName" type="text" class="form-control" 
+            value="master" disabled autofocus>
+          <span class="help-block">Create a new git branch.</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal">
+           Pull
+        </spark-button>
+      </div>
+    </spark-modal>
 
     <!-- Git Checkout dialog -->
     <spark-modal id="gitCheckoutDialog" class="dialog spark-overlay-scale-slideup">
