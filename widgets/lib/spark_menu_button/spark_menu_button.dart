@@ -36,7 +36,7 @@ class SparkMenuButton extends SparkWidget {
   }
 
   //* Toggle the opened state of the dropdown.
-  void toggle([bool inOpened]) {
+  void toggle([var event, bool inOpened]) {
     final bool newOpened = inOpened != null ? inOpened : !opened;
     if (newOpened != opened) {
       opened = newOpened;
@@ -54,9 +54,9 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void open() => toggle(true);
+  void open() => toggle(null, true);
 
-  void close() => toggle(false);
+  void close() => toggle(null, false);
 
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
   //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
