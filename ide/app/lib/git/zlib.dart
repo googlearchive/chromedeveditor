@@ -12,12 +12,10 @@ import 'package:chrome/src/common_exp.dart' as chrome;
  * Encapsulates the result returned by js zlib library.
  */
 class ZlibResult {
-  final chrome.ArrayBuffer buffer;
-  final int expectedLength;
+  final List<int> data;
+  final int readLength;
 
-  ZlibResult(this.buffer, [this.expectedLength]);
-
-  List<int> get data => buffer.getBytes();
+  ZlibResult(this.data, [this.readLength]);
 }
 
 /**
@@ -29,17 +27,21 @@ class Zlib {
   /**
    * Inflates a zlib deflated byte stream.
    */
-  static ZlibResult inflate(List<int> data, [int expectedLength]) {
+  static ZlibResult inflate(List<int> data, {int expectedLength}) {
     Map<String, int> options = {};
     if (expectedLength != null) {
       options['bufferSize'] = expectedLength;
     }
-    js.JsObject inflater = new js.JsObject(
-        _zlib['Inflate'], [_listToJs(data), options]);
+    js.JsObject inflater = new js.JsObject(_zlib['Inflate'], [_listToJs(data), options]);
     inflater['verify'] = true;
     var buffer = inflater.callMethod('decompress');
-    return new ZlibResult(
-        new chrome.ArrayBuffer.fromProxy(buffer), inflater['ip']);
+    return new ZlibResult(new chrome.ArrayBuffer.fromProxy(buffer).getBytes(),
+        inflater['ip']);
+
+//    archive.InputStream stream = new archive.InputStream(data);
+//    archive.Inflate inflater = new archive.Inflate.buffer(stream); //, expectedLength);
+//
+//    return new ZlibResult(inflater.getBytes(), stream.position);
   }
 
   /**
@@ -49,7 +51,7 @@ class Zlib {
     js.JsObject deflater = new js.JsObject(_zlib['Deflate'], [_listToJs(data)]);
     // TODO: This should be a JsObject, but Dartium returns an Uint8List.
     var buffer = deflater.callMethod('compress');
-    return new ZlibResult(chrome.ArrayBuffer.create(buffer));
+    return new ZlibResult(chrome.ArrayBuffer.create(buffer).getBytes());
   }
 
   static dynamic _listToJs(List<int> data) => new js.JsArray.from(data);

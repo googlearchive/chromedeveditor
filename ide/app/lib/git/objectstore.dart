@@ -246,8 +246,8 @@ class ObjectStore {
 
     return this._findLooseObject(sha).then((chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
-        chrome.ArrayBuffer inflated = Zlib.inflate(
-            new Uint8List.fromList(buffer.getBytes()), 0).buffer;
+        chrome.ArrayBuffer inflated = new chrome.ArrayBuffer.fromBytes(
+            Zlib.inflate(new Uint8List.fromList(buffer.getBytes())).data);
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
           // TODO do trim buffer and return completer ;
           var buff;
@@ -621,7 +621,8 @@ class ObjectStore {
         return fileEntry.file().then((File file) {
 
           Future<String> writeContent() {
-            chrome.ArrayBuffer content = Zlib.deflate(store).buffer;
+            chrome.ArrayBuffer content = new chrome.ArrayBuffer.fromBytes(
+                Zlib.deflate(store).data);
             // TODO: Use fileEntry.createWriter() once implemented in ChromeGen.
             return fileEntry.writeBytes(content).then((_) {
               return digest;

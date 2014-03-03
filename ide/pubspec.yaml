@@ -9,6 +9,7 @@ dependencies:
   ace: '>=0.3.0 <0.4.0'
   analyzer: '>=0.11.0 <0.12.0'
   archive: '>=1.0.15 <1.1.0'
+  benchmark_harness: '>=1.0.4 <2.0.0'
   bootjack: any
   browser: any
   chrome: '>=0.5.1 <0.6.0'
