@@ -218,10 +218,11 @@ class ChromeDeveloperPrivate extends ChromeApi {
     _developerPrivate.callMethod('openDevTools', [jsify(dict)]);
   }
 
-  Stream<EventData> get onItemStateChanged => _onItemStateChanged.stream;
-
-  final ChromeStreamController<EventData> _onItemStateChanged =
-      new ChromeStreamController<EventData>.oneArg(_developerPrivate, 'onItemStateChanged', _createEventData);
+//  Stream<EventData> get onItemStateChanged => _onItemStateChanged.stream;
+//
+//  final ChromeStreamController<EventData> _onItemStateChanged =
+//      new ChromeStreamController<EventData>.oneArg(() => _developerPrivate,
+//          'onItemStateChanged', _createEventData);
 
   void _throwNotAvailable() {
     throw new UnsupportedError("'chrome.developerPrivate' is not available");

@@ -6,7 +6,6 @@ library git.zlib;
 
 import 'dart:js' as js;
 
-import 'package:archive/archive.dart' as archive;
 import 'package:chrome/src/common_exp.dart' as chrome;
 
 /**

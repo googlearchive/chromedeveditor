@@ -10,8 +10,11 @@ import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:logging/logging.dart';
 
 import 'file_operations.dart';
+
+Logger logger = new Logger('spark.git');
 
 /**
  * Convertes [sha] string to sha bytes.

@@ -373,8 +373,6 @@ class Workspace extends Container {
    * Read the sync file system and restore entries.
    */
   Future _restoreSyncFs() {
-    _whenAvailableSyncFs.complete(null);
-    return new Future.value(null);
     Stopwatch stopwatch = new Stopwatch()..start();
     Completer completer = new Completer();
 
