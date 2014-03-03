@@ -9,7 +9,6 @@ import 'dart:isolate';
 
 import 'analyzer_common.dart';
 import 'workspace.dart' as ws;
-
 import 'services/compiler.dart';
 import 'utils.dart';
 
@@ -27,8 +26,8 @@ class Services {
   Services(this._workspace) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
-    registerService(new ExampleService(this, _isolateHandler));
     registerService(new AnalyzerService(this, _isolateHandler));
+    registerService(new TestService(this, _isolateHandler));
     _chromeService = new ChromeServiceImpl(this, _isolateHandler);
 
     _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event){
@@ -78,16 +77,40 @@ abstract class Service {
   }
 }
 
-class AnalyzerService extends Service {
-  String serviceId = "analyzer";
+class TestService extends Service {
+  String serviceId = "test";
 
-  AnalyzerService(Services services, _IsolateHandler handler)
+  TestService(Services services, _IsolateHandler handler)
       : super(services, handler);
 
-  Future<Map<ws.File, List<AnalysisError>>> buildFiles(
-      Iterable<ws.File> dartFiles) {
-    return new Future.value({});
+  Future<String> shortTest(String name) {
+    return _sendAction("shortTest", {"name": name})
+        .then((ServiceActionEvent event) {
+      return event.data['response'];
+    });
   }
+
+  Future<String> longTest(String name) {
+    return _sendAction("longTest", {"name": name})
+        .then((ServiceActionEvent event) {
+      return event.data['response'];
+    });
+  }
+
+  /**
+   * For testing ChromeService.getFileContents on the isolate side.
+   *
+   * Sends a [File] reference (via uuid) to the isolate which then then makes
+   * [ChromeService].[getFileContents()] call with that uuid which should send
+   * back the contents of the file to the isolate, which will return the
+   * contents to us for verification.
+   */
+  Future<String> readText(ws.File file) {
+    return _sendAction("readText", {"fileUuid": file.uuid})
+        .then((ServiceActionEvent event) => event.data['contents']);
+  }
+
+  // TODO(ericarnold): Include analyzer_tests.
 }
 
 class CompilerService extends Service {
@@ -122,40 +145,42 @@ class CompilerService extends Service {
   }
 }
 
-class ExampleService extends Service {
-  String serviceId = "example";
+class AnalyzerService extends Service {
+  String serviceId = "analyzer";
 
-  ExampleService(Services services, _IsolateHandler handler)
-      : super(services, handler);
+  AnalyzerService(Services services, _IsolateHandler handler)
+  : super(services, handler);
 
-  Future<String> shortTest(String name) {
-    return _sendAction("shortTest", {"name": name})
-        .then((ServiceActionEvent event) {
-      return event.data['response'];
+  Future<Map<ws.File, List<AnalysisError>>>
+      buildFiles(Iterable<ws.File> dartFiles) {
+    return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
+    .then((ServiceActionEvent event) {
+      Map<String, List<Map>> responseErrors =
+          event.data['errors'];
+
+      Map<ws.File, List<AnalysisError>> errorsPerFile = {};
+
+      for (String uuid in responseErrors.keys) {
+        List<AnalysisError> errors =
+            responseErrors[uuid].map((Map errorData) =>
+            new AnalysisError.fromMap(errorData)).toList();
+        errorsPerFile[_uuidToFile(uuid)] = errors;
+      }
+
+      return errorsPerFile;
     });
   }
 
-  Future<String> longTest(String name) {
-    return _sendAction("longTest", {"name": name})
-        .then((ServiceActionEvent event) {
-      return event.data['response'];
-    });
+  Future dispose() {
+    return _sendAction("dispose")
+        .then((_) => null);
   }
 
-  /**
-   * For testing ChromeService.getFileContents on the isolate side.
-   *
-   * Sends a [File] reference (via uuid) to the isolate which then then makes
-   * [ChromeService].[getFileContents()] call with that uuid which should send
-   * back the contents of the file to the isolate, which will return the
-   * contents to us for verification.
-   */
-  Future<String> readText(ws.File file) {
-    return _sendAction("readText", {"fileUuid": file.uuid})
-        .then((ServiceActionEvent event) {
-          return event.data['contents'];
-        });
-  }
+  ws.File _uuidToFile(String uuid) =>
+      _services._workspace.restoreResource(uuid);
+
+  List<String> _filesToUuid(Iterable<ws.File> files) =>
+      files.map((f) => f.uuid).toList();
 }
 
 /**
