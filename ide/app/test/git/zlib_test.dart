@@ -26,7 +26,7 @@ defineTests() {
       Uint8List buffer2 = new Uint8List.fromList(deflated.data);
 
       // inflate the string back.
-      ZlibResult result = Zlib.inflate(buffer2, null);
+      ZlibResult result = Zlib.inflate(buffer2);
 
       String out = UTF8.decode(result.data);
       expect(out, ZLIB_INPUT_STRING);
@@ -56,7 +56,7 @@ defineTests() {
       timer.emit('encode');
       ZlibResult result = Zlib.deflate(data);
       timer.emit('deflate');
-      result = Zlib.inflate(result.data, null);
+      result = Zlib.inflate(result.data);
       timer.emit('inflate');
       String decodedString = UTF8.decoder.convert(result.data);
       timer.emit('decode');

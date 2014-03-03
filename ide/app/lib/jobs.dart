@@ -6,9 +6,11 @@ library spark.jobs;
 
 import 'dart:async';
 
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 final Logger _logger = new Logger('spark.jobs');
+final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
  * A Job manager. This class can be used to schedule jobs, and provides event
@@ -63,7 +65,8 @@ class JobManager {
       _runningJob.run(monitor).catchError((e, st) {
         _logger.severe("'${_runningJob}' errored", e, st);
       }).whenComplete(() {
-        _logger.info("'${_runningJob}' finished in ${timer.elapsedMilliseconds}ms");
+        int ms = timer.elapsedMilliseconds;
+        _logger.info("'${_runningJob}' finished in ${_nf.format(ms)}ms");
         _jobFinished(_runningJob);
         _runningJob = null;
         _scheduleNextJob();

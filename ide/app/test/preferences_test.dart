@@ -63,22 +63,24 @@ defineTests() {
       });
     });
 
-    test('clearSync', () {
-      syncStore.setValue('foo3', 'bar3');
-      syncStore.setValue('foo4', 'bar4');
-      syncStore.setValue('foo5', 'bar5');
-      return syncStore.clear().then((_) {
-        return syncStore.getValue('foo3').then((value) {
-          expect(value, null);
-          return syncStore.getValue('foo4');
-        }).then((foo4_value) {
-          expect(foo4_value, null);
-          return syncStore.getValue('foo5');
-        }).then((foo5_value) {
-          expect(foo5_value, null);
-        });
-      });
-    });
+    // Disabled this test, just so that running the tests doesn't clear out our
+    // settings each time.
+//    test('clearSync', () {
+//      syncStore.setValue('foo3', 'bar3');
+//      syncStore.setValue('foo4', 'bar4');
+//      syncStore.setValue('foo5', 'bar5');
+//      return syncStore.clear().then((_) {
+//        return syncStore.getValue('foo3').then((value) {
+//          expect(value, null);
+//          return syncStore.getValue('foo4');
+//        }).then((foo4_value) {
+//          expect(foo4_value, null);
+//          return syncStore.getValue('foo5');
+//        }).then((foo5_value) {
+//          expect(foo5_value, null);
+//        });
+//      });
+//    });
 
     test('removeSync', () {
       MapPreferencesStore mapStore = new MapPreferencesStore();
