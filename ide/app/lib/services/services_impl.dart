@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'analyzer.dart';
-import '../analyzer_common.dart' as common;
+import 'services_common.dart' as common;
 import 'compiler.dart';
 import '../dart/sdk.dart';
 import '../utils.dart';
