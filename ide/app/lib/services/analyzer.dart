@@ -236,19 +236,19 @@ class SdkSource extends Source {
   String toString() => fullName;
 }
 
-class File {
+class ServiceFile {
   String uuid;
   String name;
   String fullPath;
 
-  File(this.uuid, this.fullPath, this.name);
+  ServiceFile(this.uuid, this.fullPath, this.name);
 }
 
 /**
  * A [Source] implementation based on HTML FileEntrys.
  */
 class FileSource extends Source {
-  final File file;
+  final ServiceFile file;
 
   FileSource(this.file);
 

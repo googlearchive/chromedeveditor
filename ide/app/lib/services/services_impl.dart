@@ -274,15 +274,13 @@ class AnalyzerServiceImpl extends ServiceImpl {
   }
 
   /**
-   * Create markers for a `.dart` file.
+   * Analyzes file and returns a Future with the [AnalyzerResult].
    */
   Future<AnalyzerResult> _processFile(ChromeDartSdk sdk, String fileUuid) {
     return _isolate.chromeService.getFileContents(fileUuid)
         .then((String contents) =>
             analyzeString(sdk, contents, performResolution: false))
-        .then((AnalyzerResult result) {
-            return result;
-    });
+        .then((AnalyzerResult result) => result);
   }
 
 }
