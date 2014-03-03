@@ -59,7 +59,7 @@ class Clone {
       return  _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
         return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-          logger.info(_stopwatch.emit('fetchUploadRefs'));
+          logger.info(_stopwatch.finishCurrentTask('fetchUploadRefs'));
 
           if (refs.isEmpty) {
             return _createInitialConfig(null, null);
@@ -90,7 +90,7 @@ class Clone {
               }
             }
 
-            logger.info(_stopwatch.emit('_writeRefs'));
+            logger.info(_stopwatch.finishCurrentTask('_writeRefs'));
 
             return _processClone(gitDir, localHeadRef, fetcher);
           });
@@ -100,7 +100,7 @@ class Clone {
               (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively());
           throw "unable to load remote repo";
         }).whenComplete(() {
-          logger.info(_stopwatch.finish());
+          logger.info(_stopwatch.finishProfiler());
         });
       });
     });
@@ -204,13 +204,13 @@ class Clone {
 
           String packName = 'pack-${packNameSha}';
 
-          logger.info(_stopwatch.emit('create HEAD'));
+          logger.info(_stopwatch.finishCurrentTask('create HEAD'));
 
           return gitDir.createDirectory('objects').then(
               (chrome.DirectoryEntry objectsDir) {
             return _createPackFiles(objectsDir, packName, packData,
                 packIdxData).then((_) {
-              logger.info(_stopwatch.emit('createPackFiles'));
+              logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
               PackIndex packIdx = new PackIndex(packIdxData.buffer);
               Pack pack = new Pack(packData, _options.store);
               _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
@@ -218,12 +218,12 @@ class Clone {
               //progress({pct: 95, msg: "Building file tree from pack. Be patient..."});
               return _createCurrentTreeFromPack(_options.root, _options.store,
                   localHeadRef.sha).then((_) {
-                logger.info(_stopwatch.emit('createCurrentTreeFromPack'));
+                logger.info(_stopwatch.finishCurrentTask('createCurrentTreeFromPack'));
                 return _createInitialConfig(result.shallow, localHeadRef)
                     .then((_) {
-                  logger.info(_stopwatch.emit('createInitialConfig'));
+                  logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
                   return _options.store.index.reset(true).then((_) {
-                    logger.info(_stopwatch.emit('index.reset()'));
+                    logger.info(_stopwatch.finishCurrentTask('index.reset()'));
                   });
                 });
               });

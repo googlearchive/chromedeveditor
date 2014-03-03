@@ -98,6 +98,7 @@ class NullNotifier implements Notifier {
  */
 class PrintProfiler {
   final String name;
+  final bool printToStdout;
 
   int _previousTaskTime = 0;
   Stopwatch _stopwatch = new Stopwatch();
@@ -105,7 +106,7 @@ class PrintProfiler {
   /**
    * Create a profiler to time a single operation (`name`).
    */
-  PrintProfiler(this.name) {
+  PrintProfiler(this.name, {this.printToStdout: false}) {
     _stopwatch.start();
   }
 
@@ -117,21 +118,25 @@ class PrintProfiler {
   /**
    * Finish the current task and print out that task's elapsed time.
    */
-  String emit(String taskName) {
+  String finishCurrentTask(String taskName) {
     _stopwatch.stop();
     int ms = _stopwatch.elapsedMilliseconds;
     _previousTaskTime += ms;
     _stopwatch.reset();
     _stopwatch.start();
-    return '${name}, ${taskName} ${_nf.format(ms)}ms';
+    String output = '${name}, ${taskName} ${_nf.format(ms)}ms';
+    if (printToStdout) print(output);
+    return output;
   }
 
   /**
    * Stop the timer, and print out the total time for the operation.
    */
-  String finish() {
+  String finishProfiler() {
     _stopwatch.stop();
-    return '${name} total: ${_nf.format(totalElapsedMs())}ms';
+    String output = '${name} total: ${_nf.format(totalElapsedMs())}ms';
+    if (printToStdout) print(output);
+    return output;
   }
 
   /**
