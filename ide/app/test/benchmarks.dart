@@ -15,6 +15,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart';
 
+import '../lib/git/utils.dart';
 import '../lib/git/zlib.dart';
 
 final ScoreEmitter _emitter = new LoggerEmitter();
@@ -24,23 +25,27 @@ Logger _logger = new Logger('spark.benchmarks');
 
 //Dartium:
 // archive inflate :   4.051 ms
-// archive deflate :  20.57 ms
+// archive deflate :  20.570 ms
 // create zip      :  88.936 ms
-// jszlib inflate  :  12.442 ms
-// jszlib deflate  : 440.04 ms
+// git sha         : 295.857 ms (214.900 ms)
+// jszlib inflate  : 304.714 ms
+// jszlib deflate  : 440.040 ms
 
 //dart2js:
-// archive inflate :  40.6 ms
-// archive deflate : 168.25 ms
-// create zip      : 489.8 ms
+// archive inflate :  40.600 ms
+// archive deflate : 168.250 ms
+// create zip      : 489.800 ms
+//
 // jszlib inflate  :  36.161 ms
-// jszlib deflate  : 826 ms
+// jszlib deflate  : 826.000 ms
 
 defineTests() {
   group('benchmarks', () {
     test('archive inflate', () => runBenchmark(new InflateBenchmark()));
     test('archive deflate', () => runBenchmark(new DeflateBenchmark()));
     test('create zip', () => runBenchmark(new CreateZipBenchmark()));
+
+    test('git sha', () => runBenchmark(new GitShaBenchmark()));
 
     test('jszlib inflate', () => runBenchmark(new JszlibInflateBenchmark()));
     test('jszlib deflate', () => runBenchmark(new JszlibDeflateBenchmark()));
@@ -133,6 +138,25 @@ class JszlibDeflateBenchmark extends BenchmarkBase {
 
   void run() {
     ZlibResult result = Zlib.deflate(data);
+  }
+}
+
+class GitShaBenchmark extends BenchmarkBase {
+  List data;
+
+  GitShaBenchmark() : super('git sha', emitter: _emitter);
+
+  void setup() {
+    data = _createData(100000);
+  }
+
+  void run() {
+//    Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
+//      return entry.readBytes().then((chrome.ArrayBuffer content) {
+//        return _getShaStringForData(content.getBytes(), type);
+//      });
+//    }
+    getShaStringForData(data, 'blob');
   }
 }
 
