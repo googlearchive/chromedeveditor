@@ -26,7 +26,7 @@ dependencies:
   spark_widgets:
     path: ../widgets
   tavern:
-    git: git://github.com/tapted/tavern.git
+    git: https://github.com/tapted/tavern.git
   unittest: '>=0.10.0'
   uuid: '>=0.3.0 <0.4.0'
 dev_dependencies:
