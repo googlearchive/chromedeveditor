@@ -12,6 +12,7 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
+//import 'package:tavern/tavern.dart' as tavern;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_status/spark_status.dart';
@@ -250,7 +251,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     // Track logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
-      if (r.loggerName == 'spark.tests') return;
       if (!developerMode && r.level <= Level.INFO) return;
 
       print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
@@ -367,15 +367,15 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     actionManager.registerAction(new NextMarkerAction(this));
     actionManager.registerAction(new PrevMarkerAction(this));
-    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
+    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
-    actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
+    actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
@@ -1059,7 +1059,7 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
     });
   }
 
-  String get category => 'tab';
+  String get category => 'folder';
 
   bool appliesTo(Object object) => _isFileList(object);
 }
@@ -1345,10 +1345,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 }
 
 class PubGetAction extends SparkAction implements ContextAction {
-  PubGetAction(Spark spark) : super(
-      spark, "pub-get", "Pub Get") {
-    enabled = false;
-  }
+  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
 
   void _invoke([context]) {
     ws.Resource resource;
@@ -1358,14 +1355,25 @@ class PubGetAction extends SparkAction implements ContextAction {
     } else {
       resource = context.first;
     }
-    spark.showMessage('Pub Get','TODO: implement this');
+
+    spark.jobManager.schedule(new PubGetJob(spark, resource.project));
   }
 
-  String get category => 'pub';
-
-  bool _appliesTo(ws.Resource resource) =>  resource is ws.File && resource.name == 'pubspec.yaml';
+  String get category => 'application';
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+
+  bool _appliesTo(ws.Resource resource) {
+    if (resource is ws.File && resource.name == 'pubspec.yaml') {
+      return true;
+    }
+
+    if (resource is ws.Project && resource.getChild('pubspec.yaml') != null) {
+      return true;
+    }
+
+    return false;
+  }
 }
 
 class ResourceRefreshAction extends SparkAction implements ContextAction {
@@ -2144,6 +2152,36 @@ class _GitPushJob extends Job {
     }).catchError((e) {
       spark.showErrorMessage('Error while pushing changes', e.toString());
     });
+  }
+}
+
+class PubGetJob extends Job {
+  final Spark spark;
+  final ws.Project project;
+
+  Logger _logger = new Logger('spark.pub');
+
+  PubGetJob(this.spark, this.project) : super('Getting packages…');
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    spark.showMessage('Under Construction', 'Pub Get in progress');
+
+    return new Future.value();
+
+    // Commented out until we get a handle on the compiled JS size.
+//    return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
+//      project.refresh();
+//    }).catchError((e, st) {
+//      spark.showErrorMessage('Error Running Pub Get', '${e}');
+//      _logger.severe('Error Running Pub Get', e, st);
+//    });
+  }
+
+  void _handlePubLog(String line, String level) {
+    // TODO: Dial the logging back.
+    _logger.info(line);
   }
 }
 

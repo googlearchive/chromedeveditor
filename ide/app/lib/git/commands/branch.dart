@@ -31,7 +31,7 @@ class Branch {
   static bool _verifyBranchName(String name) {
     var length = name.length;
     var branchRegex = new RegExp(BRANCH_PATTERN);
-    return name.isNotEmpty && name.matchAsPrefix(name).groupCount;
+    return name.isNotEmpty && name.matchAsPrefix(name) != null;
   }
 
   /**

@@ -6,7 +6,6 @@ library spark.dart_builder;
 
 import 'dart:async';
 
-import '../analyzer_common.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../services.dart';
@@ -21,29 +20,31 @@ class DartBuilder extends Builder {
   DartBuilder(this.services);
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    Iterable<File> dartFiles = event.modifiedFiles.where(
-        (file) => file.name.endsWith('.dart'));
+    List<File> files = event.modifiedFiles.where(
+        (file) => file.name.endsWith('.dart')).toList();
 
-    if (dartFiles.isEmpty) return new Future.value();
+    if (files.isEmpty) return new Future.value();
 
     AnalyzerService analyzer = services.getService("analyzer");
-    return analyzer.buildFiles(dartFiles)
-        .then((Map<File, List<AnalysisError>> errorsForFile) {
-      for (File file in errorsForFile.keys) {
-        try {
-          file.clearMarkers();
 
-          List<AnalysisError> errors = errorsForFile[file];
+    return analyzer.buildFiles(files).then((Map<File, List<AnalysisError>> errors) {
+      Workspace workspace = files.first.workspace;
 
-          for (AnalysisError error in errors) {
-            file.createMarker(
-                'dart', _convertSeverity(error.errorSeverity),
+      workspace.pauseMarkerStream();
+
+      try {
+        files.forEach((f) => f.clearMarkers());
+
+        for (File file in errors.keys) {
+          for (AnalysisError error in errors[file]) {
+            file.createMarker('dart',
+                _convertSeverity(error.errorSeverity),
                 error.message, error.lineNumber,
                 error.offset, error.offset + error.length);
           }
-        } finally {
-          file.workspace.resumeMarkerStream();
         }
+      } finally {
+        workspace.resumeMarkerStream();
       }
     });
   }

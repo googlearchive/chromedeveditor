@@ -300,7 +300,7 @@ class Workspace extends Container {
         existingPaths[root.resource.path] = root;
       }
     }
-    
+
     // Add new roots from syncFS.
     futures.add(_syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
       List<Future> newAdditions = [];
@@ -311,7 +311,7 @@ class Workspace extends Container {
           newAdditions.add(link(new SyncFolderRoot(entry)));
         }
       }
-      
+
       // Remove deleted syncFS roots.
       for(String path in existingPaths.keys) {
         if (!newPaths.contains(path)) {
@@ -323,10 +323,10 @@ class Workspace extends Container {
 
       return Future.wait(newAdditions);
     }));
-    
+
     return Future.wait(futures);
   }
-  
+
   /**
    * Perform the refresh and mark refresh as being in progress.
    */
@@ -341,7 +341,7 @@ class Workspace extends Container {
       }
     });
   }
-  
+
   /**
    * If a timer has not been created for a refresh of syncFS files, create one.
    */
@@ -476,6 +476,8 @@ class Workspace extends Container {
   bool containedBy(Container container) => false;
 
   bool isScmPrivate() => false;
+
+  bool isDerived() => false;
 
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     _roots.removeWhere((root) => root.resource == resource);
@@ -666,6 +668,13 @@ abstract class Resource {
   bool isScmPrivate() => false;
 
   /**
+   * Returns whether the given resource should be considered 'derived'. These
+   * are resources that are created by the tool (like a `build/` directory), and
+   * not by the user.
+   */
+  bool isDerived() => parent != null && parent.isDerived();
+
+  /**
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
    */
@@ -673,7 +682,7 @@ abstract class Resource {
 
   static Iterable<Resource> _workspaceTraversal(Resource r) {
     if (r is Container) {
-      if (r.isScmPrivate()) {
+      if (r.isScmPrivate() || r.isDerived()) {
         return [];
       } else {
         return
@@ -718,6 +727,14 @@ class Folder extends Container {
   }
 
   bool isScmPrivate() => name == '.git' || name == '.svn';
+
+  bool isDerived() {
+    if (name == 'build' && parent is Project) {
+      return true;
+    } else {
+      return super.isDerived();
+    }
+  }
 
   Future _refresh() {
     return _dirEntry.createReader().readEntries().then((List<chrome.Entry> entries) {

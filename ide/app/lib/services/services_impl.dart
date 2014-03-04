@@ -7,6 +7,8 @@ library spark.services_impl;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'analyzer.dart';
+import 'services_common.dart' as common;
 import 'compiler.dart';
 import '../dart/sdk.dart';
 import '../utils.dart';
@@ -55,7 +57,8 @@ class ServicesIsolate {
 
     // Register each ServiceImpl:
     _registerServiceImpl(new CompilerServiceImpl(this));
-    _registerServiceImpl(new ExampleServiceImpl(this));
+    _registerServiceImpl(new TestServiceImpl(this));
+    _registerServiceImpl(new AnalyzerServiceImpl(this));
 
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
@@ -92,7 +95,7 @@ class ServicesIsolate {
         new Completer<ServiceActionEvent>();
 
     ServiceImpl service = getServiceImpl(event.serviceId);
-    service.handleEvent(event).then((ServiceActionEvent responseEvent){
+    service.handleEvent(event).then((ServiceActionEvent responseEvent) {
       if (responseEvent != null) {
         _sendResponse(responseEvent);
         completer.complete();
@@ -127,24 +130,22 @@ class ServicesIsolate {
   }
 }
 
-class ExampleServiceImpl extends ServiceImpl {
-  String get serviceId => "example";
-  ExampleServiceImpl(ServicesIsolate isolate) : super(isolate);
+class TestServiceImpl extends ServiceImpl {
+  String get serviceId => "test";
+  TestServiceImpl(ServicesIsolate isolate) : super(isolate);
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
       case "shortTest":
         return new Future.value(event.createReponse(
             {"response": "short${event.data['name']}"}));
-        break;
       case "readText":
         String fileUuid = event.data['fileUuid'];
         return _isolate.chromeService.getFileContents(fileUuid)
             .then((String contents) =>
                 event.createReponse({"contents": contents}));
-        break;
       case "longTest":
-        return _isolate.chromeService.delay(1000).then((_){
+        return _isolate.chromeService.delay(1000).then((_) {
           return new Future.value(event.createReponse(
               {"response": "long${event.data['name']}"}));
         });
@@ -173,16 +174,13 @@ class CompilerServiceImpl extends ServiceImpl {
       case "start":
         // TODO(ericarnold): Start should happen automatically on use.
         return _start().then((_) => new Future.value(event.createReponse(null)));
-        break;
       case "dispose":
         return new Future.value(event.createReponse(null));
-        break;
       case "compileString":
         return compiler.compileString(event.data['string'])
             .then((CompilerResult result)  {
               return new Future.value(event.createReponse(result.toMap()));
             });
-        break;
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
@@ -197,6 +195,89 @@ class CompilerServiceImpl extends ServiceImpl {
 
     return _readyCompleter.future;
   }
+}
+
+class AnalyzerServiceImpl extends ServiceImpl {
+  AnalyzerServiceImpl(ServicesIsolate isolate) : super(isolate);
+
+  String get serviceId => "analyzer";
+  Future<ChromeDartSdk> _dartSdkFuture;
+  Future<ChromeDartSdk> get dartSdkFuture {
+    if (_dartSdkFuture == null) {
+      _dartSdkFuture = _isolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+          .then((List<int> sdkContents) => createSdk(sdkContents));
+    }
+    return _dartSdkFuture;
+  }
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    switch (event.actionId) {
+      case "buildFiles":
+        return build(event.data["dartFileUuids"])
+            .then((Map<String, List<Map>> errorsPerFile) {
+              return new Future.value(event.createReponse(
+                  {"errors": errorsPerFile}));
+            });
+      default:
+        throw new ArgumentError(
+            "Unknown action '${event.actionId}' sent to $serviceId service.");
+    }
+  }
+
+  Future<Map<String, List<Map>>> build(List<Map> fileUuids) {
+    Map<String, List<Map>> errorsPerFile = {};
+
+    return dartSdkFuture.then((ChromeDartSdk sdk) {
+      return Future.forEach(fileUuids, (String fileUuid) {
+        return _processFile(sdk, fileUuid)
+            .then((AnalyzerResult result) {
+              List<AnalysisError> errors = result.errors;
+              List<Map> responseErrors = [];
+              if (errors != null) {
+                for (AnalysisError error in errors) {
+                  common.AnalysisError responseError =
+                      new common.AnalysisError();
+                  responseError.message = error.message;
+                  responseError.offset = error.offset;
+                  LineInfo_Location location = result.getLineInfo(error);
+                  responseError.lineNumber = location.lineNumber;
+                  responseError.errorSeverity =
+                      _errorSeverityToInt(error.errorCode.errorSeverity);
+                  responseError.length = error.length;
+                  responseErrors.add(responseError.toMap());
+                }
+              }
+
+              return responseErrors;
+            }).then((List<Map> errors) {
+              errorsPerFile[fileUuid] = errors;
+            });
+        });
+    }).then((_) => errorsPerFile);
+  }
+
+  int _errorSeverityToInt(ErrorSeverity severity) {
+    if (severity == ErrorSeverity.ERROR) {
+      return common.ErrorSeverity.ERROR;
+    } else  if (severity == ErrorSeverity.WARNING) {
+      return common.ErrorSeverity.WARNING;
+    } else  if (severity == ErrorSeverity.INFO) {
+      return common.ErrorSeverity.INFO;
+    } else {
+      return common.ErrorSeverity.NONE;
+    }
+  }
+
+  /**
+   * Analyzes file and returns a Future with the [AnalyzerResult].
+   */
+  Future<AnalyzerResult> _processFile(ChromeDartSdk sdk, String fileUuid) {
+    return _isolate.chromeService.getFileContents(fileUuid)
+        .then((String contents) =>
+            analyzeString(sdk, contents, performResolution: false))
+        .then((AnalyzerResult result) => result);
+  }
+
 }
 
 /**
@@ -230,7 +311,7 @@ class ChromeService {
   Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
       [bool expectResponse = false]) {
     return _isolate._sendAction(event, expectResponse)
-        .then((ServiceActionEvent event){
+        .then((ServiceActionEvent event) {
           if (event.error != true) {
             return event;
           } else {
@@ -248,7 +329,7 @@ abstract class ServiceImpl {
 
   ServiceImpl(this._isolate);
 
-  String get serviceId => null;
+  String get serviceId;
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
 }

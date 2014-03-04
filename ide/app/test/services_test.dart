@@ -26,26 +26,26 @@ defineTests() {
     });
   });
 
-  group('services example', () {
+  group('services implementation tests', () {
     test('service order', () {
-      ExampleService exampleService = services.getService("example");
+      TestService testService = services.getService("test");
       Completer completer = new Completer();
       List<String> orderedResponses = [];
 
       // Test 1 (slow A) starts
-      exampleService.longTest("1").then((str) {
+      testService.longTest("1").then((str) {
         orderedResponses.add(str);
       });
 
       // Test 2 (fast) starts
-      exampleService.shortTest("2").then((str) {
+      testService.shortTest("2").then((str) {
         orderedResponses.add(str);
       });
 
       // Test 2 should end
       return new Future.delayed(const Duration(milliseconds: 500)).then((_){
         // Test 3 (slow B) starts
-        return exampleService.longTest("3").then((str) {
+        return testService.longTest("3").then((str) {
           orderedResponses.add(str);
         });
       }).then((_) =>
@@ -69,10 +69,10 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
       FileEntry fileEntry = fs.createFile('test.txt', contents: "some words");
       String fileUuid;
-      ExampleService exampleService = services.getService("example");
+      TestService testService = services.getService("test");
       return workspace.link(createWsRoot(fileEntry))
           .then((ws.File fileResource) {
-            return exampleService.readText(fileResource);
+            return testService.readText(fileResource);
           }).then((String text) => expect(text, equals("some words")));
     });
   });

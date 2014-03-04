@@ -17,36 +17,23 @@ import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
-import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:path/path.dart' as path;
-
-import '../dart/sdk.dart' as sdk;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
 export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
 
-// TODO: investigate web workers and isolates
-
-Completer<ChromeDartSdk> _sdkCompleter;
+import '../dart/sdk.dart' as sdk;
 
 /**
  * Create and return a ChromeDartSdk asynchronously.
  */
-Future<ChromeDartSdk> createSdk() {
-  if (_sdkCompleter != null) {
-    return _sdkCompleter.future;
-  }
+Future<ChromeDartSdk> createSdk(List<int> sdkContents) {
+  sdk.DartSdk dartSdk = sdk.DartSdk.createSdkFromContents(sdkContents);
+  ChromeDartSdk chromeSdk = new ChromeDartSdk._(dartSdk);
+  chromeSdk._parseLibrariesFile();
 
-  _sdkCompleter = new Completer();
-
-  sdk.DartSdk.createSdk().then((sdk.DartSdk sdk) {
-    ChromeDartSdk chromeSdk = new ChromeDartSdk._(sdk);
-    chromeSdk._parseLibrariesFile();
-    _sdkCompleter.complete(chromeSdk);
-  });
-
-  return _sdkCompleter.future;
+  return new Future.value(chromeSdk);
 }
 
 /**
@@ -249,11 +236,19 @@ class SdkSource extends Source {
   String toString() => fullName;
 }
 
+class ServiceFile {
+  String uuid;
+  String name;
+  String fullPath;
+
+  ServiceFile(this.uuid, this.fullPath, this.name);
+}
+
 /**
  * A [Source] implementation based on HTML FileEntrys.
  */
 class FileSource extends Source {
-  final chrome.ChromeFileEntry file;
+  final ServiceFile file;
 
   FileSource(this.file);
 
