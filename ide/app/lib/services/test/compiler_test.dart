@@ -6,7 +6,7 @@ library spark.compiler_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/services/compiler.dart';
+import '../compiler.dart';
 
 defineTests() {
   group('compiler', () {
@@ -18,19 +18,8 @@ defineTests() {
       });
     });
 
-    tearDown(() {
-      if (compiler != null) compiler.dispose();
-    });
-
     test('is available', () {
       expect(compiler, isNotNull);
-    });
-
-    test('ping compiler isolate', () {
-      return compiler.pingCompiler().then((CompilerResult r) {
-        expect(r, isNotNull);
-        expect(r.getSuccess(), true);
-      });
     });
 
     test('compile helloworld', () {

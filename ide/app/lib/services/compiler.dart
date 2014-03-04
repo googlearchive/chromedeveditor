@@ -15,8 +15,6 @@ export 'package:compiler_unsupported/compiler.dart' show Diagnostic;
 
 import '../dart/sdk.dart';
 
-// TODO: we should be tracking compilation times and sizes
-
 /**
  * An interface to the dart2js compiler. A compiler object can process one
  * compile at a time. They are heavy-weight objects, and can be re-used once
@@ -27,8 +25,6 @@ import '../dart/sdk.dart';
  * web worker). This library may then move to something like compiler_impl.dart.
  * compiler.dart would become an interface to the compiler in the isolate, and
  * we'd get a new top-level library in app/, called compiler_entry.dart.
- *
- * TODO: host this in a separate isolate
  */
 class Compiler {
   DartSdk _sdk;
@@ -45,13 +41,6 @@ class Compiler {
   }
 
   Compiler._(this._sdk);
-
-  /**
-   * Ensure the compiler is live and available.
-   */
-  Future<CompilerResult> pingCompiler() {
-    return new Future.value(new CompilerResult._());
-  }
 
   Future<CompilerResult> compile(/*chrome.FileEntry*/ entry) {
     // TODO: implement
@@ -76,14 +65,6 @@ class Compiler {
       return result;
     });
   }
-
-  /**
-   * Dispose of this [Compiler] instance. [Compiler]'s are heavy-weight objects.
-   */
-  void dispose() {
-    // TODO: close down the associated isolate process
-
-  }
 }
 
 /**
@@ -99,6 +80,8 @@ class CompilerResult {
   List<CompilerProblem> get problems => _problems;
 
   String get output => _output == null ? null : _output.toString();
+
+  bool get hasOutput => output != null;
 
   Duration get compileTime => _compileTime;
 
@@ -175,9 +158,9 @@ class CompilerProblem {
 
   String toString() {
     if (uri == null) {
-      return "${kind}: ${message}";
+      return "[${kind}] ${message}";
     } else {
-      return "${kind} ${uri}: ${message}";
+      return "[${kind}] ${message} (${uri})";
     }
   }
 
