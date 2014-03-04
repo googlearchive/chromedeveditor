@@ -56,3 +56,7 @@ void defineTests() {
   utils_test.defineTests();
   workspace_test.defineTests();
 }
+
+void oneTest() {
+  outline_test.defineTests();
+}

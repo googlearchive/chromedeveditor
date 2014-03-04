@@ -830,7 +830,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   Future applicationStarted(Application application) {
     if (spark.developerMode) {
       spark._testDriver = new TestDriver(
-          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+          all_tests.oneTest, spark.jobManager, connectToTestListener: true);
+      spark._testDriver.runTests();
     }
     return new Future.value();
   }
