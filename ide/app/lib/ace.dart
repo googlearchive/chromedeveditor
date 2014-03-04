@@ -433,8 +433,10 @@ class AceManager {
     // Setup the code completion options for the current file type.
     if (file != null) {
       currentFile = file;
-//      _aceEditor.setOption(
-//          'enableBasicAutocompletion', path.extension(file.name) != '.dart');
+      // For now, we turn on lexical code completion for Dart files. We'll want
+      // to switch this over to semantic code completion soonest.
+      //_aceEditor.setOption(
+      //    'enableBasicAutocompletion', path.extension(file.name) != '.dart');
 
       if (_markerSubscription == null) {
         _markerSubscription = file.workspace.onMarkerChange.listen(
