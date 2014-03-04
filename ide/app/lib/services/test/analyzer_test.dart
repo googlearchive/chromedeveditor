@@ -8,12 +8,15 @@ import 'package:unittest/unittest.dart';
 
 import '../analyzer.dart';
 import '../../utils.dart';
+import '../../services/services_impl.dart';
 
-defineTests() {
+defineTests(ServicesIsolate servicesIsolate) {
   group('analyzer.', () {
     test('ChromeDartSdk exists', () {
 
-      return createSdk().then((ChromeDartSdk sdk) {
+      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+          .then((List<int> sdkContents) => createSdk(sdkContents))
+          .then((ChromeDartSdk sdk) {
         expect(sdk, isNotNull);
         expect(sdk.sdkVersion.length, greaterThan(0));
 
@@ -34,7 +37,9 @@ defineTests() {
     });
 
     test('analyze string, no resolution', () {
-      return createSdk().then((ChromeDartSdk sdk) {
+      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+          .then((List<int> sdkContents) => createSdk(sdkContents))
+          .then((ChromeDartSdk sdk) {
         return analyzeString(sdk, "void main() {\n print('hello world');\n}",
             performResolution: false).then((AnalyzerResult result) {
           expect(result, isNotNull);
@@ -49,7 +54,9 @@ defineTests() {
     });
 
     test('analyze string, no resolution, syntax errors', () {
-      return createSdk().then((ChromeDartSdk sdk) {
+      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+          .then((List<int> sdkContents) => createSdk(sdkContents))
+          .then((ChromeDartSdk sdk) {
         return analyzeString(sdk, "void main() {\n print('hello world') \n}",
             performResolution: false).then((AnalyzerResult result) {
           expect(result.ast.declarations.length, 1);
@@ -65,7 +72,9 @@ defineTests() {
       // TODO: this fails under dart2js
       if (isDart2js()) return null;
 
-      return createSdk().then((ChromeDartSdk sdk) {
+      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+          .then((List<int> sdkContents) => createSdk(sdkContents))
+          .then((ChromeDartSdk sdk) {
         return analyzeString(sdk, "void main() {\n print('hello world');\n}",
             performResolution: true).then((AnalyzerResult result) {
           expect(result, isNotNull);
@@ -84,7 +93,9 @@ defineTests() {
       // TODO: this fails under dart2js
       if (isDart2js()) return null;
 
-      return createSdk().then((ChromeDartSdk sdk) {
+      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+          .then((List<int> sdkContents) => createSdk(sdkContents))
+          .then((ChromeDartSdk sdk) {
         return analyzeString(sdk, "void main() {\n printfoo('hello world');\n}",
             performResolution: true).then((AnalyzerResult result) {
           expect(result.ast, isNotNull);
