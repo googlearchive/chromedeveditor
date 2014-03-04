@@ -37,6 +37,9 @@ class ErrorSeverity {
   static int INFO = 3;
 }
 
+/**
+ *
+ */
 class Outline {
   List<OutlineTopLevelEntry> entries = [];
 
@@ -49,9 +52,27 @@ class Outline {
   }
 }
 
-abstract class OutlineTopLevelEntry {
+abstract class OutlineEntry {
   String name;
+  int startOffset;
+  int endOffset;
 
+  void populateFromMap(Map mapData) {
+    name = mapData["name"];
+    startOffset = mapData["startOffset"];
+    endOffset = mapData["endOffset"];
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+      "startOffset": startOffset,
+      "endOffset": endOffset,
+    };
+  }
+}
+
+abstract class OutlineTopLevelEntry extends OutlineEntry {
   OutlineTopLevelEntry();
 
   factory OutlineTopLevelEntry.fromMap(Map mapData) {
@@ -59,22 +80,19 @@ abstract class OutlineTopLevelEntry {
     OutlineTopLevelEntry entry;
 
     if (type == OutlineClass._type) {
-      entry = new OutlineClass.fromMap(mapData);
+      entry = new OutlineClass()..populateFromMap(mapData);
     } else if (type == OutlineTopLevelFunction._type) {
-      entry = new OutlineTopLevelFunction.fromMap(mapData);
+      entry = new OutlineTopLevelFunction()..populateFromMap(mapData);
     } else if (type == OutlineTopLevelVariable._type) {
-      entry = new OutlineTopLevelVariable.fromMap(mapData);
+      entry = new OutlineTopLevelVariable()..populateFromMap(mapData);
     }
 
-    entry.name = mapData["name"];
+    entry.populateFromMap(mapData);
     return entry;
   }
 
-  Map toMap() {
-    return {
-      "name": name,
-    };
-  }
+  Map toMap() => super.toMap();
+
 }
 
 class OutlineClass extends OutlineTopLevelEntry {
@@ -83,7 +101,8 @@ class OutlineClass extends OutlineTopLevelEntry {
   bool abstract = false;
   List<OutlineMember> members = [];
 
-  OutlineClass.fromMap(Map mapData) {
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
     abstract = mapData["abstract"];
     List<Map> membersMaps = mapData["members"];
     if (membersMaps != null && membersMaps.length > 0) {
@@ -101,8 +120,7 @@ class OutlineClass extends OutlineTopLevelEntry {
   }
 }
 
-class OutlineMember {
-  String name;
+class OutlineMember extends OutlineEntry {
   bool static;
 
   OutlineMember();
@@ -112,31 +130,21 @@ class OutlineMember {
     OutlineMember entry;
 
     if (type == OutlineMethod._type) {
-      entry = new OutlineMethod.fromMap(mapData);
+      entry = new OutlineMethod()..populateFromMap(mapData);
     } else if (type == OutlineClassVariable._type) {
-      entry = new OutlineClassVariable.fromMap(mapData);
+      entry = new OutlineClassVariable()..populateFromMap(mapData);
     }
 
-    entry.name = mapData["name"];
     entry.static = mapData["static"];
 
     return entry;
   }
-
-  Map toMap() {
-    return {
-      "name": name,
-    };
-  }
-
 }
 
 class OutlineMethod extends OutlineMember {
   static String _type = "method";
 
   bool static = false;
-
-  OutlineMethod.fromMap(Map mapData);
 
   Map toMap() {
     return super.toMap()..addAll({
@@ -150,8 +158,6 @@ class OutlineClassVariable extends OutlineMember {
 
   bool static = false;
 
-  OutlineClassVariable.fromMap(Map mapData);
-
   Map toMap() {
     return super.toMap()..addAll({
       "type": _type,
@@ -162,8 +168,6 @@ class OutlineClassVariable extends OutlineMember {
 class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   static String _type = "function";
 
-  OutlineTopLevelFunction.fromMap(Map mapData);
-
   Map toMap() {
     return super.toMap()..addAll({
       "type": _type
@@ -173,7 +177,6 @@ class OutlineTopLevelFunction extends OutlineTopLevelEntry {
 
 class OutlineTopLevelVariable extends OutlineTopLevelEntry {
   static String _type = "top-level-variable";
-  OutlineTopLevelVariable.fromMap(Map mapData);
 
   Map toMap() {
     return super.toMap()..addAll({

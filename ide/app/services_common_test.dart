@@ -27,24 +27,34 @@ expectOutlineFunction(OutlineTopLevelFunction functionEntry) {
 
 Map outlineTopLevelVariableMap = {
     "name": "varName",
+    "startOffset": 10,
+    "endOffset": 20,
     "type": "top-level-variable"};
 
 Map outlineClassMap = {
     "name": "className",
+    "startOffset": 30,
+    "endOffset": 40,
     "abstract": true,
     "members": [],
     "type": "class"};
 
 Map outlineFunctionMap = {
     "name": "functionName",
+    "startOffset": 50,
+    "endOffset": 60,
     "type": "function"};
 
 Map outlineMethodMap = {
     "name": "methodName",
+    "startOffset": 70,
+    "endOffset": 80,
     "type": "method"};
 
 Map outlineClassVariableMap = {
     "name": "variableName",
+    "startOffset": 90,
+    "endOffset": 100,
     "type": "class-variable"};
 
 
