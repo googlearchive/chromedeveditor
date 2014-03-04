@@ -12,6 +12,7 @@ import 'dart:async';
 import 'package:analyzer/src/generated/ast.dart';
 import 'package:analyzer/src/generated/engine.dart';
 import 'package:analyzer/src/generated/error.dart';
+import 'package:analyzer/src/generated/java_core.dart';
 import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
@@ -137,7 +138,7 @@ class ChromeDartSdk extends DartSdk {
   LibraryMap _parseLibrariesMap(String contents) {
     SimpleAnalysisErrorListener errorListener = new SimpleAnalysisErrorListener();
     Source source = new StringSource(contents, 'lib/_internal/libraries.dart');
-    Scanner scanner = new Scanner(source, new CharSequenceReader(contents), errorListener);
+    Scanner scanner = new Scanner(source, new CharSequenceReader(new CharSequence(contents)), errorListener);
     Parser parser = new Parser(source, errorListener);
     CompilationUnit unit = parser.parseCompilationUnit(scanner.tokenize());
     SdkLibrariesReader_LibraryBuilder libraryBuilder = new SdkLibrariesReader_LibraryBuilder();
@@ -170,7 +171,7 @@ class StringSource extends Source {
   bool exists() => true;
 
   void getContents(Source_ContentReceiver receiver) =>
-      receiver.accept(_contents, modificationStamp);
+      receiver.accept2(_contents, modificationStamp);
 
   String get encoding => 'UTF-8';
 
@@ -210,7 +211,7 @@ class SdkSource extends Source {
     String cachedSource = _sdk.getSourceForPath(fullName);
 
     if (cachedSource != null) {
-      receiver.accept(cachedSource, modificationStamp);
+      receiver.accept2(cachedSource, modificationStamp);
     } else {
       throw new UnimplementedError('getContents');
     }
