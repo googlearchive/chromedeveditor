@@ -156,7 +156,7 @@ class AceManager {
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
     _aceEditor.readOnly = true;
-    _aceEditor.fadeFoldWidgets = true;
+    //_aceEditor.fadeFoldWidgets = true;
 
     // Enable code completion.
     ace.require('ace/ext/language_tools');
@@ -281,10 +281,10 @@ class AceManager {
 
   void _selectMarker(workspace.Marker marker) {
     _aceEditor.gotoLine(marker.lineNum);
-    ace.Selection selection = _aceEditor.selection;
-    ace.Range range = selection.getLineRange(marker.lineNum - 1);
-    selection.setSelectionAnchor(range.end.row, range.end.column);
-    selection.selectTo(range.start.row, range.start.column);
+//    ace.Selection selection = _aceEditor.selection;
+//    ace.Range range = selection.getLineRange(marker.lineNum - 1);
+//    selection.setSelectionAnchor(range.end.row, range.end.column);
+//    selection.selectTo(range.start.row, range.start.column);
     _aceEditor.focus();
     _currentMarker = marker;
   }
