@@ -223,10 +223,23 @@ class AnalyzerServiceImpl extends ServiceImpl {
               return new Future.value(event.createReponse(
                   {"errors": errorsPerFile}));
             });
+      case "getOutlineFor":
+        return dartSdkFuture
+            .then((ChromeDartSdk sdk) {
+              analyzeString(sdk, event.data['string'],
+                  performResolution: false);
+            }).then((AnalyzerResult result) => getOutline(result.ast));
+        break;
+
       default:
         throw new ArgumentError(
             "Unknown action '${event.actionId}' sent to $serviceId service.");
     }
+  }
+
+  Map getOutline(CompilationUnit ast) {
+    return {"hello": "there"};
+//    ast.declarations.
   }
 
   Future<Map<String, List<Map>>> build(List<Map> fileUuids) {

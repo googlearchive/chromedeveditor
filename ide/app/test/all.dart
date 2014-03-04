@@ -18,6 +18,7 @@ import 'event_bus_test.dart' as event_bus_test;
 import 'files_test.dart' as files_test;
 import 'jobs_test.dart' as jobs_test;
 import 'git/all.dart' as git_all_test;
+import 'outline_test.dart' as outline_test;
 import 'preferences_test.dart' as preferences_test;
 import 'scm_test.dart' as scm_test;
 import 'sdk_test.dart' as sdk_test;
