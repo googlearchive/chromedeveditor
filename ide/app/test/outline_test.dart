@@ -25,7 +25,7 @@ defineTests() {
           class A {
             methA() {}
             int propA = 1;
-            String propB
+            String propB;
           }""";
 //      MockFileSystem fs = new MockFileSystem();
 //      FileEntry fileEntry = fs.createFile('test.txt', contents: );

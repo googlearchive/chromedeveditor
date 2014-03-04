@@ -226,9 +226,10 @@ class AnalyzerServiceImpl extends ServiceImpl {
       case "getOutlineFor":
         return dartSdkFuture
             .then((ChromeDartSdk sdk) {
-              analyzeString(sdk, event.data['string'],
-                  performResolution: false);
-            }).then((AnalyzerResult result) => getOutline(result.ast));
+              var codeString = event.data['string'];
+              return analyzeString(sdk, codeString, performResolution: false);
+            }).then((AnalyzerResult result) => event.createReponse(
+                {"outline": getOutline(result.ast)}));
         break;
 
       default:
@@ -238,6 +239,16 @@ class AnalyzerServiceImpl extends ServiceImpl {
   }
 
   Map getOutline(CompilationUnit ast) {
+    for (Declaration member in ast.declarations) {
+      String name;
+      if (member is ClassDeclaration) {
+        name = member.name.name;
+      } else if (member is FunctionDeclaration) {
+        name = member.name.name;
+      } else if (member is VariableDeclaration) {
+        name = member.name.name;
+      }
+    }
     return {"hello": "there"};
 //    ast.declarations.
   }
