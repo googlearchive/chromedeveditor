@@ -60,8 +60,10 @@ abstract class OutlineTopLevelEntry {
 
     if (type == OutlineClass._type) {
       entry = new OutlineClass.fromMap(mapData);
-    } else if (type == TopLevelFunction._type) {
-      entry = new TopLevelFunction.fromMap(mapData);
+    } else if (type == OutlineTopLevelFunction._type) {
+      entry = new OutlineTopLevelFunction.fromMap(mapData);
+    } else if (type == OutlineTopLevelVariable._type) {
+      entry = new OutlineTopLevelVariable.fromMap(mapData);
     }
 
     entry.name = mapData["name"];
@@ -79,23 +81,88 @@ class OutlineClass extends OutlineTopLevelEntry {
   static String _type = "class";
 
   bool abstract = false;
+  List<OutlineMember> members = [];
 
   OutlineClass.fromMap(Map mapData) {
     abstract = mapData["abstract"];
+    List<Map> membersMaps = mapData["members"];
+    if (membersMaps != null && membersMaps.length > 0) {
+      members = membersMaps.map((Map memberMap) =>
+        new OutlineMember.fromMap(memberMap)).toList();
+    }
   }
 
   Map toMap() {
     return super.toMap()..addAll({
       "type": _type,
       "abstract": abstract,
+      "members": members.map((OutlineMember element) => element.toMap())
     });
   }
 }
 
-class TopLevelFunction extends OutlineTopLevelEntry {
+class OutlineMember {
+  String name;
+  bool static;
+
+  OutlineMember();
+
+  factory OutlineMember.fromMap(Map mapData) {
+    String type = mapData["type"];
+    OutlineMember entry;
+
+    if (type == OutlineMethod._type) {
+      entry = new OutlineMethod.fromMap(mapData);
+    } else if (type == OutlineClassVariable._type) {
+      entry = new OutlineClassVariable.fromMap(mapData);
+    }
+
+    entry.name = mapData["name"];
+    entry.static = mapData["static"];
+
+    return entry;
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+    };
+  }
+
+}
+
+class OutlineMethod extends OutlineMember {
+  static String _type = "method";
+
+  bool static = false;
+
+  OutlineMethod.fromMap(Map mapData);
+
+  Map toMap() {
+    return super.toMap()..addAll({
+      "type": _type,
+    });
+  }
+}
+
+class OutlineClassVariable extends OutlineMember {
+  static String _type = "class-variable";
+
+  bool static = false;
+
+  OutlineClassVariable.fromMap(Map mapData);
+
+  Map toMap() {
+    return super.toMap()..addAll({
+      "type": _type,
+    });
+  }
+}
+
+class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   static String _type = "function";
 
-  TopLevelFunction.fromMap(Map mapData);
+  OutlineTopLevelFunction.fromMap(Map mapData);
 
   Map toMap() {
     return super.toMap()..addAll({
@@ -103,5 +170,17 @@ class TopLevelFunction extends OutlineTopLevelEntry {
     });
   }
 }
+
+class OutlineTopLevelVariable extends OutlineTopLevelEntry {
+  static String _type = "top-level-variable";
+  OutlineTopLevelVariable.fromMap(Map mapData);
+
+  Map toMap() {
+    return super.toMap()..addAll({
+      "type": _type
+    });
+  }
+}
+
 
 
