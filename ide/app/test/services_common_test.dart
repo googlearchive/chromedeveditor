@@ -1,6 +1,6 @@
 import 'package:unittest/unittest.dart';
 
-import 'lib/services/services_common.dart';
+import '../lib/services/services_common.dart';
 
 expectOutlineTopLevelVariable(OutlineTopLevelVariable varEntry) {
   expect(varEntry.name, equals("varName"));
@@ -58,7 +58,7 @@ Map outlineClassVariableMap = {
     "type": "class-variable"};
 
 
-main() {
+defineTests() {
   group('Outline Instantiation Tests', () {
     test('Instnantiate individual entries', () {
       OutlineTopLevelVariable outlineTopLevelVariable =
