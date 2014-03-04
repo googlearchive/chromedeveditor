@@ -4,7 +4,7 @@
 
 library spark_widgets;
 
-import 'dart:html' show Node, Element, ContentElement;
+import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
@@ -26,12 +26,25 @@ class SparkWidget extends PolymerElement {
   @override
   void focus() {
     super.focus();
+    _applyAutofocus(true);
+  }
 
-    // Only the first found element that has 'focused' attribute on it will be
-    // actually focused; if there are more than one, the rest will be ignored.
-    Element elementToFocus = getShadowDomElement('[focused]');
-    if (elementToFocus != null) {
-      elementToFocus.focus();
+  @override
+  void blur() {
+    super.blur();
+    _applyAutofocus(false);
+  }
+
+  void _applyAutofocus(bool isFocused) {
+    // Give preference to the user's (ligth DOM) nodes.
+    ElementList elts = this.querySelectorAll('[autofocus]');
+    if (elts.isEmpty) {
+      elts = shadowRoot.querySelectorAll('[autofocus]');
+    }
+    if (elts.isNotEmpty) {
+      // At most one element is expected to have an `autofocus` attribute.
+      assert(elts.length == 1);
+      isFocused ? elts.single.focus() : elts.single.blur();
     }
   }
 
@@ -59,7 +72,7 @@ class SparkWidget extends PolymerElement {
    */
   void preventFlashOfUnstyledContent({Function method,
                                       Duration delay}) {
-    // TODO(ussuri): We use a temporary crude way here. Polymer's avertised
+    // TODO(ussuri): We use a temporary crude way here. Polymer's advertised
     // machanisms (via :resolved pseudo class as well as older .polymer-veiled
     // class) have failed to work so far, although :unresolved reportedly
     // functions in Chrome 34. Revisit.

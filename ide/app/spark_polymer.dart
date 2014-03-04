@@ -47,17 +47,19 @@ class SparkPolymerDialog implements SparkDialog {
     });
   }
 
+  @override
   void show() {
     if (!_dialogElement.opened) {
       _dialogElement.toggle();
-      Timer.run(() => _dialogElement.applyFocus());
     }
   }
 
   // TODO(ussuri): Currently, this never gets called (the dialog closes in
   // another way). Make symmetrical when merging Polymer and non-Polymer.
+  @override
   void hide() => _dialogElement.toggle();
 
+  @override
   Element get element => _dialogElement;
 }
 

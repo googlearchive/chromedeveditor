@@ -1002,7 +1002,7 @@ class SparkBootjackDialog implements SparkDialog {
 
     _dialog.$element.on('shown.bs.modal', (event) {
       final Element dialog = event.target;
-      Element elementToFocus = dialog.querySelector('[focused]');
+      Element elementToFocus = dialog.querySelector('[autofocus]');
 
       if (elementToFocus != null) {
         elementToFocus.focus();
@@ -1010,10 +1010,13 @@ class SparkBootjackDialog implements SparkDialog {
     });
   }
 
+  @override
   void show() => _dialog.show();
 
+  @override
   void hide() => _dialog.hide();
 
+  @override
   Element get element => _dialog.element;
 }
 
