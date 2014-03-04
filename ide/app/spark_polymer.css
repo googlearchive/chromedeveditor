@@ -141,6 +141,7 @@ body {
   bottom: 0;
   top: 0;
   position: absolute;
+  z-index: 10;
 }
 
 .minimap-marker {
@@ -150,9 +151,6 @@ body {
   left: 1px;
   right: 1px;
   background: #DDD;
-}
-
-.minimap-marker:hover {
   cursor: pointer;
 }
 
