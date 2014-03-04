@@ -7,7 +7,7 @@ environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
   ace: '>=0.3.0 <0.4.0'
-  analyzer: '>=0.12.0 <0.13.0'
+  analyzer: '>=0.11.0 <0.12.0'
   archive: '>=1.0.15 <1.1.0'
   benchmark_harness: '>=1.0.4 <2.0.0'
   bootjack: any
@@ -21,7 +21,7 @@ dependencies:
   logging: any
   mime: any
   path: any
-  polymer: '>=0.9.2'
+  polymer: '>=0.9.5'
   shadow_dom: 0.9.1
   spark_widgets:
     path: ../widgets
@@ -32,6 +32,9 @@ dependencies:
 dev_dependencies:
   args: any
   grinder: '>=0.5.0 <0.6.0'
+dependency_overrides:
+  analyzer: 0.11.10
+  polymer: 0.9.5
 transformers:
 - polymer:
     entry_points: web/spark_polymer.html
