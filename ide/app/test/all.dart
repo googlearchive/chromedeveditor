@@ -24,6 +24,7 @@ import 'sdk_test.dart' as sdk_test;
 import 'search_test.dart' as search_test;
 import 'server_test.dart' as server_test;
 import 'services_test.dart' as services_test;
+import 'services_common_test.dart' as services_common_test;
 import 'tcp_test.dart' as tcp_test;
 import 'utils_test.dart' as utils_test;
 import 'workspace_test.dart' as workspace_test;
@@ -48,6 +49,7 @@ void defineTests() {
   search_test.defineTests();
   server_test.defineTests();
   services_test.defineTests();
+  services_common_test.defineTests();
   tcp_test.defineTests();
   utils_test.defineTests();
   workspace_test.defineTests();
