@@ -64,7 +64,7 @@ Map outlineClassVariableMap = {
 
 defineTests() {
   group('Outline Instantiation Tests', () {
-    test('Instnantiate individual entries', () {
+    test('Instantiate individual entries', () {
       OutlineTopLevelVariable outlineTopLevelVariable =
           new OutlineTopLevelEntry.fromMap(outlineTopLevelVariableMap);
       expectOutlineTopLevelVariable(outlineTopLevelVariable);

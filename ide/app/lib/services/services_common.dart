@@ -2,6 +2,13 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+abstract class Serializable {
+  // TODO(ericarnold): Implement as, and refactor any classes containing toMap
+  // to implement Serializable:
+  // Map toMap();
+  // void populateFromMap(Map mapData);
+}
+
 class AnalysisError {
   String message;
   int offset;
