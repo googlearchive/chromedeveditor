@@ -38,20 +38,20 @@ class ErrorSeverity {
 }
 
 /**
- *
+ * Defines an outline containing instances of [OutlineTopLevelEntry].
  */
 class Outline {
   List<OutlineTopLevelEntry> entries = [];
 
   Outline.fromMap(Map mapData) {
-    List<Map> serializedEntries = mapData['entries'];
-    for (Map serializedEntry in serializedEntries) {
-      OutlineTopLevelEntry entry = new OutlineTopLevelEntry.fromMap(serializedEntry);
-      entries.add(entry);
-    }
+    entries = mapData['entries'].map((Map serializedEntry) =>
+      new OutlineTopLevelEntry.fromMap(serializedEntry)).toList();
   }
 }
 
+/**
+ * Defines any line-item entry in the [Outline].
+ */
 abstract class OutlineEntry {
   String name;
   int startOffset;
@@ -72,6 +72,9 @@ abstract class OutlineEntry {
   }
 }
 
+/**
+ * Defines any top-level entry in the [Outline].
+ */
 abstract class OutlineTopLevelEntry extends OutlineEntry {
   OutlineTopLevelEntry();
 
@@ -92,9 +95,11 @@ abstract class OutlineTopLevelEntry extends OutlineEntry {
   }
 
   Map toMap() => super.toMap();
-
 }
 
+/**
+ * Defines a class entry in the [Outline].
+ */
 class OutlineClass extends OutlineTopLevelEntry {
   static String _type = "class";
 
@@ -104,11 +109,8 @@ class OutlineClass extends OutlineTopLevelEntry {
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     abstract = mapData["abstract"];
-    List<Map> membersMaps = mapData["members"];
-    if (membersMaps != null && membersMaps.length > 0) {
-      members = membersMaps.map((Map memberMap) =>
+    members = mapData["members"].map((Map memberMap) =>
         new OutlineMember.fromMap(memberMap)).toList();
-    }
   }
 
   Map toMap() {
@@ -120,7 +122,10 @@ class OutlineClass extends OutlineTopLevelEntry {
   }
 }
 
-class OutlineMember extends OutlineEntry {
+/**
+ * Defines any member entry in an [OutlineClass].
+ */
+abstract class OutlineMember extends OutlineEntry {
   bool static;
 
   OutlineMember();
@@ -141,6 +146,9 @@ class OutlineMember extends OutlineEntry {
   }
 }
 
+/**
+ * Defines a method entry in an [OutlineClass].
+ */
 class OutlineMethod extends OutlineMember {
   static String _type = "method";
 
@@ -153,6 +161,9 @@ class OutlineMethod extends OutlineMember {
   }
 }
 
+/**
+ * Defines a class variable entry in an [OutlineClass].
+ */
 class OutlineClassVariable extends OutlineMember {
   static String _type = "class-variable";
 
@@ -165,6 +176,9 @@ class OutlineClassVariable extends OutlineMember {
   }
 }
 
+/**
+ * Defines a top-level function entry in the [Outline].
+ */
 class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   static String _type = "function";
 
@@ -175,6 +189,9 @@ class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   }
 }
 
+/**
+ * Defines a top-level variable entry in the [Outline].
+ */
 class OutlineTopLevelVariable extends OutlineTopLevelEntry {
   static String _type = "top-level-variable";
 
