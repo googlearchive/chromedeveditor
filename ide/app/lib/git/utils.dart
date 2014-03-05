@@ -62,17 +62,11 @@ String getShaStringForData(List<int> content, String type) {
 /**
  * Return sha for the given data.
  */
-dynamic getSha(dynamic data, [bool asBytes]) {
+List<int> getShaAsBytes(List<int> data) {
   crypto.SHA1 sha1 = new crypto.SHA1();
   sha1.add(data);
-  Uint8List sha = sha1.close();
-  if (asBytes) {
-    return sha;
-  } else {
-    return shaBytesToString(sha);
-  }
+  return sha1.close();
 }
-
 
 /**
  * Clears the given working directory.
