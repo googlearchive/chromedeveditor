@@ -282,7 +282,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
-    _editorManager.onNewFileOpened.listen((_){
+    _editorManager.onNewFileOpened.listen((_) {
       _workspace.checkResource(_editorManager.currentFile);
     });
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
@@ -1538,6 +1538,10 @@ class NewProjectAction extends SparkActionWithDialog {
             case "dart-web-app-radio":
               ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
                   "web-dart", name.toLowerCase(), name);
+              return projectBuilder.build();
+            case "js-chrome-app-radio":
+              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+                  "app-js", name.toLowerCase(), name);
               return projectBuilder.build();
           }
         }).then((_) {
