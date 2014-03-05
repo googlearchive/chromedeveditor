@@ -35,16 +35,21 @@ class SparkWidget extends PolymerElement {
     _applyAutofocus(false);
   }
 
+  /**
+   * Look for an element with an `autofocus` attribute in our light DOM and
+   * shadow DOM, giving priority to the former, and if found, focus the element.
+   */
   void _applyAutofocus(bool isFocused) {
-    // Give preference to the user's (ligth DOM) nodes.
+    //
     ElementList elts = this.querySelectorAll('[autofocus]');
     if (elts.isEmpty) {
       elts = shadowRoot.querySelectorAll('[autofocus]');
     }
     if (elts.isNotEmpty) {
       // At most one element is expected to have an `autofocus` attribute.
+      // Use [first] vs [single] to be more lax to errors in production.
       assert(elts.length == 1);
-      isFocused ? elts.single.focus() : elts.single.blur();
+      isFocused ? elts.first.focus() : elts.first.blur();
     }
   }
 
