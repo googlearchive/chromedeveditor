@@ -241,6 +241,9 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Map getOutline(analyzer.CompilationUnit ast) {
     Outline outline = new Outline();
 
+    // TODO(ericarnold): Need to implement modifiers
+    // TODO(ericarnold): Need to implenent types
+
     for (analyzer.Declaration declaration in ast.declarations) {
       OutlineTopLevelEntry outlineDeclaration;
       if (declaration is analyzer.TopLevelVariableDeclaration) {

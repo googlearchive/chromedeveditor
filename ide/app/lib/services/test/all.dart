@@ -8,7 +8,6 @@
 library spark.all_tests;
 
 import 'analyzer_test.dart' as analyzer_test;
-import 'outliner_test.dart' as outliner_test;
 
 import '../../services/services_impl.dart';
 
@@ -17,5 +16,4 @@ import '../../services/services_impl.dart';
  */
 void defineTests(ServicesIsolate servicesIsolate) {
   analyzer_test.defineTests(servicesIsolate);
-  outliner_test.defineTests(servicesIsolate);
 }
