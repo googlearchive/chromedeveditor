@@ -24,14 +24,12 @@ import 'merge.dart';
  * TODO add unittests.
  */
 class Pull {
-
-  GitOptions options;
+  final GitOptions options;
   chrome.DirectoryEntry root;
   ObjectStore store;
   Function progress;
 
-
-  Pull(this.options){
+  Pull(this.options) {
     root = options.root;
     store = options.store;
     progress = options.progressCallback;

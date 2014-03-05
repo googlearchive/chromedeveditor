@@ -6,10 +6,11 @@ homepage: https://github.com/GoogleChrome/spark
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  ace: 0.3.3+1.8.2014
+  ace: '>=0.3.5 <0.4.0'
   analyzer: '>=0.11.0 <0.12.0'
   archive: '>=1.0.15 <1.1.0'
   benchmark_harness: '>=1.0.4 <2.0.0'
+  bignum: ">=0.0.5 <0.1.0"
   bootjack: any
   browser: any
   chrome: '>=0.5.1 <0.6.0'

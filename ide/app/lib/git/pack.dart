@@ -27,15 +27,11 @@ import 'zlib.dart';
  * Encapsulates a pack object header.
  */
 class PackObjectHeader {
-  int size;
-  int type;
-  int offset;
+  final int size;
+  final int type;
+  final int offset;
 
-  PackObjectHeader(int size, int type, int offset) {
-    this.size = size;
-    this.type = type;
-    this.offset = offset;
-  }
+  PackObjectHeader(this.size, this.type, this.offset);
 }
 
 /**
@@ -43,16 +39,12 @@ class PackObjectHeader {
  * TODO(grv) : add unittests.
  */
 class Pack {
-
   Uint8List data;
   int _offset = 0;
   ObjectStore _store;
   List<PackedObject> objects = [];
 
-  Pack(Uint8List data, store) {
-    this.data = data;
-    this._store = store;
-  }
+  Pack(this.data, this._store);
 
   Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
 
@@ -386,19 +378,17 @@ class Pack {
 }
 
 class PackBuilder {
-
   List<CommitObject> _commits;
   ObjectStore _store;
   List _packed;
   Map<String, bool> _visited;
-
 
   PackBuilder(this._commits, this._store) {
     _packed = [];
     _visited = {};
   }
 
-  Future build() {
+  Future<List<int>> build() {
     return Future.forEach(_commits, (CommitObject commit) {
       _packIt(commit.rawObj);
       return _walkTree(commit.treeSha);
@@ -457,7 +447,7 @@ class PackBuilder {
 
     return FileOps.readBlob(new Blob(_packed), 'ArrayBuffer').then(
         (Uint8List data) {
-      List<int> sha = getSha(data, true);
+      List<int> sha = getShaAsBytes(data);
       List<Uint8List> finalPack = [];
       finalPack.add(data);
       finalPack.add(new Uint8List.fromList(sha));
@@ -466,7 +456,7 @@ class PackBuilder {
   }
 
   Future _walkTree(String treeSha) {
-    if (_visited[treeSha]) {
+    if (_visited[treeSha] == true) {
       return new Future.value();
     }
 
@@ -487,7 +477,7 @@ class PackBuilder {
       return Future.forEach(tree.entries, (TreeEntry entry) {
         String nextSha = shaBytesToString(entry.shaBytes);
         if (entry.isBlob) {
-          if (_visited[nextSha]) {
+          if (_visited[nextSha] == true) {
             return new Future.value();
           } else {
             _visited[nextSha] = true;
@@ -508,15 +498,12 @@ class PackBuilder {
   }
 }
 
-
 /**
  * Defines a delta data object.
  */
 class DeltaDataStream {
-  Uint8List data;
+  final Uint8List data;
   int offset;
-  DeltaDataStream(Uint8List data, int offset) {
-    this.data = data;
-    this.offset = offset;
-  }
+
+  DeltaDataStream(this.data, this.offset);
 }
