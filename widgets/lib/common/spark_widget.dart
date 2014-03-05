@@ -23,12 +23,25 @@ class SparkWidget extends PolymerElement {
   Element getShadowDomElement(String selectors) =>
       shadowRoot.querySelector(selectors);
 
+  /**
+   * Override the standard behavior of the built-in focus():
+   * look for a sub-element with an `autofocus` attribute, first in the
+   * light DOM and then in shadow DOM, and if found, focus it; otherwise,
+   * focus ourselves.
+   *
+   * Note that the found sub-element may itself be a
+   * SparkWidget, and as such trigger a recursive autofocusing process.
+   */
   @override
   void focus() {
     super.focus();
     _applyAutofocus(true);
   }
 
+  /**
+   * Override the standard behavior of the built-in blur():
+   * reverse the effect of a previous call to [focus].
+   */
   @override
   void blur() {
     super.blur();
@@ -36,8 +49,7 @@ class SparkWidget extends PolymerElement {
   }
 
   /**
-   * Look for an element with an `autofocus` attribute in our light DOM and
-   * shadow DOM, giving priority to the former, and if found, focus the element.
+   * Perform the actual autofocusing used in [focus] and [blur].
    */
   void _applyAutofocus(bool isFocused) {
     //
@@ -64,10 +76,16 @@ class SparkWidget extends PolymerElement {
     }
   }
 
+  /**
+   * Put an opaque veil over the element.
+   */
   void veil() {
     classes..remove('unveiled')..toggle('veiled', true);
   }
 
+  /**
+   * Undo the result of [veil].
+   */
   void unveil() {
     classes..remove('veiled')..toggle('unveiled', true);
   }
