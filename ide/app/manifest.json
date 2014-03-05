@@ -43,7 +43,48 @@
     "storage",
     "unlimitedStorage",
     "webview",
-    "contextMenus"
+    "contextMenus",
+    "usb",
+    {
+      "usbDevices": [
+        {
+          "vendorId": 6353,
+          "productId": 20193
+        },
+        {
+          "vendorId": 6353,
+          "productId": 20194
+        },
+        {
+          "vendorId": 6353,
+          "productId": 20198
+        },
+        {
+          "vendorId": 6353,
+          "productId": 20033
+        },
+        {
+          "vendorId": 6353,
+          "productId": 20035
+        },
+        {
+          "vendorId": 1256,
+          "productId": 26718
+        },
+        {
+          "vendorId": 1256,
+          "productId": 26726
+        },
+        {
+          "vendorId": 1256,
+          "productId": 26720
+        },
+        {
+          "vendorId": 2996,
+          "productId": 3939
+        }
+      ]
+    }
   ],
   "sockets": {
     "tcp": {

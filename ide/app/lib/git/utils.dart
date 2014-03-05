@@ -10,8 +10,11 @@ import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:logging/logging.dart';
 
 import 'file_operations.dart';
+
+Logger logger = new Logger('spark.git');
 
 /**
  * Convertes [sha] string to sha bytes.
@@ -27,35 +30,32 @@ Uint8List shaToBytes(String sha) {
 /**
  * Converts [shaBytes] to HEX string.
  */
-String shaBytesToString(List shaBytes) {
-  String sha = "";
-  shaBytes.forEach((int byte) {
-    String shaPart = byte.toRadixString(16);
-    if (shaPart.length == 1) shaPart = '0' + shaPart;
-    sha += shaPart;
-  });
-  return sha;
+String shaBytesToString(List<int> sha) {
+  StringBuffer buf = new StringBuffer();
+  int len = sha.length;
+  for (int i = 0; i < len; i++) {
+    String s = sha[i].toRadixString(16);
+    if (s.length == 1) buf.write('0');
+    buf.write(s);
+  }
+  return buf.toString();
 }
 
 Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
   return entry.readBytes().then((chrome.ArrayBuffer content) {
-    return _getShaStringForData(content.getBytes(), type);
+    return getShaStringForData(content.getBytes(), type);
   });
 }
 
 String getShaForString(String data, String type) {
-  return _getShaStringForData(data.codeUnits, type);
+  return getShaStringForData(data.codeUnits, type);
 }
 
-String _getShaStringForData(List<int> content, String type) {
-  List<int> data = [];
-
-  data.addAll('${type} ${content.length}'.codeUnits);
-  data.add(0);
-  data.addAll(content);
-
+String getShaStringForData(List<int> content, String type) {
   crypto.SHA1 sha1 = new crypto.SHA1();
-  sha1.add(data);
+  sha1.add('${type} ${content.length}'.codeUnits);
+  sha1.add([0]);
+  sha1.add(content);
   return shaBytesToString(sha1.close());
 }
 

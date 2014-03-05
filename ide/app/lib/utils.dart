@@ -10,7 +10,10 @@ import 'dart:typed_data' as typed_data;
 import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+
+final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
@@ -95,7 +98,7 @@ class NullNotifier implements Notifier {
  */
 class PrintProfiler {
   final String name;
-  final bool quiet;
+  final bool printToStdout;
 
   int _previousTaskTime = 0;
   Stopwatch _stopwatch = new Stopwatch();
@@ -103,7 +106,7 @@ class PrintProfiler {
   /**
    * Create a profiler to time a single operation (`name`).
    */
-  PrintProfiler(this.name, {this.quiet: false}) {
+  PrintProfiler(this.name, {this.printToStdout: false}) {
     _stopwatch.start();
   }
 
@@ -115,25 +118,25 @@ class PrintProfiler {
   /**
    * Finish the current task and print out that task's elapsed time.
    */
-  void emit(String taskName) {
+  String finishCurrentTask(String taskName) {
     _stopwatch.stop();
     int ms = _stopwatch.elapsedMilliseconds;
-    if (!quiet) {
-      print('${name}, ${taskName} ${ms / 1000}s');
-    }
     _previousTaskTime += ms;
     _stopwatch.reset();
     _stopwatch.start();
+    String output = '${name}, ${taskName} ${_nf.format(ms)}ms';
+    if (printToStdout) print(output);
+    return output;
   }
 
   /**
    * Stop the timer, and print out the total time for the operation.
    */
-  void finish() {
+  String finishProfiler() {
     _stopwatch.stop();
-    if (!quiet) {
-      print('${name} total: ${totalElapsedMs() / 1000}s');
-    }
+    String output = '${name} total: ${_nf.format(totalElapsedMs())}ms';
+    if (printToStdout) print(output);
+    return output;
   }
 
   /**

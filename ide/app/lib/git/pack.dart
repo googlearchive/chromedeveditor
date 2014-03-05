@@ -198,7 +198,7 @@ class Pack {
     // This has a very significant impact on performance.
     int end =  uncompressedLength + objOffset + 1000;
     if (end > data.length) end = data.length;
-    return Zlib.inflate(data.sublist(objOffset, end), uncompressedLength);
+    return Zlib.inflate(data.sublist(objOffset, end), expectedLength: uncompressedLength);
   }
 
 
@@ -225,9 +225,9 @@ class Pack {
     }
 
     ZlibResult objData = _uncompressObject(_offset, header.size);
-    object.data = new Uint8List.fromList(objData.buffer.getBytes());
+    object.data = new Uint8List.fromList(objData.data);
 
-    _advance(objData.expectedLength);
+    _advance(objData.readLength);
     return object;
   }
 
@@ -285,9 +285,8 @@ class Pack {
           // TODO(grv) : add progress.
         });
       });
-    } catch (e) {
-      // TODO(grv) : throw custom error.
-      throw e;
+    } catch (e, st) {
+      completer.completeError(e, st);
     }
     return completer.future;
   }
@@ -436,8 +435,7 @@ class PackBuilder {
       data = UTF8.encoder.convert(buf);
     }
     ByteBuffer compressed;
-    compressed = new Uint8List.fromList(Zlib.deflate(data).buffer
-        .getBytes()).buffer;
+    compressed = new Uint8List.fromList(Zlib.deflate(data).data).buffer;
     _packed.add(new Uint8List.fromList(
         _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);
