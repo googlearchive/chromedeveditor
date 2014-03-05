@@ -271,7 +271,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           outlineDeclaration = populateOutlineEntry(
               new OutlineTopLevelFunction(declaration.name.name), declaration);
         } else {
-          print ("${declaration.runtimeType} is unknown");
+          throw new UnimplementedError("${declaration.runtimeType} is unknown");
         }
 
         outline.entries.add(populateOutlineEntry(
