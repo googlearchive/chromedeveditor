@@ -224,7 +224,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
               return analyzer.analyzeString(
                   sdk, codeString, performResolution: false);
             }).then((analyzer.AnalyzerResult result) =>
-                event.createReponse(getOutline(result.ast)));
+                event.createReponse(getOutline(result.ast).toMap()));
         break;
 
       default:
@@ -233,11 +233,11 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }
   }
 
-  Map getOutline(analyzer.CompilationUnit ast) {
+  Outline getOutline(analyzer.CompilationUnit ast) {
     Outline outline = new Outline();
 
     // TODO(ericarnold): Need to implement modifiers
-    // TODO(ericarnold): Need to implenent types
+    // TODO(ericarnold): Need to implement types
 
     for (analyzer.Declaration declaration in ast.declarations) {
       OutlineTopLevelEntry outlineDeclaration;
@@ -271,7 +271,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           outlineDeclaration = populateOutlineEntry(
               new OutlineTopLevelFunction(declaration.name.name), declaration);
         } else {
-          throw new UnimplementedError("${declaration.runtimeType} is unknown");
+          print("${declaration.runtimeType} is unknown");
         }
 
         outline.entries.add(populateOutlineEntry(
@@ -279,7 +279,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
       }
     }
 
-    return outline.toMap();
+    return outline;
   }
 
   OutlineEntry populateOutlineEntry(
