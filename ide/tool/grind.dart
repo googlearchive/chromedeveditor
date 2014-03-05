@@ -104,14 +104,8 @@ void deploy(GrinderContext context) {
   // Compile the services entry-point.
   _dart2jsCompile(context, deployWeb, 'services_entry.dart', true);
 
-  if (Platform.isWindows) {
-    context.log(
-        'TODO: manually patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
-  } else {
-    _runCommandSync(
-        context,
-        'patch ${destDir.path}/web/packages/shadow_dom/shadow_dom.debug.js tool/shadow_dom.patch');
-  }
+  // Replace shadow DOM to include some fixes.
+  copyFile(getFile('tool/shadow_dom.debug.js'), joinDir(deployWeb, ['packages', 'shadow_dom']));
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
