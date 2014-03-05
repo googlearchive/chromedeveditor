@@ -378,6 +378,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
+    actionManager.registerAction(new GitPullAction(this));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitResolveConflictsAction(this));
@@ -1722,6 +1723,21 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 }
 
+class GitPullAction extends SparkAction implements ContextAction {
+  GitPullAction(Spark spark) : super(spark, "git-pull", "Pull from Origin");
+
+  void _invoke([context]) {
+    var project = context.first.project;
+    var operations = spark.scmManager.getScmOperationsFor(project);
+
+    spark.jobManager.schedule(new _GitPullJob(operations, spark));
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(context) => _isScmProject(context);
+}
+
 class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
@@ -2051,6 +2067,25 @@ class _GitCloneJob extends Job {
       });
     }).catchError((e) {
       spark.showErrorMessage('Error cloning ${_projectName}', e.toString());
+    });
+  }
+}
+
+class _GitPullJob extends Job {
+  GitScmProjectOperations gitOperations;
+  Spark spark;
+
+  _GitPullJob(this.gitOperations, this.spark) : super("Pulling…");
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    // TODO: We'll want a way to indicate to the user what files changed and if
+    // there were any merge problems.
+    return gitOperations.pull().then((_) {
+      spark.showSuccessMessage('Pull successful');
+    }).catchError((e) {
+      spark.showErrorMessage('Git Pull Status', e.toString());
     });
   }
 }
@@ -2435,7 +2470,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
       _instance = new GitAuthenticationDialog(spark,
           spark.getDialogElement('#gitAuthenticationDialog'));
     }
-    assert(_instance.completer != null);
+    assert(_instance.completer == null);
     _instance.completer = new Completer();
     _instance.invoke();
     return _instance.completer.future;

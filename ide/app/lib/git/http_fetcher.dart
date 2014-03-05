@@ -10,8 +10,6 @@ import 'dart:core';
 import 'dart:html';
 import 'dart:typed_data';
 
-import 'package:chrome/chrome_app.dart' as chrome;
-
 import 'objectstore.dart';
 import 'upload_pack_parser.dart';
 
@@ -46,8 +44,7 @@ class HttpFetcher {
 
   Future<List<GitRef>> fetchUploadRefs() => _fetchRefs('git-upload-pack');
 
-  Future pushRefs(List<GitRef> refPaths, chrome.ArrayBuffer packData,
-      progress) {
+  Future pushRefs(List<GitRef> refPaths, List<int> packData, progress) {
     Completer completer = new Completer();
     String url = _makeUri('/git-receive-pack', {});
     Blob body = _pushRequest(refPaths, packData);
@@ -244,7 +241,7 @@ class HttpFetcher {
     return hex;
   }
 
-  Blob _pushRequest(List<GitRef> refPaths, packData) {
+  Blob _pushRequest(List<GitRef> refPaths, List<int> packData) {
     List blobParts = [];
     String header = refPaths[0].getPktLine() + '\u0000report-status\n';
     header = _padWithZeros(header.length + 4) + header;

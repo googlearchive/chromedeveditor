@@ -410,11 +410,8 @@ class ObjectStore {
     // find the remote branch corresponding to the local one.
     GitRef remoteRef, headRef;
     return getHeadRef().then((String headRefName) {
-      try {
-        remoteRef = baseRefs.firstWhere((GitRef ref) => ref.name == headRefName);
-      } catch (e) {
-        // Ignore exception raised when firstWhere() failed.
-      }
+      remoteRef = baseRefs.firstWhere(
+          (GitRef ref) => ref.name == headRefName, orElse: () => null);
       Map<String, bool> remoteShas = {};
       // Didn't find a remote branch for the local branch.
       if (remoteRef == null) {
@@ -446,8 +443,8 @@ class ObjectStore {
     });
   }
 
-  Future<CommitPushEntry> _getCommits(GitRef remoteRef, Map<String, bool>
-      remoteShas, String sha) {
+  Future<CommitPushEntry> _getCommits(GitRef remoteRef,
+      Map<String, bool> remoteShas, String sha) {
     var commits = [];
     Future<CommitPushEntry> getNextCommit(String sha) {
 
@@ -463,7 +460,7 @@ class ObjectStore {
           completer.completeError("");
         } else if (commitObj.parents.length == 0
             || commitObj.parents.first == remoteRef.sha
-            || remoteShas[commitObj.parents[0]]) {
+            || remoteShas[commitObj.parents[0]] == true) {
           completer.complete(new CommitPushEntry(commits, remoteRef));
         } else {
           return getNextCommit(commitObj.parents.first);

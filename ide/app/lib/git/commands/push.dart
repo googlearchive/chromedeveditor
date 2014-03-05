@@ -24,12 +24,12 @@ class Push {
     String username = options.username;
     String password = options.password;
 
-    Function remotePushProgress;
+    Function pushProgress;
 
     if (options.progressCallback != null) {
       // TODO add progress chunker.
     } else {
-      remotePushProgress = nopFunction;
+      pushProgress = nopFunction;
     }
 
     Config config = store.config;
@@ -50,9 +50,8 @@ class Push {
           throw "no commits to push.";
         }
         PackBuilder builder = new PackBuilder(commits.commits, store);
-        return builder.build().then((packData) {
-          return fetcher.pushRefs([commits.ref], packData,
-              remotePushProgress).then((_) {
+        return builder.build().then((List<int> packData) {
+          return fetcher.pushRefs([commits.ref], packData, pushProgress).then((_) {
             config.remoteHeads[commits.ref.name] = commits.ref.head;
             config.url = url;
             return store.writeConfig();
