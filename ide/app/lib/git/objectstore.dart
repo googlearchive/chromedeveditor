@@ -246,16 +246,15 @@ class ObjectStore {
 
     return this._findLooseObject(sha).then((chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
-        chrome.ArrayBuffer inflated = new chrome.ArrayBuffer.fromBytes(
-            Zlib.inflate(new Uint8List.fromList(buffer.getBytes())).data);
+        List<int> inflated = Zlib.inflate(buffer.getBytes()).data;
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
           // TODO do trim buffer and return completer ;
           var buff;
           return new LooseObject(inflated);
         } else {
           return FileOps.readBlob(new Blob(
-              [new Uint8List.fromList(inflated.getBytes())]), 'Text').then(
-              (data) => new LooseObject(data));
+              [new Uint8List.fromList(inflated)]), 'Text').then(
+                  (data) => new LooseObject(data));
         }
       });
     }, onError:(e) {

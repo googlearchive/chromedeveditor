@@ -6,6 +6,7 @@ library git.zlib;
 
 import 'dart:js' as js;
 
+import 'package:archive/archive.dart' as archive;
 import 'package:chrome/src/common_exp.dart' as chrome;
 
 /**
@@ -27,7 +28,16 @@ class Zlib {
   /**
    * Inflates a zlib deflated byte stream.
    */
-  static ZlibResult inflate(List<int> data, {int expectedLength}) {
+  static ZlibResult inflate(List<int> data, {int offset: 0, int expectedLength}) {
+    // We assume that the compressed string will not be greater by 1000 in
+    // length to the uncompressed string.
+    // This has a very significant impact on performance.
+    if (expectedLength != null) {
+      int end =  expectedLength + offset + 1000;
+      if (end > data.length) end = data.length;
+      data = data.sublist(offset, end);
+    }
+
     Map<String, int> options = {};
     if (expectedLength != null) {
       options['bufferSize'] = expectedLength;
@@ -38,7 +48,7 @@ class Zlib {
     return new ZlibResult(new chrome.ArrayBuffer.fromProxy(buffer).getBytes(),
         inflater['ip']);
 
-//    archive.InputStream stream = new archive.InputStream(data);
+//    archive.InputStream stream = new archive.InputStream(data, start: offset);
 //    archive.Inflate inflater = new archive.Inflate.buffer(stream); //, expectedLength);
 //
 //    return new ZlibResult(inflater.getBytes(), stream.position);

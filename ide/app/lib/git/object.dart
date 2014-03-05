@@ -270,13 +270,19 @@ class LooseObject extends GitObject {
     String header;
     int i;
     if (buf is chrome.ArrayBuffer) {
-      Uint8List data = new Uint8List.fromList(buf.getBytes());
+      buf = buf.getBytes();
+    }
+
+    if (buf is List) {
+      List data = buf;
       List<String> headChars = [];
       for (i = 0; i < data.length; ++i) {
-        if (data[i] != 0)
+        if (data[i] != 0) {
+          // TODO: this seems very slow
           headChars.add(UTF8.decode([data[i]]));
-        else
+        } else {
           break;
+        }
       }
       header = headChars.join();
 

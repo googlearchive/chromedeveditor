@@ -188,9 +188,12 @@ class Pack {
     // We assume that the compressed string will not be greater by 1000 in
     // length to the uncompressed string.
     // This has a very significant impact on performance.
-    int end =  uncompressedLength + objOffset + 1000;
-    if (end > data.length) end = data.length;
-    return Zlib.inflate(data.sublist(objOffset, end), expectedLength: uncompressedLength);
+    //int end =  uncompressedLength + objOffset + 1000;
+    //if (end > data.length) end = data.length;
+    return Zlib.inflate(
+        data,
+        offset: objOffset,
+        expectedLength: uncompressedLength);
   }
 
 
