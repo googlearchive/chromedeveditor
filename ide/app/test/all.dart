@@ -45,6 +45,7 @@ void defineTests() {
   files_test.defineTests();
   jobs_test.defineTests();
   git_all_test.defineTests();
+  outline_test.defineTests();
   preferences_test.defineTests();
   scm_test.defineTests();
   sdk_test.defineTests();
@@ -55,8 +56,4 @@ void defineTests() {
   tcp_test.defineTests();
   utils_test.defineTests();
   workspace_test.defineTests();
-}
-
-void oneTest() {
-  outline_test.defineTests();
 }
