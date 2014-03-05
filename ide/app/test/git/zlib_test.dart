@@ -26,7 +26,7 @@ defineTests() {
       Uint8List buffer2 = new Uint8List.fromList(deflated.data);
 
       // inflate the string back.
-      ZlibResult result = Zlib.inflate(buffer2, null);
+      ZlibResult result = Zlib.inflate(buffer2);
 
       String out = UTF8.decode(result.data);
       expect(out, ZLIB_INPUT_STRING);
@@ -42,26 +42,26 @@ defineTests() {
 
     // This test will time out if zlib deflate is very slow.
     test('speed test', () {
-      PrintProfiler timer = new PrintProfiler('zlib test', quiet: true);
+      PrintProfiler timer = new PrintProfiler('zlib test', printToStdout: false);
 
       StringBuffer buf = new StringBuffer();
       for (int i = 0; i < 10000; i++) {
         buf.writeln(ZLIB_INPUT_STRING);
       }
 
-      timer.emit('create string');
+      timer.finishCurrentTask('create string');
 
       String str = buf.toString();
       Uint8List data = new Uint8List.fromList(UTF8.encoder.convert(str));
-      timer.emit('encode');
+      timer.finishCurrentTask('encode');
       ZlibResult result = Zlib.deflate(data);
-      timer.emit('deflate');
-      result = Zlib.inflate(result.data, null);
-      timer.emit('inflate');
+      timer.finishCurrentTask('deflate');
+      result = Zlib.inflate(result.data);
+      timer.finishCurrentTask('inflate');
       String decodedString = UTF8.decoder.convert(result.data);
-      timer.emit('decode');
+      timer.finishCurrentTask('decode');
       expect(decodedString, str);
-      timer.finish();
+      timer.finishProfiler();
     });
   });
 }

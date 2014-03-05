@@ -11,8 +11,8 @@ import 'ace_test.dart' as ace_test;
 import 'actions_test.dart' as actions_test;
 import 'analytics_test.dart' as analytics_test;
 import 'app_test.dart' as app_test;
+import 'benchmarks.dart' as benchmarks;
 import 'builder_test.dart' as builder_test;
-import 'compiler_test.dart' as compiler_test;
 import 'editors_test.dart' as editors_test;
 import 'event_bus_test.dart' as event_bus_test;
 import 'files_test.dart' as files_test;
@@ -38,7 +38,6 @@ void defineTests() {
   analytics_test.defineTests();
   app_test.defineTests();
   builder_test.defineTests();
-  compiler_test.defineTests();
   editors_test.defineTests();
   event_bus_test.defineTests();
   files_test.defineTests();
@@ -54,4 +53,7 @@ void defineTests() {
   tcp_test.defineTests();
   utils_test.defineTests();
   workspace_test.defineTests();
+
+  // Run our benchmarks as well.
+  benchmarks.defineTests();
 }

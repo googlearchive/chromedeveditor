@@ -94,7 +94,7 @@ class ServicesIsolate {
         new Completer<ServiceActionEvent>();
 
     ServiceImpl service = getServiceImpl(event.serviceId);
-    service.handleEvent(event).then((ServiceActionEvent responseEvent){
+    service.handleEvent(event).then((ServiceActionEvent responseEvent) {
       if (responseEvent != null) {
         _sendResponse(responseEvent);
         completer.complete();
@@ -138,15 +138,13 @@ class TestServiceImpl extends ServiceImpl {
       case "shortTest":
         return new Future.value(event.createReponse(
             {"response": "short${event.data['name']}"}));
-        break;
       case "readText":
         String fileUuid = event.data['fileUuid'];
         return _isolate.chromeService.getFileContents(fileUuid)
             .then((String contents) =>
                 event.createReponse({"contents": contents}));
-        break;
       case "longTest":
-        return _isolate.chromeService.delay(1000).then((_){
+        return _isolate.chromeService.delay(1000).then((_) {
           return new Future.value(event.createReponse(
               {"response": "long${event.data['name']}"}));
         });
@@ -175,16 +173,13 @@ class CompilerServiceImpl extends ServiceImpl {
       case "start":
         // TODO(ericarnold): Start should happen automatically on use.
         return _start().then((_) => new Future.value(event.createReponse(null)));
-        break;
       case "dispose":
         return new Future.value(event.createReponse(null));
-        break;
       case "compileString":
         return compiler.compileString(event.data['string'])
             .then((CompilerResult result)  {
               return new Future.value(event.createReponse(result.toMap()));
             });
-        break;
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
@@ -315,7 +310,7 @@ class ChromeService {
   Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
       [bool expectResponse = false]) {
     return _isolate._sendAction(event, expectResponse)
-        .then((ServiceActionEvent event){
+        .then((ServiceActionEvent event) {
           if (event.error != true) {
             return event;
           } else {

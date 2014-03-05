@@ -373,25 +373,32 @@ class Dart2JsServlet extends PicoServlet {
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    HttpResponse response = new HttpResponse.ok();
-
     Resource resource = _getResource(request.uri.path);
-
     Stopwatch stopwatch = new Stopwatch()..start();
-
     Completer completer = new Completer();
 
     resource.workspace.builderManager.jobManager.schedule(
         new ProgressJob('Compiling ${resource.name}…', completer));
 
     return (resource as File).getContents().then((String string) {
-      // TODO: compiler should also accept files
+      // TODO: The compiler should also accept files.
       return _compiler.compileString(string).then((CompilerResult result) {
-        _logger.info('compiled ${resource.path} in '
-            '${_NF.format(stopwatch.elapsedMilliseconds)} ms');
-        response.setContent(result.output);
-        response.setContentTypeFrom(request.uri.path);
-        return new Future.value(response);
+        if (!result.hasOutput) {
+          // TODO: Log this to something like a console window.
+          _logger.warning('Error compiling ${resource.path} with dart2js.');
+          for (CompilerProblem problem in result.problems) {
+            _logger.warning('${problem}');
+          }
+          return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
+        } else {
+          _logger.info('compiled ${resource.path} in '
+              '${_NF.format(stopwatch.elapsedMilliseconds)} ms, '
+              '${result.output.length ~/ 1024} kb');
+          HttpResponse response = new HttpResponse.ok();
+          response.setContent(result.output);
+          response.setContentTypeFrom(request.uri.path);
+          return response;
+        }
       });
     }).whenComplete(() => completer.complete());
   }

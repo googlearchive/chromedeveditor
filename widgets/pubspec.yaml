@@ -7,4 +7,4 @@ environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
   bootjack: any
-  polymer: '>=0.9.2'
+  polymer: '>=0.9.5'
