@@ -207,8 +207,10 @@ class AndroidDevice {
     CipherBase.initCipher();
   }
 
+  // TODO: add generic type info to the Future
   Future listDevices() {
     // TODO (shepheb): List all Android devices.
+    return new Future.value([]);
   }
 
   // Either resolves on successful open, or rejects with an error message on failure.
