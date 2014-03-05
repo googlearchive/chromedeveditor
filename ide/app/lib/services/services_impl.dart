@@ -7,11 +7,10 @@ library spark.services_impl;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'analyzer.dart';
-import 'services_common.dart' as common;
+import 'analyzer.dart' as analyzer;
+import 'services_common.dart';
 import 'compiler.dart';
 import '../dart/sdk.dart';
-import '../utils.dart';
 
 void init(SendPort sendPort) {
   final ServicesIsolate servicesIsolate = new ServicesIsolate(sendPort);
@@ -201,11 +200,11 @@ class AnalyzerServiceImpl extends ServiceImpl {
   AnalyzerServiceImpl(ServicesIsolate isolate) : super(isolate);
 
   String get serviceId => "analyzer";
-  Future<ChromeDartSdk> _dartSdkFuture;
-  Future<ChromeDartSdk> get dartSdkFuture {
+  Future<analyzer.ChromeDartSdk> _dartSdkFuture;
+  Future<analyzer.ChromeDartSdk> get dartSdkFuture {
     if (_dartSdkFuture == null) {
       _dartSdkFuture = _isolate.chromeService.getAppContents('sdk/dart-sdk.bin')
-          .then((List<int> sdkContents) => createSdk(sdkContents));
+          .then((List<int> sdkContents) => analyzer.createSdk(sdkContents));
     }
     return _dartSdkFuture;
   }
@@ -227,19 +226,19 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Future<Map<String, List<Map>>> build(List<Map> fileUuids) {
     Map<String, List<Map>> errorsPerFile = {};
 
-    return dartSdkFuture.then((ChromeDartSdk sdk) {
+    return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
       return Future.forEach(fileUuids, (String fileUuid) {
         return _processFile(sdk, fileUuid)
-            .then((AnalyzerResult result) {
-              List<AnalysisError> errors = result.errors;
+            .then((analyzer.AnalyzerResult result) {
+              List<analyzer.AnalysisError> errors = result.errors;
               List<Map> responseErrors = [];
               if (errors != null) {
-                for (AnalysisError error in errors) {
-                  common.AnalysisError responseError =
-                      new common.AnalysisError();
+                for (analyzer.AnalysisError error in errors) {
+                  AnalysisError responseError =
+                      new AnalysisError();
                   responseError.message = error.message;
                   responseError.offset = error.offset;
-                  LineInfo_Location location = result.getLineInfo(error);
+                  analyzer.LineInfo_Location location = result.getLineInfo(error);
                   responseError.lineNumber = location.lineNumber;
                   responseError.errorSeverity =
                       _errorSeverityToInt(error.errorCode.errorSeverity);
@@ -256,26 +255,26 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }).then((_) => errorsPerFile);
   }
 
-  int _errorSeverityToInt(ErrorSeverity severity) {
-    if (severity == ErrorSeverity.ERROR) {
-      return common.ErrorSeverity.ERROR;
-    } else  if (severity == ErrorSeverity.WARNING) {
-      return common.ErrorSeverity.WARNING;
-    } else  if (severity == ErrorSeverity.INFO) {
-      return common.ErrorSeverity.INFO;
+  int _errorSeverityToInt(analyzer.ErrorSeverity severity) {
+    if (severity == analyzer.ErrorSeverity.ERROR) {
+      return ErrorSeverity.ERROR;
+    } else  if (severity == analyzer.ErrorSeverity.WARNING) {
+      return ErrorSeverity.WARNING;
+    } else  if (severity == analyzer.ErrorSeverity.INFO) {
+      return ErrorSeverity.INFO;
     } else {
-      return common.ErrorSeverity.NONE;
+      return ErrorSeverity.NONE;
     }
   }
 
   /**
    * Analyzes file and returns a Future with the [AnalyzerResult].
    */
-  Future<AnalyzerResult> _processFile(ChromeDartSdk sdk, String fileUuid) {
+  Future<analyzer.AnalyzerResult> _processFile(analyzer.ChromeDartSdk sdk, String fileUuid) {
     return _isolate.chromeService.getFileContents(fileUuid)
         .then((String contents) =>
-            analyzeString(sdk, contents, performResolution: false))
-        .then((AnalyzerResult result) => result);
+            analyzer.analyzeString(sdk, contents, performResolution: false))
+        .then((analyzer.AnalyzerResult result) => result);
   }
 
 }
