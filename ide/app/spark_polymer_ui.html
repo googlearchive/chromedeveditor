@@ -193,26 +193,28 @@
             <input id="name" type="text" class="form-control" autofocus>
           </div>
           <br/>
-          <div>
-            <input type="radio" name="type" value="empty-project" id="empty-project" checked>
-            <label for="empty-project" checked>Create an empty project</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
-            <label for="dart-web-app-radio" checked>Create a new Web App (Dart)</label>
-          </div>
-          <!--div>
-            <input type="radio" name="type" value="web-js" id="js-web-app-radio">
-            <label for="js-web-app-radio" checked>Create a new Web App (JavaScript)</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="chrome-dart" id="dart-chrome-app-radio">
-            <label for="dart-chrome-app-radio" checked>Create a new Chrome App (Dart)</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="chrome-js" id="js-chrome-app-radio">
-            <label for="js-chrome-app-radio" checked>Create a new Chrome App (JavaScript)</label>
-          </div-->
+          <form>
+            <div>
+              <input type="radio" name="type" value="empty-project" id="empty-project" checked>
+              <label for="empty-project">Create an empty project</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
+              <label for="dart-web-app-radio">Create a new Web App (Dart)</label>
+            </div>
+            <!--div>
+              <input type="radio" name="type" value="web-js" id="js-web-app-radio">
+              <label for="js-web-app-radio">Create a new Web App (JavaScript)</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="chrome-dart" id="dart-chrome-app-radio">
+              <label for="dart-chrome-app-radio">Create a new Chrome App (Dart)</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="chrome-js" id="js-chrome-app-radio">
+              <label for="js-chrome-app-radio">Create a new Chrome App (JavaScript)</label>
+            </div-->
+          </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -233,17 +235,19 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <div>
-            <input type="radio" name="type" value="push-adb" id="adb" checked />
-            <label for="adb" checked>ADB over USB</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="push-ip" id="ip" />
-            <label for="ip">Directly over network</label>
+          <form>
+            <div>
+              <input type="radio" name="type" value="push-adb" id="adb" checked />
+              <label for="adb">ADB over USB</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="push-ip" id="ip" />
+              <label for="ip">Directly over network</label>
 
-            <label for="pushUrl">Target Host</label>
-            <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
-          </div>
+              <label for="pushUrl">Target Host</label>
+              <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+            </div>
+          </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -527,7 +531,7 @@
           <form>
             <div>
               <input type="radio" name="type" value="new" id="new-app-radio" checked>
-              <label for="new-app-radio" checked>Create a new application</label>
+              <label for="new-app-radio">Create a new application</label>
             </div>
             <div>
               <input type="radio" name="type" value="existing" id="existing-app-radio">
