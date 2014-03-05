@@ -182,6 +182,13 @@ class AnalyzerService extends Service {
 
   List<String> _filesToUuid(Iterable<ws.File> files) =>
       files.map((f) => f.uuid).toList();
+
+  Future<Outline> getOutlineFor(String codeString) {
+    return _sendAction("getOutlineFor", {"string": codeString})
+        .then((ServiceActionEvent result) {
+      return new Outline.fromMap(result.data);
+    });
+  }
 }
 
 /**

@@ -217,10 +217,76 @@ class AnalyzerServiceImpl extends ServiceImpl {
               return new Future.value(event.createReponse(
                   {"errors": errorsPerFile}));
             });
+      case "getOutlineFor":
+        return dartSdkFuture
+            .then((analyzer.ChromeDartSdk sdk) {
+              var codeString = event.data['string'];
+              return analyzer.analyzeString(
+                  sdk, codeString, performResolution: false);
+            }).then((analyzer.AnalyzerResult result) =>
+                event.createReponse(getOutline(result.ast).toMap()));
+        break;
+
       default:
         throw new ArgumentError(
             "Unknown action '${event.actionId}' sent to $serviceId service.");
     }
+  }
+
+  Outline getOutline(analyzer.CompilationUnit ast) {
+    Outline outline = new Outline();
+
+    // TODO(ericarnold): Need to implement modifiers
+    // TODO(ericarnold): Need to implement types
+
+    for (analyzer.Declaration declaration in ast.declarations) {
+      OutlineTopLevelEntry outlineDeclaration;
+      if (declaration is analyzer.TopLevelVariableDeclaration) {
+        analyzer.VariableDeclarationList variables = declaration.variables;
+
+        for (analyzer.VariableDeclaration variable in variables.variables) {
+          outline.entries.add(populateOutlineEntry(
+              new OutlineTopLevelVariable(variable.name.name), declaration));
+        }
+      } else {
+        if (declaration is analyzer.ClassDeclaration) {
+          outlineDeclaration = new OutlineClass(declaration.name.name);
+          OutlineClass outlineClass = outlineDeclaration;
+          outline.entries.add(outlineClass);
+          analyzer.NodeList<analyzer.ClassMember> members = declaration.members;
+          for (analyzer.ClassMember member in members) {
+            String name;
+            if (member is analyzer.MethodDeclaration) {
+              outlineClass.members.add(populateOutlineEntry(
+                  new OutlineMethod(member.name.name), member));
+            } else if (member is analyzer.FieldDeclaration) {
+              analyzer.VariableDeclarationList fields = member.fields;
+              for (analyzer.VariableDeclaration field in fields.variables) {
+                outlineClass.members.add(populateOutlineEntry(
+                    new OutlineClassVariable(field.name.name), field));
+              }
+            }
+          }
+        } else if (declaration is analyzer.FunctionDeclaration) {
+          outlineDeclaration = populateOutlineEntry(
+              new OutlineTopLevelFunction(declaration.name.name), declaration);
+        } else {
+          print("${declaration.runtimeType} is unknown");
+        }
+
+        outline.entries.add(populateOutlineEntry(
+            outlineDeclaration, declaration));
+      }
+    }
+
+    return outline;
+  }
+
+  OutlineEntry populateOutlineEntry(
+      OutlineEntry outlineEntry, analyzer.ASTNode node) {
+    outlineEntry.startOffset = node.beginToken.offset;
+    outlineEntry.endOffset = node.endToken.end;
+    return outlineEntry;
   }
 
   Future<Map<String, List<Map>>> build(List<Map> fileUuids) {
