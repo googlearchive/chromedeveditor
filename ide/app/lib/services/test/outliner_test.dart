@@ -6,8 +6,6 @@ library spark.outliner_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../analyzer.dart';
-import '../../utils.dart';
 import '../../services/services_impl.dart';
 
 defineTests(ServicesIsolate servicesIsolate) {

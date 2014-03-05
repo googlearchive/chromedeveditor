@@ -188,7 +188,6 @@ class AnalyzerService extends Service {
         .then((ServiceActionEvent result) {
       return new Outline.fromMap(result.data);
     });
-
   }
 }
 
