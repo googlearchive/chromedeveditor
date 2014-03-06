@@ -13,6 +13,8 @@ import '../lib/services.dart' as services;
 class Outline {
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
+  html.DivElement _outlineContainer;
+
   services.AnalyzerService analyzer;
 
   List<OutlineTopLevelItem> children = [];
@@ -22,14 +24,35 @@ class Outline {
 
     _outlineDiv.style
         ..position = 'absolute'
-        ..width = '200px'
+        ..minWidth = '40px'
         ..right = '10px'
         ..top ='10px'
         ..bottom = '10px'
         ..background = 'rgb(100, 100, 100)'
         ..borderRadius = '2px'
         ..zIndex = '100'
-        ..opacity = '0.6';
+        ..opacity = '0.6'
+        ..overflow = 'scroll';
+
+    _outlineContainer = new html.DivElement();
+    _outlineContainer.style
+        ..height = '100%'
+        ..width = '200px'
+        ..overflow = 'scroll';
+    _outlineDiv.append(_outlineContainer);
+
+    html.ButtonElement toggleButton = new html.ButtonElement();
+    toggleButton
+        ..onClick.listen((e) => e.target.text = _toggle() ? ">" : "<")
+        ..text = ">";
+
+    toggleButton.style
+        ..position = 'absolute'
+        ..height ='20px'
+        ..top ='50%'
+        ..bottom ='50%';
+
+    _outlineDiv.append(toggleButton);
   }
 
   /**
@@ -50,7 +73,7 @@ class Outline {
     }
 
     _rootList = new html.UListElement();
-    _outlineDiv.append(_rootList);
+    _outlineContainer.append(_rootList);
 
     for (services.OutlineTopLevelEntry data in outline.entries) {
       _create(data);
@@ -70,13 +93,15 @@ class Outline {
   }
 
   /**
-   * Toggles visibility of the outline
+   * Toggles visibility of the outline.  Returns true if showing.
    */
-  void toggle() {
-    if (_outlineDiv.style.display == 'none') {
-      _outlineDiv.style.display = 'block';
+  bool _toggle() {
+    if (_outlineContainer.style.display == 'none') {
+      _outlineContainer.style.display = 'block';
+      return true;
     } else {
-      _outlineDiv.style.display = 'none';
+      _outlineContainer.style.display = 'none';
+      return false;
     }
   }
 
