@@ -261,7 +261,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
               analyzer.VariableDeclarationList fields = member.fields;
               for (analyzer.VariableDeclaration field in fields.variables) {
                 outlineClass.members.add(populateOutlineEntry(
-                    new OutlineClassVariable(field.name.name), field));
+                    new OutlineProperty(field.name.name), field));
               }
             }
           }

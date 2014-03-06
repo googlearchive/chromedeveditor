@@ -1,7 +1,15 @@
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+import 'dart:async';
 import 'dart:html' as html;
 
 import '../lib/services.dart' as services;
 
+/**
+ * Defines a class to build an outline UI for a given block of code.
+ */
 class Outline {
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
@@ -24,8 +32,11 @@ class Outline {
         ..opacity = '0.6';
   }
 
-  void build(String code) {
-    analyzer.getOutlineFor(code).then((services.Outline model) {
+  /**
+   * Builds or rebuilds the outline UI based on the given String of code.
+   */
+  Future build(String code) {
+    return analyzer.getOutlineFor(code).then((services.Outline model) {
       _populate(model);
     });
   }
@@ -58,7 +69,9 @@ class Outline {
     }
   }
 
-
+  /**
+   * Toggles visibility of the outline
+   */
   void toggle() {
     if (_outlineDiv.style.display == 'none') {
       _outlineDiv.style.display = 'block';
@@ -132,7 +145,7 @@ class OutlineClass extends OutlineTopLevelItem {
   OutlineItem _create(services.OutlineEntry data) {
     if (data is services.OutlineMethod) {
       return addMethod(data);
-    } else if (data is services.OutlineClassVariable) {
+    } else if (data is services.OutlineProperty) {
       return addProperty(data);
     } else {
       throw new UnimplementedError("Unknown type");
@@ -141,7 +154,7 @@ class OutlineClass extends OutlineTopLevelItem {
 
   OutlineMethod addMethod(services.OutlineMethod data) =>
       _addElement(new OutlineMethod(data));
-  OutlineProperty addProperty(services.OutlineClassVariable data) =>
+  OutlineProperty addProperty(services.OutlineProperty data) =>
       _addElement(new OutlineProperty(data));
 }
 
@@ -154,6 +167,6 @@ abstract class OutlineClassMember extends OutlineItem {
 }
 
 class OutlineProperty extends OutlineClassMember {
-  OutlineProperty(services.OutlineClassVariable data) : super(data);
+  OutlineProperty(services.OutlineProperty data) : super(data);
 }
 
