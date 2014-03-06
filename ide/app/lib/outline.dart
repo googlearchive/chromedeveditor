@@ -1,6 +1,6 @@
 import 'dart:html' as html;
 
-import '../lib/services/services_common.dart' as data;
+import '../lib/services/services_common.dart' as model;
 
 class Outline {
   html.DivElement _outlineDiv;
@@ -21,27 +21,29 @@ class Outline {
         ..opacity = '0.6';
   }
 
-  void populate(data.Outline outline) {
+  void populate(model.Outline outline) {
+    // TODO(ericarnold): Is there anything else that needs to be done to
+    //    emsure there are no memory leaks?
     children = [];
-
     if (_rootList != null) {
       _rootList.remove();
     }
+
     _rootList = new html.UListElement();
     _outlineDiv.append(_rootList);
 
-    for (data.OutlineTopLevelEntry model in outline.entries) {
-      _create(model);
+    for (model.OutlineTopLevelEntry data in outline.entries) {
+      _create(data);
     }
   }
 
-  OutlineTopLevelItem _create(data.OutlineTopLevelEntry model) {
-    if (model is data.OutlineClass) {
-      return addClass(model);
-    } else if (model is data.OutlineTopLevelVariable) {
-      return addVariable(model);
-    } else if (model is data.OutlineTopLevelFunction) {
-      return addFunction(model);
+  OutlineTopLevelItem _create(model.OutlineTopLevelEntry data) {
+    if (data is model.OutlineClass) {
+      return _addClass(data);
+    } else if (data is model.OutlineTopLevelVariable) {
+      return _addVariable(data);
+    } else if (data is model.OutlineTopLevelFunction) {
+      return _addFunction(data);
     } else {
       throw new UnimplementedError("Unknown type");
     }
@@ -62,13 +64,14 @@ class Outline {
     return item;
   }
 
-  OutlineTopLevelVariable addVariable(data.OutlineTopLevelVariable model) =>
-      _addItem(new OutlineTopLevelVariable(model));
-  OutlineTopLevelFunction addFunction(data.OutlineTopLevelFunction model) =>
-      _addItem(new OutlineTopLevelFunction(model));
+  OutlineTopLevelVariable _addVariable(model.OutlineTopLevelVariable data) =>
+      _addItem(new OutlineTopLevelVariable(data));
 
-  OutlineClass addClass(data.OutlineClass model) {
-    OutlineClass classItem = new OutlineClass(model);
+  OutlineTopLevelFunction _addFunction(model.OutlineTopLevelFunction data) =>
+      _addItem(new OutlineTopLevelFunction(data));
+
+  OutlineClass _addClass(model.OutlineClass data) {
+    OutlineClass classItem = new OutlineClass(data);
     _addItem(classItem);
     _rootList.append(classItem._childrenRootElement);
     return classItem;
@@ -77,32 +80,32 @@ class Outline {
 
 abstract class OutlineItem {
   html.LIElement _element;
-  data.OutlineEntry _model;
+  model.OutlineEntry _data;
 
-  OutlineItem(this._model) {
+  OutlineItem(this._data) {
     _element = new html.LIElement();
-    _element.text = _model.name;
+    _element.text = _data.name;
   }
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
-  OutlineTopLevelItem(data.OutlineTopLevelEntry model) : super(model);
+  OutlineTopLevelItem(model.OutlineTopLevelEntry data) : super(data);
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
-  OutlineTopLevelVariable(data.OutlineTopLevelVariable model) : super(model);
+  OutlineTopLevelVariable(model.OutlineTopLevelVariable data) : super(data);
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
-  OutlineTopLevelFunction(data.OutlineTopLevelFunction model) : super(model);
+  OutlineTopLevelFunction(model.OutlineTopLevelFunction data) : super(data);
 }
 
 class OutlineClass extends OutlineTopLevelItem {
   var _childrenRootElement = new html.UListElement();
   List<OutlineClassMember> members = [];
 
-  OutlineClass(data.OutlineClass model) : super(model) {
-    populate(model);
+  OutlineClass(model.OutlineClass data) : super(data) {
+    populate(data);
   }
 
   OutlineClassMember _addElement(OutlineClassMember member) {
@@ -111,37 +114,37 @@ class OutlineClass extends OutlineTopLevelItem {
     return member;
   }
 
-  void populate(data.OutlineClass classModel) {
-    for (data.OutlineEntry model in classModel.members) {
-      _create(model);
+  void populate(model.OutlineClass classData) {
+    for (model.OutlineEntry data in classData.members) {
+      _create(data);
     }
   }
 
-  OutlineItem _create(data.OutlineEntry model) {
-    if (model is data.OutlineMethod) {
-      return addMethod(model);
-    } else if (model is data.OutlineClassVariable) {
-      return addProperty(model);
+  OutlineItem _create(model.OutlineEntry data) {
+    if (data is model.OutlineMethod) {
+      return addMethod(data);
+    } else if (data is model.OutlineClassVariable) {
+      return addProperty(data);
     } else {
       throw new UnimplementedError("Unknown type");
     }
   }
 
-  OutlineMethod addMethod(data.OutlineMethod model) =>
-      _addElement(new OutlineMethod(model));
-  OutlineProperty addProperty(data.OutlineClassVariable model) =>
-      _addElement(new OutlineProperty(model));
+  OutlineMethod addMethod(model.OutlineMethod data) =>
+      _addElement(new OutlineMethod(data));
+  OutlineProperty addProperty(model.OutlineClassVariable data) =>
+      _addElement(new OutlineProperty(data));
 }
 
 class OutlineMethod extends OutlineClassMember {
-  OutlineMethod(data.OutlineMethod model) : super(model);
+  OutlineMethod(model.OutlineMethod data) : super(data);
 }
 
 abstract class OutlineClassMember extends OutlineItem {
-  OutlineClassMember(data.OutlineMember model) : super(model);
+  OutlineClassMember(model.OutlineMember data) : super(data);
 }
 
 class OutlineProperty extends OutlineClassMember {
-  OutlineProperty(data.OutlineClassVariable model) : super(model);
+  OutlineProperty(model.OutlineClassVariable data) : super(data);
 }
 
