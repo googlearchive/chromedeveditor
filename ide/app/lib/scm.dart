@@ -437,13 +437,17 @@ class GitScmProjectOperations extends ScmProjectOperations {
     // For each file, request the SCM status asynchronously.
     return objectStore.then((ObjectStore store) {
       return Future.forEach(files, (File file) {
-        Stopwatch timer = new Stopwatch()..start();
-        return Status.getFileStatus(store, file.entry).then((status) {
-          file.setMetadata('scmStatus',
-              new FileStatus.fromIndexStatus(status.type).status);
-          _logger.info('calculated scm status for ${file.path} in '
-              '${timer.elapsedMilliseconds}ms');
-        });
+        // TODO: remove this short-circuit once scm status is fast
+        file.setMetadata('scmStatus', FileStatus.COMMITTED.status);
+        return new Future.value();
+
+//        Stopwatch timer = new Stopwatch()..start();
+//        return Status.getFileStatus(store, file.entry).then((status) {
+//          file.setMetadata('scmStatus',
+//              new FileStatus.fromIndexStatus(status.type).status);
+//          _logger.info('calculated scm status for ${file.path} in '
+//              '${timer.elapsedMilliseconds}ms');
+//        });
       }).then((_) => _statusController.add(this));
     }).catchError((e, st) {
       _logger.severe("error calculating scm status", e, st);
