@@ -21,6 +21,7 @@ import 'editors.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
+import 'services.dart' as services;
 import 'outline.dart';
 
 export 'package:ace/ace.dart' show EditSession;
@@ -34,6 +35,7 @@ class TextEditor extends Editor {
   StreamController _modificationController = new StreamController.broadcast();
 
   ace.EditSession _session;
+  services.Services _services;
 
   String _lastSavedHash;
 
@@ -44,7 +46,7 @@ class TextEditor extends Editor {
 
   bool _dirty = false;
 
-  TextEditor(this.aceManager, this.file);
+  TextEditor(this.aceManager, this.file, this._services);
 
   bool get dirty => _dirty;
 
@@ -91,6 +93,12 @@ class TextEditor extends Editor {
     if (_dirty) {
       String text = _session.value;
       _lastSavedHash = _calcMD5(text);
+
+      services.AnalyzerService analyzer = _services.getService("analyzer");
+      analyzer.getOutlineFor(text).then((services.Outline model) {
+        aceManager.outline.populate(model);
+      });
+
       return file.setContents(text).then((_) => dirty = false);
     } else {
       return new Future.value();
@@ -139,6 +147,8 @@ class AceManager {
   final html.Element parentElement;
   final AceManagerDelegate delegate;
 
+  Outline outline;
+
   ace.Editor _aceEditor;
 
   workspace.Marker _currentMarker;
@@ -173,7 +183,7 @@ class AceManager {
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
 
     parentElement.children.add(_outlineDiv);
-    Outline view = new Outline(_outlineDiv);
+    outline = new Outline(_outlineDiv);
   }
 
   bool isFileExtensionEditable(String extension) {

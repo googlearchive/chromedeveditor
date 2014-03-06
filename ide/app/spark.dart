@@ -281,7 +281,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _aceKeysManager = new KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
-        workspace, aceManager, localPrefs, eventBus);
+        workspace, aceManager, localPrefs, eventBus, services);
     _editorManager.onNewFileOpened.listen((_) {
       _workspace.checkResource(_editorManager.currentFile);
     });
