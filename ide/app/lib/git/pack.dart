@@ -198,7 +198,6 @@ class Pack {
 
 
   PackedObject _matchObjectData(PackObjectHeader header) {
-
     PackedObject object = new PackedObject();
 
     object.offset = header.offset;
@@ -220,8 +219,7 @@ class Pack {
     }
 
     ZlibResult objData = _uncompressObject(_offset, header.size);
-    object.data = new Uint8List.fromList(objData.data);
-
+    object.data = objData.data;
     _advance(objData.readLength);
     return object;
   }
@@ -427,8 +425,7 @@ class PackBuilder {
       // assume it's a string.
       data = UTF8.encoder.convert(buf);
     }
-    ByteBuffer compressed =
-        new Uint8List.fromList(Zlib.deflate(data)).buffer;
+    ByteBuffer compressed = new Uint8List.fromList(Zlib.deflate(data)).buffer;
     _packed.add(new Uint8List.fromList(
         _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);

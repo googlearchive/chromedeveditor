@@ -252,9 +252,11 @@ class ObjectStore {
           var buff;
           return new LooseObject(inflated);
         } else {
-          return FileOps.readBlob(new Blob(
-              [new Uint8List.fromList(inflated)]), 'Text').then(
-                  (data) => new LooseObject(data));
+          // TODO: this seems inefficient - why are we reading the inflated
+          // data as 'Text'?
+          return FileOps.readBlob(new Blob([inflated]), 'Text').then((data) {
+            return new LooseObject(data);
+          });
         }
       });
     }, onError:(e) {

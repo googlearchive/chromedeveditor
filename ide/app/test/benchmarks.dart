@@ -46,15 +46,15 @@ Logger _logger = new Logger('spark.benchmarks');
 
 defineTests() {
   group('benchmarks', () {
-    test('archive inflate', () => runBenchmark(new InflateBenchmark()));
-    test('archive deflate', () => runBenchmark(new DeflateBenchmark()));
+    //test('archive inflate', () => runBenchmark(new InflateBenchmark()));
+    //test('archive deflate', () => runBenchmark(new DeflateBenchmark()));
     test('create zip', () => runBenchmark(new CreateZipBenchmark()));
 
     test('git sha', () => runBenchmark(new GitShaBenchmark()));
     test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
 
-    test('jszlib inflate', () => runBenchmark(new JszlibInflateBenchmark()));
-    test('jszlib deflate', () => runBenchmark(new JszlibDeflateBenchmark()));
+    test('zlib inflate', () => runBenchmark(new ZlibInflateBenchmark()));
+    test('zlib deflate', () => runBenchmark(new ZlibDeflateBenchmark()));
   });
 }
 
@@ -119,10 +119,10 @@ class CreateZipBenchmark extends BenchmarkBase {
   }
 }
 
-class JszlibInflateBenchmark extends BenchmarkBase {
+class ZlibInflateBenchmark extends BenchmarkBase {
   List data;
 
-  JszlibInflateBenchmark() : super('jszlib inflate', emitter: _emitter);
+  ZlibInflateBenchmark() : super('zlib inflate', emitter: _emitter);
 
   void setup() {
     data = Zlib.deflate(_createData(100000));
@@ -133,10 +133,10 @@ class JszlibInflateBenchmark extends BenchmarkBase {
   }
 }
 
-class JszlibDeflateBenchmark extends BenchmarkBase {
+class ZlibDeflateBenchmark extends BenchmarkBase {
   List data = _createData(100000);
 
-  JszlibDeflateBenchmark() : super('jszlib deflate', emitter: _emitter);
+  ZlibDeflateBenchmark() : super('zlib deflate', emitter: _emitter);
 
   void run() {
     List<int> result = Zlib.deflate(data);
