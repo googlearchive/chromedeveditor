@@ -2,62 +2,6 @@ import 'dart:html' as html;
 
 import '../lib/services/services_common.dart' as data;
 
-class Test {
-  Map outlineTopLevelVariableMap = {
-      "name": "varName",
-      "startOffset": 10,
-      "endOffset": 20,
-      "type": "top-level-variable"};
-
-  Map outlineClassMap = {
-      "name": "className",
-      "startOffset": 30,
-      "endOffset": 40,
-      "abstract": true,
-      "members": [],
-      "type": "class"};
-
-  Map outlineFunctionMap = {
-      "name": "functionName",
-      "startOffset": 50,
-      "endOffset": 60,
-      "type": "function"};
-
-  Map outlineMethodMap = {
-      "name": "methodName",
-      "startOffset": 70,
-      "endOffset": 80,
-      "type": "method"};
-
-  Map outlineClassVariableMap = {
-      "name": "variableName",
-      "startOffset": 90,
-      "endOffset": 100,
-      "type": "class-variable"};
-
-  data.Outline outline;
-
-  test() {
-    data.OutlineTopLevelVariable outlineTopLevelVariable =
-        new data.OutlineTopLevelEntry.fromMap(outlineTopLevelVariableMap);
-
-    data.OutlineClass outlineEmptyClass =
-        new data.OutlineTopLevelEntry.fromMap(outlineClassMap);
-
-    // Fill the class and re-test
-    outlineClassMap['members'].add(outlineClassVariableMap);
-    outlineClassMap['members'].add(outlineMethodMap);
-
-    data.OutlineClass outlineClass =
-        new data.OutlineTopLevelEntry.fromMap(outlineClassMap);
-
-    data.OutlineTopLevelFunction outlineFunction =
-        new data.OutlineTopLevelEntry.fromMap(outlineFunctionMap);
-    outline = new data.Outline.fromMap({
-      "entries": [outlineTopLevelVariableMap, outlineClassMap, outlineFunctionMap]});
-  }
-}
-
 class Outline {
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
@@ -75,22 +19,17 @@ class Outline {
         ..borderRadius = '2px'
         ..zIndex = '100'
         ..opacity = '0.6';
-    _rootList = new html.UListElement();
-    _outlineDiv.append(_rootList);
-    Test test = new Test();
-
-    test.test();
-
-    populate(test.outline);
-
-//    addClass()
-//      ..addMethod()
-//      ..addProperty();
-//    addVariable();
-//    addFunction();
   }
 
   void populate(data.Outline outline) {
+    children = [];
+
+    if (_rootList != null) {
+      _rootList.remove();
+    }
+    _rootList = new html.UListElement();
+    _outlineDiv.append(_rootList);
+
     for (data.OutlineTopLevelEntry model in outline.entries) {
       _create(model);
     }
@@ -135,7 +74,6 @@ class Outline {
     return classItem;
   }
 }
-
 
 abstract class OutlineItem {
   html.LIElement _element;
@@ -189,8 +127,10 @@ class OutlineClass extends OutlineTopLevelItem {
     }
   }
 
-  OutlineMethod addMethod(data.OutlineMethod model) => _addElement(new OutlineMethod(model));
-  OutlineProperty addProperty(data.OutlineClassVariable model) => _addElement(new OutlineProperty(model));
+  OutlineMethod addMethod(data.OutlineMethod model) =>
+      _addElement(new OutlineMethod(model));
+  OutlineProperty addProperty(data.OutlineClassVariable model) =>
+      _addElement(new OutlineProperty(model));
 }
 
 class OutlineMethod extends OutlineClassMember {
