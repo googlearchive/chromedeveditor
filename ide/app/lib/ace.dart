@@ -21,6 +21,7 @@ import 'editors.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
+import 'outline.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -149,6 +150,8 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
 
+  html.DivElement _outlineDiv = new html.DivElement();
+
   AceManager(this.parentElement, this.delegate) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
@@ -168,6 +171,9 @@ class AceManager {
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
+
+    parentElement.children.add(_outlineDiv);
+    Outline view = new Outline(_outlineDiv);
   }
 
   bool isFileExtensionEditable(String extension) {
