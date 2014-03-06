@@ -374,9 +374,12 @@ class Workspace extends Container {
    */
   Future _restoreSyncFs() {
     Stopwatch stopwatch = new Stopwatch()..start();
-    Completer completer = new Completer();
+    Completer progressCompleter = new Completer();
 
-    chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
+    _builderManager.jobManager.schedule(
+        new ProgressJob('Opening sync filesystem…', progressCompleter));
+
+    return chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
       _syncFileSystem = fs;
 
       chrome.syncFileSystem.onFileStatusChanged.listen((chrome.FileInfo info) {
@@ -393,17 +396,14 @@ class Workspace extends Container {
         }).whenComplete(() {
           _logger.info('SyncFS restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
-        }).then((_) => _whenAvailableSyncFs.complete(this));
+        });
       });
     }, onError: (e) {
         _logger.warning('Exception in workspace restore sync file system', e);
-        _whenAvailableSyncFs.complete(this);
-    }).whenComplete(() => completer.complete());
-
-    _builderManager.jobManager.schedule(
-        new ProgressJob('Opening sync filesystem…', completer));
-
-    return whenAvailableSyncFs();
+    }).timeout(new Duration(seconds: 20)).whenComplete(() {
+      progressCompleter.complete();
+      _whenAvailableSyncFs.complete(this);
+    });
   }
 
   /**
