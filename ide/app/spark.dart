@@ -275,7 +275,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void createEditorComponents() {
-    _aceManager = new AceManager(new DivElement(), this);
+    _aceManager = new AceManager(new DivElement(), this, services);
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(

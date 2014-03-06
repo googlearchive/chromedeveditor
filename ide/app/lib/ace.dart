@@ -35,7 +35,6 @@ class TextEditor extends Editor {
   StreamController _modificationController = new StreamController.broadcast();
 
   ace.EditSession _session;
-  services.Services _services;
 
   String _lastSavedHash;
 
@@ -46,7 +45,7 @@ class TextEditor extends Editor {
 
   bool _dirty = false;
 
-  TextEditor(this.aceManager, this.file, this._services);
+  TextEditor(this.aceManager, this.file);
 
   bool get dirty => _dirty;
 
@@ -94,10 +93,7 @@ class TextEditor extends Editor {
       String text = _session.value;
       _lastSavedHash = _calcMD5(text);
 
-      services.AnalyzerService analyzer = _services.getService("analyzer");
-      analyzer.getOutlineFor(text).then((services.Outline model) {
-        aceManager.outline.populate(model);
-      });
+      aceManager.outline.build(text);
 
       return file.setContents(text).then((_) => dirty = false);
     } else {
@@ -162,7 +158,7 @@ class AceManager {
 
   html.DivElement _outlineDiv = new html.DivElement();
 
-  AceManager(this.parentElement, this.delegate) {
+  AceManager(this.parentElement, this.delegate, services.Services services) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -183,7 +179,7 @@ class AceManager {
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
 
     parentElement.children.add(_outlineDiv);
-    outline = new Outline(_outlineDiv);
+    outline = new Outline(services, _outlineDiv);
   }
 
   bool isFileExtensionEditable(String extension) {

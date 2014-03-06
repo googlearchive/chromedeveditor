@@ -361,7 +361,7 @@ class EditorManager implements EditorProvider {
     if (editorType(file.name) == EDITOR_TYPE_IMAGE) {
       editor = new ImageViewer(file);
     } else {
-      editor = new ace.TextEditor(_aceContainer, file, _services);
+      editor = new ace.TextEditor(_aceContainer, file);
     }
 
     _editorMap[file] = editor;
