@@ -420,15 +420,15 @@ class PackBuilder {
     var buf = object.data;
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
-      data = new Uint8List(buf);
+      data = buf.getBytes();
     } else if (buf is Uint8List) {
       data = buf;
     } else {
       // assume it's a string.
       data = UTF8.encoder.convert(buf);
     }
-    ByteBuffer compressed;
-    compressed = new Uint8List.fromList(Zlib.deflate(data).data).buffer;
+    ByteBuffer compressed =
+        new Uint8List.fromList(Zlib.deflate(data)).buffer;
     _packed.add(new Uint8List.fromList(
         _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);

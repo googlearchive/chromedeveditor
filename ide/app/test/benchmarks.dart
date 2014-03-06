@@ -11,6 +11,7 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:benchmark_harness/benchmark_harness.dart';
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart';
@@ -30,14 +31,18 @@ Logger _logger = new Logger('spark.benchmarks');
 // git sha         : 295.857 ms (214.900 ms)
 // jszlib inflate  : 304.714 ms
 // jszlib deflate  : 440.040 ms
+// zlip inflate    :   4.177 ms (304.714 ms)
+// zlib deflate    :  38.377 ms (440.040 ms)
 
 //dart2js:
-// archive inflate :  40.600 ms
-// archive deflate : 168.250 ms
-// create zip      : 489.800 ms
-//
+// archive inflate :  22.573 ms (40.600 ms)
+// archive deflate :  39.275 ms (168.250 ms)
+// create zip      : 110.263 ms (489.800 ms)
+// git sha         :1760.000 ms (???)
 // jszlib inflate  :  36.161 ms
 // jszlib deflate  : 826.000 ms
+// zlip inflate    :  19.921 ms (36.161 ms)
+// zlib deflate    :  47.733 ms (826.000 ms)
 
 defineTests() {
   group('benchmarks', () {
@@ -46,6 +51,7 @@ defineTests() {
     test('create zip', () => runBenchmark(new CreateZipBenchmark()));
 
     test('git sha', () => runBenchmark(new GitShaBenchmark()));
+    test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
 
     test('jszlib inflate', () => runBenchmark(new JszlibInflateBenchmark()));
     test('jszlib deflate', () => runBenchmark(new JszlibDeflateBenchmark()));
@@ -119,7 +125,7 @@ class JszlibInflateBenchmark extends BenchmarkBase {
   JszlibInflateBenchmark() : super('jszlib inflate', emitter: _emitter);
 
   void setup() {
-    data = Zlib.deflate(_createData(100000)).data;
+    data = Zlib.deflate(_createData(100000));
   }
 
   void run() {
@@ -128,35 +134,34 @@ class JszlibInflateBenchmark extends BenchmarkBase {
 }
 
 class JszlibDeflateBenchmark extends BenchmarkBase {
-  List data;
+  List data = _createData(100000);
 
   JszlibDeflateBenchmark() : super('jszlib deflate', emitter: _emitter);
 
-  void setup() {
-    data = _createData(100000);
-  }
-
   void run() {
-    ZlibResult result = Zlib.deflate(data);
+    List<int> result = Zlib.deflate(data);
   }
 }
 
 class GitShaBenchmark extends BenchmarkBase {
-  List data;
+  List data = _createData(100000);
 
   GitShaBenchmark() : super('git sha', emitter: _emitter);
 
-  void setup() {
-    data = _createData(100000);
+  void run() {
+    getShaStringForData(data, 'blob');
   }
+}
+
+class PlainShaBenchmark extends BenchmarkBase {
+  List data = _createData(100000);
+
+  PlainShaBenchmark() : super('plain sha', emitter: _emitter);
 
   void run() {
-//    Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
-//      return entry.readBytes().then((chrome.ArrayBuffer content) {
-//        return _getShaStringForData(content.getBytes(), type);
-//      });
-//    }
-    getShaStringForData(data, 'blob');
+    crypto.SHA1 sha1 = new crypto.SHA1();
+    sha1.add(data);
+    sha1.close();
   }
 }
 

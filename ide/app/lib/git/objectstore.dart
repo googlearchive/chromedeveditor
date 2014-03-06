@@ -618,7 +618,7 @@ class ObjectStore {
 
           Future<String> writeContent() {
             chrome.ArrayBuffer content = new chrome.ArrayBuffer.fromBytes(
-                Zlib.deflate(store).data);
+                Zlib.deflate(store));
             // TODO: Use fileEntry.createWriter() once implemented in ChromeGen.
             return fileEntry.writeBytes(content).then((_) {
               return digest;
