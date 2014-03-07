@@ -164,7 +164,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       // content of the workspace from other applications. For that reason, when
       // the user switch back to Spark, we want to check whether the content of
       // the workspace changed.
-      
+
       // TODO(dvh): Disabled because of performance issue. Still need some
       // tweaking before enabling it by default.
       //workspace.refresh();
@@ -402,7 +402,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1187,11 +1187,11 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _invoke([List<ws.Resource> resources]) {
-   if (resources != null && resources.isNotEmpty) {
-     resource = resources.first;
-     _nameElement.value = resource.name;
-     _show();
-   }
+    if (resources != null && resources.isNotEmpty) {
+      resource = resources.first;
+      _nameElement.value = resource.name;
+      _show();
+    }
   }
 
   void _commit() {
@@ -1436,8 +1436,8 @@ class PrevMarkerAction extends SparkAction {
 class NextMarkerAction extends SparkAction {
   NextMarkerAction(Spark spark) : super(
       spark, "marker-next", "Next Marker") {
-    // TODO: we probably don't want to bind to 'print'. Perhaps there's a good
-    // keybinding we can borrow from chrome?
+    // TODO: We probably don't want to bind to 'print'. Perhaps there's a good
+    // keybinding we can borrow from Chrome?
     addBinding("ctrl-p");
   }
 
@@ -1657,27 +1657,27 @@ class _HarnessPushJob extends Job {
   }
 }
 
-class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
-  ws.Project project;
+class PropertiesAction extends SparkActionWithDialog implements ContextAction {
+  ws.Resource _selectedResource;
   HtmlElement _propertiesElement;
 
-  ProjectPropertiesAction(Spark spark, Element dialog)
-      : super(spark, 'project-properties', 'Properties…', dialog) {
-    _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
+  PropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'properties', 'Properties…', dialog) {
+    _propertiesElement = getElement('#propertiesDialog .modal-body');
   }
 
   void _invoke([List context]) {
-    project = context.first;
+    _selectedResource = context.first;
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
 
   Future _buildProperties() {
-    _addProperty(_propertiesElement, 'Name', project.name);
-    _addProperty(_propertiesElement, 'Location', project.entry.fullPath);
+    _addProperty(_propertiesElement, 'Name', _selectedResource.name);
+    _addProperty(_propertiesElement, 'Location', _selectedResource.entry.fullPath);
 
     GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(project);
+        spark.scmManager.getScmOperationsFor(_selectedResource.project);
 
     if (gitOperations != null) {
       return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
@@ -1707,7 +1707,7 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAc
 
   String get category => 'resource';
 
-  bool appliesTo(context) => _isProject(context);
+  bool appliesTo(context) => true;
 }
 
 /* Git operations */
@@ -1725,7 +1725,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     String url = _repoUrlElement.value;
     if (!url.endsWith('.git')) {
       url = url + '.git';
@@ -1773,7 +1773,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     _GitBranchJob job = new _GitBranchJob(gitOperations, _branchNameElement.value);
     spark.jobManager.schedule(job);
   }
@@ -1836,7 +1836,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _startJob() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     _GitCommitJob job = new _GitCommitJob(
         gitOperations, _gitName, _gitEmail, _commitMessageElement.value, spark);
     spark.jobManager.schedule(job);
@@ -1879,7 +1879,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     String branchName = _selectElement.options[
         _selectElement.selectedIndex].value;
     _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
@@ -2390,7 +2390,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = getAppContainerFor(resource) != null;;
+    enabled = getAppContainerFor(resource) != null;
   }
 }
 
@@ -2529,7 +2529,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
-// analytics code
+// Analytics code.
 
 void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
