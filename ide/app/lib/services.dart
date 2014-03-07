@@ -31,7 +31,7 @@ class Services {
     registerService(new TestService(this, _isolateHandler));
     _chromeService = new ChromeServiceImpl(this, _isolateHandler);
 
-    _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event){
+    _isolateHandler.onIsolateMessage.listen((ServiceActionEvent event) {
       if (event.serviceId == "chrome") {
         _chromeService.handleEvent(event);
       }
@@ -52,12 +52,12 @@ class Services {
  * isolate from the actual Service.
  */
 abstract class Service {
-  Services _services;
+  final String serviceId;
+
+  Services services;
   _IsolateHandler _isolateHandler;
 
-  String get serviceId;
-
-  Service(this._services, this._isolateHandler);
+  Service(this.services, this.serviceId, this._isolateHandler);
 
   ServiceActionEvent _createNewEvent(String actionId, [Map data]) {
     return new ServiceActionEvent(serviceId, actionId, data);
@@ -79,10 +79,8 @@ abstract class Service {
 }
 
 class TestService extends Service {
-  String serviceId = "test";
-
   TestService(Services services, _IsolateHandler handler)
-      : super(services, handler);
+      : super(services, 'test', handler);
 
   Future<String> shortTest(String name) {
     return _sendAction("shortTest", {"name": name})
@@ -117,11 +115,10 @@ class TestService extends Service {
 class CompilerService extends Service {
   Completer _readyCompleter = new Completer();
 
-  String serviceId = "compiler";
   Future onceReady;
 
   CompilerService(Services services, _IsolateHandler handler)
-      : super(services, handler) {
+      : super(services, 'compiler', handler) {
     onceReady = _readyCompleter.future;
   }
 
@@ -141,29 +138,23 @@ class CompilerService extends Service {
   }
 
   Future dispose() {
-    return onceReady.then((_) => _sendAction("dispose"))
-        .then((_) => null);
+    return onceReady.then((_) => _sendAction("dispose")).then((_) => null);
   }
 }
 
 class AnalyzerService extends Service {
-  String serviceId = "analyzer";
-
-  AnalyzerService(Services services, _IsolateHandler handler)
-  : super(services, handler);
+  AnalyzerService(Services services, _IsolateHandler handler) :
+    super(services, 'analyzer', handler);
 
   Future<Map<ws.File, List<AnalysisError>>>
       buildFiles(Iterable<ws.File> dartFiles) {
     return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
-    .then((ServiceActionEvent event) {
-      Map<String, List<Map>> responseErrors =
-          event.data['errors'];
-
+        .then((ServiceActionEvent event) {
+      Map<String, List<Map>> responseErrors = event.data['errors'];
       Map<ws.File, List<AnalysisError>> errorsPerFile = {};
 
       for (String uuid in responseErrors.keys) {
-        List<AnalysisError> errors =
-            responseErrors[uuid].map((Map errorData) =>
+        List<AnalysisError> errors = responseErrors[uuid].map((Map errorData) =>
             new AnalysisError.fromMap(errorData)).toList();
         errorsPerFile[_uuidToFile(uuid)] = errors;
       }
@@ -173,12 +164,11 @@ class AnalyzerService extends Service {
   }
 
   Future dispose() {
-    return _sendAction("dispose")
-        .then((_) => null);
+    return _sendAction("dispose").then((_) => null);
   }
 
   ws.File _uuidToFile(String uuid) =>
-      _services._workspace.restoreResource(uuid);
+      services._workspace.restoreResource(uuid);
 
   List<String> _filesToUuid(Iterable<ws.File> files) =>
       files.map((f) => f.uuid).toList();
@@ -196,17 +186,15 @@ class AnalyzerService extends Service {
  * cannot handle on its own.
  */
 class ChromeServiceImpl extends Service {
-  String serviceId = "chrome";
-
   ChromeServiceImpl(Services services, _IsolateHandler handler)
-      : super(services, handler);
+      : super(services, 'chrome', handler);
 
   // For incoming (non-requested) actions.
   void handleEvent(ServiceActionEvent event) {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
 
-    new Future.value(null).then((_){
+    new Future.value(null).then((_) {
       switch(event.actionId) {
         case "delay":
           new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
@@ -221,7 +209,7 @@ class ChromeServiceImpl extends Service {
           break;
         case "getFileContents":
           String uuid = event.data['uuid'];
-          ws.File restoredFile = _services._workspace.restoreResource(uuid);
+          ws.File restoredFile = services._workspace.restoreResource(uuid);
           if (restoredFile == null) {
             // TODO(ericarnold): Turn into an Exception subclass.
             throw new Exception("Could not restore file with uuid $uuid");
@@ -322,7 +310,7 @@ class _IsolateHandler {
     int callId = _topCallId;
     _serviceCallCompleters["ping_$callId"] = completer;
 
-    onceIsolateReady.then((_){
+    onceIsolateReady.then((_) {
       _sendPort.send(callId);
     });
 
