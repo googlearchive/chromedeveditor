@@ -162,7 +162,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       // content of the workspace from other applications. For that reason, when
       // the user switch back to Spark, we want to check whether the content of
       // the workspace changed.
-      workspace.refresh();
+      
+      // TODO(dvh): Disabled because of performance issue. Still need some
+      // tweaking before enabling it by default.
+      //workspace.refresh();
     });
 
     // Add a Dart builder.
