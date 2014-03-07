@@ -13,6 +13,12 @@ body {
 
 h1 {
   font-size: 20px;
+
+}
+
+.selectable-link {
+  -webkit-user-select: text;
+  font-family: "courier new";
 }
 
 #message {

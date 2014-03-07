@@ -705,6 +705,10 @@ class Folder extends Container {
    * Creates a new [File] with the given name
    */
   Future<File> createNewFile(String name) {
+    if (getChild(name) != null) {
+      return new Future.error("File already exists.");
+    }
+    
     return _dirEntry.createFile(name).then((entry) {
       File file = new File(this, entry);
       _children.add(file);
@@ -714,11 +718,42 @@ class Folder extends Container {
   }
 
   Future<Folder> createNewFolder(String name) {
+    if (getChild(name) != null) {
+      return new Future.error("Folder already exists.");
+    }
+    
     return _dirEntry.createDirectory(name).then((entry) {
       Folder folder = new Folder(this, entry);
       _children.add(folder);
       _fireResourceEvent(new ChangeDelta(folder, EventType.ADD));
       return folder;
+    });
+  }
+
+  Future<File> importFile(chrome.ChromeFileEntry sourceEntry) {
+    return createNewFile(sourceEntry.name).then((File file) {
+      sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
+        return file.setBytes(buffer.getBytes());
+      });
+      return file;
+    });
+  }
+
+  Future importFolder(chrome.DirectoryEntry entry) {
+    return createNewFolder(entry.name).then((Folder folder) {
+      return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
+        List<Future> futures = [];
+        for(chrome.Entry child in entries) {
+          if (child is chrome.DirectoryEntry) {
+            futures.add(folder.importFolder(child));
+          } else if (child is chrome.ChromeFileEntry) {
+            futures.add(folder.importFile(child));
+          }
+        }
+        return Future.wait(futures).then((_) {
+          return folder;
+        });
+      });
     });
   }
 

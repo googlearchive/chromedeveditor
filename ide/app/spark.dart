@@ -12,7 +12,6 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
-//import 'package:tavern/tavern.dart' as tavern;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_status/spark_status.dart';
@@ -32,6 +31,7 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/project_builder.dart';
+import 'lib/pub.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
@@ -101,6 +101,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   EditorManager _editorManager;
   EditorArea _editorArea;
   LaunchManager _launchManager;
+  PubManager _pubManager;
 
   final EventBus eventBus = new EventBus();
 
@@ -156,6 +157,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initSaveStatusListener();
 
     initLaunchManager();
+    initPubManager();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -187,6 +189,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
   LaunchManager get launchManager => _launchManager;
+  PubManager get pubManager => _pubManager;
 
   preferences.PreferenceStore get localPrefs => _localPrefs;
   preferences.PreferenceStore get syncPrefs => _syncPrefs;
@@ -277,6 +280,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _launchManager = new LaunchManager(_workspace, services, this);
   }
 
+  void initPubManager() {
+    _pubManager = new PubManager(this);
+  }
+  
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement(), this);
     _aceThemeManager = new ThemeManager(
@@ -406,7 +413,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
-
+    actionManager.registerAction(new ImportFileAction(this));
+    actionManager.registerAction(new ImportFolderAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -2220,30 +2228,18 @@ class PubGetJob extends Job {
   final Spark spark;
   final ws.Project project;
 
-  Logger _logger = new Logger('spark.pub');
-
   PubGetJob(this.spark, this.project) : super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-
-    spark.showMessage('Under Construction', 'Pub Get in progress');
-
-    return new Future.value();
-
-    // Commented out until we get a handle on the compiled JS size.
-//    return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
-//      project.refresh();
-//    }).catchError((e, st) {
-//      spark.showErrorMessage('Error Running Pub Get', '${e}');
-//      _logger.severe('Error Running Pub Get', e, st);
-//    });
+  
+    return spark.pubManager.runPubGet(project).then((_) {
+      spark.showSuccessMessage('Pub get run successful');
+    }).catchError((e) {
+      spark.showErrorMessage('Error while running pub get', e.toString());
+    });
   }
 
-  void _handlePubLog(String line, String level) {
-    // TODO: Dial the logging back.
-    _logger.info(line);
-  }
 }
 
 class ResourceRefreshJob extends Job {
@@ -2485,6 +2481,52 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
     _instance.invoke();
     return _instance.completer.future;
   }
+}
+
+class ImportFileAction extends SparkAction implements ContextAction {
+  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…") {
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_FILE);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
+      if (entry != null) {
+        Folder folder = resources.first;
+        folder.importFile(entry).catchError((e) {
+          spark.showErrorMessage('Error while importing file', e);
+        });
+      }
+    });
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+class ImportFolderAction extends SparkAction implements ContextAction {
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…") {
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        Folder folder = resources.first;
+        folder.importFolder(entry).catchError((e) {
+          spark.showErrorMessage('Error while importing folder', e);
+        });
+      }
+    });
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
 // Analytics code.
