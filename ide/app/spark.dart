@@ -2228,8 +2228,6 @@ class PubGetJob extends Job {
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-
-    spark.showMessage('Under Construction', 'Pub Get in progress');
   
     return spark.pubManager.runPubGet(project).then((_) {
       spark.showSuccessMessage('Pub get run successful');
