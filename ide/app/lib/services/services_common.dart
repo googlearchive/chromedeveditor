@@ -2,6 +2,8 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+library spark.services_common;
+
 abstract class Serializable {
   // TODO(ericarnold): Implement as, and refactor any classes containing toMap
   // to implement Serializable:
@@ -35,8 +37,8 @@ class ServiceActionEvent {
     error = map["error"];
   }
 
-  ServiceActionEvent._asResponse(this.serviceId, this.actionId, this._callId,
-      this.data);
+  ServiceActionEvent.asResponse(this.serviceId, this.actionId, this._callId,
+      this.data) : response = true;
 
   Map toMap() {
     return {
@@ -51,10 +53,11 @@ class ServiceActionEvent {
   }
 
   ServiceActionEvent createReponse(Map data) {
-    ServiceActionEvent response = new ServiceActionEvent._asResponse(
-        serviceId, actionId, callId, data);
-    response.response = true;
-    return response;
+    return new ServiceActionEvent.asResponse(serviceId, actionId, callId, data);
+  }
+
+  ServiceActionEvent createErrorReponse(String errorMessage) {
+    return createReponse({'message': errorMessage})..error = true;
   }
 
   void makeRespondable(String callId) {
@@ -64,6 +67,25 @@ class ServiceActionEvent {
       throw "ServiceActionEvent is already respondable";
     }
   }
+
+  /**
+   * If this event represents an error, a [ServiceException] is thrown.
+   */
+  void throwIfError() {
+    if (error) {
+      throw new ServiceException(data['message'], serviceId, actionId);
+    }
+  }
+}
+
+class ServiceException {
+  final String message;
+  final String serviceId;
+  final String actionId;
+
+  ServiceException(this.message, [this.serviceId, this.actionId]);
+
+  String toString() => 'ServiceException: ${message}';
 }
 
 class AnalysisError {
@@ -287,6 +309,3 @@ class OutlineTopLevelVariable extends OutlineTopLevelEntry {
     });
   }
 }
-
-
-
