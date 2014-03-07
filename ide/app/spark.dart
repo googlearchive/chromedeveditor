@@ -186,6 +186,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
   LaunchManager get launchManager => _launchManager;
+  PubManager get pubManager => _pubManager;
 
   preferences.PreferenceStore get localPrefs => _localPrefs;
   preferences.PreferenceStore get syncPrefs => _syncPrefs;
@@ -2230,7 +2231,7 @@ class PubGetJob extends Job {
 
     spark.showMessage('Under Construction', 'Pub Get in progress');
   
-    return spark._pubManager.runPubGet(project);
+    return spark.pubManager.runPubGet(project);
   }
 
 }
