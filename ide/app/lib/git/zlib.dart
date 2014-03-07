@@ -4,6 +4,8 @@
 
 library git.zlib;
 
+import 'dart:typed_data';
+
 import 'package:archive/archive.dart' as archive;
 
 /**
@@ -35,8 +37,9 @@ class Zlib {
   /**
    * Deflates a byte stream.
    */
-  static List<int> deflate(List<int> data) {
+  static Uint8List deflate(List<int> data) {
     archive.ZLibEncoder encoder = new archive.ZLibEncoder();
+    // Note: ZLibEncoder always returns a `Uint8List` list.
     return encoder.encode(data);
   }
 }

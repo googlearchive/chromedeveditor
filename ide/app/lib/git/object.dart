@@ -274,17 +274,13 @@ class LooseObject extends GitObject {
     }
 
     if (buf is List) {
-      List data = buf;
-      List<String> headChars = [];
-      for (i = 0; i < data.length; ++i) {
-        if (data[i] != 0) {
-          // TODO: this seems very slow
-          headChars.add(UTF8.decode([data[i]]));
-        } else {
-          break;
-        }
+      List<int> data = buf;
+      int len = data.length;
+      for (i = 0; i < len; i++) {
+        if (data[i] == 0) break;
       }
-      header = headChars.join();
+
+      header = UTF8.decode(data.sublist(0, i - 1));
 
       this.data = data.sublist(i + 1, data.length);
     } else {

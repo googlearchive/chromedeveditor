@@ -21,11 +21,10 @@ defineTests() {
     test('inflate', () {
       // deflate a string.
       Uint8List buffer = new Uint8List.fromList(encodeUtf8(ZLIB_INPUT_STRING));
-      List<int> deflated = Zlib.deflate(buffer);
-      Uint8List buffer2 = new Uint8List.fromList(deflated);
+      Uint8List deflated = Zlib.deflate(buffer);
 
       // inflate the string back.
-      ZlibResult result = Zlib.inflate(buffer2);
+      ZlibResult result = Zlib.inflate(deflated);
 
       String out = UTF8.decode(result.data);
       expect(out, ZLIB_INPUT_STRING);

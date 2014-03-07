@@ -28,10 +28,10 @@ Logger _logger = new Logger('spark.benchmarks');
 // archive inflate :   4.051 ms
 // archive deflate :  20.570 ms
 // create zip      :  88.936 ms
-// git sha         : 295.857 ms (214.900 ms)
+// git sha         : 214.900 ms (295.857 ms)
 // jszlib inflate  : 304.714 ms
 // jszlib deflate  : 440.040 ms
-// zlip inflate    :   4.177 ms (304.714 ms)
+// zlib inflate    :   4.177 ms (304.714 ms)
 // zlib deflate    :  38.377 ms (440.040 ms)
 
 //dart2js:
@@ -41,7 +41,7 @@ Logger _logger = new Logger('spark.benchmarks');
 // git sha         :1760.000 ms (???)
 // jszlib inflate  :  36.161 ms
 // jszlib deflate  : 826.000 ms
-// zlip inflate    :  19.921 ms (36.161 ms)
+// zlib inflate    :  19.921 ms (36.161 ms)
 // zlib deflate    :  47.733 ms (826.000 ms)
 
 defineTests() {

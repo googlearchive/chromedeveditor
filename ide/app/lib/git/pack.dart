@@ -185,11 +185,6 @@ class Pack {
   }
 
   ZlibResult _uncompressObject(int objOffset, int uncompressedLength) {
-    // We assume that the compressed string will not be greater by 1000 in
-    // length to the uncompressed string.
-    // This has a very significant impact on performance.
-    //int end =  uncompressedLength + objOffset + 1000;
-    //if (end > data.length) end = data.length;
     return Zlib.inflate(
         data,
         offset: objOffset,
@@ -425,7 +420,7 @@ class PackBuilder {
       // assume it's a string.
       data = UTF8.encoder.convert(buf);
     }
-    ByteBuffer compressed = new Uint8List.fromList(Zlib.deflate(data)).buffer;
+    ByteBuffer compressed = Zlib.deflate(data).buffer;
     _packed.add(new Uint8List.fromList(
         _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);
