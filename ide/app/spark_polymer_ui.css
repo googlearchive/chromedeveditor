@@ -70,6 +70,10 @@
   padding: 2px 5px;
 }
 
+#settingsDialog .directory-label {
+  width: 250px;
+}
+
 #settingsDialog .plus-minus-container {
   margin-left: 15px;
 }
