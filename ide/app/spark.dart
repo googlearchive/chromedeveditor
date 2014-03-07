@@ -12,7 +12,6 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
-//import 'package:tavern/tavern.dart' as tavern;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_status/spark_status.dart';
@@ -32,6 +31,7 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/project_builder.dart';
+import 'lib/pub.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
@@ -101,6 +101,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   EditorManager _editorManager;
   EditorArea _editorArea;
   LaunchManager _launchManager;
+  PubManager _pubManager;
 
   final EventBus eventBus = new EventBus();
 
@@ -156,6 +157,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initSaveStatusListener();
 
     initLaunchManager();
+    initPubManager();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -274,6 +276,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _launchManager = new LaunchManager(_workspace, services, this);
   }
 
+  void initPubManager() {
+    _pubManager = new PubManager(this);
+  }
+  
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement(), this);
     _aceThemeManager = new ThemeManager(
@@ -2217,30 +2223,16 @@ class PubGetJob extends Job {
   final Spark spark;
   final ws.Project project;
 
-  Logger _logger = new Logger('spark.pub');
-
   PubGetJob(this.spark, this.project) : super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     spark.showMessage('Under Construction', 'Pub Get in progress');
-
-    return new Future.value();
-
-    // Commented out until we get a handle on the compiled JS size.
-//    return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
-//      project.refresh();
-//    }).catchError((e, st) {
-//      spark.showErrorMessage('Error Running Pub Get', '${e}');
-//      _logger.severe('Error Running Pub Get', e, st);
-//    });
+  
+    return spark._pubManager.runPugGet(project);
   }
 
-  void _handlePubLog(String line, String level) {
-    // TODO: Dial the logging back.
-    _logger.info(line);
-  }
 }
 
 class ResourceRefreshJob extends Job {
