@@ -19,6 +19,7 @@ h1 {
 .selectable-link {
   -webkit-user-select: text;
   font-family: "courier new";
+  margin-left: 20px;
 }
 
 #message {
