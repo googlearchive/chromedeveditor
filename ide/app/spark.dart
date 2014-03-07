@@ -395,7 +395,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
+    actionManager.registerAction(new FilePropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new FolderPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1650,32 +1652,94 @@ class _HarnessPushJob extends Job {
   }
 }
 
-class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
-  ws.Project project;
-  HtmlElement _propertiesElement;
-
+class ProjectPropertiesAction extends PropertiesAction {
   ProjectPropertiesAction(Spark spark, Element dialog)
-      : super(spark, 'project-properties', 'Properties…', dialog) {
+      : super(spark, 'project-properties', dialog) {
+  }
+
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'Type', 'Project');
+    return super._buildProperties().then((_) {
+      if (gitOperations != null) {
+        _calculateScmStatus(selectedItem as ws.Folder);
+        _addProperty(_propertiesElement, 'Git Status',
+            'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
+      }
+
+    });
+  }
+
+  bool appliesTo(context) => _isProject(context);
+}
+
+class FolderPropertiesAction extends PropertiesAction {
+  FolderPropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'folder-properties', dialog) {
+  }
+
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'Type', 'Folder');
+    return super._buildProperties().then((_) {
+      if (gitOperations != null) {
+        _calculateScmStatus(selectedItem as ws.Folder);
+
+        _addProperty(_propertiesElement, 'Git Status',
+            'Modified: $modifiedStatusCount, Untracked: $untrackedStatusCount');
+      }
+
+    });
+  }
+
+  bool appliesTo(context) => _isSingleFolder(context) && !_isProject(context);
+}
+
+class FilePropertiesAction extends PropertiesAction {
+  FilePropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'file-properties', dialog) {
+  }
+
+  Future _buildProperties() {
+    _addProperty(_propertiesElement, 'Type', 'File');
+    return super._buildProperties().then((_) {
+      String state = gitOperations.getFileStatus(selectedItem).toString();
+      _addProperty(_propertiesElement, 'Git State', state);
+    });
+  }
+
+  bool appliesTo(context) => _isFileList(context) && _isSingleResource(context);
+}
+
+abstract class PropertiesAction extends SparkActionWithDialog implements ContextAction {
+  ws.Project project;
+  var selectedItem;
+  HtmlElement _propertiesElement;
+  GitScmProjectOperations gitOperations;
+  int modifiedStatusCount;
+  int untrackedStatusCount;
+
+  PropertiesAction(Spark spark, String id, Element dialog)
+      : super(spark, id, 'Properties…', dialog) {
     _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
   }
 
   void _invoke([List context]) {
-    project = context.first;
+    selectedItem = context.first;
+    project = context.first.project;
     _propertiesElement.innerHtml = '';
+    modifiedStatusCount = 0;
+    untrackedStatusCount = 0;
     _buildProperties().then((_) => _show());
   }
 
   Future _buildProperties() {
-    _addProperty(_propertiesElement, 'Name', project.name);
-    _addProperty(_propertiesElement, 'Location', project.entry.fullPath);
-
-    GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(project);
+    _addProperty(_propertiesElement, 'Location', selectedItem.entry.fullPath);
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
 
     if (gitOperations != null) {
       return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
         final String repoUrl = map['url'];
         _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+        return new Future.value();
       }).catchError((e) {
         _addProperty(_propertiesElement, 'Git Repository',
             '<error retrieving Git data>');
@@ -1696,11 +1760,27 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAc
     div.children.addAll([label, element]);
   }
 
+  // Calculate sub-folder status by PostOrder.
+  void _calculateScmStatus(ws.Folder folder) {
+    folder.getChildren().forEach((resource) {
+      if (resource is ws.Folder) {
+        _calculateScmStatus(resource);
+      } else if (resource is ws.File) {
+        FileStatus status = gitOperations.getFileStatus(resource);
+        if (status == FileStatus.MODIFIED) {
+          modifiedStatusCount += 1;
+        } else if (status == FileStatus.UNTRACKED) {
+          untrackedStatusCount += 1;
+        }
+      }
+    });
+  }
+
   void _commit() { }
 
   String get category => 'resource';
 
-  bool appliesTo(context) => _isProject(context);
+  bool appliesTo(context) => true;
 }
 
 /* Git operations */
