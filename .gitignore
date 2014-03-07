@@ -9,5 +9,6 @@
 .idea
 .project
 .svn
+/.settings
 packages
 pubspec.lock
