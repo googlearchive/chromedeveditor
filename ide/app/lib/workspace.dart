@@ -731,10 +731,6 @@ class Folder extends Container {
   }
 
   Future<File> importFile(chrome.ChromeFileEntry sourceEntry) {
-    if (getChild(sourceEntry.name) != null) {
-      return new Future.error("File already exists.");
-    }
-    
     return createNewFile(sourceEntry.name).then((File file) {
       sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
         return file.setBytes(buffer.getBytes());
@@ -744,10 +740,6 @@ class Folder extends Container {
   }
 
   Future importFolder(chrome.DirectoryEntry entry) {
-    if (getChild(entry.name) != null) {
-      return new Future.error("Folder already exists.");
-    }
-    
     return createNewFolder(entry.name).then((Folder folder) {
       return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
         List<Future> futures = [];
