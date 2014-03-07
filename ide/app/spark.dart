@@ -406,7 +406,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
-
+    actionManager.registerAction(new ImportFileAction(this));
+    actionManager.registerAction(new ImportFolderAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -2485,6 +2486,52 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
     _instance.invoke();
     return _instance.completer.future;
   }
+}
+
+class ImportFileAction extends SparkAction implements ContextAction {
+  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…") {
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_FILE);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
+      if (entry != null) {
+        Folder folder = resources.first;
+        folder.importFile(entry).catchError((e) {
+          spark.showErrorMessage('Error while importing file', e);
+        });
+      }
+    });
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+class ImportFolderAction extends SparkAction implements ContextAction {
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…") {
+  }
+
+  void _invoke([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        Folder folder = resources.first;
+        folder.importFolder(entry).catchError((e) {
+          spark.showErrorMessage('Error while importing folder', e);
+        });
+      }
+    });
+  }
+
+  String get category => 'folder';
+
+  bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
 // analytics code
