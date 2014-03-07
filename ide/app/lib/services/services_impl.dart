@@ -17,6 +17,12 @@ void init(SendPort sendPort) {
 }
 
 /**
+ * A `Function` that takes in a [ServiceActionEvent] as a request and returns
+ * its response event in a [Future].
+ */
+typedef Future<ServiceActionEvent> RequestHandler(ServiceActionEvent request);
+
+/**
  * Defines a handler for all worker-side service implementations.
  */
 class ServicesIsolate {
@@ -31,17 +37,6 @@ class ServicesIsolate {
 
   ChromeService chromeService;
   Map<String, ServiceImpl> _serviceImplsById = {};
-
-  Future<ServiceActionEvent> _onResponseByCallId(String callId) {
-    Completer<ServiceActionEvent> completer =
-        new Completer<ServiceActionEvent>();
-    onResponseMessage.listen((ServiceActionEvent event) {
-      if (event.callId == callId) {
-        completer.complete(event);
-      }
-    });
-    return completer.future;
-  }
 
   ServicesIsolate(this._sendPort) {
     chromeService = new ChromeService(this);
@@ -80,18 +75,27 @@ class ServicesIsolate {
     });
   }
 
-  void _registerServiceImpl(ServiceImpl serviceImplementation) {
-    _serviceImplsById[serviceImplementation.serviceId] =
-        serviceImplementation;
-  }
-
   ServiceImpl getServiceImpl(String serviceId) {
     return _serviceImplsById[serviceId];
   }
 
-  Future<ServiceActionEvent> _handleMessage(ServiceActionEvent event) {
+  Future<ServiceActionEvent> _onResponseByCallId(String callId) {
     Completer<ServiceActionEvent> completer =
         new Completer<ServiceActionEvent>();
+    onResponseMessage.listen((ServiceActionEvent event) {
+      if (event.callId == callId) {
+        completer.complete(event);
+      }
+    });
+    return completer.future;
+  }
+
+  void _registerServiceImpl(ServiceImpl serviceImplementation) {
+    _serviceImplsById[serviceImplementation.serviceId] = serviceImplementation;
+  }
+
+  Future<ServiceActionEvent> _handleMessage(ServiceActionEvent event) {
+    Completer<ServiceActionEvent> completer = new Completer<ServiceActionEvent>();
 
     ServiceImpl service = getServiceImpl(event.serviceId);
     service.handleEvent(event).then((ServiceActionEvent responseEvent) {
@@ -100,6 +104,7 @@ class ServicesIsolate {
         completer.complete();
       }
     });
+
     return completer.future;
   }
 
@@ -130,43 +135,41 @@ class ServicesIsolate {
 }
 
 class TestServiceImpl extends ServiceImpl {
-  String get serviceId => "test";
-  TestServiceImpl(ServicesIsolate isolate) : super(isolate);
+  TestServiceImpl(ServicesIsolate isolate) : super(isolate, 'test') {
+    registerRequestHandler('shortTest', shortTest);
+    registerRequestHandler('longTest', longTest);
+    registerRequestHandler('readText', readText);
+  }
 
-  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
-    switch (event.actionId) {
-      case "shortTest":
-        return new Future.value(event.createReponse(
-            {"response": "short${event.data['name']}"}));
-      case "readText":
-        String fileUuid = event.data['fileUuid'];
-        return _isolate.chromeService.getFileContents(fileUuid)
-            .then((String contents) =>
-                event.createReponse({"contents": contents}));
-      case "longTest":
-        return _isolate.chromeService.delay(1000).then((_) {
-          return new Future.value(event.createReponse(
-              {"response": "long${event.data['name']}"}));
-        });
-      default:
-        throw "Unknown action '${event.actionId}' sent to $serviceId service.";
-    }
+  Future<ServiceActionEvent> shortTest(ServiceActionEvent request) {
+    Map map = {"response": "short${request.data['name']}"};
+    return new Future.value(request.createReponse(map));
+  }
+
+  Future<ServiceActionEvent> longTest(ServiceActionEvent request) {
+    return isolate.chromeService.delay(1000).then((_) {
+      Map map = {"response": "long${request.data['name']}"};
+      return new Future.value(request.createReponse(map));
+    });
+  }
+
+  Future<ServiceActionEvent> readText(ServiceActionEvent request) {
+    String fileUuid = request.data['fileUuid'];
+    return isolate.chromeService.getFileContents(fileUuid) .then((String contents) {
+      return request.createReponse({"contents": contents});
+    });
   }
 }
 
-
 class CompilerServiceImpl extends ServiceImpl {
-  String get serviceId => "compiler";
-
   DartSdk sdk;
   Compiler compiler;
 
-  Completer<ServiceActionEvent> _readyCompleter =
-      new Completer<ServiceActionEvent>();
+  Completer<ServiceActionEvent> _readyCompleter = new Completer();
 
   Future<ServiceActionEvent> get onceReady => _readyCompleter.future;
 
-  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate);
+  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate, 'compiler');
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
@@ -178,15 +181,15 @@ class CompilerServiceImpl extends ServiceImpl {
       case "compileString":
         return compiler.compileString(event.data['string'])
             .then((CompilerResult result)  {
-              return new Future.value(event.createReponse(result.toMap()));
-            });
+          return new Future.value(event.createReponse(result.toMap()));
+        });
       default:
         throw "Unknown action '${event.actionId}' sent to $serviceId service.";
     }
   }
 
   Future _start() {
-    _isolate.chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
+    isolate.chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
       sdk = DartSdk.createSdkFromContents(sdkContents);
       compiler = Compiler.createCompilerFrom(sdk);
       _readyCompleter.complete();
@@ -197,13 +200,12 @@ class CompilerServiceImpl extends ServiceImpl {
 }
 
 class AnalyzerServiceImpl extends ServiceImpl {
-  AnalyzerServiceImpl(ServicesIsolate isolate) : super(isolate);
+  AnalyzerServiceImpl(ServicesIsolate isolate) : super(isolate, 'analyzer');
 
-  String get serviceId => "analyzer";
   Future<analyzer.ChromeDartSdk> _dartSdkFuture;
   Future<analyzer.ChromeDartSdk> get dartSdkFuture {
     if (_dartSdkFuture == null) {
-      _dartSdkFuture = _isolate.chromeService.getAppContents('sdk/dart-sdk.bin')
+      _dartSdkFuture = isolate.chromeService.getAppContents('sdk/dart-sdk.bin')
           .then((List<int> sdkContents) => analyzer.createSdk(sdkContents));
     }
     return _dartSdkFuture;
@@ -212,18 +214,83 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
       case "buildFiles":
-        return build(event.data["dartFileUuids"])
+        return buildFiles(event.data["dartFileUuids"])
             .then((Map<String, List<Map>> errorsPerFile) {
-              return new Future.value(event.createReponse(
-                  {"errors": errorsPerFile}));
-            });
+          return new Future.value(
+              event.createReponse({"errors": errorsPerFile}));
+        });
+      case "getOutlineFor":
+        return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
+          var codeString = event.data['string'];
+          return analyzer.analyzeString(sdk, codeString,
+              performResolution: false);
+        }).then((analyzer.AnalyzerResult result) {
+          return event.createReponse(getOutline(result.ast).toMap());
+        });
+
       default:
         throw new ArgumentError(
             "Unknown action '${event.actionId}' sent to $serviceId service.");
     }
   }
 
-  Future<Map<String, List<Map>>> build(List<Map> fileUuids) {
+  Outline getOutline(analyzer.CompilationUnit ast) {
+    Outline outline = new Outline();
+
+    // TODO(ericarnold): Need to implement modifiers
+    // TODO(ericarnold): Need to implement types
+
+    for (analyzer.Declaration declaration in ast.declarations) {
+      OutlineTopLevelEntry outlineDeclaration;
+      if (declaration is analyzer.TopLevelVariableDeclaration) {
+        analyzer.VariableDeclarationList variables = declaration.variables;
+
+        for (analyzer.VariableDeclaration variable in variables.variables) {
+          outline.entries.add(populateOutlineEntry(
+              new OutlineTopLevelVariable(variable.name.name), declaration));
+        }
+      } else {
+        if (declaration is analyzer.ClassDeclaration) {
+          outlineDeclaration = new OutlineClass(declaration.name.name);
+          OutlineClass outlineClass = outlineDeclaration;
+          outline.entries.add(outlineClass);
+          analyzer.NodeList<analyzer.ClassMember> members = declaration.members;
+          for (analyzer.ClassMember member in members) {
+            String name;
+            if (member is analyzer.MethodDeclaration) {
+              outlineClass.members.add(populateOutlineEntry(
+                  new OutlineMethod(member.name.name), member));
+            } else if (member is analyzer.FieldDeclaration) {
+              analyzer.VariableDeclarationList fields = member.fields;
+              for (analyzer.VariableDeclaration field in fields.variables) {
+                outlineClass.members.add(populateOutlineEntry(
+                    new OutlineClassVariable(field.name.name), field));
+              }
+            }
+          }
+        } else if (declaration is analyzer.FunctionDeclaration) {
+          outlineDeclaration = populateOutlineEntry(
+              new OutlineTopLevelFunction(declaration.name.name), declaration);
+        } else {
+          print("${declaration.runtimeType} is unknown");
+        }
+
+        outline.entries.add(populateOutlineEntry(
+            outlineDeclaration, declaration));
+      }
+    }
+
+    return outline;
+  }
+
+  OutlineEntry populateOutlineEntry(
+      OutlineEntry outlineEntry, analyzer.ASTNode node) {
+    outlineEntry.startOffset = node.beginToken.offset;
+    outlineEntry.endOffset = node.endToken.end;
+    return outlineEntry;
+  }
+
+  Future<Map<String, List<Map>>> buildFiles(List<Map> fileUuids) {
     Map<String, List<Map>> errorsPerFile = {};
 
     return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
@@ -271,12 +338,11 @@ class AnalyzerServiceImpl extends ServiceImpl {
    * Analyzes file and returns a Future with the [AnalyzerResult].
    */
   Future<analyzer.AnalyzerResult> _processFile(analyzer.ChromeDartSdk sdk, String fileUuid) {
-    return _isolate.chromeService.getFileContents(fileUuid)
+    return isolate.chromeService.getFileContents(fileUuid)
         .then((String contents) =>
             analyzer.analyzeString(sdk, contents, performResolution: false))
         .then((analyzer.AnalyzerResult result) => result);
   }
-
 }
 
 /**
@@ -309,26 +375,44 @@ class ChromeService {
 
   Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
       [bool expectResponse = false]) {
-    return _isolate._sendAction(event, expectResponse)
-        .then((ServiceActionEvent event) {
-          if (event.error != true) {
-            return event;
-          } else {
-            String error = event.data['error'];
-            String stackTrace = event.data['stackTrace'];
-            throw "ChromeService error: $error\n$stackTrace";
-          }
-        });
+    return _isolate._sendAction(event, expectResponse).
+        then((ServiceActionEvent event) {
+      if (event.error != true) {
+        return event;
+      } else {
+        String error = event.data['error'];
+        String stackTrace = event.data['stackTrace'];
+        throw "ChromeService error: $error\n$stackTrace";
+      }
+    });
   }
 }
 
-// Provides an abstract class and helper code for service implementations.
+/**
+ * Provides an abstract class and helper code for service implementations.
+ */
 abstract class ServiceImpl {
-  ServicesIsolate _isolate;
+  final String serviceId;
+  final ServicesIsolate isolate;
 
-  ServiceImpl(this._isolate);
+  Map<String, RequestHandler> _responders = {};
 
-  String get serviceId;
+  ServiceImpl(this.isolate, this.serviceId);
 
-  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event);
+  void registerRequestHandler(String methodName, RequestHandler responder) {
+    _responders[methodName] = responder;
+  }
+
+  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
+    RequestHandler responder = _responders[event.actionId];
+
+    if (responder == null) {
+      return new Future.value(
+          event.createErrorReponse("no such method: ${event.actionId}"));
+    }
+
+    Future f = responder(event);
+    assert(f != null);
+    return f;
+  }
 }

@@ -61,7 +61,7 @@
           </spark-menu-item>
           <spark-menu-item action-id="git-clone" label="Git Clone...">
           </spark-menu-item>
-          <spark-menu-item action-id="webstore-publish" iconsize=0 label="Publish to Chrome Web Store">
+          <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
           </spark-menu-item>
           <template if="{{developerMode}}">
             <spark-menu-separator></spark-menu-separator>
@@ -93,7 +93,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <spark-button id="errorClose" overlay-toggle primary autofocus data-dismiss="modal">
+        <spark-button id="errorClose" overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
       </div>
@@ -108,7 +108,7 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button id="okText" overlay-toggle primary autofocus data-dismiss="modal">
+        <spark-button id="okText" overlay-toggle primary focused data-dismiss="modal">
           OK
         </spark-button>
       </div>
@@ -123,7 +123,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="renameFileName">New name</label>
-          <input id="renameFileName" type="text" class="form-control" autofocus>
+          <input id="renameFileName" type="text" class="form-control" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -145,7 +145,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="fileName">New file name</label>
-          <input id="fileName" type="text" class="form-control" autofocus>
+          <input id="fileName" type="text" class="form-control" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -167,7 +167,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="folderName">New folder name</label>
-          <input id="folderName" type="text" class="form-control" autofocus>
+          <input id="folderName" type="text" class="form-control" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -190,29 +190,32 @@
         <div class="form-group">
           <div>
             <label for="name">Project name</label>
-            <input id="name" type="text" class="form-control" autofocus>
+            <input id="name" type="text" class="form-control" focused>
           </div>
           <br/>
-          <div>
-            <input type="radio" name="type" value="empty-project" id="empty-project" checked>
-            <label for="empty-project" checked>Create an empty project</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
-            <label for="dart-web-app-radio" checked>Create a new Web App (Dart)</label>
-          </div>
-          <!--div>
-            <input type="radio" name="type" value="web-js" id="js-web-app-radio">
-            <label for="js-web-app-radio" checked>Create a new Web App (JavaScript)</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="chrome-dart" id="dart-chrome-app-radio">
-            <label for="dart-chrome-app-radio" checked>Create a new Chrome App (Dart)</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="chrome-js" id="js-chrome-app-radio">
-            <label for="js-chrome-app-radio" checked>Create a new Chrome App (JavaScript)</label>
-          </div-->
+          <form>
+            <div>
+              <input type="radio" name="type" value="empty-project" id="empty-project" checked>
+              <label for="empty-project" checked>Create a blank project</label>
+            </div>
+            <hr>
+            <div>
+              <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
+              <label for="dart-web-app-radio">Create a new Dart web application</label>
+            </div>
+            <!--div>
+              <input type="radio" name="type" value="web-js" id="js-web-app-radio">
+              <label for="js-web-app-radio">Create a new JavaScript web application</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="app-dart" id="dart-chrome-app-radio">
+              <label for="dart-chrome-app-radio">Create a new Dart Chrome App</label>
+            </div-->
+            <div>
+              <input type="radio" name="type" value="app-js" id="js-chrome-app-radio">
+              <label for="js-chrome-app-radio">Create a new JavaScript Chrome App</label>
+            </div>
+          </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -233,17 +236,19 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <div>
-            <input type="radio" name="type" value="push-adb" id="adb" checked />
-            <label for="adb" checked>ADB over USB</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="push-ip" id="ip" />
-            <label for="ip">Directly over network</label>
+          <form>
+            <div>
+              <input type="radio" name="type" value="push-adb" id="adb" checked />
+              <label for="adb">ADB over USB</label>
+            </div>
+            <div>
+              <input type="radio" name="type" value="push-ip" id="ip" />
+              <label for="ip">Directly over network</label>
 
-            <label for="pushUrl">Target Host</label>
-            <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
-          </div>
+              <label for="pushUrl">Target Host</label>
+              <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+            </div>
+          </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -266,7 +271,7 @@
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
           <input id="gitRepoUrl" type="text" class="form-control"
-              placeholder="https://github.com/foo/bar.git" autofocus>
+              placeholder="https://github.com/foo/bar.git" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -291,17 +296,17 @@
             <div class="input-label">
               <label for="gitName">Your Name</label>
               <input id="gitName" type="text" class="form-control"
-                  placeholder="John Doe" autofocus>
+                  placeholder="John Doe" focused>
             </div>
             <div class="input-label">
               <label for="gitEmail">Email</label>
               <input id="gitEmail" type="text" class="form-control"
-                  placeholder="johndoe@gmail.com" autofocus>
+                  placeholder="johndoe@gmail.com">
             </div>
           </div>
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"
-              rows="3" autofocus></textarea>
+              rows="3"></textarea>
           <span class="help-block">Enter a brief description of the changes.</span>
         </div>
       </div>
@@ -324,7 +329,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitBranchName">New branch name</label>
-          <input id="gitBranchName" type="text" class="form-control" autofocus>
+          <input id="gitBranchName" type="text" class="form-control" focused>
           <span class="help-block">Create a new git branch.</span>
         </div>
       </div>
@@ -407,7 +412,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
       </div>
@@ -478,7 +483,7 @@
         </template>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
       </div>
@@ -496,7 +501,7 @@
             <div class="input-label">
               <label for="gitUsername">User name</label>
               <input id="gitUsername" type="text" class="form-control"
-                  placeholder="johndoe" autofocus>
+                  placeholder="johndoe" focused>
             </div>
             <div class="input-label">
               <label for="gitPassword">Password</label>
@@ -527,7 +532,7 @@
           <form>
             <div>
               <input type="radio" name="type" value="new" id="new-app-radio" checked>
-              <label for="new-app-radio" checked>Create a new application</label>
+              <label for="new-app-radio">Create a new application</label>
             </div>
             <div>
               <input type="radio" name="type" value="existing" id="existing-app-radio">
@@ -559,7 +564,7 @@
       <div class="modal-body">
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
       </div>
@@ -580,7 +585,7 @@
         <spark-button id="webStorePublishedAction" overlay-toggle data-dismiss="modal">
           Open in the WebStore
         </spark-button>
-        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
       </div>
@@ -602,7 +607,7 @@
         <spark-button id="webStoreUploadedAction" overlay-toggle data-dismiss="modal">
           Open in the Developer Dashboard
         </spark-button>
-        <spark-button overlay-toggle primary autofocus data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
       </div>

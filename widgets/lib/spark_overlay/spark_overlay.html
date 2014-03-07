@@ -35,7 +35,7 @@
  * It's common to use spark-overlay to gather user input, for example a login
  * dialog. To facilitate this, spark-overlay supports automatic focusing of a
  * specific element when it's opened. The element to be focused should be given
- * an autofocus attribute.
+ * an `focused` attribute.
  *
  * An element that should close the spark-overlay will automatically do so if it
  * is given the overlay-toggle attribute. Please note that spark-overlay will
@@ -44,7 +44,7 @@
  *
  *     <spark-overlay class="spark-overlay-scale-slideup">
  *       <h2>Dialog</h2>
- *       <input placeholder="say something..." autofocus>
+ *       <input placeholder="say something..." focused>
  *       <div>I agree with this wholeheartedly.</div>
  *       <button overlay-toggle>OK</button>
  *     </spark-overlay>

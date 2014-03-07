@@ -10,6 +10,8 @@ import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'utils.dart';
+
 class ProjectBuilder {
   DirectoryEntry _destRoot;
   DirectoryEntry _sourceRoot;
@@ -23,7 +25,7 @@ class ProjectBuilder {
   ProjectBuilder(this._destRoot, String templateId, this._sourceName,
       this._projectName) {
     String templatesPath = 'resources/templates/$templateId';
-    _sourceUri = chrome.runtime.getURL(templatesPath);
+    _sourceUri = templatesPath;
 
     _onceSourceRootReady = chrome.runtime.getPackageDirectoryEntry()
         .then((DirectoryEntry root) => root.getDirectory(templatesPath))
@@ -31,7 +33,7 @@ class ProjectBuilder {
   }
 
   Future build() {
-    Future setupFuture = HttpRequest.getString("$_sourceUri/setup.json")
+    Future setupFuture = getAppContents("$_sourceUri/setup.json")
         .then((String contents) => _setup = JSON.decode(contents));
 
     return Future.wait([setupFuture, _onceSourceRootReady]).then((_) {
@@ -51,13 +53,12 @@ class ProjectBuilder {
     if (directories != null) {
       return Future.forEach(directories.keys, (String directoryName) {
         DirectoryEntry destDirectoryRoot;
-        return _destRoot.createDirectory(directoryName)
-            .then((DirectoryEntry entry) {
-              destDirectoryRoot = entry;
-              return sourceRoot.getDirectory(directoryName);
-            }).then((DirectoryEntry sourceDirectoryRoot) {
-              return traverseElement(destDirectoryRoot, sourceDirectoryRoot,
-                  "$sourceUri/$directoryName", directories[directoryName]);
+        return _destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
+          destDirectoryRoot = entry;
+          return sourceRoot.getDirectory(directoryName);
+        }).then((DirectoryEntry sourceDirectoryRoot) {
+          return traverseElement(destDirectoryRoot, sourceDirectoryRoot,
+              "$sourceUri/$directoryName", directories[directoryName]);
         });
       });
     }
@@ -67,25 +68,33 @@ class ProjectBuilder {
 
   Future handleFiles(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
       String sourceUri, List files) {
-    if (files != null) {
-      return Future.forEach(files, (fileElement) {
-        String source = fileElement['source'];
-        String dest = fileElement['dest'];
-        dest = dest.replaceAll("\$sourceName", _sourceName)
-            .replaceAll("\$projectName", _projectName);
+    if (files == null) return new Future.value();
 
-        String content;
+    return Future.forEach(files, (fileElement) {
+      String source = fileElement['source'];
+      String dest = fileElement['dest'];
 
-        return HttpRequest.getString("$sourceUri/$source")
-            .then((String fileContent) {
-              content = fileContent.replaceAll("_Project_name_", _projectName)
-                  .replaceAll("_source_name_", _sourceName);
-              return destRoot.createFile(dest);
-            }).then((FileEntry newFile) =>
-                chrome.fileSystem.getWritableEntry(newFile))
-            .then((chrome.ChromeFileEntry entry) => entry.writeText(content));
+      dest = dest
+          .replaceAll("\$sourceName", _sourceName)
+          .replaceAll("\$projectName", _projectName);
+
+      chrome.ChromeFileEntry entry;
+
+      return destRoot.createFile(dest).then((chrome.ChromeFileEntry _entry) {
+        entry = _entry;
+        if (dest.endsWith(".png")) {
+          return getAppContentsBinary("$sourceUri/$source").then((List<int> data) {
+            return entry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
+          });
+        } else {
+          return getAppContents("$sourceUri/$source").then((String data) {
+            data = data
+                .replaceAll("_Project_name_", _projectName)
+                .replaceAll("_source_name_", _sourceName);
+            return entry.writeText(data);
+          });
+        }
       });
-    }
-    return new Future.value(null);
+    });
   }
 }

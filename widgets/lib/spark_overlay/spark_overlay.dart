@@ -61,7 +61,7 @@ class SparkOverlay extends SparkWidget {
   static void focusOverlay() {
     var current = currentOverlay();
     if (current != null) {
-      current.applyFocus();
+      current.focus();
     }
   }
 
@@ -147,6 +147,8 @@ class SparkOverlay extends SparkWidget {
 
   @override
   void enteredView() {
+    super.enteredView();
+
     style.visibility = "visible";
     enableKeyboardEvents();
   }
@@ -186,19 +188,13 @@ class SparkOverlay extends SparkWidget {
     eventTypes.forEach((et) => addRemoveFunc(et, _captureHandler, true));
   }
 
-  getFocusNode() {
-    var focus = this.querySelector('[autofocus]');
-    return (focus != null) ? focus : this;
-  }
-
   // TODO(sorvell): nodes stay focused when they become un-focusable due to
   // an ancestory becoming display: none; file bug.
   void applyFocus() {
-    var focusNode = getFocusNode();
     if (opened) {
-      focusNode.focus();
+      focus();
     } else {
-      focusNode.blur();
+      blur();
       focusOverlay();
     }
   }

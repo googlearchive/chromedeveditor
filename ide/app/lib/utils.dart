@@ -75,6 +75,14 @@ Future<List<int>> getAppContentsBinary(String path) {
 }
 
 /**
+ * Return the contents of the file at the given path. The path is relative to
+ * the Chrome app's directory.
+ */
+Future<String> getAppContents(String path) {
+  return html.HttpRequest.getString(chrome.runtime.getURL(path));
+}
+
+/**
  * A [Notifier] is used to present the user with a message.
  */
 abstract class Notifier {

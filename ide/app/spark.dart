@@ -162,7 +162,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       // content of the workspace from other applications. For that reason, when
       // the user switch back to Spark, we want to check whether the content of
       // the workspace changed.
-      workspace.refresh();
+      
+      // TODO(dvh): Disabled because of performance issue. Still need some
+      // tweaking before enabling it by default.
+      //workspace.refresh();
     });
 
     // Add a Dart builder.
@@ -282,7 +285,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus);
-    _editorManager.onNewFileOpened.listen((_){
+    _editorManager.onNewFileOpened.listen((_) {
       _workspace.checkResource(_editorManager.currentFile);
     });
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
@@ -1011,10 +1014,13 @@ class SparkBootjackDialog implements SparkDialog {
     });
   }
 
+  @override
   void show() => _dialog.show();
 
+  @override
   void hide() => _dialog.hide();
 
+  @override
   Element get element => _dialog.element;
 }
 
@@ -1535,6 +1541,10 @@ class NewProjectAction extends SparkActionWithDialog {
             case "dart-web-app-radio":
               ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
                   "web-dart", name.toLowerCase(), name);
+              return projectBuilder.build();
+            case "js-chrome-app-radio":
+              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+                  "app-js", name.toLowerCase(), name);
               return projectBuilder.build();
           }
         }).then((_) {
