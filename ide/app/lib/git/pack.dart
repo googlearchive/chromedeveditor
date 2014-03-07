@@ -185,17 +185,14 @@ class Pack {
   }
 
   ZlibResult _uncompressObject(int objOffset, int uncompressedLength) {
-    // We assume that the compressed string will not be greater by 1000 in
-    // length to the uncompressed string.
-    // This has a very significant impact on performance.
-    int end =  uncompressedLength + objOffset + 1000;
-    if (end > data.length) end = data.length;
-    return Zlib.inflate(data.sublist(objOffset, end), expectedLength: uncompressedLength);
+    return Zlib.inflate(
+        data,
+        offset: objOffset,
+        expectedLength: uncompressedLength);
   }
 
 
   PackedObject _matchObjectData(PackObjectHeader header) {
-
     PackedObject object = new PackedObject();
 
     object.offset = header.offset;
@@ -217,8 +214,7 @@ class Pack {
     }
 
     ZlibResult objData = _uncompressObject(_offset, header.size);
-    object.data = new Uint8List.fromList(objData.data);
-
+    object.data = objData.data;
     _advance(objData.readLength);
     return object;
   }
@@ -417,15 +413,14 @@ class PackBuilder {
     var buf = object.data;
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
-      data = new Uint8List(buf);
+      data = buf.getBytes();
     } else if (buf is Uint8List) {
       data = buf;
     } else {
       // assume it's a string.
       data = UTF8.encoder.convert(buf);
     }
-    ByteBuffer compressed;
-    compressed = new Uint8List.fromList(Zlib.deflate(data).data).buffer;
+    ByteBuffer compressed = Zlib.deflate(data).buffer;
     _packed.add(new Uint8List.fromList(
         _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);

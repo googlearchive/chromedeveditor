@@ -14,19 +14,17 @@ import '../../lib/utils.dart';
 import '../../lib/git/zlib.dart';
 
 final String ZLIB_INPUT_STRING = "This is a test.";
-final String ZLIB_DEFLATE_OUTPUT =
-  "12015613194651300821924236481415120184233272346311218722219302251454341151536";
+final String ZLIB_DEFLATE_OUTPUT = "12011120120044860162681331462122261861041151536";
 
 defineTests() {
   group('git.zlib', () {
     test('inflate', () {
       // deflate a string.
       Uint8List buffer = new Uint8List.fromList(encodeUtf8(ZLIB_INPUT_STRING));
-      ZlibResult deflated = Zlib.deflate(buffer);
-      Uint8List buffer2 = new Uint8List.fromList(deflated.data);
+      Uint8List deflated = Zlib.deflate(buffer);
 
       // inflate the string back.
-      ZlibResult result = Zlib.inflate(buffer2);
+      ZlibResult result = Zlib.inflate(deflated);
 
       String out = UTF8.decode(result.data);
       expect(out, ZLIB_INPUT_STRING);
@@ -34,10 +32,8 @@ defineTests() {
 
     test('deflate', () {
       Uint8List buffer = new Uint8List.fromList(encodeUtf8(ZLIB_INPUT_STRING));
-      ZlibResult result = Zlib.deflate(buffer);
-
-      List<int> bytes = result.data;
-      expect(bytes.join(''), ZLIB_DEFLATE_OUTPUT);
+      List<int> result = Zlib.deflate(buffer);
+      expect(result.join(''), ZLIB_DEFLATE_OUTPUT);
     });
 
     // This test will time out if zlib deflate is very slow.
@@ -54,9 +50,9 @@ defineTests() {
       String str = buf.toString();
       Uint8List data = new Uint8List.fromList(UTF8.encoder.convert(str));
       timer.finishCurrentTask('encode');
-      ZlibResult result = Zlib.deflate(data);
+      List<int> resultBytes = Zlib.deflate(data);
       timer.finishCurrentTask('deflate');
-      result = Zlib.inflate(result.data);
+      ZlibResult result = Zlib.inflate(resultBytes);
       timer.finishCurrentTask('inflate');
       String decodedString = UTF8.decoder.convert(result.data);
       timer.finishCurrentTask('decode');
