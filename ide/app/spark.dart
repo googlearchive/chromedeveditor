@@ -2503,7 +2503,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
     });
   }
 
-  String get category => 'import';
+  String get category => 'folder';
 
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
@@ -2526,7 +2526,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
     });
   }
 
-  String get category => 'import';
+  String get category => 'folder';
 
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
