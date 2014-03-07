@@ -30,10 +30,10 @@ class PubManager {
   
   Future runPubGet(Project project) {
     return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
-      project.refresh();
-    }).catchError((e, st) {
-      _notifier.showMessage('Error Running Pub Get', '${e}');
+      return project.refresh();
+    }).catchError((e, st) {   
       _logger.severe('Error Running Pub Get', e, st);
+      return new Future.error(e, st);
     });
   }
   
