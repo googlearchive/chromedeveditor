@@ -1785,7 +1785,6 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   List<ws.File> modifiedFileList = [];
   List<ws.File> addedFileList = [];
-  int deletedStatusCount;
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
@@ -1798,10 +1797,8 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   void _invoke([context]) {
     project = context.first.project;
     gitOperations = spark.scmManager.getScmOperationsFor(project);
-    _gitStatusElement.text = '';
     modifiedFileList.clear();
     addedFileList.clear();
-    deletedStatusCount = 0;
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -1818,7 +1815,11 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _userNameElement.value = '';
       _userEmailElement.value = '';
     });
-    _addGitStatus();
+
+    // TODO: Remove this #gitStatusGroup hidden once scm status is fast.
+    getElement("#gitStatusGroup").hidden = true;
+    //_addGitStatus();
+
     _show();
   }
 
