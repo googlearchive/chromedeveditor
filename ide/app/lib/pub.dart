@@ -28,7 +28,7 @@ class PubManager {
     }
   }
   
-  Future runPugGet(Project project) {
+  Future runPubGet(Project project) {
     return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
       project.refresh();
     }).catchError((e, st) {

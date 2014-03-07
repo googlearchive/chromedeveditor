@@ -2230,7 +2230,7 @@ class PubGetJob extends Job {
 
     spark.showMessage('Under Construction', 'Pub Get in progress');
   
-    return spark._pubManager.runPugGet(project);
+    return spark._pubManager.runPubGet(project);
   }
 
 }
