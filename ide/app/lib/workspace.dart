@@ -34,8 +34,6 @@ class Workspace extends Container {
   int _markersPauseCount = 0;
   List<MarkerDelta> _makerChangeList = [];
 
-  List<Resource> _deletedResourceList = [];
-
   BuilderManager _builderManager;
 
   List<WorkspaceRoot> _roots = [];

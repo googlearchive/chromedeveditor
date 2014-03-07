@@ -1814,13 +1814,13 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _commitMessageElement.value = '';
       _userNameElement.value = '';
       _userEmailElement.value = '';
+
+      // TODO: Remove this #gitStatusGroup hidden once scm status is fast.
+      getElement("#gitStatusGroup").hidden = true;
+      //_addGitStatus();
+
+      _show();
     });
-
-    // TODO: Remove this #gitStatusGroup hidden once scm status is fast.
-    getElement("#gitStatusGroup").hidden = true;
-    //_addGitStatus();
-
-    _show();
   }
 
   void _addGitStatus() {
