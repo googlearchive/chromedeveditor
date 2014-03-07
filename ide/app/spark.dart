@@ -2489,8 +2489,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 }
 
 class ImportFileAction extends SparkAction implements ContextAction {
-  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…") {
-  }
+  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…");
 
   void _invoke([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -2512,8 +2511,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
 }
 
 class ImportFolderAction extends SparkAction implements ContextAction {
-  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…") {
-  }
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…");
 
   void _invoke([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(

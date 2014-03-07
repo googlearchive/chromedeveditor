@@ -756,6 +756,14 @@ class Folder extends Container {
       });
     });
   }
+  
+  Future importResource(Resource res) {
+    if (res.entry is chrome.ChromeFileEntry) {
+      return importFile(res.entry);
+    } else if (res.entry is chrome.DirectoryEntry) {
+      return importFolder(res.entry);
+    }
+  }
 
   Future delete() {
     return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
