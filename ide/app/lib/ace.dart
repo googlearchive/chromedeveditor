@@ -21,6 +21,8 @@ import 'editors.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
+import 'services.dart' as services;
+import 'outline.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -90,6 +92,11 @@ class TextEditor extends Editor {
     if (_dirty) {
       String text = _session.value;
       _lastSavedHash = _calcMD5(text);
+
+      // TODO(ericarnold): Need to cache or re-analyze on file switch.
+      // TODO(ericarnold): Need to analyze on initial file load.
+      aceManager.outline.build(text);
+
       return file.setContents(text).then((_) => dirty = false);
     } else {
       return new Future.value();
@@ -138,6 +145,8 @@ class AceManager {
   final html.Element parentElement;
   final AceManagerDelegate delegate;
 
+  Outline outline;
+
   ace.Editor _aceEditor;
 
   workspace.Marker _currentMarker;
@@ -149,7 +158,9 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
 
-  AceManager(this.parentElement, this.delegate) {
+  html.DivElement _outlineDiv = new html.DivElement();
+
+  AceManager(this.parentElement, this.delegate, services.Services services) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -168,6 +179,9 @@ class AceManager {
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
+
+    parentElement.children.add(_outlineDiv);
+    outline = new Outline(services, _outlineDiv);
   }
 
   bool isFileExtensionEditable(String extension) {

@@ -236,8 +236,8 @@ abstract class OutlineMember extends OutlineEntry {
 
     if (type == OutlineMethod._type) {
       entry = new OutlineMethod()..populateFromMap(mapData);
-    } else if (type == OutlineClassVariable._type) {
-      entry = new OutlineClassVariable()..populateFromMap(mapData);
+    } else if (type == OutlineProperty._type) {
+      entry = new OutlineProperty()..populateFromMap(mapData);
     }
 
     entry.static = mapData["static"];
@@ -266,12 +266,12 @@ class OutlineMethod extends OutlineMember {
 /**
  * Defines a class variable entry in an [OutlineClass].
  */
-class OutlineClassVariable extends OutlineMember {
+class OutlineProperty extends OutlineMember {
   static String _type = "class-variable";
 
   bool static = false;
 
-  OutlineClassVariable([String name]) : super(name);
+  OutlineProperty([String name]) : super(name);
 
   Map toMap() {
     return super.toMap()..addAll({

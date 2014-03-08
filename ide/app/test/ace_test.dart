@@ -27,6 +27,7 @@ class MockAceManager implements AceManager {
   final Element parentElement = null;
   workspace.File currentFile = null;
   AceManagerDelegate delegate = null;
+  var outline = null;
 
   MockAceManager();
 
