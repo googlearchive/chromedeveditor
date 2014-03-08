@@ -2322,11 +2322,12 @@ class SettingsAction extends SparkActionWithDialog {
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
       if (folderToken == null) {
+        getElement('#directory-label').text = '';
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         chrome.fileSystem.getDisplayPath(entry).then((path) {
-          getElement('.directory-label').text = path;
+          getElement('#directory-label').text = path;
         });
       });
     });
