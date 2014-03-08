@@ -53,11 +53,11 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void toggle(Event e) => _toggle(!opened);
+  void clickHandler(Event e) => _toggle(!opened);
 
-  void open(Event e) => _toggle(true);
+  void focusHandler(Event e) => _toggle(true);
 
-  void close(Event e) => _toggle(false);
+  void blurHandler(Event e) => _toggle(false);
 
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
   //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).

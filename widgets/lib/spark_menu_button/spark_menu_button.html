@@ -33,9 +33,9 @@
 
     <spark-button id="button"
         focused small noPadding
-        on-click="{{toggle}}"
-        on-focus="{{open}}"
-        on-blur="{{close}}">
+        on-click="{{clickHandler}}"
+        on-focus="{{focusHandler}}"
+        on-blur="{{blurHandler}}">
       <img src="{{src}}">
     </spark-button>
 
@@ -47,7 +47,7 @@
           on-opened="{{overlayOpenedHandler}}">
 
         <div class="arrow"></div>
-        <div class="arrow arrow-inner" on-click="{{close}}"></div>
+        <div class="arrow arrow-inner" on-click="{{clickHandler}}"></div>
 
         <spark-menu id="menu"
             selected="{{selected}}"
