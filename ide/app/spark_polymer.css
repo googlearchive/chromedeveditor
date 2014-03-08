@@ -310,12 +310,11 @@ body {
   right: 10px;
   top: 10px;
   bottom: 10px;
-  background: rgb(100, 100, 100);
+  background: #555;
   borderRadius: 2px;
   zIndex: 100;
   opacity: 0.6;
   overflow: scroll;
-  color: #ddd;
 }
 
 .outlineContainer {
@@ -324,23 +323,35 @@ body {
   overflow: scroll;
 }
 
-.outlineTopLevelFunction {
+.outlineContainer ul {
+  margin: 0px;
+  padding: 0px;
+  list-style-type: none;
+}
+
+
+ul.outlineItem.topLevel {
+  padding: 0 0 0 10px;
+  background: #333;
+}
+
+.outlineItem.topLevel.function {
   color: #faa;
 }
 
-.outlineTopLevelVariable {
+.outlineItem.topLevel.variable {
   color: #afa;
 }
 
-.outlineClass {
+.outlineItem.topLevel.class {
   color: #aaf;
 }
 
-.outlineMethod {
+.outlineItem.method {
   color: #faa;
 }
 
-.outlineProperty {
+.outlineItem.property {
   color: #afa;
 }
 

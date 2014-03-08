@@ -119,32 +119,33 @@ abstract class OutlineItem {
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
-    _element.className = cssClassName;
+    _element.classes.add("outlineItem $cssClassName");
     _element.text = _data.name;
   }
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
   OutlineTopLevelItem(services.OutlineTopLevelEntry data, String cssClassName)
-      : super(data, cssClassName);
+      : super(data, "topLevel $cssClassName");
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
-      : super(data, "outlineTopLevelVariable");
+      : super(data, "variable");
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
   OutlineTopLevelFunction(services.OutlineTopLevelFunction data)
-      : super(data, "outlineTopLevelFunction");
+      : super(data, "function");
 }
 
 class OutlineClass extends OutlineTopLevelItem {
-  var _childrenRootElement = new html.UListElement();
+  html.UListElement _childrenRootElement = new html.UListElement();
   List<OutlineClassMember> members = [];
 
   OutlineClass(services.OutlineClass data)
-      : super(data, "outlineClass") {
+      : super(data, "class") {
+    _childrenRootElement.classes = _element.classes;
     _populate(data);
   }
 
@@ -183,11 +184,11 @@ abstract class OutlineClassMember extends OutlineItem {
 
 class OutlineMethod extends OutlineClassMember {
   OutlineMethod(services.OutlineMethod data)
-      : super(data, "outlineMethod");
+      : super(data, "method");
 }
 
 class OutlineProperty extends OutlineClassMember {
   OutlineProperty(services.OutlineProperty data)
-      : super(data, "outlineProperty");
+      : super(data, "property");
 }
 
