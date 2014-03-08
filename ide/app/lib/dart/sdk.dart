@@ -75,7 +75,7 @@ class DartSdk extends SdkDirectory {
 
     SdkDirectory dir = libDirectory;
 
-    for (String p in paths.sublist(0, paths.length - 1)) {
+    for (String p in paths.getRange(0, paths.length - 1)) {
       SdkEntity child = dir.getChild(p);
 
       if (child is SdkDirectory) {
