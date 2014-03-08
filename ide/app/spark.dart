@@ -283,7 +283,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   void initPubManager() {
     _pubManager = new PubManager(this);
   }
-  
+
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement(), this, services);
     _aceThemeManager = new ThemeManager(
@@ -2232,7 +2232,7 @@ class PubGetJob extends Job {
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-  
+
     return spark.pubManager.runPubGet(project).then((_) {
       spark.showSuccessMessage('Pub get run successful');
     }).catchError((e) {

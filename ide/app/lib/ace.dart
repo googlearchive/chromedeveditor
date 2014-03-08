@@ -182,6 +182,9 @@ class AceManager {
 
     parentElement.children.add(_outlineDiv);
     outline = new Outline(services, _outlineDiv);
+    outline.onChildSelected.listen((OutlineItem item) {
+      /*%TRACE3*/ print("""(4> 3/7/14): item: ${item.startOffset} ..  ${item.endOffset}"""); // TRACE%
+    });
   }
 
   bool isFileExtensionEditable(String extension) {
