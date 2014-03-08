@@ -22,23 +22,11 @@ class Outline {
   Outline(services.Services services, this._outlineDiv) {
     analyzer = services.getService("analyzer");
 
-    _outlineDiv.style
-        ..position = 'absolute'
-        ..minWidth = '40px'
-        ..right = '10px'
-        ..top ='10px'
-        ..bottom = '10px'
-        ..background = 'rgb(100, 100, 100)'
-        ..borderRadius = '2px'
-        ..zIndex = '100'
-        ..opacity = '0.6'
-        ..overflow = 'scroll';
+    // TODO(ericarnold): This should be done in polymer.
+    _outlineDiv.className = "outline";
 
     _outlineContainer = new html.DivElement();
-    _outlineContainer.style
-        ..height = '100%'
-        ..width = '200px'
-        ..overflow = 'scroll';
+    _outlineContainer.className = "outlineContainer";
     _outlineDiv.append(_outlineContainer);
 
     html.ButtonElement toggleButton = new html.ButtonElement();
@@ -129,29 +117,34 @@ abstract class OutlineItem {
   html.LIElement _element;
   services.OutlineEntry _data;
 
-  OutlineItem(this._data) {
+  OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
+    _element.className = cssClassName;
     _element.text = _data.name;
   }
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
-  OutlineTopLevelItem(services.OutlineTopLevelEntry data) : super(data);
+  OutlineTopLevelItem(services.OutlineTopLevelEntry data, String cssClassName)
+      : super(data, cssClassName);
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
-  OutlineTopLevelVariable(services.OutlineTopLevelVariable data) : super(data);
+  OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
+      : super(data, "outlineTopLevelVariable");
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
-  OutlineTopLevelFunction(services.OutlineTopLevelFunction data) : super(data);
+  OutlineTopLevelFunction(services.OutlineTopLevelFunction data)
+      : super(data, "outlineTopLevelFunction");
 }
 
 class OutlineClass extends OutlineTopLevelItem {
   var _childrenRootElement = new html.UListElement();
   List<OutlineClassMember> members = [];
 
-  OutlineClass(services.OutlineClass data) : super(data) {
+  OutlineClass(services.OutlineClass data)
+      : super(data, "outlineClass") {
     _populate(data);
   }
 
@@ -183,15 +176,18 @@ class OutlineClass extends OutlineTopLevelItem {
       _addElement(new OutlineProperty(data));
 }
 
-class OutlineMethod extends OutlineClassMember {
-  OutlineMethod(services.OutlineMethod data) : super(data);
+abstract class OutlineClassMember extends OutlineItem {
+  OutlineClassMember(services.OutlineMember data, String cssClassName)
+      : super(data, cssClassName);
 }
 
-abstract class OutlineClassMember extends OutlineItem {
-  OutlineClassMember(services.OutlineMember data) : super(data);
+class OutlineMethod extends OutlineClassMember {
+  OutlineMethod(services.OutlineMethod data)
+      : super(data, "outlineMethod");
 }
 
 class OutlineProperty extends OutlineClassMember {
-  OutlineProperty(services.OutlineProperty data) : super(data);
+  OutlineProperty(services.OutlineProperty data)
+      : super(data, "outlineProperty");
 }
 

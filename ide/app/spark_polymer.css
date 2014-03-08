@@ -303,3 +303,45 @@ body {
   opacity: 0.25;
   z-index: 500;
 }
+
+.outline {
+  position: absolute;
+  minWidth: 40px;
+  right: 10px;
+  top: 10px;
+  bottom: 10px;
+  background: rgb(100, 100, 100);
+  borderRadius: 2px;
+  zIndex: 100;
+  opacity: 0.6;
+  overflow: scroll;
+  color: #ddd;
+}
+
+.outlineContainer {
+  height: 100%;
+  width: 200px;
+  overflow: scroll;
+}
+
+.outlineTopLevelFunction {
+  color: #faa;
+}
+
+.outlineTopLevelVariable {
+  color: #afa;
+}
+
+.outlineClass {
+  color: #aaf;
+}
+
+.outlineMethod {
+  color: #faa;
+}
+
+.outlineProperty {
+  color: #afa;
+}
+
+
