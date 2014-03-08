@@ -307,14 +307,13 @@ body {
 .outline {
   position: absolute;
   minWidth: 40px;
-  right: 10px;
+  right: 15px;
   top: 10px;
   bottom: 10px;
   background: #555;
   borderRadius: 2px;
   zIndex: 100;
   opacity: 0.6;
-  overflow: scroll;
 }
 
 .outlineContainer {
@@ -325,12 +324,13 @@ body {
 
 .outlineContainer ul {
   margin: 0px;
-  padding: 0px;
+  padding: 0 0 0 10px;
   list-style-type: none;
 }
 
 
 ul.outlineItem.topLevel {
+  margin: 0px;
   padding: 0 0 0 10px;
   background: #333;
 }
