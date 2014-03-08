@@ -1205,7 +1205,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   }
 
   String get category => 'resource';
-
+ 
   bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 

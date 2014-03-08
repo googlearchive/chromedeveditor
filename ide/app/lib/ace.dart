@@ -184,6 +184,17 @@ class AceManager {
     outline = new Outline(services, _outlineDiv);
     outline.onChildSelected.listen((OutlineItem item) {
       /*%TRACE3*/ print("""(4> 3/7/14): item: ${item.startOffset} ..  ${item.endOffset}"""); // TRACE%
+
+      ace.Point startPoint =
+          currentSession.document.indexToPosition(item.startOffset);
+      ace.Point endPoint =
+          currentSession.document.indexToPosition(item.endOffset);
+
+      ace.Selection selection = _aceEditor.selection;
+      selection.setSelectionAnchor(startPoint.row, startPoint.column);
+      selection.selectTo(endPoint.row, endPoint.column);
+      _aceEditor.focus();
+
     });
   }
 
