@@ -137,16 +137,14 @@ class ChromeDartSdk extends DartSdk {
   LibraryMap _parseLibrariesMap(String contents) {
     SimpleAnalysisErrorListener errorListener =
         new SimpleAnalysisErrorListener();
-    Source source =
-        new StringSource(contents, 'lib/_internal/libraries.dart');
+    Source source = new StringSource(contents, 'lib/_internal/libraries.dart');
     Scanner scanner =
         new Scanner(source, new CharSequenceReader(contents), errorListener);
-    Parser parser =
-        new Parser(source, errorListener);
-    CompilationUnit unit =
-        parser.parseCompilationUnit(scanner.tokenize());
+    Parser parser = new Parser(source, errorListener);
+    CompilationUnit unit = parser.parseCompilationUnit(scanner.tokenize());
     SdkLibrariesReader_LibraryBuilder libraryBuilder =
         new SdkLibrariesReader_LibraryBuilder(false);
+
     if (!errorListener.foundError) {
       unit.accept(libraryBuilder);
     }
