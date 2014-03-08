@@ -61,7 +61,7 @@ class SparkMenuButton extends SparkWidget {
 
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
   //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
-  void onOpened(CustomEvent e) {
+  void overlayOpenedHandler(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {
       opened = false;
