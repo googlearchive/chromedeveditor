@@ -2325,7 +2325,9 @@ class SettingsAction extends SparkActionWithDialog {
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        getElement('.directory-label').text = entry.fullPath;
+        chrome.fileSystem.getDisplayPath(entry).then((path) {
+          getElement('.directory-label').text = path;
+        });
       });
     });
   }
