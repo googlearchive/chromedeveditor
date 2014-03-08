@@ -188,13 +188,11 @@ class SparkOverlay extends SparkWidget {
     eventTypes.forEach((et) => addRemoveFunc(et, _captureHandler, true));
   }
 
-  // TODO(sorvell): nodes stay focused when they become un-focusable due to
-  // an ancestory becoming display: none; file bug.
   void applyFocus() {
     if (opened) {
       focus();
     } else {
-      blur();
+      // Focus the next overlay in the stack.
       focusOverlay();
     }
   }
