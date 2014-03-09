@@ -11,10 +11,9 @@ import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/services.dart';
-import '../lib/workspace.dart' as ws;
 
 defineTests() {
-  ws.Workspace workspace = new ws.Workspace();
+  Workspace workspace = new Workspace();
 
   Services services = new Services(workspace);
 
@@ -56,11 +55,7 @@ defineTests() {
 
     test('basic test', () {
       CompilerService compilerService = services.getService("compiler");
-
-      return compilerService.start().then((_) {
-        // TODO(ericarnold): What's a better way to do this?
-        expect(true, equals(true));
-      });
+      expect(compilerService, isNotNull);
     });
   });
 
@@ -70,18 +65,21 @@ defineTests() {
       FileEntry fileEntry = fs.createFile('test.txt', contents: "some words");
       String fileUuid;
       TestService testService = services.getService("test");
-      return workspace.link(createWsRoot(fileEntry))
-          .then((ws.File fileResource) {
-            return testService.readText(fileResource);
-          }).then((String text) => expect(text, equals("some words")));
+      return workspace.link(createWsRoot(fileEntry)).then((File fileResource) {
+        return testService.readText(fileResource);
+      }).then((String text) => expect(text, equals("some words")));
     });
   });
 
   group('services compiler', () {
+    CompilerService compiler;
+
+    setUp(() {
+      compiler = services.getService("compiler");
+    });
+
     test('hello world', () {
       final String str = "void main() { print('hello world'); }";
-
-      CompilerService compiler = services.getService("compiler");
 
       return compiler.compileString(str).then((CompilerResult result) {
         expect(result.getSuccess(), true);
@@ -93,14 +91,30 @@ defineTests() {
       // Missing semi-colon.
       final String str = "void main() { print('hello world') }";
 
-      CompilerService compiler = services.getService("compiler");
-
       return compiler.compileString(str).then((CompilerResult result) {
         expect(result.getSuccess(), false);
         expect(result.problems.length, 1);
         expect(result.output, null);
       });
     });
+
+    // TODO: This test isn't working right now - the services it's testing
+    // against has a different workspace.
+//    test('compile file', () {
+//      return linkSampleProject(createSampleDirectory1('foo')).then((Project project) {
+//        File file = project.getChildPath('web/sample.dart');
+//        return compiler.compileFile(file).then((CompilerResult result) {
+//          expect(result.getSuccess(), true);
+//          expect(result.problems.length, 0);
+//          expect(result.output.length, greaterThan(100));
+//        });
+//      });
+//    });
+  });
+
+  group('services analyzer', () {
+    // TODO: add some analyzer integration tests
+
   });
 
 //  group('services_impl', () {

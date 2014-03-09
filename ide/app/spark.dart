@@ -283,7 +283,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   void initPubManager() {
     _pubManager = new PubManager(this);
   }
-  
+
   void createEditorComponents() {
     _aceManager = new AceManager(new DivElement(), this);
     _aceThemeManager = new ThemeManager(
@@ -2232,7 +2232,7 @@ class PubGetJob extends Job {
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-  
+
     return spark.pubManager.runPubGet(project).then((_) {
       spark.showSuccessMessage('Pub get run successful');
     }).catchError((e) {
@@ -2493,7 +2493,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
     chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
       if (entry != null) {
-        Folder folder = resources.first;
+        ws.Folder folder = resources.first;
         folder.importFile(entry).catchError((e) {
           spark.showErrorMessage('Error while importing file', e);
         });
@@ -2516,7 +2516,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
     chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
-        Folder folder = resources.first;
+        ws.Folder folder = resources.first;
         folder.importFolder(entry).catchError((e) {
           spark.showErrorMessage('Error while importing folder', e);
         });

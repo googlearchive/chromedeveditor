@@ -708,7 +708,7 @@ class Folder extends Container {
     if (getChild(name) != null) {
       return new Future.error("File already exists.");
     }
-    
+
     return _dirEntry.createFile(name).then((entry) {
       File file = new File(this, entry);
       _children.add(file);
@@ -721,7 +721,7 @@ class Folder extends Container {
     if (getChild(name) != null) {
       return new Future.error("Folder already exists.");
     }
-    
+
     return _dirEntry.createDirectory(name).then((entry) {
       Folder folder = new Folder(this, entry);
       _children.add(folder);

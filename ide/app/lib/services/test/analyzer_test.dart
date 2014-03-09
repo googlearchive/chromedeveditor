@@ -13,58 +13,51 @@ import '../../services/services_impl.dart';
 defineTests(ServicesIsolate servicesIsolate) {
   group('analyzer.', () {
     test('ChromeDartSdk exists', () {
+      ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
 
-      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
-          .then((List<int> sdkContents) => createSdk(sdkContents))
-          .then((ChromeDartSdk sdk) {
-        expect(sdk, isNotNull);
-        expect(sdk.sdkVersion.length, greaterThan(0));
+      expect(sdk, isNotNull);
+      expect(sdk.sdkVersion.length, greaterThan(0));
 
-        // expect some libraries
-        expect(sdk.sdkLibraries.length, greaterThan(10));
+      // expect some libraries
+      expect(sdk.sdkLibraries.length, greaterThan(10));
 
-        // expect some uris
-        expect(sdk.uris.length, greaterThan(10));
+      // expect some uris
+      expect(sdk.uris.length, greaterThan(10));
 
-        expect(sdk.getSdkLibrary('dart:core'), isNotNull);
-        expect(sdk.getSdkLibrary('dart:html'), isNotNull);
+      expect(sdk.getSdkLibrary('dart:core'), isNotNull);
+      expect(sdk.getSdkLibrary('dart:html'), isNotNull);
 
-        // TODO: test fromEncoding
+      // TODO: test fromEncoding
 
-        // TODO: test mapDartUri
+      // TODO: test mapDartUri
 
-      });
     });
 
     test('analyze string, no resolution', () {
-      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
-          .then((List<int> sdkContents) => createSdk(sdkContents))
-          .then((ChromeDartSdk sdk) {
-        return analyzeString(sdk, "void main() {\n print('hello world');\n}",
-            performResolution: false).then((AnalyzerResult result) {
-          expect(result, isNotNull);
-          expect(result.ast, isNotNull);
-          expect(result.ast.declarations.length, 1);
-          CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
-          expect((decl as FunctionDeclaration).name.name, 'main');
-          expect(result.errors, isEmpty);
-        });
+      ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
+
+      return analyzeString(sdk, "void main() {\n print('hello world');\n}",
+          performResolution: false).then((AnalyzerResult result) {
+        expect(result, isNotNull);
+        expect(result.ast, isNotNull);
+        expect(result.ast.declarations.length, 1);
+        CompilationUnitMember decl = result.ast.declarations.first;
+        expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+        expect((decl as FunctionDeclaration).name.name, 'main');
+        expect(result.errors, isEmpty);
       });
     });
 
     test('analyze string, no resolution, syntax errors', () {
-      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
-          .then((List<int> sdkContents) => createSdk(sdkContents))
-          .then((ChromeDartSdk sdk) {
-        return analyzeString(sdk, "void main() {\n print('hello world') \n}",
-            performResolution: false).then((AnalyzerResult result) {
-          expect(result.ast.declarations.length, 1);
-          CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
-          expect((decl as FunctionDeclaration).name.name, 'main');
-          expect(result.errors.length, greaterThan(0));
-        });
+      ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
+
+      return analyzeString(sdk, "void main() {\n print('hello world') \n}",
+          performResolution: false).then((AnalyzerResult result) {
+        expect(result.ast.declarations.length, 1);
+        CompilationUnitMember decl = result.ast.declarations.first;
+        expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+        expect((decl as FunctionDeclaration).name.name, 'main');
+        expect(result.errors.length, greaterThan(0));
       });
     });
 
@@ -72,20 +65,18 @@ defineTests(ServicesIsolate servicesIsolate) {
       // TODO: this fails under dart2js
       if (isDart2js()) return null;
 
-      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
-          .then((List<int> sdkContents) => createSdk(sdkContents))
-          .then((ChromeDartSdk sdk) {
-        return analyzeString(sdk, "void main() {\n print('hello world');\n}",
-            performResolution: true).then((AnalyzerResult result) {
-          expect(result, isNotNull);
-          expect(result.ast, isNotNull);
-          expect(result.ast.declarations.length, 1);
-          CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
-          expect((decl as FunctionDeclaration).name.name, 'main');
-          expect(result.errors, isEmpty);
-          expect((decl as FunctionDeclaration).element, isNotNull);
-        });
+      ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
+
+      return analyzeString(sdk, "void main() {\n print('hello world');\n}",
+          performResolution: true).then((AnalyzerResult result) {
+        expect(result, isNotNull);
+        expect(result.ast, isNotNull);
+        expect(result.ast.declarations.length, 1);
+        CompilationUnitMember decl = result.ast.declarations.first;
+        expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+        expect((decl as FunctionDeclaration).name.name, 'main');
+        expect(result.errors, isEmpty);
+        expect((decl as FunctionDeclaration).element, isNotNull);
       });
     });
 
@@ -93,18 +84,16 @@ defineTests(ServicesIsolate servicesIsolate) {
       // TODO: this fails under dart2js
       if (isDart2js()) return null;
 
-      servicesIsolate.chromeService.getAppContents('sdk/dart-sdk.bin')
-          .then((List<int> sdkContents) => createSdk(sdkContents))
-          .then((ChromeDartSdk sdk) {
-        return analyzeString(sdk, "void main() {\n printfoo('hello world');\n}",
-            performResolution: true).then((AnalyzerResult result) {
-          expect(result.ast, isNotNull);
-          expect(result.ast.declarations.length, 1);
-          CompilationUnitMember decl = result.ast.declarations.first;
-          expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
-          expect((decl as FunctionDeclaration).name.name, 'main');
-          expect(result.errors.length, 1);
-        });
+      ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
+
+      return analyzeString(sdk, "void main() {\n printfoo('hello world');\n}",
+          performResolution: true).then((AnalyzerResult result) {
+        expect(result.ast, isNotNull);
+        expect(result.ast.declarations.length, 1);
+        CompilationUnitMember decl = result.ast.declarations.first;
+        expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
+        expect((decl as FunctionDeclaration).name.name, 'main');
+        expect(result.errors.length, 1);
       });
     });
 

@@ -38,24 +38,24 @@ class ServicesIsolate {
   ChromeService chromeService;
   Map<String, ServiceImpl> _serviceImplsById = {};
 
+  DartSdk sdk;
+
   ServicesIsolate(this._sendPort) {
     chromeService = new ChromeService(this);
 
     StreamController<ServiceActionEvent> hostMessageController =
-        new StreamController<ServiceActionEvent>.broadcast();
+        new StreamController();
     StreamController<ServiceActionEvent> responseMessageController =
-        new StreamController<ServiceActionEvent>.broadcast();
+        new StreamController.broadcast();
 
     onResponseMessage = responseMessageController.stream;
     onHostMessage = hostMessageController.stream;
 
-    // Register each ServiceImpl:
-    _registerServiceImpl(new CompilerServiceImpl(this));
-    _registerServiceImpl(new TestServiceImpl(this));
-    _registerServiceImpl(new AnalyzerServiceImpl(this));
-
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
+
+    // Register each ServiceImpl.
+    _registerServiceImpl(new TestServiceImpl(this));
 
     receivePort.listen((arg) {
       if (arg is int) {
@@ -70,8 +70,13 @@ class ServicesIsolate {
       }
     });
 
-    onHostMessage.listen((ServiceActionEvent event) {
-      _handleMessage(event);
+    chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
+      sdk = DartSdk.createSdkFromContents(sdkContents);
+
+      _registerServiceImpl(new CompilerServiceImpl(this, sdk));
+      _registerServiceImpl(new AnalyzerServiceImpl(this, sdk));
+
+      onHostMessage.listen((ServiceActionEvent event) => _handleMessage(event));
     });
   }
 
@@ -80,11 +85,13 @@ class ServicesIsolate {
   }
 
   Future<ServiceActionEvent> _onResponseByCallId(String callId) {
-    Completer<ServiceActionEvent> completer =
-        new Completer<ServiceActionEvent>();
-    onResponseMessage.listen((ServiceActionEvent event) {
+    Completer<ServiceActionEvent> completer = new Completer<ServiceActionEvent>();
+    // Added to avoid leaking subscriptions. Consider using a map of completers.
+    StreamSubscription sub = null;
+    sub = onResponseMessage.listen((ServiceActionEvent event) {
       if (event.callId == callId) {
         completer.complete(event);
+        sub.cancel();
       }
     });
     return completer.future;
@@ -162,54 +169,53 @@ class TestServiceImpl extends ServiceImpl {
 }
 
 class CompilerServiceImpl extends ServiceImpl {
-  DartSdk sdk;
+  final DartSdk sdk;
   Compiler compiler;
 
-  Completer<ServiceActionEvent> _readyCompleter = new Completer();
+  CompilerServiceImpl(ServicesIsolate isolate, this.sdk) :
+    super(isolate, 'compiler') {
+    compiler = Compiler.createCompilerFrom(sdk);
 
-  Future<ServiceActionEvent> get onceReady => _readyCompleter.future;
-
-  CompilerServiceImpl(ServicesIsolate isolate) : super(isolate, 'compiler');
-
-  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
-    switch (event.actionId) {
-      case "start":
-        // TODO(ericarnold): Start should happen automatically on use.
-        return _start().then((_) => new Future.value(event.createReponse(null)));
-      case "dispose":
-        return new Future.value(event.createReponse(null));
-      case "compileString":
-        return compiler.compileString(event.data['string'])
-            .then((CompilerResult result)  {
-          return new Future.value(event.createReponse(result.toMap()));
-        });
-      default:
-        throw "Unknown action '${event.actionId}' sent to $serviceId service.";
-    }
+    registerRequestHandler('compileString', compileString);
+    registerRequestHandler('compileFile', compileFile);
   }
 
-  Future _start() {
-    isolate.chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
-      sdk = DartSdk.createSdkFromContents(sdkContents);
-      compiler = Compiler.createCompilerFrom(sdk);
-      _readyCompleter.complete();
+  Future<ServiceActionEvent> compileString(ServiceActionEvent request) {
+    String string = request.data['string'];
+    return compiler.compileString(string).then((CompilerResult result) {
+      return new Future.value(request.createReponse(result.toMap()));
+    });
+  }
+
+  Future<ServiceActionEvent> compileFile(ServiceActionEvent request) {
+    String fileUuid = request.data['fileUuid'];
+    String project = request.data['project'];
+
+    // TODO: temporary implementation
+
+    return isolate.chromeService.getFileContents(fileUuid).then((String contents) {
+      return compiler.compileString(contents).then((CompilerResult result) {
+        return new Future.value(request.createReponse(result.toMap()));
+      });
     });
 
-    return _readyCompleter.future;
+    // TODO: provide data getter callbacks
+
+//    return compiler.compileFile(fileUuid).then((CompilerResult result) {
+//      return new Future.value(request.createReponse(result.toMap()));
+//    });
   }
 }
 
 class AnalyzerServiceImpl extends ServiceImpl {
-  AnalyzerServiceImpl(ServicesIsolate isolate) : super(isolate, 'analyzer');
+  analyzer.ChromeDartSdk dartSdk;
 
-  Future<analyzer.ChromeDartSdk> _dartSdkFuture;
-  Future<analyzer.ChromeDartSdk> get dartSdkFuture {
-    if (_dartSdkFuture == null) {
-      _dartSdkFuture = isolate.chromeService.getAppContents('sdk/dart-sdk.bin')
-          .then((List<int> sdkContents) => analyzer.createSdk(sdkContents));
-    }
-    return _dartSdkFuture;
+  AnalyzerServiceImpl(ServicesIsolate isolate, DartSdk sdk) :
+    super(isolate, 'analyzer') {
+    dartSdk = analyzer.createSdk(sdk);
   }
+
+  Future<analyzer.ChromeDartSdk> get dartSdkFuture => new Future.value(dartSdk);
 
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {

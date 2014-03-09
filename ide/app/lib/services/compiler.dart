@@ -42,10 +42,19 @@ class Compiler {
 
   Compiler._(this._sdk);
 
-  Future<CompilerResult> compile(/*chrome.FileEntry*/ entry) {
-    // TODO: implement
+  Future<CompilerResult> compileFile(String fileUuid) {
+    _CompilerProvider provider = new _CompilerProvider.fromUuid(_sdk, fileUuid);
 
-    return new Future.value(new CompilerResult._());
+    CompilerResult result = new CompilerResult._().._start();
+
+    return compiler.compile(
+        provider.getInitialUri(),
+        new Uri(scheme: 'sdk', path: '/'),
+        null,
+        provider.inputProvider,
+        result._diagnosticHandler,
+        [],
+        result._outputProvider).then((_) => result._stop());
   }
 
   /**
@@ -53,17 +62,17 @@ class Compiler {
    */
   Future<CompilerResult> compileString(String input) {
     _CompilerProvider provider = new _CompilerProvider.fromString(_sdk, input);
-    CompilerResult result = new CompilerResult._();
-    DateTime startTime = new DateTime.now();
 
-    return compiler.compile(provider.inputUri, new Uri(scheme: 'sdk', path: '/'), null,
+    CompilerResult result = new CompilerResult._().._start();
+
+    return compiler.compile(
+        provider.getInitialUri(),
+        new Uri(scheme: 'sdk', path: '/'),
+        null,
         provider.inputProvider,
         result._diagnosticHandler,
         [],
-        result._outputProvider).then((String str) {
-      result._compileTime = new DateTime.now().difference(startTime);
-      return result;
-    });
+        result._outputProvider).then((_) => result._stop());
   }
 }
 
@@ -74,8 +83,18 @@ class CompilerResult {
   List<CompilerProblem> _problems = [];
   StringBuffer _output;
   Duration _compileTime;
+  DateTime _startTime;
 
   CompilerResult._();
+
+  void _start() {
+    _startTime = new DateTime.now();
+  }
+
+  CompilerResult _stop() {
+    _compileTime = new DateTime.now().difference(_startTime);
+    return this;
+  }
 
   List<CompilerProblem> get problems => _problems;
 
@@ -100,6 +119,7 @@ class CompilerResult {
   }
 
   EventSink<String> _outputProvider(String name, String extension) {
+    // TODO: Also include the .precompiled.js output.
     if (name.isEmpty && extension == 'js') {
       _output = new StringBuffer();
       return new _StringSink(_output);
@@ -229,19 +249,28 @@ class _StringSink implements EventSink<String> {
  * Instances of this class allow dart2js to resolve Uris to input sources.
  */
 class _CompilerProvider {
-  static final String INPUT_URI_TEXT = 'resource:/foo.dart';
+  static final String _INPUT_URI_TEXT = 'resource:/foo.dart';
 
-  String input;
-  DartSdk sdk;
+  final String textInput;
+  final String uuidInput;
+  final DartSdk sdk;
 
-  _CompilerProvider.fromString(this.sdk, this.input);
+  _CompilerProvider.fromString(this.sdk, this.textInput) : uuidInput = null;
 
-  Uri get inputUri => Uri.parse(INPUT_URI_TEXT);
+  _CompilerProvider.fromUuid(this.sdk, this.uuidInput) : textInput = null;
+
+  Uri getInitialUri() {
+    if (textInput != null) {
+      return Uri.parse(_CompilerProvider._INPUT_URI_TEXT);
+    } else {
+      return new Uri(scheme: 'file', path: uuidInput);
+    }
+  }
 
   Future<String> inputProvider(Uri uri) {
     if (uri.scheme == 'resource') {
-      if (uri.toString() == INPUT_URI_TEXT) {
-        return new Future.value(input);
+      if (uri.toString() == _INPUT_URI_TEXT) {
+        return new Future.value(textInput);
       } else {
         return new Future.error('unhandled: ${uri.scheme}');
       }
@@ -261,10 +290,6 @@ class _CompilerProvider {
       }
     } else if (uri.scheme == 'file') {
       // TODO: file:
-
-      return new Future.error('unhandled: ${uri.scheme}');
-    } else if (uri.scheme == 'dart') {
-      // TODO: dart:
 
       return new Future.error('unhandled: ${uri.scheme}');
     } else if (uri.scheme == 'package') {
