@@ -41,13 +41,19 @@ class WebStoreClient {
       }
       bool success = (responseMap['uploadState'] == 'SUCCESS');
       if (!success) {
-        List<Map> errors = responseMap['itemError'];
         String errorString = null;
-        for(Map error in errors) {
-          if (errorString == null) {
-            errorString = error['error_detail'];
-          } else {
-            errorString += '\n' + error['error_detail'];
+        List<Map> errors = responseMap['itemError'];
+        // We do defensive type checking here because it's coming from a webservice.
+        if (errors is List) {
+          for(var item in errors) {
+            if (item is Map) {
+              Map error = item;
+              if ((errorString == null) && (error['error_detail'] is String)) {
+                errorString = error['error_detail'];
+              } else {
+                errorString += '\n' + error['error_detail'];
+              }
+            }
           }
         }
         if (errorString == null) {
