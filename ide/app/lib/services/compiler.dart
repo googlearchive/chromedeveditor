@@ -42,8 +42,10 @@ class Compiler {
 
   Compiler._(this._sdk);
 
-  Future<CompilerResult> compileFile(String fileUuid) {
-    _CompilerProvider provider = new _CompilerProvider.fromUuid(_sdk, fileUuid);
+  Future<CompilerResult> compileFile(
+      String fileUuid, CompilerContentsProvider contentsProvider) {
+    _CompilerProvider provider =
+        new _CompilerProvider.fromUuid(_sdk, contentsProvider, fileUuid);
 
     CompilerResult result = new CompilerResult._().._start();
 
@@ -214,6 +216,11 @@ class CompilerProblem {
   }
 }
 
+abstract class CompilerContentsProvider {
+  Future<String> getFileContents(String uuid);
+  Future<String> getPackageContents(String packageRef);
+}
+
 /**
  * A sink that drains into /dev/null.
  */
@@ -255,10 +262,12 @@ class _CompilerProvider {
   final String textInput;
   final String uuidInput;
   final DartSdk sdk;
+  CompilerContentsProvider provider;
 
   _CompilerProvider.fromString(this.sdk, this.textInput) : uuidInput = null;
 
-  _CompilerProvider.fromUuid(this.sdk, this.uuidInput) : textInput = null;
+  _CompilerProvider.fromUuid(this.sdk, this.provider, this.uuidInput) :
+    textInput = null;
 
   Uri getInitialUri() {
     if (textInput != null) {
@@ -290,12 +299,9 @@ class _CompilerProvider {
         return new Future.error('file not found');
       }
     } else if (uri.scheme == 'file') {
-      // TODO: file:
-
-      return new Future.error('unhandled: ${uri.scheme}');
+      return provider.getFileContents(uri.path);
     } else if (uri.scheme == 'package') {
       // TODO: package:
-
       return new Future.error('unhandled: ${uri.scheme}');
     } else {
       return html.HttpRequest.getString(uri.toString());

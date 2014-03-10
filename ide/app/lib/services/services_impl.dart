@@ -191,19 +191,34 @@ class CompilerServiceImpl extends ServiceImpl {
     String fileUuid = request.data['fileUuid'];
     String project = request.data['project'];
 
-    // TODO: temporary implementation
-
-    return isolate.chromeService.getFileContents(fileUuid).then((String contents) {
-      return compiler.compileString(contents).then((CompilerResult result) {
-        return new Future.value(request.createReponse(result.toMap()));
-      });
-    });
-
-    // TODO: provide data getter callbacks
-
-//    return compiler.compileFile(fileUuid).then((CompilerResult result) {
-//      return new Future.value(request.createReponse(result.toMap()));
+//    return isolate.chromeService.getFileContents(fileUuid).then((String contents) {
+//      return compiler.compileString(contents).then((CompilerResult result) {
+//        return new Future.value(request.createReponse(result.toMap()));
+//      });
 //    });
+
+    var contentsProvider = new _ServiceContentsProvider(isolate.chromeService);
+
+    Future f = compiler.compileFile(fileUuid, contentsProvider);
+    return f.then((CompilerResult result) {
+      return new Future.value(request.createReponse(result.toMap()));
+    });
+  }
+}
+
+class _ServiceContentsProvider implements CompilerContentsProvider {
+  final ChromeService chromeService;
+
+  _ServiceContentsProvider(this.chromeService);
+
+  Future<String> getFileContents(String uuid) {
+    if (uuid.startsWith('/')) uuid = uuid.substring(1);
+    return chromeService.getFileContents(uuid);
+  }
+
+  Future<String> getPackageContents(String packageRef) {
+    // TODO: Implement getPackageContents.
+    return new Future.error('not implemented');
   }
 }
 
