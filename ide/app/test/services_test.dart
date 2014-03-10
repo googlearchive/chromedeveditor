@@ -14,7 +14,6 @@ import '../lib/services.dart';
 
 defineTests() {
   Workspace workspace = new Workspace();
-
   Services services = new Services(workspace);
 
   group('services', () {
@@ -72,10 +71,17 @@ defineTests() {
   });
 
   group('services compiler', () {
+    Workspace workspace = new Workspace();
+    Services services;
     CompilerService compiler;
 
     setUp(() {
+      services = new Services(workspace);
       compiler = services.getService("compiler");
+    });
+
+    tearDown(() {
+      services.dispose();
     });
 
     test('hello world', () {
@@ -98,18 +104,41 @@ defineTests() {
       });
     });
 
-    // TODO: This test isn't working right now - the services it's testing
-    // against has a different workspace.
-//    test('compile file', () {
-//      return linkSampleProject(createSampleDirectory1('foo')).then((Project project) {
-//        File file = project.getChildPath('web/sample.dart');
-//        return compiler.compileFile(file).then((CompilerResult result) {
-//          expect(result.getSuccess(), true);
-//          expect(result.problems.length, 0);
-//          expect(result.output.length, greaterThan(100));
-//        });
-//      });
-//    });
+    test('compile file', () {
+      DirectoryEntry dir = createSampleDirectory1('foo');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return compiler.compileFile(file).then((CompilerResult result) {
+          expect(result.getSuccess(), true);
+          expect(result.problems.length, 0);
+          expect(result.output.length, greaterThan(100));
+        });
+      });
+    });
+
+    test('compile file with relative references', () {
+      DirectoryEntry dir = createSampleDirectory2('foo');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return compiler.compileFile(file).then((CompilerResult result) {
+          expect(result.getSuccess(), true);
+          expect(result.problems.length, 0);
+          expect(result.output.length, greaterThan(100));
+        });
+      });
+    });
+
+    test('compile file with package references', () {
+      DirectoryEntry dir = createSampleDirectory3('foo');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return compiler.compileFile(file).then((CompilerResult result) {
+          expect(result.getSuccess(), true);
+          expect(result.problems.length, 0);
+          expect(result.output.length, greaterThan(100));
+        });
+      });
+    });
   });
 
   group('services analyzer', () {

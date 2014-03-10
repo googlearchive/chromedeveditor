@@ -45,6 +45,8 @@ class Services {
   void registerService(Service service) {
     _services[service.serviceId] = service;
   }
+
+  void dispose() => _isolateHandler.dispose();
 }
 
 /**
@@ -238,6 +240,7 @@ class ChromeServiceImpl extends Service {
  */
 class _IsolateHandler {
   int _topCallId = 0;
+  Isolate _isolate;
   Map<String, Completer> _serviceCallCompleters = {};
 
   final String _workerPath = 'services_entry.dart';
@@ -255,12 +258,12 @@ class _IsolateHandler {
 
   _IsolateHandler() {
     onceIsolateReady = _readyController.stream.first;
-    _startIsolate();
+    _startIsolate().then((result) => _isolate = result);
   }
 
   String _getNewCallId() => "host_${_topCallId++}";
 
-  Future _startIsolate() {
+  Future<Isolate> _startIsolate() {
     StreamController<ServiceActionEvent> _messageController =
         new StreamController<ServiceActionEvent>.broadcast();
 
@@ -326,5 +329,10 @@ class _IsolateHandler {
 
   void sendResponse(ServiceActionEvent event) {
     _sendPort.send(event.toMap());
+  }
+
+  void dispose() {
+    // TODO: I'm not entirely sure how to terminate an isolate...
+    //_isolate.
   }
 }

@@ -154,8 +154,9 @@ DirectoryEntry createSampleDirectory3(String name) {
   return directory;
 }
 
-Future<workspace.Project> linkSampleProject(DirectoryEntry dir) {
-  workspace.Workspace ws = new workspace.Workspace();
+Future<workspace.Project> linkSampleProject(
+    DirectoryEntry dir, [workspace.Workspace ws]) {
+  if (ws == null) ws = new workspace.Workspace();
   ws.createBuilderManager(new JobManager());
   return ws.link(createWsRoot(dir));
 }

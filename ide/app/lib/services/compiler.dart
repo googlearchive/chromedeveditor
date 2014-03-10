@@ -65,6 +65,7 @@ class Compiler {
 
     CompilerResult result = new CompilerResult._().._start();
 
+    // TODO: add a package: resolver
     return compiler.compile(
         provider.getInitialUri(),
         new Uri(scheme: 'sdk', path: '/'),
