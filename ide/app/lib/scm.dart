@@ -31,7 +31,6 @@ import 'git/commands/fetch.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
-import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 

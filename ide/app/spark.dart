@@ -12,7 +12,6 @@ import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
-//import 'package:tavern/tavern.dart' as tavern;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'packages/spark_widgets/spark_status/spark_status.dart';
@@ -32,6 +31,7 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/project_builder.dart';
+import 'lib/pub.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
@@ -101,6 +101,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   EditorManager _editorManager;
   EditorArea _editorArea;
   LaunchManager _launchManager;
+  PubManager _pubManager;
 
   final EventBus eventBus = new EventBus();
 
@@ -156,13 +157,14 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initSaveStatusListener();
 
     initLaunchManager();
+    initPubManager();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
       // content of the workspace from other applications. For that reason, when
       // the user switch back to Spark, we want to check whether the content of
       // the workspace changed.
-      
+
       // TODO(dvh): Disabled because of performance issue. Still need some
       // tweaking before enabling it by default.
       //workspace.refresh();
@@ -187,6 +189,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
   LaunchManager get launchManager => _launchManager;
+  PubManager get pubManager => _pubManager;
 
   preferences.PreferenceStore get localPrefs => _localPrefs;
   preferences.PreferenceStore get syncPrefs => _syncPrefs;
@@ -275,6 +278,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   void initLaunchManager() {
     _launchManager = new LaunchManager(_workspace, services, this);
+  }
+
+  void initPubManager() {
+    _pubManager = new PubManager(this);
   }
 
   void createEditorComponents() {
@@ -395,7 +402,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new ProjectPropertiesAction(this, getDialogElement("#projectPropertiesDialog")));
+    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
@@ -1180,11 +1187,11 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _invoke([List<ws.Resource> resources]) {
-   if (resources != null && resources.isNotEmpty) {
-     resource = resources.first;
-     _nameElement.value = resource.name;
-     _show();
-   }
+    if (resources != null && resources.isNotEmpty) {
+      resource = resources.first;
+      _nameElement.value = resource.name;
+      _show();
+    }
   }
 
   void _commit() {
@@ -1429,8 +1436,8 @@ class PrevMarkerAction extends SparkAction {
 class NextMarkerAction extends SparkAction {
   NextMarkerAction(Spark spark) : super(
       spark, "marker-next", "Next Marker") {
-    // TODO: we probably don't want to bind to 'print'. Perhaps there's a good
-    // keybinding we can borrow from chrome?
+    // TODO: We probably don't want to bind to 'print'. Perhaps there's a good
+    // keybinding we can borrow from Chrome?
     addBinding("ctrl-p");
   }
 
@@ -1650,27 +1657,27 @@ class _HarnessPushJob extends Job {
   }
 }
 
-class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAction {
-  ws.Project project;
+class PropertiesAction extends SparkActionWithDialog implements ContextAction {
+  ws.Resource _selectedResource;
   HtmlElement _propertiesElement;
 
-  ProjectPropertiesAction(Spark spark, Element dialog)
-      : super(spark, 'project-properties', 'Properties…', dialog) {
-    _propertiesElement = getElement('#projectPropertiesDialog .modal-body');
+  PropertiesAction(Spark spark, Element dialog)
+      : super(spark, 'properties', 'Properties…', dialog) {
+    _propertiesElement = getElement('#propertiesDialog .modal-body');
   }
 
   void _invoke([List context]) {
-    project = context.first;
+    _selectedResource = context.first;
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
 
   Future _buildProperties() {
-    _addProperty(_propertiesElement, 'Name', project.name);
-    _addProperty(_propertiesElement, 'Location', project.entry.fullPath);
+    _addProperty(_propertiesElement, 'Name', _selectedResource.name);
+    _addProperty(_propertiesElement, 'Location', _selectedResource.entry.fullPath);
 
     GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(project);
+        spark.scmManager.getScmOperationsFor(_selectedResource.project);
 
     if (gitOperations != null) {
       return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
@@ -1700,7 +1707,7 @@ class ProjectPropertiesAction extends SparkActionWithDialog implements ContextAc
 
   String get category => 'resource';
 
-  bool appliesTo(context) => _isProject(context);
+  bool appliesTo(context) => true;
 }
 
 /* Git operations */
@@ -1718,7 +1725,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     String url = _repoUrlElement.value;
     if (!url.endsWith('.git')) {
       url = url + '.git';
@@ -1766,7 +1773,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     _GitBranchJob job = new _GitBranchJob(gitOperations, _branchNameElement.value);
     spark.jobManager.schedule(job);
   }
@@ -1829,7 +1836,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _startJob() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     _GitCommitJob job = new _GitCommitJob(
         gitOperations, _gitName, _gitEmail, _commitMessageElement.value, spark);
     spark.jobManager.schedule(job);
@@ -1872,7 +1879,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
-    // TODO(grv): add verify checks.
+    // TODO(grv): Add verify checks.
     String branchName = _selectElement.options[
         _selectElement.selectedIndex].value;
     _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
@@ -2221,30 +2228,18 @@ class PubGetJob extends Job {
   final Spark spark;
   final ws.Project project;
 
-  Logger _logger = new Logger('spark.pub');
-
   PubGetJob(this.spark, this.project) : super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    spark.showMessage('Under Construction', 'Pub Get in progress');
-
-    return new Future.value();
-
-    // Commented out until we get a handle on the compiled JS size.
-//    return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
-//      project.refresh();
-//    }).catchError((e, st) {
-//      spark.showErrorMessage('Error Running Pub Get', '${e}');
-//      _logger.severe('Error Running Pub Get', e, st);
-//    });
+    return spark.pubManager.runPubGet(project).then((_) {
+      spark.showSuccessMessage('Pub get run successful');
+    }).catchError((e) {
+      spark.showErrorMessage('Error while running pub get', e.toString());
+    });
   }
 
-  void _handlePubLog(String line, String level) {
-    // TODO: Dial the logging back.
-    _logger.info(line);
-  }
 }
 
 class ResourceRefreshJob extends Job {
@@ -2320,7 +2315,21 @@ class SettingsAction extends SparkActionWithDialog {
     }
 
     spark.setGitSettingsResetDoneVisible(false);
-    _show();
+    _showRootDirectory().then((_) => _show());
+  }
+
+  Future _showRootDirectory() {
+    return spark.localPrefs.getValue('projectFolder').then((folderToken) {
+      if (folderToken == null) {
+        getElement('#directory-label').text = '';
+        return new Future.value();
+      }
+      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+          getElement('#directory-label').text = path;
+        });
+      });
+    });
   }
 
   void _commit() {
@@ -2395,7 +2404,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = getAppContainerFor(resource) != null;;
+    enabled = getAppContainerFor(resource) != null;
   }
 }
 
@@ -2497,7 +2506,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
     chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
       if (entry != null) {
-        Folder folder = resources.first;
+        ws.Folder folder = resources.first;
         folder.importFileEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing file', e);
         });
@@ -2519,7 +2528,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
     chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
-        Folder folder = resources.first;
+        ws.Folder folder = resources.first;
         folder.importDirectoryEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing folder', e);
         });
@@ -2532,7 +2541,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
-// analytics code
+// Analytics code.
 
 void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
