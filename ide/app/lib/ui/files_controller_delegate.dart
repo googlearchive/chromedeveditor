@@ -32,4 +32,9 @@ abstract class FilesControllerDelegate {
    * [resource].
    */
   List<ContextAction> getActionsFor(List<Resource> resources);
+  
+  /**
+   * The implementation of this method should report an error.
+   */
+   void showErrorMessage(String title, String message);
 }
