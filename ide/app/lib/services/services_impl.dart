@@ -54,7 +54,6 @@ class ServicesIsolate {
     ReceivePort receivePort = new ReceivePort();
     _sendPort.send(receivePort.sendPort);
 
-    // Register each ServiceImpl.
     _registerServiceImpl(new TestServiceImpl(this));
 
     receivePort.listen((arg) {
@@ -173,8 +172,10 @@ class CompilerServiceImpl extends ServiceImpl {
   Compiler compiler;
 
   CompilerServiceImpl(ServicesIsolate isolate, this.sdk) :
-    super(isolate, 'compiler') {
-    compiler = Compiler.createCompilerFrom(sdk);
+      super(isolate, 'compiler') {
+
+    compiler = Compiler.createCompilerFrom(sdk,
+        new _ServiceContentsProvider(isolate.chromeService));
 
     registerRequestHandler('compileString', compileString);
     registerRequestHandler('compileFile', compileFile);
@@ -191,22 +192,13 @@ class CompilerServiceImpl extends ServiceImpl {
     String fileUuid = request.data['fileUuid'];
     String project = request.data['project'];
 
-//    return isolate.chromeService.getFileContents(fileUuid).then((String contents) {
-//      return compiler.compileString(contents).then((CompilerResult result) {
-//        return new Future.value(request.createReponse(result.toMap()));
-//      });
-//    });
-
-    var contentsProvider = new _ServiceContentsProvider(isolate.chromeService);
-
-    Future f = compiler.compileFile(fileUuid, contentsProvider);
-    return f.then((CompilerResult result) {
+    return compiler.compileFile(fileUuid).then((CompilerResult result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
 }
 
-class _ServiceContentsProvider implements CompilerContentsProvider {
+class _ServiceContentsProvider implements ContentsProvider {
   final ChromeService chromeService;
 
   _ServiceContentsProvider(this.chromeService);
@@ -226,7 +218,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
   analyzer.ChromeDartSdk dartSdk;
 
   AnalyzerServiceImpl(ServicesIsolate isolate, DartSdk sdk) :
-    super(isolate, 'analyzer') {
+      super(isolate, 'analyzer') {
     dartSdk = analyzer.createSdk(sdk);
   }
 

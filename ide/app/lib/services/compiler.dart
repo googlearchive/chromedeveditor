@@ -28,24 +28,26 @@ import '../dart/sdk.dart';
  */
 class Compiler {
   DartSdk _sdk;
+  ContentsProvider _contentsProvider;
 
   /**
    * Create and return a [Compiler] instance. These are heavy-weight objects.
    */
-  static Future<Compiler> createCompiler() {
-    return DartSdk.createSdk().then((DartSdk sdk) => new Compiler._(sdk));
+  static Future<Compiler> createCompiler(ContentsProvider contentsProvider) {
+    return DartSdk.createSdk().then(
+        (DartSdk sdk) => new Compiler._(sdk, contentsProvider));
   }
 
-  static Compiler createCompilerFrom(DartSdk sdk) {
-    return new Compiler._(sdk);
+  static Compiler createCompilerFrom(DartSdk sdk,
+                                     ContentsProvider contentsProvider) {
+    return new Compiler._(sdk, contentsProvider);
   }
 
-  Compiler._(this._sdk);
+  Compiler._(this._sdk, this._contentsProvider);
 
-  Future<CompilerResult> compileFile(
-      String fileUuid, CompilerContentsProvider contentsProvider) {
+  Future<CompilerResult> compileFile(String fileUuid) {
     _CompilerProvider provider =
-        new _CompilerProvider.fromUuid(_sdk, contentsProvider, fileUuid);
+        new _CompilerProvider.fromUuid(_sdk, _contentsProvider, fileUuid);
 
     CompilerResult result = new CompilerResult._().._start();
 
@@ -216,7 +218,7 @@ class CompilerProblem {
   }
 }
 
-abstract class CompilerContentsProvider {
+abstract class ContentsProvider {
   Future<String> getFileContents(String uuid);
   Future<String> getPackageContents(String packageRef);
 }
@@ -262,12 +264,12 @@ class _CompilerProvider {
   final String textInput;
   final String uuidInput;
   final DartSdk sdk;
-  CompilerContentsProvider provider;
+  ContentsProvider provider;
 
   _CompilerProvider.fromString(this.sdk, this.textInput) : uuidInput = null;
 
   _CompilerProvider.fromUuid(this.sdk, this.provider, this.uuidInput) :
-    textInput = null;
+      textInput = null;
 
   Uri getInitialUri() {
     if (textInput != null) {
