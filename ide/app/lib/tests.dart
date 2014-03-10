@@ -171,7 +171,7 @@ class _SparkTestConfiguration extends unittest.Configuration {
 
   bool get autoStart => false;
 
-  Duration get timeout => const Duration(seconds: 15);
+  Duration get timeout => const Duration(seconds: 30);
 
   void onStart() {
 
