@@ -412,6 +412,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
+    actionManager.registerAction(new FormatAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
     actionManager.registerAction(new ImportFolderAction(this));
@@ -1481,9 +1482,27 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
+class FormatAction extends SparkAction {
+  FormatAction(Spark spark) : super(spark, 'edit-format', 'Format') {
+    // TODO: I do not like this binding...
+    addBinding('ctrl-shift-1');
+  }
+
+  void _invoke([Object context]) {
+    ws.File file = spark.editorManager.currentFile;
+    for (Editor editor in spark.editorManager.editors) {
+      if (editor.file == file) {
+        if (editor is TextEditor) {
+          editor.format();
+        }
+        break;
+      }
+    }
+  }
+}
+
 /// Transfers the focus to the search box
 class SearchAction extends SparkAction {
-
   SearchAction(Spark spark) : super(spark, 'search', 'Search') {
     addBinding('ctrl-shift-f');
   }
