@@ -412,6 +412,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
+    actionManager.registerAction(new FormatAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
     actionManager.registerAction(new ImportFolderAction(this));
@@ -1481,9 +1482,27 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
+class FormatAction extends SparkAction {
+  FormatAction(Spark spark) : super(spark, 'edit-format', 'Format') {
+    // TODO: I do not like this binding, but can't think of a better one.
+    addBinding('ctrl-shift-1');
+  }
+
+  void _invoke([Object context]) {
+    ws.File file = spark.editorManager.currentFile;
+    for (Editor editor in spark.editorManager.editors) {
+      if (editor.file == file) {
+        if (editor is TextEditor) {
+          editor.format();
+        }
+        break;
+      }
+    }
+  }
+}
+
 /// Transfers the focus to the search box
 class SearchAction extends SparkAction {
-
   SearchAction(Spark spark) : super(spark, 'search', 'Search') {
     addBinding('ctrl-shift-f');
   }
@@ -2498,8 +2517,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 }
 
 class ImportFileAction extends SparkAction implements ContextAction {
-  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…") {
-  }
+  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…");
 
   void _invoke([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -2508,7 +2526,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
       chrome.ChromeFileEntry entry = res.entry;
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFile(entry).catchError((e) {
+        folder.importFileEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing file', e);
         });
       }
@@ -2521,8 +2539,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
 }
 
 class ImportFolderAction extends SparkAction implements ContextAction {
-  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…") {
-  }
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…");
 
   void _invoke([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -2531,7 +2548,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFolder(entry).catchError((e) {
+        folder.importDirectoryEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing folder', e);
         });
       }

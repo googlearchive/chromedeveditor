@@ -79,6 +79,17 @@ abstract class TreeViewDelegate {
   String treeViewDropEffect(TreeView view,
                             DataTransfer dataTransfer,
                             String nodeUID) => null;
+                            
+  /**
+   * This method is called when a selection of TreeView is dragged,
+   * on dragenter.
+   * Return 'copy', 'move', 'link' or 'none'.
+   * It will adjust the visual of the mouse cursor when the item is
+   * dragged over the treeview.
+   */
+  String treeViewDropCellsEffect(TreeView view,
+                                 List<String> nodesUIDs,
+                                 String nodeUID) => null;
 
   /**
    * This method is called when the dragged item is actually dropped on the
