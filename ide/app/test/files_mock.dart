@@ -14,10 +14,12 @@ import 'package:chrome/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
 import 'package:path/path.dart' as path;
 
+import '../lib/jobs.dart';
+import '../lib/workspace.dart' as workspace;
+
 export 'package:chrome/chrome_app.dart'
   show Entry, FileEntry, DirectoryEntry, ChromeFileEntry;
-
-import '../lib/workspace.dart' as workspace;
+export '../lib/workspace.dart';
 
 /**
  * A mutable, memory resident file system.
@@ -105,6 +107,60 @@ class MockFileSystem implements FileSystem {
   }
 }
 
+/**
+ * Create a simple sample directory.
+ */
+DirectoryEntry createSampleDirectory1(String name) {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/bar.txt', contents: '123');
+  fs.createFile('${name}/web/index.html', contents:
+      '<html><body><script type="application/dart" src="sample.dart"></script></body></html>');
+  fs.createFile('${name}/web/sample.dart', contents:
+      'void main() {\n  print("hello");\n}\n');
+  fs.createFile('${name}/web/sample.css', contents: 'body { }');
+  return directory;
+}
+
+/**
+ * Create a sample directory, with one Dart file referencing another.
+ */
+DirectoryEntry createSampleDirectory2(String name) {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/web/index.html', contents:
+      '<html><body><script type="application/dart" src="sample.dart"></script></body></html>');
+  fs.createFile('${name}/web/sample.dart', contents:
+      'import "foo.dart";\n\nvoid main() {\n  print("hello \${foo()}");\n}\n');
+  fs.createFile('${name}/web/foo.dart', contents:
+      'String foo() => "there";\n');
+  fs.createFile('${name}/web/sample.css', contents: 'body { }');
+  return directory;
+}
+
+/**
+ * Create a sample directory with a package reference.
+ */
+DirectoryEntry createSampleDirectory3(String name) {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/web/index.html', contents:
+      '<html><body><script type="application/dart" src="sample.dart"></script></body></html>');
+  fs.createFile('${name}/web/sample.dart', contents:
+      'import "package:foo/foo.dart";\n\nvoid main() {\n  print("hello \${foo()}");\n}\n');
+  fs.createFile('${name}/packages/foo/foo.dart', contents:
+      'String foo() => "there";\n');
+  fs.createFile('${name}/web/sample.css', contents: 'body { }');
+  return directory;
+}
+
+Future<workspace.Project> linkSampleProject(
+    DirectoryEntry dir, [workspace.Workspace ws]) {
+  if (ws == null) ws = new workspace.Workspace();
+  ws.createBuilderManager(new JobManager());
+  return ws.link(createWsRoot(dir));
+}
+
 MockWorkspaceRoot createWsRoot(Entry entry) => new MockWorkspaceRoot(entry);
 
 class MockWorkspaceRoot extends workspace.WorkspaceRoot {
@@ -125,6 +181,9 @@ class MockWorkspaceRoot extends workspace.WorkspaceRoot {
   Map persistState() => {};
 
   Future restore() => new Future.value();
+
+  String retainEntry(Entry entry) => entry.name;
+  Future<Entry> restoreEntry(String id) => new Future.value(entry);
 }
 
 abstract class _MockEntry implements Entry {

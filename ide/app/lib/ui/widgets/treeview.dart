@@ -339,11 +339,16 @@ class TreeView implements ListViewDelegate {
   }
 
   String listViewDropEffect(ListView view, MouseEvent event) {
+    List<String> dragSelection = _innerDragSelection(event.dataTransfer);
     String nodeUID = null;
     if (_currentDragOverCell != null) {
       nodeUID = _currentDragOverCell.nodeUID;
     }
-    return _delegate.treeViewDropEffect(this, event.dataTransfer, nodeUID);
+    if (dragSelection != null) {
+      return _delegate.treeViewDropCellsEffect(this, dragSelection, nodeUID);
+    } else {
+      return _delegate.treeViewDropEffect(this, event.dataTransfer, nodeUID);
+    }
   }
 
   List<String> _innerDragSelection(DataTransfer dataTransfer) {

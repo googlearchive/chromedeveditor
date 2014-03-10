@@ -386,8 +386,6 @@ class Dart2JsServlet extends PicoServlet {
 
   Dart2JsServlet(this._launchManager){
     _compiler = _launchManager._compiler;
-    // TODO(ericarnold): Compiler should auto-start
-    _compiler.start();
   }
 
   bool canServe(HttpRequest request) {
@@ -412,26 +410,23 @@ class Dart2JsServlet extends PicoServlet {
     file.workspace.builderManager.jobManager.schedule(
         new ProgressJob('Compiling ${file.name}…', completer));
 
-    return file.getContents().then((String string) {
-      // TODO: The compiler should also accept files.
-      return _compiler.compileString(string).then((CompilerResult result) {
-        if (!result.hasOutput) {
-          // TODO: Log this to something like a console window.
-          _logger.warning('Error compiling ${file.path} with dart2js.');
-          for (CompilerProblem problem in result.problems) {
-            _logger.warning('${problem}');
-          }
-          return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
-        } else {
-          _logger.info('compiled ${file.path} in '
-              '${_NF.format(stopwatch.elapsedMilliseconds)} ms, '
-              '${result.output.length ~/ 1024} kb');
-          HttpResponse response = new HttpResponse.ok();
-          response.setContent(result.output);
-          response.setContentTypeFrom(request.uri.path);
-          return response;
+    return _compiler.compileFile(file).then((CompilerResult result) {
+      if (!result.hasOutput) {
+        // TODO: Log this to something like a console window.
+        _logger.warning('Error compiling ${file.path} with dart2js.');
+        for (CompilerProblem problem in result.problems) {
+          _logger.warning('${problem}');
         }
-      });
+        return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
+      } else {
+        _logger.info('compiled ${file.path} in '
+            '${_NF.format(stopwatch.elapsedMilliseconds)} ms, '
+            '${result.output.length ~/ 1024} kb');
+        HttpResponse response = new HttpResponse.ok();
+        response.setContent(result.output);
+        response.setContentTypeFrom(request.uri.path);
+        return response;
+      }
     }).whenComplete(() => completer.complete());
   }
 }
