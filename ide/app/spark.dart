@@ -1484,7 +1484,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
 
 class FormatAction extends SparkAction {
   FormatAction(Spark spark) : super(spark, 'edit-format', 'Format') {
-    // TODO: I do not like this binding...
+    // TODO: I do not like this binding, but can't think of a better one.
     addBinding('ctrl-shift-1');
   }
 

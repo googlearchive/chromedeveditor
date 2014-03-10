@@ -15,7 +15,7 @@ class CssBeautify {
   final int indentSpaceSize;
 
   /**
-   * TODO: doc
+   * Create a new css formatter, with the given formatting options.
    */
   CssBeautify({this.autosemicolon: true, this.useTabs: false,
     this.indentSpaceSize: 2}) {
