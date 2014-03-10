@@ -25,14 +25,12 @@ export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
 import '../dart/sdk.dart' as sdk;
 
 /**
- * Create and return a ChromeDartSdk asynchronously.
+ * Create and return a ChromeDartSdk.
  */
-Future<ChromeDartSdk> createSdk(List<int> sdkContents) {
-  sdk.DartSdk dartSdk = sdk.DartSdk.createSdkFromContents(sdkContents);
+ChromeDartSdk createSdk(sdk.DartSdk dartSdk) {
   ChromeDartSdk chromeSdk = new ChromeDartSdk._(dartSdk);
   chromeSdk._parseLibrariesFile();
-
-  return new Future.value(chromeSdk);
+  return chromeSdk;
 }
 
 /**
