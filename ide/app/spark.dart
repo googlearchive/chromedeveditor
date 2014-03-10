@@ -2315,7 +2315,21 @@ class SettingsAction extends SparkActionWithDialog {
     }
 
     spark.setGitSettingsResetDoneVisible(false);
-    _show();
+    _showRootDirectory().then((_) => _show());
+  }
+
+  Future _showRootDirectory() {
+    return spark.localPrefs.getValue('projectFolder').then((folderToken) {
+      if (folderToken == null) {
+        getElement('#directory-label').text = '';
+        return new Future.value();
+      }
+      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+          getElement('#directory-label').text = path;
+        });
+      });
+    });
   }
 
   void _commit() {
