@@ -499,7 +499,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       _publishedAppDialog = createDialog(getDialogElement('#webStorePublishedDialog'));
       _publishedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
       _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((MouseEvent event) {
-        window.open('https://chrome.google.com/webstore/detail/${appID}', null);
+        window.open('https://chrome.google.com/webstore/detail/${appID}',
+            '_blank');
         _hideBackdropOnClick(event);
       });
     }
@@ -513,7 +514,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       _uploadedAppDialog = createDialog(getDialogElement('#webStoreUploadedDialog'));
       _uploadedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
       _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((MouseEvent event) {
-        window.open('https://chrome.google.com/webstore/developer/edit/${appID}', null);
+        window.open('https://chrome.google.com/webstore/developer/edit/${appID}',
+            '_blank');
         _hideBackdropOnClick(event);
       });
     }
