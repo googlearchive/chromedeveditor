@@ -21,6 +21,7 @@ import 'jobs_test.dart' as jobs_test;
 import 'git/all.dart' as git_all_test;
 import 'outline_test.dart' as outline_test;
 import 'preferences_test.dart' as preferences_test;
+import 'pub_test.dart' as pub_test;
 import 'scm_test.dart' as scm_test;
 import 'sdk_test.dart' as sdk_test;
 import 'search_test.dart' as search_test;
@@ -48,6 +49,7 @@ void defineTests() {
   git_all_test.defineTests();
   outline_test.defineTests();
   preferences_test.defineTests();
+  pub_test.defineTests();
   scm_test.defineTests();
   sdk_test.defineTests();
   search_test.defineTests();

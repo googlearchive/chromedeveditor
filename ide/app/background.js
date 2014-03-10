@@ -37,7 +37,7 @@ App.prototype.launch = function(ui_opt) {
         frame: 'chrome',
         bounds: {
           width: 600,
-          height: 200
+          height: 220
         },
         resizable: false
     });

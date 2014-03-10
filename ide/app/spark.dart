@@ -281,7 +281,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initPubManager() {
-    _pubManager = new PubManager(this);
+    _pubManager = new PubManager(workspace);
   }
 
   void createEditorComponents() {

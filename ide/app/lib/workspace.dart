@@ -894,10 +894,18 @@ class File extends Resource {
 
   List<Marker> getMarkers() => _markers;
 
-  void clearMarkers() {
+  void clearMarkers([String type]) {
     if (_markers.isNotEmpty) {
-      _markers.clear();
-      _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+      if (type == null) {
+        _markers.clear();
+        _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+      } else {
+        int len = _markers.length;
+        _markers.removeWhere((m) => m.type == type);
+        if (len != _markers.length) {
+          _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+        }
+      }
     }
   }
 
