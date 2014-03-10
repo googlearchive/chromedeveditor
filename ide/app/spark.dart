@@ -2498,7 +2498,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
       chrome.ChromeFileEntry entry = res.entry;
       if (entry != null) {
         Folder folder = resources.first;
-        folder.importFile(entry).catchError((e) {
+        folder.importFileEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing file', e);
         });
       }
@@ -2520,7 +2520,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
         Folder folder = resources.first;
-        folder.importFolder(entry).catchError((e) {
+        folder.importDirectoryEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing folder', e);
         });
       }
