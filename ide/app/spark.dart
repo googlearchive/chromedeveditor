@@ -412,6 +412,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FileExitAction(this));
     actionManager.registerAction(new WebStorePublishAction(this, getDialogElement('#webStorePublishDialog')));
     actionManager.registerAction(new SearchAction(this));
+    actionManager.registerAction(new FormatAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
     actionManager.registerAction(new ImportFolderAction(this));
@@ -499,7 +500,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       _publishedAppDialog = createDialog(getDialogElement('#webStorePublishedDialog'));
       _publishedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
       _publishedAppDialog.element.querySelector("#webStorePublishedAction").onClick.listen((MouseEvent event) {
-        window.open('https://chrome.google.com/webstore/detail/${appID}', null);
+        window.open('https://chrome.google.com/webstore/detail/${appID}',
+            '_blank');
         _hideBackdropOnClick(event);
       });
     }
@@ -513,7 +515,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       _uploadedAppDialog = createDialog(getDialogElement('#webStoreUploadedDialog'));
       _uploadedAppDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
       _uploadedAppDialog.element.querySelector("#webStoreUploadedAction").onClick.listen((MouseEvent event) {
-        window.open('https://chrome.google.com/webstore/developer/edit/${appID}', null);
+        window.open('https://chrome.google.com/webstore/developer/edit/${appID}',
+            '_blank');
         _hideBackdropOnClick(event);
       });
     }
@@ -1481,9 +1484,27 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
+class FormatAction extends SparkAction {
+  FormatAction(Spark spark) : super(spark, 'edit-format', 'Format') {
+    // TODO: I do not like this binding, but can't think of a better one.
+    addBinding('ctrl-shift-1');
+  }
+
+  void _invoke([Object context]) {
+    ws.File file = spark.editorManager.currentFile;
+    for (Editor editor in spark.editorManager.editors) {
+      if (editor.file == file) {
+        if (editor is TextEditor) {
+          editor.format();
+        }
+        break;
+      }
+    }
+  }
+}
+
 /// Transfers the focus to the search box
 class SearchAction extends SparkAction {
-
   SearchAction(Spark spark) : super(spark, 'search', 'Search') {
     addBinding('ctrl-shift-f');
   }
@@ -2315,7 +2336,21 @@ class SettingsAction extends SparkActionWithDialog {
     }
 
     spark.setGitSettingsResetDoneVisible(false);
-    _show();
+    _showRootDirectory().then((_) => _show());
+  }
+
+  Future _showRootDirectory() {
+    return spark.localPrefs.getValue('projectFolder').then((folderToken) {
+      if (folderToken == null) {
+        getElement('#directory-label').text = '';
+        return new Future.value();
+      }
+      return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
+        return chrome.fileSystem.getDisplayPath(entry).then((path) {
+          getElement('#directory-label').text = path;
+        });
+      });
+    });
   }
 
   void _commit() {
@@ -2484,8 +2519,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 }
 
 class ImportFileAction extends SparkAction implements ContextAction {
-  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…") {
-  }
+  ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…");
 
   void _invoke([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -2494,7 +2528,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
       chrome.ChromeFileEntry entry = res.entry;
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFile(entry).catchError((e) {
+        folder.importFileEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing file', e);
         });
       }
@@ -2507,8 +2541,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
 }
 
 class ImportFolderAction extends SparkAction implements ContextAction {
-  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…") {
-  }
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…");
 
   void _invoke([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -2517,7 +2550,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFolder(entry).catchError((e) {
+        folder.importDirectoryEntry(entry).catchError((e) {
           spark.showErrorMessage('Error while importing folder', e);
         });
       }
