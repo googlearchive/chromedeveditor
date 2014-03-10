@@ -284,7 +284,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
   }
 
   OutlineEntry populateOutlineEntry(
-      OutlineEntry outlineEntry, analyzer.ASTNode node) {
+      OutlineEntry outlineEntry, analyzer.AstNode node) {
     outlineEntry.startOffset = node.beginToken.offset;
     outlineEntry.endOffset = node.endToken.end;
     return outlineEntry;
