@@ -1810,19 +1810,27 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   TextAreaElement _commitMessageElement;
   InputElement _userNameElement;
   InputElement _userEmailElement;
+  DivElement _gitStatusElement;
   bool _needsFillNameEmail;
   String _gitName;
   String _gitEmail;
+
+  List<ws.File> modifiedFileList = [];
+  List<ws.File> addedFileList = [];
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
     _commitMessageElement = getElement("#commitMessage");
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
+    _gitStatusElement = getElement('#gitStatus');
   }
 
   void _invoke([context]) {
     project = context.first.project;
+    gitOperations = spark.scmManager.getScmOperationsFor(project);
+    modifiedFileList.clear();
+    addedFileList.clear();
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -1835,11 +1843,42 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         _needsFillNameEmail = true;
       }
       getElement('#gitUserInfo').classes.toggle('hidden', !_needsFillNameEmail);
-      gitOperations = spark.scmManager.getScmOperationsFor(project);
       _commitMessageElement.value = '';
       _userNameElement.value = '';
       _userEmailElement.value = '';
+
+      // TODO: Remove this #gitStatusGroup hidden once scm status is fast.
+      getElement("#gitStatusGroup").hidden = true;
+      //_addGitStatus();
+
       _show();
+    });
+  }
+
+  void _addGitStatus() {
+    _calculateScmStatus(project);
+    int modifiedFileCnt = modifiedFileList.length;
+    int addedFileCnt = addedFileList.length;
+    _gitStatusElement.text =
+        '$modifiedFileCnt file(s) modified, $addedFileCnt files(s) added.';
+    // TODO(sunglim): show the count of deletetd files.
+  }
+
+  void _calculateScmStatus(ws.Folder folder) {
+    folder.getChildren().forEach((resource) {
+      if (resource is ws.Folder) {
+        if (resource.name == '.git') {
+          return;
+        }
+        _calculateScmStatus(resource);
+      } else if (resource is ws.File) {
+        FileStatus status = gitOperations.getFileStatus(resource);
+        if (status == FileStatus.MODIFIED) {
+          modifiedFileList.add(resource);
+        } else if (status == FileStatus.UNTRACKED) {
+          addedFileList.add(resource);
+        }
+      }
     });
   }
 
