@@ -764,7 +764,7 @@ class Folder extends Container {
       });
     });
   }
-  
+
   /**
    * This method will copy a resource entry that might be from an other
    * filesystem to the current folder.
@@ -775,6 +775,7 @@ class Folder extends Container {
     } else if (res.entry is chrome.DirectoryEntry) {
       return importDirectoryEntry(res.entry);
     }
+    return new Future.value();
   }
 
   Future delete() {
