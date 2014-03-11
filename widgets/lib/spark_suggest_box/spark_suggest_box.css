@@ -30,13 +30,13 @@
 }
 
 .suggestion-item {
-  padding: 7px 12px;
+  padding: 5px 12px;
   font-size: 14px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.suggestion-item[active] {
+.suggestion-item.active {
   background-color: #3a84c3;
   color: white;
 }

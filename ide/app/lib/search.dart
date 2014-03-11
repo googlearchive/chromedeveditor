@@ -24,8 +24,9 @@ typedef void FileOpener(File file);
 class SearchOracle implements SuggestOracle {
   final WsGetter _wsGetter;
   final FileOpener _fileOpener;
+  final int _limitCount;
 
-  SearchOracle(this._wsGetter, this._fileOpener);
+  SearchOracle(this._wsGetter, this._fileOpener, [this._limitCount=100]);
 
   Stream<List<Suggestion>> getSuggestions(String text) {
     if (text == null || text.trim().isEmpty) {
@@ -36,25 +37,25 @@ class SearchOracle implements SuggestOracle {
     //                index the sources and run the search incrementally and
     //                preferably in a separate isolate, and test on a large
     //                project.
-    var suggestions = _wsGetter().traverse()
+    var suggestions = _wsGetter()
+        .traverse()
         .where((res) => res is File && _matches(res.name, text))
+        .take(_limitCount)
         .map((res) => _makeSuggestionFromResource(res))
-        .take(20)
         .toList(growable: false);
     return new Stream.fromIterable([suggestions]);
   }
 
-  String _cleanse(String s) => s
-      .trim()
-      .replaceAll('_', '')
-      .replaceAll('-', '')
-      .toLowerCase();
+  String _cleanse(String s) =>
+      s.trim().replaceAll('[_-]', '').toLowerCase();
 
   bool _matches(String string, String searchText) =>
       string != null && _cleanse(string).contains(searchText);
 
-  Suggestion _makeSuggestionFromResource(Resource res) =>
-      new Suggestion(res.name,
-          details: res.parent.path,
-          onSelected: () => _fileOpener(res));
+  Suggestion _makeSuggestionFromResource(Resource res) {
+    return new Suggestion(
+        res.name,
+        details: res.parent.path,
+        onSelected: () => _fileOpener(res));
+  }
 }
