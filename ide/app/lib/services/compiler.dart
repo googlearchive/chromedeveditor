@@ -118,6 +118,9 @@ class CompilerResult {
 
   void _diagnosticHandler(Uri uri, int begin, int end, String message,
       compiler.Diagnostic kind) {
+    // Convert dart2js crash types to our error type.
+    if (kind == compiler.Diagnostic.CRASH) kind = compiler.Diagnostic.ERROR;
+
     if (kind == compiler.Diagnostic.WARNING || kind == compiler.Diagnostic.ERROR) {
       _problems.add(new CompilerProblem._(uri, begin, end, message, kind));
     }
