@@ -7,7 +7,7 @@ library spark.search_test;
 import 'package:unittest/unittest.dart';
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import '../packages/spark_widgets/spark_suggest/spark_suggest_box.dart';
+import '../packages/spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 
 import '../lib/search.dart';
 import '../lib/workspace.dart';
