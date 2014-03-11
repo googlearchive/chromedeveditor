@@ -1695,22 +1695,25 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
-    _addProperty(_propertiesElement, 'Location', _selectedResource.entry.fullPath);
-
-    GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(_selectedResource.project);
-
-    if (gitOperations != null) {
-      return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
-        final String repoUrl = map['url'];
-        _addProperty(_propertiesElement, 'Git Repository', repoUrl);
-      }).catchError((e) {
-        _addProperty(_propertiesElement, 'Git Repository',
-            '<error retrieving Git data>');
-      });
-    } else {
+    return chrome.fileSystem.getDisplayPath(_selectedResource.entry).then((path) {
+      _addProperty(_propertiesElement, 'Location', path);
       return new Future.value();
-    }
+    }).then((_) {
+      GitScmProjectOperations gitOperations =
+          spark.scmManager.getScmOperationsFor(_selectedResource.project);
+
+      if (gitOperations != null) {
+        return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
+          final String repoUrl = map['url'];
+          _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+        }).catchError((e) {
+          _addProperty(_propertiesElement, 'Git Repository',
+              '<error retrieving Git data>');
+        });
+      } else {
+        return new Future.value();
+      }
+    });
   }
 
   void _addProperty(HtmlElement parent, String key, String value) {
