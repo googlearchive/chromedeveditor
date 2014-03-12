@@ -55,7 +55,7 @@ analytics.Tracker _analyticsTracker = new analytics.NullTracker();
  * does not exit, it returns true.
  */
 Future<bool> isTestMode() {
-  String url = chrome.runtime.getURL('app.json');
+  final String url = chrome.runtime.getURL('app.json');
   return HttpRequest.getString(url).then((String contents) {
     bool result = true;
     try {
@@ -1466,7 +1466,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
-    var name = _nameElement.value;
+    final String name = _nameElement.value;
     if (name.isNotEmpty) {
       folder.createNewFolder(name).then((folder) {
         // Delay a bit to allow the files view to process the new file event.
@@ -1542,7 +1542,7 @@ class NewProjectAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    var name = _nameElement.value.trim();
+    final var name = _nameElement.value.trim();
     if (name.isNotEmpty) {
       spark.projectLocationManager.createNewFolder(name)
           .then((LocationResult location) {
@@ -2307,7 +2307,6 @@ class PubGetJob extends Job {
       spark.showErrorMessage('Error while running pub get', e.toString());
     });
   }
-
 }
 
 class ResourceRefreshJob extends Job {
@@ -2539,9 +2538,10 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   }
 
   void _commit() {
-    String username = (getElement('#gitUsername') as InputElement).value;
-    String password = (getElement('#gitPassword') as InputElement).value;
-    String encoded = JSON.encode({'username': username, 'password': password});
+    final String username = (getElement('#gitUsername') as InputElement).value;
+    final String password = (getElement('#gitPassword') as InputElement).value;
+    final String encoded =
+        JSON.encode({'username': username, 'password': password});
     spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
       completer.complete({'username': username, 'password': password});
       completer = null;
@@ -2613,8 +2613,9 @@ class ImportFolderAction extends SparkAction implements ContextAction {
 
 void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
-  String errorDesc = error != null ? error.runtimeType.toString() : '';
-  String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
+  final String errorDesc = error != null ? error.runtimeType.toString() : '';
+  final String desc =
+      '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
 
