@@ -1695,8 +1695,8 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
-    return chrome.fileSystem.getDisplayPath(_selectedResource.entry).then((path) {
-      _addProperty(_propertiesElement, 'Location', path);
+    return _getLocation().then((location) {
+      _addProperty(_propertiesElement, 'Location', location);
       return new Future.value();
     }).then((_) {
       GitScmProjectOperations gitOperations =
@@ -1713,6 +1713,15 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
       } else {
         return new Future.value();
       }
+    });
+  }
+
+  Future<String> _getLocation() {
+    return chrome.fileSystem.getDisplayPath(_selectedResource.entry).then((path) {
+      return path;
+    }).catchError((e) {
+      // SyncFS from ChromeBook falls in here.
+      return new Future.value(_selectedResource.entry.fullPath);
     });
   }
 
