@@ -1695,22 +1695,30 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
-    _addProperty(_propertiesElement, 'Location', _selectedResource.entry.fullPath);
+    return _getLocation().then((location) {
+      _addProperty(_propertiesElement, 'Location', location);
+    }).then((_) {
+      GitScmProjectOperations gitOperations =
+          spark.scmManager.getScmOperationsFor(_selectedResource.project);
 
-    GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(_selectedResource.project);
+      if (gitOperations != null) {
+        return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
+          final String repoUrl = map['url'];
+          _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+        }).catchError((e) {
+          _addProperty(_propertiesElement, 'Git Repository',
+              '<error retrieving Git data>');
+        });
+      }
+    });
+  }
 
-    if (gitOperations != null) {
-      return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
-        final String repoUrl = map['url'];
-        _addProperty(_propertiesElement, 'Git Repository', repoUrl);
-      }).catchError((e) {
-        _addProperty(_propertiesElement, 'Git Repository',
-            '<error retrieving Git data>');
-      });
-    } else {
-      return new Future.value();
-    }
+  Future<String> _getLocation() {
+    return chrome.fileSystem.getDisplayPath(_selectedResource.entry)
+        .catchError((e) {
+      // SyncFS from ChromeBook falls in here.
+      return _selectedResource.entry.fullPath;
+    });
   }
 
   void _addProperty(HtmlElement parent, String key, String value) {
