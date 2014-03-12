@@ -156,8 +156,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initSplitView();
     initSaveStatusListener();
 
-    initLaunchManager();
     initPubManager();
+    initLaunchManager();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -277,7 +277,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initLaunchManager() {
-    _launchManager = new LaunchManager(_workspace, services, this);
+    _launchManager = new LaunchManager(_workspace, services, pubManager);
   }
 
   void initPubManager() {
@@ -1346,7 +1346,15 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
     } else {
       resource = context.first;
     }
-    spark.launchManager.run(resource);
+
+    Completer completer = new Completer();
+    ProgressJob job = new ProgressJob("Running application…", completer);
+    spark.launchManager.run(resource).then((_) {
+      completer.complete();
+    }).catchError((e) {
+      completer.complete();
+      spark.showErrorMessage('Error Running Application', '${e}');
+    });
   }
 
   String get category => 'application';
