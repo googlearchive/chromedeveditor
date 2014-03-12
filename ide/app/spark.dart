@@ -1542,7 +1542,7 @@ class NewProjectAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    final var name = _nameElement.value.trim();
+    final name = _nameElement.value.trim();
     if (name.isNotEmpty) {
       spark.projectLocationManager.createNewFolder(name)
           .then((LocationResult location) {
