@@ -1697,7 +1697,6 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
     return _getLocation().then((location) {
       _addProperty(_propertiesElement, 'Location', location);
-      return new Future.value();
     }).then((_) {
       GitScmProjectOperations gitOperations =
           spark.scmManager.getScmOperationsFor(_selectedResource.project);
@@ -1710,18 +1709,15 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
           _addProperty(_propertiesElement, 'Git Repository',
               '<error retrieving Git data>');
         });
-      } else {
-        return new Future.value();
       }
     });
   }
 
   Future<String> _getLocation() {
-    return chrome.fileSystem.getDisplayPath(_selectedResource.entry).then((path) {
-      return path;
-    }).catchError((e) {
+    return chrome.fileSystem.getDisplayPath(_selectedResource.entry)
+        .catchError((e) {
       // SyncFS from ChromeBook falls in here.
-      return new Future.value(_selectedResource.entry.fullPath);
+      return _selectedResource.entry.fullPath;
     });
   }
 
