@@ -20,11 +20,6 @@ import '../dart/sdk.dart';
  * compile at a time. They are heavy-weight objects, and can be re-used once
  * a compile finishes. Subsequent compiles after the first one will be faster,
  * on the order of a 2x speedup.
- *
- * We'll want to re-work this so that the compile happens in an isolate (or a
- * web worker). This library may then move to something like compiler_impl.dart.
- * compiler.dart would become an interface to the compiler in the isolate, and
- * we'd get a new top-level library in app/, called compiler_entry.dart.
  */
 class Compiler {
   DartSdk _sdk;
@@ -72,7 +67,7 @@ class Compiler {
     return compiler.compile(
         provider.getInitialUri(),
         new Uri(scheme: 'sdk', path: '/'),
-        null,
+        new Uri(scheme: 'package', path: '/'),
         provider.inputProvider,
         result._diagnosticHandler,
         [],
@@ -203,8 +198,6 @@ class CompilerProblem {
       "begin": begin,
       "end": end,
       "message": message,
-      // TODO(ericarnold): Depending on how it's being used,
-      //   consider storing uri as a String.
       "uri": (uri == null) ? "" : uri.path,
       "kind": kind.name
     };
