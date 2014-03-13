@@ -37,7 +37,7 @@ class SparkMenuButton extends SparkWidget {
 
   //* Toggle the opened state of the dropdown.
   void _toggle(bool inOpened) {
-    if (inOpened == opened) {
+    if (inOpened != opened) {
       opened = inOpened;
       // TODO(ussuri): A temporary plug to make spark-overlay see changes
       // in 'opened' when run as deployed code. Just binding via {{opened}}
@@ -53,15 +53,15 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void toggle(Event e) => _toggle(!opened);
+  void clickHandler(Event e) => _toggle(!opened);
 
-  void open(Event e) => _toggle(true);
+  void focusHandler(Event e) => _toggle(true);
 
-  void close(Event e) => _toggle(false);
+  void blurHandler(Event e) => _toggle(false);
 
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
   //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
-  void onOpened(CustomEvent e) {
+  void overlayOpenedHandler(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {
       opened = false;

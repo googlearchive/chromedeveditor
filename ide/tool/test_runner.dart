@@ -26,7 +26,7 @@ Process chromeProcess;
 int exitCode;
 Directory tempDir;
 
-final int TEST_TIMEOUT = 30;
+final int TEST_TIMEOUT = 45;
 final int CHROME_SHUTDOWN_TIMEOUT = 1;
 final int EXIT_PROCESS_TIMEOUT = 1;
 

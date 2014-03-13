@@ -18,9 +18,10 @@ import 'apps/app_utils.dart';
 import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
-import 'utils.dart';
+import 'pub.dart';
 import 'server.dart';
 import 'services.dart';
+import 'utils.dart';
 import 'workspace.dart';
 
 const int SERVER_PORT = 4040;
@@ -34,19 +35,15 @@ final NumberFormat _NF = new NumberFormat.decimalPattern();
  */
 class LaunchManager {
   List<LaunchDelegate> _delegates = [];
-  Notifier _notifier;
   Services _services;
+  PubManager _pubManager;
   CompilerService _compiler;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace, this._services, [this._notifier]) {
+  LaunchManager(this._workspace, this._services, this._pubManager) {
     _compiler = _services.getService("compiler");
-
-    if (_notifier == null) {
-      _notifier = new NullNotifier();
-    }
 
     // The order of registration here matters.
     _delegates.add(new ChromeAppLaunchDelegate(this));
@@ -112,6 +109,7 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
       _server.addServlet(_redirectServlet);
       _server.addServlet(new StaticResourcesServlet());
       _server.addServlet(_dart2jsServlet);
+      _server.addServlet(new PackagesServlet(launchManager));
       _server.addServlet(new WorkspaceServlet(launchManager));
     }).catchError((error) {
       // TODO: We could fallback to binding to any port.
@@ -180,19 +178,13 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
         width: 800, height: 570,
         minWidth: 800, minHeight: 570);
 
-    return chrome.app.window.create('launch_page/launch_page.htm', options).catchError((e) {
-      _logger.log(Level.INFO, 'Error launching Dart web app', e);
-
-      launchManager._notifier.showMessage(
-          'Error launching Dart web app', e.toString());
-    });
+    return chrome.app.window.create('launch_page/launch_page.htm', options);
   }
 
   void dispose() {
     if (_server != null) {
       _server.dispose();
     }
-    _dart2jsServlet.dispose();
   }
 }
 
@@ -210,9 +202,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     Container launchContainer = getAppContainerFor(resource);
 
     if (!isDart2js()) {
-      launchManager._notifier.showMessage(
-          'Error launching Chrome app', "Can't launch on Dartium currently...");
-      return new Future.value();
+      return new Future.error("Can't launch on Dartium currently...");
     } else {
       return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
         // TODO: Use the returned appId once it has the correct results.
@@ -225,11 +215,6 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
             return management.launchApp(id);
           }
         });
-      }).catchError((e) {
-        _logger.severe('Error launching Chrome app', e);
-
-        launchManager._notifier.showMessage(
-            'Error launching Chrome app', e.toString());
       });
     }
   }
@@ -249,8 +234,40 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     });
   }
 
-  void dispose() {
+  void dispose() { }
+}
 
+/**
+ * A servlet that can serve `package:` urls (`/packages/`).
+ */
+class PackagesServlet extends PicoServlet {
+  static const PACKAGE_SEGMENT = '/packages/';
+
+  LaunchManager _launchManager;
+
+  PackagesServlet(this._launchManager);
+
+  bool canServe(HttpRequest request) {
+    String path = request.uri.path;
+    return path.contains(PACKAGE_SEGMENT);
+  }
+
+  Future<HttpResponse> serve(HttpRequest request) {
+    String projectName = request.uri.pathSegments[0];
+    Container project = _launchManager.workspace.getChild(projectName);
+
+    if (project is Project) {
+      String path = request.uri.path;
+      path = PACKAGE_REF_PREFIX +
+          path.substring(path.indexOf(PACKAGE_SEGMENT) + PACKAGE_SEGMENT.length);
+      PubResolver resolver = _launchManager._pubManager.getResolverFor(project);
+      File file = resolver.resolveRefToFile(path);
+      if (file != null) {
+        return _serveFileResponse(file);
+      }
+    }
+
+    return new Future.value(new HttpResponse.notFound());
   }
 }
 
@@ -270,26 +287,41 @@ class WorkspaceServlet extends PicoServlet {
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    HttpResponse response = new HttpResponse.ok();
-
     String path = request.uri.path;
+
     if (path.startsWith('/')) {
       path = path.substring(1);
     }
 
     Resource resource = _launchManager.workspace.getChildPath(path);
 
-    if (resource != null) {
-      // TODO: Verify that the resource is a File.
-      return (resource as File).getBytes().then((chrome.ArrayBuffer buffer) {
-        response.setContentBytes(buffer.getBytes());
-        response.setContentTypeFrom(resource.name);
-        return new Future.value(response);
-      }, onError: (_) => new Future.value(new HttpResponse.notFound()));
-    } else {
-      return new Future.value(new HttpResponse.notFound());
+    if (resource is File) {
+      return _serveFileResponse(resource);
     }
+
+    if (resource is Container) {
+      if (resource.getChild('index.html') != null) {
+        // Issue a 302 redirect.
+        HttpResponse response = new HttpResponse(statusCode: HttpStatus.FOUND);
+        response.headers.set(HttpHeaders.LOCATION, request.uri.resolve('index.html'));
+        response.headers.set(HttpHeaders.CONTENT_LENGTH, 0);
+        return new Future.value(response);
+      }
+    }
+
+    return new Future.value(new HttpResponse.notFound());
   }
+}
+
+Future<HttpResponse> _serveFileResponse(File file) {
+  return file.getBytes().then((chrome.ArrayBuffer buffer) {
+    HttpResponse response = new HttpResponse.ok();
+    response.setContentBytes(buffer.getBytes());
+    response.setContentTypeFrom(file.name);
+    return new Future.value(response);
+  }, onError: (_) {
+    return new Future.value(new HttpResponse.notFound());
+  });
 }
 
 /**
@@ -354,13 +386,11 @@ class Dart2JsServlet extends PicoServlet {
 
   Dart2JsServlet(this._launchManager){
     _compiler = _launchManager._compiler;
-    // TODO(ericarnold): Compiler should auto-start
-    _compiler.start();
   }
 
   bool canServe(HttpRequest request) {
     String path = request.uri.path;
-    return path.endsWith('.dart.js') && _getResource(path) != null;
+    return path.endsWith('.dart.js') && _getResource(path) is File;
   }
 
   Resource _getResource(String path) {
@@ -373,37 +403,30 @@ class Dart2JsServlet extends PicoServlet {
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    Resource resource = _getResource(request.uri.path);
+    File file = _getResource(request.uri.path);
     Stopwatch stopwatch = new Stopwatch()..start();
     Completer completer = new Completer();
 
-    resource.workspace.builderManager.jobManager.schedule(
-        new ProgressJob('Compiling ${resource.name}…', completer));
+    file.workspace.builderManager.jobManager.schedule(
+        new ProgressJob('Compiling ${file.name}…', completer));
 
-    return (resource as File).getContents().then((String string) {
-      // TODO: The compiler should also accept files.
-      return _compiler.compileString(string).then((CompilerResult result) {
-        if (!result.hasOutput) {
-          // TODO: Log this to something like a console window.
-          _logger.warning('Error compiling ${resource.path} with dart2js.');
-          for (CompilerProblem problem in result.problems) {
-            _logger.warning('${problem}');
-          }
-          return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
-        } else {
-          _logger.info('compiled ${resource.path} in '
-              '${_NF.format(stopwatch.elapsedMilliseconds)} ms, '
-              '${result.output.length ~/ 1024} kb');
-          HttpResponse response = new HttpResponse.ok();
-          response.setContent(result.output);
-          response.setContentTypeFrom(request.uri.path);
-          return response;
+    return _compiler.compileFile(file).then((CompilerResult result) {
+      if (!result.hasOutput) {
+        // TODO: Log this to something like a console window.
+        _logger.warning('Error compiling ${file.path} with dart2js.');
+        for (CompilerProblem problem in result.problems) {
+          _logger.warning('${problem}');
         }
-      });
+        return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
+      } else {
+        _logger.info('compiled ${file.path} in '
+            '${_NF.format(stopwatch.elapsedMilliseconds)} ms, '
+            '${result.output.length ~/ 1024} kb');
+        HttpResponse response = new HttpResponse.ok();
+        response.setContent(result.output);
+        response.setContentTypeFrom(request.uri.path);
+        return response;
+      }
     }).whenComplete(() => completer.complete());
-  }
-
-  void dispose() {
-    _compiler.dispose();
   }
 }

@@ -44,7 +44,7 @@ class Pack {
   ObjectStore _store;
   List<PackedObject> objects = [];
 
-  Pack(this.data, this._store);
+  Pack(this.data, [this._store]);
 
   Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
 
@@ -109,7 +109,6 @@ class Pack {
     sha1.add(fullContent);
     return sha1.close();
   }
-
 
   String _padString(String str, int width, String padding) {
     String result = str;
@@ -238,9 +237,7 @@ class Pack {
   }
 
   // TODO(grv) : add progress.
-  Future parseAll(progress) {
-    Completer completer = new Completer();
-
+  Future parseAll([var progress]) {
     try {
       int numObjects;
       List<PackedObject> deferredObjects = [];
@@ -265,8 +262,10 @@ class Pack {
             // TODO(grv) : add progress.
             break;
         }
+
         objects.add(object);
       }
+
       return Future.forEach(deferredObjects, (PackedObject obj) {
         return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
           deltifiedObj.data = null;
@@ -274,9 +273,8 @@ class Pack {
         });
       });
     } catch (e, st) {
-      completer.completeError(e, st);
+      return new Future.error(e, st);
     }
-    return completer.future;
   }
 
   Uint8List applyDelta(Uint8List baseData, Uint8List deltaData) {

@@ -8,7 +8,7 @@ import 'dart:async';
 import 'dart:isolate';
 
 import 'services/services_common.dart';
-import 'workspace.dart' as ws;
+import 'workspace.dart';
 import 'services/compiler.dart';
 import 'utils.dart';
 
@@ -22,7 +22,7 @@ class Services {
   _IsolateHandler _isolateHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
-  ws.Workspace _workspace;
+  Workspace _workspace;
 
   Services(this._workspace) {
     _isolateHandler = new _IsolateHandler();
@@ -45,6 +45,8 @@ class Services {
   void registerService(Service service) {
     _services[service.serviceId] = service;
   }
+
+  void dispose() => _isolateHandler.dispose();
 }
 
 /**
@@ -104,7 +106,7 @@ class TestService extends Service {
    * back the contents of the file to the isolate, which will return the
    * contents to us for verification.
    */
-  Future<String> readText(ws.File file) {
+  Future<String> readText(File file) {
     return _sendAction("readText", {"fileUuid": file.uuid})
         .then((ServiceActionEvent event) => event.data['contents']);
   }
@@ -113,32 +115,21 @@ class TestService extends Service {
 }
 
 class CompilerService extends Service {
-  Completer _readyCompleter = new Completer();
-
-  Future onceReady;
-
   CompilerService(Services services, _IsolateHandler handler)
-      : super(services, 'compiler', handler) {
-    onceReady = _readyCompleter.future;
-  }
-
-  Future start() {
-    return _isolateHandler.onceIsolateReady
-        .then((_) => _sendAction("start"))
-        .then((_) => _readyCompleter.complete());
-  }
+      : super(services, 'compiler', handler);
 
   Future<CompilerResult> compileString(String string) {
-    return onceReady.then((_) =>
-        _sendAction("compileString", {"string": string}))
-        .then((ServiceActionEvent result) {
-      CompilerResult response = new CompilerResult.fromMap(result.data);
-      return response;
+    Map args = {"string": string};
+    return _sendAction("compileString", args).then((ServiceActionEvent result) {
+      return new CompilerResult.fromMap(result.data);
     });
   }
 
-  Future dispose() {
-    return onceReady.then((_) => _sendAction("dispose")).then((_) => null);
+  Future<CompilerResult> compileFile(File file) {
+    Map args = { "fileUuid" : file.uuid, "project" : file.project.name };
+    return _sendAction("compileFile", args).then((ServiceActionEvent result) {
+      return new CompilerResult.fromMap(result.data);
+    });
   }
 }
 
@@ -146,12 +137,11 @@ class AnalyzerService extends Service {
   AnalyzerService(Services services, _IsolateHandler handler) :
     super(services, 'analyzer', handler);
 
-  Future<Map<ws.File, List<AnalysisError>>>
-      buildFiles(Iterable<ws.File> dartFiles) {
+  Future<Map<File, List<AnalysisError>>> buildFiles(Iterable<File> dartFiles) {
     return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
         .then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
-      Map<ws.File, List<AnalysisError>> errorsPerFile = {};
+      Map<File, List<AnalysisError>> errorsPerFile = {};
 
       for (String uuid in responseErrors.keys) {
         List<AnalysisError> errors = responseErrors[uuid].map((Map errorData) =>
@@ -163,14 +153,9 @@ class AnalyzerService extends Service {
     });
   }
 
-  Future dispose() {
-    return _sendAction("dispose").then((_) => null);
-  }
+  File _uuidToFile(String uuid) => services._workspace.restoreResource(uuid);
 
-  ws.File _uuidToFile(String uuid) =>
-      services._workspace.restoreResource(uuid);
-
-  List<String> _filesToUuid(Iterable<ws.File> files) =>
+  List<String> _filesToUuid(Iterable<File> files) =>
       files.map((f) => f.uuid).toList();
 
   Future<Outline> getOutlineFor(String codeString) {
@@ -209,7 +194,7 @@ class ChromeServiceImpl extends Service {
           break;
         case "getFileContents":
           String uuid = event.data['uuid'];
-          ws.File restoredFile = services._workspace.restoreResource(uuid);
+          File restoredFile = services._workspace.restoreResource(uuid);
           if (restoredFile == null) {
             // TODO(ericarnold): Turn into an Exception subclass.
             throw new Exception("Could not restore file with uuid $uuid");
@@ -249,6 +234,7 @@ class ChromeServiceImpl extends Service {
  */
 class _IsolateHandler {
   int _topCallId = 0;
+  Isolate _isolate;
   Map<String, Completer> _serviceCallCompleters = {};
 
   final String _workerPath = 'services_entry.dart';
@@ -266,12 +252,12 @@ class _IsolateHandler {
 
   _IsolateHandler() {
     onceIsolateReady = _readyController.stream.first;
-    _startIsolate();
+    _startIsolate().then((result) => _isolate = result);
   }
 
   String _getNewCallId() => "host_${_topCallId++}";
 
-  Future _startIsolate() {
+  Future<Isolate> _startIsolate() {
     StreamController<ServiceActionEvent> _messageController =
         new StreamController<ServiceActionEvent>.broadcast();
 
@@ -337,5 +323,10 @@ class _IsolateHandler {
 
   void sendResponse(ServiceActionEvent event) {
     _sendPort.send(event.toMap());
+  }
+
+  void dispose() {
+    // TODO: I'm not entirely sure how to terminate an isolate...
+    //_isolate.
   }
 }

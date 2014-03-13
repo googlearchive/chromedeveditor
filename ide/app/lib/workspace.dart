@@ -145,7 +145,7 @@ class Workspace extends Container {
    * adds for the resources after the moves are completed.
    */
   Future moveTo(List<Resource> resources, Container container) {
-    List futures = resources.map((r) => _moveTo(r, container));
+    Iterable<Future> futures = resources.map((r) => _moveTo(r, container));
     return Future.wait(futures).then((events) {
       List<ChangeDelta> list = [];
       resources.forEach((r) => list.add(new ChangeDelta(r, EventType.DELETE)));
@@ -708,7 +708,7 @@ class Folder extends Container {
     if (getChild(name) != null) {
       return new Future.error("File already exists.");
     }
-    
+
     return _dirEntry.createFile(name).then((entry) {
       File file = new File(this, entry);
       _children.add(file);
@@ -721,7 +721,7 @@ class Folder extends Container {
     if (getChild(name) != null) {
       return new Future.error("Folder already exists.");
     }
-    
+
     return _dirEntry.createDirectory(name).then((entry) {
       Folder folder = new Folder(this, entry);
       _children.add(folder);
@@ -730,7 +730,11 @@ class Folder extends Container {
     });
   }
 
-  Future<File> importFile(chrome.ChromeFileEntry sourceEntry) {
+  /**
+   * This method will import a file entry that might be from an other
+   * filesystem to the current folder.
+   */
+  Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
     return createNewFile(sourceEntry.name).then((File file) {
       sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
         return file.setBytes(buffer.getBytes());
@@ -739,15 +743,19 @@ class Folder extends Container {
     });
   }
 
-  Future importFolder(chrome.DirectoryEntry entry) {
+  /**
+   * This method will copy a directory entry that might be from an other
+   * filesystem to the current folder.
+   */
+  Future importDirectoryEntry(chrome.DirectoryEntry entry) {
     return createNewFolder(entry.name).then((Folder folder) {
       return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
         List<Future> futures = [];
         for(chrome.Entry child in entries) {
           if (child is chrome.DirectoryEntry) {
-            futures.add(folder.importFolder(child));
+            futures.add(folder.importDirectoryEntry(child));
           } else if (child is chrome.ChromeFileEntry) {
-            futures.add(folder.importFile(child));
+            futures.add(folder.importFileEntry(child));
           }
         }
         return Future.wait(futures).then((_) {
@@ -755,6 +763,19 @@ class Folder extends Container {
         });
       });
     });
+  }
+
+  /**
+   * This method will copy a resource entry that might be from an other
+   * filesystem to the current folder.
+   */
+  Future importResource(Resource res) {
+    if (res.entry is chrome.ChromeFileEntry) {
+      return importFileEntry(res.entry);
+    } else if (res.entry is chrome.DirectoryEntry) {
+      return importDirectoryEntry(res.entry);
+    }
+    return new Future.value();
   }
 
   Future delete() {
@@ -845,7 +866,6 @@ class File extends Resource {
       return entry.getMetadata();
     }).then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
-    }).then((_) {
       workspace._fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
     });
   }
@@ -874,10 +894,18 @@ class File extends Resource {
 
   List<Marker> getMarkers() => _markers;
 
-  void clearMarkers() {
+  void clearMarkers([String type]) {
     if (_markers.isNotEmpty) {
-      _markers.clear();
-      _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+      if (type == null) {
+        _markers.clear();
+        _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+      } else {
+        int len = _markers.length;
+        _markers.removeWhere((m) => m.type == type);
+        if (len != _markers.length) {
+          _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+        }
+      }
     }
   }
 

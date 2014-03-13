@@ -4,6 +4,8 @@
 
 library spark.compiler_test;
 
+import 'dart:async';
+
 import 'package:unittest/unittest.dart';
 
 import '../compiler.dart';
@@ -13,7 +15,7 @@ defineTests() {
     Compiler compiler;
 
     setUp(() {
-      return Compiler.createCompiler().then((c) {
+      return Compiler.createCompiler(new _MockContentsProvider()).then((c) {
         compiler = c;
       });
     });
@@ -34,4 +36,14 @@ void main() {
       });
     });
   });
+}
+
+class _MockContentsProvider implements ContentsProvider {
+  Future<String> getFileContents(String uuid) {
+    return new Future.error('not implemented');
+  }
+
+  Future<String> getPackageContents(String packageRef) {
+    return new Future.error('not implemented');
+  }
 }

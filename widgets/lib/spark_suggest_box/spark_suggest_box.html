@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ * spark-suggest-box displays suggestions based on text entered by a user and
+ * allows the user select one using either mouse or keyboard (using the arrow
+ * keys and the "enter" key).
+ *
+ * The suggestions themselves are supplied by a [SuggestOracle] passed via the
+ * [oracle] attribute. Placehoder text can be provided via the [placeholder]
+ * attribute.
+ *
+ * Example:
+ *   <spark-suggest-box oracle="{{colorOracle}}" placeholder="Pick a color...">
+ *   </spark-suggest-box>
+ */
+-->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_selector/spark_selector.html">
+<link rel="import" href="../../../packages/spark_widgets/spark_menu_item/spark_menu_item.html">
+<link rel="import" href="../../../packages/spark_widgets/spark_overlay/spark_overlay.html">
+
+<polymer-element name="spark-suggest-box" extends="spark-widget"
+    attributes="oracle placeholder opened">
+  <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
+    <style>
+      @import url("../../../packages/spark_widgets/spark_suggest_box/spark_suggest_box.css");
+    </style>
+
+    <input id="text-box"
+        type="search"
+        class="form-control"
+        focused
+        placeholder="{{placeholder}}"
+        on-click="{{textBoxClickHandler}}"
+        on-focus="{{textBoxFocusHandler}}"
+        on-blur="{{textBoxBlurHandler}}"
+        on-keydown="{{textBoxKeyDownHandler}}"
+        on-input="{{textBoxInputHandler}}"
+    />
+
+    <spark-overlay id="suggestion-list-overlay"
+        autoClose
+        class="spark-overlay-scale-slideup"
+        opened="{{opened}}"
+        on-opened="{{overlayOpenedHandler}}">
+
+      <spark-selector id="suggestion-list-menu"
+          multi="false"
+          activeProperty="active"
+          on-activate="{{menuActivateHandler}}">
+        <template repeat="{{s in suggestions}}">
+          <div class="suggestion-item">
+            {{s.label}}
+            <span class="text-muted">{{s.details}}</span>
+          </div>
+        </template>
+      </spark-selector>
+    </spark-overlay>
+  </template>
+
+  <script type="application/dart" src="spark_suggest_box.dart"></script>
+</polymer-element>

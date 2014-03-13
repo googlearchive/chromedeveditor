@@ -193,8 +193,8 @@ class SparkSelector extends SparkWidget {
   }
 
   // Event fired from host.
-  void clickHandler(Event e) {
-    if (e.target == _active) {
+  void clickHandler(MouseEvent e) {
+    if (_active.contains(e.target)) {
       _commitActiveToSelected();
     } else {
       // This will happen if the user clicks on some element not designated as

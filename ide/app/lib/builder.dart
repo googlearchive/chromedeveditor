@@ -40,6 +40,21 @@ class BuilderManager {
 
   bool get isRunning => _buildRunning;
 
+  List<Completer> _completers = [];
+
+  /**
+   * Returns a [Future] that will complete when all current builds are finished.
+   */
+  Future waitForAllBuilds() {
+    if (_events.isNotEmpty || isRunning) {
+      Completer completer = new Completer();
+      _completers.add(completer);
+      return completer.future;
+    } else {
+      return new Future.value();
+    }
+  }
+
   void _handleChange(ResourceChangeEvent event) {
     _events.add(event);
 
@@ -71,8 +86,12 @@ class BuilderManager {
 
     completer.future.then((_) {
       _buildRunning = false;
+
       if (_events.isNotEmpty) {
         _startTimer();
+      } else {
+        _completers.forEach((c) => c.complete());
+        _completers.clear();
       }
     });
   }
@@ -88,7 +107,7 @@ abstract class Builder {
   /**
    * Process a set of resource changes and complete the [Future] when finished.
    */
-  Future build(ResourceChangeEvent changes, ProgressMonitor monitor);
+  Future build(ResourceChangeEvent event, ProgressMonitor monitor);
 }
 
 class _BuildJob extends Job {

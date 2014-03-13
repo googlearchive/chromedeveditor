@@ -242,6 +242,23 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
+  String treeViewDropCellsEffect(TreeView view,
+                                 List<String> nodesUIDs,
+                                 String nodeUID) {
+    if (nodeUID == null) {
+      return "none";
+    }
+    if (_isDifferentProject(nodesUIDs, nodeUID)) {
+      return "copy";
+    } else {
+      if (_isValidMove(nodesUIDs, nodeUID)) {
+        return "move";
+      } else {
+        return "none";
+      }
+    }
+  }
+  
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     Folder destinationFolder = _filesMap[nodeUID] as Folder;
     for(html.File file in dataTransfer.files) {
@@ -253,6 +270,23 @@ class FilesController implements TreeViewDelegate {
       });
       reader.readAsArrayBuffer(file);
     }
+  }
+  
+  bool _isDifferentProject(List<String> nodesUIDs, String targetNodeUID) {
+    if (targetNodeUID == null) {
+      return false;
+    }
+    Resource destination = _filesMap[targetNodeUID];
+    Project destinationProject = destination is Project ? destination :
+        destination.project;
+    for(String nodeUID in nodesUIDs) {
+      Resource node = _filesMap[nodeUID];
+      // Check if the resource have the same top-level container.
+      if (node.project == destinationProject) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // Returns true if the move is valid:
@@ -300,16 +334,31 @@ class FilesController implements TreeViewDelegate {
   void treeViewDropCells(TreeView view,
                          List<String> nodesUIDs,
                          String targetNodeUID) {
-    Resource destination = _filesMap[targetNodeUID];
-    if (_isValidMove(nodesUIDs, targetNodeUID)) {
-      _workspace.moveTo(nodesUIDs.map((f) => _filesMap[f]).toList(), destination);
+    Folder destination = _filesMap[targetNodeUID] as Folder;
+    if (_isDifferentProject(nodesUIDs, targetNodeUID)) {
+      List<Future> futures = [];
+      for(String nodeUID in nodesUIDs) {
+        Resource res = _filesMap[nodeUID];
+        futures.add(destination.importResource(res));
+      }
+      Future.wait(futures).catchError((e) {
+        _delegate.showErrorMessage('Error while importing files', e);
+      });
+    } else {
+      if (_isValidMove(nodesUIDs, targetNodeUID)) {
+        _workspace.moveTo(nodesUIDs.map((f) => _filesMap[f]).toList(), destination);
+      }
     }
   }
 
   bool treeViewAllowsDropCells(TreeView view,
                                List<String> nodesUIDs,
                                String destinationNodeUID) {
-    return _isValidMove(nodesUIDs, destinationNodeUID);
+    if (_isDifferentProject(nodesUIDs, destinationNodeUID)) {
+      return true;
+    } else {
+      return _isValidMove(nodesUIDs, destinationNodeUID);
+    }
   }
 
   bool treeViewAllowsDrop(TreeView view,
