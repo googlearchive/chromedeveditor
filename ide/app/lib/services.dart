@@ -181,10 +181,8 @@ class ChromeServiceImpl extends Service {
     new Future.value(null).then((_) {
       switch(event.actionId) {
         case "delay":
-          return new Future.delayed(
-              new Duration(milliseconds: event.data['ms'])).then((_) {
-            _sendResponse(event);
-          });
+          var duration = new Duration(milliseconds: event.data['ms']);
+          return new Future.delayed(duration).then((_) => _sendResponse(event));
         case "getAppContents":
           String path = event.data['path'];
           return getAppContentsBinary(path).then((List<int> contents) {
