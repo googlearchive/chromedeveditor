@@ -13,7 +13,6 @@ body {
 
 h1 {
   font-size: 20px;
-
 }
 
 .selectable-link {
@@ -32,7 +31,7 @@ h1 {
 }
 
 #close-button {
-  font-size: 14px;
+  font-size: 13px;
   padding: 5px 30px;
   border-radius: 5px;
   background-color: #ddd;

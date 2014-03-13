@@ -18,7 +18,7 @@
 <polymer-element name="spark-menu-button" extends="spark-widget"
     attributes="src,
                 selected,
-                valueattr,
+                valueAttr,
                 opened,
                 responsive,
                 valign"
@@ -33,25 +33,25 @@
 
     <spark-button id="button"
         focused small noPadding
-        on-click="{{toggle}}"
-        on-focus="{{open}}"
-        on-blur="{{close}}">
+        on-click="{{clickHandler}}"
+        on-focus="{{focusHandler}}"
+        on-blur="{{blurHandler}}">
       <img src="{{src}}">
     </spark-button>
 
     <div responsive="{{responsive}}" valign="{{valign}}">
       <spark-overlay id="overlay"
           autoClose
-          class="spark-overlay-scale-slideup"
+          animation="scale-slideup"
           opened="{{opened}}"
-          on-opened="{{onOpened}}">
+          on-opened="{{overlayOpenedHandler}}">
 
         <div class="arrow"></div>
-        <div class="arrow arrow-inner" on-click="{{close}}"></div>
+        <div class="arrow arrow-inner" on-click="{{clickHandler}}"></div>
 
         <spark-menu id="menu"
             selected="{{selected}}"
-            valueattr="{{valueattr}}"
+            valueAttr="{{valueAttr}}"
             on-activate="{{menuActivateHandler}}">
           <content></content>
         </spark-menu>

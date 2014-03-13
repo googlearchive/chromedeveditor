@@ -14,7 +14,7 @@
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
-<link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_box.html">
+<link rel="import" href="packages/spark_widgets/spark_suggest_box/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 
@@ -49,7 +49,7 @@
         <spark-menu-button
             id="mainMenu"
             src="images/menu.png"
-            valueattr="action-id"
+            valueAttr="action-id"
             valign="right"
             on-activate={{onMenuSelected}}>
           <spark-menu-item action-id="file-open" label="Open File...">
@@ -85,7 +85,7 @@
     </spark-split-view>
 
     <!-- Error dialog -->
-    <spark-modal id="errorDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="errorDialog" class="dialog" animation="scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label id="errorTitle"></label>
@@ -100,7 +100,7 @@
     </spark-modal>
 
     <!-- OK / Cancel dialog -->
-    <spark-modal id="okCancelDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="okCancelDialog" class="dialog" animation="scale-slideup">
       <div class="modal-body">
         <p id="okCancelMessage"></p>
       </div>
@@ -115,7 +115,7 @@
     </spark-modal>
 
     <!-- Rename File dialog -->
-    <spark-modal id="renameDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="renameDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Rename</h4>
@@ -137,7 +137,7 @@
     </spark-modal>
 
     <!-- New File dialog -->
-    <spark-modal id="fileNewDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="fileNewDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">New File</h4>
@@ -159,7 +159,7 @@
     </spark-modal>
 
     <!-- New Folder dialog -->
-    <spark-modal id="folderNewDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="folderNewDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">New Folder</h4>
@@ -181,7 +181,7 @@
     </spark-modal>
 
     <!-- New Project dialog -->
-    <spark-modal id="newProjectDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="newProjectDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">New Project</h4>
@@ -198,7 +198,6 @@
               <input type="radio" name="type" value="empty-project" id="empty-project" checked>
               <label for="empty-project" checked>Create a blank project</label>
             </div>
-            <hr>
             <div>
               <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
               <label for="dart-web-app-radio">Create a new Dart web application</label>
@@ -213,7 +212,7 @@
             </div-->
             <div>
               <input type="radio" name="type" value="app-js" id="js-chrome-app-radio">
-              <label for="js-chrome-app-radio">Create a new JavaScript Chrome App</label>
+              <label for="js-chrome-app-radio">Create a new JavaScript Chrome app</label>
             </div>
           </form>
         </div>
@@ -229,7 +228,7 @@
     </spark-modal>
 
     <!-- Harness Push dialog -->
-    <spark-modal id="pushDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="pushDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>
@@ -242,11 +241,12 @@
               <label for="adb">ADB over USB</label>
             </div>
             <div>
-              <input type="radio" name="type" value="push-ip" id="ip" />
               <label for="ip">Directly over network</label>
+              <input id="ip" type="radio" name="type" value="push-ip" />
 
               <label for="pushUrl">Target Host</label>
-              <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+              <input id="pushUrl" type="text" class="form-control"
+                  placeholder="e.g. 192.168.1.101" />
             </div>
           </form>
         </div>
@@ -262,7 +262,7 @@
     </spark-modal>
 
     <!-- Git Clone dialog -->
-    <spark-modal id="gitCloneDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="gitCloneDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Clone Git Project</h4>
@@ -271,7 +271,7 @@
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
           <input id="gitRepoUrl" type="text" class="form-control"
-              placeholder="https://github.com/foo/bar.git" focused>
+              placeholder="https://github.com/dart-lang/spark.git" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -285,7 +285,7 @@
     </spark-modal>
 
     <!-- Git Commit dialog -->
-    <spark-modal id="gitCommitDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="gitCommitDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Git Commit</h4>
@@ -304,6 +304,12 @@
                   placeholder="johndoe@gmail.com">
             </div>
           </div>
+        </div>
+        <div id="gitStatusGroup" class="form-group">
+          <label>Changes</label>
+          <div id="gitStatus"></div>
+        </div>
+        <div class="form-group">
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"
               rows="3"></textarea>
@@ -321,7 +327,7 @@
     </spark-modal>
 
     <!-- Git Branch dialog -->
-    <spark-modal id="gitBranchDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="gitBranchDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Create Branch</h4>
@@ -344,7 +350,7 @@
     </spark-modal>
 
     <!-- Git Checkout dialog -->
-    <spark-modal id="gitCheckoutDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="gitCheckoutDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Git Checkout</h4>
@@ -370,7 +376,7 @@
     </spark-modal>
 
     <!-- Git Push dialog -->
-    <spark-modal id="gitPushDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="gitPushDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Git Push</h4>
@@ -391,7 +397,7 @@
     </spark-modal>
 
     <!-- About dialog -->
-    <spark-modal id="aboutDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="aboutDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Spark</h4>
@@ -419,7 +425,7 @@
     </spark-modal>
 
     <!-- Setting dialog -->
-    <spark-modal id="settingsDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="settingsDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Settings</h4>
@@ -470,6 +476,12 @@
             <span id="gitResetSettingsDone">Done</span>
           </div>
         </div>
+        <div class="form-group">
+          <label class="settings-title">Root directory</label>
+          <div>
+            <span id="directory-label" class="settings-label"></span>
+          </div>
+        </div>
         <template if="{{developerMode}}">
           <div class="form-group">
             <label class="settings-title">Preference</label>
@@ -490,7 +502,7 @@
     </spark-modal>
 
     <!-- Git authentication dialog -->
-    <spark-modal id="gitAuthenticationDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="gitAuthenticationDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Git Authentication</h4>
@@ -522,7 +534,7 @@
     </spark-modal>
 
     <!-- Publish on webstore -->
-    <spark-modal id="webStorePublishDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="webStorePublishDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Publish to Chrome Web Store</h4>
@@ -549,14 +561,14 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Publish
         </spark-button>
       </div>
     </spark-modal>
 
     <!-- Properties dialog -->
-    <spark-modal id="propertiesDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="propertiesDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Properties</h4>
@@ -571,7 +583,7 @@
     </spark-modal>
 
     <!-- Chrome WebStore published dialog -->
-    <spark-modal id="webStorePublishedDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="webStorePublishedDialog" class="dialog" animation="scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label>Your application has been published</label>
@@ -592,7 +604,7 @@
     </spark-modal>
 
     <!-- Chrome WebStore first upload dialog -->
-    <spark-modal id="webStoreUploadedDialog" class="dialog spark-overlay-scale-slideup">
+    <spark-modal id="webStoreUploadedDialog" class="dialog" animation="scale-slideup">
       <div class="modal-body">
         <div class="form-group">
           <label>Your application has been uploaded</label>
@@ -610,6 +622,19 @@
         <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
+      </div>
+    </spark-modal>
+
+    <!-- Dialog shown while pushing an application to ADB. -->
+    <spark-modal id="pushADBProgressDialog" class="dialog" animation="scale-slideup">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Push to the mobile device in progress</label>
+          <div class="help-block">
+            Please unlock the phone and check whether it's asking for a
+            connection authorization.
+          </div>
+        </div>
       </div>
     </spark-modal>
   </template>

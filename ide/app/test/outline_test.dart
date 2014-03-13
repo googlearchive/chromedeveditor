@@ -6,13 +6,14 @@ library spark.outline_test;
 
 import 'package:unittest/unittest.dart';
 
+import '../lib/pub.dart';
 import '../lib/services.dart';
 import '../lib/workspace.dart' as ws;
 
 defineTests() {
   ws.Workspace workspace = new ws.Workspace();
 
-  Services services = new Services(workspace);
+  Services services = new Services(workspace, new PubManager(workspace));
 
   group('outline service tests', () {
     test('resource read', () {

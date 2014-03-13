@@ -12,7 +12,6 @@ import 'dart:async';
 import 'package:analyzer/src/generated/ast.dart';
 import 'package:analyzer/src/generated/engine.dart';
 import 'package:analyzer/src/generated/error.dart';
-import 'package:analyzer/src/generated/java_core.dart';
 import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
@@ -26,14 +25,12 @@ export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
 import '../dart/sdk.dart' as sdk;
 
 /**
- * Create and return a ChromeDartSdk asynchronously.
+ * Create and return a ChromeDartSdk.
  */
-Future<ChromeDartSdk> createSdk(List<int> sdkContents) {
-  sdk.DartSdk dartSdk = sdk.DartSdk.createSdkFromContents(sdkContents);
+ChromeDartSdk createSdk(sdk.DartSdk dartSdk) {
   ChromeDartSdk chromeSdk = new ChromeDartSdk._(dartSdk);
   chromeSdk._parseLibrariesFile();
-
-  return new Future.value(chromeSdk);
+  return chromeSdk;
 }
 
 /**
@@ -51,7 +48,7 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
   //AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
   AnalysisContext context = new AnalysisContextImpl();
 
-  context.sourceFactory = new SourceFactory.con2([new DartUriResolver(sdk)]);
+  context.sourceFactory = new SourceFactory([new DartUriResolver(sdk)]);
 
   CompilationUnit unit;
   StringSource source = new StringSource(contents, '<StringSource>');
@@ -104,10 +101,10 @@ class ChromeDartSdk extends DartSdk {
 
   ChromeDartSdk._(this._sdk): context = new AnalysisContextImpl() {
     // TODO: this will also need a dart: uri resolver
-    context.sourceFactory = new SourceFactory.con2([]);
+    context.sourceFactory = new SourceFactory([]);
   }
 
-  Source fromEncoding(ContentCache contentCache, UriKind kind, Uri uri) {
+  Source fromEncoding(UriKind kind, Uri uri) {
     // TODO:
     throw new UnimplementedError('fromEncoding');
   }
@@ -136,12 +133,16 @@ class ChromeDartSdk extends DartSdk {
   }
 
   LibraryMap _parseLibrariesMap(String contents) {
-    SimpleAnalysisErrorListener errorListener = new SimpleAnalysisErrorListener();
+    SimpleAnalysisErrorListener errorListener =
+        new SimpleAnalysisErrorListener();
     Source source = new StringSource(contents, 'lib/_internal/libraries.dart');
-    Scanner scanner = new Scanner(source, new CharSequenceReader(new CharSequence(contents)), errorListener);
+    Scanner scanner =
+        new Scanner(source, new CharSequenceReader(contents), errorListener);
     Parser parser = new Parser(source, errorListener);
     CompilationUnit unit = parser.parseCompilationUnit(scanner.tokenize());
-    SdkLibrariesReader_LibraryBuilder libraryBuilder = new SdkLibrariesReader_LibraryBuilder();
+    SdkLibrariesReader_LibraryBuilder libraryBuilder =
+        new SdkLibrariesReader_LibraryBuilder(false);
+
     if (!errorListener.foundError) {
       unit.accept(libraryBuilder);
     }
@@ -170,8 +171,12 @@ class StringSource extends Source {
 
   bool exists() => true;
 
-  void getContents(Source_ContentReceiver receiver) =>
-      receiver.accept2(_contents, modificationStamp);
+  // TODO(devoncarew): This is a new method in Source; investigate.
+  TimestampedData<String> get contents =>
+      new TimestampedData<String>(modificationStamp, _contents);
+
+  void getContentsToReceiver(Source_ContentReceiver receiver) =>
+      receiver.accept(_contents, modificationStamp);
 
   String get encoding => 'UTF-8';
 
@@ -207,12 +212,19 @@ class SdkSource extends Source {
 
   bool exists() => true;
 
-  void getContents(Source_ContentReceiver receiver) {
-    String cachedSource = _sdk.getSourceForPath(fullName);
+  TimestampedData<String> get contents {
+    String source = _sdk.getSourceForPath(fullName);
+    return source != null ?
+        new TimestampedData<String>(modificationStamp, source) : null;
+  }
 
-    if (cachedSource != null) {
-      receiver.accept2(cachedSource, modificationStamp);
+  void getContentsToReceiver(Source_ContentReceiver receiver) {
+    final cnt = contents;
+
+    if (cnt != null) {
+      receiver.accept(cnt.data, cnt.modificationTime);
     } else {
+      // TODO(devoncarew): Error type seems wrong.
       throw new UnimplementedError('getContents');
     }
   }
@@ -261,17 +273,22 @@ class FileSource extends Source {
   }
 
   bool exists() {
-    // TODO:
+    // TODO: Implement.
      throw new UnimplementedError('exists');
   }
 
-  void getContents(Source_ContentReceiver receiver) {
-    // TODO:
+  TimestampedData<String> get contents {
+    // TODO: Implement.
+    throw new UnimplementedError('getContents');
+  }
+
+  void getContentsToReceiver(Source_ContentReceiver receiver) {
+    // TODO: Implement.
     throw new UnimplementedError('getContents');
   }
 
   String get encoding {
-    // TODO:
+    // TODO: Implement.
     throw new UnimplementedError('encoding');
   }
 

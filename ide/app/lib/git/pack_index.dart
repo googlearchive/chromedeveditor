@@ -53,7 +53,6 @@ import 'object.dart';
  *
  *    20-byte SHA1-checksum of all of the above.
  */
-
 class PackIndex {
 
   static final int PACK_IDX_SIGNATURE = 0xff744f63;
@@ -66,7 +65,6 @@ class PackIndex {
   int _offsetsOffset;
 
   PackIndex(ByteBuffer buffer) {
-
     _data = new ByteData.view(buffer);
 
     // load the index into memory

@@ -303,3 +303,56 @@ body {
   opacity: 0.25;
   z-index: 500;
 }
+
+#outline {
+  position: absolute;
+  minWidth: 40px;
+  right: 15px;
+  top: 10px;
+  bottom: 10px;
+  background: #555;
+  borderRadius: 2px;
+  zIndex: 100;
+  opacity: 0.6;
+}
+
+#outlineContainer {
+  height: 100%;
+  width: 200px;
+  overflow: scroll;
+}
+
+#outlineContainer > ul {
+  margin: 0px;
+  padding: 0 0 0 10px;
+  list-style-type: none;
+}
+
+
+ul.outlineItem.topLevel {
+  margin: 0px;
+  padding: 0 0 0 10px;
+  background: #333;
+}
+
+.outlineItem.topLevel.function {
+  color: #faa;
+}
+
+.outlineItem.topLevel.variable {
+  color: #afa;
+}
+
+.outlineItem.topLevel.class {
+  color: #aaf;
+}
+
+.outlineItem.method {
+  color: #faa;
+}
+
+.outlineItem.property {
+  color: #afa;
+}
+
+

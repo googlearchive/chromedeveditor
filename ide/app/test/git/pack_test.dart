@@ -4,6 +4,7 @@
 
 library git_pack_test;
 
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -17,13 +18,12 @@ final String PACK_INDEX_FILE_PATH = 'test/data/pack-_index_test.idx';
 defineTests() {
   group('git.pack', () {
     test('parsePack', () {
-      return chrome.runtime.getPackageDirectoryEntry().then(
-          (chrome.DirectoryEntry dir) {
+      Future f = chrome.runtime.getPackageDirectoryEntry();
+      return f.then((chrome.DirectoryEntry dir) {
         return dir.getFile(PACK_FILE_PATH).then((chrome.ChromeFileEntry entry) {
           return entry.readBytes().then((chrome.ArrayBuffer binaryData) {
-            Uint8List data = new Uint8List.fromList(binaryData.getBytes());
-            Pack pack = new Pack(data, null);
-            return pack.parseAll(null).then((_) {
+            Pack pack = new Pack(new Uint8List.fromList(binaryData.getBytes()));
+            return pack.parseAll().then((_) {
               // TODO: add more expects for the pack state?
               expect(pack.objects.length, 15);
             });

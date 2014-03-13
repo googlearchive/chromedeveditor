@@ -109,6 +109,15 @@ class SparkOverlay extends SparkWidget {
   @published bool autoClose = false;
 
   /**
+   * The kind of animation that the overlay should perform on open/close.
+   */
+  @published String animation = '';
+
+  static final List<String> SUPPORTED_ANIMATIONS = [
+    'fade', 'shake', 'scale-slideup'
+  ];
+
+  /**
    * Events to capture on the [document] level in the capturing event
    * propagation phase and either block them (with [modal]) or auto-close the
    * overlay (with [autoClose]).
@@ -149,8 +158,20 @@ class SparkOverlay extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
+    assert(SUPPORTED_ANIMATIONS.contains(animation));
+
     style.visibility = "visible";
+
     enableKeyboardEvents();
+
+    addEventListener('webkitAnimationStart', openedAnimationStart);
+    addEventListener('animationStart', openedAnimationStart);
+    addEventListener('webkitAnimationEnd', openedAnimationEnd);
+    addEventListener('animationEnd', openedAnimationEnd);
+    addEventListener('webkitTransitionEnd', openedTransitionEnd);
+    addEventListener('transitionEnd', openedTransitionEnd);
+    addEventListener('click', tapHandler);
+    addEventListener('keydown', keyDownHandler);
   }
 
   /// Toggle the opened state of the overlay.
@@ -188,13 +209,11 @@ class SparkOverlay extends SparkWidget {
     eventTypes.forEach((et) => addRemoveFunc(et, _captureHandler, true));
   }
 
-  // TODO(sorvell): nodes stay focused when they become un-focusable due to
-  // an ancestory becoming display: none; file bug.
   void applyFocus() {
     if (opened) {
       focus();
     } else {
-      blur();
+      // Focus the next overlay in the stack.
       focusOverlay();
     }
   }
@@ -223,7 +242,7 @@ class SparkOverlay extends SparkWidget {
 
   void openedAnimationEnd(AnimationEvent e) {
     if (!opened) {
-      classes.remove('animation');
+      classes.remove('animation-in-progress');
     }
     // same steps as when a transition ends
     openedTransitionEnd(e);
@@ -241,7 +260,7 @@ class SparkOverlay extends SparkWidget {
   }
 
   void openedAnimationStart(AnimationEvent e) {
-    classes.add('animation');
+    classes.add('animation-in-progress');
     e.stopImmediatePropagation();
     e.preventDefault();
   }

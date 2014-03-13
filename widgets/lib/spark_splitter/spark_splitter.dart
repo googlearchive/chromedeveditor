@@ -29,7 +29,7 @@ class SparkSplitter extends SparkWidget {
   /**
    * Return the current splitter location.
    */
-  num get targetSize {
+  int get targetSize {
     final style = _target.getComputedStyle();
     final sizeStr = _isHorizontal ? style.height : style.width;
     return int.parse(_sizeRe.firstMatch(sizeStr).group(1));
@@ -38,7 +38,7 @@ class SparkSplitter extends SparkWidget {
   /**
    * Set the current splitter location.
    */
-  set targetSize(num val) {
+  set targetSize(int val) {
     final sizeStr = '${val.toInt()}px';
     if (_isHorizontal) {
       _target.style.height = sizeStr;

@@ -24,23 +24,11 @@ class Outline {
   Outline(services.Services services, this._outlineDiv) {
     analyzer = services.getService("analyzer");
 
-    _outlineDiv.style
-        ..position = 'absolute'
-        ..minWidth = '40px'
-        ..right = '10px'
-        ..top ='10px'
-        ..bottom = '10px'
-        ..background = 'rgb(100, 100, 100)'
-        ..borderRadius = '2px'
-        ..zIndex = '100'
-        ..opacity = '0.6'
-        ..overflow = 'scroll';
+    // TODO(ericarnold): This should be done in polymer.
+    _outlineDiv.id = "outline";
 
     _outlineContainer = new html.DivElement();
-    _outlineContainer.style
-        ..height = '100%'
-        ..width = '200px'
-        ..overflow = 'scroll';
+    _outlineContainer.id = "outlineContainer";
     _outlineDiv.append(_outlineContainer);
 
     html.ButtonElement toggleButton = new html.ButtonElement();
@@ -68,7 +56,7 @@ class Outline {
 
   void _populate(services.Outline outline) {
     // TODO(ericarnold): Is there anything else that needs to be done to
-    //    emsure there are no memory leaks?
+    //    ensure there are no memory leaks?
     children = [];
     if (_rootList != null) {
       _rootList.remove();
@@ -125,7 +113,7 @@ class Outline {
     classItem.onChildSelected.listen((event) =>
         childSelectedController.add(event));
     _addItem(classItem);
-    _rootList.append(classItem._rootElement);
+    _rootList.append(classItem._childrenRootElement);
     return classItem;
   }
 }
@@ -138,38 +126,45 @@ abstract class OutlineItem {
   int get startOffset => _data.startOffset;
   int get endOffset => _data.endOffset;
 
-  OutlineItem(this._data) {
+  OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
     _anchor = new html.AnchorElement(href: "#");
-    _element.append(_anchor);
     _anchor.text = _data.name;
+
+    _element.append(_anchor);
+    _element.classes.add("outlineItem $cssClassName");
   }
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
-  OutlineTopLevelItem(services.OutlineTopLevelEntry data) : super(data);
+  OutlineTopLevelItem(services.OutlineTopLevelEntry data, String cssClassName)
+      : super(data, "topLevel $cssClassName");
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
-  OutlineTopLevelVariable(services.OutlineTopLevelVariable data) : super(data);
+  OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
+      : super(data, "variable");
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
-  OutlineTopLevelFunction(services.OutlineTopLevelFunction data) : super(data);
+  OutlineTopLevelFunction(services.OutlineTopLevelFunction data)
+      : super(data, "function");
 }
 
 class OutlineClass extends OutlineTopLevelItem {
-  var _rootElement = new html.UListElement();
+  html.UListElement _childrenRootElement = new html.UListElement();
   List<OutlineClassMember> members = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
 
-  OutlineClass(services.OutlineClass data) : super(data) {
+  OutlineClass(services.OutlineClass data)
+      : super(data, "class") {
+    _childrenRootElement.classes = _element.classes;
     _populate(data);
   }
 
   OutlineClassMember _addItem(OutlineClassMember item) {
-    _rootElement.append(item._element);
+    _childrenRootElement.append(item._element);
     item.onClick.listen((event) => childSelectedController.add(item));
     members.add(item);
     return item;
@@ -197,15 +192,18 @@ class OutlineClass extends OutlineTopLevelItem {
       _addItem(new OutlineProperty(data));
 }
 
-class OutlineMethod extends OutlineClassMember {
-  OutlineMethod(services.OutlineMethod data) : super(data);
+abstract class OutlineClassMember extends OutlineItem {
+  OutlineClassMember(services.OutlineMember data, String cssClassName)
+      : super(data, cssClassName);
 }
 
-abstract class OutlineClassMember extends OutlineItem {
-  OutlineClassMember(services.OutlineMember data) : super(data);
+class OutlineMethod extends OutlineClassMember {
+  OutlineMethod(services.OutlineMethod data)
+      : super(data, "method");
 }
 
 class OutlineProperty extends OutlineClassMember {
-  OutlineProperty(services.OutlineProperty data) : super(data);
+  OutlineProperty(services.OutlineProperty data)
+      : super(data, "property");
 }
 
