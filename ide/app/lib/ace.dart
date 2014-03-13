@@ -243,9 +243,21 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
+      double markerPos;
+
+
+      /*%TRACE3*/ print("""(4> 3/13/14): currentSession.screenLength: ${currentSession.screenLength}"""); // TRACE%
+      /*%TRACE3*/ print("""(4> 3/13/14): currentSession.document.length: ${currentSession.document.length}"""); // TRACE%
+
+      var lastDocumentScreenRow = currentSession.documentToScreenRow(0, 0);
+      /*%TRACE3*/ print("""(4> 3/13/14): lastDocumentScreenRow: ${lastDocumentScreenRow}"""); // TRACE%
+      if (currentSession.screenLength > currentSession.document.length) {
+        /*%TRACE3*/ print("(4> 3/13/14): currentSession.screenLength > currentSession.document.length!"); // TRACE%
+
+      }
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
-      double markerPos =
+      markerPos =
           currentSession.documentToScreenRow(marker.lineNum, aceColumn)
           / numberLines * 100.0;
 
