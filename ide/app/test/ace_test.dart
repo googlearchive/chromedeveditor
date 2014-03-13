@@ -11,6 +11,7 @@ import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
 
 defineTests() {
@@ -27,6 +28,7 @@ class MockAceManager implements AceManager {
   final Element parentElement = null;
   workspace.File currentFile = null;
   AceManagerDelegate delegate = null;
+  Outline outline = null;
 
   MockAceManager();
 

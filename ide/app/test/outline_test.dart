@@ -45,8 +45,8 @@ defineTests() {
         expect(members[1] is OutlineMethod, isTrue);
         method = members[1];
         expect(method.name, equals("method2Name"));
-        expect(members[2] is OutlineClassVariable, isTrue);
-        OutlineClassVariable field = members[2];
+        expect(members[2] is OutlineProperty, isTrue);
+        OutlineProperty field = members[2];
         expect(field.name, equals("classVariable1Name"));
         field = members[3];
         expect(field.name, equals("classVariable2Name"));

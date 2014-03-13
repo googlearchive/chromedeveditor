@@ -265,9 +265,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
         if (declaration is analyzer.ClassDeclaration) {
           outlineDeclaration = new OutlineClass(declaration.name.name);
           OutlineClass outlineClass = outlineDeclaration;
-          outline.entries.add(outlineClass);
-          analyzer.NodeList<analyzer.ClassMember> members = declaration.members;
-          for (analyzer.ClassMember member in members) {
+          for (analyzer.ClassMember member in declaration.members) {
             String name;
             if (member is analyzer.MethodDeclaration) {
               outlineClass.members.add(populateOutlineEntry(
@@ -276,13 +274,13 @@ class AnalyzerServiceImpl extends ServiceImpl {
               analyzer.VariableDeclarationList fields = member.fields;
               for (analyzer.VariableDeclaration field in fields.variables) {
                 outlineClass.members.add(populateOutlineEntry(
-                    new OutlineClassVariable(field.name.name), field));
+                    new OutlineProperty(field.name.name), field));
               }
             }
           }
         } else if (declaration is analyzer.FunctionDeclaration) {
-          outlineDeclaration = populateOutlineEntry(
-              new OutlineTopLevelFunction(declaration.name.name), declaration);
+          outlineDeclaration =
+              new OutlineTopLevelFunction(declaration.name.name);
         } else {
           print("${declaration.runtimeType} is unknown");
         }
