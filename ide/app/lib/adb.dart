@@ -306,7 +306,7 @@ class AndroidDevice {
           if (adbInterface != null && androidDevice != null &&
               this.adbConnectionHandle != null && inDescriptor != null &&
               outDescriptor != null) {
-            return;
+            return new Future.value();
           }
           else {
             return new Future.error('invalid-device');
@@ -352,7 +352,8 @@ class AndroidDevice {
     return chrome.usb.claimInterface(adbConnectionHandle,
         adbInterface.interfaceNumber).catchError((_) {
       return new Future.error(
-        'Could not open ADB connection. Do you already have ADB running?');
+        'Could not open ADB connection.\n' +
+        'Please check whether Chrome ADT is running.');
     }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
           AdbUtil.MAX_PAYLOAD, systemIdentity.toString());

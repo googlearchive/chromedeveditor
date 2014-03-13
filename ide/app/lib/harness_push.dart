@@ -140,9 +140,7 @@ class HarnessPush {
 
       Future doOpen(int index) {
         Map m = _KNOWN_DEVICES[index];
-        return device.getPluggedDevice(m['vendorId'], m['productId']).then((_) {
-          return device.open(m['vendorId'], m['productId']);
-        }).catchError((e) {
+        return device.open(m['vendorId'], m['productId']).catchError((e) {
           if ((e == 'no-device') || (e == 'no-connection')) {
             // No matching device found, try again.
             ++index;
