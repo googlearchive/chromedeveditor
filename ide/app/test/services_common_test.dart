@@ -35,7 +35,7 @@ Map outlineTopLevelVariableMap = {
     "endOffset": 20,
     "type": "top-level-variable"};
 
-Map outlineClassMap = {
+Map _outlineClassMap = {
     "name": "className",
     "startOffset": 30,
     "endOffset": 40,
@@ -65,6 +65,10 @@ Map outlineClassVariableMap = {
 defineTests() {
   group('Outline Instantiation Tests', () {
     test('Instantiate individual entries', () {
+      // Make copies before we mutate the test data.
+      Map outlineClassMap = new Map.from(_outlineClassMap);
+      outlineClassMap['members'] = [];
+
       OutlineTopLevelVariable outlineTopLevelVariable =
           new OutlineTopLevelEntry.fromMap(outlineTopLevelVariableMap);
       expectOutlineTopLevelVariable(outlineTopLevelVariable);
@@ -91,12 +95,14 @@ defineTests() {
       expect(outlineFunction.toMap(), equals(outlineFunctionMap));
     });
 
-    test('Instnantiate full outline', () {
+    test('Instantiate full outline', () {
+      Map outlineClassMap = new Map.from(_outlineClassMap);
+
       Outline outline = new Outline.fromMap({
         "entries": [outlineTopLevelVariableMap, outlineClassMap, outlineFunctionMap]});
       expect(outline.entries.length, equals(3));
       expectOutlineTopLevelVariable(outline.entries[0]);
-      expectOutlineFilledClass(outline.entries[1]);
+      expectOutlineEmptyClass(outline.entries[1]);
       expectOutlineFunction(outline.entries[2]);
     });
   });

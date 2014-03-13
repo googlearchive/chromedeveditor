@@ -5,12 +5,12 @@
 library spark.services_test;
 
 import 'dart:async';
-import 'dart:isolate';
 
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/services.dart';
+import '../lib/utils.dart';
 
 defineTests() {
   Workspace workspace = new Workspace();
@@ -134,31 +134,57 @@ defineTests() {
   });
 
   group('services analyzer', () {
-    // TODO: add some analyzer integration tests
+    // TODO: The analyzer is currently not working when compiled to JavaScript.
+    if (isDart2js()) return;
 
+    Workspace workspace = new Workspace();
+    Services services = new Services(workspace);;
+    AnalyzerService analyzer = services.getService("analyzer");
+
+    test('analyze file', () {
+      DirectoryEntry dir = createSampleDirectory1('foo1');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+          expect(result.length, 1);
+          expect(result[file], isEmpty);
+        });
+      });
+    });
+
+    test('analyze file with errors', () {
+      DirectoryEntry dir = createSampleDirectory1('foo_error');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return file.setContents("void main() {\n  print('hello') \n}\n").then((_) {
+          return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+            expect(result.length, 1);
+            expect(result[file].length, 1);
+          });
+        });
+      });
+    });
+
+    test('analyze file with relative references', () {
+      DirectoryEntry dir = createSampleDirectory2('foo2');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+          expect(result.length, 1);
+          expect(result[file], isEmpty);
+        });
+      });
+    });
+
+    test('analyze file with package: references', () {
+      DirectoryEntry dir = createSampleDirectory3('foo3');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+          expect(result.length, 1);
+          expect(result[file], isEmpty);
+        });
+      });
+    });
   });
-
-//  group('services_impl', () {
-//    test('setup', () {
-//      MockSendPort mockSendPort = new MockSendPort();
-//      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
-//      expect(mockSendPort.wasSent, isNotNull);
-//    });
-//    //test('compiler start', () {
-//    //  MockSendPort mockSendPort = new MockSendPort();
-//    //  servicesIsolate = new impl.ServicesIsolate(mockSendPort);
-//    //  impl.CompilerServiceImpl compilerImpl =
-//    //      servicesIsolate.getServiceImpl("compiler");
-//    //  });
-//    //});
-//  });
-}
-
-class MockSendPort extends SendPort {
-  bool operator ==(other) => super == other;
-  int get hashCode => null;
-  var wasSent = null;
-  void send(var message) {
-    wasSent = message;
-  }
 }

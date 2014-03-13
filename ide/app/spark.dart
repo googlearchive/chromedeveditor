@@ -55,7 +55,7 @@ analytics.Tracker _analyticsTracker = new analytics.NullTracker();
  * does not exit, it returns true.
  */
 Future<bool> isTestMode() {
-  String url = chrome.runtime.getURL('app.json');
+  final String url = chrome.runtime.getURL('app.json');
   return HttpRequest.getString(url).then((String contents) {
     bool result = true;
     try {
@@ -156,8 +156,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initSplitView();
     initSaveStatusListener();
 
-    initLaunchManager();
     initPubManager();
+    initLaunchManager();
 
     window.onFocus.listen((Event e) {
       // When the user switch to an other application, he might change the
@@ -277,7 +277,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initLaunchManager() {
-    _launchManager = new LaunchManager(_workspace, services, this);
+    _launchManager = new LaunchManager(_workspace, services, pubManager);
   }
 
   void initPubManager() {
@@ -1346,7 +1346,15 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
     } else {
       resource = context.first;
     }
-    spark.launchManager.run(resource);
+
+    Completer completer = new Completer();
+    ProgressJob job = new ProgressJob("Running application…", completer);
+    spark.launchManager.run(resource).then((_) {
+      completer.complete();
+    }).catchError((e) {
+      completer.complete();
+      spark.showErrorMessage('Error Running Application', '${e}');
+    });
   }
 
   String get category => 'application';
@@ -1466,7 +1474,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
-    var name = _nameElement.value;
+    final String name = _nameElement.value;
     if (name.isNotEmpty) {
       folder.createNewFolder(name).then((folder) {
         // Delay a bit to allow the files view to process the new file event.
@@ -1542,7 +1550,7 @@ class NewProjectAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    var name = _nameElement.value.trim();
+    final name = _nameElement.value.trim();
     if (name.isNotEmpty) {
       spark.projectLocationManager.createNewFolder(name)
           .then((LocationResult location) {
@@ -1695,22 +1703,30 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
-    _addProperty(_propertiesElement, 'Location', _selectedResource.entry.fullPath);
+    return _getLocation().then((location) {
+      _addProperty(_propertiesElement, 'Location', location);
+    }).then((_) {
+      GitScmProjectOperations gitOperations =
+          spark.scmManager.getScmOperationsFor(_selectedResource.project);
 
-    GitScmProjectOperations gitOperations =
-        spark.scmManager.getScmOperationsFor(_selectedResource.project);
+      if (gitOperations != null) {
+        return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
+          final String repoUrl = map['url'];
+          _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+        }).catchError((e) {
+          _addProperty(_propertiesElement, 'Git Repository',
+              '<error retrieving Git data>');
+        });
+      }
+    });
+  }
 
-    if (gitOperations != null) {
-      return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
-        final String repoUrl = map['url'];
-        _addProperty(_propertiesElement, 'Git Repository', repoUrl);
-      }).catchError((e) {
-        _addProperty(_propertiesElement, 'Git Repository',
-            '<error retrieving Git data>');
-      });
-    } else {
-      return new Future.value();
-    }
+  Future<String> _getLocation() {
+    return chrome.fileSystem.getDisplayPath(_selectedResource.entry)
+        .catchError((e) {
+      // SyncFS from ChromeBook falls in here.
+      return _selectedResource.entry.fullPath;
+    });
   }
 
   void _addProperty(HtmlElement parent, String key, String value) {
@@ -2299,7 +2315,6 @@ class PubGetJob extends Job {
       spark.showErrorMessage('Error while running pub get', e.toString());
     });
   }
-
 }
 
 class ResourceRefreshJob extends Job {
@@ -2531,9 +2546,10 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   }
 
   void _commit() {
-    String username = (getElement('#gitUsername') as InputElement).value;
-    String password = (getElement('#gitPassword') as InputElement).value;
-    String encoded = JSON.encode({'username': username, 'password': password});
+    final String username = (getElement('#gitUsername') as InputElement).value;
+    final String password = (getElement('#gitPassword') as InputElement).value;
+    final String encoded =
+        JSON.encode({'username': username, 'password': password});
     spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
       completer.complete({'username': username, 'password': password});
       completer = null;
@@ -2605,8 +2621,9 @@ class ImportFolderAction extends SparkAction implements ContextAction {
 
 void _handleUncaughtException(error, [StackTrace stackTrace]) {
   // We don't log the error object itself because of PII concerns.
-  String errorDesc = error != null ? error.runtimeType.toString() : '';
-  String desc = '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
+  final String errorDesc = error != null ? error.runtimeType.toString() : '';
+  final String desc =
+      '${errorDesc}\n${utils.minimizeStackTrace(stackTrace)}'.trim();
 
   _analyticsTracker.sendException(desc);
 

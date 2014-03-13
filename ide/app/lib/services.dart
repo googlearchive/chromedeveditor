@@ -137,8 +137,7 @@ class AnalyzerService extends Service {
   AnalyzerService(Services services, _IsolateHandler handler) :
     super(services, 'analyzer', handler);
 
-  Future<Map<File, List<AnalysisError>>>
-      buildFiles(Iterable<File> dartFiles) {
+  Future<Map<File, List<AnalysisError>>> buildFiles(Iterable<File> dartFiles) {
     return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
         .then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
@@ -154,12 +153,7 @@ class AnalyzerService extends Service {
     });
   }
 
-  Future dispose() {
-    return _sendAction("dispose").then((_) => null);
-  }
-
-  File _uuidToFile(String uuid) =>
-      services._workspace.restoreResource(uuid);
+  File _uuidToFile(String uuid) => services._workspace.restoreResource(uuid);
 
   List<String> _filesToUuid(Iterable<File> files) =>
       files.map((f) => f.uuid).toList();

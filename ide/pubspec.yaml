@@ -14,7 +14,7 @@ dependencies:
   bootjack: any
   chrome: '>=0.5.1 <0.6.0'
   cipher: '>=0.6.0 <0.7.0'
-  compiler_unsupported: 0.7.0
+  compiler_unsupported: 0.7.1
   crypto: any
   dquery: '>=0.5.0 <0.6.0'
   intl: any

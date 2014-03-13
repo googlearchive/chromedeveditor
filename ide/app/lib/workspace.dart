@@ -145,7 +145,7 @@ class Workspace extends Container {
    * adds for the resources after the moves are completed.
    */
   Future moveTo(List<Resource> resources, Container container) {
-    List futures = resources.map((r) => _moveTo(r, container));
+    Iterable<Future> futures = resources.map((r) => _moveTo(r, container));
     return Future.wait(futures).then((events) {
       List<ChangeDelta> list = [];
       resources.forEach((r) => list.add(new ChangeDelta(r, EventType.DELETE)));
@@ -866,7 +866,6 @@ class File extends Resource {
       return entry.getMetadata();
     }).then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
-    }).then((_) {
       workspace._fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
     });
   }
