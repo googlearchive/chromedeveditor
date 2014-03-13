@@ -492,7 +492,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       lineElement.text = line;
       container.children.add(lineElement);
     }
-    //_errorDialog.element.querySelector('#errorMessage').text = message;
 
     _errorDialog.show();
   }
