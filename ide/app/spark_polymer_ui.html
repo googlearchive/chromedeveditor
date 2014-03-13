@@ -198,7 +198,6 @@
               <input type="radio" name="type" value="empty-project" id="empty-project" checked>
               <label for="empty-project" checked>Create a blank project</label>
             </div>
-            <hr>
             <div>
               <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
               <label for="dart-web-app-radio">Create a new Dart web application</label>
@@ -213,7 +212,7 @@
             </div-->
             <div>
               <input type="radio" name="type" value="app-js" id="js-chrome-app-radio">
-              <label for="js-chrome-app-radio">Create a new JavaScript Chrome App</label>
+              <label for="js-chrome-app-radio">Create a new JavaScript Chrome app</label>
             </div>
           </form>
         </div>
@@ -242,11 +241,12 @@
               <label for="adb">ADB over USB</label>
             </div>
             <div>
-              <input type="radio" name="type" value="push-ip" id="ip" />
               <label for="ip">Directly over network</label>
+              <input id="ip" type="radio" name="type" value="push-ip" />
 
               <label for="pushUrl">Target Host</label>
-              <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+              <input id="pushUrl" type="text" class="form-control"
+                  placeholder="e.g. 192.168.1.101" />
             </div>
           </form>
         </div>
@@ -271,7 +271,7 @@
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
           <input id="gitRepoUrl" type="text" class="form-control"
-              placeholder="https://github.com/foo/bar.git" focused>
+              placeholder="https://github.com/dart-lang/spark.git" focused>
         </div>
       </div>
       <div class="modal-footer">
