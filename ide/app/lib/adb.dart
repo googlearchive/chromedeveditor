@@ -228,9 +228,6 @@ class AndroidDevice {
       // For each such device, look for a specific device with ADB class,
       // subclass and protocol.
       // TODO(shepheb): Handle finding multiple ADB devices.
-      // NB: The function inside the forEach below uses errors to indicate
-      // success, when it finds a valid device. This is a bit of a hack, but it
-      // works. Real errors are String messages. "Successes" are null.
       chrome.Device resultDevice = null;
       return Future.forEach(devices, (chrome.Device device) {
         chrome.EnumerateDevicesAndRequestAccessOptions opts =
@@ -241,6 +238,7 @@ class AndroidDevice {
               if (connections.length == 0) {
                 return new Future.error('no-connection');
               } else {
+                // It's a valid device. Use it as the result.
                 resultDevice = device;
               }
             });
