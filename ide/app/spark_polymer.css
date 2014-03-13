@@ -304,7 +304,7 @@ body {
   z-index: 500;
 }
 
-.outline {
+#outline {
   position: absolute;
   minWidth: 40px;
   right: 15px;
@@ -316,13 +316,13 @@ body {
   opacity: 0.6;
 }
 
-.outlineContainer {
+#outlineContainer {
   height: 100%;
   width: 200px;
   overflow: scroll;
 }
 
-.outlineContainer ul {
+#outlineContainer > ul {
   margin: 0px;
   padding: 0 0 0 10px;
   list-style-type: none;

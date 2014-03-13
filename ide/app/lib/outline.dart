@@ -23,10 +23,10 @@ class Outline {
     analyzer = services.getService("analyzer");
 
     // TODO(ericarnold): This should be done in polymer.
-    _outlineDiv.className = "outline";
+    _outlineDiv.id = "outline";
 
     _outlineContainer = new html.DivElement();
-    _outlineContainer.className = "outlineContainer";
+    _outlineContainer.id = "outlineContainer";
     _outlineDiv.append(_outlineContainer);
 
     html.ButtonElement toggleButton = new html.ButtonElement();
@@ -54,7 +54,7 @@ class Outline {
 
   void _populate(services.Outline outline) {
     // TODO(ericarnold): Is there anything else that needs to be done to
-    //    emsure there are no memory leaks?
+    //    ensure there are no memory leaks?
     children = [];
     if (_rootList != null) {
       _rootList.remove();
@@ -173,6 +173,7 @@ class OutlineClass extends OutlineTopLevelItem {
 
   OutlineMethod addMethod(services.OutlineMethod data) =>
       _addElement(new OutlineMethod(data));
+
   OutlineProperty addProperty(services.OutlineProperty data) =>
       _addElement(new OutlineProperty(data));
 }
