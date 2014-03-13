@@ -165,15 +165,14 @@ class AdbMessage {
     dataCrc32 = AdbUtil.checksum(data);
   }
 
-
   String toString() {
     StringBuffer sb = new StringBuffer()
-    ..write('[command = ${command.toRadixString(16)}, ')
-    ..write('arg0 = ${arg0.toRadixString(16)}, ')
-    ..write('arg1 = ${arg1.toRadixString(16)}, ')
-    ..write('dataLength = ${dataLength.toRadixString(16)}, ')
-    ..write('dataCrc32 = ${dataCrc32.toRadixString(16)}, ')
-    ..write('magic = ${magic.toRadixString(16)}]');
+        ..write('[command = ${command.toRadixString(16)}, ')
+        ..write('arg0 = ${arg0.toRadixString(16)}, ')
+        ..write('arg1 = ${arg1.toRadixString(16)}, ')
+        ..write('dataLength = ${dataLength.toRadixString(16)}, ')
+        ..write('dataCrc32 = ${dataCrc32.toRadixString(16)}, ')
+        ..write('magic = ${magic.toRadixString(16)}]');
 
     if (dataBuffer != null) {
       sb.write('[');
@@ -233,15 +232,15 @@ class AndroidDevice {
         chrome.EnumerateDevicesAndRequestAccessOptions opts =
             new chrome.EnumerateDevicesAndRequestAccessOptions(
                 vendorId: device.vendorId, productId: device.productId);
-        return chrome.usb.findDevices(opts)
-            .then((List<chrome.ConnectionHandle> connections) {
-              if (connections.length == 0) {
-                return new Future.error('no-connection');
-              } else {
-                // It's a valid device. Use it as the result.
-                resultDevice = device;
-              }
-            });
+        return chrome.usb.findDevices(opts).then(
+            (List<chrome.ConnectionHandle> connections) {
+          if (connections.length == 0) {
+            return new Future.error('no-connection');
+          } else {
+            // It's a valid device. Use it as the result.
+            resultDevice = device;
+          }
+        });
       }).then((_) {
         return resultDevice;
       });
@@ -254,13 +253,12 @@ class AndroidDevice {
       chrome.EnumerateDevicesAndRequestAccessOptions opts =
           new chrome.EnumerateDevicesAndRequestAccessOptions(
               vendorId: device.vendorId, productId: device.productId);
-      return chrome.usb.findDevices(opts)
-          .then((List<chrome.ConnectionHandle> connections) {
-            return Future.forEach(connections,
-                (chrome.ConnectionHandle handle) {
-                  return _checkDevice(handle, device);
-                });
-          });
+      return chrome.usb.findDevices(opts).then(
+          (List<chrome.ConnectionHandle> connections) {
+        return Future.forEach(connections, (chrome.ConnectionHandle handle) {
+          return _checkDevice(handle, device);
+        });
+      });
     });
   }
 
@@ -324,8 +322,8 @@ class AndroidDevice {
         ..length = arrayBuffer.getBytes().length
         ..data = arrayBuffer;
 
-    return chrome.usb.bulkTransfer(adbConnectionHandle, transferInfo)
-        .then((chrome.TransferResultInfo result) {
+    return chrome.usb.bulkTransfer(adbConnectionHandle, transferInfo).then(
+        (chrome.TransferResultInfo result) {
       if (result.resultCode != 0) {
         return new Future.error('Failed to send');
       } else {
@@ -343,7 +341,6 @@ class AndroidDevice {
       return message.dataLength > 0 ? sendBuffer(message.dataBuffer) : result;
     });
   }
-
 
   // Connects to and authenticates with the device.
   Future connect(SystemIdentity systemIdentity) {
@@ -388,8 +385,9 @@ class AndroidDevice {
       KeyGenerator gen = new KeyGenerator("RSA");
       gen.init(paramsWithRandom);
       AsymmetricKeyPair keys = gen.generateKeyPair();
-      return _prefs.setValue('adb_rsa_keys', _serializeRSAKeys(keys))
-          .then((_) => keys);
+      return _prefs.setValue('adb_rsa_keys', _serializeRSAKeys(keys)).then((_) {
+        return keys;
+      });
     });
   }
 
@@ -536,12 +534,12 @@ class AndroidDevice {
     AdbMessage readAdbMessage;
     chrome.GenericTransferInfo readTransferInfo =
         new chrome.GenericTransferInfo()
-        ..direction = inDescriptor.direction
-        ..endpoint = inDescriptor.address
-        ..length = AdbUtil.MESSAGE_SIZE_PAYLOAD;
+            ..direction = inDescriptor.direction
+            ..endpoint = inDescriptor.address
+            ..length = AdbUtil.MESSAGE_SIZE_PAYLOAD;
 
-    return chrome.usb.bulkTransfer(adbConnectionHandle, readTransferInfo)
-        .then((chrome.TransferResultInfo readResult) {
+    return chrome.usb.bulkTransfer(adbConnectionHandle, readTransferInfo).then(
+        (chrome.TransferResultInfo readResult) {
       // Read back a MessageBuffer for AUTH response.
       if (readResult.resultCode != 0) {
         return new Future.error(readResult);
@@ -553,12 +551,12 @@ class AndroidDevice {
       if (readAdbMessage.dataLength > 0) {
         chrome.GenericTransferInfo readDataInfo =
             new chrome.GenericTransferInfo()
-            ..direction = inDescriptor.direction
-            ..endpoint = inDescriptor.address
-            ..length = readAdbMessage.dataLength;
+                ..direction = inDescriptor.direction
+                ..endpoint = inDescriptor.address
+                ..length = readAdbMessage.dataLength;
 
-        return chrome.usb.bulkTransfer(adbConnectionHandle, readDataInfo)
-            .then((chrome.TransferResultInfo readDataResult) {
+        return chrome.usb.bulkTransfer(adbConnectionHandle, readDataInfo).then(
+            (chrome.TransferResultInfo readDataResult) {
           if (readDataResult.resultCode != 0) {
             return new Future.error(readDataResult);
           }
@@ -641,22 +639,21 @@ class AndroidDevice {
           responseChunks = new Queue<ByteData>();
 
           Future readChunk() {
-            return receive().timeout(new Duration(milliseconds: 800))
-                .then((msg) {
-                  if (msg.command == AdbUtil.A_WRTE) {
-                    responseChunks.add(msg.dataBuffer);
-                    return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
-                        remoteID)).then((_) { return readChunk(); });
-                  } else {
-                    return new Future.error('Unexpected message from device.');
-                  }
-                }).catchError((e) {
-                  if (e is TimeoutException) {
-                    return null;
-                  } else {
-                    return new Future.error(e);
-                  }
-                });
+            return receive().timeout(new Duration(milliseconds: 800)).then((msg) {
+              if (msg.command == AdbUtil.A_WRTE) {
+                responseChunks.add(msg.dataBuffer);
+                return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
+                    remoteID)).then((_) { return readChunk(); });
+              } else {
+                return new Future.error('Unexpected message from device.');
+              }
+            }).catchError((e) {
+              if (e is TimeoutException) {
+                return null;
+              } else {
+                return new Future.error(e);
+              }
+            });
           };
 
           return readChunk();
@@ -679,7 +676,6 @@ class AndroidDevice {
     // TODO(shepheb): Handle the incoming messages.
   }
 }
-
 
 String _serializeRSAKeys(AsymmetricKeyPair keys) {
   Map<String, String> cereal = new Map<String, String>();
