@@ -54,12 +54,16 @@
 
       <spark-selector id="suggestion-list-menu"
           multi="false"
-          activeProperty="active"
+          activeClass="active"
           on-activate="{{menuActivateHandler}}">
         <template repeat="{{s in suggestions}}">
           <div class="suggestion-item">
-            {{s.label}}
-            <span class="text-muted">{{s.details}}</span>
+            <div>
+              {{s.label}}
+            </div>
+            <div class="text-muted">
+              {{s.details}}
+            </div>
           </div>
         </template>
       </spark-selector>
