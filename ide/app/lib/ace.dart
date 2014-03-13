@@ -17,6 +17,7 @@ import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
+import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
@@ -38,14 +39,14 @@ class TextEditor extends Editor {
 
   String _lastSavedHash;
 
+  bool _dirty = false;
+
+  TextEditor(this.aceManager, this.file);
+
   void setSession(ace.EditSession value) {
     _session = value;
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
   }
-
-  bool _dirty = false;
-
-  TextEditor(this.aceManager, this.file);
 
   bool get dirty => _dirty;
 
@@ -70,6 +71,19 @@ class TextEditor extends Editor {
   void resize() => aceManager.resize();
 
   void focus() => aceManager.focus();
+
+  // TODO: [TextEditor] should allow subclasses that know how to handle specific
+  // content (css, html, dart, ...).
+  void format() {
+    if (file.name.endsWith('.css')) {
+      String oldValue = _session.value;
+      String newValue = new CssBeautify().format(oldValue);
+      if (newValue != oldValue) {
+        _replaceContents(newValue);
+        dirty = true;
+      }
+    }
+  }
 
   void fileContentsChanged() {
     if (_session != null) {

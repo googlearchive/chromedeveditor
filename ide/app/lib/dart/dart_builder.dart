@@ -33,7 +33,7 @@ class DartBuilder extends Builder {
       workspace.pauseMarkerStream();
 
       try {
-        files.forEach((f) => f.clearMarkers());
+        files.forEach((f) => f.clearMarkers('dart'));
 
         for (File file in errors.keys) {
           for (AnalysisError error in errors[file]) {

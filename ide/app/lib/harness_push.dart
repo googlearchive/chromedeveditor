@@ -154,7 +154,10 @@ class HarnessPush {
 
       return doOpen(0).then((_) {
         return device.connect(new SystemIdentity());
-      }).then((_) => device);
+      }).then((_) => device).catchError((e) {
+        device = null;
+        return new Future.error(e);
+      });
     } else {
       return new Future.value(device);
     }

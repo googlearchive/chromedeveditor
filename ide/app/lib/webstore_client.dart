@@ -35,15 +35,34 @@ class WebStoreClient {
     request.setRequestHeader('Authorization', 'Bearer ${_token}');
     request.setRequestHeader('x-goog-api-version', '2');
     request.onLoad.listen((event) {
+      Map responseMap = JSON.decode(request.response);
       if (identifier == null) {
-        Map responseMap = JSON.decode(request.response);
         identifier = responseMap['id'];
-        bool success = (responseMap['uploadState'] == 'SUCCESS');
-        if (!success) {
-          completer.completeError("Upload to webstore failed");
-        }
       }
-      completer.complete(identifier);
+      bool success = (responseMap['uploadState'] == 'SUCCESS');
+      if (!success) {
+        String errorString = null;
+        List<Map> errors = responseMap['itemError'];
+        // We do defensive type checking here because it's coming from a webservice.
+        if (errors is List) {
+          for(var item in errors) {
+            if (item is Map) {
+              Map error = item;
+              if ((errorString == null) && (error['error_detail'] is String)) {
+                errorString = error['error_detail'];
+              } else {
+                errorString += '\n' + error['error_detail'];
+              }
+            }
+          }
+        }
+        if (errorString == null) {
+          errorString = "Upload to webstore failed";
+        }
+        completer.completeError(errorString);
+      } else {
+        completer.complete(identifier);
+      }
     });
     request.onError.listen((event) {
       completer.completeError("Upload to webstore failed: connection error");

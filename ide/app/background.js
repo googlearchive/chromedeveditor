@@ -36,8 +36,8 @@ App.prototype.launch = function(ui_opt) {
         'cannot_launch/cannot_launch.htm', {
         frame: 'chrome',
         bounds: {
-          width: 500,
-          height: 160
+          width: 600,
+          height: 220
         },
         resizable: false
     });

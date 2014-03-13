@@ -34,6 +34,7 @@ class Workspace extends Container {
   int _markersPauseCount = 0;
   List<MarkerDelta> _makerChangeList = [];
 
+  JobManager _jobManager;
   BuilderManager _builderManager;
 
   List<WorkspaceRoot> _roots = [];
@@ -50,16 +51,15 @@ class Workspace extends Container {
   StreamController<MarkerChangeEvent> _markerController =
       new StreamController.broadcast();
 
-  Workspace([this._store]) : super(null, null);
+  Workspace([this._store, this._jobManager]) : super(null, null) {
+    if (_jobManager == null) _jobManager = new JobManager();
+    _builderManager = new BuilderManager(this, _jobManager);
+  }
 
   Future<Workspace> whenAvailable() => _whenAvailable.future;
   Future<Workspace> whenAvailableSyncFs() => _whenAvailableSyncFs.future;
 
   BuilderManager get builderManager => _builderManager;
-
-  void createBuilderManager(JobManager jobManager) {
-    _builderManager = new BuilderManager(this, jobManager);
-  }
 
   String get name => null;
   String get path => '';
@@ -145,7 +145,7 @@ class Workspace extends Container {
    * adds for the resources after the moves are completed.
    */
   Future moveTo(List<Resource> resources, Container container) {
-    List futures = resources.map((r) => _moveTo(r, container));
+    Iterable<Future> futures = resources.map((r) => _moveTo(r, container));
     return Future.wait(futures).then((events) {
       List<ChangeDelta> list = [];
       resources.forEach((r) => list.add(new ChangeDelta(r, EventType.DELETE)));
@@ -374,9 +374,12 @@ class Workspace extends Container {
    */
   Future _restoreSyncFs() {
     Stopwatch stopwatch = new Stopwatch()..start();
-    Completer completer = new Completer();
+    Completer progressCompleter = new Completer();
 
-    chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
+    _builderManager.jobManager.schedule(
+        new ProgressJob('Opening sync filesystem…', progressCompleter));
+
+    return chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
       _syncFileSystem = fs;
 
       chrome.syncFileSystem.onFileStatusChanged.listen((chrome.FileInfo info) {
@@ -393,17 +396,14 @@ class Workspace extends Container {
         }).whenComplete(() {
           _logger.info('SyncFS restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
-        }).then((_) => _whenAvailableSyncFs.complete(this));
+        });
       });
     }, onError: (e) {
         _logger.warning('Exception in workspace restore sync file system', e);
-        _whenAvailableSyncFs.complete(this);
-    }).whenComplete(() => completer.complete());
-
-    _builderManager.jobManager.schedule(
-        new ProgressJob('Opening sync filesystem…', completer));
-
-    return whenAvailableSyncFs();
+    }).timeout(new Duration(seconds: 20)).whenComplete(() {
+      progressCompleter.complete();
+      _whenAvailableSyncFs.complete(this);
+    });
   }
 
   /**
@@ -705,6 +705,10 @@ class Folder extends Container {
    * Creates a new [File] with the given name
    */
   Future<File> createNewFile(String name) {
+    if (getChild(name) != null) {
+      return new Future.error("File already exists.");
+    }
+
     return _dirEntry.createFile(name).then((entry) {
       File file = new File(this, entry);
       _children.add(file);
@@ -714,12 +718,64 @@ class Folder extends Container {
   }
 
   Future<Folder> createNewFolder(String name) {
+    if (getChild(name) != null) {
+      return new Future.error("Folder already exists.");
+    }
+
     return _dirEntry.createDirectory(name).then((entry) {
       Folder folder = new Folder(this, entry);
       _children.add(folder);
       _fireResourceEvent(new ChangeDelta(folder, EventType.ADD));
       return folder;
     });
+  }
+
+  /**
+   * This method will import a file entry that might be from an other
+   * filesystem to the current folder.
+   */
+  Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
+    return createNewFile(sourceEntry.name).then((File file) {
+      sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
+        return file.setBytes(buffer.getBytes());
+      });
+      return file;
+    });
+  }
+
+  /**
+   * This method will copy a directory entry that might be from an other
+   * filesystem to the current folder.
+   */
+  Future importDirectoryEntry(chrome.DirectoryEntry entry) {
+    return createNewFolder(entry.name).then((Folder folder) {
+      return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
+        List<Future> futures = [];
+        for(chrome.Entry child in entries) {
+          if (child is chrome.DirectoryEntry) {
+            futures.add(folder.importDirectoryEntry(child));
+          } else if (child is chrome.ChromeFileEntry) {
+            futures.add(folder.importFileEntry(child));
+          }
+        }
+        return Future.wait(futures).then((_) {
+          return folder;
+        });
+      });
+    });
+  }
+
+  /**
+   * This method will copy a resource entry that might be from an other
+   * filesystem to the current folder.
+   */
+  Future importResource(Resource res) {
+    if (res.entry is chrome.ChromeFileEntry) {
+      return importFileEntry(res.entry);
+    } else if (res.entry is chrome.DirectoryEntry) {
+      return importDirectoryEntry(res.entry);
+    }
+    return new Future.value();
   }
 
   Future delete() {
@@ -810,7 +866,6 @@ class File extends Resource {
       return entry.getMetadata();
     }).then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
-    }).then((_) {
       workspace._fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
     });
   }
@@ -839,10 +894,18 @@ class File extends Resource {
 
   List<Marker> getMarkers() => _markers;
 
-  void clearMarkers() {
+  void clearMarkers([String type]) {
     if (_markers.isNotEmpty) {
-      _markers.clear();
-      _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+      if (type == null) {
+        _markers.clear();
+        _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+      } else {
+        int len = _markers.length;
+        _markers.removeWhere((m) => m.type == type);
+        if (len != _markers.length) {
+          _fireMarkerEvent(new MarkerDelta(this, null, EventType.DELETE));
+        }
+      }
     }
   }
 

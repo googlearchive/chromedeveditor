@@ -20,32 +20,40 @@ import '../dart/sdk.dart';
  * compile at a time. They are heavy-weight objects, and can be re-used once
  * a compile finishes. Subsequent compiles after the first one will be faster,
  * on the order of a 2x speedup.
- *
- * We'll want to re-work this so that the compile happens in an isolate (or a
- * web worker). This library may then move to something like compiler_impl.dart.
- * compiler.dart would become an interface to the compiler in the isolate, and
- * we'd get a new top-level library in app/, called compiler_entry.dart.
  */
 class Compiler {
   DartSdk _sdk;
+  ContentsProvider _contentsProvider;
 
   /**
    * Create and return a [Compiler] instance. These are heavy-weight objects.
    */
-  static Future<Compiler> createCompiler() {
-    return DartSdk.createSdk().then((DartSdk sdk) => new Compiler._(sdk));
+  static Future<Compiler> createCompiler(ContentsProvider contentsProvider) {
+    return DartSdk.createSdk().then(
+        (DartSdk sdk) => new Compiler._(sdk, contentsProvider));
   }
 
-  static Compiler createCompilerFrom(DartSdk sdk) {
-    return new Compiler._(sdk);
+  static Compiler createCompilerFrom(DartSdk sdk,
+                                     ContentsProvider contentsProvider) {
+    return new Compiler._(sdk, contentsProvider);
   }
 
-  Compiler._(this._sdk);
+  Compiler._(this._sdk, this._contentsProvider);
 
-  Future<CompilerResult> compile(/*chrome.FileEntry*/ entry) {
-    // TODO: implement
+  Future<CompilerResult> compileFile(String fileUuid) {
+    _CompilerProvider provider =
+        new _CompilerProvider.fromUuid(_sdk, _contentsProvider, fileUuid);
 
-    return new Future.value(new CompilerResult._());
+    CompilerResult result = new CompilerResult._().._start();
+
+    return compiler.compile(
+        provider.getInitialUri(),
+        new Uri(scheme: 'sdk', path: '/'),
+        new Uri(scheme: 'package', path: '/'),
+        provider.inputProvider,
+        result._diagnosticHandler,
+        [],
+        result._outputProvider).then((_) => result._stop());
   }
 
   /**
@@ -53,17 +61,17 @@ class Compiler {
    */
   Future<CompilerResult> compileString(String input) {
     _CompilerProvider provider = new _CompilerProvider.fromString(_sdk, input);
-    CompilerResult result = new CompilerResult._();
-    DateTime startTime = new DateTime.now();
 
-    return compiler.compile(provider.inputUri, new Uri(scheme: 'sdk', path: '/'), null,
+    CompilerResult result = new CompilerResult._().._start();
+
+    return compiler.compile(
+        provider.getInitialUri(),
+        new Uri(scheme: 'sdk', path: '/'),
+        new Uri(scheme: 'package', path: '/'),
         provider.inputProvider,
         result._diagnosticHandler,
         [],
-        result._outputProvider).then((String str) {
-      result._compileTime = new DateTime.now().difference(startTime);
-      return result;
-    });
+        result._outputProvider).then((_) => result._stop());
   }
 }
 
@@ -74,8 +82,18 @@ class CompilerResult {
   List<CompilerProblem> _problems = [];
   StringBuffer _output;
   Duration _compileTime;
+  DateTime _startTime;
 
   CompilerResult._();
+
+  void _start() {
+    _startTime = new DateTime.now();
+  }
+
+  CompilerResult _stop() {
+    _compileTime = new DateTime.now().difference(_startTime);
+    return this;
+  }
 
   List<CompilerProblem> get problems => _problems;
 
@@ -94,12 +112,16 @@ class CompilerResult {
 
   void _diagnosticHandler(Uri uri, int begin, int end, String message,
       compiler.Diagnostic kind) {
+    // Convert dart2js crash types to our error type.
+    if (kind == compiler.Diagnostic.CRASH) kind = compiler.Diagnostic.ERROR;
+
     if (kind == compiler.Diagnostic.WARNING || kind == compiler.Diagnostic.ERROR) {
       _problems.add(new CompilerProblem._(uri, begin, end, message, kind));
     }
   }
 
   EventSink<String> _outputProvider(String name, String extension) {
+    // TODO: Also include the .precompiled.js output.
     if (name.isEmpty && extension == 'js') {
       _output = new StringBuffer();
       return new _StringSink(_output);
@@ -176,8 +198,6 @@ class CompilerProblem {
       "begin": begin,
       "end": end,
       "message": message,
-      // TODO(ericarnold): Depending on how it's being used,
-      //   consider storing uri as a String.
       "uri": (uri == null) ? "" : uri.path,
       "kind": kind.name
     };
@@ -191,6 +211,11 @@ class CompilerProblem {
     if (name == 'crash') return compiler.Diagnostic.CRASH;
     return compiler.Diagnostic.ERROR;
   }
+}
+
+abstract class ContentsProvider {
+  Future<String> getFileContents(String uuid);
+  Future<String> getPackageContents(String relativeUuid, String packageRef);
 }
 
 /**
@@ -229,19 +254,30 @@ class _StringSink implements EventSink<String> {
  * Instances of this class allow dart2js to resolve Uris to input sources.
  */
 class _CompilerProvider {
-  static final String INPUT_URI_TEXT = 'resource:/foo.dart';
+  static final String _INPUT_URI_TEXT = 'resource:/foo.dart';
 
-  String input;
-  DartSdk sdk;
+  final String textInput;
+  final String uuidInput;
+  final DartSdk sdk;
+  ContentsProvider provider;
 
-  _CompilerProvider.fromString(this.sdk, this.input);
+  _CompilerProvider.fromString(this.sdk, this.textInput) : uuidInput = null;
 
-  Uri get inputUri => Uri.parse(INPUT_URI_TEXT);
+  _CompilerProvider.fromUuid(this.sdk, this.provider, this.uuidInput) :
+      textInput = null;
+
+  Uri getInitialUri() {
+    if (textInput != null) {
+      return Uri.parse(_CompilerProvider._INPUT_URI_TEXT);
+    } else {
+      return new Uri(scheme: 'file', path: uuidInput);
+    }
+  }
 
   Future<String> inputProvider(Uri uri) {
     if (uri.scheme == 'resource') {
-      if (uri.toString() == INPUT_URI_TEXT) {
-        return new Future.value(input);
+      if (uri.toString() == _INPUT_URI_TEXT) {
+        return new Future.value(textInput);
       } else {
         return new Future.error('unhandled: ${uri.scheme}');
       }
@@ -260,17 +296,13 @@ class _CompilerProvider {
         return new Future.error('file not found');
       }
     } else if (uri.scheme == 'file') {
-      // TODO: file:
-
-      return new Future.error('unhandled: ${uri.scheme}');
-    } else if (uri.scheme == 'dart') {
-      // TODO: dart:
-
-      return new Future.error('unhandled: ${uri.scheme}');
+      return provider.getFileContents(uri.path);
     } else if (uri.scheme == 'package') {
-      // TODO: package:
+      if (uuidInput == null) return new Future.error('file not found');
 
-      return new Future.error('unhandled: ${uri.scheme}');
+      // Convert `package:/foo/foo.dart` to `package:foo/foo.dart`.
+      return provider.getPackageContents(
+          uuidInput, 'package:${uri.path.substring(1)}');
     } else {
       return html.HttpRequest.getString(uri.toString());
     }

@@ -14,7 +14,7 @@
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
-<link rel="import" href="packages/spark_widgets/spark_suggest/spark_suggest_box.html">
+<link rel="import" href="packages/spark_widgets/spark_suggest_box/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 
@@ -304,6 +304,12 @@
                   placeholder="johndoe@gmail.com">
             </div>
           </div>
+        </div>
+        <div id="gitStatusGroup" class="form-group">
+          <label>Changes</label>
+          <div id="gitStatus"></div>
+        </div>
+        <div class="form-group">
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"
               rows="3"></textarea>
@@ -470,6 +476,12 @@
             <span id="gitResetSettingsDone">Done</span>
           </div>
         </div>
+        <div class="form-group">
+          <label class="settings-title">Root directory</label>
+          <div>
+            <span id="directory-label" class="settings-label"></span>
+          </div>
+        </div>
         <template if="{{developerMode}}">
           <div class="form-group">
             <label class="settings-title">Preference</label>
@@ -549,14 +561,14 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Publish
         </spark-button>
       </div>
-    </spark-modal><!-- /.modal -->
+    </spark-modal>
 
-    <!-- Project properties dialog -->
-    <spark-modal id="projectPropertiesDialog" class="dialog spark-overlay-scale-slideup">
+    <!-- Properties dialog -->
+    <spark-modal id="propertiesDialog" class="dialog spark-overlay-scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Properties</h4>

@@ -83,6 +83,11 @@ Future<String> getAppContents(String path) {
 }
 
 /**
+ * Returns a Future that completes after the next tick.
+ */
+Future nextTick() => new Future.delayed(Duration.ZERO);
+
+/**
  * A [Notifier] is used to present the user with a message.
  */
 abstract class Notifier {

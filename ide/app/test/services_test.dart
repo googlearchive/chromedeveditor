@@ -5,18 +5,17 @@
 library spark.services_test;
 
 import 'dart:async';
-import 'dart:isolate';
 
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
+import '../lib/pub.dart';
 import '../lib/services.dart';
-import '../lib/workspace.dart' as ws;
+import '../lib/utils.dart';
 
 defineTests() {
-  ws.Workspace workspace = new ws.Workspace();
-
-  Services services = new Services(workspace);
+  Workspace workspace = new Workspace();
+  Services services = new Services(workspace, new PubManager(workspace));
 
   group('services', () {
     test('ping', () {
@@ -56,11 +55,7 @@ defineTests() {
 
     test('basic test', () {
       CompilerService compilerService = services.getService("compiler");
-
-      return compilerService.start().then((_) {
-        // TODO(ericarnold): What's a better way to do this?
-        expect(true, equals(true));
-      });
+      expect(compilerService, isNotNull);
     });
   });
 
@@ -70,18 +65,19 @@ defineTests() {
       FileEntry fileEntry = fs.createFile('test.txt', contents: "some words");
       String fileUuid;
       TestService testService = services.getService("test");
-      return workspace.link(createWsRoot(fileEntry))
-          .then((ws.File fileResource) {
-            return testService.readText(fileResource);
-          }).then((String text) => expect(text, equals("some words")));
+      return workspace.link(createWsRoot(fileEntry)).then((File fileResource) {
+        return testService.readText(fileResource);
+      }).then((String text) => expect(text, equals("some words")));
     });
   });
 
   group('services compiler', () {
+    Workspace workspace = new Workspace();
+    Services services = new Services(workspace, new PubManager(workspace));;
+    CompilerService compiler = services.getService("compiler");
+
     test('hello world', () {
       final String str = "void main() { print('hello world'); }";
-
-      CompilerService compiler = services.getService("compiler");
 
       return compiler.compileString(str).then((CompilerResult result) {
         expect(result.getSuccess(), true);
@@ -93,37 +89,102 @@ defineTests() {
       // Missing semi-colon.
       final String str = "void main() { print('hello world') }";
 
-      CompilerService compiler = services.getService("compiler");
-
       return compiler.compileString(str).then((CompilerResult result) {
         expect(result.getSuccess(), false);
         expect(result.problems.length, 1);
         expect(result.output, null);
       });
     });
+
+    test('compile file', () {
+      DirectoryEntry dir = createSampleDirectory1('foo1');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return compiler.compileFile(file).then((CompilerResult result) {
+          expect(result.getSuccess(), true);
+          expect(result.problems.length, 0);
+          expect(result.output.length, greaterThan(100));
+        });
+      });
+    });
+
+    test('compile file with relative references', () {
+      DirectoryEntry dir = createSampleDirectory2('foo2');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return compiler.compileFile(file).then((CompilerResult result) {
+          expect(result.getSuccess(), true);
+          expect(result.problems.length, 0);
+          expect(result.output.length, greaterThan(100));
+        });
+      });
+    });
+
+    test('compile file with package references', () {
+      DirectoryEntry dir = createSampleDirectory3('foo3');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return compiler.compileFile(file).then((CompilerResult result) {
+          expect(result.getSuccess(), true);
+          expect(result.problems.length, 0);
+          expect(result.output.length, greaterThan(100));
+        });
+      });
+    });
   });
 
-//  group('services_impl', () {
-//    test('setup', () {
-//      MockSendPort mockSendPort = new MockSendPort();
-//      servicesIsolate = new impl.ServicesIsolate(mockSendPort);
-//      expect(mockSendPort.wasSent, isNotNull);
-//    });
-//    //test('compiler start', () {
-//    //  MockSendPort mockSendPort = new MockSendPort();
-//    //  servicesIsolate = new impl.ServicesIsolate(mockSendPort);
-//    //  impl.CompilerServiceImpl compilerImpl =
-//    //      servicesIsolate.getServiceImpl("compiler");
-//    //  });
-//    //});
-//  });
-}
+  group('services analyzer', () {
+    // TODO: The analyzer is currently not working when compiled to JavaScript.
+    if (isDart2js()) return;
 
-class MockSendPort extends SendPort {
-  bool operator ==(other) => super == other;
-  int get hashCode => null;
-  var wasSent = null;
-  void send(var message) {
-    wasSent = message;
-  }
+    Workspace workspace = new Workspace();
+    Services services = new Services(workspace, new PubManager(workspace));;
+    AnalyzerService analyzer = services.getService("analyzer");
+
+    test('analyze file', () {
+      DirectoryEntry dir = createSampleDirectory1('foo1');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+          expect(result.length, 1);
+          expect(result[file], isEmpty);
+        });
+      });
+    });
+
+    test('analyze file with errors', () {
+      DirectoryEntry dir = createSampleDirectory1('foo_error');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return file.setContents("void main() {\n  print('hello') \n}\n").then((_) {
+          return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+            expect(result.length, 1);
+            expect(result[file].length, 1);
+          });
+        });
+      });
+    });
+
+    test('analyze file with relative references', () {
+      DirectoryEntry dir = createSampleDirectory2('foo2');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+          expect(result.length, 1);
+          expect(result[file], isEmpty);
+        });
+      });
+    });
+
+    test('analyze file with package: references', () {
+      DirectoryEntry dir = createSampleDirectory3('foo3');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
+          expect(result.length, 1);
+          expect(result[file], isEmpty);
+        });
+      });
+    });
+  });
 }

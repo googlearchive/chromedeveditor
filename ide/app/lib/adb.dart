@@ -337,7 +337,10 @@ class AndroidDevice {
   // Connects to and authenticates with the device.
   Future connect(SystemIdentity systemIdentity) {
     return chrome.usb.claimInterface(adbConnectionHandle,
-        adbInterface.interfaceNumber).then((_) {
+        adbInterface.interfaceNumber).catchError((_) {
+      return new Future.error(
+        'Could not open ADB connection. Do you already have ADB running?');
+    }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
           AdbUtil.MAX_PAYLOAD, systemIdentity.toString());
 
@@ -584,12 +587,13 @@ class AndroidDevice {
     // Send the open message.
     return sendMessage(new AdbMessage(AdbUtil.A_OPEN, localID, 0,
             'tcp:$port\x00'))
-        .then((_) { return awaitOkay(); })
         .catchError((e) {
           // If we caught an error here, we probably got a CLSE instead.
           // This means the remote end isn't listening to our port.
+          print(e);
           return new Future.error('Connection on port $port refused.');
-        }).then((remoteID_) {
+        }).then((_) { return awaitOkay(); })
+        .then((remoteID_) {
           remoteID = remoteID_;
 
           // Prepare and send the parts of the message.
@@ -685,4 +689,3 @@ AsymmetricKeyPair _deserializeRSAKeys(String json) {
   RSAPrivateKey private = new RSAPrivateKey(modulus, privateExponent, p, q);
   return new AsymmetricKeyPair(public, private);
 }
-
