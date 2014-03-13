@@ -75,8 +75,8 @@ class TestDriver {
       print('Connected to test listener on port ${testClient.port}');
 
       _logger.onRecord.listen((LogRecord r) {
-        String str = '[${r.level.name}] ${_ljus(r.loggerName, 11)}: ${r.message}';
-        testClient.log(str);
+        testClient.log(
+            '[${r.level.name}] ${_fixed(r.loggerName, 11)}: ${r.message}');
       });
 
       _logger.info('Running tests on ${window.navigator.appCodeName} ${window.navigator.appName} ${window.navigator.appVersion}');
@@ -191,14 +191,14 @@ class _SparkTestConfiguration extends unittest.Configuration {
 
   void onTestResult(unittest.TestCase test) {
     if (test.result != unittest.PASS) {
-      String stackTrace = '';
+      String st = '';
 
       if (test.stackTrace != null && test.stackTrace != '') {
-        stackTrace = '\n' + indent(test.stackTrace.toString().trim(), '    ');
+        st = '\n' + indent(test.stackTrace.toString().trim(), '    ');
       }
 
-      _logger.severe('${test.result} ${test.description}\n' +
-          test.message.trim() + stackTrace + '\n');
+      _logger.severe(
+          '${test.result} ${test.description}\n${test.message.trim()}${st}\n');
     } else {
       _logger.info("${test.result} ${test.description}\n");
     }
@@ -208,14 +208,14 @@ class _SparkTestConfiguration extends unittest.Configuration {
       List<unittest.TestCase> results, String uncaughtError) {
     for (unittest.TestCase test in results) {
       if (test.result != unittest.PASS) {
-        String stackTrace = '';
+        String st = '';
 
         if (test.stackTrace != null && test.stackTrace != '') {
-          stackTrace = '\n' + indent(test.stackTrace.toString().trim(), '    ');
+          st = '\n' + indent(test.stackTrace.toString().trim(), '    ');
         }
 
-        _logger.severe('${test.result}: ${test.description}\n' +
-            test.message.trim() + stackTrace);
+        _logger.severe(
+            '${test.result}: ${test.description}\n${test.message.trim()}${st}');
       }
     }
 
@@ -238,24 +238,7 @@ class _SparkTestConfiguration extends unittest.Configuration {
   }
 }
 
-String _rjus(String str, int width) {
-  switch (width - str.length) {
-    case 0: return str;
-    case 1: return ' ${str}';
-    case 2: return '  ${str}';
-    case 3: return '   ${str}';
-    case 4: return '    ${str}';
-    case 5: return '     ${str}';
-    case 6: return '      ${str}';
-    case 7: return '       ${str}';
-    case 8: return '        ${str}';
-    case 9: return '         ${str}';
-    default:
-      return str;
-  }
-}
-
-String _ljus(String str, int width) {
+String _fixed(String str, int width) {
   if (str.length > width) return str.substring(0, width);
 
   switch (width - str.length) {
