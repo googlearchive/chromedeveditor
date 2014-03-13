@@ -162,3 +162,9 @@
 #webStorePublishDialog label {
   margin-left: 5px;
 }
+
+.modal-footer #notify-message {
+  color: #F00;
+  font-weight: bold;
+  margin-right: 20px;
+}
