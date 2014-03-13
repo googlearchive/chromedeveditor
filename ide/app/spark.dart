@@ -105,9 +105,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   final EventBus eventBus = new EventBus();
 
-  preferences.PreferenceStore _localPrefs;
-  preferences.PreferenceStore _syncPrefs;
-
   ActionManager _actionManager;
 
   SplitView _splitView;
@@ -122,9 +119,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   Spark(this.developerMode) {
     document.title = appName;
-
-    _localPrefs = preferences.localStore;
-    _syncPrefs = preferences.syncStore;
 
     initAnalytics();
 
@@ -191,8 +185,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   LaunchManager get launchManager => _launchManager;
   PubManager get pubManager => _pubManager;
 
-  preferences.PreferenceStore get localPrefs => _localPrefs;
-  preferences.PreferenceStore get syncPrefs => _syncPrefs;
+  preferences.PreferenceStore get localPrefs => preferences.localStore;
+  preferences.PreferenceStore get syncPrefs => preferences.syncStore;
 
   ActionManager get actionManager => _actionManager;
 
@@ -297,7 +291,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         _workspace, allowsLabelBar: true);
 
-    _syncPrefs.getValue('textFileExtensions').then((String value) {
+    syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
         _textFileExtensions.addAll(JSON.decode(value));
       }
@@ -641,7 +635,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
       _textFileExtensions.remove(extension);
     }
 
-    _syncPrefs.setValue('textFileExtensions',
+    syncPrefs.setValue('textFileExtensions',
         JSON.encode(_textFileExtensions.toList()));
   }
 
