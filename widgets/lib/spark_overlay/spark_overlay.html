@@ -13,9 +13,9 @@
  * to true. A spark-overlay's opened state can be toggled by calling the toggle
  * method.
  *
- * It's common to want a spark-overlay to animate to its opened position. A number
- * of helper css classes provide some basic open/close animations. For example,
- * assigning the class spark-overlay-fade to a spark-overlay will make it fade into
+ * It's common to want a spark-overlay to animate to and from its opened position.
+ * The 'animation' attribute provides some basic open/close animations. For example,
+ * assigning animation="fade" to a spark-overlay will make it fade into
  * and out of view as it opens and closes. Note, if multiple spark-overlay's are
  * opened, they should stack on top of each other.
  *
@@ -26,11 +26,11 @@
  * the 'opened' class is removed and a 'closing' class is added. Use 'closing'
  * to customize the closing animation.
  *
- * Classes for animating spark-overlay:
+ * Supported values for the 'animation' attribute:
  *
- * * spark-overlay-fade: fade in/out when opened/closed
- * * spark-overlay-scale-slideup: open: fade in and shrink; close: slide up
- * * spark-overlay-shake: open: fly in and shake; close: shake and fly out.
+ * * fade: fade in/out when opened/closed
+ * * scale-slideup: open - fade in and shrink; close - grow and slide up
+ * * shake: open - fly in and shake; close - shake and fly out.
  *
  * It's common to use spark-overlay to gather user input, for example a login
  * dialog. To facilitate this, spark-overlay supports automatic focusing of a
@@ -62,7 +62,7 @@
 
 <polymer-element name="spark-overlay"
          extends="spark-widget"
-         attributes="opened modal autoClose"
+         attributes="opened modal autoClose animation"
          on-webkitAnimationStart="{{openedAnimationStart}}"
          on-animationStart="{{openedAnimationStart}}"
          on-webkitAnimationEnd="{{openedAnimationEnd}}"
