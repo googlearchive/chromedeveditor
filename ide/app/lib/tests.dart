@@ -5,6 +5,7 @@
 library spark.tests;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -73,8 +74,9 @@ class TestDriver {
 
       print('Connected to test listener on port ${testClient.port}');
 
-      _logger.onRecord.listen((LogRecord record) {
-        testClient.log(record.toString());
+      _logger.onRecord.listen((LogRecord r) {
+        testClient.log(
+            '[${r.level.name}] ${_fixed(r.loggerName, 11)}: ${r.message}');
       });
 
       _logger.info('Running tests on ${window.navigator.appCodeName} ${window.navigator.appName} ${window.navigator.appVersion}');
@@ -127,8 +129,7 @@ class _TestJob extends Job {
   _TestJob(this.testDriver, this.testCompleter) : super("Running tests…");
 
   Future<Job> run(ProgressMonitor monitor) {
-    // TODO: Count tests for future progress bar.
-    monitor.start(name, 1);
+    monitor.start(name);
 
     unittest.runTests();
 
@@ -148,10 +149,11 @@ class _TestListenerClient {
    * instance of [TestListenerClient] on success.
    */
   static Future<_TestListenerClient> connect([int port = _DEFAULT_TESTPORT]) {
-    return tcp.TcpClient.createClient(tcp.LOCAL_HOST, port, throwOnError: false)
-        .then((tcp.TcpClient client) {
-          return client == null ? null : new _TestListenerClient._(port, client);
-        });
+    Future f = tcp.TcpClient.createClient(
+        tcp.LOCAL_HOST, port, throwOnError: false);
+    return f.then((tcp.TcpClient client) {
+      return client == null ? null : new _TestListenerClient._(port, client);
+    });
   }
 
   _TestListenerClient._(this.port, this._tcpClient);
@@ -159,9 +161,7 @@ class _TestListenerClient {
   /**
    * Send a line of output to the test listener.
    */
-  void log(String str) {
-    _tcpClient.writeString('${str}\n');
-  }
+  void log(String str) => _tcpClient.write(UTF8.encode('${str}\n'));
 }
 
 class _SparkTestConfiguration extends unittest.Configuration {
@@ -191,24 +191,31 @@ class _SparkTestConfiguration extends unittest.Configuration {
 
   void onTestResult(unittest.TestCase test) {
     if (test.result != unittest.PASS) {
-      _logger.warning("${test.result} ${test.description}");
+      String st = '';
+
+      if (test.stackTrace != null && test.stackTrace != '') {
+        st = '\n' + indent(test.stackTrace.toString().trim(), '    ');
+      }
+
+      _logger.severe(
+          '${test.result} ${test.description}\n${test.message.trim()}${st}\n');
+    } else {
+      _logger.info("${test.result} ${test.description}\n");
     }
   }
 
   void onSummary(int passed, int failed, int errors,
       List<unittest.TestCase> results, String uncaughtError) {
     for (unittest.TestCase test in results) {
-      if (test.result == unittest.PASS) {
-        _logger.info('${test.result}: ${test.description}');
-      } else {
-        String stackTrace = '';
+      if (test.result != unittest.PASS) {
+        String st = '';
 
         if (test.stackTrace != null && test.stackTrace != '') {
-          stackTrace = '\n' + indent(test.stackTrace.toString().trim(), '    ');
+          st = '\n' + indent(test.stackTrace.toString().trim(), '    ');
         }
 
-        _logger.warning('${test.result}: ${test.description}\n' +
-            test.message.trim() + stackTrace);
+        _logger.severe(
+            '${test.result}: ${test.description}\n${test.message.trim()}${st}');
       }
     }
 
@@ -228,5 +235,24 @@ class _SparkTestConfiguration extends unittest.Configuration {
 
   String indent(String str, [String indent = '  ']) {
     return str.split("\n").map((line) => "${indent}${line}").join("\n");
+  }
+}
+
+String _fixed(String str, int width) {
+  if (str.length > width) return str.substring(0, width);
+
+  switch (width - str.length) {
+    case 0: return str;
+    case 1: return '${str} ';
+    case 2: return '${str}  ';
+    case 3: return '${str}   ';
+    case 4: return '${str}    ';
+    case 5: return '${str}     ';
+    case 6: return '${str}      ';
+    case 7: return '${str}       ';
+    case 8: return '${str}        ';
+    case 9: return '${str}         ';
+    default:
+      return str;
   }
 }
