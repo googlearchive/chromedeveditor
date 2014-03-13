@@ -14,7 +14,6 @@ import 'package:chrome/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
 import 'package:path/path.dart' as path;
 
-import '../lib/jobs.dart';
 import '../lib/workspace.dart' as workspace;
 
 export 'package:chrome/chrome_app.dart'
@@ -157,7 +156,6 @@ DirectoryEntry createSampleDirectory3(String name) {
 Future<workspace.Project> linkSampleProject(
     DirectoryEntry dir, [workspace.Workspace ws]) {
   if (ws == null) ws = new workspace.Workspace();
-  ws.createBuilderManager(new JobManager());
   return ws.link(createWsRoot(dir));
 }
 

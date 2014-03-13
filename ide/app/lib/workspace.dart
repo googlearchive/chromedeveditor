@@ -34,6 +34,7 @@ class Workspace extends Container {
   int _markersPauseCount = 0;
   List<MarkerDelta> _makerChangeList = [];
 
+  JobManager _jobManager;
   BuilderManager _builderManager;
 
   List<WorkspaceRoot> _roots = [];
@@ -50,16 +51,15 @@ class Workspace extends Container {
   StreamController<MarkerChangeEvent> _markerController =
       new StreamController.broadcast();
 
-  Workspace([this._store]) : super(null, null);
+  Workspace([this._store, this._jobManager]) : super(null, null) {
+    if (_jobManager == null) _jobManager = new JobManager();
+    _builderManager = new BuilderManager(this, _jobManager);
+  }
 
   Future<Workspace> whenAvailable() => _whenAvailable.future;
   Future<Workspace> whenAvailableSyncFs() => _whenAvailableSyncFs.future;
 
   BuilderManager get builderManager => _builderManager;
-
-  void createBuilderManager(JobManager jobManager) {
-    _builderManager = new BuilderManager(this, jobManager);
-  }
 
   String get name => null;
   String get path => '';

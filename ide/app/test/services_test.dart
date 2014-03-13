@@ -9,12 +9,13 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
+import '../lib/pub.dart';
 import '../lib/services.dart';
 import '../lib/utils.dart';
 
 defineTests() {
   Workspace workspace = new Workspace();
-  Services services = new Services(workspace);
+  Services services = new Services(workspace, new PubManager(workspace));
 
   group('services', () {
     test('ping', () {
@@ -72,7 +73,7 @@ defineTests() {
 
   group('services compiler', () {
     Workspace workspace = new Workspace();
-    Services services = new Services(workspace);;
+    Services services = new Services(workspace, new PubManager(workspace));;
     CompilerService compiler = services.getService("compiler");
 
     test('hello world', () {
@@ -119,18 +120,17 @@ defineTests() {
       });
     });
 
-    // TODO: Add in when we support package: references in the implementation.
-//    test('compile file with package references', () {
-//      DirectoryEntry dir = createSampleDirectory3('foo3');
-//      return linkSampleProject(dir, workspace).then((Project project) {
-//        File file = project.getChildPath('web/sample.dart');
-//        return compiler.compileFile(file).then((CompilerResult result) {
-//          expect(result.getSuccess(), true);
-//          expect(result.problems.length, 0);
-//          expect(result.output.length, greaterThan(100));
-//        });
-//      });
-//    });
+    test('compile file with package references', () {
+      DirectoryEntry dir = createSampleDirectory3('foo3');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return compiler.compileFile(file).then((CompilerResult result) {
+          expect(result.getSuccess(), true);
+          expect(result.problems.length, 0);
+          expect(result.output.length, greaterThan(100));
+        });
+      });
+    });
   });
 
   group('services analyzer', () {
@@ -138,7 +138,7 @@ defineTests() {
     if (isDart2js()) return;
 
     Workspace workspace = new Workspace();
-    Services services = new Services(workspace);;
+    Services services = new Services(workspace, new PubManager(workspace));;
     AnalyzerService analyzer = services.getService("analyzer");
 
     test('analyze file', () {
