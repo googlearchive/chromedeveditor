@@ -138,6 +138,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
 
     initWorkspace();
+    initPubManager();
     initServices();
     initScmManager();
 
@@ -156,7 +157,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initSplitView();
     initSaveStatusListener();
 
-    initPubManager();
     initLaunchManager();
 
     window.onFocus.listen((Event e) {
@@ -175,7 +175,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   initServices() {
-    services = new Services(this.workspace);
+    services = new Services(this.workspace, _pubManager);
   }
 
   //
@@ -268,8 +268,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initWorkspace() {
-    _workspace = new ws.Workspace(localPrefs);
-    _workspace.createBuilderManager(jobManager);
+    _workspace = new ws.Workspace(localPrefs, jobManager);
   }
 
   void initScmManager() {

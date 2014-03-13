@@ -43,7 +43,7 @@ class _MockContentsProvider implements ContentsProvider {
     return new Future.error('not implemented');
   }
 
-  Future<String> getPackageContents(String packageRef) {
+  Future<String> getPackageContents(String relativeToUuid, String packageRef) {
     return new Future.error('not implemented');
   }
 }

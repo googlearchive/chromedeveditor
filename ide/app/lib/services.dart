@@ -7,10 +7,11 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'services/services_common.dart';
-import 'workspace.dart';
+import 'pub.dart';
 import 'services/compiler.dart';
+import 'services/services_common.dart';
 import 'utils.dart';
+import 'workspace.dart';
 
 export 'services/compiler.dart' show CompilerResult;
 export 'services/services_common.dart';
@@ -22,9 +23,10 @@ class Services {
   _IsolateHandler _isolateHandler;
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
-  Workspace _workspace;
+  final Workspace _workspace;
+  final PubManager _pubManager;
 
-  Services(this._workspace) {
+  Services(this._workspace, this._pubManager) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
     registerService(new AnalyzerService(this, _isolateHandler));
@@ -176,39 +178,44 @@ class ChromeServiceImpl extends Service {
 
   // For incoming (non-requested) actions.
   void handleEvent(ServiceActionEvent event) {
-    Completer<ServiceActionEvent> completer =
-        new Completer<ServiceActionEvent>();
-
     new Future.value(null).then((_) {
       switch(event.actionId) {
         case "delay":
-          new Future.delayed(new Duration(milliseconds: event.data['ms'])).then(
-              (_) => _sendResponse(event));
-          break;
+          var duration = new Duration(milliseconds: event.data['ms']);
+          return new Future.delayed(duration).then((_) => _sendResponse(event));
         case "getAppContents":
           String path = event.data['path'];
-          getAppContentsBinary(path)
-              .then((List<int> contents) {
-                return _sendResponse(event, {"contents": contents.toList()});
-              });
-          break;
+          return getAppContentsBinary(path).then((List<int> contents) {
+            return _sendResponse(event, {"contents": contents.toList()});
+          });
         case "getFileContents":
           String uuid = event.data['uuid'];
           File restoredFile = services._workspace.restoreResource(uuid);
           if (restoredFile == null) {
-            // TODO(ericarnold): Turn into an Exception subclass.
-            throw new Exception("Could not restore file with uuid $uuid");
+            throw "Could not restore file with uuid $uuid";
           }
-
-          restoredFile.getContents()
-              .then((String contents) =>
-                  _sendResponse(event, {"contents": contents}));
-          break;
+          return restoredFile.getContents().then((String contents) {
+            return _sendResponse(event, {"contents": contents});
+          });
+        case "getPackageContents":
+          String relativeToUUid = event.data['relativeTo'];
+          String packageRef = event.data['packageRef'];
+          File file = services._workspace.restoreResource(relativeToUUid);
+          if (file == null) {
+            throw "Could not restore file with uuid $relativeToUUid";
+          }
+          PubResolver resolver = services._pubManager.getResolverFor(file.project);
+          File packageFile = resolver.resolveRefToFile(packageRef);
+          if (packageFile == null) {
+            throw "Could not resolve reference: ${packageRef}";
+          }
+          return packageFile.getContents().then((String contents) {
+            return _sendResponse(event, {"contents": contents});
+          });
         default:
           throw "Unknown action '${event.actionId}' sent to Chrome service.";
       }
-    })
-    .catchError((error) => _sendErrorResponse(event, error));
+    }).catchError((error) => _sendErrorResponse(event, error));
   }
 
   void _sendErrorResponse(ServiceActionEvent event, e) {

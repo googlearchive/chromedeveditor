@@ -208,9 +208,8 @@ class _ServiceContentsProvider implements ContentsProvider {
     return chromeService.getFileContents(uuid);
   }
 
-  Future<String> getPackageContents(String packageRef) {
-    // TODO: Implement getPackageContents.
-    return new Future.error('not implemented');
+  Future<String> getPackageContents(String relativeUuid, String packageRef) {
+    return chromeService.getPackageContents(relativeUuid, packageRef);
   }
 }
 
@@ -385,6 +384,16 @@ class ChromeService {
   Future<String> getFileContents(String uuid) =>
     _sendAction(_createNewEvent("getFileContents", {"uuid": uuid}))
         .then((ServiceActionEvent event) => event.data["contents"]);
+
+  /**
+   * Get the contents for the given package reference. [packageRef] should look
+   * something like `package:foo/foo.dart`;
+   */
+  Future<String> getPackageContents(String relativeUuid, String packageRef) {
+    var event = _createNewEvent("getPackageContents",
+        {"relativeTo": relativeUuid, "packageRef": packageRef});
+    return _sendAction(event).then((event) => event.data["contents"]);
+  }
 
   Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
       [bool expectResponse = false]) {

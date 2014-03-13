@@ -9,7 +9,6 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
-import '../lib/jobs.dart';
 import '../lib/pub.dart';
 import '../lib/workspace.dart';
 
@@ -20,7 +19,6 @@ defineTests() {
 
     setUp(() {
       Workspace workspace = new Workspace();
-      workspace.createBuilderManager(new JobManager());
       DirectoryEntry dir = _createSampleDirectory();
       return workspace.link(createWsRoot(dir)).then((Project _project) {
         project = _project;

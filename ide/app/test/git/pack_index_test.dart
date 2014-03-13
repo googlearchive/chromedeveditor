@@ -6,7 +6,6 @@ library git_pack_index_test;
 
 import 'dart:async';
 import 'dart:typed_data';
-import 'dart:convert';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
