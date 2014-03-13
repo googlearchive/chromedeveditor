@@ -4,11 +4,12 @@
 
 library spark.pub_test;
 
+import 'dart:async';
+
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/pub.dart';
-import '../lib/utils.dart';
 import '../lib/workspace.dart';
 
 defineTests() {
@@ -48,7 +49,7 @@ defineTests() {
       expect(project.getMarkers().length, 0);
       File pubspec = project.getChild(PUBSPEC_FILE_NAME);
       return pubspec.setContents('name: sample:\nversion: 0.1.0\n').then((_) {
-        return nextTick();
+        return new Future.delayed(new Duration(milliseconds: 100));
       }).then((_) {
         return project.workspace.builderManager.waitForAllBuilds();
       }).then((_) {
