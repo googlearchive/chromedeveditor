@@ -61,17 +61,11 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-overlay"
-         extends="spark-widget"
-         attributes="opened modal autoClose animation"
-         on-webkitAnimationStart="{{openedAnimationStart}}"
-         on-animationStart="{{openedAnimationStart}}"
-         on-webkitAnimationEnd="{{openedAnimationEnd}}"
-         on-animationEnd="{{openedAnimationEnd}}"
-         on-webkitTransitionEnd="{{openedTransitionEnd}}"
-         on-transitionEnd="{{openedTransitionEnd}}"
-         on-click="{{tapHandler}}"
-         on-keydown="{{keyDownHandler}}">
-         <!-- on-tap="{{tapHandler}}" -->
+     extends="spark-widget"
+     attributes="opened,
+                 modal,
+                 autoClose,
+                 animation">
 
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->

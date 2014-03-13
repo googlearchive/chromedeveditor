@@ -161,7 +161,17 @@ class SparkOverlay extends SparkWidget {
     assert(SUPPORTED_ANIMATIONS.contains(animation));
 
     style.visibility = "visible";
+
     enableKeyboardEvents();
+
+    addEventListener('webkitAnimationStart', openedAnimationStart);
+    addEventListener('animationStart', openedAnimationStart);
+    addEventListener('webkitAnimationEnd', openedAnimationEnd);
+    addEventListener('animationEnd', openedAnimationEnd);
+    addEventListener('webkitTransitionEnd', openedTransitionEnd);
+    addEventListener('transitionEnd', openedTransitionEnd);
+    addEventListener('click', tapHandler);
+    addEventListener('keydown', keyDownHandler);
   }
 
   /// Toggle the opened state of the overlay.
