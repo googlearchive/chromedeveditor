@@ -213,44 +213,54 @@ class AndroidDevice {
     return new Future.value([]);
   }
 
-  // Either resolves on successful open, or rejects with an error message on failure.
-  Future open(vendorId, productId) {
+  // Returns the best device for an ADB connection.
+  Future _getPluggedDevice(vendorId, productId) {
     chrome.EnumerateDevicesOptions edo =
         new chrome.EnumerateDevicesOptions(vendorId: vendorId, productId:
             productId);
 
     // Get the devices with the given vendor id and product id.
     return chrome.usb.getDevices(edo).then((List<chrome.Device> devices) {
+      if (devices.length == 0) {
+        return new Future.error('no-device');
+      }
+
       // For each such device, look for a specific device with ADB class,
       // subclass and protocol.
       // TODO(shepheb): Handle finding multiple ADB devices.
-      // NB: The function inside the forEach below uses errors to indicate
-      // success, when it finds a valid device. This is a bit of a hack, but it
-      // works. Real errors are String messages. "Successes" are null.
+      chrome.Device resultDevice = null;
       return Future.forEach(devices, (chrome.Device device) {
         chrome.EnumerateDevicesAndRequestAccessOptions opts =
             new chrome.EnumerateDevicesAndRequestAccessOptions(
                 vendorId: device.vendorId, productId: device.productId);
         return chrome.usb.findDevices(opts)
             .then((List<chrome.ConnectionHandle> connections) {
-              return Future.forEach(connections,
-                  (chrome.ConnectionHandle handle) {
-                    return _checkDevice(handle, device);
-                  });
+              if (connections.length == 0) {
+                return new Future.error('no-connection');
+              } else {
+                // It's a valid device. Use it as the result.
+                resultDevice = device;
+              }
             });
       }).then((_) {
-        // If the above completed "successfully", then no device was found.
-        return new Future.error('No Android device found.');
-      }).catchError((e) {
-        if (e == null || e is NullThrownError) {
-          // Turn an empty error into an empty success, since we found our
-          // Android device.
-          return null;
-        } else {
-          // Otherwise the error is real, and we should re-throw.
-          return new Future.error(e);
-        }
+        return resultDevice;
       });
+    });
+  }
+
+  // Either resolves on successful open, or rejects with an error message on failure.
+  Future open(vendorId, productId) {
+    return _getPluggedDevice(vendorId, productId).then((chrome.Device device) {
+      chrome.EnumerateDevicesAndRequestAccessOptions opts =
+          new chrome.EnumerateDevicesAndRequestAccessOptions(
+              vendorId: device.vendorId, productId: device.productId);
+      return chrome.usb.findDevices(opts)
+          .then((List<chrome.ConnectionHandle> connections) {
+            return Future.forEach(connections,
+                (chrome.ConnectionHandle handle) {
+                  return _checkDevice(handle, device);
+                });
+          });
     });
   }
 
@@ -294,9 +304,10 @@ class AndroidDevice {
           if (adbInterface != null && androidDevice != null &&
               this.adbConnectionHandle != null && inDescriptor != null &&
               outDescriptor != null) {
-            // Throw here to bail out of iterating through the devices.
-            // It's not really an error.
-            return new Future.error(null);
+            return new Future.value();
+          }
+          else {
+            return new Future.error('invalid-device');
           }
         });
   }
@@ -339,7 +350,8 @@ class AndroidDevice {
     return chrome.usb.claimInterface(adbConnectionHandle,
         adbInterface.interfaceNumber).catchError((_) {
       return new Future.error(
-        'Could not open ADB connection. Do you already have ADB running?');
+        'Could not open ADB connection.\n' +
+        'Please check whether Chrome ADT is running.');
     }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
           AdbUtil.MAX_PAYLOAD, systemIdentity.toString());
@@ -569,7 +581,8 @@ class AndroidDevice {
       if (msg.command == AdbUtil.A_OKAY) {
         return msg.arg0;
       } else {
-        return new Future.error('Expected an OKAY but got: ${msg.toString()}');
+        return new Future.error('Expected an OKAY but got: ${msg.toString()}.\n' +
+            'Please check that you are running Chrome ADT on your mobile device.');
       }
     });
   }
@@ -591,7 +604,8 @@ class AndroidDevice {
           // If we caught an error here, we probably got a CLSE instead.
           // This means the remote end isn't listening to our port.
           print(e);
-          return new Future.error('Connection on port $port refused.');
+          return new Future.error('Connection on port $port refused.\n' +
+              'Please check whether Chrome ADT is running on your mobile device.');
         }).then((_) { return awaitOkay(); })
         .then((remoteID_) {
           remoteID = remoteID_;

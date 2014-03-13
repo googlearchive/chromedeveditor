@@ -624,6 +624,19 @@
         </spark-button>
       </div>
     </spark-modal>
+
+    <!-- Dialog shown while pushing an application to ADB. -->
+    <spark-modal id="pushADBProgressDialog" class="dialog spark-overlay-scale-slideup">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Push to the mobile device in progress</label>
+          <div class="help-block">
+            Please unlock the phone and check whether it's asking for a
+            connection authorization.
+          </div>
+        </div>
+      </div>
+    </spark-modal>
   </template>
 
   <script type="application/dart" src="spark_polymer_ui.dart"></script>
