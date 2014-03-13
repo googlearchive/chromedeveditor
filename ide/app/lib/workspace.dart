@@ -866,7 +866,6 @@ class File extends Resource {
       return entry.getMetadata();
     }).then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
-    }).then((_) {
       workspace._fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
     });
   }
