@@ -1056,10 +1056,10 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
-    _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
+    _dialog.element.querySelector("[primary]").onClick.listen((event) => _commit(event));
   }
 
-  void _commit();
+  void _commit([MouseEvent event]);
 
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
@@ -1122,7 +1122,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
     }
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     var name = _nameElement.value;
     if (name.isNotEmpty) {
       if (folder != null) {
@@ -1209,7 +1209,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
     }
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     if (_nameElement.value.isNotEmpty) {
       resource.rename(_nameElement.value).then((value) {
         spark._renameOpenEditor(resource);
@@ -1485,7 +1485,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
     _show();
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     final String name = _nameElement.value;
     if (name.isNotEmpty) {
       folder.createNewFolder(name).then((folder) {
@@ -1550,64 +1550,71 @@ class FocusMainMenuAction extends SparkAction {
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElement;
   ws.Folder folder;
+  Element _messageElement;
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
     _nameElement = _triggerOnReturn("#name");
+    _messageElement = getElement('#notify-message');
   }
 
   void _invoke([context]) {
     _nameElement.value = '';
+    _messageElement.text = '';
     _show();
   }
 
-  void _commit() {
+  void _commit([MouseEvent event]) {
     final name = _nameElement.value.trim();
-    if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name)
-          .then((LocationResult location) {
-        if (location == null) {
-          spark.showErrorMessage('Error while creating project',
-              "The folder '${name}' could not be created.");
-          return new Future.value();
+    if (name.isEmpty && event != null) {
+      _messageElement.text = "Enter the project name.";
+      event..stopPropagation()..preventDefault();
+      return;
+    }
+
+    spark.projectLocationManager.createNewFolder(name)
+        .then((LocationResult location) {
+      if (location == null) {
+        spark.showErrorMessage('Error while creating project',
+            "The folder '${name}' could not be created.");
+        return new Future.value();
+      }
+
+      ws.WorkspaceRoot root;
+      var locationEntry = location.entry;
+
+      if (location.isSync) {
+        root = new ws.SyncFolderRoot(locationEntry);
+      } else {
+        root = new ws.FolderChildRoot(location.parent, locationEntry);
+      }
+
+      String type = getElement('input[name="type"]:checked').id;
+
+      return new Future.value().then((_) {
+        switch (type) {
+          case "empty-project":
+            break;
+          case "dart-web-app-radio":
+            ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+                "web-dart", name.toLowerCase(), name);
+            return projectBuilder.build();
+          case "js-chrome-app-radio":
+            ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+                "app-js", name.toLowerCase(), name);
+            return projectBuilder.build();
         }
-
-        ws.WorkspaceRoot root;
-        var locationEntry = location.entry;
-
-        if (location.isSync) {
-          root = new ws.SyncFolderRoot(locationEntry);
-        } else {
-          root = new ws.FolderChildRoot(location.parent, locationEntry);
-        }
-
-        String type = getElement('input[name="type"]:checked').id;
-
-        return new Future.value().then((_) {
-          switch (type) {
-            case "empty-project":
-              break;
-            case "dart-web-app-radio":
-              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
-                  "web-dart", name.toLowerCase(), name);
-              return projectBuilder.build();
-            case "js-chrome-app-radio":
-              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
-                  "app-js", name.toLowerCase(), name);
-              return projectBuilder.build();
-          }
-        }).then((_) {
-          return spark.workspace.link(root).then((ws.Project project) {
-            spark.showSuccessMessage('Created ${project.name}');
-            Timer.run(() {
-              spark._filesController.selectFile(project);
-              spark._filesController.setFolderExpanded(project);
-            });
-            spark.workspace.save();
+      }).then((_) {
+        return spark.workspace.link(root).then((ws.Project project) {
+          spark.showSuccessMessage('Created ${project.name}');
+          Timer.run(() {
+            spark._filesController.selectFile(project);
+            spark._filesController.setFolderExpanded(project);
           });
+          spark.workspace.save();
         });
       });
-    }
+    });
   }
 }
 
@@ -1656,7 +1663,7 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
     enabled = _appliesTo(resource);
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     String type = getElement('input[name="type"]:checked').id;
     Job job;
     if (type == 'adb') {
@@ -1762,7 +1769,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     div.children.addAll([label, element]);
   }
 
-  void _commit() { }
+  void _commit([MouseEvent e]) { }
 
   String get category => 'resource';
 
@@ -1783,7 +1790,7 @@ class GitCloneAction extends SparkActionWithDialog {
     _show();
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     // TODO(grv): Add verify checks.
     String url = _repoUrlElement.value;
     if (!url.endsWith('.git')) {
@@ -1831,7 +1838,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
     _show();
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     // TODO(grv): Add verify checks.
     _GitBranchJob job = new _GitBranchJob(gitOperations, _branchNameElement.value);
     spark.jobManager.schedule(job);
@@ -1920,7 +1927,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     });
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     if (_needsFillNameEmail) {
       _gitName = _userNameElement.value;
       _gitEmail = _userEmailElement.value;
@@ -1976,7 +1983,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
     _show();
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     // TODO(grv): Add verify checks.
     String branchName = _selectElement.options[
         _selectElement.selectedIndex].value;
@@ -2043,7 +2050,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
     spark.jobManager.schedule(job);
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     if (_needsUsernamePassword) {
       Timer.run(() {
         // In a timer to let the previous dialog dismiss properly.
@@ -2394,7 +2401,7 @@ class AboutSparkAction extends SparkActionWithDialog {
     _show();
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     // Nothing to do for this dialog.
   }
 }
@@ -2429,7 +2436,7 @@ class SettingsAction extends SparkActionWithDialog {
     });
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     // Nothing to do for this dialog.
   }
 }
@@ -2490,7 +2497,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
     }
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     String appID = null;
     if (_existingInput.checked) {
       appID = _appIdInput.value;
@@ -2567,7 +2574,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
     _show();
   }
 
-  void _commit() {
+  void _commit([MouseEvent e]) {
     final String username = (getElement('#gitUsername') as InputElement).value;
     final String password = (getElement('#gitPassword') as InputElement).value;
     final String encoded =
