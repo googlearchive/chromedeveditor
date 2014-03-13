@@ -139,16 +139,25 @@ class HarnessPush {
       device = new AndroidDevice(_prefs);
 
       Future doOpen(int index) {
-        if (index >= _KNOWN_DEVICES.length) {
-          device = null;
-          return new Future.error('No known devices connected');
-        }
-
         Map m = _KNOWN_DEVICES[index];
-        return device.open(m['vendorId'], m['productId'])
-        .catchError((e) {
-          // If it failed to open, try again.
-          return doOpen(index+1);
+        return device.getPluggedDevice(m['vendorId'], m['productId']).then((_) {
+          return device.open(m['vendorId'], m['productId']);
+        }).catchError((e) {
+          if ((e == 'no-device') || (e == 'no-connection')) {
+            // No matching device found, try again.
+            ++index;
+            if (index >= _KNOWN_DEVICES.length) {
+              return new Future.error('No known mobile device connected.\n' +
+                  'Please check whether you plugged your mobile device properly.');
+            }
+            return doOpen(index);
+          } else {
+            return new Future.error('Connection to the Android device failed.\n' +
+                'Please check whether "Developer Options" and "USB debugging" is enabled on your device.\n' +
+                'Enable Developer Options by going in Settings > System > About phone and press 7 times on Build number.\n' +
+                '"Developer options" should now appear in Settings > System > Developer options. ' +
+                'You can now enable "USB debugging" in that menu.');
+          }
         });
       }
 

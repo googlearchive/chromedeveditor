@@ -484,9 +484,29 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     }
 
     _errorDialog.element.querySelector('#errorTitle').text = title;
-    _errorDialog.element.querySelector('#errorMessage').text = message;
+    Element container = _errorDialog.element.querySelector('#errorMessage');
+    container.children.clear();
+    var lines = message.split('\n');
+    for(String line in lines) {
+      Element lineElement = new Element.p();
+      lineElement.text = line;
+      container.children.add(lineElement);
+    }
+    //_errorDialog.element.querySelector('#errorMessage').text = message;
 
     _errorDialog.show();
+  }
+
+  SparkDialog _progressDialog;
+
+  void showProgressDialog(String selector) {
+    _progressDialog = createDialog(getDialogElement('${selector}'));
+    _progressDialog.show();
+  }
+
+  void hideProgressDialog() {
+    _progressDialog.hide();
+    _progressDialog = null;
   }
 
   void _hideBackdropOnClick(MouseEvent event) {
@@ -1666,21 +1686,31 @@ class _HarnessPushJob extends Job {
 
   _HarnessPushJob.pushToAdb(this.spark, this.deployContainer)
       : super('Deploying via ADB…') {
-    this._adb = true;
+    _adb = true;
   }
 
   _HarnessPushJob.pushToUrl(this.spark, this.deployContainer, this._url)
       : super('Deploying to mobile…') { }
 
   Future run(ProgressMonitor monitor) {
+    if (_adb) {
+      spark.showProgressDialog('#pushADBProgressDialog');
+    }
+
     HarnessPush harnessPush = new HarnessPush(deployContainer,
         spark.localPrefs);
 
     Future push = _adb ? harnessPush.pushADB(monitor) :
         harnessPush.push(_url, monitor);
     return push.then((_) {
+      if (_adb) {
+        spark.hideProgressDialog();
+      }
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
+      if (_adb) {
+        spark.hideProgressDialog();
+      }
       spark.showMessage('Push failure', e.toString());
     });
   }
