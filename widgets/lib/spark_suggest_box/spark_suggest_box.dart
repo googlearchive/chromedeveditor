@@ -20,13 +20,11 @@ import '../spark_overlay/spark_overlay.dart';
  */
 @reflectable
 class Suggestion {
-  String label;
-  String details;
+  final String label;
+  final String details;
+  final Function onSelected;
 
-  Function onSelected;
-
-  Suggestion(this.label, {String details, this.onSelected})
-      : details = details.isNotEmpty ? "[$details]" : "";
+  Suggestion(this.label, {this.details, this.onSelected});
 }
 
 /**
