@@ -17,7 +17,7 @@ import '../spark_overlay/spark_overlay.dart';
 class SparkMenuButton extends SparkWidget {
   @published String src = "";
   @published dynamic selected;
-  @published String valueattr = "";
+  @published String valueAttr = "";
   @published bool opened = false;
   @published bool responsive = false;
   @published String valign = "center";

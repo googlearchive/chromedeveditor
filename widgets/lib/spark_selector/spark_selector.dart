@@ -17,11 +17,11 @@ import '../spark_selection/spark_selection.dart';
  * Default is to use the index of the item element.
  *
  * If you want a specific attribute value of the element to be
- * used instead of index, set "valueattr" to that attribute name.
+ * used instead of index, set "valueAttr" to that attribute name.
  *
  * Example:
  *
- *     <polymer-selector valueattr="label" selected="foo">
+ *     <polymer-selector valueAttr="label" selected="foo">
  *       <div label="foo"></div>
  *       <div label="bar"></div>
  *       <div label="zot"></div>
@@ -31,7 +31,7 @@ import '../spark_selection/spark_selection.dart';
  *
  * Example:
  *
- *     <polymer-selector id="selector" valueattr="label" multi>
+ *     <polymer-selector id="selector" valueAttr="label" multi>
  *       <div label="foo"></div>
  *       <div label="bar"></div>
  *       <div label="zot"></div>
@@ -47,13 +47,13 @@ class SparkSelector extends SparkWidget {
   /// The IDs of the initially selected element ([multi]==false) or
   /// a space-separated list of the initially selected elements
   /// ([multi]==true). An ID can be either the element's 0-based index or
-  /// the element's value as determined by the [valueattr] property.
+  /// the element's value as determined by the [valueAttr] property.
   /// [selected] can also be externally set after the initial instantiation
   /// to force a particular selection.
   @published dynamic inSelection;
 
   /// The attribute to be used as an item's "value".
-  @published String valueattr;
+  @published String valueAttr;
 
   /// The CSS selector to choose the selectable subset of elements passed from
   /// the light DOM into the <content> insertion point.
@@ -62,11 +62,11 @@ class SparkSelector extends SparkWidget {
   /// The CSS class to add to an active element (hovered/selected via keyboard).
   @published String activeClass = '';
   /// The attribute to add to an active element (hovered/selected via keyboard).
-  @published String activeProperty = '';
+  @published String activeAttr = '';
   /// The CSS class to add to a selected element.
   @published String selectedClass = '';
   /// The attribute to set on a selected element.
-  @published String selectedProperty = '';
+  @published String selectedAttr = '';
 
   SparkSelection selection;
 
@@ -148,7 +148,7 @@ class SparkSelector extends SparkWidget {
     _fireEvents = true;
   }
 
-  /// Find an item with valueattr == value and return it's index.
+  /// Find an item with valueAttr == value and return it's index.
   Element _valueToItem(String value) {
     Element item = _items.firstWhere(
         (i) => _itemToValue(i) == value, orElse: () => null);
@@ -162,10 +162,10 @@ class SparkSelector extends SparkWidget {
     return item;
   }
 
-  /// Extract the value for an item if [valueattr] is set, or else its index.
+  /// Extract the value for an item if [valueAttr] is set, or else its index.
   String _itemToValue(Element item) {
-      return valueattr != null ?
-          item.attributes[valueattr] : _items.indexOf(item).toString();
+      return valueAttr != null ?
+          item.attributes[valueAttr] : _items.indexOf(item).toString();
   }
 
   /// Events fired from <polymer-selection> object.
@@ -259,22 +259,22 @@ class SparkSelector extends SparkWidget {
   }
 
   void _renderSelected(Element item, bool isSelected) =>
-      _renderClassAndProperty(item, isSelected, selectedClass, selectedProperty);
+      _renderClassAndProperty(item, isSelected, selectedClass, selectedAttr);
 
   void _renderActive(Element item, bool isActive) =>
-      _renderClassAndProperty(item, isActive, activeClass, activeProperty);
+      _renderClassAndProperty(item, isActive, activeClass, activeAttr);
 
-  void _renderClassAndProperty(
-      Element item, bool isOn, String cssClass, String property) {
+  static void _renderClassAndProperty(
+      Element item, bool isOn, String cssClass, String attr) {
     if (item != null) {
       if (cssClass != null && cssClass.isNotEmpty) {
         item.classes.toggle(cssClass, isOn);
       }
-      if (property != null && property.isNotEmpty) {
+      if (attr != null && attr.isNotEmpty) {
         if (isOn) {
-          item.attributes[property] = '';
+          item.attributes[attr] = '';
         } else {
-          item.attributes.remove(property);
+          item.attributes.remove(attr);
         }
       }
     }
