@@ -50,6 +50,7 @@ import 'test/all.dart' as all_tests;
 import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
+final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
  * Returns true if app.json contains a test-mode entry set to true. If app.json
@@ -1742,13 +1743,13 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
         });
       }
     }).then((_) {
-      _selectedResource.entry.getMetadata().then((meta) {
+      return _selectedResource.entry.getMetadata().then((meta) {
         if (_selectedResource.entry is FileEntry) {
-          String size = new NumberFormat.decimalPattern().format(meta.size);
+          final String size = _nf.format(meta.size);
           _addProperty(_propertiesElement, 'Size', '$size bytes');
         }
 
-        String lastModified =
+        final String lastModified =
             new DateFormat.yMd().add_Hm().format(meta.modificationTime);
         _addProperty(_propertiesElement, 'Last Modified', lastModified);
       });

@@ -28,7 +28,7 @@ const int SERVER_PORT = 4040;
 
 final Logger _logger = new Logger('spark.launch');
 
-final NumberFormat _NF = new NumberFormat.decimalPattern();
+final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
  * Manages all the launches and calls the appropriate delegate.
@@ -420,7 +420,7 @@ class Dart2JsServlet extends PicoServlet {
         return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
       } else {
         _logger.info('compiled ${file.path} in '
-            '${_NF.format(stopwatch.elapsedMilliseconds)} ms, '
+            '${_nf.format(stopwatch.elapsedMilliseconds)} ms, '
             '${result.output.length ~/ 1024} kb');
         HttpResponse response = new HttpResponse.ok();
         response.setContent(result.output);
