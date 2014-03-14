@@ -4,6 +4,8 @@
 
 library spark.services_common;
 
+import 'dart:async';
+
 import '../workspace.dart';
 
 abstract class Serializable {
@@ -95,10 +97,7 @@ class AnalysisError {
   int offset;
   int lineNumber;
   int length;
-
-  /**
-   * See [ErrorSeverity].
-   */
+  // see [ErrorSeverity]
   int errorSeverity;
 
   AnalysisError();
@@ -120,6 +119,8 @@ class AnalysisError {
         "length": length
     };
   }
+
+  String toString() => '[${errorSeverity}] ${message}, line ${lineNumber}';
 }
 
 class AnalysisResult {
@@ -140,6 +141,11 @@ class AnalysisResult {
   List<File> getFiles() => _results.keys.toList();
 
   List<AnalysisError> getErrorsFor(File file) => _results[file];
+}
+
+abstract class ContentsProvider {
+  Future<String> getFileContents(String uuid);
+  Future<String> getPackageContents(String relativeUuid, String packageRef);
 }
 
 class ErrorSeverity {

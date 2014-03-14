@@ -13,6 +13,7 @@ import 'dart:html' as html;
 import 'package:compiler_unsupported/compiler.dart' as compiler;
 export 'package:compiler_unsupported/compiler.dart' show Diagnostic;
 
+import 'services_common.dart' as common;
 import '../dart/sdk.dart';
 
 /**
@@ -23,18 +24,18 @@ import '../dart/sdk.dart';
  */
 class Compiler {
   DartSdk _sdk;
-  ContentsProvider _contentsProvider;
+  common.ContentsProvider _contentsProvider;
 
   /**
    * Create and return a [Compiler] instance. These are heavy-weight objects.
    */
-  static Future<Compiler> createCompiler(ContentsProvider contentsProvider) {
+  static Future<Compiler> createCompiler(common.ContentsProvider contentsProvider) {
     return DartSdk.createSdk().then(
         (DartSdk sdk) => new Compiler._(sdk, contentsProvider));
   }
 
   static Compiler createCompilerFrom(DartSdk sdk,
-                                     ContentsProvider contentsProvider) {
+                                     common.ContentsProvider contentsProvider) {
     return new Compiler._(sdk, contentsProvider);
   }
 
@@ -213,11 +214,6 @@ class CompilerProblem {
   }
 }
 
-abstract class ContentsProvider {
-  Future<String> getFileContents(String uuid);
-  Future<String> getPackageContents(String relativeUuid, String packageRef);
-}
-
 /**
  * A sink that drains into /dev/null.
  */
@@ -259,7 +255,7 @@ class _CompilerProvider {
   final String textInput;
   final String uuidInput;
   final DartSdk sdk;
-  ContentsProvider provider;
+  common.ContentsProvider provider;
 
   _CompilerProvider.fromString(this.sdk, this.textInput) : uuidInput = null;
 

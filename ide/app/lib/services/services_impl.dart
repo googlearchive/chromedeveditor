@@ -282,7 +282,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     Future<ServiceActionEvent> createContext(ServiceActionEvent request) {
       String id = request.data['context'];
-      _contexts[id] = new analyzer.ProjectContext(dartSdk, id);
+      _contexts[id] = new analyzer.ProjectContext(id, dartSdk,
+          new _ServiceContentsProvider(isolate.chromeService));
       return new Future.value(request.createReponse({}));
     }
 
@@ -465,10 +466,12 @@ abstract class ServiceImpl {
     if (responder == null) {
       return new Future.value(
           event.createErrorReponse("no such method: ${event.actionId}"));
+    } else {
+      Future f = responder(event);
+      assert(f != null);
+      return f.catchError((e, st) {
+        return event.createErrorReponse('${e}\n${st}');
+      });
     }
-
-    Future f = responder(event);
-    assert(f != null);
-    return f;
   }
 }

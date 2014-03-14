@@ -16,7 +16,6 @@ import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
-import 'package:path/path.dart' as path;
 
 export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
@@ -45,10 +44,7 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
     {bool performResolution: true}) {
   Completer completer = new Completer();
 
-  // TODO: move over to using this factory method - it will share SDK contexts.
-  //AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
-  AnalysisContext context = new AnalysisContextImpl();
-
+  AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
   context.sourceFactory = new SourceFactory([new DartUriResolver(sdk)]);
 
   CompilationUnit unit;
@@ -106,7 +102,7 @@ class AnalysisResultUuid {
   Map toMap() {
     Map m = {};
     _errorMap.forEach((String uuid, List<common.AnalysisError> errors) {
-      m[uuid] = errors.map((e) => e.toMap());
+      m[uuid] = errors.map((e) => e.toMap()).toList();
     });
     return m;
   }
@@ -122,7 +118,6 @@ class ChromeDartSdk extends DartSdk {
   LibraryMap _libraryMap;
 
   ChromeDartSdk._(this._sdk): context = new AnalysisContextImpl() {
-    // TODO: this will also need a dart: uri resolver
     context.sourceFactory = new SourceFactory([]);
   }
 
@@ -180,15 +175,14 @@ class ProjectContext {
   // The id for the project this context is associated with.
   final String id;
   final ChromeDartSdk sdk;
+  final common.ContentsProvider provider;
 
   AnalysisContext context;
 
   Map<String, FileSource> _sources = {};
 
-  ProjectContext(this.sdk, this.id){
-    // TODO: move over to using this factory method - it will share SDK contexts.
-    //AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
-    context = new AnalysisContextImpl();
+  ProjectContext(this.id, this.sdk, this.provider) {
+    context = AnalysisEngine.instance.createAnalysisContext();
 
     // TODO: add a package: uri resolver
     context.sourceFactory = new SourceFactory(
@@ -209,18 +203,19 @@ class ProjectContext {
     // changed
     for (String uuid in changedUuids) {
       if (_sources[uuid] != null) {
-        _sources[uuid].touchFile();
+        changeSet.changedSource(_sources[uuid]);
+        _sources[uuid].setContents(null);
       } else {
         _sources[uuid] = new FileSource(this, uuid);
+        changeSet.addedSource(_sources[uuid]);
       }
-
-      changeSet.changedSource(_sources[uuid]);
     }
 
     // deleted
     for (String uuid in deletedUuids) {
       if (_sources[uuid] != null) {
         _sources[uuid]._exists = false;
+        _sources[uuid].setContents(null);
         changeSet.removedSource(_sources.remove(uuid));
       }
     }
@@ -228,7 +223,13 @@ class ProjectContext {
     context.applyChanges(changeSet);
 
     Completer<AnalysisResultUuid> completer = new Completer();
-    _processChanges(completer, new AnalysisResultUuid());
+
+    _populateSources().then((_) {
+      _processChanges(completer, new AnalysisResultUuid());
+    }).catchError((e) {
+      completer.completeError(e);
+    });
+
     return completer.future;
   }
 
@@ -245,26 +246,74 @@ class ProjectContext {
 
   void _processChanges(Completer<AnalysisResultUuid> completer,
       AnalysisResultUuid analysisResult) {
-    AnalysisResult result = context.performAnalysisTask();
-    List<ChangeNotice> notices = result.changeNotices;
+    try {
+      AnalysisResult result = context.performAnalysisTask();
+      List<ChangeNotice> notices = result.changeNotices;
 
-    if (notices == null) {
-      print('notices == null');
-      completer.complete(analysisResult);
-    } else {
-      print('${notices.length} notices');
-      for (ChangeNotice notice in notices) {
-        if (notice.source is FileSource) {
+      if (notices == null) {
+        completer.complete(analysisResult);
+      } else {
+        print('${notices.length} notices');
+
+        for (ChangeNotice notice in notices) {
+          if (notice.source is! FileSource) continue;
+
           FileSource source = notice.source;
-          print(source);
-
-          // TODO: record the errors
-          analysisResult.addErrors(source.uuid, []);
+          analysisResult.addErrors(
+              source.uuid, _convertErrors(notice, notice.errors));
         }
-      }
 
-      _processChanges(completer, analysisResult);
+        _processChanges(completer, analysisResult);
+      }
+    } catch (e, st) {
+      completer.completeError(e, st);
     }
+  }
+
+  /**
+   * Fill in all the
+   */
+  Future _populateSources() {
+    List<Future> futures = [];
+
+    _sources.forEach((String uuid, FileSource source) {
+      if (source.exists() && source._strContents == null) {
+        Future f = provider.getFileContents(uuid).then((String str) {
+          source.setContents(str);
+        });
+        futures.add(f);
+      }
+    });
+
+    return Future.wait(futures);
+  }
+}
+
+List<common.AnalysisError> _convertErrors(
+    AnalysisErrorInfo errorInfo, List<AnalysisError> errors) {
+  return errors.map((error) => _convertError(errorInfo, error)).toList();
+}
+
+common.AnalysisError _convertError(AnalysisErrorInfo errorInfo, AnalysisError error) {
+  common.AnalysisError err = new common.AnalysisError();
+  err.message = error.message;
+  err.offset = error.offset;
+  LineInfo_Location location = errorInfo.lineInfo.getLocation(error.offset);
+  err.lineNumber = location.lineNumber;
+  err.length = error.length;
+  err.errorSeverity = _errorSeverityToInt(error.errorCode.errorSeverity);
+  return err;
+}
+
+int _errorSeverityToInt(ErrorSeverity severity) {
+  if (severity == ErrorSeverity.ERROR) {
+    return common.ErrorSeverity.ERROR;
+  } else  if (severity == ErrorSeverity.WARNING) {
+    return common.ErrorSeverity.WARNING;
+  } else  if (severity == ErrorSeverity.INFO) {
+    return common.ErrorSeverity.INFO;
+  } else {
+    return common.ErrorSeverity.NONE;
   }
 }
 
@@ -348,7 +397,7 @@ class SdkSource extends Source {
 
   String get encoding => 'UTF-8';
 
-  String get shortName => path.basename(fullName);
+  String get shortName => basename(fullName);
 
   UriKind get uriKind => UriKind.DART_URI;
 
@@ -357,7 +406,7 @@ class SdkSource extends Source {
   bool get isInSystemLibrary => true;
 
   Source resolveRelative(Uri relativeUri) {
-    return new SdkSource(_sdk, '${path.dirname(fullName)}/${relativeUri.path}');
+    return new SdkSource(_sdk, '${dirname(fullName)}/${relativeUri.path}');
   }
 
   int get modificationStamp => 0;
@@ -386,20 +435,20 @@ class FileSource extends Source {
 
   bool exists() => _exists;
 
-  TimestampedData<String> get contents =>
-      new TimestampedData(modificationStamp, _strContents);
+  TimestampedData<String> get contents {
+    print('get contents ${uuid}');
+    return new TimestampedData(modificationStamp, _strContents);
+  }
 
   void getContentsToReceiver(Source_ContentReceiver receiver) {
+    print('getContentsToReceiver ${uuid}');
     TimestampedData cnts = contents;
     receiver.accept(cnts.data, cnts.modificationTime);
   }
 
   String get encoding => 'UTF-8';
 
-  String get shortName {
-    int index = uuid.lastIndexOf('/');
-    return index == -1 ? uuid : uuid.substring(index + 1);
-  }
+  String get shortName => basename(uuid);
 
   String get fullName {
     int index = uuid.indexOf('/');
@@ -431,30 +480,46 @@ class FileSource extends Source {
   String toString() => uuid;
 }
 
-class PhantomFileSource extends FileSource {
-  PhantomFileSource(ProjectContext context, String uuid) : super(context, uuid) {
-    _exists = false;
-  }
-
-  // TODO:
-  TimestampedData<String> get contents =>
-      new TimestampedData(modificationStamp, _strContents);
-
-  // TODO:
-  void getContentsToReceiver(Source_ContentReceiver receiver) {
-    TimestampedData cnts = contents;
-    receiver.accept(cnts.data, cnts.modificationTime);
-  }
-}
+//class PhantomFileSource extends FileSource {
+//  PhantomFileSource(ProjectContext context, String uuid) : super(context, uuid) {
+//    _exists = false;
+//  }
+//
+//  // TODO:
+//  TimestampedData<String> get contents =>
+//      new TimestampedData(modificationStamp, _strContents);
+//
+//  // TODO:
+//  void getContentsToReceiver(Source_ContentReceiver receiver) {
+//    TimestampedData cnts = contents;
+//    receiver.accept(cnts.data, cnts.modificationTime);
+//  }
+//}
 
 class FileUriResolver extends UriResolver {
+  static String FILE_SCHEME = "file";
+
+  static bool isFileUri(Uri uri) => uri.scheme == FILE_SCHEME;
+
   final ProjectContext context;
 
   FileUriResolver(this.context);
 
-  Source fromEncoding(UriKind kind, Uri uri) => context.getSource(uri.path);
+  Source fromEncoding(UriKind kind, Uri uri) {
+    if (kind == UriKind.FILE_URI) {
+      return context.getSource(uri.path);
+    } else {
+      return null;
+    }
+  }
 
-  Source resolveAbsolute(Uri uri) => context.getSource(uri.path);
+  Source resolveAbsolute(Uri uri) {
+    if (!isFileUri(uri)) {
+      return null;
+    } else {
+      return context.getSource(uri.path);
+    }
+  }
 }
 
 class SimpleAnalysisErrorListener implements AnalysisErrorListener {
@@ -465,4 +530,14 @@ class SimpleAnalysisErrorListener implements AnalysisErrorListener {
   void onError(AnalysisError error) {
     foundError = true;
   }
+}
+
+String basename(String str) {
+  int index = str.lastIndexOf('/');
+  return index == -1 ? str : str.substring(index + 1);
+}
+
+String dirname(String str) {
+  int index = str.lastIndexOf('/');
+  return index == -1 ? '' : str.substring(0, index);
 }
