@@ -216,9 +216,15 @@ class _ServiceContentsProvider implements ContentsProvider {
 class AnalyzerServiceImpl extends ServiceImpl {
   analyzer.ChromeDartSdk dartSdk;
 
+  Map<String, analyzer.ProjectContext> _contexts = {};
+
   AnalyzerServiceImpl(ServicesIsolate isolate, DartSdk sdk) :
       super(isolate, 'analyzer') {
     dartSdk = analyzer.createSdk(sdk);
+
+    registerRequestHandler('createContext', createContext);
+    registerRequestHandler('processContextChanges', processContextChanges);
+    registerRequestHandler('disposeContext', disposeContext);
   }
 
   Future<analyzer.ChromeDartSdk> get dartSdkFuture => new Future.value(dartSdk);
@@ -226,27 +232,89 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
     switch (event.actionId) {
       case "buildFiles":
-        return buildFiles(event.data["dartFileUuids"])
-            .then((Map<String, List<Map>> errorsPerFile) {
+        return buildFiles(event.data["dartFileUuids"]).then(
+            (Map<String, List<Map>> errorsPerFile) {
           return new Future.value(
               event.createReponse({"errors": errorsPerFile}));
         });
       case "getOutlineFor":
-        return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
-          var codeString = event.data['string'];
-          return analyzer.analyzeString(sdk, codeString,
-              performResolution: false);
-        }).then((analyzer.AnalyzerResult result) {
-          return event.createReponse(getOutline(result.ast).toMap());
+        var codeString = event.data['string'];
+        return analyzer.analyzeString(
+            dartSdk, codeString, performResolution: false).then(
+                (analyzer.AnalyzerResult result) {
+          return event.createReponse(_getOutline(result.ast).toMap());
         });
-
       default:
-        throw new ArgumentError(
-            "Unknown action '${event.actionId}' sent to $serviceId service.");
+        return super.handleEvent(event);
     }
   }
 
-  Outline getOutline(analyzer.CompilationUnit ast) {
+  Future<Map<String, List<Map>>> buildFiles(List<Map> fileUuids) {
+      Map<String, List<Map>> errorsPerFile = {};
+
+      return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
+        return Future.forEach(fileUuids, (String fileUuid) {
+          return _processFile(sdk, fileUuid).then((analyzer.AnalyzerResult result) {
+            List<analyzer.AnalysisError> errors = result.errors;
+            List<Map> responseErrors = [];
+
+            if (errors != null) {
+              for (analyzer.AnalysisError error in errors) {
+                AnalysisError responseError = new AnalysisError();
+                responseError.message = error.message;
+                responseError.offset = error.offset;
+                analyzer.LineInfo_Location location = result.getLineInfo(error);
+                responseError.lineNumber = location.lineNumber;
+                responseError.errorSeverity =
+                    _errorSeverityToInt(error.errorCode.errorSeverity);
+                responseError.length = error.length;
+                responseErrors.add(responseError.toMap());
+              }
+            }
+
+            return responseErrors;
+          }).then((List<Map> errors) {
+            errorsPerFile[fileUuid] = errors;
+          });
+        });
+      }).then((_) => errorsPerFile);
+    }
+
+    Future<ServiceActionEvent> createContext(ServiceActionEvent request) {
+      String id = request.data['context'];
+      _contexts[id] = new analyzer.ProjectContext(dartSdk, id);
+      return new Future.value(request.createReponse({}));
+    }
+
+    Future<ServiceActionEvent> processContextChanges(ServiceActionEvent request) {
+      String id = request.data['context'];
+      List<String> addedUuids = request.data['added'];
+      List<String> changedUuids = request.data['changed'];
+      List<String> deletedUuids = request.data['deleted'];
+
+      analyzer.ProjectContext context = _contexts[id];
+
+      if (context != null) {
+        return context.processChanges(addedUuids, changedUuids,
+            deletedUuids).then((analyzer.AnalysisResultUuid result) {
+          return new Future.value(request.createReponse(result.toMap()));
+        });
+      } else {
+        return new Future.value(
+            request.createErrorReponse('no context associated with id ${id}'));
+      }
+    }
+
+    Future<ServiceActionEvent> disposeContext(ServiceActionEvent request) {
+      String id = request.data['context'];
+      analyzer.ProjectContext context = _contexts.remove(id);
+      if (context != null) {
+        context.dispose();
+      }
+      return new Future.value(request.createReponse({}));
+    }
+
+    Outline _getOutline(analyzer.CompilationUnit ast) {
     Outline outline = new Outline();
 
     // TODO(ericarnold): Need to implement modifiers
@@ -258,7 +326,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
         analyzer.VariableDeclarationList variables = declaration.variables;
 
         for (analyzer.VariableDeclaration variable in variables.variables) {
-          outline.entries.add(populateOutlineEntry(
+          outline.entries.add(_populateOutlineEntry(
               new OutlineTopLevelVariable(variable.name.name), declaration));
         }
       } else {
@@ -268,12 +336,12 @@ class AnalyzerServiceImpl extends ServiceImpl {
           for (analyzer.ClassMember member in declaration.members) {
             String name;
             if (member is analyzer.MethodDeclaration) {
-              outlineClass.members.add(populateOutlineEntry(
+              outlineClass.members.add(_populateOutlineEntry(
                   new OutlineMethod(member.name.name), member));
             } else if (member is analyzer.FieldDeclaration) {
               analyzer.VariableDeclarationList fields = member.fields;
               for (analyzer.VariableDeclaration field in fields.variables) {
-                outlineClass.members.add(populateOutlineEntry(
+                outlineClass.members.add(_populateOutlineEntry(
                     new OutlineProperty(field.name.name), field));
               }
             }
@@ -285,7 +353,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           print("${declaration.runtimeType} is unknown");
         }
 
-        outline.entries.add(populateOutlineEntry(
+        outline.entries.add(_populateOutlineEntry(
             outlineDeclaration, declaration));
       }
     }
@@ -293,43 +361,11 @@ class AnalyzerServiceImpl extends ServiceImpl {
     return outline;
   }
 
-  OutlineEntry populateOutlineEntry(
+  OutlineEntry _populateOutlineEntry(
       OutlineEntry outlineEntry, analyzer.AstNode node) {
     outlineEntry.startOffset = node.beginToken.offset;
     outlineEntry.endOffset = node.endToken.end;
     return outlineEntry;
-  }
-
-  Future<Map<String, List<Map>>> buildFiles(List<Map> fileUuids) {
-    Map<String, List<Map>> errorsPerFile = {};
-
-    return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
-      return Future.forEach(fileUuids, (String fileUuid) {
-        return _processFile(sdk, fileUuid)
-            .then((analyzer.AnalyzerResult result) {
-              List<analyzer.AnalysisError> errors = result.errors;
-              List<Map> responseErrors = [];
-              if (errors != null) {
-                for (analyzer.AnalysisError error in errors) {
-                  AnalysisError responseError =
-                      new AnalysisError();
-                  responseError.message = error.message;
-                  responseError.offset = error.offset;
-                  analyzer.LineInfo_Location location = result.getLineInfo(error);
-                  responseError.lineNumber = location.lineNumber;
-                  responseError.errorSeverity =
-                      _errorSeverityToInt(error.errorCode.errorSeverity);
-                  responseError.length = error.length;
-                  responseErrors.add(responseError.toMap());
-                }
-              }
-
-              return responseErrors;
-            }).then((List<Map> errors) {
-              errorsPerFile[fileUuid] = errors;
-            });
-        });
-    }).then((_) => errorsPerFile);
   }
 
   int _errorSeverityToInt(analyzer.ErrorSeverity severity) {

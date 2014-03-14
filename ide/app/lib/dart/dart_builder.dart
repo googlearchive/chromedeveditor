@@ -11,6 +11,8 @@ import '../jobs.dart';
 import '../services.dart';
 import '../workspace.dart';
 
+final _disableDartAnalyzer = false;
+
 /**
  * A [Builder] implementation that drives the Dart analyzer.
  */
@@ -20,23 +22,37 @@ class DartBuilder extends Builder {
   DartBuilder(this.services);
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    List<File> files = event.modifiedFiles.where(
-        (file) => file.name.endsWith('.dart')).toList();
+    List<ChangeDelta> changes = event.changes.where(
+        (c) => c.resource is File && c.resource.name.endsWith('.dart')).toList();
 
-    if (files.isEmpty) return new Future.value();
+    if (_disableDartAnalyzer || changes.isEmpty) return new Future.value();
+
+    Project project = changes.first.resource.project;
+
+    List<File> addedFiles = changes.where((c) => c.isAdd).map((c) => c.resource);
+    List<File> changedFiles = changes.where((c) => c.isChange).map((c) => c.resource);
+    List<File> deletedFiles = changes.where((c) => c.isDelete).map((c) => c.resource);
 
     AnalyzerService analyzer = services.getService("analyzer");
+    ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
-    return analyzer.buildFiles(files).then((Map<File, List<AnalysisError>> errors) {
-      Workspace workspace = files.first.workspace;
+    if (context == null) {
+      context = analyzer.createProjectAnalyzer(project);
 
-      workspace.pauseMarkerStream();
+      // TODO: we'll need to send in all the existing files for the project in
+      // order to properly set up the new context
+
+    }
+
+    return context.processChanges(addedFiles, changedFiles, deletedFiles).then(
+        (AnalysisResult result) {
+      project.workspace.pauseMarkerStream();
 
       try {
-        files.forEach((f) => f.clearMarkers('dart'));
+        for (File file in result.getFiles()) {
+          file.clearMarkers('dart');
 
-        for (File file in errors.keys) {
-          for (AnalysisError error in errors[file]) {
+          for (AnalysisError error in result.getErrorsFor(file)) {
             file.createMarker('dart',
                 _convertSeverity(error.errorSeverity),
                 error.message, error.lineNumber,
@@ -44,7 +60,7 @@ class DartBuilder extends Builder {
           }
         }
       } finally {
-        workspace.resumeMarkerStream();
+        project.workspace.resumeMarkerStream();
       }
     });
   }

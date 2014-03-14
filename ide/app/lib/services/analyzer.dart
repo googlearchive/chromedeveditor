@@ -22,6 +22,7 @@ export 'package:analyzer/src/generated/ast.dart';
 export 'package:analyzer/src/generated/error.dart';
 export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
 
+import 'services_common.dart' as common;
 import '../dart/sdk.dart' as sdk;
 
 /**
@@ -90,6 +91,27 @@ class AnalyzerResult {
   String toString() => 'AnalyzerResult[${errorInfo.errors.length} issues]';
 }
 
+class AnalysisResultUuid {
+  /**
+   * A Map from file uuids to list of associated errors.
+   */
+  Map<String, List<common.AnalysisError>> _errorMap = {};
+
+  AnalysisResultUuid();
+
+  void addErrors(String uuid, List<common.AnalysisError> errors) {
+    _errorMap[uuid] = errors;
+  }
+
+  Map toMap() {
+    Map m = {};
+    _errorMap.forEach((String uuid, List<common.AnalysisError> errors) {
+      m[uuid] = errors.map((e) => e.toMap());
+    });
+    return m;
+  }
+}
+
 /**
  * A Spark and Chrome Apps specific implementation of the [DartSdk] class.
  */
@@ -151,6 +173,102 @@ class ChromeDartSdk extends DartSdk {
 }
 
 /**
+ * A wrapper around an analysis context. There is a one-to-one mapping between
+ * projects, on the DOM side, and analysis contexts.
+ */
+class ProjectContext {
+  // The id for the project this context is associated with.
+  final String id;
+  final ChromeDartSdk sdk;
+
+  AnalysisContext context;
+
+  Map<String, FileSource> _sources = {};
+
+  ProjectContext(this.sdk, this.id){
+    // TODO: move over to using this factory method - it will share SDK contexts.
+    //AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
+    context = new AnalysisContextImpl();
+
+    // TODO: add a package: uri resolver
+    context.sourceFactory = new SourceFactory(
+        [new DartUriResolver(sdk), new FileUriResolver(this)]);
+  }
+
+  Future<AnalysisResultUuid> processChanges(List<String> addedUuids,
+      List<String> changedUuids, List<String> deletedUuids) {
+
+    ChangeSet changeSet = new ChangeSet();
+
+    // added
+    for (String uuid in addedUuids) {
+      _sources[uuid] = new FileSource(this, uuid);
+      changeSet.addedSource(_sources[uuid]);
+    }
+
+    // changed
+    for (String uuid in changedUuids) {
+      if (_sources[uuid] != null) {
+        _sources[uuid].touchFile();
+      } else {
+        _sources[uuid] = new FileSource(this, uuid);
+      }
+
+      changeSet.changedSource(_sources[uuid]);
+    }
+
+    // deleted
+    for (String uuid in deletedUuids) {
+      if (_sources[uuid] != null) {
+        _sources[uuid]._exists = false;
+        changeSet.removedSource(_sources.remove(uuid));
+      }
+    }
+
+    context.applyChanges(changeSet);
+
+    Completer<AnalysisResultUuid> completer = new Completer();
+    _processChanges(completer, new AnalysisResultUuid());
+    return completer.future;
+  }
+
+  // Not sure there's anything to do here -
+  void dispose() { }
+
+  FileSource getSource(String uuid) {
+    //if (_sources.containsKey(uuid)) {
+      return _sources[uuid];
+    //} else {
+    //  return new PhantomFileSource(this, uuid);
+    //}
+  }
+
+  void _processChanges(Completer<AnalysisResultUuid> completer,
+      AnalysisResultUuid analysisResult) {
+    AnalysisResult result = context.performAnalysisTask();
+    List<ChangeNotice> notices = result.changeNotices;
+
+    if (notices == null) {
+      print('notices == null');
+      completer.complete(analysisResult);
+    } else {
+      print('${notices.length} notices');
+      for (ChangeNotice notice in notices) {
+        if (notice.source is FileSource) {
+          FileSource source = notice.source;
+          print(source);
+
+          // TODO: record the errors
+          analysisResult.addErrors(source.uuid, []);
+        }
+      }
+
+      _processChanges(completer, analysisResult);
+    }
+  }
+}
+
+/**
  * An implementation of [Source] that's based on an in-memory Dart string.
  */
 class StringSource extends Source {
@@ -171,7 +289,6 @@ class StringSource extends Source {
 
   bool exists() => true;
 
-  // TODO(devoncarew): This is a new method in Source; investigate.
   TimestampedData<String> get contents =>
       new TimestampedData<String>(modificationStamp, _contents);
 
@@ -225,7 +342,7 @@ class SdkSource extends Source {
       receiver.accept(cnt.data, cnt.modificationTime);
     } else {
       // TODO(devoncarew): Error type seems wrong.
-      throw new UnimplementedError('getContents');
+      throw new UnimplementedError('getContentsToReceiver');
     }
   }
 
@@ -248,53 +365,46 @@ class SdkSource extends Source {
   String toString() => fullName;
 }
 
-class ServiceFile {
-  String uuid;
-  String name;
-  String fullPath;
-
-  ServiceFile(this.uuid, this.fullPath, this.name);
-}
-
 /**
- * A [Source] implementation based on HTML FileEntrys.
+ * A [Source] implementation based on workspace uuids.
  */
 class FileSource extends Source {
-  final ServiceFile file;
+  final ProjectContext context;
+  final String uuid;
 
-  FileSource(this.file);
+  int modificationStamp;
+  bool _exists = true;
+  String _strContents;
+
+  FileSource(this.context, this.uuid) {
+    touchFile();
+  }
 
   bool operator==(Object object) {
-    if (object is FileSource) {
-      return object.fullName == fullName;
-    } else {
-      return false;
-    }
+    return object is FileSource ? object.uuid == uuid : false;
   }
 
-  bool exists() {
-    // TODO: Implement.
-     throw new UnimplementedError('exists');
-  }
+  bool exists() => _exists;
 
-  TimestampedData<String> get contents {
-    // TODO: Implement.
-    throw new UnimplementedError('getContents');
-  }
+  TimestampedData<String> get contents =>
+      new TimestampedData(modificationStamp, _strContents);
 
   void getContentsToReceiver(Source_ContentReceiver receiver) {
-    // TODO: Implement.
-    throw new UnimplementedError('getContents');
+    TimestampedData cnts = contents;
+    receiver.accept(cnts.data, cnts.modificationTime);
   }
 
-  String get encoding {
-    // TODO: Implement.
-    throw new UnimplementedError('encoding');
+  String get encoding => 'UTF-8';
+
+  String get shortName {
+    int index = uuid.lastIndexOf('/');
+    return index == -1 ? uuid : uuid.substring(index + 1);
   }
 
-  String get shortName => file.name;
-
-  String get fullName => file.fullPath;
+  String get fullName {
+    int index = uuid.indexOf('/');
+    return index == -1 ? uuid : uuid.substring(index + 1);
+  }
 
   UriKind get uriKind => UriKind.FILE_URI;
 
@@ -303,16 +413,48 @@ class FileSource extends Source {
   bool get isInSystemLibrary => false;
 
   Source resolveRelative(Uri relativeUri) {
-    // TODO:
-    throw new UnimplementedError('resolveRelative');
+    Uri thisUri = new Uri(scheme: 'file', path: uuid);
+    Uri sourceUri = thisUri.resolveUri(relativeUri);
+
+    return context.getSource(sourceUri.path);
   }
 
-  int get modificationStamp {
-    // TODO:
-    throw new UnimplementedError('modificationStamp');
+  void setContents(String newContents) {
+    _strContents = newContents;
+    touchFile();
   }
 
-  String toString() => fullName;
+  void touchFile() {
+    modificationStamp = new DateTime.now().millisecondsSinceEpoch;
+  }
+
+  String toString() => uuid;
+}
+
+class PhantomFileSource extends FileSource {
+  PhantomFileSource(ProjectContext context, String uuid) : super(context, uuid) {
+    _exists = false;
+  }
+
+  // TODO:
+  TimestampedData<String> get contents =>
+      new TimestampedData(modificationStamp, _strContents);
+
+  // TODO:
+  void getContentsToReceiver(Source_ContentReceiver receiver) {
+    TimestampedData cnts = contents;
+    receiver.accept(cnts.data, cnts.modificationTime);
+  }
+}
+
+class FileUriResolver extends UriResolver {
+  final ProjectContext context;
+
+  FileUriResolver(this.context);
+
+  Source fromEncoding(UriKind kind, Uri uri) => context.getSource(uri.path);
+
+  Source resolveAbsolute(Uri uri) => context.getSource(uri.path);
 }
 
 class SimpleAnalysisErrorListener implements AnalysisErrorListener {

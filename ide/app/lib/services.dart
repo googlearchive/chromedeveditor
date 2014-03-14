@@ -136,10 +136,14 @@ class CompilerService extends Service {
 }
 
 class AnalyzerService extends Service {
+  Map<Project, ProjectAnalyzer> _analyzers = {};
+
   AnalyzerService(Services services, _IsolateHandler handler) :
     super(services, 'analyzer', handler);
 
-  Future<Map<File, List<AnalysisError>>> buildFiles(Iterable<File> dartFiles) {
+  Workspace get workspace => services._workspace;
+
+  Future<Map<File, List<AnalysisError>>> buildFiles(List<File> dartFiles) {
     return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
         .then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
@@ -157,14 +161,59 @@ class AnalyzerService extends Service {
 
   File _uuidToFile(String uuid) => services._workspace.restoreResource(uuid);
 
-  List<String> _filesToUuid(Iterable<File> files) =>
-      files.map((f) => f.uuid).toList();
-
   Future<Outline> getOutlineFor(String codeString) {
-    return _sendAction("getOutlineFor", {"string": codeString})
-        .then((ServiceActionEvent result) {
+    var args = {"string": codeString};
+    return _sendAction("getOutlineFor", args).then((ServiceActionEvent result) {
       return new Outline.fromMap(result.data);
     });
+  }
+
+  ProjectAnalyzer createProjectAnalyzer(Project project) {
+    if (_analyzers[project] == null) {
+      _analyzers[project] = new ProjectAnalyzer._(this, project);
+      _sendAction('createContext', {'context': project.uuid});
+    }
+
+    return _analyzers[project];
+  }
+
+  ProjectAnalyzer getProjectAnalyzer(Project project) => _analyzers[project];
+
+  Future _disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
+    Project project = projectAnalyzer.project;
+    _analyzers.remove(project);
+    return _sendAction('disposeContext', {'context': project.uuid});
+  }
+}
+
+/**
+ * Used to associate a [Project] and an analysis context.
+ */
+class ProjectAnalyzer {
+  final AnalyzerService analyzerService;
+  final Project project;
+
+  ProjectAnalyzer._(this.analyzerService, this.project);
+
+  Future<AnalysisResult> processChanges(
+      List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
+    var args = {'context': project.uuid};
+    args['added'] = _filesToUuid(addedFiles);
+    args['changed'] = _filesToUuid(changedFiles);
+    args['deleted'] = _filesToUuid(deletedFiles);
+
+    return analyzerService._sendAction('processContextChanges', args).then(
+        (ServiceActionEvent event) {
+      if (event.error) {
+        throw event.getErrorMessage();
+      } else {
+        return new AnalysisResult.fromMap(analyzerService.workspace, event.data);
+      }
+    });
+  }
+
+  Future dispose() {
+    return analyzerService._disposeProjectAnalyzer(this);
   }
 }
 
@@ -334,6 +383,8 @@ class _IsolateHandler {
 
   void dispose() {
     // TODO: I'm not entirely sure how to terminate an isolate...
-    //_isolate.
+
   }
 }
+
+List<String> _filesToUuid(List<File> files) => files.map((f) => f.uuid).toList();
