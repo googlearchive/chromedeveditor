@@ -126,12 +126,18 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
     addParticipant(new _SparkSetupParticipant(this));
 
-    // This event is not fired when closing the current window. We listen for it
-    // in the vain hope that we will get the event, and we'll be able to clean
-    // up after ourselves slightly better.
-    chrome.app.window.current().onClosed.listen((_) {
-      close();
-    });
+    try {
+      // This event is not fired when closing the current window. We listen for it
+      // in the vain hope that we will get the event, and we'll be able to clean
+      // up after ourselves slightly better.
+      chrome.app.window.current().onClosed.listen((_) {
+        close();
+      });
+    } catch (e, st) {
+      // The onClosed call can throw when compiled to JavaScript (#1268).
+      // 'Undefined is not a function'
+      window.console.log('${e}');
+    }
 
     initWorkspace();
     initPubManager();
