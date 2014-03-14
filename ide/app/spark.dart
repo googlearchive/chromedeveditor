@@ -10,6 +10,7 @@ import 'dart:html' hide File;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 
@@ -49,6 +50,7 @@ import 'test/all.dart' as all_tests;
 import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
+final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
  * Returns true if app.json contains a test-mode entry set to true. If app.json
@@ -1740,6 +1742,17 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
               '<error retrieving Git data>');
         });
       }
+    }).then((_) {
+      return _selectedResource.entry.getMetadata().then((meta) {
+        if (_selectedResource.entry is FileEntry) {
+          final String size = _nf.format(meta.size);
+          _addProperty(_propertiesElement, 'Size', '$size bytes');
+        }
+
+        final String lastModified =
+            new DateFormat.yMd().add_Hm().format(meta.modificationTime);
+        _addProperty(_propertiesElement, 'Last Modified', lastModified);
+      });
     });
   }
 
