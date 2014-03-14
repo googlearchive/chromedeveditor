@@ -11,7 +11,6 @@ import 'package:unittest/unittest.dart';
 import 'files_mock.dart';
 import '../lib/pub.dart';
 import '../lib/services.dart';
-import '../lib/utils.dart';
 
 defineTests() {
   Workspace workspace = new Workspace();
@@ -134,9 +133,6 @@ defineTests() {
   });
 
   group('services analyzer', () {
-    // TODO: The analyzer is currently not working when compiled to JavaScript.
-    if (isDart2js()) return;
-
     Workspace workspace = new Workspace();
     Services services = new Services(workspace, new PubManager(workspace));;
     AnalyzerService analyzer = services.getService("analyzer");
