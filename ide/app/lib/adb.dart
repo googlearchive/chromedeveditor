@@ -351,7 +351,8 @@ class AndroidDevice {
         adbInterface.interfaceNumber).catchError((_) {
       return new Future.error(
         'Could not open ADB connection.\n' +
-        'Please check whether Chrome ADT is running.');
+        'Please check whether Chrome ADT is running.\n' +
+        'If it\'s already running. On a Chrome browser window, go to chrome://inspect > Devices > uncheck Discover USB devices then restart Chrome.');
     }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
           AdbUtil.MAX_PAYLOAD, systemIdentity.toString());
