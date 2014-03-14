@@ -15,18 +15,31 @@ import 'packages/spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 
 import 'spark_model.dart';
 import 'lib/search.dart';
+import 'lib/workspace.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
   @observable bool developerMode = false;
   @observable SuggestOracle searchOracle;
 
-  SparkPolymerUI.created() : super.created() {
+  SparkPolymerUI.created() : super.created();
+
+  @override
+  void enteredView() {
+    super.enteredView();
+
     searchOracle = new SearchOracle(
-        () => SparkModel.instance.workspace,
-        (f) => SparkModel.instance.editorArea.selectFile(
-            f, forceOpen: true, replaceCurrent: false, switchesTab: true));
-    Timer.run(() => bindKeybindingDesc());
+        () => SparkModel.instance.workspace, _selectFile);
+    bindKeybindingDesc();
+  }
+
+  void _selectFile(Resource file) {
+    SparkModel.instance.editorArea.selectFile(
+        file,
+        forceOpen: true,
+        replaceCurrent: false,
+        switchesTab: true,
+        forceFocus: true);
   }
 
   void onMenuSelected(CustomEvent event, var detail) {
