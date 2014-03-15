@@ -8,8 +8,7 @@ library git.pack.index;
 import 'dart:core';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart' as crypto;
-
+import 'fast_sha.dart';
 import 'object.dart';
 
 /**
@@ -212,8 +211,8 @@ class PackIndex {
     }
 
     // Write sha for all of the above.
-    crypto.SHA1 sha1 = new crypto.SHA1();
-    sha1.newInstance().add(byteList.getRange(0, byteOffset).toList());
+    FastSha sha1 = new FastSha();
+    sha1.add(byteList.sublist(0, byteOffset).toList());
     List<int> indexSha = sha1.close();
 
     indexSha.forEach((int byte) {

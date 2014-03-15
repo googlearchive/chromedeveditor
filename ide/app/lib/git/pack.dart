@@ -13,9 +13,9 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
 
+import 'fast_sha.dart';
 import 'file_operations.dart';
 import 'object.dart';
 import 'object_utils.dart';
@@ -105,7 +105,7 @@ class Pack {
     fullContent.setAll(0, header);
     fullContent.setAll(header.length, contentData);
 
-    crypto.SHA1 sha1 = new crypto.SHA1();
+    FastSha sha1 = new FastSha();
     sha1.add(fullContent);
     return sha1.close();
   }

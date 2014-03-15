@@ -12,10 +12,10 @@ import 'dart:js';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 
 import 'config.dart';
 import 'constants.dart';
+import 'fast_sha.dart';
 import 'file_operations.dart';
 import 'commands/index.dart';
 import 'object.dart';
@@ -547,7 +547,6 @@ class ObjectStore {
   }
 
   Future<String> writeRawObject(String type, content) {
-
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
 
@@ -572,7 +571,7 @@ class ObjectStore {
 
     reader['onloadend'] = (var event) {
       var result = reader['result'];
-      crypto.SHA1 sha1 = new crypto.SHA1();
+      FastSha sha1 = new FastSha();
       Uint8List resultList;
 
       if (result is JsObject) {
@@ -587,16 +586,16 @@ class ObjectStore {
         throw "Unexpected result type.";
       }
 
-      Uint8List data = new Uint8List.fromList(resultList);
-      sha1.add(data);
+      sha1.add(resultList);
       Uint8List digest = new Uint8List.fromList(sha1.close());
 
       try {
         FindPackedObjectResult obj = findPackedObject(digest);
         completer.complete(shaBytesToString(digest));
       } catch (e) {
-        Future<String> str = _storeInFile(shaBytesToString(digest), data).then(
-            (str) => completer.complete(str));
+        _storeInFile(shaBytesToString(digest), resultList).then((str) {
+          completer.complete(str);
+        });
       }
     };
 

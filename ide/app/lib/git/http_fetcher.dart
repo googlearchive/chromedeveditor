@@ -49,8 +49,11 @@ class HttpFetcher {
     String url = _makeUri('/git-receive-pack', {});
     Blob body = _pushRequest(refPaths, packData);
 
+    //String bodySize = (body.size / 1024).toStringAsFixed(2);
+
     HttpRequest xhr = getNewHttpRequest();
     xhr.open("POST", url, async: true , user: username, password: password);
+    xhr.setRequestHeader('Content-Type', 'application/x-git-receive-pack-request');
     xhr.onLoad.listen((event) {
       if (xhr.readyState == 4) {
         if (xhr.status == 200) {
@@ -66,16 +69,18 @@ class HttpFetcher {
         }
       }
     });
-    xhr.setRequestHeader('Content-Type',
-        'application/x-git-receive-pack-request');
-    String bodySize = (body.size / 1024).toStringAsFixed(2);
+    xhr.onError.listen((e) {
+      completer.completeError(e);
+    });
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
       if (progress != null) {
         progress();
       }
     });
+
     xhr.send(body);
+
     return completer.future;
   }
 

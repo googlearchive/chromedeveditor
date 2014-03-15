@@ -16,6 +16,7 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart';
 
+import '../lib/git/fast_sha.dart';
 import '../lib/git/utils.dart';
 import '../lib/git/zlib.dart';
 
@@ -38,7 +39,9 @@ Logger _logger = new Logger('spark.benchmarks');
 // archive inflate :  22.573 ms (40.600 ms)
 // archive deflate :  39.275 ms (168.250 ms)
 // create zip      : 110.263 ms (489.800 ms)
-// git sha         :1760.000 ms (???)
+// git sha         :1087.500 ms (1760.000 ms)
+// plain sha       :1977.500 ms
+// fast sha        : 943.667 ms
 // jszlib inflate  :  36.161 ms
 // jszlib deflate  : 826.000 ms
 // zlib inflate    :  19.921 ms (36.161 ms)
@@ -55,6 +58,7 @@ defineTests() {
 
     test('git sha', () => runBenchmark(new GitShaBenchmark()));
     test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
+    test('fast sha', () => runBenchmark(new FastShaBenchmark()));
   });
 }
 
@@ -162,6 +166,18 @@ class PlainShaBenchmark extends BenchmarkBase {
     crypto.SHA1 sha1 = new crypto.SHA1();
     sha1.add(data);
     sha1.close();
+  }
+}
+
+class FastShaBenchmark extends BenchmarkBase {
+  List data = _createData(100000);
+
+  FastShaBenchmark() : super('fast sha', emitter: _emitter);
+
+  void run() {
+    FastSha sha = new FastSha();
+    sha.add(data);
+    sha.close();
   }
 }
 
