@@ -74,12 +74,13 @@ class TestDriver {
 
       print('Connected to test listener on port ${testClient.port}');
 
-      _logger.onRecord.listen((LogRecord r) {
+      Logger.root.onRecord.listen((LogRecord r) {
         testClient.log(
             '[${r.level.name}] ${_fixed(r.loggerName, 11)}: ${r.message}');
       });
 
-      _logger.info('Running tests on ${window.navigator.appCodeName} ${window.navigator.appName} ${window.navigator.appVersion}');
+      _logger.info('Running tests on ${window.navigator.appCodeName} '
+          '${window.navigator.appName} ${window.navigator.appVersion}');
 
       runTests().then((bool success) {
         testClient.log('test exit code: ${(success ? 0 : 1)}');
