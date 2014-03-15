@@ -52,20 +52,20 @@ String getShaForString(String data, String type) {
 }
 
 String getShaStringForData(List<int> content, String type) {
-  FastSha sha = new FastSha();
-  sha.add('${type} ${content.length}'.codeUnits);
-  sha.add([0]);
-  sha.add(content);
-  return shaBytesToString(sha.close());
+  FastSha sha1 = new FastSha();
+  sha1.add('${type} ${content.length}'.codeUnits);
+  sha1.add([0]);
+  sha1.add(content);
+  return shaBytesToString(sha1.close());
 }
 
 /**
  * Return sha for the given data.
  */
 List<int> getShaAsBytes(List<int> data) {
-  FastSha sha = new FastSha();
-  sha.add(data);
-  return sha.close();
+  FastSha sha1 = new FastSha();
+  sha1.add(data);
+  return sha1.close();
 }
 
 /**
