@@ -656,7 +656,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   bool canShowFileAsText(String filename) {
     String extension = path.extension(filename);
 
-    // Whitelist files that don't have a period or start with one. Ex.,
+    // Whitelist files that don't have a period or that start with one. Ex.,
     // `AUTHORS`, `.gitignore`.
     if (extension.isEmpty) return true;
 
@@ -1789,9 +1789,6 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
-    // Select any previous text in the URL field.
-    Timer.run(_repoUrlElement.select);
-
     _show();
   }
 
