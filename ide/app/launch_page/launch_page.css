@@ -56,10 +56,11 @@ button:hover {
 
 #controls #center-column {
   -webkit-flex: 1;
+  margin-right: 3px;
 }
 
-/* The reload button turns into a spinning trobber */
-.loading #reload {
+/* The reload button turns into a spinning throbber */
+.loading #spinner {
   -webkit-animation: spinner-animation .5s infinite linear;
   -webkit-transform-origin: 50% 55.5%;
 }
