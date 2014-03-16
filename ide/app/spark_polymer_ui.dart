@@ -70,21 +70,25 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void bindKeybindingDesc() {
-    final items = getShadowDomElement('#mainMenu').querySelectorAll('spark-menu-item');
+    final items = getShadowDomElement('#mainMenu').querySelectorAll(
+        'spark-menu-item');
     items.forEach((menuItem) {
       final actionId = menuItem.attributes['action-id'];
       final action = SparkModel.instance.actionManager.getAction(actionId);
-      action.bindings.forEach((keyBind) => menuItem.description = keyBind.getDescription());
+      action.bindings.forEach(
+          (keyBind) => menuItem.description = keyBind.getDescription());
     });
   }
 
   void onResetGit() {
-    SparkModel.instance.syncPrefs.removeValue(['git-auth-info', 'git-user-info']);
+    SparkModel.instance.syncPrefs.removeValue(
+        ['git-auth-info', 'git-user-info']);
     SparkModel.instance.setGitSettingsResetDoneVisible(true);
   }
 
   void onResetPreference() {
-    Element resultElement = getShadowDomElement('#preferenceResetResult')..text = '';
+    Element resultElement = getShadowDomElement('#preferenceResetResult');
+    resultElement.text = '';
     SparkModel.instance.syncPrefs.clear().then((_) {
       SparkModel.instance.localPrefs.clear();
     }).catchError((e) {
@@ -92,5 +96,11 @@ class SparkPolymerUI extends SparkWidget {
     }).then((_) {
       resultElement.text = 'Preferences are reset. Restart Spark.';
     });
+  }
+
+  void handleAnchorClick(Event e) {
+    e..preventDefault()..stopPropagation();
+    AnchorElement anchor = e.target;
+    window.open(anchor.href, '_blank');
   }
 }

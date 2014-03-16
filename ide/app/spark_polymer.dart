@@ -66,7 +66,7 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future<bool> openFolder() {
+  Future openFolder() {
     return _beforeSystemModal()
         .then((_) => super.openFolder())
         .then((_) => _systemModalComplete())
@@ -230,16 +230,10 @@ class SparkPolymer extends Spark {
     }
   }
 
-  Future<bool> _beforeSystemModal() {
-    Completer completer = new Completer();
+  Future _beforeSystemModal() {
     backdropShowing = true;
 
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () {
-          completer.complete();
-        });
-
-    return completer.future;
+    return new Future.delayed(new Duration(milliseconds: 100));
   }
 
   void _systemModalComplete() {
