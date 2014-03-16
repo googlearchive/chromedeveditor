@@ -57,7 +57,7 @@ void main([List<String> args = const []]) {
     browserPath = _chromeStablePath();
   }
 
-  if (results['chrome-dev']) {
+  if (results['chrome-dev'] || results['chrome-unstable']) {
     appPath = 'build/deploy-out/web';
     browserPath = _chromeDevPath();
   }
@@ -141,6 +141,8 @@ ArgParser _createArgsParser() {
   parser.addFlag('chrome-dev',
       help: 'run in chrome dev, test the app in build/deploy-out/web/',
       negatable: false);
+  parser.addFlag('chrome-unstable',
+      help: 'an alias to --chrome-dev', negatable: false);
   parser.addFlag('verbose',
       help: 'show more logs when running unit tests in chrome',
       negatable: false);
@@ -211,6 +213,8 @@ String _chromeStablePath() {
 String _chromeDevPath() {
   if (Platform.isLinux) {
     return '/usr/bin/google-chrome-unstable';
+  } else if (Platform.isMacOS) {
+    return '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
   } else {
     throw 'unable to locate Chrome dev; ${Platform.operatingSystem} not yet supported';
   }
