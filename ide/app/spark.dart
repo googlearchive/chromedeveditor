@@ -390,8 +390,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
-    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
     actionManager.registerAction(new TabNextAction(this));
@@ -404,6 +402,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
     actionManager.registerAction(new ImportFolderAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
 
     actionManager.registerKeyListener();
   }
@@ -1054,7 +1054,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
   }
 
-  void _commit();
+  void _commit() { }
 
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
@@ -1182,7 +1182,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
     });
   }
 
-  String get category => 'resource-delete';
+  String get category => 'resource';
 
   bool appliesTo(Object object) => _isResourceList(object);
 }
@@ -1705,15 +1705,20 @@ class _HarnessPushJob extends Job {
 
 class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Resource _selectedResource;
+  Element _titleElement;
   HtmlElement _propertiesElement;
 
   PropertiesAction(Spark spark, Element dialog)
       : super(spark, 'properties', 'Properties…', dialog) {
+    _titleElement = getElement('#propertiesDialog .modal-title');
     _propertiesElement = getElement('#propertiesDialog .modal-body');
   }
 
   void _invoke([List context]) {
     _selectedResource = context.first;
+    String type = _selectedResource is ws.Project ? 'Project' :
+      _selectedResource is ws.Container ? 'Folder' : 'File';
+    _titleElement.text = '${type} Properties';
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
@@ -1729,9 +1734,9 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
       if (gitOperations != null) {
         return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
           final String repoUrl = map['url'];
-          _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+          _addProperty(_propertiesElement, 'Repository', repoUrl);
         }).catchError((e) {
-          _addProperty(_propertiesElement, 'Git Repository',
+          _addProperty(_propertiesElement, 'Repository',
               '<error retrieving Git data>');
         });
       }
@@ -1768,9 +1773,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     div.children.addAll([label, element]);
   }
 
-  void _commit() { }
-
-  String get category => 'resource';
+  String get category => 'properties';
 
   bool appliesTo(context) => true;
 }
@@ -1786,6 +1789,9 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    // Select any previous text in the URL field.
+    Timer.run(_repoUrlElement.select);
+
     _show();
   }
 
@@ -2399,10 +2405,6 @@ class AboutSparkAction extends SparkActionWithDialog {
 
     _show();
   }
-
-  void _commit() {
-    // Nothing to do for this dialog.
-  }
 }
 
 class SettingsAction extends SparkActionWithDialog {
@@ -2418,7 +2420,13 @@ class SettingsAction extends SparkActionWithDialog {
     }
 
     spark.setGitSettingsResetDoneVisible(false);
-    _showRootDirectory().then((_) => _show());
+
+    // For now, don't show the location field on Chrome OS.
+    if (_isCros()) {
+      _show();
+    } else {
+      _showRootDirectory().then((_) => _show());
+    }
   }
 
   Future _showRootDirectory() {
@@ -2433,10 +2441,6 @@ class SettingsAction extends SparkActionWithDialog {
         });
       });
     });
-  }
-
-  void _commit() {
-    // Nothing to do for this dialog.
   }
 }
 

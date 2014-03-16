@@ -249,6 +249,9 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Outline getOutline(analyzer.CompilationUnit ast) {
     Outline outline = new Outline();
 
+    // Ideally, we'd get an AST back, even for very badly formed files.
+    if (ast == null) return outline;
+
     // TODO(ericarnold): Need to implement modifiers
     // TODO(ericarnold): Need to implement types
 
