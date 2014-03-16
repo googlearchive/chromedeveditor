@@ -4,6 +4,7 @@
 
 library spark_polymer.ui;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -29,7 +30,9 @@ class SparkPolymerUI extends SparkWidget {
 
     searchOracle = new SearchOracle(
         () => SparkModel.instance.workspace, _selectFile);
-    bindKeybindingDesc();
+
+    // Delay calling this until the `SparkModel.instance` is populated.
+    Timer.run(bindKeybindingDesc);
   }
 
   void _selectFile(Resource file) {
