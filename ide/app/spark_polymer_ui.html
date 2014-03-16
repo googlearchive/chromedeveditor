@@ -235,18 +235,26 @@
         <h4 class="modal-title">Deploy to Mobile</h4>
       </div>
       <div class="modal-body">
+        <h4>Deploy a Chrome App to an Android Device</h4>
+        <p>
+          You need to have the
+          <a href="https://github.com/MobileChromeApps/harness/releases/"
+              on-click="{{handleAnchorClick}}">
+            ChromeAPT.apk
+          </a>
+          installed on your Android phone or tablet.
+        </p>
         <div class="form-group">
           <form>
             <div>
-              <input type="radio" name="type" value="push-adb" id="adb" checked />
-              <label for="adb">ADB over USB</label>
+              <input id="adb" type="radio" name="type" value="push-adb" checked />
+              <label for="adb">Deploy via USB</label>
             </div>
             <div>
-              <input type="radio" name="type" value="push-ip" id="ip" />
-              <label for="ip">Directly over network</label>
-
-              <label for="pushUrl">Target Host</label>
-              <input id="pushUrl" type="text" class="form-control" placeholder="e.g. 192.168.1.101" />
+              <input id="ip" type="radio" name="type" value="push-ip" />
+              <label for="ip">Deploy to a network host</label>
+              <input id="pushUrl" type="text" class="form-control"
+                  placeholder="e.g. 192.168.1.101" />
             </div>
           </form>
         </div>
@@ -255,7 +263,7 @@
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button overlay-toggle primary focused data-dismiss="modal">
           Deploy
         </spark-button>
       </div>
