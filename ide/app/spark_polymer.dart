@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
@@ -94,6 +95,9 @@ class SparkPolymer extends Spark {
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode) {
     _ui.developerMode = developerMode;
+    chrome.runtime.getPlatformInfo().then((Map m) {
+      _ui.chromeOS = m['os'] == 'cros';
+    });
   }
 
   @override

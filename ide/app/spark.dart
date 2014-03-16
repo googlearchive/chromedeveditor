@@ -2421,7 +2421,7 @@ class SettingsAction extends SparkActionWithDialog {
 
     spark.setGitSettingsResetDoneVisible(false);
 
-    // For now, don't show the location field on Chrome OS.
+    // For now, don't show the location field on Chrome OS; we always use syncFS.
     if (_isCros()) {
       _show();
     } else {

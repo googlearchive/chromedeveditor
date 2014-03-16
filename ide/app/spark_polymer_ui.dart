@@ -19,6 +19,7 @@ import 'lib/workspace.dart';
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
   @observable bool developerMode = false;
+  @observable bool chromeOS = false;
   @observable SuggestOracle searchOracle;
 
   SparkPolymerUI.created() : super.created();
