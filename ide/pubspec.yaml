@@ -12,7 +12,7 @@ dependencies:
   benchmark_harness: '>=1.0.4 <2.0.0'
   bignum: '>=0.0.5 <0.1.0'
   bootjack: any
-  chrome: '>=0.5.2 <0.6.0'
+  chrome: '>=0.5.3 <0.6.0'
   cipher: '>=0.6.0 <0.7.0'
   compiler_unsupported: 0.7.1
   crypto: any
