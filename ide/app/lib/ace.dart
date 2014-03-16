@@ -192,7 +192,12 @@ class AceManager {
     theme = THEMES[0];
 
     // Add some additional file extension editors.
+    ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
+    ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
+    ace.Mode.extensionMap['htm'] = ace.Mode.HTML;
+    ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
+    ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
     parentElement.children.add(_outlineDiv);
     outline = new Outline(services, _outlineDiv);

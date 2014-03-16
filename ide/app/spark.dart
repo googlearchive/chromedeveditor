@@ -117,7 +117,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
-      ['.cmake', '.gitignore', '.lock', '.prefs', '.txt']);
+      ['.cmake', '.gitignore', '.prefs', '.txt']);
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -655,7 +655,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   bool canShowFileAsText(String filename) {
     String extension = path.extension(filename);
-    if (extension.isEmpty) extension = filename;
+
+    // Whitelist files that don't have a period or start with one. Ex.,
+    // `AUTHORS`, `.gitignore`.
+    if (extension.isEmpty) return true;
 
     return _aceManager.isFileExtensionEditable(extension) ||
         _textFileExtensions.contains(extension);
@@ -1786,6 +1789,9 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    // Select any previous text in the URL field.
+    Timer.run(_repoUrlElement.select);
+
     _show();
   }
 
