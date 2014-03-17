@@ -348,6 +348,8 @@ ul.outlineItem.topLevel {
 }
 
 .outlineItem.method {
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #faa;
 }
 
