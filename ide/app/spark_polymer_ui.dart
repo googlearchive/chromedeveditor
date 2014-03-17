@@ -4,6 +4,7 @@
 
 library spark_polymer.ui;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -19,6 +20,7 @@ import 'lib/workspace.dart';
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
   @observable bool developerMode = false;
+  @observable bool chromeOS = false;
   @observable SuggestOracle searchOracle;
 
   SparkPolymerUI.created() : super.created();
@@ -29,7 +31,9 @@ class SparkPolymerUI extends SparkWidget {
 
     searchOracle = new SearchOracle(
         () => SparkModel.instance.workspace, _selectFile);
-    bindKeybindingDesc();
+
+    // Delay calling this until the `SparkModel.instance` is populated.
+    Timer.run(bindKeybindingDesc);
   }
 
   void _selectFile(Resource file) {

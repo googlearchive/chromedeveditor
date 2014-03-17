@@ -306,13 +306,13 @@ body {
 
 #outline {
   position: absolute;
-  minWidth: 40px;
-  right: 15px;
+  min-width: 25px;
+  right: 25px;
   top: 10px;
   bottom: 10px;
   background: #555;
-  borderRadius: 2px;
-  zIndex: 100;
+  border-radius: 2px;
+  z-index: 100;
   opacity: 0.6;
 }
 
@@ -322,38 +322,43 @@ body {
   overflow: scroll;
 }
 
-#outlineContainer > ul {
+#outlineContainer ul {
   margin: 0px;
   padding: 0 0 0 10px;
   list-style-type: none;
 }
 
 
-ul.outlineItem.topLevel {
-  margin: 0px;
-  padding: 0 0 0 10px;
+outlineItem.topLevel > ul {
   background: #333;
 }
 
-.outlineItem.topLevel.function {
+.outlineItem > a:hover {
+  text-decoration: none;
+}
+
+.outlineItem.topLevel.function > a {
   color: #faa;
 }
 
-.outlineItem.topLevel.variable {
+.outlineItem.topLevel.variable > a {
   color: #afa;
 }
 
-.outlineItem.topLevel.class {
+.outlineItem.topLevel.class > a {
   color: #aaf;
 }
 
 .outlineItem.method {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.outlineItem.method > a {
   color: #faa;
 }
 
-.outlineItem.property {
+.outlineItem.property > a {
   color: #afa;
 }
 

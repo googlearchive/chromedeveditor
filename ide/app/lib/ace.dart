@@ -41,7 +41,17 @@ class TextEditor extends Editor {
 
   bool _dirty = false;
 
-  TextEditor(this.aceManager, this.file);
+  factory TextEditor(AceManager aceManager, workspace.File file) {
+    if (DartEditor.isDartFile(file)) {
+      return new DartEditor._create(aceManager, file);
+    }
+    if (CssEditor.isCssFile(file)) {
+      return new CssEditor._create(aceManager, file);
+    }
+    return new TextEditor._create(aceManager, file);
+  }
+
+  TextEditor._create(this.aceManager, this.file);
 
   void setSession(ace.EditSession value) {
     _session = value;
@@ -64,26 +74,18 @@ class TextEditor extends Editor {
   html.Element get element => aceManager.parentElement;
 
   void activate() {
-    // TODO:
-
+    aceManager.outline.visible = supportsOutline;
   }
 
   void resize() => aceManager.resize();
 
   void focus() => aceManager.focus();
 
-  // TODO: [TextEditor] should allow subclasses that know how to handle specific
-  // content (css, html, dart, ...).
-  void format() {
-    if (file.name.endsWith('.css')) {
-      String oldValue = _session.value;
-      String newValue = new CssBeautify().format(oldValue);
-      if (newValue != oldValue) {
-        _replaceContents(newValue);
-        dirty = true;
-      }
-    }
-  }
+  bool get supportsOutline => false;
+
+  bool get supportsFormat => false;
+
+  void format() { }
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -142,6 +144,33 @@ class TextEditor extends Editor {
   }
 }
 
+class DartEditor extends TextEditor {
+  static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
+
+  DartEditor._create(AceManager aceManager, workspace.File file) :
+      super._create(aceManager, file);
+
+  bool get supportsOutline => true;
+}
+
+class CssEditor extends TextEditor {
+  static bool isCssFile(workspace.File file) => file.name.endsWith('.css');
+
+  CssEditor._create(AceManager aceManager, workspace.File file) :
+      super._create(aceManager, file);
+
+  bool get supportsFormat => true;
+
+  void format() {
+    String oldValue = _session.value;
+    String newValue = new CssBeautify().format(oldValue);
+    if (newValue != oldValue) {
+      _replaceContents(newValue);
+      dirty = true;
+    }
+  }
+}
+
 /**
  * A wrapper around an Ace editor instance.
  */
@@ -196,6 +225,18 @@ class AceManager {
 
     parentElement.children.add(_outlineDiv);
     outline = new Outline(services, _outlineDiv);
+    outline.onChildSelected.listen((OutlineItem item) {
+      ace.Point startPoint =
+          currentSession.document.indexToPosition(item.startOffset);
+      ace.Point endPoint =
+          currentSession.document.indexToPosition(item.endOffset);
+
+      ace.Selection selection = _aceEditor.selection;
+      selection.setSelectionAnchor(startPoint.row, startPoint.column);
+      selection.selectTo(endPoint.row, endPoint.column);
+      _aceEditor.focus();
+
+    });
   }
 
   bool isFileExtensionEditable(String extension) {

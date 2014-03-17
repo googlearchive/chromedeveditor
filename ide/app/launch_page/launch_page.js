@@ -30,7 +30,8 @@ onload = function() {
       if (!isLoading) {
         document.body.classList.remove('loading');
       }
-    });
+    }
+  );
 
   webview.addEventListener('loadstart', handleLoadStart);
   webview.addEventListener('loadstop', handleLoadStop);
@@ -50,7 +51,6 @@ function doLayout() {
 
   webview.style.width = webviewWidth + 'px';
   webview.style.height = webviewHeight + 'px';
-
 }
 
 function handleLoadCommit(event) {

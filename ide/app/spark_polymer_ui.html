@@ -476,15 +476,17 @@
             <span id="gitResetSettingsDone">Done</span>
           </div>
         </div>
-        <div class="form-group">
-          <label class="settings-title">Root directory</label>
-          <div>
-            <span id="directory-label" class="settings-label"></span>
+        <template if="{{!chromeOS}}">
+          <div class="form-group">
+            <label class="settings-title">Root directory</label>
+            <div>
+              <span id="directory-label" class="settings-label"></span>
+            </div>
           </div>
-        </div>
+        </template>
         <template if="{{developerMode}}">
           <div class="form-group">
-            <label class="settings-title">Preference</label>
+            <label class="settings-title">Preferences</label>
             <div>
               <spark-button on-click="{{onResetPreference}}">
                 Reset Preferences

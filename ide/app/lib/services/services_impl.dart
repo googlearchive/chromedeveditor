@@ -249,44 +249,46 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Outline getOutline(analyzer.CompilationUnit ast) {
     Outline outline = new Outline();
 
+    // Ideally, we'd get an AST back, even for very badly formed files.
+    if (ast == null) return outline;
+
     // TODO(ericarnold): Need to implement modifiers
     // TODO(ericarnold): Need to implement types
 
     for (analyzer.Declaration declaration in ast.declarations) {
-      OutlineTopLevelEntry outlineDeclaration;
+
       if (declaration is analyzer.TopLevelVariableDeclaration) {
         analyzer.VariableDeclarationList variables = declaration.variables;
 
         for (analyzer.VariableDeclaration variable in variables.variables) {
-          outline.entries.add(populateOutlineEntry(
-              new OutlineTopLevelVariable(variable.name.name), declaration));
+          outline.entries.add(populateOutlineEntry(new OutlineTopLevelVariable(
+              variable.name.name), variable.name));
         }
       } else {
         if (declaration is analyzer.ClassDeclaration) {
-          outlineDeclaration = new OutlineClass(declaration.name.name);
-          OutlineClass outlineClass = outlineDeclaration;
+          OutlineClass outlineClass = new OutlineClass(declaration.name.name);
+          outline.entries.add(populateOutlineEntry(outlineClass,
+              declaration.name));
+
           for (analyzer.ClassMember member in declaration.members) {
             String name;
             if (member is analyzer.MethodDeclaration) {
               outlineClass.members.add(populateOutlineEntry(
-                  new OutlineMethod(member.name.name), member));
+                  new OutlineMethod(member.name.name), member.name));
             } else if (member is analyzer.FieldDeclaration) {
               analyzer.VariableDeclarationList fields = member.fields;
               for (analyzer.VariableDeclaration field in fields.variables) {
                 outlineClass.members.add(populateOutlineEntry(
-                    new OutlineProperty(field.name.name), field));
+                    new OutlineProperty(field.name.name), field.name));
               }
             }
           }
         } else if (declaration is analyzer.FunctionDeclaration) {
-          outlineDeclaration =
-              new OutlineTopLevelFunction(declaration.name.name);
+          outline.entries.add(populateOutlineEntry(new OutlineTopLevelFunction(
+              declaration.name.name), declaration.name));
         } else {
           print("${declaration.runtimeType} is unknown");
         }
-
-        outline.entries.add(populateOutlineEntry(
-            outlineDeclaration, declaration));
       }
     }
 

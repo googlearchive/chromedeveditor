@@ -169,17 +169,20 @@ class Pack {
       switch (baseObj.type) {
         case ObjectTypes.OFS_DELTA_STR:
         case ObjectTypes.REF_DELTA_STR:
-          return expandDeltifiedObject(baseObj).then((
-              PackedObject expandedObject) => doExpand(expandedObject, object));
+          return expandDeltifiedObject(baseObj).then((PackedObject expandedObject) {
+            return doExpand(expandedObject, object);
+          });
         default:
           completer.complete(doExpand(baseObj, object));
       }
     } else {
       // TODO(grv) : desing object class.
+      completer.completeError('todo');
       /*_store.retrieveRawObject(object.baseSha, 'ArrayBuffer').then((baseObj) {
         completer.complete(doExpand(baseObj, object));
       });*/
     }
+
     return completer.future;
   }
 

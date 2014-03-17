@@ -79,6 +79,8 @@ class MockAceEditor implements TextEditor {
   void setSession(ace.EditSession value) { }
 
   void fileContentsChanged() { }
+  bool get supportsOutline => false;
+  bool get supportsFormat => false;
   void format() { }
 }
 
