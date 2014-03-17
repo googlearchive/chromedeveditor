@@ -43,6 +43,13 @@ class Outline {
     _outlineDiv.append(toggleButton);
   }
 
+  bool get visible => _outlineDiv.style.display != 'none';
+  set visible(bool value) {
+    if (value != visible) {
+      _outlineDiv.style.display = (value ? 'block' : 'none');
+    }
+  }
+
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
    */
