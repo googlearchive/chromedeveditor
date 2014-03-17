@@ -18,6 +18,8 @@ class Outline {
   services.AnalyzerService analyzer;
 
   List<OutlineTopLevelItem> children = [];
+  StreamController childSelectedController = new StreamController();
+  Stream get onChildSelected => childSelectedController.stream;
 
   Outline(services.Services services, this._outlineDiv) {
     analyzer = services.getService("analyzer");
@@ -102,6 +104,7 @@ class Outline {
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
     _rootList.append(item._element);
+    item.onClick.listen((event) => childSelectedController.add(item));
     children.add(item);
     return item;
   }
@@ -114,6 +117,8 @@ class Outline {
 
   OutlineClass _addClass(services.OutlineClass data) {
     OutlineClass classItem = new OutlineClass(data);
+    classItem.onChildSelected.listen((event) =>
+        childSelectedController.add(event));
     _addItem(classItem);
     _rootList.append(classItem._childrenRootElement);
     return classItem;
@@ -123,11 +128,18 @@ class Outline {
 abstract class OutlineItem {
   html.LIElement _element;
   services.OutlineEntry _data;
+  html.AnchorElement _anchor;
+  Stream get onClick => _anchor.onClick;
+  int get startOffset => _data.startOffset;
+  int get endOffset => _data.endOffset;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
+    _anchor = new html.AnchorElement(href: "#");
+    _anchor.text = _data.name;
+
+    _element.append(_anchor);
     _element.classes.add("outlineItem $cssClassName");
-    _element.text = _data.name;
   }
 }
 
@@ -149,6 +161,8 @@ class OutlineTopLevelFunction extends OutlineTopLevelItem {
 class OutlineClass extends OutlineTopLevelItem {
   html.UListElement _childrenRootElement = new html.UListElement();
   List<OutlineClassMember> members = [];
+  StreamController childSelectedController = new StreamController();
+  Stream get onChildSelected => childSelectedController.stream;
 
   OutlineClass(services.OutlineClass data)
       : super(data, "class") {
@@ -156,10 +170,11 @@ class OutlineClass extends OutlineTopLevelItem {
     _populate(data);
   }
 
-  OutlineClassMember _addElement(OutlineClassMember member) {
-    _childrenRootElement.append(member._element);
-    members.add(member);
-    return member;
+  OutlineClassMember _addItem(OutlineClassMember item) {
+    _childrenRootElement.append(item._element);
+    item.onClick.listen((event) => childSelectedController.add(item));
+    members.add(item);
+    return item;
   }
 
   void _populate(services.OutlineClass classData) {
@@ -179,10 +194,9 @@ class OutlineClass extends OutlineTopLevelItem {
   }
 
   OutlineMethod addMethod(services.OutlineMethod data) =>
-      _addElement(new OutlineMethod(data));
-
+      _addItem(new OutlineMethod(data));
   OutlineProperty addProperty(services.OutlineProperty data) =>
-      _addElement(new OutlineProperty(data));
+      _addItem(new OutlineProperty(data));
 }
 
 abstract class OutlineClassMember extends OutlineItem {

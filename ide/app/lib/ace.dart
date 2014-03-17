@@ -225,6 +225,18 @@ class AceManager {
 
     parentElement.children.add(_outlineDiv);
     outline = new Outline(services, _outlineDiv);
+    outline.onChildSelected.listen((OutlineItem item) {
+      ace.Point startPoint =
+          currentSession.document.indexToPosition(item.startOffset);
+      ace.Point endPoint =
+          currentSession.document.indexToPosition(item.endOffset);
+
+      ace.Selection selection = _aceEditor.selection;
+      selection.setSelectionAnchor(startPoint.row, startPoint.column);
+      selection.selectTo(endPoint.row, endPoint.column);
+      _aceEditor.focus();
+
+    });
   }
 
   bool isFileExtensionEditable(String extension) {
