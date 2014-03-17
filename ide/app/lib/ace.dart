@@ -148,7 +148,7 @@ class DartEditor extends TextEditor {
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
   DartEditor._create(AceManager aceManager, workspace.File file) :
-    super._create(aceManager, file);
+      super._create(aceManager, file);
 
   bool get supportsOutline => true;
 }
@@ -157,7 +157,7 @@ class CssEditor extends TextEditor {
   static bool isCssFile(workspace.File file) => file.name.endsWith('.css');
 
   CssEditor._create(AceManager aceManager, workspace.File file) :
-    super._create(aceManager, file);
+      super._create(aceManager, file);
 
   bool get supportsFormat => true;
 
