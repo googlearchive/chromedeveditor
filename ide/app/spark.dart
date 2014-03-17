@@ -1716,7 +1716,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
   void _invoke([List context]) {
     _selectedResource = context.first;
-    String type = _selectedResource is ws.Project ? 'Project' :
+    final String type = _selectedResource is ws.Project ? 'Project' :
       _selectedResource is ws.Container ? 'Folder' : 'File';
     _titleElement.text = '${type} Properties';
     _propertiesElement.innerHtml = '';

@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:bootjack/bootjack.dart' as bootjack;
-import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
@@ -18,6 +17,7 @@ import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
+import 'lib/app.dart';
 import 'lib/jobs.dart';
 
 void main() {
@@ -95,9 +95,7 @@ class SparkPolymer extends Spark {
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode) {
     _ui.developerMode = developerMode;
-    chrome.runtime.getPlatformInfo().then((Map m) {
-      _ui.chromeOS = m['os'] == 'cros';
-    });
+    addParticipant(new _AppSetupParticipant());
   }
 
   @override
@@ -248,5 +246,16 @@ class SparkPolymer extends Spark {
 
   void _systemModalComplete() {
     backdropShowing = false;
+  }
+}
+
+class _AppSetupParticipant extends LifecycleParticipant {
+  /**
+   * Update the Polymer UI with async info from the Spark app instance.
+   */
+  Future applicationStarted(Application application) {
+    SparkPolymer app = application;
+    app._ui.chromeOS = app.platformInfo.isCros;
+    return new Future.value();
   }
 }
