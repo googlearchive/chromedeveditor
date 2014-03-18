@@ -12,17 +12,17 @@
   background-color: #F7F7F7;
 }
 
-:host(.horizontal) {
+:host(.horizontal:host) {
   cursor: row-resize;
 }
 
-:host(.vertical-handle) {
+:host(.vertical-handle:host) {
   background: url('handle_vert.png') no-repeat center;
 }
 
-:host(.horizontal-handle) {
+:host(.horizontal-handle:host) {
   background: url('handle_horiz.png') no-repeat center;
 }
 
-:host:hover, :host(.active) {
+:host:hover, :host(.active:host) {
 }

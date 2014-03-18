@@ -27,11 +27,11 @@
   background-position: 0 -44px;
 }
 
-:host(.selected) {
+:host(.selected:host) {
   background-position: 0 -88px;
 }
 
-:host:active, :host(.selected):active {
+:host:active, :host(.selected:host):active {
   background-position: 0 -132px;
 }
 

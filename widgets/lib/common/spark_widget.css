@@ -5,10 +5,10 @@
 @import url("../../../packages/bootjack/css/bootstrap.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
-:host(.veiled) {
+:host(.veiled:host) {
   opacity: 0;
 }
 
-:host(.unveiled) {
+:host(.unveiled:host) {
   opacity: 1;
 }
