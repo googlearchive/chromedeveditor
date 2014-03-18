@@ -733,7 +733,7 @@ class FilesController implements TreeViewDelegate {
     if (estimatedHeight + clickPoint.y > topUi.offsetHeight) {
       var positionY = clickPoint.y - estimatedHeight;
       if (positionY < 0) {
-        // Add additional 5px to show 'shadow' of context menu.
+        // Add additional 5px to show boundary of context menu.
         contextMenu.style.top = '${topUi.offsetHeight - estimatedHeight - 5}px';
       } else {
         contextMenu.style.top = '${positionY}px';
