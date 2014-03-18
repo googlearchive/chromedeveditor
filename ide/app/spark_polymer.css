@@ -329,6 +329,11 @@ body {
   list-style-type: none;
 }
 
+#outlineContainer > ul {
+  margin: 10px;
+  padding: 0px;
+}
+
 outlineItem.topLevel > ul {
   background: #333;
 }
@@ -340,6 +345,15 @@ outlineItem.topLevel > ul {
 .outlineItem {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.outlineItem.topLevel.class > ul {
+  border-left: 2px #111 solid;
+}
+
+li.outlineItem.topLevel.class {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
@@ -356,3 +370,9 @@ outlineItem.topLevel > ul {
   color: #77c;
 }
 
+#toggleOutlineButton {
+  position: absolute;
+  height: 20px;
+  right: 2px;
+  bottom: 0px;
+}
