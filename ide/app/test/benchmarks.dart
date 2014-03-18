@@ -43,13 +43,13 @@ defineTests() {
   group('benchmarks', () {
     //test('archive inflate', () => runBenchmark(new InflateBenchmark()));
     //test('archive deflate', () => runBenchmark(new DeflateBenchmark()));
-    test('zlib inflate', () => runBenchmark(new ZlibInflateBenchmark()));
-    test('zlib deflate', () => runBenchmark(new ZlibDeflateBenchmark()));
+    //test('zlib inflate', () => runBenchmark(new ZlibInflateBenchmark()));
+    //test('zlib deflate', () => runBenchmark(new ZlibDeflateBenchmark()));
 
-    test('create zip', () => runBenchmark(new CreateZipBenchmark()));
+    //test('create zip', () => runBenchmark(new CreateZipBenchmark()));
 
-    test('git sha', () => runBenchmark(new GitShaBenchmark()));
-    test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
+    //test('git sha', () => runBenchmark(new GitShaBenchmark()));
+    //test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
   });
 }
 
