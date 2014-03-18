@@ -310,10 +310,11 @@ body {
   right: 25px;
   top: 10px;
   bottom: 10px;
-  background: #555;
+  background: #000;
   border-radius: 2px;
   z-index: 100;
-  opacity: 0.6;
+  opacity: 0.8;
+  border: 1px #888 solid;
 }
 
 #outlineContainer {
@@ -328,7 +329,6 @@ body {
   list-style-type: none;
 }
 
-
 outlineItem.topLevel > ul {
   background: #333;
 }
@@ -337,24 +337,22 @@ outlineItem.topLevel > ul {
   text-decoration: none;
 }
 
-.outlineItem.topLevel.function > a {
-  color: #faa;
+.outlineItem {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.outlineItem.topLevel.variable > a {
-  color: #afa;
+.outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
+  color: #ddd;
 }
 
-.outlineItem.topLevel.class > a {
-  color: #aaf;
+.outlineItem.topLevel.function, .outlineItem.method,
+    .outlineItem.topLevel.function > a, .outlineItem.method > a {
+  color: #888;
 }
 
-.outlineItem.method > a {
-  color: #faa;
+.outlineItem.topLevel.variable, .outlineItem.property,
+    .outlineItem.topLevel.variable > a, .outlineItem.property > a {
+  color: #77c;
 }
-
-.outlineItem.property > a {
-  color: #afa;
-}
-
 
