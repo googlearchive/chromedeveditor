@@ -87,7 +87,7 @@ class EditorManager implements EditorProvider {
       new StreamController.broadcast();
 
   static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
+      new RegExp(r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {

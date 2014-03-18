@@ -189,8 +189,8 @@ class ImageViewer implements Editor {
 
   /// Get the cursor position of the event and map it to the virtual coordinate.
   html.Point _getEventPosition(html.WheelEvent e) {
-    int x = e.offset.x;
-    int y = e.offset.y;
+    num x = e.offset.x;
+    num y = e.offset.y;
     html.Element parent = e.target as html.Element;
     while (parent != _rootElement) {
       x += parent.offsetLeft - parent.scrollLeft;
