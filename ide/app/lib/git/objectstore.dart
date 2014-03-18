@@ -246,17 +246,16 @@ class ObjectStore {
 
     return this._findLooseObject(sha).then((chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
-        List<int> inflated = Zlib.inflate(buffer.getBytes()).data;
+        chrome.ArrayBuffer inflated = new chrome.ArrayBuffer.fromBytes(
+            Zlib.inflate(new Uint8List.fromList(buffer.getBytes())).data);
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
           // TODO do trim buffer and return completer ;
           var buff;
           return new LooseObject(inflated);
         } else {
-          // TODO: this seems inefficient - why are we reading the inflated
-          // data as 'Text'?
-          return FileOps.readBlob(new Blob([inflated]), 'Text').then((data) {
-            return new LooseObject(data);
-          });
+          return FileOps.readBlob(new Blob(
+              [new Uint8List.fromList(inflated.getBytes())]), 'Text').then(
+              (data) => new LooseObject(data));
         }
       });
     }, onError:(e) {
@@ -620,7 +619,7 @@ class ObjectStore {
 
           Future<String> writeContent() {
             chrome.ArrayBuffer content = new chrome.ArrayBuffer.fromBytes(
-                Zlib.deflate(store));
+                Zlib.deflate(store).data);
             // TODO: Use fileEntry.createWriter() once implemented in ChromeGen.
             return fileEntry.writeBytes(content).then((_) {
               return digest;
