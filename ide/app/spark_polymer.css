@@ -347,9 +347,11 @@ outlineItem.topLevel > ul {
   text-overflow: ellipsis;
 }
 
+/* For left guides in classes:
 .outlineItem.topLevel.class > ul {
   border-left: 2px #111 solid;
 }
+*/
 
 li.outlineItem.topLevel.class {
   margin-top: 10px;
