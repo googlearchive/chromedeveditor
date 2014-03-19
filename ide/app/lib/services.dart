@@ -186,7 +186,7 @@ class ChromeServiceImpl extends Service {
         case "getAppContents":
           String path = event.data['path'];
           return getAppContentsBinary(path).then((List<int> contents) {
-            return _sendResponse(event, {"contents": contents.toList()});
+            return _sendResponse(event, {"contents": contents});
           });
         case "getFileContents":
           String uuid = event.data['uuid'];
