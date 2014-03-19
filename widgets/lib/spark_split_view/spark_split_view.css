@@ -8,36 +8,37 @@
   display: flex;
 }
 
-:host([direction="left"]), :host([direction="right"]) {
+:host([direction="left"], [direction="right"]) {
   flex-flow: row;
 }
 
-:host([direction="up"]), :host([direction="down"]) {
+:host([direction="up"], [direction="down"]) {
   flex-flow: column;
 }
 
 ::content > * {
   position: relative;
 }
+* /content/ * {
+  position: relative;
+}
 
 /* If the resizing target is to the left or up, make the other one flex so
    it auto-adjusts.
 */
-:host([direction="left"]) > content[select=":nth-child(2)"]::content > * {
+:host([direction="left"], [direction="up"]) > content[select=":nth-child(2)"]::content > * {
   flex: 1;
 }
-
-:host([direction="up"]) > content[select=":nth-child(2)"]::content > * {
+:host([direction="left"], [direction="up"]) > content[select=":nth-child(2)"] /content/ * {
   flex: 1;
 }
 
 /* If the resizing target is to the right or down, make the other one flex so
    it auto-adjusts.
 */
-:host([direction="right"]) > content[select=":nth-child(1)"]::content > * {
+:host([direction="right"], [direction="down"]) > content[select=":nth-child(1)"]::content > * {
   flex: 1;
 }
-
-:host([direction="down"]) > content[select=":nth-child(1)"]::content > * {
+:host([direction="right"], [direction="down"]) > content[select=":nth-child(1)"] /content/ * {
   flex: 1;
 }
