@@ -4,7 +4,7 @@
 
 @import url("../common/spark_widget.css");
 
-.toolbar {
+#toolbar {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -19,20 +19,29 @@
   border-bottom: 1px solid #ddd;
 }
 
-/* toolbars can be made plain and nested toolbars are unstyled by default */
+/* Toolbars can be made plain and nested toolbars are unstyled by default */
 /* TODO(ffu): use :scope when it is available */
-.toolbar[responsive=true] {
+#toolbar[responsive=true] {
   box-shadow: none;
   border-bottom: 0;
 }
 
-/*@polyfill .toolbar > * */
+/*@polyfill #toolbar > * */
 ::content > * {
   margin: 0 4px;
 }
+* /content/ * {
+  margin: 0 4px;
+}
 
-/*@polyfill .toolbar > .flex */
-::content .flex {
+/*@polyfill #toolbar > .flex */
+::content > .flex {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+}
+* /content/ .flex {
   -webkit-box-flex: 1;
   -webkit-flex: 1;
   -ms-flex: 1;
@@ -56,5 +65,7 @@
   ::content .hidden-narrow {
     display: none;
   }
-
+  * /content/ .hidden-narrow {
+    display: none;
+  }
 }
