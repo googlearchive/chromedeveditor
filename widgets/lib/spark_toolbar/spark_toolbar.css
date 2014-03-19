@@ -4,7 +4,7 @@
 
 @import url("../common/spark_widget.css");
 
-#toolbar {
+.toolbar {
   display: -webkit-box;
   display: -webkit-flex;
   display: -ms-flexbox;
@@ -21,12 +21,12 @@
 
 /* Toolbars can be made plain and nested toolbars are unstyled by default */
 /* TODO(ffu): use :scope when it is available */
-#toolbar[responsive=true] {
+.toolbar[responsive=true] {
   box-shadow: none;
   border-bottom: 0;
 }
 
-/*@polyfill #toolbar > * */
+/*@polyfill .toolbar > * */
 ::content > * {
   margin: 0 4px;
 }
@@ -34,7 +34,7 @@
   margin: 0 4px;
 }
 
-/*@polyfill #toolbar > .flex */
+/*@polyfill .toolbar > .flex */
 ::content > .flex {
   -webkit-box-flex: 1;
   -webkit-flex: 1;
