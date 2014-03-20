@@ -306,7 +306,7 @@ body {
 
 #outline {
   position: absolute;
-  min-width: 25px;
+  min-width: 30px;
   right: 25px;
   top: 10px;
   bottom: 10px;
@@ -374,7 +374,8 @@ li.outlineItem.topLevel.class {
 
 #toggleOutlineButton {
   position: absolute;
-  height: 20px;
+  height: 30px;
+  width: 30px;
   right: 2px;
   bottom: 0px;
 }

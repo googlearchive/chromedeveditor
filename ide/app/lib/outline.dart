@@ -20,6 +20,10 @@ class Outline {
   List<OutlineTopLevelItem> children = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
+  static const _showGlyph =
+      '<span class="glyphicon glyphicon-play"></span>';
+  static const _hideGlyph =
+      '<span class="glyphicon glyphicon-list"></span>';
 
   Outline(services.Services services, this._outlineDiv) {
     analyzer = services.getService("analyzer");
@@ -32,10 +36,18 @@ class Outline {
     _outlineDiv.append(_outlineContainer);
 
     html.ButtonElement toggleButton = new html.ButtonElement();
-    toggleButton
-        ..onClick.listen((e) => e.target.text = _toggle() ? ">" : "<")
-        ..text = ">"
-        ..id = "toggleOutlineButton";
+    toggleButton = new html.ButtonElement()
+        ..innerHtml = _showGlyph
+        ..id = "toggleOutlineButton"
+        ..onClick.listen((e) {
+          toggleButton.innerHtml = _toggle() ? _showGlyph : _hideGlyph;
+        });
+
+
+
+    html.SpanElement test = new html.SpanElement()
+        ..classes.add("glyphicon")
+        ..classes.add("glyphicon-play");
 
     _outlineDiv.append(toggleButton);
   }
