@@ -361,6 +361,18 @@ class AndroidDevice {
     });
   }
 
+  /**
+   * Releases any claimed USB interface.
+   */
+  Future dispose() {
+    print('disposing usb interface ${adbInterface.interfaceNumber}');
+
+    return chrome.usb.releaseInterface(adbConnectionHandle,
+        adbInterface.interfaceNumber).catchError((e) {
+      return null;
+    });
+  }
+
   Future<AsymmetricKeyPair> getKeys(ByteData seedToken) {
     return _prefs.getValue('adb_rsa_keys').then((jsonKeys) {
       if (jsonKeys == null) {
