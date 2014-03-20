@@ -365,8 +365,6 @@ class AndroidDevice {
    * Releases any claimed USB interface.
    */
   Future dispose() {
-    print('disposing usb interface ${adbInterface.interfaceNumber}');
-
     return chrome.usb.releaseInterface(adbConnectionHandle,
         adbInterface.interfaceNumber).catchError((e) {
       return null;
