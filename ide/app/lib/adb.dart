@@ -679,19 +679,7 @@ class AndroidDevice {
   void handleMessage() {
     // TODO(shepheb): Handle the incoming messages.
   }
-  
-
-  /**
-    * Releases any claimed USB interface.
-    */
-   Future dispose() {
-    return chrome.usb.releaseInterface(adbConnectionHandle,
-         adbInterface.interfaceNumber).catchError((e) {
-       return null;
-     });
-   }
 }
-
 
 String _serializeRSAKeys(AsymmetricKeyPair keys) {
   Map<String, String> cereal = new Map<String, String>();

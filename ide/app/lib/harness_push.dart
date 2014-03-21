@@ -110,10 +110,6 @@ class HarnessPush {
         } else {
           throw lines.first;
         }
-      }).whenComplete(() {
-        if (client != null) {
-          client.dispose();
-        }
       });
     });
   }
@@ -162,8 +158,6 @@ class HarnessPush {
       return doOpen(0).then((_) {
         return device.connect(new SystemIdentity());
       }).then((_) => device).catchError((e) {
-        device.dispose();
-        device = null;
         return new Future.error(e);
       });
     } else {
@@ -200,11 +194,6 @@ class HarnessPush {
             '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
       } else {
         return body;
-      }
-    }).whenComplete(() {
-      if (device != null) {
-        device.dispose();
-        device = null;
       }
     });
   }
