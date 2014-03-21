@@ -14,9 +14,6 @@ import 'workspace.dart';
 import 'workspace_utils.dart';
 
 class HarnessPush {
-  // The single ADB connection is shared across all push contexts.
-  static AndroidDevice device;
-
   final Container appContainer;
   final PreferenceStore _prefs;
 
@@ -134,45 +131,43 @@ class HarnessPush {
 
 
   // Safe to call multiple times. It will open the device if it has not been opened yet.
-  Future _fetchAndroidDevice() {
-    if (device == null) {
-      device = new AndroidDevice(_prefs);
+  Future<AndroidDevice> _fetchAndroidDevice() {
+    AndroidDevice device = new AndroidDevice(_prefs);
 
-      Future doOpen(int index) {
-        Map m = _KNOWN_DEVICES[index];
-        return device.open(m['vendorId'], m['productId']).catchError((e) {
-          if ((e == 'no-device') || (e == 'no-connection')) {
-            // No matching device found, try again.
-            ++index;
-            if (index >= _KNOWN_DEVICES.length) {
-              return new Future.error('No known mobile device connected.\n' +
-                  'Please check whether you plugged your mobile device properly.');
-            }
-            return doOpen(index);
-          } else {
-            return new Future.error('Connection to the Android device failed.\n' +
-                'Please check whether "Developer Options" and "USB debugging" is enabled on your device.\n' +
-                'Enable Developer Options by going in Settings > System > About phone and press 7 times on Build number.\n' +
-                '"Developer options" should now appear in Settings > System > Developer options. ' +
-                'You can now enable "USB debugging" in that menu.');
+    Future doOpen(int index) {
+      Map m = _KNOWN_DEVICES[index];
+      return device.open(m['vendorId'], m['productId']).catchError((e) {
+        if ((e == 'no-device') || (e == 'no-connection')) {
+          // No matching device found, try again.
+          ++index;
+          if (index >= _KNOWN_DEVICES.length) {
+            return new Future.error('No known mobile device connected.\n' +
+                'Please check whether you plugged your mobile device properly.');
           }
-        });
-      }
-
-      return doOpen(0).then((_) {
-        return device.connect(new SystemIdentity());
-      }).then((_) => device).catchError((e) {
-        device = null;
-        return new Future.error(e);
+          return doOpen(index);
+        } else {
+          return new Future.error('Connection to the Android device failed.\n' +
+              'Please check whether "Developer Options" and "USB debugging" is enabled on your device.\n' +
+              'Enable Developer Options by going in Settings > System > About phone and press 7 times on Build number.\n' +
+              '"Developer options" should now appear in Settings > System > Developer options. ' +
+              'You can now enable "USB debugging" in that menu.');
+        }
       });
-    } else {
-      return new Future.value(device);
     }
+
+    return doOpen(0).then((_) {
+      return device.connect(new SystemIdentity()).catchError((e) {
+        device.dispose();
+        throw e;
+      });
+    }).then((_) => device);
   }
 
   Future pushADB(ProgressMonitor monitor) {
     monitor.start('Deploying…', 10);
     List<int> httpRequest;
+
+    AndroidDevice _device;
 
     return archiveContainer(appContainer).then((List<int> archivedData) {
       monitor.worked(3);
@@ -181,8 +176,10 @@ class HarnessPush {
 
       // Now send this payload to the USB code.
       return _fetchAndroidDevice();
-    }).then((device) {
-      return device.sendHttpRequest(httpRequest, 2424).timeout(
+    }).then((deviceResult) {
+      _device = deviceResult;
+
+      return _device.sendHttpRequest(httpRequest, 2424).timeout(
           new Duration(seconds: 30), onTimeout: () {
             return new Future.error('Push timed out');
           });
@@ -200,6 +197,8 @@ class HarnessPush {
       } else {
         return body;
       }
+    }).whenComplete(() {
+      if (_device != null) _device.dispose();
     });
   }
 }
