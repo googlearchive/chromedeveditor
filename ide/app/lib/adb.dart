@@ -687,7 +687,6 @@ class AndroidDevice {
    Future dispose() {
     return chrome.usb.releaseInterface(adbConnectionHandle,
          adbInterface.interfaceNumber).catchError((e) {
-           device = null;
        return null;
      });
    }
