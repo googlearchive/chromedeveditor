@@ -126,7 +126,8 @@ class HarnessPush {
     { 'vendorId': 0x04e8, 'productId': 0x685e }, // Galaxy S II debug mode
     { 'vendorId': 0x04e8, 'productId': 0x6866 }, // Galaxy S III debug mode
     { 'vendorId': 0x04e8, 'productId': 0x6860 }, // Galaxy Nexus
-    { 'vendorId': 0x0bb4, 'productId': 0x0f63 }  // HTC One
+    { 'vendorId': 0x0bb4, 'productId': 0x0f63 },  // HTC One
+    { 'vendorId': 0x18d1, 'productId': 0xd002 }  // Moto X
   ];
 
 
