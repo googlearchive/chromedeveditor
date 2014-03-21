@@ -351,8 +351,8 @@ class AndroidDevice {
         adbInterface.interfaceNumber).catchError((_) {
       return new Future.error(
         'Could not open ADB connection.\n' +
-        'Please check whether Chrome ADT is running.\n' +
-        'If it\'s already running. On a Chrome browser window, go to chrome://inspect > Devices > uncheck Discover USB devices then unplug and replug your Android phone.');
+        'Please check whether Chrome ADT is running on your mobile device.\n' +
+        'Additionally, DevTools may not have released the USB connection. To check this go to chrome://inspect, Devices, uncheck \'Discover USB devices\', then disconnect and re-connect your phone from USB.');
     }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
           AdbUtil.MAX_PAYLOAD, systemIdentity.toString());
@@ -679,6 +679,18 @@ class AndroidDevice {
   void handleMessage() {
     // TODO(shepheb): Handle the incoming messages.
   }
+  
+
+  /**
+    * Releases any claimed USB interface.
+    */
+   Future dispose() {
+    return chrome.usb.releaseInterface(adbConnectionHandle,
+         adbInterface.interfaceNumber).catchError((e) {
+           device = null;
+       return null;
+     });
+   }
 }
 
 
