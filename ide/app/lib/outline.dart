@@ -28,19 +28,32 @@ class Outline {
     _outlineDiv.id = "outline";
 
     _outlineContainer = new html.DivElement();
+    _outlineContainer.onMouseWheel.listen((html.MouseEvent event) {
+      event.stopPropagation();
+    });
     _outlineContainer.id = "outlineContainer";
     _outlineDiv.append(_outlineContainer);
 
-    html.ButtonElement toggleButton = new html.ButtonElement();
-    toggleButton
-        ..onClick.listen((e) => e.target.text = _toggle() ? ">" : "<")
-        ..text = ">";
+    html.SpanElement showGlyph = new html.SpanElement()
+        ..classes.add('glyphicon')
+        ..classes.add('glyphicon-play')
+        ..id = "showOutlineGlyph";
+    html.SpanElement hideGlyph = new html.SpanElement()
+        ..classes.add('glyphicon')
+        ..classes.add('glyphicon-list')
+        ..style.display = 'none'
+        ..id = "hideOutlineGlyph";
 
-    toggleButton.style
-        ..position = 'absolute'
-        ..height ='20px'
-        ..top ='50%'
-        ..bottom ='50%';
+    html.ButtonElement toggleButton = new html.ButtonElement();
+    toggleButton = new html.ButtonElement()
+        ..id = "toggleOutlineButton"
+        ..append(hideGlyph)
+        ..append(showGlyph)
+        ..onClick.listen((e) {
+          bool toggled = _toggle();
+          showGlyph.style.display = !toggled ? 'none' : 'inline';
+          hideGlyph.style.display = toggled ? 'none' : 'inline';
+        });
 
     _outlineDiv.append(toggleButton);
   }
@@ -103,7 +116,7 @@ class Outline {
   }
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
-    _rootList.append(item._element);
+    _rootList.append(item.element);
     item.onClick.listen((event) => childSelectedController.add(item));
     children.add(item);
     return item;
@@ -120,7 +133,6 @@ class Outline {
     classItem.onChildSelected.listen((event) =>
         childSelectedController.add(event));
     _addItem(classItem);
-    _rootList.append(classItem._childrenRootElement);
     return classItem;
   }
 }
@@ -129,9 +141,6 @@ abstract class OutlineItem {
   html.LIElement _element;
   services.OutlineEntry _data;
   html.AnchorElement _anchor;
-  Stream get onClick => _anchor.onClick;
-  int get startOffset => _data.startOffset;
-  int get endOffset => _data.endOffset;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
@@ -141,6 +150,11 @@ abstract class OutlineItem {
     _element.append(_anchor);
     _element.classes.add("outlineItem $cssClassName");
   }
+
+  Stream get onClick => _anchor.onClick;
+  int get startOffset => _data.startOffset;
+  int get endOffset => _data.endOffset;
+  html.LIElement get element => _element;
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
@@ -160,18 +174,19 @@ class OutlineTopLevelFunction extends OutlineTopLevelItem {
 
 class OutlineClass extends OutlineTopLevelItem {
   html.UListElement _childrenRootElement = new html.UListElement();
+
   List<OutlineClassMember> members = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
 
   OutlineClass(services.OutlineClass data)
       : super(data, "class") {
-    _childrenRootElement.classes = _element.classes;
+    _element.append(_childrenRootElement);
     _populate(data);
   }
 
   OutlineClassMember _addItem(OutlineClassMember item) {
-    _childrenRootElement.append(item._element);
+    _childrenRootElement.append(item.element);
     item.onClick.listen((event) => childSelectedController.add(item));
     members.add(item);
     return item;
