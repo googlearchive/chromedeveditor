@@ -165,14 +165,15 @@ class AdbMessage {
     dataCrc32 = AdbUtil.checksum(data);
   }
 
+
   String toString() {
     StringBuffer sb = new StringBuffer()
-        ..write('[command = ${command.toRadixString(16)}, ')
-        ..write('arg0 = ${arg0.toRadixString(16)}, ')
-        ..write('arg1 = ${arg1.toRadixString(16)}, ')
-        ..write('dataLength = ${dataLength.toRadixString(16)}, ')
-        ..write('dataCrc32 = ${dataCrc32.toRadixString(16)}, ')
-        ..write('magic = ${magic.toRadixString(16)}]');
+    ..write('[command = ${command.toRadixString(16)}, ')
+    ..write('arg0 = ${arg0.toRadixString(16)}, ')
+    ..write('arg1 = ${arg1.toRadixString(16)}, ')
+    ..write('dataLength = ${dataLength.toRadixString(16)}, ')
+    ..write('dataCrc32 = ${dataCrc32.toRadixString(16)}, ')
+    ..write('magic = ${magic.toRadixString(16)}]');
 
     if (dataBuffer != null) {
       sb.write('[');
@@ -232,15 +233,15 @@ class AndroidDevice {
         chrome.EnumerateDevicesAndRequestAccessOptions opts =
             new chrome.EnumerateDevicesAndRequestAccessOptions(
                 vendorId: device.vendorId, productId: device.productId);
-        return chrome.usb.findDevices(opts).then(
-            (List<chrome.ConnectionHandle> connections) {
-          if (connections.length == 0) {
-            return new Future.error('no-connection');
-          } else {
-            // It's a valid device. Use it as the result.
-            resultDevice = device;
-          }
-        });
+        return chrome.usb.findDevices(opts)
+            .then((List<chrome.ConnectionHandle> connections) {
+              if (connections.length == 0) {
+                return new Future.error('no-connection');
+              } else {
+                // It's a valid device. Use it as the result.
+                resultDevice = device;
+              }
+            });
       }).then((_) {
         return resultDevice;
       });
@@ -253,12 +254,13 @@ class AndroidDevice {
       chrome.EnumerateDevicesAndRequestAccessOptions opts =
           new chrome.EnumerateDevicesAndRequestAccessOptions(
               vendorId: device.vendorId, productId: device.productId);
-      return chrome.usb.findDevices(opts).then(
-          (List<chrome.ConnectionHandle> connections) {
-        return Future.forEach(connections, (chrome.ConnectionHandle handle) {
-          return _checkDevice(handle, device);
-        });
-      });
+      return chrome.usb.findDevices(opts)
+          .then((List<chrome.ConnectionHandle> connections) {
+            return Future.forEach(connections,
+                (chrome.ConnectionHandle handle) {
+                  return _checkDevice(handle, device);
+                });
+          });
     });
   }
 
@@ -322,8 +324,8 @@ class AndroidDevice {
         ..length = arrayBuffer.getBytes().length
         ..data = arrayBuffer;
 
-    return chrome.usb.bulkTransfer(adbConnectionHandle, transferInfo).then(
-        (chrome.TransferResultInfo result) {
+    return chrome.usb.bulkTransfer(adbConnectionHandle, transferInfo)
+        .then((chrome.TransferResultInfo result) {
       if (result.resultCode != 0) {
         return new Future.error('Failed to send');
       } else {
@@ -342,13 +344,15 @@ class AndroidDevice {
     });
   }
 
+
   // Connects to and authenticates with the device.
   Future connect(SystemIdentity systemIdentity) {
     return chrome.usb.claimInterface(adbConnectionHandle,
         adbInterface.interfaceNumber).catchError((_) {
-      return new Future.error('''
-Could not open an ADB connection; please check whether the Chrome ADT application is running on the Android device.
-Additionally, DevTools may not have released the USB connection. To check this go to chrome://inspect, Devices, uncheck 'Discover USB devices', then disconnect and re-connect your phone from USB.''');
+      return new Future.error(
+        'Could not open ADB connection.\n' +
+        'Please check whether Chrome ADT is running.\n' +
+        'If it\'s already running. On a Chrome browser window, go to chrome://inspect > Devices > uncheck Discover USB devices then unplug and replug your Android phone.');
     }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
           AdbUtil.MAX_PAYLOAD, systemIdentity.toString());
@@ -357,16 +361,6 @@ Additionally, DevTools may not have released the USB connection. To check this g
       return sendMessage(adbMessage).then((_) {
         return expectConnectionMessage();
       });
-    });
-  }
-
-  /**
-   * Releases any claimed USB interface.
-   */
-  Future dispose() {
-    return chrome.usb.releaseInterface(adbConnectionHandle,
-        adbInterface.interfaceNumber).catchError((e) {
-      return null;
     });
   }
 
@@ -395,9 +389,8 @@ Additionally, DevTools may not have released the USB connection. To check this g
       KeyGenerator gen = new KeyGenerator("RSA");
       gen.init(paramsWithRandom);
       AsymmetricKeyPair keys = gen.generateKeyPair();
-      return _prefs.setValue('adb_rsa_keys', _serializeRSAKeys(keys)).then((_) {
-        return keys;
-      });
+      return _prefs.setValue('adb_rsa_keys', _serializeRSAKeys(keys))
+          .then((_) => keys);
     });
   }
 
@@ -544,12 +537,12 @@ Additionally, DevTools may not have released the USB connection. To check this g
     AdbMessage readAdbMessage;
     chrome.GenericTransferInfo readTransferInfo =
         new chrome.GenericTransferInfo()
-            ..direction = inDescriptor.direction
-            ..endpoint = inDescriptor.address
-            ..length = AdbUtil.MESSAGE_SIZE_PAYLOAD;
+        ..direction = inDescriptor.direction
+        ..endpoint = inDescriptor.address
+        ..length = AdbUtil.MESSAGE_SIZE_PAYLOAD;
 
-    return chrome.usb.bulkTransfer(adbConnectionHandle, readTransferInfo).then(
-        (chrome.TransferResultInfo readResult) {
+    return chrome.usb.bulkTransfer(adbConnectionHandle, readTransferInfo)
+        .then((chrome.TransferResultInfo readResult) {
       // Read back a MessageBuffer for AUTH response.
       if (readResult.resultCode != 0) {
         return new Future.error(readResult);
@@ -561,12 +554,12 @@ Additionally, DevTools may not have released the USB connection. To check this g
       if (readAdbMessage.dataLength > 0) {
         chrome.GenericTransferInfo readDataInfo =
             new chrome.GenericTransferInfo()
-                ..direction = inDescriptor.direction
-                ..endpoint = inDescriptor.address
-                ..length = readAdbMessage.dataLength;
+            ..direction = inDescriptor.direction
+            ..endpoint = inDescriptor.address
+            ..length = readAdbMessage.dataLength;
 
-        return chrome.usb.bulkTransfer(adbConnectionHandle, readDataInfo).then(
-            (chrome.TransferResultInfo readDataResult) {
+        return chrome.usb.bulkTransfer(adbConnectionHandle, readDataInfo)
+            .then((chrome.TransferResultInfo readDataResult) {
           if (readDataResult.resultCode != 0) {
             return new Future.error(readDataResult);
           }
@@ -649,21 +642,22 @@ Additionally, DevTools may not have released the USB connection. To check this g
           responseChunks = new Queue<ByteData>();
 
           Future readChunk() {
-            return receive().timeout(new Duration(milliseconds: 800)).then((msg) {
-              if (msg.command == AdbUtil.A_WRTE) {
-                responseChunks.add(msg.dataBuffer);
-                return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
-                    remoteID)).then((_) { return readChunk(); });
-              } else {
-                return new Future.error('Unexpected message from device.');
-              }
-            }).catchError((e) {
-              if (e is TimeoutException) {
-                return null;
-              } else {
-                return new Future.error(e);
-              }
-            });
+            return receive().timeout(new Duration(milliseconds: 800))
+                .then((msg) {
+                  if (msg.command == AdbUtil.A_WRTE) {
+                    responseChunks.add(msg.dataBuffer);
+                    return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
+                        remoteID)).then((_) { return readChunk(); });
+                  } else {
+                    return new Future.error('Unexpected message from device.');
+                  }
+                }).catchError((e) {
+                  if (e is TimeoutException) {
+                    return null;
+                  } else {
+                    return new Future.error(e);
+                  }
+                });
           };
 
           return readChunk();
@@ -687,6 +681,7 @@ Additionally, DevTools may not have released the USB connection. To check this g
   }
 }
 
+
 String _serializeRSAKeys(AsymmetricKeyPair keys) {
   Map<String, String> cereal = new Map<String, String>();
   cereal['p'] = keys.privateKey.p.toString(16);
@@ -709,3 +704,4 @@ AsymmetricKeyPair _deserializeRSAKeys(String json) {
   RSAPrivateKey private = new RSAPrivateKey(modulus, privateExponent, p, q);
   return new AsymmetricKeyPair(public, private);
 }
+
