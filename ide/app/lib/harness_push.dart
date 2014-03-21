@@ -162,7 +162,6 @@ class HarnessPush {
       return doOpen(0).then((_) {
         return device.connect(new SystemIdentity());
       }).then((_) => device).catchError((e) {
-        device.dispose();
         device = null;
         return new Future.error(e);
       });
@@ -182,7 +181,7 @@ class HarnessPush {
 
       // Now send this payload to the USB code.
       return _fetchAndroidDevice();
-    }).then((_) {
+    }).then((device) {
       return device.sendHttpRequest(httpRequest, 2424).timeout(
           new Duration(seconds: 30), onTimeout: () {
             return new Future.error('Push timed out');
@@ -200,11 +199,6 @@ class HarnessPush {
             '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
       } else {
         return body;
-      }
-    }).whenComplete(() {
-      if (device != null) {
-        device.dispose();
-        device = null;
       }
     });
   }
