@@ -167,7 +167,7 @@ class HarnessPush {
     monitor.start('Deploying…', 10);
     List<int> httpRequest;
 
-    AndroidDevice device;
+    AndroidDevice _device;
 
     return archiveContainer(appContainer).then((List<int> archivedData) {
       monitor.worked(3);
@@ -176,10 +176,10 @@ class HarnessPush {
 
       // Now send this payload to the USB code.
       return _fetchAndroidDevice();
-    }).then((_device) {
-      device = _device;
+    }).then((deviceResult) {
+      _device = deviceResult;
 
-      return device.sendHttpRequest(httpRequest, 2424).timeout(
+      return _device.sendHttpRequest(httpRequest, 2424).timeout(
           new Duration(seconds: 30), onTimeout: () {
             return new Future.error('Push timed out');
           });
@@ -198,7 +198,7 @@ class HarnessPush {
         return body;
       }
     }).whenComplete(() {
-      if (device != null) device.dispose();
+      if (_device != null) _device.dispose();
     });
   }
 }
