@@ -35,10 +35,13 @@ class Outline {
     _outlineDiv.append(_outlineContainer);
 
     html.SpanElement showGlyph = new html.SpanElement()
+        ..classes.add('glyphicon')
         ..classes.add('glyphicon-play')
         ..id = "showOutlineGlyph";
     html.SpanElement hideGlyph = new html.SpanElement()
+        ..classes.add('glyphicon')
         ..classes.add('glyphicon-list')
+        ..style.display = 'none'
         ..id = "hideOutlineGlyph";
 
     html.ButtonElement toggleButton = new html.ButtonElement();
@@ -48,11 +51,9 @@ class Outline {
         ..append(showGlyph)
         ..onClick.listen((e) {
           bool toggled = _toggle();
-          showGlyph.style.display = toggled ? 'none' : 'inline';
-          hideGlyph.style.display = !toggled ? 'none' : 'inline';
+          showGlyph.style.display = !toggled ? 'none' : 'inline';
+          hideGlyph.style.display = toggled ? 'none' : 'inline';
         });
-    toggleButton.append(new html.SpanElement();
-
 
     _outlineDiv.append(toggleButton);
   }
