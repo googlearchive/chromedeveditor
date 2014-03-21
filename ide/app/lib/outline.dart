@@ -32,6 +32,9 @@ class Outline {
     _outlineDiv.id = "outline";
 
     _outlineContainer = new html.DivElement();
+    _outlineContainer.onMouseWheel.listen((html.MouseEvent event) {
+      event.stopPropagation();
+    });
     _outlineContainer.id = "outlineContainer";
     _outlineDiv.append(_outlineContainer);
 

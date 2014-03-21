@@ -306,21 +306,25 @@ body {
 
 #outline {
   position: absolute;
-  min-width: 30px;
   right: 25px;
   top: 10px;
   bottom: 10px;
   background: #000;
-  border-radius: 2px;
+  border-radius: 5px;
   z-index: 100;
   opacity: 0.8;
   border: 1px #888 solid;
+  top: 0;
+  bottom: 40px;
+  margin: 10px
+  
 }
 
 #outlineContainer {
-  height: 100%;
+  overflow-y: scroll;
   width: 200px;
-  overflow: scroll;
+  height: 100%;
+  bottom: 30px;
 }
 
 #outlineContainer ul {
@@ -334,7 +338,7 @@ body {
   padding: 0px;
 }
 
-outlineItem.topLevel > ul {
+.outlineItem.topLevel > ul {
   background: #333;
 }
 
@@ -376,6 +380,6 @@ li.outlineItem.topLevel.class {
   position: absolute;
   height: 30px;
   width: 30px;
-  right: 2px;
-  bottom: 0px;
+  right: 0;
+  bottom: -40px;
 }
