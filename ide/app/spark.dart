@@ -704,26 +704,29 @@ class PlatformInfo {
 class ProjectLocationManager {
   preferences.PreferenceStore _prefs;
   LocationResult _projectLocation;
+  final ws.Workspace _workspace;
 
   /**
    * Create a ProjectLocationManager asynchronously, restoring the default
    * project location from the given preferences.
    */
-  static Future<ProjectLocationManager> restoreManager(preferences.PreferenceStore prefs) {
+  static Future<ProjectLocationManager> restoreManager(
+      preferences.PreferenceStore prefs, ws.Workspace workspace) {
     return prefs.getValue('projectFolder').then((String folderToken) {
       if (folderToken == null) {
-        return new ProjectLocationManager._(prefs);
+        return new ProjectLocationManager._(prefs, workspace);
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
+        return new ProjectLocationManager._(prefs, workspace,
+            new LocationResult(entry, entry, false));
       }).catchError((e) {
-        return new ProjectLocationManager._(prefs);
+        return new ProjectLocationManager._(prefs, workspace);
       });
     });
   }
 
-  ProjectLocationManager._(this._prefs, [this._projectLocation]);
+  ProjectLocationManager._(this._prefs, this._workspace, [this._projectLocation]);
 
   /**
    * Returns the default location to create new projects in. For Chrome OS, this
@@ -745,7 +748,7 @@ class ProjectLocationManager {
     }
 
     // On Chrome OS, use the sync filesystem.
-    if (_isCros()) {
+    if (_isCros() && _workspace.syncFsIsAvailable) {
       return chrome.syncFileSystem.requestFileSystem().then((fs) {
         var entry = fs.root;
         return new LocationResult(entry, entry, true);
@@ -845,7 +848,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
         }
       });
     }).then((_) {
-      return ProjectLocationManager.restoreManager(spark.localPrefs).then((manager) {
+      return ProjectLocationManager.restoreManager(spark.localPrefs,
+          spark.workspace).then((manager) {
         spark.projectLocationManager = manager;
       });
     }).whenComplete(() => spark.unveil());
@@ -1218,7 +1222,7 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   }
 
   String get category => 'resource';
- 
+
   bool appliesTo(Object object) => _isSingleResource(object) && !_isTopLevel(object);
 }
 
