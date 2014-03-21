@@ -127,8 +127,12 @@ class CompilerService extends Service {
     });
   }
 
-  Future<CompilerResult> compileFile(File file) {
-    Map args = { "fileUuid" : file.uuid, "project" : file.project.name };
+  Future<CompilerResult> compileFile(File file, {bool csp: false}) {
+    Map args = {
+        "fileUuid" : file.uuid,
+        "project" : file.project.name,
+        "csp" : csp
+    };
     return _sendAction("compileFile", args).then((ServiceActionEvent result) {
       return new CompilerResult.fromMap(result.data);
     });

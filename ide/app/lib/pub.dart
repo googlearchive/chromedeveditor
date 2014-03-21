@@ -99,7 +99,9 @@ class PubResolver {
   String getReferenceFor(File file) {
     if (file.project != project) return null;
 
-    List resources = [file];
+    List resources = [];
+    resources.add(file);
+
     Container parent = file.parent;
     while (parent is! Project) {
       resources.insert(0, parent);

@@ -191,8 +191,9 @@ class CompilerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> compileFile(ServiceActionEvent request) {
     String fileUuid = request.data['fileUuid'];
     String project = request.data['project'];
+    bool csp = request.data['csp'];
 
-    return compiler.compileFile(fileUuid).then((CompilerResult result) {
+    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResult result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
