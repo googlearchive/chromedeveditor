@@ -1417,6 +1417,10 @@ class PubGetAction extends SparkAction implements ContextAction {
   }
 }
 
+/**
+ * A context menu item to compile a Dart file to JavaScript. Currently this is
+ * only available for Dart files in a chrome app.
+ */
 class CompileDartAction extends SparkAction implements ContextAction {
   CompileDartAction(Spark spark) : super(spark, "dart-compile", "Compile to JavaScript");
 
@@ -1438,8 +1442,12 @@ class CompileDartAction extends SparkAction implements ContextAction {
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
-    return resource is ws.File && resource.project != null
+    bool isDartFile = resource is ws.File && resource.project != null
         && resource.name.endsWith('.dart');
+
+    if (!isDartFile) return false;
+
+    return resource.parent.getChild('manifest.json') != null;
   }
 }
 

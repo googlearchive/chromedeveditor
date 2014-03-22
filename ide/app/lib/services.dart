@@ -127,6 +127,11 @@ class CompilerService extends Service {
     });
   }
 
+  /**
+   * Compile the given file and return the results from Dart2js. This includes
+   * any errors and the generated JavaScript output. You can optionally pass in
+   * [csp] `true` to select the content security policy output from dart2js.
+   */
   Future<CompilerResult> compileFile(File file, {bool csp: false}) {
     Map args = {
         "fileUuid" : file.uuid,
