@@ -375,6 +375,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
+    actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitPullAction(this));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
@@ -1416,6 +1417,40 @@ class PubGetAction extends SparkAction implements ContextAction {
   }
 }
 
+/**
+ * A context menu item to compile a Dart file to JavaScript. Currently this is
+ * only available for Dart files in a chrome app.
+ */
+class CompileDartAction extends SparkAction implements ContextAction {
+  CompileDartAction(Spark spark) : super(spark, "dart-compile", "Compile to JavaScript");
+
+  void _invoke([context]) {
+    ws.Resource resource;
+
+    if (context == null) {
+      resource = spark.focusManager.currentResource;
+    } else {
+      resource = context.first;
+    }
+
+    spark.jobManager.schedule(
+        new CompileDartJob(spark, resource, resource.name));
+  }
+
+  String get category => 'application';
+
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+
+  bool _appliesTo(ws.Resource resource) {
+    bool isDartFile = resource is ws.File && resource.project != null
+        && resource.name.endsWith('.dart');
+
+    if (!isDartFile) return false;
+
+    return resource.parent.getChild('manifest.json') != null;
+  }
+}
+
 class ResourceRefreshAction extends SparkAction implements ContextAction {
   ResourceRefreshAction(Spark spark) : super(
       spark, "resource-refresh", "Refresh") {
@@ -2355,6 +2390,41 @@ class PubGetJob extends Job {
     }).catchError((e) {
       spark.showErrorMessage('Error while running pub get', e.toString());
     });
+  }
+}
+
+class CompileDartJob extends Job {
+  final Spark spark;
+  final ws.File file;
+
+  CompileDartJob(this.spark, this.file, String fileName) :
+      super('Compiling ${fileName}…');
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    CompilerService compiler = spark.services.getService("compiler");
+
+    return compiler.compileFile(file, csp: true).then((CompilerResult result) {
+      if (!result.getSuccess()) {
+        throw result;
+      }
+
+      return getCreateFile(file.parent, '${file.name}.js').then((ws.File file) {
+        return file.setContents(result.output);
+      });
+    }).catchError((e) {
+      spark.showErrorMessage('Error Compiling ${file.name}', '${e}');
+    });
+  }
+
+  Future<ws.File> getCreateFile(ws.Folder parent, String name) {
+    ws.File file = parent.getChild(name);
+    if (file == null) {
+      return parent.createNewFile(name);
+    } else {
+      return new Future.value(file);
+    }
   }
 }
 

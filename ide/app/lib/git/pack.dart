@@ -418,7 +418,7 @@ class PackBuilder {
     var buf = object.data;
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
-      data = new Uint8List(buf);
+      data = buf.getBytes();
     } else if (buf is Uint8List) {
       data = buf;
     } else {
