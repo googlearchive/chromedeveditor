@@ -2405,12 +2405,8 @@ class CompileDartJob extends Job {
 
     CompilerService compiler = spark.services.getService("compiler");
 
-    // TODO: request the csp version
     return compiler.compileFile(file, csp: true).then((CompilerResult result) {
-      print('compile done: ${result}');
-
       if (!result.getSuccess()) {
-        // TODO: better error messages
         throw result;
       }
 
