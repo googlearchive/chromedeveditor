@@ -176,8 +176,6 @@ class SparkSelector extends SparkWidget {
     if (item != null) {
       _renderSelected(item, detail['isSelected']);
 
-      detail['item'] = item;
-
       if (_fireEvents) {
         asyncFire('activate', detail: detail, canBubble: true);
       }

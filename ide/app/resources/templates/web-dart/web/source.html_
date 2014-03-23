@@ -9,6 +9,6 @@
   </head>
   <body>
     <script type="application/dart" src="_source_name_.dart"></script>
-    <script src="packages/browser/dart.js"></script>
+    <script src="dart.js"></script>
   </body>
 </html>

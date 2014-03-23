@@ -169,29 +169,35 @@ class Pack {
       switch (baseObj.type) {
         case ObjectTypes.OFS_DELTA_STR:
         case ObjectTypes.REF_DELTA_STR:
-          return expandDeltifiedObject(baseObj).then((
-              PackedObject expandedObject) => doExpand(expandedObject, object));
+          return expandDeltifiedObject(baseObj).then((PackedObject expandedObject) {
+            return doExpand(expandedObject, object);
+          });
         default:
           completer.complete(doExpand(baseObj, object));
       }
     } else {
       // TODO(grv) : desing object class.
+      completer.completeError('todo');
       /*_store.retrieveRawObject(object.baseSha, 'ArrayBuffer').then((baseObj) {
         completer.complete(doExpand(baseObj, object));
       });*/
     }
+
     return completer.future;
   }
 
   ZlibResult _uncompressObject(int objOffset, int uncompressedLength) {
-    return Zlib.inflate(
-        data,
-        offset: objOffset,
-        expectedLength: uncompressedLength);
+    // We assume that the compressed string will not be greater by 1000 in
+    // length to the uncompressed string.
+    // This has a very significant impact on performance.
+    int end =  uncompressedLength + objOffset + 1000;
+    if (end > data.length) end = data.length;
+    return Zlib.inflate(data.sublist(objOffset, end), expectedLength: uncompressedLength);
   }
 
 
   PackedObject _matchObjectData(PackObjectHeader header) {
+
     PackedObject object = new PackedObject();
 
     object.offset = header.offset;
@@ -213,7 +219,8 @@ class Pack {
     }
 
     ZlibResult objData = _uncompressObject(_offset, header.size);
-    object.data = objData.data;
+    object.data = new Uint8List.fromList(objData.data);
+
     _advance(objData.readLength);
     return object;
   }
@@ -418,7 +425,8 @@ class PackBuilder {
       // assume it's a string.
       data = UTF8.encoder.convert(buf);
     }
-    ByteBuffer compressed = Zlib.deflate(data).buffer;
+    ByteBuffer compressed;
+    compressed = new Uint8List.fromList(Zlib.deflate(data).data).buffer;
     _packed.add(new Uint8List.fromList(
         _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);

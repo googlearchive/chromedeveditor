@@ -69,9 +69,10 @@ class HttpFetcher {
         }
       }
     });
-    xhr.onError.listen((e) {
-      completer.completeError(e);
-    });
+    xhr.onError.listen(completer.completeError);
+    xhr.setRequestHeader('Content-Type',
+        'application/x-git-receive-pack-request');
+    String bodySize = (body.size / 1024).toStringAsFixed(2);
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
       if (progress != null) {

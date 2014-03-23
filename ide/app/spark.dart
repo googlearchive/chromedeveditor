@@ -117,7 +117,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
-      ['.cmake', '.gitignore', '.lock', '.prefs', '.txt']);
+      ['.cmake', '.gitignore', '.prefs', '.txt']);
 
   Spark(this.developerMode) {
     document.title = appName;
@@ -125,13 +125,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initAnalytics();
 
     addParticipant(new _SparkSetupParticipant(this));
-
-    // This event is not fired when closing the current window. We listen for it
-    // in the vain hope that we will get the event, and we'll be able to clean
-    // up after ourselves slightly better.
-    chrome.app.window.current().onClosed.listen((_) {
-      close();
-    });
 
     initWorkspace();
     initPubManager();
@@ -382,6 +375,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
+    actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     actionManager.registerAction(new GitPullAction(this));
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
@@ -397,8 +391,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
     //actionManager.registerAction(new ResourceCloseAction(this));
-    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
-    actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new TabCloseAction(this));
     actionManager.registerAction(new TabPreviousAction(this));
     actionManager.registerAction(new TabNextAction(this));
@@ -411,6 +403,8 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
     actionManager.registerAction(new ImportFolderAction(this));
+    actionManager.registerAction(new FileDeleteAction(this));
+    actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
 
     actionManager.registerKeyListener();
   }
@@ -662,7 +656,10 @@ class Spark extends SparkModel implements FilesControllerDelegate,
 
   bool canShowFileAsText(String filename) {
     String extension = path.extension(filename);
-    if (extension.isEmpty) extension = filename;
+
+    // Whitelist files that don't have a period or that start with one. Ex.,
+    // `AUTHORS`, `.gitignore`.
+    if (extension.isEmpty) return true;
 
     return _aceManager.isFileExtensionEditable(extension) ||
         _textFileExtensions.contains(extension);
@@ -708,26 +705,29 @@ class PlatformInfo {
 class ProjectLocationManager {
   preferences.PreferenceStore _prefs;
   LocationResult _projectLocation;
+  final ws.Workspace _workspace;
 
   /**
    * Create a ProjectLocationManager asynchronously, restoring the default
    * project location from the given preferences.
    */
-  static Future<ProjectLocationManager> restoreManager(preferences.PreferenceStore prefs) {
+  static Future<ProjectLocationManager> restoreManager(
+      preferences.PreferenceStore prefs, ws.Workspace workspace) {
     return prefs.getValue('projectFolder').then((String folderToken) {
       if (folderToken == null) {
-        return new ProjectLocationManager._(prefs);
+        return new ProjectLocationManager._(prefs, workspace);
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return new ProjectLocationManager._(prefs, new LocationResult(entry, entry, false));
+        return new ProjectLocationManager._(prefs, workspace,
+            new LocationResult(entry, entry, false));
       }).catchError((e) {
-        return new ProjectLocationManager._(prefs);
+        return new ProjectLocationManager._(prefs, workspace);
       });
     });
   }
 
-  ProjectLocationManager._(this._prefs, [this._projectLocation]);
+  ProjectLocationManager._(this._prefs, this._workspace, [this._projectLocation]);
 
   /**
    * Returns the default location to create new projects in. For Chrome OS, this
@@ -749,7 +749,7 @@ class ProjectLocationManager {
     }
 
     // On Chrome OS, use the sync filesystem.
-    if (_isCros()) {
+    if (_isCros() && _workspace.syncFsIsAvailable) {
       return chrome.syncFileSystem.requestFileSystem().then((fs) {
         var entry = fs.root;
         return new LocationResult(entry, entry, true);
@@ -849,7 +849,8 @@ class _SparkSetupParticipant extends LifecycleParticipant {
         }
       });
     }).then((_) {
-      return ProjectLocationManager.restoreManager(spark.localPrefs).then((manager) {
+      return ProjectLocationManager.restoreManager(spark.localPrefs,
+          spark.workspace).then((manager) {
         spark.projectLocationManager = manager;
       });
     }).whenComplete(() => spark.unveil());
@@ -1061,7 +1062,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
   }
 
-  void _commit();
+  void _commit() { }
 
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
@@ -1189,7 +1190,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
     });
   }
 
-  String get category => 'resource-delete';
+  String get category => 'resource';
 
   bool appliesTo(Object object) => _isResourceList(object);
 }
@@ -1413,6 +1414,40 @@ class PubGetAction extends SparkAction implements ContextAction {
     }
 
     return false;
+  }
+}
+
+/**
+ * A context menu item to compile a Dart file to JavaScript. Currently this is
+ * only available for Dart files in a chrome app.
+ */
+class CompileDartAction extends SparkAction implements ContextAction {
+  CompileDartAction(Spark spark) : super(spark, "dart-compile", "Compile to JavaScript");
+
+  void _invoke([context]) {
+    ws.Resource resource;
+
+    if (context == null) {
+      resource = spark.focusManager.currentResource;
+    } else {
+      resource = context.first;
+    }
+
+    spark.jobManager.schedule(
+        new CompileDartJob(spark, resource, resource.name));
+  }
+
+  String get category => 'application';
+
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+
+  bool _appliesTo(ws.Resource resource) {
+    bool isDartFile = resource is ws.File && resource.project != null
+        && resource.name.endsWith('.dart');
+
+    if (!isDartFile) return false;
+
+    return resource.parent.getChild('manifest.json') != null;
   }
 }
 
@@ -1712,15 +1747,20 @@ class _HarnessPushJob extends Job {
 
 class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Resource _selectedResource;
+  Element _titleElement;
   HtmlElement _propertiesElement;
 
   PropertiesAction(Spark spark, Element dialog)
       : super(spark, 'properties', 'Properties…', dialog) {
+    _titleElement = getElement('#propertiesDialog .modal-title');
     _propertiesElement = getElement('#propertiesDialog .modal-body');
   }
 
   void _invoke([List context]) {
     _selectedResource = context.first;
+    final String type = _selectedResource is ws.Project ? 'Project' :
+      _selectedResource is ws.Container ? 'Folder' : 'File';
+    _titleElement.text = '${type} Properties';
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
@@ -1736,9 +1776,9 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
       if (gitOperations != null) {
         return gitOperations.getConfigMap().then((Map<String, dynamic> map) {
           final String repoUrl = map['url'];
-          _addProperty(_propertiesElement, 'Git Repository', repoUrl);
+          _addProperty(_propertiesElement, 'Repository', repoUrl);
         }).catchError((e) {
-          _addProperty(_propertiesElement, 'Git Repository',
+          _addProperty(_propertiesElement, 'Repository',
               '<error retrieving Git data>');
         });
       }
@@ -1775,9 +1815,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     div.children.addAll([label, element]);
   }
 
-  void _commit() { }
-
-  String get category => 'resource';
+  String get category => 'properties';
 
   bool appliesTo(context) => true;
 }
@@ -1793,6 +1831,9 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    // Select any previous text in the URL field.
+    Timer.run(_repoUrlElement.select);
+
     _show();
   }
 
@@ -2352,6 +2393,41 @@ class PubGetJob extends Job {
   }
 }
 
+class CompileDartJob extends Job {
+  final Spark spark;
+  final ws.File file;
+
+  CompileDartJob(this.spark, this.file, String fileName) :
+      super('Compiling ${fileName}…');
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
+    CompilerService compiler = spark.services.getService("compiler");
+
+    return compiler.compileFile(file, csp: true).then((CompilerResult result) {
+      if (!result.getSuccess()) {
+        throw result;
+      }
+
+      return getCreateFile(file.parent, '${file.name}.js').then((ws.File file) {
+        return file.setContents(result.output);
+      });
+    }).catchError((e) {
+      spark.showErrorMessage('Error Compiling ${file.name}', '${e}');
+    });
+  }
+
+  Future<ws.File> getCreateFile(ws.Folder parent, String name) {
+    ws.File file = parent.getChild(name);
+    if (file == null) {
+      return parent.createNewFile(name);
+    } else {
+      return new Future.value(file);
+    }
+  }
+}
+
 class ResourceRefreshJob extends Job {
   final List<ws.Project> resources;
 
@@ -2406,10 +2482,6 @@ class AboutSparkAction extends SparkActionWithDialog {
 
     _show();
   }
-
-  void _commit() {
-    // Nothing to do for this dialog.
-  }
 }
 
 class SettingsAction extends SparkActionWithDialog {
@@ -2425,7 +2497,13 @@ class SettingsAction extends SparkActionWithDialog {
     }
 
     spark.setGitSettingsResetDoneVisible(false);
-    _showRootDirectory().then((_) => _show());
+
+    // For now, don't show the location field on Chrome OS; we always use syncFS.
+    if (_isCros()) {
+      _show();
+    } else {
+      _showRootDirectory().then((_) => _show());
+    }
   }
 
   Future _showRootDirectory() {
@@ -2440,10 +2518,6 @@ class SettingsAction extends SparkActionWithDialog {
         });
       });
     });
-  }
-
-  void _commit() {
-    // Nothing to do for this dialog.
   }
 }
 

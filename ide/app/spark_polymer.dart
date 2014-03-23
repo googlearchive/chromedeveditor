@@ -17,6 +17,7 @@ import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
+import 'lib/app.dart';
 import 'lib/jobs.dart';
 
 void main() {
@@ -66,7 +67,7 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future<bool> openFolder() {
+  Future openFolder() {
     return _beforeSystemModal()
         .then((_) => super.openFolder())
         .then((_) => _systemModalComplete())
@@ -94,6 +95,7 @@ class SparkPolymer extends Spark {
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode) {
     _ui.developerMode = developerMode;
+    addParticipant(new _AppSetupParticipant());
   }
 
   @override
@@ -230,19 +232,24 @@ class SparkPolymer extends Spark {
     }
   }
 
-  Future<bool> _beforeSystemModal() {
-    Completer completer = new Completer();
+  Future _beforeSystemModal() {
     backdropShowing = true;
 
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () {
-          completer.complete();
-        });
-
-    return completer.future;
+    return new Future.delayed(new Duration(milliseconds: 100));
   }
 
   void _systemModalComplete() {
     backdropShowing = false;
+  }
+}
+
+class _AppSetupParticipant extends LifecycleParticipant {
+  /**
+   * Update the Polymer UI with async info from the Spark app instance.
+   */
+  Future applicationStarted(Application application) {
+    SparkPolymer app = application;
+    app._ui.chromeOS = app.platformInfo.isCros;
+    return new Future.value();
   }
 }
