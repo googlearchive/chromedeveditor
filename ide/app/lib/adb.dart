@@ -345,9 +345,10 @@ class AndroidDevice {
   // Connects to and authenticates with the device.
   Future connect(SystemIdentity systemIdentity) {
     return chrome.usb.claimInterface(adbConnectionHandle,
-        adbInterface.interfaceNumber).catchError((_) {
+        adbInterface.interfaceNumber).catchError((e) {
       return new Future.error('''
-Could not open an ADB connection; please check whether the Chrome ADT application is running on the Android device.
+Could not open an ADB connection: "$e"
+Please check whether the Chrome ADT application is running on the Android device.
 Additionally, DevTools may not have released the USB connection. To check this go to chrome://inspect, Devices, uncheck 'Discover USB devices', then disconnect and re-connect your phone from USB.''');
     }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
