@@ -19,6 +19,7 @@ import 'builder.dart';
 import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
+import 'git/http_fetcher.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
 import 'git/options.dart';
@@ -134,9 +135,11 @@ abstract class ScmProvider {
   ScmProjectOperations createOperationsFor(Project project);
 
   /**
-   * Clone the repo at the given url into the given directory.
+   * Clone the repo at the given url into the given directory. Returns a
+   * [ScmException] through the Future's error on a failure.
    */
-  Future clone(String url, chrome.DirectoryEntry dir);
+  Future clone(String url, chrome.DirectoryEntry dir,
+               {String username, String password});
 }
 
 /**
@@ -174,6 +177,15 @@ abstract class ScmProjectOperations {
   Future push(String username, String password);
 
   Future updateForChanges(List<ChangeDelta> changes);
+}
+
+class ScmException implements Exception {
+  final String message;
+  final bool needsAuth;
+
+  ScmException(this.message, [this.needsAuth = false]);
+
+  String toString() => message;
 }
 
 /**
@@ -246,13 +258,20 @@ class GitScmProvider extends ScmProvider {
     return null;
   }
 
-  Future clone(String url, chrome.DirectoryEntry dir) {
+  Future clone(String url, chrome.DirectoryEntry dir,
+               {String username, String password}) {
     GitOptions options = new GitOptions(
-        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
+        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir),
+        username: username, password: password);
 
     return options.store.init().then((_) {
-      Clone clone = new Clone(options);
-      return clone.clone();
+      return new Clone(options).clone();
+    }).catchError((e) {
+      if (e is HttpResult) {
+        throw new ScmException(e.toString(), e.needsAuth);
+      } else {
+        throw new ScmException(e.toString());
+      }
     });
   }
 }

@@ -66,7 +66,9 @@ class HttpFetcher {
         }
       }
     });
-    xhr.onError.listen(completer.completeError);
+    xhr.onError.listen((_) {
+      completer.completeError(new HttpResult.fromXhr(xhr));
+    });
     xhr.setRequestHeader('Content-Type',
         'application/x-git-receive-pack-request');
     String bodySize = (body.size / 1024).toStringAsFixed(2);
@@ -123,11 +125,11 @@ class HttpFetcher {
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
 
     xhr.send(body);
@@ -175,17 +177,17 @@ class HttpFetcher {
         if (xhr.status == 200) {
           return completer.complete(xhr.responseText);
         } else {
-          completer.completeError(xhr.response);
+          completer.completeError(new HttpResult.fromXhr(xhr));
         }
       }
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
     xhr.send();
     return completer.future;
@@ -316,4 +318,21 @@ class HttpFetcher {
       return new Future.value(discInfo["refs"]);
     });
   }
+}
+
+class HttpResult {
+  final int status;
+  final String statusText;
+
+  HttpResult(this.status, this.statusText);
+
+  HttpResult.fromXhr(HttpRequest request) :
+      status = request.status, statusText = request.statusText;
+
+  /**
+   * Returns `true` if the status is 401 Unauthorized.
+   */
+  bool get needsAuth => status == 401;
+
+  String toString() => '${status} ${statusText}';
 }

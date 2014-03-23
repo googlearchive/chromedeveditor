@@ -1840,11 +1840,15 @@ class GitCloneAction extends SparkActionWithDialog {
   void _commit() {
     // TODO(grv): Add verify checks.
     String url = _repoUrlElement.value;
-    if (!url.endsWith('.git')) {
-      url = url + '.git';
+    String projectName;
+
+    if (url.endsWith('/')) {
+      projectName = url.substring(0, url.length - 1).split('/').last;
+    } else {
+      if (!url.endsWith('.git')) url = url + '.git';
+      projectName = url.split('/').last;
     }
 
-    String projectName = url.split('/').last;
     if (projectName.endsWith('.git')) {
       projectName = projectName.substring(0, projectName.length - 4);
     }
@@ -2236,7 +2240,9 @@ class _GitCloneJob extends Job {
         });
       });
     }).catchError((e) {
-      spark.showErrorMessage('Error cloning ${_projectName}', e.toString());
+      if (e != null) {
+        spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
+      }
     });
   }
 }
@@ -2670,7 +2676,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
     completer = null;
   }
 
-  static Future request(Spark spark) {
+  static Future<Map> request(Spark spark) {
     if (_instance == null) {
       _instance = new GitAuthenticationDialog(spark,
           spark.getDialogElement('#gitAuthenticationDialog'));
