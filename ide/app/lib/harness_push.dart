@@ -18,6 +18,8 @@ import 'workspace_utils.dart';
 class DeviceInfo {
   final int vendorId;
   final int productId;
+  /// This field is currently for debugging purposes only.
+  /// It can be later used for more informative progress and error messages.
   final String description;
 
   DeviceInfo(this.vendorId, this.productId, this.description);
@@ -33,7 +35,7 @@ class HarnessPush {
       throw new ArgumentError('must provide an app to push');
     }
 
-    final permissions = chrome.runtime.getManifest()['permissions'];
+    final List permissions = chrome.runtime.getManifest()['permissions'];
     for (final p in permissions) {
       if (p is Map && (p as Map).containsKey('usbDevices')) {
         final List usbDevices = (p as Map)['usbDevices'];
@@ -48,16 +50,18 @@ class HarnessPush {
   List<int> _buildHttpRequest(String target, List<int> payload) {
     List<int> httpRequest = [];
     // Build the HTTP request headers.
-    String boundary = "--------------------------------a921a8f557cf";
-    String header = "POST /push?name=${appContainer.name}&type=crx HTTP/1.1\r\n"
-        + "User-Agent: Spark IDE\r\n"
-        + "Host: ${target}:2424\r\n"
-        + "Content-Type: multipart/form-data; boundary=$boundary\r\n";
+    String boundary = '--------------------------------a921a8f557cf';
+    String header =
+        'POST /push?name=${appContainer.name}&type=crx HTTP/1.1\r\n'
+        'User-Agent: Spark IDE\r\n'
+        'Host: ${target}:2424\r\n'
+        'Content-Type: multipart/form-data; boundary=$boundary\r\n';
     List<int> body = [];
-    String bodyTop = "$boundary\r\n"
-        + "Content-Disposition: form-data; name=\"file\"; "
-        + "filename=\"SparkPush.crx\"\r\n"
-        + "Content-Type: application/octet-stream\r\n\r\n";
+    String bodyTop =
+        '$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; '
+        'filename="SparkPush.crx"\r\n'
+        'Content-Type: application/octet-stream\r\n\r\n';
     body.addAll(bodyTop.codeUnits);
 
     // Add the CRX headers before the zip content.
@@ -79,7 +83,7 @@ class HarnessPush {
     body.addAll([45, 45, 13, 10]); // --\r\n
 
     httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll("Content-length: ${body.length}\r\n\r\n".codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
 
     return httpRequest;
