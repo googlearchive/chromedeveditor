@@ -1790,7 +1790,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
         }
 
         final String lastModified =
-            new DateFormat.yMd().add_Hm().format(meta.modificationTime);
+            new DateFormat.yMMMd().add_jms().format(meta.modificationTime);
         _addProperty(_propertiesElement, 'Last Modified', lastModified);
       });
     });
