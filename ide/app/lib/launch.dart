@@ -25,8 +25,6 @@ import 'services.dart';
 import 'utils.dart';
 import 'workspace.dart';
 
-const int SERVER_PORT = 4040;
-
 final Logger _logger = new Logger('spark.launch');
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
