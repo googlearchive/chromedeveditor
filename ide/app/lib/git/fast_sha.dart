@@ -14,13 +14,6 @@ const _MASK_32 = 0xffffffff;
 const _BITS_PER_BYTE = 8;
 const _BYTES_PER_WORD = 4;
 
-// Rotate left limiting to unsigned 32-bit values.
-int _rotl32(int val, int shift) {
-  final mod_shift = shift & 31;
-
-  return ((val << mod_shift) & _MASK_32) | ((val & _MASK_32) >> (32 - mod_shift));
-}
-
 /**
  * An optimized implementation of the SHA1 message digest algorithm.
  */
@@ -120,12 +113,20 @@ class FastSha implements Hash {
     _h4 = _add32(e, _h4) & _MASK_32;
   }
 
+  /**
+   * Performs a 32-bit add (`(x + y) & _MASK_32`), that compiles to fast code
+   * when run on V8.
+   */
   int _add32(x, y) {
     var lsw = (x & 0xFFFF) + (y & 0xFFFF);
     var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
     return (msw << 16) | (lsw & 0xFFFF);
+  }
 
-    //return (x + y) & _MASK_32;
+  // Rotate left limiting to unsigned 32-bit values.
+  int _rotl32(int val, int shift) {
+    final mod_shift = shift & 31;
+    return ((val << mod_shift) & _MASK_32) | ((val & _MASK_32) >> (32 - mod_shift));
   }
 
   // Compute the final result as a list of bytes from the hash words.
