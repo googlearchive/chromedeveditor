@@ -161,7 +161,7 @@ class _PubBuilder extends Builder {
 
         try {
           var doc = yaml.loadYaml(str);
-          String packageName = doc['name'];
+          String packageName = doc == null ? null : doc['name'];
           _setSelfReference(file.project, packageName);
         } on SyntaxError catch (e) {
           // Use some better method for determining where to place the marker.
