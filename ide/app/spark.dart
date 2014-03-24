@@ -778,7 +778,7 @@ class ProjectLocationManager {
    */
   Future<LocationResult> createNewFolder(String defaultName) {
     return getProjectLocation().then((LocationResult root) {
-      return _create(root, defaultName, 1);
+      return root == null ? null : _create(root, defaultName, 1);
     });
   }
 
@@ -790,7 +790,7 @@ class ProjectLocationManager {
       return new LocationResult(location.parent, dir, location.isSync);
     }).catchError((_) {
       if (count > 50) {
-        return null;
+        throw "Error creating project '${baseName}.'";
       } else {
         return _create(location, baseName, count + 1);
       }
@@ -1604,8 +1604,6 @@ class NewProjectAction extends SparkActionWithDialog {
       spark.projectLocationManager.createNewFolder(name)
           .then((LocationResult location) {
         if (location == null) {
-          spark.showErrorMessage('Error while creating project',
-              "The folder '${name}' could not be created.");
           return new Future.value();
         }
 
@@ -1643,6 +1641,8 @@ class NewProjectAction extends SparkActionWithDialog {
             spark.workspace.save();
           });
         });
+      }).catchError((e) {
+        spark.showErrorMessage('Error Creating Project', '${e}');
       });
     }
   }
@@ -2210,8 +2210,6 @@ class _GitCloneJob extends Job {
 
     return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
       if (location == null) {
-        spark.showErrorMessage('Error while cloning the repository',
-            "The folder '${_projectName}' could not be created.");
         return new Future.value();
       }
 
