@@ -8,6 +8,7 @@
 library spark.launch;
 
 import 'dart:async';
+import 'dart:html' show window;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:chrome/gen/management.dart';
@@ -23,8 +24,6 @@ import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
 import 'workspace.dart';
-
-const int SERVER_PORT = 4040;
 
 final Logger _logger = new Logger('spark.launch');
 
@@ -97,22 +96,17 @@ abstract class LaunchDelegate {
  */
 class DartWebAppLaunchDelegate extends LaunchDelegate {
   PicoServer _server;
-  Dart2JsServlet _dart2jsServlet;
-  ProjectRedirectServlet _redirectServlet;
 
   DartWebAppLaunchDelegate(LaunchManager launchManager) : super(launchManager) {
-    _dart2jsServlet = new Dart2JsServlet(launchManager);
-    _redirectServlet = new ProjectRedirectServlet(launchManager);
-
-    PicoServer.createServer(SERVER_PORT).then((server) {
+    PicoServer.createServer().then((server) {
       _server = server;
-      _server.addServlet(_redirectServlet);
       _server.addServlet(new StaticResourcesServlet());
-      _server.addServlet(_dart2jsServlet);
+      _server.addServlet(new Dart2JsServlet(launchManager));
       _server.addServlet(new PackagesServlet(launchManager));
       _server.addServlet(new WorkspaceServlet(launchManager));
+
+      _logger.info('embedded web server listening on port ${_nf.format(_server.port)}');
     }).catchError((error) {
-      // TODO: We could fallback to binding to any port.
       _logger.severe('Error starting up embedded server', error);
     });
   }
@@ -169,22 +163,18 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
   }
 
   Future run(Resource resource) {
-    _redirectServlet._launchFile = getLaunchResourceFor(resource);
-
-    // Use `.htm` extension for launch page, otherwise the polymer build tries
-    // to pick it up.
-    var options = new chrome.CreateWindowOptions(
-        id: 'runWindow',
-        width: 800, height: 570,
-        minWidth: 800, minHeight: 570);
-
-    return chrome.app.window.create('launch_page/launch_page.htm', options);
+    window.open(_getUrlFor(getLaunchResourceFor(resource)), '_blank');
+    return new Future.value();
   }
 
   void dispose() {
     if (_server != null) {
       _server.dispose();
     }
+  }
+
+  String _getUrlFor(Resource resource) {
+    return 'http://127.0.0.1:${_server.port}${resource.path}';
   }
 }
 
@@ -248,8 +238,7 @@ class PackagesServlet extends PicoServlet {
   PackagesServlet(this._launchManager);
 
   bool canServe(HttpRequest request) {
-    String path = request.uri.path;
-    return path.contains(PACKAGE_SEGMENT);
+    return request.uri.pathSegments.contains('packages');
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
@@ -257,9 +246,9 @@ class PackagesServlet extends PicoServlet {
     Container project = _launchManager.workspace.getChild(projectName);
 
     if (project is Project) {
-      String path = request.uri.path;
-      path = PACKAGE_REF_PREFIX +
-          path.substring(path.indexOf(PACKAGE_SEGMENT) + PACKAGE_SEGMENT.length);
+      String path = _getPath(request);
+      path = PACKAGE_REF_PREFIX + path.substring(
+          path.indexOf(PACKAGE_SEGMENT) + PACKAGE_SEGMENT.length);
       PubResolver resolver = _launchManager._pubManager.getResolverFor(project);
       File file = resolver.resolveRefToFile(path);
       if (file != null) {
@@ -287,7 +276,7 @@ class WorkspaceServlet extends PicoServlet {
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    String path = request.uri.path;
+    String path = _getPath(request);
 
     if (path.startsWith('/')) {
       path = path.substring(1);
@@ -346,20 +335,18 @@ class StaticResourcesServlet extends PicoServlet {
  * Servlet that redirects to the landing page for the project that was run.
  */
 class ProjectRedirectServlet extends PicoServlet {
-  String HTML_REDIRECT =
-      '<meta http-equiv="refresh" content="0; url=http://127.0.0.1:$SERVER_PORT/';
-
-  LaunchManager _launchManager;
+  final LaunchManager _launchManager;
+  final PicoServer _server;
   Resource _launchFile;
 
-  ProjectRedirectServlet(this._launchManager);
+  ProjectRedirectServlet(this._launchManager, this._server);
 
   bool canServe(HttpRequest request) {
     return request.uri.path == '/';
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    String url = 'http://127.0.0.1:$SERVER_PORT${launchPath}';
+    String url = 'http://127.0.0.1:${_server.port}${launchPath}';
 
     // Issue a 302 redirect.
     HttpResponse response = new HttpResponse(statusCode: HttpStatus.FOUND);
@@ -389,7 +376,7 @@ class Dart2JsServlet extends PicoServlet {
   }
 
   bool canServe(HttpRequest request) {
-    String path = request.uri.path;
+    String path = _getPath(request);
     return path.endsWith('.dart.js') && _getResource(path) is File;
   }
 
@@ -403,7 +390,7 @@ class Dart2JsServlet extends PicoServlet {
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
-    File file = _getResource(request.uri.path);
+    File file = _getResource(_getPath(request));
     Stopwatch stopwatch = new Stopwatch()..start();
     Completer completer = new Completer();
 
@@ -430,3 +417,5 @@ class Dart2JsServlet extends PicoServlet {
     }).whenComplete(() => completer.complete());
   }
 }
+
+String _getPath(HttpRequest request) => request.uri.pathSegments.join('/');
