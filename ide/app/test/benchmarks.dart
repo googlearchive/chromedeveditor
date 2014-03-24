@@ -39,7 +39,7 @@ Logger _logger = new Logger('spark.benchmarks');
 // create zip      : 110.263 ms (489.800 ms)
 // git sha         :1087.500 ms (1760.000 ms)
 // plain sha       :1977.500 ms
-// fast sha        : 943.667 ms
+// fast sha        : 216.000 ms (943.667 ms)
 // jszlib inflate  :  36.161 ms
 // jszlib deflate  : 826.000 ms
 

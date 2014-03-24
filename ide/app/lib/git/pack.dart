@@ -97,16 +97,13 @@ class Pack {
   /**
    * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(String type, Uint8List contentData) {
-    List<int> header = encodeUtf8(type + " ${contentData.length}\u0000");
-
-    Uint8List fullContent = new Uint8List(header.length + contentData.length);
-
-    fullContent.setAll(0, header);
-    fullContent.setAll(header.length, contentData);
-
+  List<int> getObjectHash(String type, Uint8List data) {
     FastSha sha1 = new FastSha();
-    sha1.add(fullContent);
+
+    List<int> header = encodeUtf8("${type} ${data.length}\u0000");
+    sha1.add(header);
+    sha1.add(data);
+
     return sha1.close();
   }
 

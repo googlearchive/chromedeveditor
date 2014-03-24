@@ -14,14 +14,11 @@ const _MASK_32 = 0xffffffff;
 const _BITS_PER_BYTE = 8;
 const _BYTES_PER_WORD = 4;
 
-// Helper functions used by more than one hasher.
-
 // Rotate left limiting to unsigned 32-bit values.
 int _rotl32(int val, int shift) {
-  var mod_shift = shift & 31;
+  final mod_shift = shift & 31;
 
-  return ((val << mod_shift) & _MASK_32) | ((val & _MASK_32) >> (32 -
-      mod_shift));
+  return ((val << mod_shift) & _MASK_32) | ((val & _MASK_32) >> (32 - mod_shift));
 }
 
 /**
@@ -80,23 +77,25 @@ class FastSha implements Hash {
 
   // Compute one iteration of the SHA1 algorithm with a chunk of
   // 16 32-bit pieces.
-  void _updateHash(Uint32List m) {
+  void _updateHash() {
     //assert(m.length == 16);
 
-    var a = _h0;
-    var b = _h1;
-    var c = _h2;
-    var d = _h3;
-    var e = _h4;
+    var a = _h0 & _MASK_32;
+    var b = _h1 & _MASK_32;
+    var c = _h2 & _MASK_32;
+    var d = _h3 & _MASK_32;
+    var e = _h4 & _MASK_32;
 
     for (var i = 0; i < 80; i++) {
       if (i < 16) {
-        _w[i] = m[i];
+        _w[i] = _currentChunk[i];
       } else {
         var n = _w[i - 3] ^ _w[i - 8] ^ _w[i - 14] ^ _w[i - 16];
         _w[i] = _rotl32(n, 1);
       }
+
       var t = _add32(_add32(_rotl32(a, 5), e), _w[i]);
+
       if (i < 20) {
         t = _add32(_add32(t, (b & c) | (~b & d)), 0x5A827999);
       } else if (i < 40) {
@@ -114,15 +113,20 @@ class FastSha implements Hash {
       a = t & _MASK_32;
     }
 
-    _h0 = _add32(a, _h0);
-    _h1 = _add32(b, _h1);
-    _h2 = _add32(c, _h2);
-    _h3 = _add32(d, _h3);
-    _h4 = _add32(e, _h4);
+    _h0 = _add32(a, _h0) & _MASK_32;
+    _h1 = _add32(b, _h1) & _MASK_32;
+    _h2 = _add32(c, _h2) & _MASK_32;
+    _h3 = _add32(d, _h3) & _MASK_32;
+    _h4 = _add32(e, _h4) & _MASK_32;
   }
 
-  int _add32(x, y) => (x + y) & _MASK_32;
-  int _roundUp(val, n) => (val + n - 1) & -n;
+  int _add32(x, y) {
+    var lsw = (x & 0xFFFF) + (y & 0xFFFF);
+    var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+    return (msw << 16) | (lsw & 0xFFFF);
+
+    //return (x + y) & _MASK_32;
+  }
 
   // Compute the final result as a list of bytes from the hash words.
   List<int> _resultAsBytes() {
@@ -136,20 +140,20 @@ class FastSha implements Hash {
   }
 
   // Converts a list of bytes to a chunk of 32-bit words.
-  void _bytesToChunk(List<int> data, int dataIndex) {
+  void _bytesToChunk(int dataIndex) {
     //assert((data.length - dataIndex) >= (16 * _BYTES_PER_WORD));
 
     for (var wordIndex = 0; wordIndex < 16; wordIndex++) {
-      var w3 = data[dataIndex];
-      var w2 = data[dataIndex + 1];
-      var w1 = data[dataIndex + 2];
-      var w0 = data[dataIndex + 3];
+      var w3 = _pendingData[dataIndex];
+      var w2 = _pendingData[dataIndex + 1];
+      var w1 = _pendingData[dataIndex + 2];
+      var w0 = _pendingData[dataIndex + 3];
       dataIndex += 4;
       var word = (w3 & _MASK_8) << 24;
       word |= (w2 & _MASK_8) << 16;
       word |= (w1 & _MASK_8) << 8;
       word |= (w0 & _MASK_8);
-      _currentChunk[wordIndex] = word;
+      _currentChunk[wordIndex] = word & _MASK_32;
     }
   }
 
@@ -172,8 +176,8 @@ class FastSha implements Hash {
     if (len >= chunkSizeInBytes) {
       var index = 0;
       for ( ; (len - index) >= chunkSizeInBytes; index += chunkSizeInBytes) {
-        _bytesToChunk(_pendingData, index);
-        _updateHash(_currentChunk);
+        _bytesToChunk(index);
+        _updateHash();
       }
       if (len - index > 0) {
         _pendingData = _pendingData.sublist(index, len);
@@ -199,4 +203,6 @@ class FastSha implements Hash {
     _pendingData.addAll(_wordToBytes(0));
     _pendingData.addAll(_wordToBytes(lengthInBits & _MASK_32));
   }
+
+  int _roundUp(val, n) => (val + n - 1) & -n;
 }
