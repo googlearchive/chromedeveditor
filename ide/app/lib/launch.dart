@@ -201,22 +201,18 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
   Future run(Resource resource) {
     Container launchContainer = getAppContainerFor(resource);
 
-    if (!isDart2js()) {
-      return new Future.error("Can't launch on Dartium currently...");
-    } else {
-      return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
-        // TODO: Use the returned appId once it has the correct results.
-        return _getAppId(launchContainer.name).then((String id) {
-          if (id == null) {
-            throw 'Unable to locate an application id.';
-          } else if (!management.available) {
-            throw 'The chrome.management API is not available.';
-          } else {
-            return management.launchApp(id);
-          }
-        });
+    return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
+      // TODO: Use the returned appId once it has the correct results.
+      return _getAppId(launchContainer.name).then((String id) {
+        if (id == null) {
+          throw 'Unable to locate an application id.';
+        } else if (!management.available) {
+          throw 'The chrome.management API is not available.';
+        } else {
+          return management.launchApp(id);
+        }
       });
-    }
+    });
   }
 
   /**
