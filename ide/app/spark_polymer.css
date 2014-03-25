@@ -306,9 +306,8 @@ body {
 
 #outline {
   position: absolute;
+  min-width: 200px;
   right: 25px;
-  top: 10px;
-  bottom: 10px;
   background: #000;
   border-radius: 5px;
   z-index: 100;
@@ -316,15 +315,19 @@ body {
   border: 1px #888 solid;
   top: 0;
   bottom: 40px;
-  margin: 10px
-  
+  margin: 10px;
 }
 
 #outlineContainer {
+  display: block;
+  position: absolute;
+  height: auto;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
   overflow-y: scroll;
-  width: 200px;
-  height: 100%;
-  bottom: 30px;
+  margin: 10px;
 }
 
 #outlineContainer ul {
@@ -334,7 +337,6 @@ body {
 }
 
 #outlineContainer > ul {
-  margin: 10px;
   padding: 0px;
 }
 

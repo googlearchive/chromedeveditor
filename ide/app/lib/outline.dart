@@ -105,15 +105,7 @@ class Outline {
   /**
    * Toggles visibility of the outline.  Returns true if showing.
    */
-  bool _toggle() {
-    if (_outlineContainer.style.display == 'none') {
-      _outlineContainer.style.display = 'block';
-      return true;
-    } else {
-      _outlineContainer.style.display = 'none';
-      return false;
-    }
-  }
+  bool _toggle() => visible = !visible;
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
     _rootList.append(item.element);
