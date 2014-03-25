@@ -6,6 +6,8 @@ library spark.harness_push;
 
 import 'dart:async';
 
+import 'package:chrome/chrome_app.dart' as chrome;
+
 import 'adb.dart';
 import 'jobs.dart';
 import 'preferences.dart';
@@ -13,29 +15,53 @@ import 'tcp.dart';
 import 'workspace.dart';
 import 'workspace_utils.dart';
 
+class DeviceInfo {
+  final int vendorId;
+  final int productId;
+  /// This field is currently for debugging purposes only.
+  /// It can be later used for more informative progress and error messages.
+  final String description;
+
+  DeviceInfo(this.vendorId, this.productId, this.description);
+}
+
 class HarnessPush {
   final Container appContainer;
   final PreferenceStore _prefs;
+  List<DeviceInfo> _knownDevices = [];
 
   HarnessPush(this.appContainer, this._prefs) {
     if (appContainer == null) {
       throw new ArgumentError('must provide an app to push');
+    }
+
+    final List permissions = chrome.runtime.getManifest()['permissions'];
+    for (final p in permissions) {
+      if (p is Map && (p as Map).containsKey('usbDevices')) {
+        final List usbDevices = (p as Map)['usbDevices'];
+        for (final Map<String, dynamic> d in usbDevices) {
+          _knownDevices.add(
+              new DeviceInfo(d['vendorId'], d['productId'], d['description']));
+        }
+      }
     }
   }
 
   List<int> _buildHttpRequest(String target, List<int> payload) {
     List<int> httpRequest = [];
     // Build the HTTP request headers.
-    String boundary = "--------------------------------a921a8f557cf";
-    String header = "POST /push?name=${appContainer.name}&type=crx HTTP/1.1\r\n"
-        + "User-Agent: Spark IDE\r\n"
-        + "Host: ${target}:2424\r\n"
-        + "Content-Type: multipart/form-data; boundary=$boundary\r\n";
+    String boundary = '--------------------------------a921a8f557cf';
+    String header =
+        'POST /push?name=${appContainer.name}&type=crx HTTP/1.1\r\n'
+        'User-Agent: Spark IDE\r\n'
+        'Host: ${target}:2424\r\n'
+        'Content-Type: multipart/form-data; boundary=$boundary\r\n';
     List<int> body = [];
-    String bodyTop = "$boundary\r\n"
-        + "Content-Disposition: form-data; name=\"file\"; "
-        + "filename=\"SparkPush.crx\"\r\n"
-        + "Content-Type: application/octet-stream\r\n\r\n";
+    String bodyTop =
+        '$boundary\r\n'
+        'Content-Disposition: form-data; name="file"; '
+        'filename="SparkPush.crx"\r\n'
+        'Content-Type: application/octet-stream\r\n\r\n';
     body.addAll(bodyTop.codeUnits);
 
     // Add the CRX headers before the zip content.
@@ -57,7 +83,7 @@ class HarnessPush {
     body.addAll([45, 45, 13, 10]); // --\r\n
 
     httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll("Content-length: ${body.length}\r\n\r\n".codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
 
     return httpRequest;
@@ -115,42 +141,29 @@ class HarnessPush {
     });
   }
 
-  // NB: All new devices added here must also be added to manifest.json, under
-  // usbDevices.
-  static final _KNOWN_DEVICES = [
-    { 'vendorId': 0x18d1, 'productId': 0x4ee1 }, // Nexus 4 (and 5?)
-    { 'vendorId': 0x18d1, 'productId': 0x4ee2 }, // Nexus 5 (and 4?)
-    { 'vendorId': 0x18d1, 'productId': 0x4ee6 }, // Nexus 10
-    { 'vendorId': 0x18d1, 'productId': 0x4e41 }, // Nexus 7 MTP
-    { 'vendorId': 0x18d1, 'productId': 0x4e43 }, // Nexus 7 PTP
-    { 'vendorId': 0x04e8, 'productId': 0x685e }, // Galaxy S II debug mode
-    { 'vendorId': 0x04e8, 'productId': 0x6866 }, // Galaxy S III debug mode
-    { 'vendorId': 0x04e8, 'productId': 0x6860 }, // Galaxy Nexus
-    { 'vendorId': 0x0bb4, 'productId': 0x0f63 },  // HTC One
-    { 'vendorId': 0x18d1, 'productId': 0xd002 }  // Moto X
-  ];
-
-
   // Safe to call multiple times. It will open the device if it has not been opened yet.
   Future<AndroidDevice> _fetchAndroidDevice() {
     AndroidDevice device = new AndroidDevice(_prefs);
 
     Future doOpen(int index) {
-      Map m = _KNOWN_DEVICES[index];
-      return device.open(m['vendorId'], m['productId']).catchError((e) {
+      if (_knownDevices.length == 0) {
+        return new Future.error('No known mobile devices.');
+      }
+      if (index >= _knownDevices.length) {
+        return new Future.error('No known mobile device connected.\n'
+            'Please check whether you plugged your mobile device properly.');
+      }
+
+      DeviceInfo di = _knownDevices[index];
+      return device.open(di.vendorId, di.productId).catchError((e) {
         if ((e == 'no-device') || (e == 'no-connection')) {
           // No matching device found, try again.
-          ++index;
-          if (index >= _KNOWN_DEVICES.length) {
-            return new Future.error('No known mobile device connected.\n' +
-                'Please check whether you plugged your mobile device properly.');
-          }
-          return doOpen(index);
+          return doOpen(index + 1);
         } else {
-          return new Future.error('Connection to the Android device failed.\n' +
-              'Please check whether "Developer Options" and "USB debugging" is enabled on your device.\n' +
-              'Enable Developer Options by going in Settings > System > About phone and press 7 times on Build number.\n' +
-              '"Developer options" should now appear in Settings > System > Developer options. ' +
+          return new Future.error('Connection to the Android device failed.\n'
+              'Please check whether "Developer Options" and "USB debugging" is enabled on your device.\n'
+              'Enable Developer Options by going in Settings > System > About phone and press 7 times on Build number.\n'
+              '"Developer options" should now appear in Settings > System > Developer options. '
               'You can now enable "USB debugging" in that menu.');
         }
       });

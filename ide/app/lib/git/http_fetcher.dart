@@ -51,6 +51,7 @@ class HttpFetcher {
 
     HttpRequest xhr = getNewHttpRequest();
     xhr.open("POST", url, async: true , user: username, password: password);
+    xhr.setRequestHeader('Content-Type', 'application/x-git-receive-pack-request');
     xhr.onLoad.listen((event) {
       if (xhr.readyState == 4) {
         if (xhr.status == 200) {
@@ -66,11 +67,7 @@ class HttpFetcher {
         }
       }
     });
-    xhr.onError.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
-    });
-    xhr.setRequestHeader('Content-Type',
-        'application/x-git-receive-pack-request');
+    xhr.onError.listen((_) => completer.completeError(new HttpResult.fromXhr(xhr)));
     String bodySize = (body.size / 1024).toStringAsFixed(2);
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
@@ -78,7 +75,9 @@ class HttpFetcher {
         progress();
       }
     });
+
     xhr.send(body);
+
     return completer.future;
   }
 

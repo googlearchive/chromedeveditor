@@ -50,43 +50,53 @@
       "usbDevices": [
         {
           "vendorId": 6353,
-          "productId": 20193
+          "productId": 20193,
+          "description": "0x18d1/0x4ee1 Nexus 4 (and 5?)"
         },
         {
           "vendorId": 6353,
-          "productId": 20194
+          "productId": 20194,
+          "description": "0x18d1/0x4ee2 Nexus 5 (and 4?)"
         },
         {
           "vendorId": 6353,
-          "productId": 20198
+          "productId": 20198,
+          "description": "0x18d1/0x4ee6 Nexus 10"
         },
         {
           "vendorId": 6353,
-          "productId": 20033
+          "productId": 20033,
+          "description": "0x18d1/0x4e41 Nexus 7 MTP"
         },
         {
           "vendorId": 6353,
-          "productId": 20035
+          "productId": 20035,
+          "description": "0x18d1/0x4e43 Nexus 7 PTP"
+        },
+        {
+          "vendorId": 6353,
+          "productId": 53250,
+          "description": "0x18d1/0xd002 Moto X + some Nexus 5"
         },
         {
           "vendorId": 1256,
-          "productId": 26718
+          "productId": 26718,
+          "description": "0x04e8/0x685e Galaxy S II debug mode"
         },
         {
           "vendorId": 1256,
-          "productId": 26726
+          "productId": 26726,
+          "description": "0x04e8/0x6866 Galaxy S III debug mode"
         },
         {
           "vendorId": 1256,
-          "productId": 26720
+          "productId": 26720,
+          "description": "0x04e8/0x6860 Galaxy Nexus"
         },
         {
           "vendorId": 2996,
-          "productId": 3939
-        },
-        {
-          "vendorId": 6353,
-          "productId": 53250
+          "productId": 3939,
+          "description": "0x0bb4/0x0f63 HTC One"
         }
       ]
     }

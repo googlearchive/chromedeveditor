@@ -778,7 +778,7 @@ class ProjectLocationManager {
    */
   Future<LocationResult> createNewFolder(String defaultName) {
     return getProjectLocation().then((LocationResult root) {
-      return _create(root, defaultName, 1);
+      return root == null ? null : _create(root, defaultName, 1);
     });
   }
 
@@ -790,7 +790,7 @@ class ProjectLocationManager {
       return new LocationResult(location.parent, dir, location.isSync);
     }).catchError((_) {
       if (count > 50) {
-        return null;
+        throw "Error creating project '${baseName}.'";
       } else {
         return _create(location, baseName, count + 1);
       }
@@ -1604,8 +1604,6 @@ class NewProjectAction extends SparkActionWithDialog {
       spark.projectLocationManager.createNewFolder(name)
           .then((LocationResult location) {
         if (location == null) {
-          spark.showErrorMessage('Error while creating project',
-              "The folder '${name}' could not be created.");
           return new Future.value();
         }
 
@@ -1643,6 +1641,8 @@ class NewProjectAction extends SparkActionWithDialog {
             spark.workspace.save();
           });
         });
+      }).catchError((e) {
+        spark.showErrorMessage('Error Creating Project', '${e}');
       });
     }
   }
@@ -1790,7 +1790,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
         }
 
         final String lastModified =
-            new DateFormat.yMd().add_Hm().format(meta.modificationTime);
+            new DateFormat.yMMMd().add_jms().format(meta.modificationTime);
         _addProperty(_propertiesElement, 'Last Modified', lastModified);
       });
     });
@@ -1838,10 +1838,14 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    // TODO(grv): Add verify checks.
     String url = _repoUrlElement.value;
     String projectName;
 
+    if (url.isEmpty) return;
+
+    // TODO(grv): Add verify checks.
+
+    // Add `'.git` to the given url unless it ends with `/`.
     if (url.endsWith('/')) {
       projectName = url.substring(0, url.length - 1).split('/').last;
     } else {
@@ -2214,8 +2218,6 @@ class _GitCloneJob extends Job {
 
     return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
       if (location == null) {
-        spark.showErrorMessage('Error while cloning the repository',
-            "The folder '${_projectName}' could not be created.");
         return new Future.value();
       }
 

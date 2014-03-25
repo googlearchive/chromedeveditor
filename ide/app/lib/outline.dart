@@ -228,4 +228,3 @@ class OutlineProperty extends OutlineClassMember {
   OutlineProperty(services.OutlineProperty data)
       : super(data, "property");
 }
-

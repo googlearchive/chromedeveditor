@@ -11,10 +11,12 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:benchmark_harness/benchmark_harness.dart';
+import 'package:crypto/crypto.dart' as crypto;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart';
 
+import '../lib/git/fast_sha.dart';
 import '../lib/git/utils.dart';
 import '../lib/git/zlib.dart';
 
@@ -32,10 +34,12 @@ Logger _logger = new Logger('spark.benchmarks');
 // jszlib deflate  : 440.040 ms
 
 //dart2js:
-// archive inflate :  40.600 ms
-// archive deflate : 168.250 ms
-// create zip      : 489.800 ms
-//
+// archive inflate :  22.573 ms (40.600 ms)
+// archive deflate :  39.275 ms (168.250 ms)
+// create zip      : 110.263 ms (489.800 ms)
+// git sha         :1087.500 ms (1760.000 ms)
+// plain sha       :1977.500 ms
+// fast sha        : 216.000 ms (943.667 ms)
 // jszlib inflate  :  36.161 ms
 // jszlib deflate  : 826.000 ms
 
@@ -48,8 +52,9 @@ defineTests() {
 
     //test('create zip', () => runBenchmark(new CreateZipBenchmark()));
 
-    //test('git sha', () => runBenchmark(new GitShaBenchmark()));
-    //test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
+    test('plain sha', () => runBenchmark(new PlainShaBenchmark()));
+    test('git sha', () => runBenchmark(new GitShaBenchmark()));
+    test('fast sha', () => runBenchmark(new FastShaBenchmark()));
   });
 }
 
@@ -152,12 +157,35 @@ class GitShaBenchmark extends BenchmarkBase {
   }
 
   void run() {
-//    Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
-//      return entry.readBytes().then((chrome.ArrayBuffer content) {
-//        return _getShaStringForData(content.getBytes(), type);
-//      });
-//    }
     getShaStringForData(data, 'blob');
+  }
+}
+
+class PlainShaBenchmark extends BenchmarkBase {
+  List data;
+
+  PlainShaBenchmark() : super('plain sha', emitter: _emitter);
+
+  void setup() {
+    data = _createData(100000);
+  }
+
+  void run() {
+    crypto.SHA1 sha = new crypto.SHA1();
+    sha.add(data);
+    sha.close();
+  }
+}
+
+class FastShaBenchmark extends BenchmarkBase {
+  List data = _createData(100000);
+
+  FastShaBenchmark() : super('fast sha', emitter: _emitter);
+
+  void run() {
+    FastSha sha = new FastSha();
+    sha.add(data);
+    sha.close();
   }
 }
 

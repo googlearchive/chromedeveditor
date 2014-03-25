@@ -32,6 +32,7 @@ import 'git/commands/fetch.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
+import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 
@@ -179,6 +180,7 @@ abstract class ScmProjectOperations {
   Future updateForChanges(List<ChangeDelta> changes);
 }
 
+// TODO: Remove this when we have a generic spark exception class.
 class ScmException implements Exception {
   final String message;
   final bool needsAuth;
@@ -455,17 +457,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
     // For each file, request the SCM status asynchronously.
     return objectStore.then((ObjectStore store) {
       return Future.forEach(files, (File file) {
-        // TODO: remove this short-circuit once scm status is fast
-        file.setMetadata('scmStatus', FileStatus.COMMITTED.status);
-        return new Future.value();
-
-//        Stopwatch timer = new Stopwatch()..start();
-//        return Status.getFileStatus(store, file.entry).then((status) {
-//          file.setMetadata('scmStatus',
-//              new FileStatus.fromIndexStatus(status.type).status);
-//          _logger.info('calculated scm status for ${file.path} in '
-//              '${timer.elapsedMilliseconds}ms');
-//        });
+        return Status.getFileStatus(store, file.entry).then((status) {
+          file.setMetadata('scmStatus',
+              new FileStatus.fromIndexStatus(status.type).status);
+        });
       }).then((_) => _statusController.add(this));
     }).catchError((e, st) {
       _logger.severe("error calculating scm status", e, st);
