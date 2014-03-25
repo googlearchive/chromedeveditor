@@ -308,35 +308,41 @@ body {
   position: absolute;
   min-width: 200px;
   right: 25px;
-  background: #000;
-  border-radius: 5px;
   z-index: 100;
-  opacity: 0.8;
-  border: 1px #888 solid;
   top: 0;
   bottom: 40px;
   margin: 10px;
 }
 
-#outlineContainer {
-  display: block;
+#outlineContent {
+  width: 200px;
+  height: 100%;
+  background: #000;
+  opacity: 0.8;
+  border-radius: 5px;  
+  border: 1px #888 solid;
+}
+
+#outlineScrollable {
   position: absolute;
+  background: #000;
+  display: block;
   height: auto;
   left: 0;
   right: 0;
   top: 0;
   bottom: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
   margin: 10px;
 }
 
-#outlineContainer ul {
+#outlineScrollable ul {
   margin: 0px;
   padding: 0 0 0 10px;
   list-style-type: none;
 }
 
-#outlineContainer > ul {
+#outlineScrollable > ul {
   padding: 0px;
 }
 
