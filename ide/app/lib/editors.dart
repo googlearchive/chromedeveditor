@@ -16,6 +16,7 @@ import 'ace.dart' as ace;
 import 'event_bus.dart';
 import 'preferences.dart';
 import 'workspace.dart';
+import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
@@ -77,6 +78,7 @@ class EditorManager implements EditorProvider {
   // Keys are persist tokens of the files.
   final Map<String, _EditorState> _savedEditorStates = {};
   final Map<File, Editor> _editorMap = {};
+  final Services _services;
 
   final Completer<bool> _loadedCompleter = new Completer.sync();
   _EditorState _currentState;
@@ -85,9 +87,10 @@ class EditorManager implements EditorProvider {
       new StreamController.broadcast();
 
   static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
+      new RegExp(r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
 
-  EditorManager(this._workspace, this._aceContainer, this._prefs, this._eventBus) {
+  EditorManager(this._workspace, this._aceContainer, this._prefs,
+      this._eventBus, this._services) {
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);

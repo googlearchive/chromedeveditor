@@ -14,11 +14,14 @@
   <div id="controls">
       <button id="back" title="Go Back">&#9664;</button>
       <button id="forward" title="Go Forward">&#9654;</button>
-      <button id="reload" title="Reload">&#10227;</button>
+      <button id="reload" title="Reload">
+        <div id="spinner">&#10227;</div>
+      </button>
 
       <form id="location-form">
         <div id="center-column">
-          <input id="location" type="text" value="http://127.0.0.1:4040/">
+          <input id="location" type="text" disabled readonly
+              value="http://127.0.0.1:4040/">
         </div>
       </form>
     </div>

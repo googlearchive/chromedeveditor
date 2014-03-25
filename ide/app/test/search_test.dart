@@ -43,7 +43,7 @@ defineTests() {
       oracle.getSuggestions('spark').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(1));
         expect(list[0].label, 'Spark.DART');
-        expect(list[0].details, '[/root]');
+        expect(list[0].details, '/root');
       }));
     }));
 
@@ -51,9 +51,9 @@ defineTests() {
       oracle.getSuggestions('multi').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(2));
         expect(list[0].label, 'multi1.dart');
-        expect(list[0].details, '[/root]');
+        expect(list[0].details, '/root');
         expect(list[1].label, 'multi2.dart');
-        expect(list[1].details, '[/root]');
+        expect(list[1].details, '/root');
       }));
     }));
 
@@ -61,7 +61,7 @@ defineTests() {
       oracle.getSuggestions('SP').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(1));
         expect(list[0].label, 'Spark.DART');
-        expect(list[0].details, '[/root]');
+        expect(list[0].details, '/root');
       }));
     }));
 
@@ -69,7 +69,7 @@ defineTests() {
       oracle.getSuggestions('ih-asunder_dashes').listen(expectAsync((List<Suggestion> list) {
         expect(list, hasLength(1));
         expect(list[0].label, 'i_has-underdashes.txt');
-        expect(list[0].details, '[/root]');
+        expect(list[0].details, '/root');
       }));
     }));
 

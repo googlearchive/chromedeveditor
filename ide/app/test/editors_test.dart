@@ -23,7 +23,7 @@ defineTests() {
       AceManager aceManager = new MockAceManager();
       PreferenceStore store = new MapPreferencesStore();
       EditorManager manager = new EditorManager(
-          workspace, aceManager, store, new EventBus());
+          workspace, aceManager, store, new EventBus(), null);
 
       MockFileSystem fs = new MockFileSystem();
 

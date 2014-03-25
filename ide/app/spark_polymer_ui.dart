@@ -4,8 +4,8 @@
 
 library spark_polymer.ui;
 
-import 'dart:html';
 import 'dart:async';
+import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
@@ -15,18 +15,34 @@ import 'packages/spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 
 import 'spark_model.dart';
 import 'lib/search.dart';
+import 'lib/workspace.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
   @observable bool developerMode = false;
+  @observable bool chromeOS = false;
   @observable SuggestOracle searchOracle;
 
-  SparkPolymerUI.created() : super.created() {
+  SparkPolymerUI.created() : super.created();
+
+  @override
+  void enteredView() {
+    super.enteredView();
+
     searchOracle = new SearchOracle(
-        () => SparkModel.instance.workspace,
-        (f) => SparkModel.instance.editorArea.selectFile(
-            f, forceOpen: true, replaceCurrent: false, switchesTab: true));
-    Timer.run(() => bindKeybindingDesc());
+        () => SparkModel.instance.workspace, _selectFile);
+
+    // Delay calling this until the `SparkModel.instance` is populated.
+    Timer.run(bindKeybindingDesc);
+  }
+
+  void _selectFile(Resource file) {
+    SparkModel.instance.editorArea.selectFile(
+        file,
+        forceOpen: true,
+        replaceCurrent: false,
+        switchesTab: true,
+        forceFocus: true);
   }
 
   void onMenuSelected(CustomEvent event, var detail) {
@@ -58,21 +74,25 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void bindKeybindingDesc() {
-    final items = getShadowDomElement('#mainMenu').querySelectorAll('spark-menu-item');
+    final items = getShadowDomElement('#mainMenu').querySelectorAll(
+        'spark-menu-item');
     items.forEach((menuItem) {
       final actionId = menuItem.attributes['action-id'];
       final action = SparkModel.instance.actionManager.getAction(actionId);
-      action.bindings.forEach((keyBind) => menuItem.description = keyBind.getDescription());
+      action.bindings.forEach(
+          (keyBind) => menuItem.description = keyBind.getDescription());
     });
   }
 
   void onResetGit() {
-    SparkModel.instance.syncPrefs.removeValue(['git-auth-info', 'git-user-info']);
+    SparkModel.instance.syncPrefs.removeValue(
+        ['git-auth-info', 'git-user-info']);
     SparkModel.instance.setGitSettingsResetDoneVisible(true);
   }
 
   void onResetPreference() {
-    Element resultElement = getShadowDomElement('#preferenceResetResult')..text = '';
+    Element resultElement = getShadowDomElement('#preferenceResetResult');
+    resultElement.text = '';
     SparkModel.instance.syncPrefs.clear().then((_) {
       SparkModel.instance.localPrefs.clear();
     }).catchError((e) {
@@ -80,5 +100,11 @@ class SparkPolymerUI extends SparkWidget {
     }).then((_) {
       resultElement.text = 'Preferences are reset. Restart Spark.';
     });
+  }
+
+  void handleAnchorClick(Event e) {
+    e..preventDefault()..stopPropagation();
+    AnchorElement anchor = e.target;
+    window.open(anchor.href, '_blank');
   }
 }

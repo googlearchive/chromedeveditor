@@ -303,3 +303,83 @@ body {
   opacity: 0.25;
   z-index: 500;
 }
+
+#outline {
+  position: absolute;
+  right: 25px;
+  top: 10px;
+  bottom: 10px;
+  background: #000;
+  border-radius: 5px;
+  z-index: 100;
+  opacity: 0.8;
+  border: 1px #888 solid;
+  top: 0;
+  bottom: 40px;
+  margin: 10px
+  
+}
+
+#outlineContainer {
+  overflow-y: scroll;
+  width: 200px;
+  height: 100%;
+  bottom: 30px;
+}
+
+#outlineContainer ul {
+  margin: 0px;
+  padding: 0 0 0 10px;
+  list-style-type: none;
+}
+
+#outlineContainer > ul {
+  margin: 10px;
+  padding: 0px;
+}
+
+.outlineItem.topLevel > ul {
+  background: #333;
+}
+
+.outlineItem > a:hover {
+  text-decoration: none;
+}
+
+.outlineItem {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* For left guides in classes:
+.outlineItem.topLevel.class > ul {
+  border-left: 2px #111 solid;
+}
+*/
+
+li.outlineItem.topLevel.class {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
+  color: #ddd;
+}
+
+.outlineItem.topLevel.function, .outlineItem.method,
+    .outlineItem.topLevel.function > a, .outlineItem.method > a {
+  color: #888;
+}
+
+.outlineItem.topLevel.variable, .outlineItem.property,
+    .outlineItem.topLevel.variable > a, .outlineItem.property > a {
+  color: #77c;
+}
+
+#toggleOutlineButton {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  right: 0;
+  bottom: -40px;
+}

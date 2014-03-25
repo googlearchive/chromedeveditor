@@ -58,15 +58,10 @@ class JobManager {
     _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
     _jobStarted(_runningJob);
 
-    Stopwatch timer = new Stopwatch()..start();
-    _logger.info("${_runningJob} started");
-
     try {
       _runningJob.run(monitor).catchError((e, st) {
         _logger.severe("${_runningJob} errored", e, st);
       }).whenComplete(() {
-        int ms = timer.elapsedMilliseconds;
-        _logger.info("${_runningJob} finished in ${_nf.format(ms)}ms");
         _jobFinished(_runningJob);
         _runningJob = null;
         _scheduleNextJob();
