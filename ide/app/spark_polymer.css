@@ -331,7 +331,7 @@ body {
   top: 0;
   bottom: 0;
   overflow-y: auto;
-  margin: 10px;
+  margin: 10px 0 10px 10px;
 }
 
 #outlineScrollable ul {
@@ -341,6 +341,7 @@ body {
 }
 
 #outlineScrollable > ul {
+  margin: 0 10px 0 0;
   padding: 0px;
 }
 
