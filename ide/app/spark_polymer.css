@@ -306,7 +306,6 @@ body {
 
 #outline {
   position: absolute;
-  min-width: 200px;
   right: 25px;
   z-index: 100;
   top: 0;
@@ -325,7 +324,6 @@ body {
 
 #outlineScrollable {
   position: absolute;
-  background: #000;
   display: block;
   height: auto;
   left: 0;
