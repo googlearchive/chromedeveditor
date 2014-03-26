@@ -1958,9 +1958,13 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     });
     int modifiedFileCnt = modifiedFileList.length;
     int addedFileCnt = addedFileList.length;
+    if (modifiedFileCnt + addedFileCnt == 0) {
+      _gitStatusElement.text = "Nothing to commit.";
+    } else {
     _gitStatusElement.text =
         '$modifiedFileCnt file(s) modified, $addedFileCnt files(s) added.';
     // TODO(sunglim): show the count of deletetd files.
+    }
   }
 
   void _calculateScmStatus(ws.Folder folder) {
