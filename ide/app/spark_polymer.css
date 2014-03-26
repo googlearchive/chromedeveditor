@@ -307,34 +307,41 @@ body {
 #outline {
   position: absolute;
   right: 25px;
-  top: 10px;
-  bottom: 10px;
-  background: #000;
-  border-radius: 5px;
   z-index: 100;
-  opacity: 0.8;
-  border: 1px #888 solid;
   top: 0;
   bottom: 40px;
-  margin: 10px
-  
+  margin: 10px;
 }
 
-#outlineContainer {
-  overflow-y: scroll;
+#outlineContent {
   width: 200px;
   height: 100%;
-  bottom: 30px;
+  background: #000;
+  opacity: 0.8;
+  border-radius: 5px;  
+  border: 1px #888 solid;
 }
 
-#outlineContainer ul {
+#outlineScrollable {
+  position: absolute;
+  display: block;
+  height: auto;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+  margin: 10px 0 10px 10px;
+}
+
+#outlineScrollable ul {
   margin: 0px;
   padding: 0 0 0 10px;
   list-style-type: none;
 }
 
-#outlineContainer > ul {
-  margin: 10px;
+#outlineScrollable > ul {
+  margin: 0 10px 0 0;
   padding: 0px;
 }
 
