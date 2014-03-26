@@ -1903,6 +1903,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   InputElement _userNameElement;
   InputElement _userEmailElement;
   DivElement _gitStatusElement;
+  DivElement _gitChangeElement;
   bool _needsFillNameEmail;
   String _gitName;
   String _gitEmail;
@@ -1916,6 +1917,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
     _gitStatusElement = getElement('#gitStatus');
+    _gitChangeElement = getElement('#gitChangeList');
   }
 
   void _invoke([context]) {
@@ -1938,10 +1940,9 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _commitMessageElement.value = '';
       _userNameElement.value = '';
       _userEmailElement.value = '';
+      _gitChangeElement.text = '';
 
-      // TODO: Remove this #gitStatusGroup hidden once scm status is fast.
-      getElement("#gitStatusGroup").hidden = true;
-      //_addGitStatus();
+      _addGitStatus();
 
       _show();
     });
@@ -1949,6 +1950,12 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _addGitStatus() {
     _calculateScmStatus(project);
+    modifiedFileList.forEach((file) {
+      _gitChangeElement.innerHtml += 'Modified:&emsp;' + file.path + '<br/>';
+    });
+    addedFileList.forEach((file){
+      _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
+    });
     int modifiedFileCnt = modifiedFileList.length;
     int addedFileCnt = addedFileList.length;
     _gitStatusElement.text =
