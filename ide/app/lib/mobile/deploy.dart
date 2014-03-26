@@ -2,18 +2,18 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.harness_push;
+library spark.deploy;
 
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'adb.dart';
-import 'jobs.dart';
-import 'preferences.dart';
-import 'tcp.dart';
-import 'workspace.dart';
-import 'workspace_utils.dart';
+import '../jobs.dart';
+import '../preferences.dart';
+import '../tcp.dart';
+import '../workspace.dart';
+import '../workspace_utils.dart';
 
 class DeviceInfo {
   final int vendorId;
