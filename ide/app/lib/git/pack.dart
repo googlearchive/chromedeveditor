@@ -13,9 +13,9 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
 
+import 'fast_sha.dart';
 import 'file_operations.dart';
 import 'object.dart';
 import 'object_utils.dart';
@@ -97,16 +97,13 @@ class Pack {
   /**
    * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(String type, Uint8List contentData) {
-    List<int> header = encodeUtf8(type + " ${contentData.length}\u0000");
+  List<int> getObjectHash(String type, Uint8List data) {
+    FastSha sha1 = new FastSha();
 
-    Uint8List fullContent = new Uint8List(header.length + contentData.length);
+    List<int> header = encodeUtf8("${type} ${data.length}\u0000");
+    sha1.add(header);
+    sha1.add(data);
 
-    fullContent.setAll(0, header);
-    fullContent.setAll(header.length, contentData);
-
-    crypto.SHA1 sha1 = new crypto.SHA1();
-    sha1.add(fullContent);
     return sha1.close();
   }
 

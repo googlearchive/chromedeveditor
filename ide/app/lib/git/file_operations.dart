@@ -56,9 +56,7 @@ abstract class FileOps {
         if (type == 'Text') {
           return entry.writeText(content).then((_) => entry);
         } else if (type == 'blob') {
-          if (content is Uint8List) {
-            content = new chrome.ArrayBuffer.fromBytes(content.toList());
-          }
+          content = new chrome.ArrayBuffer.fromBytes(content as List);
           return entry.writeBytes(content).then((_) => entry);
         } else {
           throw new UnsupportedError(

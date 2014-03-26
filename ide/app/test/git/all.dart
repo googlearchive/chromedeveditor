@@ -13,6 +13,7 @@ import 'commands/fetch_test.dart' as git_commands_fetch_test;
 import 'commands/merge_test.dart' as git_commands_merge_test;
 import 'commands/pull_test.dart' as git_commands_pull_test;
 import 'commands/push_test.dart' as git_commands_push_test;
+import 'fast_sha_test.dart' as git_fast_sha_test;
 import 'file_operations_test.dart' as git_file_operations_test;
 import 'logger_test.dart' as git_logger_test;
 import 'object_test.dart' as git_object_test;
@@ -35,6 +36,7 @@ void defineTests() {
   git_commands_merge_test.defineTests();
   git_commands_pull_test.defineTests();
   git_commands_push_test.defineTests();
+  git_fast_sha_test.defineTests();
   git_file_operations_test.defineTests();
   git_logger_test.defineTests();
   git_object_test.defineTests();

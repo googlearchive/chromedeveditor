@@ -13,7 +13,8 @@ import '../lib/services.dart' as services;
 class Outline {
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
-  html.DivElement _outlineContainer;
+  html.DivElement _outlineScrollableDiv;
+  html.DivElement _outlineContentDiv;
 
   services.AnalyzerService analyzer;
 
@@ -27,12 +28,17 @@ class Outline {
     // TODO(ericarnold): This should be done in polymer.
     _outlineDiv.id = "outline";
 
-    _outlineContainer = new html.DivElement();
-    _outlineContainer.onMouseWheel.listen((html.MouseEvent event) {
-      event.stopPropagation();
-    });
-    _outlineContainer.id = "outlineContainer";
-    _outlineDiv.append(_outlineContainer);
+    _outlineContentDiv = new html.DivElement()
+        ..id = "outlineContent";
+
+    _outlineScrollableDiv = new html.DivElement()
+        ..id = "outlineScrollable"
+        ..onMouseWheel.listen((html.MouseEvent event) {
+          event.stopPropagation();
+        });
+
+    _outlineContentDiv.append(_outlineScrollableDiv);
+    _outlineDiv.append(_outlineContentDiv);
 
     html.SpanElement showGlyph = new html.SpanElement()
         ..classes.add('glyphicon')
@@ -83,7 +89,7 @@ class Outline {
     }
 
     _rootList = new html.UListElement();
-    _outlineContainer.append(_rootList);
+    _outlineScrollableDiv.append(_rootList);
 
     for (services.OutlineTopLevelEntry data in outline.entries) {
       _create(data);
@@ -106,11 +112,11 @@ class Outline {
    * Toggles visibility of the outline.  Returns true if showing.
    */
   bool _toggle() {
-    if (_outlineContainer.style.display == 'none') {
-      _outlineContainer.style.display = 'block';
+    if (_outlineContentDiv.style.display == 'none') {
+      _outlineContentDiv.style.display = 'block';
       return true;
     } else {
-      _outlineContainer.style.display = 'none';
+      _outlineContentDiv.style.display = 'none';
       return false;
     }
   }
@@ -228,4 +234,3 @@ class OutlineProperty extends OutlineClassMember {
   OutlineProperty(services.OutlineProperty data)
       : super(data, "property");
 }
-
