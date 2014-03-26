@@ -15,7 +15,7 @@ import 'package:cipher/cipher.dart';
 import 'package:cipher/impl/base.dart' as CipherBase;
 import 'package:crypto/crypto.dart' show CryptoUtils;
 
-import 'preferences.dart';
+import '../preferences.dart';
 
 // Most of these are helper classes that don't really need to be exported,
 // and might be better off in an internal library.

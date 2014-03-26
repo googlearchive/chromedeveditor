@@ -27,12 +27,12 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
-import 'lib/harness_push.dart';
+import 'lib/mobile/deploy.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/project_builder.dart';
-import 'lib/pub.dart';
+import 'lib/dart/pub.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
@@ -1838,13 +1838,21 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    // TODO(grv): Add verify checks.
     String url = _repoUrlElement.value;
-    if (!url.endsWith('.git')) {
-      url = url + '.git';
+    String projectName;
+
+    if (url.isEmpty) return;
+
+    // TODO(grv): Add verify checks.
+
+    // Add `'.git` to the given url unless it ends with `/`.
+    if (url.endsWith('/')) {
+      projectName = url.substring(0, url.length - 1).split('/').last;
+    } else {
+      if (!url.endsWith('.git')) url = url + '.git';
+      projectName = url.split('/').last;
     }
 
-    String projectName = url.split('/').last;
     if (projectName.endsWith('.git')) {
       projectName = projectName.substring(0, projectName.length - 4);
     }
@@ -2234,7 +2242,9 @@ class _GitCloneJob extends Job {
         });
       });
     }).catchError((e) {
-      spark.showErrorMessage('Error cloning ${_projectName}', e.toString());
+      if (e != null) {
+        spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
+      }
     });
   }
 }
@@ -2668,7 +2678,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
     completer = null;
   }
 
-  static Future request(Spark spark) {
+  static Future<Map> request(Spark spark) {
     if (_instance == null) {
       _instance = new GitAuthenticationDialog(spark,
           spark.getDialogElement('#gitAuthenticationDialog'));

@@ -314,27 +314,32 @@ body {
   z-index: 100;
 }
 
-#outlineContainer {
+#outlineContent {
   background: rgba(0, 0, 0, 0.8);
   border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   bottom: 35px;
   left: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
   position: absolute;
   right: 0;
   top: 0;
   transition: opacity 250ms;
 }
 
-#outlineContainer ul {
+#outlineScrollable {
+  overflow-y: auto;
+  margin: 10px;
+}
+
+#outlineScrollable ul {
   margin: 0px;
   padding: 0 0 0 10px;
   list-style-type: none;
 }
 
-#outlineContainer > ul {
-  margin: 10px;
+#outlineScrollable > ul {
+  margin: 0 10px 0 0;
   padding: 0px;
 }
 
@@ -410,6 +415,6 @@ li.outlineItem.topLevel.class {
   display: inline;
 }
 
-#outline.collapsed #outlineContainer {
+#outline.collapsed #outlineContent {
   opacity: 0;
 }

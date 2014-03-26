@@ -19,7 +19,7 @@ import 'apps/app_utils.dart';
 import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
-import 'pub.dart';
+import 'dart/pub.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
