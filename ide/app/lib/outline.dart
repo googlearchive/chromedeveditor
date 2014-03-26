@@ -36,12 +36,11 @@ class Outline {
 
     html.SpanElement showGlyph = new html.SpanElement()
         ..classes.add('glyphicon')
-        ..classes.add('glyphicon-play')
+        ..classes.add('glyphicon-list')
         ..id = "showOutlineGlyph";
     html.SpanElement hideGlyph = new html.SpanElement()
         ..classes.add('glyphicon')
-        ..classes.add('glyphicon-list')
-        ..style.display = 'none'
+        ..classes.add('glyphicon-play')
         ..id = "hideOutlineGlyph";
 
     html.ButtonElement toggleButton = new html.ButtonElement();
@@ -50,18 +49,16 @@ class Outline {
         ..append(hideGlyph)
         ..append(showGlyph)
         ..onClick.listen((e) {
-          bool toggled = _toggle();
-          showGlyph.style.display = !toggled ? 'none' : 'inline';
-          hideGlyph.style.display = toggled ? 'none' : 'inline';
+          _toggle();
         });
 
     _outlineDiv.append(toggleButton);
   }
 
-  bool get visible => _outlineDiv.style.display != 'none';
+  bool get visible => /*_outlineDiv.style.display != 'none' */ !_outlineDiv.classes.contains('collapsed');
   set visible(bool value) {
     if (value != visible) {
-      _outlineDiv.style.display = (value ? 'block' : 'none');
+      _outlineDiv.classes.toggle('collapsed');
     }
   }
 
@@ -105,14 +102,8 @@ class Outline {
   /**
    * Toggles visibility of the outline.  Returns true if showing.
    */
-  bool _toggle() {
-    if (_outlineContainer.style.display == 'none') {
-      _outlineContainer.style.display = 'block';
-      return true;
-    } else {
-      _outlineContainer.style.display = 'none';
-      return false;
-    }
+  void _toggle() {
+    _outlineDiv.classes.toggle('collapsed');
   }
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
