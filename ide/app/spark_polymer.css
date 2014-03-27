@@ -305,33 +305,31 @@ body {
 }
 
 #outline {
-  position: absolute;
-  right: 25px;
-  z-index: 100;
-  top: 0;
-  bottom: 40px;
+  bottom: 0;
   margin: 10px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 200px;
+  z-index: 100;
 }
 
 #outlineContent {
-  width: 200px;
-  height: 100%;
-  background: #000;
-  opacity: 0.8;
-  border-radius: 5px;  
-  border: 1px #888 solid;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  bottom: 35px;
+  left: 0;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: opacity 250ms;
 }
 
 #outlineScrollable {
-  position: absolute;
-  display: block;
-  height: auto;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
   overflow-y: auto;
-  margin: 10px 0 10px 10px;
+  margin: 10px;
 }
 
 #outlineScrollable ul {
@@ -345,24 +343,15 @@ body {
   padding: 0px;
 }
 
-.outlineItem.topLevel > ul {
-  background: #333;
-}
-
-.outlineItem > a:hover {
-  text-decoration: none;
+.outlineItem.topLevel.class:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
 }
 
 .outlineItem {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* For left guides in classes:
-.outlineItem.topLevel.class > ul {
-  border-left: 2px #111 solid;
-}
-*/
 
 li.outlineItem.topLevel.class {
   margin-top: 10px;
@@ -378,15 +367,54 @@ li.outlineItem.topLevel.class {
   color: #888;
 }
 
+.outlineItem.topLevel.function > a:after, .outlineItem.method > a:after {
+  content: '()';
+}
+
 .outlineItem.topLevel.variable, .outlineItem.property,
     .outlineItem.topLevel.variable > a, .outlineItem.property > a {
   color: #77c;
 }
 
 #toggleOutlineButton {
-  position: absolute;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  border-radius: 5px;
+  bottom: 0px;
   height: 30px;
-  width: 30px;
+  position: absolute;
   right: 0;
-  bottom: -40px;
+  width: 30px;
+}
+
+#toggleOutlineButton:hover {
+  background-color: rgba(255, 255, 255, 0.7);;
+}
+
+#toggleOutlineButton:active {
+  background-color: rgba(255, 255, 255, 1);;
+}
+
+#toggleOutlineButton:focus {
+  outline: none;
+}
+
+#toggleOutlineButton > #hideOutlineGlyph {
+  display: inline;
+}
+
+#toggleOutlineButton > #showOutlineGlyph {
+  display: none;
+}
+
+#outline.collapsed #toggleOutlineButton > #hideOutlineGlyph {
+  display: none;
+}
+
+#outline.collapsed #toggleOutlineButton > #showOutlineGlyph {
+  display: inline;
+}
+
+#outline.collapsed #outlineContent {
+  opacity: 0;
 }
