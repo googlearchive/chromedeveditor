@@ -1910,7 +1910,8 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   TextAreaElement _commitMessageElement;
   InputElement _userNameElement;
   InputElement _userEmailElement;
-  DivElement _gitStatusElement;
+  Element _gitStatusElement;
+  DivElement _gitChangeElement;
   bool _needsFillNameEmail;
   String _gitName;
   String _gitEmail;
@@ -1924,6 +1925,11 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
     _gitStatusElement = getElement('#gitStatus');
+    _gitChangeElement = getElement('#gitChangeList');
+    getElement('#gitStatusDetail').onClick.listen((e) {
+      _gitChangeElement.style.display =
+          _gitChangeElement.style.display == 'none' ? 'block' : 'none';
+    });
   }
 
   void _invoke([context]) {
@@ -1946,10 +1952,10 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _commitMessageElement.value = '';
       _userNameElement.value = '';
       _userEmailElement.value = '';
+      _gitChangeElement.text = '';
+      _gitChangeElement.style.display = 'none';
 
-      // TODO: Remove this #gitStatusGroup hidden once scm status is fast.
-      getElement("#gitStatusGroup").hidden = true;
-      //_addGitStatus();
+      _addGitStatus();
 
       _show();
     });
@@ -1957,17 +1963,28 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _addGitStatus() {
     _calculateScmStatus(project);
-    int modifiedFileCnt = modifiedFileList.length;
-    int addedFileCnt = addedFileList.length;
-    _gitStatusElement.text =
-        '$modifiedFileCnt file(s) modified, $addedFileCnt files(s) added.';
+    modifiedFileList.forEach((file) {
+      _gitChangeElement.innerHtml += 'Modified:&emsp;' + file.path + '<br/>';
+    });
+    addedFileList.forEach((file){
+      _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
+    });
+    final int modifiedCnt = modifiedFileList.length;
+    final int addedCnt = addedFileList.length;
+    if (modifiedCnt + addedCnt == 0) {
+      _gitStatusElement.text = "Nothing to commit.";
+    } else {
+      _gitStatusElement.text =
+          '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
+          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.';
     // TODO(sunglim): show the count of deletetd files.
+    }
   }
 
   void _calculateScmStatus(ws.Folder folder) {
     folder.getChildren().forEach((resource) {
       if (resource is ws.Folder) {
-        if (resource.name == '.git') {
+        if (resource.isScmPrivate()) {
           return;
         }
         _calculateScmStatus(resource);

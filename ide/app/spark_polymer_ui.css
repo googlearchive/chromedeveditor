@@ -139,6 +139,24 @@
   margin-bottom: 0px;
 }
 
+#gitChangeList {
+  border-radius: 4px;
+  border: 1px solid #cccccc;
+  display: none;
+  margin-bottom: 15px;
+  max-height: 105px;
+  overflow: auto;
+  padding: 5px 14px;
+}
+
+#changeLabel {
+  top: 0px;
+}
+
+#gitStatusDiv {
+  width: 100%;
+}
+
 #gitUserInfo.hidden {
   display: none;
 }
