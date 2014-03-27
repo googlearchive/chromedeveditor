@@ -39,7 +39,7 @@ Future<chrome.DirectoryEntry> getPackageDirectoryEntry() {
 }
 
 /**
- * Returns the given word with the first character capitolized.
+ * Returns the given word with the first character capitalized.
  */
 String capitalize(String s) {
   return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));

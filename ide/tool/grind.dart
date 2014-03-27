@@ -260,7 +260,7 @@ void createSdk(GrinderContext context) {
 
   // Get rid of some big directories we don't use.
   _delete('app/sdk/lib/_internal/compiler', context);
-  _delete('app/sdk/lib/_internal/dartdoc', context);
+  _delete('app/sdk/lib/_internal/pub', context);
 
   context.log('creating SDK archive');
   _createSdkArchive(versionFile, joinDir(destSdkDir, ['lib']), destArchiveFile);
