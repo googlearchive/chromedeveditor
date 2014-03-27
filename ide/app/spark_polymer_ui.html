@@ -312,11 +312,14 @@
             </div>
           </div>
         </div>
-        <div id="gitStatusGroup" class="form-group">
-          <label>Changes</label>
-          <div id="gitStatus"></div>
+          <div class="input-label">
+            <label id="changeLabel">Changes</label>
+            <div id="gitStatusDiv">
+               <span id="gitStatus"></span>
+               <a href="#" id="gitStatusDetail" class="glyphicon glyphicon-expand"></a>
+            </div>
+          </div>
           <div id="gitChangeList"></div>
-        </div>
         <div class="form-group">
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"

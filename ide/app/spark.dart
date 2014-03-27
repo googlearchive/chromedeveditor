@@ -1964,6 +1964,10 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _gitStatusElement.text =
           '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
           '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.';
+      getElement('#gitStatusDetail').onClick.listen((e) {
+        _gitChangeElement.style.display =
+            _gitChangeElement.style.display == 'none' ? 'block' : 'none';
+      });
     // TODO(sunglim): show the count of deletetd files.
     }
   }
