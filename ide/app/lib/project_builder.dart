@@ -12,32 +12,35 @@ import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'utils.dart';
 
+/**
+ * A class to create a sample project given a project name and the template id
+ * to use.
+ */
 class ProjectBuilder {
   DirectoryEntry _destRoot;
-  DirectoryEntry _sourceRoot;
-  String _sourcePath;
-  Future _onceSourceRootReady;
   String _sourceName;
   String _projectName;
-  Map _setup;
   String _sourceUri;
 
   ProjectBuilder(this._destRoot, String templateId, this._sourceName,
       this._projectName) {
-    String templatesPath = 'resources/templates/$templateId';
-    _sourceUri = templatesPath;
-
-    _onceSourceRootReady = chrome.runtime.getPackageDirectoryEntry()
-        .then((DirectoryEntry root) => root.getDirectory(templatesPath))
-        .then((DirectoryEntry root) => _sourceRoot = root);
+    _sourceUri = 'resources/templates/$templateId';
   }
 
+  /**
+   * Build the sample project and complete the Future when finished.
+   */
   Future build() {
-    Future setupFuture = getAppContents("$_sourceUri/setup.json")
-        .then((String contents) => _setup = JSON.decode(contents));
+    DirectoryEntry sourceRoot;
 
-    return Future.wait([setupFuture, _onceSourceRootReady]).then((_) {
-      return traverseElement(_destRoot, _sourceRoot, _sourceUri, _setup);
+    return getPackageDirectoryEntry().then((root) {
+      return root.getDirectory(_sourceUri);
+    }).then((dir) {
+      sourceRoot = dir;
+      return getAppContents("$_sourceUri/setup.json");
+    }).then((String contents) {
+      Map m = JSON.decode(contents);
+      return traverseElement(_destRoot, sourceRoot, _sourceUri, m);
     });
   }
 

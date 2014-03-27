@@ -105,7 +105,7 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
       _server.addServlet(new PackagesServlet(launchManager));
       _server.addServlet(new WorkspaceServlet(launchManager));
 
-      _logger.info('embedded web server listening on port ${_nf.format(_server.port)}');
+      _logger.info('embedded web server listening on port ${_server.port}');
     }).catchError((error) {
       _logger.severe('Error starting up embedded server', error);
     });

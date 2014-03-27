@@ -15,11 +15,32 @@ import 'package:logging/logging.dart';
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
+chrome.DirectoryEntry _packageDirectoryEntry;
+
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
 String i18n(String messageId) => chrome.i18n.getMessage(messageId);
 
+/**
+ * Return the Chrome App's directory. This utility method ensures that we only
+ * make the `chrome.runtime.getPackageDirectoryEntry` once in the application's
+ * lifetime.
+ */
+Future<chrome.DirectoryEntry> getPackageDirectoryEntry() {
+  if (_packageDirectoryEntry != null) {
+    return new Future.value(_packageDirectoryEntry);
+  }
+
+  return chrome.runtime.getPackageDirectoryEntry().then((dir) {
+    _packageDirectoryEntry = dir;
+    return dir;
+  });
+}
+
+/**
+ * Returns the given word with the first character capitolized.
+ */
 String capitalize(String s) {
   return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
 }

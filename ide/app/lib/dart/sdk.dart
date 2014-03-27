@@ -17,6 +17,9 @@ library spark.sdk;
 
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:archive/archive.dart' as archive;
+
 import '../utils.dart';
 
 /**
@@ -34,7 +37,7 @@ class DartSdk extends SdkDirectory {
    * objects.
    */
   static Future<DartSdk> createSdk() {
-    return getAppContentsBinary('sdk/dart-sdk.bin').then((List<int> contents) {
+    return getAppContentsBinary('sdk/dart-sdk.bz').then((List<int> contents) {
       return new DartSdk._withContents(contents);
     }).catchError((e) {
       return new DartSdk._fromVersion('');
@@ -90,6 +93,7 @@ class DartSdk extends SdkDirectory {
   }
 
   void _parseArchive() {
+    _contents = _decompress(_contents);
     _libDirectory = _getCreateDir('lib');
 
     _ByteReader reader = new _ByteReader(_contents);
@@ -113,6 +117,10 @@ class DartSdk extends SdkDirectory {
 
   List<int> _getFileContents(int offset, int len) =>
       _contents.sublist(offset, offset + len);
+
+  List<int> _decompress(List<int> data) {
+    return new archive.BZip2Decoder().decodeBytes(data, verify: false);
+  }
 }
 
 /**
@@ -230,10 +238,8 @@ class _ByteReader {
   String readUtf() {
     int len = 0;
 
-    // Assert that we don't read past the end of the archive - all utf strings
-    // should be null-terminated.
-    // TODO(devoncarew): Track down why this assert is failing.
-    //assert(_contents.isNotEmpty && _contents.last == 0);
+    // Assert that there is something to read.
+    assert(_contents.isNotEmpty);
 
     while (_contents[_pos + len] != 0) {
       len++;
