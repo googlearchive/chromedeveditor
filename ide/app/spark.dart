@@ -1956,13 +1956,14 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     addedFileList.forEach((file){
       _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
     });
-    int modifiedFileCnt = modifiedFileList.length;
-    int addedFileCnt = addedFileList.length;
-    if (modifiedFileCnt + addedFileCnt == 0) {
+    final int modifiedCnt = modifiedFileList.length;
+    final int addedCnt = addedFileList.length;
+    if (modifiedCnt + addedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
     } else {
-    _gitStatusElement.text =
-        '$modifiedFileCnt file(s) modified, $addedFileCnt files(s) added.';
+      _gitStatusElement.text =
+          '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
+          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.';
     // TODO(sunglim): show the count of deletetd files.
     }
   }
@@ -1970,7 +1971,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   void _calculateScmStatus(ws.Folder folder) {
     folder.getChildren().forEach((resource) {
       if (resource is ws.Folder) {
-        if (resource.name == '.git') {
+        if (resource.isScmPrivate()) {
           return;
         }
         _calculateScmStatus(resource);
