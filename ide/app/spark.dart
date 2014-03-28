@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
-import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
@@ -84,8 +83,10 @@ Zone createSparkZone() {
   return Zone.current.fork(specification: specification);
 }
 
-class Spark extends SparkModel implements FilesControllerDelegate,
-    AceManagerDelegate, Notifier {
+abstract class Spark
+    extends SparkModel
+    implements FilesControllerDelegate, AceManagerDelegate, Notifier {
+
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
@@ -136,8 +137,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initEditorManager();
 
     initFilesController();
-
-    initLookAndFeel();
 
     createActions();
     initToolbar();
@@ -230,8 +229,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   Element getDialogElement(String selectors) =>
       document.querySelector(selectors);
 
-  SparkDialog createDialog(Element dialogElement) =>
-      new SparkBootjackDialog(dialogElement);
+  SparkDialog createDialog(Element dialogElement);
 
   //
   // Parts of ctor:
@@ -335,11 +333,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
   }
 
-  void initLookAndFeel() {
-    // Init the Bootjack library (a wrapper around Bootstrap).
-    bootjack.Bootjack.useDefault();
-  }
-
   void initSplitView() {
     _splitView = new SplitView(getUIElement('#splitview'));
     _splitView.onResized.listen((_) {
@@ -410,11 +403,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initToolbar() {
-
   }
 
   void buildMenu() {
-
   }
 
   //
@@ -1022,32 +1013,6 @@ abstract class SparkDialog {
   void show();
   void hide();
   Element get element;
-}
-
-class SparkBootjackDialog implements SparkDialog {
-  bootjack.Modal _dialog;
-
-  SparkBootjackDialog(Element dialogElement) {
-    _dialog = bootjack.Modal.wire(dialogElement);
-
-    _dialog.$element.on('shown.bs.modal', (event) {
-      final Element dialog = event.target;
-      Element elementToFocus = dialog.querySelector('[focused]');
-
-      if (elementToFocus != null) {
-        elementToFocus.focus();
-      }
-    });
-  }
-
-  @override
-  void show() => _dialog.show();
-
-  @override
-  void hide() => _dialog.hide();
-
-  @override
-  Element get element => _dialog.element;
 }
 
 abstract class SparkActionWithDialog extends SparkAction {
