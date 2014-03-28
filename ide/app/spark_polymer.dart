@@ -211,9 +211,6 @@ class SparkPolymer extends Spark {
   void initFilesController() => super.initFilesController();
 
   @override
-  void initLookAndFeel() => super.initLookAndFeel();
-
-  @override
   void createActions() => super.createActions();
 
   @override
