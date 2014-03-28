@@ -8,7 +8,6 @@ import 'dart:async';
 import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
-import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
@@ -27,12 +26,12 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
-import 'lib/harness_push.dart';
+import 'lib/mobile/deploy.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/project_builder.dart';
-import 'lib/pub.dart';
+import 'lib/dart/pub.dart';
 import 'lib/scm.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
@@ -84,8 +83,10 @@ Zone createSparkZone() {
   return Zone.current.fork(specification: specification);
 }
 
-class Spark extends SparkModel implements FilesControllerDelegate,
-    AceManagerDelegate, Notifier {
+abstract class Spark
+    extends SparkModel
+    implements FilesControllerDelegate, AceManagerDelegate, Notifier {
+
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
@@ -136,8 +137,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     initEditorManager();
 
     initFilesController();
-
-    initLookAndFeel();
 
     createActions();
     initToolbar();
@@ -230,8 +229,7 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   Element getDialogElement(String selectors) =>
       document.querySelector(selectors);
 
-  SparkDialog createDialog(Element dialogElement) =>
-      new SparkBootjackDialog(dialogElement);
+  SparkDialog createDialog(Element dialogElement);
 
   //
   // Parts of ctor:
@@ -335,11 +333,6 @@ class Spark extends SparkModel implements FilesControllerDelegate,
     });
   }
 
-  void initLookAndFeel() {
-    // Init the Bootjack library (a wrapper around Bootstrap).
-    bootjack.Bootjack.useDefault();
-  }
-
   void initSplitView() {
     _splitView = new SplitView(getUIElement('#splitview'));
     _splitView.onResized.listen((_) {
@@ -410,11 +403,9 @@ class Spark extends SparkModel implements FilesControllerDelegate,
   }
 
   void initToolbar() {
-
   }
 
   void buildMenu() {
-
   }
 
   //
@@ -1022,32 +1013,6 @@ abstract class SparkDialog {
   void show();
   void hide();
   Element get element;
-}
-
-class SparkBootjackDialog implements SparkDialog {
-  bootjack.Modal _dialog;
-
-  SparkBootjackDialog(Element dialogElement) {
-    _dialog = bootjack.Modal.wire(dialogElement);
-
-    _dialog.$element.on('shown.bs.modal', (event) {
-      final Element dialog = event.target;
-      Element elementToFocus = dialog.querySelector('[focused]');
-
-      if (elementToFocus != null) {
-        elementToFocus.focus();
-      }
-    });
-  }
-
-  @override
-  void show() => _dialog.show();
-
-  @override
-  void hide() => _dialog.hide();
-
-  @override
-  Element get element => _dialog.element;
 }
 
 abstract class SparkActionWithDialog extends SparkAction {
@@ -1910,7 +1875,8 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
   TextAreaElement _commitMessageElement;
   InputElement _userNameElement;
   InputElement _userEmailElement;
-  DivElement _gitStatusElement;
+  Element _gitStatusElement;
+  DivElement _gitChangeElement;
   bool _needsFillNameEmail;
   String _gitName;
   String _gitEmail;
@@ -1924,6 +1890,11 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
     _gitStatusElement = getElement('#gitStatus');
+    _gitChangeElement = getElement('#gitChangeList');
+    getElement('#gitStatusDetail').onClick.listen((e) {
+      _gitChangeElement.style.display =
+          _gitChangeElement.style.display == 'none' ? 'block' : 'none';
+    });
   }
 
   void _invoke([context]) {
@@ -1946,10 +1917,10 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _commitMessageElement.value = '';
       _userNameElement.value = '';
       _userEmailElement.value = '';
+      _gitChangeElement.text = '';
+      _gitChangeElement.style.display = 'none';
 
-      // TODO: Remove this #gitStatusGroup hidden once scm status is fast.
-      getElement("#gitStatusGroup").hidden = true;
-      //_addGitStatus();
+      _addGitStatus();
 
       _show();
     });
@@ -1957,17 +1928,28 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _addGitStatus() {
     _calculateScmStatus(project);
-    int modifiedFileCnt = modifiedFileList.length;
-    int addedFileCnt = addedFileList.length;
-    _gitStatusElement.text =
-        '$modifiedFileCnt file(s) modified, $addedFileCnt files(s) added.';
+    modifiedFileList.forEach((file) {
+      _gitChangeElement.innerHtml += 'Modified:&emsp;' + file.path + '<br/>';
+    });
+    addedFileList.forEach((file){
+      _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
+    });
+    final int modifiedCnt = modifiedFileList.length;
+    final int addedCnt = addedFileList.length;
+    if (modifiedCnt + addedCnt == 0) {
+      _gitStatusElement.text = "Nothing to commit.";
+    } else {
+      _gitStatusElement.text =
+          '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
+          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.';
     // TODO(sunglim): show the count of deletetd files.
+    }
   }
 
   void _calculateScmStatus(ws.Folder folder) {
     folder.getChildren().forEach((resource) {
       if (resource is ws.Folder) {
-        if (resource.name == '.git') {
+        if (resource.isScmPrivate()) {
           return;
         }
         _calculateScmStatus(resource);

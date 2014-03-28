@@ -14,9 +14,9 @@ import 'package:tavern/tavern.dart' as tavern;
 import 'package:yaml/yaml.dart' as yaml;
 import 'package:yaml/src/parser.dart' show SyntaxError;
 
-import 'builder.dart';
-import 'jobs.dart';
-import 'workspace.dart';
+import '../builder.dart';
+import '../jobs.dart';
+import '../workspace.dart';
 
 const PUBSPEC_FILE_NAME = 'pubspec.yaml';
 const PACKAGES_DIR_NAME = 'packages';

@@ -3,6 +3,7 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("../common/spark_widget.css");
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
 
 .toolbar {
   display: -webkit-box;

@@ -3,6 +3,8 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("packages/spark_widgets/common/spark_widget.css");
+@import url("packages/bootjack/css/bootstrap.min.css");
+@import url("packages/bootjack/css/bootstrap-theme.css");
 
 #searchBox {
   display: inline-block;
@@ -137,6 +139,24 @@
   font-size: 15px;
   margin-top: 20px;
   margin-bottom: 0px;
+}
+
+#gitChangeList {
+  border-radius: 4px;
+  border: 1px solid #cccccc;
+  display: none;
+  margin-bottom: 15px;
+  max-height: 105px;
+  overflow: auto;
+  padding: 5px 14px;
+}
+
+#changeLabel {
+  top: 0px;
+}
+
+#gitStatusDiv {
+  width: 100%;
 }
 
 #gitUserInfo.hidden {

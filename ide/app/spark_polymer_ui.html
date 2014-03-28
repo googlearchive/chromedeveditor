@@ -5,29 +5,21 @@
      license that can be found in the LICENSE file. -->
 
 <link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
-<link rel="import" href="packages/spark_widgets/spark_icon/spark_icon.html">
-<link rel="import" href="packages/spark_widgets/spark_icon_button/spark_icon_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
-<link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_suggest_box/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 
-<!--link rel="import" href="packages/polymer_elements/polymer_flex_layout/polymer_flex_panel.html"-->
-
 <polymer-element name="spark-polymer-ui">
   <template>
 
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="spark_polymer_ui.css"-->
-    <style>
-      @import url("spark_polymer_ui.css");
-    </style>
+    <link rel="stylesheet" href="spark_polymer_ui.css">
 
     <spark-toolbar id="toolbar" lightdom>
       <spark-button id="runButton" small primary>
@@ -312,10 +304,14 @@
             </div>
           </div>
         </div>
-        <div id="gitStatusGroup" class="form-group">
-          <label>Changes</label>
-          <div id="gitStatus"></div>
-        </div>
+          <div class="input-label">
+            <label id="changeLabel">Changes</label>
+            <div id="gitStatusDiv">
+               <span id="gitStatus"></span>
+               <a href="#" id="gitStatusDetail">Details...</a>
+            </div>
+          </div>
+          <div id="gitChangeList"></div>
         <div class="form-group">
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"

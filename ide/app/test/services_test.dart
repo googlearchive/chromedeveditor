@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
-import '../lib/pub.dart';
+import '../lib/dart/pub.dart';
 import '../lib/services.dart';
 
 defineTests() {

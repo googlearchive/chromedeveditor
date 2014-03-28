@@ -34,11 +34,7 @@
 <polymer-element name="spark-split-view" extends="spark-widget"
     attributes="direction splitterSize splitterHandle locked">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("../../../packages/spark_widgets/spark_split_view/spark_split_view.css");
-    </style>
+    <link rel="stylesheet" href="spark_split_view.css">
 
     <!-- NOTE: The Dart side verifies that there is exactly 2 children -->
     <content select=":nth-child(1)"></content>
