@@ -7,7 +7,6 @@ library spark_polymer;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
@@ -212,10 +211,7 @@ class SparkPolymer extends Spark {
   void initFilesController() => super.initFilesController();
 
   @override
-  void initLookAndFeel() {
-    // Init the Bootjack library (a wrapper around Bootstrap).
-    bootjack.Bootjack.useDefault();
-  }
+  void initLookAndFeel() => super.initLookAndFeel();
 
   @override
   void createActions() => super.createActions();
