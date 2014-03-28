@@ -20,19 +20,54 @@ import 'lib/actions.dart';
 import 'lib/app.dart';
 import 'lib/jobs.dart';
 
+class _TimeLogger {
+  final _stepStopwatch = new Stopwatch()..start();
+  final _elapsedStopwatch = new Stopwatch()..start();
+
+  void _log(String message) {
+    // NOTE: standard [Logger] didn't work reliably here.
+    print('[INFO] spark.startup: $message');
+  }
+
+  void logStep(String message) {
+    _log('$message: ${_stepStopwatch.elapsedMilliseconds}ms.');
+    _stepStopwatch.reset();
+  }
+
+  void logElapsed(String message) {
+    _log('$message: ${_elapsedStopwatch.elapsedMilliseconds}ms.');
+  }
+}
+
 void main() {
+  final logger = new _TimeLogger();
+
   isTestMode().then((testMode) {
+    logger.logStep('testMode retrieved');
+
     polymer.initPolymer().run(() {
+      logger.logStep('Polymer initialized');
+
       // Don't set up the zone exception handler if we're running in dev mode.
-      if (testMode) {
+      final Function maybeRunGuarded =
+          testMode ? (f) => f() : createSparkZone().runGuarded;
+
+      maybeRunGuarded(() {
         SparkPolymer spark = new SparkPolymer._(testMode);
+
+        logger.logStep('Spark created');
+
         spark.start();
-      } else {
-        createSparkZone().runGuarded(() {
-          SparkPolymer spark = new SparkPolymer._(testMode);
-          spark.start();
+
+        logger.logStep('Spark started');
+
+        // NOTE: This even is unused right now, but it will be soon. For now
+        // we're just interested in its timing.
+        polymer.Polymer.onReady.then((_) {
+          logger.logStep('Polymer.onReady fired');
+          logger.logElapsed('Total startup time');
         });
-      }
+      });
     });
   });
 }
