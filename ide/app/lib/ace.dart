@@ -304,8 +304,13 @@ class AceManager {
       annotationByRow[aceRow] = annotation;
 
       double markerPos;
+      
+      
 
-
+      var scrolling = (_aceEditor.lastVisibleRow - _aceEditor.firstVisibleRow + 1) >= currentSession.document.length;
+      /*%TRACE3*/ print("""(4> 3/28/14): scrolling: ${scrolling}"""); // TRACE%
+      /*%TRACE3*/ print("""(4> 3/28/14): _aceEditor.firstVisibleRow: ${_aceEditor.firstVisibleRow}"""); // TRACE%
+      /*%TRACE3*/ print("""(4> 3/28/14): _aceEditor.lastVisibleRow: ${_aceEditor.lastVisibleRow}"""); // TRACE%
       /*%TRACE3*/ print("""(4> 3/13/14): currentSession.screenLength: ${currentSession.screenLength}"""); // TRACE%
       /*%TRACE3*/ print("""(4> 3/13/14): currentSession.document.length: ${currentSession.document.length}"""); // TRACE%
 
