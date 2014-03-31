@@ -8,17 +8,18 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
+import '../lib/utils.dart';
 
 defineTests() {
   group('files', () {
     test('package directory available', () {
-      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
         expect(dir, isNotNull);
       });
     });
 
     test('can list directories', () {
-      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
         return dir.createReader().readEntries().then((List<chrome.Entry> entries) {
           expect(entries.length, greaterThan(1));
         });
@@ -26,7 +27,7 @@ defineTests() {
     });
 
     test('can get file', () {
-      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
         return dir.getFile('manifest.json').then((chrome.Entry file) {
           expect(file, isNotNull);
           expect(file.name, 'manifest.json');
@@ -35,7 +36,7 @@ defineTests() {
     });
 
     test('can retain and restore file', () {
-      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
         return dir.getFile('manifest.json').then((chrome.Entry file) {
           expect(file, isNotNull);
           String id = chrome.fileSystem.retainEntry(file);
@@ -47,7 +48,7 @@ defineTests() {
       });
     });
     test('ChromeFileEntry readText()', () {
-      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
         return dir.getFile('manifest.json').then((chrome.ChromeFileEntry file) {
           expect(file, isNotNull);
           return file.readText().then((String text) {

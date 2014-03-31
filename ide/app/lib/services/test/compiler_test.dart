@@ -15,9 +15,10 @@ defineTests() {
     Compiler compiler;
 
     setUp(() {
-      return Compiler.createCompiler(new _MockContentsProvider()).then((c) {
-        compiler = c;
-      });
+      // TODO: Move over to calling createCompilerFrom().
+//      return Compiler.createCompiler(new _MockContentsProvider()).then((c) {
+//        compiler = c;
+//      });
     });
 
     test('is available', () {

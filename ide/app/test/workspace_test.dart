@@ -51,7 +51,7 @@ defineTests() {
 
       var prefs = new MapPreferencesStore();
       ws.Workspace workspace = new ws.Workspace(prefs);
-      return chrome.runtime.getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
+      return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
         return workspace.link(createWsRoot(dir)).then((ws.Resource resource) {
           expect(resource, isNotNull);
           return workspace.save().then((_) {
