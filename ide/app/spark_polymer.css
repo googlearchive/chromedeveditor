@@ -26,12 +26,22 @@ body {
 #topUi {
   height: 100%;
   width: 100%;
+  /* TODO(sergeygs): Model initialization currently takes more time than
+     Polymer element upgrade for topUi. If that reverses, uncomment the block
+     below, remove `opacity: 0` line, and remove all code related to .modelReady
+     CSS class in the project.
+  */
+  /*
   opacity: 1;
   transition: opacity 300ms;
+  */
+  opacity: 0;
+  z-index: 1;
 }
 
-#topUi:unresolved {
-  /*opacity: 0;*/
+#topUi.modelReady {
+  opacity: 1;
+  transition: opacity 300ms;
 }
 
 #splashScreen {
@@ -46,11 +56,7 @@ body {
   right: 0;
   top: 0;
   bottom: 0;
-  z-index: 1000;
-}
-
-#splashScreen.closeSplash {
-  opacity: 0;
+  z-index: 0;
 }
 
 #editorArea {

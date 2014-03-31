@@ -187,24 +187,29 @@
           <br/>
           <form>
             <div>
-              <input type="radio" name="type" value="empty-project" id="empty-project" checked>
-              <label for="empty-project" checked>Create a blank project</label>
+              <input id="emptyProject" type="radio" name="type" value="empty-project" checked>
+              <label for="emptyProject" checked>Create a blank project</label>
             </div>
             <div>
-              <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
-              <label for="dart-web-app-radio">Create a new Dart web application</label>
+              <input id="dartWebApp" type="radio" name="type" value="web-dart">
+              <label for="dartWebApp">Create a new Dart web application</label>
             </div>
             <!--div>
-              <input type="radio" name="type" value="web-js" id="js-web-app-radio">
-              <label for="js-web-app-radio">Create a new JavaScript web application</label>
+              <input id="jsWebApp" type="radio" name="type" value="web-js">
+              <label for="jsWebApp">Create a new JavaScript web application</label>
             </div>
             <div>
-              <input type="radio" name="type" value="app-dart" id="dart-chrome-app-radio">
-              <label for="dart-chrome-app-radio">Create a new Dart Chrome App</label>
+              <input id="dartChromeApp" type="radio" name="type" value="app-dart">
+              <label for="dartChromeApp">Create a new Dart Chrome App</label>
             </div-->
             <div>
-              <input type="radio" name="type" value="app-js" id="js-chrome-app-radio">
-              <label for="js-chrome-app-radio">Create a new JavaScript Chrome app</label>
+              <input id="jsChromeApp" type="radio" name="type" value="app-js">
+              <label for="jsChromeApp">Create a new JavaScript Chrome app</label>
+            </div>
+            <hr>
+            <div>
+              <input id="usePolymerJS" type="checkbox" value="use-polymer-js">
+              <label for="usePolymerJS">Use Polymer JavaScript</label>
             </div>
           </form>
         </div>
@@ -242,9 +247,9 @@
               <label for="adb">Deploy via USB</label>
             </div>
             <div>
-              <input id="ip" type="radio" name="type" value="push-ip" />
+              <input id="ip" type="radio" name="type" value="push-ip" autosave />
               <label for="ip">Deploy to a network host</label>
-              <input id="pushUrl" type="text" class="form-control"
+              <input id="pushUrl" type="text" class="form-control" autosave
                   placeholder="e.g. 192.168.1.101" />
             </div>
           </form>
@@ -269,7 +274,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
-          <input id="gitRepoUrl" type="text" class="form-control"
+          <input id="gitRepoUrl" type="url" class="form-control" autosave
               placeholder="https://github.com/dart-lang/spark.git" focused>
         </div>
       </div>
@@ -299,7 +304,7 @@
             </div>
             <div class="input-label">
               <label for="gitEmail">Email</label>
-              <input id="gitEmail" type="text" class="form-control"
+              <input id="gitEmail" type="email" class="form-control" autosave
                   placeholder="johndoe@gmail.com">
             </div>
           </div>
@@ -315,7 +320,7 @@
         <div class="form-group">
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"
-              rows="3"></textarea>
+              spellcheck wrap="soft" rows="3"></textarea>
           <span class="help-block">Enter a brief description of the changes.</span>
         </div>
       </div>
@@ -338,7 +343,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitBranchName">New branch name</label>
-          <input id="gitBranchName" type="text" class="form-control" focused>
+          <input id="gitBranchName" type="text" class="form-control"
+              autosave focused>
           <span class="help-block">Create a new git branch.</span>
         </div>
       </div>
@@ -518,7 +524,7 @@
             <div class="input-label">
               <label for="gitUsername">User name</label>
               <input id="gitUsername" type="text" class="form-control"
-                  placeholder="johndoe" focused>
+                  autosave placeholder="johndoe" focused>
             </div>
             <div class="input-label">
               <label for="gitPassword">Password</label>

@@ -128,7 +128,7 @@ class SparkPolymer extends Spark {
   SparkPolymer._(bool developerMode)
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode) {
-    _ui.developerMode = developerMode;
+    _ui.bindToSparkModel(this);
     addParticipant(new _AppSetupParticipant());
   }
 
@@ -248,15 +248,11 @@ class SparkPolymer extends Spark {
   }
 
   void unveil() {
-    // TODO(devoncarew) We'll want to switch over to using the polymer
-    // 'unresolved' or 'polymer-unveil' attributes, once these start working.
-    DivElement element = document.querySelector('#splashScreen');
+    _ui.classes.add('modelReady');
 
+    DivElement element = document.querySelector('#splashScreen');
     if (element != null) {
-      element.classes.add('closeSplash');
-      new Timer(new Duration(milliseconds: 300), () {
-        element.parent.children.remove(element);
-      });
+      element.parent.children.remove(element);
     }
   }
 

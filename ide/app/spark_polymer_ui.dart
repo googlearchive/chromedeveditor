@@ -4,7 +4,6 @@
 
 library spark_polymer.ui;
 
-import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -14,30 +13,30 @@ import 'packages/spark_widgets/common/spark_widget.dart';
 import 'packages/spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 
 import 'spark_model.dart';
+import 'lib/actions.dart';
 import 'lib/search.dart';
 import 'lib/workspace.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
+  SparkModel _spark;
+
   @observable bool developerMode = false;
   @observable bool chromeOS = false;
   @observable SuggestOracle searchOracle;
 
   SparkPolymerUI.created() : super.created();
 
-  @override
-  void enteredView() {
-    super.enteredView();
+  void bindToSparkModel(SparkModel spark) {
+    _spark = spark;
 
-    searchOracle = new SearchOracle(
-        () => SparkModel.instance.workspace, _selectFile);
-
-    // Delay calling this until the `SparkModel.instance` is populated.
-    Timer.run(bindKeybindingDesc);
+    developerMode = spark.developerMode;
+    searchOracle = new SearchOracle(() => _spark.workspace, _selectFile);
+    bindKeybindingDesc();
   }
 
   void _selectFile(Resource file) {
-    SparkModel.instance.editorArea.selectFile(
+    _spark.editorArea.selectFile(
         file,
         forceOpen: true,
         replaceCurrent: false,
@@ -48,29 +47,29 @@ class SparkPolymerUI extends SparkWidget {
   void onMenuSelected(CustomEvent event, var detail) {
     if (detail['isSelected']) {
       final actionId = detail['value'];
-      final action = SparkModel.instance.actionManager.getAction(actionId);
+      final action = _spark.actionManager.getAction(actionId);
       action.invoke();
     }
   }
 
   void onThemeMinus(Event e) {
-    SparkModel.instance.aceThemeManager.dec(e);
+    _spark.aceThemeManager.dec(e);
   }
 
   void onThemePlus(Event e) {
-    SparkModel.instance.aceThemeManager.inc(e);
+    _spark.aceThemeManager.inc(e);
   }
 
   void onKeysMinus(Event e) {
-    SparkModel.instance.aceKeysManager.dec(e);
+    _spark.aceKeysManager.dec(e);
   }
 
   void onKeysPlus(Event e) {
-    SparkModel.instance.aceKeysManager.inc(e);
+    _spark.aceKeysManager.inc(e);
   }
 
   void onSplitterUpdate(CustomEvent e, var detail) {
-    SparkModel.instance.onSplitViewUpdate(detail['targetSize']);
+    _spark.onSplitViewUpdate(detail['targetSize']);
   }
 
   void bindKeybindingDesc() {
@@ -78,23 +77,22 @@ class SparkPolymerUI extends SparkWidget {
         'spark-menu-item');
     items.forEach((menuItem) {
       final actionId = menuItem.attributes['action-id'];
-      final action = SparkModel.instance.actionManager.getAction(actionId);
+      final Action action = _spark.actionManager.getAction(actionId);
       action.bindings.forEach(
           (keyBind) => menuItem.description = keyBind.getDescription());
     });
   }
 
   void onResetGit() {
-    SparkModel.instance.syncPrefs.removeValue(
-        ['git-auth-info', 'git-user-info']);
-    SparkModel.instance.setGitSettingsResetDoneVisible(true);
+    _spark.syncPrefs.removeValue(['git-auth-info', 'git-user-info']);
+    _spark.setGitSettingsResetDoneVisible(true);
   }
 
   void onResetPreference() {
     Element resultElement = getShadowDomElement('#preferenceResetResult');
     resultElement.text = '';
-    SparkModel.instance.syncPrefs.clear().then((_) {
-      SparkModel.instance.localPrefs.clear();
+    _spark.syncPrefs.clear().then((_) {
+      _spark.localPrefs.clear();
     }).catchError((e) {
       resultElement.text = '<error reset preferences>';
     }).then((_) {

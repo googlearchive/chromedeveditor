@@ -1551,15 +1551,18 @@ class FocusMainMenuAction extends SparkAction {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElement;
+  InputElement _usePolymerJSElement;
   ws.Folder folder;
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
     _nameElement = _triggerOnReturn("#name");
+    _usePolymerJSElement = getElement("#usePolymerJS");
   }
 
   void _invoke([context]) {
     _nameElement.value = '';
+    _usePolymerJSElement.checked = false;
     _show();
   }
 
@@ -1573,7 +1576,7 @@ class NewProjectAction extends SparkActionWithDialog {
         }
 
         ws.WorkspaceRoot root;
-        var locationEntry = location.entry;
+        final locationEntry = location.entry;
 
         if (location.isSync) {
           root = new ws.SyncFolderRoot(locationEntry);
@@ -1585,13 +1588,13 @@ class NewProjectAction extends SparkActionWithDialog {
 
         return new Future.value().then((_) {
           switch (type) {
-            case "empty-project":
+            case "emptyProject":
               break;
-            case "dart-web-app-radio":
+            case "dartWebApp":
               ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
                   "web-dart", name.toLowerCase(), name);
               return projectBuilder.build();
-            case "js-chrome-app-radio":
+            case "jsChromeApp":
               ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
                   "app-js", name.toLowerCase(), name);
               return projectBuilder.build();
@@ -1609,6 +1612,10 @@ class NewProjectAction extends SparkActionWithDialog {
       }).catchError((e) {
         spark.showErrorMessage('Error Creating Project', '${e}');
       });
+    }
+
+    if (_usePolymerJSElement.checked) {
+
     }
   }
 }
