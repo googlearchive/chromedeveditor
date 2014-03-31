@@ -26,14 +26,6 @@ class Compiler {
   DartSdk _sdk;
   common.ContentsProvider _contentsProvider;
 
-  /**
-   * Create and return a [Compiler] instance. These are heavy-weight objects.
-   */
-  static Future<Compiler> createCompiler(common.ContentsProvider contentsProvider) {
-    return DartSdk.createSdk().then(
-        (DartSdk sdk) => new Compiler._(sdk, contentsProvider));
-  }
-
   static Compiler createCompilerFrom(DartSdk sdk,
                                      common.ContentsProvider contentsProvider) {
     return new Compiler._(sdk, contentsProvider);
@@ -41,11 +33,11 @@ class Compiler {
 
   Compiler._(this._sdk, this._contentsProvider);
 
-  Future<CompilerResult> compileFile(String fileUuid) {
+  Future<CompilerResult> compileFile(String fileUuid, {bool csp: false}) {
     _CompilerProvider provider =
         new _CompilerProvider.fromUuid(_sdk, _contentsProvider, fileUuid);
 
-    CompilerResult result = new CompilerResult._().._start();
+    CompilerResult result = new CompilerResult._(csp).._start();
 
     return compiler.compile(
         provider.getInitialUri(),
@@ -80,12 +72,13 @@ class Compiler {
  * The result of a dart2js compile.
  */
 class CompilerResult {
+  final bool csp;
   List<CompilerProblem> _problems = [];
   StringBuffer _output;
   Duration _compileTime;
   DateTime _startTime;
 
-  CompilerResult._();
+  CompilerResult._([this.csp = false]);
 
   void _start() {
     _startTime = new DateTime.now();
@@ -122,8 +115,10 @@ class CompilerResult {
   }
 
   EventSink<String> _outputProvider(String name, String extension) {
-    // TODO: Also include the .precompiled.js output.
-    if (name.isEmpty && extension == 'js') {
+    if (!csp && name.isEmpty && extension == 'js') {
+      _output = new StringBuffer();
+      return new _StringSink(_output);
+    } else if (csp && name.isEmpty && extension == 'precompiled.js') {
       _output = new StringBuffer();
       return new _StringSink(_output);
     } else {
@@ -131,7 +126,7 @@ class CompilerResult {
     }
   }
 
-  CompilerResult.fromMap(Map data) {
+  CompilerResult.fromMap(Map data) : csp = false {
     _compileTime = new Duration(milliseconds: data['compileMilliseconds']);
     String outputString = data['output'];
     _output = (outputString == null) ? null : new StringBuffer(outputString);

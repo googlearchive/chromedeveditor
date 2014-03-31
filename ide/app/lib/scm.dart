@@ -19,6 +19,7 @@ import 'builder.dart';
 import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
+import 'git/http_fetcher.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
 import 'git/options.dart';
@@ -31,6 +32,7 @@ import 'git/commands/fetch.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
+import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
 
@@ -134,9 +136,11 @@ abstract class ScmProvider {
   ScmProjectOperations createOperationsFor(Project project);
 
   /**
-   * Clone the repo at the given url into the given directory.
+   * Clone the repo at the given url into the given directory. Returns a
+   * [ScmException] through the Future's error on a failure.
    */
-  Future clone(String url, chrome.DirectoryEntry dir);
+  Future clone(String url, chrome.DirectoryEntry dir,
+               {String username, String password});
 }
 
 /**
@@ -174,6 +178,16 @@ abstract class ScmProjectOperations {
   Future push(String username, String password);
 
   Future updateForChanges(List<ChangeDelta> changes);
+}
+
+// TODO: Remove this when we have a generic spark exception class.
+class ScmException implements Exception {
+  final String message;
+  final bool needsAuth;
+
+  ScmException(this.message, [this.needsAuth = false]);
+
+  String toString() => message;
 }
 
 /**
@@ -246,13 +260,20 @@ class GitScmProvider extends ScmProvider {
     return null;
   }
 
-  Future clone(String url, chrome.DirectoryEntry dir) {
+  Future clone(String url, chrome.DirectoryEntry dir,
+               {String username, String password}) {
     GitOptions options = new GitOptions(
-        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
+        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir),
+        username: username, password: password);
 
     return options.store.init().then((_) {
-      Clone clone = new Clone(options);
-      return clone.clone();
+      return new Clone(options).clone();
+    }).catchError((e) {
+      if (e is HttpResult) {
+        throw new ScmException(e.toString(), e.needsAuth);
+      } else {
+        throw new ScmException(e.toString());
+      }
     });
   }
 }
@@ -436,17 +457,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
     // For each file, request the SCM status asynchronously.
     return objectStore.then((ObjectStore store) {
       return Future.forEach(files, (File file) {
-        // TODO: remove this short-circuit once scm status is fast
-        file.setMetadata('scmStatus', FileStatus.COMMITTED.status);
-        return new Future.value();
-
-//        Stopwatch timer = new Stopwatch()..start();
-//        return Status.getFileStatus(store, file.entry).then((status) {
-//          file.setMetadata('scmStatus',
-//              new FileStatus.fromIndexStatus(status.type).status);
-//          _logger.info('calculated scm status for ${file.path} in '
-//              '${timer.elapsedMilliseconds}ms');
-//        });
+        return Status.getFileStatus(store, file.entry).then((status) {
+          file.setMetadata('scmStatus',
+              new FileStatus.fromIndexStatus(status.type).status);
+        });
       }).then((_) => _statusController.add(this));
     }).catchError((e, st) {
       _logger.severe("error calculating scm status", e, st);

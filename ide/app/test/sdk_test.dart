@@ -8,14 +8,16 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/dart/sdk.dart';
 
+DartSdk sdk;
+
 defineTests() {
   group('sdk', () {
-    DartSdk sdk;
-
     setUp(() {
-      return DartSdk.createSdk().then((result) {
-        sdk = result;
-      });
+      if (sdk == null) {
+        return DartSdk.createSdk().then((result) {
+          sdk = result;
+        });
+      }
     });
 
     test('exists', () {

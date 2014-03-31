@@ -7,7 +7,6 @@ library spark_polymer;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:bootjack/bootjack.dart' as bootjack;
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
@@ -17,21 +16,57 @@ import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
+import 'lib/app.dart';
 import 'lib/jobs.dart';
 
+class _TimeLogger {
+  final _stepStopwatch = new Stopwatch()..start();
+  final _elapsedStopwatch = new Stopwatch()..start();
+
+  void _log(String message) {
+    // NOTE: standard [Logger] didn't work reliably here.
+    print('[INFO] spark.startup: $message');
+  }
+
+  void logStep(String message) {
+    _log('$message: ${_stepStopwatch.elapsedMilliseconds}ms.');
+    _stepStopwatch.reset();
+  }
+
+  void logElapsed(String message) {
+    _log('$message: ${_elapsedStopwatch.elapsedMilliseconds}ms.');
+  }
+}
+
 void main() {
+  final logger = new _TimeLogger();
+
   isTestMode().then((testMode) {
+    logger.logStep('testMode retrieved');
+
     polymer.initPolymer().run(() {
+      logger.logStep('Polymer initialized');
+
       // Don't set up the zone exception handler if we're running in dev mode.
-      if (testMode) {
+      final Function maybeRunGuarded =
+          testMode ? (f) => f() : createSparkZone().runGuarded;
+
+      maybeRunGuarded(() {
         SparkPolymer spark = new SparkPolymer._(testMode);
+
+        logger.logStep('Spark created');
+
         spark.start();
-      } else {
-        createSparkZone().runGuarded(() {
-          SparkPolymer spark = new SparkPolymer._(testMode);
-          spark.start();
+
+        logger.logStep('Spark started');
+
+        // NOTE: This even is unused right now, but it will be soon. For now
+        // we're just interested in its timing.
+        polymer.Polymer.onReady.then((_) {
+          logger.logStep('Polymer.onReady fired');
+          logger.logElapsed('Total startup time');
         });
-      }
+      });
     });
   });
 }
@@ -66,7 +101,7 @@ class SparkPolymerDialog implements SparkDialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future<bool> openFolder() {
+  Future openFolder() {
     return _beforeSystemModal()
         .then((_) => super.openFolder())
         .then((_) => _systemModalComplete())
@@ -94,6 +129,7 @@ class SparkPolymer extends Spark {
       : _ui = document.querySelector('#topUi') as SparkPolymerUI,
         super(developerMode) {
     _ui.developerMode = developerMode;
+    addParticipant(new _AppSetupParticipant());
   }
 
   @override
@@ -175,12 +211,6 @@ class SparkPolymer extends Spark {
   void initFilesController() => super.initFilesController();
 
   @override
-  void initLookAndFeel() {
-    // Init the Bootjack library (a wrapper around Bootstrap).
-    bootjack.Bootjack.useDefault();
-  }
-
-  @override
   void createActions() => super.createActions();
 
   @override
@@ -230,19 +260,24 @@ class SparkPolymer extends Spark {
     }
   }
 
-  Future<bool> _beforeSystemModal() {
-    Completer completer = new Completer();
+  Future _beforeSystemModal() {
     backdropShowing = true;
 
-    Timer timer =
-        new Timer(new Duration(milliseconds: 100), () {
-          completer.complete();
-        });
-
-    return completer.future;
+    return new Future.delayed(new Duration(milliseconds: 100));
   }
 
   void _systemModalComplete() {
     backdropShowing = false;
+  }
+}
+
+class _AppSetupParticipant extends LifecycleParticipant {
+  /**
+   * Update the Polymer UI with async info from the Spark app instance.
+   */
+  Future applicationStarted(Application application) {
+    SparkPolymer app = application;
+    app._ui.chromeOS = app.platformInfo.isCros;
+    return new Future.value();
   }
 }

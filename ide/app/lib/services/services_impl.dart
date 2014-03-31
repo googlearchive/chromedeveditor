@@ -69,7 +69,7 @@ class ServicesIsolate {
       }
     });
 
-    chromeService.getAppContents('sdk/dart-sdk.bin').then((List<int> sdkContents) {
+    chromeService.getAppContents('sdk/dart-sdk.bz').then((List<int> sdkContents) {
       sdk = DartSdk.createSdkFromContents(sdkContents);
 
       _registerServiceImpl(new CompilerServiceImpl(this, sdk));
@@ -191,8 +191,9 @@ class CompilerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> compileFile(ServiceActionEvent request) {
     String fileUuid = request.data['fileUuid'];
     String project = request.data['project'];
+    bool csp = request.data['csp'];
 
-    return compiler.compileFile(fileUuid).then((CompilerResult result) {
+    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResult result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
@@ -318,11 +319,13 @@ class AnalyzerServiceImpl extends ServiceImpl {
     Outline _getOutline(analyzer.CompilationUnit ast) {
     Outline outline = new Outline();
 
+    // Ideally, we'd get an AST back, even for very badly formed files.
+    if (ast == null) return outline;
+
     // TODO(ericarnold): Need to implement modifiers
     // TODO(ericarnold): Need to implement types
 
     for (analyzer.Declaration declaration in ast.declarations) {
-      OutlineTopLevelEntry outlineDeclaration;
       if (declaration is analyzer.TopLevelVariableDeclaration) {
         analyzer.VariableDeclarationList variables = declaration.variables;
 
@@ -330,32 +333,28 @@ class AnalyzerServiceImpl extends ServiceImpl {
           outline.entries.add(_populateOutlineEntry(
               new OutlineTopLevelVariable(variable.name.name), declaration));
         }
-      } else {
-        if (declaration is analyzer.ClassDeclaration) {
-          outlineDeclaration = new OutlineClass(declaration.name.name);
-          OutlineClass outlineClass = outlineDeclaration;
-          for (analyzer.ClassMember member in declaration.members) {
-            String name;
-            if (member is analyzer.MethodDeclaration) {
+      } else if (declaration is analyzer.ClassDeclaration) {
+        OutlineClass outlineClass = new OutlineClass(declaration.name.name);
+        outline.entries.add(
+            _populateOutlineEntry(outlineClass, declaration.name));
+
+        for (analyzer.ClassMember member in declaration.members) {
+          if (member is analyzer.MethodDeclaration) {
+            outlineClass.members.add(_populateOutlineEntry(
+                new OutlineMethod(member.name.name), member));
+          } else if (member is analyzer.FieldDeclaration) {
+            analyzer.VariableDeclarationList fields = member.fields;
+            for (analyzer.VariableDeclaration field in fields.variables) {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineMethod(member.name.name), member));
-            } else if (member is analyzer.FieldDeclaration) {
-              analyzer.VariableDeclarationList fields = member.fields;
-              for (analyzer.VariableDeclaration field in fields.variables) {
-                outlineClass.members.add(_populateOutlineEntry(
-                    new OutlineProperty(field.name.name), field));
-              }
+                  new OutlineProperty(field.name.name), field));
             }
           }
-        } else if (declaration is analyzer.FunctionDeclaration) {
-          outlineDeclaration =
-              new OutlineTopLevelFunction(declaration.name.name);
-        } else {
-          print("${declaration.runtimeType} is unknown");
         }
-
-        outline.entries.add(_populateOutlineEntry(
-            outlineDeclaration, declaration));
+      } else if (declaration is analyzer.FunctionDeclaration) {
+        outline.entries.add(_populateOutlineEntry(new OutlineTopLevelFunction(
+            declaration.name.name), declaration.name));
+      } else {
+        print("${declaration.runtimeType} is unknown");
       }
     }
 

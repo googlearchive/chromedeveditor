@@ -2,7 +2,7 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-@import url("../../../packages/bootjack/css/bootstrap.css");
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
 @import url("lib/ui/widgets/listview.css");
@@ -305,54 +305,116 @@ body {
 }
 
 #outline {
+  bottom: 0;
+  margin: 10px;
   position: absolute;
-  minWidth: 40px;
-  right: 15px;
-  top: 10px;
-  bottom: 10px;
-  background: #555;
-  borderRadius: 2px;
-  zIndex: 100;
-  opacity: 0.6;
-}
-
-#outlineContainer {
-  height: 100%;
+  right: 0;
+  top: 0;
   width: 200px;
-  overflow: scroll;
+  z-index: 100;
 }
 
-#outlineContainer > ul {
+#outlineContent {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  bottom: 35px;
+  left: 0;
+  overflow-y: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: opacity 250ms;
+}
+
+#outlineScrollable {
+  overflow-y: auto;
+  margin: 10px;
+}
+
+#outlineScrollable ul {
   margin: 0px;
   padding: 0 0 0 10px;
   list-style-type: none;
 }
 
-
-ul.outlineItem.topLevel {
-  margin: 0px;
-  padding: 0 0 0 10px;
-  background: #333;
+#outlineScrollable > ul {
+  margin: 0 10px 0 0;
+  padding: 0px;
 }
 
-.outlineItem.topLevel.function {
-  color: #faa;
+.outlineItem.topLevel.class:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
 }
 
-.outlineItem.topLevel.variable {
-  color: #afa;
+.outlineItem {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.outlineItem.topLevel.class {
-  color: #aaf;
+li.outlineItem.topLevel.class {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
-.outlineItem.method {
-  color: #faa;
+.outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
+  color: #ddd;
 }
 
-.outlineItem.property {
-  color: #afa;
+.outlineItem.topLevel.function, .outlineItem.method,
+    .outlineItem.topLevel.function > a, .outlineItem.method > a {
+  color: #888;
 }
 
+.outlineItem.topLevel.function > a:after, .outlineItem.method > a:after {
+  content: '()';
+}
 
+.outlineItem.topLevel.variable, .outlineItem.property,
+    .outlineItem.topLevel.variable > a, .outlineItem.property > a {
+  color: #77c;
+}
+
+#toggleOutlineButton {
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  border-radius: 5px;
+  bottom: 0px;
+  height: 30px;
+  position: absolute;
+  right: 0;
+  width: 30px;
+}
+
+#toggleOutlineButton:hover {
+  background-color: rgba(255, 255, 255, 0.7);;
+}
+
+#toggleOutlineButton:active {
+  background-color: rgba(255, 255, 255, 1);;
+}
+
+#toggleOutlineButton:focus {
+  outline: none;
+}
+
+#toggleOutlineButton > #hideOutlineGlyph {
+  display: inline;
+}
+
+#toggleOutlineButton > #showOutlineGlyph {
+  display: none;
+}
+
+#outline.collapsed #toggleOutlineButton > #hideOutlineGlyph {
+  display: none;
+}
+
+#outline.collapsed #toggleOutlineButton > #showOutlineGlyph {
+  display: inline;
+}
+
+#outline.collapsed #outlineContent {
+  opacity: 0;
+}

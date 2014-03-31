@@ -9,12 +9,7 @@
 <polymer-element name="spark-button" extends="spark-widget"
     attributes="primary active large small noPadding">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("../../../packages/spark_widgets/spark_button/spark_button.css");
-    </style>
-
+    <link rel="stylesheet" href="spark_button.css">
     <template if="{{noPadding}}">
       <style>
         #button {

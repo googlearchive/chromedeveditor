@@ -9,9 +9,9 @@ import 'dart:core';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:logging/logging.dart';
 
+import 'fast_sha.dart';
 import 'file_operations.dart';
 
 Logger logger = new Logger('spark.git');
@@ -52,7 +52,7 @@ String getShaForString(String data, String type) {
 }
 
 String getShaStringForData(List<int> content, String type) {
-  crypto.SHA1 sha1 = new crypto.SHA1();
+  FastSha sha1 = new FastSha();
   sha1.add('${type} ${content.length}'.codeUnits);
   sha1.add([0]);
   sha1.add(content);
@@ -63,7 +63,7 @@ String getShaStringForData(List<int> content, String type) {
  * Return sha for the given data.
  */
 List<int> getShaAsBytes(List<int> data) {
-  crypto.SHA1 sha1 = new crypto.SHA1();
+  FastSha sha1 = new FastSha();
   sha1.add(data);
   return sha1.close();
 }

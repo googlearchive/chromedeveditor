@@ -22,11 +22,7 @@
 
 <polymer-element name="spark-toolbar" attributes="responsive touch">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("../../../packages/spark_widgets/spark_toolbar/spark_toolbar.css");
-    </style>
+    <link rel="stylesheet" href="spark_toolbar.css">
 
     <div class="toolbar" responsive="{{responsive}}" touch-action="{{touchAction}}">
       <content></content>

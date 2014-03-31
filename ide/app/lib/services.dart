@@ -7,7 +7,7 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'pub.dart';
+import 'dart/pub.dart';
 import 'services/compiler.dart';
 import 'services/services_common.dart';
 import 'utils.dart';
@@ -127,8 +127,17 @@ class CompilerService extends Service {
     });
   }
 
-  Future<CompilerResult> compileFile(File file) {
-    Map args = { "fileUuid" : file.uuid, "project" : file.project.name };
+  /**
+   * Compile the given file and return the results from Dart2js. This includes
+   * any errors and the generated JavaScript output. You can optionally pass in
+   * [csp] `true` to select the content security policy output from dart2js.
+   */
+  Future<CompilerResult> compileFile(File file, {bool csp: false}) {
+    Map args = {
+        "fileUuid" : file.uuid,
+        "project" : file.project.name,
+        "csp" : csp
+    };
     return _sendAction("compileFile", args).then((ServiceActionEvent result) {
       return new CompilerResult.fromMap(result.data);
     });
@@ -235,7 +244,7 @@ class ChromeServiceImpl extends Service {
         case "getAppContents":
           String path = event.data['path'];
           return getAppContentsBinary(path).then((List<int> contents) {
-            return _sendResponse(event, {"contents": contents.toList()});
+            return _sendResponse(event, {"contents": contents});
           });
         case "getFileContents":
           String uuid = event.data['uuid'];

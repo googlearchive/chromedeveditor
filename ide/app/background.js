@@ -72,7 +72,7 @@ var EditorWindow = function(app) {
         height: Math.floor(screen.availHeight * (7/8))
       },
       minWidth: 900,
-      minHeight: 450,
+      minHeight: 640,
     },
     this.onCreated_.bind(this)
   );

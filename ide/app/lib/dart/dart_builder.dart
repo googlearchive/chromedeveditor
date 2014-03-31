@@ -29,9 +29,12 @@ class DartBuilder extends Builder {
 
     Project project = changes.first.resource.project;
 
-    List<File> addedFiles = changes.where((c) => c.isAdd).map((c) => c.resource);
-    List<File> changedFiles = changes.where((c) => c.isChange).map((c) => c.resource);
-    List<File> deletedFiles = changes.where((c) => c.isDelete).map((c) => c.resource);
+    List<File> addedFiles = changes.where(
+        (c) => c.isAdd).map((c) => c.resource).toList();
+    List<File> changedFiles = changes.where(
+        (c) => c.isChange).map((c) => c.resource).toList();
+    List<File> deletedFiles = changes.where(
+        (c) => c.isDelete).map((c) => c.resource).toList();
 
     AnalyzerService analyzer = services.getService("analyzer");
     ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);

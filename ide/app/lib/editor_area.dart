@@ -82,7 +82,7 @@ class ImageViewerTab extends EditorTab {
  */
 class EditorArea extends TabView {
   static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
+      new RegExp(r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
 
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
@@ -101,7 +101,7 @@ class EditorArea extends TabView {
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = false;
     onLabelBarShown.listen((_) => resize());
-    
+
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete && delta.resource.isFile) {

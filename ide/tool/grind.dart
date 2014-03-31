@@ -6,6 +6,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart' as arch;
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
@@ -241,7 +242,7 @@ void stats(GrinderContext context) {
 }
 
 /**
- * Create the 'app/sdk/dart-sdk.bin' file from the current Dart SDK.
+ * Create the 'app/sdk/dart-sdk.bz' file from the current Dart SDK.
  */
 void createSdk(GrinderContext context) {
   Directory srcSdkDir = sdkDir;
@@ -251,6 +252,7 @@ void createSdk(GrinderContext context) {
 
   File versionFile = joinFile(srcSdkDir, ['version']);
   File destArchiveFile = joinFile(destSdkDir, ['dart-sdk.bin']);
+  File destCompressedFile = joinFile(destSdkDir, ['dart-sdk.bz']);
 
   // copy files over
   context.log('copying SDK');
@@ -258,10 +260,14 @@ void createSdk(GrinderContext context) {
 
   // Get rid of some big directories we don't use.
   _delete('app/sdk/lib/_internal/compiler', context);
-  _delete('app/sdk/lib/_internal/dartdoc', context);
+  _delete('app/sdk/lib/_internal/pub', context);
 
   context.log('creating SDK archive');
   _createSdkArchive(versionFile, joinDir(destSdkDir, ['lib']), destArchiveFile);
+
+  // Create the compresed file; delete the original.
+  _compressFile(destArchiveFile, destCompressedFile);
+  destArchiveFile.deleteSync();
 
   deleteEntity(joinDir(destSdkDir, ['lib']), context);
 }
@@ -547,6 +553,16 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
   }
 
   destFile.writeAsBytesSync(writer.toBytes());
+}
+
+/**
+ * Create a bzip2 compressed version of the input file.
+ */
+void _compressFile(File sourceFile, File destFile) {
+  List<int> data = sourceFile.readAsBytesSync();
+  arch.BZip2Encoder encoder = new arch.BZip2Encoder();
+  List<int> output = encoder.encode(data);
+  destFile.writeAsBytesSync(output);
 }
 
 void _printSize(GrinderContext context, File file) {
