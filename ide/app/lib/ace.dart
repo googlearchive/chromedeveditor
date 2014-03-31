@@ -216,6 +216,7 @@ class AceManager {
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
+    _aceEditor.setOption('tooltipFollowsMouse', false);
 
     // Fallback
     theme = THEMES[0];
