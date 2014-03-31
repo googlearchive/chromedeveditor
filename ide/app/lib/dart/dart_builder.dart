@@ -6,12 +6,16 @@ library spark.dart_builder;
 
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+
 import '../builder.dart';
 import '../jobs.dart';
 import '../services.dart';
 import '../workspace.dart';
 
 final _disableDartAnalyzer = false;
+
+Logger _logger = new Logger('spark.dart_builder');
 
 /**
  * A [Builder] implementation that drives the Dart analyzer.
@@ -40,11 +44,20 @@ class DartBuilder extends Builder {
     ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
     if (context == null) {
+      // Send in all the existing files for the project in order to properly set
+      // up the new context.
+      addedFiles = project.traverse().where(
+          (r) => r.isFile && r.name.endsWith('.dart')).toList();
+      changedFiles = [];
+      deletedFiles = [];
+
+      // TODO(devoncarew): Temporarily, short-circuit large projects.
+      if (addedFiles.length > 100) {
+        _logger.warning('Dart analysis is disabled for large projects.');
+        return new Future.value();
+      }
+
       context = analyzer.createProjectAnalyzer(project);
-
-      // TODO: we'll need to send in all the existing files for the project in
-      // order to properly set up the new context
-
     }
 
     return context.processChanges(addedFiles, changedFiles, deletedFiles).then(

@@ -54,7 +54,7 @@ class ServiceActionEvent {
     };
   }
 
-  ServiceActionEvent createReponse(Map data) {
+  ServiceActionEvent createReponse([Map data = const {}]) {
     return new ServiceActionEvent.asResponse(serviceId, actionId, callId, data);
   }
 

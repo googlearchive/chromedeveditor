@@ -396,4 +396,5 @@ class _IsolateHandler {
   }
 }
 
+// TODO: Handle converting files in the packages folder.
 List<String> _filesToUuid(List<File> files) => files.map((f) => f.uuid).toList();

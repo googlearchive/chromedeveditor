@@ -285,11 +285,12 @@ class AnalyzerServiceImpl extends ServiceImpl {
       String id = request.data['context'];
       _contexts[id] = new analyzer.ProjectContext(id, dartSdk,
           new _ServiceContentsProvider(isolate.chromeService));
-      return new Future.value(request.createReponse({}));
+      return new Future.value(request.createReponse());
     }
 
     Future<ServiceActionEvent> processContextChanges(ServiceActionEvent request) {
       String id = request.data['context'];
+
       List<String> addedUuids = request.data['added'];
       List<String> changedUuids = request.data['changed'];
       List<String> deletedUuids = request.data['deleted'];
@@ -309,11 +310,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     Future<ServiceActionEvent> disposeContext(ServiceActionEvent request) {
       String id = request.data['context'];
-      analyzer.ProjectContext context = _contexts.remove(id);
-      if (context != null) {
-        context.dispose();
-      }
-      return new Future.value(request.createReponse({}));
+      _contexts.remove(id);
+      return new Future.value(request.createReponse());
     }
 
     Outline _getOutline(analyzer.CompilationUnit ast) {

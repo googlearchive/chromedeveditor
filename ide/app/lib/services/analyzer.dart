@@ -184,7 +184,7 @@ class ProjectContext {
   ProjectContext(this.id, this.sdk, this.provider) {
     context = AnalysisEngine.instance.createAnalysisContext();
 
-    // TODO: add a package: uri resolver
+    // TODO: Add a package: uri resolver. (PackageUriResolver)
     context.sourceFactory = new SourceFactory(
         [new DartUriResolver(sdk), new FileUriResolver(this)]);
   }
@@ -233,15 +233,8 @@ class ProjectContext {
     return completer.future;
   }
 
-  // Not sure there's anything to do here -
-  void dispose() { }
-
   FileSource getSource(String uuid) {
-    //if (_sources.containsKey(uuid)) {
-      return _sources[uuid];
-    //} else {
-    //  return new PhantomFileSource(this, uuid);
-    //}
+    return _sources[uuid];
   }
 
   void _processChanges(Completer<AnalysisResultUuid> completer,
@@ -253,8 +246,6 @@ class ProjectContext {
       if (notices == null) {
         completer.complete(analysisResult);
       } else {
-        print('${notices.length} notices');
-
         for (ChangeNotice notice in notices) {
           if (notice.source is! FileSource) continue;
 
@@ -271,7 +262,7 @@ class ProjectContext {
   }
 
   /**
-   * Fill in all the
+   * Populate the contents for the [FileSource]s.
    */
   Future _populateSources() {
     List<Future> futures = [];
@@ -436,12 +427,10 @@ class FileSource extends Source {
   bool exists() => _exists;
 
   TimestampedData<String> get contents {
-    print('get contents ${uuid}');
     return new TimestampedData(modificationStamp, _strContents);
   }
 
   void getContentsToReceiver(Source_ContentReceiver receiver) {
-    print('getContentsToReceiver ${uuid}');
     TimestampedData cnts = contents;
     receiver.accept(cnts.data, cnts.modificationTime);
   }
@@ -465,7 +454,7 @@ class FileSource extends Source {
     Uri thisUri = new Uri(scheme: 'file', path: uuid);
     Uri sourceUri = thisUri.resolveUri(relativeUri);
 
-    return context.getSource(sourceUri.path);
+    return context.getSource(sourceUri.path.substring(1));
   }
 
   void setContents(String newContents) {
@@ -479,22 +468,6 @@ class FileSource extends Source {
 
   String toString() => uuid;
 }
-
-//class PhantomFileSource extends FileSource {
-//  PhantomFileSource(ProjectContext context, String uuid) : super(context, uuid) {
-//    _exists = false;
-//  }
-//
-//  // TODO:
-//  TimestampedData<String> get contents =>
-//      new TimestampedData(modificationStamp, _strContents);
-//
-//  // TODO:
-//  void getContentsToReceiver(Source_ContentReceiver receiver) {
-//    TimestampedData cnts = contents;
-//    receiver.accept(cnts.data, cnts.modificationTime);
-//  }
-//}
 
 class FileUriResolver extends UriResolver {
   static String FILE_SCHEME = "file";
@@ -517,6 +490,33 @@ class FileUriResolver extends UriResolver {
     if (!isFileUri(uri)) {
       return null;
     } else {
+      return context.getSource(uri.path);
+    }
+  }
+}
+
+class PackageUriResolver extends UriResolver {
+  static String PACKAGE_SCHEME = "package";
+
+  static bool isPackageUri(Uri uri) => uri.scheme == PACKAGE_SCHEME;
+
+  final ProjectContext context;
+
+  PackageUriResolver(this.context);
+
+  Source fromEncoding(UriKind kind, Uri uri) {
+    if (kind == UriKind.PACKAGE_URI) {
+      return context.getSource(uri.path);
+    } else {
+      return null;
+    }
+  }
+
+  Source resolveAbsolute(Uri uri) {
+    if (!isPackageUri(uri)) {
+      return null;
+    } else {
+      // TODO: Use the services content provider.
       return context.getSource(uri.path);
     }
   }
