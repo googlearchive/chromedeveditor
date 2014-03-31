@@ -7,7 +7,6 @@ library spark.analyzer_test;
 import 'package:unittest/unittest.dart';
 
 import '../analyzer.dart';
-import '../../utils.dart';
 import '../../services/services_impl.dart';
 
 defineTests(ServicesIsolate servicesIsolate) {
@@ -62,9 +61,6 @@ defineTests(ServicesIsolate servicesIsolate) {
     });
 
     test('analyze string', () {
-      // TODO: this fails under dart2js
-      if (isDart2js()) return null;
-
       ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
 
       return analyzeString(sdk, "void main() {\n print('hello world');\n}",
@@ -81,9 +77,6 @@ defineTests(ServicesIsolate servicesIsolate) {
     });
 
     test('analyze string with errors', () {
-      // TODO: this fails under dart2js
-      if (isDart2js()) return null;
-
       ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
 
       return analyzeString(sdk, "void main() {\n printfoo('hello world');\n}",

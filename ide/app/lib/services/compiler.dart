@@ -25,14 +25,6 @@ class Compiler {
   DartSdk _sdk;
   ContentsProvider _contentsProvider;
 
-  /**
-   * Create and return a [Compiler] instance. These are heavy-weight objects.
-   */
-  static Future<Compiler> createCompiler(ContentsProvider contentsProvider) {
-    return DartSdk.createSdk().then(
-        (DartSdk sdk) => new Compiler._(sdk, contentsProvider));
-  }
-
   static Compiler createCompilerFrom(DartSdk sdk,
                                      ContentsProvider contentsProvider) {
     return new Compiler._(sdk, contentsProvider);
