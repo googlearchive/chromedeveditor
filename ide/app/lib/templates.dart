@@ -2,7 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library spark.project_builder;
+library spark.templates;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
@@ -11,6 +11,7 @@ import 'dart:html' hide File;
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'utils.dart';
+import 'workspace.dart';
 
 /**
  * A class to create a sample project given a project name and the template id
@@ -42,6 +43,30 @@ class ProjectBuilder {
       Map m = JSON.decode(contents);
       return traverseElement(_destRoot, sourceRoot, _sourceUri, m);
     });
+  }
+
+  /**
+   * Return the 'main' file for the given project. This is generally the first
+   * file we should show to the user after a project is created.
+   */
+  Resource getMainFileFor(Project project) {
+    if (project.getChild('manifest.json') != null) {
+      return project.getChild('manifest.json');
+    }
+
+    if (project.getChild('web') != null) {
+      Folder web = project.getChild('web');
+
+      Resource r = web.getChildren().firstWhere(
+          (r) => r.name.endsWith('.dart'), orElse: null);
+      if (r != null) return r;
+
+      r = web.getChildren().firstWhere(
+          (r) => r.name.endsWith('.html'), orElse: null);
+      if (r != null) return r;
+    }
+
+    return project;
   }
 
   Future traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
