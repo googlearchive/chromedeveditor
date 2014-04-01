@@ -6,10 +6,16 @@ library spark.dart_builder;
 
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+
 import '../builder.dart';
 import '../jobs.dart';
 import '../services.dart';
 import '../workspace.dart';
+
+final _disableDartAnalyzer = false;
+
+Logger _logger = new Logger('spark.dart_builder');
 
 /**
  * A [Builder] implementation that drives the Dart analyzer.
@@ -20,23 +26,49 @@ class DartBuilder extends Builder {
   DartBuilder(this.services);
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    List<File> files = event.modifiedFiles.where(
-        (file) => file.name.endsWith('.dart')).toList();
+    List<ChangeDelta> changes = event.changes.where(
+        (c) => c.resource is File && c.resource.name.endsWith('.dart')).toList();
 
-    if (files.isEmpty) return new Future.value();
+    if (_disableDartAnalyzer || changes.isEmpty) return new Future.value();
+
+    Project project = changes.first.resource.project;
+
+    List<File> addedFiles = changes.where(
+        (c) => c.isAdd).map((c) => c.resource).toList();
+    List<File> changedFiles = changes.where(
+        (c) => c.isChange).map((c) => c.resource).toList();
+    List<File> deletedFiles = changes.where(
+        (c) => c.isDelete).map((c) => c.resource).toList();
 
     AnalyzerService analyzer = services.getService("analyzer");
+    ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
-    return analyzer.buildFiles(files).then((Map<File, List<AnalysisError>> errors) {
-      Workspace workspace = files.first.workspace;
+    if (context == null) {
+      // Send in all the existing files for the project in order to properly set
+      // up the new context.
+      addedFiles = project.traverse().where(
+          (r) => r.isFile && r.name.endsWith('.dart')).toList();
+      changedFiles = [];
+      deletedFiles = [];
 
-      workspace.pauseMarkerStream();
+      // TODO(devoncarew): Temporarily, short-circuit large projects.
+      if (addedFiles.length > 100) {
+        _logger.warning('Dart analysis is disabled for large projects.');
+        return new Future.value();
+      }
+
+      context = analyzer.createProjectAnalyzer(project);
+    }
+
+    return context.processChanges(addedFiles, changedFiles, deletedFiles).then(
+        (AnalysisResult result) {
+      project.workspace.pauseMarkerStream();
 
       try {
-        files.forEach((f) => f.clearMarkers('dart'));
+        for (File file in result.getFiles()) {
+          file.clearMarkers('dart');
 
-        for (File file in errors.keys) {
-          for (AnalysisError error in errors[file]) {
+          for (AnalysisError error in result.getErrorsFor(file)) {
             file.createMarker('dart',
                 _convertSeverity(error.errorSeverity),
                 error.message, error.lineNumber,
@@ -44,7 +76,7 @@ class DartBuilder extends Builder {
           }
         }
       } finally {
-        workspace.resumeMarkerStream();
+        project.workspace.resumeMarkerStream();
       }
     });
   }
