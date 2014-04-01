@@ -18,6 +18,7 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
 import 'css/cssbeautify.dart';
+import 'dart/pub.dart';
 import 'editors.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
@@ -75,6 +76,7 @@ class TextEditor extends Editor {
 
   void activate() {
     aceManager.outline.visible = supportsOutline;
+    aceManager._aceEditor.readOnly = readOnly;
   }
 
   void resize() => aceManager.resize();
@@ -84,6 +86,8 @@ class TextEditor extends Editor {
   bool get supportsOutline => false;
 
   bool get supportsFormat => false;
+
+  bool get readOnly => isInPackagesFolder(file);
 
   void format() { }
 
@@ -492,13 +496,8 @@ class AceManager {
 
     if (session == null) {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
-      _aceEditor.readOnly = true;
     } else {
       _aceEditor.session = session;
-
-      if (_aceEditor.readOnly) {
-        _aceEditor.readOnly = false;
-      }
 
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
         setMarkers(file.getMarkers());

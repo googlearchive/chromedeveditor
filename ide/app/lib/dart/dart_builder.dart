@@ -27,7 +27,7 @@ class DartBuilder extends Builder {
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     List<ChangeDelta> changes = event.changes.where(
-        (c) => c.resource is File && c.resource.name.endsWith('.dart')).toList();
+        (c) => c.resource is File && _includeFile(c.resource)).toList();
 
     if (_disableDartAnalyzer || changes.isEmpty) return new Future.value();
 
@@ -79,6 +79,10 @@ class DartBuilder extends Builder {
         project.workspace.resumeMarkerStream();
       }
     });
+  }
+
+  bool _includeFile(File file) {
+    return file.name.endsWith('.dart') && !file.isDerived();
   }
 }
 

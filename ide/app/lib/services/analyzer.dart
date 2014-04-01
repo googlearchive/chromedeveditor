@@ -96,7 +96,10 @@ class AnalysisResultUuid {
   AnalysisResultUuid();
 
   void addErrors(String uuid, List<common.AnalysisError> errors) {
-    _errorMap[uuid] = errors;
+    // Ignore warnings from imported packages.
+    if (!uuid.startsWith('package:')) {
+      _errorMap[uuid] = errors;
+    }
   }
 
   Map toMap() {
@@ -183,10 +186,11 @@ class ProjectContext {
 
   ProjectContext(this.id, this.sdk, this.provider) {
     context = AnalysisEngine.instance.createAnalysisContext();
-
-    // TODO: Add a package: uri resolver. (PackageUriResolver)
-    context.sourceFactory = new SourceFactory(
-        [new DartUriResolver(sdk), new FileUriResolver(this)]);
+    context.sourceFactory = new SourceFactory([
+        new DartUriResolver(sdk),
+        new PackageUriResolver(this),
+        new FileUriResolver(this)
+    ]);
   }
 
   Future<AnalysisResultUuid> processChanges(List<String> addedUuids,
@@ -214,6 +218,7 @@ class ProjectContext {
     // deleted
     for (String uuid in deletedUuids) {
       if (_sources[uuid] != null) {
+        // TODO(devoncarew): Should we set this to deleted or remove the FileSource?
         _sources[uuid]._exists = false;
         _sources[uuid].setContents(null);
         changeSet.removedSource(_sources.remove(uuid));
@@ -269,9 +274,18 @@ class ProjectContext {
 
     _sources.forEach((String uuid, FileSource source) {
       if (source.exists() && source._strContents == null) {
-        Future f = provider.getFileContents(uuid).then((String str) {
-          source.setContents(str);
-        });
+        Future f;
+
+        if (uuid.startsWith('package:')) {
+          f = provider.getPackageContents(id, uuid).then((String str) {
+            source.setContents(str);
+          });
+        } else {
+          f = provider.getFileContents(uuid).then((String str) {
+            source.setContents(str);
+          });
+        }
+
         futures.add(f);
       }
     });
@@ -516,8 +530,7 @@ class PackageUriResolver extends UriResolver {
     if (!isPackageUri(uri)) {
       return null;
     } else {
-      // TODO: Use the services content provider.
-      return context.getSource(uri.path);
+      return context.getSource(uri.toString());
     }
   }
 }

@@ -365,8 +365,8 @@ abstract class Spark
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
-    actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new PubGetAction(this));
+    actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));

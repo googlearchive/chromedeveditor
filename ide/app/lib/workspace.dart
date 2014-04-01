@@ -785,7 +785,8 @@ class Folder extends Container {
   bool isScmPrivate() => name == '.git' || name == '.svn';
 
   bool isDerived() {
-    if (name == 'build' && parent is Project) {
+    // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
+    if ((name == 'build' || name == 'cache') && parent is Project) {
       return true;
     } else {
       return super.isDerived();
