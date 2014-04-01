@@ -115,7 +115,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="renameFileName">New name</label>
-          <input id="renameFileName" type="text" class="form-control" focused>
+          <input id="renameFileName" type="text" class="form-control"
+              spellcheck="false" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -137,7 +138,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="fileName">New file name</label>
-          <input id="fileName" type="text" class="form-control" focused>
+          <input id="fileName" type="text" class="form-control"
+              spellcheck="false" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -159,7 +161,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="folderName">New folder name</label>
-          <input id="folderName" type="text" class="form-control" focused>
+          <input id="folderName" type="text" class="form-control"
+              spellcheck="false" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -182,7 +185,8 @@
         <div class="form-group">
           <div>
             <label for="name">Project name</label>
-            <input id="name" type="text" class="form-control" focused>
+            <input id="name" type="text" class="form-control" pattern="\S+"
+                spellcheck="false" focused>
           </div>
           <br/>
           <form>
@@ -242,10 +246,11 @@
               <label for="adb">Deploy via USB</label>
             </div>
             <div>
-              <input id="ip" type="radio" name="type" value="push-ip" />
+              <input id="ip" type="radio" name="type" value="push-ip" autosave />
               <label for="ip">Deploy to a network host</label>
               <input id="pushUrl" type="text" class="form-control"
-                  placeholder="e.g. 192.168.1.101" />
+                  placeholder="e.g. 192.168.1.101"
+                  pattern="(\d{1,3}\.){3}\d{1,3}" spellcheck="false" autosave/>
             </div>
           </form>
         </div>
@@ -269,8 +274,9 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
-          <input id="gitRepoUrl" type="text" class="form-control"
-              placeholder="https://github.com/dart-lang/spark.git" focused>
+          <input id="gitRepoUrl" type="url" class="form-control"
+              placeholder="https://github.com/dart-lang/spark.git"
+              spellcheck="false" autosave focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -295,12 +301,13 @@
             <div class="input-label">
               <label for="gitName">Your Name</label>
               <input id="gitName" type="text" class="form-control"
-                  placeholder="John Doe" focused>
+                  placeholder="John Doe" spellcheck="false"
+                  spellcheck="false" autosave focused>
             </div>
             <div class="input-label">
               <label for="gitEmail">Email</label>
-              <input id="gitEmail" type="text" class="form-control"
-                  placeholder="johndoe@gmail.com">
+              <input id="gitEmail" type="email" class="form-control"
+                  placeholder="johndoe@gmail.com" spellcheck="false" autosave>
             </div>
           </div>
         </div>
@@ -315,7 +322,7 @@
         <div class="form-group">
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"
-              rows="3"></textarea>
+              rows="3" wrap="soft" spellcheck autosave></textarea>
           <span class="help-block">Enter a brief description of the changes.</span>
         </div>
       </div>
@@ -338,7 +345,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitBranchName">New branch name</label>
-          <input id="gitBranchName" type="text" class="form-control" focused>
+          <input id="gitBranchName" type="text" class="form-control"
+              pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
           <span class="help-block">Create a new git branch.</span>
         </div>
       </div>
@@ -361,7 +369,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="currentBranchName">Current branch</label>
-          <input id="currentBranchName" type="text" class="form-control" disabled>
+          <input id="currentBranchName" type="text" class="form-control"
+              spellcheck="false" disabled>
         </div>
         <div class="form-group">
           <label for="gitCheckout">Switch to branch</label>
@@ -413,9 +422,9 @@
         </div>
         <div class="form-group">
           <div class="checkbox">
-            <label>
-              <input id="analyticsCheck" type="checkbox">
-                Allow Spark to collect anonymous usage statistics
+            <input id="analyticsCheck" type="checkbox">
+            <label for="analyticsCheck">
+              Allow Spark to collect anonymous usage statistics
             </label>
           </div>
         </div>
@@ -518,7 +527,8 @@
             <div class="input-label">
               <label for="gitUsername">User name</label>
               <input id="gitUsername" type="text" class="form-control"
-                  placeholder="johndoe" focused>
+                  placeholder="johndoe" pattern="\S+" spellcheck="false"
+                  autosave focused>
             </div>
             <div class="input-label">
               <label for="gitPassword">Password</label>
@@ -559,7 +569,9 @@
         </div>
         <div class="form-group">
           <label for="appID">Enter the ID of the existing application</label>
-          <input id="appID" type="text" class="form-control">
+          <input id="appID" type="text" class="form-control"
+              placeholder="abcdefghijklmnopqrstuvwxyzabcdef" pattern="[a-z]{32}"
+              spellcheck="false" autosave>
         </div>
       </div>
       <div class="modal-footer">
