@@ -211,8 +211,8 @@ class ProjectAnalyzer {
     args['changed'] = _filesToUuid(changedFiles);
     args['deleted'] = _filesToUuid(deletedFiles);
 
-    return analyzerService._sendAction('processContextChanges', args).then(
-        (ServiceActionEvent event) {
+    return analyzerService._sendAction('processContextChanges', args)
+        .then((ServiceActionEvent event) {
       if (event.error) {
         throw event.getErrorMessage();
       } else {
