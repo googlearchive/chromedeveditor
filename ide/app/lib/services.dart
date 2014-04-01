@@ -180,7 +180,7 @@ class AnalyzerService extends Service {
   ProjectAnalyzer createProjectAnalyzer(Project project) {
     if (_analyzers[project] == null) {
       _analyzers[project] = new ProjectAnalyzer._(this, project);
-      _sendAction('createContext', {'context': project.uuid});
+      _sendAction('createContext', {'contextId': project.uuid});
     }
 
     return _analyzers[project];
@@ -194,7 +194,7 @@ class AnalyzerService extends Service {
   Future _disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
     Project project = projectAnalyzer.project;
     _analyzers.remove(project);
-    return _sendAction('disposeContext', {'context': project.uuid});
+    return _sendAction('disposeContext', {'contextId': project.uuid});
   }
 }
 
@@ -211,7 +211,7 @@ class ProjectAnalyzer {
       List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
     PubResolver resolver = analyzerService.getPubResolverFor(project);
 
-    var args = {'context': project.uuid};
+    var args = {'contextId': project.uuid};
     args['added'] = _filesToUuid(resolver, addedFiles);
     args['changed'] = _filesToUuid(resolver, changedFiles);
     args['deleted'] = _filesToUuid(resolver, deletedFiles);

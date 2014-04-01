@@ -282,14 +282,14 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }
 
     Future<ServiceActionEvent> createContext(ServiceActionEvent request) {
-      String id = request.data['context'];
+      String id = request.data['contextId'];
       _contexts[id] = new analyzer.ProjectContext(id, dartSdk,
           new _ServiceContentsProvider(isolate.chromeService));
       return new Future.value(request.createReponse());
     }
 
     Future<ServiceActionEvent> processContextChanges(ServiceActionEvent request) {
-      String id = request.data['context'];
+      String id = request.data['contextId'];
 
       List<String> addedUuids = request.data['added'];
       List<String> changedUuids = request.data['changed'];
@@ -309,7 +309,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }
 
     Future<ServiceActionEvent> disposeContext(ServiceActionEvent request) {
-      String id = request.data['context'];
+      String id = request.data['contextId'];
       _contexts.remove(id);
       return new Future.value(request.createReponse());
     }
