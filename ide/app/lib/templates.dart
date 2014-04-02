@@ -85,7 +85,7 @@ class ProjectBuilder {
     if (directories != null) {
       return Future.forEach(directories.keys, (String directoryName) {
         DirectoryEntry destDirectoryRoot;
-        return _destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
+        return destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
           destDirectoryRoot = entry;
           return sourceRoot.getDirectory(directoryName);
         }).then((DirectoryEntry sourceDirectoryRoot) {
