@@ -289,12 +289,10 @@ class ListView {
     });
     _addCurrentSelectionHighlight();
 
-    // If no selected row is set, we set one by default.
-    // It will help multi-selection using Shift key working as expected.
-    if (_selectedRow == -1) {
-      if (selection.length > 0) {
-        _selectedRow = selection.first;
-      }
+    if (selection.length > 0) {
+      _selectedRow = selection.first;
+    } else {
+      _selectedRow = -1;
     }
   }
 

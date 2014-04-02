@@ -323,10 +323,12 @@ class TreeView implements ListViewDelegate {
           setNodeExpanded(uuid, false, animated: true);
         } else {
           // Select the parent.
-          // TODO: how to we get the parent uuid given the child uuid?
-          String parentUuid = uuid;
-          selection = [parentUuid];
-          scrollIntoNode(parentUuid);
+          String parentUuid = getParentUuid(uuid);
+          if (parentUuid != null) {
+            int index = _rows.indexOf(_rowsMap[parentUuid]);
+            _listView.selection = [index];
+            scrollIntoNode(parentUuid);
+          }
         }
 
         cancelEvent(event);
@@ -472,6 +474,20 @@ class TreeView implements ListViewDelegate {
   }
 
   bool get dropEnabled => _listView.dropEnabled;
+
+  String getParentUuid(String childUuid) {
+    int childIndex = _rows.indexOf(_rowsMap[childUuid]);
+    int childLevel = _rows[childIndex].level;
+
+    while (childIndex > -1) {
+      if (_rows[childIndex].level < childLevel) {
+        return _rows[childIndex].nodeUID;
+      }
+      childIndex--;
+    }
+
+    return null;
+  }
 
   /**
    *  Make sure the given node is selected.
