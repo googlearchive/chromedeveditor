@@ -305,27 +305,37 @@ class TreeView implements ListViewDelegate {
   }
 
   bool listViewKeyDown(KeyboardEvent event) {
-    int keyCode = event.which;
-    bool expand;
+    if (_listView.selectedRow == -1) return true;
 
-    switch (keyCode) {
+    String uuid = _rows[_listView.selectedRow].nodeUID;
+
+    switch (event.which) {
       case KeyCode.RIGHT:
-        expand = true;
-        break;
+        setNodeExpanded(uuid, true, animated: true);
+        cancelEvent(event);
+        return false;
       case KeyCode.LEFT:
-        expand = false;
-        break;
-      default:
-        return true;
+        bool canHaveChildren = _delegate.treeViewHasChildren(this,  uuid);
+        bool expanded = isNodeExpanded(uuid);
+
+        if (canHaveChildren && expanded) {
+          // Collapse the node.
+          setNodeExpanded(uuid, false, animated: true);
+        } else {
+          // Select the parent.
+          String parentUuid = getParentUuid(uuid);
+          if (parentUuid != null) {
+            int index = _rows.indexOf(_rowsMap[parentUuid]);
+            _listView.selection = [index];
+            scrollIntoNode(parentUuid);
+          }
+        }
+
+        cancelEvent(event);
+        return false;
     }
 
-    if (_listView.selectedRow != -1) {
-      setNodeExpanded(_rows[_listView.selectedRow].nodeUID, expand,
-          animated: true);
-    }
-
-    cancelEvent(event);
-    return false;
+    return true;
   }
 
   void listViewContextMenu(ListView view,
@@ -464,6 +474,20 @@ class TreeView implements ListViewDelegate {
   }
 
   bool get dropEnabled => _listView.dropEnabled;
+
+  String getParentUuid(String childUuid) {
+    int childIndex = _rows.indexOf(_rowsMap[childUuid]);
+    int childLevel = _rows[childIndex].level;
+
+    while (childIndex > -1) {
+      if (_rows[childIndex].level < childLevel) {
+        return _rows[childIndex].nodeUID;
+      }
+      childIndex--;
+    }
+
+    return null;
+  }
 
   /**
    *  Make sure the given node is selected.
