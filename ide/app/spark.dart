@@ -31,9 +31,9 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/preferences.dart' as preferences;
-import 'lib/project_builder.dart';
 import 'lib/services.dart';
 import 'lib/scm.dart';
+import 'lib/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
@@ -1583,16 +1583,18 @@ class NewProjectAction extends SparkActionWithDialog {
 
         String type = getElement('input[name="type"]:checked').id;
 
+        ProjectBuilder projectBuilder;
+
         return new Future.value().then((_) {
           switch (type) {
             case "empty-project":
               break;
             case "dart-web-app-radio":
-              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+              projectBuilder = new ProjectBuilder(locationEntry,
                   "web-dart", name.toLowerCase(), name);
               return projectBuilder.build();
             case "js-chrome-app-radio":
-              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
+              projectBuilder = new ProjectBuilder(locationEntry,
                   "app-js", name.toLowerCase(), name);
               return projectBuilder.build();
           }
@@ -1600,8 +1602,17 @@ class NewProjectAction extends SparkActionWithDialog {
           return spark.workspace.link(root).then((ws.Project project) {
             spark.showSuccessMessage('Created ${project.name}');
             Timer.run(() {
-              spark._filesController.selectFile(project);
-              spark._filesController.setFolderExpanded(project);
+              if (projectBuilder != null) {
+                spark._selectFile(projectBuilder.getMainFileFor(project));
+              } else {
+                spark._filesController.selectFile(project);
+                spark._filesController.setFolderExpanded(project);
+              }
+
+              // Run pub if the new project has a pubspec file.
+              if (project.getChild('pubspec.yaml') != null) {
+                spark.jobManager.schedule(new PubGetJob(spark, project));
+              }
             });
             spark.workspace.save();
           });
