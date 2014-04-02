@@ -61,15 +61,15 @@ body {
   color: #aaa;
 }
 
-.ace_gutter-cell.ace_error {
+div.ace_gutter-cell.ace_error {
   background-image: url("images/error_icon.png");
 }
 
-.ace_gutter-cell.ace_warning {
+div.ace_gutter-cell.ace_warning {
   background-image: url("images/warning_icon.png");
 }
 
-.ace_gutter-cell.ace_info {
+div.ace_gutter-cell.ace_info {
   background-image: url("images/info_icon.png");
 }
 
