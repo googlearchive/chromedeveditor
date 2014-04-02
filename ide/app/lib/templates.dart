@@ -23,8 +23,8 @@ class ProjectBuilder {
   String _projectName;
   String _sourceUri;
 
-  ProjectBuilder(this._destRoot, String templateId, this._sourceName,
-      this._projectName) {
+  ProjectBuilder(this._destRoot, this._sourceName,
+      this._projectName, [String templateId]) {
     if (templateId != null) {
       _sourceUri = 'resources/templates/$templateId';
     }

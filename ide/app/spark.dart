@@ -1602,7 +1602,7 @@ class NewProjectAction extends SparkActionWithDialog {
             templateId = "app-js";
         }
         final ProjectBuilder projectBuilder = new ProjectBuilder(
-            locationEntry, templateId, name.toLowerCase(), name);
+            locationEntry, name.toLowerCase(), name, templateId);
         return projectBuilder.build();
 
       }).then((_) {
