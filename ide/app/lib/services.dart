@@ -153,7 +153,7 @@ class AnalyzerService extends Service {
   Workspace get workspace => services._workspace;
 
   Future<Map<File, List<AnalysisError>>> buildFiles(List<File> dartFiles) {
-    return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
+    return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(null, dartFiles)})
         .then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
       Map<File, List<AnalysisError>> errorsPerFile = {};
@@ -180,7 +180,7 @@ class AnalyzerService extends Service {
   ProjectAnalyzer createProjectAnalyzer(Project project) {
     if (_analyzers[project] == null) {
       _analyzers[project] = new ProjectAnalyzer._(this, project);
-      _sendAction('createContext', {'context': project.uuid});
+      _sendAction('createContext', {'contextId': project.uuid});
     }
 
     return _analyzers[project];
@@ -188,10 +188,13 @@ class AnalyzerService extends Service {
 
   ProjectAnalyzer getProjectAnalyzer(Project project) => _analyzers[project];
 
+  PubResolver getPubResolverFor(Project project) =>
+      services._pubManager.getResolverFor(project);
+
   Future _disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
     Project project = projectAnalyzer.project;
     _analyzers.remove(project);
-    return _sendAction('disposeContext', {'context': project.uuid});
+    return _sendAction('disposeContext', {'contextId': project.uuid});
   }
 }
 
@@ -206,10 +209,12 @@ class ProjectAnalyzer {
 
   Future<AnalysisResult> processChanges(
       List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
-    var args = {'context': project.uuid};
-    args['added'] = _filesToUuid(addedFiles);
-    args['changed'] = _filesToUuid(changedFiles);
-    args['deleted'] = _filesToUuid(deletedFiles);
+    PubResolver resolver = analyzerService.getPubResolverFor(project);
+
+    var args = {'contextId': project.uuid};
+    args['added'] = _filesToUuid(resolver, addedFiles);
+    args['changed'] = _filesToUuid(resolver, changedFiles);
+    args['deleted'] = _filesToUuid(resolver, deletedFiles);
 
     return analyzerService._sendAction('processContextChanges', args)
         .then((ServiceActionEvent event) {
@@ -258,11 +263,11 @@ class ChromeServiceImpl extends Service {
         case "getPackageContents":
           String relativeToUUid = event.data['relativeTo'];
           String packageRef = event.data['packageRef'];
-          File file = services._workspace.restoreResource(relativeToUUid);
-          if (file == null) {
+          Resource resource = services._workspace.restoreResource(relativeToUUid);
+          if (resource == null) {
             throw "Could not restore file with uuid $relativeToUUid";
           }
-          PubResolver resolver = services._pubManager.getResolverFor(file.project);
+          PubResolver resolver = services._pubManager.getResolverFor(resource.project);
           File packageFile = resolver.resolveRefToFile(packageRef);
           if (packageFile == null) {
             throw "Could not resolve reference: ${packageRef}";
@@ -330,7 +335,6 @@ class _IsolateHandler {
 
     _receivePort.listen((arg) {
       if (arg is String) {
-        // TODO: convert this to a logger call?
         // String: handle as print
         print(arg);
       } else if (_sendPort == null) {
@@ -390,11 +394,16 @@ class _IsolateHandler {
     _sendPort.send(event.toMap());
   }
 
-  void dispose() {
-    // TODO: I'm not entirely sure how to terminate an isolate...
-
-  }
+  // TODO: I'm not entirely sure how to terminate an isolate...
+  void dispose() { }
 }
 
-// TODO: Handle converting files in the packages folder.
-List<String> _filesToUuid(List<File> files) => files.map((f) => f.uuid).toList();
+List<String> _filesToUuid(PubResolver pubResolver, List<File> files) {
+  return files.map((File file) {
+    if (isInPackagesFolder(file) && pubResolver != null) {
+      return pubResolver.getReferenceFor(file);
+    } else {
+      return file.uuid;
+    }
+  }).toList();
+}
