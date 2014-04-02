@@ -100,7 +100,6 @@ class ListView {
 
     int keyCode = event.which;
     switch (keyCode) {
-      //TODO: Open file on UP/DOWN?  On ENTER?  Alt+ENTER opens in new tab?
       case KeyCode.UP:
         if (_selectedRow > 0) {
           if (event.shiftKey) {
