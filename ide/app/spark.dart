@@ -308,7 +308,7 @@ abstract class Spark
           editorArea.tabs[0].select();
           return;
         }
-        _selectFile(resource);
+        _selectResource(resource);
       });
     });
   }
@@ -424,7 +424,7 @@ abstract class Spark
 
       if (entry != null) {
         workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
-          _selectFile(file);
+          _selectResource(file);
           _aceManager.focus();
           workspace.save();
         });
@@ -597,9 +597,14 @@ abstract class Spark
     }
   }
 
-  void _selectFile(ws.Resource file) {
-    editorArea.selectFile(file,
-        forceOpen: true, switchesTab: true, forceFocus: true);
+  void _selectResource(ws.Resource resource) {
+    if (resource.isFile) {
+      editorArea.selectFile(
+          resource, forceOpen: true, switchesTab: true, forceFocus: true);
+    } else {
+      _filesController.selectFile(resource);
+      _filesController.setFolderExpanded(resource);
+    }
   }
 
   //
@@ -1565,62 +1570,58 @@ class NewProjectAction extends SparkActionWithDialog {
 
   void _commit() {
     final name = _nameElement.value.trim();
-    if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name)
-          .then((LocationResult location) {
-        if (location == null) {
-          return new Future.value();
+
+    if (name.isEmpty) return;
+
+    spark.projectLocationManager.createNewFolder(name)
+        .then((LocationResult location) {
+      if (location == null) {
+        return new Future.value();
+      }
+
+      ws.WorkspaceRoot root;
+      final locationEntry = location.entry;
+
+      if (location.isSync) {
+        root = new ws.SyncFolderRoot(locationEntry);
+      } else {
+        root = new ws.FolderChildRoot(location.parent, locationEntry);
+      }
+
+      String type = getElement('input[name="type"]:checked').id;
+
+      return new Future.value().then((_) {
+        String templateId;
+        switch (type) {
+          case "empty-project":
+            break;
+          case "dart-web-app-radio":
+            templateId = "web-dart";
+            break;
+          case "js-chrome-app-radio":
+            templateId = "app-js";
         }
+        final ProjectBuilder projectBuilder = new ProjectBuilder(
+            locationEntry, templateId, name.toLowerCase(), name);
+        return projectBuilder.build();
 
-        ws.WorkspaceRoot root;
-        var locationEntry = location.entry;
+      }).then((_) {
+        return spark.workspace.link(root).then((ws.Project project) {
+          spark.showSuccessMessage('Created ${project.name}');
+          Timer.run(() {
+            spark._selectResource(ProjectBuilder.getMainResourceFor(project));
 
-        if (location.isSync) {
-          root = new ws.SyncFolderRoot(locationEntry);
-        } else {
-          root = new ws.FolderChildRoot(location.parent, locationEntry);
-        }
-
-        String type = getElement('input[name="type"]:checked').id;
-
-        ProjectBuilder projectBuilder;
-
-        return new Future.value().then((_) {
-          switch (type) {
-            case "empty-project":
-              break;
-            case "dart-web-app-radio":
-              projectBuilder = new ProjectBuilder(locationEntry,
-                  "web-dart", name.toLowerCase(), name);
-              return projectBuilder.build();
-            case "js-chrome-app-radio":
-              projectBuilder = new ProjectBuilder(locationEntry,
-                  "app-js", name.toLowerCase(), name);
-              return projectBuilder.build();
-          }
-        }).then((_) {
-          return spark.workspace.link(root).then((ws.Project project) {
-            spark.showSuccessMessage('Created ${project.name}');
-            Timer.run(() {
-              if (projectBuilder != null) {
-                spark._selectFile(projectBuilder.getMainFileFor(project));
-              } else {
-                spark._filesController.selectFile(project);
-                spark._filesController.setFolderExpanded(project);
-              }
-
-              // Run pub if the new project has a pubspec file.
-              if (project.getChild('pubspec.yaml') != null) {
-                spark.jobManager.schedule(new PubGetJob(spark, project));
-              }
-            });
-            spark.workspace.save();
+            // Run pub if the new project has a pubspec file.
+            if (project.getChild('pubspec.yaml') != null) {
+              spark.jobManager.schedule(new PubGetJob(spark, project));
+            }
           });
+          spark.workspace.save();
         });
-      }).catchError((e) {
-        spark.showErrorMessage('Error Creating Project', '${e}');
       });
-    }
+    }).catchError((e) {
+      spark.showErrorMessage('Error Creating Project', '${e}');
+    });
   }
 }
 
