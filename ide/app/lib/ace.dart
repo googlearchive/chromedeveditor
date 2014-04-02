@@ -276,7 +276,9 @@ class AceManager {
 
     html.Element minimap = _minimapElement;
 
-    for (workspace.Marker marker in markers) {
+    int numberMarkers = markers.length.clamp(0, 100);
+    for (int markerIndex = 0; markerIndex < numberMarkers; markerIndex++) {
+      workspace.Marker marker = markers[markerIndex];
       String annotationType = _convertMarkerSeverity(marker.severity);
 
       // Style the marker with the annotation type.
