@@ -275,10 +275,8 @@ class AceManager {
     Map<int, ace.Annotation> annotationByRow = new Map<int, ace.Annotation>();
 
     html.Element minimap = _minimapElement;
-    int a = 0;
 
     for (workspace.Marker marker in markers) {
-      /*%TRACE3*/ print("(4> 4/1/14): marker in markers ${a++}!"); // TRACE%
       String annotationType = _convertMarkerSeverity(marker.severity);
 
       // Style the marker with the annotation type.

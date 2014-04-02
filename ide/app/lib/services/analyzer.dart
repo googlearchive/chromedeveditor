@@ -150,7 +150,6 @@ class ChromeDartSdk extends DartSdk {
   }
 
   LibraryMap _parseLibrariesMap(String contents) {
-    /*%TRACE3*/ print("(4> 3/31/14): _parseLibrariesMap!"); // TRACE%
     SimpleAnalysisErrorListener errorListener =
         new SimpleAnalysisErrorListener();
     Source source = new StringSource(contents, 'lib/_internal/libraries.dart');
@@ -161,7 +160,6 @@ class ChromeDartSdk extends DartSdk {
     SdkLibrariesReader_LibraryBuilder libraryBuilder =
         new SdkLibrariesReader_LibraryBuilder(false);
 
-    /*%TRACE3*/ print("""(4> 3/31/14): errorListener.foundError: ${errorListener.foundError}"""); // TRACE%
     if (!errorListener.foundError) {
       unit.accept(libraryBuilder);
     }
@@ -531,7 +529,6 @@ class SimpleAnalysisErrorListener implements AnalysisErrorListener {
 
   void onError(AnalysisError error) {
     foundError = true;
-    /*%TRACE3*/ print("(4> 3/31/14): foundError = true!"); // TRACE%
   }
 }
 
