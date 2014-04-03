@@ -793,6 +793,8 @@ class Folder extends Container {
     }
   }
 
+  String toString() => '${this.runtimeType} ${name}/';
+
   Future _refresh() {
     return _dirEntry.createReader().readEntries().then((List<chrome.Entry> entries) {
       List<String> currentNames = _children.map((r) => r.name).toList();
