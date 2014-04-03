@@ -152,9 +152,18 @@ class AnalyzerService extends Service {
 
   Workspace get workspace => services._workspace;
 
+  // TODO(devoncarew): We'll want to move away from this method, in favor of the
+  // [ProjectAnalyzer] interface.
   Future<Map<File, List<AnalysisError>>> buildFiles(List<File> dartFiles) {
-    return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(null, dartFiles)})
-        .then((ServiceActionEvent event) {
+    PubResolver resolver = null;
+
+    if (dartFiles.isNotEmpty) {
+      resolver = services._pubManager.getResolverFor(dartFiles.first.project);
+    }
+
+    Map args = {"dartFileUuids": _filesToUuid(resolver, dartFiles)};
+
+    return _sendAction("buildFiles", args).then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
       Map<File, List<AnalysisError>> errorsPerFile = {};
 
