@@ -1596,9 +1596,15 @@ class NewProjectAction extends SparkActionWithDialog {
       return new Future.value().then((_) {
         List<ProjectTemplate> templates = [];
 
+        final globalVars = {
+            'projectName': name,
+            'sourceName': name.toLowerCase()
+        };
+
         final InputElement projectTypeElt =
             getElement('input[name="type"]:checked');
-        templates.add(new ProjectTemplate(projectTypeElt.value));
+        templates.add(
+            new ProjectTemplate(projectTypeElt.value, globalVars));
 
         List<String> jsDeps = [];
         for (final elt in _jsDepsElts) {
@@ -1609,13 +1615,14 @@ class NewProjectAction extends SparkActionWithDialog {
           }
         }
         if (jsDeps.isNotEmpty) {
-          templates.add(new ProjectTemplate(
-              "bower-deps", {"dependencies": jsDeps.join(',\n    ')}));
+          final localVars = {
+              'dependencies': jsDeps.join(',\n    ')
+          };
+          templates.add(
+              new ProjectTemplate("bower-deps", globalVars, localVars));
         }
 
-        final ProjectBuilder projectBuilder = new ProjectBuilder(
-            locationEntry, templates, name, name.toLowerCase());
-        return projectBuilder.build();
+        return new ProjectBuilder(locationEntry, templates).build();
 
       }).then((_) {
         return spark.workspace.link(root).then((ws.Project project) {

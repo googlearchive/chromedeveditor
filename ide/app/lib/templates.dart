@@ -36,14 +36,7 @@ class ProjectBuilder {
   DirectoryEntry _destRoot;
   List<ProjectTemplate> _templates = [];
 
-  ProjectBuilder(this._destRoot,
-                 this._templates, String projectName, String sourceName) {
-    List<TemplateVar> globalVars = [
-        new TemplateVar('projectName', projectName),
-        new TemplateVar('sourceName', sourceName)
-    ];
-    _templates.forEach((ProjectTemplate p) => p.setGlobalVars(globalVars));
-  }
+  ProjectBuilder(this._destRoot, this._templates);
 
   /**
    * Build the sample project and complete the Future when finished.
@@ -94,16 +87,15 @@ class ProjectTemplate {
   String _sourceUri;
   List<TemplateVar> _vars = [];
 
-  ProjectTemplate(this._id, [Map<String, String> localVars]) {
+  ProjectTemplate(this._id,
+                  [Map<String, String> globalVars,
+                   Map<String, String> localVars]) {
     _sourceUri = 'resources/templates/$_id';
-    if (localVars != null) {
-      localVars.forEach((name, value) =>
-          _vars.add(new TemplateVar(name, value)));
+    for (var vars in [globalVars, localVars]) {
+      if (vars != null) {
+        vars.forEach((name, value) => _vars.add(new TemplateVar(name, value)));
+      }
     }
-  }
-
-  void setGlobalVars(List<TemplateVar> globalVars) {
-    _vars.addAll(globalVars);
   }
 
   Future build(DirectoryEntry destRoot) {
@@ -122,8 +114,7 @@ class ProjectTemplate {
   }
 
   String _interpolateTemplateVars(String text) {
-    return _vars.fold(
-        text, (String t, TemplateVar v) => v.interpolate(t));
+    return _vars.fold(text, (String t, TemplateVar v) => v.interpolate(t));
   }
 
   Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
