@@ -1037,6 +1037,9 @@ abstract class SparkActionWithDialog extends SparkAction {
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
 
+  List<Element> getElements(String selectors) =>
+      _dialog.element.querySelectorAll(selectors);
+
   Element _triggerOnReturn(String selectors) {
     var element = _dialog.element.querySelector(selectors);
     element.onKeyDown.listen((event) {
@@ -1555,21 +1558,23 @@ class FocusMainMenuAction extends SparkAction {
 }
 
 class NewProjectAction extends SparkActionWithDialog {
-  InputElement _nameElement;
+  InputElement _nameElt;
+  List<InputElement> _jsDepsElts;
   ws.Folder folder;
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
-    _nameElement = _triggerOnReturn("#name");
+    _nameElt = _triggerOnReturn("#name");
+    _jsDepsElts = getElements('[name="jsDeps"]');
   }
 
   void _invoke([context]) {
-    _nameElement.value = '';
+    _nameElt.value = '';
     _show();
   }
 
   void _commit() {
-    final name = _nameElement.value.trim();
+    final name = _nameElt.value.trim();
 
     if (name.isEmpty) return;
 
@@ -1594,6 +1599,19 @@ class NewProjectAction extends SparkActionWithDialog {
         final InputElement projectTypeElt =
             getElement('input[name="type"]:checked');
         templates.add(new ProjectTemplate(projectTypeElt.value));
+
+        List<String> jsDeps = [];
+        for (final elt in _jsDepsElts) {
+          // NOTE: This test will get both the checkboxes and the textbox.
+          if ((elt.type == "checkbox" && elt.checked) ||
+              (elt.type == "text" && elt.value.isNotEmpty)) {
+            jsDeps.add(elt.value);
+          }
+        }
+        if (jsDeps.isNotEmpty) {
+          templates.add(new ProjectTemplate(
+              "bower-deps", {"dependencies": jsDeps.join(',\n    ')}));
+        }
 
         final ProjectBuilder projectBuilder = new ProjectBuilder(
             locationEntry, templates, name, name.toLowerCase());

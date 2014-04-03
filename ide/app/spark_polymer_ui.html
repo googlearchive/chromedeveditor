@@ -183,26 +183,59 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <div>
+          <div class="input-label">
             <label for="name">Project name</label>
             <input id="name" type="text" class="form-control" pattern="\S+"
                 spellcheck="false" focused>
           </div>
           <br/>
-          <form>
-            <div>
+          <div class="form-group">
+            <span class="option">
               <input id="emptyProject" type="radio" name="type" value="empty" checked>
               <label for="emptyProject" checked>Blank project</label>
-            </div>
-            <div>
+            </span>
+            <span class="option">
               <input id="dartWebApp" type="radio" name="type" value="web-dart">
               <label for="dartWebApp">Dart web app</label>
-            </div>
-            <div class="option">
+            </span>
+            <span class="option">
               <input id="jsChromeApp" type="radio" name="type" value="app-js">
               <label for="jsChromeApp">JavaScript Chrome app</label>
+            </span>
+          </div>
+          <hr/>
+          <div class="form-group">
+            <label>JavaScript (Bower) dependencies:</label>
+            <div>
+              <span class="option">
+                <input id="jsPolymerCore" type="checkbox" name="jsDeps"
+                    value='"polymer": "Polymer/polymer#master"'>
+                <label for="jsPolymerCore">Polymer core</label>
+              </span>
+              <span class="option">
+                <input id="jsPolymerElements" type="checkbox" name="jsDeps"
+                    value='"polymer-elements": "PolymerLabs/polymer-elements#master"'>
+                <label for="jsPolymerElements">Polymer elements</label>
+              </span>
+              <span class="option">
+                <input id="jsPolymerUIElements" type="checkbox" name="jsDeps"
+                    value='"polymer-ui-elements": "PolymerLabs/polymer-ui-elements#master"'>
+                <label for="jsPolymerUIElements">Polymer UI elements</label>
+              </span>
             </div>
-          </form>
+            <br/>
+            <div>
+              <label for="jsAdditionalDeps">
+                Additional dependencies (comma-separated):
+              </label>
+              <textarea id="jsAdditionalDeps" type="text" class="form-control"
+                  name="jsDeps"
+                  placeholder='e.g. "package": "GitHubProj/package#master"'
+                  pattern='("[\w-]+"\s*:\s*".+"\s*,?\s*)+'
+                  rows="2" spellcheck="false" autosave>
+              </textarea>
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">

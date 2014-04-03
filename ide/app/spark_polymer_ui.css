@@ -55,6 +55,10 @@
   text-align: center;
 }
 
+.dialog .option + .option {
+  margin-left: 10px;
+}
+
 #toolbar {
   position: absolute;
   left: 0;
