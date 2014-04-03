@@ -14,38 +14,43 @@ import 'utils.dart';
 import 'workspace.dart';
 
 /**
- * A class to create a sample project given a project name and the template id
- * to use.
+ * Specifies a variable-to-value substitution in a template file text.
+ */
+class TemplateVar {
+  final String name;
+  final String value;
+
+  TemplateVar(this.name, this.value);
+
+  String interpolate(String text) => text.replaceAll('``$name``', value);
+}
+
+/**
+ * A class to create a sample project given a project name and a list of
+ * template IDs to use as building blocks.
+ *
+ * Directories corresponding to the template IDs will be copied on top of
+ * one another in random order; conflicts will not be detected nor resolved.
  */
 class ProjectBuilder {
   DirectoryEntry _destRoot;
-  String _sourceName;
-  String _projectName;
-  String _sourceUri;
+  List<ProjectTemplate> _templates = [];
 
-  ProjectBuilder(this._destRoot, this._sourceName,
-      this._projectName, [String templateId]) {
-    if (templateId != null) {
-      _sourceUri = 'resources/templates/$templateId';
-    }
+  ProjectBuilder(this._destRoot,
+                 this._templates, String projectName, String sourceName) {
+    List<TemplateVar> globalVars = [
+        new TemplateVar('projectName', projectName),
+        new TemplateVar('sourceName', sourceName)
+    ];
+    _templates.forEach((ProjectTemplate p) => p.setGlobalVars(globalVars));
   }
 
   /**
    * Build the sample project and complete the Future when finished.
    */
   Future build() {
-    if (_sourceUri == null) return new Future.value();
-
-    DirectoryEntry sourceRoot;
-
-    return getPackageDirectoryEntry().then((root) {
-      return root.getDirectory(_sourceUri);
-    }).then((dir) {
-      sourceRoot = dir;
-      return getAppContents("$_sourceUri/setup.json");
-    }).then((String contents) {
-      Map m = JSON.decode(contents);
-      return _traverseElement(_destRoot, sourceRoot, _sourceUri, m);
+    return Future.forEach(_templates, (ProjectTemplate template) {
+      return template.build(_destRoot);
     });
   }
 
@@ -54,14 +59,14 @@ class ProjectBuilder {
    * file we should show to the user after a project is created.
    */
   static Resource getMainResourceFor(Project project) {
-    if (project.getChild('manifest.json') != null) {
-      return project.getChild('manifest.json');
-    }
+    Resource r;
 
-    if (project.getChild('web') != null) {
-      Folder web = project.getChild('web');
+    r = project.getChild('manifest.json');
+    if (r != null) return r;
 
-      Resource r = web.getChildren().firstWhere(
+    final Folder web = project.getChild('web');
+    if (web != null) {
+      r = web.getChildren().firstWhere(
           (r) => r.name.endsWith('.dart'), orElse: null);
       if (r != null) return r;
 
@@ -71,6 +76,54 @@ class ProjectBuilder {
     }
 
     return project;
+  }
+}
+
+/**
+ * A project template that knows how to instantiate itself within a given
+ * destination directory.
+ *
+ * Instantiation consists of copying over files and directories listed in
+ * the template's setup.json, with renaming the targets as specified.
+ *
+ * In addition, each source file's contents is pre-interpolated using the
+ * provided global and local template variables.
+ */
+class ProjectTemplate {
+  String _id;
+  String _sourceUri;
+  List<TemplateVar> _vars = [];
+
+  ProjectTemplate(this._id, [Map<String, String> localVars]) {
+    _sourceUri = 'resources/templates/$_id';
+    if (localVars != null) {
+      localVars.forEach((name, value) =>
+          _vars.add(new TemplateVar(name, value)));
+    }
+  }
+
+  void setGlobalVars(List<TemplateVar> globalVars) {
+    _vars.addAll(globalVars);
+  }
+
+  Future build(DirectoryEntry destRoot) {
+    DirectoryEntry sourceRoot;
+
+    return getPackageDirectoryEntry().then((root) {
+      return root.getDirectory(_sourceUri);
+    }).then((dir) {
+      sourceRoot = dir;
+      return getAppContents("$_sourceUri/setup.json");
+    }).then((String contents) {
+      contents = _interpolateTemplateVars(contents);
+      final Map m = JSON.decode(contents);
+      return _traverseElement(destRoot, sourceRoot, _sourceUri, m);
+    });
+  }
+
+  String _interpolateTemplateVars(String text) {
+    return _vars.fold(
+        text, (String t, TemplateVar v) => v.interpolate(t));
   }
 
   Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
@@ -104,12 +157,7 @@ class ProjectBuilder {
 
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];
-      String dest = fileElement['dest'];
-
-      dest = dest
-          .replaceAll("\$sourceName", _sourceName)
-          .replaceAll("\$projectName", _projectName);
-
+      String dest = _interpolateTemplateVars(fileElement['dest']);
       chrome.ChromeFileEntry entry;
 
       return destRoot.createFile(dest).then((chrome.ChromeFileEntry _entry) {
@@ -120,10 +168,7 @@ class ProjectBuilder {
           });
         } else {
           return getAppContents("$sourceUri/$source").then((String data) {
-            data = data
-                .replaceAll("_Project_name_", _projectName)
-                .replaceAll("_source_name_", _sourceName);
-            return entry.writeText(data);
+            return entry.writeText(_interpolateTemplateVars(data));
           });
         }
       });
