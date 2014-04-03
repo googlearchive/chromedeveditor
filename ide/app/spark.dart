@@ -1588,21 +1588,23 @@ class NewProjectAction extends SparkActionWithDialog {
         root = new ws.FolderChildRoot(location.parent, locationEntry);
       }
 
-      String type = getElement('input[name="type"]:checked').id;
+      final String type = getElement('input[name="type"]:checked').id;
 
       return new Future.value().then((_) {
         String templateId;
         switch (type) {
           case "empty-project":
+            templateId = "empty";
             break;
           case "dart-web-app-radio":
             templateId = "web-dart";
             break;
           case "js-chrome-app-radio":
             templateId = "app-js";
+            break;
         }
         final ProjectBuilder projectBuilder = new ProjectBuilder(
-            locationEntry, name.toLowerCase(), name, templateId);
+            locationEntry, templateId, name, name.toLowerCase());
         return projectBuilder.build();
 
       }).then((_) {

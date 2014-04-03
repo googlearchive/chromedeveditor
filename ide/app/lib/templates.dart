@@ -13,20 +13,33 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'utils.dart';
 import 'workspace.dart';
 
+class TemplateVar {
+  final String name;
+  final String value;
+
+  TemplateVar(this.name, this.value);
+
+  String interpolate(String text) => text.replaceAll('``$name``', value);
+}
+
 /**
  * A class to create a sample project given a project name and the template id
  * to use.
  */
 class ProjectBuilder {
   DirectoryEntry _destRoot;
-  String _sourceName;
-  String _projectName;
   String _sourceUri;
+  List<TemplateVar> _templateVars = [];
 
-  ProjectBuilder(this._destRoot, this._sourceName,
-      this._projectName, [String templateId]) {
-    if (templateId != null) {
-      _sourceUri = 'resources/templates/$templateId';
+  ProjectBuilder(this._destRoot,
+                 String templateId, String projectName, String sourceName,
+                 [Map<String, String> additionalVars]) {
+    _sourceUri = 'resources/templates/$templateId';
+    _templateVars.add(new TemplateVar('projectName', projectName));
+    _templateVars.add(new TemplateVar('sourceName', sourceName));
+    if (additionalVars != null) {
+      additionalVars.forEach((name, value) =>
+          _templateVars.add(new TemplateVar(name, value)));
     }
   }
 
@@ -44,7 +57,7 @@ class ProjectBuilder {
       sourceRoot = dir;
       return getAppContents("$_sourceUri/setup.json");
     }).then((String contents) {
-      Map m = JSON.decode(contents);
+      Map m = JSON.decode(_interpolateTemplateVars(contents));
       return _traverseElement(_destRoot, sourceRoot, _sourceUri, m);
     });
   }
@@ -71,6 +84,11 @@ class ProjectBuilder {
     }
 
     return project;
+  }
+
+  String _interpolateTemplateVars(String text) {
+    return _templateVars.fold(
+        text, (String t, TemplateVar v) => v.interpolate(t));
   }
 
   Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
@@ -104,11 +122,9 @@ class ProjectBuilder {
 
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];
-      String dest = fileElement['dest'];
+      String dest = _interpolateTemplateVars(fileElement['dest']);
 
-      dest = dest
-          .replaceAll("\$sourceName", _sourceName)
-          .replaceAll("\$projectName", _projectName);
+      dest = _interpolateTemplateVars(dest);
 
       chrome.ChromeFileEntry entry;
 
@@ -120,10 +136,7 @@ class ProjectBuilder {
           });
         } else {
           return getAppContents("$sourceUri/$source").then((String data) {
-            data = data
-                .replaceAll("_Project_name_", _projectName)
-                .replaceAll("_source_name_", _sourceName);
-            return entry.writeText(data);
+            return entry.writeText(_interpolateTemplateVars(data));
           });
         }
       });
