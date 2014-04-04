@@ -1,1 +1,3 @@
-modp_b64.cc / modp_b64.h is the same base 64 encoder as the one used in Chrome.
+- modp_b64.cc / modp_b64.h is the same base 64 encoder as the one used in Chrome.
+- OpenSSL is built using NaCL ports (https://code.google.com/p/naclports/). The PNaCL version has been imported in the source.
+- use make.sh to build PNaCL Android RSA module.
