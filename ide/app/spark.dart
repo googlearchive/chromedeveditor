@@ -31,9 +31,9 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/preferences.dart' as preferences;
-import 'lib/project_builder.dart';
 import 'lib/services.dart';
 import 'lib/scm.dart';
+import 'lib/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
@@ -308,7 +308,7 @@ abstract class Spark
           editorArea.tabs[0].select();
           return;
         }
-        _selectFile(resource);
+        _selectResource(resource);
       });
     });
   }
@@ -365,8 +365,8 @@ abstract class Spark
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
-    actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new PubGetAction(this));
+    actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
@@ -424,7 +424,7 @@ abstract class Spark
 
       if (entry != null) {
         workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
-          _selectFile(file);
+          _selectResource(file);
           _aceManager.focus();
           workspace.save();
         });
@@ -597,9 +597,14 @@ abstract class Spark
     }
   }
 
-  void _selectFile(ws.Resource file) {
-    editorArea.selectFile(file,
-        forceOpen: true, switchesTab: true, forceFocus: true);
+  void _selectResource(ws.Resource resource) {
+    if (resource.isFile) {
+      editorArea.selectFile(
+          resource, forceOpen: true, switchesTab: true, forceFocus: true);
+    } else {
+      _filesController.selectFile(resource);
+      _filesController.setFolderExpanded(resource);
+    }
   }
 
   //
@@ -1565,51 +1570,56 @@ class NewProjectAction extends SparkActionWithDialog {
 
   void _commit() {
     final name = _nameElement.value.trim();
-    if (name.isNotEmpty) {
-      spark.projectLocationManager.createNewFolder(name)
-          .then((LocationResult location) {
-        if (location == null) {
-          return new Future.value();
-        }
 
-        ws.WorkspaceRoot root;
-        var locationEntry = location.entry;
+    if (name.isEmpty) return;
 
-        if (location.isSync) {
-          root = new ws.SyncFolderRoot(locationEntry);
-        } else {
-          root = new ws.FolderChildRoot(location.parent, locationEntry);
-        }
+    spark.projectLocationManager.createNewFolder(name)
+        .then((LocationResult location) {
+      if (location == null) {
+        return new Future.value();
+      }
 
-        String type = getElement('input[name="type"]:checked').id;
+      ws.WorkspaceRoot root;
+      final locationEntry = location.entry;
 
-        return new Future.value().then((_) {
-          switch (type) {
-            case "empty-project":
-              break;
-            case "dart-web-app-radio":
-              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
-                  "web-dart", name.toLowerCase(), name);
-              return projectBuilder.build();
-            case "js-chrome-app-radio":
-              ProjectBuilder projectBuilder = new ProjectBuilder(locationEntry,
-                  "app-js", name.toLowerCase(), name);
-              return projectBuilder.build();
-          }
-        }).then((_) {
-          return spark.workspace.link(root).then((ws.Project project) {
-            spark.showSuccessMessage('Created ${project.name}');
-            Timer.run(() {
-              spark._filesController.selectFile(project);
-              spark._filesController.setFolderExpanded(project);
-            });
-            spark.workspace.save();
+      if (location.isSync) {
+        root = new ws.SyncFolderRoot(locationEntry);
+      } else {
+        root = new ws.FolderChildRoot(location.parent, locationEntry);
+      }
+
+      return new Future.value().then((_) {
+        List<ProjectTemplate> templates = [];
+
+        final globalVars = {
+            'projectName': name,
+            'sourceName': name.toLowerCase()
+        };
+
+        final InputElement projectTypeElt =
+            getElement('input[name="type"]:checked');
+        templates.add(
+            new ProjectTemplate(projectTypeElt.value, globalVars));
+
+        return new ProjectBuilder(locationEntry, templates).build();
+
+      }).then((_) {
+        return spark.workspace.link(root).then((ws.Project project) {
+          spark.showSuccessMessage('Created ${project.name}');
+          Timer.run(() {
+            spark._selectResource(ProjectBuilder.getMainResourceFor(project));
+
+            // Run pub if the new project has a pubspec file.
+            if (project.getChild('pubspec.yaml') != null) {
+              spark.jobManager.schedule(new PubGetJob(spark, project));
+            }
           });
+          spark.workspace.save();
         });
-      }).catchError((e) {
-        spark.showErrorMessage('Error Creating Project', '${e}');
       });
-    }
+    }).catchError((e) {
+      spark.showErrorMessage('Error Creating Project', '${e}');
+    });
   }
 }
 

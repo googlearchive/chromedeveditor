@@ -21,13 +21,8 @@
     }
   },
   "permissions": [
-    "https://www.google-analytics.com/",
-    "https://www.googleapis.com/upload/chromewebstore/v1.1/items",
-    "https://github.com/*",
-    "https://source.developers.google.com/*",
-    "https://pub.dartlang.org/*",
-    "https://commondatastorage.googleapis.com/*",
-    "http://*/push",
+    "http://*/*",
+    "https://*/*",
     "identity",
     "clipboardRead",
     "clipboardWrite",

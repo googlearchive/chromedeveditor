@@ -18,12 +18,17 @@ import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
-const PUBSPEC_FILE_NAME = 'pubspec.yaml';
-const PACKAGES_DIR_NAME = 'packages';
 const LIB_DIR_NAME = 'lib';
 const PACKAGE_REF_PREFIX = 'package:';
+const PACKAGES_DIR_NAME = 'packages';
+const PUBSPEC_FILE_NAME = 'pubspec.yaml';
 
 bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
+
+bool isInPackagesFolder(Resource resource) {
+  String path = resource.path;
+  return path.contains('/packages/') || path.endsWith('/packages');
+}
 
 Logger _logger = new Logger('spark.pub');
 

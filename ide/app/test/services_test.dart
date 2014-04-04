@@ -172,15 +172,7 @@ defineTests() {
       });
     });
 
-    test('analyze file with package: references', () {
-      DirectoryEntry dir = createSampleDirectory3('foo3');
-      return linkSampleProject(dir, workspace).then((Project project) {
-        File file = project.getChildPath('web/sample.dart');
-        return analyzer.buildFiles([file]).then((Map<File, List<AnalysisError>> result) {
-          expect(result.length, 1);
-          expect(result[file], isEmpty);
-        });
-      });
-    });
+    // TODO: Add integration level tests of ProjectAnalyzer.processChanges().
+
   });
 }

@@ -145,12 +145,25 @@ class CompilerService extends Service {
 }
 
 class AnalyzerService extends Service {
+  Map<Project, ProjectAnalyzer> _analyzers = {};
+
   AnalyzerService(Services services, _IsolateHandler handler) :
     super(services, 'analyzer', handler);
 
-  Future<Map<File, List<AnalysisError>>> buildFiles(Iterable<File> dartFiles) {
-    return _sendAction("buildFiles", {"dartFileUuids": _filesToUuid(dartFiles)})
-        .then((ServiceActionEvent event) {
+  Workspace get workspace => services._workspace;
+
+  // TODO(devoncarew): We'll want to move away from this method, in favor of the
+  // [ProjectAnalyzer] interface.
+  Future<Map<File, List<AnalysisError>>> buildFiles(List<File> dartFiles) {
+    PubResolver resolver = null;
+
+    if (dartFiles.isNotEmpty) {
+      resolver = services._pubManager.getResolverFor(dartFiles.first.project);
+    }
+
+    Map args = {"dartFileUuids": _filesToUuid(resolver, dartFiles)};
+
+    return _sendAction("buildFiles", args).then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
       Map<File, List<AnalysisError>> errorsPerFile = {};
 
@@ -166,14 +179,64 @@ class AnalyzerService extends Service {
 
   File _uuidToFile(String uuid) => services._workspace.restoreResource(uuid);
 
-  List<String> _filesToUuid(Iterable<File> files) =>
-      files.map((f) => f.uuid).toList();
-
   Future<Outline> getOutlineFor(String codeString) {
-    return _sendAction("getOutlineFor", {"string": codeString})
-        .then((ServiceActionEvent result) {
+    var args = {"string": codeString};
+    return _sendAction("getOutlineFor", args).then((ServiceActionEvent result) {
       return new Outline.fromMap(result.data);
     });
+  }
+
+  ProjectAnalyzer createProjectAnalyzer(Project project) {
+    if (_analyzers[project] == null) {
+      _analyzers[project] = new ProjectAnalyzer._(this, project);
+      _sendAction('createContext', {'contextId': project.uuid});
+    }
+
+    return _analyzers[project];
+  }
+
+  ProjectAnalyzer getProjectAnalyzer(Project project) => _analyzers[project];
+
+  PubResolver getPubResolverFor(Project project) =>
+      services._pubManager.getResolverFor(project);
+
+  Future _disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
+    Project project = projectAnalyzer.project;
+    _analyzers.remove(project);
+    return _sendAction('disposeContext', {'contextId': project.uuid});
+  }
+}
+
+/**
+ * Used to associate a [Project] and an analysis context.
+ */
+class ProjectAnalyzer {
+  final AnalyzerService analyzerService;
+  final Project project;
+
+  ProjectAnalyzer._(this.analyzerService, this.project);
+
+  Future<AnalysisResult> processChanges(
+      List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
+    PubResolver resolver = analyzerService.getPubResolverFor(project);
+
+    var args = {'contextId': project.uuid};
+    args['added'] = _filesToUuid(resolver, addedFiles);
+    args['changed'] = _filesToUuid(resolver, changedFiles);
+    args['deleted'] = _filesToUuid(resolver, deletedFiles);
+
+    return analyzerService._sendAction('processContextChanges', args)
+        .then((ServiceActionEvent event) {
+      if (event.error) {
+        throw event.getErrorMessage();
+      } else {
+        return new AnalysisResult.fromMap(analyzerService.workspace, event.data);
+      }
+    });
+  }
+
+  Future dispose() {
+    return analyzerService._disposeProjectAnalyzer(this);
   }
 }
 
@@ -209,11 +272,11 @@ class ChromeServiceImpl extends Service {
         case "getPackageContents":
           String relativeToUUid = event.data['relativeTo'];
           String packageRef = event.data['packageRef'];
-          File file = services._workspace.restoreResource(relativeToUUid);
-          if (file == null) {
+          Resource resource = services._workspace.restoreResource(relativeToUUid);
+          if (resource == null) {
             throw "Could not restore file with uuid $relativeToUUid";
           }
-          PubResolver resolver = services._pubManager.getResolverFor(file.project);
+          PubResolver resolver = services._pubManager.getResolverFor(resource.project);
           File packageFile = resolver.resolveRefToFile(packageRef);
           if (packageFile == null) {
             throw "Could not resolve reference: ${packageRef}";
@@ -281,7 +344,6 @@ class _IsolateHandler {
 
     _receivePort.listen((arg) {
       if (arg is String) {
-        // TODO: convert this to a logger call?
         // String: handle as print
         print(arg);
       } else if (_sendPort == null) {
@@ -341,8 +403,16 @@ class _IsolateHandler {
     _sendPort.send(event.toMap());
   }
 
-  void dispose() {
-    // TODO: I'm not entirely sure how to terminate an isolate...
-    //_isolate.
-  }
+  // TODO: I'm not entirely sure how to terminate an isolate...
+  void dispose() { }
+}
+
+List<String> _filesToUuid(PubResolver pubResolver, List<File> files) {
+  return files.map((File file) {
+    if (isInPackagesFolder(file) && pubResolver != null) {
+      return pubResolver.getReferenceFor(file);
+    } else {
+      return file.uuid;
+    }
+  }).toList();
 }

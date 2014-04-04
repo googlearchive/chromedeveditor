@@ -4,6 +4,10 @@
 
 library spark.services_common;
 
+import 'dart:async';
+
+import '../workspace.dart';
+
 abstract class Serializable {
   // TODO(ericarnold): Implement as, and refactor any classes containing toMap
   // to implement Serializable:
@@ -15,10 +19,9 @@ abstract class Serializable {
  * Defines a received action event.
  */
 class ServiceActionEvent {
-  // TODO(ericarnold): Extend Event?
-  // TODO(ericarnold): This should be shared between ServiceIsolate and Service.
-  String serviceId;
-  String actionId;
+  final String serviceId;
+  final String actionId;
+
   bool response = false;
   bool error = false;
   Map data;
@@ -28,17 +31,16 @@ class ServiceActionEvent {
 
   ServiceActionEvent(this.serviceId, this.actionId, this.data);
 
-  ServiceActionEvent.fromMap(Map map) {
-    serviceId = map["serviceId"];
-    actionId = map["actionId"];
+  ServiceActionEvent.fromMap(Map map) :
+      serviceId = map["serviceId"], actionId = map["actionId"] {
     _callId = map["callId"];
     data = map["data"];
     response = map["response"];
     error = map["error"];
   }
 
-  ServiceActionEvent.asResponse(this.serviceId, this.actionId, this._callId,
-      this.data) : response = true;
+  ServiceActionEvent.asResponse(
+      this.serviceId, this.actionId, this._callId, this.data) : response = true;
 
   Map toMap() {
     return {
@@ -52,13 +54,15 @@ class ServiceActionEvent {
     };
   }
 
-  ServiceActionEvent createReponse(Map data) {
+  ServiceActionEvent createReponse([Map data = const {}]) {
     return new ServiceActionEvent.asResponse(serviceId, actionId, callId, data);
   }
 
   ServiceActionEvent createErrorReponse(String errorMessage) {
     return createReponse({'message': errorMessage})..error = true;
   }
+
+  String getErrorMessage() => data['message'];
 
   void makeRespondable(String callId) {
     if (this._callId == null) {
@@ -92,8 +96,9 @@ class AnalysisError {
   String message;
   int offset;
   int lineNumber;
-  int errorSeverity;
   int length;
+  // see [ErrorSeverity]
+  int errorSeverity;
 
   AnalysisError();
 
@@ -114,6 +119,33 @@ class AnalysisError {
         "length": length
     };
   }
+
+  String toString() => '[${errorSeverity}] ${message}, line ${lineNumber}';
+}
+
+class AnalysisResult {
+  Map<File, List<AnalysisError>> _results = {};
+
+  AnalysisResult();
+
+  AnalysisResult.fromMap(Workspace workspace, Map m) {
+    Map<String, List<Map>> uuidToErrors = m;
+
+    for (String uuid in uuidToErrors.keys) {
+      List<AnalysisError> errors = uuidToErrors[uuid].map(
+          (Map errorData) => new AnalysisError.fromMap(errorData)).toList();
+      _results[workspace.restoreResource(uuid)] = errors;
+    }
+  }
+
+  List<File> getFiles() => _results.keys.toList();
+
+  List<AnalysisError> getErrorsFor(File file) => _results[file];
+}
+
+abstract class ContentsProvider {
+  Future<String> getFileContents(String uuid);
+  Future<String> getPackageContents(String relativeUuid, String packageRef);
 }
 
 class ErrorSeverity {
