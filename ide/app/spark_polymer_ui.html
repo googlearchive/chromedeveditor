@@ -186,7 +186,7 @@
           <div class="input-label">
             <label for="name">Project name</label>
             <input id="name" type="text" class="form-control" pattern="\S+"
-                spellcheck="false" focused>
+                spellcheck="false" autosave focused>
           </div>
           <br/>
           <div class="form-group">
@@ -231,9 +231,7 @@
               <textarea id="jsAdditionalDeps" type="text" class="form-control"
                   name="jsDeps"
                   placeholder='e.g. "package": "GitHubProj/package#master"'
-                  pattern='("[\w-]+"\s*:\s*".+"\s*,?\s*)+'
-                  rows="2" spellcheck="false" autosave>
-              </textarea>
+                  rows="2" spellcheck="false" autosave></textarea>
             </div>
           </div>
         </div>
