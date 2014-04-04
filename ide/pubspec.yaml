@@ -18,6 +18,7 @@ dependencies:
   crypto: any
   dquery: '>=0.5.0 <0.6.0'
   intl: any
+  json: any
   logging: any
   mime: any
   path: any

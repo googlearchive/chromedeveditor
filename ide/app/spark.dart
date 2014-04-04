@@ -27,6 +27,7 @@ import 'lib/dart/pub.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
+import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
@@ -158,8 +159,9 @@ abstract class Spark
       //workspace.refresh();
     });
 
-    // Add a Dart builder.
+    // Add various builders.
     addBuilder(new DartBuilder(this.services));
+    addBuilder(new JsonBuilder());
   }
 
   initServices() {
