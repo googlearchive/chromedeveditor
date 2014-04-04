@@ -301,11 +301,13 @@ void clean(GrinderContext context) {
 }
 
 void buildAndroidRSA(GrinderContext context) {
-  print('building PNaCL Android RSA module');
+  context.log('building PNaCL Android RSA module');
   final Directory androidRSADir = new Directory('nacl_android_rsa');
   _runCommandSync(context, './make.sh', cwd: androidRSADir.path);
-  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.nmf'), getDir('app/lib/mobile'), context);
-  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.pexe'), getDir('app/lib/mobile'), context);
+  Directory appMobileDir = getDir('app/lib/mobile');
+  appMobileDir.createSync();
+  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.nmf'), appMobileDir, context);
+  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.pexe'), appMobileDir, context);
 }
 
 void _zip(GrinderContext context, String dirToZip, String destFile) {
