@@ -7,7 +7,7 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'dart/pub.dart';
+import 'package_mgmt/pub.dart';
 import 'services/compiler.dart';
 import 'services/services_common.dart';
 import 'utils.dart';

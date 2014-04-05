@@ -7,7 +7,7 @@ library spark.pub_test;
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
-import '../lib/dart/pub.dart';
+import '../lib/package_mgmt/pub.dart';
 import '../lib/workspace.dart';
 
 defineTests() {
@@ -21,7 +21,7 @@ defineTests() {
       return workspace.link(createWsRoot(dir)).then((Project _project) {
         project = _project;
         pubManager = new PubManager(workspace);
-        return project.createNewFile(PUBSPEC_FILE_NAME);
+        return project.createNewFile(PACKAGE_SPEC_FILE_NAME);
       }).then((File file) {
         return file.setContents('name: sample\nversion: 0.1.0\n');
       }).then((_) {
@@ -37,9 +37,9 @@ defineTests() {
     });
 
     test('PubManager isPubProject', () {
-      expect(pubManager.isPubProject(project), true);
-      return project.getChild(PUBSPEC_FILE_NAME).delete().then((_) {
-        expect(pubManager.isPubProject(project), false);
+      expect(PubManager.isPubProject(project), true);
+      return project.getChild(PACKAGE_SPEC_FILE_NAME).delete().then((_) {
+        expect(PubManager.isPubProject(project), false);
       });
     });
 
