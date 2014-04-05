@@ -31,6 +31,7 @@ import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/package_mgmt/pub.dart';
+import 'lib/package_mgmt/bower.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/services.dart';
 import 'lib/scm.dart';
@@ -106,6 +107,7 @@ abstract class Spark
   EditorArea _editorArea;
   LaunchManager _launchManager;
   PubManager _pubManager;
+  BowerManager _bowerManager;
 
   final EventBus eventBus = new EventBus();
 
@@ -129,7 +131,7 @@ abstract class Spark
     addParticipant(new _SparkSetupParticipant(this));
 
     initWorkspace();
-    initPubManager();
+    initPackageManagers();
     initServices();
     initScmManager();
 
@@ -180,6 +182,7 @@ abstract class Spark
   EditorArea get editorArea => _editorArea;
   LaunchManager get launchManager => _launchManager;
   PubManager get pubManager => _pubManager;
+  BowerManager get bowerManager => _bowerManager;
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
   preferences.PreferenceStore get syncPrefs => preferences.syncStore;
@@ -268,8 +271,9 @@ abstract class Spark
     _launchManager = new LaunchManager(_workspace, services, pubManager);
   }
 
-  void initPubManager() {
+  void initPackageManagers() {
     _pubManager = new PubManager(workspace);
+    _bowerManager = new BowerManager();
   }
 
   void createEditorComponents() {
@@ -1626,6 +1630,11 @@ class NewProjectAction extends SparkActionWithDialog {
             if (PubManager.isPubProject(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
+
+            // Run Bower if the new project has a bower.json file.
+            if (BowerManager.isBowerProject(project)) {
+              spark.jobManager.schedule(new BowerGetJob(spark, project));
+            }
           });
           spark.workspace.save();
         });
@@ -2389,21 +2398,35 @@ class _GitPushJob extends Job {
   }
 }
 
-class PubGetJob extends Job {
+abstract class PackagesGetJob extends Job {
   final Spark spark;
   final ws.Project project;
 
-  PubGetJob(this.spark, this.project) : super('Getting packages…');
+  PackagesGetJob(this.spark, this.project) : super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return spark.pubManager.runPubGet(project).then((_) {
+    return _run(project).then((_) {
       spark.showSuccessMessage('Pub get run successful');
     }).catchError((e) {
       spark.showErrorMessage('Error while running pub get', e.toString());
     });
   }
+
+  Future _run(Project);
+}
+
+class PubGetJob extends PackagesGetJob {
+  PubGetJob(Spark spark, ws.Project project) : super(spark, project);
+
+  Future _run(Project) => spark.pubManager.runPubGet(project);
+}
+
+class BowerGetJob extends PackagesGetJob {
+  BowerGetJob(Spark spark, ws.Project project) : super(spark, project);
+
+  Future _run(Project) => spark.bowerManager.runBowerInstall(project);
 }
 
 class CompileDartJob extends Job {
