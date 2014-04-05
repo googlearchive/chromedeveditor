@@ -1602,7 +1602,7 @@ class NewProjectAction extends SparkActionWithDialog {
         for (final elt in _jsDepsElts) {
           // NOTE: This test will get both the checkboxes and the textbox.
           if ((elt.type == "checkbox" && elt.checked) ||
-              (elt.type == "text" && elt.value.isNotEmpty)) {
+              (elt.type == "textarea" && elt.value.isNotEmpty)) {
             jsDeps.add(elt.value);
           }
         }
