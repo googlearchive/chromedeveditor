@@ -149,17 +149,17 @@ class ProjectTemplate {
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];
       String dest = _interpolateTemplateVars(fileElement['dest']);
-      chrome.ChromeFileEntry entry;
+      chrome.ChromeFileEntry fileEntry;
 
-      return destRoot.createFile(dest).then((chrome.ChromeFileEntry _entry) {
-        entry = _entry;
+      return destRoot.createFile(dest).then((chrome.ChromeFileEntry entry) {
+        fileEntry = entry;
         if (dest.endsWith(".png")) {
           return getAppContentsBinary("$sourceUri/$source").then((List<int> data) {
-            return entry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
+            return fileEntry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
           });
         } else {
           return getAppContents("$sourceUri/$source").then((String data) {
-            return entry.writeText(_interpolateTemplateVars(data));
+            return fileEntry.writeText(_interpolateTemplateVars(data));
           });
         }
       });
