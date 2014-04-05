@@ -1379,17 +1379,7 @@ class PubGetAction extends SparkAction implements ContextAction {
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
-  bool _appliesTo(ws.Resource resource) {
-    if (resource is ws.File && resource.name == 'pubspec.yaml') {
-      return true;
-    }
-
-    if (resource is ws.Project && resource.getChild('pubspec.yaml') != null) {
-      return true;
-    }
-
-    return false;
-  }
+  bool _appliesTo(ws.Resource resource) => PubManager.isPubResource(resource);
 }
 
 /**
@@ -1633,7 +1623,7 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._selectResource(ProjectBuilder.getMainResourceFor(project));
 
             // Run pub if the new project has a pubspec file.
-            if (project.getChild('pubspec.yaml') != null) {
+            if (PubManager.isPubProject(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
           });
