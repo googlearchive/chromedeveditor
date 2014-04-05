@@ -186,3 +186,11 @@
 #webStorePublishDialog label {
   margin-left: 5px;
 }
+
+#newProjectDialog table {
+  width: 100%;
+}
+
+#newProjectDialog table td {
+  vertical-align: top;
+}

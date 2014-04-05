@@ -1,0 +1,12 @@
+{
+  "directories": {
+    "bower_packages": {
+      "files": [
+        { "source": "readme.txt_", "dest": "readme.txt" }
+      ]
+    }
+  },
+  "files": [
+    { "source": "bower.json_", "dest": "bower.json" }
+  ]
+}

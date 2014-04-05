@@ -183,13 +183,13 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <div>
+          <div class="input-label">
             <label for="name">Project name</label>
-            <input id="name" type="text" class="form-control" pattern="\S+"
-                spellcheck="false" focused>
+            <input id="name" type="text" class="form-control"
+                pattern="\S+" spellcheck="false" autosave focused>
           </div>
           <br/>
-          <form>
+          <div class="form-group">
             <div>
               <input id="emptyProject" type="radio" name="type" value="empty" checked>
               <label for="emptyProject" checked>Blank project</label>
@@ -198,11 +198,49 @@
               <input id="dartWebApp" type="radio" name="type" value="web-dart">
               <label for="dartWebApp">Dart web app</label>
             </div>
-            <div class="option">
+            <div>
               <input id="jsChromeApp" type="radio" name="type" value="app-js">
               <label for="jsChromeApp">JavaScript Chrome app</label>
             </div>
-          </form>
+          </div>
+          <hr/>
+          <h5>
+            Bower/GitHub dependencies
+          </h5>
+          <br/>
+          <table id="jsOptions">
+            <tr>
+              <td>
+                <label>
+                  Polymer:
+                </label>
+                <div>
+                  <input id="jsPolymerCore" type="checkbox" name="jsDeps"
+                      value='"polymer": "Polymer/polymer#master"'>
+                  <label for="jsPolymerCore">Core</label>
+                </div>
+                <div>
+                  <input id="jsPolymerElements" type="checkbox" name="jsDeps"
+                      value='"polymer-elements": "PolymerLabs/polymer-elements#master"'>
+                  <label for="jsPolymerElements">UI-less elements</label>
+                </div>
+                <div>
+                  <input id="jsPolymerUIElements" type="checkbox" name="jsDeps"
+                      value='"polymer-ui-elements": "PolymerLabs/polymer-ui-elements#master"'>
+                  <label for="jsPolymerUIElements">UI elements</label>
+                </div>
+              </td>
+              <td>
+                <label>
+                  Custom (format as bower.json):
+                </label>
+                <textarea id="jsCustomDeps" type="text" class="form-control"
+                    name="jsDeps"
+                    placeholder='"package": "GitHubProj/package#master"'
+                    rows="3" spellcheck="false" autosave></textarea>
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
       <div class="modal-footer">
