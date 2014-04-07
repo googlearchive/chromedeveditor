@@ -47,6 +47,7 @@ void main([List<String> args]) {
 
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
+    defineTask('build-android-rsa', taskFunction: buildAndroidRSA);
     defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
     defineTask('release-nightly',
                taskFunction : releaseNightly,
@@ -297,6 +298,16 @@ void clean(GrinderContext context) {
       entity.deleteSync();
     }
   }
+}
+
+void buildAndroidRSA(GrinderContext context) {
+  context.log('building PNaCL Android RSA module');
+  final Directory androidRSADir = new Directory('nacl_android_rsa');
+  _runCommandSync(context, './make.sh', cwd: androidRSADir.path);
+  Directory appMobileDir = getDir('app/lib/mobile');
+  appMobileDir.createSync();
+  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.nmf'), appMobileDir, context);
+  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.pexe'), appMobileDir, context);
 }
 
 void _zip(GrinderContext context, String dirToZip, String destFile) {
