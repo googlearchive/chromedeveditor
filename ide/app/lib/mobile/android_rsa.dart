@@ -5,6 +5,7 @@
 /**
  * A library to manage Android RSA key generation and signature.
  */
+
 library spark.android_rsa;
 
 import 'dart:async';
