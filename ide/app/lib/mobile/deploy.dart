@@ -194,8 +194,9 @@ class HarnessPush {
       _device = deviceResult;
 
       return _device.sendHttpRequest(httpRequest, 2424).timeout(
-          new Duration(seconds: 30), onTimeout: () {
-            return new Future.error('Push timed out');
+          new Duration(minutes: 5), onTimeout: () {
+            return new Future.error(
+                'Push timed out: Total time exceeds 5 minutes');
           });
     }).then((msg) {
       monitor.worked(3);
