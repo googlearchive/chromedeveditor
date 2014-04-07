@@ -146,8 +146,10 @@ class _PubBuilder extends Builder {
     for (ChangeDelta delta in event.changes) {
       Resource r = delta.resource;
 
-      if (r.name == PUBSPEC_FILE_NAME && r.parent is Project) {
-        futures.add(_handlePubspecChange(delta));
+      if (!r.isDerived()) {
+        if (r.name == PUBSPEC_FILE_NAME && r.parent is Project) {
+          futures.add(_handlePubspecChange(delta));
+        }
       }
     }
 

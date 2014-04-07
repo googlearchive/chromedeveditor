@@ -639,6 +639,9 @@ Additionally, DevTools may not have released the USB connection. To check this g
             msg.setData(packet);
             return sendMessage(msg).then((_) {
               return awaitOkay();
+            }).timeout(new Duration(seconds: 10), onTimeout: () {
+              return new Future.error(
+                  'Push timed out: Single message took more than 10 seconds.');
             });
           });
         }).then((_) {

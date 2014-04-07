@@ -884,6 +884,10 @@ class File extends Resource {
     });
   }
 
+  /**
+   * Create a resource marker. For [severity], see [Marker.SEVERITY_INFO],
+   * [Marker.SEVERITY_WARNING], or [Marker.SEVERITY_ERROR].
+   */
   Marker createMarker(String type, int severity, String message, int lineNum,
                     [int charStart = -1, int charEnd = -1]) {
     Marker marker = new Marker(

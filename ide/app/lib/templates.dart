@@ -118,14 +118,14 @@ class ProjectTemplate {
   }
 
   Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-      String sourceUri, Map element) {
+                          String sourceUri, Map element) {
     return _handleDirectories(destRoot, sourceRoot, sourceUri,
         element['directories']).then((_) =>
             _handleFiles(destRoot, sourceRoot, sourceUri, element['files']));
   }
 
   Future _handleDirectories(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-      String sourceUri, Map directories) {
+                            String sourceUri, Map directories) {
     if (directories != null) {
       return Future.forEach(directories.keys, (String directoryName) {
         DirectoryEntry destDirectoryRoot;
@@ -143,23 +143,23 @@ class ProjectTemplate {
   }
 
   Future _handleFiles(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-      String sourceUri, List files) {
+                      String sourceUri, List files) {
     if (files == null) return new Future.value();
 
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];
       String dest = _interpolateTemplateVars(fileElement['dest']);
-      chrome.ChromeFileEntry entry;
+      chrome.ChromeFileEntry fileEntry;
 
-      return destRoot.createFile(dest).then((chrome.ChromeFileEntry _entry) {
-        entry = _entry;
+      return destRoot.createFile(dest).then((chrome.ChromeFileEntry entry) {
+        fileEntry = entry;
         if (dest.endsWith(".png")) {
           return getAppContentsBinary("$sourceUri/$source").then((List<int> data) {
-            return entry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
+            return fileEntry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
           });
         } else {
           return getAppContents("$sourceUri/$source").then((String data) {
-            return entry.writeText(_interpolateTemplateVars(data));
+            return fileEntry.writeText(_interpolateTemplateVars(data));
           });
         }
       });

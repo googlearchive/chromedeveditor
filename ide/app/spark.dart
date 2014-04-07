@@ -27,6 +27,7 @@ import 'lib/dart/pub.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
+import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
@@ -158,8 +159,9 @@ abstract class Spark
       //workspace.refresh();
     });
 
-    // Add a Dart builder.
+    // Add various builders.
     addBuilder(new DartBuilder(this.services));
+    addBuilder(new JsonBuilder());
   }
 
   initServices() {
@@ -1037,6 +1039,9 @@ abstract class SparkActionWithDialog extends SparkAction {
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
 
+  List<Element> getElements(String selectors) =>
+      _dialog.element.querySelectorAll(selectors);
+
   Element _triggerOnReturn(String selectors) {
     var element = _dialog.element.querySelector(selectors);
     element.onKeyDown.listen((event) {
@@ -1555,21 +1560,23 @@ class FocusMainMenuAction extends SparkAction {
 }
 
 class NewProjectAction extends SparkActionWithDialog {
-  InputElement _nameElement;
+  InputElement _nameElt;
+  List<InputElement> _jsDepsElts;
   ws.Folder folder;
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
-    _nameElement = _triggerOnReturn("#name");
+    _nameElt = _triggerOnReturn("#name");
+    _jsDepsElts = getElements('[name="jsDeps"]');
   }
 
   void _invoke([context]) {
-    _nameElement.value = '';
+    _nameElt.value = '';
     _show();
   }
 
   void _commit() {
-    final name = _nameElement.value.trim();
+    final name = _nameElt.value.trim();
 
     if (name.isEmpty) return;
 
@@ -1600,6 +1607,22 @@ class NewProjectAction extends SparkActionWithDialog {
             getElement('input[name="type"]:checked');
         templates.add(
             new ProjectTemplate(projectTypeElt.value, globalVars));
+
+        List<String> jsDeps = [];
+        for (final elt in _jsDepsElts) {
+          // NOTE: This test will get both the checkboxes and the textbox.
+          if ((elt.type == "checkbox" && elt.checked) ||
+              (elt.type == "text" && elt.value.isNotEmpty)) {
+            jsDeps.add(elt.value);
+          }
+        }
+        if (jsDeps.isNotEmpty) {
+          final localVars = {
+              'dependencies': jsDeps.join(',\n    ')
+          };
+          templates.add(
+              new ProjectTemplate("bower-deps", globalVars, localVars));
+        }
 
         return new ProjectBuilder(locationEntry, templates).build();
 
