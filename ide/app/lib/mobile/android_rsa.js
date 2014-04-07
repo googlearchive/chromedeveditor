@@ -1,4 +1,4 @@
-// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -56,14 +56,12 @@ AndroidRSA._moduleDidLoad = function() {
 // This method is called when a message is received from the NaCL module.
 AndroidRSA._handleMessage = function(messageEvent) {
   if (messageEvent.data === null) {
-    console.log('null message, ignore');
-    console.log(messageEvent.data);
-    return;
+    throw 'null message, ignore';
   }
   if (typeof messageEvent.data !== 'object') {
-    console.log('invalid message, ignore');
+    console.log('Received the following message:');
     console.log(messageEvent.data);
-    return;
+    throw 'invalid message, ignore';
   }
 
   if (messageEvent.data.log != null) {
@@ -71,9 +69,9 @@ AndroidRSA._handleMessage = function(messageEvent) {
     return;
   }
   if (messageEvent.data.uuid == null) {
-    console.log('invalid message, missing UUID');
+    console.log('Received the following message:');
     console.log(messageEvent.data);
-    return;
+    throw 'invalid message, missing UUID';
   }
 
   // Call the callback related to this command.
