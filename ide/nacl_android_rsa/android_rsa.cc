@@ -46,7 +46,7 @@ bool ExportKey(EVP_PKEY* key, ExportFunction export_fn, std::string& output) {
     goto err;
   }
 
-  export_fn(bio, key);
+  res = export_fn(bio, key);
   if (!res) {
     goto free_bio;
   }
