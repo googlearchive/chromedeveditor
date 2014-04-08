@@ -506,6 +506,9 @@ String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
   version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
   manifestDict['x-spark-revision'] = revision;
+  manifestDict['name'] = 'Spark Nightly';
+  manifestDict['short_name'] = 'Spark Nightly';
+  manifestDict['description'] = 'A Chrome app based development environment - Nightly version';
   if (removeKey) {
     manifestDict.remove('key');
   }
