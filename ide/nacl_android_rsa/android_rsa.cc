@@ -328,10 +328,6 @@ std::string AndroidRSAPublicKey(EVP_PKEY* key) {
   set_uint32(data, offset, htole32(BN_get_word(inverse)));
   offset += sizeof(uint32_t);
 
-  e = rsa->e;
-  set_uint32(data, offset, htole32(BN_get_word(e)));
-  offset += sizeof(uint32_t);
-
   if (!set_bn(data, offset, n, kRSAKeyBytes)) {
     goto free_inverse;
   }
@@ -341,6 +337,10 @@ std::string AndroidRSAPublicKey(EVP_PKEY* key) {
     goto free_r2;
   }
   offset += kRSAKeyBytes;
+
+  e = rsa->e;
+  set_uint32(data, offset, htole32(BN_get_word(e)));
+  offset += sizeof(uint32_t);
 
   BN_free(r2);
   BN_free(r);
