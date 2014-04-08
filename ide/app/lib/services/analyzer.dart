@@ -175,6 +175,9 @@ class ChromeDartSdk extends DartSdk {
  * projects, on the DOM side, and analysis contexts.
  */
 class ProjectContext {
+  static final int MAX_CACHE_SIZE = 256;
+  static final int DEFAULT_CACHE_SIZE = AnalysisOptionsImpl.DEFAULT_CACHE_SIZE;
+
   // The id for the project this context is associated with.
   final String id;
   final ChromeDartSdk sdk;
@@ -225,6 +228,10 @@ class ProjectContext {
       }
     }
 
+    // Increase the cache size before we process the changes. We set the size
+    // back down to the default after analysis is complete.
+    _setCacheSize(MAX_CACHE_SIZE);
+
     context.applyChanges(changeSet);
 
     Completer<AnalysisResultUuid> completer = new Completer();
@@ -232,6 +239,7 @@ class ProjectContext {
     _populateSources().then((_) {
       _processChanges(completer, new AnalysisResultUuid());
     }).catchError((e) {
+      _setCacheSize(DEFAULT_CACHE_SIZE);
       completer.completeError(e);
     });
 
@@ -249,6 +257,7 @@ class ProjectContext {
       List<ChangeNotice> notices = result.changeNotices;
 
       if (notices == null) {
+        _setCacheSize(DEFAULT_CACHE_SIZE);
         completer.complete(analysisResult);
       } else {
         for (ChangeNotice notice in notices) {
@@ -262,6 +271,7 @@ class ProjectContext {
         _processChanges(completer, analysisResult);
       }
     } catch (e, st) {
+      _setCacheSize(DEFAULT_CACHE_SIZE);
       completer.completeError(e, st);
     }
   }
@@ -291,6 +301,12 @@ class ProjectContext {
     });
 
     return Future.wait(futures);
+  }
+
+  void _setCacheSize(int size) {
+    var options = new AnalysisOptionsImpl();
+    options.cacheSize = size;
+    context.analysisOptions = options;
   }
 }
 

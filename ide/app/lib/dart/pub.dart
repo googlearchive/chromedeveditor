@@ -23,14 +23,14 @@ const PACKAGE_REF_PREFIX = 'package:';
 const PACKAGES_DIR_NAME = 'packages';
 const PUBSPEC_FILE_NAME = 'pubspec.yaml';
 
+Logger _logger = new Logger('spark.pub');
+
 bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
 
 bool isInPackagesFolder(Resource resource) {
   String path = resource.path;
   return path.contains('/packages/') || path.endsWith('/packages');
 }
-
-Logger _logger = new Logger('spark.pub');
 
 class PubManager {
   final Workspace workspace;

@@ -21,64 +21,76 @@ Logger _logger = new Logger('spark.dart_builder');
  * A [Builder] implementation that drives the Dart analyzer.
  */
 class DartBuilder extends Builder {
-  Services services;
+  final Services services;
 
   DartBuilder(this.services);
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
+    if (_disableDartAnalyzer) return new Future.value();
+
     List<ChangeDelta> changes = event.changes.where(
         (c) => c.resource is File && _includeFile(c.resource)).toList();
-
-    if (_disableDartAnalyzer || changes.isEmpty) return new Future.value();
-
-    Project project = changes.first.resource.project;
-
-    List<File> addedFiles = changes.where(
-        (c) => c.isAdd).map((c) => c.resource).toList();
-    List<File> changedFiles = changes.where(
-        (c) => c.isChange).map((c) => c.resource).toList();
-    List<File> deletedFiles = changes.where(
-        (c) => c.isDelete).map((c) => c.resource).toList();
+    List<ChangeDelta> projectDeletes = event.changes.where(
+        (c) => c.resource is Project && c.isDelete).toList();
 
     AnalyzerService analyzer = services.getService("analyzer");
-    ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
-    if (context == null) {
-      // Send in all the existing files for the project in order to properly set
-      // up the new context.
-      addedFiles = project.traverse().where(
-          (r) => r.isFile && r.name.endsWith('.dart')).toList();
-      changedFiles = [];
-      deletedFiles = [];
+    if (projectDeletes.isNotEmpty) {
+      // If we get a project delete, it'll be the only thing that we have to
+      // process.
+      Project project = projectDeletes.first.resource;
+      ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
-      // TODO(devoncarew): Temporarily, short-circuit large projects.
-      if (addedFiles.length > 100) {
-        _logger.warning('Dart analysis is disabled for large projects.');
-        return new Future.value();
+      if (context != null) {
+        analyzer.disposeProjectAnalyzer(context);
       }
 
-      context = analyzer.createProjectAnalyzer(project);
-    }
+      return new Future.value();
+    } else if (changes.isEmpty) {
+      return new Future.value();
+    } else {
+      Project project = changes.first.resource.project;
 
-    return context.processChanges(addedFiles, changedFiles, deletedFiles).then(
-        (AnalysisResult result) {
-      project.workspace.pauseMarkerStream();
+      List<File> addedFiles = changes.where(
+          (c) => c.isAdd).map((c) => c.resource).toList();
+      List<File> changedFiles = changes.where(
+          (c) => c.isChange).map((c) => c.resource).toList();
+      List<File> deletedFiles = changes.where(
+          (c) => c.isDelete).map((c) => c.resource).toList();
 
-      try {
-        for (File file in result.getFiles()) {
-          file.clearMarkers('dart');
+      ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
-          for (AnalysisError error in result.getErrorsFor(file)) {
-            file.createMarker('dart',
-                _convertSeverity(error.errorSeverity),
-                error.message, error.lineNumber,
-                error.offset, error.offset + error.length);
+      if (context == null) {
+        // Send in all the existing files for the project in order to properly set
+        // up the new context.
+        addedFiles = project.traverse().where(
+            (r) => r.isFile && r.name.endsWith('.dart')).toList();
+        changedFiles = [];
+        deletedFiles = [];
+
+        context = analyzer.createProjectAnalyzer(project);
+      }
+
+      return context.processChanges(addedFiles, changedFiles, deletedFiles).then(
+          (AnalysisResult result) {
+        project.workspace.pauseMarkerStream();
+
+        try {
+          for (File file in result.getFiles()) {
+            file.clearMarkers('dart');
+
+            for (AnalysisError error in result.getErrorsFor(file)) {
+              file.createMarker('dart',
+                  _convertSeverity(error.errorSeverity),
+                  error.message, error.lineNumber,
+                  error.offset, error.offset + error.length);
+            }
           }
+        } finally {
+          project.workspace.resumeMarkerStream();
         }
-      } finally {
-        project.workspace.resumeMarkerStream();
-      }
-    });
+      });
+    }
   }
 
   bool _includeFile(File file) {
