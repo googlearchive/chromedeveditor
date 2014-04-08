@@ -372,6 +372,7 @@ abstract class Spark
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
+    actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
@@ -1364,8 +1365,9 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 }
 
-class PubGetAction extends SparkAction implements ContextAction {
-  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
+abstract class PackageGetAction extends SparkAction implements ContextAction {
+  PackageGetAction(Spark spark, String id, String name) :
+    super(spark, id, name);
 
   void _invoke([context]) {
     ws.Resource resource;
@@ -1376,14 +1378,34 @@ class PubGetAction extends SparkAction implements ContextAction {
       resource = context.first;
     }
 
-    spark.jobManager.schedule(new PubGetJob(spark, resource.project));
+    spark.jobManager.schedule(_createJob(resource.project));
   }
 
   String get category => 'application';
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
-  bool _appliesTo(ws.Resource resource) => PubManager.isPubResource(resource);
+  Job _createJob(ws.Project project);
+
+  bool _appliesTo(ws.Resource resource);
+}
+
+class PubGetAction extends PackageGetAction {
+  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
+
+  Job _createJob(ws.Project project) => new PubGetJob(spark, project);
+
+  bool _appliesTo(ws.Resource resource) =>
+      PubManager.isPackageResource(resource);
+}
+
+class BowerGetAction extends PackageGetAction {
+  BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
+
+  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+
+  bool _appliesTo(ws.Resource resource) =>
+      BowerManager.isPackageResource(resource);
 }
 
 /**
@@ -1627,12 +1649,12 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._selectResource(ProjectBuilder.getMainResourceFor(project));
 
             // Run pub if the new project has a pubspec file.
-            if (PubManager.isPubProject(project)) {
+            if (PubManager.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
-            if (BowerManager.isBowerProject(project)) {
+            if (BowerManager.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });
@@ -2424,14 +2446,14 @@ class PubGetJob extends PackagesGetJob {
   PubGetJob(Spark spark, ws.Project project) :
     super(spark, project, 'pub get');
 
-  Future _fetchPackages() => _spark.pubManager.runPubGet(_project);
+  Future _fetchPackages() => _spark.pubManager.fetchPackages(_project);
 }
 
 class BowerGetJob extends PackagesGetJob {
   BowerGetJob(Spark spark, ws.Project project) :
     super(spark, project, 'bower install');
 
-  Future _fetchPackages() => _spark.bowerManager.runBowerInstall(_project);
+  Future _fetchPackages() => _spark.bowerManager.fetchPackages(_project);
 }
 
 class CompileDartJob extends Job {

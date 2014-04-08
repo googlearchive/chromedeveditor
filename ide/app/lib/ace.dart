@@ -19,6 +19,7 @@ import 'package:path/path.dart' as path;
 
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'package_mgmt/bower.dart';
 import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
@@ -87,7 +88,8 @@ class TextEditor extends Editor {
 
   bool get supportsFormat => false;
 
-  bool get readOnly => isInPackagesFolder(file);
+  bool get readOnly =>
+      BowerManager.isInPackagesFolder(file) || PubManager.isInPackagesFolder(file);
 
   void format() { }
 

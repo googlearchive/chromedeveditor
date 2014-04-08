@@ -21,7 +21,7 @@ defineTests() {
       return workspace.link(createWsRoot(dir)).then((Project _project) {
         project = _project;
         pubManager = new PubManager(workspace);
-        return project.createNewFile(PACKAGE_SPEC_FILE_NAME);
+        return project.createNewFile(PubManager.PACKAGE_SPEC_FILE_NAME);
       }).then((File file) {
         return file.setContents('name: sample\nversion: 0.1.0\n');
       }).then((_) {
@@ -30,16 +30,16 @@ defineTests() {
     });
 
     test('isPackageRef', () {
-      expect(isPackageRef('package'), false);
-      expect(isPackageRef('package:'), true);
-      expect(isPackageRef('package:foo/bar.dart'), true);
-      expect(isPackageRef('dart:html'), false);
+      expect(PubManager.isPackageRef('package'), false);
+      expect(PubManager.isPackageRef('package:'), true);
+      expect(PubManager.isPackageRef('package:foo/bar.dart'), true);
+      expect(PubManager.isPackageRef('dart:html'), false);
     });
 
     test('PubManager isPubProject', () {
-      expect(PubManager.isPubProject(project), true);
-      return project.getChild(PACKAGE_SPEC_FILE_NAME).delete().then((_) {
-        expect(PubManager.isPubProject(project), false);
+      expect(PubManager.isProjectWithPackages(project), true);
+      return project.getChild(PubManager.PACKAGE_SPEC_FILE_NAME).delete().then((_) {
+        expect(PubManager.isProjectWithPackages(project), false);
       });
     });
 
