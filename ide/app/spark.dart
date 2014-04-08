@@ -2399,42 +2399,39 @@ class _GitPushJob extends Job {
 }
 
 abstract class PackagesGetJob extends Job {
-  final Spark spark;
-  final ws.Project project;
-  final String _successMsg;
-  final String _errorMsg;
+  final Spark _spark;
+  final ws.Project _project;
+  final String _commandName;
 
-  PackagesGetJob(this.spark, this.project, this._successMsg, this._errorMsg) :
+  PackagesGetJob(this._spark, this._project, this._commandName) :
     super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return _run(project).then((_) {
-      spark.showSuccessMessage(_successMsg);
-      spark.workspace.refresh();
+    return _fetchPackages().then((_) {
+      _spark.showSuccessMessage("Success fetching '$_commandName'");
+      _spark.workspace.refresh();
     }).catchError((e) {
-      spark.showErrorMessage(_errorMsg, e.toString());
+      _spark.showErrorMessage("Error while running '$_commandName'", e.toString());
     });
   }
 
-  Future _run(Project);
+  Future _fetchPackages();
 }
 
 class PubGetJob extends PackagesGetJob {
   PubGetJob(Spark spark, ws.Project project) :
-    super(spark, project,
-          'Pub get run successful', 'Error while running pub get');
+    super(spark, project, 'pub get');
 
-  Future _run(Project) => spark.pubManager.runPubGet(project);
+  Future _fetchPackages() => _spark.pubManager.runPubGet(_project);
 }
 
 class BowerGetJob extends PackagesGetJob {
   BowerGetJob(Spark spark, ws.Project project) :
-    super(spark, project,
-          'Bower install run successful', 'Error while running bower install');
+    super(spark, project, 'bower install');
 
-  Future _run(Project) => spark.bowerManager.runBowerInstall(project);
+  Future _fetchPackages() => _spark.bowerManager.runBowerInstall(_project);
 }
 
 class CompileDartJob extends Job {
