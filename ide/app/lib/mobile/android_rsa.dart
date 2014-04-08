@@ -94,7 +94,7 @@ class AndroidRSA {
    * This method will seed the pseudo random number generator with some
    * unpredictable data.
    */
-  static Future randomSeed(String unpredictableData) {
+  static Future randomSeed(Uint8List unpredictableData) {
     Completer completer = new Completer();
     Function callback = () {
       completer.complete();
@@ -102,7 +102,8 @@ class AndroidRSA {
     Function errorHandler = ([error]) {
       completer.completeError(error);
     };
-    jsAndroidRSA.callMethod('randomSeed', [unpredictableData, callback, errorHandler]);
+    String b64Data = CryptoUtils.bytesToBase64(unpredictableData.toList());
+    jsAndroidRSA.callMethod('randomSeed', [b64Data, callback, errorHandler]);
     return completer.future;
   }
 }
