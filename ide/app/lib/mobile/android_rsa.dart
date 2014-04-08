@@ -12,7 +12,6 @@ import 'dart:async';
 import 'dart:js' as js;
 import 'dart:typed_data';
 
-import 'package:chrome/src/common_exp.dart' as chrome;
 import 'package:crypto/crypto.dart' show CryptoUtils;
 
 /**
@@ -40,7 +39,7 @@ import 'package:crypto/crypto.dart' show CryptoUtils;
 class AndroidRSA {
   // Javascript object to wrap.
   static js.JsObject jsAndroidRSA = js.context['AndroidRSA'];
-  
+
   /**
    * This method will sign the given data using the given private key.
    * It will return the signature on success.
