@@ -5,7 +5,7 @@
 /**
  * Pub services.
  */
-library spark.pub;
+library spark.package_mgmt.pub;
 
 import 'dart:async';
 
@@ -14,40 +14,42 @@ import 'package:tavern/tavern.dart' as tavern;
 import 'package:yaml/yaml.dart' as yaml;
 import 'package:yaml/src/parser.dart' show SyntaxError;
 
+import 'package_manager.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
-const LIB_DIR_NAME = 'lib';
-const PACKAGE_REF_PREFIX = 'package:';
-const PACKAGES_DIR_NAME = 'packages';
-const PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
-
-bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
-
-bool isInPackagesFolder(Resource resource) {
-  String path = resource.path;
-  return path.contains('/$PACKAGES_DIR_NAME/') ||
-         path.endsWith('/$PACKAGES_DIR_NAME');
-}
-
 Logger _logger = new Logger('spark.pub');
 
-class PubManager {
+class PubManager extends PackageManager {
+  static const PACKAGES_DIR_NAME = 'packages';
+  static const PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
+  static const PACKAGE_REF_PREFIX = 'package:';
+
+  static const _LIB_DIR_NAME = 'lib';
+
   PubManager(Workspace workspace) {
     workspace.builderManager.builders.add(new _PubBuilder());
   }
 
-  static bool isPubProject(Project project) =>
+  static bool isProjectWithPackages(Project project) =>
       project.getChild(PACKAGE_SPEC_FILE_NAME) != null;
 
-  static bool isPubResource(Resource resource) {
+  static bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == PACKAGE_SPEC_FILE_NAME) ||
-           (resource is Project && isPubProject(resource));
+           (resource is Project && isProjectWithPackages(resource));
   }
 
-  Future runPubGet(Project project) {
-    return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
+  static bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
+
+  static bool isInPackagesFolder(Resource resource) {
+    String path = resource.path;
+    return path.contains('/$PACKAGES_DIR_NAME/') ||
+           path.endsWith('/$PACKAGES_DIR_NAME');
+  }
+
+  Future fetchPackages(Project project) {
+    return tavern.getDependencies(project.entry, _handleLog).whenComplete(() {
       return project.refresh();
     }).catchError((e, st) {
       _logger.severe('Error Running Pub Get', e, st);
@@ -59,7 +61,7 @@ class PubManager {
     return new PubResolver._(project);
   }
 
-  void _handlePubLog(String line, String level) {
+  void _handleLog(String line, String level) {
     // TODO: Dial the logging back.
      _logger.info(line);
   }
@@ -80,17 +82,17 @@ class PubResolver {
    * does not resolve to an existing file, this method will return `null`.
    */
   File resolveRefToFile(String url) {
-    if (!isPackageRef(url)) return null;
+    if (!PubManager.isPackageRef(url)) return null;
 
-    String ref = url.substring(PACKAGE_REF_PREFIX.length);
+    String ref = url.substring(PubManager.PACKAGE_REF_PREFIX.length);
     String selfRefName = _getSelfReference(project);
 
-    Folder packageDir = project.getChild(PACKAGES_DIR_NAME);
+    Folder packageDir = project.getChild(PubManager.PACKAGES_DIR_NAME);
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
       ref = ref.substring(selfRefName.length + 1);
-      packageDir = project.getChild(LIB_DIR_NAME);
+      packageDir = project.getChild(PubManager._LIB_DIR_NAME);
     }
 
     if (packageDir == null) return null;
@@ -117,10 +119,10 @@ class PubResolver {
       parent = parent.parent;
     }
 
-    if (resources[0].name == PACKAGES_DIR_NAME) {
+    if (resources[0].name == PubManager.PACKAGES_DIR_NAME) {
       resources.removeAt(0);
-      return PACKAGE_REF_PREFIX + resources.map((r) => r.name).join('/');
-    } else if (resources[0].name == LIB_DIR_NAME) {
+      return PubManager.PACKAGE_REF_PREFIX + resources.map((r) => r.name).join('/');
+    } else if (resources[0].name == PubManager._LIB_DIR_NAME) {
       String selfRefName = _getSelfReference(project);
 
       if (selfRefName != null) {
@@ -151,7 +153,7 @@ class _PubBuilder extends Builder {
       Resource r = delta.resource;
 
       if (!r.isDerived()) {
-        if (r.name == PACKAGE_SPEC_FILE_NAME && r.parent is Project) {
+        if (r.name == PubManager.PACKAGE_SPEC_FILE_NAME && r.parent is Project) {
           futures.add(_handlePackageSpecChange(delta));
         }
       }

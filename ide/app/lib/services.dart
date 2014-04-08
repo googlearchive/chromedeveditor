@@ -409,7 +409,7 @@ class _IsolateHandler {
 
 List<String> _filesToUuid(PubResolver pubResolver, List<File> files) {
   return files.map((File file) {
-    if (isInPackagesFolder(file) && pubResolver != null) {
+    if (PubManager.isInPackagesFolder(file) && pubResolver != null) {
       return pubResolver.getReferenceFor(file);
     } else {
       return file.uuid;

@@ -243,7 +243,7 @@ class PackagesServlet extends PicoServlet {
 
     if (project is Project) {
       String path = _getPath(request);
-      path = PACKAGE_REF_PREFIX + path.substring(
+      path = PubManager.PACKAGE_REF_PREFIX + path.substring(
           path.indexOf(PACKAGE_SEGMENT) + PACKAGE_SEGMENT.length);
       PubResolver resolver = _launchManager._pubManager.getResolverFor(project);
       File file = resolver.resolveRefToFile(path);

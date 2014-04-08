@@ -5,56 +5,55 @@
 /**
  * Bower services.
  */
-library spark.bower;
+library spark.package_mgmt.bower;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:html';
-
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
+import 'package_manager.dart';
 import '../scm.dart';
 import '../workspace.dart' as ws;
 
-const PACKAGES_DIR_NAME = 'bower_packages';
-const PACKAGE_SPEC_FILE_NAME = 'bower.json';
-
-bool isInPackagesFolder(ws.Resource resource) {
-  String path = resource.path;
-  return path.contains('/$PACKAGES_DIR_NAME/') ||
-         path.endsWith('/$PACKAGES_DIR_NAME');
-}
-
 Logger _logger = new Logger('spark.bower');
 
-class BowerManager {
-  static const GITHUB_ROOT_URL = 'https://github.com';
+class BowerManager extends PackageManager {
+  static const PACKAGES_DIR_NAME = 'bower_packages';
+  static const PACKAGE_SPEC_FILE_NAME = 'bower.json';
+
+  static const _GITHUB_ROOT_URL = 'https://github.com';
 
   /// E.g.: "Polymer/polymer-elements".
-  static const PKG_SPEC_PATH = '''[-\\w./]+''';
+  static const _PACKAGE_SPEC_PATH = '''[-\\w./]+''';
   /// E.g.: "#master", "#1.2.3" (however branches in general are not yet
   /// supported, only "#master" is accepted - see below).
-  static const PKG_SPEC_BRANCH = '''[-\\w.]+''';
+  static const _PACKAGE_SPEC_BRANCH = '''[-\\w.]+''';
   /// E.g.: "Polymer/polymer#master";
-  static final RegExp PKG_SPEC_REGEXP =
-      new RegExp('''^($PKG_SPEC_PATH)(?:#($PKG_SPEC_BRANCH))?\$''');
+  static final RegExp _PACKAGE_SPEC_REGEXP =
+      new RegExp('''^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$''');
 
   ScmProvider _scmProvider;
 
   BowerManager() :
     _scmProvider = getProviderType('git');
 
-  static bool isBowerProject(ws.Project project) =>
+  static bool isProjectWithPackages(ws.Project project) =>
       project.getChild(PACKAGE_SPEC_FILE_NAME) != null;
 
-  static bool isBowerResource(ws.Resource resource) {
+  static bool isPackageResource(ws.Resource resource) {
     return (resource is ws.File && resource.name == PACKAGE_SPEC_FILE_NAME) ||
-           (resource is ws.Project && isBowerProject(resource));
+           (resource is ws.Project && isProjectWithPackages(resource));
   }
 
-  Future runBowerInstall(ws.Project project) {
+  static bool isInPackagesFolder(ws.Resource resource) {
+    String path = resource.path;
+    return path.contains('/$PACKAGES_DIR_NAME/') ||
+           path.endsWith('/$PACKAGES_DIR_NAME');
+  }
+
+  Future fetchPackages(ws.Project project) {
     final ws.File specFile = project.getChild(PACKAGE_SPEC_FILE_NAME);
     final ws.Folder packagesDir = project.getChild(PACKAGES_DIR_NAME);
 
@@ -64,11 +63,6 @@ class BowerManager {
       _logger.severe('Error getting Bower packages', e, st);
       return new Future.error(e, st);
     });
-  }
-
-  void _handleLog(String line, String level) {
-    // TODO: Dial the logging back.
-     _logger.info(line);
   }
 
   Future _fetchDependencies(chrome.ChromeFileEntry specFile,
@@ -108,7 +102,7 @@ class BowerManager {
   Future _fetchPackage(String name,
                        String spec,
                        chrome.DirectoryEntry topDestDir) {
-    final Match match = PKG_SPEC_REGEXP.matchAsPrefix(spec);
+    final Match match = _PACKAGE_SPEC_REGEXP.matchAsPrefix(spec);
 
     if (match == null) {
       return new Future.error("Malformed Bower dependency: '$spec'");
@@ -128,7 +122,12 @@ class BowerManager {
 
     return topDestDir.createDirectory(name).then(
         (chrome.DirectoryEntry destDir) {
-      return _scmProvider.clone('$GITHUB_ROOT_URL/$path', destDir);
+      return _scmProvider.clone('$_GITHUB_ROOT_URL/$path', destDir);
     });
+  }
+
+  void _handleLog(String line, String level) {
+    // TODO: Dial the logging back.
+     _logger.info(line);
   }
 }
