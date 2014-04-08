@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 
+import 'pub.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../services.dart';
@@ -71,6 +72,10 @@ class DartBuilder extends Builder {
         context = analyzer.createProjectAnalyzer(project);
       }
 
+      _removeSecondaryPackages(addedFiles);
+      _removeSecondaryPackages(changedFiles);
+      _removeSecondaryPackages(deletedFiles);
+
       return context.processChanges(addedFiles, changedFiles, deletedFiles).then(
           (AnalysisResult result) {
         project.workspace.pauseMarkerStream();
@@ -96,6 +101,12 @@ class DartBuilder extends Builder {
   bool _includeFile(File file) {
     return file.name.endsWith('.dart') && !file.isDerived();
   }
+}
+
+void _removeSecondaryPackages(List<File> files) {
+  files.removeWhere((file) {
+    return file.path.contains('/$PACKAGES_DIR_NAME/') && !isInPackagesFolder(file);
+  });
 }
 
 int _convertSeverity(int sev) {

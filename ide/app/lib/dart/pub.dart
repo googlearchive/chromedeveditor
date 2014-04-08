@@ -27,9 +27,20 @@ Logger _logger = new Logger('spark.pub');
 
 bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
 
+/**
+ * Returns whether the given resource is contained in the 'packages' folder.
+ * This only returns true if the 'packages' folder is a direct child of the
+ * containing project.
+ */
 bool isInPackagesFolder(Resource resource) {
-  String path = resource.path;
-  return path.contains('/packages/') || path.endsWith('/packages');
+  while (resource.parent != null) {
+    if (resource.parent is Project) {
+      return resource.name == PACKAGES_DIR_NAME && resource is Folder;
+    }
+    resource = resource.parent;
+  }
+
+  return false;
 }
 
 class PubManager {

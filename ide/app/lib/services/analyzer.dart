@@ -447,6 +447,7 @@ class FileSource extends Source {
   String _strContents;
 
   FileSource(this.context, this.uuid) {
+    assert(uuid != null);
     touchFile();
   }
 
