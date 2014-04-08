@@ -2401,16 +2401,20 @@ class _GitPushJob extends Job {
 abstract class PackagesGetJob extends Job {
   final Spark spark;
   final ws.Project project;
+  final String _successMsg;
+  final String _errorMsg;
 
-  PackagesGetJob(this.spark, this.project) : super('Getting packages…');
+  PackagesGetJob(this.spark, this.project, this._successMsg, this._errorMsg) :
+    super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     return _run(project).then((_) {
-      spark.showSuccessMessage('Pub get run successful');
+      spark.showSuccessMessage(_successMsg);
+      spark.workspace.refresh();
     }).catchError((e) {
-      spark.showErrorMessage('Error while running pub get', e.toString());
+      spark.showErrorMessage(_errorMsg, e.toString());
     });
   }
 
@@ -2418,13 +2422,17 @@ abstract class PackagesGetJob extends Job {
 }
 
 class PubGetJob extends PackagesGetJob {
-  PubGetJob(Spark spark, ws.Project project) : super(spark, project);
+  PubGetJob(Spark spark, ws.Project project) :
+    super(spark, project,
+          'Pub get run successful', 'Error while running pub get');
 
   Future _run(Project) => spark.pubManager.runPubGet(project);
 }
 
 class BowerGetJob extends PackagesGetJob {
-  BowerGetJob(Spark spark, ws.Project project) : super(spark, project);
+  BowerGetJob(Spark spark, ws.Project project) :
+    super(spark, project,
+          'Bower install run successful', 'Error while running bower install');
 
   Future _run(Project) => spark.bowerManager.runBowerInstall(project);
 }
