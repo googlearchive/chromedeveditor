@@ -377,9 +377,11 @@ Additionally, DevTools may not have released the USB connection. To check this g
         if (key != null) {
           return key;
         }
-        return AndroidRSA.generateKey().then((String key) {
-          return _prefs.setValue('adb_nacl_rsa_keys', key).then((_) {
-            return key;
+        return AndroidRSA.randomSeed(new Uint8List.view(seedToken.buffer)).then((_) {
+          return AndroidRSA.generateKey().then((String key) {
+            return _prefs.setValue('adb_nacl_rsa_keys', key).then((_) {
+              return key;
+            });
           });
         });
       });
