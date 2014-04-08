@@ -175,6 +175,10 @@ void AndroidRSAInstance::getPublicKey(Var& uuid, VarArray& parameters) {
 
   std::string privatekey = b64_privatekey.AsString();
   EVP_PKEY* key = AndroidRSAImportPrivateKey(privatekey);
+  if (key == NULL) {
+    postError(uuid, "invalid_key");
+    return;
+  }
   std::string publickey = AndroidRSAPublicKey(key);
   // Returns the public key.
   postResult(uuid, publickey);
@@ -202,7 +206,7 @@ void AndroidRSAInstance::HandleMessage(const pp::Var& var_message) {
   Var undefined;
   
   if (!var_message.is_dictionary()) {
-    postError(undefined, "invalid_message");
+    postErrorInvalidMessage();
     return;
   }
 
@@ -213,7 +217,7 @@ void AndroidRSAInstance::HandleMessage(const pp::Var& var_message) {
   VarArray parameters(value_parameters);
 
   if (uuid.is_undefined()) {
-    postError(undefined, "invalid_message");
+    postErrorInvalidMessage();
     return;
   }
 
