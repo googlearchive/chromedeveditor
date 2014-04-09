@@ -6,22 +6,22 @@ library spark.error;
 
 /**
  * A wrapper class for all errors thrown inside spark. Each error is represented
- * by a unique [errorString] pre-defined in spark_error_constants.dart.
+ * by a unique [errorcode] pre-defined in spark_error_constants.dart.
  */
 class SparkError extends Error {
   // Represents the unique string for each error type.
-  final String errorString;
+  final String errorcode;
   final String message;
 
   // Indicates if the error is not necessary to be handled and can be ignored.
   bool canIgnore = false;
 
-  SparkError([this.errorString, this.message, this.canIgnore]);
+  SparkError([this.errorcode, this.message, this.canIgnore]);
 
   String toString() {
     if (message != null) {
-      return "SparkError($errorString) : $message";
+      return "SparkError($errorcode) : $message";
     }
-    return "SparkError($errorString)";
+    return "SparkError($errorcode)";
   }
 }
