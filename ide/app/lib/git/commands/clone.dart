@@ -33,6 +33,7 @@ class Clone {
 
   Clone(this._options) {
     if (_options.branchName == null) _options.branchName = 'master';
+    if (!_options.repoUrl.endsWith('.git')) _options.repoUrl += '.git';
     if (_options.progressCallback == null) {
       _options.progressCallback = nopFunction;
     }

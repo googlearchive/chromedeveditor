@@ -1869,7 +1869,6 @@ class GitCloneAction extends SparkActionWithDialog {
     if (url.endsWith('/')) {
       projectName = url.substring(0, url.length - 1).split('/').last;
     } else {
-      if (!url.endsWith('.git')) url = url + '.git';
       projectName = url.split('/').last;
     }
 
