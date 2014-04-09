@@ -297,9 +297,10 @@ class EditorManager implements EditorProvider {
 
     bool wasDirty = false;
 
-    // TODO: We need to re-think how this is done.  Since this happens after
-    // a timer, the state may have changed since the timer started (if a user
-    // edits and then closes a file, for instance, it will not get saved)
+    // TODO: We need to rethink how this is done.  Since this happens after
+    // a timer, the state may have changed since the timer started.  This could
+    // affect everything that follows (saving, rebuilding, etc) if the editor
+    // state changes between the timer start and now.
     for (Editor editor in editors) {
       if (editor.dirty) {
         editor.save();

@@ -58,9 +58,7 @@ class Outline {
         ..id = "toggleOutlineButton"
         ..append(hideGlyph)
         ..append(showGlyph)
-        ..onClick.listen((e) {
-          _toggle();
-        });
+        ..onClick.listen((e) => _toggle());
 
     _outlineDiv.append(toggleButton);
   }
@@ -85,15 +83,9 @@ class Outline {
     }
 
     _currentOutlineOperation = analyzer.getOutlineFor(code).asStream()
-        .listen((services.Outline model) {
-          /*%TRACE3*/ print("(4> 4/8/14): _populate!"); // TRACE%
-          _populate(model);
-        });
+        .listen((services.Outline model) => _populate(model));
     
-    _currentOutlineOperation.onDone(() {
-      completer.complete;
-      /*%TRACE3*/ print("(4> 4/8/14): onDone!"); // TRACE%
-    });
+    _currentOutlineOperation.onDone(() => completer.complete);
     
     return completer.future;
   }
