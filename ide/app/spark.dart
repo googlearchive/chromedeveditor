@@ -372,6 +372,7 @@ abstract class Spark
     actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
+    actionManager.registerAction(new PubUpgradeAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
@@ -1377,6 +1378,28 @@ class PubGetAction extends SparkAction implements ContextAction {
     }
 
     spark.jobManager.schedule(new PubGetJob(spark, resource.project));
+  }
+
+  String get category => 'application';
+
+  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+
+  bool _appliesTo(ws.Resource resource) => PubManager.isPubResource(resource);
+}
+
+class PubUpgradeAction extends SparkAction implements ContextAction {
+  PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
+
+  void _invoke([context]) {
+    ws.Resource resource;
+
+    if (context == null) {
+      resource = spark.focusManager.currentResource;
+    } else {
+      resource = context.first;
+    }
+
+    spark.jobManager.schedule(new PubUpgradeJob(spark, resource.project));
   }
 
   String get category => 'application';
@@ -2427,6 +2450,14 @@ class PubGetJob extends PackagesGetJob {
           'Pub get run successful', 'Error while running pub get');
 
   Future _run(Project) => spark.pubManager.runPubGet(project);
+}
+
+class PubUpgradeJob extends PackagesGetJob {
+  PubUpgradeJob(Spark spark, ws.Project project) :
+    super(spark, project,
+          'Pub upgrade successful', 'Error while running pub upgrade');
+
+  Future _run(Project) => spark.pubManager.runPubUpgrade(project);
 }
 
 class BowerGetJob extends PackagesGetJob {
