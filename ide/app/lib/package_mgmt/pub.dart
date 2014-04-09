@@ -21,7 +21,7 @@ import '../workspace.dart';
 const LIB_DIR_NAME = 'lib';
 const PACKAGE_REF_PREFIX = 'package:';
 const PACKAGES_DIR_NAME = 'packages';
-const PUBSPEC_FILE_NAME = 'pubspec.yaml';
+const PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
 
 Logger _logger = new Logger('spark.pub');
 
@@ -44,14 +44,17 @@ bool isInPackagesFolder(Resource resource) {
 }
 
 class PubManager {
-  final Workspace workspace;
-
-  PubManager(this.workspace) {
+  PubManager(Workspace workspace) {
     workspace.builderManager.builders.add(new _PubBuilder());
   }
 
-  bool isPubProject(Project project) =>
-      project.getChild(PUBSPEC_FILE_NAME) != null;
+  static bool isPubProject(Project project) =>
+      project.getChild(PACKAGE_SPEC_FILE_NAME) != null;
+
+  static bool isPubResource(Resource resource) {
+    return (resource is File && resource.name == PACKAGE_SPEC_FILE_NAME) ||
+           (resource is Project && isPubProject(resource));
+  }
 
   Future runPubGet(Project project) {
     return tavern.getDependencies(project.entry, _handlePubLog).whenComplete(() {
@@ -158,8 +161,8 @@ class _PubBuilder extends Builder {
       Resource r = delta.resource;
 
       if (!r.isDerived()) {
-        if (r.name == PUBSPEC_FILE_NAME && r.parent is Project) {
-          futures.add(_handlePubspecChange(delta));
+        if (r.name == PACKAGE_SPEC_FILE_NAME && r.parent is Project) {
+          futures.add(_handlePackageSpecChange(delta));
         }
       }
     }
@@ -167,7 +170,7 @@ class _PubBuilder extends Builder {
     return Future.wait(futures);
   }
 
-  Future _handlePubspecChange(ChangeDelta delta) {
+  Future _handlePackageSpecChange(ChangeDelta delta) {
     File file = delta.resource;
 
     if (delta.isDelete) {

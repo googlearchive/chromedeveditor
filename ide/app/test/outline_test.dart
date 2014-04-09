@@ -6,7 +6,7 @@ library spark.outline_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/dart/pub.dart';
+import '../lib/package_mgmt/pub.dart';
 import '../lib/services.dart';
 import '../lib/workspace.dart' as ws;
 

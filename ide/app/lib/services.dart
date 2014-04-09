@@ -9,7 +9,7 @@ import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 
-import 'dart/pub.dart';
+import 'package_mgmt/pub.dart';
 import 'services/compiler.dart';
 import 'services/services_common.dart';
 import 'utils.dart';

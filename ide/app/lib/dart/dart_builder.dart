@@ -8,7 +8,7 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-import 'pub.dart';
+import '../package_mgmt/pub.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../services.dart';
