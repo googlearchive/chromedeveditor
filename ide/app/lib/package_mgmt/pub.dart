@@ -43,9 +43,14 @@ class PubManager extends PackageManager {
   static bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
 
   static bool isInPackagesFolder(Resource resource) {
-    String path = resource.path;
-    return path.contains('/$PACKAGES_DIR_NAME/') ||
-           path.endsWith('/$PACKAGES_DIR_NAME');
+    while (resource.parent != null) {
+      if (resource.parent is Project) {
+        return resource.name == PACKAGES_DIR_NAME && resource is Folder;
+      }
+      resource = resource.parent;
+    }
+
+    return false;
   }
 
   Future fetchPackages(Project project) {

@@ -7,6 +7,8 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:logging/logging.dart';
+
 import 'package_mgmt/pub.dart';
 import 'services/compiler.dart';
 import 'services/services_common.dart';
@@ -15,6 +17,8 @@ import 'workspace.dart';
 
 export 'services/compiler.dart' show CompilerResult;
 export 'services/services_common.dart';
+
+Logger _logger = new Logger('spark.services');
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -145,10 +149,15 @@ class CompilerService extends Service {
 }
 
 class AnalyzerService extends Service {
-  Map<Project, ProjectAnalyzer> _analyzers = {};
+  // We limit the number of active analysis contexts in order to better manage
+  // our memory consumption.
+  static final int MAX_CONTEXTS = 5;
+
+  Map<Project, ProjectAnalyzer> _contextMap = {};
+  List<ProjectAnalyzer> _recentContexts = [];
 
   AnalyzerService(Services services, _IsolateHandler handler) :
-    super(services, 'analyzer', handler);
+      super(services, 'analyzer', handler);
 
   Workspace get workspace => services._workspace;
 
@@ -187,23 +196,46 @@ class AnalyzerService extends Service {
   }
 
   ProjectAnalyzer createProjectAnalyzer(Project project) {
-    if (_analyzers[project] == null) {
-      _analyzers[project] = new ProjectAnalyzer._(this, project);
+    if (_contextMap[project] == null) {
+      _logger.info('created analysis context [${project.name}]');
+
+      _contextMap[project] = new ProjectAnalyzer._(this, project);
+      _recentContexts.insert(0, _contextMap[project]);
+
       _sendAction('createContext', {'contextId': project.uuid});
+
+      if (_recentContexts.length > MAX_CONTEXTS) {
+        // Dispose of the oldest context.
+        disposeProjectAnalyzer(_recentContexts.last);
+      }
     }
 
-    return _analyzers[project];
+    return _contextMap[project];
   }
 
-  ProjectAnalyzer getProjectAnalyzer(Project project) => _analyzers[project];
+  ProjectAnalyzer getProjectAnalyzer(Project project) => _contextMap[project];
 
-  PubResolver getPubResolverFor(Project project) =>
-      services._pubManager.getResolverFor(project);
-
-  Future _disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
+  Future disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
     Project project = projectAnalyzer.project;
-    _analyzers.remove(project);
-    return _sendAction('disposeContext', {'contextId': project.uuid});
+    ProjectAnalyzer context = _contextMap.remove(project);
+
+    if (context != null) {
+      _logger.info('disposed analysis context [${projectAnalyzer.project.name}]');
+
+      _recentContexts.remove(context);
+      return _sendAction('disposeContext', {'contextId': project.uuid});
+    } else {
+      return new Future.value();
+    }
+  }
+
+  PubResolver getPubResolverFor(Project project) {
+    return services._pubManager.getResolverFor(project);
+  }
+
+  void _touch(ProjectAnalyzer context) {
+    _recentContexts.remove(context);
+    _recentContexts.insert(0, context);
   }
 }
 
@@ -218,6 +250,8 @@ class ProjectAnalyzer {
 
   Future<AnalysisResult> processChanges(
       List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
+    analyzerService._touch(this);
+
     PubResolver resolver = analyzerService.getPubResolverFor(project);
 
     var args = {'contextId': project.uuid};
@@ -236,7 +270,7 @@ class ProjectAnalyzer {
   }
 
   Future dispose() {
-    return analyzerService._disposeProjectAnalyzer(this);
+    return analyzerService.disposeProjectAnalyzer(this);
   }
 }
 

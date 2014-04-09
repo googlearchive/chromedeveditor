@@ -108,6 +108,36 @@ Future<String> getAppContents(String path) {
  */
 Future nextTick() => new Future.delayed(Duration.ZERO);
 
+
+html.DirectoryEntry _html5FSRoot;
+
+/**
+ * Returns the root directory of the application's persistent local storage.
+ */
+Future<html.DirectoryEntry> getLocalDataRoot() {
+  // For now we request 100 MBs; would like this to be unlimited though.
+  final int requestedSize = 100 * 1024 * 1024;
+
+  if (_html5FSRoot != null) return new Future.value(_html5FSRoot);
+
+  return html.window.requestFileSystem(
+      requestedSize, persistent: true).then((html.FileSystem fs) {
+    _html5FSRoot = fs.root;
+    return _html5FSRoot;
+  });
+}
+
+/**
+ * Creates and returns a directory in persistent local storage. This can be used
+ * to cache application data, e.g `getLocalDataDir('workspace')` or
+ * `getLocalDataDir('pub')`.
+ */
+Future<html.DirectoryEntry> getLocalDataDir(String name) {
+  return getLocalDataRoot().then((html.DirectoryEntry root) {
+    return root.createDirectory(name, exclusive: false);
+  });
+}
+
 /**
  * A [Notifier] is used to present the user with a message.
  */
