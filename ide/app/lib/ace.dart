@@ -272,6 +272,7 @@ class AceManager {
   }
 
   void setMarkers(List<workspace.Marker> markers) {
+    /*%TRACE3*/ print("(4> 4/8/14): setMarkers!"); // TRACE%
     List<ace.Annotation> annotations = [];
     int numberLines = currentSession.screenLength;
 
@@ -492,6 +493,7 @@ class AceManager {
   ace.EditSession get currentSession => _aceEditor.session;
 
   void switchTo(ace.EditSession session, [workspace.File file]) {
+    /*%TRACE3*/ print("(4> 4/8/14): switchTo!"); // TRACE%
     if (_foldListenerSubscription != null) {
       _foldListenerSubscription.cancel();
       _foldListenerSubscription = null;
@@ -507,6 +509,7 @@ class AceManager {
       });
 
       setMarkers(file.getMarkers());
+      buildOutline();
     }
 
     // Setup the code completion options for the current file type.
@@ -522,6 +525,11 @@ class AceManager {
             _handleMarkerChange);
       }
     }
+  }
+  
+  void buildOutline() {
+    String text = currentSession.value;
+    outline.build(text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {

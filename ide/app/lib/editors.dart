@@ -374,7 +374,6 @@ class EditorManager implements EditorProvider {
     _EditorState state = _getStateFor(editor.file);
     _switchState(state);
     _aceContainer.createDialog(editor.file.name);
-    _aceContainer.setMarkers(editor.file.getMarkers());
   }
 }
 
