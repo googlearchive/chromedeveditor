@@ -64,6 +64,15 @@ class PubManager {
       return new Future.error(e, st);
     });
   }
+  
+  Future runPubUpgrade(Project project) {
+    return tavern.getDependencies(project.entry, _handlePubLog, true).whenComplete(() {
+      return project.refresh();
+    }).catchError((e, st) {
+      _logger.severe('Error Running Pub Upgrade', e, st);
+      return new Future.error(e, st);
+    });
+  }
 
   PubResolver getResolverFor(Project project) {
     return new PubResolver._(project);
