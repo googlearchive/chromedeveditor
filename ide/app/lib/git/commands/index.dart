@@ -131,7 +131,6 @@ class Index {
    * Writes into the index file the current index.
    */
   Future _writeIndex() {
-    print('write index ${_store.root.fullPath}');
     String out = JSON.encode(statusIdxToMap());
     return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
         (chrome.DirectoryEntry entry) {
