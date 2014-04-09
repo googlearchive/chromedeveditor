@@ -23,15 +23,25 @@ const PACKAGE_REF_PREFIX = 'package:';
 const PACKAGES_DIR_NAME = 'packages';
 const PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
 
+Logger _logger = new Logger('spark.pub');
+
 bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
 
+/**
+ * Returns whether the given resource is contained in the 'packages' folder.
+ * This only returns true if the 'packages' folder is a direct child of the
+ * containing project.
+ */
 bool isInPackagesFolder(Resource resource) {
-  String path = resource.path;
-  return path.contains('/$PACKAGES_DIR_NAME/') ||
-         path.endsWith('/$PACKAGES_DIR_NAME');
-}
+  while (resource.parent != null) {
+    if (resource.parent is Project) {
+      return resource.name == PACKAGES_DIR_NAME && resource is Folder;
+    }
+    resource = resource.parent;
+  }
 
-Logger _logger = new Logger('spark.pub');
+  return false;
+}
 
 class PubManager {
   PubManager(Workspace workspace) {
