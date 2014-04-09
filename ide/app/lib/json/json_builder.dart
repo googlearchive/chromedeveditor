@@ -5,8 +5,7 @@
 library spark.json_builder;
 
 import 'dart:async';
-
-import 'package:json/json.dart';
+import 'dart:convert';
 
 import '../builder.dart';
 import '../jobs.dart';
@@ -34,33 +33,49 @@ class JsonBuilder extends Builder {
       file.clearMarkers('json');
 
       try {
-        JsonParser parser = new JsonParser(str, new _JsonParserListener(file));
-        parser.parse();
+        new JsonDecoder().convert(str);
       } catch (e) {
-        // Ignore e; already reported through the listener interface.
+        _ErrorMessageParser parser = new _ErrorMessageParser(str, e.message);
+        file.createMarker('json',
+                          Marker.SEVERITY_ERROR,
+                          parser.message,
+                          parser.lineNumber,
+                          parser.position);
       }
     });
   }
 }
 
-class _JsonParserListener extends JsonListener {
-  final File file;
+/*
+ *  Parse the exception message.
+ */
+class _ErrorMessageParser {
+  final String _errorMessage;
+  final String _source;
+  var message;
+  var position;
+  var lineNumber;
 
-  _JsonParserListener(this.file);
+  _ErrorMessageParser(this._source, this._errorMessage) {
+     // The error message format would be
+     // "Unexpected character at 877: 'aa: [\n    "http://*/...'"
+    message = _errorMessage.substring(
+        0, _errorMessage.indexOf(new RegExp(' at \\d+:')));
+    position = int.parse(
+        _errorMessage.substring(_errorMessage.indexOf(new RegExp('\\d+:')),
+                                _errorMessage.indexOf(new RegExp(': '))));
 
-  void fail(String source, int position, String message) {
-    int lineNum = _calcLineNumber(source, position);
-    file.createMarker('json', Marker.SEVERITY_ERROR, message, lineNum, position);
+    lineNumber = _calcLineNumber();
   }
 
   /**
-   * Count the newlines between 0 and position.
-   */
-  int _calcLineNumber(String source, int position) {
+    * Count the newlines between 0 and position.
+    */
+  int _calcLineNumber() {
     int lineCount = 0;
 
-    for (int index = 0; index < source.length; index++) {
-      if (source[index] == '\n') lineCount++;
+    for (int index = 0; index < _source.length; index++) {
+      if (_source[index] == '\n') lineCount++;
       if (index == position) return lineCount + 1;
     }
 
