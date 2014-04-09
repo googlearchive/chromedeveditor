@@ -105,7 +105,8 @@ class DartBuilder extends Builder {
 
 void _removeSecondaryPackages(List<File> files) {
   files.removeWhere((file) {
-    return file.path.contains('/$PACKAGES_DIR_NAME/') && !isInPackagesFolder(file);
+    return file.path.contains('/${PubManager.PACKAGES_DIR_NAME}/') &&
+           !PubManager.isInPackagesFolder(file);
   });
 }
 
