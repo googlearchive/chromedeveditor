@@ -14,6 +14,7 @@ import '../lib/services.dart' as services;
  */
 class Outline {
   StreamSubscription _currentOutlineOperation;
+  Completer _buildCompleter;
 
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
@@ -76,18 +77,22 @@ class Outline {
    * @return A subscription which can be canceled to cancel the outline.
    */
   Future build(String code) {
-    Completer completer = new Completer();
-    
     if (_currentOutlineOperation != null) {
       _currentOutlineOperation.cancel();
     }
 
+    if (_buildCompleter != null && !_buildCompleter.isCompleted) {
+      _buildCompleter.complete();
+    }
+    
+    _buildCompleter = new Completer();
+    
     _currentOutlineOperation = analyzer.getOutlineFor(code).asStream()
         .listen((services.Outline model) => _populate(model));
     
-    _currentOutlineOperation.onDone(() => completer.complete);
+    _currentOutlineOperation.onDone(() => _buildCompleter.complete);
     
-    return completer.future;
+    return _buildCompleter.future;
   }
 
   void _populate(services.Outline outline) {
