@@ -449,5 +449,17 @@ var Diff = {
       }
     }
     return {conflict: conflict, text: lines.join('\n')};
+  },
+
+  createDiffWindow: function(file1, file2, path) {
+    chrome.app.window.create('diff/main.html', {
+        width: 1280,
+        height: 800
+      },
+      function(appWindow) {
+        appWindow.contentWindow.files = function() { return [file1, file2];};
+        appWindow.contentWindow.path = function() { return path;};
+      }
+    );
   }
 };

@@ -28,6 +28,7 @@ import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
+import 'git/commands/diff.dart';
 import 'git/commands/fetch.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
@@ -379,6 +380,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       return Revert.revert(options, resources.map((e) => e.entry).toList());
+    });
+  }
+
+  Future diff(chrome.ChromeFileEntry fileEntry) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Diff.DiffFile(store, fileEntry);
     });
   }
 
