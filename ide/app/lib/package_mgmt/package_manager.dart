@@ -10,22 +10,9 @@ import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
-class PackageServiceProperties {
-  String packageServiceName;
-  String packageSpecFileName;
-  String packagesDirName;
-  String libDirName;
-  String packageRefPrefix;
-  RegExp packageRefPrefixRegexp;
+// TODO(ussuri): Add comments.
 
-  PackageServiceProperties(
-      this.packageServiceName,
-      this.packageSpecFileName,
-      this.packagesDirName,
-      this.libDirName,
-      this.packageRefPrefix,
-      this.packageRefPrefixRegexp);
-
+abstract class PackageServiceProperties {
   bool isProjectWithPackages(Project project) =>
       project.getChild(packageSpecFileName) != null;
 
@@ -52,11 +39,20 @@ class PackageServiceProperties {
            !isInPackagesFolder(resource);
   }
 
-  void setSelfReference(Project project, String selfReference) =>
-      project.setMetadata('${packageServiceName}SelfReference', selfReference);
+  /**
+   * Pure virtual interface.
+   */
 
-  String getSelfReference(Project project) =>
-      project.getMetadata('${packageServiceName}SelfReference');
+  String get packageServiceName;
+  String get packageSpecFileName;
+  String get packagesDirName;
+  String get libDirName;
+  String get packageRefPrefix;
+  RegExp get packageRefPrefixRegexp;
+
+  void setSelfReference(Project project, String selfReference);
+
+  String getSelfReference(Project project);
 }
 
 abstract class PackageManager {
