@@ -9,6 +9,7 @@ import 'dart:isolate';
 
 import 'package:logging/logging.dart';
 
+import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
 import 'services/compiler.dart';
 import 'services/services_common.dart';
@@ -28,9 +29,9 @@ class Services {
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
   final Workspace _workspace;
-  final PubManager _pubManager;
+  final PackageManager _packageManager;
 
-  Services(this._workspace, this._pubManager) {
+  Services(this._workspace, this._packageManager) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
     registerService(new AnalyzerService(this, _isolateHandler));
@@ -164,13 +165,15 @@ class AnalyzerService extends Service {
   // TODO(devoncarew): We'll want to move away from this method, in favor of the
   // [ProjectAnalyzer] interface.
   Future<Map<File, List<AnalysisError>>> buildFiles(List<File> dartFiles) {
-    PubResolver resolver = null;
+    PackageResolver resolver = null;
 
     if (dartFiles.isNotEmpty) {
-      resolver = services._pubManager.getResolverFor(dartFiles.first.project);
+      resolver = services._packageManager.getResolverFor(dartFiles.first.project);
     }
 
-    Map args = {"dartFileUuids": _filesToUuid(resolver, dartFiles)};
+    Map args = {
+        "dartFileUuids": _filesToUuid(services._packageManager, resolver, dartFiles)
+    };
 
     return _sendAction("buildFiles", args).then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
@@ -229,9 +232,10 @@ class AnalyzerService extends Service {
     }
   }
 
-  PubResolver getPubResolverFor(Project project) {
-    return services._pubManager.getResolverFor(project);
-  }
+  PackageManager getPackageManager() => services._packageManager;
+
+  PackageResolver getPackageResolverFor(Project project) =>
+      services._packageManager.getResolverFor(project);
 
   void _touch(ProjectAnalyzer context) {
     _recentContexts.remove(context);
@@ -252,12 +256,13 @@ class ProjectAnalyzer {
       List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
     analyzerService._touch(this);
 
-    PubResolver resolver = analyzerService.getPubResolverFor(project);
+    PackageManager manager = analyzerService.getPackageManager();
+    PackageResolver resolver = analyzerService.getPackageResolverFor(project);
 
     var args = {'contextId': project.uuid};
-    args['added'] = _filesToUuid(resolver, addedFiles);
-    args['changed'] = _filesToUuid(resolver, changedFiles);
-    args['deleted'] = _filesToUuid(resolver, deletedFiles);
+    args['added'] = _filesToUuid(manager, resolver, addedFiles);
+    args['changed'] = _filesToUuid(manager, resolver, changedFiles);
+    args['deleted'] = _filesToUuid(manager, resolver, deletedFiles);
 
     return analyzerService._sendAction('processContextChanges', args)
         .then((ServiceActionEvent event) {
@@ -304,13 +309,13 @@ class ChromeServiceImpl extends Service {
             return _sendResponse(event, {"contents": contents});
           });
         case "getPackageContents":
-          String relativeToUUid = event.data['relativeTo'];
+          String relativeToUuid = event.data['relativeTo'];
           String packageRef = event.data['packageRef'];
-          Resource resource = services._workspace.restoreResource(relativeToUUid);
+          Resource resource = services._workspace.restoreResource(relativeToUuid);
           if (resource == null) {
-            throw "Could not restore file with uuid $relativeToUUid";
+            throw "Could not restore file with uuid $relativeToUuid";
           }
-          PubResolver resolver = services._pubManager.getResolverFor(resource.project);
+          PackageResolver resolver = services._packageManager.getResolverFor(resource.project);
           File packageFile = resolver.resolveRefToFile(packageRef);
           if (packageFile == null) {
             throw "Could not resolve reference: ${packageRef}";
@@ -441,10 +446,11 @@ class _IsolateHandler {
   void dispose() { }
 }
 
-List<String> _filesToUuid(PubResolver pubResolver, List<File> files) {
+List<String> _filesToUuid(
+    PackageManager manager, PackageResolver resolver, List<File> files) {
   return files.map((File file) {
-    if (PubProps.isInPackagesFolder(file) && pubResolver != null) {
-      return pubResolver.getReferenceFor(file);
+    if (resolver != null && manager.props.isInPackagesFolder(file)) {
+      return resolver.getReferenceFor(file);
     } else {
       return file.uuid;
     }

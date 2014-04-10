@@ -19,6 +19,7 @@ import 'apps/app_utils.dart';
 import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
+import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
 import 'server.dart';
 import 'services.dart';
@@ -241,7 +242,8 @@ class PackagesServlet extends PicoServlet {
 
     if (project is Project) {
       // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
-      PubResolver resolver = _launchManager._pubManager.getResolverFor(project);
+      PackageResolver resolver =
+          _launchManager._pubManager.getResolverFor(project);
       File file = resolver.resolveRefToFile(_getPath(request));
       if (file != null) {
         return _serveFileResponse(file);

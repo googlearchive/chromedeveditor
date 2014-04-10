@@ -30,6 +30,9 @@ import 'outline.dart';
 export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
+  static final PubProps _pubProps = new PubProps();
+  static final BowerProps _bowerProps = new BowerProps();
+
   final AceManager aceManager;
   final workspace.File file;
 
@@ -88,8 +91,10 @@ class TextEditor extends Editor {
 
   bool get supportsFormat => false;
 
+  // TODO(ussuri): get ahold of a generic PackageManager and use its
+  // isInPackagesFolder() instead.
   bool get readOnly =>
-      BowerProps.isInPackagesFolder(file) || PubProps.isInPackagesFolder(file);
+      _pubProps.isInPackagesFolder(file) || _bowerProps.isInPackagesFolder(file);
 
   void format() { }
 

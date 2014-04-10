@@ -23,38 +23,29 @@ class PubProps extends PackageManagerProps {
   static const _PACKAGES_DIR_NAME = 'packages';
   static const _PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
   static const _LIB_DIR_NAME = 'lib';
-  static final _PACKAGE_REF_PREFIX = 'package:';
+  static const _PACKAGE_REF_PREFIX = 'package:';
   // Matching prefixes:
   // package:foo/bar
   // package:/foo/bar
   // /packages/foo/bar
-  static final _PACKAGE_REF_PREFIX_REGEX = new RegExp(
-      '^($_PACKAGE_REF_PREFIX|/${PubProps._PACKAGES_DIR_NAME}/)(.*)');
+  static final _PACKAGE_REF_PREFIX_REGEXP = new RegExp(
+      '^($_PACKAGE_REF_PREFIX|/${_PACKAGES_DIR_NAME}/)(.*)');
 
-  static bool isProjectWithPackages(Project project) =>
-      PackageManagerProps.isProjectWithPackages(project, _PACKAGE_SPEC_FILE_NAME);
-
-  static bool isPackageResource(Resource resource) =>
-      PackageManagerProps.isPackageResource(resource, _PACKAGE_SPEC_FILE_NAME);
-
-  static bool isInPackagesFolder(Resource resource) =>
-      PackageManagerProps.isInPackagesFolder(resource, _PACKAGES_DIR_NAME);
-
-  static bool isPackageRef(String url) =>
-      _PACKAGE_REF_PREFIX_REGEX.matchAsPrefix(url) != null;
-
-  static bool isSecondaryPackage(Resource resource) {
-    return resource.path.contains('/$_PACKAGES_DIR_NAME/') &&
-           !isInPackagesFolder(resource);
-  }
+  String get packageSpecFileName => _PACKAGE_SPEC_FILE_NAME;
+  String get packagesDirName => _PACKAGES_DIR_NAME;
+  RegExp get packageRefPrefixRegexp => _PACKAGE_REF_PREFIX_REGEXP;
 }
 
 class PubManager extends PackageManager {
+  static final _props = new PubProps();
+
   PubManager(Workspace workspace) : super(workspace);
+
+  PackageManagerProps get props => _props;
 
   PackageBuilder getBuilder() => new _PubBuilder();
 
-  PackageResolver getResolverFor(Project project) => new PubResolver._(project);
+  PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
   Future fetchPackages(Project project) {
     return tavern.getDependencies(project.entry, _handleLog).whenComplete(() {
@@ -74,10 +65,12 @@ class PubManager extends PackageManager {
 /**
  * A class to help resolve pub `package:` references.
  */
-class PubResolver extends PackageResolver {
+class _PubResolver extends PackageResolver {
+  static final _props = new PubProps();
+
   final Project project;
 
-  PubResolver._(this.project);
+  _PubResolver._(this.project);
 
   String get packageServiceName => PubProps._PACKAGE_SERVICE_NAME;
 
@@ -88,7 +81,7 @@ class PubResolver extends PackageResolver {
    * does not resolve to an existing file, this method will return `null`.
    */
   File resolveRefToFile(String url) {
-    Match match = PubProps._PACKAGE_REF_PREFIX_REGEX.matchAsPrefix(url);
+    Match match = _props.packageRefPrefixRegexp.matchAsPrefix(url);
     if (match == null) return null;
 
     String ref = match.group(2);

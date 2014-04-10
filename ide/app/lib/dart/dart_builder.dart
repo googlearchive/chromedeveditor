@@ -23,8 +23,11 @@ Logger _logger = new Logger('spark.dart_builder');
  */
 class DartBuilder extends Builder {
   final Services services;
+  AnalyzerService analyzer;
 
-  DartBuilder(this.services);
+  DartBuilder(this.services) {
+     analyzer = services.getService("analyzer");
+  }
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     if (_disableDartAnalyzer) return new Future.value();
@@ -33,8 +36,6 @@ class DartBuilder extends Builder {
         (c) => c.resource is File && _includeFile(c.resource)).toList();
     List<ChangeDelta> projectDeletes = event.changes.where(
         (c) => c.resource is Project && c.isDelete).toList();
-
-    AnalyzerService analyzer = services.getService("analyzer");
 
     if (projectDeletes.isNotEmpty) {
       // If we get a project delete, it'll be the only thing that we have to
@@ -101,10 +102,13 @@ class DartBuilder extends Builder {
   bool _includeFile(File file) {
     return file.name.endsWith('.dart') && !file.isDerived();
   }
+
+  void _removeSecondaryPackages(List<File> files) {
+    files.removeWhere(
+        (file) => analyzer.getPackageManager().props.isSecondaryPackage(file));
+  }
 }
 
-void _removeSecondaryPackages(List<File> files) =>
-    files.removeWhere((file) => PubProps.isSecondaryPackage(file));
 
 int _convertSeverity(int sev) {
   if (sev == ErrorSeverity.ERROR) {

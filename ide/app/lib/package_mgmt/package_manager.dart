@@ -11,16 +11,15 @@ import '../jobs.dart';
 import '../workspace.dart';
 
 abstract class PackageManagerProps {
-  static bool isProjectWithPackages(Project project, String specFileName) =>
-      project.getChild(specFileName) != null;
+  bool isProjectWithPackages(Project project) =>
+      project.getChild(packageSpecFileName) != null;
 
-  static bool isPackageResource(Resource resource, String specFileName) {
-    return
-        (resource is File && resource.name == specFileName) ||
-        (resource is Project && isProjectWithPackages(resource, specFileName));
+  bool isPackageResource(Resource resource) {
+    return (resource is File && resource.name == packageSpecFileName) ||
+           (resource is Project && isProjectWithPackages(resource));
   }
 
-  static bool isInPackagesFolder(Resource resource, String packagesDirName) {
+  bool isInPackagesFolder(Resource resource) {
     while (resource.parent != null) {
       if (resource.parent is Project) {
         return resource.name == packagesDirName && resource is Folder;
@@ -29,6 +28,21 @@ abstract class PackageManagerProps {
     }
     return false;
   }
+
+  bool isPackageRef(String url) =>
+      packageRefPrefixRegexp.matchAsPrefix(url) != null;
+
+  bool isSecondaryPackage(Resource resource) {
+    return resource.path.contains('/$packagesDirName/') &&
+           !isInPackagesFolder(resource);
+  }
+
+  /**
+   * Pure virtual interface.
+   */
+  String get packageSpecFileName;
+  String get packagesDirName;
+  RegExp packageRefPrefixRegexp;
 }
 
 abstract class PackageManager {
@@ -39,6 +53,7 @@ abstract class PackageManager {
   /**
    * Pure virtual interface.
    */
+  PackageManagerProps get props;
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
   Future fetchPackages(Project project);

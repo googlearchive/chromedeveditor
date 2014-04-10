@@ -26,14 +26,9 @@ class BowerProps extends PackageManagerProps {
   static const _PACKAGES_DIR_NAME = 'bower_packages';
   static const _PACKAGE_SPEC_FILE_NAME = 'bower.json';
 
-  static bool isProjectWithPackages(Project project) =>
-      PackageManagerProps.isProjectWithPackages(project, _PACKAGE_SPEC_FILE_NAME);
-
-  static bool isPackageResource(Resource resource) =>
-      PackageManagerProps.isPackageResource(resource, _PACKAGE_SPEC_FILE_NAME);
-
-  static bool isInPackagesFolder(Resource resource) =>
-      PackageManagerProps.isInPackagesFolder(resource, _PACKAGES_DIR_NAME);
+  String get packageSpecFileName => _PACKAGE_SPEC_FILE_NAME;
+  String get packagesDirName => _PACKAGES_DIR_NAME;
+  RegExp get packageRefPrefixRegexp => null;
 }
 
 class BowerManager extends PackageManager {
@@ -48,15 +43,18 @@ class BowerManager extends PackageManager {
       new RegExp('''^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$''');
 
   ScmProvider _scmProvider;
+  static final _props = new BowerProps();
 
   BowerManager(Workspace workspace) :
     _scmProvider = getProviderType('git'),
     super(workspace);
 
+  PackageManagerProps get props => _props;
+
   PackageBuilder getBuilder() => new _BowerBuilder();
 
   PackageResolver getResolverFor(Project project) =>
-      new BowerResolver._(project);
+      new _BowerResolver._(project);
 
   Future fetchPackages(Project project) {
     return _fetchPackages(project).whenComplete(() {
@@ -123,8 +121,8 @@ class BowerManager extends PackageManager {
  * A dummy class that currently doesn't resolve anything, since the definition
  * of a Bower package reference in JS code is yet unclear.
  */
-class BowerResolver extends PackageResolver {
-  BowerResolver._(Project project);
+class _BowerResolver extends PackageResolver {
+  _BowerResolver._(Project project);
 
   String get packageServiceName => BowerProps._PACKAGE_SERVICE_NAME;
 

@@ -1396,7 +1396,7 @@ class PubGetAction extends PackageGetAction {
   Job _createJob(ws.Project project) => new PubGetJob(spark, project);
 
   bool _appliesTo(ws.Resource resource) =>
-      PubProps.isPackageResource(resource);
+      spark.pubManager.props.isPackageResource(resource);
 }
 
 class BowerGetAction extends PackageGetAction {
@@ -1405,7 +1405,7 @@ class BowerGetAction extends PackageGetAction {
   Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
 
   bool _appliesTo(ws.Resource resource) =>
-      BowerProps.isPackageResource(resource);
+      spark.bowerManager.props.isPackageResource(resource);
 }
 
 /**
@@ -1649,12 +1649,12 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._selectResource(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
-            if (PubProps.isProjectWithPackages(project)) {
+            if (spark.pubManager.props.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
-            if (BowerProps.isProjectWithPackages(project)) {
+            if (spark.bowerManager.props.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });
