@@ -273,7 +273,7 @@ abstract class Spark
 
   void initPackageManagers() {
     _pubManager = new PubManager(workspace);
-    _bowerManager = new BowerManager();
+    _bowerManager = new BowerManager(workspace);
   }
 
   void createEditorComponents() {
@@ -373,6 +373,7 @@ abstract class Spark
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
+    actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
@@ -1365,8 +1366,9 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 }
 
-class PubGetAction extends SparkAction implements ContextAction {
-  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
+abstract class PackageGetAction extends SparkAction implements ContextAction {
+  PackageGetAction(Spark spark, String id, String name) :
+    super(spark, id, name);
 
   void _invoke([context]) {
     ws.Resource resource;
@@ -1377,14 +1379,34 @@ class PubGetAction extends SparkAction implements ContextAction {
       resource = context.first;
     }
 
-    spark.jobManager.schedule(new PubGetJob(spark, resource.project));
+    spark.jobManager.schedule(_createJob(resource.project));
   }
 
   String get category => 'application';
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
-  bool _appliesTo(ws.Resource resource) => PubManager.isPubResource(resource);
+  Job _createJob(ws.Project project);
+
+  bool _appliesTo(ws.Resource resource);
+}
+
+class PubGetAction extends PackageGetAction {
+  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
+
+  Job _createJob(ws.Project project) => new PubGetJob(spark, project);
+
+  bool _appliesTo(ws.Resource resource) =>
+      spark.pubManager.properties.isPackageResource(resource);
+}
+
+class BowerGetAction extends PackageGetAction {
+  BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
+
+  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+
+  bool _appliesTo(ws.Resource resource) =>
+      spark.bowerManager.properties.isPackageResource(resource);
 }
 
 class PubUpgradeAction extends SparkAction implements ContextAction {
@@ -1406,7 +1428,8 @@ class PubUpgradeAction extends SparkAction implements ContextAction {
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
-  bool _appliesTo(ws.Resource resource) => PubManager.isPubResource(resource);
+  bool _appliesTo(ws.Resource resource) =>
+      spark.pubManager.properties.isPackageResource(resource);
 }
 
 /**
@@ -1649,13 +1672,13 @@ class NewProjectAction extends SparkActionWithDialog {
           Timer.run(() {
             spark._selectResource(ProjectBuilder.getMainResourceFor(project));
 
-            // Run pub if the new project has a pubspec file.
-            if (PubManager.isPubProject(project)) {
+            // Run Pub if the new project has a pubspec file.
+            if (spark.pubManager.properties.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
-            if (BowerManager.isBowerProject(project)) {
+            if (spark.bowerManager.properties.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });
@@ -2421,51 +2444,47 @@ class _GitPushJob extends Job {
   }
 }
 
-abstract class PackagesGetJob extends Job {
-  final Spark spark;
-  final ws.Project project;
-  final String _successMsg;
-  final String _errorMsg;
+abstract class PackageManagementJob extends Job {
+  final Spark _spark;
+  final ws.Project _project;
+  final String _commandName;
 
-  PackagesGetJob(this.spark, this.project, this._successMsg, this._errorMsg) :
-    super('Getting packages…');
+  PackageManagementJob(this._spark, this._project, this._commandName) :
+      super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return _run(project).then((_) {
-      spark.showSuccessMessage(_successMsg);
-      spark.workspace.refresh();
+    return _run().then((_) {
+      _spark.showSuccessMessage("Success fetching '$_commandName'");
+      _spark.workspace.refresh();
     }).catchError((e) {
-      spark.showErrorMessage(_errorMsg, e.toString());
+      _spark.showErrorMessage("Error while running '$_commandName'", e.toString());
     });
   }
 
-  Future _run(Project);
+  Future _run();
 }
 
-class PubGetJob extends PackagesGetJob {
+class PubGetJob extends PackageManagementJob {
   PubGetJob(Spark spark, ws.Project project) :
-    super(spark, project,
-          'Pub get run successful', 'Error while running pub get');
+      super(spark, project, 'pub get');
 
-  Future _run(Project) => spark.pubManager.runPubGet(project);
+  Future _run() => _spark.pubManager.installPackages(_project);
 }
 
-class PubUpgradeJob extends PackagesGetJob {
+class PubUpgradeJob extends PackageManagementJob {
   PubUpgradeJob(Spark spark, ws.Project project) :
-    super(spark, project,
-          'Pub upgrade successful', 'Error while running pub upgrade');
+      super(spark, project, 'pub upgrade');
 
-  Future _run(Project) => spark.pubManager.runPubUpgrade(project);
+  Future _run() => _spark.pubManager.upgradePackages(_project);
 }
 
-class BowerGetJob extends PackagesGetJob {
+class BowerGetJob extends PackageManagementJob {
   BowerGetJob(Spark spark, ws.Project project) :
-    super(spark, project,
-          'Bower install run successful', 'Error while running bower install');
+      super(spark, project, 'bower install');
 
-  Future _run(Project) => spark.bowerManager.runBowerInstall(project);
+  Future _run() => _spark.bowerManager.installPackages(_project);
 }
 
 class CompileDartJob extends Job {

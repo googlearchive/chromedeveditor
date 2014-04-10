@@ -5,56 +5,66 @@
 /**
  * Bower services.
  */
-library spark.bower;
+
+// TODO(ussuri): Add tests.
+
+library spark.package_mgmt.bower;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
 
-
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
+import 'package_manager.dart';
 import '../scm.dart';
-import '../workspace.dart' as ws;
-
-const PACKAGES_DIR_NAME = 'bower_packages';
-const PACKAGE_SPEC_FILE_NAME = 'bower.json';
-
-bool isInPackagesFolder(ws.Resource resource) {
-  String path = resource.path;
-  return path.contains('/$PACKAGES_DIR_NAME/') ||
-         path.endsWith('/$PACKAGES_DIR_NAME');
-}
+import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
 
-class BowerManager {
-  static const GITHUB_ROOT_URL = 'https://github.com';
+// TODO(ussuri): Make package-private once no longer used outside.
+final bowerProperties = new BowerProperties();
 
+class BowerProperties extends PackageServiceProperties {
+  String get packageServiceName => 'bower';
+  String get packageSpecFileName => 'bowerspec.yaml';
+  String get packagesDirName => 'bower_packages';
+
+  // Bower doesn't use any of the below nullified properties/methods.
+
+  String get libDirName => null;
+  String get packageRefPrefix => null;
+  RegExp get packageRefPrefixRegexp => null;
+
+  void setSelfReference(Project project, String selfReference) {}
+  String getSelfReference(Project project) => null;
+}
+
+class BowerManager extends PackageManager {
+  static const _GITHUB_ROOT_URL = 'https://github.com';
   /// E.g.: "Polymer/polymer-elements".
-  static const PKG_SPEC_PATH = '''[-\\w./]+''';
+  static const _PACKAGE_SPEC_PATH = '''[-\\w./]+''';
   /// E.g.: "#master", "#1.2.3" (however branches in general are not yet
   /// supported, only "#master" is accepted - see below).
-  static const PKG_SPEC_BRANCH = '''[-\\w.]+''';
+  static const _PACKAGE_SPEC_BRANCH = '''[-\\w.]+''';
   /// E.g.: "Polymer/polymer#master";
-  static final RegExp PKG_SPEC_REGEXP =
-      new RegExp('''^($PKG_SPEC_PATH)(?:#($PKG_SPEC_BRANCH))?\$''');
+  static final RegExp _PACKAGE_SPEC_REGEXP =
+      new RegExp('''^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$''');
 
   ScmProvider _scmProvider;
 
-  BowerManager() :
-    _scmProvider = getProviderType('git');
+  BowerManager(Workspace workspace) :
+      _scmProvider = getProviderType('git'),
+      super(workspace);
 
+  PackageServiceProperties get properties => bowerProperties;
 
-  static bool isBowerProject(ws.Project project) =>
-      project.getChild(PACKAGE_SPEC_FILE_NAME) != null;
+  PackageBuilder getBuilder() => new _BowerBuilder();
 
-  static bool isBowerResource(ws.Resource resource) {
-    return (resource is ws.File && resource.name == PACKAGE_SPEC_FILE_NAME) ||
-           (resource is ws.Project && isBowerProject(resource));
-  }
+  PackageResolver getResolverFor(Project project) =>
+      new _BowerResolver._(project);
 
-  Future runBowerInstall(ws.Project project) {
+  Future installPackages(Project project) {
     return _fetchPackages(project).whenComplete(() {
       return project.refresh();
     }).catchError((e, st) {
@@ -63,14 +73,18 @@ class BowerManager {
     });
   }
 
-  void _handleLog(String line, String level) {
-    // TODO: Dial the logging back.
-     _logger.info(line);
+  Future upgradePackages(Project project) {
+    return new Future.error('Not implemented');
   }
 
-  Future _fetchPackages(ws.Project project) {
-    final chrome.Entry packagesDir = project.getChild(PACKAGES_DIR_NAME).entry;
-    final ws.File specFile = project.getChild(PACKAGE_SPEC_FILE_NAME);
+  // TODO(ussuri): Move the actual fetching code to a standalone package akin
+  // to tavern.
+
+  Future _fetchPackages(Project project) {
+    final chrome.Entry packagesDir =
+        project.getChild(properties.packagesDirName).entry;
+    final File specFile =
+        project.getChild(properties.packageSpecFileName);
 
     return specFile.getContents().then((String spec) {
       final Map<String, dynamic> specMap = JSON.decode(spec);
@@ -86,10 +100,10 @@ class BowerManager {
     });
   }
 
-  Future _fetchPackage(String packageName,
-                     String packageSpec,
-                     chrome.DirectoryEntry packagesDir) {
-    final Match m = PKG_SPEC_REGEXP.matchAsPrefix(packageSpec);
+  Future _fetchPackage(
+      String packageName, String packageSpec,
+      chrome.DirectoryEntry packagesDir) {
+    final Match m = _PACKAGE_SPEC_REGEXP.matchAsPrefix(packageSpec);
     String path = m.group(1);
     if (!path.endsWith('.git')) {
       path += '.git';
@@ -105,7 +119,41 @@ class BowerManager {
     }
 
     return packagesDir.createDirectory(packageName).then((destDir) {
-      return _scmProvider.clone('$GITHUB_ROOT_URL/$path', destDir);
+      return _scmProvider.clone('$_GITHUB_ROOT_URL/$path', destDir);
     });
+  }
+
+  void _handleLog(String line, String level) {
+    // TODO: Dial the logging back.
+     _logger.info(line);
+  }
+}
+
+/**
+ * A dummy class that currently doesn't resolve anything, since the definition
+ * of a Bower package reference in JS code is yet unclear.
+ */
+class _BowerResolver extends PackageResolver {
+  _BowerResolver._(Project project);
+
+  PackageServiceProperties get properties => bowerProperties;
+
+  File resolveRefToFile(String url) => null;
+
+  String getReferenceFor(File file) => null;
+}
+
+/**
+ * A [Builder] implementation which watches for changes to `bower.json` files
+ * and updates the project Bower metadata.
+ */
+class _BowerBuilder extends PackageBuilder {
+  _BowerBuilder();
+
+  PackageServiceProperties get properties => bowerProperties;
+
+  String getPackageNameFromSpec(String spec) {
+    final Map<String, dynamic> specMap = JSON.decode(spec);
+    return specMap == null ? null : specMap['name'];
   }
 }
