@@ -56,13 +56,17 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future fetchPackages(Project project) {
+  Future installPackages(Project project) {
     return _fetchPackages(project).whenComplete(() {
       return project.refresh();
     }).catchError((e, st) {
       _logger.severe('Error getting Bower packages', e, st);
       return new Future.error(e, st);
     });
+  }
+
+  Future upgradePackages(Project project) {
+    return new Future.error('Not implemented');
   }
 
   // TODO(ussuri): Move the actual fetching code to a standalone package akin

@@ -68,9 +68,12 @@ abstract class PackageManager {
    * Pure virtual interface.
    */
   PackageServiceProps get props;
+
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
-  Future fetchPackages(Project project);
+
+  Future installPackages(Project project);
+  Future upgradePackages(Project project);
 }
 
 abstract class PackageResolver {
@@ -124,5 +127,6 @@ abstract class PackageBuilder extends Builder {
    * Pure virtual interface.
    */
   PackageServiceProps get props;
+
   String getPackageNameFromSpec(String spec);
 }

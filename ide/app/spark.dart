@@ -1428,7 +1428,8 @@ class PubUpgradeAction extends SparkAction implements ContextAction {
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
-  bool _appliesTo(ws.Resource resource) => PubManager.isPubResource(resource);
+  bool _appliesTo(ws.Resource resource) =>
+      spark.pubManager.props.isPackageResource(resource);
 }
 
 /**
@@ -2443,18 +2444,18 @@ class _GitPushJob extends Job {
   }
 }
 
-abstract class PackagesGetJob extends Job {
+abstract class PackageManagementJob extends Job {
   final Spark _spark;
   final ws.Project _project;
   final String _commandName;
 
-  PackagesGetJob(this._spark, this._project, this._commandName) :
-    super('Getting packages…');
+  PackageManagementJob(this._spark, this._project, this._commandName) :
+      super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return _fetchPackages().then((_) {
+    return _run().then((_) {
       _spark.showSuccessMessage("Success fetching '$_commandName'");
       _spark.workspace.refresh();
     }).catchError((e) {
@@ -2462,29 +2463,28 @@ abstract class PackagesGetJob extends Job {
     });
   }
 
-  Future _fetchPackages();
+  Future _run();
 }
 
-class PubGetJob extends PackagesGetJob {
+class PubGetJob extends PackageManagementJob {
   PubGetJob(Spark spark, ws.Project project) :
-    super(spark, project, 'pub get');
+      super(spark, project, 'pub get');
 
-  Future _fetchPackages() => _spark.pubManager.fetchPackages(_project);
+  Future _run() => _spark.pubManager.installPackages(_project);
 }
 
-class PubUpgradeJob extends PackagesGetJob {
+class PubUpgradeJob extends PackageManagementJob {
   PubUpgradeJob(Spark spark, ws.Project project) :
-    super(spark, project,
-          'Pub upgrade successful', 'Error while running pub upgrade');
+      super(spark, project, 'pub upgrade');
 
-  Future _run(Project) => spark.pubManager.runPubUpgrade(project);
+  Future _run() => _spark.pubManager.upgradePackages(_project);
 }
 
-class BowerGetJob extends PackagesGetJob {
+class BowerGetJob extends PackageManagementJob {
   BowerGetJob(Spark spark, ws.Project project) :
-    super(spark, project, 'bower install');
+      super(spark, project, 'bower install');
 
-  Future _fetchPackages() => _spark.bowerManager.fetchPackages(_project);
+  Future _run() => _spark.bowerManager.installPackages(_project);
 }
 
 class CompileDartJob extends Job {
