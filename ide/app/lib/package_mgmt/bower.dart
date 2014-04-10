@@ -23,17 +23,14 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.bower');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final BowerProps bowerProps = new BowerProps();
-
-class BowerProps extends PackageServiceProps {
-  String get packageServiceName => 'bower';
-  String get packageSpecFileName => 'bower.json';
-  String get packagesDirName => 'bower_packages';
-  // TODO(ussuri): Do these 3 make sense for Bower?
-  String get libDirName => null;
-  String get packageRefPrefix => null;
-  RegExp get packageRefPrefixRegexp => null;
-}
+final bowerProps = new PackageServiceProps(
+   'bower',
+   'bower.json',
+   'bower_packages',
+   null,
+   null,
+   null
+);
 
 class BowerManager extends PackageManager {
   static const _GITHUB_ROOT_URL = 'https://github.com';

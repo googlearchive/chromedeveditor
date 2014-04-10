@@ -19,29 +19,14 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.pub');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final PubProps pubProps = new PubProps();
-
-class PubProps extends PackageServiceProps {
-  static RegExp _packageRefPrefixRe;
-
-  String get packageServiceName => 'pub';
-  String get packageSpecFileName => 'pubspec.yaml';
-  String get packagesDirName => 'packages';
-  String get libDirName => 'lib';
-  String get packageRefPrefix => 'prefix:';
-
-  RegExp get packageRefPrefixRegexp {
-    if (_packageRefPrefixRe == null) {
-      // Matches:
-      // package:foo/bar
-      // package:/foo/bar
-      // /packages/foo/bar
-      _packageRefPrefixRe =
-          new RegExp('^($packageRefPrefix:|/$packagesDirName/)(.*)');
-    }
-    return _packageRefPrefixRe;
-  }
-}
+final pubProps = new PackageServiceProps(
+    'pub',
+    'pubspec.yaml',
+    'packages',
+    'lib',
+    'prefix:',
+    new RegExp('^(package:|/packages/)(.*)')
+);
 
 class PubManager extends PackageManager {
   PubManager(Workspace workspace) : super(workspace);

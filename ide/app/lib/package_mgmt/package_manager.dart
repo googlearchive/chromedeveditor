@@ -10,7 +10,22 @@ import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
-abstract class PackageServiceProps {
+class PackageServiceProps {
+  String packageServiceName;
+  String packageSpecFileName;
+  String packagesDirName;
+  String libDirName;
+  String packageRefPrefix;
+  RegExp packageRefPrefixRegexp;
+
+  PackageServiceProps(
+      this.packageServiceName,
+      this.packageSpecFileName,
+      this.packagesDirName,
+      this.libDirName,
+      this.packageRefPrefix,
+      this.packageRefPrefixRegexp);
+
   bool isProjectWithPackages(Project project) =>
       project.getChild(packageSpecFileName) != null;
 
@@ -42,13 +57,6 @@ abstract class PackageServiceProps {
 
   String getSelfReference(Project project) =>
       project.getMetadata('${packageServiceName}SelfReference');
-
-  String get packageServiceName;
-  String get packageSpecFileName;
-  String get packagesDirName;
-  String get libDirName;
-  String get packageRefPrefix;
-  RegExp get packageRefPrefixRegexp;
 }
 
 abstract class PackageManager {
