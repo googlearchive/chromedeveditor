@@ -140,7 +140,7 @@ abstract class ScmProvider {
    * [ScmException] through the Future's error on a failure.
    */
   Future clone(String url, chrome.DirectoryEntry dir,
-               {String username, String password});
+               {String username, String password, String branchName});
 }
 
 /**
@@ -261,10 +261,10 @@ class GitScmProvider extends ScmProvider {
   }
 
   Future clone(String url, chrome.DirectoryEntry dir,
-               {String username, String password}) {
+               {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
         root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir),
-        username: username, password: password);
+        branchName : branchName, username: username, password: password);
 
     return options.store.init().then((_) {
       return new Clone(options).clone();

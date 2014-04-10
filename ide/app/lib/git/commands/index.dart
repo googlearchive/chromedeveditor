@@ -24,14 +24,18 @@ import '../utils.dart';
 class Index {
 
   final ObjectStore _store;
-
   Map<String, FileStatus> _statusIdx = {};
-
   Map<String, FileStatus> get statusMap => _statusIdx;
+  // Whether index needs to be written on disk.
+  bool _indexDirty = false;
+  // Whether the index is being written on disk.
+  bool _writingIndex = false;
+  // The timer used to schedule saving of the index to the disk.
+  Timer _writeIndexTimer;
 
   Index(this._store);
 
-  Future updateIndexForEntry(FileStatus status) {
+  void updateIndexForEntry(FileStatus status) {
 
     FileStatus oldStatus = _statusIdx[status.path];
 
@@ -71,14 +75,14 @@ class Index {
       status.type = FileStatusType.UNTRACKED;
     }
     _statusIdx[status.path] = status;
-    return writeIndex();
+    _scheduleWriteIndex();
   }
 
-  Future commitEntry(FileStatus status) {
+  void commitEntry(FileStatus status) {
     status.headSha = status.sha;
     status.type = FileStatusType.COMMITTED;
     _statusIdx[status.path] = status;
-    return writeIndex();
+    _scheduleWriteIndex();
   }
 
   FileStatus getStatusForEntry(chrome.Entry entry)
@@ -97,7 +101,7 @@ class Index {
         }
         status.headSha = status.sha;
       });
-      return writeIndex();
+      _scheduleWriteIndex();
     });
   }
 
@@ -126,14 +130,39 @@ class Index {
   /**
    * Writes into the index file the current index.
    */
-  Future writeIndex() {
-
-    JsonEncoder encoder = new JsonEncoder();
-    String out = encoder.convert(statusIdxToMap());
-
+  Future _writeIndex() {
+    String out = JSON.encode(statusIdxToMap());
     return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
         (chrome.DirectoryEntry entry) {
       return FileOps.createFileWithContent(entry, 'index2', out, 'Text');
+    });
+  }
+
+  /**
+   * Schedule saving of the index to the disk.
+   */
+  void _scheduleWriteIndex() {
+    _indexDirty = true;
+
+    if (_writingIndex) {
+      return;
+    }
+
+    if (_writeIndexTimer != null) {
+      _writeIndexTimer.cancel();
+      _writeIndexTimer = null;
+    }
+
+    _writeIndexTimer = new Timer(const Duration(seconds: 2), () {
+      _writingIndex = true;
+      _writeIndexTimer = null;
+      _indexDirty = false;
+      _writeIndex().then((_) {
+        _writingIndex = false;
+        if (_indexDirty) {
+          _scheduleWriteIndex();
+        }
+      });
     });
   }
 
