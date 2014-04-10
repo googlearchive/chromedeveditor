@@ -43,15 +43,12 @@ abstract class PackageServiceProps {
   String getSelfReference(Project project) =>
       project.getMetadata('${packageServiceName}SelfReference');
 
-  /**
-   * Pure virtual interface.
-   */
   String get packageServiceName;
   String get packageSpecFileName;
   String get packagesDirName;
   String get libDirName;
   String get packageRefPrefix;
-  RegExp packageRefPrefixRegexp;
+  RegExp get packageRefPrefixRegexp;
 }
 
 abstract class PackageManager {
