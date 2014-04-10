@@ -227,8 +227,6 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
  * A servlet that can serve `package:` urls (`/packages/`).
  */
 class PackagesServlet extends PicoServlet {
-  static const PACKAGE_SEGMENT = '/packages/';
-
   LaunchManager _launchManager;
 
   PackagesServlet(this._launchManager);
@@ -242,11 +240,9 @@ class PackagesServlet extends PicoServlet {
     Container project = _launchManager.workspace.getChild(projectName);
 
     if (project is Project) {
-      String path = _getPath(request);
-      path = PubManager.PACKAGE_REF_PREFIX + path.substring(
-          path.indexOf(PACKAGE_SEGMENT) + PACKAGE_SEGMENT.length);
+      // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
       PubResolver resolver = _launchManager._pubManager.getResolverFor(project);
-      File file = resolver.resolveRefToFile(path);
+      File file = resolver.resolveRefToFile(_getPath(request));
       if (file != null) {
         return _serveFileResponse(file);
       }

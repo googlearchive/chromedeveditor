@@ -89,7 +89,7 @@ class TextEditor extends Editor {
   bool get supportsFormat => false;
 
   bool get readOnly =>
-      BowerManager.isInPackagesFolder(file) || PubManager.isInPackagesFolder(file);
+      BowerProps.isInPackagesFolder(file) || PubProps.isInPackagesFolder(file);
 
   void format() { }
 

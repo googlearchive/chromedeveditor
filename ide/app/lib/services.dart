@@ -443,7 +443,7 @@ class _IsolateHandler {
 
 List<String> _filesToUuid(PubResolver pubResolver, List<File> files) {
   return files.map((File file) {
-    if (PubManager.isInPackagesFolder(file) && pubResolver != null) {
+    if (PubProps.isInPackagesFolder(file) && pubResolver != null) {
       return pubResolver.getReferenceFor(file);
     } else {
       return file.uuid;

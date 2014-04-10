@@ -103,12 +103,8 @@ class DartBuilder extends Builder {
   }
 }
 
-void _removeSecondaryPackages(List<File> files) {
-  files.removeWhere((file) {
-    return file.path.contains('/${PubManager.PACKAGES_DIR_NAME}/') &&
-           !PubManager.isInPackagesFolder(file);
-  });
-}
+void _removeSecondaryPackages(List<File> files) =>
+    files.removeWhere((file) => PubProps.isSecondaryPackage(file));
 
 int _convertSeverity(int sev) {
   if (sev == ErrorSeverity.ERROR) {

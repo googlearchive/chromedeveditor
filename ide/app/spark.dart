@@ -273,7 +273,7 @@ abstract class Spark
 
   void initPackageManagers() {
     _pubManager = new PubManager(workspace);
-    _bowerManager = new BowerManager();
+    _bowerManager = new BowerManager(workspace);
   }
 
   void createEditorComponents() {
@@ -1396,7 +1396,7 @@ class PubGetAction extends PackageGetAction {
   Job _createJob(ws.Project project) => new PubGetJob(spark, project);
 
   bool _appliesTo(ws.Resource resource) =>
-      PubManager.isPackageResource(resource);
+      PubProps.isPackageResource(resource);
 }
 
 class BowerGetAction extends PackageGetAction {
@@ -1405,7 +1405,7 @@ class BowerGetAction extends PackageGetAction {
   Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
 
   bool _appliesTo(ws.Resource resource) =>
-      BowerManager.isPackageResource(resource);
+      BowerProps.isPackageResource(resource);
 }
 
 /**
@@ -1648,13 +1648,13 @@ class NewProjectAction extends SparkActionWithDialog {
           Timer.run(() {
             spark._selectResource(ProjectBuilder.getMainResourceFor(project));
 
-            // Run pub if the new project has a pubspec file.
-            if (PubManager.isProjectWithPackages(project)) {
+            // Run Pub if the new project has a pubspec file.
+            if (PubProps.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
-            if (BowerManager.isProjectWithPackages(project)) {
+            if (BowerProps.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });

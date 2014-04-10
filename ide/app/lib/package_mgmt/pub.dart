@@ -12,46 +12,49 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:tavern/tavern.dart' as tavern;
 import 'package:yaml/yaml.dart' as yaml;
-import 'package:yaml/src/parser.dart' show SyntaxError;
 
 import 'package_manager.dart';
-import '../builder.dart';
-import '../jobs.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
 
-class PubManager extends PackageManager {
-  static const PACKAGES_DIR_NAME = 'packages';
-  static const PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
-  static const PACKAGE_REF_PREFIX = 'package:';
-
+class PubProps extends PackageManagerProps {
+  static const _PACKAGE_SERVICE_NAME = 'pub';
+  static const _PACKAGES_DIR_NAME = 'packages';
+  static const _PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
   static const _LIB_DIR_NAME = 'lib';
-
-  PubManager(Workspace workspace) {
-    workspace.builderManager.builders.add(new _PubBuilder());
-  }
+  static final _PACKAGE_REF_PREFIX = 'package:';
+  // Matching prefixes:
+  // package:foo/bar
+  // package:/foo/bar
+  // /packages/foo/bar
+  static final _PACKAGE_REF_PREFIX_REGEX = new RegExp(
+      '^($_PACKAGE_REF_PREFIX|/${PubProps._PACKAGES_DIR_NAME}/)(.*)');
 
   static bool isProjectWithPackages(Project project) =>
-      project.getChild(PACKAGE_SPEC_FILE_NAME) != null;
+      PackageManagerProps.isProjectWithPackages(project, _PACKAGE_SPEC_FILE_NAME);
 
-  static bool isPackageResource(Resource resource) {
-    return (resource is File && resource.name == PACKAGE_SPEC_FILE_NAME) ||
-           (resource is Project && isProjectWithPackages(resource));
+  static bool isPackageResource(Resource resource) =>
+      PackageManagerProps.isPackageResource(resource, _PACKAGE_SPEC_FILE_NAME);
+
+  static bool isInPackagesFolder(Resource resource) =>
+      PackageManagerProps.isInPackagesFolder(resource, _PACKAGES_DIR_NAME);
+
+  static bool isPackageRef(String url) =>
+      _PACKAGE_REF_PREFIX_REGEX.matchAsPrefix(url) != null;
+
+  static bool isSecondaryPackage(Resource resource) {
+    return resource.path.contains('/$_PACKAGES_DIR_NAME/') &&
+           !isInPackagesFolder(resource);
   }
+}
 
-  static bool isPackageRef(String url) => url.startsWith(PACKAGE_REF_PREFIX);
+class PubManager extends PackageManager {
+  PubManager(Workspace workspace) : super(workspace);
 
-  static bool isInPackagesFolder(Resource resource) {
-    while (resource.parent != null) {
-      if (resource.parent is Project) {
-        return resource.name == PACKAGES_DIR_NAME && resource is Folder;
-      }
-      resource = resource.parent;
-    }
+  PackageBuilder getBuilder() => new _PubBuilder();
 
-    return false;
-  }
+  PackageResolver getResolverFor(Project project) => new PubResolver._(project);
 
   Future fetchPackages(Project project) {
     return tavern.getDependencies(project.entry, _handleLog).whenComplete(() {
@@ -60,10 +63,6 @@ class PubManager extends PackageManager {
       _logger.severe('Error Running Pub Get', e, st);
       return new Future.error(e, st);
     });
-  }
-
-  PubResolver getResolverFor(Project project) {
-    return new PubResolver._(project);
   }
 
   void _handleLog(String line, String level) {
@@ -75,10 +74,12 @@ class PubManager extends PackageManager {
 /**
  * A class to help resolve pub `package:` references.
  */
-class PubResolver {
+class PubResolver extends PackageResolver {
   final Project project;
 
   PubResolver._(this.project);
+
+  String get packageServiceName => PubProps._PACKAGE_SERVICE_NAME;
 
   /**
    * Resolve a `package:` reference to a file in this project. This will
@@ -87,17 +88,17 @@ class PubResolver {
    * does not resolve to an existing file, this method will return `null`.
    */
   File resolveRefToFile(String url) {
-    if (!PubManager.isPackageRef(url)) return null;
+    Match match = PubProps._PACKAGE_REF_PREFIX_REGEX.matchAsPrefix(url);
+    if (match == null) return null;
 
-    String ref = url.substring(PubManager.PACKAGE_REF_PREFIX.length);
-    String selfRefName = _getSelfReference(project);
-
-    Folder packageDir = project.getChild(PubManager.PACKAGES_DIR_NAME);
+    String ref = match.group(2);
+    String selfRefName = getSelfReference(project);
+    Folder packageDir = project.getChild(PubProps._PACKAGES_DIR_NAME);
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
       ref = ref.substring(selfRefName.length + 1);
-      packageDir = project.getChild(PubManager._LIB_DIR_NAME);
+      packageDir = project.getChild(PubProps._LIB_DIR_NAME);
     }
 
     if (packageDir == null) return null;
@@ -124,15 +125,17 @@ class PubResolver {
       parent = parent.parent;
     }
 
-    if (resources[0].name == PubManager.PACKAGES_DIR_NAME) {
+    if (resources[0].name == PubProps._PACKAGES_DIR_NAME) {
       resources.removeAt(0);
-      return PubManager.PACKAGE_REF_PREFIX + resources.map((r) => r.name).join('/');
-    } else if (resources[0].name == PubManager._LIB_DIR_NAME) {
-      String selfRefName = _getSelfReference(project);
+      return PubProps._PACKAGE_REF_PREFIX +
+             resources.map((r) => r.name).join('/');
+    } else if (resources[0].name == PubProps._LIB_DIR_NAME) {
+      String selfRefName = getSelfReference(project);
 
       if (selfRefName != null) {
         resources.removeAt(0);
-        return 'package:${selfRefName}/' + resources.map((r) => r.name).join('/');
+        return 'package:${selfRefName}/' +
+               resources.map((r) => r.name).join('/');
       } else {
         return null;
       }
@@ -148,52 +151,15 @@ class PubResolver {
  * information about the project's self-reference name, for later use in
  * resolving `package:` references.
  */
-class _PubBuilder extends Builder {
+class _PubBuilder extends PackageBuilder {
   _PubBuilder();
 
-  Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    List futures = [];
+  String get packageSpecFileName => PubProps._PACKAGE_SPEC_FILE_NAME;
 
-    for (ChangeDelta delta in event.changes) {
-      Resource r = delta.resource;
+  String get packageServiceName => PubProps._PACKAGE_SERVICE_NAME;
 
-      if (!r.isDerived()) {
-        if (r.name == PubManager.PACKAGE_SPEC_FILE_NAME && r.parent is Project) {
-          futures.add(_handlePackageSpecChange(delta));
-        }
-      }
-    }
-
-    return Future.wait(futures);
+  String getPackageNameFromSpec(String spec) {
+    final doc = yaml.loadYaml(spec);
+    return doc == null ? null : doc['name'];
   }
-
-  Future _handlePackageSpecChange(ChangeDelta delta) {
-    File file = delta.resource;
-
-    if (delta.isDelete) {
-      _setSelfReference(file.project, null);
-      return new Future.value();
-    } else {
-      return file.getContents().then((String str) {
-        file.clearMarkers('pub');
-
-        try {
-          var doc = yaml.loadYaml(str);
-          String packageName = doc == null ? null : doc['name'];
-          _setSelfReference(file.project, packageName);
-        } on SyntaxError catch (e) {
-          // Use some better method for determining where to place the marker.
-          file.createMarker('pub', Marker.SEVERITY_ERROR, '${e}', 1);
-        }
-      });
-    }
-  }
-}
-
-void _setSelfReference(Project project, String selfReference) {
-  project.setMetadata('pubSelfReference', selfReference);
-}
-
-String _getSelfReference(Project project) {
-  return project.getMetadata('pubSelfReference');
 }

@@ -15,16 +15,29 @@ import 'package:logging/logging.dart';
 
 import 'package_manager.dart';
 import '../scm.dart';
-import '../workspace.dart' as ws;
+import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
 
+// TODO(ussuri): Add tests.
+
+class BowerProps extends PackageManagerProps {
+  static const _PACKAGE_SERVICE_NAME = 'bower';
+  static const _PACKAGES_DIR_NAME = 'bower_packages';
+  static const _PACKAGE_SPEC_FILE_NAME = 'bower.json';
+
+  static bool isProjectWithPackages(Project project) =>
+      PackageManagerProps.isProjectWithPackages(project, _PACKAGE_SPEC_FILE_NAME);
+
+  static bool isPackageResource(Resource resource) =>
+      PackageManagerProps.isPackageResource(resource, _PACKAGE_SPEC_FILE_NAME);
+
+  static bool isInPackagesFolder(Resource resource) =>
+      PackageManagerProps.isInPackagesFolder(resource, _PACKAGES_DIR_NAME);
+}
+
 class BowerManager extends PackageManager {
-  static const PACKAGES_DIR_NAME = 'bower_packages';
-  static const PACKAGE_SPEC_FILE_NAME = 'bower.json';
-
   static const _GITHUB_ROOT_URL = 'https://github.com';
-
   /// E.g.: "Polymer/polymer-elements".
   static const _PACKAGE_SPEC_PATH = '''[-\\w./]+''';
   /// E.g.: "#master", "#1.2.3" (however branches in general are not yet
@@ -36,26 +49,18 @@ class BowerManager extends PackageManager {
 
   ScmProvider _scmProvider;
 
-  BowerManager() :
-    _scmProvider = getProviderType('git');
+  BowerManager(Workspace workspace) :
+    _scmProvider = getProviderType('git'),
+    super(workspace);
 
-  static bool isProjectWithPackages(ws.Project project) =>
-      project.getChild(PACKAGE_SPEC_FILE_NAME) != null;
+  PackageBuilder getBuilder() => new _BowerBuilder();
 
-  static bool isPackageResource(ws.Resource resource) {
-    return (resource is ws.File && resource.name == PACKAGE_SPEC_FILE_NAME) ||
-           (resource is ws.Project && isProjectWithPackages(resource));
-  }
+  PackageResolver getResolverFor(Project project) =>
+      new BowerResolver._(project);
 
-  static bool isInPackagesFolder(ws.Resource resource) {
-    String path = resource.path;
-    return path.contains('/$PACKAGES_DIR_NAME/') ||
-           path.endsWith('/$PACKAGES_DIR_NAME');
-  }
-
-  Future fetchPackages(ws.Project project) {
-    final ws.File specFile = project.getChild(PACKAGE_SPEC_FILE_NAME);
-    final ws.Folder packagesDir = project.getChild(PACKAGES_DIR_NAME);
+  Future fetchPackages(Project project) {
+    final File specFile = project.getChild(BowerProps._PACKAGE_SPEC_FILE_NAME);
+    final Folder packagesDir = project.getChild(BowerProps._PACKAGES_DIR_NAME);
 
     return _fetchDependencies(specFile.entry, packagesDir.entry).whenComplete(() {
       return project.refresh();
@@ -65,8 +70,11 @@ class BowerManager extends PackageManager {
     });
   }
 
-  Future _fetchDependencies(chrome.ChromeFileEntry specFile,
-                                  chrome.DirectoryEntry topDestDir) {
+  // TODO(ussuri): Move the actual fetching code to a standalone package akin
+  // to tavern.
+
+  Future _fetchDependencies(
+      chrome.ChromeFileEntry specFile, chrome.DirectoryEntry topDestDir) {
     return specFile.readText().then((String spec) {
       final Map<String, dynamic> specMap = JSON.decode(spec);
       final Map<String, String> deps = specMap['dependencies'];
@@ -83,8 +91,8 @@ class BowerManager extends PackageManager {
         final List<Future> subFutures = [];
 
         deps.forEach((String packageName, String packageSpec) {
-          topDestDir.getFile('$packageName/$PACKAGE_SPEC_FILE_NAME').then(
-              (chrome.FileEntry subSpecFile) {
+          topDestDir.getFile('$packageName/$BowerProps.PACKAGE_SPEC_FILE_NAME')
+              .then((chrome.FileEntry subSpecFile) {
             if (subSpecFile != null) {
               subFutures.add(_fetchDependencies(subSpecFile, topDestDir));
             }
@@ -96,12 +104,12 @@ class BowerManager extends PackageManager {
       });
     }).catchError((e, s) {
       // Ignore: fetch as many dependencies as we can, regardless of errors.
+      return new Future.value();
     });
   }
 
-  Future _fetchPackage(String name,
-                       String spec,
-                       chrome.DirectoryEntry topDestDir) {
+  Future _fetchPackage(
+      String name, String spec, chrome.DirectoryEntry rootDestDir) {
     final Match match = _PACKAGE_SPEC_REGEXP.matchAsPrefix(spec);
 
     if (match == null) {
@@ -120,7 +128,7 @@ class BowerManager extends PackageManager {
           " Only 'master' is supported.");
     }
 
-    return topDestDir.createDirectory(name).then(
+    return rootDestDir.createDirectory(name).then(
         (chrome.DirectoryEntry destDir) {
       return _scmProvider.clone('$_GITHUB_ROOT_URL/$path', destDir);
     });
@@ -129,5 +137,36 @@ class BowerManager extends PackageManager {
   void _handleLog(String line, String level) {
     // TODO: Dial the logging back.
      _logger.info(line);
+  }
+}
+
+/**
+ * A dummy class that currently doesn't resolve anything, since the definition
+ * of a Bower package reference in JS code is yet unclear.
+ */
+class BowerResolver extends PackageResolver {
+  BowerResolver._(Project project);
+
+  String get packageServiceName => BowerProps._PACKAGE_SERVICE_NAME;
+
+  File resolveRefToFile(String url) => null;
+
+  String getReferenceFor(File file) => null;
+}
+
+/**
+ * A [Builder] implementation which watches for changes to `bower.json` files
+ * and updates the project Bower metadata.
+ */
+class _BowerBuilder extends PackageBuilder {
+  _BowerBuilder();
+
+  String get packageSpecFileName => BowerProps._PACKAGE_SPEC_FILE_NAME;
+
+  String get packageServiceName => BowerProps._PACKAGE_SERVICE_NAME;
+
+  String getPackageNameFromSpec(String spec) {
+    final Map<String, dynamic> specMap = JSON.decode(spec);
+    return specMap == null ? null : specMap['name'];
   }
 }
