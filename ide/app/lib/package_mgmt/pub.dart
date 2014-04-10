@@ -18,30 +18,35 @@ import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
 
-class PubProps extends PackageManagerProps {
-  static const _PACKAGE_SERVICE_NAME = 'pub';
-  static const _PACKAGES_DIR_NAME = 'packages';
-  static const _PACKAGE_SPEC_FILE_NAME = 'pubspec.yaml';
-  static const _LIB_DIR_NAME = 'lib';
-  static const _PACKAGE_REF_PREFIX = 'package:';
-  // Matching prefixes:
-  // package:foo/bar
-  // package:/foo/bar
-  // /packages/foo/bar
-  static final _PACKAGE_REF_PREFIX_REGEXP = new RegExp(
-      '^($_PACKAGE_REF_PREFIX|/${_PACKAGES_DIR_NAME}/)(.*)');
+// TODO(ussuri): Make package-private once no longer used outside.
+final PubProps pubProps = new PubProps();
 
-  String get packageSpecFileName => _PACKAGE_SPEC_FILE_NAME;
-  String get packagesDirName => _PACKAGES_DIR_NAME;
-  RegExp get packageRefPrefixRegexp => _PACKAGE_REF_PREFIX_REGEXP;
+class PubProps extends PackageServiceProps {
+  static RegExp _packageRefPrefixRe;
+
+  String get packageServiceName => 'pub';
+  String get packageSpecFileName => 'pubspec.yaml';
+  String get packagesDirName => 'packages';
+  String get libDirName => 'lib';
+  String get packageRefPrefix => 'prefix:';
+
+  RegExp get packageRefPrefixRegexp {
+    if (_packageRefPrefixRe == null) {
+      // Matches:
+      // package:foo/bar
+      // package:/foo/bar
+      // /packages/foo/bar
+      _packageRefPrefixRe =
+          new RegExp('^($packageRefPrefix:|/$packagesDirName/)(.*)');
+    }
+    return _packageRefPrefixRe;
+  }
 }
 
 class PubManager extends PackageManager {
-  static final _props = new PubProps();
-
   PubManager(Workspace workspace) : super(workspace);
 
-  PackageManagerProps get props => _props;
+  PackageServiceProps get props => pubProps;
 
   PackageBuilder getBuilder() => new _PubBuilder();
 
@@ -66,13 +71,11 @@ class PubManager extends PackageManager {
  * A class to help resolve pub `package:` references.
  */
 class _PubResolver extends PackageResolver {
-  static final _props = new PubProps();
-
   final Project project;
 
   _PubResolver._(this.project);
 
-  String get packageServiceName => PubProps._PACKAGE_SERVICE_NAME;
+  PackageServiceProps get props => pubProps;
 
   /**
    * Resolve a `package:` reference to a file in this project. This will
@@ -81,17 +84,17 @@ class _PubResolver extends PackageResolver {
    * does not resolve to an existing file, this method will return `null`.
    */
   File resolveRefToFile(String url) {
-    Match match = _props.packageRefPrefixRegexp.matchAsPrefix(url);
+    Match match = props.packageRefPrefixRegexp.matchAsPrefix(url);
     if (match == null) return null;
 
     String ref = match.group(2);
-    String selfRefName = getSelfReference(project);
-    Folder packageDir = project.getChild(PubProps._PACKAGES_DIR_NAME);
+    String selfRefName = props.getSelfReference(project);
+    Folder packageDir = project.getChild(props.packagesDirName);
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
       ref = ref.substring(selfRefName.length + 1);
-      packageDir = project.getChild(PubProps._LIB_DIR_NAME);
+      packageDir = project.getChild(props.libDirName);
     }
 
     if (packageDir == null) return null;
@@ -118,12 +121,11 @@ class _PubResolver extends PackageResolver {
       parent = parent.parent;
     }
 
-    if (resources[0].name == PubProps._PACKAGES_DIR_NAME) {
+    if (resources[0].name == props.packagesDirName) {
       resources.removeAt(0);
-      return PubProps._PACKAGE_REF_PREFIX +
-             resources.map((r) => r.name).join('/');
-    } else if (resources[0].name == PubProps._LIB_DIR_NAME) {
-      String selfRefName = getSelfReference(project);
+      return props.packageRefPrefix + resources.map((r) => r.name).join('/');
+    } else if (resources[0].name == props.libDirName) {
+      String selfRefName = props.getSelfReference(project);
 
       if (selfRefName != null) {
         resources.removeAt(0);
@@ -147,9 +149,7 @@ class _PubResolver extends PackageResolver {
 class _PubBuilder extends PackageBuilder {
   _PubBuilder();
 
-  String get packageSpecFileName => PubProps._PACKAGE_SPEC_FILE_NAME;
-
-  String get packageServiceName => PubProps._PACKAGE_SERVICE_NAME;
+  PackageServiceProps get props => pubProps;
 
   String getPackageNameFromSpec(String spec) {
     final doc = yaml.loadYaml(spec);

@@ -5,6 +5,9 @@
 /**
  * Bower services.
  */
+
+// TODO(ussuri): Add tests.
+
 library spark.package_mgmt.bower;
 
 import 'dart:async';
@@ -19,15 +22,16 @@ import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
 
-// TODO(ussuri): Add tests.
+// TODO(ussuri): Make package-private once no longer used outside.
+final BowerProps bowerProps = new BowerProps();
 
-class BowerProps extends PackageManagerProps {
-  static const _PACKAGE_SERVICE_NAME = 'bower';
-  static const _PACKAGES_DIR_NAME = 'bower_packages';
-  static const _PACKAGE_SPEC_FILE_NAME = 'bower.json';
-
-  String get packageSpecFileName => _PACKAGE_SPEC_FILE_NAME;
-  String get packagesDirName => _PACKAGES_DIR_NAME;
+class BowerProps extends PackageServiceProps {
+  String get packageServiceName => 'bower';
+  String get packageSpecFileName => 'bower.json';
+  String get packagesDirName => 'bower_packages';
+  // TODO(ussuri): Do these 3 make sense for Bower?
+  String get libDirName => null;
+  String get packageRefPrefix => null;
   RegExp get packageRefPrefixRegexp => null;
 }
 
@@ -43,13 +47,12 @@ class BowerManager extends PackageManager {
       new RegExp('''^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$''');
 
   ScmProvider _scmProvider;
-  static final _props = new BowerProps();
 
   BowerManager(Workspace workspace) :
-    _scmProvider = getProviderType('git'),
-    super(workspace);
+      _scmProvider = getProviderType('git'),
+      super(workspace);
 
-  PackageManagerProps get props => _props;
+  PackageServiceProps get props => bowerProps;
 
   PackageBuilder getBuilder() => new _BowerBuilder();
 
@@ -70,9 +73,9 @@ class BowerManager extends PackageManager {
 
   Future _fetchPackages(Project project) {
     final chrome.Entry packagesDir =
-        project.getChild(BowerProps._PACKAGES_DIR_NAME).entry;
+        project.getChild(props.packagesDirName).entry;
     final File specFile =
-        project.getChild(BowerProps._PACKAGE_SPEC_FILE_NAME);
+        project.getChild(props.packageSpecFileName);
 
     return specFile.getContents().then((String spec) {
       final Map<String, dynamic> specMap = JSON.decode(spec);
@@ -88,9 +91,9 @@ class BowerManager extends PackageManager {
     });
   }
 
-  Future _fetchPackage(String packageName,
-                     String packageSpec,
-                     chrome.DirectoryEntry packagesDir) {
+  Future _fetchPackage(
+      String packageName, String packageSpec,
+      chrome.DirectoryEntry packagesDir) {
     final Match m = _PACKAGE_SPEC_REGEXP.matchAsPrefix(packageSpec);
     String path = m.group(1);
     if (!path.endsWith('.git')) {
@@ -124,7 +127,7 @@ class BowerManager extends PackageManager {
 class _BowerResolver extends PackageResolver {
   _BowerResolver._(Project project);
 
-  String get packageServiceName => BowerProps._PACKAGE_SERVICE_NAME;
+  PackageServiceProps get props => bowerProps;
 
   File resolveRefToFile(String url) => null;
 
@@ -138,9 +141,7 @@ class _BowerResolver extends PackageResolver {
 class _BowerBuilder extends PackageBuilder {
   _BowerBuilder();
 
-  String get packageSpecFileName => BowerProps._PACKAGE_SPEC_FILE_NAME;
-
-  String get packageServiceName => BowerProps._PACKAGE_SERVICE_NAME;
+  PackageServiceProps get props => bowerProps;
 
   String getPackageNameFromSpec(String spec) {
     final Map<String, dynamic> specMap = JSON.decode(spec);

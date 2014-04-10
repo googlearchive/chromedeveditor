@@ -10,7 +10,7 @@ import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
-abstract class PackageManagerProps {
+abstract class PackageServiceProps {
   bool isProjectWithPackages(Project project) =>
       project.getChild(packageSpecFileName) != null;
 
@@ -37,11 +37,20 @@ abstract class PackageManagerProps {
            !isInPackagesFolder(resource);
   }
 
+  void setSelfReference(Project project, String selfReference) =>
+      project.setMetadata('${packageServiceName}SelfReference', selfReference);
+
+  String getSelfReference(Project project) =>
+      project.getMetadata('${packageServiceName}SelfReference');
+
   /**
    * Pure virtual interface.
    */
+  String get packageServiceName;
   String get packageSpecFileName;
   String get packagesDirName;
+  String get libDirName;
+  String get packageRefPrefix;
   RegExp packageRefPrefixRegexp;
 }
 
@@ -53,20 +62,17 @@ abstract class PackageManager {
   /**
    * Pure virtual interface.
    */
-  PackageManagerProps get props;
+  PackageServiceProps get props;
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
   Future fetchPackages(Project project);
 }
 
 abstract class PackageResolver {
-  String getSelfReference(Project project) =>
-      project.getMetadata('${packageServiceName}SelfReference');
-
   /**
    * Pure virtual interface.
    */
-  String get packageServiceName;
+  PackageServiceProps get props;
   File resolveRefToFile(String url);
   String getReferenceFor(File file);
 }
@@ -79,7 +85,7 @@ abstract class PackageBuilder extends Builder {
       Resource r = delta.resource;
 
       if (!r.isDerived()) {
-        if (r.name == packageSpecFileName && r.parent is Project) {
+        if (r.name == props.packageSpecFileName && r.parent is Project) {
           futures.add(_handlePackageSpecChange(delta));
         }
       }
@@ -92,29 +98,26 @@ abstract class PackageBuilder extends Builder {
     File file = delta.resource;
 
     if (delta.isDelete) {
-      _setSelfReference(file.project, null);
+      props.setSelfReference(file.project, null);
       return new Future.value();
     } else {
       return file.getContents().then((String spec) {
-        file.clearMarkers(packageServiceName);
+        file.clearMarkers(props.packageServiceName);
 
         try {
-          _setSelfReference(file.project, getPackageNameFromSpec(spec));
+          props.setSelfReference(file.project, getPackageNameFromSpec(spec));
         } on Exception catch (e) {
           // Use some better method for determining where to place the marker.
-          file.createMarker(packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
+          file.createMarker(
+              props.packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
         }
       });
     }
   }
 
-  void _setSelfReference(Project project, String selfReference) =>
-      project.setMetadata('${packageServiceName}SelfReference', selfReference);
-
   /**
    * Pure virtual interface.
    */
-  String get packageSpecFileName;
-  String get packageServiceName;
+  PackageServiceProps get props;
   String getPackageNameFromSpec(String spec);
 }
