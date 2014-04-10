@@ -59,10 +59,7 @@ class BowerManager extends PackageManager {
       new BowerResolver._(project);
 
   Future fetchPackages(Project project) {
-    final File specFile = project.getChild(BowerProps._PACKAGE_SPEC_FILE_NAME);
-    final Folder packagesDir = project.getChild(BowerProps._PACKAGES_DIR_NAME);
-
-    return _fetchDependencies(specFile.entry, packagesDir.entry).whenComplete(() {
+    return _fetchPackages(project).whenComplete(() {
       return project.refresh();
     }).catchError((e, st) {
       _logger.severe('Error getting Bower packages', e, st);
@@ -73,63 +70,45 @@ class BowerManager extends PackageManager {
   // TODO(ussuri): Move the actual fetching code to a standalone package akin
   // to tavern.
 
-  Future _fetchDependencies(
-      chrome.ChromeFileEntry specFile, chrome.DirectoryEntry topDestDir) {
-    return specFile.readText().then((String spec) {
+  Future _fetchPackages(Project project) {
+    final chrome.Entry packagesDir =
+        project.getChild(BowerProps._PACKAGES_DIR_NAME).entry;
+    final File specFile =
+        project.getChild(BowerProps._PACKAGE_SPEC_FILE_NAME);
+
+    return specFile.getContents().then((String spec) {
       final Map<String, dynamic> specMap = JSON.decode(spec);
       final Map<String, String> deps = specMap['dependencies'];
-
-      if (deps == null) return new Future.value();
 
       final List<Future> futures = [];
 
       deps.forEach((packageName, packageSpec) {
-        futures.add(_fetchPackage(packageName, packageSpec, topDestDir));
+        futures.add(_fetchPackage(packageName, packageSpec, packagesDir));
       });
 
-      return Future.wait(futures).whenComplete(() {
-        final List<Future> subFutures = [];
-
-        deps.forEach((String packageName, String packageSpec) {
-          topDestDir.getFile('$packageName/$BowerProps.PACKAGE_SPEC_FILE_NAME')
-              .then((chrome.FileEntry subSpecFile) {
-            if (subSpecFile != null) {
-              subFutures.add(_fetchDependencies(subSpecFile, topDestDir));
-            }
-          });
-        });
-
-        // TODO: This ignores the first-level results in [futures].
-        return Future.wait(subFutures);
-      });
-    }).catchError((e, s) {
-      // Ignore: fetch as many dependencies as we can, regardless of errors.
-      return new Future.value();
+      return Future.wait(futures);
     });
   }
 
-  Future _fetchPackage(
-      String name, String spec, chrome.DirectoryEntry rootDestDir) {
-    final Match match = _PACKAGE_SPEC_REGEXP.matchAsPrefix(spec);
-
-    if (match == null) {
-      return new Future.error("Malformed Bower dependency: '$spec'");
-    }
-
-    String path = match.group(1);
+  Future _fetchPackage(String packageName,
+                     String packageSpec,
+                     chrome.DirectoryEntry packagesDir) {
+    final Match m = _PACKAGE_SPEC_REGEXP.matchAsPrefix(packageSpec);
+    String path = m.group(1);
     if (!path.endsWith('.git')) {
       path += '.git';
     }
-    final String branch = match.group(2);
+    final String branch = m.group(2);
 
-    if (branch != 'master') {
+    if (m == null) {
+      return new Future.error("Malformed Bower dependency: '$packageSpec'");
+    } else if (branch != 'master') {
       return new Future.error(
-          "Unsupported branch in Bower dependency: '$spec'."
+          "Unsupported branch in Bower dependency: '$packageSpec'."
           " Only 'master' is supported.");
     }
 
-    return rootDestDir.createDirectory(name).then(
-        (chrome.DirectoryEntry destDir) {
+    return packagesDir.createDirectory(packageName).then((destDir) {
       return _scmProvider.clone('$_GITHUB_ROOT_URL/$path', destDir);
     });
   }
