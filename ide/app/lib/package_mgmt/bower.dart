@@ -23,14 +23,22 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.bower');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final bowerProps = new PackageServiceProperties(
-   'bower',
-   'bower.json',
-   'bower_packages',
-   null,
-   null,
-   null
-);
+final bowerProperties = new BowerProperties();
+
+class BowerProperties extends PackageServiceProperties {
+  String get packageServiceName => 'bower';
+  String get packageSpecFileName => 'bowerspec.yaml';
+  String get packagesDirName => 'bower_packages';
+
+  // Bower doesn't use any of the below nullified properties/methods.
+
+  String get libDirName => null;
+  String get packageRefPrefix => null;
+  RegExp get packageRefPrefixRegexp => null;
+
+  void setSelfReference(Project project, String selfReference) {}
+  String getSelfReference(Project project) => null;
+}
 
 class BowerManager extends PackageManager {
   static const _GITHUB_ROOT_URL = 'https://github.com';
@@ -49,7 +57,7 @@ class BowerManager extends PackageManager {
       _scmProvider = getProviderType('git'),
       super(workspace);
 
-  PackageServiceProperties get properties => bowerProps;
+  PackageServiceProperties get properties => bowerProperties;
 
   PackageBuilder getBuilder() => new _BowerBuilder();
 
@@ -128,7 +136,7 @@ class BowerManager extends PackageManager {
 class _BowerResolver extends PackageResolver {
   _BowerResolver._(Project project);
 
-  PackageServiceProperties get properties => bowerProps;
+  PackageServiceProperties get properties => bowerProperties;
 
   File resolveRefToFile(String url) => null;
 
@@ -142,7 +150,7 @@ class _BowerResolver extends PackageResolver {
 class _BowerBuilder extends PackageBuilder {
   _BowerBuilder();
 
-  PackageServiceProperties get properties => bowerProps;
+  PackageServiceProperties get properties => bowerProperties;
 
   String getPackageNameFromSpec(String spec) {
     final Map<String, dynamic> specMap = JSON.decode(spec);

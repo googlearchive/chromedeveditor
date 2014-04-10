@@ -19,19 +19,27 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.pub');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final pubProps = new PackageServiceProperties(
-    'pub',
-    'pubspec.yaml',
-    'packages',
-    'lib',
-    'prefix:',
-    new RegExp('^(package:|/packages/)(.*)')
-);
+final pubProperties = new PubProperties();
+
+class PubProperties extends PackageServiceProperties {
+  String get packageServiceName => 'pub';
+  String get packageSpecFileName => 'pubspec.yaml';
+  String get packagesDirName => 'packages';
+  String get libDirName => 'lib';
+  String get packageRefPrefix => 'prefix:';
+  RegExp get packageRefPrefixRegexp => new RegExp('^(package:|/packages/)(.*)');
+
+  void setSelfReference(Project project, String selfReference) =>
+      project.setMetadata('${packageServiceName}SelfReference', selfReference);
+
+  String getSelfReference(Project project) =>
+      project.getMetadata('${packageServiceName}SelfReference');
+}
 
 class PubManager extends PackageManager {
   PubManager(Workspace workspace) : super(workspace);
 
-  PackageServiceProperties get properties => pubProps;
+  PackageServiceProperties get properties => pubProperties;
 
   PackageBuilder getBuilder() => new _PubBuilder();
 
@@ -69,7 +77,7 @@ class _PubResolver extends PackageResolver {
 
   _PubResolver._(this.project);
 
-  PackageServiceProperties get properties => pubProps;
+  PackageServiceProperties get properties => pubProperties;
 
   /**
    * Resolve a `package:` reference to a file in this project. This will
@@ -143,7 +151,7 @@ class _PubResolver extends PackageResolver {
 class _PubBuilder extends PackageBuilder {
   _PubBuilder();
 
-  PackageServiceProperties get properties => pubProps;
+  PackageServiceProperties get properties => pubProperties;
 
   String getPackageNameFromSpec(String spec) {
     final doc = yaml.loadYaml(spec);

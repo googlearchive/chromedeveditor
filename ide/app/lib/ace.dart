@@ -90,7 +90,7 @@ class TextEditor extends Editor {
 
   // TODO(ussuri): use MetaPackageManager instead when it's ready.
   bool get readOnly =>
-      pubProps.isInPackagesFolder(file) || bowerProps.isInPackagesFolder(file);
+      pubProperties.isInPackagesFolder(file) || bowerProperties.isInPackagesFolder(file);
 
   void format() { }
 
