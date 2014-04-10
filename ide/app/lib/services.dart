@@ -449,7 +449,7 @@ class _IsolateHandler {
 List<String> _filesToUuid(
     PackageManager manager, PackageResolver resolver, List<File> files) {
   return files.map((File file) {
-    if (resolver != null && manager.props.isInPackagesFolder(file)) {
+    if (resolver != null && manager.properties.isInPackagesFolder(file)) {
       return resolver.getReferenceFor(file);
     } else {
       return file.uuid;
