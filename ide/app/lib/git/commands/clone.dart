@@ -51,24 +51,26 @@ class Clone {
 
   Future clone() {
     _stopwatch = new PrintProfiler('clone');
+    return _clone(_options.repoUrl);
+  }
 
-    HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
-        _options.repoUrl, _options.username, _options.password);
+  Future _clone(String url) {
+
+    HttpFetcher fetcher = new HttpFetcher(_options.store, "origin", url,
+        _options.username, _options.password);
 
     return fetcher.isValidRepoUrl(_options.repoUrl).then((isValid) {
       if (isValid) {
-        return _clone(fetcher);
-      } else if (!_options.repoUrl.endsWith('.git')) {
-        fetcher = new HttpFetcher(_options.store, "origin",
-            _options.repoUrl + '.git', _options.username, _options.password);
-        return _clone(fetcher);
+        return _startClone(fetcher);
+      } else if (!url.endsWith('.git')) {
+        return _clone(url + '.git');
       } else {
         return new Future.error('Invalid git repository url.');
       }
     });
   }
 
-  Future _clone(HttpFetcher  fetcher) {
+  Future _startClone(HttpFetcher  fetcher) {
     return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
       return  _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {

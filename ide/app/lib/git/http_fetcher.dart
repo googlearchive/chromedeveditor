@@ -197,7 +197,6 @@ class HttpFetcher {
    * by sending a request to the server.
    */
   Future<bool> isValidRepoUrl(String url) {
-    if (url.endsWith('.git')) return new Future.value(true);
     String uri = _makeUri('/info/refs', {"service": 'git-upload-pack'});
     return _doGet(uri).then((_) => true).catchError((e) => false);
   }
