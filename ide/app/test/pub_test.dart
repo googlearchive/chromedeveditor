@@ -31,16 +31,16 @@ defineTests() {
     });
 
     test('isPackageRef', () {
-      expect(pubManager.props.isPackageRef('package'), false);
-      expect(pubManager.props.isPackageRef('package:'), true);
-      expect(pubManager.props.isPackageRef('package:foo/bar.dart'), true);
-      expect(pubManager.props.isPackageRef('dart:html'), false);
+      expect(pubManager.properties.isPackageRef('package'), false);
+      expect(pubManager.properties.isPackageRef('package:'), true);
+      expect(pubManager.properties.isPackageRef('package:foo/bar.dart'), true);
+      expect(pubManager.properties.isPackageRef('dart:html'), false);
     });
 
     test('PubManager isPubProject', () {
-      expect(pubManager.props.isProjectWithPackages(project), true);
+      expect(pubManager.properties.isProjectWithPackages(project), true);
       return project.getChild('pubspec.yaml').delete().then((_) {
-        expect(pubManager.props.isProjectWithPackages(project), false);
+        expect(pubManager.properties.isProjectWithPackages(project), false);
       });
     });
 

@@ -10,7 +10,7 @@ import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
-class PackageServiceProps {
+class PackageServiceProperties {
   String packageServiceName;
   String packageSpecFileName;
   String packagesDirName;
@@ -18,7 +18,7 @@ class PackageServiceProps {
   String packageRefPrefix;
   RegExp packageRefPrefixRegexp;
 
-  PackageServiceProps(
+  PackageServiceProperties(
       this.packageServiceName,
       this.packageSpecFileName,
       this.packagesDirName,
@@ -67,7 +67,7 @@ abstract class PackageManager {
   /**
    * Pure virtual interface.
    */
-  PackageServiceProps get props;
+  PackageServiceProperties get properties;
 
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
@@ -80,7 +80,7 @@ abstract class PackageResolver {
   /**
    * Pure virtual interface.
    */
-  PackageServiceProps get props;
+  PackageServiceProperties get properties;
   File resolveRefToFile(String url);
   String getReferenceFor(File file);
 }
@@ -93,7 +93,7 @@ abstract class PackageBuilder extends Builder {
       Resource r = delta.resource;
 
       if (!r.isDerived()) {
-        if (r.name == props.packageSpecFileName && r.parent is Project) {
+        if (r.name == properties.packageSpecFileName && r.parent is Project) {
           futures.add(_handlePackageSpecChange(delta));
         }
       }
@@ -106,18 +106,19 @@ abstract class PackageBuilder extends Builder {
     File file = delta.resource;
 
     if (delta.isDelete) {
-      props.setSelfReference(file.project, null);
+      properties.setSelfReference(file.project, null);
       return new Future.value();
     } else {
       return file.getContents().then((String spec) {
-        file.clearMarkers(props.packageServiceName);
+        file.clearMarkers(properties.packageServiceName);
 
         try {
-          props.setSelfReference(file.project, getPackageNameFromSpec(spec));
+          properties.setSelfReference(
+              file.project, getPackageNameFromSpec(spec));
         } on Exception catch (e) {
-          // Use some better method for determining where to place the marker.
+          // TODO: Use some better method for determining where to place the marker.
           file.createMarker(
-              props.packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
+              properties.packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
         }
       });
     }
@@ -126,7 +127,7 @@ abstract class PackageBuilder extends Builder {
   /**
    * Pure virtual interface.
    */
-  PackageServiceProps get props;
+  PackageServiceProperties get properties;
 
   String getPackageNameFromSpec(String spec);
 }

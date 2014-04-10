@@ -1397,7 +1397,7 @@ class PubGetAction extends PackageGetAction {
   Job _createJob(ws.Project project) => new PubGetJob(spark, project);
 
   bool _appliesTo(ws.Resource resource) =>
-      spark.pubManager.props.isPackageResource(resource);
+      spark.pubManager.properties.isPackageResource(resource);
 }
 
 class BowerGetAction extends PackageGetAction {
@@ -1406,7 +1406,7 @@ class BowerGetAction extends PackageGetAction {
   Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
 
   bool _appliesTo(ws.Resource resource) =>
-      spark.bowerManager.props.isPackageResource(resource);
+      spark.bowerManager.properties.isPackageResource(resource);
 }
 
 class PubUpgradeAction extends SparkAction implements ContextAction {
@@ -1429,7 +1429,7 @@ class PubUpgradeAction extends SparkAction implements ContextAction {
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) =>
-      spark.pubManager.props.isPackageResource(resource);
+      spark.pubManager.properties.isPackageResource(resource);
 }
 
 /**
@@ -1673,12 +1673,12 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._selectResource(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.props.isProjectWithPackages(project)) {
+            if (spark.pubManager.properties.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.props.isProjectWithPackages(project)) {
+            if (spark.bowerManager.properties.isProjectWithPackages(project)) {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });

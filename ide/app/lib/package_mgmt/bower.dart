@@ -23,7 +23,7 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.bower');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final bowerProps = new PackageServiceProps(
+final bowerProps = new PackageServiceProperties(
    'bower',
    'bower.json',
    'bower_packages',
@@ -49,7 +49,7 @@ class BowerManager extends PackageManager {
       _scmProvider = getProviderType('git'),
       super(workspace);
 
-  PackageServiceProps get props => bowerProps;
+  PackageServiceProperties get properties => bowerProps;
 
   PackageBuilder getBuilder() => new _BowerBuilder();
 
@@ -74,9 +74,9 @@ class BowerManager extends PackageManager {
 
   Future _fetchPackages(Project project) {
     final chrome.Entry packagesDir =
-        project.getChild(props.packagesDirName).entry;
+        project.getChild(properties.packagesDirName).entry;
     final File specFile =
-        project.getChild(props.packageSpecFileName);
+        project.getChild(properties.packageSpecFileName);
 
     return specFile.getContents().then((String spec) {
       final Map<String, dynamic> specMap = JSON.decode(spec);
@@ -128,7 +128,7 @@ class BowerManager extends PackageManager {
 class _BowerResolver extends PackageResolver {
   _BowerResolver._(Project project);
 
-  PackageServiceProps get props => bowerProps;
+  PackageServiceProperties get properties => bowerProps;
 
   File resolveRefToFile(String url) => null;
 
@@ -142,7 +142,7 @@ class _BowerResolver extends PackageResolver {
 class _BowerBuilder extends PackageBuilder {
   _BowerBuilder();
 
-  PackageServiceProps get props => bowerProps;
+  PackageServiceProperties get properties => bowerProps;
 
   String getPackageNameFromSpec(String spec) {
     final Map<String, dynamic> specMap = JSON.decode(spec);

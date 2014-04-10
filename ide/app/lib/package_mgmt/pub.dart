@@ -19,7 +19,7 @@ import '../workspace.dart';
 Logger _logger = new Logger('spark.pub');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final pubProps = new PackageServiceProps(
+final pubProps = new PackageServiceProperties(
     'pub',
     'pubspec.yaml',
     'packages',
@@ -31,7 +31,7 @@ final pubProps = new PackageServiceProps(
 class PubManager extends PackageManager {
   PubManager(Workspace workspace) : super(workspace);
 
-  PackageServiceProps get props => pubProps;
+  PackageServiceProperties get properties => pubProps;
 
   PackageBuilder getBuilder() => new _PubBuilder();
 
@@ -69,7 +69,7 @@ class _PubResolver extends PackageResolver {
 
   _PubResolver._(this.project);
 
-  PackageServiceProps get props => pubProps;
+  PackageServiceProperties get properties => pubProps;
 
   /**
    * Resolve a `package:` reference to a file in this project. This will
@@ -78,17 +78,17 @@ class _PubResolver extends PackageResolver {
    * does not resolve to an existing file, this method will return `null`.
    */
   File resolveRefToFile(String url) {
-    Match match = props.packageRefPrefixRegexp.matchAsPrefix(url);
+    Match match = properties.packageRefPrefixRegexp.matchAsPrefix(url);
     if (match == null) return null;
 
     String ref = match.group(2);
-    String selfRefName = props.getSelfReference(project);
-    Folder packageDir = project.getChild(props.packagesDirName);
+    String selfRefName = properties.getSelfReference(project);
+    Folder packageDir = project.getChild(properties.packagesDirName);
 
     if (selfRefName != null && ref.startsWith(selfRefName + '/')) {
       // `foo/bar.dart` becomes `bar.dart` in the lib/ directory.
       ref = ref.substring(selfRefName.length + 1);
-      packageDir = project.getChild(props.libDirName);
+      packageDir = project.getChild(properties.libDirName);
     }
 
     if (packageDir == null) return null;
@@ -115,11 +115,11 @@ class _PubResolver extends PackageResolver {
       parent = parent.parent;
     }
 
-    if (resources[0].name == props.packagesDirName) {
+    if (resources[0].name == properties.packagesDirName) {
       resources.removeAt(0);
-      return props.packageRefPrefix + resources.map((r) => r.name).join('/');
-    } else if (resources[0].name == props.libDirName) {
-      String selfRefName = props.getSelfReference(project);
+      return properties.packageRefPrefix + resources.map((r) => r.name).join('/');
+    } else if (resources[0].name == properties.libDirName) {
+      String selfRefName = properties.getSelfReference(project);
 
       if (selfRefName != null) {
         resources.removeAt(0);
@@ -143,7 +143,7 @@ class _PubResolver extends PackageResolver {
 class _PubBuilder extends PackageBuilder {
   _PubBuilder();
 
-  PackageServiceProps get props => pubProps;
+  PackageServiceProperties get properties => pubProps;
 
   String getPackageNameFromSpec(String spec) {
     final doc = yaml.loadYaml(spec);
