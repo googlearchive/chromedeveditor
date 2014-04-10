@@ -33,7 +33,6 @@ class Clone {
 
   Clone(this._options) {
     if (_options.branchName == null) _options.branchName = 'master';
-    if (!_options.repoUrl.endsWith('.git')) _options.repoUrl += '.git';
     if (_options.progressCallback == null) {
       _options.progressCallback = nopFunction;
     }
@@ -56,6 +55,22 @@ class Clone {
     HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
         _options.repoUrl, _options.username, _options.password);
 
+    if (!_options.repoUrl.endsWith('.git')) {
+      return fetcher.isValidRepoUrl(_options.repoUrl).then((isValid) {
+        if (isValid) {
+          return _startClone(fetcher);
+        } else {
+         fetcher = new HttpFetcher(_options.store, "origin",
+             _options.repoUrl + '.git', _options.username, _options.password);
+         return _startClone(fetcher);
+         }
+      });
+    } else {
+      return _startClone(fetcher);
+    }
+  }
+
+  Future _startClone(HttpFetcher  fetcher) {
     return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
       return  _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
