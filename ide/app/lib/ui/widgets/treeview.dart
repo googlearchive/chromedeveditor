@@ -98,13 +98,14 @@ class TreeView implements ListViewDelegate {
       row.expanded = expanded;
       row.level = level;
       row.rowIndex = _rows.length;
+      print('_recursiveFill, adding $nodeUID, ${_rows.length}');
       _rows.add(row);
       _rowsMap[nodeUID] = row;
     }
 
     if (expanded) {
       int childrenCount = _delegate.treeViewNumberOfChildren(this, nodeUID);
-      for(int i = 0 ; i < childrenCount ; i ++) {
+      for (int i = 0 ; i < childrenCount ; i ++) {
         String _rows = _delegate.treeViewChild(this, nodeUID, i);
         _recursiveFill(_rows, level + 1);
       }
@@ -115,7 +116,7 @@ class TreeView implements ListViewDelegate {
    * Cleans the selection to not include non-showing elements
    */
   void _cleanSelection() {
-    for(String nodeUID in selection) {
+    for (String nodeUID in selection) {
       TreeViewRow row = _rowsMap[nodeUID];
       if (row == null) {
         selection.remove(nodeUID);
@@ -256,6 +257,7 @@ class TreeView implements ListViewDelegate {
 
   // Embed the cell returned by the delegate into a `TreeViewCell`.
   ListViewCell listViewCellForRow(ListView view, int rowIndex) {
+    print('listViewCellForRow($rowIndex)');
     ListViewCell cell =
         _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUID);
     bool hasChildren =
