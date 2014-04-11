@@ -2455,10 +2455,10 @@ abstract class PackageManagementJob extends Job {
     monitor.start(name, 1);
 
     return _run().then((_) {
-      _spark.showSuccessMessage("Success fetching '$_commandName'");
+      _spark.showSuccessMessage("Success running $_commandName");
       _spark.workspace.refresh();
     }).catchError((e) {
-      _spark.showErrorMessage("Error while running '$_commandName'", e.toString());
+      _spark.showErrorMessage("Error while running $_commandName", e.toString());
     });
   }
 
