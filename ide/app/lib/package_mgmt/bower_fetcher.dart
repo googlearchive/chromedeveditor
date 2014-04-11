@@ -73,9 +73,13 @@ class BowerFetcher {
   }
 
   List<_Package> _parseDepsFromSpec(String spec) {
-    // TODO(ussuri): Handle possible parsing errors.
-    final Map<String, dynamic> specMap = JSON.decode(spec);
-    Map<String, String> rawDeps = specMap['dependencies'];
+    Map<String, String> rawDeps;
+    try {
+      final Map<String, dynamic> specMap = JSON.decode(spec);
+      rawDeps = specMap['dependencies'];
+    } on Exception catch(e) {
+      _logger.warning('Error parsing package spec: $e\n$spec');
+    }
     if (rawDeps == null) rawDeps = {};
 
     List<_Package> deps = [];
@@ -138,6 +142,6 @@ class _Package {
   String getUrlForCloning() =>
       '$_GITHUB_ROOT_URL/$path' + (path.endsWith('.git') ? '' : '.git');
 
-  String getUrlForDownloading(String relFilePath) =>
-      '$_GITHUB_USER_CONTENT_URL/$path/$branch/$relFilePath';
+  String getUrlForDownloading(String remoteFilePath) =>
+      '$_GITHUB_USER_CONTENT_URL/$path/$branch/$remoteFilePath';
 }

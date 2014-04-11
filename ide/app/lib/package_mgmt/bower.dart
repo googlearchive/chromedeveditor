@@ -97,8 +97,15 @@ class _BowerBuilder extends PackageBuilder {
   PackageServiceProperties get properties => bowerProperties;
 
   String getPackageNameFromSpec(String spec) {
-    // TODO(ussuri): Handle parsing errors.
-    final Map<String, dynamic> specMap = JSON.decode(spec);
+    // TODO(ussuri): Similar code is now in 3 places in package_mgmt.
+    // Generalize package spec parsing as a PackageServiceProperties API.
+    Map<String, dynamic> specMap;
+    try {
+      specMap = JSON.decode(spec);
+    } on FormatException catch(e) {
+      _logger.warning('Error parsing package spec: $e\n$spec');
+    }
+    // specMap['name'] can return null: that's ok.
     return specMap == null ? null : specMap['name'];
   }
 }
