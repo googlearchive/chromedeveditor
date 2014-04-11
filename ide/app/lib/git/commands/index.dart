@@ -192,7 +192,7 @@ class Index {
                status.path = entry.fullPath;
                status.sha = sha;
                status.size = data.size;
-               return updateIndexForEntry(status);
+               updateIndexForEntry(status);
              });
            });
          }
