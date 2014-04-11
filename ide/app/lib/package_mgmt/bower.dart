@@ -41,21 +41,7 @@ class BowerProperties extends PackageServiceProperties {
 }
 
 class BowerManager extends PackageManager {
-  static const _GITHUB_ROOT_URL = 'https://github.com';
-  /// E.g.: "Polymer/polymer-elements".
-  static const _PACKAGE_SPEC_PATH = '''[-\\w./]+''';
-  /// E.g.: "#master", "#1.2.3" (however branches in general are not yet
-  /// supported, only "#master" is accepted - see below).
-  static const _PACKAGE_SPEC_BRANCH = '''[-\\w.]+''';
-  /// E.g.: "Polymer/polymer#master";
-  static final RegExp _PACKAGE_SPEC_REGEXP =
-      new RegExp('''^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$''');
-
-  ScmProvider _scmProvider;
-
-  BowerManager(Workspace workspace) :
-      _scmProvider = getProviderType('git'),
-      super(workspace);
+  BowerManager(Workspace workspace) : super(workspace);
 
   PackageServiceProperties get properties => bowerProperties;
 
@@ -65,65 +51,80 @@ class BowerManager extends PackageManager {
       new _BowerResolver._(project);
 
   Future installPackages(Project project) {
-    return _fetchPackages(project).whenComplete(() {
-      return project.refresh();
-    }).catchError((e, st) {
-      _logger.severe('Error getting Bower packages', e, st);
-      return new Future.error(e, st);
+    final File specFile = project.getChild(properties.packageSpecFileName);
+    // The client is expected to call us only when the project has bower.json.
+    assert(specFile != null);
+
+    return project.getOrCreateFolder(properties.packagesDirName, true)
+        .then((Folder packagesDir) {
+      final _BowerFetcher fetcher = new _BowerFetcher(packagesDir.entry);
+
+      return fetcher.getDependencies(specFile.entry).whenComplete(() {
+        return project.refresh();
+      }).catchError((e, st) {
+        _logger.severe('Error getting Bower packages', e, st);
+        return new Future.error(e, st);
+      });
     });
   }
 
   Future upgradePackages(Project project) {
     return new Future.error('Not implemented');
   }
+}
 
-  // TODO(ussuri): Move the actual fetching code to a standalone package akin
-  // to tavern.
+class _BowerFetcher {
+  static const _GITHUB_ROOT_URL = 'https://github.com';
+  static const _GITHUB_USER_CONTENT_URL = 'https://raw.githubusercontent.com';
+  /// E.g.: "Polymer/polymer-elements".
+  static const _PACKAGE_SPEC_PATH = '''[-\\w./]+''';
+  /// E.g.: "#master", "#1.2.3".
+  static const _PACKAGE_SPEC_BRANCH = '''[-\\w.]+''';
+  /// E.g.: "Polymer/polymer#master";
+  static final RegExp _PACKAGE_SPEC_REGEXP =
+      new RegExp('''^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$''');
 
-  Future _fetchPackages(Project project) {
-    final chrome.Entry packagesDir =
-        project.getChild(properties.packagesDirName).entry;
-    final File specFile =
-        project.getChild(properties.packageSpecFileName);
+  static final ScmProvider _scmProvider = getProviderType('git');
+  chrome.DirectoryEntry _packagesDir;
 
-    return specFile.getContents().then((String spec) {
+  _BowerFetcher(this._packagesDir);
+
+  Future getDependencies(chrome.ChromeFileEntry specFile) {
+    return specFile.readText().then((String spec) {
       final Map<String, dynamic> specMap = JSON.decode(spec);
       final Map<String, String> deps = specMap['dependencies'];
+
+      if (deps == null) return new Future.value();
 
       final List<Future> futures = [];
 
       deps.forEach((packageName, packageSpec) {
-        futures.add(_fetchPackage(packageName, packageSpec, packagesDir));
+        futures.add(_fetchPackage(packageName, packageSpec, _packagesDir));
       });
 
       return Future.wait(futures);
+    }).catchError((e, s) {
+      // Ignore: fetch as many dependencies as we can, regardless of errors.
+      return new Future.value();
     });
   }
 
   Future _fetchPackage(
-      String packageName, String packageSpec,
+      String packageName,
+      String packageSpec,
       chrome.DirectoryEntry packagesDir) {
-    final Match m = _PACKAGE_SPEC_REGEXP.matchAsPrefix(packageSpec);
-    String path = m.group(1);
-
-    final String branch = m.group(2);
-
-    if (m == null) {
+    final Match match = _PACKAGE_SPEC_REGEXP.matchAsPrefix(packageSpec);
+    if (match == null) {
       return new Future.error("Malformed Bower dependency: '$packageSpec'");
-    } else if (branch != 'master') {
-      return new Future.error(
-          "Unsupported branch in Bower dependency: '$packageSpec'."
-          " Only 'master' is supported.");
     }
+    final String path = match.group(1);
+    // NOTE: This can be null, but _scmProvider.clone() can handle that.
+    final String branch = match.group(2);
 
     return packagesDir.createDirectory(packageName).then((destDir) {
-      return _scmProvider.clone('$_GITHUB_ROOT_URL/$path', destDir);
+      final String url = '$_GITHUB_ROOT_URL/$path';
+      return _scmProvider.clone(url, destDir, branchName: branch);
     });
-  }
-
-  void _handleLog(String line, String level) {
-    // TODO: Dial the logging back.
-     _logger.info(line);
   }
 }
 
