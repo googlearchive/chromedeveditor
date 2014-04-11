@@ -32,6 +32,11 @@ class Index {
   bool _writingIndex = false;
   // The timer used to schedule saving of the index to the disk.
   Timer _writeIndexTimer;
+  // When the index is being written, it's the completer used internally
+  // to know when it will complete.
+  Completer _writeIndexCompleter = null;
+  // Request to write the index to disk now is in progress.
+  bool _flushing;
 
   Index(this._store);
 
@@ -131,10 +136,18 @@ class Index {
    * Writes into the index file the current index.
    */
   Future _writeIndex() {
+    assert(_writeIndexCompleter == null);
+    _writingIndex = true;
+    _writeIndexCompleter = new Completer();
     String out = JSON.encode(statusIdxToMap());
     return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
         (chrome.DirectoryEntry entry) {
-      return FileOps.createFileWithContent(entry, 'index2', out, 'Text');
+      return FileOps.createFileWithContent(entry, 'index2', out, 'Text').then((_) {
+        Completer completer = _writeIndexCompleter;
+        _writeIndexCompleter = null;
+        _writingIndex = false;
+        completer.complete();
+      });
     });
   }
 
@@ -153,17 +166,50 @@ class Index {
       _writeIndexTimer = null;
     }
 
-    _writeIndexTimer = new Timer(const Duration(seconds: 2), () {
-      _writingIndex = true;
+    _writeIndexTimer = new Timer(const Duration(seconds: 0), () {
       _writeIndexTimer = null;
       _indexDirty = false;
       _writeIndex().then((_) {
-        _writingIndex = false;
-        if (_indexDirty) {
+        if (_indexDirty && !_flushing) {
           _scheduleWriteIndex();
         }
       });
     });
+  }
+
+  /**
+   * Flush the index to disk now and returns a Future if the caller needs to
+   * wait for completion.
+   */
+  Future flush() {
+    if (_writingIndex) {
+      // Waiting for completion...
+      assert(_writeIndexCompleter != null);
+      _flushing = true;
+      return _writeIndexCompleter.future.then((_) {
+        // Then write the index if needed.
+        if (_indexDirty) {
+          _indexDirty = false;
+          return _writeIndex().then((_) {
+            _flushing = false;
+          });
+        }
+      });
+    } else {
+      if (!_indexDirty) {
+        // Doesn't need to write the index.
+        return new Future.value();
+      }
+
+      if (_writeIndexTimer != null) {
+        _writeIndexTimer.cancel();
+        _writeIndexTimer = null;
+      }
+      _flushing = true;
+      return _writeIndex().then((_) {
+        _flushing = false;
+      });
+    }
   }
 
   /**
