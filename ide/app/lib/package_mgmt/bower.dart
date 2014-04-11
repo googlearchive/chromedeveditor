@@ -11,6 +11,7 @@
 library spark.package_mgmt.bower;
 
 import 'dart:async';
+import 'dart:html' as html;
 import 'dart:convert' show JSON;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -102,7 +103,22 @@ class _BowerFetcher {
         futures.add(_fetchPackage(packageName, packageSpec, _packagesDir));
       });
 
-      return Future.wait(futures);
+      return Future.wait(futures).whenComplete(() {
+        final List<Future> subFutures = [];
+
+        deps.forEach((String packageName, String packageSpec) {
+          final String subSpecFname =
+              '$packageName/${bowerProperties.packageSpecFileName}';
+          _packagesDir.getFile(subSpecFname).then((chrome.FileEntry subSpecFile) {
+            if (subSpecFile != null) {
+              subFutures.add(getDependencies(subSpecFile));
+            }
+          });
+        });
+
+        // TODO: This ignores the first-level results in [futures].
+        return Future.wait(subFutures);
+      });
     }).catchError((e, s) {
       // Ignore: fetch as many dependencies as we can, regardless of errors.
       return new Future.value();
