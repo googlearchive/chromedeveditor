@@ -736,7 +736,7 @@ class Folder extends Container {
   /**
    * Gets an existing or creates a new [File] with the given name.
    */
-  Future<File> getOrCreateFile(String name, [createIfMissing = false]) {
+  Future<File> getOrCreateFile(String name, [bool createIfMissing = false]) {
     File file = getChild(name);
     if (file != null) {
       return new Future.value(file);
@@ -750,7 +750,7 @@ class Folder extends Container {
   /**
    * Gets an existing or creates a new [Folder] with the given name.
    */
-  Future<Folder> getOrCreateFolder(String name, [createIfMissing = false]) {
+  Future<Folder> getOrCreateFolder(String name, [bool createIfMissing = false]) {
     Folder folder = getChild(name);
     if (folder != null) {
       return new Future.value(folder);
