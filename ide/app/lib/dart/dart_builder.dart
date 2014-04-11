@@ -8,7 +8,6 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-import '../package_mgmt/pub.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../services.dart';
@@ -105,10 +104,9 @@ class DartBuilder extends Builder {
 
   void _removeSecondaryPackages(List<File> files) {
     files.removeWhere(
-        (file) => analyzer.getPackageManager().props.isSecondaryPackage(file));
+        (file) => analyzer.getPackageManager().properties.isSecondaryPackage(file));
   }
 }
-
 
 int _convertSeverity(int sev) {
   if (sev == ErrorSeverity.ERROR) {
