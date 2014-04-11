@@ -105,9 +105,7 @@ class BowerManager extends PackageManager {
       chrome.DirectoryEntry packagesDir) {
     final Match m = _PACKAGE_SPEC_REGEXP.matchAsPrefix(packageSpec);
     String path = m.group(1);
-    if (!path.endsWith('.git')) {
-      path += '.git';
-    }
+
     final String branch = m.group(2);
 
     if (m == null) {
