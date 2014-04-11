@@ -166,7 +166,7 @@ class Index {
       _writeIndexTimer = null;
     }
 
-    _writeIndexTimer = new Timer(const Duration(seconds: 0), () {
+    _writeIndexTimer = new Timer(const Duration(seconds: 2), () {
       _writeIndexTimer = null;
       _indexDirty = false;
       _writeIndex().then((_) {
