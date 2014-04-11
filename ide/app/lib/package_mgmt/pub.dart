@@ -26,7 +26,7 @@ class PubProperties extends PackageServiceProperties {
   String get packageSpecFileName => 'pubspec.yaml';
   String get packagesDirName => 'packages';
   String get libDirName => 'lib';
-  String get packageRefPrefix => 'prefix:';
+  String get packageRefPrefix => 'package:';
   RegExp get packageRefPrefixRegexp => new RegExp('^(package:|/packages/)(.*)');
 
   void setSelfReference(Project project, String selfReference) =>
