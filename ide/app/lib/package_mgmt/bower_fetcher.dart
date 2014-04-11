@@ -94,13 +94,14 @@ class BowerFetcher {
   }
 
   Future _fetchPackage(_Package package) {
-    return _packagesDir.createDirectory(package.name).then((destDir) {
-      // TODO(ussuri): Handle case where destination already exists.
-      return _git.clone(
-          package.getUrlForCloning(), destDir, branchName: package.branch)
-              .catchError((e, s) =>
-                  _logger.severe('Error cloning package ${package.name}: $e'));
-    });
+    return _packagesDir.createDirectory(package.name, exclusive: true)
+        .then((dir) {
+      return _git.clone(package.getUrlForCloning(), dir, branchName: package.branch)
+          .catchError((e, s) =>
+              _logger.severe('Error cloning package ${package.name}: $e'));
+    }).catchError((e, s) =>
+      _logger.severe('Error creating directory for ${package.name}: $e')
+    );
   }
 }
 
