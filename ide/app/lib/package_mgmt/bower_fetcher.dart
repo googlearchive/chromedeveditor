@@ -32,55 +32,58 @@ class BowerFetcher {
   BowerFetcher(this._packagesDir, this._packageSpecFileName);
 
   Future fetchDependencies(chrome.ChromeFileEntry specFile) {
-    return specFile.readText().then((spec) {
-      return _gatherAllDeps(spec).then((_) {
-        return _fetchAllDeps();
-      });
+    return _gatherAllDeps(_readLocalSpecFile(specFile)).then((_) {
+      return _fetchAllDeps();
     });
   }
 
-  Future _gatherAllDeps(String spec) {
-    List<_Package> deps = _parseDepsFromSpec(spec);
+  Future _gatherAllDeps(Future<String> getSpec) {
+    return getSpec.then((String spec) {
+      List<_Package> deps = _parseDepsFromSpec(spec);
 
-    List<Future> futures = [];
+      List<Future> futures = [];
 
-    deps.forEach((_Package package) {
-      // TODO(ussuri): Handle conflicts: same names, different specs.
-      if (!_allDeps.containsKey(package.name)) {
-        _allDeps[package.name] = package;
+      deps.forEach((_Package package) {
+        // TODO(ussuri): Handle conflicts: same name, but different paths.
+        if (!_allDeps.containsKey(package.name)) {
+          _allDeps[package.name] = package;
 
-        final Future f = _readRemoteSpecFile(package).then((String depSpec) {
-          return _gatherAllDeps(depSpec);
-        }).catchError((e) {
-          // Remote spec file doesn't exist: this is a leaf package with no
-          // dependencies.
-          return new Future.value();
-        });
+          // Recurse into sub-dependencies.
+          futures.add(_gatherAllDeps(_readRemoteSpecFile(package)));
+        }
+      });
 
-        futures.add(f);
-      }
+      return Future.wait(futures);
+    }).catchError((e, s) {
+      // Ignore errors for now.
+      _logger.warning(e, s);
+//      return new Future.error(e);
     });
-
-    return Future.wait(futures);
   }
 
   Future _fetchAllDeps() {
     List<Future> futures = [];
-    _allDeps.values.forEach((_Package package) =>
-        futures.add(_fetchPackage(package))
-    );
+    _allDeps.values.forEach((_Package package) {
+        futures.add(
+            _fetchPackage(package).catchError((e, s) {
+              _logger.warning(e);
+            })
+        );
+    });
     return Future.wait(futures);
   }
 
   List<_Package> _parseDepsFromSpec(String spec) {
-    Map<String, String> rawDeps;
+    Map<String, dynamic> specMap;
     try {
-      final Map<String, dynamic> specMap = JSON.decode(spec);
-      rawDeps = specMap['dependencies'];
-    } on Exception catch(e) {
-      _logger.warning('Error parsing package spec: $e\n$spec');
+      specMap = JSON.decode(spec);
+    } on FormatException catch(e, s) {
+      _logger.warning("Bad package spec: $e\n$spec");
+      return [];
     }
-    if (rawDeps == null) rawDeps = {};
+
+    final Map<String, String> rawDeps = specMap['dependencies'];
+    if (rawDeps == null) return [];
 
     List<_Package> deps = [];
     rawDeps.forEach((String name, String fullPath) =>
@@ -90,22 +93,47 @@ class BowerFetcher {
     return deps;
   }
 
+  Future<String> _readLocalSpecFile(chrome.ChromeFileEntry file) {
+    return file.readText().catchError((e, s) {
+      return new Future.error("Failed to read ${file.fullPath}: $e");
+    });
+  }
+
   Future<String> _readRemoteSpecFile(_Package package) {
-    final String url = package.getUrlForDownloading(_packageSpecFileName);
-    return html.HttpRequest.getString(url)
-        .catchError((e, s) =>
-            _logger.info('Error reading spec file for ${package.name}: $e'));
+    final completer = new Completer();
+
+    final request = new html.HttpRequest();
+    request.open('GET', package.getUrlForDownloading(_packageSpecFileName));
+    request.onLoad.listen((event) {
+      if (request.status == 200) {
+        completer.complete(request.responseText);
+      } else if (request.status == 404) {
+        // Remote bower.json doesn't exist: it's just a leaf package with no
+        // dependencies. Emulate that by returning an empty JSON.
+        completer.complete('{}');
+      } else {
+        completer.completeError(
+            "Failed to load $_packageSpecFileName for ${package.name}: "
+            "$request.statusText");
+      }
+    });
+    request.send();
+
+    return completer.future;
   }
 
   Future _fetchPackage(_Package package) {
-    return _packagesDir.createDirectory(package.name, exclusive: true)
-        .then((dir) {
-      return _git.clone(package.getUrlForCloning(), dir, branchName: package.branch)
-          .catchError((e, s) =>
-              _logger.severe('Error cloning package ${package.name}: $e'));
-    }).catchError((e, s) =>
-      _logger.severe('Error creating directory for ${package.name}: $e')
-    );
+    return _packagesDir.createDirectory(package.name, exclusive: true).catchError((e, s) {
+      return new Future.error(
+          "Target directory for package ${package.name} not created: $e");
+    }).then((dir) {
+      return _git.clone(
+          package.getUrlForCloning(), dir, branchName: package.branch)
+            .catchError((e, s) {
+                return new Future.error(
+                    "Package ${package.name} not cloned: $e");
+              });
+    });
   }
 }
 
