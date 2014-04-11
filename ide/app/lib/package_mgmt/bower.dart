@@ -51,8 +51,11 @@ class BowerManager extends PackageManager {
 
   Future installPackages(Project project) {
     final File specFile = project.getChild(properties.packageSpecFileName);
+
     // The client is expected to call us only when the project has bower.json.
-    assert(specFile != null);
+    if (specFile == null) {
+      throw new StateError('installPackages() called, but there is no bower.json');
+    }
 
     return project.getOrCreateFolder(properties.packagesDirName, true)
         .then((Folder packagesDir) {
