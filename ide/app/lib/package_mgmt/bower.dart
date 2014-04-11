@@ -27,7 +27,7 @@ final bowerProperties = new BowerProperties();
 
 class BowerProperties extends PackageServiceProperties {
   String get packageServiceName => 'bower';
-  String get packageSpecFileName => 'bowerspec.yaml';
+  String get packageSpecFileName => 'bower.json';
   String get packagesDirName => 'bower_packages';
 
   // Bower doesn't use any of the below nullified properties/methods.
