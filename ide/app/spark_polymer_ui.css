@@ -195,7 +195,6 @@
   vertical-align: top;
 }
 
-[selectabletxt]
-{
+[selectabletxt] {
   -webkit-user-select: text;
 }
