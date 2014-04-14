@@ -1,0 +1,9 @@
+{
+  "program": {
+    "portable": {
+      "pnacl-translate": {
+        "url": "nacl_android_rsa.pexe"
+      }
+    }
+  }
+}

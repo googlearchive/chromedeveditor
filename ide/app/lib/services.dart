@@ -7,7 +7,9 @@ library spark.services;
 import 'dart:async';
 import 'dart:isolate';
 
-import 'dart/pub.dart';
+import 'package:logging/logging.dart';
+
+import 'package_mgmt/package_manager.dart';
 import 'services/compiler.dart';
 import 'services/services_common.dart';
 import 'utils.dart';
@@ -15,6 +17,8 @@ import 'workspace.dart';
 
 export 'services/compiler.dart' show CompilerResult;
 export 'services/services_common.dart';
+
+Logger _logger = new Logger('spark.services');
 
 /**
  * Defines a class which contains services and manages their communication.
@@ -24,9 +28,9 @@ class Services {
   Map<String, Service> _services = {};
   ChromeServiceImpl _chromeService;
   final Workspace _workspace;
-  final PubManager _pubManager;
+  final PackageManager _packageManager;
 
-  Services(this._workspace, this._pubManager) {
+  Services(this._workspace, this._packageManager) {
     _isolateHandler = new _IsolateHandler();
     registerService(new CompilerService(this, _isolateHandler));
     registerService(new AnalyzerService(this, _isolateHandler));
@@ -145,23 +149,30 @@ class CompilerService extends Service {
 }
 
 class AnalyzerService extends Service {
-  Map<Project, ProjectAnalyzer> _analyzers = {};
+  // We limit the number of active analysis contexts in order to better manage
+  // our memory consumption.
+  static final int MAX_CONTEXTS = 5;
+
+  Map<Project, ProjectAnalyzer> _contextMap = {};
+  List<ProjectAnalyzer> _recentContexts = [];
 
   AnalyzerService(Services services, _IsolateHandler handler) :
-    super(services, 'analyzer', handler);
+      super(services, 'analyzer', handler);
 
   Workspace get workspace => services._workspace;
 
   // TODO(devoncarew): We'll want to move away from this method, in favor of the
   // [ProjectAnalyzer] interface.
   Future<Map<File, List<AnalysisError>>> buildFiles(List<File> dartFiles) {
-    PubResolver resolver = null;
+    PackageResolver resolver = null;
 
     if (dartFiles.isNotEmpty) {
-      resolver = services._pubManager.getResolverFor(dartFiles.first.project);
+      resolver = services._packageManager.getResolverFor(dartFiles.first.project);
     }
 
-    Map args = {"dartFileUuids": _filesToUuid(resolver, dartFiles)};
+    Map args = {
+        "dartFileUuids": _filesToUuid(services._packageManager, resolver, dartFiles)
+    };
 
     return _sendAction("buildFiles", args).then((ServiceActionEvent event) {
       Map<String, List<Map>> responseErrors = event.data['errors'];
@@ -187,23 +198,47 @@ class AnalyzerService extends Service {
   }
 
   ProjectAnalyzer createProjectAnalyzer(Project project) {
-    if (_analyzers[project] == null) {
-      _analyzers[project] = new ProjectAnalyzer._(this, project);
+    if (_contextMap[project] == null) {
+      _logger.info('created analysis context [${project.name}]');
+
+      _contextMap[project] = new ProjectAnalyzer._(this, project);
+      _recentContexts.insert(0, _contextMap[project]);
+
       _sendAction('createContext', {'contextId': project.uuid});
+
+      if (_recentContexts.length > MAX_CONTEXTS) {
+        // Dispose of the oldest context.
+        disposeProjectAnalyzer(_recentContexts.last);
+      }
     }
 
-    return _analyzers[project];
+    return _contextMap[project];
   }
 
-  ProjectAnalyzer getProjectAnalyzer(Project project) => _analyzers[project];
+  ProjectAnalyzer getProjectAnalyzer(Project project) => _contextMap[project];
 
-  PubResolver getPubResolverFor(Project project) =>
-      services._pubManager.getResolverFor(project);
-
-  Future _disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
+  Future disposeProjectAnalyzer(ProjectAnalyzer projectAnalyzer) {
     Project project = projectAnalyzer.project;
-    _analyzers.remove(project);
-    return _sendAction('disposeContext', {'contextId': project.uuid});
+    ProjectAnalyzer context = _contextMap.remove(project);
+
+    if (context != null) {
+      _logger.info('disposed analysis context [${projectAnalyzer.project.name}]');
+
+      _recentContexts.remove(context);
+      return _sendAction('disposeContext', {'contextId': project.uuid});
+    } else {
+      return new Future.value();
+    }
+  }
+
+  PackageManager getPackageManager() => services._packageManager;
+
+  PackageResolver getPackageResolverFor(Project project) =>
+      services._packageManager.getResolverFor(project);
+
+  void _touch(ProjectAnalyzer context) {
+    _recentContexts.remove(context);
+    _recentContexts.insert(0, context);
   }
 }
 
@@ -218,12 +253,15 @@ class ProjectAnalyzer {
 
   Future<AnalysisResult> processChanges(
       List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
-    PubResolver resolver = analyzerService.getPubResolverFor(project);
+    analyzerService._touch(this);
+
+    PackageManager manager = analyzerService.getPackageManager();
+    PackageResolver resolver = analyzerService.getPackageResolverFor(project);
 
     var args = {'contextId': project.uuid};
-    args['added'] = _filesToUuid(resolver, addedFiles);
-    args['changed'] = _filesToUuid(resolver, changedFiles);
-    args['deleted'] = _filesToUuid(resolver, deletedFiles);
+    args['added'] = _filesToUuid(manager, resolver, addedFiles);
+    args['changed'] = _filesToUuid(manager, resolver, changedFiles);
+    args['deleted'] = _filesToUuid(manager, resolver, deletedFiles);
 
     return analyzerService._sendAction('processContextChanges', args)
         .then((ServiceActionEvent event) {
@@ -236,7 +274,7 @@ class ProjectAnalyzer {
   }
 
   Future dispose() {
-    return analyzerService._disposeProjectAnalyzer(this);
+    return analyzerService.disposeProjectAnalyzer(this);
   }
 }
 
@@ -270,13 +308,13 @@ class ChromeServiceImpl extends Service {
             return _sendResponse(event, {"contents": contents});
           });
         case "getPackageContents":
-          String relativeToUUid = event.data['relativeTo'];
+          String relativeToUuid = event.data['relativeTo'];
           String packageRef = event.data['packageRef'];
-          Resource resource = services._workspace.restoreResource(relativeToUUid);
+          Resource resource = services._workspace.restoreResource(relativeToUuid);
           if (resource == null) {
-            throw "Could not restore file with uuid $relativeToUUid";
+            throw "Could not restore file with uuid $relativeToUuid";
           }
-          PubResolver resolver = services._pubManager.getResolverFor(resource.project);
+          PackageResolver resolver = services._packageManager.getResolverFor(resource.project);
           File packageFile = resolver.resolveRefToFile(packageRef);
           if (packageFile == null) {
             throw "Could not resolve reference: ${packageRef}";
@@ -407,10 +445,11 @@ class _IsolateHandler {
   void dispose() { }
 }
 
-List<String> _filesToUuid(PubResolver pubResolver, List<File> files) {
+List<String> _filesToUuid(
+    PackageManager manager, PackageResolver resolver, List<File> files) {
   return files.map((File file) {
-    if (isInPackagesFolder(file) && pubResolver != null) {
-      return pubResolver.getReferenceFor(file);
+    if (resolver != null && manager.properties.isInPackagesFolder(file)) {
+      return resolver.getReferenceFor(file);
     } else {
       return file.uuid;
     }

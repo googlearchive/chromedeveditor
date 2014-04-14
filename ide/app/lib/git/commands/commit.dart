@@ -52,22 +52,21 @@ class Commit {
           chrome.ChromeFileEntry fileEntry = entry;
 
           return Status.getFileStatus(store, entry).then((FileStatus status) {
-            return store.index.updateIndexForEntry(status).then((_) {
-              status = store.index.getStatusForEntry(entry);
+            store.index.updateIndexForEntry(status);
+            status = store.index.getStatusForEntry(entry);
 
-              if (status.type != FileStatusType.COMMITTED) {
-                return fileEntry.readBytes().then((chrome.ArrayBuffer buf) {
-                  return store.writeRawObject(
-                      'blob', new Uint8List.fromList(buf.getBytes()));
-                }).then((String sha) {
-                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
-                  return store.index.commitEntry(status).then((_) => null);
-                });
-              } else {
-                treeEntries.add(
-                    new TreeEntry(entry.name, shaToBytes(status.sha), true));
-              }
-            });
+            if (status.type != FileStatusType.COMMITTED) {
+              return fileEntry.readBytes().then((chrome.ArrayBuffer buf) {
+                return store.writeRawObject(
+                    'blob', new Uint8List.fromList(buf.getBytes()));
+              }).then((String sha) {
+                treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
+                return store.index.commitEntry(status);
+              });
+            } else {
+              treeEntries.add(
+                  new TreeEntry(entry.name, shaToBytes(status.sha), true));
+            }
           });
         }
       }).then((_) {

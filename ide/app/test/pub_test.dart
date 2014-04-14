@@ -7,7 +7,8 @@ library spark.pub_test;
 import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
-import '../lib/dart/pub.dart';
+import '../lib/package_mgmt/package_manager.dart';
+import '../lib/package_mgmt/pub.dart';
 import '../lib/workspace.dart';
 
 defineTests() {
@@ -21,7 +22,7 @@ defineTests() {
       return workspace.link(createWsRoot(dir)).then((Project _project) {
         project = _project;
         pubManager = new PubManager(workspace);
-        return project.createNewFile(PUBSPEC_FILE_NAME);
+        return project.createNewFile('pubspec.yaml');
       }).then((File file) {
         return file.setContents('name: sample\nversion: 0.1.0\n');
       }).then((_) {
@@ -30,16 +31,16 @@ defineTests() {
     });
 
     test('isPackageRef', () {
-      expect(isPackageRef('package'), false);
-      expect(isPackageRef('package:'), true);
-      expect(isPackageRef('package:foo/bar.dart'), true);
-      expect(isPackageRef('dart:html'), false);
+      expect(pubManager.properties.isPackageRef('package'), false);
+      expect(pubManager.properties.isPackageRef('package:'), true);
+      expect(pubManager.properties.isPackageRef('package:foo/bar.dart'), true);
+      expect(pubManager.properties.isPackageRef('dart:html'), false);
     });
 
     test('PubManager isPubProject', () {
-      expect(pubManager.isPubProject(project), true);
-      return project.getChild(PUBSPEC_FILE_NAME).delete().then((_) {
-        expect(pubManager.isPubProject(project), false);
+      expect(pubManager.properties.isProjectWithPackages(project), true);
+      return project.getChild('pubspec.yaml').delete().then((_) {
+        expect(pubManager.properties.isProjectWithPackages(project), false);
       });
     });
 
@@ -57,7 +58,7 @@ defineTests() {
 //    });
 
     test('PubResolver resolveRefToFile', () {
-      PubResolver resolver = pubManager.getResolverFor(project);
+      PackageResolver resolver = pubManager.getResolverFor(project);
 
       expect(resolver.resolveRefToFile('package:sample/sample.dart'), isNotNull);
       expect(resolver.resolveRefToFile('package:foo/foo.dart'), isNotNull);
@@ -67,7 +68,7 @@ defineTests() {
     });
 
     test('PubResolver getReferenceFor', () {
-      PubResolver resolver = pubManager.getResolverFor(project);
+      PackageResolver resolver = pubManager.getResolverFor(project);
 
       expect(resolver.getReferenceFor(project.getChildPath('lib/sample.dart')),
           'package:sample/sample.dart');

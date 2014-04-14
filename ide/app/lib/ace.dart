@@ -18,8 +18,9 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
 import 'css/cssbeautify.dart';
-import 'dart/pub.dart';
 import 'editors.dart';
+import 'package_mgmt/bower.dart';
+import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
@@ -87,7 +88,9 @@ class TextEditor extends Editor {
 
   bool get supportsFormat => false;
 
-  bool get readOnly => isInPackagesFolder(file);
+  // TODO(ussuri): use MetaPackageManager instead when it's ready.
+  bool get readOnly =>
+      pubProperties.isInPackagesFolder(file) || bowerProperties.isInPackagesFolder(file);
 
   void format() { }
 
@@ -115,7 +118,7 @@ class TextEditor extends Editor {
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
       // TODO(ericarnold): Need to analyze on initial file load.
-      aceManager.outline.build(text);
+      aceManager.buildOutline();
 
       return file.setContents(text).then((_) => dirty = false);
     } else {
@@ -507,6 +510,7 @@ class AceManager {
       });
 
       setMarkers(file.getMarkers());
+      buildOutline();
     }
 
     // Setup the code completion options for the current file type.
@@ -522,6 +526,11 @@ class AceManager {
             _handleMarkerChange);
       }
     }
+  }
+  
+  void buildOutline() {
+    String text = currentSession.value;
+    outline.build(text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {

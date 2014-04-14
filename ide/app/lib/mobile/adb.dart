@@ -6,16 +6,16 @@ library spark.adb;
 
 import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:bignum/bignum.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:cipher/cipher.dart';
 import 'package:cipher/impl/base.dart' as CipherBase;
-import 'package:crypto/crypto.dart' show CryptoUtils;
 
 import '../preferences.dart';
+import '../utils.dart';
+import 'android_rsa.dart';
+import 'android_rsa_cipher.dart';
 
 // Most of these are helper classes that don't really need to be exported,
 // and might be better off in an internal library.
@@ -371,35 +371,33 @@ Additionally, DevTools may not have released the USB connection. To check this g
     });
   }
 
-  Future<AsymmetricKeyPair> getKeys(ByteData seedToken) {
-    return _prefs.getValue('adb_rsa_keys').then((jsonKeys) {
-      if (jsonKeys == null) {
-        return new Future.error('catchError below will generate keys');
-      }
-      return _deserializeRSAKeys(jsonKeys);
-    }).catchError((e) {
-      // If we can't retrieve the public and private keys, create and store a
-      // new pair.
-      // ADB uses 2048-bit RSA keys.
-      RSAKeyGeneratorParameters params = new RSAKeyGeneratorParameters(
-          new BigInteger(257), 2048, 90);
-
-      SecureRandom rnd = new SecureRandom('AES/CTR/PRNG');
-      // Using the random token from the device as the seed.
-      ParametersWithIV rndParams = new ParametersWithIV(
-          new KeyParameter(new Uint8List.view(seedToken.buffer, 0, 16)),
-          new Uint8List(16));
-      rnd.seed(rndParams);
-
-      ParametersWithRandom paramsWithRandom = new ParametersWithRandom(params,
-          rnd);
-      KeyGenerator gen = new KeyGenerator("RSA");
-      gen.init(paramsWithRandom);
-      AsymmetricKeyPair keys = gen.generateKeyPair();
-      return _prefs.setValue('adb_rsa_keys', _serializeRSAKeys(keys)).then((_) {
-        return keys;
+  Future<String> getKeys(ByteData seedToken) {
+    if (isDart2js()) {
+      return _prefs.getValue('adb_nacl_rsa_keys').then((String key) {
+        if (key != null) {
+          return key;
+        }
+        return AndroidRSA.randomSeed(new Uint8List.view(seedToken.buffer)).then((_) {
+          return AndroidRSA.generateKey().then((String key) {
+            return _prefs.setValue('adb_nacl_rsa_keys', key).then((_) {
+              return key;
+            });
+          });
+        });
       });
-    });
+    }
+    else {
+      return _prefs.getValue('adb_rsa_keys').then((String key) {
+        if (key != null) {
+          return key;
+        }
+        AsymmetricKeyPair keys = AndroidRSACipher.generateKey(seedToken);
+        key = AndroidRSACipher.serializeRSAKeys(keys);
+        return _prefs.setValue('adb_rsa_keys', key).then((_) {
+          return key;
+        });
+      });
+    }
   }
 
   // Waits to receive either an ATUH or CNXN message. Handles AUTH as needed.
@@ -407,116 +405,65 @@ Additionally, DevTools may not have released the USB connection. To check this g
   Future expectConnectionMessage() {
     bool sentSignature = false;
     bool sentPubKey = false;
-    AsymmetricKeyPair keys;
+    String key;
     Future handleConnectionMessage() {
-      return receive().then((msg) {
+      return receive().then((AdbMessage msg) {
         if (msg.command == AdbUtil.A_AUTH) {
           // We have been given a token.
           // If we haven't tried the keys yet, try them.
           if (!sentSignature) {
             // Fetch the keys, supplying the random token from the device as the
             // seed for the random number generator.
-            return getKeys(msg.dataBuffer)
-            .then((keys_) {
-              keys = keys_;
-
-              // First we create a SecureRandom, using the latter 16 bytes of
-              // the token as the seed. This is to keep it from being the same
-              // as the key generator seed, which would have been the first 16.
-              SecureRandom rnd = new SecureRandom('AES/CTR/PRNG');
-              ParametersWithIV rndParams = new ParametersWithIV(
-                  new KeyParameter(new Uint8List.view(
-                      msg.dataBuffer.buffer, 4, 16)),
-                  new Uint8List(16));
-              rnd.seed(rndParams);
-
-              // Next we prepare the Signer.
-              PrivateKeyParameter<RSAPrivateKey> pkParam =
-                  new PrivateKeyParameter<RSAPrivateKey>(keys.privateKey);
-              ParametersWithRandom params = new ParametersWithRandom(pkParam,
-                  rnd);
-              Signer signer = new Signer("SHA-1/RSA");
-              signer.init(true, params);
-
-              // And finally create the signature.
-              RSASignature sig = signer.generateSignature(
-                  new Uint8List.view(msg.dataBuffer.buffer));
-              // And send back the signed token.
+            //
+            // TODO(dvh): It sounds like a bad idea to use the data sent by
+            // the device as seed for the random number generator.
+            return getKeys(msg.dataBuffer).then((String key_) {
+              key = key_;
+              if (isDart2js()) {
+                return AndroidRSA.sign(key, new Uint8List.view(msg.dataBuffer.buffer))
+                    .then((Uint8List signature) {
+                      AdbMessage response = new AdbMessage(AdbUtil.A_AUTH,
+                          AdbUtil.ADB_AUTH_SIGNATURE, 0);
+                      response.setData(new ByteData.view(signature.buffer));
+                      sentSignature = true;
+                      return sendMessage(response).then((_) {
+                          return handleConnectionMessage();
+                      });
+                    });
+              } else {
+                AsymmetricKeyPair keys = AndroidRSACipher.deserializeRSAKeys(key);
+                ByteData signature = AndroidRSACipher.sign(keys, msg.dataBuffer);
+                AdbMessage response = new AdbMessage(AdbUtil.A_AUTH,
+                    AdbUtil.ADB_AUTH_SIGNATURE, 0);
+                response.setData(signature);
+                sentSignature = true;
+                return sendMessage(response).then((_) {
+                  return handleConnectionMessage();
+                });
+              }
+            });
+          } else if (!sentPubKey) {
+            if (isDart2js()) {
+              return AndroidRSA.getPublicKey(key).then((String publicKey) {
+                AdbMessage response = new AdbMessage(AdbUtil.A_AUTH,
+                    AdbUtil.ADB_AUTH_RSAPUBLICKEY, 0,
+                    "${publicKey} spark@chrome\x00");
+                sentPubKey = true;
+                return sendMessage(response).then((_) {
+                  return handleConnectionMessage();
+                });
+              });
+            } else {
+              AsymmetricKeyPair keys = AndroidRSACipher.deserializeRSAKeys(key);
+              String b64data = AndroidRSACipher.getPublicKey(keys);
               AdbMessage response = new AdbMessage(AdbUtil.A_AUTH,
-                  AdbUtil.ADB_AUTH_SIGNATURE, 0);
-              response.setData(new ByteData.view(sig.bytes.buffer));
-              sentSignature = true;
+                  AdbUtil.ADB_AUTH_RSAPUBLICKEY, 0,
+                  "${b64data} spark@chrome\x00");
+              sentPubKey = true;
               return sendMessage(response).then((_) {
                 return handleConnectionMessage();
               });
-            });
-          } else if (!sentPubKey) {
-            // If we have tried the keys, then send our public key.
-            // The public key consists of the following:
-            // - Length of key in words (64, for 2048-bit keys), 32-bit LE.
-            // - Inverse of the least-significant 32 bits of the modulus.
-            // - The modulus itself, little endian.
-            // - 2^4096 mod n, also little endian.
-            // - The exponent, same as is used in the key generation above.
-            //   (32-bit little endian).
-            // Which is all Base64-encoded and has a user@host username
-            // appended. That may be important, so I'll include one.
-
-            // Why this format? I have no idea. Especially the r^2 thing,
-            // which can be recomputed from the modulus.
-            ByteData data = new ByteData(4 + 4 + 256 + 256 + 4);
-            // First compute the little checksum that goes near the beginning.
-            // It's the multiplicative inverse of the first 32 bits of the
-            // modulus.
-            BigInteger modulus = keys.publicKey.modulus;
-            BigInteger twoTo32 = BigInteger.TWO.pow(32);
-            BigInteger firstWord = modulus.mod(twoTo32);
-            BigInteger negated = twoTo32 - firstWord;
-            BigInteger inverse = negated.modInverse(twoTo32);
-
-            // Write in the length, inverse, and the exponent.
-            data.setUint32(0, 64, Endianness.LITTLE_ENDIAN);
-            data.setUint32(4, inverse.intValue(), Endianness.LITTLE_ENDIAN);
-            data.setUint32(4+4+256+256, keys.publicKey.exponent.intValue(),
-                Endianness.LITTLE_ENDIAN);
-
-            // Write the modulus. It gets returned as a byte array, but it's
-            // big-endian. We want it little-endian, so we write it backwards.
-            List<int> beModulus = modulus.toByteArray();
-            int top = 256 + 4 + 4 - 1; // Index of the most-significant byte.
-            // HACK: For some reason, the BigInteger for the modulus is 257
-            // bytes long, with an extra 0 in its MSB. So we skip over it.
-            // Hopefully this applies to all keys, but it could be made more
-            // robust, always copying the least-significant 256 bytes from the
-            // array.
-            int extra = beModulus.length - 256;
-            for (int i = extra; i < beModulus.length; i++) {
-              data.setUint8(top - (i - extra), beModulus[i]);
             }
-
-            // Now the weird part: computing what's called r^2.
-            // This is (2^2048)^2 % modulus.
-            BigInteger r2 = BigInteger.TWO.pow(4096).mod(modulus);
-            List<int> ber2 = r2.toByteArray();
-            top = 256 + 256 + 4 + 4 - 1; // Index of the most-significant byte.
-            extra = ber2.length - 256;
-            for (int i = extra; i < ber2.length; i++) {
-              data.setUint8(top - (i - extra), ber2[i]);
-            }
-
-            // Convert the binary data to a Base64 String.
-            String b64data = CryptoUtils.bytesToBase64(
-                new Uint8List.view(data.buffer).toList());
-
-            // Now the payload is ready, so we reply with the message.
-            AdbMessage response = new AdbMessage(AdbUtil.A_AUTH,
-                AdbUtil.ADB_AUTH_RSAPUBLICKEY, 0,
-                "$b64data spark@chrome\x00");
-            Uint8List temp = new Uint8List.view(response.dataBuffer.buffer);
-            sentPubKey = true;
-            return sendMessage(response).then((_) {
-              return handleConnectionMessage();
-            });
           } else {
             // We've tried signing, and tried sending our pubkey, and are
             // still not authenticated? Something went wrong.
@@ -639,6 +586,9 @@ Additionally, DevTools may not have released the USB connection. To check this g
             msg.setData(packet);
             return sendMessage(msg).then((_) {
               return awaitOkay();
+            }).timeout(new Duration(seconds: 10), onTimeout: () {
+              return new Future.error(
+                  'Push timed out: Single message took more than 10 seconds.');
             });
           });
         }).then((_) {
@@ -686,27 +636,4 @@ Additionally, DevTools may not have released the USB connection. To check this g
   void handleMessage() {
     // TODO(shepheb): Handle the incoming messages.
   }
-}
-
-String _serializeRSAKeys(AsymmetricKeyPair keys) {
-  Map<String, String> cereal = new Map<String, String>();
-  cereal['p'] = keys.privateKey.p.toString(16);
-  cereal['q'] = keys.privateKey.q.toString(16);
-  cereal['modulus'] = keys.privateKey.modulus.toString(16);
-  cereal['privateexponent'] = keys.privateKey.exponent.toString(16);
-  cereal['publicexponent'] = keys.publicKey.exponent.toString(16);
-  return const JsonEncoder().convert(cereal);
-}
-
-AsymmetricKeyPair _deserializeRSAKeys(String json) {
-  Map<String, List<int>> cereal = const JsonDecoder(null).convert(json);
-  BigInteger p = new BigInteger(cereal['p'], 16);
-  BigInteger q = new BigInteger(cereal['q'], 16);
-  BigInteger modulus = new BigInteger(cereal['modulus'], 16);
-  BigInteger publicExponent = new BigInteger(cereal['publicexponent'], 16);
-  BigInteger privateExponent = new BigInteger(cereal['privateexponent'], 16);
-
-  RSAPublicKey public = new RSAPublicKey(modulus, publicExponent);
-  RSAPrivateKey private = new RSAPrivateKey(modulus, privateExponent, p, q);
-  return new AsymmetricKeyPair(public, private);
 }

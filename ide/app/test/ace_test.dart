@@ -53,6 +53,7 @@ class MockAceManager implements AceManager {
   void selectPrevMarker() { }
   void createDialog(String filename) { }
   bool isFileExtensionEditable(String extension) => false;
+  void buildOutline() { }
 }
 
 class MockAceEditor implements TextEditor {

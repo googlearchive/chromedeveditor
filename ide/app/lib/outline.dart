@@ -13,6 +13,9 @@ import '../lib/services.dart' as services;
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
+  StreamSubscription _currentOutlineOperation;
+  Completer _buildCompleter;
+
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
   html.DivElement _outlineScrollableDiv;
@@ -56,9 +59,7 @@ class Outline {
         ..id = "toggleOutlineButton"
         ..append(hideGlyph)
         ..append(showGlyph)
-        ..onClick.listen((e) {
-          _toggle();
-        });
+        ..onClick.listen((e) => _toggle());
 
     _outlineDiv.append(toggleButton);
   }
@@ -72,11 +73,26 @@ class Outline {
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
+   * 
+   * @return A subscription which can be canceled to cancel the outline.
    */
   Future build(String code) {
-    return analyzer.getOutlineFor(code).then((services.Outline model) {
-      _populate(model);
-    });
+    if (_currentOutlineOperation != null) {
+      _currentOutlineOperation.cancel();
+    }
+
+    if (_buildCompleter != null && !_buildCompleter.isCompleted) {
+      _buildCompleter.complete();
+    }
+    
+    _buildCompleter = new Completer();
+    
+    _currentOutlineOperation = analyzer.getOutlineFor(code).asStream()
+        .listen((services.Outline model) => _populate(model));
+    
+    _currentOutlineOperation.onDone(() => _buildCompleter.complete);
+    
+    return _buildCompleter.future;
   }
 
   void _populate(services.Outline outline) {
