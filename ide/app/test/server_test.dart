@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 
 import '../lib/server.dart';
-import '../lib/tcp.dart' as tcp;
+import '../lib/spark_exception.dart' as tcp;
 
 // TODO(devoncarew): move some tests from dart:io
 

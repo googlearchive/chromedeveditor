@@ -6,22 +6,32 @@ library spark.error;
 
 /**
  * A wrapper class for all errors thrown inside spark. Each error is represented
- * by a unique [errorcode] pre-defined in spark_error_constants.dart.
+ * by a unique [errorCode] pre-defined in spark_error_constants.dart.
  */
-class SparkError extends Error {
-  // Represents the unique string for each error type.
-  final String errorcode;
+class SparkException implements Exception {
+  /// Represents the unique string for each error type.
+  final String errorCode;
   final String message;
 
-  // Indicates if the error is not necessary to be handled and can be ignored.
+  /// Indicates if the error is not necessary to be handled and can be ignored.
   bool canIgnore = false;
 
-  SparkError([this.errorcode, this.message, this.canIgnore]);
+  SparkException([this.errorCode, this.message, this.canIgnore]);
 
-  String toString() {
-    if (message != null) {
-      return "SparkError($errorcode) : $message";
-    }
-    return "SparkError($errorcode)";
-  }
+  String toString() => message == null ? "SparkError($errorCode)"
+      : "SparkError($errorCode) : $message";
+}
+
+/**
+ * Defines all error types in spark as string. Each error string represents
+ * a unique SparkError.
+ */
+class SparkErrorConstants {
+
+static final String GIT_BRANCH_NOT_FOUND
+   = "git.branch_not_found";
+
+static final String GIT_CLONE_GIT_DIR_IN_USE
+   = "git.clone_dir_in_use";
+
 }

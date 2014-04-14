@@ -8,7 +8,7 @@ import 'dart:async';
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/tcp.dart' as tcp;
+import '../lib/spark_exception.dart' as tcp;
 
 /** A matcher for SocketExceptions. */
 const isSocketException = const _SocketExceptionMatcher();

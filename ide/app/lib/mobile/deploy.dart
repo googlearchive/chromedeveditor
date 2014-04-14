@@ -11,7 +11,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'adb.dart';
 import '../jobs.dart';
 import '../preferences.dart';
-import '../tcp.dart';
+import '../spark_exception.dart';
 import '../workspace.dart';
 import '../workspace_utils.dart';
 
