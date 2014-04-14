@@ -37,7 +37,8 @@
     <link rel="stylesheet" href="spark_split_view.css">
 
     <!-- NOTE: The Dart side verifies that there is exactly 2 children -->
-    <content select=":nth-child(1)"></content>
+    <content select="[beforeSplit]"></content>
+
     <spark-splitter
         id="splitter"
         direction="{{direction}}"
@@ -46,7 +47,9 @@
         locked="{{locked}}"
         on-update="{{splitterUpdateHandler}}">
     </spark-splitter>
-    <content select=":nth-child(2)"></content>
+
+    <content select="[afterSplit]"></content>
+
   </template>
 
   <script type="application/dart" src="spark_split_view.dart"></script>
