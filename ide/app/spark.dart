@@ -1853,8 +1853,9 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
     Element label = new LabelElement()..text = key;
     Element element = new ParagraphElement()..text = value
-        ..className = 'form-control-static';
-
+        ..className = 'form-control-static'
+        ..attributes["selectableTxt"] = "";
+    
     div.children.addAll([label, element]);
   }
 
