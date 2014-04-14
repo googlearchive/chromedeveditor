@@ -14,7 +14,7 @@ import 'package:intl/intl.dart' as intl;
 import 'package:logging/logging.dart';
 import 'package:mime/mime.dart' as mime;
 
-import 'spark_exception.dart' as tcp;
+import 'tcp.dart' as tcp;
 
 const int DEFAULT_HTTP_PORT = 80;
 
