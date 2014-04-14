@@ -2,7 +2,7 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library spark.error;
+library spark.exception;
 
 /**
  * A wrapper class for all errors thrown inside spark. Each error is represented
@@ -18,8 +18,8 @@ class SparkException implements Exception {
 
   SparkException([this.errorCode, this.message, this.canIgnore]);
 
-  String toString() => message == null ? "SparkError($errorCode)"
-      : "SparkError($errorCode) : $message";
+  String toString() => message == null ? "SparkException($errorCode)"
+      : "SparkException($errorCode) : $message";
 }
 
 /**
