@@ -154,7 +154,13 @@ class _PubBuilder extends PackageBuilder {
   PackageServiceProperties get properties => pubProperties;
 
   String getPackageNameFromSpec(String spec) {
-    final doc = yaml.loadYaml(spec);
-    return doc == null ? null : doc['name'];
+    Map<String, dynamic> specMap;
+    try {
+      specMap = yaml.loadYaml(spec);
+    } on yaml.YamlException catch(e) {
+      _logger.warning('Error parsing package spec: $e\n$spec');
+    }
+    // specMap['name'] can return null: that's ok.
+    return specMap == null ? null : specMap['name'];
   }
 }

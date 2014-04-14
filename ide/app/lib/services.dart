@@ -10,7 +10,6 @@ import 'dart:isolate';
 import 'package:logging/logging.dart';
 
 import 'package_mgmt/package_manager.dart';
-import 'package_mgmt/pub.dart';
 import 'services/compiler.dart';
 import 'services/services_common.dart';
 import 'utils.dart';

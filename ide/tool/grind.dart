@@ -10,7 +10,6 @@ import 'package:archive/archive.dart' as arch;
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
-import 'package:polymer/builder.dart' as polymer;
 
 import 'webstore_client.dart';
 
@@ -84,7 +83,8 @@ void setup(GrinderContext context) {
  * Runt Polymer lint on the Polymer entry point.
  */
 void lint(context) {
-  polymer.lint(entryPoints: ['app/spark_polymer.html']);
+  // TODO(devoncarew): Commented out to work around an NPE in the polymer linter.
+  //polymer.lint(entryPoints: ['app/spark_polymer.html']);
 }
 
 /**
