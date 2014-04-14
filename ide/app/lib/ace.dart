@@ -223,6 +223,14 @@ class AceManager {
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
+    
+    // Declaration linking hotkey
+    _aceEditor.commands.addCommand(
+        new ace.Command('link_to_declaration',
+        const ace.BindKey(mac: 'F3', win: 'F3'),
+        (editor) {
+          editor.paste('42');
+        }));
 
     // Fallback
     theme = THEMES[0];

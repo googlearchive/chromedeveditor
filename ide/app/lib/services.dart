@@ -197,6 +197,14 @@ class AnalyzerService extends Service {
       return new Outline.fromMap(result.data);
     });
   }
+  
+  Future<Declaration> getDeclarationFor(File file, int offset) {
+    var args = {"uuid": file.uuid};
+    return _sendAction("getDeclarationFor", args)
+        .then((ServiceActionEvent result) {
+          return new Declaration.fromMap(result.data);
+        });
+  }
 
   ProjectAnalyzer createProjectAnalyzer(Project project) {
     if (_contextMap[project] == null) {

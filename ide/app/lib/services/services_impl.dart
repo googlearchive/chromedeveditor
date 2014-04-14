@@ -245,6 +245,14 @@ class AnalyzerServiceImpl extends ServiceImpl {
                 (analyzer.AnalyzerResult result) {
           return event.createReponse(_getOutline(result.ast).toMap());
         });
+      case "getDeclarationFor":
+        analyzer.ElementLocator.locateWithOffset(node, offset)
+        var codeString = event.data['string'];
+        return analyzer.analyzeString(
+            dartSdk, codeString, performResolution: false).then(
+                (analyzer.AnalyzerResult result) {
+          return event.createReponse(_getOutline(result.ast).toMap());
+        });
       default:
         return super.handleEvent(event);
     }
