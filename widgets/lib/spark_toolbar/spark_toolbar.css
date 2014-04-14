@@ -31,18 +31,9 @@
 ::content > * {
   margin: 0 4px;
 }
-* /content/ * {
-  margin: 0 4px;
-}
 
 /*@polyfill .toolbar > .flex */
 ::content > .flex {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-}
-* /content/ .flex {
   -webkit-box-flex: 1;
   -webkit-flex: 1;
   -ms-flex: 1;
@@ -64,9 +55,6 @@
 
   /*@polyfill .toolbar > *.hidden-narrow */
   ::content .hidden-narrow {
-    display: none;
-  }
-  * /content/ .hidden-narrow {
     display: none;
   }
 }

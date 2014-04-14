@@ -19,9 +19,6 @@
 ::content > * {
   position: relative;
 }
-* /content/ * {
-  position: relative;
-}
 
 /* Make the passive target of resizing 'flex', so it auto-adjusts when the
    active target is resized.
