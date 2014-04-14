@@ -717,6 +717,9 @@ class Folder extends Container {
     });
   }
 
+  /**
+   * Creates a new [Folder] with the given name
+   */
   Future<Folder> createNewFolder(String name) {
     if (getChild(name) != null) {
       return new Future.error("Folder already exists.");
@@ -731,7 +734,35 @@ class Folder extends Container {
   }
 
   /**
-   * This method will import a file entry that might be from an other
+   * Gets an existing or creates a new [File] with the given name.
+   */
+  Future<File> getOrCreateFile(String name, [bool createIfMissing = false]) {
+    File file = getChild(name);
+    if (file != null) {
+      return new Future.value(file);
+    } else if (createIfMissing) {
+      return createNewFile(name);
+    } else {
+      return new Future.error("File doesn't exist");
+    }
+  }
+
+  /**
+   * Gets an existing or creates a new [Folder] with the given name.
+   */
+  Future<Folder> getOrCreateFolder(String name, [bool createIfMissing = false]) {
+    Folder folder = getChild(name);
+    if (folder != null) {
+      return new Future.value(folder);
+    } else if (createIfMissing) {
+      return createNewFolder(name);
+    } else {
+      return new Future.error("Folder doesn't exist");
+    }
+  }
+
+  /**
+   * This method will import a file entry that might be from another
    * filesystem to the current folder.
    */
   Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {

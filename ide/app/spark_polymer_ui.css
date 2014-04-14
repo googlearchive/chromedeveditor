@@ -194,3 +194,7 @@
 #newProjectDialog table td {
   vertical-align: top;
 }
+
+[selectableTxt] {
+  -webkit-user-select: text;
+}
