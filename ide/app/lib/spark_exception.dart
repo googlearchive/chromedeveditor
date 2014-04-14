@@ -6,7 +6,7 @@ library spark.exception;
 
 /**
  * A wrapper class for all errors thrown inside spark. Each error is represented
- * by a unique [errorCode] pre-defined in spark_error_constants.dart.
+ * by a unique [errorCode] pre-defined by SparkErrorConstants class.
  */
 class SparkException implements Exception {
   /// Represents the unique string for each error type.
