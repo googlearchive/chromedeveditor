@@ -27,7 +27,10 @@ class PubProperties extends PackageServiceProperties {
   String get packagesDirName => 'packages';
   String get libDirName => 'lib';
   String get packageRefPrefix => 'package:';
-  RegExp get packageRefPrefixRegexp => new RegExp('^(package:|/packages/)(.*)');
+  // This will get both the "package:foo/bar.dart" variant when used directly
+  // in Dart and the "baz/packages/foo/bar.dart" variant when served over HTTP.
+  RegExp get packageRefPrefixRegexp =>
+      new RegExp(r'^(package:|.*/packages/)(.*)$');
 
   void setSelfReference(Project project, String selfReference) =>
       project.setMetadata('${packageServiceName}SelfReference', selfReference);
