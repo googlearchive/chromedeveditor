@@ -14,7 +14,7 @@ dependencies:
   bignum: '>=0.0.5 <0.1.0'
   bootjack: '>=0.6.0 < 0.7.0'
   chrome: '>=0.5.3 <0.6.0'
-  cipher: '>=0.6.0 <0.7.0'
+  cipher: '>=0.7.0 <0.8.0'
   compiler_unsupported: 0.7.1
   crypto: any
   intl: any
