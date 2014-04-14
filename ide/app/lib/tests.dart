@@ -13,7 +13,7 @@ import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
 import 'jobs.dart';
-import 'spark_exception.dart' as tcp;
+import 'tcp.dart' as tcp;
 
 const int _DEFAULT_TESTPORT = 5120;
 
