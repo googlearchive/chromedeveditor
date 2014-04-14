@@ -84,7 +84,8 @@ void setup(GrinderContext context) {
  * Runt Polymer lint on the Polymer entry point.
  */
 void lint(context) {
-  polymer.lint(entryPoints: ['app/spark_polymer.html']);
+  // TODO(devoncarew): Commented out to work around an NPE in the polymer linter.
+  //polymer.lint(entryPoints: ['app/spark_polymer.html']);
 }
 
 /**
