@@ -267,7 +267,9 @@ class GitScmProvider extends ScmProvider {
         branchName : branchName, username: username, password: password);
 
     return options.store.init().then((_) {
-      return new Clone(options).clone();
+      return new Clone(options).clone().then((_) {
+        return options.store.index.flush();
+      });
     }).catchError((e) {
       if (e is HttpResult) {
         throw new ScmException(e.toString(), e.needsAuth);

@@ -5,107 +5,110 @@
 /**
  * Bower services.
  */
-library spark.bower;
+
+// TODO(ussuri): Add tests.
+
+library spark.package_mgmt.bower;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
 
-
-import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
-import '../scm.dart';
-import '../workspace.dart' as ws;
-
-const PACKAGES_DIR_NAME = 'bower_packages';
-const PACKAGE_SPEC_FILE_NAME = 'bower.json';
-
-bool isInPackagesFolder(ws.Resource resource) {
-  String path = resource.path;
-  return path.contains('/$PACKAGES_DIR_NAME/') ||
-         path.endsWith('/$PACKAGES_DIR_NAME');
-}
+import 'package_manager.dart';
+import 'bower_fetcher.dart';
+import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
 
-class BowerManager {
-  static const GITHUB_ROOT_URL = 'https://github.com';
+// TODO(ussuri): Make package-private once no longer used outside.
+final bowerProperties = new BowerProperties();
 
-  /// E.g.: "Polymer/polymer-elements".
-  static const PKG_SPEC_PATH = '''[-\\w./]+''';
-  /// E.g.: "#master", "#1.2.3" (however branches in general are not yet
-  /// supported, only "#master" is accepted - see below).
-  static const PKG_SPEC_BRANCH = '''[-\\w.]+''';
-  /// E.g.: "Polymer/polymer#master";
-  static final RegExp PKG_SPEC_REGEXP =
-      new RegExp('''^($PKG_SPEC_PATH)(?:#($PKG_SPEC_BRANCH))?\$''');
+class BowerProperties extends PackageServiceProperties {
+  String get packageServiceName => 'bower';
+  String get packageSpecFileName => 'bower.json';
+  String get packagesDirName => 'bower_packages';
 
-  ScmProvider _scmProvider;
+  // Bower doesn't use any of the below nullified properties/methods.
 
-  BowerManager() :
-    _scmProvider = getProviderType('git');
+  String get libDirName => null;
+  String get packageRefPrefix => null;
+  RegExp get packageRefPrefixRegexp => null;
 
+  void setSelfReference(Project project, String selfReference) {}
+  String getSelfReference(Project project) => null;
+}
 
-  static bool isBowerProject(ws.Project project) =>
-      project.getChild(PACKAGE_SPEC_FILE_NAME) != null;
+class BowerManager extends PackageManager {
+  BowerManager(Workspace workspace) : super(workspace);
 
-  static bool isBowerResource(ws.Resource resource) {
-    return (resource is ws.File && resource.name == PACKAGE_SPEC_FILE_NAME) ||
-           (resource is ws.Project && isBowerProject(resource));
-  }
+  PackageServiceProperties get properties => bowerProperties;
 
-  Future runBowerInstall(ws.Project project) {
-    return _fetchPackages(project).whenComplete(() {
-      return project.refresh();
-    }).catchError((e, st) {
-      _logger.severe('Error getting Bower packages', e, st);
-      return new Future.error(e, st);
-    });
-  }
+  PackageBuilder getBuilder() => new _BowerBuilder();
 
-  void _handleLog(String line, String level) {
-    // TODO: Dial the logging back.
-     _logger.info(line);
-  }
+  PackageResolver getResolverFor(Project project) =>
+      new _BowerResolver._(project);
 
-  Future _fetchPackages(ws.Project project) {
-    final chrome.Entry packagesDir = project.getChild(PACKAGES_DIR_NAME).entry;
-    final ws.File specFile = project.getChild(PACKAGE_SPEC_FILE_NAME);
+  Future installPackages(Project project) {
+    final File specFile = project.getChild(properties.packageSpecFileName);
 
-    return specFile.getContents().then((String spec) {
-      final Map<String, dynamic> specMap = JSON.decode(spec);
-      final Map<String, String> deps = specMap['dependencies'];
+    // The client is expected to call us only when the project has bower.json.
+    if (specFile == null) {
+      throw new StateError('installPackages() called, but there is no bower.json');
+    }
 
-      final List<Future> futures = [];
+    return project.getOrCreateFolder(properties.packagesDirName, true)
+        .then((Folder packagesDir) {
+      final fetcher = new BowerFetcher(
+          packagesDir.entry, properties.packageSpecFileName);
 
-      deps.forEach((packageName, packageSpec) {
-        futures.add(_fetchPackage(packageName, packageSpec, packagesDir));
+      return fetcher.fetchDependencies(specFile.entry).whenComplete(() {
+        return project.refresh();
+      }).catchError((e, st) {
+        _logger.severe('Error getting Bower packages', e, st);
+        return new Future.error(e, st);
       });
-
-      return Future.wait(futures);
     });
   }
 
-  Future _fetchPackage(String packageName,
-                     String packageSpec,
-                     chrome.DirectoryEntry packagesDir) {
-    final Match m = PKG_SPEC_REGEXP.matchAsPrefix(packageSpec);
-    String path = m.group(1);
-    if (!path.endsWith('.git')) {
-      path += '.git';
-    }
-    final String branch = m.group(2);
+  Future upgradePackages(Project project) {
+    return new Future.error('Not implemented');
+  }
+}
 
-    if (m == null) {
-      return new Future.error("Malformed Bower dependency: '$packageSpec'");
-    } else if (branch != 'master') {
-      return new Future.error(
-          "Unsupported branch in Bower dependency: '$packageSpec'."
-          " Only 'master' is supported.");
-    }
+/**
+ * A dummy class that currently doesn't resolve anything, since the definition
+ * of a Bower package reference in JS code is yet unclear.
+ */
+class _BowerResolver extends PackageResolver {
+  _BowerResolver._(Project project);
 
-    return packagesDir.createDirectory(packageName).then((destDir) {
-      return _scmProvider.clone('$GITHUB_ROOT_URL/$path', destDir);
-    });
+  PackageServiceProperties get properties => bowerProperties;
+
+  File resolveRefToFile(String url) => null;
+
+  String getReferenceFor(File file) => null;
+}
+
+/**
+ * A [Builder] implementation which watches for changes to `bower.json` files
+ * and updates the project Bower metadata.
+ */
+class _BowerBuilder extends PackageBuilder {
+  _BowerBuilder();
+
+  PackageServiceProperties get properties => bowerProperties;
+
+  String getPackageNameFromSpec(String spec) {
+    // TODO(ussuri): Similar code is now in 3 places in package_mgmt.
+    // Generalize package spec parsing as a PackageServiceProperties API.
+    Map<String, dynamic> specMap;
+    try {
+      specMap = JSON.decode(spec);
+    } on FormatException catch(e) {
+      _logger.warning('Error parsing package spec: $e\n$spec');
+    }
+    // specMap['name'] can return null: that's ok.
+    return specMap == null ? null : specMap['name'];
   }
 }
