@@ -356,7 +356,7 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   link.createSync('../../packages');
 
   runDartScript(context, 'packages/polymer/deploy.dart',
-      arguments: ['--out', '../../${destDir.path}'],
+      arguments: ['--out', '../../${destDir.path}', '--csp'],
       packageRoot: 'packages',
       workingDirectory: sourceDir.path);
 }
