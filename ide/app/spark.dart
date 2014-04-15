@@ -284,9 +284,6 @@ abstract class Spark
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus, services);
-    _editorManager.onNewFileOpened.listen((_) {
-      _workspace.checkResource(_editorManager.currentFile);
-    });
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         _workspace, allowsLabelBar: true);
 
@@ -1853,7 +1850,8 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
     Element label = new LabelElement()..text = key;
     Element element = new ParagraphElement()..text = value
-        ..className = 'form-control-static';
+        ..className = 'form-control-static'
+        ..attributes["selectableTxt"] = "";
 
     div.children.addAll([label, element]);
   }
