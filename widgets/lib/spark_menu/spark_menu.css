@@ -28,7 +28,11 @@
   background-color: #1a64a3;
 }
 
+/* BUG #1569 */
 ::content spark-menu-item.selected ^ * {
+  color: white;
+}
+::content spark-menu-item.selected /deep/ * {
   color: white;
 }
 
@@ -36,7 +40,11 @@
   background-color: #3a84c3;
 }
 
+/* BUG #1569 */
 ::content spark-menu-item.active ^ * {
+  color: white;
+}
+::content spark-menu-item.active /deep/ * {
   color: white;
 }
 
