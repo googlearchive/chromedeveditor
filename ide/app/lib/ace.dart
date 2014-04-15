@@ -229,6 +229,8 @@ class AceManager {
         new ace.Command('link_to_declaration',
         const ace.BindKey(mac: 'F3', win: 'F3'),
         (editor) {
+//          _aceEditor.cursorPosition.column
+          /*%TRACE3*/ print("""(4> 4/15/14): _aceEditor.cursorPosition.column: ${_aceEditor.cursorPosition.column}"""); // TRACE%
           editor.paste('42');
         }));
 
