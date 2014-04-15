@@ -266,6 +266,13 @@ class FilesController implements TreeViewDelegate {
       reader.onLoadEnd.listen((html.ProgressEvent event) {
         destinationFolder.createNewFile(file.name).then((File file) {
           file.setBytes(reader.result);
+          
+          //set dropped file as current selection
+          new Timer(const Duration(milliseconds: 20), ()
+          {
+            view.selection = new List<String>();
+            selectFile(file, forceOpen: false);
+          });
         });
       });
       reader.readAsArrayBuffer(file);
