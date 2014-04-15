@@ -24,7 +24,7 @@ import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
-import 'services.dart' as services;
+import 'services.dart' as svc;
 import 'outline.dart';
 
 export 'package:ace/ace.dart' show EditSession;
@@ -209,8 +209,9 @@ class AceManager {
   workspace.File currentFile;
 
   html.DivElement _outlineDiv = new html.DivElement();
+  svc.AnalyzerService analysisService;
 
-  AceManager(this.parentElement, this.delegate, services.Services services) {
+  AceManager(this.parentElement, this.delegate, svc.Services services) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -218,6 +219,7 @@ class AceManager {
     _aceEditor.printMarginColumn = 80;
     _aceEditor.readOnly = true;
     _aceEditor.fadeFoldWidgets = true;
+    analysisService =  services.getService("analyzer");
 
     // Enable code completion.
     ace.require('ace/ext/language_tools');
@@ -225,13 +227,12 @@ class AceManager {
     _aceEditor.setOption('enableSnippets', true);
     
     // Declaration linking hotkey
-    _aceEditor.commands.addCommand(
-        new ace.Command('link_to_declaration',
-        const ace.BindKey(mac: 'F3', win: 'F3'),
-        (editor) {
+    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
+        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
+          int offset = currentSession.document.positionToIndex(
+              _aceEditor.cursorPosition);
+          analysisService.getDeclarationFor(currentFile, offset);
 //          _aceEditor.cursorPosition.column
-          /*%TRACE3*/ print("""(4> 4/15/14): _aceEditor.cursorPosition.column: ${_aceEditor.cursorPosition.column}"""); // TRACE%
-          editor.paste('42');
         }));
 
     // Fallback
