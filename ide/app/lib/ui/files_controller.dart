@@ -158,11 +158,7 @@ class FilesController implements TreeViewDelegate {
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     Resource resource = _filesMap[nodeUID];
-
-    if (resource == null) {
-      assert(resource != null);
-    }
-
+    assert(resource != null);
     FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
       cell.acceptDrop = true;
@@ -630,9 +626,7 @@ class FilesController implements TreeViewDelegate {
   /**
    * Returns whether the given resource should be filtered from the Files view.
    */
-  bool _showResource(Resource resource) {
-    return /*_filesMap[resource.uuid] != null &&*/ !resource.isScmPrivate();
-  }
+  bool _showResource(Resource resource) => !resource.isScmPrivate();
 
   /**
    * Traverse all the created [FileItemCell]s, calling `updateFileStatus()`.
@@ -689,15 +683,6 @@ class FilesController implements TreeViewDelegate {
       });
     }
   }
-
-//  void _recursiveRemoveResource(Resource resource) {
-//    _filesMap.remove(resource.uuid);
-//    if (resource is Container) {
-//      resource.getChildren().forEach((child) {
-//        _recursiveRemoveResource(child);
-//      });
-//    }
-//  }
 
   /**
    * Shows the context menu at the location of the mouse event.
