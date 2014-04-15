@@ -18,6 +18,7 @@ import 'package:logging/logging.dart';
 import 'builder.dart';
 import 'jobs.dart';
 import 'preferences.dart';
+import 'utils.dart';
 
 final Logger _logger = new Logger('spark.workspace');
 
@@ -85,6 +86,7 @@ class Workspace extends Container {
    */
   void resumeResourceEvents() {
     _resourcePauseCount--;
+    assert(_resourcePauseCount >= 0);
     if (_resourcePauseCount == 0 && _resourceChangeList.isNotEmpty) {
       _resourceController.add(new ResourceChangeEvent.fromList(_resourceChangeList));
       _resourceChangeList.clear();
@@ -105,6 +107,7 @@ class Workspace extends Container {
    */
   void resumeMarkerStream() {
     _markersPauseCount--;
+    assert(_markersPauseCount >= 0);
     if (_markersPauseCount == 0 && _makerChangeList.isNotEmpty) {
       _markerController.add(new MarkerChangeEvent.fromList(_makerChangeList));
       _makerChangeList.clear();
@@ -121,15 +124,13 @@ class Workspace extends Container {
     if (root.resource is Container) {
       return _gatherChildren(root.resource).then((Container container) {
         if (fireEvent) {
-          _resourceController.add(new ResourceChangeEvent.fromSingle(
-              new ChangeDelta(container, EventType.ADD)));
+          _fireResourceChanges(ChangeDelta.containerAdd(container));
         }
         return container;
       });
     } else {
       if (fireEvent) {
-        _resourceController.add(new ResourceChangeEvent.fromSingle(
-            new ChangeDelta(root.resource, EventType.ADD)));
+        _fireResourceChange(new ChangeDelta(root.resource, EventType.ADD));
       }
       return new Future.value(root.resource);
     }
@@ -146,11 +147,11 @@ class Workspace extends Container {
    */
   Future moveTo(List<Resource> resources, Container container) {
     Iterable<Future> futures = resources.map((r) => _moveTo(r, container));
-    return Future.wait(futures).then((events) {
+    return Future.wait(futures).then((List<List<ChangeDelta>> changes) {
       List<ChangeDelta> list = [];
-      resources.forEach((r) => list.add(new ChangeDelta(r, EventType.DELETE)));
-      list.addAll(events);
-      _resourceController.add(new ResourceChangeEvent.fromList(list));
+      resources.forEach((r) => list.addAll(ChangeDelta.containerDelete(r)));
+      changes.forEach((List<ChangeDelta> deltas) => list.addAll(deltas));
+      _fireResourceChanges(list);
     });
   }
 
@@ -158,18 +159,20 @@ class Workspace extends Container {
    * Removes the given resource from parent, moves to the specifed container,
    * and adds it to the container's children.
    */
-  Future<ChangeDelta> _moveTo(Resource resource, Container container) {
+  Future<List<ChangeDelta>> _moveTo(Resource resource, Container container) {
     return resource.entry.moveTo(container.entry).then((chrome.Entry newEntry) {
       resource.parent._removeChild(resource, fireEvent: false);
 
       if (newEntry.isFile) {
         var file = new File(container, newEntry);
         container.getChildren().add(file);
-        return new Future.value(new ChangeDelta(file, EventType.ADD));
+        return ChangeDelta.containerAdd(file);
       } else {
         var folder = new Folder(container, newEntry);
         container.getChildren().add(folder);
-        return _gatherChildren(folder).then((_) => new ChangeDelta(folder, EventType.ADD));
+        return _gatherChildren(folder).then((_) {
+          return ChangeDelta.containerAdd(folder);
+        });
       }
     });
   }
@@ -200,18 +203,19 @@ class Workspace extends Container {
 
   Stream<MarkerChangeEvent> get onMarkerChange => _markerController.stream;
 
-  // TODO(ericarnold): We can remove this method once we analyze whole projects.
-  void checkResource(Resource resource) {
-    // TODO(devoncarew): temporarily disabled while we investigate a performance
-    // issue
-    //_fireResourceEvent(new ChangeDelta(resource, EventType.CHANGE));
-  }
-
-  void _fireResourceEvent(ChangeDelta delta) {
+  void _fireResourceChange(ChangeDelta delta) {
     if (_resourcePauseCount == 0) {
       _resourceController.add(new ResourceChangeEvent.fromSingle(delta));
     } else {
       _resourceChangeList.add(delta);
+    }
+  }
+
+  void _fireResourceChanges(List<ChangeDelta> deltas) {
+    if (_resourcePauseCount == 0) {
+      _resourceController.add(new ResourceChangeEvent.fromList(deltas));
+    } else {
+      _resourceChangeList.addAll(deltas);
     }
   }
 
@@ -293,6 +297,7 @@ class Workspace extends Container {
     List<Future> futures = [];
     Map<String, SyncFolderRoot> existingPaths = {};
     Set<String> newPaths = new Set();
+
     // Refreshing existing syncFS roots.
     for(WorkspaceRoot root in _roots) {
       if (root is SyncFolderRoot) {
@@ -317,7 +322,7 @@ class Workspace extends Container {
         if (!newPaths.contains(path)) {
           SyncFolderRoot root = existingPaths[path];
           _roots.remove(root);
-          _fireResourceEvent(new ChangeDelta(root.resource, EventType.DELETE));
+          _fireResourceChanges(ChangeDelta.containerDelete(root.resource));
         }
       }
 
@@ -482,7 +487,7 @@ class Workspace extends Container {
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     _roots.removeWhere((root) => root.resource == resource);
     if (fireEvent) {
-      _fireResourceEvent(new ChangeDelta(resource, EventType.DELETE));
+      _fireResourceChanges(ChangeDelta.containerDelete(resource));
     }
   }
 }
@@ -511,7 +516,7 @@ abstract class Container extends Resource {
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     getChildren().remove(resource);
     if (fireEvent) {
-      _fireResourceEvent(new ChangeDelta(resource, EventType.DELETE));
+      _fireResourceChanges(ChangeDelta.containerDelete(resource));
     }
   }
 
@@ -582,7 +587,9 @@ abstract class Resource {
 
   Container get parent => _parent;
 
-  void _fireResourceEvent(ChangeDelta delta) => _parent._fireResourceEvent(delta);
+  void _fireResourceChange(ChangeDelta delta) => _parent._fireResourceChange(delta);
+
+  void _fireResourceChanges(List<ChangeDelta> deltas) => _parent._fireResourceChanges(deltas);
 
   void _fireMarkerEvent(MarkerDelta delta) => _parent._fireMarkerEvent(delta);
 
@@ -591,9 +598,12 @@ abstract class Resource {
   Future rename(String name) {
     return entry.moveTo(_parent._entry, name: name).then((chrome.Entry e) {
       workspace.pauseResourceEvents();
-      _fireResourceEvent(new ChangeDelta(this, EventType.DELETE));
-      _fireResourceEvent(new ChangeDelta(this, EventType.ADD));
-      workspace.resumeResourceEvents();
+      try {
+        _fireResourceChanges(ChangeDelta.containerDelete(this));
+        _fireResourceChanges(ChangeDelta.containerAdd(this));
+      } finally {
+        workspace.resumeResourceEvents();
+      }
     });
   }
 
@@ -682,12 +692,9 @@ abstract class Resource {
 
   static Iterable<Resource> _workspaceTraversal(Resource r) {
     if (r is Container) {
-      if (r.isScmPrivate() || r.isDerived()) {
-        return [];
-      } else {
-        return
-            [[r], r.getChildren().expand(_workspaceTraversal)].expand((i) => i);
-      }
+      if (r.isScmPrivate()) return [];
+
+      return [[r], r.getChildren().expand(_workspaceTraversal)].expand((i) => i);
     } else {
       return [r];
     }
@@ -712,7 +719,7 @@ class Folder extends Container {
     return _dirEntry.createFile(name).then((entry) {
       File file = new File(this, entry);
       _children.add(file);
-      _fireResourceEvent(new ChangeDelta(file, EventType.ADD));
+      _fireResourceChange(new ChangeDelta(file, EventType.ADD));
       return file;
     });
   }
@@ -728,7 +735,7 @@ class Folder extends Container {
     return _dirEntry.createDirectory(name).then((entry) {
       Folder folder = new Folder(this, entry);
       _children.add(folder);
-      _fireResourceEvent(new ChangeDelta(folder, EventType.ADD));
+      _fireResourceChange(new ChangeDelta(folder, EventType.ADD));
       return folder;
     });
   }
@@ -827,6 +834,9 @@ class Folder extends Container {
   String toString() => '${this.runtimeType} ${name}/';
 
   Future _refresh() {
+    List<Resource> added = [];
+    List<Resource> removed = [];
+
     return _dirEntry.createReader().readEntries().then((List<chrome.Entry> entries) {
       List<String> currentNames = _children.map((r) => r.name).toList();
       List<String> newNames = entries.map((e) => e.name).toList();
@@ -839,8 +849,9 @@ class Folder extends Container {
         if (newNames.contains(name)) {
           checkChanged.add(_children[i]);
         } else {
-          Resource resource = _children.removeAt(i);
-          _fireResourceEvent(new ChangeDelta(resource, EventType.DELETE));
+          Resource resource = _children[i];
+          removed.add(resource);
+          _fireResourceChanges(ChangeDelta.containerDelete(resource));
         }
       }
 
@@ -855,13 +866,18 @@ class Folder extends Container {
 
           if (entries[i].isFile) {
             resource = new File(this, entries[i]);
+            _fireResourceChanges(ChangeDelta.containerAdd(resource));
           } else {
             resource = new Folder(this, entries[i]);
-            futures.add(workspace._gatherChildren(resource));
+            Future f = workspace._gatherChildren(resource).then((_) {
+              // After we've populated all the children of the new folder,
+              // fire a change event.
+              _fireResourceChanges(ChangeDelta.containerAdd(resource));
+            });
+            futures.add(f);
           }
 
-          _children.add(resource);
-          _fireResourceEvent(new ChangeDelta(resource, EventType.ADD));
+          added.add(resource);
         }
       }
 
@@ -874,7 +890,10 @@ class Folder extends Container {
         }
       }));
 
-      return Future.wait(futures);
+      return Future.wait(futures).then((_) {
+        _children.addAll(added);
+        removed.forEach((r) => _children.remove(r));
+      });
     });
   }
 
@@ -900,7 +919,7 @@ class File extends Resource {
       return entry.getMetadata();
     }).then((/*Metadata*/ metaData) {
       _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
-      workspace._fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
+      workspace._fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
     });
   }
 
@@ -911,7 +930,7 @@ class File extends Resource {
   Future setBytes(List<int> data) {
     chrome.ArrayBuffer bytes = new chrome.ArrayBuffer.fromBytes(data);
     return _fileEntry.writeBytes(bytes).then((_) {
-      workspace._fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
+      workspace._fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
     });
   }
 
@@ -966,7 +985,7 @@ class File extends Resource {
       final int newStamp = metaData.modificationTime.millisecondsSinceEpoch;
       if (newStamp != _timestamp) {
         _timestamp = newStamp;
-        _fireResourceEvent(new ChangeDelta(this, EventType.CHANGE));
+        _fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
       }
     });
   }
@@ -980,6 +999,8 @@ class File extends Resource {
  */
 class Project extends Folder {
   WorkspaceRoot _root;
+
+  bool _inRefresh = false;
 
   Project(Workspace workspace, WorkspaceRoot root) : super(workspace, root.entry) {
     _root = root;
@@ -998,9 +1019,16 @@ class Project extends Folder {
    * change events as necessary.
    */
   Future refresh() {
+    // Only allow one refresh call at a time.
+    assert(_inRefresh == false);
+    _inRefresh = true;
+
     workspace.pauseResourceEvents();
 
-    return _refresh().whenComplete(() {
+    return nextTick().then((_) {
+      return _refresh();
+    }).whenComplete(() {
+      _inRefresh = false;
       workspace.resumeResourceEvents();
     });
   }
@@ -1256,6 +1284,26 @@ class ResourceChangeEvent {
 class ChangeDelta {
   final Resource resource;
   final EventType type;
+
+  static List<ChangeDelta> containerAdd(Resource resource) {
+    if (resource is Container) {
+      List changes = resource.traverse().map(
+          (r) => new ChangeDelta(r, EventType.ADD)).toList();
+      return changes;
+    } else {
+      return [new ChangeDelta(resource, EventType.ADD)];
+    }
+  }
+
+  static List<ChangeDelta> containerDelete(Resource resource) {
+    if (resource is Container) {
+      List changes = resource.traverse().map(
+          (r) => new ChangeDelta(r, EventType.DELETE)).toList();
+      return changes;
+    } else {
+      return [new ChangeDelta(resource, EventType.DELETE)];
+    }
+  }
 
   ChangeDelta(this.resource, this.type);
 

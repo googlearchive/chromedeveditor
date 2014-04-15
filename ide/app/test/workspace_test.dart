@@ -134,7 +134,7 @@ defineTests() {
       chrome.DirectoryEntry dirEntry = fs.getEntry('myProject');
 
       Future future = workspace.onResourceChange.first.then((ws.ResourceChangeEvent event) {
-        ws.ChangeDelta change = event.changes.single;
+        ws.ChangeDelta change = event.changes.first;
         expect(change.resource.name, dirEntry.name);
         expect(change.type, ws.EventType.ADD);
       });
@@ -163,7 +163,7 @@ defineTests() {
       fs.createFile('/myProject/myDir/test.dart');
 
       Future future = workspace.onResourceChange.first.then((ws.ResourceChangeEvent event) {
-        ws.ChangeDelta change = event.changes.single;
+        ws.ChangeDelta change = event.changes.first;
         expect(change.resource.name, projectDir.name);
         expect(change.type, ws.EventType.ADD);
       });
