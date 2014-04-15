@@ -440,8 +440,7 @@ class TreeView implements ListViewDelegate {
         cell.dragOverlayVisible = true;
         
         //while dragging, expand the node if closed
-        if(!isNodeExpanded(nodeUID))
-        {
+        if(!isNodeExpanded(nodeUID)) {
           setNodeExpanded(nodeUID, true, animated: true);
         }
       }
