@@ -113,9 +113,9 @@ AndroidRSA._queueConsume = function() {
 
 /**
  * AndroidRSA.generateKey(function callback, function error_handler)
- * 
+ *
  * Returns a generated private key.
- * 
+ *
  * AndroidRSA.generateKey(function(string privateKey) {
  *   // Do something.
  * }, function(error_code) {
@@ -137,10 +137,11 @@ AndroidRSA.generateKey = function(callback, error_handler) {
 }
 
 /**
- * AndroidRSA.sign(string key, UInt8Array buffer, function callback, function error_handler)
- * 
+ * AndroidRSA.sign(string key, string buffer, function callback, function error_handler)
+ *
  * Returns the signature of the buffer using the given key.
- * 
+ * buffer is a base64-encoded buffer passed as a string. 
+ *
  * AndroidRSA.sign(privatekey, buffer, function(signature) {
  *   sendSignatureOverTheWire(signature, ...);
  * }, function(error_code) {
@@ -187,10 +188,11 @@ AndroidRSA.getPublicKey = function(key, callback, error_handler) {
 }
 
 /**
- * AndroidRSA.randomSeed(UInt8Array buffer, function callback, function error_handler)
- * 
+ * AndroidRSA.randomSeed(string buffer, function callback, function error_handler)
+ *
  * Seeds the pseudo random number generator with some unpredictable data (buffer).
- * 
+ * buffer is a base64-encoded buffer passed as a string. 
+ *
  * AndroidRSA.randomSeed(buffer, function() {
  *   console.log('random seed done');
  * }, function(error_code) {

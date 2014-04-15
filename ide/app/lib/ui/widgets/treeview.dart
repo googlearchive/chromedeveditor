@@ -98,7 +98,6 @@ class TreeView implements ListViewDelegate {
       row.expanded = expanded;
       row.level = level;
       row.rowIndex = _rows.length;
-      print('_recursiveFill, adding $nodeUID, ${_rows.length}');
       _rows.add(row);
       _rowsMap[nodeUID] = row;
     }
@@ -257,7 +256,6 @@ class TreeView implements ListViewDelegate {
 
   // Embed the cell returned by the delegate into a `TreeViewCell`.
   ListViewCell listViewCellForRow(ListView view, int rowIndex) {
-    print('listViewCellForRow($rowIndex)');
     ListViewCell cell =
         _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUID);
     bool hasChildren =

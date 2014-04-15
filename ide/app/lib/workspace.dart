@@ -692,12 +692,9 @@ abstract class Resource {
 
   static Iterable<Resource> _workspaceTraversal(Resource r) {
     if (r is Container) {
-      if (r.isScmPrivate() || r.isDerived()) {
-        return [];
-      } else {
-        return
-            [[r], r.getChildren().expand(_workspaceTraversal)].expand((i) => i);
-      }
+      if (r.isScmPrivate()) return [];
+
+      return [[r], r.getChildren().expand(_workspaceTraversal)].expand((i) => i);
     } else {
       return [r];
     }
@@ -727,6 +724,9 @@ class Folder extends Container {
     });
   }
 
+  /**
+   * Creates a new [Folder] with the given name
+   */
   Future<Folder> createNewFolder(String name) {
     if (getChild(name) != null) {
       return new Future.error("Folder already exists.");
@@ -741,7 +741,35 @@ class Folder extends Container {
   }
 
   /**
-   * This method will import a file entry that might be from an other
+   * Gets an existing or creates a new [File] with the given name.
+   */
+  Future<File> getOrCreateFile(String name, [bool createIfMissing = false]) {
+    File file = getChild(name);
+    if (file != null) {
+      return new Future.value(file);
+    } else if (createIfMissing) {
+      return createNewFile(name);
+    } else {
+      return new Future.error("File doesn't exist");
+    }
+  }
+
+  /**
+   * Gets an existing or creates a new [Folder] with the given name.
+   */
+  Future<Folder> getOrCreateFolder(String name, [bool createIfMissing = false]) {
+    Folder folder = getChild(name);
+    if (folder != null) {
+      return new Future.value(folder);
+    } else if (createIfMissing) {
+      return createNewFolder(name);
+    } else {
+      return new Future.error("Folder doesn't exist");
+    }
+  }
+
+  /**
+   * This method will import a file entry that might be from another
    * filesystem to the current folder.
    */
   Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
@@ -838,13 +866,18 @@ class Folder extends Container {
 
           if (entries[i].isFile) {
             resource = new File(this, entries[i]);
+            _fireResourceChanges(ChangeDelta.containerAdd(resource));
           } else {
             resource = new Folder(this, entries[i]);
-            futures.add(workspace._gatherChildren(resource));
+            Future f = workspace._gatherChildren(resource).then((_) {
+              // After we've populated all the children of the new folder,
+              // fire a change event.
+              _fireResourceChanges(ChangeDelta.containerAdd(resource));
+            });
+            futures.add(f);
           }
 
           added.add(resource);
-          _fireResourceChanges(ChangeDelta.containerAdd(resource));
         }
       }
 

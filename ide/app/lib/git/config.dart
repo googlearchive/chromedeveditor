@@ -44,7 +44,6 @@ class Config {
   }
 
   String toJson() {
-    JsonEncoder encoder = new JsonEncoder();
-    return encoder.convert(toMap());
+    return JSON.encode(toMap());
   }
 }

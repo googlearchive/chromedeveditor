@@ -294,6 +294,10 @@ class EditorManager implements EditorProvider {
 
     bool wasDirty = false;
 
+    // TODO: We need to rethink how this is done.  Since this happens after
+    // a timer, the state may have changed since the timer started.  This could
+    // affect everything that follows (saving, rebuilding, etc) if the editor
+    // state changes between the timer start and now.
     for (Editor editor in editors) {
       if (editor.dirty) {
         editor.save();
@@ -361,7 +365,6 @@ class EditorManager implements EditorProvider {
     _EditorState state = _getStateFor(editor.file);
     _switchState(state);
     _aceContainer.createDialog(editor.file.name);
-    _aceContainer.setMarkers(editor.file.getMarkers());
   }
 }
 

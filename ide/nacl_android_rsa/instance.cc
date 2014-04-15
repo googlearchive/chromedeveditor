@@ -198,6 +198,10 @@ void AndroidRSAInstance::randomSeed(Var& uuid, VarArray& parameters) {
 
   std::string b64_data_str = b64_data.AsString();
   std::string data = modp_b64_decode(b64_data_str);
+  if (!data.length()) {
+    postError(uuid, "empty_input");
+    return;
+  }
   AndroidRSARandomSeed(data);
   postResult(uuid, Var());
 }
