@@ -156,11 +156,12 @@ abstract class OutlineItem {
   html.LIElement _element;
   services.OutlineEntry _data;
   html.AnchorElement _anchor;
+  get displayText => _data.name;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
     _anchor = new html.AnchorElement(href: "#");
-    _anchor.text = _data.name;
+    _anchor.text = displayText;
 
     _element.append(_anchor);
     _element.classes.add("outlineItem $cssClassName");
@@ -218,6 +219,8 @@ class OutlineClass extends OutlineTopLevelItem {
       return addMethod(data);
     } else if (data is services.OutlineProperty) {
       return addProperty(data);
+    } else if (data is services.OutlineAccessor) {
+      return addAccessor(data);
     } else {
       throw new UnimplementedError("Unknown type");
     }
@@ -225,8 +228,12 @@ class OutlineClass extends OutlineTopLevelItem {
 
   OutlineMethod addMethod(services.OutlineMethod data) =>
       _addItem(new OutlineMethod(data));
+      
   OutlineProperty addProperty(services.OutlineProperty data) =>
       _addItem(new OutlineProperty(data));
+
+  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
+      _addItem(new OutlineAccessor(data));
 }
 
 abstract class OutlineClassMember extends OutlineItem {
@@ -242,4 +249,10 @@ class OutlineMethod extends OutlineClassMember {
 class OutlineProperty extends OutlineClassMember {
   OutlineProperty(services.OutlineProperty data)
       : super(data, "property");
+}
+
+class OutlineAccessor extends OutlineClassMember {
+  get displayText => _data.name;
+  OutlineAccessor(services.OutlineAccessor data)
+      : super(data, "accessor ${data.setter?'setter':'getter'}");
 }

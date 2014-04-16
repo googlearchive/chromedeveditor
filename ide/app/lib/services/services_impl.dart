@@ -338,8 +338,14 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
         for (analyzer.ClassMember member in declaration.members) {
           if (member is analyzer.MethodDeclaration) {
-            outlineClass.members.add(_populateOutlineEntry(
-                new OutlineMethod(member.name.name), member));
+            if (member.isGetter || member.isSetter) {
+              outlineClass.members.add(_populateOutlineEntry(
+                  new OutlineAccessor(member.name.name, member.isSetter), 
+                  member.name));
+            } else {
+              outlineClass.members.add(_populateOutlineEntry(
+                  new OutlineMethod(member.name.name), member));
+            }
           } else if (member is analyzer.FieldDeclaration) {
             analyzer.VariableDeclarationList fields = member.fields;
             for (analyzer.VariableDeclaration field in fields.variables) {
