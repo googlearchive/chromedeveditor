@@ -19,6 +19,7 @@ import 'builder.dart';
 import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
+import 'git/exception.dart';
 import 'git/http_fetcher.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
@@ -273,6 +274,8 @@ class GitScmProvider extends ScmProvider {
     }).catchError((e) {
       if (e is HttpResult) {
         throw new ScmException(e.toString(), e.needsAuth);
+      } else if (e is GitException) {
+        throw new ScmException(e.toString(), true);
       } else {
         throw new ScmException(e.toString());
       }
