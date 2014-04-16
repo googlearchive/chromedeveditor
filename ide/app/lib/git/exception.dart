@@ -27,22 +27,21 @@ class GitException implements Exception {
  * a unique GitError.
  */
 class GitErrorConstants {
+  static final String GIT_BRANCH_NOT_FOUND
+     = "git.branch_not_found";
 
-static final String GIT_BRANCH_NOT_FOUND
-   = "git.branch_not_found";
+  static final String GIT_CLONE_GIT_DIR_IN_USE
+     = "git.clone_dir_in_use";
 
-static final String GIT_CLONE_GIT_DIR_IN_USE
-   = "git.clone_dir_in_use";
+  static final String GIT_PUSH_NO_REMOTE
+      = "git.push_no_remote";
 
-static final String GIT_PUSH_NO_REMOTE
-    = "git.push_no_remote";
+  static final String GIT_PUSH_NO_COMMITS
+      = "git.push_no_commits";
 
-static final String GIT_PUSH_NO_COMMITS
-    = "git.push_no_commits";
+  static final String GIT_OBJECT_STORE_CORRUPTED
+      = "git.object_store_corrupted";
 
-static final String GIT_OBJECT_STORE_CORRUPTED
-    = "git.object_store_corrupted";
-
-static final String GIT_COMMIT_NO_CHANGES
-    = "git.commit_no_changes";
+  static final String GIT_COMMIT_NO_CHANGES
+      = "git.commit_no_changes";
 }
