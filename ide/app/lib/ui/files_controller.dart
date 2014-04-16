@@ -806,3 +806,4 @@ class FilesController implements TreeViewDelegate {
     }
   }
 }
+
