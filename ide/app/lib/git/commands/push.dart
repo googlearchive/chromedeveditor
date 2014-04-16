@@ -7,7 +7,7 @@ library git.commands.push;
 import 'dart:async';
 
 import '../config.dart';
-import '../git_exception.dart';
+import '../exception.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
 import '../objectstore.dart';

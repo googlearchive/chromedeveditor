@@ -12,7 +12,7 @@ import 'constants.dart';
 import 'index.dart';
 import 'status.dart';
 import '../file_operations.dart';
-import '../git_exception.dart';
+import '../exception.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
