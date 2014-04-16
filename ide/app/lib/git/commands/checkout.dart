@@ -10,6 +10,7 @@ import 'dart:html';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../constants.dart';
+import '../exception.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
@@ -56,7 +57,7 @@ class Checkout {
       });
     }, onError: (e) {
       if (e.code == FileError.NOT_FOUND_ERR) {
-        // TODO(grv) throw checkout branch does not exist.
+        throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
       } else {
         throw e;
       }

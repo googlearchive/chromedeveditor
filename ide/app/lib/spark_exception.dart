@@ -33,5 +33,4 @@ static final String GIT_BRANCH_NOT_FOUND
 
 static final String GIT_CLONE_GIT_DIR_IN_USE
    = "git.clone_dir_in_use";
-
 }
