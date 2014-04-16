@@ -8,6 +8,7 @@
 
 library spark.ui.widgets.treeview;
 
+import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
 
@@ -438,6 +439,17 @@ class TreeView implements ListViewDelegate {
       }
       if (cell != null) {
         cell.dragOverlayVisible = true;
+   
+        //expand cell if it's a pausing drag hover
+        new Timer(const Duration(milliseconds: 1000), () {
+          if(_currentDragOverCell != null) {
+            if(nodeUID == _currentDragOverCell.nodeUID) {
+              if(!isNodeExpanded(nodeUID)) {
+                setNodeExpanded(nodeUID, true, animated: true);
+              }
+            } 
+          }
+        });
       }
       _currentDragOverCell = cell;
     }
