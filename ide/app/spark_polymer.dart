@@ -38,34 +38,33 @@ class _TimeLogger {
   }
 }
 
+final _logger = new _TimeLogger();
+
+@initMethod
 void main() {
-  final logger = new _TimeLogger();
+  _logger.logStep('Polymer initialized');
 
   isTestMode().then((testMode) {
-    logger.logStep('testMode retrieved');
+    _logger.logStep('testMode retrieved');
 
-    polymer.initPolymer().run(() {
-      logger.logStep('Polymer initialized');
+    // Don't set up the zone exception handler if we're running in dev mode.
+    final Function maybeRunGuarded =
+        testMode ? (f) => f() : createSparkZone().runGuarded;
 
-      // Don't set up the zone exception handler if we're running in dev mode.
-      final Function maybeRunGuarded =
-          testMode ? (f) => f() : createSparkZone().runGuarded;
+    maybeRunGuarded(() {
+      SparkPolymer spark = new SparkPolymer._(testMode);
 
-      maybeRunGuarded(() {
-        SparkPolymer spark = new SparkPolymer._(testMode);
+      _logger.logStep('Spark created');
 
-        logger.logStep('Spark created');
+      spark.start();
 
-        spark.start();
+      _logger.logStep('Spark started');
 
-        logger.logStep('Spark started');
-
-        // NOTE: This even is unused right now, but it will be soon. For now
-        // we're just interested in its timing.
-        polymer.Polymer.onReady.then((_) {
-          logger.logStep('Polymer.onReady fired');
-          logger.logElapsed('Total startup time');
-        });
+      // NOTE: This even is unused right now, but it will be soon. For now
+      // we're just interested in its timing.
+      polymer.Polymer.onReady.then((_) {
+        _logger.logStep('Polymer.onReady fired');
+        _logger.logElapsed('Total startup time');
       });
     });
   });
