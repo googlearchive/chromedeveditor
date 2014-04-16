@@ -12,13 +12,13 @@ import '../spark_tree_view_common/spark_tree_view_model.dart';
 @CustomTag('spark-tree-view-node')
 class SparkTreeViewNode extends SparkWidget {
   @published SparkTreeViewModel treeModel;
-  @published String id;
+  @published String name;
   @published String path;
   @published int level;
   @published bool expanded;
 
   @observable String selfHtml;
-  @observable List<SparkTreeViewNode> childrenIds;
+  @observable List<SparkTreeViewNode> childrenNames;
 
   /// Constructor.
   SparkTreeViewNode.created() : super.created();
@@ -38,6 +38,6 @@ class SparkTreeViewNode extends SparkWidget {
   // and attaching a PathObserver to it.
   void redraw() {
     selfHtml = treeModel.getNodeInnerHtml(path);
-    childrenIds = expanded ? treeModel.getChildrenIds(path) : [];
+    childrenNames = expanded ? treeModel.getChildrenNames(path) : [];
   }
 }

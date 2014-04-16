@@ -12,13 +12,13 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-tree-view-node" extends="spark-widget"
-    attributes="treeModel id path level expanded">
+    attributes="treeModel name path level expanded">
   <template>
     <link rel="stylesheet" href="spark_tree-node_view.css">
 
     <style>
       :host {
-        left-margin: {{level * 4}};
+        left-padding: {{level * 4}};
       }
     </style>
 
@@ -28,11 +28,11 @@
       </div>
 
       <template if="{{expanded}}">
-        <template repeat="{{id in childrenIds}}">
+        <template repeat="{{name in childrenNames}}">
           <spark-tree-view-node
               treeModel="{{treeModel}}"
-              id="{{id}}"
-              path="{{path}}/{{id}}"
+              name="{{name}}"
+              path="{{path}}/{{name}}"
               level="{{level + 1}}">
           </spark-tree-view-node>
         </template>

@@ -7,18 +7,23 @@ library spark_widgets.tree_view_model;
 import '../common/spark_widget.dart';
 
 abstract class SparkTreeViewModel {
-  Iterable<String> getChildrenIds(String path);
+  Iterable<String> getChildrenNames(String nodePath);
 
-  String getNodeInnerHtml(String path);
+  String getInnerHtml(String nodePath);
 
-  // TODO(ussuri): The following two are possibly not needed and should be
-  // replaced by firing a 'context-menu-requested' custom event from
-  // [SparkTreeNodeView] and letting the client handle it.
+  // TODO(ussuri): All these could be replaced by custom events fired from
+  // [SparkTreeNodeView].
+
+  void select(String nodePath);
 
   /// Should return a list of [SparkMenuItem]s and [SparkMenuSeparator]s.
-  List<SparkWidget> getContextMenuActions(String path);
+  List<SparkWidget> getContextMenu(String nodePath);
 
   /// The returned bool indicates whether the tree-node has changed as a result of
   /// the action, and thus needs to be redrawn.
-  bool applyContextMenuAction(String path, String actionId);
+  bool applyContextMenuAction(String nodePath, String actionId);
+
+  void startDragging(List<String> nodePaths);
+
+  void drop(List<String> nodePaths, String targetNodePath);
 }
