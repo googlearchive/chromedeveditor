@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ */
+-->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
+<polymer-element name="spark-tree-view-node" extends="spark-widget"
+    attributes="treeModel id path level expanded">
+  <template>
+    <link rel="stylesheet" href="spark_tree-node_view.css">
+
+    <style>
+      :host {
+        left-margin: {{level * 4}};
+      }
+    </style>
+
+    <div>
+      <div id="self">
+        {{selfHtml}}
+      </div>
+
+      <template if="{{expanded}}">
+        <template repeat="{{id in childrenIds}}">
+          <spark-tree-view-node
+              treeModel="{{treeModel}}"
+              id="{{id}}"
+              path="{{path}}/{{id}}"
+              level="{{level + 1}}">
+          </spark-tree-view-node>
+        </template>
+      </template>
+    </div>
+  </template>
+
+  <script type="application/dart" src="spark_tree_view_node.dart"></script>
+</polymer-element>
