@@ -301,8 +301,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     _completer = new Completer();
 
     _objectStore = new ObjectStore(project.entry);
-    _objectStore.init()
-      .then((_) {
+    _objectStore.init().then((_) {
         _completer.complete(_objectStore);
 
         // Populate the branch name.
