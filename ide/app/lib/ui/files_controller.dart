@@ -550,10 +550,15 @@ class FilesController implements TreeViewDelegate {
   void _cacheChildren(String nodeUID) {
     if (_childrenCache[nodeUID] == null) {
       Container container = _filesMap[nodeUID];
-      _childrenCache[nodeUID] = container.getChildren().
-          where(_showResource).map((r) => r.uuid).toList();
-      _childrenCache[nodeUID].sort(
-          (String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      List<Resource> children =
+          container.getChildren().where(_showResource).toList();
+      // Sort folders first, then files.
+      children.sort((Resource r1, Resource r2) {
+        if (r1 is Folder && r2 is! Folder) return -1;
+        if (r1 is! Folder && r2 is Folder) return 1;
+        return r1.name.toLowerCase().compareTo(r2.name.toLowerCase());
+      });
+      _childrenCache[nodeUID] = children.map((r) => r.uuid).toList();
     }
   }
 
