@@ -249,7 +249,17 @@ class GitScmProvider extends ScmProvider {
   String get id => 'git';
 
   bool isUnderScm(Project project) {
-    return project.getChild('.git') is Folder;
+    Folder gitFolder = project.getChild('.git');
+    if (!(gitFolder is Folder)) {
+      return false;
+    }
+
+    if ((gitFolder.getChild('index2') is File) &&
+        (!(gitFolder.getChild('index') is File))) {
+      return false;
+    }
+
+    return true;
   }
 
   ScmProjectOperations createOperationsFor(Project project) {
