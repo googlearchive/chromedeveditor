@@ -4,7 +4,6 @@
 
 library git.pack.index;
 
-
 import 'dart:core';
 import 'dart:typed_data';
 

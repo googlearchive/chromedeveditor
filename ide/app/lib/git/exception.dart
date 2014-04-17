@@ -6,7 +6,7 @@ library git.exception;
 
 /**
  * A wrapper class for all errors thrown by git. Each error is represented
- * by a unique [errorCode] pre-defined by GitErrorConstants class.
+ * by a unique [errorCode] pre-defined by the [GitErrorConstants] class.
  */
 class GitException implements Exception {
   /// Represents the unique string for each error type.
@@ -24,7 +24,7 @@ class GitException implements Exception {
 
 /**
  * Defines all error types in git as string. Each error string represents
- * a unique GitError.
+ * a unique [GitError].
  */
 class GitErrorConstants {
   static final String GIT_BRANCH_NOT_FOUND
