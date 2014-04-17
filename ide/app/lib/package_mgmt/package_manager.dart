@@ -82,48 +82,8 @@ abstract class PackageResolver {
 }
 
 abstract class PackageBuilder extends Builder {
-  Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    List futures = [];
-
-    for (ChangeDelta delta in event.changes) {
-      Resource r = delta.resource;
-
-      if (!r.isDerived()) {
-        if (r.name == properties.packageSpecFileName && r.parent is Project) {
-          futures.add(_handlePackageSpecChange(delta));
-        }
-      }
-    }
-
-    return Future.wait(futures);
-  }
-
-  Future _handlePackageSpecChange(ChangeDelta delta) {
-    File file = delta.resource;
-
-    if (delta.isDelete) {
-      properties.setSelfReference(file.project, null);
-      return new Future.value();
-    } else {
-      return file.getContents().then((String spec) {
-        file.clearMarkers(properties.packageServiceName);
-
-        try {
-          properties.setSelfReference(
-              file.project, getPackageNameFromSpec(spec));
-        } on Exception catch (e) {
-          // TODO: Use some better method for determining where to place the marker.
-          file.createMarker(
-              properties.packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
-        }
-      });
-    }
-  }
-
   /**
    * Pure virtual interface.
    */
   PackageServiceProperties get properties;
-
-  String getPackageNameFromSpec(String spec);
 }

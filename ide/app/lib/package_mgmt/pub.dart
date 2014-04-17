@@ -14,12 +14,13 @@ import 'package:tavern/tavern.dart' as tavern;
 import 'package:yaml/yaml.dart' as yaml;
 
 import 'package_manager.dart';
+import '../jobs.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final pubProperties = new PubProperties();
+final PubProperties pubProperties = new PubProperties();
 
 class PubProperties extends PackageServiceProperties {
   String get packageServiceName => 'pub';
@@ -67,8 +68,7 @@ class PubManager extends PackageManager {
   }
 
   void _handleLog(String line, String level) {
-    // TODO: Dial the logging back.
-     _logger.info(line);
+    _logger.info(line.trim());
   }
 }
 
@@ -156,14 +156,85 @@ class _PubBuilder extends PackageBuilder {
 
   PackageServiceProperties get properties => pubProperties;
 
-  String getPackageNameFromSpec(String spec) {
-    Map<String, dynamic> specMap;
-    try {
-      specMap = yaml.loadYaml(spec);
-    } on yaml.YamlException catch(e) {
-      _logger.warning('Error parsing package spec: $e\n$spec');
+  Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
+    Project project = event.changes.first.resource.project;
+    File pubspecFile = project.getChild(properties.packageSpecFileName);
+
+    if (pubspecFile is! File) {
+      if (properties.getSelfReference(project) != null) {
+        properties.setSelfReference(project, null);
+      }
+    } else {
+      bool analyzePubspec = false;
+
+      for (ChangeDelta delta in event.changes) {
+        Resource r = delta.resource;
+
+        if (r == pubspecFile) {
+          analyzePubspec = true;
+        } else if (properties.isInPackagesFolder(r)) {
+          analyzePubspec = true;
+        }
+      }
+
+      if (analyzePubspec) {
+        return _analyzePubspec(pubspecFile);
+      }
     }
-    // specMap['name'] can return null: that's ok.
-    return specMap == null ? null : specMap['name'];
+
+    return new Future.value();
+  }
+
+  Future _analyzePubspec(File file) {
+    file.clearMarkers(properties.packageServiceName);
+
+    return file.getContents().then((String str) {
+      try {
+        PubSpecInfo info = new PubSpecInfo.parse(str);
+        properties.setSelfReference(file.project, info.name);
+        for (String dep in info.getDependencies()) {
+          Resource r = file.project.getChildPath(
+              '${properties.packagesDirName}/${dep}');
+          if (r is! Folder) {
+            // TODO(devoncarew): we should place these markers on the correct line
+            file.createMarker(properties.packageServiceName,
+                Marker.SEVERITY_WARNING,
+                "'${dep}' is listed in the pubspec but does not exist in the "
+                "packages directory. Do you need to run 'pub get'?",
+                1);
+          }
+        }
+      } on Exception catch (e) {
+        file.createMarker(
+            properties.packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
+      }
+    });
+  }
+}
+
+class PubSpecInfo {
+  Map _map;
+
+  /**
+   * This method can throw exceptions on parse errors.
+   */
+  PubSpecInfo.parse(String str) {
+    _map = yaml.loadYaml(str);
+  }
+
+  String get name => _map['name'];
+
+  List<String> getDependencies() {
+    return _getDeps('dependencies');
+  }
+
+  List<String> getDevDependencies() {
+    return _getDeps('dev_dependencies');
+  }
+
+  List<String> _getDeps(String name) {
+    Map m = _map[name];
+    if (m == null) return [];
+    return m.keys.toList();
   }
 }
