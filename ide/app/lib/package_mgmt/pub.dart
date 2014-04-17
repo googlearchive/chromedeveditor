@@ -196,7 +196,7 @@ class _PubBuilder extends PackageBuilder {
           Resource r = file.project.getChildPath(
               '${properties.packagesDirName}/${dep}');
           if (r is! Folder) {
-            // TODO(devoncarew): we should place these markers on the correct line
+            // TODO(devoncarew): We should place these markers on the correct line.
             file.createMarker(properties.packageServiceName,
                 Marker.SEVERITY_WARNING,
                 "'${dep}' is listed in the pubspec but does not exist in the "

@@ -7,7 +7,6 @@ library spark.package_mgmt;
 import 'dart:async';
 
 import '../builder.dart';
-import '../jobs.dart';
 import '../workspace.dart';
 
 // TODO(ussuri): Add comments.
