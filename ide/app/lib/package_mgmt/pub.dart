@@ -186,55 +186,52 @@ class _PubBuilder extends PackageBuilder {
   }
 
   Future _analyzePubspec(File file) {
-    file.clearMarkers(properties.packageServiceName);
+    file.clearMarkers(_packageServiceName);
 
     return file.getContents().then((String str) {
       try {
-        PubSpecInfo info = new PubSpecInfo.parse(str);
+        _PubSpecInfo info = new _PubSpecInfo.parse(str);
         properties.setSelfReference(file.project, info.name);
         for (String dep in info.getDependencies()) {
-          Resource r = file.project.getChildPath(
-              '${properties.packagesDirName}/${dep}');
-          if (r is! Folder) {
+          Resource dependency =
+              file.project.getChildPath('${_packagesDirName}/${dep}');
+          if (dependency is! Folder) {
             // TODO(devoncarew): We should place these markers on the correct line.
-            file.createMarker(properties.packageServiceName,
+            file.createMarker(_packageServiceName,
                 Marker.SEVERITY_WARNING,
-                "'${dep}' is listed in the pubspec but does not exist in the "
-                "packages directory. Do you need to run 'pub get'?",
+                "'${dep}' does not exist in the packages directory. "
+                "Do you need to run 'pub get'?",
                 1);
           }
         }
       } on Exception catch (e) {
         file.createMarker(
-            properties.packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
+            _packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
       }
     });
   }
+
+  String get _packagesDirName => properties.packagesDirName;
+  String get _packageServiceName => properties.packageServiceName;
 }
 
-class PubSpecInfo {
+class _PubSpecInfo {
   Map _map;
 
   /**
    * This method can throw exceptions on parse errors.
    */
-  PubSpecInfo.parse(String str) {
+  _PubSpecInfo.parse(String str) {
     _map = yaml.loadYaml(str);
   }
 
   String get name => _map['name'];
 
-  List<String> getDependencies() {
-    return _getDeps('dependencies');
-  }
+  List<String> getDependencies() => _getDeps('dependencies');
 
-  List<String> getDevDependencies() {
-    return _getDeps('dev_dependencies');
-  }
+  List<String> getDevDependencies() => _getDeps('dev_dependencies');
 
   List<String> _getDeps(String name) {
-    Map m = _map[name];
-    if (m == null) return [];
-    return m.keys.toList();
+    return _map.containsKey(name) ? _map[name].keys.toList() : [];
   }
 }
