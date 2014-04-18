@@ -2582,18 +2582,34 @@ class SettingsAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-
       _initialized = true;
     }
 
     spark.setGitSettingsResetDoneVisible(false);
 
-    // For now, don't show the location field on Chrome OS; we always use syncFS.
-    if (_isCros()) {
+    var whitespaceCheckbox = getElement('#stripWhitespace');
+
+    // Wait for each of the following to (simultaneously) complete before
+    // showing the dialog:
+    Future.wait([
+      spark.editorManager.stripWhitespaceOnSave.whenLoaded
+          .then((BoolCachedPreference pref) {
+            whitespaceCheckbox.checked = pref.value;
+      }), new Future.value().then((_) {
+        // For now, don't show the location field on Chrome OS; we always use syncFS.
+        if (_isCros()) {
+          return null;
+        } else {
+          return _showRootDirectory();
+        }
+      })
+    ]).then((_) {
       _show();
-    } else {
-      _showRootDirectory().then((_) => _show());
-    }
+      whitespaceCheckbox.onChange.listen((e) {
+        spark.editorManager.stripWhitespaceOnSave.value =
+            whitespaceCheckbox.checked;
+      });
+    });
   }
 
   Future _showRootDirectory() {
