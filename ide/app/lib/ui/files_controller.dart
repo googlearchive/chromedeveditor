@@ -13,7 +13,6 @@ import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 
-import 'files_controller_delegate.dart';
 import 'utils/html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
@@ -21,41 +20,61 @@ import 'widgets/treeview.dart';
 import 'widgets/treeview_cell.dart';
 import 'widgets/treeview_delegate.dart';
 import '../actions.dart';
+import '../event_bus.dart';
 import '../preferences.dart' as preferences;
 import '../scm.dart';
 import '../workspace.dart';
+
+class FilesControllerSelectionChanged {
+  Resource resource;
+  bool forceOpen;
+  bool replaceCurrent;
+  bool switchesTab;
+
+  FilesControllerSelectionChanged(
+      this.resource,
+      {this.forceOpen: false,
+       this.replaceCurrent: true,
+       this.switchesTab: true});
+
+  String toString() => '${resource.path}: $forceOpen $replaceCurrent $switchesTab';
+}
+
+class FilesControllerError {
+  String title;
+  String message;
+
+  FilesControllerError(this.title, this.message);
+}
 
 class FilesController implements TreeViewDelegate {
   // TreeView that's used to show the workspace.
   TreeView _treeView;
   // Workspace that references all the resources.
-  Workspace _workspace;
+  final Workspace _workspace;
+  // Used to get a list of actions in the context menu for a resource.
+  final ActionManager _actionManager;
   // The SCMManager is used to help us decorate files with their SCM status.
-  ScmManager _scmManager;
+  final ScmManager _scmManager;
   // List of top-level resources.
-  List<Resource> _files;
-  // Implements callbacks required for the FilesController.
-  FilesControllerDelegate _delegate;
+  final List<Resource> _files = [];
   // Map of nodeUID to the resources of the workspace for a quick lookup.
-  Map<String, Resource> _filesMap;
+  final Map<String, Resource> _filesMap = {};
   // Cache of sorted children of nodes.
-  Map<String, List<String>> _childrenCache;
+  final Map<String, List<String>> _childrenCache = {};
   // Preferences where to store tree expanded/collapsed state.
-  preferences.PreferenceStore localPrefs = preferences.localStore;
-  // The file selection stream controller.
-  StreamController<Resource> _selectionController = new StreamController.broadcast();
+  final preferences.PreferenceStore localPrefs = preferences.localStore;
+  // The event bus to post events for file selection in the tree.
+  final EventBus _eventBus;
+  // HTML container for the context menu.
+  html.Element _menuContainer;
 
-  FilesController(Workspace workspace,
-                  ScmManager scmManager,
-                  FilesControllerDelegate delegate,
+  FilesController(this._workspace,
+                  this._actionManager,
+                  this._scmManager,
+                  this._eventBus,
+                  this._menuContainer,
                   html.Element fileViewArea) {
-    _workspace = workspace;
-    _scmManager = scmManager;
-    _delegate = delegate;
-    _files = [];
-    _filesMap = {};
-    _childrenCache = {};
-
     _treeView = new TreeView(fileViewArea, this);
     _treeView.dropEnabled = true;
     _treeView.draggingEnabled = true;
@@ -89,11 +108,10 @@ class FilesController implements TreeViewDelegate {
     });
 
     _treeView.selection = [file.uuid];
-    if (file is File) {
-      _delegate.selectInEditor(file, forceOpen: forceOpen);
-    }
-    _selectionController.add(file);
     _treeView.scrollIntoNode(file.uuid, html.ScrollAlignment.CENTER);
+    _eventBus.addEvent(
+        BusEventType.FILES_CONTROLLER__SELECTION_CHANGED,
+        new FilesControllerSelectionChanged(file, forceOpen: forceOpen));
   }
 
   void selectFirstFile({bool forceOpen: false}) {
@@ -112,11 +130,6 @@ class FilesController implements TreeViewDelegate {
 
     _treeView.setNodeExpanded(resource.uuid, true);
   }
-
-  /**
-   * Listen for selection change events.
-   */
-  Stream<Resource> get onSelectionChange => _selectionController.stream;
 
   // Implementation of [TreeViewDelegate] interface.
 
@@ -151,8 +164,8 @@ class FilesController implements TreeViewDelegate {
   List<Resource> getSelection() {
     List resources = [];
     _treeView.selection.forEach((String nodeUID) {
-        resources.add(_filesMap[nodeUID]);
-     });
+      resources.add(_filesMap[nodeUID]);
+    });
     return resources;
   }
 
@@ -173,10 +186,10 @@ class FilesController implements TreeViewDelegate {
                                List<String> nodeUIDs) {
     if (nodeUIDs.isNotEmpty) {
       Resource resource = _filesMap[nodeUIDs.first];
-      if (resource is File) {
-        _delegate.selectInEditor(resource, forceOpen: true, replaceCurrent: true);
-      }
-      _selectionController.add(resource);
+      _eventBus.addEvent(
+          BusEventType.FILES_CONTROLLER__SELECTION_CHANGED,
+          new FilesControllerSelectionChanged(
+              resource, forceOpen: true, replaceCurrent: true));
     }
   }
 
@@ -194,8 +207,10 @@ class FilesController implements TreeViewDelegate {
       // Open in editor only if alt key or no modifier key is down.  If alt key
       // is pressed, it will open a new tab.
       if (altKeyPressed && !shiftKeyPressed && !ctrlKeyPressed) {
-        _delegate.selectInEditor(resource, forceOpen: true,
-            replaceCurrent: false);
+        _eventBus.addEvent(
+            BusEventType.FILES_CONTROLLER__SELECTION_CHANGED,
+            new FilesControllerSelectionChanged(
+                resource, forceOpen: true, replaceCurrent: false));
         return false;
       }
     }
@@ -257,7 +272,7 @@ class FilesController implements TreeViewDelegate {
 
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     Folder destinationFolder = _filesMap[nodeUID] as Folder;
-    for(html.File file in dataTransfer.files) {
+    for (html.File file in dataTransfer.files) {
       html.FileReader reader = new html.FileReader();
       reader.onLoadEnd.listen((html.ProgressEvent event) {
         destinationFolder.createNewFile(file.name).then((File file) {
@@ -275,7 +290,7 @@ class FilesController implements TreeViewDelegate {
     Resource destination = _filesMap[targetNodeUID];
     Project destinationProject = destination is Project ? destination :
         destination.project;
-    for(String nodeUID in nodesUIDs) {
+    for (String nodeUID in nodesUIDs) {
       Resource node = _filesMap[nodeUID];
       // Check if the resource have the same top-level container.
       if (node.project == destinationProject) {
@@ -301,7 +316,7 @@ class FilesController implements TreeViewDelegate {
       currentNode = currentNode.parent;
     }
     // Make sure that source items are not one of them.
-    for(String nodeUID in nodesUIDs) {
+    for (String nodeUID in nodesUIDs) {
       if (ancestorsUIDs.contains(nodeUID)) {
         // Unable to move this file.
         return false;
@@ -310,7 +325,7 @@ class FilesController implements TreeViewDelegate {
 
     Project destinationProject = destination is Project ? destination :
         destination.project;
-    for(String nodeUID in nodesUIDs) {
+    for (String nodeUID in nodesUIDs) {
       Resource node = _filesMap[nodeUID];
       // Check whether a resource is moved to its current directory, which would
       // make it a no-op.
@@ -333,12 +348,14 @@ class FilesController implements TreeViewDelegate {
     Folder destination = _filesMap[targetNodeUID] as Folder;
     if (_isDifferentProject(nodesUIDs, targetNodeUID)) {
       List<Future> futures = [];
-      for(String nodeUID in nodesUIDs) {
+      for (String nodeUID in nodesUIDs) {
         Resource res = _filesMap[nodeUID];
         futures.add(destination.importResource(res));
       }
       Future.wait(futures).catchError((e) {
-        _delegate.showErrorMessage('Error while importing files', e);
+        _eventBus.addEvent(
+            BusEventType.FILES_CONTROLLER__ERROR,
+            new FilesControllerError('Error while importing files', e.toString()));
       });
     } else {
       if (_isValidMove(nodesUIDs, targetNodeUID)) {
@@ -493,7 +510,7 @@ class FilesController implements TreeViewDelegate {
     context.setFillColorRgb(255, 255, 255, 1);
     context.setStrokeColorRgb(128, 128, 128, 1);
     context.lineWidth = 1;
-    for(int i = placeholderCount ; i >= 0 ; i --) {
+    for (int i = placeholderCount; i >= 0; i--) {
       html.Rectangle rect = new html.Rectangle(0.5 + i * stackItemInterspace,
           0.5 + i * stackItemInterspace,
           stackLabelWidth + stackItemPadding * 2,
@@ -735,14 +752,13 @@ class FilesController implements TreeViewDelegate {
       _treeView.selection = [resource.uuid];
     }
 
-    html.Element menuContainer = _delegate.getContextMenuContainer();
-    html.Element contextMenu = menuContainer.querySelector('.dropdown-menu');
+    html.Element contextMenu = _menuContainer.querySelector('.dropdown-menu');
     // Delete any existing menu items.
     contextMenu.children.clear();
 
     List<Resource> resources = getSelection();
     // Get all applicable actions.
-    List<ContextAction> actions = _delegate.getActionsFor(resources);
+    List<ContextAction> actions = _actionManager.getContextActions(resources);
     fillContextMenu(contextMenu, actions, resources);
     _positionContextMenu(position, contextMenu);
 
@@ -753,14 +769,14 @@ class FilesController implements TreeViewDelegate {
     void _closeContextMenu(html.Event event) {
       // We workaround an issue with bootstrap/boojack: There's no other way
       // to close the dropdown. For example dropdown.toggle() won't work.
-      menuContainer.classes.remove('open');
+      _menuContainer.classes.remove('open');
       cancelEvent(event);
 
       _treeView.focus();
     }
 
     // When the user clicks outside the menu, we'll close it.
-    html.Element backdrop = menuContainer.querySelector('.backdrop');
+    html.Element backdrop = _menuContainer.querySelector('.backdrop');
     backdrop.onClick.listen((event) {
       _closeContextMenu(event);
     });

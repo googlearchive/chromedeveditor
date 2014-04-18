@@ -39,7 +39,6 @@ import 'lib/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
-import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
@@ -87,7 +86,7 @@ Zone createSparkZone() {
 
 abstract class Spark
     extends SparkModel
-    implements FilesControllerDelegate, AceManagerDelegate, Notifier {
+    implements AceManagerDelegate, Notifier {
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
@@ -108,16 +107,18 @@ abstract class Spark
   LaunchManager _launchManager;
   PubManager _pubManager;
   BowerManager _bowerManager;
-
-  final EventBus eventBus = new EventBus();
-
   ActionManager _actionManager;
+  ProjectLocationManager projectLocationManager;
+
+  EventBus _eventBus = new EventBus();
 
   SplitView _splitView;
+
   FilesController _filesController;
+
   PlatformInfo _platformInfo;
+
   TestDriver _testDriver;
-  ProjectLocationManager projectLocationManager;
 
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
@@ -139,9 +140,10 @@ abstract class Spark
     initEditorArea();
     initEditorManager();
 
+    createActions();
+
     initFilesController();
 
-    createActions();
     initToolbar();
     buildMenu();
 
@@ -183,11 +185,12 @@ abstract class Spark
   LaunchManager get launchManager => _launchManager;
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
+  ActionManager get actionManager => _actionManager;
+
+  EventBus get eventBus => _eventBus;
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
   preferences.PreferenceStore get syncPrefs => preferences.syncStore;
-
-  ActionManager get actionManager => _actionManager;
 
   //
   // - End SparkModel interface.
@@ -283,7 +286,7 @@ abstract class Spark
     _aceKeysManager = new KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
-        workspace, aceManager, localPrefs, eventBus, services);
+        workspace, aceManager, localPrefs, _eventBus, services);
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         _workspace, allowsLabelBar: true);
 
@@ -330,9 +333,24 @@ abstract class Spark
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, scmManager, this, querySelector('#fileViewArea'));
-    _filesController.onSelectionChange.listen((resource) {
-      focusManager.setCurrentResource(resource);
+        workspace, actionManager, scmManager, _eventBus,
+        querySelector('#file-item-context-menu'),
+        querySelector('#fileViewArea'));
+    _eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
+        .listen((EventBusEvent event) {
+      final FilesControllerSelectionChanged data = event.data;
+      focusManager.setCurrentResource(data.resource);
+      if (data.resource is ws.File) {
+        _selectInEditor(
+            data.resource,
+            forceOpen: data.forceOpen,
+            replaceCurrent: data.replaceCurrent,
+            switchesTab: data.switchesTab);
+      }
+    });
+    _eventBus.onEvent(BusEventType.FILES_CONTROLLER__ERROR).listen((event) {
+      final FilesControllerError data = event.data;
+      showErrorMessage(data.title, data.message);
     });
   }
 
@@ -612,14 +630,10 @@ abstract class Spark
     }
   }
 
-  //
-  // Implementation of FilesControllerDelegate interface:
-  //
-
-  void selectInEditor(ws.File file,
-                      {bool forceOpen: false,
-                       bool replaceCurrent: true,
-                       bool switchesTab: true}) {
+  void _selectInEditor(ws.File file,
+                       {bool forceOpen: false,
+                        bool replaceCurrent: true,
+                        bool switchesTab: true}) {
     if (forceOpen || editorManager.isFileOpened(file)) {
       editorArea.selectFile(file,
           forceOpen: forceOpen,
@@ -627,15 +641,6 @@ abstract class Spark
           switchesTab: switchesTab);
     }
   }
-
-  Element getContextMenuContainer() => querySelector('#file-item-context-menu');
-
-  List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
-      actionManager.getContextActions(resources);
-
-  //
-  // - End implementation of FilesControllerDelegate interface.
-  //
 
   //
   // Implementation of AceManagerDelegate interface:
@@ -1066,7 +1071,7 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
     files.forEach((ws.File file) {
-      spark.selectInEditor(file, forceOpen: true, replaceCurrent: false);
+      spark._selectInEditor(file, forceOpen: true, replaceCurrent: false);
     });
   }
 
@@ -1113,7 +1118,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._selectInEditor(file, forceOpen: true, replaceCurrent: true);
             spark._aceManager.focus();
           });
         }).catchError((e) {

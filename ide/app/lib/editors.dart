@@ -287,7 +287,7 @@ class EditorManager implements EditorProvider {
   Timer _timer;
 
   void _startSaveTimer() {
-    _eventBus.addEvent(BusEventType.FILE_MODIFIED, currentFile);
+    _eventBus.addEvent(BusEventType.EDITOR_MANAGER__FILE_MODIFIED, currentFile);
 
     if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
@@ -313,7 +313,7 @@ class EditorManager implements EditorProvider {
     }
 
     if (wasDirty) {
-      _eventBus.addEvent(BusEventType.FILES_SAVED, null);
+      _eventBus.addEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED);
     }
   }
 
