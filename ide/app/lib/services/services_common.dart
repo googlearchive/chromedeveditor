@@ -186,6 +186,9 @@ abstract class OutlineEntry {
 
   OutlineEntry([this.name]);
 
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     name = mapData["name"];
     startOffset = mapData["startOffset"];
@@ -237,6 +240,9 @@ class OutlineClass extends OutlineTopLevelEntry {
 
   OutlineClass([String name]) : super(name);
 
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     abstract = mapData["abstract"];
@@ -276,7 +282,10 @@ abstract class OutlineMember extends OutlineEntry {
 
     return entry;
   }
-  
+
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     static = mapData["static"];
@@ -329,6 +338,9 @@ class OutlineAccessor extends OutlineMember {
 
   OutlineAccessor([String name, this.setter]) : super(name);
 
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     setter = mapData["setter"];

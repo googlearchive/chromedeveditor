@@ -7,12 +7,14 @@ library git.commands.push;
 import 'dart:async';
 
 import '../config.dart';
+import '../exception.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
 import '../objectstore.dart';
 import '../options.dart';
 import '../pack.dart';
 import '../utils.dart';
+
 
 /**
  * This class implements the git push command.
@@ -36,8 +38,7 @@ class Push {
     String url = config.url != null ? config.url : options.repoUrl;
 
     if (url == null) {
-      // TODO throw push_no_remote.
-      return null;
+      throw new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE);
     }
 
     HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
@@ -46,8 +47,7 @@ class Push {
       return store.getCommitsForPush(refs, config.remoteHeads).then(
           (commits) {
         if (commits == null) {
-          // TODO(grv) : throw Custom exceptions.
-          throw "no commits to push.";
+          throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
         }
         PackBuilder builder = new PackBuilder(commits.commits, store);
         return builder.build().then((List<int> packData) {
@@ -70,8 +70,7 @@ class Push {
     return store.getCommitsForPush([ref], config.remoteHeads).
         then((CommitPushEntry commits) {
       if (commits == null) {
-        // TODO(grv) : throw Custom exceptions.
-        throw "no commits to push.";
+        throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
       }
       return commits.commits;
     });
