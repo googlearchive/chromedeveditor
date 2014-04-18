@@ -44,6 +44,10 @@ class FilesController implements TreeViewDelegate {
   preferences.PreferenceStore localPrefs = preferences.localStore;
   // The file selection stream controller.
   StreamController<Resource> _selectionController = new StreamController.broadcast();
+  // Filter the list of files by filename containing this string.
+  String _filterString;
+  List<Resource> _filteredFiles;
+  Map<String, List<String>> _filteredChildrenCache;
 
   FilesController(Workspace workspace,
                   ScmManager scmManager,
@@ -75,8 +79,16 @@ class FilesController implements TreeViewDelegate {
     return _treeView.selection.contains(file.uuid);
   }
 
+  List<Resource> _currentFiles() {
+    return _filteredFiles != null ?  _filteredFiles : _files;
+  }
+
+   Map<String, List<String>> _currentChildrenCache() {
+    return  _filteredChildrenCache != null ? _filteredChildrenCache : _childrenCache;
+  }
+
   void selectFile(Resource file, {bool forceOpen: false}) {
-    if (_files.isEmpty) {
+    if (_currentFiles().isEmpty) {
       return;
     }
 
@@ -97,10 +109,10 @@ class FilesController implements TreeViewDelegate {
   }
 
   void selectFirstFile({bool forceOpen: false}) {
-    if (_files.isEmpty) {
+    if (_currentFiles().isEmpty) {
       return;
     }
-    selectFile(_files[0], forceOpen: forceOpen);
+    selectFile(_currentFiles()[0], forceOpen: forceOpen);
   }
 
   void setFolderExpanded(Container resource) {
@@ -130,10 +142,13 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewNumberOfChildren(TreeView view, String nodeUID) {
     if (nodeUID == null) {
-      return _files.length;
+      return _currentFiles().length;
     } else if (_filesMap[nodeUID] is Container) {
       _cacheChildren(nodeUID);
-      return _childrenCache[nodeUID].length;
+      if (_currentChildrenCache()[nodeUID] == null) {
+        return 0;
+      }
+      return _currentChildrenCache()[nodeUID].length;
     } else {
       return 0;
     }
@@ -141,10 +156,10 @@ class FilesController implements TreeViewDelegate {
 
   String treeViewChild(TreeView view, String nodeUID, int childIndex) {
     if (nodeUID == null) {
-      return _files[childIndex].uuid;
+      return _currentFiles()[childIndex].uuid;
     } else {
       _cacheChildren(nodeUID);
-      return _childrenCache[nodeUID][childIndex];
+      return _currentChildrenCache()[nodeUID][childIndex];
     }
   }
 
@@ -780,6 +795,60 @@ class FilesController implements TreeViewDelegate {
       return _collectParents(parent, parents);
     } else {
       return parents;
+    }
+  }
+
+  String get filterString {
+    return _filterString;
+  }
+
+  void filterAddResult(Set result,
+      List<Resource> roots,
+      Map<String, List<String>> childrenCache,
+      Resource res) {
+    if (result.contains(res.uuid)) {
+      return;
+    }
+    if (res.parent == null) {
+      return;
+    }
+    result.add(res.uuid);
+    if (res.parent.parent == null) {
+      roots.add(res);
+      return;
+    }
+    List<String> children = childrenCache[res.parent.uuid];
+    if (children == null) {
+      children = [];
+      childrenCache[res.parent.uuid] = children;
+    }
+    children.add(res.uuid);
+    filterAddResult(result, roots, childrenCache, res.parent);
+  }
+
+  void set filterString(String filterString) {
+    if (filterString != null) {
+      if (filterString.length == 0) {
+        filterString = null;
+      }
+    }
+    _filterString = filterString;
+    if (_filterString == null) {
+      _filteredFiles = null;
+      _filteredChildrenCache = null;
+      _reloadData();
+    } else {
+      Set<String> filtered = new Set();
+      _filteredFiles = [];
+      _filteredChildrenCache = {};
+      _filesMap.forEach((String key, Resource res) {
+        if (res.name.contains(_filterString)) {
+          filterAddResult(filtered, _filteredFiles, _filteredChildrenCache, res);
+        }
+      });
+      //print("${_filteredChildrenCache}");
+      _reloadData();
+      _treeView.restoreExpandedState(filtered.toList());
     }
   }
 }

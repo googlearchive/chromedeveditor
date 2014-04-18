@@ -221,6 +221,9 @@ class SparkPolymer extends Spark {
     _bindButtonToAction('newProject', 'project-new');
     _bindButtonToAction('runButton', 'application-run');
     _bindButtonToAction('pushButton', 'application-push');
+
+    InputElement input = getUIElement('#search');
+    input.onInput.listen((e) => filterFilesList(input.value));
   }
 
   @override

@@ -668,6 +668,24 @@ abstract class Spark
   //
   // - End implementation of AceManagerDelegate interface.
   //
+
+  Timer _filterTimer = null;
+
+  void filterFilesList(String searchString) {
+    if ( _filterTimer!= null) {
+      _filterTimer.cancel();
+      _filterTimer = null;
+    }
+
+    _filterTimer = new Timer(new Duration(milliseconds: 500), () {
+      _filterTimer = null;
+      _reallyFilterFilesList(searchString);
+    });
+  }
+
+  void _reallyFilterFilesList(String searchString) {
+    _filesController.filterString = searchString;
+  }
 }
 
 class PlatformInfo {
