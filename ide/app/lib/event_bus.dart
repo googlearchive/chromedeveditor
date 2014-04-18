@@ -40,7 +40,7 @@ class EventBus {
   /**
    * Add an event to the event bus.
    */
-  void addEvent(BusEventType type, Object data) {
+  void addEvent(BusEventType type, [Object data]) {
     _controller.add(new EventBusEvent(type, data));
   }
 
