@@ -10,6 +10,13 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/event_bus.dart';
 
+class TestFileModifiedBusEvent extends BusEvent {
+  String fileName;
+
+  TestFileModifiedBusEvent(this.fileName);
+  BusEventType get type => BusEventType.FILE_MODIFIED;
+}
+
 defineTests() {
   group('event_bus', () {
     test('fire one event', () {
@@ -29,6 +36,8 @@ defineTests() {
       bus.close();
       return f.then((List l) {
         expect(l.length, 2);
+        expect(l[0].fileName, 'a');
+        expect(l[1].fileName, 'b');
       });
     });
 
@@ -45,7 +54,7 @@ defineTests() {
 }
 
 void _fireEvents(EventBus bus) {
-  bus.addEvent(BusEventType.FILE_MODIFIED, null);
-  bus.addEvent(BusEventType.FILE_MODIFIED, null);
-  bus.addEvent(BusEventType.FILES_SAVED, null);
+  bus.addEvent(new TestFileModifiedBusEvent('a'));
+  bus.addEvent(new TestFileModifiedBusEvent('b'));
+  bus.addEvent(new SimpleBusEvent(BusEventType.FILES_SAVED));
 }
