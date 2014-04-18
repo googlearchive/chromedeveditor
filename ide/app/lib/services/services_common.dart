@@ -186,6 +186,9 @@ abstract class OutlineEntry {
 
   OutlineEntry([this.name]);
 
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     name = mapData["name"];
     startOffset = mapData["startOffset"];
@@ -237,6 +240,9 @@ class OutlineClass extends OutlineTopLevelEntry {
 
   OutlineClass([String name]) : super(name);
 
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     abstract = mapData["abstract"];
@@ -270,11 +276,25 @@ abstract class OutlineMember extends OutlineEntry {
       entry = new OutlineMethod()..populateFromMap(mapData);
     } else if (type == OutlineProperty._type) {
       entry = new OutlineProperty()..populateFromMap(mapData);
+    } else if (type == OutlineAccessor._type) {
+      entry = new OutlineAccessor()..populateFromMap(mapData);
     }
 
-    entry.static = mapData["static"];
-
     return entry;
+  }
+
+  /**
+   * Populates values and children from a map
+   */
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    static = mapData["static"];
+  }
+
+  Map toMap() {
+    return super.toMap()..addAll({
+      "static": static,
+    });
   }
 }
 
@@ -283,8 +303,6 @@ abstract class OutlineMember extends OutlineEntry {
  */
 class OutlineMethod extends OutlineMember {
   static String _type = "method";
-
-  bool static = false;
 
   OutlineMethod([String name]) : super(name);
 
@@ -301,13 +319,37 @@ class OutlineMethod extends OutlineMember {
 class OutlineProperty extends OutlineMember {
   static String _type = "class-variable";
 
-  bool static = false;
-
   OutlineProperty([String name]) : super(name);
 
   Map toMap() {
     return super.toMap()..addAll({
       "type": _type,
+    });
+  }
+}
+
+/**
+ * Defines a class accessor (getter / setter) entry in an [OutlineClass].
+ */
+class OutlineAccessor extends OutlineMember {
+  static String _type = "class-accessor";
+
+  bool setter = false;
+
+  OutlineAccessor([String name, this.setter]) : super(name);
+
+  /**
+   * Populates values and children from a map
+   */
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    setter = mapData["setter"];
+  }
+
+  Map toMap() {
+    return super.toMap()..addAll({
+      "type": _type,
+      "setter": setter,
     });
   }
 }
