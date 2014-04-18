@@ -59,10 +59,12 @@ abstract class Editor {
  * An event broadcast by EditorManager to let all interested parties know
  * that a file has been modified.
  */
-// TODO(ussuri): It may make sense to send a single bulk notification when
-// multiple files get modified at the same time, e.g. during refactoring.
 class FileModifiedBusEvent extends BusEvent {
-  File file;
+  // TODO(ussuri): Later on, it may make sense to send a single bulk
+  // notification when multiple files get modified at the same time,
+  // e.g. during large refactoring.
+  final File file;
+
   FileModifiedBusEvent(this.file);
   BusEventType get type => BusEventType.FILE_MODIFIED;
 }
