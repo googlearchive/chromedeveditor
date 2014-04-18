@@ -30,6 +30,8 @@ import 'outline.dart';
 export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
+  static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
+
   final AceManager aceManager;
   final workspace.File file;
 
@@ -113,7 +115,7 @@ class TextEditor extends Editor {
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
-      // Remove the trailing whitespace if asked to do so
+      // Remove the trailing whitespace if asked to do so.
       // TODO(ericarnold): Can't think of an easy way to share this preference,
       //           but it might be a good idea to do so rather than passing it.
       if (stripWhitespace) _stripWhitespace();
@@ -131,11 +133,12 @@ class TextEditor extends Editor {
     }
   }
 
-  _stripWhitespace() {
-    html.Point cursorPosition = aceManager.cursorPosition;
-    RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
-    _session.value = _session.value.replaceAll(whitespaceRegEx, '');
-    aceManager.cursorPosition = cursorPosition;
+  void _stripWhitespace() {
+    String currentText = _session.value;
+    String newText = currentText.replaceAll(whitespaceRegEx, '');
+    if (newText != currentText) {
+      _replaceContents(newText);
+    }
   }
 
   /**
