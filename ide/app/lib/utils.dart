@@ -12,6 +12,7 @@ import 'dart:web_audio';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+import 'preferences.dart';
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
@@ -207,6 +208,49 @@ class PrintProfiler {
    * The elapsed time for the whole operation.
    */
   int totalElapsedMs() => _previousTaskTime + _stopwatch.elapsedMilliseconds;
+}
+
+class CachedPreference<T> {
+  final PreferenceStore _prefs;
+  String _currentValue;
+  String _preferenceId;
+
+  static Future<CachedPreference> setup(PreferenceStore prefs, String id) {
+    CachedPreference instance = _instantiate(prefs, id);
+    return instance._retrieveValue().then((_) {
+      return instance;
+    });
+  }
+  
+  static CachedPreference _instantiate(PreferenceStore prefs, String id) {
+    throw "Must override '_instantiate'";
+  }
+  
+  CachedPreference._(this._prefs, this._preferenceId);
+
+  T getValue() => adaptFromString(_currentValue);
+  void setValue(T newValue) {
+    adaptToString(newValue);
+  }
+  
+  T adaptFromString(String value) => throw "Must override 'adaptFromString'";
+  String adaptToString(T value) => throw "Must override 'adaptToString'";
+  
+  Future _retrieveValue() => _prefs.getValue('stripWhitespaceOnSave').then((String value) =>
+      _currentValue = adaptFromString(value));
+}
+
+class BoolCachedPreference extends CachedPreference<bool> {
+  BoolCachedPreference._(PreferenceStore prefs, String id) : super._(prefs, id);
+  
+  static CachedPreference<bool> _instantiate(PreferenceStore prefs, String id) =>
+      new BoolCachedPreference._(prefs, id);
+
+  @override
+  bool adaptFromString(String value) => value == 'true';
+
+  @override
+  String adaptToString(bool value) => value ? 'true' : 'false';
 }
 
 /**
