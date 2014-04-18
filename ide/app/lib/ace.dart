@@ -119,6 +119,10 @@ class TextEditor extends Editor {
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
       // TODO(ericarnold): Need to analyze on initial file load.
       aceManager.buildOutline();
+
+      // Remove the trailing whitespace if asked to do so
+      // TODO(ericarnold): Can't think of an easy way to share this preference,
+      //           but it might be a good idea to do so rather than passing it.
       if (stripWhitespace) {
         RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
         text = text.replaceAll(whitespaceRegEx, '');
@@ -531,7 +535,7 @@ class AceManager {
       }
     }
   }
-  
+
   void buildOutline() {
     String text = currentSession.value;
     outline.build(text);

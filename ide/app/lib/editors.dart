@@ -67,7 +67,7 @@ class EditorManager implements EditorProvider {
 
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
-  
+
   BoolCachedPreference stripWhitespaceOnSave;
 
   static final int PREFS_EDITORSTATES_VERSION = 1;
@@ -96,7 +96,7 @@ class EditorManager implements EditorProvider {
       this._eventBus, this._services) {
     stripWhitespaceOnSave =
           new BoolCachedPreference(_prefs, "stripWhitespaceOnSave");
-    
+
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);

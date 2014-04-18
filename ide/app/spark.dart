@@ -2584,11 +2584,13 @@ class SettingsAction extends SparkActionWithDialog {
     if (!_initialized) {
       _initialized = true;
     }
-    
+
     spark.setGitSettingsResetDoneVisible(false);
 
     var whitespaceCheckbox = getElement('#stripWhitespace');
-    
+
+    // Wait for each of the following to (simultaneously) complete before
+    // showing the dialog:
     Future.wait([
       spark.editorManager.stripWhitespaceOnSave.whenLoaded
           .then((BoolCachedPreference pref) {
@@ -2609,7 +2611,7 @@ class SettingsAction extends SparkActionWithDialog {
       });
     });
   }
-  
+
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
       if (folderToken == null) {
