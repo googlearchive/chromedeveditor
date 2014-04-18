@@ -24,10 +24,10 @@ abstract class BusEvent {
   BusEventType get type;
 }
 
-class BusEventSimple extends BusEvent {
+class SimpleBusEvent extends BusEvent {
   BusEventType _type;
 
-  BusEventSimple(this._type);
+  SimpleBusEvent(this._type);
   BusEventType get type => _type;
 }
 

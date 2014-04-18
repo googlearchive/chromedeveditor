@@ -56,5 +56,5 @@ defineTests() {
 void _fireEvents(EventBus bus) {
   bus.addEvent(new FileModifiedBusEvent('a'));
   bus.addEvent(new FileModifiedBusEvent('b'));
-  bus.addEvent(new BusEventSimple(BusEventType.FILES_SAVED));
+  bus.addEvent(new SimpleBusEvent(BusEventType.FILES_SAVED));
 }
