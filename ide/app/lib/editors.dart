@@ -55,6 +55,11 @@ abstract class Editor {
   Future save([bool stripWhitespace = false]);
 }
 
+class BusEventFileModified extends BusEvent {
+  File file;
+  BusEventFileModified(this.file);
+  BusEventType get type => BusEventType.FILE_MODIFIED;
+}
 
 /**
  * Manage a list of open editors.
@@ -287,7 +292,7 @@ class EditorManager implements EditorProvider {
   Timer _timer;
 
   void _startSaveTimer() {
-    _eventBus.addEvent(BusEventType.FILE_MODIFIED, currentFile);
+    _eventBus.addEvent(new BusEventFileModified(currentFile));
 
     if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
@@ -313,7 +318,7 @@ class EditorManager implements EditorProvider {
     }
 
     if (wasDirty) {
-      _eventBus.addEvent(BusEventType.FILES_SAVED, null);
+      _eventBus.addEvent(new BusEventSimple(BusEventType.FILES_SAVED));
     }
   }
 
