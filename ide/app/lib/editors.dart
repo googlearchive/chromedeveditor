@@ -55,6 +55,19 @@ abstract class Editor {
   Future save([bool stripWhitespace = false]);
 }
 
+/**
+ * An event broadcast by EditorManager to let all interested parties know
+ * that a file has been modified.
+ */
+class FileModifiedBusEvent extends BusEvent {
+  // TODO(ussuri): Later on, it may make sense to send a single bulk
+  // notification when multiple files get modified at the same time,
+  // e.g. during large refactoring.
+  final File file;
+
+  FileModifiedBusEvent(this.file);
+  BusEventType get type => BusEventType.FILE_MODIFIED;
+}
 
 /**
  * Manage a list of open editors.
@@ -287,7 +300,7 @@ class EditorManager implements EditorProvider {
   Timer _timer;
 
   void _startSaveTimer() {
-    _eventBus.addEvent(BusEventType.EDITOR_MANAGER__FILE_MODIFIED, currentFile);
+    _eventBus.addEvent(new FileModifiedBusEvent(currentFile));
 
     if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
@@ -313,7 +326,7 @@ class EditorManager implements EditorProvider {
     }
 
     if (wasDirty) {
-      _eventBus.addEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED);
+      _eventBus.addEvent(new SimpleBusEvent(BusEventType.FILES_SAVED));
     }
   }
 

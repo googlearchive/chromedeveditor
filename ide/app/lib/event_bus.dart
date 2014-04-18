@@ -24,12 +24,26 @@ class BusEventType extends Enum<String> {
 }
 
 /**
+ * An event type for use with [EventBus].
+ */
+abstract class BusEvent {
+  BusEventType get type;
+}
+
+class SimpleBusEvent extends BusEvent {
+  final BusEventType _type;
+
+  SimpleBusEvent(this._type);
+  BusEventType get type => _type;
+}
+
+/**
  * An event bus class. Clients can listen for classes of events, optionally
  * filtered by a string type. This can be used to decouple events sources and
  * event listeners.
  */
 class EventBus {
-  StreamController<EventBusEvent> _controller;
+  StreamController<BusEvent> _controller;
 
   EventBus() {
     _controller = new StreamController.broadcast();
@@ -39,15 +53,15 @@ class EventBus {
    * Listen for events on the event bus. Clients can pass in an optional [type],
    * which filters the events to only those specific ones.
    */
-  Stream<EventBusEvent> onEvent([BusEventType type]) {
+  Stream<BusEvent> onEvent([BusEventType type]) {
     return _controller.stream.where((e) => type == null || e.type == type);
   }
 
   /**
    * Add an event to the event bus.
    */
-  void addEvent(BusEventType type, [Object data]) {
-    _controller.add(new EventBusEvent(type, data));
+  void addEvent(BusEvent event) {
+    _controller.add(event);
   }
 
   /**
@@ -58,14 +72,4 @@ class EventBus {
   void close() {
     _controller.close();
   }
-}
-
-/**
- * An event type for use with [EventBus].
- */
-class EventBusEvent {
-  final BusEventType type;
-  final Object data;
-
-  EventBusEvent(this.type, this.data);
 }

@@ -10,11 +10,18 @@ import 'package:unittest/unittest.dart';
 
 import '../lib/event_bus.dart';
 
+class TestFileModifiedBusEvent extends BusEvent {
+  String fileName;
+
+  TestFileModifiedBusEvent(this.fileName);
+  BusEventType get type => BusEventType.FILE_MODIFIED;
+}
+
 defineTests() {
   group('event_bus', () {
     test('fire one event', () {
       EventBus bus = new EventBus();
-      Future f = bus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).toList();
+      Future f = bus.onEvent(BusEventType.FILES_SAVED).toList();
       _fireEvents(bus);
       bus.close();
       return f.then((List l) {
@@ -24,11 +31,13 @@ defineTests() {
 
     test('fire two events', () {
       EventBus bus = new EventBus();
-      Future f = bus.onEvent(BusEventType.EDITOR_MANAGER__FILE_MODIFIED).toList();
+      Future f = bus.onEvent(BusEventType.FILE_MODIFIED).toList();
       _fireEvents(bus);
       bus.close();
       return f.then((List l) {
         expect(l.length, 2);
+        expect(l[0].fileName, 'a');
+        expect(l[1].fileName, 'b');
       });
     });
 
@@ -45,7 +54,7 @@ defineTests() {
 }
 
 void _fireEvents(EventBus bus) {
-  bus.addEvent(BusEventType.EDITOR_MANAGER__FILE_MODIFIED, null);
-  bus.addEvent(BusEventType.EDITOR_MANAGER__FILE_MODIFIED, null);
-  bus.addEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED);
+  bus.addEvent(new TestFileModifiedBusEvent('a'));
+  bus.addEvent(new TestFileModifiedBusEvent('b'));
+  bus.addEvent(new SimpleBusEvent(BusEventType.FILES_SAVED));
 }
