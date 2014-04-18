@@ -158,6 +158,10 @@ class _PubBuilder extends PackageBuilder {
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     Project project = event.changes.first.resource.project;
+
+    // If we're building a top-level file, return.
+    if (project == null) return new Future.value();
+
     File pubspecFile = project.getChild(properties.packageSpecFileName);
 
     if (pubspecFile is! File) {
