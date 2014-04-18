@@ -2,12 +2,11 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// TODO(ussuri): Add tests.
+
 /**
  * Bower services.
  */
-
-// TODO(ussuri): Add tests.
-
 library spark.package_mgmt.bower;
 
 import 'dart:async';
@@ -17,12 +16,13 @@ import 'package:logging/logging.dart';
 
 import 'package_manager.dart';
 import 'bower_fetcher.dart';
+import '../jobs.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
 
 // TODO(ussuri): Make package-private once no longer used outside.
-final bowerProperties = new BowerProperties();
+final BowerProperties bowerProperties = new BowerProperties();
 
 class BowerProperties extends PackageServiceProperties {
   String get packageServiceName => 'bower';
@@ -99,16 +99,47 @@ class _BowerBuilder extends PackageBuilder {
 
   PackageServiceProperties get properties => bowerProperties;
 
-  String getPackageNameFromSpec(String spec) {
+  Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
+    List futures = [];
+
+    for (ChangeDelta delta in event.changes) {
+      Resource r = delta.resource;
+
+      if (r.isDerived()) continue;
+
+      if (r.name == properties.packageSpecFileName && r.parent is Project) {
+        futures.add(_handlePackageSpecChange(delta));
+      }
+    }
+
+    return Future.wait(futures);
+  }
+
+  Future _handlePackageSpecChange(ChangeDelta delta) {
+    File file = delta.resource;
+
+    if (delta.isDelete) {
+      properties.setSelfReference(file.project, null);
+      return new Future.value();
+    } else {
+      return file.getContents().then((String spec) {
+        file.clearMarkers(properties.packageServiceName);
+
+        try {
+          properties.setSelfReference(
+              file.project, _parsePackageNameFromSpec(spec));
+        } on Exception catch (e) {
+          file.createMarker(
+              properties.packageServiceName, Marker.SEVERITY_ERROR, '${e}', 1);
+        }
+      });
+    }
+  }
+
+  String _parsePackageNameFromSpec(String spec) {
     // TODO(ussuri): Similar code is now in 3 places in package_mgmt.
     // Generalize package spec parsing as a PackageServiceProperties API.
-    Map<String, dynamic> specMap;
-    try {
-      specMap = JSON.decode(spec);
-    } on FormatException catch(e) {
-      _logger.warning('Error parsing package spec: $e\n$spec');
-    }
-    // specMap['name'] can return null: that's ok.
+    Map<String, dynamic> specMap = JSON.decode(spec);
     return specMap == null ? null : specMap['name'];
   }
 }

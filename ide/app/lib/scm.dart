@@ -249,7 +249,11 @@ class GitScmProvider extends ScmProvider {
   String get id => 'git';
 
   bool isUnderScm(Project project) {
-    return project.getChild('.git') is Folder;
+    Folder gitFolder = project.getChild('.git');
+    if (gitFolder is! Folder) return false;
+    if (gitFolder.getChild('index2') is! File) return false;
+    if (gitFolder.getChild('index') is File) return false;
+    return true;
   }
 
   ScmProjectOperations createOperationsFor(Project project) {
@@ -297,8 +301,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     _completer = new Completer();
 
     _objectStore = new ObjectStore(project.entry);
-    _objectStore.init()
-      .then((_) {
+    _objectStore.init().then((_) {
         _completer.complete(_objectStore);
 
         // Populate the branch name.

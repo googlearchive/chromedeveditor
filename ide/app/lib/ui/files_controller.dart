@@ -60,16 +60,11 @@ class FilesController implements TreeViewDelegate {
     _treeView.dropEnabled = true;
     _treeView.draggingEnabled = true;
 
-    _workspace.whenAvailable().then((_) {
-      _addAllFiles();
-    });
+    _workspace.whenAvailable().then((_) => _addAllFiles());
 
     _workspace.onResourceChange.listen((event) {
-      bool hasAddsDeletes = event.changes.any(
-          (d) => d.isAdd || d.isDelete || !d.resource.isFile);
-      if (hasAddsDeletes) {
-        _processEvents(event);
-      }
+      bool hasAddsDeletes = event.changes.any((d) => d.isAdd || d.isDelete);
+      if (hasAddsDeletes) _processEvents(event);
     });
 
     _workspace.onMarkerChange.listen((_) => _processMarkerChange());
@@ -163,6 +158,7 @@ class FilesController implements TreeViewDelegate {
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     Resource resource = _filesMap[nodeUID];
+    assert(resource != null);
     FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
       cell.acceptDrop = true;
@@ -258,7 +254,7 @@ class FilesController implements TreeViewDelegate {
       }
     }
   }
-  
+
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     Folder destinationFolder = _filesMap[nodeUID] as Folder;
     for(html.File file in dataTransfer.files) {
@@ -271,7 +267,7 @@ class FilesController implements TreeViewDelegate {
       reader.readAsArrayBuffer(file);
     }
   }
-  
+
   bool _isDifferentProject(List<String> nodesUIDs, String targetNodeUID) {
     if (targetNodeUID == null) {
       return false;
@@ -554,10 +550,15 @@ class FilesController implements TreeViewDelegate {
   void _cacheChildren(String nodeUID) {
     if (_childrenCache[nodeUID] == null) {
       Container container = _filesMap[nodeUID];
-      _childrenCache[nodeUID] = container.getChildren().
-          where(_showResource).map((r) => r.uuid).toList();
-      _childrenCache[nodeUID].sort(
-          (String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      List<Resource> children =
+          container.getChildren().where(_showResource).toList();
+      // Sort folders first, then files.
+      children.sort((Resource r1, Resource r2) {
+        if (r1 is Folder && r2 is! Folder) return -1;
+        if (r1 is! Folder && r2 is Folder) return 1;
+        return r1.name.toLowerCase().compareTo(r2.name.toLowerCase());
+      });
+      _childrenCache[nodeUID] = children.map((r) => r.uuid).toList();
     }
   }
 
@@ -610,37 +611,27 @@ class FilesController implements TreeViewDelegate {
         if (resource.isTopLevel) {
           _files.add(resource);
         }
-        _sortTopLevel();
-        _recursiveAddResource(resource);
-      }
-
-      if (change.type == EventType.DELETE) {
+        _filesMap[resource.uuid] = resource;
+      } else if (change.type == EventType.DELETE) {
         var resource = change.resource;
-        _files.remove(resource);
-        _recursiveRemoveResource(resource);
-      }
-
-      if (change.type == EventType.CHANGE) {
-        // refresh the container that has changed.
-        // remove all old paths and add new.
+        if (resource.isTopLevel) {
+          _files.remove(resource);
+        }
+        _filesMap.remove(resource.uuid);
+      } else if (change.type == EventType.CHANGE) {
         var resource = change.resource;
-        _recursiveRemoveResource(resource);
-        _recursiveAddResource(resource);
+        _filesMap[resource.uuid] = resource;
       }
     });
 
+    _sortTopLevel();
     _reloadData();
   }
 
   /**
    * Returns whether the given resource should be filtered from the Files view.
    */
-  bool _showResource(Resource resource) {
-    if (resource.isScmPrivate()) {
-      return false;
-    }
-    return true;
-  }
+  bool _showResource(Resource resource) => !resource.isScmPrivate();
 
   /**
    * Traverse all the created [FileItemCell]s, calling `updateFileStatus()`.
@@ -694,15 +685,6 @@ class FilesController implements TreeViewDelegate {
         if (_showResource(child)) {
           _recursiveAddResource(child);
         }
-      });
-    }
-  }
-
-  void _recursiveRemoveResource(Resource resource) {
-    _filesMap.remove(resource.uuid);
-    if (resource is Container) {
-      resource.getChildren().forEach((child) {
-        _recursiveRemoveResource(child);
       });
     }
   }

@@ -14,7 +14,7 @@ defineTests() {
   group('event_bus', () {
     test('fire one event', () {
       EventBus bus = new EventBus();
-      Future f = bus.onEvent('foo').toList();
+      Future f = bus.onEvent(BusEventType.FILES_SAVED).toList();
       _fireEvents(bus);
       bus.close();
       return f.then((List l) {
@@ -24,7 +24,7 @@ defineTests() {
 
     test('fire two events', () {
       EventBus bus = new EventBus();
-      Future f = bus.onEvent('bar').toList();
+      Future f = bus.onEvent(BusEventType.FILE_MODIFIED).toList();
       _fireEvents(bus);
       bus.close();
       return f.then((List l) {
@@ -45,7 +45,7 @@ defineTests() {
 }
 
 void _fireEvents(EventBus bus) {
-  bus.addEvent('foo', null);
-  bus.addEvent('bar', null);
-  bus.addEvent('bar', null);
+  bus.addEvent(BusEventType.FILE_MODIFIED, null);
+  bus.addEvent(BusEventType.FILE_MODIFIED, null);
+  bus.addEvent(BusEventType.FILES_SAVED, null);
 }

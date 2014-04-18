@@ -18,13 +18,13 @@ import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
+import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 1000;
 
 /**
  * Classes implement this interface provides/refreshes editors for [Resource]s.
- * TODO(ikarienator): Abstract [TextEditor] so we can support more editor types.
  */
 abstract class EditorProvider {
   Editor createEditorForFile(File file);
@@ -52,8 +52,9 @@ abstract class Editor {
   void resize();
   void focus();
   void fileContentsChanged();
-  Future save();
+  Future save([bool stripWhitespace = false]);
 }
+
 
 /**
  * Manage a list of open editors.
@@ -66,6 +67,8 @@ class EditorManager implements EditorProvider {
 
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
+
+  BoolCachedPreference stripWhitespaceOnSave;
 
   static final int PREFS_EDITORSTATES_VERSION = 1;
 
@@ -91,6 +94,9 @@ class EditorManager implements EditorProvider {
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {
+    stripWhitespaceOnSave =
+          new BoolCachedPreference(_prefs, "stripWhitespaceOnSave");
+
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
@@ -99,8 +105,6 @@ class EditorManager implements EditorProvider {
         for (ChangeDelta delta in event.changes) {
           if (delta.isDelete && delta.resource.isFile) {
             _handleFileDeleted(delta.resource);
-          } else if (delta.isDelete && delta.resource is Container) {
-            _handleContainerDeleted(delta.resource);
           } else if (delta.isChange && delta.resource.isFile) {
             _handleFileChanged(delta.resource);
           }
@@ -159,7 +163,7 @@ class EditorManager implements EditorProvider {
       _removeState(state);
 
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
       }
 
       if (_currentState == state) {
@@ -283,7 +287,7 @@ class EditorManager implements EditorProvider {
   Timer _timer;
 
   void _startSaveTimer() {
-    _eventBus.addEvent('fileModified', currentFile);
+    _eventBus.addEvent(BusEventType.FILE_MODIFIED, currentFile);
 
     if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
@@ -303,13 +307,13 @@ class EditorManager implements EditorProvider {
     // state changes between the timer start and now.
     for (Editor editor in editors) {
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
         wasDirty = true;
       }
     }
 
     if (wasDirty) {
-      _eventBus.addEvent('filesSaved', null);
+      _eventBus.addEvent(BusEventType.FILES_SAVED, null);
     }
   }
 
@@ -331,16 +335,6 @@ class EditorManager implements EditorProvider {
 
     if (_savedEditorStates.containsKey(key)) {
       _savedEditorStates.remove(key);
-    }
-  }
-
-  void _handleContainerDeleted(Container container) {
-    List<File> files = this.files.toList();
-
-    for (File file in files) {
-      if (file.containedBy(container)) {
-        _handleFileDeleted(file);
-      }
     }
   }
 

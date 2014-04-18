@@ -284,9 +284,6 @@ abstract class Spark
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus, services);
-    _editorManager.onNewFileOpened.listen((_) {
-      _workspace.checkResource(_editorManager.currentFile);
-    });
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         _workspace, allowsLabelBar: true);
 
@@ -1855,7 +1852,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     Element element = new ParagraphElement()..text = value
         ..className = 'form-control-static'
         ..attributes["selectableTxt"] = "";
-    
+
     div.children.addAll([label, element]);
   }
 
@@ -2456,7 +2453,7 @@ abstract class PackageManagementJob extends Job {
     monitor.start(name, 1);
 
     return _run().then((_) {
-      _spark.showSuccessMessage("Success running $_commandName");
+      _spark.showSuccessMessage("Successfully ran $_commandName");
     }).catchError((e) {
       _spark.showErrorMessage("Error while running $_commandName", e.toString());
     });
@@ -2585,18 +2582,34 @@ class SettingsAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-
       _initialized = true;
     }
 
     spark.setGitSettingsResetDoneVisible(false);
 
-    // For now, don't show the location field on Chrome OS; we always use syncFS.
-    if (_isCros()) {
+    var whitespaceCheckbox = getElement('#stripWhitespace');
+
+    // Wait for each of the following to (simultaneously) complete before
+    // showing the dialog:
+    Future.wait([
+      spark.editorManager.stripWhitespaceOnSave.whenLoaded
+          .then((BoolCachedPreference pref) {
+            whitespaceCheckbox.checked = pref.value;
+      }), new Future.value().then((_) {
+        // For now, don't show the location field on Chrome OS; we always use syncFS.
+        if (_isCros()) {
+          return null;
+        } else {
+          return _showRootDirectory();
+        }
+      })
+    ]).then((_) {
       _show();
-    } else {
-      _showRootDirectory().then((_) => _show());
-    }
+      whitespaceCheckbox.onChange.listen((e) {
+        spark.editorManager.stripWhitespaceOnSave.value =
+            whitespaceCheckbox.checked;
+      });
+    });
   }
 
   Future _showRootDirectory() {
