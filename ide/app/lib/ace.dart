@@ -108,7 +108,7 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save() {
+  Future save(bool stripWhitespace) {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
@@ -119,6 +119,10 @@ class TextEditor extends Editor {
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
       // TODO(ericarnold): Need to analyze on initial file load.
       aceManager.buildOutline();
+      if (stripWhitespace) {
+        RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
+        text = text.replaceAll(whitespaceRegEx, '');
+      }
 
       return file.setContents(text).then((_) => dirty = false);
     } else {

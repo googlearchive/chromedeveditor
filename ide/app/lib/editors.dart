@@ -52,7 +52,7 @@ abstract class Editor {
   void resize();
   void focus();
   void fileContentsChanged();
-  Future save();
+  Future save(bool stripWhitespace);
 }
 
 
@@ -163,7 +163,7 @@ class EditorManager implements EditorProvider {
       _removeState(state);
 
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
       }
 
       if (_currentState == state) {
@@ -307,7 +307,7 @@ class EditorManager implements EditorProvider {
     // state changes between the timer start and now.
     for (Editor editor in editors) {
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
         wasDirty = true;
       }
     }
