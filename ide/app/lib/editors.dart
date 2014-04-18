@@ -65,6 +65,8 @@ class EditorManager implements EditorProvider {
 
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
+  
+  bool get _prefs.getValue('editorStates')
 
   static final int PREFS_EDITORSTATES_VERSION = 1;
 

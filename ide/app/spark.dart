@@ -2582,8 +2582,14 @@ class SettingsAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-
       _initialized = true;
+    }
+    
+    var whitespaceCheckbox = getElement('#stripWhitespace');
+//    whitespaceCheckbox.checked = _isTrackingPermitted;
+    whitespaceCheckbox.onChange.listen((e) {
+      spark.editorManager.
+//      _isTrackingPermitted = whitespaceCheckbox.checked);
     }
 
     spark.setGitSettingsResetDoneVisible(false);
