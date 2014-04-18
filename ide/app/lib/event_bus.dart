@@ -6,6 +6,17 @@ library spark.event_bus;
 
 import 'dart:async';
 
+import 'enum.dart';
+
+class BusEventType extends Enum<String> {
+  const BusEventType._(String value) : super(value);
+
+  String get enumName => 'BusEventType';
+
+  static const FILE_MODIFIED = const BusEventType._('FILE_MODIFIED');
+  static const FILES_SAVED = const BusEventType._('FILES_SAVED');
+}
+
 /**
  * An event bus class. Clients can listen for classes of events, optionally
  * filtered by a string type. This can be used to decouple events sources and
@@ -29,7 +40,7 @@ class EventBus {
   /**
    * Add an event to the event bus.
    */
-  void addEvent(String type, Object data) {
+  void addEvent(BusEventType type, [Object data]) {
     _controller.add(new EventBusEvent(type, data));
   }
 
@@ -47,7 +58,7 @@ class EventBus {
  * An event type for use with [EventBus].
  */
 class EventBusEvent {
-  final String type;
+  final BusEventType type;
   final Object data;
 
   EventBusEvent(this.type, this.data);
