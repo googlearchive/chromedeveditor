@@ -11,6 +11,8 @@ import 'enum.dart';
 class BusEventType extends Enum<String> {
   const BusEventType._(String value) : super(value);
 
+  String get enumName => 'BusEventType';
+
   static const FILE_MODIFIED = const BusEventType._('FILE_MODIFIED');
   static const FILES_SAVED = const BusEventType._('FILES_SAVED');
 }
