@@ -54,6 +54,7 @@ abstract class Editor {
   Future save();
 }
 
+
 /**
  * Manage a list of open editors.
  */
@@ -66,7 +67,16 @@ class EditorManager implements EditorProvider {
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
   
-  bool get _prefs.getValue('editorStates')
+  Future<bool> getStripWhitespaceOnSave() => _prefs.getValue(
+      'stripWhitespaceOnSave').then((String value) =>
+          _stripWhitespaceOnSave = (value == 'true'));
+  
+  void setStripWhitespaceOnSave(bool value) {
+    _stripWhitespaceOnSave = value;
+    _prefs.setValue('stripWhitespaceOnSave', value ? 'true' : 'false');
+  }
+  
+  bool _stripWhitespaceOnSave;
 
   static final int PREFS_EDITORSTATES_VERSION = 1;
 

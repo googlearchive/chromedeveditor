@@ -2585,23 +2585,30 @@ class SettingsAction extends SparkActionWithDialog {
       _initialized = true;
     }
     
-    var whitespaceCheckbox = getElement('#stripWhitespace');
-//    whitespaceCheckbox.checked = _isTrackingPermitted;
-    whitespaceCheckbox.onChange.listen((e) {
-      spark.editorManager.
-//      _isTrackingPermitted = whitespaceCheckbox.checked);
-    }
-
+    
     spark.setGitSettingsResetDoneVisible(false);
 
-    // For now, don't show the location field on Chrome OS; we always use syncFS.
-    if (_isCros()) {
+    var whitespaceCheckbox = getElement('#stripWhitespace');
+    
+    Future.wait([
+      spark.editorManager.getStripWhitespaceOnSave().then((bool checked) {
+        whitespaceCheckbox.checked = checked;
+      }), new Future.value().then((_) {
+        // For now, don't show the location field on Chrome OS; we always use syncFS.
+        if (_isCros()) {
+          return null;
+        } else {
+          return _showRootDirectory();
+        }
+      })
+    ]).then((_) {
       _show();
-    } else {
-      _showRootDirectory().then((_) => _show());
-    }
+      whitespaceCheckbox.onChange.listen((e) {
+        spark.editorManager.setStripWhitespaceOnSave(whitespaceCheckbox.checked);
+      });
+    });
   }
-
+  
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
       if (folderToken == null) {
