@@ -2585,14 +2585,14 @@ class SettingsAction extends SparkActionWithDialog {
       _initialized = true;
     }
     
-    
     spark.setGitSettingsResetDoneVisible(false);
 
     var whitespaceCheckbox = getElement('#stripWhitespace');
     
     Future.wait([
-      spark.editorManager.getStripWhitespaceOnSave().then((bool checked) {
-        whitespaceCheckbox.checked = checked;
+      spark.editorManager.stripWhitespaceOnSave.whenLoaded
+          .then((BoolCachedPreference pref) {
+            whitespaceCheckbox.checked = pref.value;
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (_isCros()) {
@@ -2604,7 +2604,8 @@ class SettingsAction extends SparkActionWithDialog {
     ]).then((_) {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
-        spark.editorManager.setStripWhitespaceOnSave(whitespaceCheckbox.checked);
+        spark.editorManager.stripWhitespaceOnSave.value =
+            whitespaceCheckbox.checked;
       });
     });
   }

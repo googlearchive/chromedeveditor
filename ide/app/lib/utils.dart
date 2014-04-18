@@ -210,42 +210,42 @@ class PrintProfiler {
   int totalElapsedMs() => _previousTaskTime + _stopwatch.elapsedMilliseconds;
 }
 
-class CachedPreference<T> {
+abstract class CachedPreference<T> {
+  Future<CachedPreference> whenLoaded;
+  
+  Completer _whenLoadedCompleter = new Completer<CachedPreference>();
   final PreferenceStore _prefs;
-  String _currentValue;
+  T _currentValue;
   String _preferenceId;
 
-  static Future<CachedPreference> setup(PreferenceStore prefs, String id) {
-    CachedPreference instance = _instantiate(prefs, id);
-    return instance._retrieveValue().then((_) {
-      return instance;
+  CachedPreference (this._prefs, this._preferenceId) {
+    whenLoaded = _whenLoadedCompleter.future;
+    _retrieveValue().then((_) {
+      _whenLoadedCompleter.complete(this);
     });
   }
-  
-  static CachedPreference _instantiate(PreferenceStore prefs, String id) {
-    throw "Must override '_instantiate'";
-  }
-  
-  CachedPreference._(this._prefs, this._preferenceId);
 
-  T getValue() => adaptFromString(_currentValue);
-  void setValue(T newValue) {
-    adaptToString(newValue);
-  }
+  T adaptFromString(String value);
+  String adaptToString(T value);
   
-  T adaptFromString(String value) => throw "Must override 'adaptFromString'";
-  String adaptToString(T value) => throw "Must override 'adaptToString'";
+  T get value {
+    if (!_whenLoadedCompleter.isCompleted) {
+      throw "CachedPreference value read before it was loaded";
+    }
+    return _currentValue;
+  }
+  void set value(T newValue) {
+    _currentValue = newValue;
+    _prefs.setValue(_preferenceId, adaptToString(newValue));
+  }
   
   Future _retrieveValue() => _prefs.getValue('stripWhitespaceOnSave').then((String value) =>
       _currentValue = adaptFromString(value));
 }
 
 class BoolCachedPreference extends CachedPreference<bool> {
-  BoolCachedPreference._(PreferenceStore prefs, String id) : super._(prefs, id);
+  BoolCachedPreference(PreferenceStore prefs, String id) : super(prefs, id);
   
-  static CachedPreference<bool> _instantiate(PreferenceStore prefs, String id) =>
-      new BoolCachedPreference._(prefs, id);
-
   @override
   bool adaptFromString(String value) => value == 'true';
 

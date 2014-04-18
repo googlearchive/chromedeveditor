@@ -18,6 +18,7 @@ import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
+import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 1000;
@@ -67,16 +68,7 @@ class EditorManager implements EditorProvider {
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
   
-  Future<bool> getStripWhitespaceOnSave() => _prefs.getValue(
-      'stripWhitespaceOnSave').then((String value) =>
-          _stripWhitespaceOnSave = (value == 'true'));
-  
-  void setStripWhitespaceOnSave(bool value) {
-    _stripWhitespaceOnSave = value;
-    _prefs.setValue('stripWhitespaceOnSave', value ? 'true' : 'false');
-  }
-  
-  bool _stripWhitespaceOnSave;
+  BoolCachedPreference stripWhitespaceOnSave;
 
   static final int PREFS_EDITORSTATES_VERSION = 1;
 
@@ -102,6 +94,9 @@ class EditorManager implements EditorProvider {
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {
+    stripWhitespaceOnSave =
+          new BoolCachedPreference(_prefs, "stripWhitespaceOnSave");
+    
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
