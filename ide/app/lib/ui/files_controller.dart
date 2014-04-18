@@ -25,26 +25,19 @@ import '../preferences.dart' as preferences;
 import '../scm.dart';
 import '../workspace.dart';
 
-class FilesControllerSelectionChanged {
+class FilesControllerSelectionChangedEvent extends BusEvent {
   Resource resource;
   bool forceOpen;
   bool replaceCurrent;
   bool switchesTab;
 
-  FilesControllerSelectionChanged(
+  FilesControllerSelectionChangedEvent(
       this.resource,
       {this.forceOpen: false,
        this.replaceCurrent: true,
        this.switchesTab: true});
 
-  String toString() => '${resource.path}: $forceOpen $replaceCurrent $switchesTab';
-}
-
-class FilesControllerError {
-  String title;
-  String message;
-
-  FilesControllerError(this.title, this.message);
+  BusEventType get type => BusEventType.FILES_CONTROLLER__SELECTION_CHANGED;
 }
 
 class FilesController implements TreeViewDelegate {
@@ -110,8 +103,8 @@ class FilesController implements TreeViewDelegate {
     _treeView.selection = [file.uuid];
     _treeView.scrollIntoNode(file.uuid, html.ScrollAlignment.CENTER);
     _eventBus.addEvent(
-        BusEventType.FILES_CONTROLLER__SELECTION_CHANGED,
-        new FilesControllerSelectionChanged(file, forceOpen: forceOpen));
+        new FilesControllerSelectionChangedEvent(
+            file, forceOpen: forceOpen));
   }
 
   void selectFirstFile({bool forceOpen: false}) {
@@ -187,8 +180,7 @@ class FilesController implements TreeViewDelegate {
     if (nodeUIDs.isNotEmpty) {
       Resource resource = _filesMap[nodeUIDs.first];
       _eventBus.addEvent(
-          BusEventType.FILES_CONTROLLER__SELECTION_CHANGED,
-          new FilesControllerSelectionChanged(
+          new FilesControllerSelectionChangedEvent(
               resource, forceOpen: true, replaceCurrent: true));
     }
   }
@@ -208,8 +200,7 @@ class FilesController implements TreeViewDelegate {
       // is pressed, it will open a new tab.
       if (altKeyPressed && !shiftKeyPressed && !ctrlKeyPressed) {
         _eventBus.addEvent(
-            BusEventType.FILES_CONTROLLER__SELECTION_CHANGED,
-            new FilesControllerSelectionChanged(
+            new FilesControllerSelectionChangedEvent(
                 resource, forceOpen: true, replaceCurrent: false));
         return false;
       }
@@ -354,8 +345,7 @@ class FilesController implements TreeViewDelegate {
       }
       Future.wait(futures).catchError((e) {
         _eventBus.addEvent(
-            BusEventType.FILES_CONTROLLER__ERROR,
-            new FilesControllerError('Error while importing files', e.toString()));
+            new ErrorMessageBusEvent('Error while importing files', e));
       });
     } else {
       if (_isValidMove(nodesUIDs, targetNodeUID)) {

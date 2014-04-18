@@ -13,6 +13,11 @@ class BusEventType extends Enum<String> {
 
   String get enumName => 'BusEvent';
 
+  static const PROGRESS_MESSAGE =
+      const BusEventType._('PROGRESS_MESSAGE');
+  static const ERROR_MESSAGE =
+      const BusEventType._('ERROR_MESSAGE');
+
   static const EDITOR_MANAGER__FILE_MODIFIED =
       const BusEventType._('EDITOR_MANAGER__FILE_MODIFIED');
   static const EDITOR_MANAGER__FILES_SAVED =
@@ -28,13 +33,34 @@ class BusEventType extends Enum<String> {
  */
 abstract class BusEvent {
   BusEventType get type;
+
+  String toString() => type.toString();
 }
 
 class SimpleBusEvent extends BusEvent {
   final BusEventType _type;
 
   SimpleBusEvent(this._type);
+
   BusEventType get type => _type;
+}
+
+class ProgressMessageBusEvent extends BusEvent {
+  final String message;
+
+  ProgressMessageBusEvent(this.message);
+
+  BusEventType get type => BusEventType.PROGRESS_MESSAGE;
+}
+
+class ErrorMessageBusEvent extends BusEvent {
+  final String title;
+  final dynamic error;
+  final String stack;
+
+  ErrorMessageBusEvent(this.title, this.error, [this.stack = '']);
+
+  BusEventType get type => BusEventType.ERROR_MESSAGE;
 }
 
 /**

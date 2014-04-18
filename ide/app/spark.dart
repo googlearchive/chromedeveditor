@@ -110,7 +110,7 @@ abstract class Spark
   ActionManager _actionManager;
   ProjectLocationManager projectLocationManager;
 
-  EventBus _eventBus = new EventBus();
+  EventBus _eventBus;
 
   SplitView _splitView;
 
@@ -126,6 +126,8 @@ abstract class Spark
 
   Spark(this.developerMode) {
     document.title = appName;
+
+    initEventBus();
 
     initAnalytics();
 
@@ -243,6 +245,14 @@ abstract class Spark
   // Parts of ctor:
   //
 
+  void initEventBus() {
+    _eventBus = new EventBus();
+    _eventBus.onEvent(BusEventType.ERROR_MESSAGE).listen(
+        (ErrorMessageBusEvent event) {
+      showErrorMessage(event.title, event.error.toString());
+    });
+  }
+
   void initAnalytics() {
     // Init the analytics tracker and send a page view for the main page.
     analytics.getService('Spark').then((service) {
@@ -337,20 +347,15 @@ abstract class Spark
         querySelector('#file-item-context-menu'),
         querySelector('#fileViewArea'));
     _eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
-        .listen((EventBusEvent event) {
-      final FilesControllerSelectionChanged data = event.data;
-      focusManager.setCurrentResource(data.resource);
-      if (data.resource is ws.File) {
+        .listen((FilesControllerSelectionChangedEvent event) {
+      focusManager.setCurrentResource(event.resource);
+      if (event.resource is ws.File) {
         _selectInEditor(
-            data.resource,
-            forceOpen: data.forceOpen,
-            replaceCurrent: data.replaceCurrent,
-            switchesTab: data.switchesTab);
+            event.resource,
+            forceOpen: event.forceOpen,
+            replaceCurrent: event.replaceCurrent,
+            switchesTab: event.switchesTab);
       }
-    });
-    _eventBus.onEvent(BusEventType.FILES_CONTROLLER__ERROR).listen((event) {
-      final FilesControllerError data = event.data;
-      showErrorMessage(data.title, data.message);
     });
   }
 

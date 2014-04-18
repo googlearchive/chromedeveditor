@@ -66,7 +66,7 @@ class FileModifiedBusEvent extends BusEvent {
   final File file;
 
   FileModifiedBusEvent(this.file);
-  BusEventType get type => BusEventType.FILE_MODIFIED;
+  BusEventType get type => BusEventType.EDITOR_MANAGER__FILE_MODIFIED;
 }
 
 /**
@@ -326,7 +326,8 @@ class EditorManager implements EditorProvider {
     }
 
     if (wasDirty) {
-      _eventBus.addEvent(new SimpleBusEvent(BusEventType.FILES_SAVED));
+      _eventBus.addEvent(
+          new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
     }
   }
 
