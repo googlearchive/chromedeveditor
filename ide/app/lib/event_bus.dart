@@ -33,7 +33,7 @@ class EventBus {
    * Listen for events on the event bus. Clients can pass in an optional [type],
    * which filters the events to only those specific ones.
    */
-  Stream<EventBusEvent> onEvent([String type]) {
+  Stream<EventBusEvent> onEvent([BusEventType type]) {
     return _controller.stream.where((e) => type == null || e.type == type);
   }
 
