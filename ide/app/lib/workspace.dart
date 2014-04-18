@@ -16,6 +16,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import 'builder.dart';
+import 'enum.dart';
 import 'jobs.dart';
 import 'preferences.dart';
 import 'utils.dart';
@@ -1218,10 +1219,8 @@ class SyncFolderRoot extends WorkspaceRoot {
 /**
  * An enum of the valid [ResourceChangeEvent] types.
  */
-class EventType {
-  final String name;
-
-  const EventType._(this.name);
+class EventType extends Enum<String> {
+  const EventType._(String value) : super(value);
 
   /**
    * Event type indicates resource has been added to workspace.
@@ -1237,8 +1236,6 @@ class EventType {
    * Event type indicates resource has changed.
    */
   static const EventType CHANGE = const EventType._('CHANGE');
-
-  String toString() => name;
 }
 
 /**
