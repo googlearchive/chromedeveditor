@@ -52,7 +52,7 @@ abstract class Editor {
   void resize();
   void focus();
   void fileContentsChanged();
-  Future save(bool stripWhitespace);
+  Future save([bool stripWhitespace = false]);
 }
 
 

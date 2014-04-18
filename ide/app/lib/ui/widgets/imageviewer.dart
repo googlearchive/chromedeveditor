@@ -208,7 +208,7 @@ class ImageViewer implements Editor {
   Stream get onDirtyChange => _dirtyController.stream;
   Stream get onModification => _dirtyController.stream;
   bool get dirty => false;
-  Future save(bool stripWhitespace) {
+  Future save([bool stripWhitespace = false]) {
     return new Future.value();
   }
 

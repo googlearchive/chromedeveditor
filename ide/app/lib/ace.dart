@@ -108,11 +108,16 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save(bool stripWhitespace) {
+  Future save([bool stripWhitespace = false]) {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
+      // Remove the trailing whitespace if asked to do so
+      // TODO(ericarnold): Can't think of an easy way to share this preference,
+      //           but it might be a good idea to do so rather than passing it.
+      if (stripWhitespace) _stripWhitespace();
+
       String text = _session.value;
       _lastSavedHash = _calcMD5(text);
 
@@ -120,18 +125,17 @@ class TextEditor extends Editor {
       // TODO(ericarnold): Need to analyze on initial file load.
       aceManager.buildOutline();
 
-      // Remove the trailing whitespace if asked to do so
-      // TODO(ericarnold): Can't think of an easy way to share this preference,
-      //           but it might be a good idea to do so rather than passing it.
-      if (stripWhitespace) {
-        RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
-        text = text.replaceAll(whitespaceRegEx, '');
-      }
-
       return file.setContents(text).then((_) => dirty = false);
     } else {
       return new Future.value();
     }
+  }
+
+  _stripWhitespace() {
+    html.Point cursorPosition = aceManager.cursorPosition;
+    RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
+    _session.value = _session.value.replaceAll(whitespaceRegEx, '');
+    aceManager.cursorPosition = cursorPosition;
   }
 
   /**
