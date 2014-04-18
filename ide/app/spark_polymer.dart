@@ -17,6 +17,7 @@ import 'spark.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';
+import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 
 class _TimeLogger {
@@ -185,8 +186,8 @@ class SparkPolymer extends Spark {
     statusComponent = getUIElement('#sparkStatus');
 
     // Listen for save events.
-    eventBus.onEvent('filesSaved').listen((_) {
-      statusComponent.temporaryMessage = 'all changes saved';
+    eventBus.onEvent(BusEventType.FILES_SAVED).listen((_) {
+      statusComponent.temporaryMessage = 'All changes saved';
     });
 
     // Listen for job manager events.
