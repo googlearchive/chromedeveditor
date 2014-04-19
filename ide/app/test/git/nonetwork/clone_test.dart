@@ -6,14 +6,12 @@ library git_no_network_clone_test;
 
 import 'package:unittest/unittest.dart';
 
-
 import 'mock_http_request.dart';
 import '../../files_mock.dart';
 import '../../../lib/git/commands/clone.dart';
 import '../../../lib/git/http_fetcher.dart';
 import '../../../lib/git/objectstore.dart';
 import '../../../lib/git/options.dart';
-
 
 class MockHttpFetcher extends HttpFetcher {
 
@@ -23,7 +21,6 @@ class MockHttpFetcher extends HttpFetcher {
   MockHttpRequest getNewHttpRequest() => new MockHttpRequestClone();
 
 }
-
 
 class MockHttpRequestClone extends MockHttpRequest {
   open(_a, _b, {async : true, user, password}) => throw "some error";
@@ -39,7 +36,6 @@ class MockClone extends Clone {
     return new MockHttpFetcher(store, origin, url, username, password);
   }
 }
-
 
 defineTests() {
 

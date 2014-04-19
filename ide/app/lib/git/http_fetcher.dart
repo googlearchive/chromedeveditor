@@ -143,7 +143,7 @@ class HttpFetcher {
   /*
    * Get a new instance of HttpRequest. Exposed for tests to inject fake xhr.
    */
-   getNewHttpRequest() => new HttpRequest();
+  getNewHttpRequest() => new HttpRequest();
 
   /**
    * Parses the uri and returns the query params map.
