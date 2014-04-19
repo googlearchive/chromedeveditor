@@ -66,7 +66,7 @@ class FileModifiedBusEvent extends BusEvent {
   final File file;
 
   FileModifiedBusEvent(this.file);
-  BusEventType get type => BusEventType.FILE_MODIFIED;
+  BusEventType get type => BusEventType.EDITOR_MANAGER__FILE_MODIFIED;
 }
 
 /**
@@ -284,7 +284,8 @@ class EditorManager implements EditorProvider {
             _selectedController.add(currentFile);
             persistState();
           } else if (_editorMap[currentFile] != null) {
-            // TODO: this explicit casting to AceEditor will go away in a future refactoring
+            // TODO: this explicit casting to AceEditor will go away in a
+            // future refactoring
             ace.TextEditor textEditor = _editorMap[currentFile];
             textEditor.setSession(state.session);
             _selectedController.add(currentFile);
@@ -326,7 +327,8 @@ class EditorManager implements EditorProvider {
     }
 
     if (wasDirty) {
-      _eventBus.addEvent(new SimpleBusEvent(BusEventType.FILES_SAVED));
+      _eventBus.addEvent(
+          new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
     }
   }
 
