@@ -49,7 +49,7 @@ class HttpFetcher {
     String url = _makeUri('/git-receive-pack', {});
     Blob body = _pushRequest(refPaths, packData);
 
-    HttpRequest xhr = getNewHttpRequest();
+    var xhr = getNewHttpRequest();
     xhr.open("POST", url, async: true , user: username, password: password);
     xhr.setRequestHeader('Content-Type', 'application/x-git-receive-pack-request');
     xhr.onLoad.listen((event) {
@@ -87,7 +87,7 @@ class HttpFetcher {
     Completer completer = new Completer();
     String url = _makeUri('/git-upload-pack', {});
     String body = _refWantRequst(wantRefs, haveRefs, shallow, depth, moreHaves);
-    HttpRequest xhr = getNewHttpRequest();
+    var xhr = getNewHttpRequest();
 
     //TODO add progress.
     Function packProgress, receiveProgress;
@@ -143,7 +143,7 @@ class HttpFetcher {
   /*
    * Get a new instance of HttpRequest. Exposed for tests to inject fake xhr.
    */
-  HttpRequest getNewHttpRequest() => new HttpRequest();
+   getNewHttpRequest() => new HttpRequest();
 
   /**
    * Parses the uri and returns the query params map.
@@ -168,7 +168,7 @@ class HttpFetcher {
    */
   Future<String> _doGet(String url) {
     Completer completer = new Completer();
-    HttpRequest xhr = getNewHttpRequest();
+    var xhr = getNewHttpRequest();
     xhr.open("GET", url, async: true , user: username , password: password );
 
     xhr.onLoad.listen((event) {

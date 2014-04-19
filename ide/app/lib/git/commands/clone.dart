@@ -49,6 +49,11 @@ class Clone {
     });
   }
 
+  HttpFetcher getHttpFetcher(ObjectStore store, String origin, String url,
+      String username, String password) {
+    return new HttpFetcher(store, origin, url, username, password);
+  }
+
   Future clone() {
     _stopwatch = new PrintProfiler('clone');
     return _clone(_options.repoUrl);
@@ -56,7 +61,7 @@ class Clone {
 
   Future _clone(String url) {
 
-    HttpFetcher fetcher = new HttpFetcher(_options.store, "origin", url,
+    HttpFetcher fetcher = getHttpFetcher(_options.store, "origin", url,
         _options.username, _options.password);
 
     return fetcher.isValidRepoUrl(_options.repoUrl).then((isValid) {
