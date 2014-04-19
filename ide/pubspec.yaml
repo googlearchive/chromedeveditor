@@ -22,7 +22,7 @@ dependencies:
   logging: any
   mime: any
   path: any
-  polymer: 0.10.0-pre.4
+  polymer: 0.10.0-pre.9
   spark_widgets:
     path: ../widgets
   tavern:
@@ -39,4 +39,4 @@ transformers:
     entry_points: web/spark_polymer.html
     csp: 'true'
 dependency_overrides:
-  barback: 0.12.0
+  barback: 0.13.0
