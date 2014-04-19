@@ -9,6 +9,7 @@ import 'lib/actions.dart';
 import 'lib/app.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
+import 'lib/event_bus.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
 
@@ -30,11 +31,12 @@ abstract class SparkModel extends Application {
   ws.Workspace get workspace;
   EditorManager get editorManager;
   EditorArea get editorArea;
+  ActionManager get actionManager;
+
+  EventBus get eventBus;
 
   preferences.PreferenceStore get localPrefs;
   preferences.PreferenceStore get syncPrefs;
-
-  ActionManager get actionManager;
 
   void showSuccessMessage(String message);
   void showErrorMessage(String title, String message);

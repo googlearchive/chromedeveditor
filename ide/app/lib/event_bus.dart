@@ -22,6 +22,10 @@ class BusEventType extends Enum<String> {
       const BusEventType._('EDITOR_MANAGER__FILE_MODIFIED');
   static const EDITOR_MANAGER__FILES_SAVED =
       const BusEventType._('EDITOR_MANAGER__FILES_SAVED');
+  static const FILES_CONTROLLER__SELECTION_CHANGED =
+      const BusEventType._('FILES_CONTROLLER__SELECTION_CHANGED');
+  static const FILES_CONTROLLER__ERROR =
+      const BusEventType._('FILES_CONTROLLER__ERROR');
 }
 
 /**
