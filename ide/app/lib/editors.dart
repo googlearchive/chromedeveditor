@@ -284,7 +284,8 @@ class EditorManager implements EditorProvider {
             _selectedController.add(currentFile);
             persistState();
           } else if (_editorMap[currentFile] != null) {
-            // TODO: this explicit casting to AceEditor will go away in a future refactoring
+            // TODO: this explicit casting to AceEditor will go away in a
+            // future refactoring
             ace.TextEditor textEditor = _editorMap[currentFile];
             textEditor.setSession(state.session);
             _selectedController.add(currentFile);
