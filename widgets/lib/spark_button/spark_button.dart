@@ -4,39 +4,81 @@
 
 library spark_widgets.button;
 
+//import 'dart:async' as async;
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
 @CustomTag('spark-button')
 class SparkButton extends SparkWidget {
-  @published bool primary = false;
-
-  // TODO: changing this field does not cause the btnClasses to be re-calculated
-  bool _active = true;
-  @published bool get active => _active;
-  set active(bool value) {
-    _active = value;
-    getShadowDomElement('button').className = btnClasses;
-  }
-
-  @published bool large = false;
-  @published bool small = false;
-  @published bool noPadding = false;
+  @published
+  bool primary = false;
+  @published
+  bool active = true;
+  @published
+  bool large = false;
+  @published
+  bool small = false;
+  @published
+  bool noPadding = false;
 
   String get actionId => attributes['action-id'];
 
-  @observable String get btnClasses {
-    List classes = [
-        CSS_BUTTON,
-        primary ? CSS_PRIMARY : CSS_DEFAULT,
-        active ? SparkWidget.CSS_ENABLED : SparkWidget.CSS_DISABLED
-    ];
+  @observable
+  final btnClasses = toObservable({
+    CSS_BUTTON: true
+  });
 
-    if (large) classes.add(CSS_LARGE);
-    if (small) classes.add(CSS_SMALL);
+  @override
+  void enteredView() {
+    super.enteredView();
+    updateBtnClassesJob();
+  }
 
-    return joinClasses(classes);
+  void updateBtnClasses() {
+    btnClasses[CSS_PRIMARY] = primary;
+    btnClasses[CSS_DEFAULT] = !primary;
+    btnClasses[SparkWidget.CSS_ENABLED] = active;
+    btnClasses[SparkWidget.CSS_DISABLED] = !active;
+    btnClasses[CSS_LARGE] = large;
+    btnClasses[CSS_SMALL] = small;
+  }
+
+  /**
+   * only modify collection once for several succinct events
+   */
+  var btnClassesJob = false;
+  void updateBtnClassesJob() {
+    // see https://code.google.com/p/dart/issues/detail?id=17859
+    updateBtnClasses();
+//    if (btnClassesJob == false) {
+//      btnClassesJob = true;
+//      async.scheduleMicrotask(() {
+//        updateBtnClasses();
+//        btnClassesJob = false;
+//      });
+//    }
+  }
+
+  void activeChanged(old) {
+    updateBtnClassesJob();
+  }
+
+  void primaryChanged(old) {
+    updateBtnClassesJob();
+  }
+
+  void largeChanged(old) {
+    updateBtnClassesJob();
+
+    // TODO should this disable small?
+  }
+
+  void smallChanged(old) {
+    updateBtnClassesJob();
+
+    // TODO should this disable large?
   }
 
   static const CSS_BUTTON = "btn";
@@ -45,5 +87,5 @@ class SparkButton extends SparkWidget {
   static const CSS_LARGE = "btn-lg";
   static const CSS_SMALL = "btn-sm";
 
-  SparkButton.created() : super.created();
+  SparkButton.created(): super.created();
 }
