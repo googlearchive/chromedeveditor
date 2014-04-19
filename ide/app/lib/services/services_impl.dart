@@ -246,13 +246,26 @@ class AnalyzerServiceImpl extends ServiceImpl {
           return event.createReponse(_getOutline(result.ast).toMap());
         });
       case "getDeclarationFor":
-        analyzer.ElementLocator.locateWithOffset(node, offset)
-        var codeString = event.data['string'];
-        return analyzer.analyzeString(
-            dartSdk, codeString, performResolution: false).then(
-                (analyzer.AnalyzerResult result) {
-          return event.createReponse(_getOutline(result.ast).toMap());
-        });
+        /*%TRACE3*/ print("(4> 4/18/14): getDeclarationFor!"); // TRACE%
+        analyzer.ProjectContext context = _contexts[event.data['contextId']];
+        String fileUuid = event.data['fileUuid'];
+        /*%TRACE3*/ print("""(4> 4/18/14): fileUuid: ${fileUuid}"""); // TRACE%
+        analyzer.FileSource source = context.getSource(fileUuid);
+        var unit = context.context.parseCompilationUnit(source);
+        /*%TRACE3*/ print("""(4> 4/18/14): unit: ${unit.toSource()}"""); // TRACE%
+        int offset = event.data['offset'];
+        analyzer.NodeLocator locator = new analyzer.NodeLocator.con1(offset);
+        /*%TRACE3*/ print("""(4> 4/18/14): locator.foundNode: ${locator.foundNode}"""); // TRACE%
+//        analyzer.Element element = analyzer.NodeLocator.(
+//            unit, event.data['offset']);
+//        /*%TRACE3*/ print("""(4> 4/18/14): element: ${element.kind}"""); // TRACE%
+//        var codeString = event.data['string'];
+//        return analyzer.analyzeString(
+//            dartSdk, codeString, performResolution: false).then(
+//                (analyzer.AnalyzerResult result) {
+//          return event.createReponse(_getOutline(result.ast).toMap());
+//        });
+        return new Future.value();
       default:
         return super.handleEvent(event);
     }
@@ -317,6 +330,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }
 
     Future<ServiceActionEvent> disposeContext(ServiceActionEvent request) {
+      /*%TRACE3*/ print("(4> 4/18/14): disposeContext!"); // TRACE%
       String id = request.data['contextId'];
       _contexts.remove(id);
       return new Future.value(request.createReponse());
@@ -348,7 +362,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           if (member is analyzer.MethodDeclaration) {
             if (member.isGetter || member.isSetter) {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineAccessor(member.name.name, member.isSetter), 
+                  new OutlineAccessor(member.name.name, member.isSetter),
                   member.name));
             } else {
               outlineClass.members.add(_populateOutlineEntry(
