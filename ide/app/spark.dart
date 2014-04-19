@@ -296,7 +296,7 @@ abstract class Spark
     _aceKeysManager = new KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
-        workspace, aceManager, localPrefs, _eventBus, services);
+        workspace, aceManager, localPrefs, eventBus, services);
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         _workspace, allowsLabelBar: true);
 
@@ -343,10 +343,10 @@ abstract class Spark
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, actionManager, scmManager, _eventBus,
+        workspace, actionManager, scmManager, eventBus,
         querySelector('#file-item-context-menu'),
         querySelector('#fileViewArea'));
-    _eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
+    eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
       if (event.resource is ws.File) {
