@@ -15,14 +15,12 @@ import 'package:spark_widgets/spark_selection/spark_selection.dart';
 import 'package:spark_widgets/spark_selector/spark_selector.dart';
 import 'package:spark_widgets/spark_menu/spark_menu.dart';
 import 'package:spark_widgets/spark_menu_button/spark_menu_button.dart';
-import 'package:spark_widgets/spark_icon/spark_icon.dart';
 import 'package:spark_widgets/spark_menu_item/spark_menu_item.dart';
 import 'package:spark_widgets/spark_menu_separator/spark_menu_separator.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
 import 'package:spark_widgets/spark_splitter/spark_splitter.dart';
 import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
-import 'package:spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 import 'package:spark_widgets/spark_toolbar/spark_toolbar.dart';
 
 import 'lib/utils.dart';
@@ -37,7 +35,7 @@ void main() {
   // Init Polymer.
   startPolymer([], false);
 
-  // Register polymer components.
+  // Register Polymer components (ones that are actually used in the app).
   Polymer.register('spark-widget', SparkWidget);
   Polymer.register('spark-button', SparkButton);
   Polymer.register('spark-overlay', SparkOverlay);
@@ -45,14 +43,12 @@ void main() {
   Polymer.register('spark-selector', SparkSelector);
   Polymer.register('spark-menu', SparkMenu);
   Polymer.register('spark-menu-button', SparkMenuButton);
-  Polymer.register('spark-icon', SparkIcon);
   Polymer.register('spark-menu-item', SparkMenuItem);
   Polymer.register('spark-menu-separator', SparkMenuSeparator);
   Polymer.register('spark-modal', SparkModal);
   Polymer.register('spark-splitter', SparkSplitter);
   Polymer.register('spark-split-view', SparkSplitView);
   Polymer.register('spark-status', SparkStatus);
-  Polymer.register('spark-suggest-box', SparkSuggestBox);
   Polymer.register('spark-toolbar', SparkToolbar);
   Polymer.register('commit-message-view', CommitMessageView);
   Polymer.register('spark-polymer-ui', SparkPolymerUI);
