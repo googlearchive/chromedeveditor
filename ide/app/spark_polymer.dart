@@ -60,7 +60,7 @@ void main() {
 
       logger.logStep('Spark started');
 
-      // NOTE: This even is unused right now, but it will be soon. For now
+      // NOTE: This event is unused right now, but it will be soon. For now
       // we're just interested in its timing.
       polymer.Polymer.onReady.then((_) {
         logger.logStep('Polymer.onReady fired');
