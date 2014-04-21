@@ -18,6 +18,7 @@ import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
+import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 1000;
@@ -51,7 +52,21 @@ abstract class Editor {
   void resize();
   void focus();
   void fileContentsChanged();
-  Future save();
+  Future save([bool stripWhitespace = false]);
+}
+
+/**
+ * An event broadcast by EditorManager to let all interested parties know
+ * that a file has been modified.
+ */
+class FileModifiedBusEvent extends BusEvent {
+  // TODO(ussuri): Later on, it may make sense to send a single bulk
+  // notification when multiple files get modified at the same time,
+  // e.g. during large refactoring.
+  final File file;
+
+  FileModifiedBusEvent(this.file);
+  BusEventType get type => BusEventType.EDITOR_MANAGER__FILE_MODIFIED;
 }
 
 /**
@@ -65,6 +80,8 @@ class EditorManager implements EditorProvider {
 
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
+
+  BoolCachedPreference stripWhitespaceOnSave;
 
   static final int PREFS_EDITORSTATES_VERSION = 1;
 
@@ -90,6 +107,9 @@ class EditorManager implements EditorProvider {
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {
+    stripWhitespaceOnSave =
+          new BoolCachedPreference(_prefs, "stripWhitespaceOnSave");
+
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
@@ -156,7 +176,7 @@ class EditorManager implements EditorProvider {
       _removeState(state);
 
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
       }
 
       if (_currentState == state) {
@@ -264,7 +284,8 @@ class EditorManager implements EditorProvider {
             _selectedController.add(currentFile);
             persistState();
           } else if (_editorMap[currentFile] != null) {
-            // TODO: this explicit casting to AceEditor will go away in a future refactoring
+            // TODO: this explicit casting to AceEditor will go away in a
+            // future refactoring
             ace.TextEditor textEditor = _editorMap[currentFile];
             textEditor.setSession(state.session);
             _selectedController.add(currentFile);
@@ -280,7 +301,7 @@ class EditorManager implements EditorProvider {
   Timer _timer;
 
   void _startSaveTimer() {
-    _eventBus.addEvent('fileModified', currentFile);
+    _eventBus.addEvent(new FileModifiedBusEvent(currentFile));
 
     if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
@@ -300,13 +321,14 @@ class EditorManager implements EditorProvider {
     // state changes between the timer start and now.
     for (Editor editor in editors) {
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
         wasDirty = true;
       }
     }
 
     if (wasDirty) {
-      _eventBus.addEvent('filesSaved', null);
+      _eventBus.addEvent(
+          new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
     }
   }
 
