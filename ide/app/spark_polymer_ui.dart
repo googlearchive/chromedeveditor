@@ -13,23 +13,18 @@ import 'package:polymer/polymer.dart';
 import 'packages/spark_widgets/common/spark_widget.dart';
 
 import 'spark_model.dart';
-import 'lib/search.dart';
 import 'lib/workspace.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
   @observable bool developerMode = false;
   @observable bool chromeOS = false;
-  @observable SuggestOracle searchOracle;
 
   SparkPolymerUI.created() : super.created();
 
   @override
   void enteredView() {
     super.enteredView();
-
-    searchOracle = new SearchOracle(
-        () => SparkModel.instance.workspace, _selectFile);
 
     // Delay calling this until the `SparkModel.instance` is populated.
     Timer.run(bindKeybindingDesc);
