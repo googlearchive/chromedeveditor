@@ -250,8 +250,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
         String fileUuid = event.data['fileUuid'];
         /*%TRACE3*/ print("""(4> 4/18/14): fileUuid: ${fileUuid}"""); // TRACE%
         analyzer.FileSource source = context.getSource(fileUuid);
-        // var unit = context.context.parseCompilationUnit(source);
-        var unit = context.context.resolveCompilationUnit2(source, source);
+        var unit = context.context.parseCompilationUnit(source);
         /*%TRACE3*/ print("""(4> 4/18/14): unit: ${unit.toSource()}"""); // TRACE%
         int offset = event.data['offset'];
         analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
@@ -273,9 +272,9 @@ class AnalyzerServiceImpl extends ServiceImpl {
             /*%TRACE3*/ print("""(4> 4/20/14): inv.target: ${inv.target}"""); // TRACE%
           } else if (foundNode is analyzer.TypeName) {
           } else if (foundNode is analyzer.PrefixedIdentifier) {
-//            ((foundNode as analyzer.PrefixedIdentifier).
-            /*%TRACE3*/ print("""(4> 4/20/14): ((foundNode as analyzer.PrefixedIdentifier).bestElement).runtimeType: ${(foundNode as analyzer.PrefixedIdentifier).bestElement}"""); // TRACE%
-            foundNode = foundNode.parent;
+            analyzer.PrefixedIdentifier prefixedIdentifier = foundNode;
+            /*%TRACE3*/ print("""(4> 4/20/14): ((foundNode as analyzer.PrefixedIdentifier).bestElement).runtimeType: ${prefixedIdentifier.bestElement}"""); // TRACE%
+            foundNode = prefixedIdentifier.parent;
             /*%TRACE3*/ print("""(4> 4/20/14): foundNode: ${foundNode.runtimeType}"""); // TRACE%
           }
         }
