@@ -34,9 +34,10 @@
       <spark-status id="sparkStatus"></spark-status>
 
       <div id="toolbarRight">
-        <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
-            placeholder="Search">
-        </spark-suggest-box>
+        <input type="search"
+            id="search"
+            class="form-control"
+            placeholder="Search"/>
 
         <spark-menu-button
             id="mainMenu"
@@ -693,5 +694,5 @@
     </spark-modal>
   </template>
 
-  <script type="application/dart" src="spark_polymer_ui.dart"></script>
+  <script type="application/dart;component=1" src="spark_polymer_ui.dart"></script>
 </polymer-element>

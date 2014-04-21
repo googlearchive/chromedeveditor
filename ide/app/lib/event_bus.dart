@@ -11,10 +11,56 @@ import 'enum.dart';
 class BusEventType extends Enum<String> {
   const BusEventType._(String value) : super(value);
 
-  String get enumName => 'BusEventType';
+  String get enumName => 'BusEvent';
 
-  static const FILE_MODIFIED = const BusEventType._('FILE_MODIFIED');
-  static const FILES_SAVED = const BusEventType._('FILES_SAVED');
+  static const PROGRESS_MESSAGE =
+      const BusEventType._('PROGRESS_MESSAGE');
+  static const ERROR_MESSAGE =
+      const BusEventType._('ERROR_MESSAGE');
+
+  static const EDITOR_MANAGER__FILE_MODIFIED =
+      const BusEventType._('EDITOR_MANAGER__FILE_MODIFIED');
+  static const EDITOR_MANAGER__FILES_SAVED =
+      const BusEventType._('EDITOR_MANAGER__FILES_SAVED');
+  static const FILES_CONTROLLER__SELECTION_CHANGED =
+      const BusEventType._('FILES_CONTROLLER__SELECTION_CHANGED');
+  static const FILES_CONTROLLER__ERROR =
+      const BusEventType._('FILES_CONTROLLER__ERROR');
+}
+
+/**
+ * An event type for use with [EventBus].
+ */
+abstract class BusEvent {
+  BusEventType get type;
+
+  String toString() => type.toString();
+}
+
+class SimpleBusEvent extends BusEvent {
+  final BusEventType _type;
+
+  SimpleBusEvent(this._type);
+
+  BusEventType get type => _type;
+}
+
+class ProgressMessageBusEvent extends BusEvent {
+  final String message;
+
+  ProgressMessageBusEvent(this.message);
+
+  BusEventType get type => BusEventType.PROGRESS_MESSAGE;
+}
+
+class ErrorMessageBusEvent extends BusEvent {
+  final String title;
+  final dynamic error;
+  final String stack;
+
+  ErrorMessageBusEvent(this.title, this.error, [this.stack = '']);
+
+  BusEventType get type => BusEventType.ERROR_MESSAGE;
 }
 
 /**
@@ -23,7 +69,7 @@ class BusEventType extends Enum<String> {
  * event listeners.
  */
 class EventBus {
-  StreamController<EventBusEvent> _controller;
+  StreamController<BusEvent> _controller;
 
   EventBus() {
     _controller = new StreamController.broadcast();
@@ -33,15 +79,15 @@ class EventBus {
    * Listen for events on the event bus. Clients can pass in an optional [type],
    * which filters the events to only those specific ones.
    */
-  Stream<EventBusEvent> onEvent([BusEventType type]) {
+  Stream<BusEvent> onEvent([BusEventType type]) {
     return _controller.stream.where((e) => type == null || e.type == type);
   }
 
   /**
    * Add an event to the event bus.
    */
-  void addEvent(BusEventType type, [Object data]) {
-    _controller.add(new EventBusEvent(type, data));
+  void addEvent(BusEvent event) {
+    _controller.add(event);
   }
 
   /**
@@ -52,14 +98,4 @@ class EventBus {
   void close() {
     _controller.close();
   }
-}
-
-/**
- * An event type for use with [EventBus].
- */
-class EventBusEvent {
-  final BusEventType type;
-  final Object data;
-
-  EventBusEvent(this.type, this.data);
 }
