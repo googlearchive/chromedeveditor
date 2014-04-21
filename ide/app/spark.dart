@@ -672,7 +672,7 @@ abstract class Spark
   Timer _filterTimer = null;
 
   void filterFilesList(String searchString) {
-    if ( _filterTimer!= null) {
+    if ( _filterTimer != null) {
       _filterTimer.cancel();
       _filterTimer = null;
     }
@@ -684,7 +684,7 @@ abstract class Spark
   }
 
   void _reallyFilterFilesList(String searchString) {
-    _filesController.filterString = searchString;
+    _filesController.performFilter(searchString);
   }
 }
 

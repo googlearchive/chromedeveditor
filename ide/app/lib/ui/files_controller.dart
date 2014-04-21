@@ -46,7 +46,9 @@ class FilesController implements TreeViewDelegate {
   StreamController<Resource> _selectionController = new StreamController.broadcast();
   // Filter the list of files by filename containing this string.
   String _filterString;
+  // List of filtered top-level resources.
   List<Resource> _filteredFiles;
+  // Sorted children of nodes.
   Map<String, List<String>> _filteredChildrenCache;
 
   FilesController(Workspace workspace,
@@ -567,8 +569,11 @@ class FilesController implements TreeViewDelegate {
       Container container = _filesMap[nodeUID];
       _childrenCache[nodeUID] = container.getChildren().
           where(_showResource).map((r) => r.uuid).toList();
-      _childrenCache[nodeUID].sort(
-          (String a, String b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      _childrenCache[nodeUID].sort((String a, String b) {
+        Resource resA = _filesMap[a];
+        Resource resB = _filesMap[b];
+        return _compareResources(resA, resB);
+      });
     }
   }
 
@@ -578,15 +583,17 @@ class FilesController implements TreeViewDelegate {
 
   void _sortTopLevel() {
     // Show top-level files before folders.
-    _files.sort((Resource a, Resource b) {
-      if (a is File && b is Container) {
-        return -1;
-      } else if (a is Container && b is File) {
-        return 1;
-      } else {
-        return a.path.toLowerCase().compareTo(b.path.toLowerCase());
-      }
-    });
+    _files.sort(_compareResources);
+  }
+
+  int _compareResources(Resource a, Resource b) {
+    if (a is File && b is Container) {
+      return 1;
+    } else if (a is Container && b is File) {
+      return -1;
+    } else {
+      return a.path.toLowerCase().compareTo(b.path.toLowerCase());
+    }
   }
 
   void _reloadData() {
@@ -798,11 +805,13 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
-  String get filterString {
-    return _filterString;
-  }
-
-  void filterAddResult(Set result,
+  /**
+   * Add the given resource to the results.
+   * [result] is a set that contains uuid of resources that have already been
+   * added.
+   * [roots] is the list of 
+   */
+  void _filterAddResult(Set result,
       List<Resource> roots,
       Map<String, List<String>> childrenCache,
       Resource res) {
@@ -823,14 +832,12 @@ class FilesController implements TreeViewDelegate {
       childrenCache[res.parent.uuid] = children;
     }
     children.add(res.uuid);
-    filterAddResult(result, roots, childrenCache, res.parent);
+    _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
-  void set filterString(String filterString) {
-    if (filterString != null) {
-      if (filterString.length == 0) {
-        filterString = null;
-      }
+  void performFilter(String filterString) {
+    if (filterString != null && filterString.isEmpty) {
+      filterString = null;
     }
     _filterString = filterString;
     if (_filterString == null) {
@@ -843,10 +850,17 @@ class FilesController implements TreeViewDelegate {
       _filteredChildrenCache = {};
       _filesMap.forEach((String key, Resource res) {
         if (res.name.contains(_filterString)) {
-          filterAddResult(filtered, _filteredFiles, _filteredChildrenCache, res);
+          _filterAddResult(filtered, _filteredFiles, _filteredChildrenCache, res);
         }
       });
-      //print("${_filteredChildrenCache}");
+      _filteredChildrenCache.forEach((String key, List<String> value) {
+        value.sort((String a, String b) {
+          Resource resA = _filesMap[a];
+          Resource resB = _filesMap[b];
+          return _compareResources(resA, resB);
+        });
+      });
+
       _reloadData();
       _treeView.restoreExpandedState(filtered.toList());
     }
