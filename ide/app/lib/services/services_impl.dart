@@ -246,16 +246,41 @@ class AnalyzerServiceImpl extends ServiceImpl {
           return event.createReponse(_getOutline(result.ast).toMap());
         });
       case "getDeclarationFor":
-        /*%TRACE3*/ print("(4> 4/18/14): getDeclarationFor!"); // TRACE%
         analyzer.ProjectContext context = _contexts[event.data['contextId']];
         String fileUuid = event.data['fileUuid'];
         /*%TRACE3*/ print("""(4> 4/18/14): fileUuid: ${fileUuid}"""); // TRACE%
         analyzer.FileSource source = context.getSource(fileUuid);
-        var unit = context.context.parseCompilationUnit(source);
+        // var unit = context.context.parseCompilationUnit(source);
+        var unit = context.context.resolveCompilationUnit2(source, source);
         /*%TRACE3*/ print("""(4> 4/18/14): unit: ${unit.toSource()}"""); // TRACE%
         int offset = event.data['offset'];
-        analyzer.NodeLocator locator = new analyzer.NodeLocator.con1(offset);
-        /*%TRACE3*/ print("""(4> 4/18/14): locator.foundNode: ${locator.foundNode}"""); // TRACE%
+        analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
+        if (foundNode is analyzer.SimpleIdentifier) {
+          var element = analyzer.ElementLocator.locate(foundNode);
+          /*%TRACE3*/ print("""(4> 4/20/14): element: ${element}"""); // TRACE%
+          /*%TRACE3*/ print("""(4> 4/20/14): foundNode.bestElement: ${(foundNode as analyzer.SimpleIdentifier).bestElement}"""); // TRACE%
+          /*%TRACE3*/ print("""(4> 4/20/14): foundNode: ${foundNode.runtimeType}"""); // TRACE%
+          foundNode = foundNode.parent;
+          /*%TRACE3*/ print("""(4> 4/20/14): foundNode: ${foundNode.runtimeType}"""); // TRACE%
+          if (foundNode is analyzer.MethodInvocation) {
+            element = analyzer.ElementLocator.locate(foundNode);
+            /*%TRACE3*/ print("""(4> 4/20/14): element: ${element}"""); // TRACE%
+            /*%TRACE3*/ print("(4> 4/20/14): foundNode is analyzer.MethodInvocation!"); // TRACE%
+            /*%TRACE3*/ print("""(4> 4/20/14): foundNode.bestElement: ${(foundNode as analyzer.MethodInvocation).bestType}"""); // TRACE%
+            analyzer.MethodInvocation inv = foundNode;
+            inv.target;
+            inv.realTarget;
+            /*%TRACE3*/ print("""(4> 4/20/14): inv.target: ${inv.target}"""); // TRACE%
+          } else if (foundNode is analyzer.TypeName) {
+          } else if (foundNode is analyzer.PrefixedIdentifier) {
+//            ((foundNode as analyzer.PrefixedIdentifier).
+            /*%TRACE3*/ print("""(4> 4/20/14): ((foundNode as analyzer.PrefixedIdentifier).bestElement).runtimeType: ${(foundNode as analyzer.PrefixedIdentifier).bestElement}"""); // TRACE%
+            foundNode = foundNode.parent;
+            /*%TRACE3*/ print("""(4> 4/20/14): foundNode: ${foundNode.runtimeType}"""); // TRACE%
+          }
+        }
+
+//        analyzer.NodeLocator locator = new analyzer.NodeLocator.con2(offset, offset + 1);
 //        analyzer.Element element = analyzer.NodeLocator.(
 //            unit, event.data['offset']);
 //        /*%TRACE3*/ print("""(4> 4/18/14): element: ${element.kind}"""); // TRACE%
@@ -416,6 +441,20 @@ class AnalyzerServiceImpl extends ServiceImpl {
         .then((analyzer.AnalyzerResult result) => result);
   }
 }
+
+class DeclarationVisitor extends analyzer.GeneralizingAstVisitor {
+  int offset;
+
+  visitMethodDeclaration(analyzer.MethodDeclaration node) {
+    /*%TRACE3*/ print("""(4> 4/20/14): node: ${node}"""); // TRACE%
+  }
+
+  visitMethodInvocation(analyzer.MethodInvocation node) {
+    /*%TRACE3*/ print("""(4> 4/20/14): node: ${node}"""); // TRACE%
+  }
+
+}
+
 
 /**
  * Special service for calling back to chrome.
