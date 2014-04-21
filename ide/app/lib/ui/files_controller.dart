@@ -587,11 +587,11 @@ class FilesController implements TreeViewDelegate {
   }
 
   void _sortTopLevel() {
-    // Show top-level files before folders.
     _files.sort(_compareResources);
   }
 
   int _compareResources(Resource a, Resource b) {
+    // Show top-level files before folders.
     if (a is File && b is Container) {
       return 1;
     } else if (a is Container && b is File) {
