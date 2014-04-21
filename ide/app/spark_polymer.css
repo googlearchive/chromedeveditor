@@ -308,7 +308,7 @@ div.ace_gutter-cell.ace_info {
   bottom: 0;
   margin: 10px;
   position: absolute;
-  right: 0;
+  right: 15px;
   top: 0;
   width: 200px;
   z-index: 100;
@@ -369,6 +369,23 @@ li.outlineItem.topLevel.class {
 
 .outlineItem.topLevel.function > a:after, .outlineItem.method > a:after {
   content: '()';
+}
+
+.outlineItem.accessor,
+    .outlineItem.accessor > a {
+  color: #77c;
+}
+
+.outlineItem.accessor.getter > a:before,
+    .outlineItem.accessor.getter > a:before {
+  content: 'get ';
+  color: #888;
+}
+
+.outlineItem.accessor.setter > a:before,
+    .outlineItem.accessor.setter > a:before {
+  content: 'set ';
+  color: #888;
 }
 
 .outlineItem.topLevel.variable, .outlineItem.property,

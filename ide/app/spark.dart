@@ -39,7 +39,6 @@ import 'lib/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
-import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
 import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
@@ -87,7 +86,7 @@ Zone createSparkZone() {
 
 abstract class Spark
     extends SparkModel
-    implements FilesControllerDelegate, AceManagerDelegate, Notifier {
+    implements AceManagerDelegate, Notifier {
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
@@ -108,16 +107,18 @@ abstract class Spark
   LaunchManager _launchManager;
   PubManager _pubManager;
   BowerManager _bowerManager;
-
-  final EventBus eventBus = new EventBus();
-
   ActionManager _actionManager;
+  ProjectLocationManager projectLocationManager;
+
+  EventBus _eventBus;
 
   SplitView _splitView;
+
   FilesController _filesController;
+
   PlatformInfo _platformInfo;
+
   TestDriver _testDriver;
-  ProjectLocationManager projectLocationManager;
 
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
@@ -125,6 +126,8 @@ abstract class Spark
 
   Spark(this.developerMode) {
     document.title = appName;
+
+    initEventBus();
 
     initAnalytics();
 
@@ -139,9 +142,10 @@ abstract class Spark
     initEditorArea();
     initEditorManager();
 
+    createActions();
+
     initFilesController();
 
-    createActions();
     initToolbar();
     buildMenu();
 
@@ -183,11 +187,12 @@ abstract class Spark
   LaunchManager get launchManager => _launchManager;
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
+  ActionManager get actionManager => _actionManager;
+
+  EventBus get eventBus => _eventBus;
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
   preferences.PreferenceStore get syncPrefs => preferences.syncStore;
-
-  ActionManager get actionManager => _actionManager;
 
   //
   // - End SparkModel interface.
@@ -239,6 +244,14 @@ abstract class Spark
   //
   // Parts of ctor:
   //
+
+  void initEventBus() {
+    _eventBus = new EventBus();
+    _eventBus.onEvent(BusEventType.ERROR_MESSAGE).listen(
+        (ErrorMessageBusEvent event) {
+      showErrorMessage(event.title, event.error.toString());
+    });
+  }
 
   void initAnalytics() {
     // Init the analytics tracker and send a page view for the main page.
@@ -330,9 +343,19 @@ abstract class Spark
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, scmManager, this, querySelector('#fileViewArea'));
-    _filesController.onSelectionChange.listen((resource) {
-      focusManager.setCurrentResource(resource);
+        workspace, actionManager, scmManager, eventBus,
+        querySelector('#file-item-context-menu'),
+        querySelector('#fileViewArea'));
+    eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
+        .listen((FilesControllerSelectionChangedEvent event) {
+      focusManager.setCurrentResource(event.resource);
+      if (event.resource is ws.File) {
+        _selectInEditor(
+            event.resource,
+            forceOpen: event.forceOpen,
+            replaceCurrent: event.replaceCurrent,
+            switchesTab: event.switchesTab);
+      }
     });
   }
 
@@ -612,14 +635,10 @@ abstract class Spark
     }
   }
 
-  //
-  // Implementation of FilesControllerDelegate interface:
-  //
-
-  void selectInEditor(ws.File file,
-                      {bool forceOpen: false,
-                       bool replaceCurrent: true,
-                       bool switchesTab: true}) {
+  void _selectInEditor(ws.File file,
+                       {bool forceOpen: false,
+                        bool replaceCurrent: true,
+                        bool switchesTab: true}) {
     if (forceOpen || editorManager.isFileOpened(file)) {
       editorArea.selectFile(file,
           forceOpen: forceOpen,
@@ -627,15 +646,6 @@ abstract class Spark
           switchesTab: switchesTab);
     }
   }
-
-  Element getContextMenuContainer() => querySelector('#file-item-context-menu');
-
-  List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
-      actionManager.getContextActions(resources);
-
-  //
-  // - End implementation of FilesControllerDelegate interface.
-  //
 
   //
   // Implementation of AceManagerDelegate interface:
@@ -1066,7 +1076,7 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
     files.forEach((ws.File file) {
-      spark.selectInEditor(file, forceOpen: true, replaceCurrent: false);
+      spark._selectInEditor(file, forceOpen: true, replaceCurrent: false);
     });
   }
 
@@ -1113,7 +1123,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._selectInEditor(file, forceOpen: true, replaceCurrent: true);
             spark._aceManager.focus();
           });
         }).catchError((e) {
@@ -2453,7 +2463,7 @@ abstract class PackageManagementJob extends Job {
     monitor.start(name, 1);
 
     return _run().then((_) {
-      _spark.showSuccessMessage("Success running $_commandName");
+      _spark.showSuccessMessage("Successfully ran $_commandName");
     }).catchError((e) {
       _spark.showErrorMessage("Error while running $_commandName", e.toString());
     });
@@ -2582,18 +2592,34 @@ class SettingsAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-
       _initialized = true;
     }
 
     spark.setGitSettingsResetDoneVisible(false);
 
-    // For now, don't show the location field on Chrome OS; we always use syncFS.
-    if (_isCros()) {
+    var whitespaceCheckbox = getElement('#stripWhitespace');
+
+    // Wait for each of the following to (simultaneously) complete before
+    // showing the dialog:
+    Future.wait([
+      spark.editorManager.stripWhitespaceOnSave.whenLoaded
+          .then((BoolCachedPreference pref) {
+            whitespaceCheckbox.checked = pref.value;
+      }), new Future.value().then((_) {
+        // For now, don't show the location field on Chrome OS; we always use syncFS.
+        if (_isCros()) {
+          return null;
+        } else {
+          return _showRootDirectory();
+        }
+      })
+    ]).then((_) {
       _show();
-    } else {
-      _showRootDirectory().then((_) => _show());
-    }
+      whitespaceCheckbox.onChange.listen((e) {
+        spark.editorManager.stripWhitespaceOnSave.value =
+            whitespaceCheckbox.checked;
+      });
+    });
   }
 
   Future _showRootDirectory() {

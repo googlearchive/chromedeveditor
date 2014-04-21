@@ -17,6 +17,7 @@ import 'spark.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';
+import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 
 class _TimeLogger {
@@ -40,30 +41,27 @@ class _TimeLogger {
 
 final _logger = new _TimeLogger();
 
-@initMethod
+@polymer.initMethod
 void main() {
+  polymer.Polymer.onReady.then((_) {
   _logger.logStep('Polymer initialized');
 
-  isTestMode().then((testMode) {
-    _logger.logStep('testMode retrieved');
+    isTestMode().then((testMode) {
+      _logger.logStep('testMode retrieved');
 
-    // Don't set up the zone exception handler if we're running in dev mode.
-    final Function maybeRunGuarded =
-        testMode ? (f) => f() : createSparkZone().runGuarded;
+      // Don't set up the zone exception handler if we're running in dev mode.
+      final Function maybeRunGuarded =
+          testMode ? (f) => f() : createSparkZone().runGuarded;
 
-    maybeRunGuarded(() {
-      SparkPolymer spark = new SparkPolymer._(testMode);
+      maybeRunGuarded(() {
+        SparkPolymer spark = new SparkPolymer._(testMode);
 
-      _logger.logStep('Spark created');
+        _logger.logStep('Spark created');
 
-      spark.start();
+        spark.start();
 
-      _logger.logStep('Spark started');
+        _logger.logStep('Spark started');
 
-      // NOTE: This even is unused right now, but it will be soon. For now
-      // we're just interested in its timing.
-      polymer.Polymer.onReady.then((_) {
-        _logger.logStep('Polymer.onReady fired');
         _logger.logElapsed('Total startup time');
       });
     });
@@ -184,8 +182,8 @@ class SparkPolymer extends Spark {
     statusComponent = getUIElement('#sparkStatus');
 
     // Listen for save events.
-    eventBus.onEvent('filesSaved').listen((_) {
-      statusComponent.temporaryMessage = 'all changes saved';
+    eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {
+      statusComponent.temporaryMessage = 'All changes saved';
     });
 
     // Listen for job manager events.

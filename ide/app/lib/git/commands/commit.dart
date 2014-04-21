@@ -12,6 +12,7 @@ import 'constants.dart';
 import 'index.dart';
 import 'status.dart';
 import '../file_operations.dart';
+import '../exception.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
@@ -89,14 +90,12 @@ class Commit {
           (CommitObject parentCommit) {
         String oldTree = parentCommit.treeSha;
         if (oldTree == sha) {
-          // TODO throw COMMITS_NO_CHANGES error.
-          throw "commits_no_changes";
+          throw new GitException(GitErrorConstants.GIT_COMMIT_NO_CHANGES);
         } else {
           return null;
         }
       }, onError: (e) {
-        // TODO throw error object_store_corrupted.
-        throw "object_store_corrupted";
+        throw new GitException(GitErrorConstants.GIT_OBJECT_STORE_CORRUPTED);
       });
     }
   }
