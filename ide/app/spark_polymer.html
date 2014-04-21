@@ -98,6 +98,11 @@
   </script>
   <script type="application/javascript" src="lib/mobile/android_rsa.js">
   </script>
+
+  <!-- Start Spark in a non-deployed build (running direct from Dartium). -->
+  <script type="application/dart" src="spark_bootstrap.dart"></script>
+
+  <!-- Start Spark in a deployed build. -->
   <script type="application/dart;component=1" src="spark_polymer.dart"></script>
 </body>
 
