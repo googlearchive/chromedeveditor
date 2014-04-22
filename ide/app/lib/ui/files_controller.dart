@@ -161,14 +161,8 @@ class FilesController implements TreeViewDelegate {
     return resources;
   }
   
-  void setSelection(List<Resource> resources)
-  {
-    List<String> sel = new List<String>();
-    resources.forEach((Resource r) => sel.add(r.uuid));
-    _treeView.selection.clear();
-    _treeView.selection = sel;
-  }
-
+  void setSelection(List<Resource> resources) { _treeView.selection = resources.map((r) => r.uuid); }
+  
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     Resource resource = _filesMap[nodeUID];
     FileItemCell cell = new FileItemCell(resource);
@@ -269,25 +263,27 @@ class FilesController implements TreeViewDelegate {
   
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     Folder destinationFolder = _filesMap[nodeUID] as Folder;
-    List<Future<File>> futures = new List<Future<File>>();
-    int target_len = dataTransfer.files.length;
+    List<Future<File>> futureFiles = new List<Future<File>>();
     
     for(html.File file in dataTransfer.files) {
-      html.FileReader reader = new html.FileReader();
-      reader.onLoadEnd.listen((html.ProgressEvent event) {
-        Future<File> f = destinationFolder.createNewFile(file.name);
-        f.then((File file) {
-          file.setBytes(reader.result);
-        });
-        futures.add(f);
-        if (futures.length == target_len) {
-          Future.wait(futures).then((List<File> files) {
-            setSelection(files);
-          });
-        }
-      });
-      reader.readAsArrayBuffer(file);
+      futureFiles.add(_WorkspaceFileFromHtmlFileElement(file, destinationFolder));
     }
+    Future.wait(futureFiles).then((List<File> files) {
+      setSelection(files);
+    });
+  }
+  
+  static Future<File> _WorkspaceFileFromHtmlFileElement(html.File file, Folder destination) {
+    Completer<File> c = new Completer();
+    html.FileReader reader = new html.FileReader();
+    reader.onLoadEnd.listen((html.ProgressEvent event) {
+      destination.createNewFile(file.name).then((File f) {
+        f.setBytes(reader.result);
+        c.complete(f);
+      });
+    });
+    reader.readAsArrayBuffer(file);
+    return c.future;
   }
   
   bool _isDifferentProject(List<String> nodesUIDs, String targetNodeUID) {
