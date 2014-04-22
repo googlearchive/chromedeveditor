@@ -30,6 +30,7 @@ import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
+import 'lib/platform_info.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/services.dart';
 import 'lib/scm.dart';
@@ -114,8 +115,6 @@ abstract class Spark
 
   FilesController _filesController;
 
-  PlatformInfo _platformInfo;
-
   TestDriver _testDriver;
 
   // Extensions of files that will be shown as text.
@@ -199,8 +198,6 @@ abstract class Spark
   String get appName => utils.i18n('app_name');
 
   String get appVersion => chrome.runtime.getManifest()['version'];
-
-  PlatformInfo get platformInfo => _platformInfo;
 
   /**
    * Get the currently selected [Resource].
@@ -696,33 +693,6 @@ abstract class Spark
   }
 }
 
-class PlatformInfo {
-  /**
-   * The operating system chrome is running on. One of: "mac", "win", "android",
-   * "cros", "linux", "openbsd".
-   */
-  final String os;
-
-  /**
-   * The machine's processor architecture. One of: "arm", "x86-32", "x86-64".
-   */
-  final String arch;
-
-  /**
-   * The native client architecture. This may be different from arch on some
-   * platforms. One of: "arm", "x86-32", "x86-64".
-   */
-  final String naclArch;
-
-  PlatformInfo._(this.os, this.arch, this.naclArch);
-
-  PlatformInfo.fromMap(Map m) : this._(m['os'], m['arch'], m['nacl_arch']);
-
-  String toString() => "${os}, ${arch}, ${naclArch}";
-
-  bool get isCros => os == 'cros';
-}
-
 /**
  * Used to manage the default location to create new projects.
  *
@@ -776,7 +746,7 @@ class ProjectLocationManager {
     }
 
     // On Chrome OS, use the sync filesystem.
-    if (_isCros() && _workspace.syncFsIsAvailable) {
+    if (PlatformInfo.isCros && _workspace.syncFsIsAvailable) {
       return chrome.syncFileSystem.requestFileSystem().then((fs) {
         var entry = fs.root;
         return new LocationResult(entry, entry, true);
@@ -866,15 +836,11 @@ class _SparkSetupParticipant extends LifecycleParticipant {
   _SparkSetupParticipant(this.spark);
 
   Future applicationStarting(Application application) {
-    // get platform info
-    return chrome.runtime.getPlatformInfo().then((Map m) {
-      spark._platformInfo = new PlatformInfo.fromMap(m);
-      return spark.workspace.restore().then((value) {
-        if (spark.workspace.getFiles().length == 0) {
-          // No files, just focus the editor.
-          spark.aceManager.focus();
-        }
-      });
+    return spark.workspace.restore().then((value) {
+      if (spark.workspace.getFiles().length == 0) {
+        // No files, just focus the editor.
+        spark.aceManager.focus();
+      }
     }).then((_) {
       return ProjectLocationManager.restoreManager(spark.localPrefs,
           spark.workspace).then((manager) {
@@ -913,10 +879,6 @@ Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
     completer.complete(res.entry);
   }).catchError((e) => completer.complete(null));
   return completer.future;
-}
-
-bool _isCros() {
-  return (SparkModel.instance as Spark).platformInfo.isCros;
 }
 
 /**
@@ -1493,13 +1455,11 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
   ResourceRefreshAction(Spark spark) : super(
       spark, "resource-refresh", "Refresh") {
     // On Chrome OS, bind to the dedicated refresh key.
-    chrome.runtime.getPlatformInfo().then((Map m) {
-      if (new PlatformInfo.fromMap(m).isCros) {
-        addBinding('f5', linuxBinding: 'f3');
-      } else {
-        addBinding('f5');
-      }
-    });
+    if (PlatformInfo.isCros) {
+      addBinding('f5', linuxBinding: 'f3');
+    } else {
+      addBinding('f5');
+    }
   }
 
   void _invoke([context]) {
@@ -2623,7 +2583,7 @@ class SettingsAction extends SparkActionWithDialog {
             whitespaceCheckbox.checked = pref.value;
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
-        if (_isCros()) {
+        if (PlatformInfo.isCros) {
           return null;
         } else {
           return _showRootDirectory();

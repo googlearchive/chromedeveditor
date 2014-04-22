@@ -17,6 +17,7 @@ import 'lib/actions.dart';
 import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
+import 'lib/platform_info.dart';
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -44,23 +45,23 @@ void main() {
   polymer.Polymer.onReady.then((_) {
   _logger.logStep('Polymer initialized');
 
-    isTestMode().then((testMode) {
-      _logger.logStep('testMode retrieved');
+    PlatformInfo.init().then((_) {
+      isTestMode().then((testMode) {
+        _logger.logStep('testMode retrieved');
 
-      // Don't set up the zone exception handler if we're running in dev mode.
-      final Function maybeRunGuarded =
-          testMode ? (f) => f() : createSparkZone().runGuarded;
+        // Don't set up the zone exception handler if we're running in dev mode.
+        final Function maybeRunGuarded =
+            testMode ? (f) => f() : createSparkZone().runGuarded;
 
-      maybeRunGuarded(() {
-        SparkPolymer spark = new SparkPolymer._(testMode);
+        maybeRunGuarded(() {
+          SparkPolymer spark = new SparkPolymer._(testMode);
+          _logger.logStep('Spark created');
 
-        _logger.logStep('Spark created');
+          spark.start();
+          _logger.logStep('Spark started');
 
-        spark.start();
-
-        _logger.logStep('Spark started');
-
-        _logger.logElapsed('Total startup time');
+          _logger.logElapsed('Total startup time');
+        });
       });
     });
   });
@@ -275,7 +276,7 @@ class _AppSetupParticipant extends LifecycleParticipant {
    */
   Future applicationStarted(Application application) {
     SparkPolymer app = application;
-    app._ui.chromeOS = app.platformInfo.isCros;
+    app._ui.chromeOS = PlatformInfo.isCros;
     return new Future.value();
   }
 }
