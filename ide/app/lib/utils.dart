@@ -60,10 +60,6 @@ String toTitleCase(String s) {
   }).join(' ');
 }
 
-bool isMac() => _platform().indexOf('mac') != -1;
-bool isWin() => _platform().indexOf('win') != -1;
-bool isLinuxLike() => !isMac() && !isWin();
-
 AudioContext _ctx;
 
 void beep() {

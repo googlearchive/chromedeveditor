@@ -10,6 +10,7 @@ library spark.actions;
 import 'dart:async';
 import 'dart:html';
 
+import 'platform_info.dart';
 import 'utils.dart';
 
 /**
@@ -159,37 +160,46 @@ class ActionManager {
 }
 
 /**
- * A [Map] to convert from the textual description of a key to its key code.
- */
-Map<String, int> _bindingMap = {
-  "META": KeyCode.META,
-  "CTRL": isMac() ? KeyCode.META : KeyCode.CTRL,
-  "MACCTRL": KeyCode.CTRL,
-  "ALT": KeyCode.ALT,
-  "SHIFT": KeyCode.SHIFT,
-
-  "F1": KeyCode.F1,
-  "F2": KeyCode.F2,
-  "F3": KeyCode.F3,
-  "F4": KeyCode.F4,
-  "F5": KeyCode.F5,
-  "F6": KeyCode.F6,
-  "F7": KeyCode.F7,
-  "F8": KeyCode.F8,
-  "F9": KeyCode.F9,
-  "F10": KeyCode.F10,
-  "F11": KeyCode.F11,
-  "F12": KeyCode.F12,
-
-  "TAB": KeyCode.TAB,
-  "[" : KeyCode.OPEN_SQUARE_BRACKET,
-  "]" : KeyCode.CLOSE_SQUARE_BRACKET
-};
-
-/**
  * This class represents a key and a set of key modifiers.
  */
 class KeyBinding {
+  static Map<String, int> __bindingMap;
+
+  /**
+   * A [Map] to convert from the textual description of a key to its key code.
+   */
+  static Map<String, int> get _bindingMap {
+    // NOTE: Initialize the map dynamically because it uses PlatformInfo.isMac,
+    // which is not available immediately upon startup.
+    if (__bindingMap == null) {
+      __bindingMap = {
+          "META": KeyCode.META,
+          "CTRL": PlatformInfo.isMac ? KeyCode.META : KeyCode.CTRL,
+          "MACCTRL": KeyCode.CTRL,
+          "ALT": KeyCode.ALT,
+          "SHIFT": KeyCode.SHIFT,
+
+          "F1": KeyCode.F1,
+          "F2": KeyCode.F2,
+          "F3": KeyCode.F3,
+          "F4": KeyCode.F4,
+          "F5": KeyCode.F5,
+          "F6": KeyCode.F6,
+          "F7": KeyCode.F7,
+          "F8": KeyCode.F8,
+          "F9": KeyCode.F9,
+          "F10": KeyCode.F10,
+          "F11": KeyCode.F11,
+          "F12": KeyCode.F12,
+
+          "TAB": KeyCode.TAB,
+          "[" : KeyCode.OPEN_SQUARE_BRACKET,
+          "]" : KeyCode.CLOSE_SQUARE_BRACKET
+      };
+    }
+    return __bindingMap;
+  }
+
   Set<int> modifiers = new Set();
   int keyCode;
 
@@ -262,7 +272,7 @@ class KeyBinding {
 
     desc.add(_descriptionOf(keyCode));
 
-    if (isMac() && modifiers.length == 1 && modifiers.first == KeyCode.META) {
+    if (PlatformInfo.isMac && modifiers.length == 1 && modifiers.first == KeyCode.META) {
       return desc.join();
     } else {
       return desc.join('+');
@@ -279,7 +289,7 @@ class KeyBinding {
 
   String _descriptionOf(int code) {
     if (code == KeyCode.META) {
-      if (isMac()) {
+      if (PlatformInfo.isMac) {
         return '⌘'; // "Cmd";
       } else {
         return "Meta";
@@ -292,7 +302,7 @@ class KeyBinding {
 
     for (String key in _bindingMap.keys) {
       if (code == _bindingMap[key]) {
-        return _toTitleCase(key);
+        return toTitleCase(key);
       }
     }
 
@@ -330,11 +340,11 @@ abstract class Action {
    */
   void addBinding(String defaultBinding,
                   {String macBinding, String linuxBinding, String winBinding}) {
-    if (macBinding != null && isMac()) {
+    if (macBinding != null && PlatformInfo.isMac) {
       bindings.add(new KeyBinding(macBinding));
-    } else if (winBinding != null && isWin()) {
+    } else if (winBinding != null && PlatformInfo.isWin) {
       bindings.add(new KeyBinding(winBinding));
-    } else if (linuxBinding != null && isLinuxLike()) {
+    } else if (linuxBinding != null && PlatformInfo.isLinux) {
       bindings.add(new KeyBinding(linuxBinding));
     } else {
       bindings.add(new KeyBinding(defaultBinding));

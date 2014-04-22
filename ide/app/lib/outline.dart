@@ -16,52 +16,37 @@ class Outline {
   StreamSubscription _currentOutlineOperation;
   Completer _buildCompleter;
 
+  html.Element _container;
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
-  html.DivElement _outlineScrollableDiv;
-  html.DivElement _outlineContentDiv;
 
   services.AnalyzerService analyzer;
 
-  List<OutlineTopLevelItem> children = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
 
-  Outline(services.Services services, this._outlineDiv) {
+  Outline(services.Services services, this._container) {
     analyzer = services.getService("analyzer");
 
-    // TODO(ericarnold): This should be done in polymer.
-    _outlineDiv.id = "outline";
+    // Use template to create the UI of outline.
+    html.DocumentFragment template =
+        (html.querySelector('#outline-template') as
+        html.TemplateElement).content;
+    html.DocumentFragment templateClone = template.clone(true);
+    _outlineDiv = templateClone.querySelector('#outline');
+    _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
+        event.stopPropagation());
+    _rootList = templateClone.querySelector('#outline ul');
+    template =
+        (html.querySelector('#outline-button-template') as
+        html.TemplateElement).content;
+    templateClone = template.clone(true);
+    html.ButtonElement button =
+        templateClone.querySelector('#toggleOutlineButton');
+    button.onClick.listen((e) => _toggle());
 
-    _outlineContentDiv = new html.DivElement()
-        ..id = "outlineContent";
-
-    _outlineScrollableDiv = new html.DivElement()
-        ..id = "outlineScrollable"
-        ..onMouseWheel.listen((html.MouseEvent event) {
-          event.stopPropagation();
-        });
-
-    _outlineContentDiv.append(_outlineScrollableDiv);
-    _outlineDiv.append(_outlineContentDiv);
-
-    html.SpanElement showGlyph = new html.SpanElement()
-        ..classes.add('glyphicon')
-        ..classes.add('glyphicon-list')
-        ..id = "showOutlineGlyph";
-    html.SpanElement hideGlyph = new html.SpanElement()
-        ..classes.add('glyphicon')
-        ..classes.add('glyphicon-play')
-        ..id = "hideOutlineGlyph";
-
-    html.ButtonElement toggleButton = new html.ButtonElement();
-    toggleButton = new html.ButtonElement()
-        ..id = "toggleOutlineButton"
-        ..append(hideGlyph)
-        ..append(showGlyph)
-        ..onClick.listen((e) => _toggle());
-
-    _outlineDiv.append(toggleButton);
+    _container.children.add(_outlineDiv);
+    _container.children.add(button);
   }
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
@@ -96,16 +81,7 @@ class Outline {
   }
 
   void _populate(services.Outline outline) {
-    // TODO(ericarnold): Is there anything else that needs to be done to
-    //    ensure there are no memory leaks?
-    children = [];
-    if (_rootList != null) {
-      _rootList.remove();
-    }
-
-    _rootList = new html.UListElement();
-    _outlineScrollableDiv.append(_rootList);
-
+    _rootList.children.clear();
     for (services.OutlineTopLevelEntry data in outline.entries) {
       _create(data);
     }
@@ -133,7 +109,6 @@ class Outline {
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
     _rootList.append(item.element);
     item.onClick.listen((event) => childSelectedController.add(item));
-    children.add(item);
     return item;
   }
 
