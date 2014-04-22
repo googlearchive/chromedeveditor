@@ -245,6 +245,40 @@ class AnalyzerServiceImpl extends ServiceImpl {
                 (analyzer.AnalyzerResult result) {
           return event.createReponse(_getOutline(result.ast).toMap());
         });
+      case "getDeclarationFor":
+        analyzer.ProjectContext context = _contexts[event.data['contextId']];
+        String fileUuid = event.data['fileUuid'];
+        analyzer.FileSource source = context.getSource(fileUuid);
+
+        return new Future.value(event.createErrorReponse('no soup'));
+
+//        var unit = context.context.parseCompilationUnit(source);
+//        int offset = event.data['offset'];
+//        analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
+//        if (foundNode is analyzer.SimpleIdentifier) {
+//          var element = analyzer.ElementLocator.locate(foundNode);
+//          foundNode = foundNode.parent;
+//          if (foundNode is analyzer.MethodInvocation) {
+//            element = analyzer.ElementLocator.locate(foundNode);
+//            analyzer.MethodInvocation inv = foundNode;
+//            inv.target;
+//            inv.realTarget;
+//          } else if (foundNode is analyzer.TypeName) {
+//          } else if (foundNode is analyzer.PrefixedIdentifier) {
+//            analyzer.PrefixedIdentifier prefixedIdentifier = foundNode;
+//            foundNode = prefixedIdentifier.parent;
+//          }
+//        }
+
+//        analyzer.NodeLocator locator = new analyzer.NodeLocator.con2(offset, offset + 1);
+//        analyzer.Element element = analyzer.NodeLocator.(
+//        /*%TRACE3*/ print("""(4> 4/18/14): element: ${element.kind}"""); // TRACE%
+//        var codeString = event.data['string'];
+//        return analyzer.analyzeString(
+//            dartSdk, codeString, performResolution: false).then(
+//                (analyzer.AnalyzerResult result) {
+//          return event.createReponse(_getOutline(result.ast).toMap());
+//        });
       default:
         return super.handleEvent(event);
     }
@@ -340,7 +374,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           if (member is analyzer.MethodDeclaration) {
             if (member.isGetter || member.isSetter) {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineAccessor(member.name.name, member.isSetter), 
+                  new OutlineAccessor(member.name.name, member.isSetter),
                   member.name));
             } else {
               outlineClass.members.add(_populateOutlineEntry(
@@ -392,6 +426,18 @@ class AnalyzerServiceImpl extends ServiceImpl {
         .then((String contents) =>
             analyzer.analyzeString(sdk, contents, performResolution: false))
         .then((analyzer.AnalyzerResult result) => result);
+  }
+}
+
+class DeclarationVisitor extends analyzer.GeneralizingAstVisitor {
+  int offset;
+
+  visitMethodDeclaration(analyzer.MethodDeclaration node) {
+    /*%TRACE3*/ print("""(4> 4/20/14): node: ${node}"""); // TRACE%
+  }
+
+  visitMethodInvocation(analyzer.MethodInvocation node) {
+    /*%TRACE3*/ print("""(4> 4/20/14): node: ${node}"""); // TRACE%
   }
 }
 

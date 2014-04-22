@@ -156,6 +156,34 @@ class ErrorSeverity {
 }
 
 /**
+ * Defines an object containing information about a declaration
+ */
+class Declaration {
+  String name;
+  String doc;
+  int startOffset;
+  int endOffset;
+
+  Declaration([this.name, this.doc, this.startOffset, this.endOffset]);
+
+  Declaration.fromMap(Map mapData) {
+    name = mapData["name"];
+    doc = mapData["doc"];
+    startOffset = mapData["startOffset"];
+    endOffset = mapData["endOffset"];
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+      "doc": doc,
+      "startOffset": startOffset,
+      "endOffset": endOffset,
+    };
+  }
+}
+
+/**
  * Defines an outline containing instances of [OutlineTopLevelEntry].
  */
 class Outline {

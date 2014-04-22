@@ -24,7 +24,7 @@ import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
-import 'services.dart' as services;
+import 'services.dart' as svc;
 import 'outline.dart';
 
 export 'package:ace/ace.dart' show EditSession;
@@ -222,8 +222,9 @@ class AceManager {
 
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
+  svc.AnalyzerService _analysisService;
 
-  AceManager(this.parentElement, this.delegate, services.Services services) {
+  AceManager(this.parentElement, this.delegate, svc.Services services) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -232,10 +233,24 @@ class AceManager {
     _aceEditor.readOnly = true;
     _aceEditor.fadeFoldWidgets = true;
 
+    _analysisService =  services.getService("analyzer");
+
     // Enable code completion.
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
+
+    // Declaration linking hotkey
+    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
+        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
+          int offset = currentSession.document.positionToIndex(
+              _aceEditor.cursorPosition);
+          _analysisService.getDeclarationFor(currentFile, offset).then(
+              (svc.Declaration declaration) {
+            print(declaration);
+          });
+//          _aceEditor.cursorPosition.column
+        }));
 
     // Fallback
     theme = THEMES[0];
@@ -248,7 +263,7 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    outline = new Outline(services, parentElement /*_outlineDiv*/);
+    outline = new Outline(services, parentElement);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.startOffset);

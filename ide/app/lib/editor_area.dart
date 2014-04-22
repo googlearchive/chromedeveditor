@@ -37,10 +37,12 @@ abstract class EditorTab extends Tab {
 class AceEditorTab extends EditorTab {
   final Editor editor;
   final EditorProvider provider;
+  bool _canBeReplaced = true;
 
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
+    editor.onModification.listen((_) => _canBeReplaced = false);
   }
 
   void activate() {
@@ -52,6 +54,8 @@ class AceEditorTab extends EditorTab {
   void focus() => editor.focus();
 
   void resize() => editor.resize();
+
+  bool get canBeReplaced => _canBeReplaced;
 
   void fileContentsChanged() => editor.fileContentsChanged();
 }
@@ -170,6 +174,11 @@ class EditorArea extends TabView {
 
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
+
+      if ((selectedTab is AceEditorTab) &&
+          !(selectedTab as AceEditorTab).canBeReplaced) {
+        replaceCurrent = false;
+      }
 
       Editor editor = editorProvider.createEditorForFile(file);
       if (editor is ace.TextEditor) {
