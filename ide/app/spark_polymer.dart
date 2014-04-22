@@ -10,8 +10,8 @@ import 'dart:html';
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/spark_button/spark_button.dart';
-import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
+import 'package:spark_widgets/spark_button/spark_button.dart';
+import 'package:spark_widgets/spark_modal/spark_modal.dart';
 
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
@@ -69,7 +69,7 @@ void main() {
 }
 
 class SparkPolymerDialog implements SparkDialog {
-  SparkOverlay _dialogElement;
+  SparkModal _dialogElement;
 
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement {

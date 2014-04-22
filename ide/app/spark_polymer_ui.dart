@@ -8,9 +8,7 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
-
-// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/common/spark_widget.dart';
+import 'package:spark_widgets/common/spark_widget.dart';
 
 import 'spark_model.dart';
 import 'lib/workspace.dart';
@@ -68,14 +66,14 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void bindKeybindingDesc() {
-    final items = getShadowDomElement('#mainMenu').querySelectorAll(
-        'spark-menu-item');
-    items.forEach((menuItem) {
-      final actionId = menuItem.attributes['action-id'];
-      final action = SparkModel.instance.actionManager.getAction(actionId);
-      action.bindings.forEach(
-          (keyBind) => menuItem.description = keyBind.getDescription());
-    });
+//    final items = getShadowDomElement('#mainMenu').querySelectorAll(
+//        'spark-menu-item');
+//    items.forEach((menuItem) {
+//      final actionId = menuItem.attributes['action-id'];
+//      final action = SparkModel.instance.actionManager.getAction(actionId);
+//      action.bindings.forEach(
+//          (keyBind) => menuItem.description = keyBind.getDescription());
+//    });
   }
 
   void onResetGit() {
