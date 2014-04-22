@@ -8,8 +8,6 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart' as polymer;
-
-// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
 
