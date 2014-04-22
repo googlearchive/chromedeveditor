@@ -160,10 +160,13 @@ class FilesController implements TreeViewDelegate {
      });
     return resources;
   }
-  void setSelection(List<String> nodeUIDs)
+  
+  void setSelection(List<Resource> resources)
   {
+    List<String> sel = new List<String>();
+    resources.forEach((Resource r) => sel.add(r.uuid));
     _treeView.selection.clear();
-    _treeView.selection = nodeUIDs;
+    _treeView.selection = sel;
   }
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
@@ -266,39 +269,25 @@ class FilesController implements TreeViewDelegate {
   
   void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
     Folder destinationFolder = _filesMap[nodeUID] as Folder;
-    List<String> new_selection = new List<String>();
+    List<Future<File>> futures = new List<Future<File>>();
+    int target_len = dataTransfer.files.length;
     
     for(html.File file in dataTransfer.files) {
-      new_selection.add("${nodeUID}/${file.name}");
       html.FileReader reader = new html.FileReader();
       reader.onLoadEnd.listen((html.ProgressEvent event) {
-        destinationFolder.createNewFile(file.name).then((File file) {
+        Future<File> f = destinationFolder.createNewFile(file.name);
+        f.then((File file) {
           file.setBytes(reader.result);
         });
+        futures.add(f);
+        if (futures.length == target_len) {
+          Future.wait(futures).then((List<File> files) {
+            setSelection(files);
+          });
+        }
       });
       reader.readAsArrayBuffer(file);
     }
-    
-    //wait and listen for all files to be available after calling destinationFolder.createNewFile(...)
-    new Timer.periodic(const Duration(milliseconds: 100),  (Timer t) {
-      List<String> existing_nuids = new List<String>();
-      Iterable<Resource> child_files = destinationFolder.getChildren().where((Resource e) => e.isFile);
-      for(Resource child_file in child_files) {
-        existing_nuids.add(child_file.uuid);
-      }
-      
-      bool ready = true;
-      new_selection.forEach((String nuid) {
-        if(!existing_nuids.contains(nuid)) {
-          ready = false;
-        }
-      });
-      
-      if(ready) {
-        setSelection(new_selection);
-        t.cancel();
-      }
-    });
   }
   
   bool _isDifferentProject(List<String> nodesUIDs, String targetNodeUID) {
