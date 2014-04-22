@@ -224,7 +224,7 @@ class AceManager {
   workspace.File currentFile;
 
   html.DivElement _outlineDiv = new html.DivElement();
-  svc.AnalyzerService analysisService;
+  svc.AnalyzerService _analysisService;
 
   AceManager(this.parentElement, this.delegate, svc.Services services) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
@@ -234,19 +234,23 @@ class AceManager {
     _aceEditor.printMarginColumn = 80;
     _aceEditor.readOnly = true;
     _aceEditor.fadeFoldWidgets = true;
-    analysisService =  services.getService("analyzer");
+
+    _analysisService =  services.getService("analyzer");
 
     // Enable code completion.
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
-    
+
     // Declaration linking hotkey
     _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
         const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
           int offset = currentSession.document.positionToIndex(
               _aceEditor.cursorPosition);
-          analysisService.getDeclarationFor(currentFile, offset);
+          _analysisService.getDeclarationFor(currentFile, offset).then(
+              (svc.Declaration declaration) {
+            print(declaration);
+          });
 //          _aceEditor.cursorPosition.column
         }));
 

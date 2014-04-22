@@ -39,34 +39,32 @@ class _TimeLogger {
   }
 }
 
+@polymer.initMethod
 void main() {
   final logger = new _TimeLogger();
+  logger.logStep('Polymer initialized');
 
   isTestMode().then((testMode) {
     logger.logStep('testMode retrieved');
 
-    polymer.initPolymer().run(() {
-      logger.logStep('Polymer initialized');
+    // Don't set up the zone exception handler if we're running in dev mode.
+    final Function maybeRunGuarded =
+        testMode ? (f) => f() : createSparkZone().runGuarded;
 
-      // Don't set up the zone exception handler if we're running in dev mode.
-      final Function maybeRunGuarded =
-          testMode ? (f) => f() : createSparkZone().runGuarded;
+    maybeRunGuarded(() {
+      SparkPolymer spark = new SparkPolymer._(testMode);
 
-      maybeRunGuarded(() {
-        SparkPolymer spark = new SparkPolymer._(testMode);
+      logger.logStep('Spark created');
 
-        logger.logStep('Spark created');
+      spark.start();
 
-        spark.start();
+      logger.logStep('Spark started');
 
-        logger.logStep('Spark started');
-
-        // NOTE: This even is unused right now, but it will be soon. For now
-        // we're just interested in its timing.
-        polymer.Polymer.onReady.then((_) {
-          logger.logStep('Polymer.onReady fired');
-          logger.logElapsed('Total startup time');
-        });
+      // NOTE: This event is unused right now, but it will be soon. For now
+      // we're just interested in its timing.
+      polymer.Polymer.onReady.then((_) {
+        logger.logStep('Polymer.onReady fired');
+        logger.logElapsed('Total startup time');
       });
     });
   });
@@ -186,7 +184,7 @@ class SparkPolymer extends Spark {
     statusComponent = getUIElement('#sparkStatus');
 
     // Listen for save events.
-    eventBus.onEvent(BusEventType.FILES_SAVED).listen((_) {
+    eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {
       statusComponent.temporaryMessage = 'All changes saved';
     });
 
@@ -222,6 +220,9 @@ class SparkPolymer extends Spark {
     _bindButtonToAction('newProject', 'project-new');
     _bindButtonToAction('runButton', 'application-run');
     _bindButtonToAction('pushButton', 'application-push');
+
+    InputElement input = getUIElement('#search');
+    input.onInput.listen((e) => filterFilesList(input.value));
   }
 
   @override

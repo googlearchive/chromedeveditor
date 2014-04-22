@@ -248,40 +248,30 @@ class AnalyzerServiceImpl extends ServiceImpl {
       case "getDeclarationFor":
         analyzer.ProjectContext context = _contexts[event.data['contextId']];
         String fileUuid = event.data['fileUuid'];
-        /*%TRACE3*/ print("""(4> 4/18/14): fileUuid: ${fileUuid}"""); // TRACE%
         analyzer.FileSource source = context.getSource(fileUuid);
-        var unit = context.context.parseCompilationUnit(source);
-        /*%TRACE3*/ print("""(4> 4/18/14): unit: ${unit.toSource()}"""); // TRACE%
-        int offset = event.data['offset'];
-        analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
-        if (foundNode is analyzer.SimpleIdentifier) {
-          var element = analyzer.ElementLocator.locate(foundNode);
-          /*%TRACE3*/ print("""(4> 4/20/14): element: ${element}"""); // TRACE%
-          /*%TRACE3*/ print("""(4> 4/20/14): foundNode.bestElement: ${(foundNode as analyzer.SimpleIdentifier).bestElement}"""); // TRACE%
-          /*%TRACE3*/ print("""(4> 4/20/14): foundNode: ${foundNode.runtimeType}"""); // TRACE%
-          foundNode = foundNode.parent;
-          /*%TRACE3*/ print("""(4> 4/20/14): foundNode: ${foundNode.runtimeType}"""); // TRACE%
-          if (foundNode is analyzer.MethodInvocation) {
-            element = analyzer.ElementLocator.locate(foundNode);
-            /*%TRACE3*/ print("""(4> 4/20/14): element: ${element}"""); // TRACE%
-            /*%TRACE3*/ print("(4> 4/20/14): foundNode is analyzer.MethodInvocation!"); // TRACE%
-            /*%TRACE3*/ print("""(4> 4/20/14): foundNode.bestElement: ${(foundNode as analyzer.MethodInvocation).bestType}"""); // TRACE%
-            analyzer.MethodInvocation inv = foundNode;
-            inv.target;
-            inv.realTarget;
-            /*%TRACE3*/ print("""(4> 4/20/14): inv.target: ${inv.target}"""); // TRACE%
-          } else if (foundNode is analyzer.TypeName) {
-          } else if (foundNode is analyzer.PrefixedIdentifier) {
-            analyzer.PrefixedIdentifier prefixedIdentifier = foundNode;
-            /*%TRACE3*/ print("""(4> 4/20/14): ((foundNode as analyzer.PrefixedIdentifier).bestElement).runtimeType: ${prefixedIdentifier.bestElement}"""); // TRACE%
-            foundNode = prefixedIdentifier.parent;
-            /*%TRACE3*/ print("""(4> 4/20/14): foundNode: ${foundNode.runtimeType}"""); // TRACE%
-          }
-        }
+
+        return new Future.value(event.createErrorReponse('no soup'));
+
+//        var unit = context.context.parseCompilationUnit(source);
+//        int offset = event.data['offset'];
+//        analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
+//        if (foundNode is analyzer.SimpleIdentifier) {
+//          var element = analyzer.ElementLocator.locate(foundNode);
+//          foundNode = foundNode.parent;
+//          if (foundNode is analyzer.MethodInvocation) {
+//            element = analyzer.ElementLocator.locate(foundNode);
+//            analyzer.MethodInvocation inv = foundNode;
+//            inv.target;
+//            inv.realTarget;
+//          } else if (foundNode is analyzer.TypeName) {
+//          } else if (foundNode is analyzer.PrefixedIdentifier) {
+//            analyzer.PrefixedIdentifier prefixedIdentifier = foundNode;
+//            foundNode = prefixedIdentifier.parent;
+//          }
+//        }
 
 //        analyzer.NodeLocator locator = new analyzer.NodeLocator.con2(offset, offset + 1);
 //        analyzer.Element element = analyzer.NodeLocator.(
-//            unit, event.data['offset']);
 //        /*%TRACE3*/ print("""(4> 4/18/14): element: ${element.kind}"""); // TRACE%
 //        var codeString = event.data['string'];
 //        return analyzer.analyzeString(
@@ -289,7 +279,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
 //                (analyzer.AnalyzerResult result) {
 //          return event.createReponse(_getOutline(result.ast).toMap());
 //        });
-        return new Future.value();
       default:
         return super.handleEvent(event);
     }
@@ -354,7 +343,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }
 
     Future<ServiceActionEvent> disposeContext(ServiceActionEvent request) {
-      /*%TRACE3*/ print("(4> 4/18/14): disposeContext!"); // TRACE%
       String id = request.data['contextId'];
       _contexts.remove(id);
       return new Future.value(request.createReponse());
@@ -451,9 +439,7 @@ class DeclarationVisitor extends analyzer.GeneralizingAstVisitor {
   visitMethodInvocation(analyzer.MethodInvocation node) {
     /*%TRACE3*/ print("""(4> 4/20/14): node: ${node}"""); // TRACE%
   }
-
 }
-
 
 /**
  * Special service for calling back to chrome.

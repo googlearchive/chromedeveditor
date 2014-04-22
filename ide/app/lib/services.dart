@@ -199,11 +199,7 @@ class AnalyzerService extends Service {
 
   Future<Declaration> getDeclarationFor(File file, int offset) {
     ProjectAnalyzer projectAnalyzer = createProjectAnalyzer(file.project);
-    projectAnalyzer.getDeclarationFor(file, offset);
-//    return _sendAction("getDeclarationFor", args)
-//        .then((ServiceActionEvent result) {
-//          return new Declaration.fromMap(result.data);
-//        });
+    return projectAnalyzer.getDeclarationFor(file, offset);
   }
 
   ProjectAnalyzer createProjectAnalyzer(Project project) {
@@ -292,11 +288,9 @@ class ProjectAnalyzer {
 
     return analyzerService._sendAction('getDeclarationFor', args)
         .then((ServiceActionEvent event) {
-      if (event.error) {
-        throw event.getErrorMessage();
-      } else {
-        return new Declaration.fromMap(event.data);
-      }
+      if (event.error) throw event.error;
+
+      return new Declaration.fromMap(event.data);
     });
   }
 
