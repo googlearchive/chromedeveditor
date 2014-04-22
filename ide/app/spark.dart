@@ -12,9 +12,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
-
-// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/spark_status/spark_status.dart';
+import 'package:spark_widgets/spark_status/spark_status.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';

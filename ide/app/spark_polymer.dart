@@ -10,8 +10,8 @@ import 'dart:html';
 import 'package:polymer/polymer.dart' as polymer;
 
 // BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/spark_button/spark_button.dart';
-import 'packages/spark_widgets/spark_overlay/spark_overlay.dart';
+import 'package:spark_widgets/spark_button/spark_button.dart';
+import 'package:spark_widgets/spark_modal/spark_modal.dart';
 
 import 'spark.dart';
 import 'spark_polymer_ui.dart';
@@ -39,39 +39,37 @@ class _TimeLogger {
   }
 }
 
+final _logger = new _TimeLogger();
+
 @polymer.initMethod
 void main() {
-  final logger = new _TimeLogger();
-  logger.logStep('Polymer initialized');
+  polymer.Polymer.onReady.then((_) {
+  _logger.logStep('Polymer initialized');
 
-  isTestMode().then((testMode) {
-    logger.logStep('testMode retrieved');
+    isTestMode().then((testMode) {
+      _logger.logStep('testMode retrieved');
 
-    // Don't set up the zone exception handler if we're running in dev mode.
-    final Function maybeRunGuarded =
-        testMode ? (f) => f() : createSparkZone().runGuarded;
+      // Don't set up the zone exception handler if we're running in dev mode.
+      final Function maybeRunGuarded =
+          testMode ? (f) => f() : createSparkZone().runGuarded;
 
-    maybeRunGuarded(() {
-      SparkPolymer spark = new SparkPolymer._(testMode);
+      maybeRunGuarded(() {
+        SparkPolymer spark = new SparkPolymer._(testMode);
 
-      logger.logStep('Spark created');
+        _logger.logStep('Spark created');
 
-      spark.start();
+        spark.start();
 
-      logger.logStep('Spark started');
+        _logger.logStep('Spark started');
 
-      // NOTE: This event is unused right now, but it will be soon. For now
-      // we're just interested in its timing.
-      polymer.Polymer.onReady.then((_) {
-        logger.logStep('Polymer.onReady fired');
-        logger.logElapsed('Total startup time');
+        _logger.logElapsed('Total startup time');
       });
     });
   });
 }
 
 class SparkPolymerDialog implements SparkDialog {
-  SparkOverlay _dialogElement;
+  SparkModal _dialogElement;
 
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement {
