@@ -23,13 +23,13 @@ fi
 
 # Run tests the Dart version of the app.
 if [ "$HAS_DARTIUM" = "true" ]; then
-  dart tool/test_runner.dart --dartium --verbose
+  dart tool/test_runner.dart --dartium
 fi
 
 # Run tests on the dart2js version of the app.
 if [ "$DRONE" = "true" ]; then
   # TODO: For now, dartium is a stand-in for chrome on drone.io.
-  dart tool/test_runner.dart --dartium --appPath=build/deploy-out/web --verbose
+  dart tool/test_runner.dart --dartium --appPath=build/deploy-out/web
 else
   dart tool/test_runner.dart --chrome
 fi
