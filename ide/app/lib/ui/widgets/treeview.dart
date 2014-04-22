@@ -49,6 +49,10 @@ class TreeView implements ListViewDelegate {
   TreeViewCell _currentDragOverCell;
   // Whether the user can drag a cell.
   bool draggingEnabled = false;
+  // Timer to expand cell on dragover
+  Timer _pendingExpansionTimer;
+  // nodeUID associated with above timer
+  String _pendingExpansionUID;
   // Unique identifier of the tree.
   String _uuid;
 
@@ -67,6 +71,8 @@ class TreeView implements ListViewDelegate {
     _listView = new ListView(element, this);
     _rows = null;
     _rowsMap = null;
+    _pendingExpansionTimer = null;
+    _pendingExpansionUID = null;
     reloadData();
   }
 
@@ -439,9 +445,15 @@ class TreeView implements ListViewDelegate {
       }
       if (cell != null) {
         cell.dragOverlayVisible = true;
-   
-        //expand cell if it's a pausing drag hover
-        new Timer(const Duration(milliseconds: 1000), () {
+        
+        if(_pendingExpansionUID != cell.nodeUID) {
+          if(_pendingExpansionTimer != null) {
+            _pendingExpansionTimer.cancel();
+          }
+        }
+        //queue cell for expanding if it's a pausing drag hover
+        _pendingExpansionUID = cell.nodeUID;
+        _pendingExpansionTimer = new Timer(const Duration(milliseconds: 1000), () {
           if(_currentDragOverCell != null) {
             if(nodeUID == _currentDragOverCell.nodeUID) {
               if(!isNodeExpanded(nodeUID)) {
@@ -449,7 +461,7 @@ class TreeView implements ListViewDelegate {
               }
             } 
           }
-        });
+        });        
       }
       _currentDragOverCell = cell;
     }
@@ -498,6 +510,31 @@ class TreeView implements ListViewDelegate {
       childIndex--;
     }
 
+    return null;
+  }
+  
+  String getPrevSiblingUuID(String selfUuid) {
+    int selfIndex = _rows.indexOf(_rowsMap[selfUuid]);
+    if(selfIndex != -1) {
+      int selfLevel = _rows[selfIndex].level;
+      for(int i = selfIndex -1; i >= 0; i--) {
+        if(_rows[i].level == selfLevel) {
+          return _rows[i].nodeUID;
+        }
+      }
+    }
+    return null;
+  }
+  String getNextSiblingUuID(String selfUuid) {
+    int selfIndex = _rows.indexOf(_rowsMap[selfUuid]);
+    if(selfIndex != -1) {
+      int selfLevel = _rows[selfIndex].level;
+      for(int i = selfIndex + 1; i < _rows.length; i++) {
+        if(_rows[i].level == selfLevel) {
+          return _rows[i].nodeUID;
+        }
+      }
+    }
     return null;
   }
 
