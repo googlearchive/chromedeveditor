@@ -223,8 +223,6 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
 
-  html.DivElement _outlineDiv = new html.DivElement();
-
   AceManager(this.parentElement, this.delegate, services.Services services) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
@@ -250,8 +248,7 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    parentElement.children.add(_outlineDiv);
-    outline = new Outline(services, _outlineDiv);
+    outline = new Outline(services, parentElement /*_outlineDiv*/);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.startOffset);
