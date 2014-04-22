@@ -197,6 +197,11 @@ class AnalyzerService extends Service {
     });
   }
 
+  Future<Declaration> getDeclarationFor(File file, int offset) {
+    ProjectAnalyzer projectAnalyzer = createProjectAnalyzer(file.project);
+    return projectAnalyzer.getDeclarationFor(file, offset);
+  }
+
   ProjectAnalyzer createProjectAnalyzer(Project project) {
     if (_contextMap[project] == null) {
       _logger.info('created analysis context [${project.name}]');
@@ -270,6 +275,22 @@ class ProjectAnalyzer {
       } else {
         return new AnalysisResult.fromMap(analyzerService.workspace, event.data);
       }
+    });
+  }
+
+  Future<Declaration> getDeclarationFor(File file, int offset) {
+    PackageManager manager = analyzerService.getPackageManager();
+    PackageResolver resolver = analyzerService.getPackageResolverFor(project);
+
+    var args = {'contextId': project.uuid};
+    args['fileUuid'] = _filesToUuid(manager, resolver, [file])[0];
+    args['offset'] = offset;
+
+    return analyzerService._sendAction('getDeclarationFor', args)
+        .then((ServiceActionEvent event) {
+      if (event.error) throw event.error;
+
+      return new Declaration.fromMap(event.data);
     });
   }
 
