@@ -193,8 +193,8 @@ class Declaration {
 
   Map toMap() {
     return {
-      "fileUuid": fileUuid,
       "name": name,
+      "fileUuid": fileUuid,
       "offset": offset,
       "length": length,
     };
