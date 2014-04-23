@@ -331,10 +331,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
       if (librarySources.isEmpty) return null;
 
-      // TODO(devoncarew): Is this the correct call to be using? We want to get
-      // resolved compilation unit, even if it would require work to be done.
       analyzer.CompilationUnit ast =
-          context.context.getResolvedCompilationUnit2(source, librarySources[0]);
+          context.context.resolveCompilationUnit2(source, librarySources[0]);
 
       analyzer.AstNode node =
           new analyzer.NodeLocator.con1(offset).searchWithin(ast);
@@ -352,10 +350,9 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
       analyzer.FileSource fileSource = element.source;
 
-      Declaration declation = new Declaration(
+      return new Declaration(
           element.displayName, fileSource.uuid,
           element.nameOffset, element.name.length);
-      return declation;
     }
 
     Outline _getOutline(analyzer.CompilationUnit ast) {
