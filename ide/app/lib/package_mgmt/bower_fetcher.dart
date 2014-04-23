@@ -57,18 +57,17 @@ class BowerFetcher {
     }).catchError((e, s) {
       // Ignore errors for now.
       _logger.warning(e, s);
-//      return new Future.error(e);
     });
   }
 
   Future _fetchAllDeps() {
     List<Future> futures = [];
     _allDeps.values.forEach((_Package package) {
-        futures.add(
-            _fetchPackage(package).catchError((e, s) {
-              _logger.warning(e);
-            })
-        );
+      futures.add(
+          _fetchPackage(package).catchError((e, s) {
+            _logger.warning(e);
+          })
+      );
     });
     return Future.wait(futures);
   }
@@ -138,6 +137,11 @@ class BowerFetcher {
 }
 
 class _Package {
+  // TODO(ussuri): The below handles only short-hand package names that assume
+  // GitHub as the root location. In actuality, Bower supports a lot more
+  // formats, including paths to local git repos and explicit GitHub URLs.
+  // Handle at least those.
+
   /// E.g.: "Polymer/polymer-elements".
   static const _PACKAGE_SPEC_PATH = '''[-\\w./]+''';
   /// E.g.: "#master", "#1.2.3".
@@ -168,7 +172,7 @@ class _Package {
       path == another.path && branch == another.branch;
 
   String getUrlForCloning() =>
-      '$_GITHUB_ROOT_URL/$path' + (path.endsWith('.git') ? '' : '.git');
+      '$_GITHUB_ROOT_URL/$path';
 
   String getUrlForDownloading(String remoteFilePath) =>
       '$_GITHUB_USER_CONTENT_URL/$path/$branch/$remoteFilePath';
