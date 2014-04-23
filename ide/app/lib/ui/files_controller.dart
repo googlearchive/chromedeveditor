@@ -161,7 +161,9 @@ class FilesController implements TreeViewDelegate {
     return resources;
   }
   
-  void setSelection(List<Resource> resources) { _treeView.selection = resources.map((r) => r.uuid); }
+  void setSelection(List<Resource> resources) { 
+    _treeView.selection = resources.map((r) => r.uuid);
+  }
   
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     Resource resource = _filesMap[nodeUID];
@@ -261,8 +263,10 @@ class FilesController implements TreeViewDelegate {
     }
   }
   
-  void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
-    Folder destinationFolder = _filesMap[nodeUID] as Folder;
+  void treeViewDrop(TreeView view,
+                    String nodeUuid,
+                    html.DataTransfer dataTransfer) {
+    Folder destinationFolder = _filesMap[nodeUuid] as Folder;
     List<Future<File>> futureFiles = new List<Future<File>>();
     
     for(html.File file in dataTransfer.files) {
@@ -273,7 +277,8 @@ class FilesController implements TreeViewDelegate {
     });
   }
   
-  static Future<File> _WorkspaceFileFromHtmlFileElement(html.File file, Folder destination) {
+  static Future<File> _WorkspaceFileFromHtmlFileElement(html.File file,
+                                                        Folder destination) {
     Completer<File> c = new Completer();
     html.FileReader reader = new html.FileReader();
     reader.onLoadEnd.listen((html.ProgressEvent event) {

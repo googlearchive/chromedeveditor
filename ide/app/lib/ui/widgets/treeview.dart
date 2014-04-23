@@ -52,7 +52,7 @@ class TreeView implements ListViewDelegate {
   // Timer to expand cell on dragover
   Timer _pendingExpansionTimer;
   // nodeUID associated with above timer
-  String _pendingExpansionUID;
+  String _pendingExpansionUuid;
   // Unique identifier of the tree.
   String _uuid;
 
@@ -72,7 +72,7 @@ class TreeView implements ListViewDelegate {
     _rows = null;
     _rowsMap = null;
     _pendingExpansionTimer = null;
-    _pendingExpansionUID = null;
+    _pendingExpansionUuid = null;
     reloadData();
   }
 
@@ -422,18 +422,18 @@ class TreeView implements ListViewDelegate {
       }
     }
 
-    String nodeUID = null;
+    String nodeUuid = null;
     if (cell != null) {
-      nodeUID = cell.nodeUID;
+      nodeUuid = cell.nodeUID;
     }
     List<String> dragSelection = _innerDragSelection(event.dataTransfer);
     if (dragSelection != null) {
-      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUID)) {
+      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUuid)) {
         cell = null;
       }
     } else {
       // Dropping from somewhere else.
-      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, nodeUID)) {
+      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, nodeUuid)) {
         cell = null;
       }
     }
@@ -446,14 +446,16 @@ class TreeView implements ListViewDelegate {
       if (cell != null) {
         cell.dragOverlayVisible = true;
         
-        if(_pendingExpansionUID != cell.nodeUID && _pendingExpansionTimer != null) {
+        if(_pendingExpansionUuid != cell.nodeUID && _pendingExpansionTimer != null) {
             _pendingExpansionTimer.cancel();
         }
         // Queue cell for expanding if it's a pausing drag hover.
-        _pendingExpansionUID = cell.nodeUID;
+        _pendingExpansionUuid = cell.nodeUID;
         _pendingExpansionTimer = new Timer(const Duration(milliseconds: 1000), () {
-          if(_currentDragOverCell != null && nodeUID == _currentDragOverCell.nodeUID && !isNodeExpanded(nodeUID)) {
-            setNodeExpanded(nodeUID, true, animated: true);
+          if(_currentDragOverCell != null &&
+              nodeUuid == _currentDragOverCell.nodeUID &&
+              !isNodeExpanded(nodeUuid)) {
+            setNodeExpanded(nodeUuid, true, animated: true);
           } 
         });        
       }
