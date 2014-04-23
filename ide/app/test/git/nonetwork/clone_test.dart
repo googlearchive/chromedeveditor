@@ -33,7 +33,7 @@ class MockClone extends Clone {
 
   HttpFetcher getHttpFetcher(ObjectStore store, String origin, String url,
       String username, String password) {
-    return new MockHttpFetcher(store, origin, url, username, password);
+    MockHttpFetcher fetcher = new MockHttpFetcher(store, origin, url, username, password);
   }
 }
 
@@ -44,7 +44,7 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
       DirectoryEntry dir = fs.createDirectory('test/git/clone');
       GitOptions options = new GitOptions(
-          root: dir, repoUrl: "https://github.com/gaurave/spark-t", depth: 1, store: new ObjectStore(dir));
+          root: dir, repoUrl: "https://github.com/gaurave/spark-t.git", depth: 1, store: new ObjectStore(dir));
       MockClone clone = new MockClone(options);
       try {
         return clone.clone();
