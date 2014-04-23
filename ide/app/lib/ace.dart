@@ -27,7 +27,7 @@ import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
 
-export 'package:ace/ace.dart' show EditSession, Point, Selection;
+export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
@@ -151,7 +151,7 @@ class TextEditor extends Editor {
     try {
       // Restore the cursor position and scroll location.
       int scrollTop = _session.scrollTop;
-      ace.Point cursorPos = null;
+      html.Point cursorPos = null;
       if (aceManager.currentFile == file) {
         cursorPos = aceManager.cursorPosition;
       }
@@ -473,13 +473,14 @@ class AceManager {
 
   void resize() => _aceEditor.resize(false);
 
-  ace.Point get cursorPosition => _aceEditor.cursorPosition;
-
-  void set cursorPosition(ace.Point position) {
-    _aceEditor.navigateTo(position.row, position.column);
+  html.Point get cursorPosition {
+    ace.Point cursorPosition = _aceEditor.cursorPosition;
+    return new html.Point(cursorPosition.column, cursorPosition.row);
   }
 
-  ace.Selection get selection => _aceEditor.selection;
+  void set cursorPosition(html.Point position) {
+    _aceEditor.navigateTo(position.y, position.x);
+  }
 
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
@@ -547,6 +548,12 @@ class AceManager {
     outline.build(text);
   }
 
+  Future<svc.Declaration> getDeclarationAtCursor() {
+    int offset = currentSession.document.positionToIndex(
+        _aceEditor.cursorPosition);
+    return _analysisService.getDeclarationFor(currentFile, offset);
+  }
+
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
     if (event.hasChangesFor(currentFile)) {
       setMarkers(currentFile.getMarkers());
@@ -562,6 +569,17 @@ class AceManager {
       default:
         return ace.Annotation.INFO;
     }
+  }
+
+  void selectDeclaration(svc.Declaration declaration) {
+    ace.Point startSelection = currentSession.document.indexToPosition(
+        declaration.offset);
+    ace.Point endSelection = currentSession.document.indexToPosition(
+        declaration.offset + declaration.length);
+
+    ace.Selection selection =_aceEditor.selection;
+    selection.setSelectionAnchor(startSelection.row, startSelection.column);
+    selection.selectTo(endSelection.row, endSelection.column);
   }
 }
 

@@ -14,7 +14,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:spark_widgets/spark_status/spark_status.dart';
 
-import 'lib/ace.dart' as ace;
+import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/apps/app_utils.dart';
@@ -84,7 +84,7 @@ Zone createSparkZone() {
 
 abstract class Spark
     extends SparkModel
-    implements ace.AceManagerDelegate, Notifier {
+    implements AceManagerDelegate, Notifier {
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
@@ -95,9 +95,9 @@ abstract class Spark
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
 
-  ace.AceManager _aceManager;
-  ace.ThemeManager _aceThemeManager;
-  ace.KeyBindingManager _aceKeysManager;
+  AceManager _aceManager;
+  ThemeManager _aceThemeManager;
+  KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
   ScmManager scmManager;
   EditorManager _editorManager;
@@ -181,9 +181,9 @@ abstract class Spark
 
   bool get developerMode => _developerMode;
 
-  ace.AceManager get aceManager => _aceManager;
-  ace.ThemeManager get aceThemeManager => _aceThemeManager;
-  ace.KeyBindingManager get aceKeysManager => _aceKeysManager;
+  AceManager get aceManager => _aceManager;
+  ThemeManager get aceThemeManager => _aceThemeManager;
+  KeyBindingManager get aceKeysManager => _aceKeysManager;
   ws.Workspace get workspace => _workspace;
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
@@ -295,10 +295,10 @@ abstract class Spark
   }
 
   void createEditorComponents() {
-    _aceManager = new ace.AceManager(new DivElement(), this, services);
-    _aceThemeManager = new ace.ThemeManager(
+    _aceManager = new AceManager(new DivElement(), this, services);
+    _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
-    _aceKeysManager = new ace.KeyBindingManager(
+    _aceKeysManager = new KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus, services);
@@ -1540,7 +1540,7 @@ class FormatAction extends SparkAction {
     ws.File file = spark.editorManager.currentFile;
     for (Editor editor in spark.editorManager.editors) {
       if (editor.file == file) {
-        if (editor is ace.TextEditor) {
+        if (editor is TextEditor) {
           editor.format();
         }
         break;
@@ -1572,33 +1572,18 @@ class GetDeclarationAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    ace.AceManager aceManager = spark._aceManager;
-    ace.EditSession currentSession = aceManager.currentSession;
-    int offset = currentSession.document.positionToIndex(
-        aceManager.cursorPosition);
+    AceManager aceManager = spark._aceManager;
 
-    _analysisService.getDeclarationFor(aceManager.currentFile, offset).then(
-        (Declaration declaration) {
+    aceManager.getDeclarationAtCursor().then((Declaration declaration) {
       if (declaration == null) {
         return;
       }
 
-      spark._selectInEditor(declaration.getFile(spark.workspace, spark.workspace.project));
+      var currentFile = aceManager.currentFile;
+      spark._selectInEditor(declaration.getFile(currentFile.project));
       aceManager.focus();
 
-      Timer.run((){
-        currentSession = aceManager.currentSession;
-
-        ace.Point startSelection = currentSession.document.indexToPosition(
-            declaration.offset);
-        ace.Point endSelection = currentSession.document.indexToPosition(
-            declaration.offset + declaration.length);
-
-        ace.Selection selection = aceManager.selection;
-        selection.setSelectionAnchor(startSelection.row,
-            startSelection.column);
-        selection.selectTo(endSelection.row, endSelection.column);
-      });
+      Timer.run(() => aceManager.selectDeclaration(declaration));
     });
   }
 }

@@ -13,6 +13,7 @@ import 'package:unittest/unittest.dart';
 import '../lib/ace.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
+import '../lib/services.dart' as svc;
 
 defineTests() {
   group('ace', () {
@@ -36,9 +37,8 @@ class MockAceManager implements AceManager {
     return new MockEditSession(fileName);
   }
 
-  ace.Point get cursorPosition => new ace.Point(0, 0);
-  void set cursorPosition(ace.Point position) {}
-  ace.Selection get selection => null;
+  Point get cursorPosition => new Point(0, 0);
+  void set cursorPosition(Point position) {}
   void setSelectionAnchor(int row, int column) {}
   void selectTo(int row, int column) {}
 
@@ -58,6 +58,8 @@ class MockAceManager implements AceManager {
   void createDialog(String filename) { }
   bool isFileExtensionEditable(String extension) => false;
   void buildOutline() { }
+  void selectDeclaration(svc.Declaration declaration) {}
+  Future<svc.Declaration> getDeclarationAtCursor() => null;
 }
 
 class MockAceEditor implements TextEditor {
