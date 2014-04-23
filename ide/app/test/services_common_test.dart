@@ -52,12 +52,14 @@ Map outlineFunctionMap = {
     "type": "function"};
 
 Map outlineMethodMap = {
+    "static": false,
     "name": "methodName",
     "startOffset": 70,
     "endOffset": 80,
     "type": "method"};
 
 Map outlineClassVariableMap = {
+    "static": false,
     "name": "variableName",
     "startOffset": 90,
     "endOffset": 100,

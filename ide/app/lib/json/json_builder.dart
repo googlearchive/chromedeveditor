@@ -11,6 +11,7 @@ import 'package:json/json.dart';
 import '../builder.dart';
 import '../jobs.dart';
 import '../workspace.dart';
+import '../package_mgmt/bower.dart';
 
 /**
  * A [Builder] implementation to add validation warnings to JSON files.
@@ -26,6 +27,9 @@ class JsonBuilder extends Builder {
   }
 
   bool _shouldProcessFile(File file) {
+    // There's a more specific builder for bower.
+    if (file.name == bowerProperties.packageSpecFileName) return false;
+
     return file.name.endsWith('.json') && !file.isDerived();
   }
 

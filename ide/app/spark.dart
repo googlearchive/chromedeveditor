@@ -12,14 +12,11 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
-
-// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/spark_status/spark_status.dart';
+import 'package:spark_widgets/spark_status/spark_status.dart';
 
 import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
-import 'lib/app.dart';
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
 import 'lib/dart/dart_builder.dart';
@@ -32,6 +29,7 @@ import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
+import 'lib/platform_info.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/services.dart';
 import 'lib/scm.dart';
@@ -39,9 +37,7 @@ import 'lib/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
-import 'lib/ui/files_controller_delegate.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
-import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
@@ -87,12 +83,12 @@ Zone createSparkZone() {
 
 abstract class Spark
     extends SparkModel
-    implements FilesControllerDelegate, AceManagerDelegate, Notifier {
+    implements AceManagerDelegate, Notifier {
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
-  final bool developerMode;
+  final bool _developerMode;
 
   Services services;
   final JobManager jobManager = new JobManager();
@@ -108,27 +104,34 @@ abstract class Spark
   LaunchManager _launchManager;
   PubManager _pubManager;
   BowerManager _bowerManager;
-
-  final EventBus eventBus = new EventBus();
-
   ActionManager _actionManager;
-
-  SplitView _splitView;
-  FilesController _filesController;
-  PlatformInfo _platformInfo;
-  TestDriver _testDriver;
   ProjectLocationManager projectLocationManager;
+
+  EventBus _eventBus;
+
+  FilesController _filesController;
 
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
       ['.cmake', '.gitignore', '.prefs', '.txt']);
 
-  Spark(this.developerMode) {
+  Spark(this._developerMode) {
     document.title = appName;
+  }
+
+  /**
+   * The main initialization sequence.
+   *
+   * Uses [querySelector] to extract HTML elements from the underlying
+   * [document], so it should be called only after all those elements become
+   * available. In particular with Polymer, that means when the Polymer custom
+   * elements in the [document] become upgraded, which is indicated by the
+   * [Polymer.onReady] event.
+   */
+  Future init() {
+    initEventBus();
 
     initAnalytics();
-
-    addParticipant(new _SparkSetupParticipant(this));
 
     initWorkspace();
     initPackageManagers();
@@ -139,12 +142,12 @@ abstract class Spark
     initEditorArea();
     initEditorManager();
 
+    createActions();
+
     initFilesController();
 
-    createActions();
     initToolbar();
     buildMenu();
-
     initSplitView();
     initSaveStatusListener();
 
@@ -164,15 +167,15 @@ abstract class Spark
     // Add various builders.
     addBuilder(new DartBuilder(this.services));
     addBuilder(new JsonBuilder());
-  }
 
-  initServices() {
-    services = new Services(this.workspace, _pubManager);
+    return restoreWorkspace().then((_) => restoreLocationManager());
   }
 
   //
   // SparkModel interface:
   //
+
+  bool get developerMode => _developerMode;
 
   AceManager get aceManager => _aceManager;
   ThemeManager get aceThemeManager => _aceThemeManager;
@@ -183,11 +186,12 @@ abstract class Spark
   LaunchManager get launchManager => _launchManager;
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
+  ActionManager get actionManager => _actionManager;
+
+  EventBus get eventBus => _eventBus;
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
   preferences.PreferenceStore get syncPrefs => preferences.syncStore;
-
-  ActionManager get actionManager => _actionManager;
 
   //
   // - End SparkModel interface.
@@ -196,8 +200,6 @@ abstract class Spark
   String get appName => utils.i18n('app_name');
 
   String get appVersion => chrome.runtime.getManifest()['version'];
-
-  PlatformInfo get platformInfo => _platformInfo;
 
   /**
    * Get the currently selected [Resource].
@@ -237,8 +239,20 @@ abstract class Spark
   SparkDialog createDialog(Element dialogElement);
 
   //
-  // Parts of ctor:
+  // Parts of init():
   //
+
+  void initServices() {
+    services = new Services(this.workspace, _pubManager);
+  }
+
+  void initEventBus() {
+    _eventBus = new EventBus();
+    _eventBus.onEvent(BusEventType.ERROR_MESSAGE).listen(
+        (ErrorMessageBusEvent event) {
+      showErrorMessage(event.title, event.error.toString());
+    });
+  }
 
   void initAnalytics() {
     // Init the analytics tracker and send a page view for the main page.
@@ -330,26 +344,28 @@ abstract class Spark
 
   void initFilesController() {
     _filesController = new FilesController(
-        workspace, scmManager, this, querySelector('#fileViewArea'));
-    _filesController.onSelectionChange.listen((resource) {
-      focusManager.setCurrentResource(resource);
+        workspace, actionManager, scmManager, eventBus,
+        querySelector('#file-item-context-menu'),
+        querySelector('#fileViewArea'));
+    eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
+        .listen((FilesControllerSelectionChangedEvent event) {
+      focusManager.setCurrentResource(event.resource);
+      if (event.resource is ws.File) {
+        _selectInEditor(
+            event.resource,
+            forceOpen: event.forceOpen,
+            replaceCurrent: event.replaceCurrent,
+            switchesTab: event.switchesTab);
+      }
+    });
+    eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
+        .listen((FilesControllerPersistTabEvent event) {
+      editorArea.persistTab(event.file);
     });
   }
 
   void initSplitView() {
-    _splitView = new SplitView(getUIElement('#splitview'));
-    _splitView.onResized.listen((_) {
-      aceManager.resize();
-      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
-    });
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          _splitView.position = value;
-        }
-      }
-    });
+    // Overridden in spark_polymer.dart.
   }
 
   void initSaveStatusListener() {
@@ -408,13 +424,30 @@ abstract class Spark
   }
 
   void initToolbar() {
+    // Overridden in spark_polymer.dart.
   }
 
   void buildMenu() {
   }
 
+  Future restoreWorkspace() {
+    return workspace.restore().then((value) {
+      if (workspace.getFiles().length == 0) {
+        // No files, just focus the editor.
+        aceManager.focus();
+      }
+    });
+  }
+
+  Future restoreLocationManager() {
+    return ProjectLocationManager.restoreManager(localPrefs, workspace)
+        .then((manager) {
+      projectLocationManager = manager;
+    });
+  }
+
   //
-  // - End parts of ctor.
+  // - End parts of init().
   //
 
   void addBuilder(Builder builder) {
@@ -456,7 +489,7 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
-    // Implemented in a sub-class.
+  // Implemented in a sub-class.
   void unveil() { }
 
   /**
@@ -557,8 +590,6 @@ abstract class Spark
     return _okCancelCompleter.future;
   }
 
-  void onSplitViewUpdate(int position) { }
-
   void setGitSettingsResetDoneVisible(bool enabled) {
     getUIElement('#gitResetSettingsDone').hidden = !enabled;
   }
@@ -612,14 +643,10 @@ abstract class Spark
     }
   }
 
-  //
-  // Implementation of FilesControllerDelegate interface:
-  //
-
-  void selectInEditor(ws.File file,
-                      {bool forceOpen: false,
-                       bool replaceCurrent: true,
-                       bool switchesTab: true}) {
+  void _selectInEditor(ws.File file,
+                       {bool forceOpen: false,
+                        bool replaceCurrent: true,
+                        bool switchesTab: true}) {
     if (forceOpen || editorManager.isFileOpened(file)) {
       editorArea.selectFile(file,
           forceOpen: forceOpen,
@@ -627,15 +654,6 @@ abstract class Spark
           switchesTab: switchesTab);
     }
   }
-
-  Element getContextMenuContainer() => querySelector('#file-item-context-menu');
-
-  List<ContextAction> getActionsFor(List<ws.Resource> resources) =>
-      actionManager.getContextActions(resources);
-
-  //
-  // - End implementation of FilesControllerDelegate interface.
-  //
 
   //
   // Implementation of AceManagerDelegate interface:
@@ -668,33 +686,24 @@ abstract class Spark
   //
   // - End implementation of AceManagerDelegate interface.
   //
-}
 
-class PlatformInfo {
-  /**
-   * The operating system chrome is running on. One of: "mac", "win", "android",
-   * "cros", "linux", "openbsd".
-   */
-  final String os;
+  Timer _filterTimer = null;
 
-  /**
-   * The machine's processor architecture. One of: "arm", "x86-32", "x86-64".
-   */
-  final String arch;
+  void filterFilesList(String searchString) {
+    if ( _filterTimer != null) {
+      _filterTimer.cancel();
+      _filterTimer = null;
+    }
 
-  /**
-   * The native client architecture. This may be different from arch on some
-   * platforms. One of: "arm", "x86-32", "x86-64".
-   */
-  final String naclArch;
+    _filterTimer = new Timer(new Duration(milliseconds: 500), () {
+      _filterTimer = null;
+      _reallyFilterFilesList(searchString);
+    });
+  }
 
-  PlatformInfo._(this.os, this.arch, this.naclArch);
-
-  PlatformInfo.fromMap(Map m) : this._(m['os'], m['arch'], m['nacl_arch']);
-
-  String toString() => "${os}, ${arch}, ${naclArch}";
-
-  bool get isCros => os == 'cros';
+  void _reallyFilterFilesList(String searchString) {
+    _filesController.performFilter(searchString);
+  }
 }
 
 /**
@@ -750,7 +759,7 @@ class ProjectLocationManager {
     }
 
     // On Chrome OS, use the sync filesystem.
-    if (_isCros() && _workspace.syncFsIsAvailable) {
+    if (PlatformInfo.isCros && _workspace.syncFsIsAvailable) {
       return chrome.syncFileSystem.requestFileSystem().then((fs) {
         var entry = fs.root;
         return new LocationResult(entry, entry, true);
@@ -834,46 +843,6 @@ class LocationResult {
   }
 }
 
-class _SparkSetupParticipant extends LifecycleParticipant {
-  Spark spark;
-
-  _SparkSetupParticipant(this.spark);
-
-  Future applicationStarting(Application application) {
-    // get platform info
-    return chrome.runtime.getPlatformInfo().then((Map m) {
-      spark._platformInfo = new PlatformInfo.fromMap(m);
-      return spark.workspace.restore().then((value) {
-        if (spark.workspace.getFiles().length == 0) {
-          // No files, just focus the editor.
-          spark.aceManager.focus();
-        }
-      });
-    }).then((_) {
-      return ProjectLocationManager.restoreManager(spark.localPrefs,
-          spark.workspace).then((manager) {
-        spark.projectLocationManager = manager;
-      });
-    }).whenComplete(() => spark.unveil());
-  }
-
-  Future applicationStarted(Application application) {
-    if (spark.developerMode) {
-      spark._testDriver = new TestDriver(
-          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
-    }
-    return new Future.value();
-  }
-
-  Future applicationClosed(Application application) {
-    spark.editorManager.persistState();
-    spark.launchManager.dispose();
-    spark.localPrefs.flush();
-    spark.syncPrefs.flush();
-    return new Future.value();
-  }
-}
-
 /**
  * Allows a user to select a folder on disk. Returns the selected folder
  * entry. Returns `null` in case the user cancels the action.
@@ -887,10 +856,6 @@ Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
     completer.complete(res.entry);
   }).catchError((e) => completer.complete(null));
   return completer.future;
-}
-
-bool _isCros() {
-  return (SparkModel.instance as Spark).platformInfo.isCros;
 }
 
 /**
@@ -1066,7 +1031,7 @@ class FileOpenInTabAction extends SparkAction implements ContextAction {
   void _invoke([List<ws.File> files]) {
     bool forceOpen = files.length > 1;
     files.forEach((ws.File file) {
-      spark.selectInEditor(file, forceOpen: true, replaceCurrent: false);
+      spark._selectInEditor(file, forceOpen: true, replaceCurrent: false);
     });
   }
 
@@ -1113,7 +1078,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark.selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._selectInEditor(file, forceOpen: true, replaceCurrent: true);
             spark._aceManager.focus();
           });
         }).catchError((e) {
@@ -1467,13 +1432,11 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
   ResourceRefreshAction(Spark spark) : super(
       spark, "resource-refresh", "Refresh") {
     // On Chrome OS, bind to the dedicated refresh key.
-    chrome.runtime.getPlatformInfo().then((Map m) {
-      if (new PlatformInfo.fromMap(m).isCros) {
-        addBinding('f5', linuxBinding: 'f3');
-      } else {
-        addBinding('f5');
-      }
-    });
+    if (PlatformInfo.isCros) {
+      addBinding('f5', linuxBinding: 'f3');
+    } else {
+      addBinding('f5');
+    }
   }
 
   void _invoke([context]) {
@@ -1935,7 +1898,8 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     // TODO(grv): Add verify checks.
-    _GitBranchJob job = new _GitBranchJob(gitOperations, _branchNameElement.value);
+    _GitBranchJob job =
+        new _GitBranchJob(gitOperations, _branchNameElement.value, spark);
     spark.jobManager.schedule(job);
   }
 
@@ -2329,8 +2293,9 @@ class _GitBranchJob extends Job {
   GitScmProjectOperations gitOperations;
   String _branchName;
   String url;
+  Spark spark;
 
-  _GitBranchJob(this.gitOperations, String branchName)
+  _GitBranchJob(this.gitOperations, String branchName, this.spark)
       : super("Creating ${branchName}…") {
     _branchName = branchName;
   }
@@ -2340,10 +2305,10 @@ class _GitBranchJob extends Job {
 
     return gitOperations.createBranch(_branchName).then((_) {
       return gitOperations.checkoutBranch(_branchName).then((_) {
-        SparkModel.instance.showSuccessMessage('Created ${_branchName}');
+        spark.showSuccessMessage('Created ${_branchName}');
       });
     }).catchError((e) {
-      SparkModel.instance.showErrorMessage(
+      spark.showErrorMessage(
           'Error creating branch ${_branchName}', e.toString());
     });
   }
@@ -2575,6 +2540,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 }
 
 class SettingsAction extends SparkActionWithDialog {
+  // TODO(ussuri): This is essentially unused. Remove.
   bool _initialized = false;
 
   SettingsAction(Spark spark, Element dialog)
@@ -2582,18 +2548,34 @@ class SettingsAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-
       _initialized = true;
     }
 
     spark.setGitSettingsResetDoneVisible(false);
 
-    // For now, don't show the location field on Chrome OS; we always use syncFS.
-    if (_isCros()) {
+    var whitespaceCheckbox = getElement('#stripWhitespace');
+
+    // Wait for each of the following to (simultaneously) complete before
+    // showing the dialog:
+    Future.wait([
+      spark.editorManager.stripWhitespaceOnSave.whenLoaded
+          .then((BoolCachedPreference pref) {
+            whitespaceCheckbox.checked = pref.value;
+      }), new Future.value().then((_) {
+        // For now, don't show the location field on Chrome OS; we always use syncFS.
+        if (PlatformInfo.isCros) {
+          return null;
+        } else {
+          return _showRootDirectory();
+        }
+      })
+    ]).then((_) {
       _show();
-    } else {
-      _showRootDirectory().then((_) => _show());
-    }
+      whitespaceCheckbox.onChange.listen((e) {
+        spark.editorManager.stripWhitespaceOnSave.value =
+            whitespaceCheckbox.checked;
+      });
+    });
   }
 
   Future _showRootDirectory() {
@@ -2618,7 +2600,13 @@ class RunTestsAction extends SparkAction {
     }
   }
 
-  _invoke([Object context]) => spark._testDriver.runTests();
+  _invoke([Object context]) {
+    if (spark.developerMode) {
+      TestDriver testDriver = new TestDriver(
+          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+      testDriver.runTests();
+    }
+  }
 }
 
 class WebStorePublishAction extends SparkActionWithDialog {

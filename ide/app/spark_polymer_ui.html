@@ -4,6 +4,8 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
+<!-- NOTE: If you add any new Polymer imports here, don't forget to also add
+     matching Dart imports in spark_bootstrap.dart. -->
 <link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
@@ -11,17 +13,14 @@
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
-<link rel="import" href="packages/spark_widgets/spark_suggest_box/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 
 <polymer-element name="spark-polymer-ui">
   <template>
-
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <link rel="stylesheet" href="spark_polymer_ui.css">
 
-    <spark-toolbar id="toolbar" lightdom>
+    <spark-toolbar id="toolbar">
       <spark-button id="runButton" small primary>
         <span class="glyphicon glyphicon-play"></span> Run
       </spark-button>
@@ -34,9 +33,10 @@
       <spark-status id="sparkStatus"></spark-status>
 
       <div id="toolbarRight">
-        <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
-            placeholder="Search">
-        </spark-suggest-box>
+        <input type="search"
+            id="search"
+            class="form-control"
+            placeholder="Search"/>
 
         <spark-menu-button
             id="mainMenu"
@@ -473,6 +473,14 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
+          <div class="checkbox">
+            <input id="stripWhitespace" type="checkbox">
+            <label for="stripWhitespace">
+              Strip trailing whitespace on save
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
           <div id="changeTheme">
             <label class="settings-title">Editor theme</label>
             <div>
@@ -685,5 +693,5 @@
     </spark-modal>
   </template>
 
-  <script type="application/dart" src="spark_polymer_ui.dart"></script>
+  <script type="application/dart;component=1" src="spark_polymer_ui.dart"></script>
 </polymer-element>

@@ -41,6 +41,7 @@ class AceEditorTab extends EditorTab {
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
+    editor.onModification.listen((_) => persisted = true);
   }
 
   void activate() {
@@ -180,6 +181,15 @@ class EditorArea extends TabView {
         assert(false);
       }
 
+      // On explicit request to open a tab, persist the new tab.
+      if (!replaceCurrent) tab.persisted = true;
+
+      // Don't replace the current tab if it's persisted.
+      if ((selectedTab is AceEditorTab) &&
+          (selectedTab as AceEditorTab).persisted) {
+        replaceCurrent = false;
+      }
+
       if (replaceCurrent) {
         replace(selectedTab, tab, switchesTab: switchesTab);
       } else {
@@ -190,6 +200,11 @@ class EditorArea extends TabView {
 
       _nameController.add(file.name);
     }
+  }
+
+  void persistTab(File file) {
+    EditorTab tab = _tabOfFile[file];
+    if (tab != null) tab.persisted = true;
   }
 
   /// Closes the tab.
