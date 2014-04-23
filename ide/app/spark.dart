@@ -419,6 +419,7 @@ abstract class Spark
     actionManager.registerAction(new ImportFolderAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
+    actionManager.registerAction(new GetDeclarationAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1546,6 +1547,33 @@ class SearchAction extends SparkAction {
     spark.getUIElement('#searchBox').focus();
   }
 }
+
+class GetDeclarationAction extends SparkAction {
+  AnalyzerService _analysisService;
+
+  GetDeclarationAction(Spark spark)
+      : super(spark, 'getDeclaration', 'Get Declaration') {
+    addBinding('f3');
+    _analysisService = spark.services.getService('analyzer');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    AceManager aceManager = spark._aceManager;
+
+    aceManager.getDeclarationAtCursor().then((Declaration declaration) {
+      if (declaration == null) return;
+
+      var currentFile = aceManager.currentFile;
+
+      spark._selectInEditor(declaration.getFile(currentFile.project));
+      aceManager.focus();
+
+      Timer.run(() => aceManager.navigateToDeclaration(declaration));
+    });
+  }
+}
+
 
 class FocusMainMenuAction extends SparkAction {
   FocusMainMenuAction(Spark spark)

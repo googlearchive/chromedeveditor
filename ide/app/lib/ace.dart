@@ -240,20 +240,6 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
-    // Declaration linking hotkey
-    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
-        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
-          int offset = currentSession.document.positionToIndex(
-              _aceEditor.cursorPosition);
-          _analysisService.getDeclarationFor(currentFile, offset).then(
-              (svc.Declaration declaration) {
-            if (declaration != null) {
-              print(declaration);
-              print(declaration.getFile(currentFile.project));
-            }
-          });
-        }));
-
     // Fallback
     theme = THEMES[0];
 
@@ -487,6 +473,15 @@ class AceManager {
 
   void resize() => _aceEditor.resize(false);
 
+  html.Point get cursorPosition {
+    ace.Point cursorPosition = _aceEditor.cursorPosition;
+    return new html.Point(cursorPosition.column, cursorPosition.row);
+  }
+
+  void set cursorPosition(html.Point position) {
+    _aceEditor.navigateTo(position.y, position.x);
+  }
+
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
@@ -510,15 +505,6 @@ class AceManager {
     }
     // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
-  }
-
-  html.Point get cursorPosition {
-    ace.Point cursorPosition = _aceEditor.cursorPosition;
-    return new html.Point(cursorPosition.column, cursorPosition.row);
-  }
-
-  void set cursorPosition(html.Point position) {
-    _aceEditor.navigateTo(position.y, position.x);
   }
 
   ace.EditSession get currentSession => _aceEditor.session;
@@ -562,6 +548,14 @@ class AceManager {
     outline.build(text);
   }
 
+  Future<svc.Declaration> getDeclarationAtCursor() {
+    if (currentFile.project == null) return null;
+
+    int offset = currentSession.document.positionToIndex(
+        _aceEditor.cursorPosition);
+    return _analysisService.getDeclarationFor(currentFile, offset);
+  }
+
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
     if (event.hasChangesFor(currentFile)) {
       setMarkers(currentFile.getMarkers());
@@ -577,6 +571,17 @@ class AceManager {
       default:
         return ace.Annotation.INFO;
     }
+  }
+
+  void navigateToDeclaration(svc.Declaration declaration) {
+    ace.Point startSelection = currentSession.document.indexToPosition(
+        declaration.offset);
+    ace.Point endSelection = currentSession.document.indexToPosition(
+        declaration.offset + declaration.length);
+
+    ace.Selection selection =_aceEditor.selection;
+    selection.setSelectionAnchor(startSelection.row, startSelection.column);
+    selection.selectTo(endSelection.row, endSelection.column);
   }
 }
 
