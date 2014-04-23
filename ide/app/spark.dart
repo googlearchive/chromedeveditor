@@ -122,6 +122,15 @@ abstract class Spark
     document.title = appName;
   }
 
+  /**
+   * The main initialization sequence.
+   *
+   * Uses [querySelector] to extract HTML elements from the underlying
+   * [document], so it should be called only after all those elements become
+   * available. In particular with Polymer, that means when the Polymer custom
+   * elements in the [document] become upgraded, which is indicated by the
+   * [Polymer.onReady] event.
+   */
   Future init() {
     initEventBus();
 

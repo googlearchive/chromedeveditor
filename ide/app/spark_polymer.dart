@@ -285,11 +285,9 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     final SparkPolymer spark = app;
     spark._ui.modelReady(spark);
     spark.unveil();
-
     _logger.logStep('Spark started');
     _logger.logElapsed('Total startup time');
-
-    return null;
+    return new Future.value();
   }
 
   Future applicationClosed(Application app) {
@@ -298,6 +296,6 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     spark.launchManager.dispose();
     spark.localPrefs.flush();
     spark.syncPrefs.flush();
-    return null;
+    return new Future.value();
   }
 }
