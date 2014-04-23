@@ -14,7 +14,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:spark_widgets/spark_status/spark_status.dart';
 
-import 'lib/ace.dart';
+import 'lib/ace.dart' as ace;
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
 import 'lib/app.dart';
@@ -85,7 +85,7 @@ Zone createSparkZone() {
 
 abstract class Spark
     extends SparkModel
-    implements AceManagerDelegate, Notifier {
+    implements ace.AceManagerDelegate, Notifier {
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
@@ -96,9 +96,9 @@ abstract class Spark
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
 
-  AceManager _aceManager;
-  ThemeManager _aceThemeManager;
-  KeyBindingManager _aceKeysManager;
+  ace.AceManager _aceManager;
+  ace.ThemeManager _aceThemeManager;
+  ace.KeyBindingManager _aceKeysManager;
   ws.Workspace _workspace;
   ScmManager scmManager;
   EditorManager _editorManager;
@@ -175,9 +175,9 @@ abstract class Spark
   // SparkModel interface:
   //
 
-  AceManager get aceManager => _aceManager;
-  ThemeManager get aceThemeManager => _aceThemeManager;
-  KeyBindingManager get aceKeysManager => _aceKeysManager;
+  ace.AceManager get aceManager => _aceManager;
+  ace.ThemeManager get aceThemeManager => _aceThemeManager;
+  ace.KeyBindingManager get aceKeysManager => _aceKeysManager;
   ws.Workspace get workspace => _workspace;
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
@@ -285,10 +285,10 @@ abstract class Spark
   }
 
   void createEditorComponents() {
-    _aceManager = new AceManager(new DivElement(), this, services);
-    _aceThemeManager = new ThemeManager(
+    _aceManager = new ace.AceManager(new DivElement(), this, services);
+    _aceThemeManager = new ace.ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
-    _aceKeysManager = new KeyBindingManager(
+    _aceKeysManager = new ace.KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
         workspace, aceManager, localPrefs, eventBus, services);
@@ -421,6 +421,7 @@ abstract class Spark
     actionManager.registerAction(new ImportFolderAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
+    actionManager.registerAction(new GetDeclarationAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1549,7 +1550,7 @@ class FormatAction extends SparkAction {
     ws.File file = spark.editorManager.currentFile;
     for (Editor editor in spark.editorManager.editors) {
       if (editor.file == file) {
-        if (editor is TextEditor) {
+        if (editor is ace.TextEditor) {
           editor.format();
         }
         break;
@@ -1569,6 +1570,43 @@ class SearchAction extends SparkAction {
     spark.getUIElement('#searchBox').focus();
   }
 }
+
+class GetDeclarationAction extends SparkAction {
+  AnalyzerService _analysisService;
+
+  GetDeclarationAction(Spark spark)
+      : super(spark, 'getDeclaration', 'Get Declaration') {
+    addBinding('f3');
+    _analysisService = spark.services.getService('analyzer');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    ace.AceManager aceManager = spark._aceManager;
+    ace.EditSession currentSession = aceManager.currentSession;
+    int offset = currentSession.document.positionToIndex(
+        aceManager.cursorPosition);
+
+    _analysisService.getDeclarationFor(aceManager.currentFile, offset).then(
+        (Declaration declaration) {
+
+      spark._selectInEditor(declaration.getFile(spark.workspace.project));
+//      switchTo(currentSession,
+//          currentFile.workspace.restoreResource(declaration.fileUuid));
+
+      ace.Point startSelection = currentSession.document.indexToPosition(
+          declaration.startOffset);
+      ace.Point endSelection = currentSession.document.indexToPosition(
+          declaration.endOffset - 1);
+
+      ace.Selection selection = aceManager.selection;
+      selection.setSelectionAnchor(startSelection.row,
+          startSelection.column);
+      selection.selectTo(endSelection.row, endSelection.column);
+    });
+  }
+}
+
 
 class FocusMainMenuAction extends SparkAction {
   FocusMainMenuAction(Spark spark)

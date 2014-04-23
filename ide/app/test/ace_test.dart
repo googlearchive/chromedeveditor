@@ -36,8 +36,12 @@ class MockAceManager implements AceManager {
     return new MockEditSession(fileName);
   }
 
-  Point get cursorPosition => new Point(0, 0);
-  void set cursorPosition(Point position) {}
+  ace.Point get cursorPosition => new ace.Point(0, 0);
+  void set cursorPosition(ace.Point position) {}
+  ace.Selection get selection => null;
+  void setSelectionAnchor(int row, int column) {}
+  void selectTo(int row, int column) {}
+
   ace.EditSession get currentSession => null;
   void focus() { }
   void resize() { }

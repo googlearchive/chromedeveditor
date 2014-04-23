@@ -399,7 +399,7 @@ class _EditorState {
   ace.EditSession session;
 
   int scrollTop = 0;
-  html.Point cursorPosition = new html.Point(0, 0);
+  ace.Point cursorPosition = new ace.Point(0, 0);
 
   _EditorState.fromFile(this.manager, this.file);
 
@@ -411,7 +411,7 @@ class _EditorState {
     } else {
       _EditorState state = new _EditorState.fromFile(manager, f);
       state.scrollTop = m['scrollTop'];
-      state.cursorPosition = new html.Point(m['column'], m['row']);
+      state.cursorPosition = new ace.Point(m['column'], m['row']);
       return state;
     }
   }
@@ -438,8 +438,8 @@ class _EditorState {
     Map m = {};
     m['file'] = file.uuid;
     m['scrollTop'] = scrollTop;
-    m['column'] = cursorPosition.x;
-    m['row'] = cursorPosition.y;
+    m['column'] = cursorPosition.row;
+    m['row'] = cursorPosition.column;
     return m;
   }
 

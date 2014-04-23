@@ -27,7 +27,7 @@ import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
 
-export 'package:ace/ace.dart' show EditSession;
+export 'package:ace/ace.dart' show EditSession, Point, Selection;
 
 class TextEditor extends Editor {
   static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
@@ -151,7 +151,7 @@ class TextEditor extends Editor {
     try {
       // Restore the cursor position and scroll location.
       int scrollTop = _session.scrollTop;
-      html.Point cursorPos = null;
+      ace.Point cursorPos = null;
       if (aceManager.currentFile == file) {
         cursorPos = aceManager.cursorPosition;
       }
@@ -241,17 +241,30 @@ class AceManager {
     _aceEditor.setOption('enableSnippets', true);
 
     // Declaration linking hotkey
-    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
-        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
-          int offset = currentSession.document.positionToIndex(
-              _aceEditor.cursorPosition);
-          _analysisService.getDeclarationFor(currentFile, offset).then(
-              (svc.Declaration declaration) {
-            print(declaration);
-          });
-//          _aceEditor.cursorPosition.column
-        }));
-
+//    _aceEditor.commands.removeCommand("openInlineEditor");
+//    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
+//        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
+//          int offset = currentSession.document.positionToIndex(
+//              _aceEditor.cursorPosition);
+//          _analysisService.getDeclarationFor(currentFile, offset).then(
+//              (svc.Declaration declaration) {
+//            switchTo(currentSession,
+//                currentFile.workspace.restoreResource(declaration.fileUuid));
+//
+//            ace.Selection selection = _aceEditor.selection;
+//            ace.Point startSelection = currentSession.document.indexToPosition(
+//                declaration.startOffset);
+//            ace.Point endSelection = currentSession.document.indexToPosition(
+//                declaration.endOffset - 1);
+//            /*%TRACE3*/ print("""(4> 4/22/14): declaration.toMap(): ${declaration.toMap()}"""); // TRACE%
+//
+//            selection.setSelectionAnchor(startSelection.row,
+//                startSelection.column);
+//            selection.selectTo(endSelection.row, endSelection.column);
+//          });
+////          _aceEditor.cursorPosition.column
+//        }));
+//
     // Fallback
     theme = THEMES[0];
 
@@ -485,6 +498,22 @@ class AceManager {
 
   void resize() => _aceEditor.resize(false);
 
+  ace.Point get cursorPosition => _aceEditor.cursorPosition;
+
+  void set cursorPosition(ace.Point position) {
+    _aceEditor.navigateTo(position.row, position.column);
+  }
+
+  ace.Selection get selection => _aceEditor.selection;
+
+  void setSelectionAnchor(int row, int column) {
+    selection.setSelectionAnchor(row, column);
+  }
+
+  void selectTo(int row, int column) {
+    selection.selectTo(row, column);
+  }
+
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
         text, new ace.Mode.forFile(fileName));
@@ -508,15 +537,6 @@ class AceManager {
     }
     // Disable Ace's analysis (this shows up in JavaScript files).
     session.useWorker = false;
-  }
-
-  html.Point get cursorPosition {
-    ace.Point cursorPosition = _aceEditor.cursorPosition;
-    return new html.Point(cursorPosition.column, cursorPosition.row);
-  }
-
-  void set cursorPosition(html.Point position) {
-    _aceEditor.navigateTo(position.y, position.x);
   }
 
   ace.EditSession get currentSession => _aceEditor.session;
