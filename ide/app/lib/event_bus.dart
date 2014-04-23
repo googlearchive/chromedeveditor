@@ -26,6 +26,8 @@ class BusEventType extends Enum<String> {
       const BusEventType._('FILES_CONTROLLER__SELECTION_CHANGED');
   static const FILES_CONTROLLER__ERROR =
       const BusEventType._('FILES_CONTROLLER__ERROR');
+  static const FILES_CONTROLLER__PERSIST_TAB =
+      const BusEventType._('FILES_CONTROLLER__PERSIST_TAB');
 }
 
 /**

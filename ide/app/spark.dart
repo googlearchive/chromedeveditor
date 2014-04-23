@@ -358,6 +358,10 @@ abstract class Spark
             switchesTab: event.switchesTab);
       }
     });
+    eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
+        .listen((FilesControllerPersistTabEvent event) {
+      editorArea.persistTab(event.file);
+    });
   }
 
   void initSplitView() {
