@@ -41,10 +41,7 @@ class AceEditorTab extends EditorTab {
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
-    editor.onModification.listen((_) {
-      if (persisted) return;
-      persisted = true;
-    });
+    editor.onModification.listen((_) => persisted = true);
   }
 
   void activate() {
