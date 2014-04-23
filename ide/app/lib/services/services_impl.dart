@@ -236,7 +236,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
   Future<ServiceActionEvent> buildFiles(ServiceActionEvent request) {
     List<Map> fileUuids = request.data["dartFileUuids"];
     return _buildFiles(fileUuids).then((errorsPerFile) {
-      request.createReponse({"errors": errorsPerFile});
+      return request.createReponse({"errors": errorsPerFile});
     });
   }
 
@@ -317,45 +317,42 @@ class AnalyzerServiceImpl extends ServiceImpl {
       String fileUuid = request.data['fileUuid'];
       int offset = request.data['offset'];
 
+      Declaration declaration = _getDeclarationFor(context, fileUuid, offset);
+      return new Future.value(request.createReponse(
+          declaration != null ? declaration.toMap() : null));
+    }
+
+    Declaration _getDeclarationFor(analyzer.ProjectContext context,
+        String fileUuid, int offset) {
       analyzer.FileSource source = context.getSource(fileUuid);
 
       List<analyzer.Source> librarySources =
           context.context.getLibrariesContaining(source);
 
-      if (librarySources.isEmpty) {
-        return new Future.value(request.createReponse());
-      }
+      if (librarySources.isEmpty) return null;
 
-      // TODO(devoncarew): Is this the correct call to be using? We want to get
-      // resolved compilation unit, even if it would require work to be done.
       analyzer.CompilationUnit ast =
-          context.context.getResolvedCompilationUnit2(source, librarySources[0]);
+          context.context.resolveCompilationUnit2(source, librarySources[0]);
 
       analyzer.AstNode node =
           new analyzer.NodeLocator.con1(offset).searchWithin(ast);
-      if (node is! analyzer.SimpleIdentifier) {
-        return new Future.value(request.createReponse());
-      }
+      if (node is! analyzer.SimpleIdentifier) return null;
 
       analyzer.Element element = analyzer.ElementLocator.locate(node);
-      if (element == null) return new Future.value(request.createReponse());
+      if (element == null) return null;
 
       if (element.nameOffset == -1 || element.source == null) {
-        return new Future.value(request.createReponse());
+        return null;
       }
 
-      if (element.source is! analyzer.FileSource) {
-        // TODO:(devoncarew): Handle sdk sources.
-        return new Future.value(request.createReponse());
-      }
+      // TODO:(devoncarew): Handle sdk sources.
+      if (element.source is! analyzer.FileSource) return null;
 
       analyzer.FileSource fileSource = element.source;
 
-      Declaration declation = new Declaration(
+      return new Declaration(
           element.displayName, fileSource.uuid,
           element.nameOffset, element.name.length);
-
-      return new Future.value(request.createReponse(declation.toMap()));
     }
 
     Outline _getOutline(analyzer.CompilationUnit ast) {

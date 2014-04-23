@@ -176,7 +176,8 @@ class Declaration {
   }
 
   /**
-   * Returns the file pointed to by the [fileUuid].
+   * Returns the file pointed to by the [fileUuid]. This can return `null` if
+   * we're not able to resolve the file reference.
    */
   File getFile(Workspace workspace, Project project) {
     if (fileUuid == null) return null;

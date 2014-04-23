@@ -17,7 +17,6 @@ import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'lib/ace.dart' as ace;
 import 'lib/actions.dart';
 import 'lib/analytics.dart' as analytics;
-import 'lib/app.dart';
 import 'lib/apps/app_utils.dart';
 import 'lib/builder.dart';
 import 'lib/dart/dart_builder.dart';
@@ -90,7 +89,7 @@ abstract class Spark
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
-  final bool developerMode;
+  final bool _developerMode;
 
   Services services;
   final JobManager jobManager = new JobManager();
@@ -115,20 +114,27 @@ abstract class Spark
 
   FilesController _filesController;
 
-  TestDriver _testDriver;
-
   // Extensions of files that will be shown as text.
   Set<String> _textFileExtensions = new Set.from(
       ['.cmake', '.gitignore', '.prefs', '.txt']);
 
-  Spark(this.developerMode) {
+  Spark(this._developerMode) {
     document.title = appName;
+  }
 
+  /**
+   * The main initialization sequence.
+   *
+   * Uses [querySelector] to extract HTML elements from the underlying
+   * [document], so it should be called only after all those elements become
+   * available. In particular with Polymer, that means when the Polymer custom
+   * elements in the [document] become upgraded, which is indicated by the
+   * [Polymer.onReady] event.
+   */
+  Future init() {
     initEventBus();
 
     initAnalytics();
-
-    addParticipant(new _SparkSetupParticipant(this));
 
     initWorkspace();
     initPackageManagers();
@@ -165,15 +171,15 @@ abstract class Spark
     // Add various builders.
     addBuilder(new DartBuilder(this.services));
     addBuilder(new JsonBuilder());
-  }
 
-  initServices() {
-    services = new Services(this.workspace, _pubManager);
+    return restoreWorkspace().then((_) => restoreLocationManager());
   }
 
   //
   // SparkModel interface:
   //
+
+  bool get developerMode => _developerMode;
 
   ace.AceManager get aceManager => _aceManager;
   ace.ThemeManager get aceThemeManager => _aceThemeManager;
@@ -237,8 +243,12 @@ abstract class Spark
   SparkDialog createDialog(Element dialogElement);
 
   //
-  // Parts of ctor:
+  // Parts of init():
   //
+
+  void initServices() {
+    services = new Services(this.workspace, _pubManager);
+  }
 
   void initEventBus() {
     _eventBus = new EventBus();
@@ -432,8 +442,24 @@ abstract class Spark
   void buildMenu() {
   }
 
+  Future restoreWorkspace() {
+    return workspace.restore().then((value) {
+      if (workspace.getFiles().length == 0) {
+        // No files, just focus the editor.
+        aceManager.focus();
+      }
+    });
+  }
+
+  Future restoreLocationManager() {
+    return ProjectLocationManager.restoreManager(localPrefs, workspace)
+        .then((manager) {
+      projectLocationManager = manager;
+    });
+  }
+
   //
-  // - End parts of ctor.
+  // - End parts of init().
   //
 
   void addBuilder(Builder builder) {
@@ -475,7 +501,7 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
-    // Implemented in a sub-class.
+  // Implemented in a sub-class.
   void unveil() { }
 
   /**
@@ -828,42 +854,6 @@ class LocationResult {
     }).catchError((e) {
       return false;
     });
-  }
-}
-
-class _SparkSetupParticipant extends LifecycleParticipant {
-  Spark spark;
-
-  _SparkSetupParticipant(this.spark);
-
-  Future applicationStarting(Application application) {
-    return spark.workspace.restore().then((value) {
-      if (spark.workspace.getFiles().length == 0) {
-        // No files, just focus the editor.
-        spark.aceManager.focus();
-      }
-    }).then((_) {
-      return ProjectLocationManager.restoreManager(spark.localPrefs,
-          spark.workspace).then((manager) {
-        spark.projectLocationManager = manager;
-      });
-    }).whenComplete(() => spark.unveil());
-  }
-
-  Future applicationStarted(Application application) {
-    if (spark.developerMode) {
-      spark._testDriver = new TestDriver(
-          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
-    }
-    return new Future.value();
-  }
-
-  Future applicationClosed(Application application) {
-    spark.editorManager.persistState();
-    spark.launchManager.dispose();
-    spark.localPrefs.flush();
-    spark.syncPrefs.flush();
-    return new Future.value();
   }
 }
 
@@ -1965,7 +1955,8 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     // TODO(grv): Add verify checks.
-    _GitBranchJob job = new _GitBranchJob(gitOperations, _branchNameElement.value);
+    _GitBranchJob job =
+        new _GitBranchJob(gitOperations, _branchNameElement.value, spark);
     spark.jobManager.schedule(job);
   }
 
@@ -2359,8 +2350,9 @@ class _GitBranchJob extends Job {
   GitScmProjectOperations gitOperations;
   String _branchName;
   String url;
+  Spark spark;
 
-  _GitBranchJob(this.gitOperations, String branchName)
+  _GitBranchJob(this.gitOperations, String branchName, this.spark)
       : super("Creating ${branchName}…") {
     _branchName = branchName;
   }
@@ -2370,10 +2362,10 @@ class _GitBranchJob extends Job {
 
     return gitOperations.createBranch(_branchName).then((_) {
       return gitOperations.checkoutBranch(_branchName).then((_) {
-        SparkModel.instance.showSuccessMessage('Created ${_branchName}');
+        spark.showSuccessMessage('Created ${_branchName}');
       });
     }).catchError((e) {
-      SparkModel.instance.showErrorMessage(
+      spark.showErrorMessage(
           'Error creating branch ${_branchName}', e.toString());
     });
   }
@@ -2605,6 +2597,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 }
 
 class SettingsAction extends SparkActionWithDialog {
+  // TODO(ussuri): This is essentially unused. Remove.
   bool _initialized = false;
 
   SettingsAction(Spark spark, Element dialog)
@@ -2664,7 +2657,13 @@ class RunTestsAction extends SparkAction {
     }
   }
 
-  _invoke([Object context]) => spark._testDriver.runTests();
+  _invoke([Object context]) {
+    if (spark.developerMode) {
+      TestDriver testDriver = new TestDriver(
+          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+      testDriver.runTests();
+    }
+  }
 }
 
 class WebStorePublishAction extends SparkActionWithDialog {

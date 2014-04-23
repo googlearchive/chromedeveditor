@@ -14,14 +14,12 @@ import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
 
 abstract class SparkModel extends Application {
-  static SparkModel _instance;
+  static bool _instanceCreated = false;
 
   SparkModel() {
-    assert(_instance == null);
-    _instance = this;
+    assert(!_instanceCreated);
+    _instanceCreated = true;
   }
-
-  static SparkModel get instance => _instance;
 
   bool get developerMode;
 

@@ -214,7 +214,7 @@ class AnalyzerService extends Service {
       return new Future.value(_contextMap[project]);
     }
 
-    _logger.info('created analysis context [${project.name}]');
+    _logger.info('creating analysis context [${project.name}]');
 
     ProjectAnalyzer context = new ProjectAnalyzer._(this, project);
     _contextMap[project] = context;
@@ -315,9 +315,7 @@ class ProjectAnalyzer {
     });
   }
 
-  Future dispose() {
-    return analyzerService.disposeProjectAnalyzer(this);
-  }
+  Future dispose() => analyzerService.disposeProjectAnalyzer(this);
 
   void _handleAnalysisResult(Project project, AnalysisResult result) {
     project.workspace.pauseMarkerStream();
