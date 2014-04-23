@@ -1575,15 +1575,14 @@ class GetDeclarationAction extends SparkAction {
     AceManager aceManager = spark._aceManager;
 
     aceManager.getDeclarationAtCursor().then((Declaration declaration) {
-      if (declaration == null) {
-        return;
-      }
+      if (declaration == null) return;
 
       var currentFile = aceManager.currentFile;
+
       spark._selectInEditor(declaration.getFile(currentFile.project));
       aceManager.focus();
 
-      Timer.run(() => aceManager.selectDeclaration(declaration));
+      Timer.run(() => aceManager.navigateToDeclaration(declaration));
     });
   }
 }

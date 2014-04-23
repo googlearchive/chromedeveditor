@@ -58,7 +58,7 @@ class MockAceManager implements AceManager {
   void createDialog(String filename) { }
   bool isFileExtensionEditable(String extension) => false;
   void buildOutline() { }
-  void selectDeclaration(svc.Declaration declaration) {}
+  void navigateToDeclaration(svc.Declaration declaration) {}
   Future<svc.Declaration> getDeclarationAtCursor() => null;
 }
 

@@ -549,6 +549,8 @@ class AceManager {
   }
 
   Future<svc.Declaration> getDeclarationAtCursor() {
+    if (currentFile.project == null) return null;
+
     int offset = currentSession.document.positionToIndex(
         _aceEditor.cursorPosition);
     return _analysisService.getDeclarationFor(currentFile, offset);
@@ -571,7 +573,7 @@ class AceManager {
     }
   }
 
-  void selectDeclaration(svc.Declaration declaration) {
+  void navigateToDeclaration(svc.Declaration declaration) {
     ace.Point startSelection = currentSession.document.indexToPosition(
         declaration.offset);
     ace.Point endSelection = currentSession.document.indexToPosition(
