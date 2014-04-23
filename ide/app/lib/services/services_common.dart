@@ -178,15 +178,15 @@ class Declaration {
   /**
    * Returns the file pointed to by the [fileUuid].
    */
-  File getFile(Project project) {
+  File getFile(Workspace workspace, Project project) {
     if (fileUuid == null) return null;
 
     if (pubProperties.isPackageRef(fileUuid)) {
-      PubManager pubManager = new PubManager(project.workspace);
+      PubManager pubManager = new PubManager(workspace);
       PackageResolver resolver = pubManager.getResolverFor(project);
       return resolver.resolveRefToFile(fileUuid);
     } else {
-      return project.workspace.restoreResource(fileUuid);
+      return workspace.restoreResource(fileUuid);
     }
   }
 

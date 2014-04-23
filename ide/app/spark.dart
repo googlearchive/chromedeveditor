@@ -1589,20 +1589,26 @@ class GetDeclarationAction extends SparkAction {
 
     _analysisService.getDeclarationFor(aceManager.currentFile, offset).then(
         (Declaration declaration) {
+      if (declaration == null) {
+        return;
+      }
 
-      spark._selectInEditor(declaration.getFile(spark.workspace.project));
-//      switchTo(currentSession,
-//          currentFile.workspace.restoreResource(declaration.fileUuid));
+      spark._selectInEditor(declaration.getFile(spark.workspace, spark.workspace.project));
+      aceManager.focus();
 
-      ace.Point startSelection = currentSession.document.indexToPosition(
-          declaration.startOffset);
-      ace.Point endSelection = currentSession.document.indexToPosition(
-          declaration.endOffset - 1);
+      Timer.run((){
+        currentSession = aceManager.currentSession;
 
-      ace.Selection selection = aceManager.selection;
-      selection.setSelectionAnchor(startSelection.row,
-          startSelection.column);
-      selection.selectTo(endSelection.row, endSelection.column);
+        ace.Point startSelection = currentSession.document.indexToPosition(
+            declaration.offset);
+        ace.Point endSelection = currentSession.document.indexToPosition(
+            declaration.offset + declaration.length);
+
+        ace.Selection selection = aceManager.selection;
+        selection.setSelectionAnchor(startSelection.row,
+            startSelection.column);
+        selection.selectTo(endSelection.row, endSelection.column);
+      });
     });
   }
 }
