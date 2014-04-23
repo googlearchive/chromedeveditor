@@ -37,12 +37,14 @@ abstract class EditorTab extends Tab {
 class AceEditorTab extends EditorTab {
   final Editor editor;
   final EditorProvider provider;
-  bool _canBeReplaced = true;
 
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
-    editor.onModification.listen((_) => _canBeReplaced = false);
+    editor.onModification.listen((_) {
+      if (persisted) return;
+      persisted = true;
+    });
   }
 
   void activate() {
@@ -54,8 +56,6 @@ class AceEditorTab extends EditorTab {
   void focus() => editor.focus();
 
   void resize() => editor.resize();
-
-  bool get canBeReplaced => _canBeReplaced;
 
   void fileContentsChanged() => editor.fileContentsChanged();
 }
@@ -175,11 +175,6 @@ class EditorArea extends TabView {
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
 
-      if ((selectedTab is AceEditorTab) &&
-          !(selectedTab as AceEditorTab).canBeReplaced) {
-        replaceCurrent = false;
-      }
-
       Editor editor = editorProvider.createEditorForFile(file);
       if (editor is ace.TextEditor) {
         tab = new AceEditorTab(this, editorProvider, editor, file);
@@ -187,6 +182,15 @@ class EditorArea extends TabView {
         tab = new ImageViewerTab(this, editorProvider, editor, file);
       } else {
         assert(false);
+      }
+
+      // On explicit request to open a tab, persist the new tab.
+      if (!replaceCurrent) tab.persisted = true;
+
+      // Don't replace the current tab if it's persisted.
+      if ((selectedTab is AceEditorTab) &&
+          (selectedTab as AceEditorTab).persisted) {
+        replaceCurrent = false;
       }
 
       if (replaceCurrent) {
@@ -199,6 +203,11 @@ class EditorArea extends TabView {
 
       _nameController.add(file.name);
     }
+  }
+
+  void persistTab(File file) {
+    EditorTab tab = _tabOfFile[file];
+    if (tab != null) tab.persisted = true;
   }
 
   /// Closes the tab.

@@ -18,6 +18,7 @@ class Tab {
   /// Parent [TabView]
   final TabView tabView;
   Element _page;
+  bool _persisted = false;
 
   DivElement _label;
   DivElement _labelCaption;
@@ -51,6 +52,13 @@ class Tab {
     this.closable = closable;
     this.page = page;
   }
+
+  void set persisted(bool persisted) {
+    _persisted = persisted;
+    _labelCaption.classes.toggle('persisted', _persisted);
+  }
+
+  bool get persisted => _persisted;
 
   String get label => _labelCaption.innerHtml;
   set label(String label) {

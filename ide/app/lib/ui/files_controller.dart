@@ -40,6 +40,14 @@ class FilesControllerSelectionChangedEvent extends BusEvent {
   BusEventType get type => BusEventType.FILES_CONTROLLER__SELECTION_CHANGED;
 }
 
+class FilesControllerPersistTabEvent extends BusEvent {
+  File file;
+
+  FilesControllerPersistTabEvent(this.file);
+
+  BusEventType get type => BusEventType.FILES_CONTROLLER__PERSIST_TAB;
+}
+
 class FilesController implements TreeViewDelegate {
   // TreeView that's used to show the workspace.
   TreeView _treeView;
@@ -229,8 +237,13 @@ class FilesController implements TreeViewDelegate {
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUIDs,
                              html.Event event) {
-    if (nodeUIDs.length == 1 && _filesMap[nodeUIDs.first] is Container) {
-      view.toggleNodeExpanded(nodeUIDs.first, animated: true);
+    if (nodeUIDs.length == 1) {
+      Resource resource = _filesMap[nodeUIDs.first];
+      if (resource is Container) {
+        view.toggleNodeExpanded(nodeUIDs.first, animated: true);
+      } else if (resource is File) {
+        _eventBus.addEvent(new FilesControllerPersistTabEvent(resource));
+      }
     }
   }
 
