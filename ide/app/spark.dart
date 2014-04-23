@@ -38,7 +38,6 @@ import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
-import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
@@ -110,8 +109,6 @@ abstract class Spark
 
   EventBus _eventBus;
 
-  SplitView _splitView;
-
   FilesController _filesController;
 
   // Extensions of files that will be shown as text.
@@ -151,7 +148,6 @@ abstract class Spark
 
     initToolbar();
     buildMenu();
-
     initSplitView();
     initSaveStatusListener();
 
@@ -365,19 +361,7 @@ abstract class Spark
   }
 
   void initSplitView() {
-    _splitView = new SplitView(getUIElement('#splitview'));
-    _splitView.onResized.listen((_) {
-      aceManager.resize();
-      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
-    });
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          _splitView.position = value;
-        }
-      }
-    });
+    // Overridden in spark_polymer.dart.
   }
 
   void initSaveStatusListener() {
@@ -436,6 +420,7 @@ abstract class Spark
   }
 
   void initToolbar() {
+    // Overridden in spark_polymer.dart.
   }
 
   void buildMenu() {
@@ -600,8 +585,6 @@ abstract class Spark
     _okCancelDialog.show();
     return _okCancelCompleter.future;
   }
-
-  void onSplitViewUpdate(int position) { }
 
   void setGitSettingsResetDoneVisible(bool enabled) {
     getUIElement('#gitResetSettingsDone').hidden = !enabled;
