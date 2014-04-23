@@ -128,7 +128,7 @@ class ServicesIsolate {
 
   String _getNewCallId() => "iso_${_topCallId++}";
 
-  // Sends action to host.  Returns a future if expectResponse is true.
+  // Sends action to host. Returns a future if expectResponse is true.
   Future<ServiceActionEvent> _sendAction(ServiceActionEvent event,
       [bool expectResponse = false]) {
 
@@ -223,85 +223,24 @@ class AnalyzerServiceImpl extends ServiceImpl {
       super(isolate, 'analyzer') {
     dartSdk = analyzer.createSdk(sdk);
 
+    registerRequestHandler('buildFiles', buildFiles);
     registerRequestHandler('createContext', createContext);
     registerRequestHandler('processContextChanges', processContextChanges);
     registerRequestHandler('disposeContext', disposeContext);
+    registerRequestHandler('getOutlineFor', getOutlineFor);
+    registerRequestHandler('getDeclarationFor', getDeclarationFor);
   }
 
   Future<analyzer.ChromeDartSdk> get dartSdkFuture => new Future.value(dartSdk);
 
-  Future<ServiceActionEvent> handleEvent(ServiceActionEvent event) {
-    switch (event.actionId) {
-      case "buildFiles":
-        return buildFiles(event.data["dartFileUuids"]).then(
-            (Map<String, List<Map>> errorsPerFile) {
-          return new Future.value(
-              event.createReponse({"errors": errorsPerFile}));
-        });
-      case "getOutlineFor":
-        var codeString = event.data['string'];
-        return analyzer.analyzeString(
-            dartSdk, codeString, performResolution: false).then(
-                (analyzer.AnalyzerResult result) {
-          return event.createReponse(_getOutline(result.ast).toMap());
-        });
-      case "getDeclarationFor":
-        analyzer.ProjectContext context = _contexts[event.data['contextId']];
-        String fileUuid = event.data['fileUuid'];
-        analyzer.FileSource source = context.getSource(fileUuid);
-
-//        return new Future.value(event.createErrorReponse('no soup'));
-
-        int offset = event.data['offset'];
-
-        var unit = context.context.parseCompilationUnit(source);
-        analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
-        if (foundNode is analyzer.SimpleIdentifier) {
-//          var element = analyzer.ElementLocator.locate(foundNode);
-          foundNode = foundNode.parent;
-          if (foundNode is analyzer.MethodInvocation) {
-//            element = analyzer.ElementLocator.locate(foundNode);
-//            analyzer.MethodInvocation invocationNode = foundNode;
-            Declaration declaration = new Declaration(fileUuid,
-                foundNode.toSource(), "TODO: Fill in documentation",
-                foundNode.beginToken.offset, foundNode.endToken.offset);
-
-            //return new Future.value(event.createReponse(declaration.toMap()));
-//            return new Future.value(event.createReponse("{name: method(), doc: TODO: Fill in documentation, startOffset: 117, endOffset: 124}"));
-
-
-//            inv.target;
-//            inv.realTarget;
-          } else if (foundNode is analyzer.TypeName) {
-          } else if (foundNode is analyzer.PrefixedIdentifier) {
-//            analyzer.PrefixedIdentifier prefixedIdentifier = foundNode;
-//            foundNode = prefixedIdentifier.parent;
-          }
-        }
-        return new Future.value(event.createReponse({
-            "fileUuid": "E398D46008623DF8A0BA96EBA7E543BF:sandbox-TestProject/getter_setter_demo.dart",
-            "name": "method()",
-            "doc": "TODO: Fill in documentation", "startOffset": 117,
-            "endOffset": 124}));
-
-//        return new Future.value(event.createErrorReponse('no soup'));
-
-
-//        analyzer.NodeLocator locator = new analyzer.NodeLocator.con2(offset, offset + 1);
-//        analyzer.Element element = analyzer.NodeLocator.(
-//        /*%TRACE3*/ print("""(4> 4/18/14): element: ${element.kind}"""); // TRACE%
-//        var codeString = event.data['string'];
-//        return analyzer.analyzeString(
-//            dartSdk, codeString, performResolution: false).then(
-//                (analyzer.AnalyzerResult result) {
-//          return event.createReponse(_getOutline(result.ast).toMap());
-//        });
-      default:
-        return super.handleEvent(event);
-    }
+  Future<ServiceActionEvent> buildFiles(ServiceActionEvent request) {
+    List<Map> fileUuids = request.data["dartFileUuids"];
+    return _buildFiles(fileUuids).then((errorsPerFile) {
+      request.createReponse({"errors": errorsPerFile});
+    });
   }
 
-  Future<Map<String, List<Map>>> buildFiles(List<Map> fileUuids) {
+  Future<Map<String, List<Map>>> _buildFiles(List<Map> fileUuids) {
       Map<String, List<Map>> errorsPerFile = {};
 
       return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
@@ -363,6 +302,60 @@ class AnalyzerServiceImpl extends ServiceImpl {
       String id = request.data['contextId'];
       _contexts.remove(id);
       return new Future.value(request.createReponse());
+    }
+
+    Future<ServiceActionEvent> getOutlineFor(ServiceActionEvent request) {
+      var codeString = request.data['string'];
+      return analyzer.analyzeString(
+          dartSdk, codeString, performResolution: false).then((result) {
+        return request.createReponse(_getOutline(result.ast).toMap());
+      });
+    }
+
+    Future<ServiceActionEvent> getDeclarationFor(ServiceActionEvent request) {
+      analyzer.ProjectContext context = _contexts[request.data['contextId']];
+      String fileUuid = request.data['fileUuid'];
+      int offset = request.data['offset'];
+
+      analyzer.FileSource source = context.getSource(fileUuid);
+
+      List<analyzer.Source> librarySources =
+          context.context.getLibrariesContaining(source);
+
+      if (librarySources.isEmpty) {
+        return new Future.value(request.createReponse());
+      }
+
+      // TODO(devoncarew): Is this the correct call to be using? We want to get
+      // resolved compilation unit, even if it would require work to be done.
+      analyzer.CompilationUnit ast =
+          context.context.getResolvedCompilationUnit2(source, librarySources[0]);
+
+      analyzer.AstNode node =
+          new analyzer.NodeLocator.con1(offset).searchWithin(ast);
+      if (node is! analyzer.SimpleIdentifier) {
+        return new Future.value(request.createReponse());
+      }
+
+      analyzer.Element element = analyzer.ElementLocator.locate(node);
+      if (element == null) return new Future.value(request.createReponse());
+
+      if (element.nameOffset == -1 || element.source == null) {
+        return new Future.value(request.createReponse());
+      }
+
+      if (element.source is! analyzer.FileSource) {
+        // TODO:(devoncarew): Handle sdk sources.
+        return new Future.value(request.createReponse());
+      }
+
+      analyzer.FileSource fileSource = element.source;
+
+      Declaration declation = new Declaration(
+          element.displayName, fileSource.uuid,
+          element.nameOffset, element.name.length);
+
+      return new Future.value(request.createReponse(declation.toMap()));
     }
 
     Outline _getOutline(analyzer.CompilationUnit ast) {
@@ -443,18 +436,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
         .then((String contents) =>
             analyzer.analyzeString(sdk, contents, performResolution: false))
         .then((analyzer.AnalyzerResult result) => result);
-  }
-}
-
-class DeclarationVisitor extends analyzer.GeneralizingAstVisitor {
-  int offset;
-
-  visitMethodDeclaration(analyzer.MethodDeclaration node) {
-    /*%TRACE3*/ print("""(4> 4/20/14): node: ${node}"""); // TRACE%
-  }
-
-  visitMethodInvocation(analyzer.MethodInvocation node) {
-    /*%TRACE3*/ print("""(4> 4/20/14): node: ${node}"""); // TRACE%
   }
 }
 

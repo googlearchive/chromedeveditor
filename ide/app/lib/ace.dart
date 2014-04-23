@@ -241,30 +241,20 @@ class AceManager {
     _aceEditor.setOption('enableSnippets', true);
 
     // Declaration linking hotkey
-//    _aceEditor.commands.removeCommand("openInlineEditor");
 //    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
 //        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
 //          int offset = currentSession.document.positionToIndex(
 //              _aceEditor.cursorPosition);
 //          _analysisService.getDeclarationFor(currentFile, offset).then(
 //              (svc.Declaration declaration) {
-//            switchTo(currentSession,
-//                currentFile.workspace.restoreResource(declaration.fileUuid));
-//
-//            ace.Selection selection = _aceEditor.selection;
-//            ace.Point startSelection = currentSession.document.indexToPosition(
-//                declaration.startOffset);
-//            ace.Point endSelection = currentSession.document.indexToPosition(
-//                declaration.endOffset - 1);
-//            /*%TRACE3*/ print("""(4> 4/22/14): declaration.toMap(): ${declaration.toMap()}"""); // TRACE%
-//
-//            selection.setSelectionAnchor(startSelection.row,
-//                startSelection.column);
-//            selection.selectTo(endSelection.row, endSelection.column);
+//            if (declaration != null) {
+//              print(declaration);
+//              print(declaration.getFile(currentFile.project));
+//            }
 //          });
 ////          _aceEditor.cursorPosition.column
 //        }));
-//
+
     // Fallback
     theme = THEMES[0];
 

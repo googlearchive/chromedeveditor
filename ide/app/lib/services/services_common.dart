@@ -10,7 +10,6 @@ import '../workspace.dart';
 import '../package_mgmt/package_manager.dart';
 import '../package_mgmt/pub.dart';
 
-
 abstract class Serializable {
   // TODO(ericarnold): Implement as, and refactor any classes containing toMap
   // to implement Serializable:
@@ -159,37 +158,29 @@ class ErrorSeverity {
 }
 
 /**
- * Defines an object containing information about a declaration
+ * Defines an object containing information about a declaration.
  */
 class Declaration {
-  String fileUuid;
-  String name;
-  String doc;
-  int startOffset;
-  int endOffset;
+  final String name;
+  final String fileUuid;
+  final int offset;
+  final int length;
 
-  Declaration([this.fileUuid, this.name, this.doc, this.startOffset,
-      this.endOffset]);
+  Declaration(this.name, this.fileUuid, this.offset, this.length);
 
-  Declaration.fromMap(Map mapData) {
-    fileUuid = mapData["fileUuid"];
-    name = mapData["name"];
-    doc = mapData["doc"];
-    startOffset = mapData["startOffset"];
-    endOffset = mapData["endOffset"];
+  factory Declaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new Declaration(map["name"], map["fileUuid"],
+        map["offset"], map["length"]);
   }
 
-  Map toMap() {
-    return {
-      "fileUuid": fileUuid,
-      "name": name,
-      "doc": doc,
-      "startOffset": startOffset,
-      "endOffset": endOffset,
-    };
-  }
-
+  /**
+   * Returns the file pointed to by the [fileUuid].
+   */
   File getFile(Project project) {
+    if (fileUuid == null) return null;
+
     if (pubProperties.isPackageRef(fileUuid)) {
       PubManager pubManager = new PubManager(project.workspace);
       PackageResolver resolver = pubManager.getResolverFor(project);
@@ -198,6 +189,17 @@ class Declaration {
       return project.workspace.restoreResource(fileUuid);
     }
   }
+
+  Map toMap() {
+    return {
+      "fileUuid": fileUuid,
+      "name": name,
+      "offset": offset,
+      "length": length,
+    };
+  }
+
+  String toString() => '${fileUuid} [${offset}:${length}]';
 }
 
 /**
