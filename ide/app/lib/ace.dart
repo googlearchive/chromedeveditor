@@ -252,7 +252,6 @@ class AceManager {
               print(declaration.getFile(currentFile.project));
             }
           });
-//          _aceEditor.cursorPosition.column
         }));
 
     // Fallback
