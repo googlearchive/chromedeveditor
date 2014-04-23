@@ -24,12 +24,14 @@ import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
-import 'services.dart' as services;
+import 'services.dart' as svc;
 import 'outline.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
+  static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
+
   final AceManager aceManager;
   final workspace.File file;
 
@@ -108,11 +110,16 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save() {
+  Future save([bool stripWhitespace = false]) {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
+      // Remove the trailing whitespace if asked to do so.
+      // TODO(ericarnold): Can't think of an easy way to share this preference,
+      //           but it might be a good idea to do so rather than passing it.
+      if (stripWhitespace) _stripWhitespace();
+
       String text = _session.value;
       _lastSavedHash = _calcMD5(text);
 
@@ -123,6 +130,14 @@ class TextEditor extends Editor {
       return file.setContents(text).then((_) => dirty = false);
     } else {
       return new Future.value();
+    }
+  }
+
+  void _stripWhitespace() {
+    String currentText = _session.value;
+    String newText = currentText.replaceAll(whitespaceRegEx, '');
+    if (newText != currentText) {
+      _replaceContents(newText);
     }
   }
 
@@ -207,10 +222,9 @@ class AceManager {
 
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
+  svc.AnalyzerService _analysisService;
 
-  html.DivElement _outlineDiv = new html.DivElement();
-
-  AceManager(this.parentElement, this.delegate, services.Services services) {
+  AceManager(this.parentElement, this.delegate, svc.Services services) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -219,10 +233,26 @@ class AceManager {
     _aceEditor.readOnly = true;
     _aceEditor.fadeFoldWidgets = true;
 
+    _analysisService =  services.getService("analyzer");
+
     // Enable code completion.
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
+
+    // Declaration linking hotkey
+    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
+        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
+          int offset = currentSession.document.positionToIndex(
+              _aceEditor.cursorPosition);
+          _analysisService.getDeclarationFor(currentFile, offset).then(
+              (svc.Declaration declaration) {
+            if (declaration != null) {
+              print(declaration);
+              print(declaration.getFile(currentFile.project));
+            }
+          });
+        }));
 
     // Fallback
     theme = THEMES[0];
@@ -235,8 +265,7 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    parentElement.children.add(_outlineDiv);
-    outline = new Outline(services, _outlineDiv);
+    outline = new Outline(services, parentElement);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.startOffset);
@@ -527,7 +556,7 @@ class AceManager {
       }
     }
   }
-  
+
   void buildOutline() {
     String text = currentSession.value;
     outline.build(text);

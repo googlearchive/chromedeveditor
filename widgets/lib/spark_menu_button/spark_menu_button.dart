@@ -40,11 +40,9 @@ class SparkMenuButton extends SparkWidget {
     if (inOpened != opened) {
       opened = inOpened;
       // TODO(ussuri): A temporary plug to make spark-overlay see changes
-      // in 'opened' when run as deployed code. Just binding via {{opened}}
-      // alone isn't detected and the menu doesn't open.
-      if (IS_DART2JS) {
-        _overlay.opened = opened;
-      }
+      // in 'opened'. Just binding via {{opened}} alone isn't detected and the
+      // menu doesn't open.
+      _overlay.opened = opened;
       if (opened) {
         // Enforce focused state so the button can accept keyboard events.
         focus();

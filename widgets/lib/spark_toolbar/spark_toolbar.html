@@ -20,7 +20,8 @@
  */
 -->
 
-<polymer-element name="spark-toolbar" attributes="responsive touch">
+<polymer-element name="spark-toolbar" extends="spark-widget"
+    attributes="responsive touch">
   <template>
     <link rel="stylesheet" href="spark_toolbar.css">
 
@@ -29,5 +30,5 @@
     </div>
   </template>
 
-  <script type="application/dart" src="spark_toolbar.dart"></script>
+  <script type="application/dart;component=1" src="spark_toolbar.dart"></script>
 </polymer-element>

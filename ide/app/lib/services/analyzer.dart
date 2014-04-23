@@ -18,8 +18,9 @@ import 'package:analyzer/src/generated/sdk.dart';
 import 'package:analyzer/src/generated/source.dart';
 
 export 'package:analyzer/src/generated/ast.dart';
+export 'package:analyzer/src/generated/element.dart';
 export 'package:analyzer/src/generated/error.dart';
-export 'package:analyzer/src/generated/source.dart' show LineInfo_Location;
+export 'package:analyzer/src/generated/source.dart';
 
 import 'services_common.dart' as common;
 import '../dart/sdk.dart' as sdk;

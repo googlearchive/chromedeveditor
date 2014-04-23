@@ -197,22 +197,43 @@ class AnalyzerService extends Service {
     });
   }
 
-  ProjectAnalyzer createProjectAnalyzer(Project project) {
-    if (_contextMap[project] == null) {
-      _logger.info('created analysis context [${project.name}]');
+  Future<Declaration> getDeclarationFor(File file, int offset) {
+    ProjectAnalyzer context = getProjectAnalyzer(file.project);
 
-      _contextMap[project] = new ProjectAnalyzer._(this, project);
-      _recentContexts.insert(0, _contextMap[project]);
+    if (context == null) {
+      return createProjectAnalyzer(file.project).then((context) {
+        return context.getDeclarationFor(file, offset);
+      });
+    } else {
+      return new Future.value(context.getDeclarationFor(file, offset));
+    }
+  }
 
-      _sendAction('createContext', {'contextId': project.uuid});
-
-      if (_recentContexts.length > MAX_CONTEXTS) {
-        // Dispose of the oldest context.
-        disposeProjectAnalyzer(_recentContexts.last);
-      }
+  Future<ProjectAnalyzer> createProjectAnalyzer(Project project) {
+    if (_contextMap[project] != null) {
+      return new Future.value(_contextMap[project]);
     }
 
-    return _contextMap[project];
+    _logger.info('creating analysis context [${project.name}]');
+
+    ProjectAnalyzer context = new ProjectAnalyzer._(this, project);
+    _contextMap[project] = context;
+    _recentContexts.insert(0, context);
+
+    if (_recentContexts.length > MAX_CONTEXTS) {
+      // Dispose of the oldest context.
+      disposeProjectAnalyzer(_recentContexts.last);
+    }
+
+    return _sendAction('createContext', {'contextId': project.uuid}).then((_) {
+      // Add existing files to the context.
+      List<File> files = project.traverse().where(
+          (r) => r.isFile && r.name.endsWith('.dart')).toList();
+      files.removeWhere(
+          (file) => getPackageManager().properties.isSecondaryPackage(file));
+
+      return context.processChanges(files, [], []).then((_) => context);
+    });
   }
 
   ProjectAnalyzer getProjectAnalyzer(Project project) => _contextMap[project];
@@ -251,6 +272,24 @@ class ProjectAnalyzer {
 
   ProjectAnalyzer._(this.analyzerService, this.project);
 
+  Future<Declaration> getDeclarationFor(File file, int offset) {
+    analyzerService._touch(this);
+
+    PackageManager manager = analyzerService.getPackageManager();
+    PackageResolver resolver = analyzerService.getPackageResolverFor(project);
+
+    var args = {'contextId': project.uuid};
+    args['fileUuid'] = _filesToUuid(manager, resolver, [file])[0];
+    args['offset'] = offset;
+
+    return analyzerService._sendAction('getDeclarationFor', args)
+        .then((ServiceActionEvent event) {
+      if (event.error) throw event.getErrorMessage();
+
+      return new Declaration.fromMap(event.data);
+    });
+  }
+
   Future<AnalysisResult> processChanges(
       List<File> addedFiles, List<File> changedFiles, List<File> deletedFiles) {
     analyzerService._touch(this);
@@ -268,13 +307,45 @@ class ProjectAnalyzer {
       if (event.error) {
         throw event.getErrorMessage();
       } else {
-        return new AnalysisResult.fromMap(analyzerService.workspace, event.data);
+        AnalysisResult result =
+            new AnalysisResult.fromMap(analyzerService.workspace, event.data);
+        _handleAnalysisResult(project, result);
+        return result;
       }
     });
   }
 
-  Future dispose() {
-    return analyzerService.disposeProjectAnalyzer(this);
+  Future dispose() => analyzerService.disposeProjectAnalyzer(this);
+
+  void _handleAnalysisResult(Project project, AnalysisResult result) {
+    project.workspace.pauseMarkerStream();
+
+    try {
+      for (File file in result.getFiles()) {
+        file.clearMarkers('dart');
+
+        for (AnalysisError error in result.getErrorsFor(file)) {
+          file.createMarker('dart',
+              _convertErrorSeverity(error.errorSeverity),
+              error.message, error.lineNumber,
+              error.offset, error.offset + error.length);
+        }
+      }
+    } finally {
+      project.workspace.resumeMarkerStream();
+    }
+  }
+
+  int _convertErrorSeverity(int sev) {
+    if (sev == ErrorSeverity.ERROR) {
+      return Marker.SEVERITY_ERROR;
+    } else  if (sev == ErrorSeverity.WARNING) {
+      return Marker.SEVERITY_WARNING;
+    } else  if (sev == ErrorSeverity.INFO) {
+      return Marker.SEVERITY_INFO;
+    } else {
+      return Marker.SEVERITY_NONE;
+    }
   }
 }
 

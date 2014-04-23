@@ -37,10 +37,12 @@ abstract class EditorTab extends Tab {
 class AceEditorTab extends EditorTab {
   final Editor editor;
   final EditorProvider provider;
+  bool _canBeReplaced = true;
 
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
+    editor.onModification.listen((_) => _canBeReplaced = false);
   }
 
   void activate() {
@@ -52,6 +54,8 @@ class AceEditorTab extends EditorTab {
   void focus() => editor.focus();
 
   void resize() => editor.resize();
+
+  bool get canBeReplaced => _canBeReplaced;
 
   void fileContentsChanged() => editor.fileContentsChanged();
 }
@@ -106,8 +110,6 @@ class EditorArea extends TabView {
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete && delta.resource.isFile) {
           closeFile(delta.resource);
-        } else if (delta.isDelete && delta.resource is Container) {
-          _handleContainerDeleted(delta.resource);
         } else if (delta.isChange && delta.resource.isFile) {
           _updateFile(delta.resource);
         }
@@ -173,6 +175,11 @@ class EditorArea extends TabView {
     if (forceOpen || replaceCurrent) {
       EditorTab tab;
 
+      if ((selectedTab is AceEditorTab) &&
+          !(selectedTab as AceEditorTab).canBeReplaced) {
+        replaceCurrent = false;
+      }
+
       Editor editor = editorProvider.createEditorForFile(file);
       if (editor is ace.TextEditor) {
         tab = new AceEditorTab(this, editorProvider, editor, file);
@@ -212,16 +219,6 @@ class EditorArea extends TabView {
       EditorTab tab = _tabOfFile[file];
       tab.label = file.name;
       _nameController.add(selectedTab.label);
-    }
-  }
-
-  void _handleContainerDeleted(Container container) {
-    List<File> files = _tabOfFile.keys.toList();
-
-    for (File file in files) {
-      if (file.containedBy(container)) {
-        closeFile(file);
-      }
     }
   }
 
