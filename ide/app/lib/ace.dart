@@ -247,9 +247,11 @@ class AceManager {
               _aceEditor.cursorPosition);
           _analysisService.getDeclarationFor(currentFile, offset).then(
               (svc.Declaration declaration) {
-            print(declaration);
+            if (declaration != null) {
+              print(declaration);
+              print(declaration.getFile(currentFile.project));
+            }
           });
-//          _aceEditor.cursorPosition.column
         }));
 
     // Fallback

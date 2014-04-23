@@ -52,49 +52,24 @@ class DartBuilder extends Builder {
     } else {
       Project project = changes.first.resource.project;
 
-      List<File> addedFiles = changes.where(
-          (c) => c.isAdd).map((c) => c.resource).toList();
-      List<File> changedFiles = changes.where(
-          (c) => c.isChange).map((c) => c.resource).toList();
-      List<File> deletedFiles = changes.where(
-          (c) => c.isDelete).map((c) => c.resource).toList();
-
       ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
       if (context == null) {
-        // Send in all the existing files for the project in order to properly set
-        // up the new context.
-        addedFiles = project.traverse().where(
-            (r) => r.isFile && r.name.endsWith('.dart')).toList();
-        changedFiles = [];
-        deletedFiles = [];
+        return analyzer.createProjectAnalyzer(project);
+      } else {
+        List<File> addedFiles = changes.where(
+            (c) => c.isAdd).map((c) => c.resource).toList();
+        List<File> changedFiles = changes.where(
+            (c) => c.isChange).map((c) => c.resource).toList();
+        List<File> deletedFiles = changes.where(
+            (c) => c.isDelete).map((c) => c.resource).toList();
 
-        context = analyzer.createProjectAnalyzer(project);
+        _removeSecondaryPackages(addedFiles);
+        _removeSecondaryPackages(changedFiles);
+        _removeSecondaryPackages(deletedFiles);
+
+        return context.processChanges(addedFiles, changedFiles, deletedFiles);
       }
-
-      _removeSecondaryPackages(addedFiles);
-      _removeSecondaryPackages(changedFiles);
-      _removeSecondaryPackages(deletedFiles);
-
-      return context.processChanges(addedFiles, changedFiles, deletedFiles).then(
-          (AnalysisResult result) {
-        project.workspace.pauseMarkerStream();
-
-        try {
-          for (File file in result.getFiles()) {
-            file.clearMarkers('dart');
-
-            for (AnalysisError error in result.getErrorsFor(file)) {
-              file.createMarker('dart',
-                  _convertSeverity(error.errorSeverity),
-                  error.message, error.lineNumber,
-                  error.offset, error.offset + error.length);
-            }
-          }
-        } finally {
-          project.workspace.resumeMarkerStream();
-        }
-      });
     }
   }
 
@@ -105,17 +80,5 @@ class DartBuilder extends Builder {
   void _removeSecondaryPackages(List<File> files) {
     files.removeWhere(
         (file) => analyzer.getPackageManager().properties.isSecondaryPackage(file));
-  }
-}
-
-int _convertSeverity(int sev) {
-  if (sev == ErrorSeverity.ERROR) {
-    return Marker.SEVERITY_ERROR;
-  } else  if (sev == ErrorSeverity.WARNING) {
-    return Marker.SEVERITY_WARNING;
-  } else  if (sev == ErrorSeverity.INFO) {
-    return Marker.SEVERITY_INFO;
-  } else {
-    return Marker.SEVERITY_NONE;
   }
 }
