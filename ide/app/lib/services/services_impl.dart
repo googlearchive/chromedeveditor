@@ -250,25 +250,42 @@ class AnalyzerServiceImpl extends ServiceImpl {
         String fileUuid = event.data['fileUuid'];
         analyzer.FileSource source = context.getSource(fileUuid);
 
-        return new Future.value(event.createErrorReponse('no soup'));
+//        return new Future.value(event.createErrorReponse('no soup'));
 
-//        var unit = context.context.parseCompilationUnit(source);
-//        int offset = event.data['offset'];
-//        analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
-//        if (foundNode is analyzer.SimpleIdentifier) {
+        int offset = event.data['offset'];
+
+        var unit = context.context.parseCompilationUnit(source);
+        analyzer.AstNode foundNode = new analyzer.NodeLocator.con1(offset).searchWithin(unit);
+        if (foundNode is analyzer.SimpleIdentifier) {
 //          var element = analyzer.ElementLocator.locate(foundNode);
-//          foundNode = foundNode.parent;
-//          if (foundNode is analyzer.MethodInvocation) {
+          foundNode = foundNode.parent;
+          if (foundNode is analyzer.MethodInvocation) {
 //            element = analyzer.ElementLocator.locate(foundNode);
-//            analyzer.MethodInvocation inv = foundNode;
+//            analyzer.MethodInvocation invocationNode = foundNode;
+            Declaration declaration = new Declaration(fileUuid,
+                foundNode.toSource(), "TODO: Fill in documentation",
+                foundNode.beginToken.offset, foundNode.endToken.offset);
+
+            //return new Future.value(event.createReponse(declaration.toMap()));
+//            return new Future.value(event.createReponse("{name: method(), doc: TODO: Fill in documentation, startOffset: 117, endOffset: 124}"));
+
+
 //            inv.target;
 //            inv.realTarget;
-//          } else if (foundNode is analyzer.TypeName) {
-//          } else if (foundNode is analyzer.PrefixedIdentifier) {
+          } else if (foundNode is analyzer.TypeName) {
+          } else if (foundNode is analyzer.PrefixedIdentifier) {
 //            analyzer.PrefixedIdentifier prefixedIdentifier = foundNode;
 //            foundNode = prefixedIdentifier.parent;
-//          }
-//        }
+          }
+        }
+        return new Future.value(event.createReponse({
+            "fileUuid": "E398D46008623DF8A0BA96EBA7E543BF:sandbox-TestProject/getter_setter_demo.dart",
+            "name": "method()",
+            "doc": "TODO: Fill in documentation", "startOffset": 117,
+            "endOffset": 124}));
+
+//        return new Future.value(event.createErrorReponse('no soup'));
+
 
 //        analyzer.NodeLocator locator = new analyzer.NodeLocator.con2(offset, offset + 1);
 //        analyzer.Element element = analyzer.NodeLocator.(

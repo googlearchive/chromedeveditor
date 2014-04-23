@@ -7,6 +7,9 @@ library spark.services_common;
 import 'dart:async';
 
 import '../workspace.dart';
+import '../package_mgmt/package_manager.dart';
+import '../package_mgmt/pub.dart';
+
 
 abstract class Serializable {
   // TODO(ericarnold): Implement as, and refactor any classes containing toMap
@@ -159,14 +162,17 @@ class ErrorSeverity {
  * Defines an object containing information about a declaration
  */
 class Declaration {
+  String fileUuid;
   String name;
   String doc;
   int startOffset;
   int endOffset;
 
-  Declaration([this.name, this.doc, this.startOffset, this.endOffset]);
+  Declaration([this.fileUuid, this.name, this.doc, this.startOffset,
+      this.endOffset]);
 
   Declaration.fromMap(Map mapData) {
+    fileUuid = mapData["fileUuid"];
     name = mapData["name"];
     doc = mapData["doc"];
     startOffset = mapData["startOffset"];
@@ -175,11 +181,22 @@ class Declaration {
 
   Map toMap() {
     return {
+      "fileUuid": fileUuid,
       "name": name,
       "doc": doc,
       "startOffset": startOffset,
       "endOffset": endOffset,
     };
+  }
+
+  File getFile(Project project) {
+    if (pubProperties.isPackageRef(fileUuid)) {
+      PubManager pubManager = new PubManager(project.workspace);
+      PackageResolver resolver = pubManager.getResolverFor(project);
+      return resolver.resolveRefToFile(fileUuid);
+    } else {
+      return project.workspace.restoreResource(fileUuid);
+    }
   }
 }
 
