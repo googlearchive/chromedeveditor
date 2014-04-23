@@ -23,18 +23,22 @@ class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
   final _elapsedStopwatch = new Stopwatch()..start();
 
-  void _log(String message) {
+  void _log(String type, String message) {
     // NOTE: standard [Logger] didn't work reliably here.
-    print('[INFO] spark.startup: $message');
+    print('[$type] spark.startup: $message');
   }
 
   void logStep(String message) {
-    _log('$message: ${_stepStopwatch.elapsedMilliseconds}ms.');
+    _log('INFO', '$message: ${_stepStopwatch.elapsedMilliseconds}ms.');
     _stepStopwatch.reset();
   }
 
   void logElapsed(String message) {
-    _log('$message: ${_elapsedStopwatch.elapsedMilliseconds}ms.');
+    _log('INFO', '$message: ${_elapsedStopwatch.elapsedMilliseconds}ms.');
+  }
+
+  void logError(String error) {
+    _log('ERROR', 'Error: $error');
   }
 }
 
@@ -42,28 +46,19 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  polymer.Polymer.onReady.then((_) {
-  _logger.logStep('Polymer initialized');
+  isTestMode().then((developerMode) {
+    _logger.logStep('testMode retrieved');
 
-    PlatformInfo.init().then((_) {
-      isTestMode().then((testMode) {
-        _logger.logStep('testMode retrieved');
+    // Don't set up the zone exception handler if we're running in dev mode.
+    final Function maybeRunGuarded =
+        developerMode ? (f) => f() : createSparkZone().runGuarded;
 
-        // Don't set up the zone exception handler if we're running in dev mode.
-        final Function maybeRunGuarded =
-            testMode ? (f) => f() : createSparkZone().runGuarded;
-
-        maybeRunGuarded(() {
-          SparkPolymer spark = new SparkPolymer._(testMode);
-          _logger.logStep('Spark created');
-
-          spark.start();
-          _logger.logStep('Spark started');
-
-          _logger.logElapsed('Total startup time');
-        });
-      });
+    maybeRunGuarded(() {
+      SparkPolymer spark = new SparkPolymer._(developerMode);
+      spark.start();
     });
+  }).catchError((error) {
+    _logger.logError(error);
   });
 }
 
@@ -72,7 +67,7 @@ class SparkPolymerDialog implements SparkDialog {
 
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement {
-    // TODO(ussuri): Encapsulate backdrop in SparkOverlay.
+    // TODO(ussuri): Encapsulate backdrop in SparkModal.
     _dialogElement.on['opened'].listen((event) {
       SparkPolymer.backdropShowing = event.detail;
     });
@@ -121,11 +116,13 @@ class SparkPolymer extends Spark {
     return (appModal.style.display != "none");
   }
 
-  SparkPolymer._(bool developerMode)
-      : _ui = document.querySelector('#topUi') as SparkPolymerUI,
-        super(developerMode) {
-    _ui.developerMode = developerMode;
-    addParticipant(new _AppSetupParticipant());
+  SparkPolymer._(bool developerMode) : super(developerMode) {
+    addParticipant(new _SparkSetupParticipant());
+  }
+
+  void uiReady() {
+    assert(_ui == null);
+    _ui = document.querySelector('#topUi');
   }
 
   @override
@@ -141,11 +138,8 @@ class SparkPolymer extends Spark {
       new SparkPolymerDialog(dialogElement);
 
   //
-  // Override some parts of the parent's ctor:
+  // Override some parts of the parent's init():
   //
-
-  @override
-  String get appName => super.appName;
 
   @override
   void initAnalytics() => super.initAnalytics();
@@ -225,8 +219,14 @@ class SparkPolymer extends Spark {
   @override
   void buildMenu() => super.buildMenu();
 
+  @override
+  Future restoreWorkspace() => super.restoreWorkspace();
+
+  @override
+  Future restoreLocationManager() => super.restoreLocationManager();
+
   //
-  // - End parts of the parent's ctor.
+  // - End parts of the parent's init().
   //
 
   @override
@@ -270,13 +270,32 @@ class SparkPolymer extends Spark {
   }
 }
 
-class _AppSetupParticipant extends LifecycleParticipant {
-  /**
-   * Update the Polymer UI with async info from the Spark app instance.
-   */
-  Future applicationStarted(Application application) {
-    SparkPolymer app = application;
-    app._ui.chromeOS = PlatformInfo.isCros;
+class _SparkSetupParticipant extends LifecycleParticipant {
+  Future applicationStarting(Application app) {
+    final SparkPolymer spark = app;
+    return PlatformInfo.init().then((_) {
+      return polymer.Polymer.onReady.then((_) {
+        spark.uiReady();
+        return spark.init();
+      });
+    });
+  }
+
+  Future applicationStarted(Application app) {
+    final SparkPolymer spark = app;
+    spark._ui.modelReady(spark);
+    spark.unveil();
+    _logger.logStep('Spark started');
+    _logger.logElapsed('Total startup time');
+    return new Future.value();
+  }
+
+  Future applicationClosed(Application app) {
+    final SparkPolymer spark = app;
+    spark.editorManager.persistState();
+    spark.launchManager.dispose();
+    spark.localPrefs.flush();
+    spark.syncPrefs.flush();
     return new Future.value();
   }
 }
