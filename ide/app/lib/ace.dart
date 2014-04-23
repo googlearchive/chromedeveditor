@@ -240,21 +240,6 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
-    // Declaration linking hotkey
-//    _aceEditor.commands.addCommand(new ace.Command('link_to_declaration',
-//        const ace.BindKey(mac: 'F3', win: 'F3'), (e) {
-//          int offset = currentSession.document.positionToIndex(
-//              _aceEditor.cursorPosition);
-//          _analysisService.getDeclarationFor(currentFile, offset).then(
-//              (svc.Declaration declaration) {
-//            if (declaration != null) {
-//              print(declaration);
-//              print(declaration.getFile(currentFile.project));
-//            }
-//          });
-////          _aceEditor.cursorPosition.column
-//        }));
-
     // Fallback
     theme = THEMES[0];
 
@@ -495,14 +480,6 @@ class AceManager {
   }
 
   ace.Selection get selection => _aceEditor.selection;
-
-  void setSelectionAnchor(int row, int column) {
-    selection.setSelectionAnchor(row, column);
-  }
-
-  void selectTo(int row, int column) {
-    selection.selectTo(row, column);
-  }
 
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
