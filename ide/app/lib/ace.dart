@@ -86,6 +86,18 @@ class TextEditor extends Editor {
 
   void focus() => aceManager.focus();
 
+  void select(int offset, int length) {
+    // Check if we're the current editor.
+    if (file != aceManager.currentFile) return;
+
+    ace.Point startSelection = _session.document.indexToPosition(offset);
+    ace.Point endSelection = _session.document.indexToPosition(offset + length);
+
+    ace.Selection selection = aceManager._aceEditor.selection;
+    selection.setSelectionAnchor(startSelection.row, startSelection.column);
+    selection.selectTo(endSelection.row, endSelection.column);
+  }
+
   bool get supportsOutline => false;
 
   bool get supportsFormat => false;
@@ -95,6 +107,8 @@ class TextEditor extends Editor {
       pubProperties.isInPackagesFolder(file) || bowerProperties.isInPackagesFolder(file);
 
   void format() { }
+
+  void navigateToDeclaration() { }
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -173,6 +187,27 @@ class DartEditor extends TextEditor {
       super._create(aceManager, file);
 
   bool get supportsOutline => true;
+
+  void navigateToDeclaration() {
+    int offset = _session.document.positionToIndex(
+        aceManager._aceEditor.cursorPosition);
+
+    aceManager._analysisService.getDeclarationFor(file, offset).then(
+        (svc.Declaration declaration) {
+      if (declaration != null) {
+        workspace.File targetFile = declaration.getFile(file.project);
+
+        // TODO: open targetFile, select declaration.offset, declaration.length
+        if (targetFile != null) {
+          aceManager.delegate.openEditor(targetFile).then((Editor editor) {
+            if (editor is TextEditor) {
+              editor.select(declaration.offset, declaration.length);
+            }
+          });
+        }
+      }
+    });
+  }
 }
 
 class CssEditor extends TextEditor {
@@ -548,14 +583,6 @@ class AceManager {
     outline.build(text);
   }
 
-  Future<svc.Declaration> getDeclarationAtCursor() {
-    if (currentFile.project == null) return null;
-
-    int offset = currentSession.document.positionToIndex(
-        _aceEditor.cursorPosition);
-    return _analysisService.getDeclarationFor(currentFile, offset);
-  }
-
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
     if (event.hasChangesFor(currentFile)) {
       setMarkers(currentFile.getMarkers());
@@ -571,17 +598,6 @@ class AceManager {
       default:
         return ace.Annotation.INFO;
     }
-  }
-
-  void navigateToDeclaration(svc.Declaration declaration) {
-    ace.Point startSelection = currentSession.document.indexToPosition(
-        declaration.offset);
-    ace.Point endSelection = currentSession.document.indexToPosition(
-        declaration.offset + declaration.length);
-
-    ace.Selection selection =_aceEditor.selection;
-    selection.setSelectionAnchor(startSelection.row, startSelection.column);
-    selection.selectTo(endSelection.row, endSelection.column);
   }
 }
 
@@ -675,6 +691,8 @@ abstract class AceManagerDelegate {
    * Returns true if the file with the given filename can be edited as text.
    */
   bool canShowFileAsText(String filename);
+
+  Future<Editor> openEditor(workspace.File file);
 }
 
 String _calcMD5(String text) {

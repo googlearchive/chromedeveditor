@@ -684,6 +684,18 @@ abstract class Spark
     return _aceManager.isFileExtensionEditable(extension) ||
         _textFileExtensions.contains(extension);
   }
+
+  Future<Editor> openEditor(ws.File file) {
+    _selectResource(file);
+
+    return nextTick().then((_) {
+      for (Editor editor in editorManager.editors) {
+        if (editor.file == file) return editor;
+      }
+      return null;
+    });
+  }
+
   //
   // - End implementation of AceManagerDelegate interface.
   //
@@ -1559,21 +1571,17 @@ class GetDeclarationAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    AceManager aceManager = spark._aceManager;
-
-    aceManager.getDeclarationAtCursor().then((Declaration declaration) {
-      if (declaration == null) return;
-
-      var currentFile = aceManager.currentFile;
-
-      spark._selectInEditor(declaration.getFile(currentFile.project));
-      aceManager.focus();
-
-      Timer.run(() => aceManager.navigateToDeclaration(declaration));
-    });
+    ws.File file = spark.editorManager.currentFile;
+    for (Editor editor in spark.editorManager.editors) {
+      if (editor.file == file) {
+        if (editor is TextEditor) {
+          editor.navigateToDeclaration();
+        }
+        break;
+      }
+    }
   }
 }
-
 
 class FocusMainMenuAction extends SparkAction {
   FocusMainMenuAction(Spark spark)
