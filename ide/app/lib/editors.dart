@@ -83,7 +83,7 @@ class EditorManager implements EditorProvider {
 
   BoolCachedPreference stripWhitespaceOnSave;
 
-  static final int PREFS_EDITORSTATES_VERSION = 2;
+  static final int PREFS_EDITORSTATES_VERSION = 1;
 
   static final int EDITOR_TYPE_IMAGE = 1;
   static final int EDITOR_TYPE_TEXT = 2;
