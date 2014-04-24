@@ -8,6 +8,7 @@
 
 library spark.ui.widgets.treeview;
 
+import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
 
@@ -48,6 +49,10 @@ class TreeView implements ListViewDelegate {
   TreeViewCell _currentDragOverCell;
   // Whether the user can drag a cell.
   bool draggingEnabled = false;
+  // Timer to expand cell on dragover
+  Timer _pendingExpansionTimer;
+  // Node UID associated with above timer
+  String _pendingExpansionNodeUid;
   // Unique identifier of the tree.
   String _uuid;
 
@@ -66,6 +71,8 @@ class TreeView implements ListViewDelegate {
     _listView = new ListView(element, this);
     _rows = null;
     _rowsMap = null;
+    _pendingExpansionTimer = null;
+    _pendingExpansionNodeUid = null;
     reloadData();
   }
 
@@ -415,18 +422,18 @@ class TreeView implements ListViewDelegate {
       }
     }
 
-    String nodeUID = null;
+    String nodeUid = null;
     if (cell != null) {
-      nodeUID = cell.nodeUID;
+      nodeUid = cell.nodeUID;
     }
     List<String> dragSelection = _innerDragSelection(event.dataTransfer);
     if (dragSelection != null) {
-      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUID)) {
+      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUid)) {
         cell = null;
       }
     } else {
       // Dropping from somewhere else.
-      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, nodeUID)) {
+      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, nodeUid)) {
         cell = null;
       }
     }
@@ -438,6 +445,22 @@ class TreeView implements ListViewDelegate {
       }
       if (cell != null) {
         cell.dragOverlayVisible = true;
+        
+        if(_pendingExpansionNodeUid != cell.nodeUID && _pendingExpansionTimer != null) {
+            _pendingExpansionTimer.cancel();
+            _pendingExpansionTimer = null;
+        }
+        if(_pendingExpansionTimer == null) {
+          // Queue cell for expanding if it's a pausing drag hover.
+          _pendingExpansionNodeUid = cell.nodeUID;
+          _pendingExpansionTimer = new Timer(const Duration(milliseconds: 1000), () {
+            if(_currentDragOverCell != null &&
+                nodeUid == _currentDragOverCell.nodeUID &&
+                !isNodeExpanded(nodeUid)) {
+              setNodeExpanded(nodeUid, true, animated: true);
+            } 
+          });
+        }
       }
       _currentDragOverCell = cell;
     }
