@@ -41,7 +41,7 @@ class AceEditorTab extends EditorTab {
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
-    editor.onModification.listen((_) => persisted = true);
+    editor.onModification.listen((_) => parent.persistTab(file));
   }
 
   void activate() {
@@ -200,11 +200,25 @@ class EditorArea extends TabView {
 
       _nameController.add(file.name);
     }
+
+    _savePersistedTabs();
   }
 
   void persistTab(File file) {
     EditorTab tab = _tabOfFile[file];
     if (tab != null) tab.persisted = true;
+    _savePersistedTabs();
+  }
+
+  void _savePersistedTabs() {
+    List<String> filesUuids = [];
+    for(EditorTab tab in tabs) {
+      if (tab.persisted) filesUuids.add(tab.file.uuid);
+    }
+
+    EditorManager manager = (editorProvider as EditorManager);
+    manager.persistedFilesUuids = filesUuids;
+    manager.persistState();
   }
 
   /// Closes the tab.
@@ -216,6 +230,8 @@ class EditorArea extends TabView {
       editorProvider.close(file);
       _nameController.add(selectedTab == null ? null : selectedTab.label);
     }
+
+    _savePersistedTabs();
   }
 
   // Replaces the file loaded in a tab with a renamed version of the file
