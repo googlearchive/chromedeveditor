@@ -108,6 +108,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: #888;
+}
+
+.tabview-tablabel-caption.persisted {
+  color: black;
 }
 
 .tabview-tablabel-closebutton {

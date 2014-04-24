@@ -37,7 +37,8 @@ void main([List<String> args]) {
 
   defineTask('lint', taskFunction: lint, depends: ['setup']);
 
-  defineTask('deploy', taskFunction: deploy, depends : ['lint']);
+  defineTask('deploy', taskFunction: deploy, depends: ['lint']);
+  defineTask('dartium', taskFunction: deployForDartium, depends: ['lint']);
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
@@ -80,12 +81,23 @@ void setup(GrinderContext context) {
 }
 
 /**
- * Runt Polymer lint on the Polymer entry point.
+ * Run Polymer lint on the Polymer entry point.
  */
 void lint(context) {
   // TODO(devoncarew): Commented out to work around an NPE in the polymer linter.
   //polymer.lint(entryPoints: ['app/spark_polymer.html']);
   print('  !!! lint is temporarily turned off');
+}
+
+/**
+ * Similar to [deploy] but creates a layout suitable for Dartium.
+ * Does not run dart2js.
+ */
+void deployForDartium(GrinderContext context) {
+  Directory sourceDir = joinDir(BUILD_DIR, ['dartium']);
+  Directory destDir = joinDir(BUILD_DIR, ['dartium-out']);
+
+  _polymerDeploy(context, sourceDir, destDir, extraArgs: ['--no-js']);
 }
 
 /**
@@ -337,7 +349,8 @@ void _zip(GrinderContext context, String dirToZip, String destFile) {
   }
 }
 
-void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
+void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir,
+                    {List extraArgs}) {
   deleteEntity(getDir('${sourceDir.path}'), context);
   deleteEntity(getDir('${destDir.path}'), context);
 
@@ -356,8 +369,11 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
 
+  var args = ['--out', '../../${destDir.path}'];
+  if (extraArgs != null) args.addAll(extraArgs);
+
   runDartScript(context, 'packages/polymer/deploy.dart',
-      arguments: ['--out', '../../${destDir.path}'],
+      arguments: args,
       packageRoot: 'packages',
       workingDirectory: sourceDir.path);
 }

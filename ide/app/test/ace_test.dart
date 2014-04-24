@@ -38,6 +38,9 @@ class MockAceManager implements AceManager {
 
   Point get cursorPosition => new Point(0, 0);
   void set cursorPosition(Point position) {}
+  void setSelectionAnchor(int row, int column) {}
+  void selectTo(int row, int column) {}
+
   ace.EditSession get currentSession => null;
   void focus() { }
   void resize() { }
@@ -75,7 +78,7 @@ class MockAceEditor implements TextEditor {
   Stream get onDirtyChange => null;
   Stream get onModification => null;
 
-  Future save() => new Future.value();
+  Future save([bool stripWhitespace = false]) => new Future.value();
 
   void setSession(ace.EditSession value) { }
 
@@ -85,7 +88,9 @@ class MockAceEditor implements TextEditor {
   bool get supportsFormat => false;
   bool get readOnly => false;
 
+  void select(Span span) { }
   void format() { }
+  void navigateToDeclaration() { }
 }
 
 class MockEditSession implements EditSession {

@@ -304,45 +304,6 @@ div.ace_gutter-cell.ace_info {
   z-index: 500;
 }
 
-#outline {
-  bottom: 0;
-  margin: 10px;
-  position: absolute;
-  right: 15px;
-  top: 0;
-  width: 200px;
-  z-index: 100;
-}
-
-#outlineContent {
-  background: rgba(0, 0, 0, 0.8);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  bottom: 35px;
-  left: 0;
-  overflow-y: auto;
-  position: absolute;
-  right: 0;
-  top: 0;
-  transition: opacity 250ms;
-}
-
-#outlineScrollable {
-  overflow-y: auto;
-  margin: 10px;
-}
-
-#outlineScrollable ul {
-  margin: 0px;
-  padding: 0 0 0 10px;
-  list-style-type: none;
-}
-
-#outlineScrollable > ul {
-  margin: 0 10px 0 0;
-  padding: 0px;
-}
-
 .outlineItem.topLevel.class:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 5px;
@@ -371,6 +332,23 @@ li.outlineItem.topLevel.class {
   content: '()';
 }
 
+.outlineItem.accessor,
+    .outlineItem.accessor > a {
+  color: #77c;
+}
+
+.outlineItem.accessor.getter > a:before,
+    .outlineItem.accessor.getter > a:before {
+  content: 'get ';
+  color: #888;
+}
+
+.outlineItem.accessor.setter > a:before,
+    .outlineItem.accessor.setter > a:before {
+  content: 'set ';
+  color: #888;
+}
+
 .outlineItem.topLevel.variable, .outlineItem.property,
     .outlineItem.topLevel.variable > a, .outlineItem.property > a {
   color: #77c;
@@ -380,11 +358,12 @@ li.outlineItem.topLevel.class {
   background-color: rgba(255, 255, 255, 0.5);
   border: none;
   border-radius: 5px;
-  bottom: 0px;
+  bottom: 10px;
   height: 30px;
   position: absolute;
-  right: 0;
+  right: 10px;
   width: 30px;
+  z-index: 100;
 }
 
 #toggleOutlineButton:hover {
@@ -399,22 +378,27 @@ li.outlineItem.topLevel.class {
   outline: none;
 }
 
-#toggleOutlineButton > #hideOutlineGlyph {
-  display: inline;
+#outline {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  bottom: 35px;
+  overflow-y: auto;
+  padding: 10px;
+  position: absolute;
+  right: 30px;
+  top: 10px;
+  transition: opacity 250ms;
+  width: 200px;
+  z-index: 100;
 }
 
-#toggleOutlineButton > #showOutlineGlyph {
-  display: none;
-}
-
-#outline.collapsed #toggleOutlineButton > #hideOutlineGlyph {
-  display: none;
-}
-
-#outline.collapsed #toggleOutlineButton > #showOutlineGlyph {
-  display: inline;
-}
-
-#outline.collapsed #outlineContent {
+#outline.collapsed {
   opacity: 0;
+  pointer-events: none;
+}
+
+#outline > ul {
+  margin: 0 10px 0 0;
+  padding: 0px;
 }

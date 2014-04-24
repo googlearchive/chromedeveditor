@@ -24,14 +24,9 @@ class SparkException implements Exception {
 
 /**
  * Defines all error types in spark as string. Each error string represents
- * a unique SparkError.
+ * a unique [SparkException].
  */
 class SparkErrorConstants {
-
-static final String GIT_BRANCH_NOT_FOUND
-   = "git.branch_not_found";
-
-static final String GIT_CLONE_GIT_DIR_IN_USE
-   = "git.clone_dir_in_use";
-
+  static final String GIT_BRANCH_NOT_FOUND = "git.branch_not_found";
+  static final String GIT_CLONE_GIT_DIR_IN_USE = "git.clone_dir_in_use";
 }
