@@ -51,7 +51,7 @@ class TreeView implements ListViewDelegate {
   bool draggingEnabled = false;
   // Timer to expand cell on dragover
   Timer _pendingExpansionTimer;
-  // nodeUID associated with above timer
+  // Node UID associated with above timer
   String _pendingExpansionNodeUid;
   // Unique identifier of the tree.
   String _uuid;
