@@ -194,9 +194,7 @@ class EditorArea extends TabView {
       if (replaceCurrent) {
         tabToReplace = selectedTab;
       } else {
-        try {
-          tabToReplace = tabs.firstWhere((t) => !t.persisted);
-        } catch (e) {}
+        tabToReplace = tabs.firstWhere((t) => !t.persisted, orElse: () => null);
       }
 
       if (tabToReplace != null) {
