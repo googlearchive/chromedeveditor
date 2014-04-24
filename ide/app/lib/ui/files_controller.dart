@@ -281,7 +281,6 @@ class FilesController implements TreeViewDelegate {
       }
     }
   }
-  
   void treeViewDrop(TreeView view,
                     String nodeUuid,
                     html.DataTransfer dataTransfer) {
@@ -289,15 +288,15 @@ class FilesController implements TreeViewDelegate {
     List<Future<File>> futureFiles = new List<Future<File>>();
     
     for(html.File file in dataTransfer.files) {
-      futureFiles.add(_WorkspaceFileFromHtmlFileElement(file, destinationFolder));
+      futureFiles.add(_CopyHtmlFileToWorkspace(file, destinationFolder));
     }
     Future.wait(futureFiles).then((List<File> files) {
       setSelection(files);
     });
   }
   
-  static Future<File> _WorkspaceFileFromHtmlFileElement(html.File file,
-                                                        Folder destination) {
+  static Future<File> _CopyHtmlFileToWorkspace(html.File file,
+                                               Folder destination) {
     Completer<File> c = new Completer();
     html.FileReader reader = new html.FileReader();
     reader.onLoadEnd.listen((html.ProgressEvent event) {
@@ -892,4 +891,3 @@ class FilesController implements TreeViewDelegate {
     }
   }
 }
-
