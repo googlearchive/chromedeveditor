@@ -420,6 +420,7 @@ abstract class Spark
     actionManager.registerAction(new ImportFolderAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
+    actionManager.registerAction(new GetDeclarationAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -492,6 +493,14 @@ abstract class Spark
 
   // Implemented in a sub-class.
   void unveil() { }
+
+  Editor getCurrentEditor() {
+    ws.File file = editorManager.currentFile;
+    for (Editor editor in editorManager.editors) {
+      if (editor.file == file) return editor;
+    }
+    return null;
+  }
 
   /**
    * Show a model error dialog.
@@ -684,6 +693,23 @@ abstract class Spark
     return _aceManager.isFileExtensionEditable(extension) ||
         _textFileExtensions.contains(extension);
   }
+
+  Future<Editor> openEditor(ws.File file, {Span selection}) {
+    _selectResource(file);
+
+    return nextTick().then((_) {
+      for (Editor editor in editorManager.editors) {
+        if (editor.file == file) {
+          if (selection != null && editor is TextEditor) {
+            editor.select(selection);
+          }
+          return editor;
+        }
+      }
+      return null;
+    });
+  }
+
   //
   // - End implementation of AceManagerDelegate interface.
   //
@@ -1524,14 +1550,9 @@ class FormatAction extends SparkAction {
   }
 
   void _invoke([Object context]) {
-    ws.File file = spark.editorManager.currentFile;
-    for (Editor editor in spark.editorManager.editors) {
-      if (editor.file == file) {
-        if (editor is TextEditor) {
-          editor.format();
-        }
-        break;
-      }
+    Editor editor = spark.getCurrentEditor();
+    if (editor is TextEditor) {
+      editor.format();
     }
   }
 }
@@ -1545,6 +1566,24 @@ class SearchAction extends SparkAction {
   @override
   void _invoke([Object context]) {
     spark.getUIElement('#searchBox').focus();
+  }
+}
+
+class GetDeclarationAction extends SparkAction {
+  AnalyzerService _analysisService;
+
+  GetDeclarationAction(Spark spark)
+      : super(spark, 'getDeclaration', 'Get Declaration') {
+    addBinding('f3');
+    _analysisService = spark.services.getService('analyzer');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    Editor editor = spark.getCurrentEditor();
+    if (editor is TextEditor) {
+      editor.navigateToDeclaration();
+    }
   }
 }
 
