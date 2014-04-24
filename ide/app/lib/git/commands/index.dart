@@ -36,7 +36,7 @@ class Index {
   // to know when it will complete.
   Completer _writeIndexCompleter = null;
   // Request to write the index to disk now is in progress.
-  bool _flushing;
+  bool _flushing = false;
 
   Index(this._store);
 
