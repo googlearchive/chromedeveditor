@@ -197,7 +197,7 @@ class DartEditor extends TextEditor {
       if (declaration != null) {
         workspace.File targetFile = declaration.getFile(file.project);
 
-        // TODO: open targetFile, select declaration.offset, declaration.length
+        // Open targetFile and select the range of text.
         if (targetFile != null) {
           aceManager.delegate.openEditor(targetFile).then((Editor editor) {
             if (editor is TextEditor) {
