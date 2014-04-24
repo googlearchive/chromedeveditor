@@ -448,8 +448,9 @@ class TreeView implements ListViewDelegate {
         
         if(_pendingExpansionNodeUid != cell.nodeUID && _pendingExpansionTimer != null) {
             _pendingExpansionTimer.cancel();
+            _pendingExpansionTimer = null;
         }
-        if(_pendingExpansionTimer == null || !_pendingExpansionTimer.isActive) {
+        if(_pendingExpansionTimer == null) {
           // Queue cell for expanding if it's a pausing drag hover.
           _pendingExpansionNodeUid = cell.nodeUID;
           _pendingExpansionTimer = new Timer(const Duration(milliseconds: 1000), () {
