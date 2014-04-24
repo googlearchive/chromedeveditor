@@ -190,8 +190,17 @@ class EditorArea extends TabView {
         replaceCurrent = false;
       }
 
+      EditorTab tabToReplace = null;
       if (replaceCurrent) {
-        replace(selectedTab, tab, switchesTab: switchesTab);
+        tabToReplace = selectedTab;
+      } else {
+        try {
+          tabToReplace = tabs.firstWhere((t) => !t.persisted);
+        } catch (e) {}
+      }
+
+      if (tabToReplace != null) {
+        replace(tabToReplace, tab, switchesTab: switchesTab);
       } else {
         add(tab, switchesTab: switchesTab);
       }
