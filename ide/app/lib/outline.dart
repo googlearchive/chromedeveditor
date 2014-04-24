@@ -13,19 +13,20 @@ import '../lib/services.dart' as services;
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
+  Map<int, OutlineItem> outlineItemsByOffset;
+  OutlineItem selectedItem;
+
   StreamSubscription _currentOutlineOperation;
   Completer _buildCompleter;
 
   html.Element _container;
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
+  StreamController _childSelectedController = new StreamController();
 
-  services.AnalyzerService analyzer;
+  services.AnalyzerService _analyzer;
 
-  StreamController childSelectedController = new StreamController();
-  Stream get onChildSelected => childSelectedController.stream;
-
-  Outline(this.analyzer, this._container) {
+  Outline(this._analyzer, this._container) {
     // Use template to create the UI of outline.
     html.DocumentFragment template =
         (html.querySelector('#outline-template') as
@@ -46,6 +47,8 @@ class Outline {
     _container.children.add(_outlineDiv);
     _container.children.add(button);
   }
+
+  Stream get onChildSelected => _childSelectedController.stream;
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
   set visible(bool value) {
@@ -70,7 +73,7 @@ class Outline {
 
     _buildCompleter = new Completer();
 
-    _currentOutlineOperation = analyzer.getOutlineFor(code).asStream()
+    _currentOutlineOperation = _analyzer.getOutlineFor(code).asStream()
         .listen((services.Outline model) => _populate(model));
 
     _currentOutlineOperation.onDone(() => _buildCompleter.complete);
@@ -79,9 +82,11 @@ class Outline {
   }
 
   void _populate(services.Outline outline) {
+    outlineItemsByOffset = {};
     _rootList.children.clear();
     for (services.OutlineTopLevelEntry data in outline.entries) {
-      _create(data);
+      OutlineItem item = _create(data);
+      outlineItemsByOffset[item.bodyStartOffset] = item;
     }
   }
 
@@ -106,7 +111,7 @@ class Outline {
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
     _rootList.append(item.element);
-    item.onClick.listen((event) => childSelectedController.add(item));
+    item.onClick.listen((event) => _childSelectedController.add(item));
     return item;
   }
 
@@ -117,11 +122,19 @@ class Outline {
       _addItem(new OutlineTopLevelFunction(data));
 
   OutlineClass _addClass(services.OutlineClass data) {
-    OutlineClass classItem = new OutlineClass(data);
+    OutlineClass classItem = new OutlineClass(data, outlineItemsByOffset);
     classItem.onChildSelected.listen((event) =>
-        childSelectedController.add(event));
+        _childSelectedController.add(event));
     _addItem(classItem);
     return classItem;
+  }
+
+  void setCurrentItem(OutlineItem itemAtCursor) {
+    if (selectedItem != null) {
+      selectedItem.setSelected(false);
+    }
+    selectedItem = itemAtCursor;
+    selectedItem.setSelected(true);
   }
 }
 
@@ -129,7 +142,7 @@ abstract class OutlineItem {
   html.LIElement _element;
   services.OutlineEntry _data;
   html.AnchorElement _anchor;
-  get displayName => _data.name;
+  String get displayName => _data.name;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
@@ -146,6 +159,14 @@ abstract class OutlineItem {
   int get bodyStartOffset => _data.bodyStartOffset;
   int get bodyEndOffset => _data.bodyEndOffset;
   html.LIElement get element => _element;
+
+  void setSelected(bool selected) {
+    if (selected) {
+      _element.classes.add("selected");
+    } else {
+      _element.classes.remove("selected");
+    }
+  }
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
@@ -169,8 +190,9 @@ class OutlineClass extends OutlineTopLevelItem {
   List<OutlineClassMember> members = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
+  Map<int, OutlineItem> _outlineItemsByOffset;
 
-  OutlineClass(services.OutlineClass data)
+  OutlineClass(services.OutlineClass data, this._outlineItemsByOffset)
       : super(data, "class") {
     _element.append(_childrenRootElement);
     _populate(data);
@@ -185,7 +207,8 @@ class OutlineClass extends OutlineTopLevelItem {
 
   void _populate(services.OutlineClass classData) {
     for (services.OutlineEntry data in classData.members) {
-      _create(data);
+      OutlineItem item = _create(data);
+      _outlineItemsByOffset[item.bodyStartOffset] = item;
     }
   }
 

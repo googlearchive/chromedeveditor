@@ -272,8 +272,24 @@ class AceManager {
       ace.Point newCursorPosition = _aceEditor.cursorPosition;
       // Cancel the last outline selection update
       if (lastCursorPosition != newCursorPosition) {
-        /*%TRACE3*/ print("""(4> 4/24/14): newCursorPosition: ${newCursorPosition.row}"""); // TRACE%
-        /*%TRACE3*/ print("""(4> 4/24/14): newCursorPosition: ${newCursorPosition.column}"""); // TRACE%
+        int cursorIndex =
+            currentSession.document.positionToIndex(newCursorPosition);
+        Map<int, OutlineItem> outlineItems = outline.outlineItemsByOffset;
+        if (outlineItems != null) {
+          int containerOffset = -1;
+
+          var outlineOffets = outlineItems.keys.toList()..sort();
+
+          for (int outlineOffset in outlineOffets) {
+            if (outlineOffset > cursorIndex) break;
+            containerOffset = outlineOffset;
+          }
+
+          if (containerOffset != -1) {
+            OutlineItem itemAtCursor = outlineItems[containerOffset];
+            outline.setCurrentItem(itemAtCursor);
+          }
+        }
       }
       lastCursorPosition = newCursorPosition;
     });
