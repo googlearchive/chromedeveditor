@@ -312,7 +312,8 @@ abstract class Spark
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
-        editorArea.selectFile(file, forceOpen: true, switchesTab: false);
+        editorArea.selectFile(file, forceOpen: true, switchesTab: false,
+            replaceCurrent: false);
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
