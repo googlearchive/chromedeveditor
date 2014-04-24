@@ -25,9 +25,7 @@ class Outline {
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
 
-  Outline(services.Services services, this._container) {
-    analyzer = services.getService("analyzer");
-
+  Outline(services.AnalyzerService analyzer, this._container) {
     // Use template to create the UI of outline.
     html.DocumentFragment template =
         (html.querySelector('#outline-template') as

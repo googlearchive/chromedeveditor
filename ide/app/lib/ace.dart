@@ -60,6 +60,9 @@ class TextEditor extends Editor {
   void setSession(ace.EditSession value) {
     _session = value;
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
+    _session.onChangeScrollTop.listen((_) {
+      /*%TRACE3*/ print("(4> 4/24/14): onChangeScrollTop!"); // TRACE%
+    });
   }
 
   bool get dirty => _dirty;
@@ -251,7 +254,13 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    outline = new Outline(services, parentElement);
+    setupOutline();
+  }
+
+  utils.Canceler outlineUpdateCanceler = new utils.Canceler();
+
+  void setupOutline() {
+    outline = new Outline(_analysisService, parentElement);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.startOffset);
@@ -262,7 +271,22 @@ class AceManager {
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
+    });
 
+    _aceEditor.onChangeSelection.listen((_) {
+      // Cancel the last outline selection update
+      outlineUpdateCanceler.canceled = true;
+
+      // Create a new canceler.
+      outlineUpdateCanceler = new utils.Canceler();
+      utils.Canceler outlineUpdateState = outlineUpdateCanceler;
+
+      new Future.delayed(const Duration(milliseconds: 10)).then((_){
+        if (!outlineUpdateState.canceled) {
+          /*%TRACE3*/ print("""(4> 4/24/14): _aceEditor.cursorPosition: ${_aceEditor.cursorPosition.row}"""); // TRACE%
+          /*%TRACE3*/ print("""(4> 4/24/14): _aceEditor.cursorPosition: ${_aceEditor.cursorPosition.column}"""); // TRACE%
+        }
+      });
     });
   }
 
