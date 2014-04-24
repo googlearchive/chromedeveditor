@@ -254,18 +254,12 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    setupOutline();
-  }
-
-  utils.Canceler outlineUpdateCanceler = new utils.Canceler();
-
-  void setupOutline() {
     outline = new Outline(_analysisService, parentElement);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
-          currentSession.document.indexToPosition(item.startOffset);
+          currentSession.document.indexToPosition(item.nameStartOffset);
       ace.Point endPoint =
-          currentSession.document.indexToPosition(item.endOffset);
+          currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
@@ -273,21 +267,23 @@ class AceManager {
       _aceEditor.focus();
     });
 
+    ace.Point lastCursorPosition =  new ace.Point(-1, -1);
     _aceEditor.onChangeSelection.listen((_) {
+      ace.Point newCursorPosition = _aceEditor.cursorPosition;
       // Cancel the last outline selection update
-      outlineUpdateCanceler.canceled = true;
-
-      // Create a new canceler.
-      outlineUpdateCanceler = new utils.Canceler();
-      utils.Canceler outlineUpdateState = outlineUpdateCanceler;
-
-      new Future.delayed(const Duration(milliseconds: 10)).then((_){
-        if (!outlineUpdateState.canceled) {
-          /*%TRACE3*/ print("""(4> 4/24/14): _aceEditor.cursorPosition: ${_aceEditor.cursorPosition.row}"""); // TRACE%
-          /*%TRACE3*/ print("""(4> 4/24/14): _aceEditor.cursorPosition: ${_aceEditor.cursorPosition.column}"""); // TRACE%
-        }
-      });
+      if (lastCursorPosition != newCursorPosition) {
+        /*%TRACE3*/ print("""(4> 4/24/14): newCursorPosition: ${newCursorPosition.row}"""); // TRACE%
+        /*%TRACE3*/ print("""(4> 4/24/14): newCursorPosition: ${newCursorPosition.column}"""); // TRACE%
+      }
+      lastCursorPosition = newCursorPosition;
     });
+
+    setupOutline();
+  }
+
+
+
+  void setupOutline() {
   }
 
   bool isFileExtensionEditable(String extension) {

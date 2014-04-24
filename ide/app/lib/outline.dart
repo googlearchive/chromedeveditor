@@ -25,7 +25,7 @@ class Outline {
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
 
-  Outline(services.AnalyzerService analyzer, this._container) {
+  Outline(this.analyzer, this._container) {
     // Use template to create the UI of outline.
     html.DocumentFragment template =
         (html.querySelector('#outline-template') as
@@ -141,8 +141,10 @@ abstract class OutlineItem {
   }
 
   Stream get onClick => _anchor.onClick;
-  int get startOffset => _data.startOffset;
-  int get endOffset => _data.endOffset;
+  int get nameStartOffset => _data.nameStartOffset;
+  int get nameEndOffset => _data.nameEndOffset;
+  int get bodyStartOffset => _data.bodyStartOffset;
+  int get bodyEndOffset => _data.bodyEndOffset;
   html.LIElement get element => _element;
 }
 
