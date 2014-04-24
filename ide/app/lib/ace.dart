@@ -86,16 +86,21 @@ class TextEditor extends Editor {
 
   void focus() => aceManager.focus();
 
-  void select(int offset, int length) {
+  void select(Span span) {
     // Check if we're the current editor.
     if (file != aceManager.currentFile) return;
 
-    ace.Point startSelection = _session.document.indexToPosition(offset);
-    ace.Point endSelection = _session.document.indexToPosition(offset + length);
+    ace.Point startSelection = _session.document.indexToPosition(span.offset);
+    ace.Point endSelection = _session.document.indexToPosition(
+        span.offset + span.length);
 
     ace.Selection selection = aceManager._aceEditor.selection;
     selection.setSelectionAnchor(startSelection.row, startSelection.column);
     selection.selectTo(endSelection.row, endSelection.column);
+
+    // TODO: The scroll position should be calculated better, to make sure
+    // enough lines are visible on either side of the selection, and to center
+    // the selection if we have to move the text from off-screen.
   }
 
   bool get supportsOutline => false;
@@ -199,11 +204,8 @@ class DartEditor extends TextEditor {
 
         // Open targetFile and select the range of text.
         if (targetFile != null) {
-          aceManager.delegate.openEditor(targetFile).then((Editor editor) {
-            if (editor is TextEditor) {
-              editor.select(declaration.offset, declaration.length);
-            }
-          });
+          Span selection = new Span(declaration.offset, declaration.length);
+          aceManager.delegate.openEditor(targetFile, selection: selection);
         }
       }
     });
@@ -692,7 +694,14 @@ abstract class AceManagerDelegate {
    */
   bool canShowFileAsText(String filename);
 
-  Future<Editor> openEditor(workspace.File file);
+  Future<Editor> openEditor(workspace.File file, {Span selection});
+}
+
+class Span {
+  final int offset;
+  final int length;
+
+  Span(this.offset, this.length);
 }
 
 String _calcMD5(String text) {

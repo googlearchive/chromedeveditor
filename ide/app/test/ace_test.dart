@@ -88,7 +88,7 @@ class MockAceEditor implements TextEditor {
   bool get supportsFormat => false;
   bool get readOnly => false;
 
-  void select(int offset, int length) { }
+  void select(Span span) { }
   void format() { }
   void navigateToDeclaration() { }
 }
