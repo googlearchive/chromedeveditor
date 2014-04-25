@@ -208,8 +208,8 @@ class PrintProfiler {
 
 /**
  * Defines a preference with built in `whenLoaded` [Future] and easy access to
- * getting and setting (automatically saving as well as caching) the
- * preference `value`.
+ * getting and setting (automatically saving as well as caching) the preference
+ * `value`.
  */
 abstract class CachedPreference<T> {
   Future<CachedPreference> whenLoaded;
@@ -220,8 +220,8 @@ abstract class CachedPreference<T> {
   String _preferenceId;
 
   /**
-   * @param prefStore The PreferenceStore to use.
-   * @param preferenceId The id of the stored preference.
+   * [prefStore] is the PreferenceStore to use and [preferenceId] is the id of
+   * the stored preference.
    */
   CachedPreference(this._prefStore, this._preferenceId) {
     whenLoaded = _whenLoadedCompleter.future;
@@ -238,7 +238,7 @@ abstract class CachedPreference<T> {
   String adaptToString(T value);
 
   /**
-   * The value of the preference, if loaded.  If not loaded, throws an error.
+   * The value of the preference, if loaded. If not loaded, throws an error.
    */
   T get value {
     if (!_whenLoadedCompleter.isCompleted) {
@@ -265,7 +265,7 @@ abstract class CachedPreference<T> {
 }
 
 /**
- * Defines a cached [bool] preference access object.  Automatically saves and
+ * Defines a cached [bool] preference access object. Automatically saves and
  * caches for performance.
  */
 class BoolCachedPreference extends CachedPreference<bool> {

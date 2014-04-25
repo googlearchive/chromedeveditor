@@ -383,7 +383,6 @@ abstract class Spark
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
-    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
@@ -491,8 +490,12 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
-  // Implemented in a sub-class.
-  void unveil() { }
+  void unveil() {
+    if (developerMode) {
+      RunTestsAction action = actionManager.getAction('run-tests');
+      action.checkForTestListener();
+    }
+  }
 
   Editor getCurrentEditor() {
     ws.File file = editorManager.currentFile;
@@ -1049,22 +1052,6 @@ abstract class SparkActionWithDialog extends SparkAction {
   }
 
   void _show() => _dialog.show();
-}
-
-class FileOpenInTabAction extends SparkAction implements ContextAction {
-  FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in New Tab");
-
-  void _invoke([List<ws.File> files]) {
-    bool forceOpen = files.length > 1;
-    files.forEach((ws.File file) {
-      spark._selectInEditor(file, forceOpen: true, replaceCurrent: false);
-    });
-  }
-
-  String get category => 'folder';
-
-  bool appliesTo(Object object) => _isFileList(object);
 }
 
 class FileOpenAction extends SparkAction {
@@ -2634,17 +2621,27 @@ class SettingsAction extends SparkActionWithDialog {
 }
 
 class RunTestsAction extends SparkAction {
+  TestDriver testDriver;
+
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
     if (spark.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
 
+  void checkForTestListener() => _initTestDriver();
+
   _invoke([Object context]) {
     if (spark.developerMode) {
-      TestDriver testDriver = new TestDriver(
-          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+      _initTestDriver();
       testDriver.runTests();
+    }
+  }
+
+  void _initTestDriver() {
+    if (testDriver == null) {
+      testDriver = new TestDriver(all_tests.defineTests, spark.jobManager,
+          connectToTestListener: true);
     }
   }
 }
