@@ -134,36 +134,24 @@ class TextEditor extends Editor {
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
+      String fileText;
 
-      _aceSubscription.cancel();
-
-      try {
-        String fileText;
-
-        // Remove the trailing whitespace if asked to do so.
-        // TODO(ericarnold): Can't think of an easy way to share this preference,
-        //           but it might be a good idea to do so rather than passing it.
-        if (stripWhitespace)  {
-          int scrollTop = _session.scrollTop;
-          html.Point cursorPos = null;
-          if (aceManager.currentFile == file) {
-            cursorPos = aceManager.cursorPosition;
-          }
-          fileText = _stripWhitespace();
-        } else {
-          fileText = _session.value;
-        }
-
-        _lastSavedHash = _calcMD5(fileText);
-
-        // TODO(ericarnold): Need to cache or re-analyze on file switch.
-        // TODO(ericarnold): Need to analyze on initial file load.
-        aceManager.buildOutline();
-
-        return file.setContents(fileText).then((_) => dirty = false);
-      } finally {
-        _aceSubscription = _session.onChange.listen((_) => dirty = true);
+      // Remove the trailing whitespace if asked to do so.
+      // TODO(ericarnold): Can't think of an easy way to share this preference,
+      //           but it might be a good idea to do so rather than passing it.
+      if (stripWhitespace)  {
+        fileText = _stripWhitespace();
+      } else {
+        fileText = _session.value;
       }
+
+      Future returnFuture = _replaceContents(_session.value, fileText);
+
+      // TODO(ericarnold): Need to cache or re-analyze on file switch.
+      // TODO(ericarnold): Need to analyze on initial file load.
+      aceManager.buildOutline();
+
+      return returnFuture;
     } else {
       return new Future.value();
     }
@@ -178,7 +166,7 @@ class TextEditor extends Editor {
    * Replace the editor's contents with the given text. Make sure that we don't
    * fire a change event.
    */
-  void _replaceContents(String newContents) {
+  Future _replaceContents(String newContents, [String fileContents = null]) {
     _aceSubscription.cancel();
 
     try {
@@ -192,6 +180,14 @@ class TextEditor extends Editor {
       _session.scrollTop = scrollTop;
       if (cursorPos != null) {
         aceManager.cursorPosition = cursorPos;
+      }
+
+      if (fileContents != null) {
+        _lastSavedHash = _calcMD5(fileContents);
+
+        return file.setContents(fileContents).then((_) => dirty = false);
+      } else {
+        return new Future.value();
       }
     } finally {
       _aceSubscription = _session.onChange.listen((_) => dirty = true);
