@@ -491,8 +491,12 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
-  // Implemented in a sub-class.
-  void unveil() { }
+  void unveil() {
+    if (developerMode) {
+      RunTestsAction action = actionManager.getAction('run-tests');
+      action.checkForTestListener();
+    }
+  }
 
   Editor getCurrentEditor() {
     ws.File file = editorManager.currentFile;
@@ -2634,17 +2638,27 @@ class SettingsAction extends SparkActionWithDialog {
 }
 
 class RunTestsAction extends SparkAction {
+  TestDriver testDriver;
+
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
     if (spark.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
 
+  void checkForTestListener() => _initTestDriver();
+
   _invoke([Object context]) {
     if (spark.developerMode) {
-      TestDriver testDriver = new TestDriver(
-          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+      _initTestDriver();
       testDriver.runTests();
+    }
+  }
+
+  void _initTestDriver() {
+    if (testDriver == null) {
+      testDriver = new TestDriver(all_tests.defineTests, spark.jobManager,
+          connectToTestListener: true);
     }
   }
 }
