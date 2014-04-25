@@ -13,8 +13,8 @@ import '../lib/services.dart' as services;
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
-  Map<int, OutlineItem> outlineItemsByOffset;
-  OutlineItem selectedItem;
+  Map<int, OutlineItem> _outlineItemsByOffset;
+  OutlineItem _selectedItem;
 
   StreamSubscription _currentOutlineOperation;
   Completer _buildCompleter;
@@ -82,11 +82,11 @@ class Outline {
   }
 
   void _populate(services.Outline outline) {
-    outlineItemsByOffset = {};
+    _outlineItemsByOffset = {};
     _rootList.children.clear();
     for (services.OutlineTopLevelEntry data in outline.entries) {
       OutlineItem item = _create(data);
-      outlineItemsByOffset[item.bodyStartOffset] = item;
+      _outlineItemsByOffset[item.bodyStartOffset] = item;
     }
   }
 
@@ -122,19 +122,44 @@ class Outline {
       _addItem(new OutlineTopLevelFunction(data));
 
   OutlineClass _addClass(services.OutlineClass data) {
-    OutlineClass classItem = new OutlineClass(data, outlineItemsByOffset);
+    OutlineClass classItem = new OutlineClass(data, _outlineItemsByOffset);
     classItem.onChildSelected.listen((event) =>
         _childSelectedController.add(event));
     _addItem(classItem);
     return classItem;
   }
 
-  void setCurrentItem(OutlineItem itemAtCursor) {
-    if (selectedItem != null) {
-      selectedItem.setSelected(false);
+  OutlineItem get selectedItem => _selectedItem;
+
+  void setSelected(OutlineItem item) {
+    if (_selectedItem != null) {
+      _selectedItem.setSelected(false);
     }
-    selectedItem = itemAtCursor;
-    selectedItem.setSelected(true);
+
+    _selectedItem = item;
+
+    if (_selectedItem != null) {
+      _selectedItem.setSelected(true);
+    }
+  }
+
+  void selectItemAtOffset(int cursorOffset) {
+    Map<int, OutlineItem> outlineItems = _outlineItemsByOffset;
+    if (outlineItems != null) {
+      int containerOffset = -1;
+
+      var outlineOffets = outlineItems.keys.toList()..sort();
+
+      // Finds the last outline item that *doesn't* satisfies this:
+      for (int outlineOffset in outlineOffets) {
+        if (outlineOffset > cursorOffset) break;
+        containerOffset = outlineOffset;
+      }
+
+      if (containerOffset != -1) {
+        setSelected(outlineItems[containerOffset]);
+      }
+    }
   }
 }
 

@@ -60,9 +60,6 @@ class TextEditor extends Editor {
   void setSession(ace.EditSession value) {
     _session = value;
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
-    _session.onChangeScrollTop.listen((_) {
-      /*%TRACE3*/ print("(4> 4/24/14): onChangeScrollTop!"); // TRACE%
-    });
   }
 
   bool get dirty => _dirty;
@@ -254,6 +251,12 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
+    _setupOutline();
+  }
+
+
+
+  void _setupOutline() {
     outline = new Outline(_analysisService, parentElement);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
@@ -272,34 +275,12 @@ class AceManager {
       ace.Point newCursorPosition = _aceEditor.cursorPosition;
       // Cancel the last outline selection update
       if (lastCursorPosition != newCursorPosition) {
-        int cursorIndex =
-            currentSession.document.positionToIndex(newCursorPosition);
-        Map<int, OutlineItem> outlineItems = outline.outlineItemsByOffset;
-        if (outlineItems != null) {
-          int containerOffset = -1;
-
-          var outlineOffets = outlineItems.keys.toList()..sort();
-
-          for (int outlineOffset in outlineOffets) {
-            if (outlineOffset > cursorIndex) break;
-            containerOffset = outlineOffset;
-          }
-
-          if (containerOffset != -1) {
-            OutlineItem itemAtCursor = outlineItems[containerOffset];
-            outline.setCurrentItem(itemAtCursor);
-          }
-        }
+        int cursorOffset = currentSession.document.positionToIndex(
+            newCursorPosition);
+        outline.selectItemAtOffset(cursorOffset);
       }
       lastCursorPosition = newCursorPosition;
     });
-
-    setupOutline();
-  }
-
-
-
-  void setupOutline() {
   }
 
   bool isFileExtensionEditable(String extension) {

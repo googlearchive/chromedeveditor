@@ -315,7 +315,6 @@ div.ace_gutter-cell.ace_info {
 }
 
 .outlineItem.selected {
-  background: url("images/error_icon.png") no-repeat right top;
   background-color: rgba(255, 255, 255, 0.1);
 }
 
