@@ -628,6 +628,10 @@ class ThemeManager {
   html.Element _label;
 
   ThemeManager(this.aceManager, this.prefs, this._label) {
+    String value = 'monokai';
+    aceManager.theme = value;
+    _updateName(value);
+/*
     prefs.getValue('aceTheme').then((String value) {
       if (value != null) {
         aceManager.theme = value;
@@ -636,6 +640,7 @@ class ThemeManager {
         _updateName(aceManager.theme);
       }
     });
+*/
   }
 
   void inc(html.Event e) {
@@ -658,7 +663,9 @@ class ThemeManager {
   }
 
   void _updateName(String name) {
-    _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+    if (_label != null) {
+      _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+    }
   }
 }
 
