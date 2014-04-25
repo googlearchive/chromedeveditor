@@ -383,7 +383,6 @@ abstract class Spark
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
-    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
@@ -1053,22 +1052,6 @@ abstract class SparkActionWithDialog extends SparkAction {
   }
 
   void _show() => _dialog.show();
-}
-
-class FileOpenInTabAction extends SparkAction implements ContextAction {
-  FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in New Tab");
-
-  void _invoke([List<ws.File> files]) {
-    bool forceOpen = files.length > 1;
-    files.forEach((ws.File file) {
-      spark._selectInEditor(file, forceOpen: true, replaceCurrent: false);
-    });
-  }
-
-  String get category => 'folder';
-
-  bool appliesTo(Object object) => _isFileList(object);
 }
 
 class FileOpenAction extends SparkAction {
