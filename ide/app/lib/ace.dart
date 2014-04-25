@@ -86,6 +86,23 @@ class TextEditor extends Editor {
 
   void focus() => aceManager.focus();
 
+  void select(Span span) {
+    // Check if we're the current editor.
+    if (file != aceManager.currentFile) return;
+
+    ace.Point startSelection = _session.document.indexToPosition(span.offset);
+    ace.Point endSelection = _session.document.indexToPosition(
+        span.offset + span.length);
+
+    ace.Selection selection = aceManager._aceEditor.selection;
+    selection.setSelectionAnchor(startSelection.row, startSelection.column);
+    selection.selectTo(endSelection.row, endSelection.column);
+
+    // TODO: The scroll position should be calculated better, to make sure
+    // enough lines are visible on either side of the selection, and to center
+    // the selection if we have to move the text from off-screen.
+  }
+
   bool get supportsOutline => false;
 
   bool get supportsFormat => false;
@@ -95,6 +112,8 @@ class TextEditor extends Editor {
       pubProperties.isInPackagesFolder(file) || bowerProperties.isInPackagesFolder(file);
 
   void format() { }
+
+  void navigateToDeclaration() { }
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -173,6 +192,24 @@ class DartEditor extends TextEditor {
       super._create(aceManager, file);
 
   bool get supportsOutline => true;
+
+  void navigateToDeclaration() {
+    int offset = _session.document.positionToIndex(
+        aceManager._aceEditor.cursorPosition);
+
+    aceManager._analysisService.getDeclarationFor(file, offset).then(
+        (svc.Declaration declaration) {
+      if (declaration != null) {
+        workspace.File targetFile = declaration.getFile(file.project);
+
+        // Open targetFile and select the range of text.
+        if (targetFile != null) {
+          Span selection = new Span(declaration.offset, declaration.length);
+          aceManager.delegate.openEditor(targetFile, selection: selection);
+        }
+      }
+    });
+  }
 }
 
 class CssEditor extends TextEditor {
@@ -563,14 +600,6 @@ class AceManager {
     outline.build(text);
   }
 
-  Future<svc.Declaration> getDeclarationAtCursor() {
-    if (currentFile.project == null) return null;
-
-    int offset = currentSession.document.positionToIndex(
-        _aceEditor.cursorPosition);
-    return _analysisService.getDeclarationFor(currentFile, offset);
-  }
-
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
     if (event.hasChangesFor(currentFile)) {
       setMarkers(currentFile.getMarkers());
@@ -586,17 +615,6 @@ class AceManager {
       default:
         return ace.Annotation.INFO;
     }
-  }
-
-  void navigateToDeclaration(svc.Declaration declaration) {
-    ace.Point startSelection = currentSession.document.indexToPosition(
-        declaration.offset);
-    ace.Point endSelection = currentSession.document.indexToPosition(
-        declaration.offset + declaration.length);
-
-    ace.Selection selection =_aceEditor.selection;
-    selection.setSelectionAnchor(startSelection.row, startSelection.column);
-    selection.selectTo(endSelection.row, endSelection.column);
   }
 }
 
@@ -690,6 +708,15 @@ abstract class AceManagerDelegate {
    * Returns true if the file with the given filename can be edited as text.
    */
   bool canShowFileAsText(String filename);
+
+  Future<Editor> openEditor(workspace.File file, {Span selection});
+}
+
+class Span {
+  final int offset;
+  final int length;
+
+  Span(this.offset, this.length);
 }
 
 String _calcMD5(String text) {

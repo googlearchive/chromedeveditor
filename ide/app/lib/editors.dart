@@ -93,6 +93,7 @@ class EditorManager implements EditorProvider {
   // Keep state of files that have been opened earlier.
   // Keys are persist tokens of the files.
   final Map<String, _EditorState> _savedEditorStates = {};
+  List<String> persistedFilesUuids = [];
   final Map<File, Editor> _editorMap = {};
   final Services _services;
 
@@ -205,9 +206,16 @@ class EditorManager implements EditorProvider {
     // version: 1 -> PREFS_EDITORSTATES_VERSION. The version number helps
     //     ensure that the format is valid.
     Map savedMap = {};
-    savedMap['openedTabs'] =
-        _openedEditorStates.map((_EditorState s) => s.file.uuid).
-        toList();
+    Set<String> persistedTabs = new Set();
+    persistedTabs.addAll(persistedFilesUuids);
+    List<String> openedTabs = [];
+    // Save only persisted tabs.
+    for(_EditorState state in _openedEditorStates) {
+      if (persistedTabs.contains(state.file.uuid)) {
+        openedTabs.add(state.file.uuid);
+      }
+    }
+    savedMap['openedTabs'] = openedTabs;
     List<Map> filesState = [];
     _savedEditorStates.forEach((String key, _EditorState value) {
       filesState.add(value.toMap());

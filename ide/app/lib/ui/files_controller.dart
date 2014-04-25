@@ -40,6 +40,14 @@ class FilesControllerSelectionChangedEvent extends BusEvent {
   BusEventType get type => BusEventType.FILES_CONTROLLER__SELECTION_CHANGED;
 }
 
+class FilesControllerPersistTabEvent extends BusEvent {
+  File file;
+
+  FilesControllerPersistTabEvent(this.file);
+
+  BusEventType get type => BusEventType.FILES_CONTROLLER__PERSIST_TAB;
+}
+
 class FilesController implements TreeViewDelegate {
   // TreeView that's used to show the workspace.
   TreeView _treeView;
@@ -178,7 +186,11 @@ class FilesController implements TreeViewDelegate {
     });
     return resources;
   }
-
+  
+  void setSelection(List<Resource> resources) { 
+    _treeView.selection = resources.map((r) => r.uuid);
+  }
+  
   ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
     Resource resource = _filesMap[nodeUID];
     assert(resource != null);
@@ -229,8 +241,13 @@ class FilesController implements TreeViewDelegate {
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUIDs,
                              html.Event event) {
-    if (nodeUIDs.length == 1 && _filesMap[nodeUIDs.first] is Container) {
-      view.toggleNodeExpanded(nodeUIDs.first, animated: true);
+    if (nodeUIDs.length == 1) {
+      Resource resource = _filesMap[nodeUIDs.first];
+      if (resource is Container) {
+        view.toggleNodeExpanded(nodeUIDs.first, animated: true);
+      } else if (resource is File) {
+        _eventBus.addEvent(new FilesControllerPersistTabEvent(resource));
+      }
     }
   }
 
@@ -277,18 +294,32 @@ class FilesController implements TreeViewDelegate {
       }
     }
   }
-
-  void treeViewDrop(TreeView view, String nodeUID, html.DataTransfer dataTransfer) {
-    Folder destinationFolder = _filesMap[nodeUID] as Folder;
-    for (html.File file in dataTransfer.files) {
-      html.FileReader reader = new html.FileReader();
-      reader.onLoadEnd.listen((html.ProgressEvent event) {
-        destinationFolder.createNewFile(file.name).then((File file) {
-          file.setBytes(reader.result);
-        });
-      });
-      reader.readAsArrayBuffer(file);
+  void treeViewDrop(TreeView view,
+                    String nodeUuid,
+                    html.DataTransfer dataTransfer) {
+    Folder destinationFolder = _filesMap[nodeUuid] as Folder;
+    List<Future<File>> futureFiles = new List<Future<File>>();
+    
+    for(html.File file in dataTransfer.files) {
+      futureFiles.add(_CopyHtmlFileToWorkspace(file, destinationFolder));
     }
+    Future.wait(futureFiles).then((List<File> files) {
+      setSelection(files);
+    });
+  }
+  
+  static Future<File> _CopyHtmlFileToWorkspace(html.File file,
+                                               Folder destination) {
+    Completer<File> c = new Completer();
+    html.FileReader reader = new html.FileReader();
+    reader.onLoadEnd.listen((html.ProgressEvent event) {
+      destination.createNewFile(file.name).then((File f) {
+        f.setBytes(reader.result);
+        c.complete(f);
+      });
+    });
+    reader.readAsArrayBuffer(file);
+    return c.future;
   }
 
   bool _isDifferentProject(List<String> nodesUIDs, String targetNodeUID) {

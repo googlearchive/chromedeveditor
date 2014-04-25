@@ -38,7 +38,6 @@ import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
 import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
-import 'lib/ui/widgets/splitview.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
@@ -110,8 +109,6 @@ abstract class Spark
 
   EventBus _eventBus;
 
-  SplitView _splitView;
-
   FilesController _filesController;
 
   // Extensions of files that will be shown as text.
@@ -151,7 +148,6 @@ abstract class Spark
 
     initToolbar();
     buildMenu();
-
     initSplitView();
     initSaveStatusListener();
 
@@ -316,7 +312,8 @@ abstract class Spark
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
-        editorArea.selectFile(file, forceOpen: true, switchesTab: false);
+        editorArea.selectFile(file, forceOpen: true, switchesTab: false,
+            replaceCurrent: false);
       });
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
@@ -362,22 +359,14 @@ abstract class Spark
             switchesTab: event.switchesTab);
       }
     });
+    eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
+        .listen((FilesControllerPersistTabEvent event) {
+      editorArea.persistTab(event.file);
+    });
   }
 
   void initSplitView() {
-    _splitView = new SplitView(getUIElement('#splitview'));
-    _splitView.onResized.listen((_) {
-      aceManager.resize();
-      syncPrefs.setValue('splitViewPosition', _splitView.position.toString());
-    });
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          _splitView.position = value;
-        }
-      }
-    });
+    // Overridden in spark_polymer.dart.
   }
 
   void initSaveStatusListener() {
@@ -437,6 +426,7 @@ abstract class Spark
   }
 
   void initToolbar() {
+    // Overridden in spark_polymer.dart.
   }
 
   void buildMenu() {
@@ -503,6 +493,14 @@ abstract class Spark
 
   // Implemented in a sub-class.
   void unveil() { }
+
+  Editor getCurrentEditor() {
+    ws.File file = editorManager.currentFile;
+    for (Editor editor in editorManager.editors) {
+      if (editor.file == file) return editor;
+    }
+    return null;
+  }
 
   /**
    * Show a model error dialog.
@@ -602,8 +600,6 @@ abstract class Spark
     return _okCancelCompleter.future;
   }
 
-  void onSplitViewUpdate(int position) { }
-
   void setGitSettingsResetDoneVisible(bool enabled) {
     getUIElement('#gitResetSettingsDone').hidden = !enabled;
   }
@@ -697,6 +693,23 @@ abstract class Spark
     return _aceManager.isFileExtensionEditable(extension) ||
         _textFileExtensions.contains(extension);
   }
+
+  Future<Editor> openEditor(ws.File file, {Span selection}) {
+    _selectResource(file);
+
+    return nextTick().then((_) {
+      for (Editor editor in editorManager.editors) {
+        if (editor.file == file) {
+          if (selection != null && editor is TextEditor) {
+            editor.select(selection);
+          }
+          return editor;
+        }
+      }
+      return null;
+    });
+  }
+
   //
   // - End implementation of AceManagerDelegate interface.
   //
@@ -1537,14 +1550,9 @@ class FormatAction extends SparkAction {
   }
 
   void _invoke([Object context]) {
-    ws.File file = spark.editorManager.currentFile;
-    for (Editor editor in spark.editorManager.editors) {
-      if (editor.file == file) {
-        if (editor is TextEditor) {
-          editor.format();
-        }
-        break;
-      }
+    Editor editor = spark.getCurrentEditor();
+    if (editor is TextEditor) {
+      editor.format();
     }
   }
 }
@@ -1572,21 +1580,12 @@ class GetDeclarationAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    AceManager aceManager = spark._aceManager;
-
-    aceManager.getDeclarationAtCursor().then((Declaration declaration) {
-      if (declaration == null) return;
-
-      var currentFile = aceManager.currentFile;
-
-      spark._selectInEditor(declaration.getFile(currentFile.project));
-      aceManager.focus();
-
-      Timer.run(() => aceManager.navigateToDeclaration(declaration));
-    });
+    Editor editor = spark.getCurrentEditor();
+    if (editor is TextEditor) {
+      editor.navigateToDeclaration();
+    }
   }
 }
-
 
 class FocusMainMenuAction extends SparkAction {
   FocusMainMenuAction(Spark spark)
