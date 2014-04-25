@@ -291,7 +291,7 @@ abstract class Spark
   }
 
   void createEditorComponents() {
-    _aceManager = new AceManager(new DivElement(), this, services);
+    _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(

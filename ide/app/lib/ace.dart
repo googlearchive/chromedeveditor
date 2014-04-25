@@ -250,6 +250,7 @@ class AceManager {
   Outline outline;
 
   ace.Editor _aceEditor;
+  PreferenceStore _prefs;
 
   workspace.Marker _currentMarker;
 
@@ -261,7 +262,10 @@ class AceManager {
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
 
-  AceManager(this.parentElement, this.delegate, svc.Services services) {
+  AceManager(this.parentElement,
+             this.delegate,
+             svc.Services services,
+             this._prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -288,7 +292,7 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    outline = new Outline(services, parentElement);
+    outline = new Outline(services, parentElement, _prefs);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.startOffset);
