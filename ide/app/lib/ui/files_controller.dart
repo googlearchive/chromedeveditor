@@ -75,6 +75,8 @@ class FilesController implements TreeViewDelegate {
   List<Resource> _filteredFiles;
   // Sorted children of nodes.
   Map<String, List<String>> _filteredChildrenCache;
+  // Expanded state when no search filter is applied.
+  List<String> _currentExpandedState;
 
   FilesController(this._workspace,
                   this._actionManager,
@@ -596,6 +598,8 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewSaveExpandedState(TreeView view) {
+    if (_filterString != null) return;
+    _currentExpandedState = _treeView.expandedState;
     localPrefs.setValue('FilesExpandedState',
         JSON.encode(_treeView.expandedState));
   }
@@ -635,6 +639,24 @@ class FilesController implements TreeViewDelegate {
   void _reloadData() {
     _clearChildrenCache();
     _treeView.reloadData();
+  }
+
+  // This method will be more efficient than _reloadData() then restoring the
+  // state.
+  void _reloadDataAndRestoreExpandedState(List<String> expandedState) {
+    List<String> selection = _treeView.selection;
+    for(String nodeUid in selection) {
+      Resource res = _filesMap[nodeUid];
+      List<Container> parents = _collectParents(res, []);
+      List<String> parentsUuid =
+          parents.map((Container container) => container.uuid).toList();
+      expandedState.addAll(parentsUuid);
+    }
+
+    _clearChildrenCache();
+    _treeView.restoreExpandedState(expandedState);
+    // Restore selection.
+    _treeView.selection = selection;
   }
 
   // Processing workspace events.
@@ -881,7 +903,7 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
-      _reloadData();
+      _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
@@ -899,8 +921,7 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
-      _reloadData();
-      _treeView.restoreExpandedState(filtered.toList());
+      _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }
 }
