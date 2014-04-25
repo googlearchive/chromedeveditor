@@ -8,6 +8,7 @@ import 'dart:async';
 import 'dart:html' as html;
 
 import '../lib/services.dart' as services;
+import 'preferences.dart';
 
 /**
  * Defines a class to build an outline UI for a given block of code.
@@ -19,13 +20,17 @@ class Outline {
   html.Element _container;
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
+  html.ButtonElement _outlineButton;
+
+  final PreferenceStore _prefs;
+  bool _visible = true;
 
   services.AnalyzerService analyzer;
 
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
 
-  Outline(services.Services services, this._container) {
+  Outline(services.Services services, this._container, this._prefs) {
     analyzer = services.getService("analyzer");
 
     // Use template to create the UI of outline.
@@ -41,19 +46,23 @@ class Outline {
         (html.querySelector('#outline-button-template') as
         html.TemplateElement).content;
     templateClone = template.clone(true);
-    html.ButtonElement button =
-        templateClone.querySelector('#toggleOutlineButton');
-    button.onClick.listen((e) => _toggle());
+    _outlineButton = templateClone.querySelector('#toggleOutlineButton');
+    _outlineButton.onClick.listen((e) => _toggle());
 
-    _container.children.add(_outlineDiv);
-    _container.children.add(button);
+    _container.children.add(_outlineButton);
+    _prefs.getValue('OutlineCollapsed').then((String data) {
+      if (data == 'true') {
+        _outlineDiv.classes.add('collapsed');
+      }
+      _container.children.add(_outlineDiv);
+    });
   }
 
-  bool get visible => !_outlineDiv.classes.contains('collapsed');
+  bool get visible => _visible;
   set visible(bool value) {
-    if (value != visible) {
-      _outlineDiv.classes.toggle('collapsed');
-    }
+    _visible = value;
+    _outlineDiv.classes.toggle('hidden', !_visible);
+    _outlineButton.classes.toggle('hidden', !_visible);
   }
 
   /**
@@ -103,6 +112,8 @@ class Outline {
    */
   void _toggle() {
     _outlineDiv.classes.toggle('collapsed');
+    String value = _outlineDiv.classes.contains('collapsed') ? 'true' : 'false';
+    _prefs.setValue('OutlineCollapsed', value);
   }
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
