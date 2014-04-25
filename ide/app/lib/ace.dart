@@ -313,6 +313,8 @@ class AceManager {
     });
 
     findView = FindView.createIn(parentElement);
+    findView.onTriggered.listen(_handleFindViewEvent);
+    findView.onClosed.listen((_) => focus());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -621,6 +623,23 @@ class AceManager {
   void _handleGotoLine() {
     // TODO(devoncarew): Show a 'goto line' dialog.
     //print('_handleGotoLine');
+
+    findView.viewTitle = 'Line:';
+    findView.queryText = 'foo bar baz';
+    findView.show();
+
+    // TODO: hide the dialog on escape
+
+  }
+
+  void _handleFindViewEvent(bool normalActivation) {
+    // TODO: handle find vs goto line
+
+    print(findView.queryText);
+
+    try {
+      _aceEditor.gotoLine(int.parse(findView.queryText));
+    } catch (e) { }
   }
 }
 

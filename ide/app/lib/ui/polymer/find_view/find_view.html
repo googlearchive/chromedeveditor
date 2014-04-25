@@ -6,12 +6,16 @@
 
 <polymer-element name="find-view">
   <template>
-    <style>
-      @import url("find_view.css");
-    </style>
+    <link rel="stylesheet" href="find_view.css">
 
-    <div id="viewTitle">{{viewTitle}}</div>
-    <input id="queryText" type="text" name="fname" value="{{queryText}}">
+    <div id="container">
+      <div id="viewTitle">{{viewTitle}}</div>
+      <input
+          id="queryText"
+          type="text"
+          size="40"
+          value="{{queryText}}">
+    </div>
   </template>
 
   <script type="application/dart;component=1" src="find_view.dart"></script>

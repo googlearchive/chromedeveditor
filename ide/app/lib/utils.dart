@@ -105,7 +105,6 @@ Future<String> getAppContents(String path) {
  */
 Future nextTick() => new Future.delayed(Duration.ZERO);
 
-
 html.DirectoryEntry _html5FSRoot;
 
 /**

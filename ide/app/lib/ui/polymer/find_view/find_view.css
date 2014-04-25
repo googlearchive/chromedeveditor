@@ -3,13 +3,30 @@
 /* license that can be found in the LICENSE file. */
 
 :host {
-  margin: 15px;
+  position: absolute;
+  left: 75px;
+  top: 4px;
+  z-index: 1;
+}
+
+#container {
+  /*height: 0;*/
+  background: #EEE;
+  padding: 4px;
+  border: 1px solid #CCC;
+  /*border-bottom: 1px solid #CCC;*/
+  border-radius: 2px;
+  border-top: 0;
 }
 
 #viewTitle {
-
+  display: inline;
 }
 
 #queryText {
+  display: inline;
+}
 
+.showing {
+  /*height: 40px;*/
 }
