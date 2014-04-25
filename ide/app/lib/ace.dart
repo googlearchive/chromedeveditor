@@ -277,6 +277,13 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
+    // Override Ace's gotoline command.
+    var command = new ace.Command(
+        'gotoline',
+        const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
+        (e) => _handleGotoLine());
+    _aceEditor.commands.addCommand(command);
+
     // Fallback
     theme = THEMES[0];
 
@@ -371,12 +378,15 @@ class AceManager {
           currentSession.documentToScreenRow(marker.lineNum, aceColumn)
           / numberLines * 100.0;
 
-      html.Element minimapMarker = new html.Element.div();
-      minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
-      minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
-      minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
+      // Only add errors and warnings to the mini-map.
+      if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
+        html.Element minimapMarker = new html.Element.div();
+        minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
+        minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
+        minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
-      minimap.append(minimapMarker);
+        minimap.append(minimapMarker);
+      }
     }
 
     currentSession.setAnnotations(annotations);
@@ -601,6 +611,11 @@ class AceManager {
       default:
         return ace.Annotation.INFO;
     }
+  }
+
+  void _handleGotoLine() {
+    // TODO(devoncarew): Show a 'goto line' dialog.
+    //print('_handleGotoLine');
   }
 }
 
