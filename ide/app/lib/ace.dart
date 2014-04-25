@@ -134,33 +134,24 @@ class TextEditor extends Editor {
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
-      String fileText;
-
       // Remove the trailing whitespace if asked to do so.
       // TODO(ericarnold): Can't think of an easy way to share this preference,
       //           but it might be a good idea to do so rather than passing it.
-      if (stripWhitespace)  {
-        fileText = _stripWhitespace();
-      } else {
-        fileText = _session.value;
-      }
-
-      Future returnFuture = _replaceContents(_session.value, fileText);
+      Future fileSaveFuture = _replaceContents(
+          _session.value, _getContent(stripWhitespace));
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
       // TODO(ericarnold): Need to analyze on initial file load.
       aceManager.buildOutline();
 
-      return returnFuture;
+      return fileSaveFuture;
     } else {
       return new Future.value();
     }
   }
 
-  String _stripWhitespace() {
-    String currentText = _session.value;
-    return currentText.replaceAll(whitespaceRegEx, '');
-  }
+  String _getContent(bool stripWhitespace) => stripWhitespace ?
+      _session.value.replaceAll(whitespaceRegEx, '') : _session.value;
 
   /**
    * Replace the editor's contents with the given text. Make sure that we don't
@@ -221,7 +212,6 @@ class DartEditor extends TextEditor {
     });
   }
 }
-
 
 class CssEditor extends TextEditor {
   static bool isCssFile(workspace.File file) => file.name.endsWith('.css');
