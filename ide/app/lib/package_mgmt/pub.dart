@@ -174,7 +174,10 @@ class _PubBuilder extends PackageBuilder {
       for (ChangeDelta delta in event.changes) {
         Resource r = delta.resource;
 
-        if (r == pubspecFile) {
+        if (r == pubspecFile && delta.isDelete) {
+          analyzePubspec = false;
+          break;
+        } else if (r == pubspecFile) {
           analyzePubspec = true;
         } else if (properties.isInPackagesFolder(r)) {
           analyzePubspec = true;
