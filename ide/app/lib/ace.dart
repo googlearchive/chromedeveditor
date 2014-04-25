@@ -298,18 +298,33 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    outline = new Outline(services, parentElement, prefs);
+    _setupOutline(prefs);
+  }
+
+  void _setupOutline(PreferenceStore prefs) {
+    outline = new Outline(_analysisService, parentElement, prefs);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
-          currentSession.document.indexToPosition(item.startOffset);
+          currentSession.document.indexToPosition(item.nameStartOffset);
       ace.Point endPoint =
-          currentSession.document.indexToPosition(item.endOffset);
+          currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
+    });
 
+    ace.Point lastCursorPosition =  new ace.Point(-1, -1);
+    _aceEditor.onChangeSelection.listen((_) {
+      ace.Point newCursorPosition = _aceEditor.cursorPosition;
+      // Cancel the last outline selection update
+      if (lastCursorPosition != newCursorPosition) {
+        int cursorOffset = currentSession.document.positionToIndex(
+            newCursorPosition);
+        outline.selectItemAtOffset(cursorOffset);
+      }
+      lastCursorPosition = newCursorPosition;
     });
   }
 
