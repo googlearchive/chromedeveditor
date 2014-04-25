@@ -194,7 +194,7 @@ class AnalyzerService extends Service {
     var args = {"string": codeString};
     Stopwatch timer = new Stopwatch()..start();
     return _sendAction("getOutlineFor", args).then((ServiceActionEvent result) {
-      String title = name.isEmpty ? '' : ' for $name';
+      String title = name == null ? '' : ' for $name';
       timer.stop();
       _logger.info('built outline${title} in ${timer.elapsedMilliseconds}ms');
       return new Outline.fromMap(result.data);
