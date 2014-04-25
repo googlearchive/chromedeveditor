@@ -58,10 +58,9 @@ class Outline {
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
-   *
-   * @return A subscription which can be canceled to cancel the outline.
+   * Returns a subscription which can be canceled to cancel the outline.
    */
-  Future build(String code) {
+  Future build(String name, String code) {
     if (_currentOutlineOperation != null) {
       _currentOutlineOperation.cancel();
     }
@@ -72,9 +71,9 @@ class Outline {
 
     _buildCompleter = new Completer();
 
-    _currentOutlineOperation = analyzer.getOutlineFor(code).asStream()
-        .listen((services.Outline model) => _populate(model));
-
+    _currentOutlineOperation =
+        analyzer.getOutlineFor(code, name).asStream().listen(
+            (services.Outline model) => _populate(model));
     _currentOutlineOperation.onDone(() => _buildCompleter.complete);
 
     return _buildCompleter.future;

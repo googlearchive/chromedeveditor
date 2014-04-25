@@ -581,8 +581,9 @@ class AceManager {
   }
 
   void buildOutline() {
+    String name = currentFile == null ? '' : currentFile.name;
     String text = currentSession.value;
-    outline.build(text);
+    outline.build(name, text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {

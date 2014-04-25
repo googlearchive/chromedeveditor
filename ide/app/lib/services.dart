@@ -190,9 +190,13 @@ class AnalyzerService extends Service {
 
   File _uuidToFile(String uuid) => services._workspace.restoreResource(uuid);
 
-  Future<Outline> getOutlineFor(String codeString) {
+  Future<Outline> getOutlineFor(String codeString, [String name]) {
     var args = {"string": codeString};
+    Stopwatch timer = new Stopwatch()..start();
     return _sendAction("getOutlineFor", args).then((ServiceActionEvent result) {
+      String title = name.isEmpty ? '' : ' for $name';
+      timer.stop();
+      _logger.info('built outline${title} in ${timer.elapsedMilliseconds}ms');
       return new Outline.fromMap(result.data);
     });
   }
