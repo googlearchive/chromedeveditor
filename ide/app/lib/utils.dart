@@ -279,13 +279,6 @@ class BoolCachedPreference extends CachedPreference<bool> {
 }
 
 /**
- * Defines an object to carry a state of cancelled or not.
- */
-class Canceler {
-  bool canceled = false;
-}
-
-/**
  * Returns a minimal textual description of the stack trace. I.e., instead of a
  * stack trace several thousand chars long, this tries to return one that can
  * meaningfully fit into several hundred chars. So, it converts something like:
