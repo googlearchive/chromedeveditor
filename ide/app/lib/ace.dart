@@ -26,6 +26,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
+import 'ui/polymer/find_view/find_view.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -249,6 +250,8 @@ class AceManager {
 
   Outline outline;
 
+  FindView findView;
+
   ace.Editor _aceEditor;
 
   workspace.Marker _currentMarker;
@@ -308,6 +311,8 @@ class AceManager {
       _aceEditor.focus();
 
     });
+
+    findView = FindView.createIn(parentElement);
   }
 
   bool isFileExtensionEditable(String extension) {
