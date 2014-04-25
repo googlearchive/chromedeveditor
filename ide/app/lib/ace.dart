@@ -254,8 +254,6 @@ class AceManager {
     _setupOutline();
   }
 
-
-
   void _setupOutline() {
     outline = new Outline(_analysisService, parentElement);
     outline.onChildSelected.listen((OutlineItem item) {

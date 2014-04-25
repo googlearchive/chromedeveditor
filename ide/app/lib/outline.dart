@@ -186,11 +186,7 @@ abstract class OutlineItem {
   html.LIElement get element => _element;
 
   void setSelected(bool selected) {
-    if (selected) {
-      _element.classes.add("selected");
-    } else {
-      _element.classes.remove("selected");
-    }
+    _element.classes.toggle("selected", selected);
   }
 }
 
