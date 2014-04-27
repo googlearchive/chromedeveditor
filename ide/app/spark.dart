@@ -1417,7 +1417,7 @@ class BowerGetAction extends BowerAction {
 }
 
 class BowerUpgradeAction extends BowerAction {
-  BowerUpgradeAction(Spark spark) : super(spark, "bower-upgrade", "Bower Upgrade");
+  BowerUpgradeAction(Spark spark) : super(spark, "bower-upgrade", "Bower Update");
 
   Job _createJob(ws.Project project) => new BowerUpgradeJob(spark, project);
 }
