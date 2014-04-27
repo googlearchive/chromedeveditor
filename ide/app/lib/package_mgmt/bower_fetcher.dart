@@ -88,8 +88,11 @@ class BowerFetcher {
   }
 
   Future _fetchAllDeps(FetchMode mode) {
-    Iterable<Future> futures = _allDeps.values.map((_Package package) =>
-        _fetchPackage(package, mode).catchError((e) => _logger.warning(e)));
+    List<Future> futures = [];
+    _allDeps.values.forEach((_Package package) {
+      futures.add(
+          _fetchPackage(package, mode).catchError((e) => _logger.warning(e)));
+    });
     return Future.wait(futures);
   }
 
@@ -142,21 +145,26 @@ class BowerFetcher {
   }
 
   Future _fetchPackage(_Package package, FetchMode mode) {
-    return _preparePackageDir(package, mode).then((_PrepareDirRes res) {
+    return _preparePackageDir(package, mode).catchError((e) {
+      // TODO(ussuri): Is this needed?
+      return new Future.error(e);
+    }).then((_PrepareDirRes res) {
       if (!res.existed && mode == FetchMode.INSTALL) {
         // _preparePackageDir created the directory.
         return _clonePackage(package, res.entry);
       } else if (!res.existed && mode == FetchMode.UPGRADE) {
         // _preparePackageDir created the directory.
         // TODO(ussuri): Verify that installing missing packages is what
-        // 'bower update' really does (maybe it just updates the present ones).
+        // 'bower update' really does (maybe it just updates existing ones).
         return _clonePackage(package, res.entry);
       } else if (res.existed && mode == FetchMode.INSTALL) {
         // Skip fetching (don't even try to analyze the directory's contents).
         return new Future.value();
       } else if (res.existed && mode == FetchMode.UPGRADE) {
-        // TODO(ussuri): issue #1694. Switch to using 'git pull' once available.
+        // TODO(ussuri): #1694 - when fixed, switch to using 'git pull'.
         return _clonePackage(package, res.entry);
+      } else {
+        throw new StateError('Unhandled case');
       }
     });
   }
@@ -172,26 +180,33 @@ class BowerFetcher {
    */
   Future<_PrepareDirRes> _preparePackageDir(_Package package, FetchMode mode) {
     final completer = new Completer();
-    _packagesDir.getDirectory(package.name).catchError((_) {
-      _packagesDir.createDirectory(package.name, exclusive: true).catchError((e) {
-        completer.completeError(
-            "Couldn't create directory for package '${package.name}': $e");
-      }).then((chrome.DirectoryEntry dir) {
+
+    _packagesDir.getDirectory(package.name).then((chrome.DirectoryEntry dir) {
+      // TODO(ussuri): #1694 - when fixed, leave just the 'true' branch.
+      if (mode == FetchMode.INSTALL) {
+        completer.complete(new _PrepareDirRes(dir, true));
+      } else {
+        dir.removeRecursively().then((_) {
+          _createPackageDir(package).then((chrome.DirectoryEntry dir2) {
+            completer.complete(new _PrepareDirRes(dir2, true));
+          });
+        });
+      }
+    }, onError: (_) {
+      _createPackageDir(package).then((chrome.DirectoryEntry dir) {
         completer.complete(new _PrepareDirRes(dir, false));
       });
-    }).then((chrome.DirectoryEntry dir) {
-      // TODO(ussuri): issue #1694 (remove the 'if'; just complete with
-      // _PrepareDirRes(dir, true)).
-      if (mode == FetchMode.UPGRADE) {
-        dir.removeRecursively().then((_) {
-          completer.complete(new _PrepareDirRes(dir, true));
-        });
-      } else {
-        completer.complete(new _PrepareDirRes(dir, true));
-      }
     });
 
     return completer.future;
+  }
+
+  Future<chrome.DirectoryEntry> _createPackageDir(_Package package) {
+    return _packagesDir.createDirectory(package.name, exclusive: true)
+        .catchError((e) {
+      return new Future.error(
+        "Couldn't create directory for package '${package.name}': $e");
+    });
   }
 
   Future _clonePackage(_Package package, chrome.DirectoryEntry dir) {
