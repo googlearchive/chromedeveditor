@@ -19,7 +19,7 @@ import 'package:path/path.dart' as path;
 
 import 'css/cssbeautify.dart';
 import 'editors.dart';
-import 'package_mgmt/bower.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
