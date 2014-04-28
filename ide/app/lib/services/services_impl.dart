@@ -306,8 +306,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     Future<ServiceActionEvent> getOutlineFor(ServiceActionEvent request) {
       var codeString = request.data['string'];
-      return analyzer.analyzeString(
-          dartSdk, codeString, performResolution: false).then((result) {
+      return analyzer.analyzeString(dartSdk, codeString).then((result) {
         return request.createReponse(_getOutline(result.ast).toMap());
       });
     }
@@ -434,8 +433,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
    */
   Future<analyzer.AnalyzerResult> _processFile(analyzer.ChromeDartSdk sdk, String fileUuid) {
     return isolate.chromeService.getFileContents(fileUuid)
-        .then((String contents) =>
-            analyzer.analyzeString(sdk, contents, performResolution: false))
+        .then((String contents) => analyzer.analyzeString(sdk, contents))
         .then((analyzer.AnalyzerResult result) => result);
   }
 }

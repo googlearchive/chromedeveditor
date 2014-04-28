@@ -402,7 +402,16 @@ li.outlineItem.topLevel.class {
   pointer-events: none;
 }
 
+#outline ul {
+  margin: 0;
+  margin-left: 15px;
+  padding: 0;
+}
+
 #outline > ul {
-  margin: 0 10px 0 0;
-  padding: 0px;
+  margin-left: 0;
+}
+
+li.outlineItem a {
+  white-space: nowrap;
 }
