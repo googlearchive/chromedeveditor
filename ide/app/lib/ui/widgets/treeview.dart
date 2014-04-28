@@ -217,7 +217,7 @@ class TreeView implements ListViewDelegate {
         }
         if (changed) {
           _delegate.treeViewSelectedChanged(this,
-              _rowIndexesToNodeUIDs(_listView.selection));
+              _rowIndexesToNodeUids(_listView.selection));
         }
 
         _delegate.treeViewSaveExpandedState(this);
@@ -237,7 +237,7 @@ class TreeView implements ListViewDelegate {
     }
   }
 
-  List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
+  List<String> get selection => _rowIndexesToNodeUids(_listView.selection);
 
   set selection(List<String> selection) {
     HashSet<String> selectionSet = new HashSet.from(selection);
@@ -276,7 +276,7 @@ class TreeView implements ListViewDelegate {
     return _delegate.treeViewHeightForNode(this, _rows[rowIndex].nodeUid);
   }
 
-  TreeViewCell getTreeViewCellForUID(String nodeUid) {
+  TreeViewCell getTreeViewCellForUid(String nodeUid) {
     if (_rowsMap[nodeUid] == null) return null;
     int rowIndex = _rowsMap[nodeUid].rowIndex;
     return _listView.cellForRow(rowIndex);
@@ -285,7 +285,7 @@ class TreeView implements ListViewDelegate {
   /**
    * Returns the list of node UIDs based on the list of row indexes.
    */
-  List<String> _rowIndexesToNodeUIDs(List<int> rowIndexes) {
+  List<String> _rowIndexesToNodeUids(List<int> rowIndexes) {
     List<String> result = [];
     rowIndexes.forEach((rowIndex) {
       result.add(_rows[rowIndex].nodeUid);
@@ -296,7 +296,7 @@ class TreeView implements ListViewDelegate {
   void listViewSelectedChanged(ListView view,
                                List<int> rowIndexes) {
     _delegate.treeViewSelectedChanged(this,
-        _rowIndexesToNodeUIDs(rowIndexes));
+        _rowIndexesToNodeUids(rowIndexes));
   }
 
   bool listViewRowClicked(Event event, int rowIndex) {
@@ -307,7 +307,7 @@ class TreeView implements ListViewDelegate {
                              List<int> rowIndexes,
                              Event event) {
     _delegate.treeViewDoubleClicked(this,
-        _rowIndexesToNodeUIDs(rowIndexes),
+        _rowIndexesToNodeUids(rowIndexes),
         event);
   }
 
@@ -350,7 +350,7 @@ class TreeView implements ListViewDelegate {
                            int rowIndex,
                            Event event) {
     _delegate.treeViewContextMenu(this,
-        _rowIndexesToNodeUIDs(rowIndexes),
+        _rowIndexesToNodeUids(rowIndexes),
         _rows[rowIndex].nodeUid,
         event);
   }
