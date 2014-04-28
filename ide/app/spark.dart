@@ -1561,7 +1561,7 @@ class GetDeclarationAction extends SparkAction {
 
   GetDeclarationAction(Spark spark)
       : super(spark, 'getDeclaration', 'Get Declaration') {
-    addBinding('f3');
+    addBinding('ctrl-.');
     _analysisService = spark.services.getService('analyzer');
   }
 
