@@ -158,10 +158,7 @@ abstract class Spark
       // content of the workspace from other applications. For that reason, when
       // the user switch back to Spark, we want to check whether the content of
       // the workspace changed.
-
-      // TODO(dvh): Disabled because of performance issue. Still need some
-      // tweaking before enabling it by default.
-      //workspace.refresh();
+      _refreshOpenFiles();
     });
 
     // Add various builders.
@@ -733,6 +730,17 @@ abstract class Spark
 
   void _reallyFilterFilesList(String searchString) {
     _filesController.performFilter(searchString);
+  }
+
+  void _refreshOpenFiles() {
+    // In order to scope how much work we do when Spark re-gains focus, we do
+    // not refresh the entire workspace or even the active projects. We refresh
+    // the currently opened files and their parent containers. This lets us
+    // capture changed files and deleted files. For any other changes it is the
+    // user's responsibility to explicitly refresh the affected project.
+    Set<ws.Resource> resources = new Set.from(
+        editorManager.files.map((r) => r.parent != null ? r.parent : r));
+    resources.forEach((ws.Resource r) => r.refresh());
   }
 }
 

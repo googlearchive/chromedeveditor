@@ -695,7 +695,17 @@ abstract class Resource {
     return _workspaceTraversal(this, includeDerived);
   }
 
+<<<<<<< HEAD
   static Iterable<Resource> _workspaceTraversal(Resource r, bool includeDerived) {
+=======
+  /**
+   * Check the files on disk for changes that we don't know about. Fire resource
+   * change events as necessary.
+   */
+  Future refresh();
+
+  static Iterable<Resource> _workspaceTraversal(Resource r) {
+>>>>>>> master
     if (r is Container) {
       if (r.isScmPrivate()) return [];
       if (!includeDerived && r.isDerived()) return [];
@@ -842,7 +852,7 @@ class Folder extends Container {
 
   String toString() => '${this.runtimeType} ${name}/';
 
-  Future _refresh() {
+  Future refresh() {
     List<Resource> added = [];
     List<Resource> removed = [];
 
@@ -892,11 +902,7 @@ class Folder extends Container {
 
       // Check for modified files.
       futures.addAll(checkChanged.map((Resource resource) {
-        if (resource is File) {
-          return resource._refresh();
-        } else if (resource is Folder) {
-          return resource._refresh();
-        }
+        return resource.refresh();
       }));
 
       return Future.wait(futures).then((_) {
@@ -989,7 +995,7 @@ class File extends Resource {
     return severity;
   }
 
-  Future _refresh() {
+  Future refresh() {
     return entry.getMetadata().then((/*Metadata*/ metaData) {
       final int newStamp = metaData.modificationTime.millisecondsSinceEpoch;
       if (newStamp != _timestamp) {
@@ -1023,10 +1029,6 @@ class Project extends Folder {
 
   String get uuid => '${_root.id}';
 
-  /**
-   * Check the files on disk for changes that we don't know about. Fire resource
-   * change events as necessary.
-   */
   Future refresh() {
     // Only allow one refresh call at a time.
     assert(_inRefresh == false);
@@ -1035,7 +1037,7 @@ class Project extends Folder {
     workspace.pauseResourceEvents();
 
     return nextTick().then((_) {
-      return _refresh();
+      return super.refresh();
     }).whenComplete(() {
       _inRefresh = false;
       workspace.resumeResourceEvents();
