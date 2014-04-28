@@ -370,34 +370,35 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
         for (analyzer.VariableDeclaration variable in variables.variables) {
           outline.entries.add(_populateOutlineEntry(
-              new OutlineTopLevelVariable(variable.name.name), declaration));
+              new OutlineTopLevelVariable(variable.name.name), declaration,
+              declaration));
         }
       } else if (declaration is analyzer.ClassDeclaration) {
         OutlineClass outlineClass = new OutlineClass(declaration.name.name);
         outline.entries.add(
-            _populateOutlineEntry(outlineClass, declaration.name));
+            _populateOutlineEntry(outlineClass, declaration.name, declaration));
 
         for (analyzer.ClassMember member in declaration.members) {
           if (member is analyzer.MethodDeclaration) {
             if (member.isGetter || member.isSetter) {
               outlineClass.members.add(_populateOutlineEntry(
                   new OutlineAccessor(member.name.name, member.isSetter),
-                  member.name));
+                  member.name, member));
             } else {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineMethod(member.name.name), member));
+                  new OutlineMethod(member.name.name), member, member));
             }
           } else if (member is analyzer.FieldDeclaration) {
             analyzer.VariableDeclarationList fields = member.fields;
             for (analyzer.VariableDeclaration field in fields.variables) {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineProperty(field.name.name), field));
+                  new OutlineProperty(field.name.name), field, field.parent));
             }
           }
         }
       } else if (declaration is analyzer.FunctionDeclaration) {
         outline.entries.add(_populateOutlineEntry(new OutlineTopLevelFunction(
-            declaration.name.name), declaration.name));
+            declaration.name.name), declaration.name, declaration));
       } else {
         print("${declaration.runtimeType} is unknown");
       }
@@ -407,9 +408,12 @@ class AnalyzerServiceImpl extends ServiceImpl {
   }
 
   OutlineEntry _populateOutlineEntry(
-      OutlineEntry outlineEntry, analyzer.AstNode node) {
-    outlineEntry.startOffset = node.beginToken.offset;
-    outlineEntry.endOffset = node.endToken.end;
+      OutlineEntry outlineEntry, analyzer.AstNode nameNode,
+      analyzer.AstNode bodyNode) {
+    outlineEntry.nameStartOffset = nameNode.beginToken.offset;
+    outlineEntry.nameEndOffset = nameNode.endToken.end;
+    outlineEntry.bodyStartOffset = bodyNode.offset;
+    outlineEntry.bodyEndOffset = bodyNode.end;
     return outlineEntry;
   }
 

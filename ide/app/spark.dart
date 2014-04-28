@@ -158,10 +158,7 @@ abstract class Spark
       // content of the workspace from other applications. For that reason, when
       // the user switch back to Spark, we want to check whether the content of
       // the workspace changed.
-
-      // TODO(dvh): Disabled because of performance issue. Still need some
-      // tweaking before enabling it by default.
-      //workspace.refresh();
+      _refreshOpenFiles();
     });
 
     // Add various builders.
@@ -291,7 +288,7 @@ abstract class Spark
   }
 
   void createEditorComponents() {
-    _aceManager = new AceManager(new DivElement(), this, services);
+    _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(
@@ -383,7 +380,6 @@ abstract class Spark
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
-    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
@@ -492,8 +488,12 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
-  // Implemented in a sub-class.
-  void unveil() { }
+  void unveil() {
+    if (developerMode) {
+      RunTestsAction action = actionManager.getAction('run-tests');
+      action.checkForTestListener();
+    }
+  }
 
   Editor getCurrentEditor() {
     ws.File file = editorManager.currentFile;
@@ -731,6 +731,17 @@ abstract class Spark
 
   void _reallyFilterFilesList(String searchString) {
     _filesController.performFilter(searchString);
+  }
+
+  void _refreshOpenFiles() {
+    // In order to scope how much work we do when Spark re-gains focus, we do
+    // not refresh the entire workspace or even the active projects. We refresh
+    // the currently opened files and their parent containers. This lets us
+    // capture changed files and deleted files. For any other changes it is the
+    // user's responsibility to explicitly refresh the affected project.
+    Set<ws.Resource> resources = new Set.from(
+        editorManager.files.map((r) => r.parent != null ? r.parent : r));
+    resources.forEach((ws.Resource r) => r.refresh());
   }
 }
 
@@ -1050,22 +1061,6 @@ abstract class SparkActionWithDialog extends SparkAction {
   }
 
   void _show() => _dialog.show();
-}
-
-class FileOpenInTabAction extends SparkAction implements ContextAction {
-  FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in New Tab");
-
-  void _invoke([List<ws.File> files]) {
-    bool forceOpen = files.length > 1;
-    files.forEach((ws.File file) {
-      spark._selectInEditor(file, forceOpen: true, replaceCurrent: false);
-    });
-  }
-
-  String get category => 'folder';
-
-  bool appliesTo(Object object) => _isFileList(object);
 }
 
 class FileOpenAction extends SparkAction {
@@ -2642,17 +2637,27 @@ class SettingsAction extends SparkActionWithDialog {
 }
 
 class RunTestsAction extends SparkAction {
+  TestDriver testDriver;
+
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
     if (spark.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
 
+  void checkForTestListener() => _initTestDriver();
+
   _invoke([Object context]) {
     if (spark.developerMode) {
-      TestDriver testDriver = new TestDriver(
-          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+      _initTestDriver();
       testDriver.runTests();
+    }
+  }
+
+  void _initTestDriver() {
+    if (testDriver == null) {
+      testDriver = new TestDriver(all_tests.defineTests, spark.jobManager,
+          connectToTestListener: true);
     }
   }
 }

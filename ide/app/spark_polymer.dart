@@ -247,6 +247,8 @@ class SparkPolymer extends Spark {
   }
 
   void unveil() {
+    super.unveil();
+
     // TODO(devoncarew) We'll want to switch over to using the polymer
     // 'unresolved' or 'polymer-unveil' attributes, once these start working.
     DivElement element = document.querySelector('#splashScreen');

@@ -5,7 +5,7 @@
 library spark_widgets.toggle_button;
 
 import 'dart:html';
-import 'dart:math';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
