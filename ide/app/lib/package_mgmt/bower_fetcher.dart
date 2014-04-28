@@ -22,13 +22,13 @@ import '../scm.dart';
 
 Logger _logger = new Logger('spark.bower_fetcher');
 
-class FetchMode extends Enum<int> {
-  const FetchMode._(int val) : super(val);
+class FetchMode extends Enum<String> {
+  const FetchMode._(String val) : super(val);
 
   String get enumName => 'FetchMode';
 
-  static const INSTALL = const FetchMode._(1);
-  static const UPGRADE = const FetchMode._(2);
+  static const INSTALL = const FetchMode._('INSTALL');
+  static const UPGRADE = const FetchMode._('UPGRADE');
 }
 
 class _PrepareDirRes {
@@ -50,9 +50,7 @@ class BowerFetcher {
   Future fetchDependencies(chrome.ChromeFileEntry specFile, FetchMode mode) {
     return _gatherAllDeps(
         _readLocalSpecFile(specFile), specFile.fullPath
-    ).catchError((e) {
-      return e;
-    }).then((_) {
+    ).then((_) {
       return _fetchAllDeps(mode);
     });
   }
@@ -66,7 +64,7 @@ class BowerFetcher {
         // TODO(ussuri): Perhaps differentiate between the user's own bower.json
         // (a hard error with a modal popup) and dependency bower.json's (a soft
         // error with just a progress bar notification).
-        return new Future.error('Error parsing Bower spec file ($specDesc): $e');
+        throw "Error parsing Bower spec file ($specDesc): $e";
       }
 
       List<Future> futures = [];
@@ -116,15 +114,14 @@ class BowerFetcher {
   }
 
   Future<String> _readLocalSpecFile(chrome.ChromeFileEntry file) {
-    return file.readText().catchError((e) {
-      return new Future.error("Failed to read ${file.fullPath}: $e");
-    });
+    return file.readText().catchError((e) =>
+        throw "Failed to read ${file.fullPath}: $e");
   }
 
   Future<String> _readRemoteSpecFile(_Package package) {
     final completer = new Completer();
-
     final request = new html.HttpRequest();
+
     request.open('GET', package.getUrlForDownloading(_packageSpecFileName));
     request.onLoad.listen((event) {
       if (request.status == 200) {
@@ -145,10 +142,7 @@ class BowerFetcher {
   }
 
   Future _fetchPackage(_Package package, FetchMode mode) {
-    return _preparePackageDir(package, mode).catchError((e) {
-      // TODO(ussuri): Is this needed?
-      return new Future.error(e);
-    }).then((_PrepareDirRes res) {
+    return _preparePackageDir(package, mode).then((_PrepareDirRes res) {
       if (!res.existed && mode == FetchMode.INSTALL) {
         // _preparePackageDir created the directory.
         return _clonePackage(package, res.entry);
@@ -204,16 +198,14 @@ class BowerFetcher {
   Future<chrome.DirectoryEntry> _createPackageDir(_Package package) {
     return _packagesDir.createDirectory(package.name, exclusive: true)
         .catchError((e) {
-      return new Future.error(
-        "Couldn't create directory for package '${package.name}': $e");
+      throw "Couldn't create directory for package '${package.name}': $e";
     });
   }
 
   Future _clonePackage(_Package package, chrome.DirectoryEntry dir) {
     final String url = package.getUrlForCloning();
     return _git.clone(url, dir, branchName: package.branch).catchError((e) {
-      return new Future.error(
-        "Package ${package.name} not cloned: $e");
+      throw "Package ${package.name} not cloned: $e";
     });
   }
 }
@@ -243,7 +235,7 @@ class _Package {
   _Package(this.name, this.fullPath) {
     final Match match = _PACKAGE_SPEC_REGEXP.matchAsPrefix(fullPath);
     if (match == null) {
-      throw "Malformed Bower dependency: '$fullPath'";
+      throw "Malformed or unsupported Bower dependency: '$fullPath'";
     }
     path = match.group(1);
     branch = match.group(2);
