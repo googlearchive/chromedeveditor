@@ -251,7 +251,7 @@ class AceManager {
   Outline outline;
 
   FindView findView;
-  bool performingGotoLine = false;
+  bool _performingGotoLine = false;
 
   ace.Editor _aceEditor;
 
@@ -635,7 +635,7 @@ class AceManager {
   }
 
   void _handleOpenFind() {
-    performingGotoLine = false;
+    _performingGotoLine = false;
 
     ace.Selection sel = _aceEditor.selection;
     if (sel.isEmpty) {
@@ -649,14 +649,14 @@ class AceManager {
   }
 
   void _handleGotoLine() {
-    performingGotoLine = true;
+    _performingGotoLine = true;
 
     findView.queryText = '';
     findView.show();
   }
 
   void _handleFindViewEvent(bool normalActivation) {
-    if (performingGotoLine) {
+    if (_performingGotoLine) {
       try {
         _aceEditor.gotoLine(int.parse(findView.queryText));
         findView.hide();
@@ -670,7 +670,7 @@ class AceManager {
   }
 
   void _handleFindViewClosed(_) {
-    performingGotoLine = false;
+    _performingGotoLine = false;
     focus();
   }
 }

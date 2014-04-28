@@ -20,13 +20,22 @@ class FindView extends SparkWidget {
 
   factory FindView() => new Element.tag('find-view');
 
+  /**
+   * Return whether the view is visible or not.
+   */
   bool get open => $['container'].classes.contains('showing');
 
+  /**
+   * Make the view visible.
+   */
   void show() {
     $['container'].classes.add('showing');
     $['queryText'].focus();
   }
 
+  /**
+   * Hide the view.
+   */
   void hide() {
     if (!open) return;
 
@@ -35,6 +44,9 @@ class FindView extends SparkWidget {
     _closedController.add(null);
   }
 
+  /**
+   * Select all the query text.
+   */
   void selectQueryText() {
     Timer.run(() {
       ($['queryText'] as InputElement).select();
@@ -47,6 +59,9 @@ class FindView extends SparkWidget {
    */
   Stream<bool> get onTriggered => _triggeredController.stream;
 
+  /**
+   * Fires an event when the view is closed.
+   */
   Stream get onClosed => _closedController.stream;
 
   FindView.created() : super.created() {

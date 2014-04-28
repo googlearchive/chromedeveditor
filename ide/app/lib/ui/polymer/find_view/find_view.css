@@ -21,11 +21,6 @@
   display: block;
 }
 
-#viewTitle {
-  display: inline;
-  color: #000;
-}
-
 #queryText {
   display: inline;
 }
