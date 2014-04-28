@@ -384,6 +384,7 @@ abstract class Spark
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
     actionManager.registerAction(new BowerGetAction(this));
+    actionManager.registerAction(new BowerUpgradeAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
@@ -1350,8 +1351,9 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 }
 
-abstract class PackageGetAction extends SparkAction implements ContextAction {
-  PackageGetAction(Spark spark, String id, String name) :
+abstract class PackageManagementAction
+    extends SparkAction implements ContextAction {
+  PackageManagementAction(Spark spark, String id, String name) :
     super(spark, id, name);
 
   void _invoke([context]) {
@@ -1360,6 +1362,8 @@ abstract class PackageGetAction extends SparkAction implements ContextAction {
     if (context == null) {
       resource = spark.focusManager.currentResource;
     } else {
+      // TODO(ussuri): This seems like a stop-gap solution. Should we run for
+      // all elements that match?
       resource = context.first;
     }
 
@@ -1370,50 +1374,47 @@ abstract class PackageGetAction extends SparkAction implements ContextAction {
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
-  Job _createJob(ws.Project project);
-
   bool _appliesTo(ws.Resource resource);
+
+  Job _createJob(ws.Project project);
 }
 
-class PubGetAction extends PackageGetAction {
-  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
-
-  Job _createJob(ws.Project project) => new PubGetJob(spark, project);
+abstract class PubAction extends PackageManagementAction {
+  PubAction(Spark spark, String id, String name) : super(spark, id, name);
 
   bool _appliesTo(ws.Resource resource) =>
       spark.pubManager.properties.isPackageResource(resource);
 }
 
-class BowerGetAction extends PackageGetAction {
-  BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
+class PubGetAction extends PubAction {
+  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
 
-  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+  Job _createJob(ws.Project project) => new PubGetJob(spark, project);
+}
+
+class PubUpgradeAction extends PubAction {
+  PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
+
+  Job _createJob(ws.Project project) => new PubUpgradeJob(spark, project);
+}
+
+abstract class BowerAction extends PackageManagementAction {
+  BowerAction(Spark spark, String id, String name) : super(spark, id, name);
 
   bool _appliesTo(ws.Resource resource) =>
       spark.bowerManager.properties.isPackageResource(resource);
 }
 
-class PubUpgradeAction extends SparkAction implements ContextAction {
-  PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
+class BowerGetAction extends BowerAction {
+  BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
 
-  void _invoke([context]) {
-    ws.Resource resource;
+  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+}
 
-    if (context == null) {
-      resource = spark.focusManager.currentResource;
-    } else {
-      resource = context.first;
-    }
+class BowerUpgradeAction extends BowerAction {
+  BowerUpgradeAction(Spark spark) : super(spark, "bower-upgrade", "Bower Update");
 
-    spark.jobManager.schedule(new PubUpgradeJob(spark, resource.project));
-  }
-
-  String get category => 'application';
-
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
-
-  bool _appliesTo(ws.Resource resource) =>
-      spark.pubManager.properties.isPackageResource(resource);
+  Job _createJob(ws.Project project) => new BowerUpgradeJob(spark, project);
 }
 
 /**
@@ -2481,6 +2482,13 @@ class BowerGetJob extends PackageManagementJob {
       super(spark, project, 'bower install');
 
   Future _run() => _spark.bowerManager.installPackages(_project);
+}
+
+class BowerUpgradeJob extends PackageManagementJob {
+  BowerUpgradeJob(Spark spark, ws.Project project) :
+      super(spark, project, 'bower upgrade');
+
+  Future _run() => _spark.bowerManager.upgradePackages(_project);
 }
 
 class CompileDartJob extends Job {
