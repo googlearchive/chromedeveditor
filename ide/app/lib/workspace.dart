@@ -695,17 +695,13 @@ abstract class Resource {
     return _workspaceTraversal(this, includeDerived);
   }
 
-<<<<<<< HEAD
-  static Iterable<Resource> _workspaceTraversal(Resource r, bool includeDerived) {
-=======
   /**
    * Check the files on disk for changes that we don't know about. Fire resource
    * change events as necessary.
    */
   Future refresh();
 
-  static Iterable<Resource> _workspaceTraversal(Resource r) {
->>>>>>> master
+  static Iterable<Resource> _workspaceTraversal(Resource r, bool includeDerived) {
     if (r is Container) {
       if (r.isScmPrivate()) return [];
       if (!includeDerived && r.isDerived()) return [];
