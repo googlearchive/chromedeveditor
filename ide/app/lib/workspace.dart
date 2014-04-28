@@ -186,7 +186,9 @@ class Workspace extends Container {
     return _roots.map((root) => root.resource).toList(growable: false);
   }
 
-  Iterable<Resource> traverse() => Resource._workspaceTraversal(this);
+  Iterable<Resource> traverse({bool includeDerived: true}) {
+    return Resource._workspaceTraversal(this, includeDerived);
+  }
 
   List<File> getFiles() {
     return _roots
@@ -689,8 +691,13 @@ abstract class Resource {
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
    */
-  Iterable<Resource> traverse() => _workspaceTraversal(this);
+  Iterable<Resource> traverse({bool includeDerived: true}) {
+    return _workspaceTraversal(this, includeDerived);
+  }
 
+<<<<<<< HEAD
+  static Iterable<Resource> _workspaceTraversal(Resource r, bool includeDerived) {
+=======
   /**
    * Check the files on disk for changes that we don't know about. Fire resource
    * change events as necessary.
@@ -698,10 +705,15 @@ abstract class Resource {
   Future refresh();
 
   static Iterable<Resource> _workspaceTraversal(Resource r) {
+>>>>>>> master
     if (r is Container) {
       if (r.isScmPrivate()) return [];
+      if (!includeDerived && r.isDerived()) return [];
 
-      return [[r], r.getChildren().expand(_workspaceTraversal)].expand((i) => i);
+      return [
+          [r],
+          r.getChildren().expand((r) => _workspaceTraversal(r, includeDerived))
+      ].expand((i) => i);
     } else {
       return [r];
     }
@@ -1272,6 +1284,8 @@ class ResourceChangeEvent {
   List<ChangeDelta> getChangesFor(Project project) {
     return changes.where((c) => c.resource.project == project).toList();
   }
+
+  bool get isEmpty => changes.isEmpty;
 }
 
 /**
