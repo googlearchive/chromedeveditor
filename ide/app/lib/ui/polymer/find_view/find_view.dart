@@ -12,39 +12,33 @@ import 'package:spark_widgets/common/spark_widget.dart';
 
 @CustomTag('find-view')
 class FindView extends SparkWidget {
-  @published String viewTitle;
-  @published String queryText;
+  String get queryText => ($['queryText'] as InputElement).value;
+  set queryText(String value) => ($['queryText'] as InputElement).value = value;
 
   StreamController<bool> _triggeredController = new StreamController.broadcast();
   StreamController<bool> _closedController = new StreamController.broadcast();
 
-  static FindView createIn(Element parent) {
-    FindView view = new FindView();
-    parent.children.add(view);
-    return view;
-  }
-
   factory FindView() => new Element.tag('find-view');
 
-  // TODO: implement
-  bool get open => true;
+  bool get open => $['container'].classes.contains('showing');
 
   void show() {
     $['container'].classes.add('showing');
     $['queryText'].focus();
-
-    print('showing...');
   }
 
   void hide() {
     if (!open) return;
 
-    // TODO: with style! animations
     $['container'].classes.remove('showing');
 
-    print('hiding');
-
     _closedController.add(null);
+  }
+
+  void selectQueryText() {
+    Timer.run(() {
+      ($['queryText'] as InputElement).select();
+    });
   }
 
   /**
@@ -69,5 +63,7 @@ class FindView extends SparkWidget {
         _triggeredController.add(event.shiftKey ? false : true);
       }
     });
+
+    $['closeButton'].onClick.listen((_) => hide());
   }
 }

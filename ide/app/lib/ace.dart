@@ -251,6 +251,7 @@ class AceManager {
   Outline outline;
 
   FindView findView;
+  bool performingGotoLine = false;
 
   ace.Editor _aceEditor;
 
@@ -280,12 +281,20 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
-    // Override Ace's gotoline command.
+    // Override Ace's goto line command.
     var command = new ace.Command(
         'gotoline',
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         (e) => _handleGotoLine());
     _aceEditor.commands.addCommand(command);
+
+    // Override Ace's find command.
+    // TODO(devoncarew): Finish implementation.
+//    command = new ace.Command(
+//        'find',
+//        const ace.BindKey(mac: 'Command-F', win: 'Ctrl-F'),
+//        (e) => _handleOpenFind());
+//    _aceEditor.commands.addCommand(command);
 
     // Fallback
     theme = THEMES[0];
@@ -312,9 +321,14 @@ class AceManager {
 
     });
 
-    findView = FindView.createIn(parentElement);
+    // Set up the goto line / find dialog.
+    findView = new FindView();
+    parentElement.children.add(findView);
     findView.onTriggered.listen(_handleFindViewEvent);
-    findView.onClosed.listen((_) => focus());
+    findView.onClosed.listen(_handleFindViewClosed);
+    parentElement.onKeyDown
+        .where((e) => e.keyCode == html.KeyCode.ESC)
+        .listen((_) => findView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -620,26 +634,44 @@ class AceManager {
     }
   }
 
-  void _handleGotoLine() {
-    // TODO(devoncarew): Show a 'goto line' dialog.
-    //print('_handleGotoLine');
+  void _handleOpenFind() {
+    performingGotoLine = false;
 
-    findView.viewTitle = 'Line:';
-    findView.queryText = 'foo bar baz';
+    ace.Selection sel = _aceEditor.selection;
+    if (sel.isEmpty) {
+      findView.queryText = '';
+    } else {
+      String str = _aceEditor.session.getTextRange(sel.range);
+      findView.queryText = str.trim();
+      findView.selectQueryText();
+    }
     findView.show();
+  }
 
-    // TODO: hide the dialog on escape
+  void _handleGotoLine() {
+    performingGotoLine = true;
 
+    findView.queryText = '';
+    findView.show();
   }
 
   void _handleFindViewEvent(bool normalActivation) {
-    // TODO: handle find vs goto line
+    if (performingGotoLine) {
+      try {
+        _aceEditor.gotoLine(int.parse(findView.queryText));
+        findView.hide();
+      } catch (e) {
+        findView.selectQueryText();
+      }
+    } else {
+      // TODO(devoncarew): Perform find.
+      print('implement find');
+    }
+  }
 
-    print(findView.queryText);
-
-    try {
-      _aceEditor.gotoLine(int.parse(findView.queryText));
-    } catch (e) { }
+  void _handleFindViewClosed(_) {
+    performingGotoLine = false;
+    focus();
   }
 }
 
