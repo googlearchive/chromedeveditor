@@ -75,6 +75,8 @@ class FilesController implements TreeViewDelegate {
   List<Resource> _filteredFiles;
   // Sorted children of nodes.
   Map<String, List<String>> _filteredChildrenCache;
+  // Expanded state when no search filter is applied.
+  List<String> _currentExpandedState;
 
   FilesController(this._workspace,
                   this._actionManager,
@@ -187,6 +189,10 @@ class FilesController implements TreeViewDelegate {
     return resources;
   }
 
+  void setSelection(List<Resource> resources) { 
+    _treeView.selection = resources.map((r) => r.uuid);
+  }
+  
   ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
     assert(resource != null);
@@ -291,17 +297,32 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
-  void treeViewDrop(TreeView view, String nodeUid, html.DataTransfer dataTransfer) {
-    Folder destinationFolder = _filesMap[nodeUid] as Folder;
-    for (html.File file in dataTransfer.files) {
-      html.FileReader reader = new html.FileReader();
-      reader.onLoadEnd.listen((html.ProgressEvent event) {
-        destinationFolder.createNewFile(file.name).then((File file) {
-          file.setBytes(reader.result);
-        });
-      });
-      reader.readAsArrayBuffer(file);
+  void treeViewDrop(TreeView view,
+                    String nodeUuid,
+                    html.DataTransfer dataTransfer) {
+    Folder destinationFolder = _filesMap[nodeUuid] as Folder;
+    List<Future<File>> futureFiles = new List<Future<File>>();
+    
+    for(html.File file in dataTransfer.files) {
+      futureFiles.add(_CopyHtmlFileToWorkspace(file, destinationFolder));
     }
+    Future.wait(futureFiles).then((List<File> files) {
+      setSelection(files);
+    });
+  }
+  
+  static Future<File> _CopyHtmlFileToWorkspace(html.File file,
+                                               Folder destination) {
+    Completer<File> c = new Completer();
+    html.FileReader reader = new html.FileReader();
+    reader.onLoadEnd.listen((html.ProgressEvent event) {
+      destination.createNewFile(file.name).then((File f) {
+        f.setBytes(reader.result);
+        c.complete(f);
+      });
+    });
+    reader.readAsArrayBuffer(file);
+    return c.future;
   }
 
   bool _isDifferentProject(List<String> nodesUIDs, String targetNodeUID) {
@@ -578,6 +599,8 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewSaveExpandedState(TreeView view) {
+    if (_filterString != null) return;
+    _currentExpandedState = _treeView.expandedState;
     localPrefs.setValue('FilesExpandedState',
         JSON.encode(_treeView.expandedState));
   }
@@ -617,6 +640,24 @@ class FilesController implements TreeViewDelegate {
   void _reloadData() {
     _clearChildrenCache();
     _treeView.reloadData();
+  }
+
+  // This method will be more efficient than _reloadData() then restoring the
+  // state.
+  void _reloadDataAndRestoreExpandedState(List<String> expandedState) {
+    List<String> selection = _treeView.selection;
+    for(String nodeUid in selection) {
+      Resource res = _filesMap[nodeUid];
+      List<Container> parents = _collectParents(res, []);
+      List<String> parentsUuid =
+          parents.map((Container container) => container.uuid).toList();
+      expandedState.addAll(parentsUuid);
+    }
+
+    _clearChildrenCache();
+    _treeView.restoreExpandedState(expandedState);
+    // Restore selection.
+    _treeView.selection = selection;
   }
 
   // Processing workspace events.
@@ -863,7 +904,7 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
-      _reloadData();
+      _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
@@ -881,8 +922,7 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
-      _reloadData();
-      _treeView.restoreExpandedState(filtered.toList());
+      _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }
 }

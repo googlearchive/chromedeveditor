@@ -8,6 +8,7 @@
 
 library spark.ui.widgets.treeview;
 
+import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
 
@@ -48,6 +49,10 @@ class TreeView implements ListViewDelegate {
   TreeViewCell _currentDragOverCell;
   // Whether the user can drag a cell.
   bool draggingEnabled = false;
+  // Timer to expand cell on dragover
+  Timer _pendingExpansionTimer;
+  // Node UID associated with above timer
+  String _pendingExpansionNodeUid;
   // Unique identifier of the tree.
   String _uuid;
 
@@ -66,6 +71,8 @@ class TreeView implements ListViewDelegate {
     _listView = new ListView(element, this);
     _rows = null;
     _rowsMap = null;
+    _pendingExpansionTimer = null;
+    _pendingExpansionNodeUid = null;
     reloadData();
   }
 
@@ -438,6 +445,22 @@ class TreeView implements ListViewDelegate {
       }
       if (cell != null) {
         cell.dragOverlayVisible = true;
+
+        if(_pendingExpansionNodeUid != cell.nodeUid && _pendingExpansionTimer != null) {
+            _pendingExpansionTimer.cancel();
+            _pendingExpansionTimer = null;
+        }
+        if(_pendingExpansionTimer == null) {
+          // Queue cell for expanding if it's a pausing drag hover.
+          _pendingExpansionNodeUid = cell.nodeUid;
+          _pendingExpansionTimer = new Timer(const Duration(milliseconds: 1000), () {
+            if(_currentDragOverCell != null &&
+                nodeUid == _currentDragOverCell.nodeUid &&
+                !isNodeExpanded(nodeUid)) {
+              setNodeExpanded(nodeUid, true, animated: true);
+            }
+          });
+        }
       }
       _currentDragOverCell = cell;
     }

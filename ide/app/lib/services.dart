@@ -190,9 +190,13 @@ class AnalyzerService extends Service {
 
   File _uuidToFile(String uuid) => services._workspace.restoreResource(uuid);
 
-  Future<Outline> getOutlineFor(String codeString) {
+  Future<Outline> getOutlineFor(String codeString, [String name]) {
     var args = {"string": codeString};
+    Stopwatch timer = new Stopwatch()..start();
     return _sendAction("getOutlineFor", args).then((ServiceActionEvent result) {
+      String title = name == null ? '' : ' for $name';
+      timer.stop();
+      _logger.info('built outline${title} in ${timer.elapsedMilliseconds}ms');
       return new Outline.fromMap(result.data);
     });
   }
@@ -227,7 +231,7 @@ class AnalyzerService extends Service {
 
     return _sendAction('createContext', {'contextId': project.uuid}).then((_) {
       // Add existing files to the context.
-      List<File> files = project.traverse().where(
+      List<File> files = project.traverse(includeDerived: false).where(
           (r) => r.isFile && r.name.endsWith('.dart')).toList();
       files.removeWhere(
           (file) => getPackageManager().properties.isSecondaryPackage(file));

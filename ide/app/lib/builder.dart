@@ -78,6 +78,8 @@ class BuilderManager {
     ResourceChangeEvent event = _combineEvents(_events);
     _events.clear();
 
+    if (event.isEmpty) return;
+
     _logger.info('starting build for ${event.changes}');
     Stopwatch timer = new Stopwatch()..start();
 
@@ -140,6 +142,7 @@ class _BuildJob extends Job {
 
 ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
   List<ChangeDelta> deltas = [];
-  events.forEach((e) => deltas.addAll(e.changes));
+  events.forEach((e) => deltas.addAll(
+      e.changes.where((change) => !change.resource.isDerived())));
   return new ResourceChangeEvent.fromList(deltas);
 }

@@ -257,10 +257,7 @@ class ProjectContext {
       AnalysisResult result = context.performAnalysisTask();
       List<ChangeNotice> notices = result.changeNotices;
 
-      if (notices == null) {
-        _setCacheSize(DEFAULT_CACHE_SIZE);
-        completer.complete(analysisResult);
-      } else {
+      while (notices != null) {
         for (ChangeNotice notice in notices) {
           if (notice.source is! FileSource) continue;
 
@@ -269,8 +266,12 @@ class ProjectContext {
               source.uuid, _convertErrors(notice, notice.errors));
         }
 
-        _processChanges(completer, analysisResult);
+        result = context.performAnalysisTask();
+        notices = result.changeNotices;
       }
+
+      _setCacheSize(DEFAULT_CACHE_SIZE);
+      completer.complete(analysisResult);
     } catch (e, st) {
       _setCacheSize(DEFAULT_CACHE_SIZE);
       completer.completeError(e, st);
