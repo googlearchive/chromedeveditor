@@ -49,20 +49,19 @@ class PubManager extends PackageManager {
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
-  Future installPackages(Project project) {
-    return tavern.getDependencies(project.entry, _handleLog).whenComplete(() {
-      return project.refresh();
-    }).catchError((e, st) {
-      _logger.severe('Error Running Pub Get', e, st);
-      return new Future.error(e, st);
-    });
-  }
+  Future installPackages(Project project) =>
+      _installUpgradePackages(project, 'get', false);
 
-  Future upgradePackages(Project project) {
-    return tavern.getDependencies(project.entry, _handleLog, true).whenComplete(() {
+  Future upgradePackages(Project project) =>
+      _installUpgradePackages(project, 'upgrade', true);
+
+  Future _installUpgradePackages(
+      Project project, String commandName, bool isUpgrade) {
+    return tavern.getDependencies(project.entry, _handleLog, isUpgrade).
+        whenComplete(() {
       return project.refresh();
     }).catchError((e, st) {
-      _logger.severe('Error Running Pub Upgrade', e, st);
+      _logger.severe('Error running pub $commandName', e, st);
       return new Future.error(e, st);
     });
   }

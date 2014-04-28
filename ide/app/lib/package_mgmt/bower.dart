@@ -7,6 +7,7 @@
 /**
  * Bower services.
  */
+
 library spark.package_mgmt.bower;
 
 import 'dart:async';
@@ -16,28 +17,11 @@ import 'package:logging/logging.dart';
 
 import 'package_manager.dart';
 import 'bower_fetcher.dart';
+import 'bower_properties.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.bower');
-
-// TODO(ussuri): Make package-private once no longer used outside.
-final BowerProperties bowerProperties = new BowerProperties();
-
-class BowerProperties extends PackageServiceProperties {
-  String get packageServiceName => 'bower';
-  String get packageSpecFileName => 'bower.json';
-  String get packagesDirName => 'bower_packages';
-
-  // Bower doesn't use any of the below nullified properties/methods.
-
-  String get libDirName => null;
-  String get packageRefPrefix => null;
-  RegExp get packageRefPrefixRegexp => null;
-
-  void setSelfReference(Project project, String selfReference) {}
-  String getSelfReference(Project project) => null;
-}
 
 class BowerManager extends PackageManager {
   BowerManager(Workspace workspace) : super(workspace);
@@ -49,7 +33,13 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future installPackages(Project project) {
+  Future installPackages(Project project) =>
+      _installOrUpgradePackages(project, FetchMode.INSTALL);
+
+  Future upgradePackages(Project project) =>
+      _installOrUpgradePackages(project, FetchMode.UPGRADE);
+
+  Future _installOrUpgradePackages(Project project, FetchMode mode) {
     final File specFile = project.getChild(properties.packageSpecFileName);
 
     // The client is expected to call us only when the project has bower.json.
@@ -62,17 +52,13 @@ class BowerManager extends PackageManager {
       final fetcher = new BowerFetcher(
           packagesDir.entry, properties.packageSpecFileName);
 
-      return fetcher.fetchDependencies(specFile.entry).whenComplete(() {
+      return fetcher.fetchDependencies(specFile.entry, mode).whenComplete(() {
         return project.refresh();
-      }).catchError((e, st) {
-        _logger.severe('Error getting Bower packages', e, st);
-        return new Future.error(e, st);
+      }).catchError((e) {
+        _logger.severe('Error getting Bower packages', e);
+        return new Future.error(e);
       });
     });
-  }
-
-  Future upgradePackages(Project project) {
-    return new Future.error('Not implemented');
   }
 }
 

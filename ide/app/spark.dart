@@ -158,10 +158,7 @@ abstract class Spark
       // content of the workspace from other applications. For that reason, when
       // the user switch back to Spark, we want to check whether the content of
       // the workspace changed.
-
-      // TODO(dvh): Disabled because of performance issue. Still need some
-      // tweaking before enabling it by default.
-      //workspace.refresh();
+      _refreshOpenFiles();
     });
 
     // Add various builders.
@@ -291,7 +288,7 @@ abstract class Spark
   }
 
   void createEditorComponents() {
-    _aceManager = new AceManager(new DivElement(), this, services);
+    _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(
@@ -383,11 +380,11 @@ abstract class Spark
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
-    actionManager.registerAction(new FileOpenInTabAction(this));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
     actionManager.registerAction(new PubUpgradeAction(this));
     actionManager.registerAction(new BowerGetAction(this));
+    actionManager.registerAction(new BowerUpgradeAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
@@ -491,8 +488,12 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
-  // Implemented in a sub-class.
-  void unveil() { }
+  void unveil() {
+    if (developerMode) {
+      RunTestsAction action = actionManager.getAction('run-tests');
+      action.checkForTestListener();
+    }
+  }
 
   Editor getCurrentEditor() {
     ws.File file = editorManager.currentFile;
@@ -730,6 +731,17 @@ abstract class Spark
 
   void _reallyFilterFilesList(String searchString) {
     _filesController.performFilter(searchString);
+  }
+
+  void _refreshOpenFiles() {
+    // In order to scope how much work we do when Spark re-gains focus, we do
+    // not refresh the entire workspace or even the active projects. We refresh
+    // the currently opened files and their parent containers. This lets us
+    // capture changed files and deleted files. For any other changes it is the
+    // user's responsibility to explicitly refresh the affected project.
+    Set<ws.Resource> resources = new Set.from(
+        editorManager.files.map((r) => r.parent != null ? r.parent : r));
+    resources.forEach((ws.Resource r) => r.refresh());
   }
 }
 
@@ -1051,22 +1063,6 @@ abstract class SparkActionWithDialog extends SparkAction {
   void _show() => _dialog.show();
 }
 
-class FileOpenInTabAction extends SparkAction implements ContextAction {
-  FileOpenInTabAction(Spark spark) :
-      super(spark, "file-open-in-tab", "Open in New Tab");
-
-  void _invoke([List<ws.File> files]) {
-    bool forceOpen = files.length > 1;
-    files.forEach((ws.File file) {
-      spark._selectInEditor(file, forceOpen: true, replaceCurrent: false);
-    });
-  }
-
-  String get category => 'folder';
-
-  bool appliesTo(Object object) => _isFileList(object);
-}
-
 class FileOpenAction extends SparkAction {
   FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
     addBinding("ctrl-o");
@@ -1355,8 +1351,9 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 }
 
-abstract class PackageGetAction extends SparkAction implements ContextAction {
-  PackageGetAction(Spark spark, String id, String name) :
+abstract class PackageManagementAction
+    extends SparkAction implements ContextAction {
+  PackageManagementAction(Spark spark, String id, String name) :
     super(spark, id, name);
 
   void _invoke([context]) {
@@ -1365,6 +1362,8 @@ abstract class PackageGetAction extends SparkAction implements ContextAction {
     if (context == null) {
       resource = spark.focusManager.currentResource;
     } else {
+      // TODO(ussuri): This seems like a stop-gap solution. Should we run for
+      // all elements that match?
       resource = context.first;
     }
 
@@ -1375,50 +1374,47 @@ abstract class PackageGetAction extends SparkAction implements ContextAction {
 
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
-  Job _createJob(ws.Project project);
-
   bool _appliesTo(ws.Resource resource);
+
+  Job _createJob(ws.Project project);
 }
 
-class PubGetAction extends PackageGetAction {
-  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
-
-  Job _createJob(ws.Project project) => new PubGetJob(spark, project);
+abstract class PubAction extends PackageManagementAction {
+  PubAction(Spark spark, String id, String name) : super(spark, id, name);
 
   bool _appliesTo(ws.Resource resource) =>
       spark.pubManager.properties.isPackageResource(resource);
 }
 
-class BowerGetAction extends PackageGetAction {
-  BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
+class PubGetAction extends PubAction {
+  PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
 
-  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+  Job _createJob(ws.Project project) => new PubGetJob(spark, project);
+}
+
+class PubUpgradeAction extends PubAction {
+  PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
+
+  Job _createJob(ws.Project project) => new PubUpgradeJob(spark, project);
+}
+
+abstract class BowerAction extends PackageManagementAction {
+  BowerAction(Spark spark, String id, String name) : super(spark, id, name);
 
   bool _appliesTo(ws.Resource resource) =>
       spark.bowerManager.properties.isPackageResource(resource);
 }
 
-class PubUpgradeAction extends SparkAction implements ContextAction {
-  PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
+class BowerGetAction extends BowerAction {
+  BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
 
-  void _invoke([context]) {
-    ws.Resource resource;
+  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+}
 
-    if (context == null) {
-      resource = spark.focusManager.currentResource;
-    } else {
-      resource = context.first;
-    }
+class BowerUpgradeAction extends BowerAction {
+  BowerUpgradeAction(Spark spark) : super(spark, "bower-upgrade", "Bower Update");
 
-    spark.jobManager.schedule(new PubUpgradeJob(spark, resource.project));
-  }
-
-  String get category => 'application';
-
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
-
-  bool _appliesTo(ws.Resource resource) =>
-      spark.pubManager.properties.isPackageResource(resource);
+  Job _createJob(ws.Project project) => new BowerUpgradeJob(spark, project);
 }
 
 /**
@@ -2488,6 +2484,13 @@ class BowerGetJob extends PackageManagementJob {
   Future _run() => _spark.bowerManager.installPackages(_project);
 }
 
+class BowerUpgradeJob extends PackageManagementJob {
+  BowerUpgradeJob(Spark spark, ws.Project project) :
+      super(spark, project, 'bower upgrade');
+
+  Future _run() => _spark.bowerManager.upgradePackages(_project);
+}
+
 class CompileDartJob extends Job {
   final Spark spark;
   final ws.File file;
@@ -2634,17 +2637,27 @@ class SettingsAction extends SparkActionWithDialog {
 }
 
 class RunTestsAction extends SparkAction {
+  TestDriver testDriver;
+
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
     if (spark.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
 
+  void checkForTestListener() => _initTestDriver();
+
   _invoke([Object context]) {
     if (spark.developerMode) {
-      TestDriver testDriver = new TestDriver(
-          all_tests.defineTests, spark.jobManager, connectToTestListener: true);
+      _initTestDriver();
       testDriver.runTests();
+    }
+  }
+
+  void _initTestDriver() {
+    if (testDriver == null) {
+      testDriver = new TestDriver(all_tests.defineTests, spark.jobManager,
+          connectToTestListener: true);
     }
   }
 }

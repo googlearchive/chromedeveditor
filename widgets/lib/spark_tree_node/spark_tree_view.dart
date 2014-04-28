@@ -4,8 +4,6 @@
 
 library spark_widgets.tree_view;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';

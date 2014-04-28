@@ -229,8 +229,10 @@ class Outline {
  */
 abstract class OutlineEntry {
   String name;
-  int startOffset;
-  int endOffset;
+  int nameStartOffset;
+  int nameEndOffset;
+  int bodyStartOffset;
+  int bodyEndOffset;
 
   OutlineEntry([this.name]);
 
@@ -239,15 +241,19 @@ abstract class OutlineEntry {
    */
   void populateFromMap(Map mapData) {
     name = mapData["name"];
-    startOffset = mapData["startOffset"];
-    endOffset = mapData["endOffset"];
+    nameStartOffset = mapData["nameStartOffset"];
+    nameEndOffset = mapData["nameEndOffset"];
+    bodyStartOffset = mapData["bodyStartOffset"];
+    bodyEndOffset = mapData["bodyEndOffset"];
   }
 
   Map toMap() {
     return {
       "name": name,
-      "startOffset": startOffset,
-      "endOffset": endOffset,
+      "nameStartOffset": nameStartOffset,
+      "nameEndOffset": nameEndOffset,
+      "bodyStartOffset": bodyStartOffset,
+      "bodyEndOffset": bodyEndOffset,
     };
   }
 }
