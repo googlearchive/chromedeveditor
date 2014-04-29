@@ -139,7 +139,7 @@ class TextEditor extends Editor {
       //           but it might be a good idea to do so rather than passing it.
 
       String text = _session.value;
-      if (stripWhitespace) text = _stripWhitespace();
+      if (stripWhitespace) text = _stripWhitespace(text);
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
@@ -152,8 +152,8 @@ class TextEditor extends Editor {
     }
   }
 
-  String _stripWhitespace() {
-    return _session.value.replaceAll(whitespaceRegEx, '');
+  String _stripWhitespace(String text) {
+    return text.replaceAll(whitespaceRegEx, '');
   }
 
   /**
