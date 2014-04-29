@@ -16,8 +16,8 @@ class MockHttpRequest {
   var _status = 200;
   var _responseType;
 
-  StreamController _loadStream;
-  get onLoad => _loadStream.stream;
+  StreamController loadStream;
+  get onLoad => loadStream.stream;
 
   StreamController _errorStream;
   get onError => _errorStream.stream;
@@ -33,9 +33,9 @@ class MockHttpRequest {
 
   set responseType(type) => _responseType = type;
 
-  static set responseText(v) => _responseText = v;
+  set responseText(v) => _responseText = v;
 
-  static get responseText => _responseText;
+  get responseText => _responseText;
 
   setRequestHeader(_a, _b) => true;
 
@@ -46,6 +46,6 @@ class MockHttpRequest {
   MockHttpRequest() {
     _abortStream = new StreamController();
     _errorStream = new StreamController();
-    _loadStream = new StreamController();
+    loadStream = new StreamController();
   }
 }

@@ -167,29 +167,34 @@ class HttpFetcher {
    * Constructs and calls a http get request
    */
   Future<String> _doGet(String url) {
-    Completer completer = new Completer();
-    var xhr = getNewHttpRequest();
-    xhr.open("GET", url, async: true , user: username , password: password );
+    try {
+      Completer completer = new Completer();
+      var xhr = getNewHttpRequest();
+      xhr.open("GET", url, async: true , user: username , password: password );
 
-    xhr.onLoad.listen((event) {
-      if (xhr.readyState == 4) {
-        if (xhr.status == 200) {
-          return completer.complete(xhr.responseText);
-        } else {
-          completer.completeError(new HttpResult.fromXhr(xhr));
+      xhr.onLoad.listen((event) {
+        if (xhr.readyState == 4) {
+          if (xhr.status == 200) {
+            return completer.complete(xhr.responseText);
+          } else {
+            completer.completeError(new HttpResult.fromXhr(xhr));
+          }
         }
-      }
-    });
+      });
 
-    xhr.onError.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
-    });
+      xhr.onError.listen((_) {
+        completer.completeError(new HttpResult.fromXhr(xhr));
+      });
 
-    xhr.onAbort.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
-    });
-    xhr.send();
-    return completer.future;
+      xhr.onAbort.listen((_) {
+        completer.completeError(new HttpResult.fromXhr(xhr));
+      });
+      xhr.send();
+      return completer.future;
+
+    } catch (e) {
+      throw e;
+    }
   }
 
   /**
