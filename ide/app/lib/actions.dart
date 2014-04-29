@@ -192,9 +192,12 @@ class KeyBinding {
           "F11": KeyCode.F11,
           "F12": KeyCode.F12,
 
+          "SPACE": KeyCode.SPACE,
+          "ENTER": KeyCode.ENTER,
           "TAB": KeyCode.TAB,
           "[" : KeyCode.OPEN_SQUARE_BRACKET,
-          "]" : KeyCode.CLOSE_SQUARE_BRACKET
+          "]" : KeyCode.CLOSE_SQUARE_BRACKET,
+          ".": KeyCode.PERIOD
       };
     }
     return __bindingMap;
