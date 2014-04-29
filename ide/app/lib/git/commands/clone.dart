@@ -50,6 +50,9 @@ class Clone {
     });
   }
 
+  /**
+   * This function is exposed for mocking purpose.
+   */
   HttpFetcher getHttpFetcher(ObjectStore store, String origin, String url,
       String username, String password) {
     return new HttpFetcher(store, origin, url, username, password);
@@ -71,11 +74,15 @@ class Clone {
       } else if (!url.endsWith('.git')) {
         return _clone(url + '.git');
       } else {
-        throw new GitException(GitErrorConstants.GIT_INVALID_REPO_URL);
+        throw new Future.error(
+            new GitException(GitErrorConstants.GIT_INVALID_REPO_URL));
       }
     });
   }
 
+  /**
+   * Public for testing purpose.
+   */
   Future startClone(HttpFetcher  fetcher) {
     return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
       return  _options.root.createDirectory(".git").then(
