@@ -144,7 +144,7 @@ class TextEditor extends Editor {
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
       // TODO(ericarnold): Need to analyze on initial file load.
-      aceManager.buildOutline();
+      if (file.name.endsWith(".dart")) aceManager.buildOutline();
 
       return file.setContents(text).then((_) => dirty = false);
     } else {
