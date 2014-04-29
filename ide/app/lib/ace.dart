@@ -144,7 +144,7 @@ class TextEditor extends Editor {
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
       // TODO(ericarnold): Need to analyze on initial file load.
-      if (file.name.endsWith(".dart")) aceManager.buildOutline();
+      aceManager.buildOutline();
 
       return file.setContents(text).then((_) => dirty = false);
     } else {
@@ -588,9 +588,6 @@ class AceManager {
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
         setMarkers(file.getMarkers());
       });
-
-      setMarkers(file.getMarkers());
-      buildOutline();
     }
 
     // Setup the code completion options for the current file type.
@@ -605,11 +602,20 @@ class AceManager {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
       }
+
+      setMarkers(file.getMarkers());
+      buildOutline();
     }
   }
 
+  /**
+   * Make a service call and build the outline view for the current file.
+   */
   void buildOutline() {
     String name = currentFile == null ? '' : currentFile.name;
+
+    if (!name.endsWith(".dart")) return;
+
     String text = currentSession.value;
     outline.build(name, text);
   }
