@@ -22,6 +22,7 @@ import 'object_utils.dart';
 import 'objectstore.dart';
 import 'utils.dart';
 import 'zlib.dart';
+import '../utils.dart';
 
 /**
  * Encapsulates a pack object header.
@@ -250,7 +251,8 @@ class Pack {
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
-      for (int i = 0; i < numObjects; ++i) {
+       Future parse(_) {
+
         PackedObject object = _matchObjectAtOffset(_offset);
         object.crc = getCrc32(data.sublist(object.offset, _offset));
 
@@ -268,14 +270,21 @@ class Pack {
         }
 
         objects.add(object);
-      }
+        return new Future.value();
+       }
 
-      return Future.forEach(deferredObjects, (PackedObject obj) {
-        return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
-          deltifiedObj.data = null;
-          // TODO(grv) : add progress.
-        });
-      });
+       List iter = new List(numObjects);
+       // This is computational intense and may take several seconds. Refresh
+       // UI after each iteartion.
+       return forEachNonBlockingUI(iter, parse).then((_) {
+         Future expandDeltified(PackedObject obj) {
+           return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
+             deltifiedObj.data = null;
+             // TODO(grv) : add progress.
+           });
+         }
+         return forEachNonBlockingUI(deferredObjects, expandDeltified);
+       });
     } catch (e, st) {
       return new Future.error(e, st);
     }
