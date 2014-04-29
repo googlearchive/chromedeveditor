@@ -174,7 +174,12 @@ class _PubBuilder extends PackageBuilder {
         Resource r = delta.resource;
 
         if (r == pubspecFile) {
-          analyzePubspec = true;
+          if (delta.isDelete) {
+            analyzePubspec = false;
+            break;
+          } else {
+            analyzePubspec = true;
+          }
         } else if (properties.isInPackagesFolder(r)) {
           analyzePubspec = true;
         }
