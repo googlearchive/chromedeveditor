@@ -588,9 +588,6 @@ class AceManager {
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
         setMarkers(file.getMarkers());
       });
-
-      setMarkers(file.getMarkers());
-      buildOutline();
     }
 
     // Setup the code completion options for the current file type.
@@ -605,11 +602,20 @@ class AceManager {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
       }
+
+      setMarkers(file.getMarkers());
+      buildOutline();
     }
   }
 
+  /**
+   * Make a service call and build the outline view for the current file.
+   */
   void buildOutline() {
     String name = currentFile == null ? '' : currentFile.name;
+
+    if (!name.endsWith(".dart")) return;
+
     String text = currentSession.value;
     outline.build(name, text);
   }
