@@ -1,4 +1,4 @@
-// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -27,7 +27,8 @@ class MockHttpFetcher extends HttpFetcher {
 
   int testNumber;
 
-  MockHttpFetcher(ObjectStore store, name, repoUrl, [username, password])
+  MockHttpFetcher(ObjectStore store, String name, String repoUrl,
+      [String username, String password])
       : super (store, name, repoUrl, username, password);
 
   MockHttpRequest getNewHttpRequest() => new MockHttpRequestClone(testNumber);
@@ -55,7 +56,7 @@ class MockHttpRequestClone extends MockHttpRequest {
       case VALID_REPO_URL_NOT_ENDING_WITH_DOT_GIT:
         break;
       case VALID_REPO_IF_DOT_GIT_APPENDED:
-        if (!_url.endsWith('.git'))
+        if (!_url.contains('.git'))
           throw new GitException(GitErrorConstants.GIT_HTTP_404_ERROR);
         break;
       case INVALID_REPO_404_ERROR:
@@ -87,7 +88,8 @@ class MockClone extends Clone {
 
   HttpFetcher getHttpFetcher(ObjectStore store, String origin, String url,
       String username, String password) {
-    MockHttpFetcher fetcher = new MockHttpFetcher(store, origin, url, username, password);
+    MockHttpFetcher fetcher = new MockHttpFetcher(store, origin, url, username,
+        password);
     fetcher.testNumber = testNumber;
     return fetcher;
   }
@@ -105,14 +107,14 @@ defineTests() {
       MockFileSystem fs = new MockFileSystem();
       DirectoryEntry dir = fs.createDirectory('test/git/clone');
       GitOptions options = new GitOptions(root: dir,
-          repoUrl: "https://github.com/gaurave/spark-t.git", depth: 1,
+          repoUrl: "https://github.com/gaurave/invalid.git", depth: 1,
         store: new ObjectStore(dir));
       MockClone clone = new MockClone(options, INVALID_REPO_404_ERROR);
-      try {
-        return clone.clone();
-      } on GitException catch (e) {
-        return true;
-      }
+      return clone.clone().catchError((e) {
+        if (e is GitException)
+          return true;
+        throw e;
+      });
     });
 
     test('private repo with credentials', () {
@@ -135,18 +137,19 @@ defineTests() {
         repoUrl: "https://github.com/gaurave/spark-t.git", depth: 1,
       store: new ObjectStore(dir));
     MockClone clone = new MockClone(options, PRIVATE_REPO_AUTHORIZATION_ERROR);
-    try {
-      return clone.clone();
-    } on GitException catch (e) {
-      return true;
-    }
+    return clone.clone().catchError((e) {
+      if (e is GitException) {
+        return true;
+      }
+      throw e;
+    });
   });
 
   test('valid repo ending with .git', () {
     MockFileSystem fs = new MockFileSystem();
     DirectoryEntry dir = fs.createDirectory('test/git/clone');
     GitOptions options = new GitOptions(root: dir,
-        repoUrl: "https://github.com/gaurave/spark-t.git", depth: 1,
+        repoUrl: "https://github.com/gaurave/spark.git", depth: 1,
       store: new ObjectStore(dir));
     MockClone clone = new MockClone(options, VALID_REPO_URL_ENDING_WITH_DOT_GIT);
     return clone.clone().then((String result) {
@@ -158,23 +161,24 @@ defineTests() {
     MockFileSystem fs = new MockFileSystem();
     DirectoryEntry dir = fs.createDirectory('test/git/clone');
     GitOptions options = new GitOptions(root: dir,
-        repoUrl: "https://github.com/gaurave/spark-t", depth: 1,
+        repoUrl: "https://github.com/gaurave/spark", depth: 1,
       store: new ObjectStore(dir));
-    MockClone clone = new MockClone(options, VALID_REPO_URL_NOT_ENDING_WITH_DOT_GIT);
+    MockClone clone = new MockClone(options,
+        VALID_REPO_URL_NOT_ENDING_WITH_DOT_GIT);
     return clone.clone().then((String result) {
       return (result == "success");
     });
   });
 
-  /*test('valid repo if dot git appended', () {
+  test('valid repo if dot git appended', () {
     MockFileSystem fs = new MockFileSystem();
     DirectoryEntry dir = fs.createDirectory('test/git/clone');
     GitOptions options = new GitOptions(root: dir,
-        repoUrl: "https://github.com/gaurave/spark-t.git", depth: 1,
+        repoUrl: "https://github.com/gaurave/spark", depth: 1,
       store: new ObjectStore(dir));
     MockClone clone = new MockClone(options, VALID_REPO_IF_DOT_GIT_APPENDED);
     return clone.clone().then((String result) {
       return (result == "success");
-    });*/
-  //});
+    });
+  });
 }

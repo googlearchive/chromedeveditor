@@ -10,6 +10,7 @@ import 'dart:core';
 import 'dart:html';
 import 'dart:typed_data';
 
+import 'exception.dart';
 import 'objectstore.dart';
 import 'upload_pack_parser.dart';
 
@@ -167,34 +168,30 @@ class HttpFetcher {
    * Constructs and calls a http get request
    */
   Future<String> _doGet(String url) {
-    try {
-      Completer completer = new Completer();
-      var xhr = getNewHttpRequest();
-      xhr.open("GET", url, async: true , user: username , password: password );
+    Completer completer = new Completer();
+    var xhr = getNewHttpRequest();
+    xhr.open("GET", url, async: true , user: username , password: password );
 
-      xhr.onLoad.listen((event) {
-        if (xhr.readyState == 4) {
-          if (xhr.status == 200) {
-            return completer.complete(xhr.responseText);
-          } else {
-            completer.completeError(new HttpResult.fromXhr(xhr));
-          }
+    xhr.onLoad.listen((event) {
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          return completer.complete(xhr.responseText);
+        } else {
+          completer.completeError(new HttpResult.fromXhr(xhr));
         }
-      });
+      }
+    });
 
-      xhr.onError.listen((_) {
-        completer.completeError(new HttpResult.fromXhr(xhr));
-      });
+    xhr.onError.listen((_) {
+      completer.completeError(new HttpResult.fromXhr(xhr));
+    });
 
-      xhr.onAbort.listen((_) {
-        completer.completeError(new HttpResult.fromXhr(xhr));
-      });
-      xhr.send();
-      return completer.future;
+    xhr.onAbort.listen((_) {
+      completer.completeError(new HttpResult.fromXhr(xhr));
+    });
 
-    } catch (e) {
-      throw e;
-    }
+    xhr.send();
+    return completer.future;
   }
 
   /**
@@ -203,7 +200,15 @@ class HttpFetcher {
    */
   Future<bool> isValidRepoUrl(String url) {
     String uri = _makeUri('/info/refs', {"service": 'git-upload-pack'});
-    return _doGet(uri).then((_) => true).catchError((e) => false);
+    try {
+      return _doGet(uri).then((_) => true).catchError((e) {
+        if (e.status == 401) {
+          throw new GitException(GitErrorConstants.GIT_AUTH_ERROR);
+        }
+      });
+    } catch (e) {
+      return new Future.value(false);
+    }
   }
 
   String _makeUri(String path, Map<String, String> extraOptions) {
