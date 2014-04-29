@@ -281,20 +281,12 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
-    // Override Ace's goto line command.
+    // Override Ace's `gotoline` command.
     var command = new ace.Command(
         'gotoline',
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         (e) => _handleGotoLine());
     _aceEditor.commands.addCommand(command);
-
-    // Override Ace's find command.
-    // TODO(devoncarew): Finish implementation.
-//    command = new ace.Command(
-//        'find',
-//        const ace.BindKey(mac: 'Command-F', win: 'Ctrl-F'),
-//        (e) => _handleOpenFind());
-//    _aceEditor.commands.addCommand(command);
 
     // Fallback
     theme = THEMES[0];
@@ -632,20 +624,6 @@ class AceManager {
       default:
         return ace.Annotation.INFO;
     }
-  }
-
-  void _handleOpenFind() {
-    _performingGotoLine = false;
-
-    ace.Selection sel = _aceEditor.selection;
-    if (sel.isEmpty) {
-      findView.queryText = '';
-    } else {
-      String str = _aceEditor.session.getTextRange(sel.range);
-      findView.queryText = str.trim();
-      findView.selectQueryText();
-    }
-    findView.show();
   }
 
   void _handleGotoLine() {
