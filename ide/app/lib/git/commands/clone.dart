@@ -11,6 +11,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../config.dart';
 import '../constants.dart';
+import '../exception.dart';
 import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
@@ -65,7 +66,7 @@ class Clone {
       } else if (!url.endsWith('.git')) {
         return _clone(url + '.git');
       } else {
-        return new Future.error('Invalid git repository url.');
+        return new GitException(GitErrorConstants.GIT_REPO_NOT_FOUND);
       }
     });
   }

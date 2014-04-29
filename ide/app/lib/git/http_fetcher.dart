@@ -11,6 +11,7 @@ import 'dart:html';
 import 'dart:typed_data';
 
 import 'objectstore.dart';
+import 'exception.dart';
 import 'upload_pack_parser.dart';
 
 final int COMMIT_LIMIT = 32;
@@ -198,7 +199,12 @@ class HttpFetcher {
    */
   Future<bool> isValidRepoUrl(String url) {
     String uri = _makeUri('/info/refs', {"service": 'git-upload-pack'});
-    return _doGet(uri).then((_) => true).catchError((e) => false);
+    return _doGet(uri).then((_) => true).catchError((e) {
+      if (e.status == 401) {
+        throw new GitException(GitErrorConstants.GIT_AUTH_FAILURE);
+      }
+      return false;
+    });
   }
 
   String _makeUri(String path, Map<String, String> extraOptions) {
