@@ -194,6 +194,7 @@ class EditorManager implements EditorProvider {
       _editorMap.remove(file);
 
       persistState();
+      state.close();
     }
   }
 
@@ -474,5 +475,9 @@ class _EditorState {
         session.value = text;
       });
     }
+  }
+
+  void close() {
+    session = null;
   }
 }

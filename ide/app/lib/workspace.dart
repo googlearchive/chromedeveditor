@@ -186,7 +186,9 @@ class Workspace extends Container {
     return _roots.map((root) => root.resource).toList(growable: false);
   }
 
-  Iterable<Resource> traverse() => Resource._workspaceTraversal(this);
+  Iterable<Resource> traverse({bool includeDerived: true}) {
+    return Resource._workspaceTraversal(this, includeDerived);
+  }
 
   List<File> getFiles() {
     return _roots
@@ -689,13 +691,25 @@ abstract class Resource {
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
    */
-  Iterable<Resource> traverse() => _workspaceTraversal(this);
+  Iterable<Resource> traverse({bool includeDerived: true}) {
+    return _workspaceTraversal(this, includeDerived);
+  }
 
-  static Iterable<Resource> _workspaceTraversal(Resource r) {
+  /**
+   * Check the files on disk for changes that we don't know about. Fire resource
+   * change events as necessary.
+   */
+  Future refresh();
+
+  static Iterable<Resource> _workspaceTraversal(Resource r, bool includeDerived) {
     if (r is Container) {
       if (r.isScmPrivate()) return [];
+      if (!includeDerived && r.isDerived()) return [];
 
-      return [[r], r.getChildren().expand(_workspaceTraversal)].expand((i) => i);
+      return [
+          [r],
+          r.getChildren().expand((r) => _workspaceTraversal(r, includeDerived))
+      ].expand((i) => i);
     } else {
       return [r];
     }
@@ -834,7 +848,7 @@ class Folder extends Container {
 
   String toString() => '${this.runtimeType} ${name}/';
 
-  Future _refresh() {
+  Future refresh() {
     List<Resource> added = [];
     List<Resource> removed = [];
 
@@ -884,11 +898,7 @@ class Folder extends Container {
 
       // Check for modified files.
       futures.addAll(checkChanged.map((Resource resource) {
-        if (resource is File) {
-          return resource._refresh();
-        } else if (resource is Folder) {
-          return resource._refresh();
-        }
+        return resource.refresh();
       }));
 
       return Future.wait(futures).then((_) {
@@ -981,7 +991,7 @@ class File extends Resource {
     return severity;
   }
 
-  Future _refresh() {
+  Future refresh() {
     return entry.getMetadata().then((/*Metadata*/ metaData) {
       final int newStamp = metaData.modificationTime.millisecondsSinceEpoch;
       if (newStamp != _timestamp) {
@@ -1015,10 +1025,6 @@ class Project extends Folder {
 
   String get uuid => '${_root.id}';
 
-  /**
-   * Check the files on disk for changes that we don't know about. Fire resource
-   * change events as necessary.
-   */
   Future refresh() {
     // Only allow one refresh call at a time.
     assert(_inRefresh == false);
@@ -1027,7 +1033,7 @@ class Project extends Folder {
     workspace.pauseResourceEvents();
 
     return nextTick().then((_) {
-      return _refresh();
+      return super.refresh();
     }).whenComplete(() {
       _inRefresh = false;
       workspace.resumeResourceEvents();
@@ -1274,6 +1280,8 @@ class ResourceChangeEvent {
   List<ChangeDelta> getChangesFor(Project project) {
     return changes.where((c) => c.resource.project == project).toList();
   }
+
+  bool get isEmpty => changes.isEmpty;
 }
 
 /**

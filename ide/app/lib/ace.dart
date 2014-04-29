@@ -19,7 +19,7 @@ import 'package:path/path.dart' as path;
 
 import 'css/cssbeautify.dart';
 import 'editors.dart';
-import 'package_mgmt/bower.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
@@ -261,7 +261,10 @@ class AceManager {
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
 
-  AceManager(this.parentElement, this.delegate, svc.Services services) {
+  AceManager(this.parentElement,
+             this.delegate,
+             svc.Services services,
+             PreferenceStore prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -277,6 +280,13 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
+    // Override Ace's gotoline command.
+    var command = new ace.Command(
+        'gotoline',
+        const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
+        (e) => _handleGotoLine());
+    _aceEditor.commands.addCommand(command);
+
     // Fallback
     theme = THEMES[0];
 
@@ -288,18 +298,33 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    outline = new Outline(services, parentElement);
+    _setupOutline(prefs);
+  }
+
+  void _setupOutline(PreferenceStore prefs) {
+    outline = new Outline(_analysisService, parentElement, prefs);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
-          currentSession.document.indexToPosition(item.startOffset);
+          currentSession.document.indexToPosition(item.nameStartOffset);
       ace.Point endPoint =
-          currentSession.document.indexToPosition(item.endOffset);
+          currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
+    });
 
+    ace.Point lastCursorPosition =  new ace.Point(-1, -1);
+    _aceEditor.onChangeSelection.listen((_) {
+      ace.Point newCursorPosition = _aceEditor.cursorPosition;
+      // Cancel the last outline selection update
+      if (lastCursorPosition != newCursorPosition) {
+        int cursorOffset = currentSession.document.positionToIndex(
+            newCursorPosition);
+        outline.selectItemAtOffset(cursorOffset);
+      }
+      lastCursorPosition = newCursorPosition;
     });
   }
 
@@ -371,12 +396,15 @@ class AceManager {
           currentSession.documentToScreenRow(marker.lineNum, aceColumn)
           / numberLines * 100.0;
 
-      html.Element minimapMarker = new html.Element.div();
-      minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
-      minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
-      minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
+      // Only add errors and warnings to the mini-map.
+      if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
+        html.Element minimapMarker = new html.Element.div();
+        minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
+        minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
+        minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
-      minimap.append(minimapMarker);
+        minimap.append(minimapMarker);
+      }
     }
 
     currentSession.setAnnotations(annotations);
@@ -581,8 +609,9 @@ class AceManager {
   }
 
   void buildOutline() {
+    String name = currentFile == null ? '' : currentFile.name;
     String text = currentSession.value;
-    outline.build(text);
+    outline.build(name, text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
@@ -601,6 +630,11 @@ class AceManager {
         return ace.Annotation.INFO;
     }
   }
+
+  void _handleGotoLine() {
+    // TODO(devoncarew): Show a 'goto line' dialog.
+    //print('_handleGotoLine');
+  }
 }
 
 class ThemeManager {
@@ -609,6 +643,10 @@ class ThemeManager {
   html.Element _label;
 
   ThemeManager(this.aceManager, this.prefs, this._label) {
+    String value = 'monokai';
+    aceManager.theme = value;
+    _updateName(value);
+/*
     prefs.getValue('aceTheme').then((String value) {
       if (value != null) {
         aceManager.theme = value;
@@ -617,6 +655,7 @@ class ThemeManager {
         _updateName(aceManager.theme);
       }
     });
+*/
   }
 
   void inc(html.Event e) {
@@ -639,7 +678,9 @@ class ThemeManager {
   }
 
   void _updateName(String name) {
-    _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+    if (_label != null) {
+      _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+    }
   }
 }
 

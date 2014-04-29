@@ -59,7 +59,7 @@ class FilesController implements TreeViewDelegate {
   final ScmManager _scmManager;
   // List of top-level resources.
   final List<Resource> _files = [];
-  // Map of nodeUID to the resources of the workspace for a quick lookup.
+  // Map of node UIDs to the resources of the workspace for a quick lookup.
   final Map<String, Resource> _filesMap = {};
   // Cache of sorted children of nodes.
   final Map<String, List<String>> _childrenCache = {};
@@ -75,6 +75,8 @@ class FilesController implements TreeViewDelegate {
   List<Resource> _filteredFiles;
   // Sorted children of nodes.
   Map<String, List<String>> _filteredChildrenCache;
+  // Expanded state when no search filter is applied.
+  List<String> _currentExpandedState;
 
   FilesController(this._workspace,
                   this._actionManager,
@@ -148,51 +150,51 @@ class FilesController implements TreeViewDelegate {
 
   // Implementation of [TreeViewDelegate] interface.
 
-  bool treeViewHasChildren(TreeView view, String nodeUID) {
-    if (nodeUID == null) {
+  bool treeViewHasChildren(TreeView view, String nodeUid) {
+    if (nodeUid == null) {
       return true;
     } else {
-      return (_filesMap[nodeUID] is Container);
+      return (_filesMap[nodeUid] is Container);
     }
   }
 
-  int treeViewNumberOfChildren(TreeView view, String nodeUID) {
-    if (nodeUID == null) {
+  int treeViewNumberOfChildren(TreeView view, String nodeUid) {
+    if (nodeUid == null) {
       return _currentFiles().length;
-    } else if (_filesMap[nodeUID] is Container) {
-      _cacheChildren(nodeUID);
-      if (_currentChildrenCache()[nodeUID] == null) {
+    } else if (_filesMap[nodeUid] is Container) {
+      _cacheChildren(nodeUid);
+      if (_currentChildrenCache()[nodeUid] == null) {
         return 0;
       }
-      return _currentChildrenCache()[nodeUID].length;
+      return _currentChildrenCache()[nodeUid].length;
     } else {
       return 0;
     }
   }
 
-  String treeViewChild(TreeView view, String nodeUID, int childIndex) {
-    if (nodeUID == null) {
+  String treeViewChild(TreeView view, String nodeUid, int childIndex) {
+    if (nodeUid == null) {
       return _currentFiles()[childIndex].uuid;
     } else {
-      _cacheChildren(nodeUID);
-      return _currentChildrenCache()[nodeUID][childIndex];
+      _cacheChildren(nodeUid);
+      return _currentChildrenCache()[nodeUid][childIndex];
     }
   }
 
   List<Resource> getSelection() {
     List resources = [];
-    _treeView.selection.forEach((String nodeUID) {
-      resources.add(_filesMap[nodeUID]);
+    _treeView.selection.forEach((String nodeUid) {
+      resources.add(_filesMap[nodeUid]);
     });
     return resources;
   }
-  
-  void setSelection(List<Resource> resources) { 
+
+  void setSelection(List<Resource> resources) {
     _treeView.selection = resources.map((r) => r.uuid);
   }
-  
-  ListViewCell treeViewCellForNode(TreeView view, String nodeUID) {
-    Resource resource = _filesMap[nodeUID];
+
+  ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
     assert(resource != null);
     FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
@@ -202,12 +204,12 @@ class FilesController implements TreeViewDelegate {
     return cell;
   }
 
-  int treeViewHeightForNode(TreeView view, String nodeUID) => 20;
+  int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
 
   void treeViewSelectedChanged(TreeView view,
-                               List<String> nodeUIDs) {
-    if (nodeUIDs.isNotEmpty) {
-      Resource resource = _filesMap[nodeUIDs.first];
+                               List<String> nodeUids) {
+    if (nodeUids.isNotEmpty) {
+      Resource resource = _filesMap[nodeUids.first];
       _eventBus.addEvent(
           new FilesControllerSelectionChangedEvent(
               resource, forceOpen: true, replaceCurrent: true));
@@ -239,12 +241,12 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewDoubleClicked(TreeView view,
-                             List<String> nodeUIDs,
+                             List<String> nodeUids,
                              html.Event event) {
-    if (nodeUIDs.length == 1) {
-      Resource resource = _filesMap[nodeUIDs.first];
+    if (nodeUids.length == 1) {
+      Resource resource = _filesMap[nodeUids.first];
       if (resource is Container) {
-        view.toggleNodeExpanded(nodeUIDs.first, animated: true);
+        view.toggleNodeExpanded(nodeUids.first, animated: true);
       } else if (resource is File) {
         _eventBus.addEvent(new FilesControllerPersistTabEvent(resource));
       }
@@ -252,20 +254,20 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewContextMenu(TreeView view,
-                           List<String> nodeUIDs,
-                           String nodeUID,
+                           List<String> nodeUids,
+                           String nodeUid,
                            html.Event event) {
     cancelEvent(event);
-    Resource resource = _filesMap[nodeUID];
+    Resource resource = _filesMap[nodeUid];
     FileItemCell cell = new FileItemCell(resource);
     _showMenuForEvent(cell, event, resource);
   }
 
   String treeViewDropEffect(TreeView view,
                             html.DataTransfer dataTransfer,
-                            String nodeUID) {
+                            String nodeUid) {
     if (dataTransfer.types.contains('Files')) {
-      if (nodeUID == null) {
+      if (nodeUid == null) {
         // Importing to top-level is not allowed for now.
         return "none";
       } else {
@@ -279,27 +281,28 @@ class FilesController implements TreeViewDelegate {
   }
 
   String treeViewDropCellsEffect(TreeView view,
-                                 List<String> nodesUIDs,
-                                 String nodeUID) {
-    if (nodeUID == null) {
+                                 List<String> nodesUids,
+                                 String nodeUid) {
+    if (nodeUid == null) {
       return "none";
     }
-    if (_isDifferentProject(nodesUIDs, nodeUID)) {
+    if (_isDifferentProject(nodesUids, nodeUid)) {
       return "copy";
     } else {
-      if (_isValidMove(nodesUIDs, nodeUID)) {
+      if (_isValidMove(nodesUids, nodeUid)) {
         return "move";
       } else {
         return "none";
       }
     }
   }
+
   void treeViewDrop(TreeView view,
                     String nodeUuid,
                     html.DataTransfer dataTransfer) {
     Folder destinationFolder = _filesMap[nodeUuid] as Folder;
     List<Future<File>> futureFiles = new List<Future<File>>();
-    
+
     for(html.File file in dataTransfer.files) {
       futureFiles.add(_CopyHtmlFileToWorkspace(file, destinationFolder));
     }
@@ -307,7 +310,7 @@ class FilesController implements TreeViewDelegate {
       setSelection(files);
     });
   }
-  
+
   static Future<File> _CopyHtmlFileToWorkspace(html.File file,
                                                Folder destination) {
     Completer<File> c = new Completer();
@@ -322,15 +325,15 @@ class FilesController implements TreeViewDelegate {
     return c.future;
   }
 
-  bool _isDifferentProject(List<String> nodesUIDs, String targetNodeUID) {
-    if (targetNodeUID == null) {
+  bool _isDifferentProject(List<String> nodesUids, String targetNodeUid) {
+    if (targetNodeUid == null) {
       return false;
     }
-    Resource destination = _filesMap[targetNodeUID];
+    Resource destination = _filesMap[targetNodeUid];
     Project destinationProject = destination is Project ? destination :
         destination.project;
-    for (String nodeUID in nodesUIDs) {
-      Resource node = _filesMap[nodeUID];
+    for (String nodeUid in nodesUids) {
+      Resource node = _filesMap[nodeUid];
       // Check if the resource have the same top-level container.
       if (node.project == destinationProject) {
         return false;
@@ -342,21 +345,21 @@ class FilesController implements TreeViewDelegate {
   // Returns true if the move is valid:
   // - We don't allow moving a file to its parent since it's a no-op.
   // - We don't allow moving an ancestor folder to one of its descendant.
-  bool _isValidMove(List<String> nodesUIDs, String targetNodeUID) {
-    if (targetNodeUID == null) {
+  bool _isValidMove(List<String> nodesUids, String targetNodeUid) {
+    if (targetNodeUid == null) {
       return false;
     }
-    Resource destination = _filesMap[targetNodeUID];
+    Resource destination = _filesMap[targetNodeUid];
     // Collect list of ancestors of the destination.
-    Set<String> ancestorsUIDs = new Set();
+    Set<String> ancestorsUids = new Set();
     Resource currentNode = destination;
     while (currentNode != null) {
-      ancestorsUIDs.add(currentNode.uuid);
+      ancestorsUids.add(currentNode.uuid);
       currentNode = currentNode.parent;
     }
     // Make sure that source items are not one of them.
-    for (String nodeUID in nodesUIDs) {
-      if (ancestorsUIDs.contains(nodeUID)) {
+    for (String nodeUid in nodesUids) {
+      if (ancestorsUids.contains(nodeUid)) {
         // Unable to move this file.
         return false;
       }
@@ -364,8 +367,8 @@ class FilesController implements TreeViewDelegate {
 
     Project destinationProject = destination is Project ? destination :
         destination.project;
-    for (String nodeUID in nodesUIDs) {
-      Resource node = _filesMap[nodeUID];
+    for (String nodeUid in nodesUids) {
+      Resource node = _filesMap[nodeUid];
       // Check whether a resource is moved to its current directory, which would
       // make it a no-op.
       if (node.parent == destination) {
@@ -382,13 +385,13 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewDropCells(TreeView view,
-                         List<String> nodesUIDs,
-                         String targetNodeUID) {
-    Folder destination = _filesMap[targetNodeUID] as Folder;
-    if (_isDifferentProject(nodesUIDs, targetNodeUID)) {
+                         List<String> nodesUids,
+                         String targetNodeUid) {
+    Folder destination = _filesMap[targetNodeUid] as Folder;
+    if (_isDifferentProject(nodesUids, targetNodeUid)) {
       List<Future> futures = [];
-      for (String nodeUID in nodesUIDs) {
-        Resource res = _filesMap[nodeUID];
+      for (String nodeUid in nodesUids) {
+        Resource res = _filesMap[nodeUid];
         futures.add(destination.importResource(res));
       }
       Future.wait(futures).catchError((e) {
@@ -396,26 +399,26 @@ class FilesController implements TreeViewDelegate {
             new ErrorMessageBusEvent('Error while importing files', e));
       });
     } else {
-      if (_isValidMove(nodesUIDs, targetNodeUID)) {
-        _workspace.moveTo(nodesUIDs.map((f) => _filesMap[f]).toList(), destination);
+      if (_isValidMove(nodesUids, targetNodeUid)) {
+        _workspace.moveTo(nodesUids.map((f) => _filesMap[f]).toList(), destination);
       }
     }
   }
 
   bool treeViewAllowsDropCells(TreeView view,
-                               List<String> nodesUIDs,
-                               String destinationNodeUID) {
-    if (_isDifferentProject(nodesUIDs, destinationNodeUID)) {
+                               List<String> nodesUids,
+                               String destinationNodeUid) {
+    if (_isDifferentProject(nodesUids, destinationNodeUid)) {
       return true;
     } else {
-      return _isValidMove(nodesUIDs, destinationNodeUID);
+      return _isValidMove(nodesUids, destinationNodeUid);
     }
   }
 
   bool treeViewAllowsDrop(TreeView view,
                           html.DataTransfer dataTransfer,
-                          String destinationNodeUID) {
-    if (destinationNodeUID == null) {
+                          String destinationNodeUid) {
+    if (destinationNodeUid == null) {
       return false;
     }
     return dataTransfer.types.contains('Files');
@@ -453,9 +456,9 @@ class FilesController implements TreeViewDelegate {
   final int counterTextPosition = 15;
 
   TreeViewDragImage treeViewDragImage(TreeView view,
-                                      List<String> nodesUIDs,
+                                      List<String> nodesUids,
                                       html.MouseEvent event) {
-    if (nodesUIDs.length == 0) {
+    if (nodesUids.length == 0) {
       return null;
     }
 
@@ -466,7 +469,7 @@ class FilesController implements TreeViewDelegate {
     // will be shown in the stack.
     // The number of files will also be shown in a badge if there's more than
     // one file.
-    int placeholderCount = nodesUIDs.length - 1;
+    int placeholderCount = nodesUids.length - 1;
 
     // We will shows 4 placeholders maximum.
     if (placeholderCount >= 4) {
@@ -477,9 +480,9 @@ class FilesController implements TreeViewDelegate {
 
     // Measure text size.
     html.CanvasRenderingContext2D context = canvas.getContext("2d");
-    Resource resource = _filesMap[nodesUIDs.first];
+    Resource resource = _filesMap[nodesUids.first];
     int stackLabelWidth = _getTextWidth(context, stackItemFontName, resource.name);
-    String counterString = '${nodesUIDs.length}';
+    String counterString = '${nodesUids.length}';
     int counterWidth =
         _getTextWidth(context, counterFontName, counterString);
 
@@ -596,20 +599,22 @@ class FilesController implements TreeViewDelegate {
   }
 
   void treeViewSaveExpandedState(TreeView view) {
+    if (_filterString != null) return;
+    _currentExpandedState = _treeView.expandedState;
     localPrefs.setValue('FilesExpandedState',
         JSON.encode(_treeView.expandedState));
   }
 
   // Cache management for sorted list of resources.
 
-  void _cacheChildren(String nodeUID) {
-    if (_childrenCache[nodeUID] == null) {
-      Container container = _filesMap[nodeUID];
+  void _cacheChildren(String nodeUid) {
+    if (_childrenCache[nodeUid] == null) {
+      Container container = _filesMap[nodeUid];
       List<Resource> children =
           container.getChildren().where(_showResource).toList();
       // Sort folders first, then files.
       children.sort(_compareResources);
-      _childrenCache[nodeUID] = children.map((r) => r.uuid).toList();
+      _childrenCache[nodeUid] = children.map((r) => r.uuid).toList();
     }
   }
 
@@ -635,6 +640,24 @@ class FilesController implements TreeViewDelegate {
   void _reloadData() {
     _clearChildrenCache();
     _treeView.reloadData();
+  }
+
+  // This method will be more efficient than _reloadData() then restoring the
+  // state.
+  void _reloadDataAndRestoreExpandedState(List<String> expandedState) {
+    List<String> selection = _treeView.selection;
+    for(String nodeUid in selection) {
+      Resource res = _filesMap[nodeUid];
+      List<Container> parents = _collectParents(res, []);
+      List<String> parentsUuid =
+          parents.map((Container container) => container.uuid).toList();
+      expandedState.addAll(parentsUuid);
+    }
+
+    _clearChildrenCache();
+    _treeView.restoreExpandedState(expandedState);
+    // Restore selection.
+    _treeView.selection = selection;
   }
 
   // Processing workspace events.
@@ -691,7 +714,7 @@ class FilesController implements TreeViewDelegate {
    */
   void _processMarkerChange() {
     for (String uid in _filesMap.keys) {
-      TreeViewCell treeViewCell = _treeView.getTreeViewCellForUID(uid);
+      TreeViewCell treeViewCell = _treeView.getTreeViewCellForUid(uid);
 
       if (treeViewCell != null) {
         FileItemCell fileItemCell = treeViewCell.embeddedCell;
@@ -702,7 +725,7 @@ class FilesController implements TreeViewDelegate {
 
   void _processScmChange() {
     for (String uid in _filesMap.keys) {
-      TreeViewCell treeViewCell = _treeView.getTreeViewCellForUID(uid);
+      TreeViewCell treeViewCell = _treeView.getTreeViewCellForUid(uid);
       if (treeViewCell != null) {
         _updateScmInfo(treeViewCell.embeddedCell);
       }
@@ -881,7 +904,7 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
-      _reloadData();
+      _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
@@ -899,8 +922,7 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
-      _reloadData();
-      _treeView.restoreExpandedState(filtered.toList());
+      _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }
 }
