@@ -9,6 +9,9 @@ Dart IDE needs to be installed and `dart/dart-sdk/bin` needs to be accessible
 from `$PATH`. In addition, you should set a `DART_SDK` environment variable
 and point it to `your/path/to/dart-sdk`.
 
+We're currently developing against the weekly development release of the Dart
+SDK.
+
 You **need** to enable experimental Web Platform features in Chrome. From 
 `chrome://flags`, enable `#enable-experimental-web-platform-features`.
 
@@ -35,25 +38,16 @@ Run:
 
     ./grind setup
 
-to copy library code from packages/ to app/packages/. This step also copies the 
-`dart:` code from the Dart SDK into the `app/sdk` directory.
+to copy library code from packages/ to app/packages/.
 
 ### Lib
 All the Dart code for the application (modulo the `spark_polymer.*` entry point
 and `spark_polymer_ui.*` top-level UI) lives in the `app/lib` directory.
 
-### API Documentation
-Documentation for the Spark APIs is available
-[here](http://dart-lang.github.io/spark/docs/spark.html).
-
 ### Tests
 All the tests live in app/test. These are standard Dart unit tests. Generally,
 one library under test == 1 test file, and they should all be referenced from
 `all.dart`.
-
-In order to run the tests, we modify the HTML entry point slightly to point to
-`app/spark_test.dart`. This source file references the entire Spark app as
-well as the unit tests for the app.
 
 Run
 
