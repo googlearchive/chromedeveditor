@@ -1260,7 +1260,7 @@ class ResourceChangeEvent {
   }
 
   ResourceChangeEvent._(List<ChangeDelta> delta) :
-    changes = new UnmodifiableListView(delta);
+      changes = new UnmodifiableListView(delta);
 
   /**
    * A convenience getter used to return modified (new or changed) files.
@@ -1276,6 +1276,14 @@ class ResourceChangeEvent {
       .map((delta) => delta.resource.project)
       .toSet()
       .where((project) => project != null);
+
+  /**
+   * Returns true only if the changes include files of the given extension.
+   */
+  bool includesFileType(String extension) {
+    return changes.any((ChangeDelta change) => change.resource.isFile &&
+        change.resource.name.endsWith(".${extension}"));
+  }
 
   List<ChangeDelta> getChangesFor(Project project) {
     return changes.where((c) => c.resource.project == project).toList();

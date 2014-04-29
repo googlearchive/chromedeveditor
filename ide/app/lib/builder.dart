@@ -33,7 +33,7 @@ class BuilderManager {
 
   List<ResourceChangeEvent> _events = [];
 
-  Timer _timer;
+  Timer _buildTimer;
   bool _buildRunning = false;
 
   BuilderManager(this.workspace, this.jobManager) {
@@ -60,18 +60,21 @@ class BuilderManager {
   void _handleChange(ResourceChangeEvent event) {
     _events.add(event);
 
-    if (!_buildRunning) {
-      _startTimer();
+    List<ChangeDelta> changes = event.changes;
+    bool dartFilesChanged = event.includesFileType("dart");
+
+    if (!_buildRunning && dartFilesChanged) {
+      _startBuildTimer();
     }
   }
 
-  void _startTimer() {
-    if (_timer != null) {
-      _timer.cancel();
+  void _startBuildTimer() {
+    if (_buildTimer != null) {
+      _buildTimer.cancel();
     }
 
     // Bundle up changes for ~50ms.
-    _timer = new Timer(new Duration(milliseconds: 50), _runBuild);
+    _buildTimer = new Timer(new Duration(milliseconds: 50), _runBuild);
   }
 
   void _runBuild() {
@@ -95,7 +98,7 @@ class BuilderManager {
       _buildRunning = false;
 
       if (_events.isNotEmpty) {
-        _startTimer();
+        _startBuildTimer();
       } else {
         _completers.forEach((c) => c.complete());
         _completers.clear();
