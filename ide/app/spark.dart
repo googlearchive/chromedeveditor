@@ -27,6 +27,7 @@ import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
+import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
 import 'lib/platform_info.dart';
@@ -105,7 +106,8 @@ abstract class Spark
   PubManager _pubManager;
   BowerManager _bowerManager;
   ActionManager _actionManager;
-  ProjectLocationManager projectLocationManager;
+  ProjectLocationManager _projectLocationManager;
+  NavigationManager _navigationManager;
 
   EventBus _eventBus;
 
@@ -137,6 +139,7 @@ abstract class Spark
     initPackageManagers();
     initServices();
     initScmManager();
+    initNavigationManager();
 
     createEditorComponents();
     initEditorArea();
@@ -184,7 +187,8 @@ abstract class Spark
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
   ActionManager get actionManager => _actionManager;
-
+  ProjectLocationManager get projectLocationManager => _projectLocationManager;
+  NavigationManager get navigationManager => _navigationManager;
   EventBus get eventBus => _eventBus;
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
@@ -280,6 +284,10 @@ abstract class Spark
 
   void initLaunchManager() {
     _launchManager = new LaunchManager(_workspace, services, pubManager);
+  }
+
+  void initNavigationManager() {
+    _navigationManager = new NavigationManager();
   }
 
   void initPackageManagers() {
@@ -418,6 +426,8 @@ abstract class Spark
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
     actionManager.registerAction(new GetDeclarationAction(this));
+    actionManager.registerAction(new HistoryAction.back(this));
+    actionManager.registerAction(new HistoryAction.forward(this));
 
     actionManager.registerKeyListener();
   }
@@ -441,7 +451,7 @@ abstract class Spark
   Future restoreLocationManager() {
     return ProjectLocationManager.restoreManager(localPrefs, workspace)
         .then((manager) {
-      projectLocationManager = manager;
+      _projectLocationManager = manager;
     });
   }
 
@@ -695,6 +705,7 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
+  // TODO(devoncarew): Convert this over to use a NavigationLocation.
   Future<Editor> openEditor(ws.File file, {Span selection}) {
     _selectResource(file);
 
@@ -1569,8 +1580,9 @@ class GetDeclarationAction extends SparkAction {
   AnalyzerService _analysisService;
 
   GetDeclarationAction(Spark spark)
-      : super(spark, 'getDeclaration', 'Get Declaration') {
+      : super(spark, 'navigate-declaration', 'Get Declaration') {
     addBinding('ctrl-.');
+    addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
   }
 
@@ -1580,6 +1592,31 @@ class GetDeclarationAction extends SparkAction {
     if (editor is TextEditor) {
       editor.navigateToDeclaration();
     }
+  }
+}
+
+class HistoryAction extends SparkAction {
+  bool _forward;
+
+  HistoryAction.back(Spark spark) : super(spark, 'navigate-back', 'Back') {
+    spark.navigationManager.onNavigate.listen((_) {
+      enabled = spark.navigationManager.canNavigate(forward: _forward);
+    });
+    _forward = false;
+    enabled = false;
+  }
+
+  HistoryAction.forward(Spark spark) : super(spark, 'navigate-forward', 'Forward') {
+    spark.navigationManager.onNavigate.listen((_) {
+      enabled = spark.navigationManager.canNavigate(forward: _forward);
+    });
+    _forward = true;
+    enabled = false;
+  }
+
+  @override
+  void _invoke([Object context]) {
+    spark.navigationManager.navigate(forward: _forward);
   }
 }
 

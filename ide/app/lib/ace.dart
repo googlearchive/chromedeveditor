@@ -19,6 +19,7 @@ import 'package:path/path.dart' as path;
 
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'preferences.dart';
@@ -742,13 +743,6 @@ abstract class AceManagerDelegate {
   bool canShowFileAsText(String filename);
 
   Future<Editor> openEditor(workspace.File file, {Span selection});
-}
-
-class Span {
-  final int offset;
-  final int length;
-
-  Span(this.offset, this.length);
 }
 
 String _calcMD5(String text) {
