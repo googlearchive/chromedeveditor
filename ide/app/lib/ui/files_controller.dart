@@ -76,7 +76,7 @@ class FilesController implements TreeViewDelegate {
   // Sorted children of nodes.
   Map<String, List<String>> _filteredChildrenCache;
   // Expanded state when no search filter is applied.
-  List<String> _currentExpandedState;
+  List<String> _currentExpandedState = [];
 
   FilesController(this._workspace,
                   this._actionManager,
@@ -670,7 +670,8 @@ class FilesController implements TreeViewDelegate {
     _sortTopLevel();
     localPrefs.getValue('FilesExpandedState').then((String state) {
       if (state != null) {
-        _treeView.restoreExpandedState(JSON.decode(state));
+        _currentExpandedState = JSON.decode(state);
+        _treeView.restoreExpandedState(_currentExpandedState);
       } else {
         _treeView.reloadData();
       }
