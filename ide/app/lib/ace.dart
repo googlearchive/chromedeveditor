@@ -298,6 +298,7 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
+    _initDartCompletion();
     _setupOutline(prefs);
   }
 
@@ -640,6 +641,43 @@ class AceManager {
   void _handleGotoLine() {
     // TODO(devoncarew): Show a 'goto line' dialog.
     //print('_handleGotoLine');
+  }
+
+  void _initDartCompletion() {
+    js.JsObject completer = new js.JsObject(js.context['Object']);
+    completer['getCompletions'] = (editor, session, pos, prefix, js.JsFunction callback) {
+      // TODO: If the mode != dart, then return an empty list.
+
+      print('dart completer called: ${prefix}');
+      js.JsArray results = new js.JsArray.from([
+        new DartCompletion('foobar').toProxy(),
+        new DartCompletion('barbaz').toProxy()
+      ]);
+      callback.apply([null, results]);
+    };
+
+    js.JsObject langTools = ace.require('ace/ext/language_tools');
+    langTools.callMethod('addCompleter', [completer]);
+  }
+}
+
+/**
+ * A Dart code completion instance.
+ */
+class DartCompletion {
+  final String word;
+
+  DartCompletion(this.word);
+
+  js.JsObject toProxy() {
+    // {name: ea.word, value: ea.word, score: ea.score, meta: "rhyme"}
+    js.JsObject proxy = new js.JsObject(js.context['Object']);
+    proxy['name'] = word;
+    proxy['value'] = word;
+    // TODO: What value to use? What's the range?
+    proxy['name'] = 300;
+    proxy['meta'] = 'Dart';
+    return proxy;
   }
 }
 
