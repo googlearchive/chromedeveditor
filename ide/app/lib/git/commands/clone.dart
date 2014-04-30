@@ -74,7 +74,7 @@ class Clone {
       } else if (!url.endsWith('.git')) {
         return _clone(url + '.git');
       } else {
-        throw new Future.error(
+        return new Future.error(
             new GitException(GitErrorConstants.GIT_INVALID_REPO_URL));
       }
     });

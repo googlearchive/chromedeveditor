@@ -43,13 +43,13 @@ class MockHttpRequestClone extends MockHttpRequest {
   String _password;
 
   MockHttpRequestClone(this.testNumber) : super();
-  open(_a, url, {async : true, user, password}) {
+  bool open(_a, url, {async : true, user, password}) {
     this._url = url;
     this._username = user;
     this._password = password;
   }
 
-  send() {
+  bool send([dynamic body]) {
     switch (testNumber) {
       case VALID_REPO_URL_ENDING_WITH_DOT_GIT:
         break;

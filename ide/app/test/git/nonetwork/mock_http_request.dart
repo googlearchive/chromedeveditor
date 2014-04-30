@@ -10,7 +10,7 @@ class MockEvents {
   List load = [];
 }
 
-class MockHttpRequest {
+abstract class MockHttpRequest {
   static var _responseText = "";
   var _readyState = 4;
   var _status = 200;
@@ -39,9 +39,9 @@ class MockHttpRequest {
 
   setRequestHeader(_a, _b) => true;
 
-  open(_a, _b, {async : true, user, password}) => true;
+  bool open(_a, _b, {async : true, user, password}) => true;
 
-  send() => on.load.forEach((cb){ cb(null);});
+  bool send([dynamic body]) => on.load.forEach((cb){ cb(null);});
 
   MockHttpRequest() {
     _abortStream = new StreamController();
