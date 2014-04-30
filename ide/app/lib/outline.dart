@@ -202,9 +202,7 @@ abstract class OutlineItem {
     _element.classes.toggle("selected", selected);
   }
 
-  void scrollIntoView() {
-    _element.scrollIntoView();
-  }
+  void scrollIntoView() => _element.scrollIntoView();
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
