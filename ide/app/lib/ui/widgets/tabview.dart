@@ -129,7 +129,7 @@ class TabView {
   DivElement _tabBarScrollable;
   DivElement _tabViewWorkspace;
   bool _labelBarShowing = false;
-  
+
   StreamController<Tab> _onCloseStreamController =
       new StreamController<Tab>.broadcast(sync: true);
   StreamController<TabBeforeCloseEvent> _onBeforeCloseStreamController =
@@ -137,7 +137,7 @@ class TabView {
   StreamController<Tab> _onSelectedStreamController =
       new StreamController<Tab>.broadcast(sync: true);
   StreamController<bool> _onLabelBarShown = new StreamController.broadcast();
-  
+
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
   bool _tabItemsLayoutListenerEnabled = false;
@@ -257,7 +257,7 @@ class TabView {
     }
 
     // maxTabItemWidth is the maximum size of a tab item.
-    final int maxTabItemWidth = 150;
+    final int maxTabItemWidth = 175;
     bool hideCloseButton = false;
     if ((remainingWidth / remainingTabs).ceil() < 90) {
       hideCloseButton = true;

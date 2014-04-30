@@ -294,7 +294,6 @@ class AceManager {
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
     ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
-    ace.Mode.extensionMap['htm'] = ace.Mode.HTML;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
