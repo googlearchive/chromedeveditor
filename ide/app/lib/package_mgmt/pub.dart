@@ -240,6 +240,11 @@ class _PubSpecInfo {
   List<String> getDevDependencies() => _getDeps('dev_dependencies');
 
   List<String> _getDeps(String name) {
-    return _map.containsKey(name) ? _map[name].keys.toList() : [];
+    var deps = _map[name];
+    if (deps is Map) {
+      return _map.containsKey(name) ? _map[name].keys.toList() : [];
+    } else {
+      return [];
+    }
   }
 }
