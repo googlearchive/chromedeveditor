@@ -31,6 +31,7 @@ final String appID = Platform.environment['SPARK_APP_ID'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
+  defineTask('setup-boot', taskFunction: setupBootstrapping, depends: ['setup']);
 
   defineTask('mode-notest', taskFunction: (c) => _changeMode(useTestMode: false));
   defineTask('mode-test', taskFunction: (c) => _changeMode(useTestMode: true));
@@ -76,6 +77,15 @@ void setup(GrinderContext context) {
   // Copy from ./packages to ./app/packages.
   copyDirectory(getDir('packages'), getDir('app/packages'), context);
 
+  BUILD_DIR.createSync();
+  DIST_DIR.createSync();
+}
+
+/**
+ * Init dependencies, and convert the symlinks in `packages` to real copies of
+ * files.
+ */
+void setupBootstrapping(GrinderContext context) {
   // Remove the symlinks from the 'packages' directory.
   for (FileSystemEntity entity in getDir('packages').listSync(followLinks: false)) {
     deleteEntity(entity);
@@ -84,9 +94,6 @@ void setup(GrinderContext context) {
   // Replace the symlinked contents with actual files. This allows chrome apps
   // to see the 'packages' direcotry contents, and analyze package: references.
   copyDirectory(getDir('app/packages'), getDir('packages'), context);
-
-  BUILD_DIR.createSync();
-  DIST_DIR.createSync();
 }
 
 /**
