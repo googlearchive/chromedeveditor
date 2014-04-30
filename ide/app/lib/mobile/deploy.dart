@@ -26,6 +26,7 @@ class DeviceInfo {
 }
 
 class HarnessPush {
+  static final int ADB_PORT = 5037;
   final Container appContainer;
   final PreferenceStore _prefs;
   List<DeviceInfo> _knownDevices = [];
@@ -108,36 +109,40 @@ class HarnessPush {
    * [Chrome ADT](https://github.com/MobileChromeApps/harness) on Android,
    * and that tool doesn't care about the CRX metadata, this is not a problem.
    */
-  Future push(String target, ProgressMonitor monitor) {
+  Future pushToHost(String target, ProgressMonitor monitor) {
     monitor.start('Deploying…', 10);
 
+    return _sendHttpPush(target, monitor);
+  }
+
+  Future _sendHttpPush(String target, ProgressMonitor monitor) {
+    List<int> httpRequest;
+    TcpClient client;
     return archiveContainer(appContainer).then((List<int> archivedData) {
       monitor.worked(3);
-      List<int> httpRequest = _buildHttpRequest(target, archivedData);
+      httpRequest = _buildHttpRequest(target, archivedData);
       monitor.worked(5);
+      return TcpClient.createClient(target, 2424);
+    }).then((TcpClient _client) {
+      client = _client;
+      client.write(httpRequest);
+      return client.stream.timeout(new Duration(minutes: 1)).first;
+    }).then((List<int> responseBytes) {
+      String response = new String.fromCharCodes(responseBytes);
+      List<String> lines = response.split('\n');
+      if (lines == null || lines.isEmpty) {
+        return new Future.error('Bad response from push server');
+      }
 
-      TcpClient client;
-      return TcpClient.createClient(target, 2424).then((TcpClient _client) {
-        client = _client;
-        client.write(httpRequest);
-        return client.stream.timeout(new Duration(minutes: 1)).first;
-      }).then((List<int> responseBytes) {
-        String response = new String.fromCharCodes(responseBytes);
-        List<String> lines = response.split('\n');
-        if (lines == null || lines.isEmpty) {
-          throw 'Bad response from push server';
-        }
-
-        if (lines.first.contains('200')) {
-          monitor.worked(2);
-        } else {
-          throw lines.first;
-        }
-      }).whenComplete(() {
-        if (client != null) {
-          client.dispose();
-        }
-      });
+      if (lines.first.contains('200')) {
+        monitor.worked(2);
+      } else {
+        return new Future.error(lines.first);
+      }
+    }).whenComplete(() {
+      if (client != null) {
+        client.dispose();
+      }
     });
   }
 
@@ -177,18 +182,90 @@ class HarnessPush {
     }).then((_) => device);
   }
 
-  Future pushADB(ProgressMonitor monitor) {
+  Future pushAdb(ProgressMonitor monitor) {
     monitor.start('Deploying…', 10);
-    List<int> httpRequest;
 
+    // Try to find a local ADB server. If we fail, try to use USB.
+    return _connectToAdbServer().then((client) {
+      return _pushToAdbServer(client, monitor);
+    }, onError: (_) { // No server found, so use our own USB code.
+      return _pushViaUSB(monitor);
+    });
+  }
+
+  Future<TcpClient> _connectToAdbServer() {
+    // Try to connect to localhost:5037.
+    return TcpClient.createClient(LOCAL_HOST, HarnessPush.ADB_PORT);
+  }
+
+  void _sendAdbCommand(TcpClient client, String msg) {
+    // ADB expects a four-character ASCII hex string at the start of a message.
+    // The value is the length of the rest of the message.
+    String lenStr = msg.length.toRadixString(16);
+    String padded = "0000".substring(lenStr.length);
+    String payload = '${padded}${lenStr}${msg}';
+    client.writeString(payload);
+  }
+
+  Future _pushToAdbServer(TcpClient client, ProgressMonitor monitor) {
+    Stream<List<int>> stream = client.stream;
+
+    // First, check how many devices there are connected.
+    _sendAdbCommand(client, 'host:devices');
+
+    return stream.take(1).single.then((List<int> deviceBytes) {
+      String deviceList = new String.fromCharCodes(deviceBytes);
+      if (!deviceList.startsWith('OKAY')) {
+        return new Future.error('Invalid response to device list request');
+      }
+
+      // Drop the OKAY and four-character hex length off the beginning,
+      // and then split on newlines. Each line is a device description.
+      // Remove any trailing newline first.
+      if (deviceList.endsWith('\n')) {
+        deviceList = deviceList.substring(0, deviceList.length-2);
+      }
+      List<String> devices = deviceList.substring(8).split('\n');
+      List<List<String>> deviceDetails = new List.from(
+          devices.map((d) => d.split('\t')));
+
+      // deviceDetails has one row for each device, and each device has two
+      // columns: [0] is the serial number, [1] is the description.
+      // TODO: Handle > 1 device!
+      if (deviceDetails.length < 1) {
+        return new Future.error(
+            'Connected to ADB server, but there are no devices attached.');
+      } else if (deviceDetails.length > 1) {
+        return new Future.error(
+            'Connect to ADB server, but there are multiple devices attached. FIXME TODO');
+      } else {
+        // The working case of exactly one device. We send a forwarding request
+        // to the server.
+        // Have to reconnect, these connections are single-use.
+        return _connectToAdbServer().then((TcpClient client) {
+          _sendAdbCommand(client,
+              'host-serial:${ deviceDetails[0][0] }:forward:tcp:2424;tcp:2424');
+          return _sendHttpPush('127.0.0.1', monitor);
+        });
+      }
+    }, onError: (e) {
+      return new Future.error(
+          'Error reading response from ADB server: ' + e);
+    });
+  }
+
+
+  Future _pushViaUSB(ProgressMonitor monitor) {
+    List<int> httpRequest;
     AndroidDevice _device;
 
+    // Build the archive.
     return archiveContainer(appContainer).then((List<int> archivedData) {
       monitor.worked(3);
-      httpRequest = _buildHttpRequest("localhost", archivedData);
+      httpRequest = _buildHttpRequest('localhost', archivedData);
       monitor.worked(4);
 
-      // Now send this payload to the USB code.
+      // Send this payload to the USB code.
       return _fetchAndroidDevice();
     }).then((deviceResult) {
       _device = deviceResult;
