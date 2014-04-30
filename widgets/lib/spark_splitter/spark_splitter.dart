@@ -83,7 +83,7 @@ class SparkSplitter extends SparkWidget {
     // anything. But if the switch is made, "draggable" for the element should
     // be set as well.
     // See bug https://code.google.com/p/chromium/issues/detail?id=264983.
-    onMouseDown.listen(trackStart);
+    ($['draggable'] as DivElement).onMouseDown.listen(trackStart);
     directionChanged();
   }
 
@@ -107,6 +107,7 @@ class SparkSplitter extends SparkWidget {
     if (handle) {
       _addBackgroundHandle();
     }
+    _setupDraggable();
   }
 
   void _setThickness() {
@@ -127,6 +128,17 @@ class SparkSplitter extends SparkWidget {
     } else {
       classes.remove('horizontal-handle');
       classes.add('vertical-handle');
+    }
+  }
+
+  void _setupDraggable() {
+    DivElement draggable = $['draggable'];
+    if (_isHorizontal) {
+      draggable.classes.add('horizontal');
+      draggable.classes.remove('vertical');
+    } else {
+      draggable.classes.remove('horizontal');
+      draggable.classes.add('vertical');
     }
   }
 

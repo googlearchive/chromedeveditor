@@ -6,11 +6,10 @@
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 
 :host {
-  display: block;
-  border-left: 1px solid #DDD;
-  border-right: 1px solid #DDD;
+  background-color: #ddd;
   cursor: col-resize;
-  background-color: #F7F7F7;
+  display: block;
+  position: relative;
 }
 
 :host(.horizontal) {
@@ -26,4 +25,23 @@
 }
 
 :host:hover, :host(.active) {
+}
+
+#draggable {
+  position: absolute;
+  z-index: 150;
+}
+
+#draggable.vertical {
+  bottom: 0;
+  left: -3px;
+  top: 0;
+  width: 7px;
+}
+
+#draggable.horizontal {
+  height: 7px;
+  left: 0;
+  right: 0;
+  top: -3px;
 }
