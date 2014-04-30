@@ -9,19 +9,19 @@
  */
 -->
 
-<link rel="import" href="../../../packages/spark_widgets/spark_tree_view_node/spark_tree_view_node.html"/>
+<link rel="import" href="src/spark_tree_view_node.html"/>
 
-<polymer-element name="spark-tree-view" extends="spark-tree-view-node"
-    attributes="model"
-    treeModel="{{model}}"
-    parent=""
-    name=""
-    level="0"
-    expanded="true">
+<polymer-element name="spark-tree-view" attributes="model">
   <template>
     <link rel="stylesheet" href="spark_tree_view.css">
 
-    <shadow></shadow>
+    <spark-tree-view-node
+        treeModel="{{model}}"
+        parent=""
+        name=""
+        level="0"
+        expanded="true">
+    </spark-tree-view-node>
   </template>
 
   <script type="application/dart;component=1" src="spark_tree_view.dart"></script>
