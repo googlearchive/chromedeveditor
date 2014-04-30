@@ -152,6 +152,7 @@ class Outline {
 
     if (_selectedItem != null) {
       _selectedItem.setSelected(true);
+      _selectedItem.scrollIntoView();
     }
   }
 
@@ -199,6 +200,10 @@ abstract class OutlineItem {
 
   void setSelected(bool selected) {
     _element.classes.toggle("selected", selected);
+  }
+
+  void scrollIntoView() {
+    _element.scrollIntoView();
   }
 }
 
