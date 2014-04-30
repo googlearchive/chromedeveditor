@@ -251,9 +251,7 @@ class Clone {
                 return _createInitialConfig(result.shallow, localHeadRef)
                     .then((_) {
                   logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
-                  return _options.store.index.reset(true).then((_) {
-                    logger.info(_stopwatch.finishCurrentTask('index.reset()'));
-                  });
+                  _options.store.index.reset(true);
                 });
               });
             });

@@ -314,6 +314,10 @@ div.ace_gutter-cell.ace_info {
   text-overflow: ellipsis;
 }
 
+.outlineItem.selected {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 li.outlineItem.topLevel.class {
   margin-top: 10px;
   margin-bottom: 10px;
@@ -361,7 +365,7 @@ li.outlineItem.topLevel.class {
   bottom: 10px;
   height: 30px;
   position: absolute;
-  right: 10px;
+  right: 30px;
   width: 30px;
   z-index: 100;
 }
@@ -382,7 +386,7 @@ li.outlineItem.topLevel.class {
   background: rgba(0, 0, 0, 0.8);
   border-radius: 5px;
   border: 1px solid rgba(255, 255, 255, 0.5);
-  bottom: 35px;
+  bottom: 45px;
   overflow-y: auto;
   padding: 10px;
   position: absolute;
@@ -398,7 +402,16 @@ li.outlineItem.topLevel.class {
   pointer-events: none;
 }
 
+#outline ul {
+  margin: 0;
+  margin-left: 15px;
+  padding: 0;
+}
+
 #outline > ul {
-  margin: 0 10px 0 0;
-  padding: 0px;
+  margin-left: 0;
+}
+
+li.outlineItem a {
+  white-space: nowrap;
 }

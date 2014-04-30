@@ -189,12 +189,6 @@ class SparkPolymer extends Spark {
         statusComponent.progressMessage = null;
       }
     });
-
-    // Listen for editing area name change events.
-    editorArea.onNameChange.listen((name) {
-      statusComponent.defaultMessage =
-          editorArea.shouldDisplayName ? name : null;
-    });
   }
 
   @override
@@ -247,6 +241,8 @@ class SparkPolymer extends Spark {
   }
 
   void unveil() {
+    super.unveil();
+
     // TODO(devoncarew) We'll want to switch over to using the polymer
     // 'unresolved' or 'polymer-unveil' attributes, once these start working.
     DivElement element = document.querySelector('#splashScreen');

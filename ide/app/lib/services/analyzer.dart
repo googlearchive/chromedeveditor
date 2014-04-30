@@ -41,8 +41,7 @@ ChromeDartSdk createSdk(sdk.DartSdk dartSdk) {
  * The API for this method is asynchronous; the actual implementation is
  * synchronous. In the future both API and implementation will be asynchronous.
  */
-Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
-    {bool performResolution: true}) {
+Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents) {
   Completer completer = new Completer();
 
   AnalysisContext context = AnalysisEngine.instance.createAnalysisContext();
@@ -55,12 +54,6 @@ Future<AnalyzerResult> analyzeString(ChromeDartSdk sdk, String contents,
     unit = context.parseCompilationUnit(source);
   } catch (e) {
     unit = null;
-  }
-
-  if (performResolution) {
-    context.computeErrors(source);
-    // Generally, we won't be resolving string fragments.
-    unit = context.resolveCompilationUnit(source, context.getLibraryElement(source));
   }
 
   AnalyzerResult result = new AnalyzerResult(unit, context.getErrors(source));
@@ -257,10 +250,7 @@ class ProjectContext {
       AnalysisResult result = context.performAnalysisTask();
       List<ChangeNotice> notices = result.changeNotices;
 
-      if (notices == null) {
-        _setCacheSize(DEFAULT_CACHE_SIZE);
-        completer.complete(analysisResult);
-      } else {
+      while (notices != null) {
         for (ChangeNotice notice in notices) {
           if (notice.source is! FileSource) continue;
 
@@ -269,8 +259,12 @@ class ProjectContext {
               source.uuid, _convertErrors(notice, notice.errors));
         }
 
-        _processChanges(completer, analysisResult);
+        result = context.performAnalysisTask();
+        notices = result.changeNotices;
       }
+
+      _setCacheSize(DEFAULT_CACHE_SIZE);
+      completer.complete(analysisResult);
     } catch (e, st) {
       _setCacheSize(DEFAULT_CACHE_SIZE);
       completer.completeError(e, st);
@@ -377,8 +371,15 @@ class StringSource extends Source {
 
   bool get isInSystemLibrary => false;
 
-  Source resolveRelative(Uri relativeUri) => throw new UnsupportedError(
-      "StringSource doesn't support resolveRelative.");
+  Source resolveRelative(Uri relativeUri) {
+    int index = fullName.lastIndexOf('/');
+    if (index == -1) {
+      return new StringSource('', fullName + '/' + relativeUri.toString());
+    } else {
+      return new StringSource(
+          '', fullName.substring(0, index + 1) + relativeUri.toString());
+    }
+  }
 }
 
 /**

@@ -8,6 +8,7 @@
 
 library spark.ui.widgets.treeview;
 
+import 'dart:async';
 import 'dart:collection';
 import 'dart:html';
 
@@ -48,6 +49,10 @@ class TreeView implements ListViewDelegate {
   TreeViewCell _currentDragOverCell;
   // Whether the user can drag a cell.
   bool draggingEnabled = false;
+  // Timer to expand cell on dragover
+  Timer _pendingExpansionTimer;
+  // Node UID associated with above timer
+  String _pendingExpansionNodeUid;
   // Unique identifier of the tree.
   String _uuid;
 
@@ -66,6 +71,8 @@ class TreeView implements ListViewDelegate {
     _listView = new ListView(element, this);
     _rows = null;
     _rowsMap = null;
+    _pendingExpansionTimer = null;
+    _pendingExpansionNodeUid = null;
     reloadData();
   }
 
@@ -82,30 +89,30 @@ class TreeView implements ListViewDelegate {
    * Add to _rows and _rowsMap the given node given by node UID and its
    * sub-nodes recursively if it's expanded.
    */
-  void _recursiveFill(String nodeUID, int level) {
+  void _recursiveFill(String nodeUid, int level) {
     // At this point, _expandedState contains the list of UIDs of nodes that
     // were previously expanded. Expands the node if it was previously
     // expanded.
-    bool expanded = _expandedState.contains(nodeUID);
-    if (nodeUID == null) {
+    bool expanded = _expandedState.contains(nodeUid);
+    if (nodeUid == null) {
       expanded = true;
     }
 
-    // nodeUID == null means it's the root node.
-    if (nodeUID != null) {
+    // nodeUid == null means it's the root node.
+    if (nodeUid != null) {
       // Adds the current node.
-      TreeViewRow row = new TreeViewRow(nodeUID);
+      TreeViewRow row = new TreeViewRow(nodeUid);
       row.expanded = expanded;
       row.level = level;
       row.rowIndex = _rows.length;
       _rows.add(row);
-      _rowsMap[nodeUID] = row;
+      _rowsMap[nodeUid] = row;
     }
 
     if (expanded) {
-      int childrenCount = _delegate.treeViewNumberOfChildren(this, nodeUID);
+      int childrenCount = _delegate.treeViewNumberOfChildren(this, nodeUid);
       for(int i = 0 ; i < childrenCount ; i ++) {
-        String _rows = _delegate.treeViewChild(this, nodeUID, i);
+        String _rows = _delegate.treeViewChild(this, nodeUid, i);
         _recursiveFill(_rows, level + 1);
       }
     }
@@ -115,10 +122,10 @@ class TreeView implements ListViewDelegate {
    * Cleans the selection to not include non-showing elements
    */
   void _cleanSelection() {
-    for(String nodeUID in selection) {
-      TreeViewRow row = _rowsMap[nodeUID];
+    for(String nodeUid in selection) {
+      TreeViewRow row = _rowsMap[nodeUid];
       if (row == null) {
-        selection.remove(nodeUID);
+        selection.remove(nodeUid);
       }
     }
   }
@@ -131,7 +138,7 @@ class TreeView implements ListViewDelegate {
     // Save selection
     Set<String> savedSelection = new HashSet();
     _listView.selection.forEach((rowIndex) {
-      savedSelection.add(_rows[rowIndex].nodeUID);
+      savedSelection.add(_rows[rowIndex].nodeUid);
     });
     // Reset selection.
     _listView.selection = [];
@@ -150,7 +157,7 @@ class TreeView implements ListViewDelegate {
     List<int> restoredSelection = [];
     int idx = 0;
     _rows.forEach((TreeViewRow row) {
-      if (savedSelection.contains(row.nodeUID)) {
+      if (savedSelection.contains(row.nodeUid)) {
         restoredSelection.add(idx);
       }
       idx++;
@@ -158,15 +165,15 @@ class TreeView implements ListViewDelegate {
     _listView.selection = restoredSelection;
   }
 
-  bool isNodeExpanded(String nodeUID) {
-    return _rowsMap[nodeUID] == null ? false : _rowsMap[nodeUID].expanded;
+  bool isNodeExpanded(String nodeUid) {
+    return _rowsMap[nodeUid] == null ? false : _rowsMap[nodeUid].expanded;
   }
 
   List<String> get expandedState {
     if (_rows == null) {
       return [];
     } else {
-      return _rows.where((row) => row.expanded).map((row) => row.nodeUID).
+      return _rows.where((row) => row.expanded).map((row) => row.nodeUid).
           toList();
     }
   }
@@ -181,10 +188,10 @@ class TreeView implements ListViewDelegate {
   /**
    * Sets expanded state of a node.
    */
-  void setNodeExpanded(String nodeUID, bool expanded, {bool animated: false}) {
-    if (isNodeExpanded(nodeUID) != expanded) {
+  void setNodeExpanded(String nodeUid, bool expanded, {bool animated: false}) {
+    if (isNodeExpanded(nodeUid) != expanded) {
       if (animated) {
-        int rowIndex = _rowsMap[nodeUID].rowIndex;
+        int rowIndex = _rowsMap[nodeUid].rowIndex;
         TreeViewCell cell = _listView.cellForRow(rowIndex);
         // We can use toggleExpanded() here since we made sure that it was
         // different from the current value.
@@ -194,7 +201,7 @@ class TreeView implements ListViewDelegate {
         cell.toggleExpanded();
       } else {
         HashSet<String> previousSelection = new HashSet.from(selection);
-        _rowsMap[nodeUID].expanded = expanded;
+        _rowsMap[nodeUid].expanded = expanded;
         reloadData();
         HashSet<String> currentSelection = new HashSet.from(selection);
 
@@ -210,7 +217,7 @@ class TreeView implements ListViewDelegate {
         }
         if (changed) {
           _delegate.treeViewSelectedChanged(this,
-              _rowIndexesToNodeUIDs(_listView.selection));
+              _rowIndexesToNodeUids(_listView.selection));
         }
 
         _delegate.treeViewSaveExpandedState(this);
@@ -218,26 +225,26 @@ class TreeView implements ListViewDelegate {
     }
   }
 
-  void toggleNodeExpanded(String nodeUID, {bool animated: false}) {
-    setNodeExpanded(nodeUID, !isNodeExpanded(nodeUID), animated: animated);
+  void toggleNodeExpanded(String nodeUid, {bool animated: false}) {
+    setNodeExpanded(nodeUid, !isNodeExpanded(nodeUid), animated: animated);
   }
 
-  void scrollIntoNode(String nodeUID, [ScrollAlignment align]) {
-    TreeViewRow row = _rowsMap[nodeUID];
+  void scrollIntoNode(String nodeUid, [ScrollAlignment align]) {
+    TreeViewRow row = _rowsMap[nodeUid];
 
     if (row != null) {
       _listView.scrollIntoRow(row.rowIndex, align);
     }
   }
 
-  List<String> get selection => _rowIndexesToNodeUIDs(_listView.selection);
+  List<String> get selection => _rowIndexesToNodeUids(_listView.selection);
 
   set selection(List<String> selection) {
     HashSet<String> selectionSet = new HashSet.from(selection);
     int idx = 0;
     List<int> listSelection = [];
     _rows.forEach((TreeViewRow row) {
-      if (selectionSet.contains(row.nodeUID)) {
+      if (selectionSet.contains(row.nodeUid)) {
         listSelection.add(idx);
       }
       idx ++;
@@ -257,31 +264,31 @@ class TreeView implements ListViewDelegate {
   // Embed the cell returned by the delegate into a `TreeViewCell`.
   ListViewCell listViewCellForRow(ListView view, int rowIndex) {
     ListViewCell cell =
-        _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUID);
+        _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUid);
     bool hasChildren =
-        _delegate.treeViewHasChildren(this, _rows[rowIndex].nodeUID);
+        _delegate.treeViewHasChildren(this, _rows[rowIndex].nodeUid);
     TreeViewCell treeCell = new TreeViewCell(this, cell, _rows[rowIndex],
         hasChildren, draggingEnabled);
     return treeCell;
   }
 
   int listViewHeightForRow(ListView view, int rowIndex) {
-    return _delegate.treeViewHeightForNode(this, _rows[rowIndex].nodeUID);
+    return _delegate.treeViewHeightForNode(this, _rows[rowIndex].nodeUid);
   }
 
-  TreeViewCell getTreeViewCellForUID(String nodeUID) {
-    if (_rowsMap[nodeUID] == null) return null;
-    int rowIndex = _rowsMap[nodeUID].rowIndex;
+  TreeViewCell getTreeViewCellForUid(String nodeUid) {
+    if (_rowsMap[nodeUid] == null) return null;
+    int rowIndex = _rowsMap[nodeUid].rowIndex;
     return _listView.cellForRow(rowIndex);
   }
 
   /**
    * Returns the list of node UIDs based on the list of row indexes.
    */
-  List<String> _rowIndexesToNodeUIDs(List<int> rowIndexes) {
+  List<String> _rowIndexesToNodeUids(List<int> rowIndexes) {
     List<String> result = [];
     rowIndexes.forEach((rowIndex) {
-      result.add(_rows[rowIndex].nodeUID);
+      result.add(_rows[rowIndex].nodeUid);
     });
     return result;
   }
@@ -289,25 +296,25 @@ class TreeView implements ListViewDelegate {
   void listViewSelectedChanged(ListView view,
                                List<int> rowIndexes) {
     _delegate.treeViewSelectedChanged(this,
-        _rowIndexesToNodeUIDs(rowIndexes));
+        _rowIndexesToNodeUids(rowIndexes));
   }
 
   bool listViewRowClicked(Event event, int rowIndex) {
-    return _delegate.treeViewRowClicked(event, _rows[rowIndex].nodeUID);
+    return _delegate.treeViewRowClicked(event, _rows[rowIndex].nodeUid);
   }
 
   void listViewDoubleClicked(ListView view,
                              List<int> rowIndexes,
                              Event event) {
     _delegate.treeViewDoubleClicked(this,
-        _rowIndexesToNodeUIDs(rowIndexes),
+        _rowIndexesToNodeUids(rowIndexes),
         event);
   }
 
   bool listViewKeyDown(KeyboardEvent event) {
     if (_listView.selectedRow == -1) return true;
 
-    String uuid = _rows[_listView.selectedRow].nodeUID;
+    String uuid = _rows[_listView.selectedRow].nodeUid;
 
     switch (event.which) {
       case KeyCode.RIGHT:
@@ -343,21 +350,21 @@ class TreeView implements ListViewDelegate {
                            int rowIndex,
                            Event event) {
     _delegate.treeViewContextMenu(this,
-        _rowIndexesToNodeUIDs(rowIndexes),
-        _rows[rowIndex].nodeUID,
+        _rowIndexesToNodeUids(rowIndexes),
+        _rows[rowIndex].nodeUid,
         event);
   }
 
   String listViewDropEffect(ListView view, MouseEvent event) {
     List<String> dragSelection = _innerDragSelection(event.dataTransfer);
-    String nodeUID = null;
+    String nodeUid = null;
     if (_currentDragOverCell != null) {
-      nodeUID = _currentDragOverCell.nodeUID;
+      nodeUid = _currentDragOverCell.nodeUid;
     }
     if (dragSelection != null) {
-      return _delegate.treeViewDropCellsEffect(this, dragSelection, nodeUID);
+      return _delegate.treeViewDropCellsEffect(this, dragSelection, nodeUid);
     } else {
-      return _delegate.treeViewDropEffect(this, event.dataTransfer, nodeUID);
+      return _delegate.treeViewDropEffect(this, event.dataTransfer, nodeUid);
     }
   }
 
@@ -374,18 +381,18 @@ class TreeView implements ListViewDelegate {
 
   void listViewDrop(ListView view, int rowIndex, DataTransfer dataTransfer) {
     List<String> dragSelection = _innerDragSelection(dataTransfer);
-    String nodeUID = null;
+    String nodeUid = null;
     if (_currentDragOverCell != null) {
-      nodeUID = _currentDragOverCell.nodeUID;
+      nodeUid = _currentDragOverCell.nodeUid;
     }
     if (dragSelection != null) {
-      if (_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUID)) {
-        _delegate.treeViewDropCells(this, dragSelection, nodeUID);
+      if (_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUid)) {
+        _delegate.treeViewDropCells(this, dragSelection, nodeUid);
       }
     } else {
       // Dropping from somewhere else.
-      if (_delegate.treeViewAllowsDrop(this, dataTransfer, nodeUID)) {
-        _delegate.treeViewDrop(this, nodeUID, dataTransfer);
+      if (_delegate.treeViewAllowsDrop(this, dataTransfer, nodeUid)) {
+        _delegate.treeViewDrop(this, nodeUid, dataTransfer);
       }
     }
     if (_currentDragOverCell != null) {
@@ -415,18 +422,18 @@ class TreeView implements ListViewDelegate {
       }
     }
 
-    String nodeUID = null;
+    String nodeUid = null;
     if (cell != null) {
-      nodeUID = cell.nodeUID;
+      nodeUid = cell.nodeUid;
     }
     List<String> dragSelection = _innerDragSelection(event.dataTransfer);
     if (dragSelection != null) {
-      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUID)) {
+      if (!_delegate.treeViewAllowsDropCells(this, dragSelection, nodeUid)) {
         cell = null;
       }
     } else {
       // Dropping from somewhere else.
-      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, nodeUID)) {
+      if (!_delegate.treeViewAllowsDrop(this, event.dataTransfer, nodeUid)) {
         cell = null;
       }
     }
@@ -438,6 +445,22 @@ class TreeView implements ListViewDelegate {
       }
       if (cell != null) {
         cell.dragOverlayVisible = true;
+
+        if(_pendingExpansionNodeUid != cell.nodeUid && _pendingExpansionTimer != null) {
+            _pendingExpansionTimer.cancel();
+            _pendingExpansionTimer = null;
+        }
+        if(_pendingExpansionTimer == null) {
+          // Queue cell for expanding if it's a pausing drag hover.
+          _pendingExpansionNodeUid = cell.nodeUid;
+          _pendingExpansionTimer = new Timer(const Duration(milliseconds: 1000), () {
+            if(_currentDragOverCell != null &&
+                nodeUid == _currentDragOverCell.nodeUid &&
+                !isNodeExpanded(nodeUid)) {
+              setNodeExpanded(nodeUid, true, animated: true);
+            }
+          });
+        }
       }
       _currentDragOverCell = cell;
     }
@@ -481,7 +504,7 @@ class TreeView implements ListViewDelegate {
 
     while (childIndex > -1) {
       if (_rows[childIndex].level < childLevel) {
-        return _rows[childIndex].nodeUID;
+        return _rows[childIndex].nodeUid;
       }
       childIndex--;
     }
@@ -493,12 +516,12 @@ class TreeView implements ListViewDelegate {
    *  Make sure the given node is selected.
    *  Note: it's a private method for TreeViewCell.
    */
-  void privateCheckSelectNode(String nodeUID) {
+  void privateCheckSelectNode(String nodeUid) {
     List<String> currentSelection = selection;
-    if (currentSelection.contains(nodeUID)) {
+    if (currentSelection.contains(nodeUid)) {
       return;
     }
-    selection = [nodeUID];
+    selection = [nodeUid];
   }
 
   /**
