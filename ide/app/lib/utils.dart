@@ -208,8 +208,8 @@ class PrintProfiler {
 
 /**
  * Defines a preference with built in `whenLoaded` [Future] and easy access to
- * getting and setting (automatically saving as well as caching) the
- * preference `value`.
+ * getting and setting (automatically saving as well as caching) the preference
+ * `value`.
  */
 abstract class CachedPreference<T> {
   Future<CachedPreference> whenLoaded;
@@ -220,8 +220,8 @@ abstract class CachedPreference<T> {
   String _preferenceId;
 
   /**
-   * @param prefStore The PreferenceStore to use.
-   * @param preferenceId The id of the stored preference.
+   * [prefStore] is the PreferenceStore to use and [preferenceId] is the id of
+   * the stored preference.
    */
   CachedPreference(this._prefStore, this._preferenceId) {
     whenLoaded = _whenLoadedCompleter.future;
@@ -238,7 +238,7 @@ abstract class CachedPreference<T> {
   String adaptToString(T value);
 
   /**
-   * The value of the preference, if loaded.  If not loaded, throws an error.
+   * The value of the preference, if loaded. If not loaded, throws an error.
    */
   T get value {
     if (!_whenLoadedCompleter.isCompleted) {
@@ -265,7 +265,7 @@ abstract class CachedPreference<T> {
 }
 
 /**
- * Defines a cached [bool] preference access object.  Automatically saves and
+ * Defines a cached [bool] preference access object. Automatically saves and
  * caches for performance.
  */
 class BoolCachedPreference extends CachedPreference<bool> {
@@ -379,4 +379,34 @@ String _removeExtPrefix(String str) {
 String _platform() {
   String str = html.window.navigator.platform;
   return (str != null) ? str.toLowerCase() : '';
+}
+
+class FutureHelper {
+  /**
+  * Perform an async operation for each element of the iterable, in turn.
+  * It refreshes the UI after each iteraton.
+  *
+  * Runs [f] for each element in [input] in order, moving to the next element
+  * only when the [Future] returned by [f] completes. Returns a [Future] that
+  * completes when all elements have been processed.
+  *
+  * The return values of all [Future]s are discarded. Any errors will cause the
+  * iteration to stop and will be piped through the returned [Future].
+  */
+  static Future forEachNonBlockingUI(Iterable input, Future f(element)) {
+    Completer doneSignal = new Completer();
+    Iterator iterator = input.iterator;
+    void nextElement(_) {
+      if (iterator.moveNext()) {
+        nextTick().then((_) {
+          f(iterator.current)
+             .then(nextElement,  onError: (e) => doneSignal.completeError(e));
+        });
+      } else {
+        doneSignal.complete(null);
+      }
+    }
+    nextElement(null);
+    return doneSignal.future;
+  }
 }

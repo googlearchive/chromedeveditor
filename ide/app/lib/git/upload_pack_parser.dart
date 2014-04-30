@@ -99,7 +99,7 @@ class UploadPackParser {
 
     return FileOps.readBlob(packDataBlob, "ArrayBuffer").then((data) {
       Pack pack = new Pack(data, store);
-      return pack.parseAll(progress).then((_) {;
+      return pack.parseAll(progress).then((_) {
         objects = pack.objects;
         return new PackParseResult(pack.objects, pack.data, shallow, common);
       });
