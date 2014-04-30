@@ -137,9 +137,9 @@ class TextEditor extends Editor {
       // Remove the trailing whitespace if asked to do so.
       // TODO(ericarnold): Can't think of an easy way to share this preference,
       //           but it might be a good idea to do so rather than passing it.
-      if (stripWhitespace) _stripWhitespace();
 
       String text = _session.value;
+      if (stripWhitespace) text = text.replaceAll(whitespaceRegEx, '');
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
@@ -149,14 +149,6 @@ class TextEditor extends Editor {
       return file.setContents(text).then((_) => dirty = false);
     } else {
       return new Future.value();
-    }
-  }
-
-  void _stripWhitespace() {
-    String currentText = _session.value;
-    String newText = currentText.replaceAll(whitespaceRegEx, '');
-    if (newText != currentText) {
-      _replaceContents(newText);
     }
   }
 
