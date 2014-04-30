@@ -91,6 +91,7 @@ div.ace_gutter-cell.ace_info {
   color: #9CC;
 }
 
+/* TODO: Remove when find bar has been implemented natively in Spark */
 div.ace_search.right {
   margin: 5px;
   border-radius: 0px 0px 5px 0px;

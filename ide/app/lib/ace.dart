@@ -264,8 +264,6 @@ class AceManager {
     _aceEditor.printMarginColumn = 80;
     _aceEditor.readOnly = true;
     _aceEditor.fadeFoldWidgets = true;
-    html.DivElement searchBox =
-        parentElement.getElementsByClassName("ace_search")[0];
 
     _analysisService =  services.getService("analyzer");
 
