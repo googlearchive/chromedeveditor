@@ -288,6 +288,10 @@ abstract class Spark
 
   void initNavigationManager() {
     _navigationManager = new NavigationManager();
+    _navigationManager.onNavigate.listen((_) {
+      // TODO:
+      print(_navigationManager.location);
+    });
   }
 
   void initPackageManagers() {
@@ -705,8 +709,10 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
-  // TODO(devoncarew): Convert this over to use a NavigationLocation.
   Future<Editor> openEditor(ws.File file, {Span selection}) {
+    navigationManager.gotoLocation(new NavigationLocation(file, selection));
+
+    // TODO(devoncarew): Convert this over to use a NavigationLocation.
     _selectResource(file);
 
     return nextTick().then((_) {
@@ -1599,19 +1605,20 @@ class HistoryAction extends SparkAction {
   bool _forward;
 
   HistoryAction.back(Spark spark) : super(spark, 'navigate-back', 'Back') {
-    spark.navigationManager.onNavigate.listen((_) {
-      enabled = spark.navigationManager.canNavigate(forward: _forward);
-    });
-    _forward = false;
-    enabled = false;
+    _init(false);
   }
 
   HistoryAction.forward(Spark spark) : super(spark, 'navigate-forward', 'Forward') {
+    _init(true);
+  }
+
+  void _init(bool value) {
+    _forward = value;
+    enabled = false;
+
     spark.navigationManager.onNavigate.listen((_) {
       enabled = spark.navigationManager.canNavigate(forward: _forward);
     });
-    _forward = true;
-    enabled = false;
   }
 
   @override

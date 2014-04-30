@@ -12,7 +12,7 @@ import 'dart:async';
 import 'workspace.dart';
 
 /**
- * TODO:
+ * A class to handle the history of navigation locations in Spark.
  */
 class NavigationManager {
   StreamController<NavigationLocation> _controller = new StreamController.broadcast();
@@ -44,7 +44,7 @@ class NavigationManager {
     _controller.add(location);
   }
 
-  void addLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
+  void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
     if (canNavigate(forward: true)) {
       _locations.removeRange(_position + 1, _locations.length - 1);
     }
@@ -67,7 +67,15 @@ class NavigationLocation {
   final File file;
   final Span span;
 
-  NavigationLocation(this.file, this.span);
+  NavigationLocation(this.file, [this.span = null]);
+
+  String toString(){
+    if (span == null) {
+      return '[${file}]';
+    } else {
+      return '[${file}, ${span}]';
+    }
+  }
 }
 
 /**
@@ -77,5 +85,7 @@ class Span {
   final int offset;
   final int length;
 
-  Span(this.offset, this.length);
+  Span(this.offset, [this.length = 0]);
+
+  String toString() => '${offset}:${length}';
 }

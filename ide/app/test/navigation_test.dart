@@ -17,11 +17,11 @@ defineTests() {
       expect(manager.canNavigate(), false);
       expect(manager.canNavigate(forward: false), false);
 
-      manager.addLocation(_mockLocation());
+      manager.gotoLocation(_mockLocation());
       expect(manager.canNavigate(), false);
       expect(manager.canNavigate(forward: false), false);
 
-      manager.addLocation(_mockLocation());
+      manager.gotoLocation(_mockLocation());
       expect(manager.canNavigate(), false);
       expect(manager.canNavigate(forward: false), true);
     });
@@ -29,8 +29,8 @@ defineTests() {
     test('navigate', () {
       NavigationManager manager = new NavigationManager();
       Future f = manager.onNavigate.take(2).toList();
-      manager.addLocation(_mockLocation());
-      manager.addLocation(_mockLocation());
+      manager.gotoLocation(_mockLocation());
+      manager.gotoLocation(_mockLocation());
       expect(manager.canNavigate(forward: false), true);
       manager.navigate(forward: false);
       expect(manager.canNavigate(forward: false), false);
@@ -45,11 +45,11 @@ defineTests() {
       NavigationManager manager = new NavigationManager();
       expect(manager.location, isNull);
 
-      manager.addLocation(_mockLocation());
+      manager.gotoLocation(_mockLocation());
       expect(manager.canNavigate(forward: false), false);
       expect(manager.location, isNotNull);
 
-      manager.addLocation(_mockLocation());
+      manager.gotoLocation(_mockLocation());
       expect(manager.canNavigate(), false);
       expect(manager.canNavigate(forward: false), true);
       expect(manager.location, isNotNull);
