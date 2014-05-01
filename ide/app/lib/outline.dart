@@ -122,9 +122,7 @@ class Outline {
       _outlineItemsByOffset[item.bodyStartOffset] = item;
     }
 
-    if (_initialScrollPosition != null) {
-      scrollPosition = _initialScrollPosition;
-    }
+    if (_initialScrollPosition != null) scrollPosition = _initialScrollPosition;
   }
 
   OutlineTopLevelItem _create(services.OutlineTopLevelEntry data) {

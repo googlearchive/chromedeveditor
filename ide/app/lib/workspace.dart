@@ -912,9 +912,10 @@ class Folder extends Container {
 }
 
 class File extends Resource {
+  int outlineScrollPosition = 0;
+
   List<Marker> _markers = [];
   int _timestamp;
-  int outlineScrollPosition = 0;
 
   File(Container parent, chrome.Entry entry) : super(parent, entry) {
     entry.getMetadata().then((/*Metadata*/ metaData) {
