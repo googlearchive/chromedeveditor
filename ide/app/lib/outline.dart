@@ -157,22 +157,47 @@ class Outline {
   }
 
   void selectItemAtOffset(int cursorOffset) {
-    Map<int, OutlineItem> outlineItems = _outlineItemsByOffset;
-    if (outlineItems != null) {
-      int containerOffset = -1;
+    OutlineItem itemAtCursor = _itemAtCodeOffset(cursorOffset);
+    if (itemAtCursor != null) {
+      setSelected(itemAtCursor);
+    }
+  }
 
-      var outlineOffets = outlineItems.keys.toList()..sort();
+  void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
+    int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
+    int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+    int centerItemIndex =
+        ((lastItemIndex - firstItemIndex) / 2).round() + firstItemIndex;
+
+    if (centerItemIndex != null) {
+      html.Element centerElement = _outlineDiv.getElementsByClassName("outlineItem")[centerItemIndex];
+      centerElement.scrollIntoView();
+    }
+  }
+
+  int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
+    int containerOffset = null;
+    if (_outlineItemsByOffset != null) {
+      int count = 0;
+      var outlineOffets = _outlineItemsByOffset.keys.toList()..sort();
 
       // Finds the last outline item that *doesn't* satisfies this:
       for (int outlineOffset in outlineOffets) {
-        if (outlineOffset > cursorOffset) break;
-        containerOffset = outlineOffset;
-      }
-
-      if (containerOffset != -1) {
-        setSelected(outlineItems[containerOffset]);
+        if (outlineOffset > codeOffset) break;
+        containerOffset = returnCodeOffset ? outlineOffset : count;
+        count++;
       }
     }
+
+    return containerOffset;
+  }
+
+  OutlineItem _itemAtCodeOffset(int codeOffset) {
+    int itemIndex = _itemIndexAtCodeOffset(codeOffset, returnCodeOffset: true);
+    if (itemIndex != null) {
+      return _outlineItemsByOffset[itemIndex];
+    }
+    return null;
   }
 }
 
