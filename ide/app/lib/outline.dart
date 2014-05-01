@@ -14,6 +14,8 @@ import 'preferences.dart';
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
+  int initialScrollPosition = 0;
+
   Map<int, OutlineItem> _outlineItemsByOffset;
   OutlineItem _selectedItem;
 
@@ -59,7 +61,10 @@ class Outline {
     });
   }
 
+  int get scrollPosition => _rootList.parent.scrollTop;
+
   Stream get onChildSelected => _childSelectedController.stream;
+  Stream get onScroll => _outlineDiv.onScroll;
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
   set visible(bool value) {
@@ -94,10 +99,21 @@ class Outline {
   void _populate(services.Outline outline) {
     _outlineItemsByOffset = {};
     _rootList.children.clear();
+    html.SpanElement scrollTarget = new html.SpanElement();
+    _rootList.append(scrollTarget);
+
     for (services.OutlineTopLevelEntry data in outline.entries) {
       OutlineItem item = _create(data);
       _outlineItemsByOffset[item.bodyStartOffset] = item;
     }
+
+    // Hack for scrollTop not working
+    scrollTarget.style
+        ..position = "absolute"
+        ..height = "${_outlineDiv.clientHeight}px"
+        ..top = "${this.initialScrollPosition}px";
+    scrollTarget.scrollIntoView();
+    scrollTarget.remove();
   }
 
   OutlineTopLevelItem _create(services.OutlineTopLevelEntry data) {
