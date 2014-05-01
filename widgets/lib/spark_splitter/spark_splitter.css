@@ -9,6 +9,11 @@
   background-color: #ddd;
   display: block;
   position: relative;
+  /* Set a identity transform to make <spark-splitter> to be a stacking context.
+     Then, z-index in #draggable becomes relative to :host.
+     Read more about stacking context here:
+     https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context*/
+  transform: scaleZ(1);
 }
 
 #draggable {
