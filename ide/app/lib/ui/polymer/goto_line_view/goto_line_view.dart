@@ -52,9 +52,10 @@ class GotoLineView extends SparkWidget {
     _closedController.add(null);
   }
 
+  // TODO(ussuri): Look into using `fireAsync` for these event streams.
   /**
-   * This event is fired when the user hits return. The event is the text the
-   * user entered in the text field.
+   * This event is fired when the user hits return. The event is line numer the
+   * user has entered.
    */
   Stream<int> get onTriggered => _triggeredController.stream;
 
@@ -68,6 +69,7 @@ class GotoLineView extends SparkWidget {
     _container = $['container'];
     _queryText = $['queryText'];
 
+    // TODO(ussuri): Look into registering the event handlers in the html.
     // Handle the escape key.
     _queryText.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ESC) {
