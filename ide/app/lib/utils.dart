@@ -379,3 +379,33 @@ String _platform() {
   String str = html.window.navigator.platform;
   return (str != null) ? str.toLowerCase() : '';
 }
+
+class FutureHelper {
+  /**
+  * Perform an async operation for each element of the iterable, in turn.
+  * It refreshes the UI after each iteraton.
+  *
+  * Runs [f] for each element in [input] in order, moving to the next element
+  * only when the [Future] returned by [f] completes. Returns a [Future] that
+  * completes when all elements have been processed.
+  *
+  * The return values of all [Future]s are discarded. Any errors will cause the
+  * iteration to stop and will be piped through the returned [Future].
+  */
+  static Future forEachNonBlockingUI(Iterable input, Future f(element)) {
+    Completer doneSignal = new Completer();
+    Iterator iterator = input.iterator;
+    void nextElement(_) {
+      if (iterator.moveNext()) {
+        nextTick().then((_) {
+          f(iterator.current)
+             .then(nextElement,  onError: (e) => doneSignal.completeError(e));
+        });
+      } else {
+        doneSignal.complete(null);
+      }
+    }
+    nextElement(null);
+    return doneSignal.future;
+  }
+}

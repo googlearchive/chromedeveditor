@@ -31,6 +31,7 @@ final String appID = Platform.environment['SPARK_APP_ID'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
+  defineTask('setup-boot', taskFunction: setupBootstrapping, depends: ['setup']);
 
   defineTask('mode-notest', taskFunction: (c) => _changeMode(useTestMode: false));
   defineTask('mode-test', taskFunction: (c) => _changeMode(useTestMode: true));
@@ -63,7 +64,7 @@ void main([List<String> args]) {
  * Init needed dependencies.
  */
 void setup(GrinderContext context) {
-  // check to make sure we can locate the SDK
+  // Check to make sure we can locate the SDK.
   if (sdkDir == null) {
     context.fail("Unable to locate the Dart SDK\n"
         "Please set the DART_SDK environment variable to the SDK path.\n"
@@ -73,11 +74,26 @@ void setup(GrinderContext context) {
   PubTools pub = new PubTools();
   pub.get(context);
 
-  // copy from ./packages to ./app/packages
+  // Copy from ./packages to ./app/packages.
   copyDirectory(getDir('packages'), getDir('app/packages'), context);
 
   BUILD_DIR.createSync();
   DIST_DIR.createSync();
+}
+
+/**
+ * Init dependencies, and convert the symlinks in `packages` to real copies of
+ * files.
+ */
+void setupBootstrapping(GrinderContext context) {
+  // Remove the symlinks from the 'packages' directory.
+  for (FileSystemEntity entity in getDir('packages').listSync(followLinks: false)) {
+    deleteEntity(entity);
+  }
+
+  // Replace the symlinked contents with actual files. This allows chrome apps
+  // to see the 'packages' direcotry contents, and analyze package: references.
+  copyDirectory(getDir('app/packages'), getDir('packages'), context);
 }
 
 /**
@@ -121,6 +137,14 @@ void deploy(GrinderContext context) {
 
   // Replace shadow DOM to include some fixes.
   copyFile(getFile('tool/shadow_dom.debug.js'), joinDir(deployWeb, ['packages', 'shadow_dom']));
+
+  // Remove map files.
+  List files = BUILD_DIR.listSync(recursive: true, followLinks: false);
+  for (FileSystemEntity entity in files) {
+    if (entity is File && entity.path.endsWith('.js.map')) {
+      deleteEntity(entity);
+    }
+  }
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
