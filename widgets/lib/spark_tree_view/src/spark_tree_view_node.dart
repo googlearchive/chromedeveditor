@@ -6,8 +6,8 @@ library spark_widgets.tree_view_node;
 
 import 'package:polymer/polymer.dart';
 
-import '../common/spark_widget.dart';
-import '../spark_tree_view_common/spark_tree_view_model.dart';
+import '../../common/spark_widget.dart';
+import '../spark_tree_view_model.dart';
 
 @CustomTag('spark-tree-view-node')
 class SparkTreeViewNode extends SparkWidget {

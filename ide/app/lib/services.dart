@@ -231,7 +231,7 @@ class AnalyzerService extends Service {
 
     return _sendAction('createContext', {'contextId': project.uuid}).then((_) {
       // Add existing files to the context.
-      List<File> files = project.traverse().where(
+      List<File> files = project.traverse(includeDerived: false).where(
           (r) => r.isFile && r.name.endsWith('.dart')).toList();
       files.removeWhere(
           (file) => getPackageManager().properties.isSecondaryPackage(file));

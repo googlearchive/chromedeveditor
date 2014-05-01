@@ -19,7 +19,7 @@ import 'package:path/path.dart' as path;
 
 import 'css/cssbeautify.dart';
 import 'editors.dart';
-import 'package_mgmt/bower.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
@@ -137,9 +137,9 @@ class TextEditor extends Editor {
       // Remove the trailing whitespace if asked to do so.
       // TODO(ericarnold): Can't think of an easy way to share this preference,
       //           but it might be a good idea to do so rather than passing it.
-      if (stripWhitespace) _stripWhitespace();
 
       String text = _session.value;
+      if (stripWhitespace) text = text.replaceAll(whitespaceRegEx, '');
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
@@ -149,14 +149,6 @@ class TextEditor extends Editor {
       return file.setContents(text).then((_) => dirty = false);
     } else {
       return new Future.value();
-    }
-  }
-
-  void _stripWhitespace() {
-    String currentText = _session.value;
-    String newText = currentText.replaceAll(whitespaceRegEx, '');
-    if (newText != currentText) {
-      _replaceContents(newText);
     }
   }
 
@@ -294,22 +286,36 @@ class AceManager {
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
     ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
-    ace.Mode.extensionMap['htm'] = ace.Mode.HTML;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    outline = new Outline(services, parentElement, prefs);
+    _setupOutline(prefs);
+  }
+
+  void _setupOutline(PreferenceStore prefs) {
+    outline = new Outline(_analysisService, parentElement, prefs);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
-          currentSession.document.indexToPosition(item.startOffset);
+          currentSession.document.indexToPosition(item.nameStartOffset);
       ace.Point endPoint =
-          currentSession.document.indexToPosition(item.endOffset);
+          currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
+    });
 
+    ace.Point lastCursorPosition =  new ace.Point(-1, -1);
+    _aceEditor.onChangeSelection.listen((_) {
+      ace.Point newCursorPosition = _aceEditor.cursorPosition;
+      // Cancel the last outline selection update
+      if (lastCursorPosition != newCursorPosition) {
+        int cursorOffset = currentSession.document.positionToIndex(
+            newCursorPosition);
+        outline.selectItemAtOffset(cursorOffset);
+      }
+      lastCursorPosition = newCursorPosition;
     });
   }
 
@@ -573,9 +579,6 @@ class AceManager {
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
         setMarkers(file.getMarkers());
       });
-
-      setMarkers(file.getMarkers());
-      buildOutline();
     }
 
     // Setup the code completion options for the current file type.
@@ -590,11 +593,20 @@ class AceManager {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
       }
+
+      setMarkers(file.getMarkers());
+      buildOutline();
     }
   }
 
+  /**
+   * Make a service call and build the outline view for the current file.
+   */
   void buildOutline() {
     String name = currentFile == null ? '' : currentFile.name;
+
+    if (!name.endsWith(".dart")) return;
+
     String text = currentSession.value;
     outline.build(name, text);
   }
@@ -628,6 +640,10 @@ class ThemeManager {
   html.Element _label;
 
   ThemeManager(this.aceManager, this.prefs, this._label) {
+    String value = 'monokai';
+    aceManager.theme = value;
+    _updateName(value);
+/*
     prefs.getValue('aceTheme').then((String value) {
       if (value != null) {
         aceManager.theme = value;
@@ -636,6 +652,7 @@ class ThemeManager {
         _updateName(aceManager.theme);
       }
     });
+*/
   }
 
   void inc(html.Event e) {
@@ -658,7 +675,9 @@ class ThemeManager {
   }
 
   void _updateName(String name) {
-    _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+    if (_label != null) {
+      _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+    }
   }
 }
 

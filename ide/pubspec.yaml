@@ -27,16 +27,16 @@ dependencies:
     path: ../widgets
   tavern:
     git: https://github.com/tapted/tavern.git
-    version: '>=0.0.4'
+    version: '>=0.0.5'
   unittest: '>=0.10.0'
   uuid: '>=0.3.0 <0.4.0'
   yaml: '>=0.9.0 <0.10.0'
 dev_dependencies:
   args: any
   grinder: '>=0.5.0 <0.6.0'
+dependency_overrides:
+  barback: 0.13.0
 transformers:
 - polymer:
     entry_points: web/spark_polymer.html
     csp: 'true'
-dependency_overrides:
-  barback: 0.13.0

@@ -44,4 +44,13 @@ class GitErrorConstants {
 
   static final String GIT_COMMIT_NO_CHANGES
       = "git.commit_no_changes";
+
+  static final String GIT_AUTH_ERROR
+      = "git.auth_error";
+
+  static final String GIT_HTTP_404_ERROR
+      = "git.http_404_error";
+
+  static final String GIT_INVALID_REPO_URL
+      = "git.invalid_repo_url";
 }

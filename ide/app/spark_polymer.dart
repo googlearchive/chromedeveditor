@@ -189,12 +189,6 @@ class SparkPolymer extends Spark {
         statusComponent.progressMessage = null;
       }
     });
-
-    // Listen for editing area name change events.
-    editorArea.onNameChange.listen((name) {
-      statusComponent.defaultMessage =
-          editorArea.shouldDisplayName ? name : null;
-    });
   }
 
   @override
