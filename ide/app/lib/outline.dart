@@ -79,15 +79,10 @@ class Outline {
     _scrollTarget.style
         ..position = "absolute"
         ..height = "${bottom - top}px"
-        ..width = "100%"
-        ..marginLeft = "-10px"
-        ..borderLeft = "solid"
-        ..borderRight = "solid"
-        ..opacity = "40%"
         ..top = "${top}px";
     _scrollTarget.scrollIntoView();
+    _scrollTarget.hidden = true;
   }
-
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
   set visible(bool value) {
