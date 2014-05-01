@@ -100,6 +100,16 @@ div.ace_search.right {
   left: 0
 }
 
+div.ace_search {
+  padding-right: 4px;
+}
+
+button.ace_searchbtn_close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+}
+
 .editor-dialog {
   background-color: white;
   position: absolute;
