@@ -95,13 +95,11 @@ class TextEditor extends Editor {
     ace.Point endSelection = _session.document.indexToPosition(
         span.offset + span.length);
 
+    aceManager._aceEditor.gotoLine(startSelection.row);
+
     ace.Selection selection = aceManager._aceEditor.selection;
     selection.setSelectionAnchor(startSelection.row, startSelection.column);
     selection.selectTo(endSelection.row, endSelection.column);
-
-    // TODO: The scroll position should be calculated better, to make sure
-    // enough lines are visible on either side of the selection, and to center
-    // the selection if we have to move the text from off-screen.
   }
 
   bool get supportsOutline => false;
@@ -302,6 +300,7 @@ class AceManager {
           currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
+      _aceEditor.gotoLine(startPoint.row);
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
@@ -733,7 +732,7 @@ abstract class AceManagerDelegate {
    */
   bool canShowFileAsText(String filename);
 
-  Future<Editor> openEditor(workspace.File file, {Span selection});
+  void openEditor(workspace.File file, {Span selection});
 }
 
 String _calcMD5(String text) {

@@ -49,6 +49,7 @@ import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
+Logger _logger = new Logger('spark');
 
 /**
  * Returns true if app.json contains a test-mode entry set to true. If app.json
@@ -288,9 +289,22 @@ abstract class Spark
 
   void initNavigationManager() {
     _navigationManager = new NavigationManager();
-    _navigationManager.onNavigate.listen((_) {
-      // TODO:
-      print(_navigationManager.location);
+    _navigationManager.onNavigate.listen((NavigationLocation location) {
+      _selectResource(location.file);
+
+      if (location.span != null) {
+        nextTick().then((_) {
+          for (Editor editor in editorManager.editors) {
+            if (editor.file == location.file) {
+              if (editor is TextEditor) {
+                editor.select(location.span);
+              }
+
+              return;
+            }
+          }
+        });
+      }
     });
   }
 
@@ -429,7 +443,7 @@ abstract class Spark
     actionManager.registerAction(new ImportFolderAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
-    actionManager.registerAction(new GetDeclarationAction(this));
+    actionManager.registerAction(new GotoDeclarationAction(this));
     actionManager.registerAction(new HistoryAction.back(this));
     actionManager.registerAction(new HistoryAction.forward(this));
 
@@ -709,23 +723,8 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
-  Future<Editor> openEditor(ws.File file, {Span selection}) {
+  void openEditor(ws.File file, {Span selection}) {
     navigationManager.gotoLocation(new NavigationLocation(file, selection));
-
-    // TODO(devoncarew): Convert this over to use a NavigationLocation.
-    _selectResource(file);
-
-    return nextTick().then((_) {
-      for (Editor editor in editorManager.editors) {
-        if (editor.file == file) {
-          if (selection != null && editor is TextEditor) {
-            editor.select(selection);
-          }
-          return editor;
-        }
-      }
-      return null;
-    });
   }
 
   //
@@ -1582,11 +1581,11 @@ class SearchAction extends SparkAction {
   }
 }
 
-class GetDeclarationAction extends SparkAction {
+class GotoDeclarationAction extends SparkAction {
   AnalyzerService _analysisService;
 
-  GetDeclarationAction(Spark spark)
-      : super(spark, 'navigate-declaration', 'Get Declaration') {
+  GotoDeclarationAction(Spark spark)
+      : super(spark, 'navigate-declaration', 'Goto Declaration') {
     addBinding('ctrl-.');
     addBinding('F3');
     _analysisService = spark.services.getService('analyzer');

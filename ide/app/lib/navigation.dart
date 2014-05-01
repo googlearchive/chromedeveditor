@@ -69,13 +69,7 @@ class NavigationLocation {
 
   NavigationLocation(this.file, [this.span = null]);
 
-  String toString(){
-    if (span == null) {
-      return '[${file}]';
-    } else {
-      return '[${file}, ${span}]';
-    }
-  }
+  String toString() => span == null ? '[${file}]' : '[${file}, ${span}]';
 }
 
 /**
