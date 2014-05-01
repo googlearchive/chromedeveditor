@@ -13,7 +13,7 @@ import 'package:unittest/unittest.dart';
 import '../lib/ace.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
-import '../lib/ui/polymer/find_view/find_view.dart';
+import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';
 
 defineTests() {
   group('ace', () {
@@ -29,7 +29,7 @@ class MockAceManager implements AceManager {
   final Element parentElement = null;
   workspace.File currentFile = null;
   AceManagerDelegate delegate = null;
-  FindView findView = null;
+  GotoLineView gotoLineView = null;
   Outline outline = null;
 
   MockAceManager();

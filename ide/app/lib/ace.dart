@@ -26,7 +26,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
-import 'ui/polymer/find_view/find_view.dart';
+import 'ui/polymer/goto_line_view/goto_line_view.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -242,7 +242,7 @@ class AceManager {
 
   Outline outline;
 
-  FindView findView;
+  GotoLineView gotoLineView;
 
   ace.Editor _aceEditor;
 
@@ -279,7 +279,7 @@ class AceManager {
     var command = new ace.Command(
         'gotoline',
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
-        (e) => _showGotoLineView());
+        _showGotoLineView);
     _aceEditor.commands.addCommand(command);
 
     // Fallback
@@ -321,14 +321,15 @@ class AceManager {
       lastCursorPosition = newCursorPosition;
     });
 
-    // Set up the goto line / find dialog.
-    findView = new FindView();
-    parentElement.children.add(findView);
-    findView.onTriggered.listen(_handleGotoLineViewEvent);
-    findView.onClosed.listen(_handleGotoLineViewClosed);
+    // Set up the goto line dialog.
+    gotoLineView = new GotoLineView();
+    gotoLineView.style.zIndex = '10';
+    parentElement.children.add(gotoLineView);
+    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
+    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
     parentElement.onKeyDown
         .where((e) => e.keyCode == html.KeyCode.ESC)
-        .listen((_) => findView.hide());
+        .listen((_) => gotoLineView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -641,18 +642,11 @@ class AceManager {
     }
   }
 
-  void _showGotoLineView() {
-    findView.queryText = '';
-    findView.show();
-  }
+  void _showGotoLineView(_) => gotoLineView.show();
 
-  void _handleGotoLineViewEvent(String str) {
-    try {
-      _aceEditor.gotoLine(int.parse(str));
-      findView.hide();
-    } catch (e) {
-      findView.selectQueryText();
-    }
+  void _handleGotoLineViewEvent(int line) {
+    _aceEditor.gotoLine(line);
+    gotoLineView.hide();
   }
 
   void _handleGotoLineViewClosed(_) => focus();
