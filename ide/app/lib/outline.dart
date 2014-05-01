@@ -70,15 +70,18 @@ class Outline {
     // If the outline has not been built yet, just save the position
     _initialScrollPosition = position;
     if (_scrollTarget != null) {
-      // Hack for scrollTop not working
-      _scrollTarget.hidden = false;
-      _scrollTarget.style
-          ..position = "absolute"
-          ..height = "${_outlineDiv.clientHeight}px"
-          ..top = "${position}px";
-      _scrollTarget.scrollIntoView();
-      _scrollTarget.hidden = true;
+      _scrollIntoView(_outlineDiv.clientHeight, position);
     }
+  }
+  void _scrollIntoView(int top, int bottom) {
+    // Hack for scrollTop not working
+    _scrollTarget.hidden = false;
+    _scrollTarget.style
+        ..position = "absolute"
+        ..height = "${bottom - top}px"
+        ..top = "${top}px";
+    _scrollTarget.scrollIntoView();
+    _scrollTarget.hidden = true;
   }
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
@@ -191,13 +194,11 @@ class Outline {
   void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
     int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
     int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
-    int centerItemIndex =
-        ((lastItemIndex - firstItemIndex) / 2).round() + firstItemIndex;
 
-    if (centerItemIndex != null) {
-      html.Element centerElement = _outlineDiv.getElementsByClassName("outlineItem")[centerItemIndex];
-      centerElement.scrollIntoView();
-    }
+    html.Element firstElement = _outlineDiv.getElementsByClassName("outlineItem")[firstItemIndex];
+    html.Element lastElement = _outlineDiv.getElementsByClassName("outlineItem")[lastItemIndex];
+    _scrollIntoView(firstElement.offsetTop,
+        lastElement.offsetTop + lastElement.offsetHeight);
   }
 
   int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
