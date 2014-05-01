@@ -4,16 +4,17 @@
 
 :host {
   position: absolute;
-  left: 75px;
+  left: 5px;
+  top: 5px;
   z-index: 10;
 }
 
 #container {
   display: none;
-  background: #EEE;
+  background: #fafafa;
   padding: 4px;
   border: 1px solid #CCC;
-  border-radius: 0 0 3px 3px;
+  border-radius: 1px 1px 3px 1px;
   border-top: 0;
 }
 
@@ -23,6 +24,10 @@
 
 #queryText {
   display: inline;
+}
+
+#queryText:focus {
+  outline: 0;
 }
 
 #closeButton {

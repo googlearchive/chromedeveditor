@@ -109,8 +109,8 @@ class TextEditor extends Editor {
   bool get supportsFormat => false;
 
   // TODO(ussuri): use MetaPackageManager instead when it's ready.
-  bool get readOnly =>
-      pubProperties.isInPackagesFolder(file) || bowerProperties.isInPackagesFolder(file);
+  bool get readOnly => pubProperties.isInPackagesFolder(file)
+      || bowerProperties.isInPackagesFolder(file);
 
   void format() { }
 
@@ -243,7 +243,6 @@ class AceManager {
   Outline outline;
 
   FindView findView;
-  bool _performingGotoLine = false;
 
   ace.Editor _aceEditor;
 
@@ -280,7 +279,7 @@ class AceManager {
     var command = new ace.Command(
         'gotoline',
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
-        (e) => _handleGotoLine());
+        (e) => _showGotoLineView());
     _aceEditor.commands.addCommand(command);
 
     // Fallback
@@ -325,8 +324,8 @@ class AceManager {
     // Set up the goto line / find dialog.
     findView = new FindView();
     parentElement.children.add(findView);
-    findView.onTriggered.listen(_handleFindViewEvent);
-    findView.onClosed.listen(_handleFindViewClosed);
+    findView.onTriggered.listen(_handleGotoLineViewEvent);
+    findView.onClosed.listen(_handleGotoLineViewClosed);
     parentElement.onKeyDown
         .where((e) => e.keyCode == html.KeyCode.ESC)
         .listen((_) => findView.hide());
@@ -375,7 +374,8 @@ class AceManager {
           annotationType);
 
       // Ace uses 0-based lines.
-      ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
+      ace.Point charPoint = currentSession.document.indexToPosition(
+          marker.charStart);
       int aceRow = charPoint.row;
       int aceColumn = charPoint.column;
 
@@ -641,31 +641,21 @@ class AceManager {
     }
   }
 
-  void _handleGotoLine() {
-    _performingGotoLine = true;
-
+  void _showGotoLineView() {
     findView.queryText = '';
     findView.show();
   }
 
-  void _handleFindViewEvent(bool normalActivation) {
-    if (_performingGotoLine) {
-      try {
-        _aceEditor.gotoLine(int.parse(findView.queryText));
-        findView.hide();
-      } catch (e) {
-        findView.selectQueryText();
-      }
-    } else {
-      // TODO(devoncarew): Perform find.
-      print('implement find');
+  void _handleGotoLineViewEvent(String str) {
+    try {
+      _aceEditor.gotoLine(int.parse(str));
+      findView.hide();
+    } catch (e) {
+      findView.selectQueryText();
     }
   }
 
-  void _handleFindViewClosed(_) {
-    _performingGotoLine = false;
-    focus();
-  }
+  void _handleGotoLineViewClosed(_) => focus();
 }
 
 class ThemeManager {

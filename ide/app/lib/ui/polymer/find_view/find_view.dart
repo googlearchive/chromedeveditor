@@ -15,8 +15,8 @@ class FindView extends SparkWidget {
   String get queryText => ($['queryText'] as InputElement).value;
   set queryText(String value) => ($['queryText'] as InputElement).value = value;
 
-  StreamController<bool> _triggeredController = new StreamController.broadcast();
-  StreamController<bool> _closedController = new StreamController.broadcast();
+  StreamController<String> _triggeredController = new StreamController.broadcast();
+  StreamController _closedController = new StreamController.broadcast();
 
   factory FindView() => new Element.tag('find-view');
 
@@ -54,10 +54,10 @@ class FindView extends SparkWidget {
   }
 
   /**
-   * This event is fired when the user hits return. The return value is either
-   * `true` (for a normal return key), or `false` if the user hit shift-return.
+   * This event is fired when the user hits return. The event is the text the
+   * user entered in the text field.
    */
-  Stream<bool> get onTriggered => _triggeredController.stream;
+  Stream<String> get onTriggered => _triggeredController.stream;
 
   /**
    * Fires an event when the view is closed.
@@ -75,7 +75,7 @@ class FindView extends SparkWidget {
     // Handle the enter key.
     $['queryText'].onKeyPress.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
-        _triggeredController.add(event.shiftKey ? false : true);
+        _triggeredController.add(queryText);
       }
     });
 
