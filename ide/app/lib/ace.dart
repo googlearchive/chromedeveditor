@@ -612,7 +612,7 @@ class AceManager {
     if (!name.endsWith(".dart")) return;
 
     String text = currentSession.value;
-    outline.initialScrollPosition = currentFile.outlineScrollPosition;
+    outline.scrollPosition = currentFile.outlineScrollPosition;
     outline.build(name, text);
   }
 
