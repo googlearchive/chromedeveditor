@@ -48,6 +48,7 @@ import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
+Logger _logger = new Logger('spark');
 
 /**
  * Returns true if app.json contains a test-mode entry set to true. If app.json
@@ -417,7 +418,7 @@ abstract class Spark
     actionManager.registerAction(new ImportFolderAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
-    actionManager.registerAction(new GetDeclarationAction(this));
+    actionManager.registerAction(new GotoDeclarationAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -696,6 +697,8 @@ abstract class Spark
   }
 
   Future<Editor> openEditor(ws.File file, {Span selection}) {
+    _logger.info('open file ${file} ${selection}');
+
     _selectResource(file);
 
     return nextTick().then((_) {
@@ -1565,12 +1568,13 @@ class SearchAction extends SparkAction {
   }
 }
 
-class GetDeclarationAction extends SparkAction {
+class GotoDeclarationAction extends SparkAction {
   AnalyzerService _analysisService;
 
-  GetDeclarationAction(Spark spark)
-      : super(spark, 'getDeclaration', 'Get Declaration') {
+  GotoDeclarationAction(Spark spark)
+      : super(spark, 'navigate-declaration', 'Goto Declaration') {
     addBinding('ctrl-.');
+    addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
   }
 

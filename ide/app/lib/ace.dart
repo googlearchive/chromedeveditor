@@ -94,13 +94,11 @@ class TextEditor extends Editor {
     ace.Point endSelection = _session.document.indexToPosition(
         span.offset + span.length);
 
+    aceManager._aceEditor.gotoLine(startSelection.row);
+
     ace.Selection selection = aceManager._aceEditor.selection;
     selection.setSelectionAnchor(startSelection.row, startSelection.column);
     selection.selectTo(endSelection.row, endSelection.column);
-
-    // TODO: The scroll position should be calculated better, to make sure
-    // enough lines are visible on either side of the selection, and to center
-    // the selection if we have to move the text from off-screen.
   }
 
   bool get supportsOutline => false;
@@ -756,6 +754,8 @@ class Span {
   final int length;
 
   Span(this.offset, this.length);
+
+  String toString() => '${offset}:{$length}';
 }
 
 String _calcMD5(String text) {
