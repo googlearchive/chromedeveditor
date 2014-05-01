@@ -7,39 +7,25 @@
 
 :host {
   background-color: #ddd;
-  cursor: col-resize;
   display: block;
   position: relative;
 }
 
-:host(.horizontal) {
-  cursor: row-resize;
-}
-
-:host(.vertical-handle) {
-  background: url('handle_vert.png') no-repeat center;
-}
-
-:host(.horizontal-handle) {
-  background: url('handle_horiz.png') no-repeat center;
-}
-
-:host:hover, :host(.active) {
-}
-
 #draggable {
   position: absolute;
-  z-index: 150;
+  z-index: 1;
 }
 
-#draggable.vertical {
+:host(.vertical) #draggable {
   bottom: 0;
+  cursor: col-resize;
   left: -3px;
   top: 0;
   width: 7px;
 }
 
-#draggable.horizontal {
+:host(.horizontal) #draggable {
+  cursor: row-resize;
   height: 7px;
   left: 0;
   right: 0;
