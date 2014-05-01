@@ -294,6 +294,10 @@ class AceManager {
 
   void _setupOutline(PreferenceStore prefs) {
     outline = new Outline(_analysisService, parentElement, prefs);
+    outline.onScroll.listen((_) {
+      currentFile.outlineScrollPosition = outline.scrollPosition;
+    });
+
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);
@@ -619,6 +623,7 @@ class AceManager {
     if (!name.endsWith(".dart")) return;
 
     String text = currentSession.value;
+    outline.scrollPosition = currentFile.outlineScrollPosition;
     outline.build(name, text);
   }
 
