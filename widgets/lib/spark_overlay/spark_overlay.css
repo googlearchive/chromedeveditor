@@ -33,6 +33,7 @@ We address this by using script based positioning =(
   z-index: 1000;
   outline: none;
   display: none;
+  /* Opacity < 1 creates a stacking context from this element */
   opacity: 0.99;
   -webkit-transition: opacity 0.001s;
   transition: opacity 0.001s;
