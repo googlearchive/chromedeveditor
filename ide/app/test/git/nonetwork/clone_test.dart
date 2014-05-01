@@ -47,6 +47,7 @@ class MockHttpRequestClone extends MockHttpRequest {
     this._url = url;
     this._username = user;
     this._password = password;
+    return true;
   }
 
   bool send([dynamic body]) {
@@ -73,6 +74,7 @@ class MockHttpRequestClone extends MockHttpRequest {
     }
 
     loadStream.add("response text");
+    return true;
   }
 
   bool verifyCredentials(String username, String password) {
