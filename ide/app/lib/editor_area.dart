@@ -50,6 +50,11 @@ class AceEditorTab extends EditorTab {
     super.activate();
   }
 
+  void deactivate() {
+    editor.deactivate();
+    super.deactivate();
+  }
+
   void focus() => editor.focus();
 
   void resize() => editor.resize();

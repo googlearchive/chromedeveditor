@@ -26,6 +26,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
+import 'ui/polymer/goto_line_view/goto_line_view.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -82,6 +83,8 @@ class TextEditor extends Editor {
     aceManager._aceEditor.readOnly = readOnly;
   }
 
+  void deactivate() { }
+
   void resize() => aceManager.resize();
 
   void focus() => aceManager.focus();
@@ -106,8 +109,8 @@ class TextEditor extends Editor {
   bool get supportsFormat => false;
 
   // TODO(ussuri): use MetaPackageManager instead when it's ready.
-  bool get readOnly =>
-      pubProperties.isInPackagesFolder(file) || bowerProperties.isInPackagesFolder(file);
+  bool get readOnly => pubProperties.isInPackagesFolder(file) ||
+      bowerProperties.isInPackagesFolder(file);
 
   void format() { }
 
@@ -233,6 +236,8 @@ class AceManager {
 
   Outline outline;
 
+  GotoLineView gotoLineView;
+
   ace.Editor _aceEditor;
 
   workspace.Marker _currentMarker;
@@ -264,11 +269,11 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
-    // Override Ace's gotoline command.
+    // Override Ace's `gotoline` command.
     var command = new ace.Command(
         'gotoline',
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
-        (e) => _handleGotoLine());
+        _showGotoLineView);
     _aceEditor.commands.addCommand(command);
 
     // Add some additional file extension editors.
@@ -290,6 +295,7 @@ class AceManager {
           currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
+      _aceEditor.gotoLine(startPoint.row);
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
@@ -306,6 +312,16 @@ class AceManager {
       }
       lastCursorPosition = newCursorPosition;
     });
+
+    // Set up the goto line dialog.
+    gotoLineView = new GotoLineView();
+    gotoLineView.style.zIndex = '10';
+    parentElement.children.add(gotoLineView);
+    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
+    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
+    parentElement.onKeyDown
+        .where((e) => e.keyCode == html.KeyCode.ESC)
+        .listen((_) => gotoLineView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -351,7 +367,8 @@ class AceManager {
           annotationType);
 
       // Ace uses 0-based lines.
-      ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
+      ace.Point charPoint = currentSession.document.indexToPosition(
+          marker.charStart);
       int aceRow = charPoint.row;
       int aceColumn = charPoint.column;
 
@@ -613,10 +630,14 @@ class AceManager {
     }
   }
 
-  void _handleGotoLine() {
-    // TODO(devoncarew): Show a 'goto line' dialog.
-    //print('_handleGotoLine');
+  void _showGotoLineView(_) => gotoLineView.show();
+
+  void _handleGotoLineViewEvent(int line) {
+    _aceEditor.gotoLine(line);
+    gotoLineView.hide();
   }
+
+  void _handleGotoLineViewClosed(_) => focus();
 }
 
 class ThemeManager {

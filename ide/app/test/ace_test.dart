@@ -13,6 +13,7 @@ import 'package:unittest/unittest.dart';
 import '../lib/ace.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
+import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';
 
 defineTests() {
   group('ace', () {
@@ -28,6 +29,7 @@ class MockAceManager implements AceManager {
   final Element parentElement = null;
   workspace.File currentFile = null;
   AceManagerDelegate delegate = null;
+  GotoLineView gotoLineView = null;
   Outline outline = null;
 
   MockAceManager();
@@ -70,6 +72,7 @@ class MockAceEditor implements TextEditor {
   void activate() { }
   void resize() { }
   void focus() { }
+  void deactivate() { }
 
   bool get dirty => false;
 
