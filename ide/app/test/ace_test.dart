@@ -11,6 +11,7 @@ import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/navigation.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
 import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';

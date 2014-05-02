@@ -27,6 +27,7 @@ import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
+import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
 import 'lib/platform_info.dart';
@@ -84,7 +85,8 @@ abstract class Spark
   PubManager _pubManager;
   BowerManager _bowerManager;
   ActionManager _actionManager;
-  ProjectLocationManager projectLocationManager;
+  ProjectLocationManager _projectLocationManager;
+  NavigationManager _navigationManager;
 
   EventBus _eventBus;
 
@@ -116,6 +118,7 @@ abstract class Spark
     initPackageManagers();
     initServices();
     initScmManager();
+    initNavigationManager();
 
     createEditorComponents();
     initEditorArea();
@@ -161,7 +164,8 @@ abstract class Spark
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
   ActionManager get actionManager => _actionManager;
-
+  ProjectLocationManager get projectLocationManager => _projectLocationManager;
+  NavigationManager get navigationManager => _navigationManager;
   EventBus get eventBus => _eventBus;
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
@@ -259,6 +263,26 @@ abstract class Spark
     _launchManager = new LaunchManager(_workspace, services, pubManager);
   }
 
+  void initNavigationManager() {
+    _navigationManager = new NavigationManager();
+    _navigationManager.onNavigate.listen((NavigationLocation location) {
+      _selectFile(location.file);
+
+      if (location.selection != null) {
+        nextTick().then((_) {
+          for (Editor editor in editorManager.editors) {
+            if (editor.file == location.file) {
+              if (editor is TextEditor) {
+                editor.select(location.selection);
+              }
+              return;
+            }
+          }
+        });
+      }
+    });
+  }
+
   void initPackageManagers() {
     _pubManager = new PubManager(workspace);
     _bowerManager = new BowerManager(workspace);
@@ -300,7 +324,7 @@ abstract class Spark
           editorArea.tabs[0].select();
           return;
         }
-        _selectResource(resource);
+        _openFile(resource);
       });
     });
   }
@@ -326,11 +350,7 @@ abstract class Spark
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
       if (event.resource is ws.File) {
-        _selectInEditor(
-            event.resource,
-            forceOpen: event.forceOpen,
-            replaceCurrent: event.replaceCurrent,
-            switchesTab: event.switchesTab);
+        _openFile(event.resource);
       }
     });
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
@@ -395,6 +415,8 @@ abstract class Spark
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
     actionManager.registerAction(new GotoDeclarationAction(this));
+    actionManager.registerAction(new HistoryAction.back(this));
+    actionManager.registerAction(new HistoryAction.forward(this));
 
     actionManager.registerKeyListener();
   }
@@ -418,7 +440,7 @@ abstract class Spark
   Future restoreLocationManager() {
     return ProjectLocationManager.restoreManager(localPrefs, workspace)
         .then((manager) {
-      projectLocationManager = manager;
+      _projectLocationManager = manager;
     });
   }
 
@@ -438,7 +460,7 @@ abstract class Spark
 
       if (entry != null) {
         workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
-          _selectResource(file);
+          _openFile(file);
           _aceManager.focus();
           workspace.save();
         });
@@ -621,25 +643,22 @@ abstract class Spark
     }
   }
 
-  void _selectResource(ws.Resource resource) {
-    if (resource.isFile) {
-      editorArea.selectFile(
-          resource, forceOpen: true, switchesTab: true, forceFocus: true);
+  void _openFile(ws.Resource resource) {
+    if (currentEditedFile == resource) return;
+
+    if (resource is ws.File) {
+      navigationManager.gotoLocation(new NavigationLocation(resource));
     } else {
-      _filesController.selectFile(resource);
-      _filesController.setFolderExpanded(resource);
+      _selectFile(resource);
     }
   }
 
-  void _selectInEditor(ws.File file,
-                       {bool forceOpen: false,
-                        bool replaceCurrent: true,
-                        bool switchesTab: true}) {
-    if (forceOpen || editorManager.isFileOpened(file)) {
-      editorArea.selectFile(file,
-          forceOpen: forceOpen,
-          replaceCurrent: replaceCurrent,
-          switchesTab: switchesTab);
+  void _selectFile(ws.Resource resource) {
+    if (resource.isFile) {
+      editorArea.selectFile(resource);
+    } else {
+      _filesController.selectFile(resource);
+      _filesController.setFolderExpanded(resource);
     }
   }
 
@@ -672,22 +691,8 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
-  Future<Editor> openEditor(ws.File file, {Span selection}) {
-    _logger.info('open file ${file} ${selection}');
-
-    _selectResource(file);
-
-    return nextTick().then((_) {
-      for (Editor editor in editorManager.editors) {
-        if (editor.file == file) {
-          if (selection != null && editor is TextEditor) {
-            editor.select(selection);
-          }
-          return editor;
-        }
-      }
-      return null;
-    });
+  void openEditor(ws.File file, {Span selection}) {
+    navigationManager.gotoLocation(new NavigationLocation(file, selection));
   }
 
   //
@@ -1080,7 +1085,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark._selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._openFile(file);
             spark._aceManager.focus();
           });
         }).catchError((e) {
@@ -1540,7 +1545,7 @@ class SearchAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    spark.getUIElement('#searchBox').focus();
+    spark.getUIElement('#search').focus();
   }
 }
 
@@ -1559,6 +1564,44 @@ class GotoDeclarationAction extends SparkAction {
     Editor editor = spark.getCurrentEditor();
     if (editor is TextEditor) {
       editor.navigateToDeclaration();
+    }
+  }
+}
+
+class HistoryAction extends SparkAction {
+  bool _forward;
+
+  HistoryAction.back(Spark spark) : super(spark, 'navigate-back', 'Back') {
+    addBinding('ctrl-[');
+    addBinding('ctrl-left');
+    _init(false);
+  }
+
+  HistoryAction.forward(Spark spark) : super(spark, 'navigate-forward', 'Forward') {
+    addBinding('ctrl-]');
+    addBinding('ctrl-right');
+    _init(true);
+  }
+
+  void _init(bool value) {
+    _forward = value;
+    enabled = false;
+
+    spark.navigationManager.onNavigate.listen((_) {
+      if (_forward) {
+        enabled = spark.navigationManager.canGoForward();
+      } else {
+        enabled = spark.navigationManager.canGoBack();
+      }
+    });
+  }
+
+  @override
+  void _invoke([Object context]) {
+    if (_forward) {
+      spark.navigationManager.goForward();
+    } else {
+      spark.navigationManager.goBack();
     }
   }
 }
@@ -1646,7 +1689,7 @@ class NewProjectAction extends SparkActionWithDialog {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
           Timer.run(() {
-            spark._selectResource(ProjectBuilder.getMainResourceFor(project));
+            spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
             if (spark.pubManager.properties.isProjectWithPackages(project)) {
