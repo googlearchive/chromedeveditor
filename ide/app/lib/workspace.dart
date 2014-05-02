@@ -912,8 +912,6 @@ class Folder extends Container {
 }
 
 class File extends Resource {
-  int outlineScrollPosition = 0;
-
   List<Marker> _markers = [];
   int _timestamp;
 

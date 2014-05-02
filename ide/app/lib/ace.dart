@@ -178,12 +178,27 @@ class TextEditor extends Editor {
 }
 
 class DartEditor extends TextEditor {
+  int outlineScrollPosition = 0;
+
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
   DartEditor._create(AceManager aceManager, workspace.File file) :
       super._create(aceManager, file);
 
   bool get supportsOutline => true;
+
+  @override
+  void activate() {
+    super.activate();
+    print("activate");
+//    _aceContainer.outline.onScroll.listen((_) {
+//      Editor currentEditor = _editorMap[currentFile];
+//      currentEditor.outlineScrollPosition = outline.scrollPosition;
+//    });
+  }
+
+
+
 
   void navigateToDeclaration() {
     int offset = _session.document.positionToIndex(
@@ -294,9 +309,6 @@ class AceManager {
 
   void _setupOutline(PreferenceStore prefs) {
     outline = new Outline(_analysisService, parentElement, prefs);
-    outline.onScroll.listen((_) {
-      currentFile.outlineScrollPosition = outline.scrollPosition;
-    });
 
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
@@ -612,7 +624,7 @@ class AceManager {
     if (!name.endsWith(".dart")) return;
 
     String text = currentSession.value;
-    outline.scrollPosition = currentFile.outlineScrollPosition;
+//    outline.scrollPosition = currentFile.outlineScrollPosition;
     outline.build(name, text);
   }
 
