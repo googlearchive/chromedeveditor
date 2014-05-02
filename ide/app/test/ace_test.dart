@@ -72,6 +72,7 @@ class MockAceEditor implements TextEditor {
   void activate() { }
   void resize() { }
   void focus() { }
+  void deactivate() { }
 
   bool get dirty => false;
 
