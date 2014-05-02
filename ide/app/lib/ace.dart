@@ -18,7 +18,6 @@ import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
 import '../spark_flags.dart';
-
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'package_mgmt/bower_properties.dart';
@@ -636,9 +635,9 @@ class ThemeManager {
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    if (SparkFlags.instance.useEditorThemes) {
-      if (SparkFlags.instance.useDarkEditorThemes) _themes.addAll(DARK_THEMES);
-      if (SparkFlags.instance.useLightEditorThemes) _themes.addAll(LIGHT_THEMES);
+    if (SparkFlags.instance.useAceThemes) {
+      if (SparkFlags.instance.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.instance.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
       _prefs.getValue('aceTheme').then((String theme) {
         if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
@@ -670,7 +669,7 @@ class ThemeManager {
   }
 
   void _updateTheme(String theme) {
-    if (SparkFlags.instance.useEditorThemes) {
+    if (SparkFlags.instance.useAceThemes) {
       _prefs.setValue('aceTheme', theme);
     }
     _aceEditor.theme = new ace.Theme.named(theme);

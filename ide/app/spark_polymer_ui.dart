@@ -22,7 +22,7 @@ class SparkPolymerUI extends SparkWidget {
   // NOTE: The initial values have to be true so the app can find all the
   // UI elements it theoretically could need.
   @observable bool developerMode = true;
-  @observable bool useEditorThemes = true;
+  @observable bool useAceThemes = true;
   @observable bool chromeOS = true;
 
   SparkPolymerUI.created() : super.created();
@@ -47,7 +47,7 @@ class SparkPolymerUI extends SparkWidget {
   void refreshFromModel() {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.instance.developerMode;
-    useEditorThemes = SparkFlags.instance.useEditorThemes;
+    useAceThemes = SparkFlags.instance.useAceThemes;
     chromeOS = PlatformInfo.isCros;
   }
 
