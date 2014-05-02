@@ -52,23 +52,6 @@ final NumberFormat _nf = new NumberFormat.decimalPattern();
 Logger _logger = new Logger('spark');
 
 /**
- * Read and return flags from app.json. If app.json does not exit, return
- * defaults.
- */
-Future readFlags() {
-  final String url = chrome.runtime.getURL('app.json');
-  return HttpRequest.getString(url).then((String contents) {
-    Map flagsMap = JSON.decode(contents);
-    SparkFlags.init(flagsMap['test-mode'],
-                    flagsMap['light-editor-themes'],
-                    flagsMap['dark-editor-themes']);
-  }).catchError((e) {
-    // If JSON is invalid, assume test mode.
-    SparkFlags.init(true, true, false);
-  });
-}
-
-/**
  * Create a [Zone] that logs uncaught exceptions.
  */
 Zone createSparkZone() {
