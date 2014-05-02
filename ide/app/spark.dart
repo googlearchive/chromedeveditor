@@ -1557,10 +1557,13 @@ class GotoDeclarationAction extends SparkAction {
     addBinding('ctrl-.');
     addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
+    spark.aceManager.onGotoDeclaration.listen((_) => gotoDeclaration());
   }
 
   @override
-  void _invoke([Object context]) {
+  void _invoke([Object context]) => gotoDeclaration();
+
+  void gotoDeclaration() {
     Editor editor = spark.getCurrentEditor();
     if (editor is TextEditor) {
       editor.navigateToDeclaration();
