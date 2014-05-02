@@ -25,7 +25,10 @@ class SparkFlags {
                this.useLightEditorThemes,
                this.useDarkEditorThemes);
 
-  /// By default, assume developer mode and a single fixed theme.
+  /**
+   * Initialize the flags. By default, assume developer mode and a single
+   * fixed editor theme.
+   */
   static void init({bool developerMode: true,
                     bool lightEditorThemes: false,
                     bool darkEditorThemes: false}) {
@@ -35,8 +38,8 @@ class SparkFlags {
   }
 
   /**
-   * Read and return flags from a JSON file. If the file does not exit, use
-   * defaults.
+   * Initialize the flags from a JSON file. If the file does not exit, use
+   * the defaults (see [init]).
    */
   static Future initFromFile(String fileName) {
     final String url = chrome.runtime.getURL(fileName);
