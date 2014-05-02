@@ -180,26 +180,18 @@
 }
 
 .input-label label {
-  -webkit-flex: 0 1 auto;
+  flex: 0 1 auto;
   width: 150px;
   position: relative;
   top: 9px;
 }
 
 .input-label input {
-  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
 }
 
 #webStorePublishDialog label {
   margin-left: 5px;
-}
-
-#newProjectDialog table {
-  width: 100%;
-}
-
-#newProjectDialog table td {
-  vertical-align: top;
 }
 
 [selectableTxt] {
