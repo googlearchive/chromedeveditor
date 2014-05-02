@@ -1620,13 +1620,19 @@ class FocusMainMenuAction extends SparkAction {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
-  List<InputElement> _jsDepsElts;
   ws.Folder folder;
+
+  static const _KNOWN_JS_PACKAGES = const {
+      'polymer': 'Polymer/polymer#master',
+      'polymer-elements': 'PolymerLabs/polymer-elements#master',
+      'polymer-ui-elements': 'PolymerLabs/polymer-ui-elements#master'
+  };
+  // Matches: "proj-template", "proj-template+polymer,polymer-elements".
+  static final _TEMPLATE_REGEX = new RegExp(r'([\w_-]+)(\+(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
     _nameElt = _triggerOnReturn("#name");
-    _jsDepsElts = getElements('[name="jsDeps"]');
   }
 
   void _invoke([context]) {
@@ -1663,24 +1669,31 @@ class NewProjectAction extends SparkActionWithDialog {
             'sourceName': name.toLowerCase()
         };
 
+        // Add a template for the main project type.
         final SelectElement projectTypeElt = getElement('select[name="type"]');
-        templates.add(
-            new ProjectTemplate(projectTypeElt.value, globalVars));
+        final Match match = _TEMPLATE_REGEX.matchAsPrefix(projectTypeElt.value);
+        assert(match.groupCount > 0);
+        final String templName = match.group(1);
+        final String jsDepsStr = match.group(3);
 
-        List<String> jsDeps = [];
-        for (final elt in _jsDepsElts) {
-          if ((elt.type == "checkbox" && elt.checked) ||
-              (elt.type == "textarea" && elt.value.isNotEmpty)) {
-            // Some values may have commas separating individual dependencies.
-            jsDeps.addAll(elt.value.split(','));
+        templates.add(new ProjectTemplate(templName, globalVars));
+
+        // Possibly also add a mix-in template for JS dependencies, if the
+        // project type requires them.
+        if (jsDepsStr != null) {
+          List<String> jsDeps = [];
+          for (final depName in jsDepsStr.split(',')) {
+            final String depPath = _KNOWN_JS_PACKAGES[depName];
+            assert(depPath != null);
+            jsDeps.add('"$depName": "$depPath"');
           }
-        }
-        if (jsDeps.isNotEmpty) {
-          final localVars = {
-              'dependencies': jsDeps.join(',\n    ')
-          };
-          templates.add(
-              new ProjectTemplate("bower-deps", globalVars, localVars));
+          if (jsDeps.isNotEmpty) {
+            final localVars = {
+                'dependencies': jsDeps.join(',\n    ')
+            };
+            templates.add(
+                new ProjectTemplate("bower-deps", globalVars, localVars));
+          }
         }
 
         return new ProjectBuilder(locationEntry, templates).build();
