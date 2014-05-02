@@ -1748,8 +1748,8 @@ class _HarnessPushJob extends Job {
     HarnessPush harnessPush = new HarnessPush(deployContainer,
         spark.localPrefs);
 
-    Future push = _adb ? harnessPush.pushADB(monitor) :
-        harnessPush.push(_url, monitor);
+    Future push = _adb ? harnessPush.pushAdb(monitor) :
+        harnessPush.pushToHost(_url, monitor);
     return push.then((_) {
       if (_adb) {
         spark.hideProgressDialog();
