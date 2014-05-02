@@ -44,31 +44,12 @@ import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
 import 'test/all.dart' as all_tests;
 
+import 'spark_flags.dart';
 import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
-
-/**
- * Returns true if app.json contains a test-mode entry set to true. If app.json
- * does not exit, it returns true.
- */
-Future<bool> isTestMode() {
-  final String url = chrome.runtime.getURL('app.json');
-  return HttpRequest.getString(url).then((String contents) {
-    bool result = true;
-    try {
-      Map info = JSON.decode(contents);
-      result = info['test-mode'];
-    } catch (exception, stackTrace) {
-      // If JSON is invalid, assume test mode.
-      result = true;
-    }
-    return result;
-  }).catchError((e) {
-    return true;
-  });
-}
+Logger _logger = new Logger('spark');
 
 /**
  * Create a [Zone] that logs uncaught exceptions.
@@ -87,8 +68,6 @@ abstract class Spark
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
-
-  final bool _developerMode;
 
   Services services;
   final JobManager jobManager = new JobManager();
@@ -115,7 +94,7 @@ abstract class Spark
   Set<String> _textFileExtensions = new Set.from(
       ['.cmake', '.gitignore', '.prefs', '.txt']);
 
-  Spark(this._developerMode) {
+  Spark() {
     document.title = appName;
   }
 
@@ -171,8 +150,6 @@ abstract class Spark
   //
   // SparkModel interface:
   //
-
-  bool get developerMode => _developerMode;
 
   AceManager get aceManager => _aceManager;
   ThemeManager get aceThemeManager => _aceThemeManager;
@@ -260,7 +237,7 @@ abstract class Spark
 
     // Track logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
-      if (!developerMode && r.level <= Level.INFO) return;
+      if (!SparkFlags.instance.developerMode && r.level <= Level.INFO) return;
 
       print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
 
@@ -417,7 +394,7 @@ abstract class Spark
     actionManager.registerAction(new ImportFolderAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
-    actionManager.registerAction(new GetDeclarationAction(this));
+    actionManager.registerAction(new GotoDeclarationAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -489,7 +466,7 @@ abstract class Spark
   }
 
   void unveil() {
-    if (developerMode) {
+    if (SparkFlags.instance.developerMode) {
       RunTestsAction action = actionManager.getAction('run-tests');
       action.checkForTestListener();
     }
@@ -696,6 +673,8 @@ abstract class Spark
   }
 
   Future<Editor> openEditor(ws.File file, {Span selection}) {
+    _logger.info('open file ${file} ${selection}');
+
     _selectResource(file);
 
     return nextTick().then((_) {
@@ -1565,12 +1544,13 @@ class SearchAction extends SparkAction {
   }
 }
 
-class GetDeclarationAction extends SparkAction {
+class GotoDeclarationAction extends SparkAction {
   AnalyzerService _analysisService;
 
-  GetDeclarationAction(Spark spark)
-      : super(spark, 'getDeclaration', 'Get Declaration') {
+  GotoDeclarationAction(Spark spark)
+      : super(spark, 'navigate-declaration', 'Goto Declaration') {
     addBinding('ctrl-.');
+    addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
   }
 
@@ -1768,8 +1748,8 @@ class _HarnessPushJob extends Job {
     HarnessPush harnessPush = new HarnessPush(deployContainer,
         spark.localPrefs);
 
-    Future push = _adb ? harnessPush.pushADB(monitor) :
-        harnessPush.push(_url, monitor);
+    Future push = _adb ? harnessPush.pushAdb(monitor) :
+        harnessPush.pushToHost(_url, monitor);
     return push.then((_) {
       if (_adb) {
         spark.hideProgressDialog();
@@ -2640,7 +2620,7 @@ class RunTestsAction extends SparkAction {
   TestDriver testDriver;
 
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
-    if (spark.developerMode) {
+    if (SparkFlags.instance.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
@@ -2648,7 +2628,7 @@ class RunTestsAction extends SparkAction {
   void checkForTestListener() => _initTestDriver();
 
   _invoke([Object context]) {
-    if (spark.developerMode) {
+    if (SparkFlags.instance.developerMode) {
       _initTestDriver();
       testDriver.runTests();
     }

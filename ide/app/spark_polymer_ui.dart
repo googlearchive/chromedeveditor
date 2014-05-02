@@ -9,6 +9,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 
+import 'spark_flags.dart';
 import 'spark_model.dart';
 
 import 'lib/event_bus.dart';
@@ -18,8 +19,11 @@ import 'lib/platform_info.dart';
 class SparkPolymerUI extends SparkWidget {
   SparkModel _model;
 
-  @observable bool developerMode = false;
-  @observable bool chromeOS = false;
+  // NOTE: The initial values have to be true so the app can find all the
+  // UI elements it theoretically could need.
+  @observable bool developerMode = true;
+  @observable bool useAceThemes = true;
+  @observable bool chromeOS = true;
 
   SparkPolymerUI.created() : super.created();
 
@@ -42,7 +46,8 @@ class SparkPolymerUI extends SparkWidget {
 
   void refreshFromModel() {
     // TODO(ussuri): This also could possibly be done using PathObservers.
-    developerMode = _model.developerMode;
+    developerMode = SparkFlags.instance.developerMode;
+    useAceThemes = SparkFlags.instance.useAceThemes;
     chromeOS = PlatformInfo.isCros;
   }
 
@@ -55,11 +60,11 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void onThemeMinus(Event e) {
-    _model.aceThemeManager.dec(e);
+    _model.aceThemeManager.prevTheme(e);
   }
 
   void onThemePlus(Event e) {
-    _model.aceThemeManager.inc(e);
+    _model.aceThemeManager.nextTheme(e);
   }
 
   void onKeysMinus(Event e) {

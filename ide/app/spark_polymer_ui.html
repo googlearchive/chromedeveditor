@@ -15,6 +15,7 @@
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
+<link rel="import" href="lib/ui/polymer/goto_line_view/goto_line_view.html">
 
 <polymer-element name="spark-polymer-ui">
   <template>
@@ -480,26 +481,26 @@
             </label>
           </div>
         </div>
-        <!--
-        <div class="form-group">
-          <div id="changeTheme">
-            <label class="settings-title">Editor theme</label>
-            <div>
-              <span class="settings-label"></span>
-              <span class="plus-minus-container">
-                <a href="#" id="themeMinus" class="plus-minus-button"
-                    on-click="{{onThemeMinus}}">
-                  <span class="glyphicon glyphicon-chevron-left"></span>
-                </a>
-                <a href="#" id="themePlus" class="plus-minus-button"
-                    on-click="{{onThemePlus}}">
-                  <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
-              </span>
+        <template if="{{useAceThemes}}">
+          <div class="form-group">
+            <div id="changeTheme">
+              <label class="settings-title">Editor theme</label>
+              <div>
+                <span class="settings-label"></span>
+                <span class="plus-minus-container">
+                  <a href="#" id="themeMinus" class="plus-minus-button"
+                      on-click="{{onThemeMinus}}">
+                    <span class="glyphicon glyphicon-chevron-left"></span>
+                  </a>
+                  <a href="#" id="themePlus" class="plus-minus-button"
+                      on-click="{{onThemePlus}}">
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                  </a>
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        -->
+        </template>
         <div class="form-group">
           <div id="changeKeys">
             <label class="settings-title">Key bindings</label>

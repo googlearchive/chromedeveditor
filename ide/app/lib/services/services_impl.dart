@@ -369,35 +369,59 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
         for (analyzer.VariableDeclaration variable in variables.variables) {
           outline.entries.add(_populateOutlineEntry(
-              new OutlineTopLevelVariable(variable.name.name), declaration,
-              declaration));
+              new OutlineTopLevelVariable(variable.name.name),
+              new _Range.fromAstNode(declaration),
+              new _Range.fromAstNode(declaration)));
         }
       } else if (declaration is analyzer.ClassDeclaration) {
         OutlineClass outlineClass = new OutlineClass(declaration.name.name);
         outline.entries.add(
-            _populateOutlineEntry(outlineClass, declaration.name, declaration));
+            _populateOutlineEntry(outlineClass,
+                                  new _Range.fromAstNode(declaration.name),
+                                  new _Range.fromAstNode(declaration)));
 
         for (analyzer.ClassMember member in declaration.members) {
           if (member is analyzer.MethodDeclaration) {
             if (member.isGetter || member.isSetter) {
               outlineClass.members.add(_populateOutlineEntry(
                   new OutlineAccessor(member.name.name, member.isSetter),
-                  member.name, member));
+                  new _Range.fromAstNode(member.name),
+                  new _Range.fromAstNode(member)));
             } else {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineMethod(member.name.name), member, member));
+                  new OutlineMethod(member.name.name),
+                  new _Range.fromAstNode(member.name),
+                  new _Range.fromAstNode(member)));
             }
           } else if (member is analyzer.FieldDeclaration) {
             analyzer.VariableDeclarationList fields = member.fields;
             for (analyzer.VariableDeclaration field in fields.variables) {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineProperty(field.name.name), field, field.parent));
+                  new OutlineProperty(field.name.name),
+                  new _Range.fromAstNode(field),
+                  new _Range.fromAstNode(field.parent)));
             }
+          } else if (member is analyzer.ConstructorDeclaration) {
+            analyzer.ConstructorDeclaration constructor = member;
+
+            var nameIdentifier = constructor.name;
+            String name = declaration.name.name +
+                (nameIdentifier != null ? ".${nameIdentifier.name}" : "");
+            _Range nameRange = new _Range(constructor.beginToken.offset,
+                nameIdentifier == null ? constructor.beginToken.end :
+                nameIdentifier.end);
+
+            outlineClass.members.add(_populateOutlineEntry(
+                new OutlineMethod(name),
+                nameRange,
+                new _Range.fromAstNode(declaration)));
           }
         }
       } else if (declaration is analyzer.FunctionDeclaration) {
-        outline.entries.add(_populateOutlineEntry(new OutlineTopLevelFunction(
-            declaration.name.name), declaration.name, declaration));
+        outline.entries.add(_populateOutlineEntry(
+            new OutlineTopLevelFunction(declaration.name.name),
+            new _Range.fromAstNode(declaration.name),
+            new _Range.fromAstNode(declaration)));
       } else {
         print("${declaration.runtimeType} is unknown");
       }
@@ -406,13 +430,12 @@ class AnalyzerServiceImpl extends ServiceImpl {
     return outline;
   }
 
-  OutlineEntry _populateOutlineEntry(
-      OutlineEntry outlineEntry, analyzer.AstNode nameNode,
-      analyzer.AstNode bodyNode) {
-    outlineEntry.nameStartOffset = nameNode.beginToken.offset;
-    outlineEntry.nameEndOffset = nameNode.endToken.end;
-    outlineEntry.bodyStartOffset = bodyNode.offset;
-    outlineEntry.bodyEndOffset = bodyNode.end;
+  OutlineEntry _populateOutlineEntry(OutlineEntry outlineEntry, _Range name,
+      _Range body) {
+    outlineEntry.nameStartOffset = name.startOffset;
+    outlineEntry.nameEndOffset = name.endOffset;
+    outlineEntry.bodyStartOffset = body.startOffset;
+    outlineEntry.bodyEndOffset = body.endOffset;
     return outlineEntry;
   }
 
@@ -435,6 +458,17 @@ class AnalyzerServiceImpl extends ServiceImpl {
     return isolate.chromeService.getFileContents(fileUuid)
         .then((String contents) => analyzer.analyzeString(sdk, contents))
         .then((analyzer.AnalyzerResult result) => result);
+  }
+}
+
+class _Range {
+  int startOffset = null;
+  int endOffset = null;
+
+  _Range(this.startOffset, this.endOffset);
+  _Range.fromAstNode(analyzer.AstNode node) {
+    startOffset = node.offset;
+    endOffset = node.end;
   }
 }
 

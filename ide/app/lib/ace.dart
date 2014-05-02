@@ -17,6 +17,7 @@ import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
+import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'package_mgmt/bower_properties.dart';
@@ -26,6 +27,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
+import 'ui/polymer/goto_line_view/goto_line_view.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -82,6 +84,8 @@ class TextEditor extends Editor {
     aceManager._aceEditor.readOnly = readOnly;
   }
 
+  void deactivate() { }
+
   void resize() => aceManager.resize();
 
   void focus() => aceManager.focus();
@@ -94,13 +98,11 @@ class TextEditor extends Editor {
     ace.Point endSelection = _session.document.indexToPosition(
         span.offset + span.length);
 
+    aceManager._aceEditor.gotoLine(startSelection.row);
+
     ace.Selection selection = aceManager._aceEditor.selection;
     selection.setSelectionAnchor(startSelection.row, startSelection.column);
     selection.selectTo(endSelection.row, endSelection.column);
-
-    // TODO: The scroll position should be calculated better, to make sure
-    // enough lines are visible on either side of the selection, and to center
-    // the selection if we have to move the text from off-screen.
   }
 
   bool get supportsOutline => false;
@@ -108,8 +110,8 @@ class TextEditor extends Editor {
   bool get supportsFormat => false;
 
   // TODO(ussuri): use MetaPackageManager instead when it's ready.
-  bool get readOnly =>
-      pubProperties.isInPackagesFolder(file) || bowerProperties.isInPackagesFolder(file);
+  bool get readOnly => pubProperties.isInPackagesFolder(file) ||
+      bowerProperties.isInPackagesFolder(file);
 
   void format() { }
 
@@ -242,12 +244,6 @@ class CssEditor extends TextEditor {
  */
 class AceManager {
   static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
-  // 2 light themes, 4 dark ones.
-  static final THEMES = [
-      'textmate', 'tomorrow',
-      'tomorrow_night', 'monokai', 'idle_fingers', 'pastel_on_dark'
-  ];
-
   /**
    * The container for the Ace editor.
    */
@@ -255,6 +251,8 @@ class AceManager {
   final AceManagerDelegate delegate;
 
   Outline outline;
+
+  GotoLineView gotoLineView;
 
   ace.Editor _aceEditor;
 
@@ -287,15 +285,12 @@ class AceManager {
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
 
-    // Override Ace's gotoline command.
+    // Override Ace's `gotoline` command.
     var command = new ace.Command(
         'gotoline',
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
-        (e) => _handleGotoLine());
+        _showGotoLineView);
     _aceEditor.commands.addCommand(command);
-
-    // Fallback
-    theme = THEMES[0];
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
@@ -317,6 +312,7 @@ class AceManager {
           currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
+      _aceEditor.gotoLine(startPoint.row);
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
@@ -333,6 +329,16 @@ class AceManager {
       }
       lastCursorPosition = newCursorPosition;
     });
+
+    // Set up the goto line dialog.
+    gotoLineView = new GotoLineView();
+    gotoLineView.style.zIndex = '10';
+    parentElement.children.add(gotoLineView);
+    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
+    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
+    parentElement.onKeyDown
+        .where((e) => e.keyCode == html.KeyCode.ESC)
+        .listen((_) => gotoLineView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -378,7 +384,8 @@ class AceManager {
           annotationType);
 
       // Ace uses 0-based lines.
-      ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
+      ace.Point charPoint = currentSession.document.indexToPosition(
+          marker.charStart);
       int aceRow = charPoint.row;
       int aceColumn = charPoint.column;
 
@@ -525,10 +532,6 @@ class AceManager {
 
   void clearMarkers() => currentSession.clearAnnotations();
 
-  String get theme => _aceEditor.theme.name;
-
-  set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
-
   Future<String> getKeyBinding() {
     var handler = _aceEditor.keyBinding.keyboardHandler;
     return handler.onLoad.then((_) {
@@ -645,55 +648,71 @@ class AceManager {
     }
   }
 
-  void _handleGotoLine() {
-    // TODO(devoncarew): Show a 'goto line' dialog.
-    //print('_handleGotoLine');
+  void _showGotoLineView(_) => gotoLineView.show();
+
+  void _handleGotoLineViewEvent(int line) {
+    _aceEditor.gotoLine(line);
+    gotoLineView.hide();
   }
+
+  void _handleGotoLineViewClosed(_) => focus();
 }
 
 class ThemeManager {
-  AceManager aceManager;
-  PreferenceStore prefs;
-  html.Element _label;
+  static final LIGHT_THEMES = [
+      'textmate', 'tomorrow'
+  ];
+  static final DARK_THEMES = [
+      'monokai', 'tomorrow_night', 'idle_fingers', 'pastel_on_dark'
+  ];
 
-  ThemeManager(this.aceManager, this.prefs, this._label) {
-    String value = 'monokai';
-    aceManager.theme = value;
-    _updateName(value);
-/*
-    prefs.getValue('aceTheme').then((String value) {
-      if (value != null) {
-        aceManager.theme = value;
-        _updateName(value);
-      } else {
-        _updateName(aceManager.theme);
-      }
-    });
-*/
+  ace.Editor _aceEditor;
+  PreferenceStore _prefs;
+  html.Element _label;
+  List<String> _themes = [];
+
+  ThemeManager(AceManager aceManager, this._prefs, this._label) :
+      _aceEditor = aceManager._aceEditor {
+    if (SparkFlags.instance.useAceThemes) {
+      if (SparkFlags.instance.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.instance.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+
+      _prefs.getValue('aceTheme').then((String theme) {
+        if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
+          theme = _themes[0];
+        }
+        _updateTheme(theme);
+      });
+    } else {
+      _themes.add(DARK_THEMES[0]);
+      _updateTheme(_themes[0]);
+    }
   }
 
-  void inc(html.Event e) {
-   e.stopPropagation();
+  void nextTheme(html.Event e) {
+    e.stopPropagation();
     _changeTheme(1);
   }
 
-  void dec(html.Event e) {
+  void prevTheme(html.Event e) {
     e.stopPropagation();
     _changeTheme(-1);
   }
 
   void _changeTheme(int direction) {
-    int index = AceManager.THEMES.indexOf(aceManager.theme);
-    index = (index + direction) % AceManager.THEMES.length;
-    String newTheme = AceManager.THEMES[index];
-    prefs.setValue('aceTheme', newTheme);
-    _updateName(newTheme);
-    aceManager.theme = newTheme;
+    int index = _themes.indexOf(_aceEditor.theme.name);
+    index = (index + direction) % _themes.length;
+    String newTheme = _themes[index];
+    _updateTheme(newTheme);
   }
 
-  void _updateName(String name) {
+  void _updateTheme(String theme) {
+    if (SparkFlags.instance.useAceThemes) {
+      _prefs.setValue('aceTheme', theme);
+    }
+    _aceEditor.theme = new ace.Theme.named(theme);
     if (_label != null) {
-      _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+      _label.text = utils.toTitleCase(theme.replaceAll('_', ' '));
     }
   }
 }
@@ -757,6 +776,8 @@ class Span {
   final int length;
 
   Span(this.offset, this.length);
+
+  String toString() => '${offset}:{$length}';
 }
 
 String _calcMD5(String text) {
