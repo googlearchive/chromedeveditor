@@ -19,8 +19,11 @@ import 'lib/platform_info.dart';
 class SparkPolymerUI extends SparkWidget {
   SparkModel _model;
 
-  @observable bool developerMode = false;
-  @observable bool chromeOS = false;
+  // NOTE: The initial values have to be true so the app can find all the
+  // UI elements it theoretically could need.
+  @observable bool developerMode = true;
+  @observable bool useEditorThemes = true;
+  @observable bool chromeOS = true;
 
   SparkPolymerUI.created() : super.created();
 
@@ -44,6 +47,7 @@ class SparkPolymerUI extends SparkWidget {
   void refreshFromModel() {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.instance.developerMode;
+    useEditorThemes = SparkFlags.instance.useEditorThemes;
     chromeOS = PlatformInfo.isCros;
   }
 

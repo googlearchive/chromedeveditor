@@ -17,6 +17,8 @@ import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
+import '../spark_flags.dart';
+
 import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'package_mgmt/bower_properties.dart';
@@ -633,14 +635,21 @@ class ThemeManager {
   List<String> _themes = [];
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
-    _aceEditor = aceManager._aceEditor {
-    _themes..add(DARK_THEMES[0]);
-    _prefs.getValue('aceTheme').then((String value) {
-      if (value == null || value.isEmpty || !_themes.contains(value)) {
-        value = _themes[0];
-      }
-      _updateTheme(value);
-    });
+      _aceEditor = aceManager._aceEditor {
+    if (SparkFlags.instance.useEditorThemes) {
+      if (SparkFlags.instance.useDarkEditorThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.instance.useLightEditorThemes) _themes.addAll(LIGHT_THEMES);
+
+      _prefs.getValue('aceTheme').then((String theme) {
+        if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
+          theme = _themes[0];
+        }
+        _updateTheme(theme);
+      });
+    } else {
+      _themes.add(DARK_THEMES[0]);
+      _updateTheme(_themes[0]);
+    }
   }
 
   void nextTheme(html.Event e) {
@@ -657,14 +666,16 @@ class ThemeManager {
     int index = _themes.indexOf(_aceEditor.theme.name);
     index = (index + direction) % _themes.length;
     String newTheme = _themes[index];
-    _prefs.setValue('aceTheme', newTheme);
     _updateTheme(newTheme);
   }
 
-  void _updateTheme(String name) {
-    _aceEditor.theme = new ace.Theme.named(name);
+  void _updateTheme(String theme) {
+    if (SparkFlags.instance.useEditorThemes) {
+      _prefs.setValue('aceTheme', theme);
+    }
+    _aceEditor.theme = new ace.Theme.named(theme);
     if (_label != null) {
-      _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+      _label.text = utils.toTitleCase(theme.replaceAll('_', ' '));
     }
   }
 }
