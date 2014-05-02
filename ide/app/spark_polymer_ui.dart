@@ -9,6 +9,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 
+import 'spark_flags.dart';
 import 'spark_model.dart';
 
 import 'lib/event_bus.dart';
@@ -42,7 +43,7 @@ class SparkPolymerUI extends SparkWidget {
 
   void refreshFromModel() {
     // TODO(ussuri): This also could possibly be done using PathObservers.
-    developerMode = _model.developerMode;
+    developerMode = SparkFlags.instance.developerMode;
     chromeOS = PlatformInfo.isCros;
   }
 
