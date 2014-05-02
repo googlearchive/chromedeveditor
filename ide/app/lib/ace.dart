@@ -23,6 +23,7 @@ import 'editors.dart';
 import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
+import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
@@ -238,6 +239,8 @@ class AceManager {
 
   Outline outline;
 
+  StreamController _onGotoDeclarationController = new StreamController();
+  Stream get onGotoDeclaration => _onGotoDeclarationController.stream;
   GotoLineView gotoLineView;
 
   ace.Editor _aceEditor;
@@ -270,6 +273,7 @@ class AceManager {
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
+    _aceEditor.setOption('enableMultiselect', false);
 
     // Override Ace's `gotoline` command.
     var command = new ace.Command(
@@ -286,6 +290,11 @@ class AceManager {
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
     _setupOutline(prefs);
+    var node = parentElement.getElementsByClassName("ace_content")[0];
+    node.onClick.listen((e) {
+      bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
+      if (accelKey) _onGotoDeclarationController.add(null);
+    });
   }
 
   void _setupOutline(PreferenceStore prefs) {
