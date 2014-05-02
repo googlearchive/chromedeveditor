@@ -404,15 +404,16 @@ class ChromeServiceImpl extends Service {
   }
 
   void _sendErrorResponse(ServiceActionEvent event, e) {
-    String stackTrace;
+    String stackTrace = '';
+
     try {
-      stackTrace = e.stackTrace.toString();
-    } catch(e) {
-      stackTrace = "";
-    }
+      if (e.stackTrace != null) {
+        stackTrace = '${e.stackTrace}';
+      }
+    } catch(e) { }
 
     ServiceActionEvent responseEvent = event.createReponse({
-        "error": e.toString(),
+        "error": '${e}',
         "stackTrace": stackTrace});
 
     responseEvent.error = true;
