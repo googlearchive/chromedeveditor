@@ -31,7 +31,7 @@ class Outline {
 
   services.AnalyzerService _analyzer;
 
-  StreamController _childSelectedController = new StreamController();
+  StreamController<OutlineItem> _childSelectedController = new StreamController();
 
   Outline(this._analyzer, this._container, this._prefs) {
     // Use template to create the UI of outline.
@@ -59,7 +59,7 @@ class Outline {
     });
   }
 
-  Stream get onChildSelected => _childSelectedController.stream;
+  Stream<OutlineItem> get onChildSelected => _childSelectedController.stream;
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
   set visible(bool value) {

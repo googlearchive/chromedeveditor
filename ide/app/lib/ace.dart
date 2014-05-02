@@ -293,6 +293,7 @@ class AceManager {
           currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
+      _aceEditor.gotoLine(startPoint.row);
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
