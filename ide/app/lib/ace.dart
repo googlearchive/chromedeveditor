@@ -83,6 +83,8 @@ class TextEditor extends Editor {
     aceManager._aceEditor.readOnly = readOnly;
   }
 
+  void deactivate() { }
+
   void resize() => aceManager.resize();
 
   void focus() => aceManager.focus();

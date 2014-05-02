@@ -49,6 +49,7 @@ abstract class Editor {
   Stream get onModification;
 
   void activate();
+  void deactivate();
   void resize();
   void focus();
   void fileContentsChanged();
