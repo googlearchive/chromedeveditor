@@ -26,12 +26,12 @@ class SparkFlags {
                this.useDarkEditorThemes);
 
   /**
-   * Initialize the flags. By default, assume developer mode and a single
-   * fixed editor theme.
+   * Initialize the flags. By default, assume developer mode and dark editor
+   * themes.
    */
   static void init({bool developerMode: true,
                     bool lightEditorThemes: false,
-                    bool darkEditorThemes: false}) {
+                    bool darkEditorThemes: true}) {
     assert(instance == null);
     instance = new SparkFlags._(
         developerMode, lightEditorThemes, darkEditorThemes);
