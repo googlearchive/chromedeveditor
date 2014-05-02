@@ -44,32 +44,12 @@ import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
 import 'test/all.dart' as all_tests;
 
+import 'spark_flags.dart';
 import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 Logger _logger = new Logger('spark');
-
-/**
- * Returns true if app.json contains a test-mode entry set to true. If app.json
- * does not exit, it returns true.
- */
-Future<bool> isTestMode() {
-  final String url = chrome.runtime.getURL('app.json');
-  return HttpRequest.getString(url).then((String contents) {
-    bool result = true;
-    try {
-      Map info = JSON.decode(contents);
-      result = info['test-mode'];
-    } catch (exception, stackTrace) {
-      // If JSON is invalid, assume test mode.
-      result = true;
-    }
-    return result;
-  }).catchError((e) {
-    return true;
-  });
-}
 
 /**
  * Create a [Zone] that logs uncaught exceptions.
@@ -88,8 +68,6 @@ abstract class Spark
 
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
-
-  final bool _developerMode;
 
   Services services;
   final JobManager jobManager = new JobManager();
@@ -116,7 +94,7 @@ abstract class Spark
   Set<String> _textFileExtensions = new Set.from(
       ['.cmake', '.gitignore', '.prefs', '.txt']);
 
-  Spark(this._developerMode) {
+  Spark() {
     document.title = appName;
   }
 
@@ -172,8 +150,6 @@ abstract class Spark
   //
   // SparkModel interface:
   //
-
-  bool get developerMode => _developerMode;
 
   AceManager get aceManager => _aceManager;
   ThemeManager get aceThemeManager => _aceThemeManager;
@@ -261,7 +237,7 @@ abstract class Spark
 
     // Track logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
-      if (!developerMode && r.level <= Level.INFO) return;
+      if (!SparkFlags.instance.developerMode && r.level <= Level.INFO) return;
 
       print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
 
@@ -490,7 +466,7 @@ abstract class Spark
   }
 
   void unveil() {
-    if (developerMode) {
+    if (SparkFlags.instance.developerMode) {
       RunTestsAction action = actionManager.getAction('run-tests');
       action.checkForTestListener();
     }
@@ -2644,7 +2620,7 @@ class RunTestsAction extends SparkAction {
   TestDriver testDriver;
 
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
-    if (spark.developerMode) {
+    if (SparkFlags.instance.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
@@ -2652,7 +2628,7 @@ class RunTestsAction extends SparkAction {
   void checkForTestListener() => _initTestDriver();
 
   _invoke([Object context]) {
-    if (spark.developerMode) {
+    if (SparkFlags.instance.developerMode) {
       _initTestDriver();
       testDriver.runTests();
     }

@@ -12,6 +12,7 @@ import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
 
 import 'spark.dart';
+import 'spark_flags.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';
@@ -46,15 +47,14 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  isTestMode().then((developerMode) {
-    _logger.logStep('testMode retrieved');
-
+  SparkFlags.initFromFile('app.json').then((_) {
     // Don't set up the zone exception handler if we're running in dev mode.
     final Function maybeRunGuarded =
-        developerMode ? (f) => f() : createSparkZone().runGuarded;
+        SparkFlags.instance.developerMode ?
+            (f) => f() : createSparkZone().runGuarded;
 
     maybeRunGuarded(() {
-      SparkPolymer spark = new SparkPolymer._(developerMode);
+      SparkPolymer spark = new SparkPolymer._();
       spark.start();
     });
   }).catchError((error) {
@@ -116,7 +116,7 @@ class SparkPolymer extends Spark {
     return (appModal.style.display != "none");
   }
 
-  SparkPolymer._(bool developerMode) : super(developerMode) {
+  SparkPolymer._() : super() {
     addParticipant(new _SparkSetupParticipant());
   }
 
