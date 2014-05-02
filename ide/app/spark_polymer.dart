@@ -47,7 +47,7 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  readFlags().then((_) {
+  SparkFlags.initFromFile('app.json').then((_) {
     // Don't set up the zone exception handler if we're running in dev mode.
     final Function maybeRunGuarded =
         SparkFlags.instance.developerMode ?
