@@ -15,26 +15,24 @@ import 'package:chrome/chrome_app.dart' as chrome;
  */
 class SparkFlags {
   bool developerMode;
-  bool useLightEditorThemes;
-  bool useDarkEditorThemes;
-  bool get useEditorThemes => useLightEditorThemes || useDarkEditorThemes;
+  bool useLightAceThemes;
+  bool useDarkAceThemes;
+  bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
 
   static SparkFlags instance;
 
-  SparkFlags._(this.developerMode,
-               this.useLightEditorThemes,
-               this.useDarkEditorThemes);
+  SparkFlags._(
+      this.developerMode, this.useLightAceThemes, this.useDarkAceThemes);
 
   /**
-   * Initialize the flags. By default, assume developer mode and a single
-   * fixed editor theme.
+   * Initialize the flags. By default, assume developer mode and dark editor
+   * themes.
    */
   static void init({bool developerMode: true,
-                    bool lightEditorThemes: false,
-                    bool darkEditorThemes: false}) {
+                    bool ligtAceThemes: false,
+                    bool darkAceThemes: true}) {
     assert(instance == null);
-    instance = new SparkFlags._(
-        developerMode, lightEditorThemes, darkEditorThemes);
+    instance = new SparkFlags._(developerMode, ligtAceThemes, darkAceThemes);
   }
 
   /**
@@ -48,8 +46,8 @@ class SparkFlags {
       Map flagsMap = JSON.decode(contents);
       // Normalize missing/malformed values to bools via x==true.
       init(developerMode: flagsMap['test-mode'] == true,
-           lightEditorThemes: flagsMap['light-editor-themes'] == true,
-           darkEditorThemes: flagsMap['dark-editor-themes'] == true);
+           ligtAceThemes: flagsMap['light-ace-themes'] == true,
+           darkAceThemes: flagsMap['dark-ace-themes'] == true);
     }).catchError((e) {
       // If JSON is invalid/non-existent, use the defaults.
       init();

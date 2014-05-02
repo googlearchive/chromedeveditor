@@ -17,8 +17,10 @@ import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
+import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub.dart';
 import 'preferences.dart';
@@ -89,19 +91,19 @@ class TextEditor extends Editor {
 
   void focus() => aceManager.focus();
 
-  void select(Span span) {
+  void select(Span selection) {
     // Check if we're the current editor.
     if (file != aceManager.currentFile) return;
 
-    ace.Point startSelection = _session.document.indexToPosition(span.offset);
+    ace.Point startSelection = _session.document.indexToPosition(selection.offset);
     ace.Point endSelection = _session.document.indexToPosition(
-        span.offset + span.length);
+        selection.offset + selection.length);
 
     aceManager._aceEditor.gotoLine(startSelection.row);
 
-    ace.Selection selection = aceManager._aceEditor.selection;
-    selection.setSelectionAnchor(startSelection.row, startSelection.column);
-    selection.selectTo(endSelection.row, endSelection.column);
+    ace.Selection aceSel = aceManager._aceEditor.selection;
+    aceSel.setSelectionAnchor(startSelection.row, startSelection.column);
+    aceSel.selectTo(endSelection.row, endSelection.column);
   }
 
   bool get supportsOutline => false;
@@ -654,14 +656,21 @@ class ThemeManager {
   List<String> _themes = [];
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
-    _aceEditor = aceManager._aceEditor {
-    _themes..add(DARK_THEMES[0]);
-    _prefs.getValue('aceTheme').then((String value) {
-      if (value == null || value.isEmpty || !_themes.contains(value)) {
-        value = _themes[0];
-      }
-      _updateTheme(value);
-    });
+      _aceEditor = aceManager._aceEditor {
+    if (SparkFlags.instance.useAceThemes) {
+      if (SparkFlags.instance.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.instance.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+
+      _prefs.getValue('aceTheme').then((String theme) {
+        if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
+          theme = _themes[0];
+        }
+        _updateTheme(theme);
+      });
+    } else {
+      _themes.add(DARK_THEMES[0]);
+      _updateTheme(_themes[0]);
+    }
   }
 
   void nextTheme(html.Event e) {
@@ -678,14 +687,16 @@ class ThemeManager {
     int index = _themes.indexOf(_aceEditor.theme.name);
     index = (index + direction) % _themes.length;
     String newTheme = _themes[index];
-    _prefs.setValue('aceTheme', newTheme);
     _updateTheme(newTheme);
   }
 
-  void _updateTheme(String name) {
-    _aceEditor.theme = new ace.Theme.named(name);
+  void _updateTheme(String theme) {
+    if (SparkFlags.instance.useAceThemes) {
+      _prefs.setValue('aceTheme', theme);
+    }
+    _aceEditor.theme = new ace.Theme.named(theme);
     if (_label != null) {
-      _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+      _label.text = utils.toTitleCase(theme.replaceAll('_', ' '));
     }
   }
 }
@@ -741,16 +752,7 @@ abstract class AceManagerDelegate {
    */
   bool canShowFileAsText(String filename);
 
-  Future<Editor> openEditor(workspace.File file, {Span selection});
-}
-
-class Span {
-  final int offset;
-  final int length;
-
-  Span(this.offset, this.length);
-
-  String toString() => '${offset}:{$length}';
+  void openEditor(workspace.File file, {Span selection});
 }
 
 String _calcMD5(String text) {
