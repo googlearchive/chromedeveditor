@@ -1,0 +1,44 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+:host {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+}
+
+#container {
+  display: none;
+  background: #fafafa;
+  padding: 4px;
+  border: 1px solid #CCC;
+  border-radius: 1px 1px 3px 1px;
+  border-top: 0;
+}
+
+#container.showing {
+  display: block;
+}
+
+#queryText {
+  display: inline;
+}
+
+#queryText:focus {
+  outline: 0;
+}
+
+#closeButton {
+  color: #000;
+  cursor: default;
+  display: inline;
+  font-size: 12px;
+  height: 15px;
+  opacity: 0.2;
+  padding: 0 4px 2px 0;
+}
+
+#closeButton:hover {
+  opacity: 0.8;
+}
