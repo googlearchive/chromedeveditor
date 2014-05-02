@@ -1611,6 +1611,7 @@ class NewProjectAction extends SparkActionWithDialog {
         root = new ws.FolderChildRoot(location.parent, locationEntry);
       }
 
+      // TODO(ussuri): Why is this no-op `return Future.value()` necessary?
       return new Future.value().then((_) {
         List<ProjectTemplate> templates = [];
 
@@ -1619,17 +1620,16 @@ class NewProjectAction extends SparkActionWithDialog {
             'sourceName': name.toLowerCase()
         };
 
-        final InputElement projectTypeElt =
-            getElement('input[name="type"]:checked');
+        final SelectElement projectTypeElt = getElement('select[name="type"]');
         templates.add(
             new ProjectTemplate(projectTypeElt.value, globalVars));
 
         List<String> jsDeps = [];
         for (final elt in _jsDepsElts) {
-          // NOTE: This test will get both the checkboxes and the textbox.
           if ((elt.type == "checkbox" && elt.checked) ||
               (elt.type == "textarea" && elt.value.isNotEmpty)) {
-            jsDeps.add(elt.value);
+            // Some values may have commas separating individual dependencies.
+            jsDeps.addAll(elt.value.split(','));
           }
         }
         if (jsDeps.isNotEmpty) {
