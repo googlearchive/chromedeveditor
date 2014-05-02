@@ -25,6 +25,10 @@ import '../preferences.dart' as preferences;
 import '../scm.dart';
 import '../workspace.dart';
 
+/**
+ * An event that is sent to indicate the user would like to select a given
+ * resource.
+ */
 class FilesControllerSelectionChangedEvent extends BusEvent {
   final Resource resource;
 
@@ -33,6 +37,10 @@ class FilesControllerSelectionChangedEvent extends BusEvent {
   BusEventType get type => BusEventType.FILES_CONTROLLER__SELECTION_CHANGED;
 }
 
+/**
+ * An event that is sent to indicate the user would like to select a given
+ * resource, in a persistent manner.
+ */
 class FilesControllerPersistTabEvent extends BusEvent {
   File file;
 
@@ -119,7 +127,6 @@ class FilesController implements TreeViewDelegate {
 
     _treeView.selection = [file.uuid];
     _treeView.scrollIntoNode(file.uuid, html.ScrollAlignment.CENTER);
-    _eventBus.addEvent(new FilesControllerSelectionChangedEvent(file));
   }
 
   void selectFirstFile() {
@@ -197,13 +204,7 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
 
-  void treeViewSelectedChanged(TreeView view,
-                               List<String> nodeUids) {
-    if (nodeUids.isNotEmpty) {
-      Resource resource = _filesMap[nodeUids.first];
-      _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
-    }
-  }
+  void treeViewSelectedChanged(TreeView view, List<String> nodeUids) { }
 
   bool treeViewRowClicked(html.MouseEvent event, String uid) {
     if (uid == null) {

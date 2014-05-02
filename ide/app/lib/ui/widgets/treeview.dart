@@ -314,6 +314,11 @@ class TreeView implements ListViewDelegate {
   bool listViewKeyDown(KeyboardEvent event) {
     if (_listView.selectedRow == -1) return true;
 
+    // Ignore navigation events that have modifiers.
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return true;
+    }
+
     String uuid = _rows[_listView.selectedRow].nodeUid;
 
     switch (event.which) {

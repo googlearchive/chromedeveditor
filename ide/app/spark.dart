@@ -668,7 +668,7 @@ abstract class Spark
   }
 
   void _openFile(ws.Resource resource) {
-    print('open file: ${resource}');
+    if (currentEditedFile == resource) return;
 
     if (resource is ws.File) {
       navigationManager.gotoLocation(new NavigationLocation(resource));
@@ -678,8 +678,6 @@ abstract class Spark
   }
 
   void _selectFile(ws.Resource resource) {
-    print('select file: ${resource}');
-
     if (resource.isFile) {
       editorArea.selectFile(resource);
     } else {
@@ -687,15 +685,6 @@ abstract class Spark
       _filesController.setFolderExpanded(resource);
     }
   }
-
-  // void _selectResource(ws.Resource resource) {
-  //   if (resource.isFile) {
-  //     editorArea.selectFile(resource);
-  //   } else {
-  //     _filesController.selectFile(resource);
-  //     _filesController.setFolderExpanded(resource);
-  //   }
-  // }
 
   //
   // Implementation of AceManagerDelegate interface:
@@ -1607,10 +1596,14 @@ class HistoryAction extends SparkAction {
   bool _forward;
 
   HistoryAction.back(Spark spark) : super(spark, 'navigate-back', 'Back') {
+    addBinding('ctrl-[');
+    addBinding('ctrl-left');
     _init(false);
   }
 
   HistoryAction.forward(Spark spark) : super(spark, 'navigate-forward', 'Forward') {
+    addBinding('ctrl-]');
+    addBinding('ctrl-right');
     _init(true);
   }
 
