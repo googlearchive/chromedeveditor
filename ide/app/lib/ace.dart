@@ -94,13 +94,11 @@ class TextEditor extends Editor {
     ace.Point endSelection = _session.document.indexToPosition(
         span.offset + span.length);
 
+    aceManager._aceEditor.gotoLine(startSelection.row);
+
     ace.Selection selection = aceManager._aceEditor.selection;
     selection.setSelectionAnchor(startSelection.row, startSelection.column);
     selection.selectTo(endSelection.row, endSelection.column);
-
-    // TODO: The scroll position should be calculated better, to make sure
-    // enough lines are visible on either side of the selection, and to center
-    // the selection if we have to move the text from off-screen.
   }
 
   bool get supportsOutline => false;
@@ -227,12 +225,6 @@ class CssEditor extends TextEditor {
  */
 class AceManager {
   static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
-  // 2 light themes, 4 dark ones.
-  static final THEMES = [
-      'textmate', 'tomorrow',
-      'tomorrow_night', 'monokai', 'idle_fingers', 'pastel_on_dark'
-  ];
-
   /**
    * The container for the Ace editor.
    */
@@ -278,9 +270,6 @@ class AceManager {
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         (e) => _handleGotoLine());
     _aceEditor.commands.addCommand(command);
-
-    // Fallback
-    theme = THEMES[0];
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
@@ -509,10 +498,6 @@ class AceManager {
 
   void clearMarkers() => currentSession.clearAnnotations();
 
-  String get theme => _aceEditor.theme.name;
-
-  set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
-
   Future<String> getKeyBinding() {
     var handler = _aceEditor.keyBinding.keyboardHandler;
     return handler.onLoad.then((_) {
@@ -635,46 +620,49 @@ class AceManager {
 }
 
 class ThemeManager {
-  AceManager aceManager;
-  PreferenceStore prefs;
-  html.Element _label;
+  static final LIGHT_THEMES = [
+      'textmate', 'tomorrow'
+  ];
+  static final DARK_THEMES = [
+      'monokai', 'tomorrow_night', 'idle_fingers', 'pastel_on_dark'
+  ];
 
-  ThemeManager(this.aceManager, this.prefs, this._label) {
-    String value = 'monokai';
-    aceManager.theme = value;
-    _updateName(value);
-/*
-    prefs.getValue('aceTheme').then((String value) {
-      if (value != null) {
-        aceManager.theme = value;
-        _updateName(value);
-      } else {
-        _updateName(aceManager.theme);
+  ace.Editor _aceEditor;
+  PreferenceStore _prefs;
+  html.Element _label;
+  List<String> _themes = [];
+
+  ThemeManager(AceManager aceManager, this._prefs, this._label) :
+    _aceEditor = aceManager._aceEditor {
+    _themes..add(DARK_THEMES[0]);
+    _prefs.getValue('aceTheme').then((String value) {
+      if (value == null || value.isEmpty || !_themes.contains(value)) {
+        value = _themes[0];
       }
+      _updateTheme(value);
     });
-*/
   }
 
-  void inc(html.Event e) {
-   e.stopPropagation();
+  void nextTheme(html.Event e) {
+    e.stopPropagation();
     _changeTheme(1);
   }
 
-  void dec(html.Event e) {
+  void prevTheme(html.Event e) {
     e.stopPropagation();
     _changeTheme(-1);
   }
 
   void _changeTheme(int direction) {
-    int index = AceManager.THEMES.indexOf(aceManager.theme);
-    index = (index + direction) % AceManager.THEMES.length;
-    String newTheme = AceManager.THEMES[index];
-    prefs.setValue('aceTheme', newTheme);
-    _updateName(newTheme);
-    aceManager.theme = newTheme;
+    int index = _themes.indexOf(_aceEditor.theme.name);
+    index = (index + direction) % _themes.length;
+    String newTheme = _themes[index];
+    _prefs.setValue('aceTheme', newTheme);
+    _updateTheme(newTheme);
   }
 
-  void _updateName(String name) {
+  void _updateTheme(String name) {
+    _aceEditor.theme = new ace.Theme.named(name);
     if (_label != null) {
       _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
     }
@@ -740,6 +728,8 @@ class Span {
   final int length;
 
   Span(this.offset, this.length);
+
+  String toString() => '${offset}:{$length}';
 }
 
 String _calcMD5(String text) {
