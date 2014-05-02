@@ -92,16 +92,17 @@ div.ace_gutter-cell.ace_info {
 }
 
 /* TODO: Remove when find bar has been implemented natively in Spark */
+div.ace_search {
+  background: #fafafa;
+  padding-right: 4px;
+}
+
 div.ace_search.right {
   margin: 5px;
   border-radius: 0px 0px 5px 0px;
   border-left: 0 none;
   border-right: 1px solid #cbcbcb;
   left: 0
-}
-
-div.ace_search {
-  padding-right: 4px;
 }
 
 button.ace_searchbtn_close {
