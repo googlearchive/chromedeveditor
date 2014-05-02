@@ -58,7 +58,6 @@ Logger _logger = new Logger('spark');
 Future readFlags() {
   final String url = chrome.runtime.getURL('app.json');
   return HttpRequest.getString(url).then((String contents) {
-    bool result = true;
     Map flagsMap = JSON.decode(contents);
     SparkFlags.init(flagsMap['test-mode'],
                     flagsMap['light-editor-themes'],
