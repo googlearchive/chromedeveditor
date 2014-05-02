@@ -88,19 +88,19 @@ class TextEditor extends Editor {
 
   void focus() => aceManager.focus();
 
-  void select(Span span) {
+  void select(Span selection) {
     // Check if we're the current editor.
     if (file != aceManager.currentFile) return;
 
-    ace.Point startSelection = _session.document.indexToPosition(span.offset);
+    ace.Point startSelection = _session.document.indexToPosition(selection.offset);
     ace.Point endSelection = _session.document.indexToPosition(
-        span.offset + span.length);
+        selection.offset + selection.length);
 
     aceManager._aceEditor.gotoLine(startSelection.row);
 
-    ace.Selection selection = aceManager._aceEditor.selection;
-    selection.setSelectionAnchor(startSelection.row, startSelection.column);
-    selection.selectTo(endSelection.row, endSelection.column);
+    ace.Selection aceSel = aceManager._aceEditor.selection;
+    aceSel.setSelectionAnchor(startSelection.row, startSelection.column);
+    aceSel.selectTo(endSelection.row, endSelection.column);
   }
 
   bool get supportsOutline => false;

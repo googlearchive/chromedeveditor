@@ -204,27 +204,14 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
 
-  void treeViewSelectedChanged(TreeView view, List<String> nodeUids) { }
-
-  bool treeViewRowClicked(html.MouseEvent event, String uid) {
-    if (uid == null) {
-      return true;
+  void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
+    if (nodeUids.isNotEmpty) {
+      Resource resource = _filesMap[nodeUids.first];
+      _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
     }
-
-    Resource resource = _filesMap[uid];
-    if (resource is File) {
-      bool shiftKeyPressed = event.shiftKey;
-      bool ctrlKeyPressed = event.ctrlKey;
-
-      // Open in editor only if no modifier key is down.
-      if (!shiftKeyPressed && !ctrlKeyPressed) {
-        _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
-        return false;
-      }
-    }
-
-    return true;
   }
+
+  bool treeViewRowClicked(html.MouseEvent event, String uid) => true;
 
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUids,

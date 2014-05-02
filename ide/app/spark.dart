@@ -268,12 +268,12 @@ abstract class Spark
     _navigationManager.onNavigate.listen((NavigationLocation location) {
       _selectFile(location.file);
 
-      if (location.span != null) {
+      if (location.selection != null) {
         nextTick().then((_) {
           for (Editor editor in editorManager.editors) {
             if (editor.file == location.file) {
               if (editor is TextEditor) {
-                editor.select(location.span);
+                editor.select(location.selection);
               }
               return;
             }
@@ -1545,7 +1545,7 @@ class SearchAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    spark.getUIElement('#searchBox').focus();
+    spark.getUIElement('#search').focus();
   }
 }
 
@@ -1588,13 +1588,21 @@ class HistoryAction extends SparkAction {
     enabled = false;
 
     spark.navigationManager.onNavigate.listen((_) {
-      enabled = spark.navigationManager.canNavigate(forward: _forward);
+      if (_forward) {
+        enabled = spark.navigationManager.canGoForward();
+      } else {
+        enabled = spark.navigationManager.canGoBack();
+      }
     });
   }
 
   @override
   void _invoke([Object context]) {
-    spark.navigationManager.navigate(forward: _forward);
+    if (_forward) {
+      spark.navigationManager.goForward();
+    } else {
+      spark.navigationManager.goBack();
+    }
   }
 }
 

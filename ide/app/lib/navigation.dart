@@ -17,7 +17,7 @@ import 'workspace.dart';
 class NavigationManager {
   StreamController<NavigationLocation> _controller = new StreamController.broadcast();
 
-  List _locations = [];
+  List<NavigationLocation> _locations = [];
   int _position = -1;
 
   NavigationLocation get location {
@@ -28,24 +28,24 @@ class NavigationManager {
     }
   }
 
-  bool canNavigate({bool forward: true}) {
-    if (forward) {
-      return (_position + 1) < _locations.length;
-    } {
-      return _position > 0;
-    }
+  bool canGoBack() => _position > 0;
+
+  void goBack() {
+    if (!canGoBack()) return;
+    _position--;
+    _controller.add(location);
   }
 
-  void navigate({bool forward: true}) {
-    if (!canNavigate(forward: forward)) return;
+  bool canGoForward() => (_position + 1) < _locations.length;
 
-    forward ? _position++ : _position--;
-
+  void goForward() {
+    if (!canGoForward()) return;
+    _position++;
     _controller.add(location);
   }
 
   void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
-    if (canNavigate(forward: true)) {
+    if (canGoForward()) {
       _locations.removeRange(_position + 1, _locations.length - 1);
     }
 
@@ -65,11 +65,11 @@ class NavigationManager {
  */
 class NavigationLocation {
   final File file;
-  final Span span;
+  final Span selection;
 
-  NavigationLocation(this.file, [this.span = null]);
+  NavigationLocation(this.file, [this.selection = null]);
 
-  String toString() => span == null ? '[${file}]' : '[${file}, ${span}]';
+  String toString() => selection == null ? '[${file}]' : '[${file}, ${selection}]';
 }
 
 /**

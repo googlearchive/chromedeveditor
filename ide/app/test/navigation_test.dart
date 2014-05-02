@@ -14,16 +14,16 @@ defineTests() {
   group('navigation', () {
     test('canNavigate', () {
       NavigationManager manager = new NavigationManager();
-      expect(manager.canNavigate(), false);
-      expect(manager.canNavigate(forward: false), false);
+      expect(manager.canGoForward(), false);
+      expect(manager.canGoBack(), false);
 
       manager.gotoLocation(_mockLocation());
-      expect(manager.canNavigate(), false);
-      expect(manager.canNavigate(forward: false), false);
+      expect(manager.canGoForward(), false);
+      expect(manager.canGoBack(), false);
 
       manager.gotoLocation(_mockLocation());
-      expect(manager.canNavigate(), false);
-      expect(manager.canNavigate(forward: false), true);
+      expect(manager.canGoForward(), false);
+      expect(manager.canGoBack(), true);
     });
 
     test('navigate', () {
@@ -31,11 +31,11 @@ defineTests() {
       Future f = manager.onNavigate.take(2).toList();
       manager.gotoLocation(_mockLocation());
       manager.gotoLocation(_mockLocation());
-      expect(manager.canNavigate(forward: false), true);
-      manager.navigate(forward: false);
-      expect(manager.canNavigate(forward: false), false);
-      manager.navigate(forward: true);
-      expect(manager.canNavigate(forward: false), true);
+      expect(manager.canGoBack(), true);
+      manager.goBack();
+      expect(manager.canGoBack(), false);
+      manager.goForward();
+      expect(manager.canGoBack(), true);
       return f.then((List l) {
         expect(l.length, 2);
       });
@@ -46,12 +46,12 @@ defineTests() {
       expect(manager.location, isNull);
 
       manager.gotoLocation(_mockLocation());
-      expect(manager.canNavigate(forward: false), false);
+      expect(manager.canGoBack(), false);
       expect(manager.location, isNotNull);
 
       manager.gotoLocation(_mockLocation());
-      expect(manager.canNavigate(), false);
-      expect(manager.canNavigate(forward: false), true);
+      expect(manager.canGoForward(), false);
+      expect(manager.canGoBack(), true);
       expect(manager.location, isNotNull);
     });
   });

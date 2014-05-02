@@ -315,6 +315,7 @@ class TreeView implements ListViewDelegate {
     if (_listView.selectedRow == -1) return true;
 
     // Ignore navigation events that have modifiers.
+    // TODO: We should support alt-left/alt-right to collapse/expand all.
     if (event.altKey || event.ctrlKey || event.metaKey) {
       return true;
     }
