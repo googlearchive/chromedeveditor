@@ -93,11 +93,45 @@ div.ace_gutter-cell.ace_info {
 
 /* TODO: Remove when find bar has been implemented natively in Spark */
 div.ace_search.right {
-  margin: 5px;
-  border-radius: 0px 0px 5px 0px;
-  border-left: 0 none;
-  border-right: 1px solid #cbcbcb;
-  left: 0
+  background-color: #eee;
+  border-radius: 0px;
+  border-right: none;
+  border-left: 1px solid #dadada;
+  width: 299px;
+  max-width: none;
+  z-index: 101;
+}
+
+div.ace_search_form, div.ace_replace_form {
+  width: 270px;
+}
+
+.ace_replace_form .ace_search_field {
+  width: 184px;
+}
+
+.ace_search_field {
+  font-family: Helvetica;
+}
+
+button.ace_replacebtn {
+  color: #484848;
+  font-family: Helvetica;
+  font-weight: bold;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+button.ace_searchbtn:hover, button.ace_replacebtn:hover {
+  background-color: #eee;
+}
+
+button.ace_replacebtn:active, button.ace_searchbtn:active {
+  outline: none;
+}
+
+div.ace_search_options {
+  display: none;
 }
 
 div.ace_search {
@@ -107,7 +141,19 @@ div.ace_search {
 button.ace_searchbtn_close {
   position: absolute;
   top: 4px;
-  right: 4px;
+  right: 5px;
+  opacity: 0.5;
+  background: url(images/search_close.png);
+}
+
+button.ace_searchbtn_close:hover {
+  background-color: transparent;
+  background-position: 0 0;
+  opacity: 1.0;
+}
+
+button.ace_searchbtn_close:active {
+  outline: none;
 }
 
 .editor-dialog {
