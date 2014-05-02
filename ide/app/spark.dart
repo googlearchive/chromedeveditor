@@ -290,7 +290,7 @@ abstract class Spark
   void initNavigationManager() {
     _navigationManager = new NavigationManager();
     _navigationManager.onNavigate.listen((NavigationLocation location) {
-      _selectResource(location.file);
+      _selectFile(location.file);
 
       if (location.span != null) {
         nextTick().then((_) {
@@ -299,7 +299,6 @@ abstract class Spark
               if (editor is TextEditor) {
                 editor.select(location.span);
               }
-
               return;
             }
           }
@@ -349,7 +348,7 @@ abstract class Spark
           editorArea.tabs[0].select();
           return;
         }
-        _selectResource(resource);
+        _openFile(resource);
       });
     });
   }
@@ -375,11 +374,7 @@ abstract class Spark
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
       if (event.resource is ws.File) {
-        _selectInEditor(
-            event.resource,
-            forceOpen: event.forceOpen,
-            replaceCurrent: event.replaceCurrent,
-            switchesTab: event.switchesTab);
+        _openFile(event.resource);
       }
     });
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
@@ -489,7 +484,7 @@ abstract class Spark
 
       if (entry != null) {
         workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
-          _selectResource(file);
+          _openFile(file);
           _aceManager.focus();
           workspace.save();
         });
@@ -672,27 +667,35 @@ abstract class Spark
     }
   }
 
-  void _selectResource(ws.Resource resource) {
+  void _openFile(ws.Resource resource) {
+    print('open file: ${resource}');
+
+    if (resource is ws.File) {
+      navigationManager.gotoLocation(new NavigationLocation(resource));
+    } else {
+      _selectFile(resource);
+    }
+  }
+
+  void _selectFile(ws.Resource resource) {
+    print('select file: ${resource}');
+
     if (resource.isFile) {
-      editorArea.selectFile(
-          resource, forceOpen: true, switchesTab: true, forceFocus: true);
+      editorArea.selectFile(resource);
     } else {
       _filesController.selectFile(resource);
       _filesController.setFolderExpanded(resource);
     }
   }
 
-  void _selectInEditor(ws.File file,
-                       {bool forceOpen: false,
-                        bool replaceCurrent: true,
-                        bool switchesTab: true}) {
-    if (forceOpen || editorManager.isFileOpened(file)) {
-      editorArea.selectFile(file,
-          forceOpen: forceOpen,
-          replaceCurrent: replaceCurrent,
-          switchesTab: switchesTab);
-    }
-  }
+  // void _selectResource(ws.Resource resource) {
+  //   if (resource.isFile) {
+  //     editorArea.selectFile(resource);
+  //   } else {
+  //     _filesController.selectFile(resource);
+  //     _filesController.setFolderExpanded(resource);
+  //   }
+  // }
 
   //
   // Implementation of AceManagerDelegate interface:
@@ -1117,7 +1120,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark._selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._openFile(file);
             spark._aceManager.focus();
           });
         }).catchError((e) {
@@ -1709,7 +1712,7 @@ class NewProjectAction extends SparkActionWithDialog {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
           Timer.run(() {
-            spark._selectResource(ProjectBuilder.getMainResourceFor(project));
+            spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
             if (spark.pubManager.properties.isProjectWithPackages(project)) {
