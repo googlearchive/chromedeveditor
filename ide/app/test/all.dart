@@ -65,7 +65,3 @@ void defineTests() {
   // Run our benchmarks as well.
   benchmarks.defineTests();
 }
-
-void oneTest() {
-  services_test.defineTests();
-}
