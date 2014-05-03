@@ -1,0 +1,2 @@
+var element = document.querySelector("#message");
+element.text = "Hello world!";

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+
+<polymer-element name="x-``projectName``" attributes="attr">
+  <template>
+    <link rel="stylesheet" href="spark_button.css">
+
+    <div id="message">
+      {{message}}
+    </div>
+
+    <content></content>
+  </template>
+
+  <script type="application/dart;component=1" src="``projectName``.dart"></script>
+</polymer-element>
