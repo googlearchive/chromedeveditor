@@ -189,7 +189,7 @@ defineTests() {
             .then((Declaration declaration) {
 
           expect(declaration.getFile(project).name, "foo.dart");
-          expect(declaration.offset, 0);
+          expect(declaration.offset, 7);
         });
       });
     });
