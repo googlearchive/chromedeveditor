@@ -66,6 +66,6 @@ void defineTests() {
   benchmarks.defineTests();
 }
 
-void oneTests() {
+void oneTest() {
   services_test.defineTests();
 }
