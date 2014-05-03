@@ -8,17 +8,19 @@ import 'package:polymer/polymer.dart';
 
 @CustomTag('x-``projectName``')
 class ``projectName`` extends PolymerElement {
-  @published String attr = "";
-  @observable String message = "";
+  @published String who = "";
+  @observable String greeting = "";
 
-  SparkButton.created() : super.created();
+  ``projectName``.created() : super.created();
   
   @override
   void ready() {
+    super.ready();
   }
   
   @override
   void enteredView() {
-    message = attr + ", world!"; 
+    super.enteredView();
+    greeting = "Hello, $who!"; 
   }
 }
