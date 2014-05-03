@@ -214,6 +214,7 @@ class TabView {
     if (tabToReplace == null) {
       add(tab, switchesTab: switchesTab);
     } else {
+      tabToReplace.deactivate();
       int index = tabs.indexOf(tabToReplace);
       // Use same width as the tab we are replacing.
       tab._label.style.width = tabToReplace._label.style.width;

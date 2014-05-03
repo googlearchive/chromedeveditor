@@ -49,6 +49,7 @@ abstract class Editor {
   Stream get onModification;
 
   void activate();
+  void deactivate();
   void resize();
   void focus();
   void fileContentsChanged();
@@ -146,7 +147,7 @@ class EditorManager implements EditorProvider {
    * This will open the given [File]. If this file is already open, it will
    * instead be made the active editor.
    */
-  void openFile(File file, {activateEditor: true}) {
+  void openFile(File file, {bool activateEditor: true}) {
     if (file == null) return;
     _EditorState state = _getStateFor(file);
 

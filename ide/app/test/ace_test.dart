@@ -11,8 +11,10 @@ import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/navigation.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
+import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';
 
 defineTests() {
   group('ace', () {
@@ -28,6 +30,7 @@ class MockAceManager implements AceManager {
   final Element parentElement = null;
   workspace.File currentFile = null;
   AceManagerDelegate delegate = null;
+  GotoLineView gotoLineView = null;
   Outline outline = null;
 
   MockAceManager();
@@ -57,6 +60,7 @@ class MockAceManager implements AceManager {
   void createDialog(String filename) { }
   bool isFileExtensionEditable(String extension) => false;
   void buildOutline() { }
+  Stream get onGotoDeclaration => null;
 }
 
 class MockAceEditor implements TextEditor {
@@ -70,6 +74,7 @@ class MockAceEditor implements TextEditor {
   void activate() { }
   void resize() { }
   void focus() { }
+  void deactivate() { }
 
   bool get dirty => false;
 

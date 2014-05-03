@@ -192,6 +192,9 @@ class KeyBinding {
           "F11": KeyCode.F11,
           "F12": KeyCode.F12,
 
+          "LEFT": KeyCode.LEFT,
+          "RIGHT": KeyCode.RIGHT,
+
           "SPACE": KeyCode.SPACE,
           "ENTER": KeyCode.ENTER,
           "TAB": KeyCode.TAB,

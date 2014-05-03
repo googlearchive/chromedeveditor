@@ -214,6 +214,8 @@ class ImageViewer implements Editor {
 
   void activate() {}
 
+  void deactivate() {}
+
   // TODO(devoncarew): implement
   void fileContentsChanged() {}
 }
