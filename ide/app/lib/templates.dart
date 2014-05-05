@@ -59,12 +59,11 @@ class ProjectBuilder {
 
     final Folder web = project.getChild('web');
     if (web != null) {
-      r = web.getChildren().firstWhere(
-          (r) => r.name.endsWith('.dart'), orElse: null);
-      if (r != null) return r;
-
-      r = web.getChildren().firstWhere(
-          (r) => r.name.endsWith('.html'), orElse: null);
+      r = web.getChildren().firstWhere((c) {
+        return c.name.endsWith('.dart') ||
+               c.name.endsWith('.js') ||
+               c.name.endsWith('.html');
+      }, orElse: null);
       if (r != null) return r;
     }
 

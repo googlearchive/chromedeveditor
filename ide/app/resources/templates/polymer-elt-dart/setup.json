@@ -1,0 +1,19 @@
+{
+  "directories": {
+    "lib": {
+      "files": [
+        { "source": "source.css_", "dest": "``sourceName``.css" },
+        { "source": "source.dart_", "dest": "``sourceName``.dart" },
+        { "source": "source.html_", "dest": "``sourceName``.html" }
+      ]
+    },
+    "example": {
+      "files": [
+        { "source": "index.html_", "dest": "index.html" }
+      ]
+    }
+  },
+  "files": [
+    { "source": "pubspec.yaml_", "dest": "pubspec.yaml" }
+  ]
+}
