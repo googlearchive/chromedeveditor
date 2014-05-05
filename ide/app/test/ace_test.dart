@@ -60,6 +60,7 @@ class MockAceManager implements AceManager {
   void createDialog(String filename) { }
   bool isFileExtensionEditable(String extension) => false;
   void buildOutline() { }
+  Stream get onGotoDeclaration => null;
 }
 
 class MockAceEditor implements TextEditor {

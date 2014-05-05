@@ -1,0 +1,26 @@
+// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// All rights reserved. Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+library x-``PolymerElement``;
+
+import 'package:polymer/polymer.dart';
+
+@CustomTag('x-``projectName``')
+class ``projectName`` extends PolymerElement {
+  @published String who = "";
+  @observable String greeting = "";
+
+  ``projectName``.created() : super.created();
+  
+  @override
+  void ready() {
+    super.ready();
+  }
+  
+  @override
+  void enteredView() {
+    super.enteredView();
+    greeting = "Hello, $who!"; 
+  }
+}
