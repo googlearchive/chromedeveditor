@@ -14,6 +14,7 @@ library spark.preferences;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'utils.dart';
 
 /**
  * A PreferenceStore backed by `chome.storage.local`.
@@ -26,6 +27,20 @@ PreferenceStore localStore = new _ChromePreferenceStore(
  */
 PreferenceStore syncStore = new _ChromePreferenceStore(
     chrome.storage.sync, 'sync', new Duration(seconds: 6));
+
+/**
+ * Preferences specific to Spark.
+ */
+class SparkPreferences {
+  PreferenceStore prefStore;
+
+  BoolCachedPreference stripWhitespaceOnSave;
+
+  SparkPreferences(this.prefStore) {
+    stripWhitespaceOnSave = new BoolCachedPreference(
+        prefStore, "stripWhitespaceOnSave");
+  }
+}
 
 /**
  * A persistent preference mechanism.

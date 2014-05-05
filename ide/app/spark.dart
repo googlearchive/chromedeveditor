@@ -73,6 +73,7 @@ abstract class Spark
   Services services;
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
+  preferences.SparkPreferences prefs;
 
   AceManager _aceManager;
   ThemeManager _aceThemeManager;
@@ -110,6 +111,7 @@ abstract class Spark
    * [Polymer.onReady] event.
    */
   Future init() {
+    initPreferences();
     initEventBus();
 
     initAnalytics();
@@ -220,6 +222,10 @@ abstract class Spark
   // Parts of init():
   //
 
+  void initPreferences() {
+    prefs = new preferences.SparkPreferences(localPrefs);
+  }
+
   void initServices() {
     services = new Services(this.workspace, _pubManager);
   }
@@ -295,7 +301,7 @@ abstract class Spark
     _aceKeysManager = new KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
     _editorManager = new EditorManager(
-        workspace, aceManager, localPrefs, eventBus, services);
+        workspace, aceManager, prefs, eventBus, services);
     _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
         _workspace, allowsLabelBar: true);
 
@@ -2640,7 +2646,7 @@ class SettingsAction extends SparkActionWithDialog {
     // Wait for each of the following to (simultaneously) complete before
     // showing the dialog:
     Future.wait([
-      spark.editorManager.stripWhitespaceOnSave.whenLoaded
+      spark.prefs.stripWhitespaceOnSave.whenLoaded
           .then((BoolCachedPreference pref) {
             whitespaceCheckbox.checked = pref.value;
       }), new Future.value().then((_) {
@@ -2654,7 +2660,7 @@ class SettingsAction extends SparkActionWithDialog {
     ]).then((_) {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
-        spark.editorManager.stripWhitespaceOnSave.value =
+        spark.prefs.stripWhitespaceOnSave.value =
             whitespaceCheckbox.checked;
       });
     });

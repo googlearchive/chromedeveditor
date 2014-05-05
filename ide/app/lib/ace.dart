@@ -30,6 +30,7 @@ import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
 import 'ui/polymer/goto_line_view/goto_line_view.dart';
+import 'utils.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -43,28 +44,32 @@ class TextEditor extends Editor {
   StreamController _dirtyController = new StreamController.broadcast();
   StreamController _modificationController = new StreamController.broadcast();
 
+  SparkPreferences _prefs;
   ace.EditSession _session;
 
   String _lastSavedHash;
 
   bool _dirty = false;
 
-  factory TextEditor(AceManager aceManager, workspace.File file) {
+  factory TextEditor(AceManager aceManager, workspace.File file,
+      SparkPreferences prefs) {
     if (DartEditor.isDartFile(file)) {
-      return new DartEditor._create(aceManager, file);
+      return new DartEditor._create(aceManager, file, prefs);
     }
     if (CssEditor.isCssFile(file)) {
-      return new CssEditor._create(aceManager, file);
+      return new CssEditor._create(aceManager, file, prefs);
     }
-    return new TextEditor._create(aceManager, file);
+    return new TextEditor._create(aceManager, file, prefs);
   }
 
-  TextEditor._create(this.aceManager, this.file);
+  TextEditor._create(this.aceManager, this.file, this._prefs);
 
   void setSession(ace.EditSession value) {
     _session = value;
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
   }
+
+  BoolCachedPreference get stripWhitespace => _prefs.stripWhitespaceOnSave;
 
   bool get dirty => _dirty;
 
@@ -133,7 +138,7 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save([bool stripWhitespace = false]) {
+  Future save() {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
@@ -143,7 +148,8 @@ class TextEditor extends Editor {
       //           but it might be a good idea to do so rather than passing it.
 
       String text = _session.value;
-      if (stripWhitespace) text = text.replaceAll(whitespaceRegEx, '');
+
+      if (stripWhitespace.value) text = text.replaceAll(whitespaceRegEx, '');
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
@@ -184,8 +190,8 @@ class TextEditor extends Editor {
 class DartEditor extends TextEditor {
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
-  DartEditor._create(AceManager aceManager, workspace.File file) :
-      super._create(aceManager, file);
+  DartEditor._create(AceManager aceManager, workspace.File file,
+      SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   bool get supportsOutline => true;
 
@@ -211,8 +217,8 @@ class DartEditor extends TextEditor {
 class CssEditor extends TextEditor {
   static bool isCssFile(workspace.File file) => file.name.endsWith('.css');
 
-  CssEditor._create(AceManager aceManager, workspace.File file) :
-      super._create(aceManager, file);
+  CssEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   bool get supportsFormat => true;
 

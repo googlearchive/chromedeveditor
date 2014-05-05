@@ -259,7 +259,7 @@ abstract class CachedPreference<T> {
     }
   }
 
-  Future _retrieveValue() => _prefStore.getValue('stripWhitespaceOnSave')
+  Future _retrieveValue() => _prefStore.getValue(_preferenceId)
       .then((String value) => _currentValue = adaptFromString(value));
 }
 

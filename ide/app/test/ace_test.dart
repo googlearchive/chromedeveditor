@@ -15,6 +15,7 @@ import '../lib/navigation.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
 import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';
+import '../lib/utils.dart';
 
 defineTests() {
   group('ace', () {
@@ -76,6 +77,7 @@ class MockAceEditor implements TextEditor {
   void focus() { }
   void deactivate() { }
 
+  BoolCachedPreference get stripWhitespace => null;
   bool get dirty => false;
 
   set dirty(bool value) { }
