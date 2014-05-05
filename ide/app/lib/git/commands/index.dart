@@ -107,13 +107,6 @@ class Index {
     _scheduleWriteIndex();
   }
 
-  void commitEntry(FileStatus status) {
-    status.headSha = status.sha;
-    status.type = FileStatusType.COMMITTED;
-    _statusIdx[status.path] = status;
-    _scheduleWriteIndex();
-  }
-
   FileStatus getStatusForEntry(chrome.Entry entry)
       => _statusIdx[entry.fullPath];
 

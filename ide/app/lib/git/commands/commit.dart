@@ -63,7 +63,6 @@ class Commit {
                     'blob', new Uint8List.fromList(buf.getBytes()));
               }).then((String sha) {
                 treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
-                return store.index.commitEntry(status);
               });
             } else if (status.type == FileStatusType.COMMITTED){
               treeEntries.add(
@@ -156,6 +155,8 @@ class Commit {
     ObjectStore store = options.store;
 
     return walkFiles(options.root, store).then((String sha) {
+      // update the index.
+      store.index.onCommit();
       return createCommit(options, parent, sha, refName);
     });
   }
