@@ -1,4 +1,4 @@
-library x-``PolymerElement``;
+library x-``projectName``;
 
 import 'package:polymer/polymer.dart';
 
