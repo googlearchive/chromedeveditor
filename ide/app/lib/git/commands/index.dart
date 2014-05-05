@@ -83,6 +83,25 @@ class Index {
     _scheduleWriteIndex();
   }
 
+  /**
+   * Updates the git index. Status of deleted files are removed.
+   * Status of untracked files are left as untracked.
+   */
+  void onCommit() {
+    Map<String, FileStatus> statusIdx = {};
+    _statusIdx.forEach((key, FileStatus status) {
+      if (status.type != FileStatusType.UNTRACKED) {
+        status.headSha = status.sha;
+        status.type = FileStatusType.COMMITTED;
+      }
+      if (!status.isDeleted) {
+        statusIdx[key] = status;
+      }
+    });
+    _statusIdx = statusIdx;
+    _scheduleWriteIndex();
+  }
+
   void commitEntry(FileStatus status) {
     status.headSha = status.sha;
     status.type = FileStatusType.COMMITTED;
@@ -216,6 +235,7 @@ class Index {
    * working tree.
    */
    Future<String> walkFilesAndUpdateIndex(chrome.DirectoryEntry root) {
+     List<String> filePaths = [];
      return FileOps.listFiles(root).then((List<chrome.ChromeFileEntry> entries) {
        if (entries.isEmpty) {
          return new Future.value();
@@ -238,12 +258,27 @@ class Index {
                status.sha = sha;
                status.size = data.size;
                updateIndexForEntry(status);
+               filePaths.add(entry.fullPath);
              });
            });
          }
       }).then((_) {
+        _updateDeletedFiles(filePaths);
         return new Future.value();
       });
+    });
+  }
+
+  /**
+   * Update the index saving the information for deleted files. If the files
+   * are added back, they will be restored back and not treated as untracked.
+   */
+  void _updateDeletedFiles(List<String> filePaths) {
+    _statusIdx.forEach((String filePath, FileStatus status) {
+      if (!filePaths.contains(filePath)) {
+        status.isDeleted = true;
+        status.type = FileStatusType.MODIFIED;
+      }
     });
   }
 
@@ -280,6 +315,7 @@ class FileStatus {
   String headSha;
   String sha;
   int size;
+  bool isDeleted = false;
 
   /**
    * The number of milliseconds since the Unix epoch.
@@ -300,6 +336,7 @@ class FileStatus {
     size = m['size'];
     modificationTime = m['modificationTime'];
     type = m['type'];
+    isDeleted = m['isDeleted'];
   }
 
   /**
@@ -315,7 +352,8 @@ class FileStatus {
       'sha' : sha,
       'size' : size,
       'modificationTime' : modificationTime,
-      'type' : type
+      'type' : type,
+      'isDeleted' : isDeleted
     };
   }
 
