@@ -42,6 +42,11 @@ class Index {
 
   void updateIndexForEntry(FileStatus status) {
 
+    // Don't track index for git files.
+    if (status.path.contains('.git')) {
+      return;
+    }
+
     FileStatus oldStatus = _statusIdx[status.path];
 
     if (oldStatus != null) {
