@@ -14,7 +14,6 @@ library spark.preferences;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'utils.dart';
 
 /**
  * A PreferenceStore backed by `chome.storage.local`.
@@ -40,6 +39,78 @@ class SparkPreferences {
     stripWhitespaceOnSave = new BoolCachedPreference(
         prefStore, "stripWhitespaceOnSave");
   }
+}
+
+/**
+ * Defines a preference with built in `whenLoaded` [Future] and easy access to
+ * getting and setting (automatically saving as well as caching) the preference
+ * `value`.
+ */
+abstract class CachedPreference<T> {
+  Future<CachedPreference> whenLoaded;
+
+  Completer _whenLoadedCompleter = new Completer<CachedPreference>();
+  final PreferenceStore _prefStore;
+  T _currentValue;
+  String _preferenceId;
+
+  /**
+   * [prefStore] is the PreferenceStore to use and [preferenceId] is the id of
+   * the stored preference.
+   */
+  CachedPreference(this._prefStore, this._preferenceId) {
+    whenLoaded = _whenLoadedCompleter.future;
+    _retrieveValue().then((_) {
+      // If already loaded (preference has been saved before the load has
+      // finished), don't complete.
+      if (!_whenLoadedCompleter.isCompleted) {
+        _whenLoadedCompleter.complete(this);
+      }
+    });
+  }
+
+  T adaptFromString(String value);
+  String adaptToString(T value);
+
+  /**
+   * The value of the preference, if loaded. If not loaded, throws an error.
+   */
+  T get value {
+    if (!_whenLoadedCompleter.isCompleted) {
+      throw "CachedPreference value read before it was loaded";
+    }
+    return _currentValue;
+  }
+
+  /**
+   * Sets and caches the value of the preference.
+   */
+  void set value(T newValue) {
+    _currentValue = newValue;
+    _prefStore.setValue(_preferenceId, adaptToString(newValue));
+
+    // If a load has not happened by this point, consider us loaded.
+    if (!_whenLoadedCompleter.isCompleted) {
+      _whenLoadedCompleter.complete(this);
+    }
+  }
+
+  Future _retrieveValue() => _prefStore.getValue(_preferenceId)
+      .then((String value) => _currentValue = adaptFromString(value));
+}
+
+/**
+ * Defines a cached [bool] preference access object. Automatically saves and
+ * caches for performance.
+ */
+class BoolCachedPreference extends CachedPreference<bool> {
+  BoolCachedPreference(PreferenceStore prefs, String id) : super(prefs, id);
+
+  @override
+  bool adaptFromString(String value) => value == 'true';
+
+  @override
+  String adaptToString(bool value) => value ? 'true' : 'false';
 }
 
 /**
