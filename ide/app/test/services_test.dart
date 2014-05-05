@@ -181,7 +181,7 @@ defineTests() {
     Services services = new Services(workspace, new PubManager(workspace));;
     AnalyzerService analyzer = services.getService("analyzer");
 
-    test('analyze file with relative references', () {
+    test('link to a declaration ', () {
       DirectoryEntry dir = createSampleDirectory2('foo2');
       return linkSampleProject(dir, workspace).then((Project project) {
         File file = project.getChildPath('web/sample.dart');
@@ -193,8 +193,5 @@ defineTests() {
         });
       });
     });
-
-    // TODO: Add integration level tests of ProjectAnalyzer.processChanges().
-
   });
 }
