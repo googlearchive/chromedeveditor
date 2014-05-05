@@ -56,7 +56,8 @@ class Commit {
             store.index.updateIndexForEntry(status);
             status = store.index.getStatusForEntry(entry);
 
-            if (status.type != FileStatusType.COMMITTED) {
+            if (status.type == FileStatusType.STAGED ||
+                status.type == FileStatusType.MODIFIED) {
               return fileEntry.readBytes().then((chrome.ArrayBuffer buf) {
                 return store.writeRawObject(
                     'blob', new Uint8List.fromList(buf.getBytes()));
@@ -64,7 +65,7 @@ class Commit {
                 treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
                 return store.index.commitEntry(status);
               });
-            } else {
+            } else if (status.type == FileStatusType.COMMITTED){
               treeEntries.add(
                   new TreeEntry(entry.name, shaToBytes(status.sha), true));
             }
