@@ -15,6 +15,7 @@
   border: 1px solid #dadada;
   border-radius: 0;
   border-top: 0;
+  border-right: none;
 }
 
 #container.showing {
@@ -44,7 +45,7 @@
   display: inline;
   font-size: 12px;
   height: 15px;
-  width: 12px;
+  width: 13px;
   opacity: 0.5;
   background: url(search_close.png);
   border: 0 none;
