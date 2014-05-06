@@ -629,6 +629,7 @@ abstract class Resource {
 
   Future rename(String name) {
     List<String> originalUuids = _resourceUuids(this);
+    List<ChangeDelta> deletions = ChangeDelta.containerDelete(this);
     return _rename(name).then((Map renameInfo) {
       Map<String, String> mapping = {};
       List<String> uuids = renameInfo['uuids'];
@@ -636,7 +637,9 @@ abstract class Resource {
       for (int i = 0 ; i < originalUuids.length ; i++) {
         mapping[originalUuids[i]] = uuids[i];
       }
-      _fireResourceChange(new ChangeDelta.rename(this, res, mapping));
+      List<ChangeDelta> additions = ChangeDelta.containerAdd(res);
+      _fireResourceChange(new ChangeDelta.rename(this, res, mapping,
+          deletions, additions));
     });
   }
 
@@ -1290,8 +1293,22 @@ class ResourceChangeEvent {
     return new ResourceChangeEvent._([delta]);
   }
 
-  factory ResourceChangeEvent.fromList(List<ChangeDelta> deltas) {
-    return new ResourceChangeEvent._(deltas.toList());
+  factory ResourceChangeEvent.fromList(List<ChangeDelta> deltas,
+      {bool filterRename: false}) {
+    if (filterRename) {
+      List<ChangeDelta> modifiedDeltas = [];
+      for(ChangeDelta change in deltas) {
+        if (change.isRename) {
+          modifiedDeltas.addAll(change.deletions);
+          modifiedDeltas.addAll(change.additions);
+        } else {
+          modifiedDeltas.add(change);
+        }
+      }
+      return new ResourceChangeEvent._(modifiedDeltas);
+    } else {
+      return new ResourceChangeEvent._(deltas);
+    }
   }
 
   ResourceChangeEvent._(List<ChangeDelta> delta) :
@@ -1327,6 +1344,8 @@ class ChangeDelta {
   EventType type;
   Resource originalResource = null;
   Map<String, String> resourceUuidsMapping = null;
+  List<ChangeDelta> deletions = null;
+  List<ChangeDelta> additions = null;
 
   static List<ChangeDelta> containerAdd(Resource resource) {
     if (resource is Container) {
@@ -1352,7 +1371,9 @@ class ChangeDelta {
 
   ChangeDelta.rename(this.originalResource,
                      this.resource,
-                     this.resourceUuidsMapping) {
+                     this.resourceUuidsMapping,
+                     this.deletions,
+                     this.additions) {
     type = EventType.RENAME;
   }
 
