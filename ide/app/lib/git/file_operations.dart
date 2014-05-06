@@ -48,47 +48,29 @@ abstract class FileOps {
    * Creates a file with a given [content] and [type]. Creates parent
    * directories if the immediate parent is absent.
    */
-  static Future<chrome.Entry> createFileWithContent(
+  static Future<chrome.FileEntry> createFileWithContent(
       chrome.DirectoryEntry root, String path, content, String type) {
-
-    createFile(chrome.DirectoryEntry dir, String fileName) {
-      return dir.createFile(fileName).then((chrome.ChromeFileEntry entry) {
-        if (type == 'Text') {
-          return entry.writeText(content).then((_) => entry);
-        } else if (type == 'blob') {
-          content = new chrome.ArrayBuffer.fromBytes(content as List);
-          return entry.writeBytes(content).then((_) => entry);
-        } else {
-          throw new UnsupportedError(
-              "Writing of content type:${type} is not supported.");
-        }
-      });
-    }
-
     if (path[0] == '/') path = path.substring(1);
     List<String> pathParts = path.split('/');
     if (pathParts.length != 1) {
       return createDirectoryRecursive(root, path.substring(0,
           path.lastIndexOf('/'))).then((dir) {
-        return createFile(dir, pathParts[pathParts.length - 1]);
+        return _createFile(dir, pathParts[pathParts.length - 1], content, type);
       });
     } else {
-      return createFile(root, path);
+      return _createFile(root, path, content, type);
     }
   }
 
-  static Future<dynamic> readFile(chrome.DirectoryEntry root, String path,
-      String type) {
+  static Future<dynamic> readFileText(chrome.DirectoryEntry root, String path) {
     return root.getFile(path).then((chrome.ChromeFileEntry entry) {
+      return entry.readText();
+    });
+  }
 
-      if (type == 'Text') {
-        return entry.readText();
-      } else if (type == 'ArrayBuffer') {
-        return entry.readBytes();
-      } else {
-        throw new UnsupportedError(
-            "Reading of content type:${type} is not supported.");
-      }
+  static Future<dynamic> readFileBytes(chrome.DirectoryEntry root, String path) {
+    return root.getFile(path).then((chrome.ChromeFileEntry entry) {
+      return entry.readBytes();
     });
   }
 
@@ -136,8 +118,7 @@ abstract class FileOps {
       return Future.forEach(entries, (chrome.Entry entry) {
         if (entry.isFile) {
           return (entry as chrome.ChromeFileEntry).readBytes().then((content) {
-            return createFileWithContent(dst, entry.name, content,
-                'blob');
+            return createFileWithContent(dst, entry.name, content, 'blob');
           });
         } else {
           return dst.createDirectory(entry.name).then(
@@ -146,6 +127,21 @@ abstract class FileOps {
           });
         }
       }).then((_) => dst);
+    });
+  }
+
+  static Future<chrome.FileEntry> _createFile(chrome.DirectoryEntry dir,
+      String fileName, content, String type) {
+    return dir.createFile(fileName).then((chrome.ChromeFileEntry entry) {
+      if (type == 'Text') {
+        return entry.writeText(content).then((_) => entry);
+      } else if (type == 'blob') {
+        content = new chrome.ArrayBuffer.fromBytes(content as List);
+        return entry.writeBytes(content).then((_) => entry);
+      } else {
+        throw new UnsupportedError(
+            "Writing of content type:${type} is not supported.");
+      }
     });
   }
 }

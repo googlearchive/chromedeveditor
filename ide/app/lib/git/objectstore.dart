@@ -168,14 +168,16 @@ class ObjectStore {
   }
 
   Future<String> getHeadForRef(String headRefName) {
-    return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
-      .then((String content) => content.substring(0, 40));
+    return FileOps.readFileText(_rootDir, gitPath + headRefName).then((content) {
+      return content.substring(0, 40);
+    });
   }
 
   Future<String> getRemoteHeadForRef(String headRefName) {
     String path = gitPath + REFS_REMOTE_HEADS + headRefName.split('/').last;
-    return FileOps.readFile(_rootDir, path, "Text")
-      .then((String content) => content.substring(0, 40));
+    return FileOps.readFileText(_rootDir, path).then((String content) {
+      return content.substring(0, 40);
+    });
   }
 
   Future<List<String>> getLocalBranches() => getAllHeads();
@@ -192,16 +194,14 @@ class ObjectStore {
   Future _readPackEntry(chrome.DirectoryEntry packDir,
       chrome.ChromeFileEntry entry) {
     return entry.readBytes().then((chrome.ArrayBuffer packData) {
-      return FileOps.readFile(packDir, entry.name.substring(0,
-          entry.name.lastIndexOf('.pack')) + '.idx', 'ArrayBuffer').then(
-          (chrome.ArrayBuffer idxData) {
-            Pack pack = new Pack(new Uint8List.fromList(
-                packData.getBytes()), this);
-
-            PackIndex packIdx = new PackIndex(new Uint8List.fromList(
-                idxData.getBytes()).buffer);
-            packs.add(new PackEntry(pack, packIdx));
-            return new Future.value();
+      String path = entry.name.substring(0, entry.name.lastIndexOf('.pack')) +
+          '.idx';
+      return FileOps.readFileBytes(packDir, path).then((chrome.ArrayBuffer idxData) {
+        Pack pack = new Pack(new Uint8List.fromList(packData.getBytes()), this);
+        PackIndex packIdx = new PackIndex(
+            new Uint8List.fromList(idxData.getBytes()).buffer);
+        packs.add(new PackEntry(pack, packIdx));
+        return new Future.value();
       });
     });
   }
@@ -652,10 +652,10 @@ class ObjectStore {
   }
 
   Future<Config> readConfig() {
-    return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
+    return FileOps.readFileText(_rootDir, '.git/config.json').then(
         (String configStr) => new Config(configStr),
-      // TODO: handle errors / build default GitConfig.
-      onError: (e) => this.config);
+        // TODO: handle errors / build default GitConfig.
+        onError: (e) => this.config);
   }
 
   Future<Entry> writeConfig() {
