@@ -369,6 +369,17 @@ class AceManager {
 
     markers.sort((x, y) => x.lineNum.compareTo(y.lineNum));
     int numberMarkers = markers.length.clamp(0, 100);
+
+    var isScrolling = (_aceEditor.lastVisibleRow -
+        _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
+
+    int documentHeight;
+    if (!isScrolling) {
+      var lineElements = parentElement.getElementsByClassName("ace_line");
+      documentHeight = (lineElements.last.offsetTo(parentElement).y -
+          lineElements.first.offsetTo(parentElement).y);
+    }
+
     for (int markerIndex = 0; markerIndex < numberMarkers; markerIndex++) {
       workspace.Marker marker = markers[markerIndex];
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -398,17 +409,25 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
+      double markerHorizontalPercentage = currentSession.documentToScreenRow(
+          marker.lineNum, aceColumn) / numberLines;
+
+      String markerPos;
+      if (!isScrolling) {
+        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
+      } else {
+        markerPos = (markerHorizontalPercentage * 100.0)
+            .toStringAsFixed(2) + "%";
+      }
+
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
-      double markerPos =
-          currentSession.documentToScreenRow(marker.lineNum, aceColumn)
-          / numberLines * 100.0;
 
       // Only add errors and warnings to the mini-map.
       if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
         html.Element minimapMarker = new html.Element.div();
         minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
-        minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
+        minimapMarker.style.top = markerPos;
         minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
         minimap.append(minimapMarker);
