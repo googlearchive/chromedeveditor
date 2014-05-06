@@ -48,9 +48,15 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  final Future<String> flagsReader =
-      HttpRequest.getString(chrome.runtime.getURL('app.json'));
-  SparkFlags.initFromFile(flagsReader).then((_) {
+  // app.json stores global per-app flags and is overwritten by the build
+  // process (`grind deploy`).
+  // user.json can be manually added to override some of the flags from app.json
+  // or add new flags that will survive the build process.
+  final List<Future<String>> flagsReaders = [
+      HttpRequest.getString(chrome.runtime.getURL('app.json')),
+      HttpRequest.getString(chrome.runtime.getURL('user.json'))
+  ];
+  SparkFlags.initFromFiles(flagsReaders).then((_) {
     // Don't set up the zone exception handler if we're running in dev mode.
     final Function maybeRunGuarded =
         SparkFlags.developerMode ? (f) => f() : createSparkZone().runGuarded;
