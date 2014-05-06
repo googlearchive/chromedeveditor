@@ -369,6 +369,18 @@ class AceManager {
 
     markers.sort((x, y) => x.lineNum.compareTo(y.lineNum));
     int numberMarkers = markers.length.clamp(0, 100);
+
+
+    var isScrolling = (_aceEditor.lastVisibleRow -
+        _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
+
+    int documentHeight;
+    if (!isScrolling) {
+      var lineElements = parentElement.getElementsByClassName("ace_line");
+      documentHeight = (lineElements.last.offsetTo(parentElement).y -
+          lineElements.first.offsetTo(parentElement).y);
+    }
+
     for (int markerIndex = 0; markerIndex < numberMarkers; markerIndex++) {
       workspace.Marker marker = markers[markerIndex];
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -398,18 +410,12 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
-      String markerPos;
-
-      var isScrolling = (_aceEditor.lastVisibleRow -
-          _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
       double markerHorizontalPercentage = currentSession.documentToScreenRow(
           marker.lineNum, aceColumn) / numberLines;
-      if (!isScrolling) {
-        var lineElements = parentElement.getElementsByClassName("ace_line");
-        int documentHeight = (lineElements.last.offsetTo(parentElement).y -
-            lineElements.first.offsetTo(parentElement).y);
-        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
 
+      String markerPos;
+      if (!isScrolling) {
+        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
       } else {
         markerPos = (markerHorizontalPercentage * 100.0)
             .toStringAsFixed(2) + "%";
