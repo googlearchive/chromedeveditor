@@ -326,7 +326,7 @@ class AceManager {
 
     // Set up the goto line dialog.
     gotoLineView = new GotoLineView();
-    gotoLineView.style.zIndex = '10';
+    gotoLineView.style.zIndex = '101';
     parentElement.children.add(gotoLineView);
     gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
     gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
