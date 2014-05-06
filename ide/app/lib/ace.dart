@@ -370,7 +370,6 @@ class AceManager {
     markers.sort((x, y) => x.lineNum.compareTo(y.lineNum));
     int numberMarkers = markers.length.clamp(0, 100);
 
-
     var isScrolling = (_aceEditor.lastVisibleRow -
         _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
 
