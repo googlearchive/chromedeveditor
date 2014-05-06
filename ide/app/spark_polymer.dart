@@ -7,6 +7,7 @@ library spark_polymer;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
@@ -47,7 +48,9 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  SparkFlags.initFromFiles(['app.json', '.spark.json']).then((_) {
+  final Future<String> flagsReader =
+      HttpRequest.getString(chrome.runtime.getURL('app.json'));
+  SparkFlags.initFromFile(flagsReader).then((_) {
     // Don't set up the zone exception handler if we're running in dev mode.
     final Function maybeRunGuarded =
         SparkFlags.developerMode ? (f) => f() : createSparkZone().runGuarded;
