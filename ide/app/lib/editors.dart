@@ -342,6 +342,9 @@ class EditorManager implements EditorProvider {
     if (wasDirty) {
       _eventBus.addEvent(
           new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
+    } else {
+      _eventBus.addEvent(
+          new SimpleBusEvent(BusEventType.EDITOR_MANAGER__NO_MODIFICATIONS));
     }
   }
 
