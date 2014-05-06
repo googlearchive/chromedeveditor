@@ -1341,7 +1341,7 @@ class ResourceChangeEvent {
  */
 class ChangeDelta {
   final Resource resource;
-  EventType type;
+  final EventType type;
   Resource originalResource = null;
   Map<String, String> resourceUuidsMapping = null;
   List<ChangeDelta> deletions = null;
@@ -1373,9 +1373,7 @@ class ChangeDelta {
                      this.resource,
                      this.resourceUuidsMapping,
                      this.deletions,
-                     this.additions) {
-    type = EventType.RENAME;
-  }
+                     this.additions) : type = EventType.RENAME;
 
   bool get isAdd => type == EventType.ADD;
   bool get isChange => type == EventType.CHANGE;
