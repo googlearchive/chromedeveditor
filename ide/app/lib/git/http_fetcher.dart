@@ -205,6 +205,7 @@ class HttpFetcher {
         if (e.status == 401) {
           throw new GitException(GitErrorConstants.GIT_AUTH_ERROR);
         }
+        return new Future.value(false);
       });
     } catch (e) {
       return new Future.value(false);

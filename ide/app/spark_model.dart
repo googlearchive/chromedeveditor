@@ -21,8 +21,6 @@ abstract class SparkModel extends Application {
     _instanceCreated = true;
   }
 
-  bool get developerMode;
-
   AceManager get aceManager;
   ThemeManager get aceThemeManager;
   KeyBindingManager get aceKeysManager;

@@ -27,6 +27,7 @@ import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
 import 'lib/mobile/deploy.dart';
+import 'lib/navigation.dart';
 import 'lib/package_mgmt/pub.dart';
 import 'lib/package_mgmt/bower.dart';
 import 'lib/platform_info.dart';
@@ -44,32 +45,12 @@ import 'lib/workspace.dart' as ws;
 import 'lib/workspace_utils.dart' as ws_utils;
 import 'test/all.dart' as all_tests;
 
+import 'spark_flags.dart';
 import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 Logger _logger = new Logger('spark');
-
-/**
- * Returns true if app.json contains a test-mode entry set to true. If app.json
- * does not exit, it returns true.
- */
-Future<bool> isTestMode() {
-  final String url = chrome.runtime.getURL('app.json');
-  return HttpRequest.getString(url).then((String contents) {
-    bool result = true;
-    try {
-      Map info = JSON.decode(contents);
-      result = info['test-mode'];
-    } catch (exception, stackTrace) {
-      // If JSON is invalid, assume test mode.
-      result = true;
-    }
-    return result;
-  }).catchError((e) {
-    return true;
-  });
-}
 
 /**
  * Create a [Zone] that logs uncaught exceptions.
@@ -89,8 +70,6 @@ abstract class Spark
   /// The Google Analytics app ID for Spark.
   static final _ANALYTICS_ID = 'UA-45578231-1';
 
-  final bool _developerMode;
-
   Services services;
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
@@ -106,7 +85,8 @@ abstract class Spark
   PubManager _pubManager;
   BowerManager _bowerManager;
   ActionManager _actionManager;
-  ProjectLocationManager projectLocationManager;
+  ProjectLocationManager _projectLocationManager;
+  NavigationManager _navigationManager;
 
   EventBus _eventBus;
 
@@ -116,7 +96,7 @@ abstract class Spark
   Set<String> _textFileExtensions = new Set.from(
       ['.cmake', '.gitignore', '.prefs', '.txt']);
 
-  Spark(this._developerMode) {
+  Spark() {
     document.title = appName;
   }
 
@@ -138,6 +118,7 @@ abstract class Spark
     initPackageManagers();
     initServices();
     initScmManager();
+    initNavigationManager();
 
     createEditorComponents();
     initEditorArea();
@@ -173,8 +154,6 @@ abstract class Spark
   // SparkModel interface:
   //
 
-  bool get developerMode => _developerMode;
-
   AceManager get aceManager => _aceManager;
   ThemeManager get aceThemeManager => _aceThemeManager;
   KeyBindingManager get aceKeysManager => _aceKeysManager;
@@ -185,7 +164,8 @@ abstract class Spark
   PubManager get pubManager => _pubManager;
   BowerManager get bowerManager => _bowerManager;
   ActionManager get actionManager => _actionManager;
-
+  ProjectLocationManager get projectLocationManager => _projectLocationManager;
+  NavigationManager get navigationManager => _navigationManager;
   EventBus get eventBus => _eventBus;
 
   preferences.PreferenceStore get localPrefs => preferences.localStore;
@@ -261,7 +241,7 @@ abstract class Spark
 
     // Track logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
-      if (!developerMode && r.level <= Level.INFO) return;
+      if (!SparkFlags.instance.developerMode && r.level <= Level.INFO) return;
 
       print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
 
@@ -281,6 +261,26 @@ abstract class Spark
 
   void initLaunchManager() {
     _launchManager = new LaunchManager(_workspace, services, pubManager);
+  }
+
+  void initNavigationManager() {
+    _navigationManager = new NavigationManager();
+    _navigationManager.onNavigate.listen((NavigationLocation location) {
+      _selectFile(location.file);
+
+      if (location.selection != null) {
+        nextTick().then((_) {
+          for (Editor editor in editorManager.editors) {
+            if (editor.file == location.file) {
+              if (editor is TextEditor) {
+                editor.select(location.selection);
+              }
+              return;
+            }
+          }
+        });
+      }
+    });
   }
 
   void initPackageManagers() {
@@ -324,7 +324,7 @@ abstract class Spark
           editorArea.tabs[0].select();
           return;
         }
-        _selectResource(resource);
+        _openFile(resource);
       });
     });
   }
@@ -350,11 +350,7 @@ abstract class Spark
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
       if (event.resource is ws.File) {
-        _selectInEditor(
-            event.resource,
-            forceOpen: event.forceOpen,
-            replaceCurrent: event.replaceCurrent,
-            switchesTab: event.switchesTab);
+        _openFile(event.resource);
       }
     });
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__PERSIST_TAB)
@@ -419,6 +415,8 @@ abstract class Spark
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new PropertiesAction(this, getDialogElement("#propertiesDialog")));
     actionManager.registerAction(new GotoDeclarationAction(this));
+    actionManager.registerAction(new HistoryAction.back(this));
+    actionManager.registerAction(new HistoryAction.forward(this));
 
     actionManager.registerKeyListener();
   }
@@ -442,7 +440,7 @@ abstract class Spark
   Future restoreLocationManager() {
     return ProjectLocationManager.restoreManager(localPrefs, workspace)
         .then((manager) {
-      projectLocationManager = manager;
+      _projectLocationManager = manager;
     });
   }
 
@@ -462,7 +460,7 @@ abstract class Spark
 
       if (entry != null) {
         workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
-          _selectResource(file);
+          _openFile(file);
           _aceManager.focus();
           workspace.save();
         });
@@ -490,7 +488,7 @@ abstract class Spark
   }
 
   void unveil() {
-    if (developerMode) {
+    if (SparkFlags.instance.developerMode) {
       RunTestsAction action = actionManager.getAction('run-tests');
       action.checkForTestListener();
     }
@@ -645,25 +643,22 @@ abstract class Spark
     }
   }
 
-  void _selectResource(ws.Resource resource) {
-    if (resource.isFile) {
-      editorArea.selectFile(
-          resource, forceOpen: true, switchesTab: true, forceFocus: true);
+  void _openFile(ws.Resource resource) {
+    if (currentEditedFile == resource) return;
+
+    if (resource is ws.File) {
+      navigationManager.gotoLocation(new NavigationLocation(resource));
     } else {
-      _filesController.selectFile(resource);
-      _filesController.setFolderExpanded(resource);
+      _selectFile(resource);
     }
   }
 
-  void _selectInEditor(ws.File file,
-                       {bool forceOpen: false,
-                        bool replaceCurrent: true,
-                        bool switchesTab: true}) {
-    if (forceOpen || editorManager.isFileOpened(file)) {
-      editorArea.selectFile(file,
-          forceOpen: forceOpen,
-          replaceCurrent: replaceCurrent,
-          switchesTab: switchesTab);
+  void _selectFile(ws.Resource resource) {
+    if (resource.isFile) {
+      editorArea.selectFile(resource);
+    } else {
+      _filesController.selectFile(resource);
+      _filesController.setFolderExpanded(resource);
     }
   }
 
@@ -696,22 +691,8 @@ abstract class Spark
         _textFileExtensions.contains(extension);
   }
 
-  Future<Editor> openEditor(ws.File file, {Span selection}) {
-    _logger.info('open file ${file} ${selection}');
-
-    _selectResource(file);
-
-    return nextTick().then((_) {
-      for (Editor editor in editorManager.editors) {
-        if (editor.file == file) {
-          if (selection != null && editor is TextEditor) {
-            editor.select(selection);
-          }
-          return editor;
-        }
-      }
-      return null;
-    });
+  void openEditor(ws.File file, {Span selection}) {
+    navigationManager.gotoLocation(new NavigationLocation(file, selection));
   }
 
   //
@@ -1104,7 +1085,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark._selectInEditor(file, forceOpen: true, replaceCurrent: true);
+            spark._openFile(file);
             spark._aceManager.focus();
           });
         }).catchError((e) {
@@ -1564,7 +1545,7 @@ class SearchAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    spark.getUIElement('#searchBox').focus();
+    spark.getUIElement('#search').focus();
   }
 }
 
@@ -1576,13 +1557,54 @@ class GotoDeclarationAction extends SparkAction {
     addBinding('ctrl-.');
     addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
+    spark.aceManager.onGotoDeclaration.listen((_) => gotoDeclaration());
+  }
+
+  @override
+  void _invoke([Object context]) => gotoDeclaration();
+
+  void gotoDeclaration() {
+    Editor editor = spark.getCurrentEditor();
+    if (editor is TextEditor) {
+      editor.navigateToDeclaration();
+    }
+  }
+}
+
+class HistoryAction extends SparkAction {
+  bool _forward;
+
+  HistoryAction.back(Spark spark) : super(spark, 'navigate-back', 'Back') {
+    addBinding('ctrl-[');
+    addBinding('ctrl-left');
+    _init(false);
+  }
+
+  HistoryAction.forward(Spark spark) : super(spark, 'navigate-forward', 'Forward') {
+    addBinding('ctrl-]');
+    addBinding('ctrl-right');
+    _init(true);
+  }
+
+  void _init(bool value) {
+    _forward = value;
+    enabled = false;
+
+    spark.navigationManager.onNavigate.listen((_) {
+      if (_forward) {
+        enabled = spark.navigationManager.canGoForward();
+      } else {
+        enabled = spark.navigationManager.canGoBack();
+      }
+    });
   }
 
   @override
   void _invoke([Object context]) {
-    Editor editor = spark.getCurrentEditor();
-    if (editor is TextEditor) {
-      editor.navigateToDeclaration();
+    if (_forward) {
+      spark.navigationManager.goForward();
+    } else {
+      spark.navigationManager.goBack();
     }
   }
 }
@@ -1601,13 +1623,19 @@ class FocusMainMenuAction extends SparkAction {
 
 class NewProjectAction extends SparkActionWithDialog {
   InputElement _nameElt;
-  List<InputElement> _jsDepsElts;
   ws.Folder folder;
+
+  static const _KNOWN_JS_PACKAGES = const {
+      'polymer': 'Polymer/polymer#master',
+      'polymer-elements': 'PolymerLabs/polymer-elements#master',
+      'polymer-ui-elements': 'PolymerLabs/polymer-ui-elements#master'
+  };
+  // Matches: "proj-template", "proj-template+polymer,polymer-elements".
+  static final _TEMPLATE_REGEX = new RegExp(r'([\w_-]+)(\+(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
     _nameElt = _triggerOnReturn("#name");
-    _jsDepsElts = getElements('[name="jsDeps"]');
   }
 
   void _invoke([context]) {
@@ -1635,6 +1663,7 @@ class NewProjectAction extends SparkActionWithDialog {
         root = new ws.FolderChildRoot(location.parent, locationEntry);
       }
 
+      // TODO(ussuri): Why is this no-op `return Future.value()` necessary?
       return new Future.value().then((_) {
         List<ProjectTemplate> templates = [];
 
@@ -1643,25 +1672,31 @@ class NewProjectAction extends SparkActionWithDialog {
             'sourceName': name.toLowerCase()
         };
 
-        final InputElement projectTypeElt =
-            getElement('input[name="type"]:checked');
-        templates.add(
-            new ProjectTemplate(projectTypeElt.value, globalVars));
+        // Add a template for the main project type.
+        final SelectElement projectTypeElt = getElement('select[name="type"]');
+        final Match match = _TEMPLATE_REGEX.matchAsPrefix(projectTypeElt.value);
+        assert(match.groupCount > 0);
+        final String templName = match.group(1);
+        final String jsDepsStr = match.group(3);
 
-        List<String> jsDeps = [];
-        for (final elt in _jsDepsElts) {
-          // NOTE: This test will get both the checkboxes and the textbox.
-          if ((elt.type == "checkbox" && elt.checked) ||
-              (elt.type == "textarea" && elt.value.isNotEmpty)) {
-            jsDeps.add(elt.value);
+        templates.add(new ProjectTemplate(templName, globalVars));
+
+        // Possibly also add a mix-in template for JS dependencies, if the
+        // project type requires them.
+        if (jsDepsStr != null) {
+          List<String> jsDeps = [];
+          for (final depName in jsDepsStr.split(',')) {
+            final String depPath = _KNOWN_JS_PACKAGES[depName];
+            assert(depPath != null);
+            jsDeps.add('"$depName": "$depPath"');
           }
-        }
-        if (jsDeps.isNotEmpty) {
-          final localVars = {
-              'dependencies': jsDeps.join(',\n    ')
-          };
-          templates.add(
-              new ProjectTemplate("bower-deps", globalVars, localVars));
+          if (jsDeps.isNotEmpty) {
+            final localVars = {
+                'dependencies': jsDeps.join(',\n    ')
+            };
+            templates.add(
+                new ProjectTemplate("bower-deps", globalVars, localVars));
+          }
         }
 
         return new ProjectBuilder(locationEntry, templates).build();
@@ -1670,7 +1705,7 @@ class NewProjectAction extends SparkActionWithDialog {
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Created ${project.name}');
           Timer.run(() {
-            spark._selectResource(ProjectBuilder.getMainResourceFor(project));
+            spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
             if (spark.pubManager.properties.isProjectWithPackages(project)) {
@@ -1772,8 +1807,8 @@ class _HarnessPushJob extends Job {
     HarnessPush harnessPush = new HarnessPush(deployContainer,
         spark.localPrefs);
 
-    Future push = _adb ? harnessPush.pushADB(monitor) :
-        harnessPush.push(_url, monitor);
+    Future push = _adb ? harnessPush.pushAdb(monitor) :
+        harnessPush.pushToHost(_url, monitor);
     return push.then((_) {
       if (_adb) {
         spark.hideProgressDialog();
@@ -2644,7 +2679,7 @@ class RunTestsAction extends SparkAction {
   TestDriver testDriver;
 
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
-    if (spark.developerMode) {
+    if (SparkFlags.instance.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
@@ -2652,7 +2687,7 @@ class RunTestsAction extends SparkAction {
   void checkForTestListener() => _initTestDriver();
 
   _invoke([Object context]) {
-    if (spark.developerMode) {
+    if (SparkFlags.instance.developerMode) {
       _initTestDriver();
       testDriver.runTests();
     }

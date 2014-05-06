@@ -25,21 +25,22 @@ import '../preferences.dart' as preferences;
 import '../scm.dart';
 import '../workspace.dart';
 
+/**
+ * An event that is sent to indicate the user would like to select a given
+ * resource.
+ */
 class FilesControllerSelectionChangedEvent extends BusEvent {
-  Resource resource;
-  bool forceOpen;
-  bool replaceCurrent;
-  bool switchesTab;
+  final Resource resource;
 
-  FilesControllerSelectionChangedEvent(
-      this.resource,
-      {this.forceOpen: false,
-       this.replaceCurrent: true,
-       this.switchesTab: true});
+  FilesControllerSelectionChangedEvent(this.resource);
 
   BusEventType get type => BusEventType.FILES_CONTROLLER__SELECTION_CHANGED;
 }
 
+/**
+ * An event that is sent to indicate the user would like to select a given
+ * resource, in a persistent manner.
+ */
 class FilesControllerPersistTabEvent extends BusEvent {
   File file;
 
@@ -112,7 +113,7 @@ class FilesController implements TreeViewDelegate {
     return  _filteredChildrenCache != null ? _filteredChildrenCache : _childrenCache;
   }
 
-  void selectFile(Resource file, {bool forceOpen: false}) {
+  void selectFile(Resource file) {
     if (_currentFiles().isEmpty) {
       return;
     }
@@ -127,16 +128,13 @@ class FilesController implements TreeViewDelegate {
 
     _treeView.selection = [file.uuid];
     _treeView.scrollIntoNode(file.uuid, html.ScrollAlignment.CENTER);
-    _eventBus.addEvent(
-        new FilesControllerSelectionChangedEvent(
-            file, forceOpen: forceOpen));
   }
 
-  void selectFirstFile({bool forceOpen: false}) {
+  void selectFirstFile() {
     if (_currentFiles().isEmpty) {
       return;
     }
-    selectFile(_currentFiles()[0], forceOpen: forceOpen);
+    selectFile(_currentFiles()[0]);
   }
 
   void setFolderExpanded(Container resource) {
@@ -207,39 +205,14 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
 
-  void treeViewSelectedChanged(TreeView view,
-                               List<String> nodeUids) {
+  void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
       Resource resource = _filesMap[nodeUids.first];
-      _eventBus.addEvent(
-          new FilesControllerSelectionChangedEvent(
-              resource, forceOpen: true, replaceCurrent: true));
+      _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
     }
   }
 
-  bool treeViewRowClicked(html.MouseEvent event, String uid) {
-    if (uid == null) {
-      return true;
-    }
-
-    Resource resource = _filesMap[uid];
-    if (resource is File) {
-      bool altKeyPressed = event.altKey;
-      bool shiftKeyPressed = event.shiftKey;
-      bool ctrlKeyPressed = event.ctrlKey;
-
-      // Open in editor only if alt key or no modifier key is down.  If alt key
-      // is pressed, it will open a new tab.
-      if (altKeyPressed && !shiftKeyPressed && !ctrlKeyPressed) {
-        _eventBus.addEvent(
-            new FilesControllerSelectionChangedEvent(
-                resource, forceOpen: true, replaceCurrent: false));
-        return false;
-      }
-    }
-
-    return true;
-  }
+  bool treeViewRowClicked(html.MouseEvent event, String uid) => true;
 
   void treeViewDoubleClicked(TreeView view,
                              List<String> nodeUids,
