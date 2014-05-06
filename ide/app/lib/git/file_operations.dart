@@ -100,12 +100,14 @@ abstract class FileOps {
         chrome.FileReader reader = new chrome.FileReader();
 
         reader.onLoadEnd.listen((_) {
-          if (reader.result is ByteBuffer) {
+          if (reader.result is Uint8List) {
+            completer.complete(reader.result);
+          } else if (reader.result is ByteBuffer) {
             ByteBuffer buf = reader.result;
             completer.complete(new Uint8List.view(buf));
           } else {
             completer.completeError(
-                'expected ByteBuffer, got ${reader.result.runtimeType}');
+                'unexpected type: ${reader.result.runtimeType}');
           }
         });
 
