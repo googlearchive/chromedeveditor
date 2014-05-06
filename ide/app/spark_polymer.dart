@@ -178,6 +178,11 @@ class SparkPolymer extends Spark {
     eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {
       statusComponent.temporaryMessage = 'All changes saved';
     });
+    // When nothing had to be saved, show the same feedback to make the user
+    // happy.
+    eventBus.onEvent(BusEventType.EDITOR_MANAGER__NO_MODIFICATIONS).listen((_) {
+      statusComponent.temporaryMessage = 'All changes saved';
+    });
 
     // Listen for job manager events.
     jobManager.onChange.listen((JobManagerEvent event) {
