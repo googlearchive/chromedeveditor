@@ -215,24 +215,16 @@ abstract class _MockEntry implements Entry {
     if (parent == null) {
       parent = (filesystem as MockFileSystem)._root;
     }
-    (parent as _MockDirectoryEntry)._children.add(this);
-    (parent as _MockDirectoryEntry)._touch();
+    //(parent as _MockDirectoryEntry)._children.add(this);
+    //(parent as _MockDirectoryEntry)._touch();
     assert(this is _MockFileEntry || this is _MockDirectoryEntry);
     _MockEntry result = null;
     String resultEntryName = name != null ? name : this.name;
     result = this.clone();
     result.name = resultEntryName;
-      /*
-    if (this is _MockFileEntry) {
-      //result = new _MockFileEntry(parent, resultEntryName);
-      result = this.clone();
-      result.name = resultEntryName;
-    } else { // _MockDirectoryEntry
-      this.name = resultEntryName;
-      result = this;
-      //result = new _MockDirectoryEntry(parent, resultEntryName);
-    }
-    */
+    result._parent = parent;
+    (parent as _MockDirectoryEntry)._children.add(result);
+    (parent as _MockDirectoryEntry)._touch();
     return new Future.value(result);
   }
 
@@ -258,7 +250,7 @@ class _MockFileEntry extends _MockEntry implements FileEntry, ChromeFileEntry {
   bool get isDirectory => false;
   bool get isFile => true;
 
-  _MockEntry clone() => new _MockFileEntry(_parent, name);
+  _MockEntry clone() => new _MockFileEntry(null, name);
 
   Future remove() => _parent._remove(this);
 
@@ -323,9 +315,10 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
   _MockDirectoryEntry(DirectoryEntry parent, String name): super(parent, name);
 
   _MockDirectoryEntry clone() {
-    _MockDirectoryEntry result = new _MockDirectoryEntry(_parent, name);
+    _MockDirectoryEntry result = new _MockDirectoryEntry(null, name);
     for(_MockEntry child in _children) {
       result._children.add(child);
+      child._parent = result;
     }
     return result;
   }

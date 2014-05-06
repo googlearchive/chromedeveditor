@@ -160,11 +160,11 @@ defineTests() {
           Container renamedContainer = change.resource;
           Resource res;
           res = renamedContainer.getChild('test.js');
-          expect(res.uuid, 'myfolder/subfolder/test.js');
+          expect(res.uuid, 'myfolder/other-name/test.js');
           res = renamedContainer.getChild('test.jpg');
-          expect(res.uuid, 'myfolder/subfolder/test.jpg');
+          expect(res.uuid, 'myfolder/other-name/test.jpg');
           res = renamedContainer.getChild('test.html');
-          expect(res.uuid, 'myfolder/subfolder/test.html');
+          expect(res.uuid, 'myfolder/other-name/test.html');
         });
         Folder folder = container.getChild('subfolder');
         folder.rename('other-name');
