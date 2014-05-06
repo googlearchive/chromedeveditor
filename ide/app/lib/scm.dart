@@ -484,6 +484,8 @@ class _ScmBuilder extends Builder {
 
   Future build(ResourceChangeEvent changes, ProgressMonitor monitor) {
     // Get a list of all changed projects and fire SCM change events for them.
+    changes =
+        new ResourceChangeEvent.fromList(changes.changes, filterRename: true);
     return Future.forEach(changes.modifiedProjects, (project) {
       return scmManager._updateStatusFor(project, changes.getChangesFor(project));
     });

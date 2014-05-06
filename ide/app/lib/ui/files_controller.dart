@@ -92,8 +92,9 @@ class FilesController implements TreeViewDelegate {
     _workspace.whenAvailable().then((_) => _addAllFiles());
 
     _workspace.onResourceChange.listen((event) {
-      bool hasAddsDeletes = event.changes.any((d) => d.isAdd || d.isDelete);
-      if (hasAddsDeletes) _processEvents(event);
+      bool shouldProcessEvent = event.changes.any((d) =>
+          d.isAdd || d.isDelete || d.isRename);
+      if (shouldProcessEvent) _processEvents(event);
     });
 
     _workspace.onMarkerChange.listen((_) => _processMarkerChange());
@@ -621,6 +622,7 @@ class FilesController implements TreeViewDelegate {
     List<String> selection = _treeView.selection;
     for(String nodeUid in selection) {
       Resource res = _filesMap[nodeUid];
+      if (res == null) continue;
       List<Container> parents = _collectParents(res, []);
       List<String> parentsUuid =
           parents.map((Container container) => container.uuid).toList();
@@ -655,27 +657,56 @@ class FilesController implements TreeViewDelegate {
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
-    event.changes.where((d) => _showResource(d.resource)).forEach((change) {
+    event.changes.where((d) => _showResource(d.resource))
+        .forEach((ChangeDelta change) {
       if (change.type == EventType.ADD) {
         var resource = change.resource;
         if (resource.isTopLevel) {
           _files.add(resource);
+          _sortTopLevel();
         }
         _filesMap[resource.uuid] = resource;
+        _reloadData();
       } else if (change.type == EventType.DELETE) {
         var resource = change.resource;
         if (resource.isTopLevel) {
           _files.remove(resource);
+          _sortTopLevel();
         }
         _filesMap.remove(resource.uuid);
-      } else if (change.type == EventType.CHANGE) {
+        _reloadData();
+      } else if (change.type == EventType.RENAME) {
+        // Update expanded state of tree view.
+        List<String> expanded = _treeView.expandedState;
+        List<String> updatedExpanded = [];
+        for(String uuid in expanded) {
+          String newUuid = change.resourceUuidsMapping[uuid];
+          if (newUuid != null) {
+            updatedExpanded.add(newUuid);
+          } else {
+            updatedExpanded.add(uuid);
+          }
+        }
+
         var resource = change.resource;
-        _filesMap[resource.uuid] = resource;
+        if (resource.isTopLevel) {
+          _files.remove(change.originalResource);
+          _files.add(resource);
+          _sortTopLevel();
+        }
+        // Remove old resources from map.
+        change.resourceUuidsMapping.forEach((String oldUuid, String newUuid) {
+          _filesMap.remove(oldUuid);
+        });
+        // Add new resources.
+        _recursiveAddResource(resource);
+        _reloadDataAndRestoreExpandedState(updatedExpanded);
+        // Save expanded state in prefs.
+        treeViewSaveExpandedState(_treeView);
+        // Update selection.
+        _treeView.selection = [resource.uuid];
       }
     });
-
-    _sortTopLevel();
-    _reloadData();
   }
 
   /**

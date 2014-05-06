@@ -125,6 +125,53 @@ defineTests() {
       });
     });
 
+    test('rename file, check for resource rename event', () {
+      ws.Workspace workspace = new ws.Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('/myProject/test.txt');
+      chrome.DirectoryEntry dirEntry = fs.getEntry('myProject');
+      return workspace.link(createWsRoot(dirEntry))
+          .then((ws.Container container) {
+        Future future = workspace.onResourceChange.first
+            .then((ws.ResourceChangeEvent event) {
+          ws.ChangeDelta change = event.changes.single;
+          expect(change.originalResource.name, 'test.txt');
+          expect(change.resource.name, 'other-name.txt');
+          expect(change.type, ws.EventType.RENAME);
+        });
+        Resource resource = container.getChild('test.txt');
+        resource.rename('other-name.txt');
+        return future;
+      });
+    });
+
+    test('rename folder, check for resource rename event', () {
+      ws.Workspace workspace = new ws.Workspace();
+      MockFileSystem fs = new MockFileSystem();
+      fs.createFile('/myProject/myfolder/subfolder/test.js');
+      fs.createFile('/myProject/myfolder/subfolder/test.jpg');
+      fs.createFile('/myProject/myfolder/subfolder/test.html');
+      chrome.DirectoryEntry dirEntry = fs.getEntry('myProject/myfolder');
+      return workspace.link(createWsRoot(dirEntry))
+          .then((ws.Container container) {
+        Future future = workspace.onResourceChange.first
+            .then((ws.ResourceChangeEvent event) {
+          ws.ChangeDelta change = event.changes.single;
+          Container renamedContainer = change.resource;
+          Resource res;
+          res = renamedContainer.getChild('test.js');
+          expect(res.uuid, 'myfolder/other-name/test.js');
+          res = renamedContainer.getChild('test.jpg');
+          expect(res.uuid, 'myfolder/other-name/test.jpg');
+          res = renamedContainer.getChild('test.html');
+          expect(res.uuid, 'myfolder/other-name/test.html');
+        });
+        Folder folder = container.getChild('subfolder');
+        folder.rename('other-name');
+        return future;
+      });
+    });
+
     test('add directory, check for resource add event', () {
       ws.Workspace workspace = new ws.Workspace();
       MockFileSystem fs = new MockFileSystem();
