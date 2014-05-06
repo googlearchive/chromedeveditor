@@ -47,11 +47,10 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  SparkFlags.initFromFile('app.json').then((_) {
+  SparkFlags.initFromFiles(['app.json', '.spark.json']).then((_) {
     // Don't set up the zone exception handler if we're running in dev mode.
     final Function maybeRunGuarded =
-        SparkFlags.instance.developerMode ?
-            (f) => f() : createSparkZone().runGuarded;
+        SparkFlags.developerMode ? (f) => f() : createSparkZone().runGuarded;
 
     maybeRunGuarded(() {
       SparkPolymer spark = new SparkPolymer._();

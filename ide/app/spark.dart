@@ -241,7 +241,7 @@ abstract class Spark
 
     // Track logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
-      if (!SparkFlags.instance.developerMode && r.level <= Level.INFO) return;
+      if (!SparkFlags.developerMode && r.level <= Level.INFO) return;
 
       print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
 
@@ -488,7 +488,7 @@ abstract class Spark
   }
 
   void unveil() {
-    if (SparkFlags.instance.developerMode) {
+    if (SparkFlags.developerMode) {
       RunTestsAction action = actionManager.getAction('run-tests');
       action.checkForTestListener();
     }
@@ -2679,7 +2679,7 @@ class RunTestsAction extends SparkAction {
   TestDriver testDriver;
 
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
-    if (SparkFlags.instance.developerMode) {
+    if (SparkFlags.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
@@ -2687,7 +2687,7 @@ class RunTestsAction extends SparkAction {
   void checkForTestListener() => _initTestDriver();
 
   _invoke([Object context]) {
-    if (SparkFlags.instance.developerMode) {
+    if (SparkFlags.developerMode) {
       _initTestDriver();
       testDriver.runTests();
     }

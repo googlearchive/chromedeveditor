@@ -46,8 +46,8 @@ class SparkPolymerUI extends SparkWidget {
 
   void refreshFromModel() {
     // TODO(ussuri): This also could possibly be done using PathObservers.
-    developerMode = SparkFlags.instance.developerMode;
-    useAceThemes = SparkFlags.instance.useAceThemes;
+    developerMode = SparkFlags.developerMode;
+    useAceThemes = SparkFlags.useAceThemes;
     chromeOS = PlatformInfo.isCros;
   }
 
