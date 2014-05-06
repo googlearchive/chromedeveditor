@@ -386,9 +386,13 @@ abstract class Spark
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
-    actionManager.registerAction(new GitPullAction(this));
-    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
-    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
+    if (SparkFlags.instance.showGitPull) {
+      actionManager.registerAction(new GitPullAction(this));
+    }
+    if (SparkFlags.instance.showGitBranch) {
+      actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+      actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
+    }
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitRevertChangesAction(this));

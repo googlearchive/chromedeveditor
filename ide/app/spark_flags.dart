@@ -14,43 +14,46 @@ import 'package:chrome/chrome_app.dart' as chrome;
  * Stores global developer flags.
  */
 class SparkFlags {
-  bool developerMode;
-  bool useLightAceThemes;
-  bool useDarkAceThemes;
-  bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
-
   static SparkFlags instance;
 
-  SparkFlags._(
-      this.developerMode, this.useLightAceThemes, this.useDarkAceThemes);
+  final bool developerMode;
+  final bool useLightAceThemes;
+  final bool useDarkAceThemes;
+  final bool showGitPull;
+  final bool showGitBranch;
+
+  SparkFlags._({
+      this.developerMode: false,
+      this.useLightAceThemes: false,
+      this.useDarkAceThemes: true,
+      this.showGitPull: false,
+      this.showGitBranch: false});
+
+  bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
 
   /**
-   * Initialize the flags. By default, assume developer mode and dark editor
-   * themes.
-   */
-  static void init({bool developerMode: true,
-                    bool ligtAceThemes: false,
-                    bool darkAceThemes: true}) {
-    assert(instance == null);
-    instance = new SparkFlags._(developerMode, ligtAceThemes, darkAceThemes);
-  }
-
-  /**
-   * Initialize the flags from a JSON file. If the file does not exit, use
-   * the defaults (see [init]).
+   * Initialize the flags from a JSON file. If the file does not exit, use the
+   * defaults.
    */
   static Future initFromFile(String fileName) {
     final String url = chrome.runtime.getURL(fileName);
     return HttpRequest.getString(url).then((String contents) {
-      bool result = true;
+      assert(instance == null);
+
       Map flagsMap = JSON.decode(contents);
-      // Normalize missing/malformed values to bools via x==true.
-      init(developerMode: flagsMap['test-mode'] == true,
-           ligtAceThemes: flagsMap['light-ace-themes'] == true,
-           darkAceThemes: flagsMap['dark-ace-themes'] == true);
+
+      // Normalize missing / malformed values to bools.
+      instance = new SparkFlags._(
+          developerMode: _flag(flagsMap, 'test-mode'),
+          useLightAceThemes: _flag(flagsMap, 'light-ace-themes'),
+          useDarkAceThemes: _flag(flagsMap, 'dark-ace-themes'),
+          showGitPull: _flag(flagsMap, 'show-git-pull'),
+          showGitBranch: _flag(flagsMap, 'show-git-branch'));
     }).catchError((e) {
-      // If JSON is invalid/non-existent, use the defaults.
-      init();
+      // If JSON is invalid / non-existent, use the defaults.
+      instance = new SparkFlags._();
     });
   }
+
+  static bool _flag(Map m, String key) => m[key] == true;
 }
