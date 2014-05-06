@@ -63,7 +63,7 @@ class ChromeTab {
    "devtoolsFrontendUrl": "/devtools/devtools.html?ws=localhost:1234/devtools/page/E1999E8A-EE27-0450-9900-5BFF4C69CA83",
    "faviconUrl": "chrome://extension-icon/bepbmhgboaologfdajaanbcjmnhjmhfn/24/1",
    "id": "E1999E8A-EE27-0450-9900-5BFF4C69CA83",
-   "title": "Google Voice Search Hotword (Beta)",
+   "title": "Google Voice Search",
    "type": "background_page",
    "url": "chrome-extension://bepbmhgboaologfdajaanbcjmnhjmhfn/background.html",
    "webSocketDebuggerUrl": "ws://localhost:1234/devtools/page/E1999E8A-EE27-0450-9900-5BFF4C69CA83"
@@ -71,7 +71,7 @@ class ChromeTab {
    "description": "",
    "devtoolsFrontendUrl": "/devtools/devtools.html?ws=localhost:1234/devtools/page/4A6CAC37-8FE0-7974-0C60-1C62D4082040",
    "id": "4A6CAC37-8FE0-7974-0C60-1C62D4082040",
-   "title": "List of Chromium Command Line Switches � Peter Beverloo",
+   "title": "List of Chromium Command Line Switches",
    "type": "page",
    "url": "http://peter.sh/experiments/chromium-command-line-switches/",
    "webSocketDebuggerUrl": "ws://localhost:1234/devtools/page/4A6CAC37-8FE0-7974-0C60-1C62D4082040"
