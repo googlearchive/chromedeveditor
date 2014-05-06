@@ -40,7 +40,7 @@ class PackObjectHeader {
  * TODO(grv) : add unittests.
  */
 class Pack {
-  Uint8List data;
+  final List<int> data;
   int _offset = 0;
   ObjectStore _store;
   List<PackedObject> objects = [];

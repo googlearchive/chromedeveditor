@@ -36,8 +36,7 @@ Future<PackIndex> initPackIndex() {
   }).then((chrome.ChromeFileEntry entry) {
     return entry.readBytes();
   }).then((chrome.ArrayBuffer binaryData) {
-    Uint8List data = new Uint8List.fromList(binaryData.getBytes());
-    return new PackIndex(data.buffer);
+    return new PackIndex(binaryData.getBytes());
   });
 }
 
