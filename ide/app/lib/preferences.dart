@@ -32,12 +32,18 @@ PreferenceStore syncStore = new _ChromePreferenceStore(
  */
 class SparkPreferences {
   PreferenceStore prefStore;
+  Future onPreferencesReady;
 
   BoolCachedPreference stripWhitespaceOnSave;
 
   SparkPreferences(this.prefStore) {
-    stripWhitespaceOnSave = new BoolCachedPreference(
-        prefStore, "stripWhitespaceOnSave");
+    // Initialize each preference
+    List<CachedPreference> allPreferences = [
+        stripWhitespaceOnSave = new BoolCachedPreference(
+            prefStore, "stripWhitespaceOnSave"),
+        ];
+
+    onPreferencesReady = Future.wait(allPreferences.map((p) => p.whenLoaded));
   }
 }
 
