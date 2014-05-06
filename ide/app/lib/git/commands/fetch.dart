@@ -135,7 +135,7 @@ class Fetch {
           return _createPackFiles(packName, result.data.buffer,
               packIdxData.buffer).then((objectsDir) {
             store.objectDir = objectsDir;
-            PackIndex packIdx = new PackIndex(packIdxData.buffer);
+            PackIndex packIdx = new PackIndex(packIdxData);
             store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));
             return _createAndUpdateRef(branchRef, wantRef);
           });

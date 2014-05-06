@@ -19,7 +19,9 @@ defineTests() {
       return location.init();
     });
 
-    tearDown(() => location.dispose());
+    tearDown(() {
+      return location.dispose();
+    });
 
     test('simple clone', () {
       ObjectStore store = new ObjectStore(location.entry);

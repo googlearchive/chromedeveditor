@@ -2,6 +2,9 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/**
+ * General utilities for testing the git library.
+ */
 library git.commands.utils;
 
 import 'dart:async';
@@ -25,5 +28,8 @@ class GitLocation {
 
   Future init() => getLocalDataDir(name).then((e) => entry = e);
 
-  Future dispose() => entry.remove();
+  Future dispose() {
+    if (entry == null) return new Future.value();
+    return entry.remove().catchError((e) => null);
+  }
 }

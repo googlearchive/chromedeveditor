@@ -52,30 +52,37 @@ import 'object.dart';
  *    20-byte SHA1-checksum of all of the above.
  */
 class PackIndex {
-
   static final int PACK_IDX_SIGNATURE = 0xff744f63;
   static final int PACK_VERSION = 2;
   static final int FAN_TABLE_LENGTH = 256 * 4;
 
-  ByteData _data;
+  ByteData _byteData;
   Uint8List _shaList;
   int _numObjects;
   int _offsetsOffset;
 
-  PackIndex(ByteBuffer buffer) {
-    _data = new ByteData.view(buffer);
+  PackIndex(List<int> data) {
+    ByteBuffer buffer;
+
+    if (data is Uint8List) {
+      buffer = data.buffer;
+    } else {
+      buffer = new Uint8List.fromList(data).buffer;
+    }
+
+    _byteData = new ByteData.view(buffer);
 
     // load the index into memory
-    int signature = _data.getUint32(0);
-    int version = _data.getUint32(4);
+    int signature = _byteData.getUint32(0);
+    int version = _byteData.getUint32(4);
 
     if (signature != PACK_IDX_SIGNATURE || version != PACK_VERSION) {
-      //TODO throw a better error.
+      // TODO: Throw a better error.
       throw "Bad pack index header. Only version 2 is supported.";
     }
 
     int byteOffset = 8;
-    int numObjects = _data.getUint32(byteOffset + (255 * 4));
+    int numObjects = _byteData.getUint32(byteOffset + (255 * 4));
 
     // skip past fanout table.
     byteOffset += FAN_TABLE_LENGTH;
@@ -107,9 +114,9 @@ class PackIndex {
   int getObjectOffset(List<int> sha) {
     int fanIndex = sha[0];
 
-    int sliceStart = fanIndex > 0 ? (_data.getUint32(8 +
+    int sliceStart = fanIndex > 0 ? (_byteData.getUint32(8 +
         (fanIndex - 1) * 4)) : 0;
-    int sliceEnd = _data.getUint32(8 + (fanIndex * 4));
+    int sliceEnd = _byteData.getUint32(8 + (fanIndex * 4));
 
     if (sliceEnd - sliceStart == 0) {
       return -1;
@@ -138,7 +145,7 @@ class PackIndex {
       return -1;
     }
 
-    return _data.getUint32(_offsetsOffset + (index * 4));
+    return _byteData.getUint32(_offsetsOffset + (index * 4));
   }
 
   /**

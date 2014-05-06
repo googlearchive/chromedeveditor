@@ -41,6 +41,10 @@ class Clone {
     }
   }
 
+  chrome.DirectoryEntry get root => _options.root;
+
+  ObjectStore get store => _options.store;
+
   Future _writeRefs(chrome.DirectoryEntry dir, List<GitRef> refs) {
     return Future.forEach(refs, (GitRef ref) {
       String refName = ref.name.split('/').last;
@@ -229,7 +233,7 @@ class Clone {
             return _createPackFiles(objectsDir, packName, packData,
                 packIdxData).then((_) {
               logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
-              PackIndex packIdx = new PackIndex(packIdxData.buffer);
+              PackIndex packIdx = new PackIndex(packIdxData);
               Pack pack = new Pack(packData, _options.store);
               _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
               // TODO: add progress
