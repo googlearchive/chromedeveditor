@@ -34,17 +34,22 @@ class SparkPreferences {
   PreferenceStore prefStore;
   Future onPreferencesReady;
 
-  BoolCachedPreference stripWhitespaceOnSave;
+  // [CachedPreference] subclass instance for each preference:
+  BoolCachedPreference _stripWhitespaceOnSave;
 
   SparkPreferences(this.prefStore) {
-    // Initialize each preference
+    // Initialize each preference:
     List<CachedPreference> allPreferences = [
-        stripWhitespaceOnSave = new BoolCachedPreference(
+        _stripWhitespaceOnSave = new BoolCachedPreference(
             prefStore, "stripWhitespaceOnSave"),
         ];
 
     onPreferencesReady = Future.wait(allPreferences.map((p) => p.whenLoaded));
   }
+
+  // Getters and setters for the value of each preference:
+  bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.value;
+  set stripWhitespaceOnSave(bool value) => _stripWhitespaceOnSave.value;
 }
 
 /**

@@ -44,7 +44,7 @@ class TextEditor extends Editor {
   StreamController _dirtyController = new StreamController.broadcast();
   StreamController _modificationController = new StreamController.broadcast();
 
-  SparkPreferences _prefs;
+  final SparkPreferences _prefs;
   ace.EditSession _session;
 
   String _lastSavedHash;
@@ -68,8 +68,6 @@ class TextEditor extends Editor {
     _session = value;
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
   }
-
-  BoolCachedPreference get stripWhitespace => _prefs.stripWhitespaceOnSave;
 
   bool get dirty => _dirty;
 
@@ -138,7 +136,7 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save() {
+  Future save([bool stripWhitespace = false]) {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
@@ -149,7 +147,7 @@ class TextEditor extends Editor {
 
       String text = _session.value;
 
-      if (stripWhitespace.value) text = text.replaceAll(whitespaceRegEx, '');
+      if (stripWhitespace) text = text.replaceAll(whitespaceRegEx, '');
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
