@@ -215,8 +215,6 @@ abstract class _MockEntry implements Entry {
     if (parent == null) {
       parent = (filesystem as MockFileSystem)._root;
     }
-    //(parent as _MockDirectoryEntry)._children.add(this);
-    //(parent as _MockDirectoryEntry)._touch();
     assert(this is _MockFileEntry || this is _MockDirectoryEntry);
     _MockEntry result = null;
     String resultEntryName = name != null ? name : this.name;

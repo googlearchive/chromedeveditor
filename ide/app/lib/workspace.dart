@@ -1297,7 +1297,7 @@ class ResourceChangeEvent {
       {bool filterRename: false}) {
     if (filterRename) {
       List<ChangeDelta> modifiedDeltas = [];
-      for(ChangeDelta change in deltas) {
+      for(ChangeDelta change in deltas.toList()) {
         if (change.isRename) {
           modifiedDeltas.addAll(change.deletions);
           modifiedDeltas.addAll(change.additions);
@@ -1307,7 +1307,7 @@ class ResourceChangeEvent {
       }
       return new ResourceChangeEvent._(modifiedDeltas);
     } else {
-      return new ResourceChangeEvent._(deltas);
+      return new ResourceChangeEvent._(deltas.toList());
     }
   }
 
