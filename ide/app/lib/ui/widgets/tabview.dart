@@ -18,6 +18,7 @@ class Tab {
   /// Parent [TabView]
   final TabView tabView;
   Element _page;
+  bool _persisted = false;
 
   DivElement _label;
   DivElement _labelCaption;
@@ -38,7 +39,6 @@ class Tab {
         ..classes.add('tabview-tablabel-closebutton')
         ..classes.add('close')
         ..type = 'button';
-    _closeButton.appendHtml('&times;');
     _closeButton.onClick.listen((e) {
       bool layoutNow = (this == tabView.tabs.last);
       tabView.remove(this, layoutNow: layoutNow);
@@ -51,6 +51,13 @@ class Tab {
     this.closable = closable;
     this.page = page;
   }
+
+  void set persisted(bool persisted) {
+    _persisted = persisted;
+    _labelCaption.classes.toggle('persisted', _persisted);
+  }
+
+  bool get persisted => _persisted;
 
   String get label => _labelCaption.innerHtml;
   set label(String label) {
@@ -122,7 +129,7 @@ class TabView {
   DivElement _tabBarScrollable;
   DivElement _tabViewWorkspace;
   bool _labelBarShowing = false;
-  
+
   StreamController<Tab> _onCloseStreamController =
       new StreamController<Tab>.broadcast(sync: true);
   StreamController<TabBeforeCloseEvent> _onBeforeCloseStreamController =
@@ -130,7 +137,7 @@ class TabView {
   StreamController<Tab> _onSelectedStreamController =
       new StreamController<Tab>.broadcast(sync: true);
   StreamController<bool> _onLabelBarShown = new StreamController.broadcast();
-  
+
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
   bool _tabItemsLayoutListenerEnabled = false;
@@ -207,6 +214,7 @@ class TabView {
     if (tabToReplace == null) {
       add(tab, switchesTab: switchesTab);
     } else {
+      tabToReplace.deactivate();
       int index = tabs.indexOf(tabToReplace);
       // Use same width as the tab we are replacing.
       tab._label.style.width = tabToReplace._label.style.width;
@@ -242,33 +250,28 @@ class TabView {
   }
 
   void _layoutTabItems() {
-    final int tabBarHorizontalMargin = 30;
-    int remainingWidth =
-        (_tabBarScrollable.clientWidth - tabBarHorizontalMargin);
+    int remainingWidth = _tabBarScrollable.clientWidth;
     int remainingTabs = tabs.length;
     if (remainingTabs == 0) {
       // There's no tab to layout.
       return;
     }
 
-    // deltaWidth is the difference between the real size of the widget and
-    // the size we set to CSS width property.
-    final int deltaWidth = 4;
     // maxTabItemWidth is the maximum size of a tab item.
-    final int maxTabItemWidth = 150;
+    final int maxTabItemWidth = 175;
     bool hideCloseButton = false;
-    if ((remainingWidth / remainingTabs).ceil() < 60) {
+    if ((remainingWidth / remainingTabs).ceil() < 90) {
       hideCloseButton = true;
     }
 
     // Distribute size over items and make sure we fill all the remaining space.
     tabs.forEach((Tab tab) {
-      int width = (remainingWidth / remainingTabs).ceil() - deltaWidth;
+      int width = (remainingWidth / remainingTabs).ceil();
       if (width > maxTabItemWidth) {
         width = maxTabItemWidth;
       }
       tab._label.style.width = '${width}px';
-      remainingWidth -= width + deltaWidth;
+      remainingWidth -= width;
       remainingTabs --;
       if (hideCloseButton) {
         tab._label.classes.add('hide-close-button');

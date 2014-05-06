@@ -4,6 +4,12 @@
 
 library spark.services_common;
 
+import 'dart:async';
+
+import '../workspace.dart';
+import '../package_mgmt/package_manager.dart';
+import '../package_mgmt/pub.dart';
+
 abstract class Serializable {
   // TODO(ericarnold): Implement as, and refactor any classes containing toMap
   // to implement Serializable:
@@ -15,10 +21,9 @@ abstract class Serializable {
  * Defines a received action event.
  */
 class ServiceActionEvent {
-  // TODO(ericarnold): Extend Event?
-  // TODO(ericarnold): This should be shared between ServiceIsolate and Service.
-  String serviceId;
-  String actionId;
+  final String serviceId;
+  final String actionId;
+
   bool response = false;
   bool error = false;
   Map data;
@@ -28,17 +33,16 @@ class ServiceActionEvent {
 
   ServiceActionEvent(this.serviceId, this.actionId, this.data);
 
-  ServiceActionEvent.fromMap(Map map) {
-    serviceId = map["serviceId"];
-    actionId = map["actionId"];
+  ServiceActionEvent.fromMap(Map map) :
+      serviceId = map["serviceId"], actionId = map["actionId"] {
     _callId = map["callId"];
     data = map["data"];
     response = map["response"];
     error = map["error"];
   }
 
-  ServiceActionEvent.asResponse(this.serviceId, this.actionId, this._callId,
-      this.data) : response = true;
+  ServiceActionEvent.asResponse(
+      this.serviceId, this.actionId, this._callId, this.data) : response = true;
 
   Map toMap() {
     return {
@@ -52,13 +56,15 @@ class ServiceActionEvent {
     };
   }
 
-  ServiceActionEvent createReponse(Map data) {
+  ServiceActionEvent createReponse([Map data = const {}]) {
     return new ServiceActionEvent.asResponse(serviceId, actionId, callId, data);
   }
 
   ServiceActionEvent createErrorReponse(String errorMessage) {
     return createReponse({'message': errorMessage})..error = true;
   }
+
+  String getErrorMessage() => data['message'];
 
   void makeRespondable(String callId) {
     if (this._callId == null) {
@@ -92,8 +98,9 @@ class AnalysisError {
   String message;
   int offset;
   int lineNumber;
-  int errorSeverity;
   int length;
+  // see [ErrorSeverity]
+  int errorSeverity;
 
   AnalysisError();
 
@@ -114,6 +121,33 @@ class AnalysisError {
         "length": length
     };
   }
+
+  String toString() => '[${errorSeverity}] ${message}, line ${lineNumber}';
+}
+
+class AnalysisResult {
+  Map<File, List<AnalysisError>> _results = {};
+
+  AnalysisResult();
+
+  AnalysisResult.fromMap(Workspace workspace, Map m) {
+    Map<String, List<Map>> uuidToErrors = m;
+
+    for (String uuid in uuidToErrors.keys) {
+      List<AnalysisError> errors = uuidToErrors[uuid].map(
+          (Map errorData) => new AnalysisError.fromMap(errorData)).toList();
+      _results[workspace.restoreResource(uuid)] = errors;
+    }
+  }
+
+  List<File> getFiles() => _results.keys.toList();
+
+  List<AnalysisError> getErrorsFor(File file) => _results[file];
+}
+
+abstract class ContentsProvider {
+  Future<String> getFileContents(String uuid);
+  Future<String> getPackageContents(String relativeUuid, String packageRef);
 }
 
 class ErrorSeverity {
@@ -121,6 +155,52 @@ class ErrorSeverity {
   static int ERROR = 1;
   static int WARNING = 2;
   static int INFO = 3;
+}
+
+/**
+ * Defines an object containing information about a declaration.
+ */
+class Declaration {
+  final String name;
+  final String fileUuid;
+  final int offset;
+  final int length;
+
+  Declaration(this.name, this.fileUuid, this.offset, this.length);
+
+  factory Declaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new Declaration(map["name"], map["fileUuid"],
+        map["offset"], map["length"]);
+  }
+
+  /**
+   * Returns the file pointed to by the [fileUuid]. This can return `null` if
+   * we're not able to resolve the file reference.
+   */
+  File getFile(Project project) {
+    if (fileUuid == null) return null;
+
+    if (pubProperties.isPackageRef(fileUuid)) {
+      PubManager pubManager = new PubManager(project.workspace);
+      PackageResolver resolver = pubManager.getResolverFor(project);
+      return resolver.resolveRefToFile(fileUuid);
+    } else {
+      return project.workspace.restoreResource(fileUuid);
+    }
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+      "fileUuid": fileUuid,
+      "offset": offset,
+      "length": length,
+    };
+  }
+
+  String toString() => '${fileUuid} [${offset}:${length}]';
 }
 
 /**
@@ -149,22 +229,31 @@ class Outline {
  */
 abstract class OutlineEntry {
   String name;
-  int startOffset;
-  int endOffset;
+  int nameStartOffset;
+  int nameEndOffset;
+  int bodyStartOffset;
+  int bodyEndOffset;
 
   OutlineEntry([this.name]);
 
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     name = mapData["name"];
-    startOffset = mapData["startOffset"];
-    endOffset = mapData["endOffset"];
+    nameStartOffset = mapData["nameStartOffset"];
+    nameEndOffset = mapData["nameEndOffset"];
+    bodyStartOffset = mapData["bodyStartOffset"];
+    bodyEndOffset = mapData["bodyEndOffset"];
   }
 
   Map toMap() {
     return {
       "name": name,
-      "startOffset": startOffset,
-      "endOffset": endOffset,
+      "nameStartOffset": nameStartOffset,
+      "nameEndOffset": nameEndOffset,
+      "bodyStartOffset": bodyStartOffset,
+      "bodyEndOffset": bodyEndOffset,
     };
   }
 }
@@ -205,6 +294,9 @@ class OutlineClass extends OutlineTopLevelEntry {
 
   OutlineClass([String name]) : super(name);
 
+  /**
+   * Populates values and children from a map
+   */
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
     abstract = mapData["abstract"];
@@ -238,11 +330,25 @@ abstract class OutlineMember extends OutlineEntry {
       entry = new OutlineMethod()..populateFromMap(mapData);
     } else if (type == OutlineProperty._type) {
       entry = new OutlineProperty()..populateFromMap(mapData);
+    } else if (type == OutlineAccessor._type) {
+      entry = new OutlineAccessor()..populateFromMap(mapData);
     }
 
-    entry.static = mapData["static"];
-
     return entry;
+  }
+
+  /**
+   * Populates values and children from a map
+   */
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    static = mapData["static"];
+  }
+
+  Map toMap() {
+    return super.toMap()..addAll({
+      "static": static,
+    });
   }
 }
 
@@ -251,8 +357,6 @@ abstract class OutlineMember extends OutlineEntry {
  */
 class OutlineMethod extends OutlineMember {
   static String _type = "method";
-
-  bool static = false;
 
   OutlineMethod([String name]) : super(name);
 
@@ -269,13 +373,37 @@ class OutlineMethod extends OutlineMember {
 class OutlineProperty extends OutlineMember {
   static String _type = "class-variable";
 
-  bool static = false;
-
   OutlineProperty([String name]) : super(name);
 
   Map toMap() {
     return super.toMap()..addAll({
       "type": _type,
+    });
+  }
+}
+
+/**
+ * Defines a class accessor (getter / setter) entry in an [OutlineClass].
+ */
+class OutlineAccessor extends OutlineMember {
+  static String _type = "class-accessor";
+
+  bool setter = false;
+
+  OutlineAccessor([String name, this.setter]) : super(name);
+
+  /**
+   * Populates values and children from a map
+   */
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    setter = mapData["setter"];
+  }
+
+  Map toMap() {
+    return super.toMap()..addAll({
+      "type": _type,
+      "setter": setter,
     });
   }
 }

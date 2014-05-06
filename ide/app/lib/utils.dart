@@ -12,16 +12,38 @@ import 'dart:web_audio';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+import 'preferences.dart';
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
+
+chrome.DirectoryEntry _packageDirectoryEntry;
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
 String i18n(String messageId) => chrome.i18n.getMessage(messageId);
 
+/**
+ * Return the Chrome App's directory. This utility method ensures that we only
+ * make the `chrome.runtime.getPackageDirectoryEntry` once in the application's
+ * lifetime.
+ */
+Future<chrome.DirectoryEntry> getPackageDirectoryEntry() {
+  if (_packageDirectoryEntry != null) {
+    return new Future.value(_packageDirectoryEntry);
+  }
+
+  return chrome.runtime.getPackageDirectoryEntry().then((dir) {
+    _packageDirectoryEntry = dir;
+    return dir;
+  });
+}
+
+/**
+ * Returns the given word with the first character capitalized.
+ */
 String capitalize(String s) {
-  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
+  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1).toLowerCase());
 }
 
 /**
@@ -37,10 +59,6 @@ String toTitleCase(String s) {
     }
   }).join(' ');
 }
-
-bool isMac() => _platform().indexOf('mac') != -1;
-bool isWin() => _platform().indexOf('win') != -1;
-bool isLinuxLike() => !isMac() && !isWin();
 
 AudioContext _ctx;
 
@@ -86,6 +104,35 @@ Future<String> getAppContents(String path) {
  * Returns a Future that completes after the next tick.
  */
 Future nextTick() => new Future.delayed(Duration.ZERO);
+
+html.DirectoryEntry _html5FSRoot;
+
+/**
+ * Returns the root directory of the application's persistent local storage.
+ */
+Future<html.DirectoryEntry> getLocalDataRoot() {
+  // For now we request 100 MBs; would like this to be unlimited though.
+  final int requestedSize = 100 * 1024 * 1024;
+
+  if (_html5FSRoot != null) return new Future.value(_html5FSRoot);
+
+  return html.window.requestFileSystem(
+      requestedSize, persistent: true).then((html.FileSystem fs) {
+    _html5FSRoot = fs.root;
+    return _html5FSRoot;
+  });
+}
+
+/**
+ * Creates and returns a directory in persistent local storage. This can be used
+ * to cache application data, e.g `getLocalDataDir('workspace')` or
+ * `getLocalDataDir('pub')`.
+ */
+Future<html.DirectoryEntry> getLocalDataDir(String name) {
+  return getLocalDataRoot().then((html.DirectoryEntry root) {
+    return root.createDirectory(name, exclusive: false);
+  });
+}
 
 /**
  * A [Notifier] is used to present the user with a message.
@@ -156,6 +203,78 @@ class PrintProfiler {
    * The elapsed time for the whole operation.
    */
   int totalElapsedMs() => _previousTaskTime + _stopwatch.elapsedMilliseconds;
+}
+
+/**
+ * Defines a preference with built in `whenLoaded` [Future] and easy access to
+ * getting and setting (automatically saving as well as caching) the preference
+ * `value`.
+ */
+abstract class CachedPreference<T> {
+  Future<CachedPreference> whenLoaded;
+
+  Completer _whenLoadedCompleter = new Completer<CachedPreference>();
+  final PreferenceStore _prefStore;
+  T _currentValue;
+  String _preferenceId;
+
+  /**
+   * [prefStore] is the PreferenceStore to use and [preferenceId] is the id of
+   * the stored preference.
+   */
+  CachedPreference(this._prefStore, this._preferenceId) {
+    whenLoaded = _whenLoadedCompleter.future;
+    _retrieveValue().then((_) {
+      // If already loaded (preference has been saved before the load has
+      // finished), don't complete.
+      if (!_whenLoadedCompleter.isCompleted) {
+        _whenLoadedCompleter.complete(this);
+      }
+    });
+  }
+
+  T adaptFromString(String value);
+  String adaptToString(T value);
+
+  /**
+   * The value of the preference, if loaded. If not loaded, throws an error.
+   */
+  T get value {
+    if (!_whenLoadedCompleter.isCompleted) {
+      throw "CachedPreference value read before it was loaded";
+    }
+    return _currentValue;
+  }
+
+  /**
+   * Sets and caches the value of the preference.
+   */
+  void set value(T newValue) {
+    _currentValue = newValue;
+    _prefStore.setValue(_preferenceId, adaptToString(newValue));
+
+    // If a load has not happened by this point, consider us loaded.
+    if (!_whenLoadedCompleter.isCompleted) {
+      _whenLoadedCompleter.complete(this);
+    }
+  }
+
+  Future _retrieveValue() => _prefStore.getValue('stripWhitespaceOnSave')
+      .then((String value) => _currentValue = adaptFromString(value));
+}
+
+/**
+ * Defines a cached [bool] preference access object. Automatically saves and
+ * caches for performance.
+ */
+class BoolCachedPreference extends CachedPreference<bool> {
+  BoolCachedPreference(PreferenceStore prefs, String id) : super(prefs, id);
+
+  @override
+  bool adaptFromString(String value) => value == 'true';
+
+  @override
+  String adaptToString(bool value) => value ? 'true' : 'false';
 }
 
 /**
@@ -259,4 +378,34 @@ String _removeExtPrefix(String str) {
 String _platform() {
   String str = html.window.navigator.platform;
   return (str != null) ? str.toLowerCase() : '';
+}
+
+class FutureHelper {
+  /**
+  * Perform an async operation for each element of the iterable, in turn.
+  * It refreshes the UI after each iteraton.
+  *
+  * Runs [f] for each element in [input] in order, moving to the next element
+  * only when the [Future] returned by [f] completes. Returns a [Future] that
+  * completes when all elements have been processed.
+  *
+  * The return values of all [Future]s are discarded. Any errors will cause the
+  * iteration to stop and will be piped through the returned [Future].
+  */
+  static Future forEachNonBlockingUI(Iterable input, Future f(element)) {
+    Completer doneSignal = new Completer();
+    Iterator iterator = input.iterator;
+    void nextElement(_) {
+      if (iterator.moveNext()) {
+        nextTick().then((_) {
+          f(iterator.current)
+             .then(nextElement,  onError: (e) => doneSignal.completeError(e));
+        });
+      } else {
+        doneSignal.complete(null);
+      }
+    }
+    nextElement(null);
+    return doneSignal.future;
+  }
 }

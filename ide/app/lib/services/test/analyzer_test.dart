@@ -7,7 +7,6 @@ library spark.analyzer_test;
 import 'package:unittest/unittest.dart';
 
 import '../analyzer.dart';
-import '../../utils.dart';
 import '../../services/services_impl.dart';
 
 defineTests(ServicesIsolate servicesIsolate) {
@@ -36,8 +35,8 @@ defineTests(ServicesIsolate servicesIsolate) {
     test('analyze string, no resolution', () {
       ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
 
-      return analyzeString(sdk, "void main() {\n print('hello world');\n}",
-          performResolution: false).then((AnalyzerResult result) {
+      return analyzeString(sdk, "void main() {\n print('hello world');\n}").then(
+          (AnalyzerResult result) {
         expect(result, isNotNull);
         expect(result.ast, isNotNull);
         expect(result.ast.declarations.length, 1);
@@ -51,49 +50,13 @@ defineTests(ServicesIsolate servicesIsolate) {
     test('analyze string, no resolution, syntax errors', () {
       ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
 
-      return analyzeString(sdk, "void main() {\n print('hello world') \n}",
-          performResolution: false).then((AnalyzerResult result) {
+      return analyzeString(sdk, "void main() {\n print('hello world') \n}").then(
+          (AnalyzerResult result) {
         expect(result.ast.declarations.length, 1);
         CompilationUnitMember decl = result.ast.declarations.first;
         expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
         expect((decl as FunctionDeclaration).name.name, 'main');
         expect(result.errors.length, greaterThan(0));
-      });
-    });
-
-    test('analyze string', () {
-      // TODO: this fails under dart2js
-      if (isDart2js()) return null;
-
-      ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
-
-      return analyzeString(sdk, "void main() {\n print('hello world');\n}",
-          performResolution: true).then((AnalyzerResult result) {
-        expect(result, isNotNull);
-        expect(result.ast, isNotNull);
-        expect(result.ast.declarations.length, 1);
-        CompilationUnitMember decl = result.ast.declarations.first;
-        expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
-        expect((decl as FunctionDeclaration).name.name, 'main');
-        expect(result.errors, isEmpty);
-        expect((decl as FunctionDeclaration).element, isNotNull);
-      });
-    });
-
-    test('analyze string with errors', () {
-      // TODO: this fails under dart2js
-      if (isDart2js()) return null;
-
-      ChromeDartSdk sdk = createSdk(servicesIsolate.sdk);
-
-      return analyzeString(sdk, "void main() {\n printfoo('hello world');\n}",
-          performResolution: true).then((AnalyzerResult result) {
-        expect(result.ast, isNotNull);
-        expect(result.ast.declarations.length, 1);
-        CompilationUnitMember decl = result.ast.declarations.first;
-        expect(decl, new isInstanceOf<FunctionDeclaration>('FunctionDeclaration'));
-        expect((decl as FunctionDeclaration).name.name, 'main');
-        expect(result.errors.length, 1);
       });
     });
 

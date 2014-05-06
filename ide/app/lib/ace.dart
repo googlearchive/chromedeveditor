@@ -17,17 +17,25 @@ import 'package:ace/proxy.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:path/path.dart' as path;
 
+import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'navigation.dart';
+import 'package_mgmt/bower_properties.dart';
+import 'package_mgmt/pub.dart';
+import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
-import 'services.dart' as services;
+import 'services.dart' as svc;
 import 'outline.dart';
+import 'ui/polymer/goto_line_view/goto_line_view.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
 class TextEditor extends Editor {
+  static final RegExp whitespaceRegEx = new RegExp('[\t ]*\$', multiLine:true);
+
   final AceManager aceManager;
   final workspace.File file;
 
@@ -75,17 +83,41 @@ class TextEditor extends Editor {
 
   void activate() {
     aceManager.outline.visible = supportsOutline;
+    aceManager._aceEditor.readOnly = readOnly;
   }
+
+  void deactivate() { }
 
   void resize() => aceManager.resize();
 
   void focus() => aceManager.focus();
 
+  void select(Span selection) {
+    // Check if we're the current editor.
+    if (file != aceManager.currentFile) return;
+
+    ace.Point startSelection = _session.document.indexToPosition(selection.offset);
+    ace.Point endSelection = _session.document.indexToPosition(
+        selection.offset + selection.length);
+
+    aceManager._aceEditor.gotoLine(startSelection.row);
+
+    ace.Selection aceSel = aceManager._aceEditor.selection;
+    aceSel.setSelectionAnchor(startSelection.row, startSelection.column);
+    aceSel.selectTo(endSelection.row, endSelection.column);
+  }
+
   bool get supportsOutline => false;
 
   bool get supportsFormat => false;
 
+  // TODO(ussuri): use MetaPackageManager instead when it's ready.
+  bool get readOnly => pubProperties.isInPackagesFolder(file) ||
+      bowerProperties.isInPackagesFolder(file);
+
   void format() { }
+
+  void navigateToDeclaration() { }
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -101,17 +133,22 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save() {
+  Future save([bool stripWhitespace = false]) {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
+      // Remove the trailing whitespace if asked to do so.
+      // TODO(ericarnold): Can't think of an easy way to share this preference,
+      //           but it might be a good idea to do so rather than passing it.
+
       String text = _session.value;
+      if (stripWhitespace) text = text.replaceAll(whitespaceRegEx, '');
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
       // TODO(ericarnold): Need to analyze on initial file load.
-      aceManager.outline.build(text);
+      aceManager.buildOutline();
 
       return file.setContents(text).then((_) => dirty = false);
     } else {
@@ -151,6 +188,24 @@ class DartEditor extends TextEditor {
       super._create(aceManager, file);
 
   bool get supportsOutline => true;
+
+  void navigateToDeclaration() {
+    int offset = _session.document.positionToIndex(
+        aceManager._aceEditor.cursorPosition);
+
+    aceManager._analysisService.getDeclarationFor(file, offset).then(
+        (svc.Declaration declaration) {
+      if (declaration != null) {
+        workspace.File targetFile = declaration.getFile(file.project);
+
+        // Open targetFile and select the range of text.
+        if (targetFile != null) {
+          Span selection = new Span(declaration.offset, declaration.length);
+          aceManager.delegate.openEditor(targetFile, selection: selection);
+        }
+      }
+    });
+  }
 }
 
 class CssEditor extends TextEditor {
@@ -176,12 +231,6 @@ class CssEditor extends TextEditor {
  */
 class AceManager {
   static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
-  // 2 light themes, 4 dark ones.
-  static final THEMES = [
-      'textmate', 'tomorrow',
-      'tomorrow_night', 'monokai', 'idle_fingers', 'pastel_on_dark'
-  ];
-
   /**
    * The container for the Ace editor.
    */
@@ -189,6 +238,10 @@ class AceManager {
   final AceManagerDelegate delegate;
 
   Outline outline;
+
+  StreamController _onGotoDeclarationController = new StreamController();
+  Stream get onGotoDeclaration => _onGotoDeclarationController.stream;
+  GotoLineView gotoLineView;
 
   ace.Editor _aceEditor;
 
@@ -200,10 +253,12 @@ class AceManager {
 
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
+  svc.AnalyzerService _analysisService;
 
-  html.DivElement _outlineDiv = new html.DivElement();
-
-  AceManager(this.parentElement, this.delegate, services.Services services) {
+  AceManager(this.parentElement,
+             this.delegate,
+             svc.Services services,
+             PreferenceStore prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -212,36 +267,72 @@ class AceManager {
     _aceEditor.readOnly = true;
     _aceEditor.fadeFoldWidgets = true;
 
+    _analysisService =  services.getService("analyzer");
+
     // Enable code completion.
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
+    _aceEditor.setOption('enableMultiselect', false);
 
-    // Fallback
-    theme = THEMES[0];
+    // Override Ace's `gotoline` command.
+    var command = new ace.Command(
+        'gotoline',
+        const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
+        _showGotoLineView);
+    _aceEditor.commands.addCommand(command);
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
     ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
-    ace.Mode.extensionMap['htm'] = ace.Mode.HTML;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    parentElement.children.add(_outlineDiv);
-    outline = new Outline(services, _outlineDiv);
+    _setupOutline(prefs);
+    var node = parentElement.getElementsByClassName("ace_content")[0];
+    node.onClick.listen((e) {
+      bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
+      if (accelKey) _onGotoDeclarationController.add(null);
+    });
+  }
+
+  void _setupOutline(PreferenceStore prefs) {
+    outline = new Outline(_analysisService, parentElement, prefs);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
-          currentSession.document.indexToPosition(item.startOffset);
+          currentSession.document.indexToPosition(item.nameStartOffset);
       ace.Point endPoint =
-          currentSession.document.indexToPosition(item.endOffset);
+          currentSession.document.indexToPosition(item.nameEndOffset);
 
       ace.Selection selection = _aceEditor.selection;
+      _aceEditor.gotoLine(startPoint.row);
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
-
     });
+
+    ace.Point lastCursorPosition =  new ace.Point(-1, -1);
+    _aceEditor.onChangeSelection.listen((_) {
+      ace.Point newCursorPosition = _aceEditor.cursorPosition;
+      // Cancel the last outline selection update
+      if (lastCursorPosition != newCursorPosition) {
+        int cursorOffset = currentSession.document.positionToIndex(
+            newCursorPosition);
+        outline.selectItemAtOffset(cursorOffset);
+      }
+      lastCursorPosition = newCursorPosition;
+    });
+
+    // Set up the goto line dialog.
+    gotoLineView = new GotoLineView();
+    gotoLineView.style.zIndex = '10';
+    parentElement.children.add(gotoLineView);
+    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
+    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
+    parentElement.onKeyDown
+        .where((e) => e.keyCode == html.KeyCode.ESC)
+        .listen((_) => gotoLineView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -276,7 +367,10 @@ class AceManager {
 
     html.Element minimap = _minimapElement;
 
-    for (workspace.Marker marker in markers) {
+    markers.sort((x, y) => x.lineNum.compareTo(y.lineNum));
+    int numberMarkers = markers.length.clamp(0, 100);
+    for (int markerIndex = 0; markerIndex < numberMarkers; markerIndex++) {
+      workspace.Marker marker = markers[markerIndex];
       String annotationType = _convertMarkerSeverity(marker.severity);
 
       // Style the marker with the annotation type.
@@ -284,7 +378,8 @@ class AceManager {
           annotationType);
 
       // Ace uses 0-based lines.
-      ace.Point charPoint = currentSession.document.indexToPosition(marker.charStart);
+      ace.Point charPoint = currentSession.document.indexToPosition(
+          marker.charStart);
       int aceRow = charPoint.row;
       int aceColumn = charPoint.column;
 
@@ -326,12 +421,15 @@ class AceManager {
           currentSession.documentToScreenRow(marker.lineNum, aceColumn)
           / numberLines * 100.0;
 
-      html.Element minimapMarker = new html.Element.div();
-      minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
-      minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
-      minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
+      // Only add errors and warnings to the mini-map.
+      if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
+        html.Element minimapMarker = new html.Element.div();
+        minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
+        minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
+        minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
-      minimap.append(minimapMarker);
+        minimap.append(minimapMarker);
+      }
     }
 
     currentSession.setAnnotations(annotations);
@@ -445,10 +543,6 @@ class AceManager {
 
   void clearMarkers() => currentSession.clearAnnotations();
 
-  String get theme => _aceEditor.theme.name;
-
-  set theme(String value) => _aceEditor.theme = new ace.Theme.named(value);
-
   Future<String> getKeyBinding() {
     var handler = _aceEditor.keyBinding.keyboardHandler;
     return handler.onLoad.then((_) {
@@ -464,6 +558,15 @@ class AceManager {
   void focus() => _aceEditor.focus();
 
   void resize() => _aceEditor.resize(false);
+
+  html.Point get cursorPosition {
+    ace.Point cursorPosition = _aceEditor.cursorPosition;
+    return new html.Point(cursorPosition.column, cursorPosition.row);
+  }
+
+  void set cursorPosition(html.Point position) {
+    _aceEditor.navigateTo(position.y, position.x);
+  }
 
   ace.EditSession createEditSession(String text, String fileName) {
     ace.EditSession session = ace.createEditSession(
@@ -490,15 +593,6 @@ class AceManager {
     session.useWorker = false;
   }
 
-  html.Point get cursorPosition {
-    ace.Point cursorPosition = _aceEditor.cursorPosition;
-    return new html.Point(cursorPosition.column, cursorPosition.row);
-  }
-
-  void set cursorPosition(html.Point position) {
-    _aceEditor.navigateTo(position.y, position.x);
-  }
-
   ace.EditSession get currentSession => _aceEditor.session;
 
   void switchTo(ace.EditSession session, [workspace.File file]) {
@@ -509,19 +603,12 @@ class AceManager {
 
     if (session == null) {
       _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
-      _aceEditor.readOnly = true;
     } else {
       _aceEditor.session = session;
-
-      if (_aceEditor.readOnly) {
-        _aceEditor.readOnly = false;
-      }
 
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
         setMarkers(file.getMarkers());
       });
-
-      setMarkers(file.getMarkers());
     }
 
     // Setup the code completion options for the current file type.
@@ -536,7 +623,22 @@ class AceManager {
         _markerSubscription = file.workspace.onMarkerChange.listen(
             _handleMarkerChange);
       }
+
+      setMarkers(file.getMarkers());
+      buildOutline();
     }
+  }
+
+  /**
+   * Make a service call and build the outline view for the current file.
+   */
+  void buildOutline() {
+    String name = currentFile == null ? '' : currentFile.name;
+
+    if (!name.endsWith(".dart")) return;
+
+    String text = currentSession.value;
+    outline.build(name, text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
@@ -555,45 +657,73 @@ class AceManager {
         return ace.Annotation.INFO;
     }
   }
+
+  void _showGotoLineView(_) => gotoLineView.show();
+
+  void _handleGotoLineViewEvent(int line) {
+    _aceEditor.gotoLine(line);
+    gotoLineView.hide();
+  }
+
+  void _handleGotoLineViewClosed(_) => focus();
 }
 
 class ThemeManager {
-  AceManager aceManager;
-  PreferenceStore prefs;
-  html.Element _label;
+  static final LIGHT_THEMES = [
+      'textmate', 'tomorrow'
+  ];
+  static final DARK_THEMES = [
+      'monokai', 'tomorrow_night', 'idle_fingers', 'pastel_on_dark'
+  ];
 
-  ThemeManager(this.aceManager, this.prefs, this._label) {
-    prefs.getValue('aceTheme').then((String value) {
-      if (value != null) {
-        aceManager.theme = value;
-        _updateName(value);
-      } else {
-        _updateName(aceManager.theme);
-      }
-    });
+  ace.Editor _aceEditor;
+  PreferenceStore _prefs;
+  html.Element _label;
+  List<String> _themes = [];
+
+  ThemeManager(AceManager aceManager, this._prefs, this._label) :
+      _aceEditor = aceManager._aceEditor {
+    if (SparkFlags.instance.useAceThemes) {
+      if (SparkFlags.instance.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.instance.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+
+      _prefs.getValue('aceTheme').then((String theme) {
+        if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
+          theme = _themes[0];
+        }
+        _updateTheme(theme);
+      });
+    } else {
+      _themes.add(DARK_THEMES[0]);
+      _updateTheme(_themes[0]);
+    }
   }
 
-  void inc(html.Event e) {
-   e.stopPropagation();
+  void nextTheme(html.Event e) {
+    e.stopPropagation();
     _changeTheme(1);
   }
 
-  void dec(html.Event e) {
+  void prevTheme(html.Event e) {
     e.stopPropagation();
     _changeTheme(-1);
   }
 
   void _changeTheme(int direction) {
-    int index = AceManager.THEMES.indexOf(aceManager.theme);
-    index = (index + direction) % AceManager.THEMES.length;
-    String newTheme = AceManager.THEMES[index];
-    prefs.setValue('aceTheme', newTheme);
-    _updateName(newTheme);
-    aceManager.theme = newTheme;
+    int index = _themes.indexOf(_aceEditor.theme.name);
+    index = (index + direction) % _themes.length;
+    String newTheme = _themes[index];
+    _updateTheme(newTheme);
   }
 
-  void _updateName(String name) {
-    _label.text = utils.toTitleCase(name.replaceAll('_', ' '));
+  void _updateTheme(String theme) {
+    if (SparkFlags.instance.useAceThemes) {
+      _prefs.setValue('aceTheme', theme);
+    }
+    _aceEditor.theme = new ace.Theme.named(theme);
+    if (_label != null) {
+      _label.text = utils.toTitleCase(theme.replaceAll('_', ' '));
+    }
   }
 }
 
@@ -647,6 +777,8 @@ abstract class AceManagerDelegate {
    * Returns true if the file with the given filename can be edited as text.
    */
   bool canShowFileAsText(String filename);
+
+  void openEditor(workspace.File file, {Span selection});
 }
 
 String _calcMD5(String text) {

@@ -4,6 +4,8 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
+<!-- NOTE: If you add any new Polymer imports here, don't forget to also add
+     matching Dart imports in spark_bootstrap.dart. -->
 <link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
@@ -11,17 +13,15 @@
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
-<link rel="import" href="packages/spark_widgets/spark_suggest_box/spark_suggest_box.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
+<link rel="import" href="lib/ui/polymer/goto_line_view/goto_line_view.html">
 
 <polymer-element name="spark-polymer-ui">
   <template>
-
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
     <link rel="stylesheet" href="spark_polymer_ui.css">
 
-    <spark-toolbar id="toolbar" lightdom>
+    <spark-toolbar id="toolbar">
       <spark-button id="runButton" small primary>
         <span class="glyphicon glyphicon-play"></span> Run
       </spark-button>
@@ -34,9 +34,17 @@
       <spark-status id="sparkStatus"></spark-status>
 
       <div id="toolbarRight">
-        <spark-suggest-box id="searchBox" oracle="{{searchOracle}}"
-            placeholder="Search">
-        </spark-suggest-box>
+        <input type="search"
+            id="search"
+            class="form-control"
+            placeholder="Search"/>
+
+        <spark-button id="leftNav" small>
+          <span class="glyphicon glyphicon-chevron-left"></span>
+        </spark-button>
+        <spark-button id="rightNav" small>
+          <span class="glyphicon glyphicon-chevron-right"></span>
+        </spark-button>
 
         <spark-menu-button
             id="mainMenu"
@@ -71,7 +79,7 @@
 
     <spark-split-view
         id="splitView"
-        direction="left" splitterSize="6" splitterHandle="false"
+        direction="left" splitterSize="4" splitterHandle="false"
         on-update="{{onSplitterUpdate}}">
       <content></content>
     </spark-split-view>
@@ -115,7 +123,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="renameFileName">New name</label>
-          <input id="renameFileName" type="text" class="form-control" focused>
+          <input id="renameFileName" type="text" class="form-control"
+              spellcheck="false" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -137,7 +146,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="fileName">New file name</label>
-          <input id="fileName" type="text" class="form-control" focused>
+          <input id="fileName" type="text" class="form-control"
+              spellcheck="false" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -159,7 +169,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="folderName">New folder name</label>
-          <input id="folderName" type="text" class="form-control" focused>
+          <input id="folderName" type="text" class="form-control"
+              spellcheck="false" focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -180,33 +191,48 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <div>
-            <label for="name">Project name</label>
-            <input id="name" type="text" class="form-control" focused>
-          </div>
-          <br/>
-          <form>
-            <div>
-              <input type="radio" name="type" value="empty-project" id="empty-project" checked>
-              <label for="empty-project" checked>Create a blank project</label>
-            </div>
-            <div>
-              <input type="radio" name="type" value="web-dart" id="dart-web-app-radio">
-              <label for="dart-web-app-radio">Create a new Dart web application</label>
-            </div>
-            <!--div>
-              <input type="radio" name="type" value="web-js" id="js-web-app-radio">
-              <label for="js-web-app-radio">Create a new JavaScript web application</label>
-            </div>
-            <div>
-              <input type="radio" name="type" value="app-dart" id="dart-chrome-app-radio">
-              <label for="dart-chrome-app-radio">Create a new Dart Chrome App</label>
-            </div-->
-            <div>
-              <input type="radio" name="type" value="app-js" id="js-chrome-app-radio">
-              <label for="js-chrome-app-radio">Create a new JavaScript Chrome app</label>
-            </div>
-          </form>
+          <label for="name">Project name</label>
+          <input id="name" type="text" class="form-control"
+              pattern="\S+" placeholder="HelloWorld" spellcheck="false"
+              autosave focused />
+        </div>
+        <div class="form-group">
+          <label for="type">Project type</label>
+          <select name="type" class="form-control" autosave>
+            <option value="empty">
+              Blank project
+            </option>
+            <optgroup label="Web apps">
+              <option value="web-js">
+                Web app (JavaScript)
+              </option>
+              <option value="web-js+polymer,polymer-elements,polymer-ui-elements">
+                Web app (JavaScript + Polymer)
+              </option>
+              <option value="web-dart">
+                Web app (Dart)
+              </option>
+            </optgroup>
+            <optgroup label="Chrome apps and extensions">
+              <option value="app-js">
+                Chrome app (JavaScript)
+              </option>
+              <option value="app-js+polymer,polymer-elements,polymer-ui-elements">
+                Chrome app (JavaScript + Polymer)
+              </option>
+              <option value="ext-js">
+                Chrome extension (JavaScript)
+              </option>
+              <option value="ext-js+polymer,polymer-elements,polymer-ui-elements">
+                Chrome extension (JavaScript + Polymer)
+              </option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="polymer-elt-dart">
+                Polymer custom element (Dart)
+              </option>
+            </optgroup>
+          </select>
         </div>
       </div>
       <div class="modal-footer">
@@ -242,10 +268,11 @@
               <label for="adb">Deploy via USB</label>
             </div>
             <div>
-              <input id="ip" type="radio" name="type" value="push-ip" />
+              <input id="ip" type="radio" name="type" value="push-ip" autosave />
               <label for="ip">Deploy to a network host</label>
               <input id="pushUrl" type="text" class="form-control"
-                  placeholder="e.g. 192.168.1.101" />
+                  placeholder="e.g. 192.168.1.101"
+                  pattern="(\d{1,3}\.){3}\d{1,3}" spellcheck="false" autosave/>
             </div>
           </form>
         </div>
@@ -269,8 +296,9 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitRepoUrl">Repository URL</label>
-          <input id="gitRepoUrl" type="text" class="form-control"
-              placeholder="https://github.com/dart-lang/spark.git" focused>
+          <input id="gitRepoUrl" type="url" class="form-control"
+              placeholder="https://github.com/dart-lang/spark.git"
+              spellcheck="false" autosave focused>
         </div>
       </div>
       <div class="modal-footer">
@@ -295,12 +323,12 @@
             <div class="input-label">
               <label for="gitName">Your Name</label>
               <input id="gitName" type="text" class="form-control"
-                  placeholder="John Doe" focused>
+                  placeholder="John Doe" spellcheck="false" autosave focused>
             </div>
             <div class="input-label">
               <label for="gitEmail">Email</label>
-              <input id="gitEmail" type="text" class="form-control"
-                  placeholder="johndoe@gmail.com">
+              <input id="gitEmail" type="email" class="form-control"
+                  placeholder="johndoe@gmail.com" spellcheck="false" autosave>
             </div>
           </div>
         </div>
@@ -315,7 +343,7 @@
         <div class="form-group">
           <label for="commitMessage">Commit Message</label>
           <textarea id="commitMessage" type="text" class="form-control"
-              rows="3"></textarea>
+              rows="3" wrap="soft" spellcheck autosave></textarea>
           <span class="help-block">Enter a brief description of the changes.</span>
         </div>
       </div>
@@ -338,7 +366,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="gitBranchName">New branch name</label>
-          <input id="gitBranchName" type="text" class="form-control" focused>
+          <input id="gitBranchName" type="text" class="form-control"
+              pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
           <span class="help-block">Create a new git branch.</span>
         </div>
       </div>
@@ -361,7 +390,8 @@
       <div class="modal-body">
         <div class="form-group">
           <label for="currentBranchName">Current branch</label>
-          <input id="currentBranchName" type="text" class="form-control" disabled>
+          <input id="currentBranchName" type="text" class="form-control"
+              spellcheck="false" disabled>
         </div>
         <div class="form-group">
           <label for="gitCheckout">Switch to branch</label>
@@ -413,9 +443,9 @@
         </div>
         <div class="form-group">
           <div class="checkbox">
-            <label>
-              <input id="analyticsCheck" type="checkbox">
-                Allow Spark to collect anonymous usage statistics
+            <input id="analyticsCheck" type="checkbox">
+            <label for="analyticsCheck">
+              Allow Spark to collect anonymous usage statistics
             </label>
           </div>
         </div>
@@ -435,23 +465,33 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <div id="changeTheme">
-            <label class="settings-title">Editor theme</label>
-            <div>
-              <span class="settings-label"></span>
-              <span class="plus-minus-container">
-                <a href="#" id="themeMinus" class="plus-minus-button"
-                    on-click="{{onThemeMinus}}">
-                  <span class="glyphicon glyphicon-chevron-left"></span>
-                </a>
-                <a href="#" id="themePlus" class="plus-minus-button"
-                    on-click="{{onThemePlus}}">
-                  <span class="glyphicon glyphicon-chevron-right"></span>
-                </a>
-              </span>
-            </div>
+          <div class="checkbox">
+            <input id="stripWhitespace" type="checkbox">
+            <label for="stripWhitespace">
+              Strip trailing whitespace on save
+            </label>
           </div>
         </div>
+        <template if="{{useAceThemes}}">
+          <div class="form-group">
+            <div id="changeTheme">
+              <label class="settings-title">Editor theme</label>
+              <div>
+                <span class="settings-label"></span>
+                <span class="plus-minus-container">
+                  <a href="#" id="themeMinus" class="plus-minus-button"
+                      on-click="{{onThemeMinus}}">
+                    <span class="glyphicon glyphicon-chevron-left"></span>
+                  </a>
+                  <a href="#" id="themePlus" class="plus-minus-button"
+                      on-click="{{onThemePlus}}">
+                    <span class="glyphicon glyphicon-chevron-right"></span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </template>
         <div class="form-group">
           <div id="changeKeys">
             <label class="settings-title">Key bindings</label>
@@ -518,7 +558,8 @@
             <div class="input-label">
               <label for="gitUsername">User name</label>
               <input id="gitUsername" type="text" class="form-control"
-                  placeholder="johndoe" focused>
+                  placeholder="johndoe" pattern="\S+" spellcheck="false"
+                  autosave focused>
             </div>
             <div class="input-label">
               <label for="gitPassword">Password</label>
@@ -559,7 +600,9 @@
         </div>
         <div class="form-group">
           <label for="appID">Enter the ID of the existing application</label>
-          <input id="appID" type="text" class="form-control">
+          <input id="appID" type="text" class="form-control"
+              placeholder="abcdefghijklmnopqrstuvwxyzabcdef" pattern="[a-z]{32}"
+              spellcheck="false" autosave>
         </div>
       </div>
       <div class="modal-footer">
@@ -644,5 +687,5 @@
     </spark-modal>
   </template>
 
-  <script type="application/dart" src="spark_polymer_ui.dart"></script>
+  <script type="application/dart;component=1" src="spark_polymer_ui.dart"></script>
 </polymer-element>

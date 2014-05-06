@@ -18,13 +18,13 @@ import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
+import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 1000;
 
 /**
  * Classes implement this interface provides/refreshes editors for [Resource]s.
- * TODO(ikarienator): Abstract [TextEditor] so we can support more editor types.
  */
 abstract class EditorProvider {
   Editor createEditorForFile(File file);
@@ -49,10 +49,25 @@ abstract class Editor {
   Stream get onModification;
 
   void activate();
+  void deactivate();
   void resize();
   void focus();
   void fileContentsChanged();
-  Future save();
+  Future save([bool stripWhitespace = false]);
+}
+
+/**
+ * An event broadcast by EditorManager to let all interested parties know
+ * that a file has been modified.
+ */
+class FileModifiedBusEvent extends BusEvent {
+  // TODO(ussuri): Later on, it may make sense to send a single bulk
+  // notification when multiple files get modified at the same time,
+  // e.g. during large refactoring.
+  final File file;
+
+  FileModifiedBusEvent(this.file);
+  BusEventType get type => BusEventType.EDITOR_MANAGER__FILE_MODIFIED;
 }
 
 /**
@@ -67,6 +82,8 @@ class EditorManager implements EditorProvider {
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
 
+  BoolCachedPreference stripWhitespaceOnSave;
+
   static final int PREFS_EDITORSTATES_VERSION = 1;
 
   static final int EDITOR_TYPE_IMAGE = 1;
@@ -77,6 +94,7 @@ class EditorManager implements EditorProvider {
   // Keep state of files that have been opened earlier.
   // Keys are persist tokens of the files.
   final Map<String, _EditorState> _savedEditorStates = {};
+  List<String> persistedFilesUuids = [];
   final Map<File, Editor> _editorMap = {};
   final Services _services;
 
@@ -91,6 +109,9 @@ class EditorManager implements EditorProvider {
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {
+    stripWhitespaceOnSave =
+          new BoolCachedPreference(_prefs, "stripWhitespaceOnSave");
+
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
@@ -99,8 +120,6 @@ class EditorManager implements EditorProvider {
         for (ChangeDelta delta in event.changes) {
           if (delta.isDelete && delta.resource.isFile) {
             _handleFileDeleted(delta.resource);
-          } else if (delta.isDelete && delta.resource is Container) {
-            _handleContainerDeleted(delta.resource);
           } else if (delta.isChange && delta.resource.isFile) {
             _handleFileChanged(delta.resource);
           }
@@ -128,7 +147,7 @@ class EditorManager implements EditorProvider {
    * This will open the given [File]. If this file is already open, it will
    * instead be made the active editor.
    */
-  void openFile(File file, {activateEditor: true}) {
+  void openFile(File file, {bool activateEditor: true}) {
     if (file == null) return;
     _EditorState state = _getStateFor(file);
 
@@ -159,7 +178,7 @@ class EditorManager implements EditorProvider {
       _removeState(state);
 
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
       }
 
       if (_currentState == state) {
@@ -176,6 +195,7 @@ class EditorManager implements EditorProvider {
       _editorMap.remove(file);
 
       persistState();
+      state.close();
     }
   }
 
@@ -188,9 +208,16 @@ class EditorManager implements EditorProvider {
     // version: 1 -> PREFS_EDITORSTATES_VERSION. The version number helps
     //     ensure that the format is valid.
     Map savedMap = {};
-    savedMap['openedTabs'] =
-        _openedEditorStates.map((_EditorState s) => s.file.uuid).
-        toList();
+    Set<String> persistedTabs = new Set();
+    persistedTabs.addAll(persistedFilesUuids);
+    List<String> openedTabs = [];
+    // Save only persisted tabs.
+    for(_EditorState state in _openedEditorStates) {
+      if (persistedTabs.contains(state.file.uuid)) {
+        openedTabs.add(state.file.uuid);
+      }
+    }
+    savedMap['openedTabs'] = openedTabs;
     List<Map> filesState = [];
     _savedEditorStates.forEach((String key, _EditorState value) {
       filesState.add(value.toMap());
@@ -267,7 +294,8 @@ class EditorManager implements EditorProvider {
             _selectedController.add(currentFile);
             persistState();
           } else if (_editorMap[currentFile] != null) {
-            // TODO: this explicit casting to AceEditor will go away in a future refactoring
+            // TODO: this explicit casting to AceEditor will go away in a
+            // future refactoring
             ace.TextEditor textEditor = _editorMap[currentFile];
             textEditor.setSession(state.session);
             _selectedController.add(currentFile);
@@ -283,7 +311,7 @@ class EditorManager implements EditorProvider {
   Timer _timer;
 
   void _startSaveTimer() {
-    _eventBus.addEvent('fileModified', currentFile);
+    _eventBus.addEvent(new FileModifiedBusEvent(currentFile));
 
     if (_timer != null) _timer.cancel();
     _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
@@ -297,15 +325,20 @@ class EditorManager implements EditorProvider {
 
     bool wasDirty = false;
 
+    // TODO: We need to rethink how this is done.  Since this happens after
+    // a timer, the state may have changed since the timer started.  This could
+    // affect everything that follows (saving, rebuilding, etc) if the editor
+    // state changes between the timer start and now.
     for (Editor editor in editors) {
       if (editor.dirty) {
-        editor.save();
+        editor.save(stripWhitespaceOnSave.value);
         wasDirty = true;
       }
     }
 
     if (wasDirty) {
-      _eventBus.addEvent('filesSaved', null);
+      _eventBus.addEvent(
+          new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
     }
   }
 
@@ -327,16 +360,6 @@ class EditorManager implements EditorProvider {
 
     if (_savedEditorStates.containsKey(key)) {
       _savedEditorStates.remove(key);
-    }
-  }
-
-  void _handleContainerDeleted(Container container) {
-    List<File> files = this.files.toList();
-
-    for (File file in files) {
-      if (file.containedBy(container)) {
-        _handleFileDeleted(file);
-      }
     }
   }
 
@@ -374,7 +397,6 @@ class EditorManager implements EditorProvider {
     _EditorState state = _getStateFor(editor.file);
     _switchState(state);
     _aceContainer.createDialog(editor.file.name);
-    _aceContainer.setMarkers(editor.file.getMarkers());
   }
 }
 
@@ -454,5 +476,9 @@ class _EditorState {
         session.value = text;
       });
     }
+  }
+
+  void close() {
+    session = null;
   }
 }

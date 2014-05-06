@@ -16,6 +16,7 @@ import 'commands/push_test.dart' as git_commands_push_test;
 import 'fast_sha_test.dart' as git_fast_sha_test;
 import 'file_operations_test.dart' as git_file_operations_test;
 import 'logger_test.dart' as git_logger_test;
+import 'nonetwork/clone_test.dart' as git_nonetwork_clone_test;
 import 'object_test.dart' as git_object_test;
 import 'objectstore_test.dart' as git_objectstore_test;
 import 'pack_test.dart' as git_pack_test;
@@ -39,6 +40,7 @@ void defineTests() {
   git_fast_sha_test.defineTests();
   git_file_operations_test.defineTests();
   git_logger_test.defineTests();
+  git_nonetwork_clone_test.defineTests();
   git_object_test.defineTests();
   git_objectstore_test.defineTests();
   git_pack_test.defineTests();

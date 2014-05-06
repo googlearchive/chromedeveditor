@@ -2,10 +2,9 @@
   "directories": {
     "web": {
       "files": [
-        { "source": "dart.js_", "dest": "dart.js" },
-        { "source": "source.css_", "dest": "$sourceName.css" },
-        { "source": "source.dart_", "dest": "$sourceName.dart" },
-        { "source": "source.html_", "dest": "$sourceName.html" }
+        { "source": "source.css_", "dest": "``sourceName``.css" },
+        { "source": "source.dart_", "dest": "``sourceName``.dart" },
+        { "source": "source.html_", "dest": "``sourceName``.html" }
       ]
     }
   },

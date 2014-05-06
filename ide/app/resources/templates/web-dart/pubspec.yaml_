@@ -1,4 +1,4 @@
-name: _Project_name_
+name: ``projectName``
 description: A sample web application
 dependencies:
   browser: any

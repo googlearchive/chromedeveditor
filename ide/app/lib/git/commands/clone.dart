@@ -11,6 +11,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../config.dart';
 import '../constants.dart';
+import '../exception.dart';
 import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
@@ -49,12 +50,40 @@ class Clone {
     });
   }
 
+  /**
+   * This function is exposed for mocking purpose.
+   */
+  HttpFetcher getHttpFetcher(ObjectStore store, String origin, String url,
+      String username, String password) {
+    return new HttpFetcher(store, origin, url, username, password);
+  }
+
   Future clone() {
     _stopwatch = new PrintProfiler('clone');
+    return _clone(_options.repoUrl);
+  }
 
-    HttpFetcher fetcher = new HttpFetcher(_options.store, "origin",
-        _options.repoUrl, _options.username, _options.password);
+  Future _clone(String url) {
 
+    HttpFetcher fetcher = getHttpFetcher(_options.store, "origin", url,
+        _options.username, _options.password);
+
+    return fetcher.isValidRepoUrl(_options.repoUrl).then((isValid) {
+      if (isValid) {
+        return startClone(fetcher);
+      } else if (!url.endsWith('.git')) {
+        return _clone(url + '.git');
+      } else {
+        return new Future.error(
+            new GitException(GitErrorConstants.GIT_INVALID_REPO_URL));
+      }
+    });
+  }
+
+  /**
+   * Public for testing purpose.
+   */
+  Future startClone(HttpFetcher  fetcher) {
     return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
       return  _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
@@ -222,9 +251,7 @@ class Clone {
                 return _createInitialConfig(result.shallow, localHeadRef)
                     .then((_) {
                   logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
-                  return _options.store.index.reset(true).then((_) {
-                    logger.info(_stopwatch.finishCurrentTask('index.reset()'));
-                  });
+                  _options.store.index.reset(true);
                 });
               });
             });

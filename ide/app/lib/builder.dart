@@ -10,12 +10,14 @@ library spark.builder;
 
 import 'dart:async';
 
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'workspace.dart';
 import 'jobs.dart';
 
 final Logger _logger = new Logger('spark.builder');
+final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
  * A [BuilderManager] listens for changes to a [Workspace], batches up those
@@ -76,7 +78,10 @@ class BuilderManager {
     ResourceChangeEvent event = _combineEvents(_events);
     _events.clear();
 
+    if (event.isEmpty) return;
+
     _logger.info('starting build for ${event.changes}');
+    Stopwatch timer = new Stopwatch()..start();
 
     _buildRunning = true;
 
@@ -85,6 +90,8 @@ class BuilderManager {
     jobManager.schedule(job);
 
     completer.future.then((_) {
+      _logger.info('build finished in ${_nf.format(timer.elapsedMilliseconds)}ms');
+
       _buildRunning = false;
 
       if (_events.isNotEmpty) {
@@ -135,6 +142,7 @@ class _BuildJob extends Job {
 
 ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
   List<ChangeDelta> deltas = [];
-  events.forEach((e) => deltas.addAll(e.changes));
+  events.forEach((e) => deltas.addAll(
+      e.changes.where((change) => !change.resource.isDerived())));
   return new ResourceChangeEvent.fromList(deltas);
 }

@@ -4,97 +4,91 @@
 
 library spark_polymer.ui;
 
-import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
+import 'package:spark_widgets/common/spark_widget.dart';
 
-// BUG(ussuri): https://github.com/dart-lang/spark/issues/500
-import 'packages/spark_widgets/common/spark_widget.dart';
-import 'packages/spark_widgets/spark_suggest_box/spark_suggest_box.dart';
-
+import 'spark_flags.dart';
 import 'spark_model.dart';
-import 'lib/search.dart';
-import 'lib/workspace.dart';
+
+import 'lib/event_bus.dart';
+import 'lib/platform_info.dart';
 
 @CustomTag('spark-polymer-ui')
 class SparkPolymerUI extends SparkWidget {
-  @observable bool developerMode = false;
-  @observable bool chromeOS = false;
-  @observable SuggestOracle searchOracle;
+  SparkModel _model;
+
+  // NOTE: The initial values have to be true so the app can find all the
+  // UI elements it theoretically could need.
+  @observable bool developerMode = true;
+  @observable bool useAceThemes = true;
+  @observable bool chromeOS = true;
 
   SparkPolymerUI.created() : super.created();
 
   @override
   void enteredView() {
     super.enteredView();
-
-    searchOracle = new SearchOracle(
-        () => SparkModel.instance.workspace, _selectFile);
-
-    // Delay calling this until the `SparkModel.instance` is populated.
-    Timer.run(bindKeybindingDesc);
   }
 
-  void _selectFile(Resource file) {
-    SparkModel.instance.editorArea.selectFile(
-        file,
-        forceOpen: true,
-        replaceCurrent: false,
-        switchesTab: true,
-        forceFocus: true);
+  void modelReady(SparkModel model) {
+    assert(_model == null);
+    _model = model;
+    refreshFromModel();
+    // Changed selection may mean some menu items become disabled.
+    // TODO(ussuri): Perhaps listen to more events, e.g. tab switch.
+    _model.eventBus
+        .onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED).listen((_) {
+      refreshFromModel();
+    });
+  }
+
+  void refreshFromModel() {
+    // TODO(ussuri): This also could possibly be done using PathObservers.
+    developerMode = SparkFlags.instance.developerMode;
+    useAceThemes = SparkFlags.instance.useAceThemes;
+    chromeOS = PlatformInfo.isCros;
   }
 
   void onMenuSelected(CustomEvent event, var detail) {
     if (detail['isSelected']) {
       final actionId = detail['value'];
-      final action = SparkModel.instance.actionManager.getAction(actionId);
+      final action = _model.actionManager.getAction(actionId);
       action.invoke();
     }
   }
 
   void onThemeMinus(Event e) {
-    SparkModel.instance.aceThemeManager.dec(e);
+    _model.aceThemeManager.prevTheme(e);
   }
 
   void onThemePlus(Event e) {
-    SparkModel.instance.aceThemeManager.inc(e);
+    _model.aceThemeManager.nextTheme(e);
   }
 
   void onKeysMinus(Event e) {
-    SparkModel.instance.aceKeysManager.dec(e);
+    _model.aceKeysManager.dec(e);
   }
 
   void onKeysPlus(Event e) {
-    SparkModel.instance.aceKeysManager.inc(e);
+    _model.aceKeysManager.inc(e);
   }
 
   void onSplitterUpdate(CustomEvent e, var detail) {
-    SparkModel.instance.onSplitViewUpdate(detail['targetSize']);
-  }
-
-  void bindKeybindingDesc() {
-    final items = getShadowDomElement('#mainMenu').querySelectorAll(
-        'spark-menu-item');
-    items.forEach((menuItem) {
-      final actionId = menuItem.attributes['action-id'];
-      final action = SparkModel.instance.actionManager.getAction(actionId);
-      action.bindings.forEach(
-          (keyBind) => menuItem.description = keyBind.getDescription());
-    });
+    _model.onSplitViewUpdate(detail['targetSize']);
   }
 
   void onResetGit() {
-    SparkModel.instance.syncPrefs.removeValue(
-        ['git-auth-info', 'git-user-info']);
-    SparkModel.instance.setGitSettingsResetDoneVisible(true);
+    _model.syncPrefs.removeValue(['git-auth-info', 'git-user-info']);
+    _model.setGitSettingsResetDoneVisible(true);
   }
 
   void onResetPreference() {
     Element resultElement = getShadowDomElement('#preferenceResetResult');
     resultElement.text = '';
-    SparkModel.instance.syncPrefs.clear().then((_) {
-      SparkModel.instance.localPrefs.clear();
+    _model.syncPrefs.clear().then((_) {
+      _model.localPrefs.clear();
     }).catchError((e) {
       resultElement.text = '<error reset preferences>';
     }).then((_) {

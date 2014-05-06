@@ -24,14 +24,23 @@ import '../utils.dart';
 class Index {
 
   final ObjectStore _store;
-
   Map<String, FileStatus> _statusIdx = {};
-
   Map<String, FileStatus> get statusMap => _statusIdx;
+  // Whether index needs to be written on disk.
+  bool _indexDirty = false;
+  // Whether the index is being written on disk.
+  bool _writingIndex = false;
+  // The timer used to schedule saving of the index to the disk.
+  Timer _writeIndexTimer;
+  // When the index is being written, it's the completer used internally
+  // to know when it will complete.
+  Completer _writeIndexCompleter = null;
+  // Request to write the index to disk now is in progress.
+  bool _flushing = false;
 
   Index(this._store);
 
-  Future updateIndexForEntry(FileStatus status) {
+  void updateIndexForEntry(FileStatus status) {
 
     FileStatus oldStatus = _statusIdx[status.path];
 
@@ -71,14 +80,14 @@ class Index {
       status.type = FileStatusType.UNTRACKED;
     }
     _statusIdx[status.path] = status;
-    return writeIndex();
+    _scheduleWriteIndex();
   }
 
-  Future commitEntry(FileStatus status) {
+  void commitEntry(FileStatus status) {
     status.headSha = status.sha;
     status.type = FileStatusType.COMMITTED;
     _statusIdx[status.path] = status;
-    return writeIndex();
+    _scheduleWriteIndex();
   }
 
   FileStatus getStatusForEntry(chrome.Entry entry)
@@ -89,16 +98,14 @@ class Index {
   }
 
   // TODO(grv) : remove this after index file implementation.
-  Future reset([bool isFirstRun]) {
-    return walkFilesAndUpdateIndex(_store.root).then((_) {
+  void reset([bool isFirstRun]) {
       _statusIdx.forEach((String key, FileStatus status) {
         if (status.type != FileStatusType.UNTRACKED || isFirstRun != null) {
           status.type = FileStatusType.COMMITTED;
         }
         status.headSha = status.sha;
       });
-      return writeIndex();
-    });
+      _scheduleWriteIndex();
   }
 
   Future updateIndex() {
@@ -118,7 +125,8 @@ class Index {
           _statusIdx = _parseIndex(out);
         });
       }, onError: (e) {
-        return reset(true);
+        reset(true);
+        return new Future.value();
       });
     });
   }
@@ -126,15 +134,81 @@ class Index {
   /**
    * Writes into the index file the current index.
    */
-  Future writeIndex() {
-
-    JsonEncoder encoder = new JsonEncoder();
-    String out = encoder.convert(statusIdxToMap());
-
+  Future _writeIndex() {
+    assert(_writeIndexCompleter == null);
+    _writingIndex = true;
+    _writeIndexCompleter = new Completer();
+    String out = JSON.encode(statusIdxToMap());
     return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
         (chrome.DirectoryEntry entry) {
-      return FileOps.createFileWithContent(entry, 'index2', out, 'Text');
+      return FileOps.createFileWithContent(entry, 'index2', out, 'Text').then((_) {
+        Completer completer = _writeIndexCompleter;
+        _writeIndexCompleter = null;
+        _writingIndex = false;
+        completer.complete();
+      });
     });
+  }
+
+  /**
+   * Schedule saving of the index to the disk.
+   */
+  void _scheduleWriteIndex() {
+    _indexDirty = true;
+
+    if (_writingIndex) {
+      return;
+    }
+
+    if (_writeIndexTimer != null) {
+      _writeIndexTimer.cancel();
+      _writeIndexTimer = null;
+    }
+
+    _writeIndexTimer = new Timer(const Duration(seconds: 2), () {
+      _writeIndexTimer = null;
+      _indexDirty = false;
+      _writeIndex().then((_) {
+        if (_indexDirty && !_flushing) {
+          _scheduleWriteIndex();
+        }
+      });
+    });
+  }
+
+  /**
+   * Flush the index to disk now and returns a Future if the caller needs to
+   * wait for completion.
+   */
+  Future flush() {
+    if (_writingIndex) {
+      // Waiting for completion...
+      assert(_writeIndexCompleter != null);
+      _flushing = true;
+      return _writeIndexCompleter.future.then((_) {
+        // Then write the index if needed.
+        if (_indexDirty) {
+          _indexDirty = false;
+          return _writeIndex().then((_) {
+            _flushing = false;
+          });
+        }
+      });
+    } else {
+      if (!_indexDirty) {
+        // Doesn't need to write the index.
+        return new Future.value();
+      }
+
+      if (_writeIndexTimer != null) {
+        _writeIndexTimer.cancel();
+        _writeIndexTimer = null;
+      }
+      _flushing = true;
+      return _writeIndex().then((_) {
+        _flushing = false;
+      });
+    }
   }
 
   /**
@@ -163,7 +237,7 @@ class Index {
                status.path = entry.fullPath;
                status.sha = sha;
                status.size = data.size;
-               return updateIndexForEntry(status);
+               updateIndexForEntry(status);
              });
            });
          }

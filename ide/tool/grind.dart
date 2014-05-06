@@ -6,10 +6,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive.dart' as arch;
 import 'package:grinder/grinder.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as path;
-import 'package:polymer/builder.dart' as polymer;
 
 import 'webstore_client.dart';
 
@@ -31,13 +31,15 @@ final String appID = Platform.environment['SPARK_APP_ID'];
 
 void main([List<String> args]) {
   defineTask('setup', taskFunction: setup);
+  defineTask('setup-boot', taskFunction: setupBootstrapping, depends: ['setup']);
 
   defineTask('mode-notest', taskFunction: (c) => _changeMode(useTestMode: false));
   defineTask('mode-test', taskFunction: (c) => _changeMode(useTestMode: true));
 
   defineTask('lint', taskFunction: lint, depends: ['setup']);
 
-  defineTask('deploy', taskFunction: deploy, depends : ['lint']);
+  defineTask('deploy', taskFunction: deploy, depends: ['lint']);
+  defineTask('dartium', taskFunction: deployForDartium, depends: ['lint']);
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
@@ -46,6 +48,7 @@ void main([List<String> args]) {
 
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
+    defineTask('build-android-rsa', taskFunction: buildAndroidRSA);
     defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
     defineTask('release-nightly',
                taskFunction : releaseNightly,
@@ -61,7 +64,7 @@ void main([List<String> args]) {
  * Init needed dependencies.
  */
 void setup(GrinderContext context) {
-  // check to make sure we can locate the SDK
+  // Check to make sure we can locate the SDK.
   if (sdkDir == null) {
     context.fail("Unable to locate the Dart SDK\n"
         "Please set the DART_SDK environment variable to the SDK path.\n"
@@ -71,7 +74,7 @@ void setup(GrinderContext context) {
   PubTools pub = new PubTools();
   pub.get(context);
 
-  // copy from ./packages to ./app/packages
+  // Copy from ./packages to ./app/packages.
   copyDirectory(getDir('packages'), getDir('app/packages'), context);
 
   BUILD_DIR.createSync();
@@ -79,10 +82,38 @@ void setup(GrinderContext context) {
 }
 
 /**
- * Runt Polymer lint on the Polymer entry point.
+ * Init dependencies, and convert the symlinks in `packages` to real copies of
+ * files.
+ */
+void setupBootstrapping(GrinderContext context) {
+  // Remove the symlinks from the 'packages' directory.
+  for (FileSystemEntity entity in getDir('packages').listSync(followLinks: false)) {
+    deleteEntity(entity);
+  }
+
+  // Replace the symlinked contents with actual files. This allows chrome apps
+  // to see the 'packages' direcotry contents, and analyze package: references.
+  copyDirectory(getDir('app/packages'), getDir('packages'), context);
+}
+
+/**
+ * Run Polymer lint on the Polymer entry point.
  */
 void lint(context) {
-  polymer.lint(entryPoints: ['app/spark_polymer.html']);
+  // TODO(devoncarew): Commented out to work around an NPE in the polymer linter.
+  //polymer.lint(entryPoints: ['app/spark_polymer.html']);
+  print('  !!! lint is temporarily turned off');
+}
+
+/**
+ * Similar to [deploy] but creates a layout suitable for Dartium.
+ * Does not run dart2js.
+ */
+void deployForDartium(GrinderContext context) {
+  Directory sourceDir = joinDir(BUILD_DIR, ['dartium']);
+  Directory destDir = joinDir(BUILD_DIR, ['dartium-out']);
+
+  _polymerDeploy(context, sourceDir, destDir, extraArgs: ['--no-js']);
 }
 
 /**
@@ -106,6 +137,14 @@ void deploy(GrinderContext context) {
 
   // Replace shadow DOM to include some fixes.
   copyFile(getFile('tool/shadow_dom.debug.js'), joinDir(deployWeb, ['packages', 'shadow_dom']));
+
+  // Remove map files.
+  List files = BUILD_DIR.listSync(recursive: true, followLinks: false);
+  for (FileSystemEntity entity in files) {
+    if (entity is File && entity.path.endsWith('.js.map')) {
+      deleteEntity(entity);
+    }
+  }
 }
 
 // Creates a release build to be uploaded to Chrome Web Store.
@@ -241,7 +280,7 @@ void stats(GrinderContext context) {
 }
 
 /**
- * Create the 'app/sdk/dart-sdk.bin' file from the current Dart SDK.
+ * Create the 'app/sdk/dart-sdk.bz' file from the current Dart SDK.
  */
 void createSdk(GrinderContext context) {
   Directory srcSdkDir = sdkDir;
@@ -251,6 +290,7 @@ void createSdk(GrinderContext context) {
 
   File versionFile = joinFile(srcSdkDir, ['version']);
   File destArchiveFile = joinFile(destSdkDir, ['dart-sdk.bin']);
+  File destCompressedFile = joinFile(destSdkDir, ['dart-sdk.bz']);
 
   // copy files over
   context.log('copying SDK');
@@ -258,10 +298,14 @@ void createSdk(GrinderContext context) {
 
   // Get rid of some big directories we don't use.
   _delete('app/sdk/lib/_internal/compiler', context);
-  _delete('app/sdk/lib/_internal/dartdoc', context);
+  _delete('app/sdk/lib/_internal/pub', context);
 
   context.log('creating SDK archive');
   _createSdkArchive(versionFile, joinDir(destSdkDir, ['lib']), destArchiveFile);
+
+  // Create the compresed file; delete the original.
+  _compressFile(destArchiveFile, destCompressedFile);
+  destArchiveFile.deleteSync();
 
   deleteEntity(joinDir(destSdkDir, ['lib']), context);
 }
@@ -293,6 +337,16 @@ void clean(GrinderContext context) {
   }
 }
 
+void buildAndroidRSA(GrinderContext context) {
+  context.log('building PNaCL Android RSA module');
+  final Directory androidRSADir = new Directory('nacl_android_rsa');
+  _runCommandSync(context, './make.sh', cwd: androidRSADir.path);
+  Directory appMobileDir = getDir('app/lib/mobile');
+  appMobileDir.createSync();
+  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.nmf'), appMobileDir, context);
+  copyFile(getFile('nacl_android_rsa/nacl_android_rsa.pexe'), appMobileDir, context);
+}
+
 void _zip(GrinderContext context, String dirToZip, String destFile) {
   final String destPath = path.relative(destFile, from: dirToZip);
 
@@ -319,7 +373,8 @@ void _zip(GrinderContext context, String dirToZip, String destFile) {
   }
 }
 
-void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir) {
+void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destDir,
+                    {List extraArgs}) {
   deleteEntity(getDir('${sourceDir.path}'), context);
   deleteEntity(getDir('${destDir.path}'), context);
 
@@ -338,8 +393,11 @@ void _polymerDeploy(GrinderContext context, Directory sourceDir, Directory destD
   final Link link = new Link(sourceDir.path + '/packages');
   link.createSync('../../packages');
 
+  var args = ['--out', '../../${destDir.path}'];
+  if (extraArgs != null) args.addAll(extraArgs);
+
   runDartScript(context, 'packages/polymer/deploy.dart',
-      arguments: ['--out', '../../${destDir.path}'],
+      arguments: args,
       packageRoot: 'packages',
       workingDirectory: sourceDir.path);
 }
@@ -489,6 +547,9 @@ String _modifyManifestWithDroneIOBuildNumber(GrinderContext context,
   version = '${majorVersion}.${buildVersion}';
   manifestDict['version'] = version;
   manifestDict['x-spark-revision'] = revision;
+  manifestDict['name'] = 'Spark Nightly';
+  manifestDict['short_name'] = 'Spark Nightly';
+  manifestDict['description'] = 'A Chrome app based development environment - Nightly version';
   if (removeKey) {
     manifestDict.remove('key');
   }
@@ -547,6 +608,16 @@ void _createSdkArchive(File versionFile, Directory srcDir, File destFile) {
   }
 
   destFile.writeAsBytesSync(writer.toBytes());
+}
+
+/**
+ * Create a bzip2 compressed version of the input file.
+ */
+void _compressFile(File sourceFile, File destFile) {
+  List<int> data = sourceFile.readAsBytesSync();
+  arch.BZip2Encoder encoder = new arch.BZip2Encoder();
+  List<int> output = encoder.encode(data);
+  destFile.writeAsBytesSync(output);
 }
 
 void _printSize(GrinderContext context, File file) {

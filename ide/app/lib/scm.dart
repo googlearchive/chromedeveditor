@@ -140,7 +140,7 @@ abstract class ScmProvider {
    * [ScmException] through the Future's error on a failure.
    */
   Future clone(String url, chrome.DirectoryEntry dir,
-               {String username, String password});
+               {String username, String password, String branchName});
 }
 
 /**
@@ -249,7 +249,11 @@ class GitScmProvider extends ScmProvider {
   String get id => 'git';
 
   bool isUnderScm(Project project) {
-    return project.getChild('.git') is Folder;
+    Folder gitFolder = project.getChild('.git');
+    if (gitFolder is! Folder) return false;
+    if (gitFolder.getChild('index2') is! File) return false;
+    if (gitFolder.getChild('index') is File) return false;
+    return true;
   }
 
   ScmProjectOperations createOperationsFor(Project project) {
@@ -261,13 +265,15 @@ class GitScmProvider extends ScmProvider {
   }
 
   Future clone(String url, chrome.DirectoryEntry dir,
-               {String username, String password}) {
+               {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
         root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir),
-        username: username, password: password);
+        branchName : branchName, username: username, password: password);
 
     return options.store.init().then((_) {
-      return new Clone(options).clone();
+      return new Clone(options).clone().then((_) {
+        return options.store.index.flush();
+      });
     }).catchError((e) {
       if (e is HttpResult) {
         throw new ScmException(e.toString(), e.needsAuth);
@@ -295,8 +301,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     _completer = new Completer();
 
     _objectStore = new ObjectStore(project.entry);
-    _objectStore.init()
-      .then((_) {
+    _objectStore.init().then((_) {
         _completer.complete(_objectStore);
 
         // Populate the branch name.

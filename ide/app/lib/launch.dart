@@ -19,7 +19,8 @@ import 'apps/app_utils.dart';
 import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
-import 'dart/pub.dart';
+import 'package_mgmt/package_manager.dart';
+import 'package_mgmt/pub.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
@@ -105,7 +106,7 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
       _server.addServlet(new PackagesServlet(launchManager));
       _server.addServlet(new WorkspaceServlet(launchManager));
 
-      _logger.info('embedded web server listening on port ${_nf.format(_server.port)}');
+      _logger.info('embedded web server listening on port ${_server.port}');
     }).catchError((error) {
       _logger.severe('Error starting up embedded server', error);
     });
@@ -227,8 +228,6 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
  * A servlet that can serve `package:` urls (`/packages/`).
  */
 class PackagesServlet extends PicoServlet {
-  static const PACKAGE_SEGMENT = '/packages/';
-
   LaunchManager _launchManager;
 
   PackagesServlet(this._launchManager);
@@ -242,11 +241,10 @@ class PackagesServlet extends PicoServlet {
     Container project = _launchManager.workspace.getChild(projectName);
 
     if (project is Project) {
-      String path = _getPath(request);
-      path = PACKAGE_REF_PREFIX + path.substring(
-          path.indexOf(PACKAGE_SEGMENT) + PACKAGE_SEGMENT.length);
-      PubResolver resolver = _launchManager._pubManager.getResolverFor(project);
-      File file = resolver.resolveRefToFile(path);
+      // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
+      PackageResolver resolver =
+          _launchManager._pubManager.getResolverFor(project);
+      File file = resolver.resolveRefToFile(_getPath(request));
       if (file != null) {
         return _serveFileResponse(file);
       }

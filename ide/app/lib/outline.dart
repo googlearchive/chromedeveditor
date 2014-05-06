@@ -1,95 +1,102 @@
-// Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+// Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+
+library spark.outline;
 
 import 'dart:async';
 import 'dart:html' as html;
 
 import '../lib/services.dart' as services;
+import 'preferences.dart';
 
 /**
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
+  Map<int, OutlineItem> _outlineItemsByOffset;
+  OutlineItem _selectedItem;
+
+  StreamSubscription _currentOutlineOperation;
+  Completer _buildCompleter;
+
+  html.Element _container;
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
-  html.DivElement _outlineScrollableDiv;
-  html.DivElement _outlineContentDiv;
 
-  services.AnalyzerService analyzer;
+  html.ButtonElement _outlineButton;
 
-  List<OutlineTopLevelItem> children = [];
-  StreamController childSelectedController = new StreamController();
-  Stream get onChildSelected => childSelectedController.stream;
+  final PreferenceStore _prefs;
+  bool _visible = true;
 
-  Outline(services.Services services, this._outlineDiv) {
-    analyzer = services.getService("analyzer");
+  services.AnalyzerService _analyzer;
 
-    // TODO(ericarnold): This should be done in polymer.
-    _outlineDiv.id = "outline";
+  StreamController<OutlineItem> _childSelectedController = new StreamController();
 
-    _outlineContentDiv = new html.DivElement()
-        ..id = "outlineContent";
+  Outline(this._analyzer, this._container, this._prefs) {
+    // Use template to create the UI of outline.
+    html.DocumentFragment template =
+        (html.querySelector('#outline-template') as
+        html.TemplateElement).content;
+    html.DocumentFragment templateClone = template.clone(true);
+    _outlineDiv = templateClone.querySelector('#outline');
+    _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
+        event.stopPropagation());
+    _rootList = templateClone.querySelector('#outline ul');
+    template =
+        (html.querySelector('#outline-button-template') as
+        html.TemplateElement).content;
+    templateClone = template.clone(true);
+    _outlineButton = templateClone.querySelector('#toggleOutlineButton');
+    _outlineButton.onClick.listen((e) => _toggle());
 
-    _outlineScrollableDiv = new html.DivElement()
-        ..id = "outlineScrollable"
-        ..onMouseWheel.listen((html.MouseEvent event) {
-          event.stopPropagation();
-        });
-
-    _outlineContentDiv.append(_outlineScrollableDiv);
-    _outlineDiv.append(_outlineContentDiv);
-
-    html.SpanElement showGlyph = new html.SpanElement()
-        ..classes.add('glyphicon')
-        ..classes.add('glyphicon-list')
-        ..id = "showOutlineGlyph";
-    html.SpanElement hideGlyph = new html.SpanElement()
-        ..classes.add('glyphicon')
-        ..classes.add('glyphicon-play')
-        ..id = "hideOutlineGlyph";
-
-    html.ButtonElement toggleButton = new html.ButtonElement();
-    toggleButton = new html.ButtonElement()
-        ..id = "toggleOutlineButton"
-        ..append(hideGlyph)
-        ..append(showGlyph)
-        ..onClick.listen((e) {
-          _toggle();
-        });
-
-    _outlineDiv.append(toggleButton);
+    _container.children.add(_outlineButton);
+    _prefs.getValue('OutlineCollapsed').then((String data) {
+      if (data == 'true') {
+        _outlineDiv.classes.add('collapsed');
+      }
+      _container.children.add(_outlineDiv);
+    });
   }
+
+  Stream<OutlineItem> get onChildSelected => _childSelectedController.stream;
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
   set visible(bool value) {
-    if (value != visible) {
-      _outlineDiv.classes.toggle('collapsed');
-    }
+    _visible = value;
+    _outlineDiv.classes.toggle('hidden', !_visible);
+    _outlineButton.classes.toggle('hidden', !_visible);
   }
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
+   * Returns a subscription which can be canceled to cancel the outline.
    */
-  Future build(String code) {
-    return analyzer.getOutlineFor(code).then((services.Outline model) {
-      _populate(model);
-    });
+  Future build(String name, String code) {
+    if (_currentOutlineOperation != null) {
+      _currentOutlineOperation.cancel();
+    }
+
+    if (_buildCompleter != null && !_buildCompleter.isCompleted) {
+      _buildCompleter.complete();
+    }
+
+    _buildCompleter = new Completer();
+
+    _currentOutlineOperation =
+        _analyzer.getOutlineFor(code, name).asStream().listen(
+            (services.Outline model) => _populate(model));
+    _currentOutlineOperation.onDone(() => _buildCompleter.complete);
+
+    return _buildCompleter.future;
   }
 
   void _populate(services.Outline outline) {
-    // TODO(ericarnold): Is there anything else that needs to be done to
-    //    ensure there are no memory leaks?
-    children = [];
-    if (_rootList != null) {
-      _rootList.remove();
-    }
-
-    _rootList = new html.UListElement();
-    _outlineScrollableDiv.append(_rootList);
-
+    _outlineItemsByOffset = {};
+    _rootList.children.clear();
     for (services.OutlineTopLevelEntry data in outline.entries) {
-      _create(data);
+      OutlineItem item = _create(data);
+      _outlineItemsByOffset[item.bodyStartOffset] = item;
     }
   }
 
@@ -110,12 +117,13 @@ class Outline {
    */
   void _toggle() {
     _outlineDiv.classes.toggle('collapsed');
+    String value = _outlineDiv.classes.contains('collapsed') ? 'true' : 'false';
+    _prefs.setValue('OutlineCollapsed', value);
   }
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
     _rootList.append(item.element);
-    item.onClick.listen((event) => childSelectedController.add(item));
-    children.add(item);
+    item.onClick.listen((event) => _childSelectedController.add(item));
     return item;
   }
 
@@ -126,11 +134,45 @@ class Outline {
       _addItem(new OutlineTopLevelFunction(data));
 
   OutlineClass _addClass(services.OutlineClass data) {
-    OutlineClass classItem = new OutlineClass(data);
+    OutlineClass classItem = new OutlineClass(data, _outlineItemsByOffset);
     classItem.onChildSelected.listen((event) =>
-        childSelectedController.add(event));
+        _childSelectedController.add(event));
     _addItem(classItem);
     return classItem;
+  }
+
+  OutlineItem get selectedItem => _selectedItem;
+
+  void setSelected(OutlineItem item) {
+    if (_selectedItem != null) {
+      _selectedItem.setSelected(false);
+    }
+
+    _selectedItem = item;
+
+    if (_selectedItem != null) {
+      _selectedItem.setSelected(true);
+      _selectedItem.scrollIntoView();
+    }
+  }
+
+  void selectItemAtOffset(int cursorOffset) {
+    Map<int, OutlineItem> outlineItems = _outlineItemsByOffset;
+    if (outlineItems != null) {
+      int containerOffset = -1;
+
+      var outlineOffets = outlineItems.keys.toList()..sort();
+
+      // Finds the last outline item that *doesn't* satisfies this:
+      for (int outlineOffset in outlineOffets) {
+        if (outlineOffset > cursorOffset) break;
+        containerOffset = outlineOffset;
+      }
+
+      if (containerOffset != -1) {
+        setSelected(outlineItems[containerOffset]);
+      }
+    }
   }
 }
 
@@ -138,20 +180,29 @@ abstract class OutlineItem {
   html.LIElement _element;
   services.OutlineEntry _data;
   html.AnchorElement _anchor;
+  String get displayName => _data.name;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
     _anchor = new html.AnchorElement(href: "#");
-    _anchor.text = _data.name;
+    _anchor.text = displayName;
 
     _element.append(_anchor);
     _element.classes.add("outlineItem $cssClassName");
   }
 
   Stream get onClick => _anchor.onClick;
-  int get startOffset => _data.startOffset;
-  int get endOffset => _data.endOffset;
+  int get nameStartOffset => _data.nameStartOffset;
+  int get nameEndOffset => _data.nameEndOffset;
+  int get bodyStartOffset => _data.bodyStartOffset;
+  int get bodyEndOffset => _data.bodyEndOffset;
   html.LIElement get element => _element;
+
+  void setSelected(bool selected) {
+    _element.classes.toggle("selected", selected);
+  }
+
+  void scrollIntoView() => _element.scrollIntoView();
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
@@ -175,8 +226,9 @@ class OutlineClass extends OutlineTopLevelItem {
   List<OutlineClassMember> members = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
+  Map<int, OutlineItem> _outlineItemsByOffset;
 
-  OutlineClass(services.OutlineClass data)
+  OutlineClass(services.OutlineClass data, this._outlineItemsByOffset)
       : super(data, "class") {
     _element.append(_childrenRootElement);
     _populate(data);
@@ -191,7 +243,8 @@ class OutlineClass extends OutlineTopLevelItem {
 
   void _populate(services.OutlineClass classData) {
     for (services.OutlineEntry data in classData.members) {
-      _create(data);
+      OutlineItem item = _create(data);
+      _outlineItemsByOffset[item.bodyStartOffset] = item;
     }
   }
 
@@ -200,6 +253,8 @@ class OutlineClass extends OutlineTopLevelItem {
       return addMethod(data);
     } else if (data is services.OutlineProperty) {
       return addProperty(data);
+    } else if (data is services.OutlineAccessor) {
+      return addAccessor(data);
     } else {
       throw new UnimplementedError("Unknown type");
     }
@@ -207,8 +262,12 @@ class OutlineClass extends OutlineTopLevelItem {
 
   OutlineMethod addMethod(services.OutlineMethod data) =>
       _addItem(new OutlineMethod(data));
+
   OutlineProperty addProperty(services.OutlineProperty data) =>
       _addItem(new OutlineProperty(data));
+
+  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
+      _addItem(new OutlineAccessor(data));
 }
 
 abstract class OutlineClassMember extends OutlineItem {
@@ -224,4 +283,10 @@ class OutlineMethod extends OutlineClassMember {
 class OutlineProperty extends OutlineClassMember {
   OutlineProperty(services.OutlineProperty data)
       : super(data, "property");
+}
+
+class OutlineAccessor extends OutlineClassMember {
+  String get displayName => _data.name;
+  OutlineAccessor(services.OutlineAccessor data)
+      : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
 }
