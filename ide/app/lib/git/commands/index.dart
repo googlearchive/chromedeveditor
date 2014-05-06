@@ -99,7 +99,7 @@ class Index {
         status.headSha = status.sha;
         status.type = FileStatusType.COMMITTED;
       }
-      if (!status.isDeleted) {
+      if (!status.deleted) {
         statusIdx[key] = status;
       }
     });
@@ -274,7 +274,7 @@ class Index {
   void _updateDeletedFiles(List<String> filePaths) {
     _statusIdx.forEach((String filePath, FileStatus status) {
       if (!filePaths.contains(filePath)) {
-        status.isDeleted = true;
+        status.deleted = true;
         status.type = FileStatusType.MODIFIED;
       }
     });
@@ -313,7 +313,7 @@ class FileStatus {
   String headSha;
   String sha;
   int size;
-  bool isDeleted = false;
+  bool deleted = false;
 
   /**
    * The number of milliseconds since the Unix epoch.
@@ -334,7 +334,7 @@ class FileStatus {
     size = m['size'];
     modificationTime = m['modificationTime'];
     type = m['type'];
-    isDeleted = m['isDeleted'];
+    deleted = m['deleted'];
   }
 
   /**
@@ -351,7 +351,7 @@ class FileStatus {
       'size' : size,
       'modificationTime' : modificationTime,
       'type' : type,
-      'isDeleted' : isDeleted
+      'deleted' : deleted
     };
   }
 

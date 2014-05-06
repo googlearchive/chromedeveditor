@@ -80,10 +80,11 @@ class Status {
         (Map<String, FileStatus> statuses) {
       Map<String, FileStatus> deletedFilesStatus = {};
       statuses.forEach((String filePath, FileStatus status) {
-        if (status.isDeleted)
+        if (status.deleted) {
           deletedFilesStatus[filePath] = status;
+        }
       });
-      return new Future.value(deletedFilesStatus);
+      return deletedFilesStatus;
     });
   }
 
