@@ -38,7 +38,7 @@ defineTests() {
         Pull pull = new Pull(
             new GitOptions(root: clone.root, store: clone.store));
         return pull.pull().catchError((e) {
-          // TODO: It would be nice is this exception was a little more
+          // TODO: It would be nice if this exception was a little more
           // semantic. For instance, a non-error result that is `null`, or a
           // result status object that indicated no changes.
           expect(e, 'Branch is up-to-date.');
