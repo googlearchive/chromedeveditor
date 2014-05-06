@@ -398,34 +398,31 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
-      double markerPos;
-      
-      
+      String markerPos;
 
-      var scrolling = (_aceEditor.lastVisibleRow - _aceEditor.firstVisibleRow + 1) >= currentSession.document.length;
-      /*%TRACE3*/ print("""(4> 3/28/14): scrolling: ${scrolling}"""); // TRACE%
-      /*%TRACE3*/ print("""(4> 3/28/14): _aceEditor.firstVisibleRow: ${_aceEditor.firstVisibleRow}"""); // TRACE%
-      /*%TRACE3*/ print("""(4> 3/28/14): _aceEditor.lastVisibleRow: ${_aceEditor.lastVisibleRow}"""); // TRACE%
-      /*%TRACE3*/ print("""(4> 3/13/14): currentSession.screenLength: ${currentSession.screenLength}"""); // TRACE%
-      /*%TRACE3*/ print("""(4> 3/13/14): currentSession.document.length: ${currentSession.document.length}"""); // TRACE%
+      var isScrolling = (_aceEditor.lastVisibleRow -
+          _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
+      double markerHorizontalPercentage = currentSession.documentToScreenRow(
+          marker.lineNum, aceColumn) / numberLines;
+      if (!isScrolling) {
+        var lineElements = parentElement.getElementsByClassName("ace_line");
+        int documentHeight = (lineElements.last.offsetTo(parentElement).y -
+            lineElements.first.offsetTo(parentElement).y);
+        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
 
-      var lastDocumentScreenRow = currentSession.documentToScreenRow(0, 0);
-      /*%TRACE3*/ print("""(4> 3/13/14): lastDocumentScreenRow: ${lastDocumentScreenRow}"""); // TRACE%
-      if (currentSession.screenLength > currentSession.document.length) {
-        /*%TRACE3*/ print("(4> 3/13/14): currentSession.screenLength > currentSession.document.length!"); // TRACE%
-
+      } else {
+        markerPos = (markerHorizontalPercentage * 100.0)
+            .toStringAsFixed(2) + "%";
       }
+
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
-      markerPos =
-          currentSession.documentToScreenRow(marker.lineNum, aceColumn)
-          / numberLines * 100.0;
 
       // Only add errors and warnings to the mini-map.
       if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
         html.Element minimapMarker = new html.Element.div();
         minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
-        minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
+        minimapMarker.style.top = markerPos;
         minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
         minimap.append(minimapMarker);
