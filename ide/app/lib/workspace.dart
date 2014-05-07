@@ -598,15 +598,48 @@ abstract class Resource {
 
   Future delete();
 
-  Future rename(String name) {
+  static List<String> _resourceUuids(Resource resource) {
+    if (resource is Container) {
+      return resource.traverse().map((r) => r.uuid).toList();
+    } else {
+      return [resource.uuid];
+    }
+  }
+
+  /**
+   * Rename a resource and returns the new uuids of the resource and its subresources.
+   */
+  Future<Map> _rename(String name) {
     return entry.moveTo(_parent._entry, name: name).then((chrome.Entry e) {
-      workspace.pauseResourceEvents();
-      try {
-        _fireResourceChanges(ChangeDelta.containerDelete(this));
-        _fireResourceChanges(ChangeDelta.containerAdd(this));
-      } finally {
-        workspace.resumeResourceEvents();
+      if (e.isFile) {
+        var file = new File(_parent, e);
+        _parent.getChildren().add(file);
+        _parent.getChildren().remove(this);
+        return {'resource': file, 'uuids': _resourceUuids(file)};
+      } else {
+        var folder = new Folder(_parent, e);
+        _parent.getChildren().add(folder);
+        _parent.getChildren().remove(this);
+        return workspace._gatherChildren(folder).then((_) {
+          return {'resource': folder, 'uuids': _resourceUuids(folder)};
+        });
       }
+    });
+  }
+
+  Future rename(String name) {
+    List<String> originalUuids = _resourceUuids(this);
+    List<ChangeDelta> deletions = ChangeDelta.containerDelete(this);
+    return _rename(name).then((Map renameInfo) {
+      Map<String, String> mapping = {};
+      List<String> uuids = renameInfo['uuids'];
+      Resource res = renameInfo['resource'];
+      for (int i = 0 ; i < originalUuids.length ; i++) {
+        mapping[originalUuids[i]] = uuids[i];
+      }
+      List<ChangeDelta> additions = ChangeDelta.containerAdd(res);
+      _fireResourceChange(new ChangeDelta.rename(this, res, mapping,
+          deletions, additions));
     });
   }
 
@@ -1243,6 +1276,11 @@ class EventType extends Enum<String> {
    * Event type indicates resource has changed.
    */
   static const EventType CHANGE = const EventType._('CHANGE');
+
+  /**
+   * Event type indicates resource has changed.
+   */
+  static const EventType RENAME = const EventType._('RENAME');
 }
 
 /**
@@ -1255,8 +1293,22 @@ class ResourceChangeEvent {
     return new ResourceChangeEvent._([delta]);
   }
 
-  factory ResourceChangeEvent.fromList(List<ChangeDelta> deltas) {
-    return new ResourceChangeEvent._(deltas.toList());
+  factory ResourceChangeEvent.fromList(List<ChangeDelta> deltas,
+      {bool filterRename: false}) {
+    if (filterRename) {
+      List<ChangeDelta> modifiedDeltas = [];
+      for(ChangeDelta change in deltas.toList()) {
+        if (change.isRename) {
+          modifiedDeltas.addAll(change.deletions);
+          modifiedDeltas.addAll(change.additions);
+        } else {
+          modifiedDeltas.add(change);
+        }
+      }
+      return new ResourceChangeEvent._(modifiedDeltas);
+    } else {
+      return new ResourceChangeEvent._(deltas.toList());
+    }
   }
 
   ResourceChangeEvent._(List<ChangeDelta> delta) :
@@ -1290,6 +1342,10 @@ class ResourceChangeEvent {
 class ChangeDelta {
   final Resource resource;
   final EventType type;
+  Resource originalResource = null;
+  Map<String, String> resourceUuidsMapping = null;
+  List<ChangeDelta> deletions = null;
+  List<ChangeDelta> additions = null;
 
   static List<ChangeDelta> containerAdd(Resource resource) {
     if (resource is Container) {
@@ -1313,9 +1369,16 @@ class ChangeDelta {
 
   ChangeDelta(this.resource, this.type);
 
+  ChangeDelta.rename(this.originalResource,
+                     this.resource,
+                     this.resourceUuidsMapping,
+                     this.deletions,
+                     this.additions) : type = EventType.RENAME;
+
   bool get isAdd => type == EventType.ADD;
   bool get isChange => type == EventType.CHANGE;
   bool get isDelete => type == EventType.DELETE;
+  bool get isRename => type == EventType.RENAME;
 
   String toString() => '${type}: ${resource}';
 }

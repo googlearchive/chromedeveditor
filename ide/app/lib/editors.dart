@@ -114,6 +114,9 @@ class EditorManager implements EditorProvider {
         _loadedCompleter.complete(true);
       });
       _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+        // TODO(dvh): reflect name change instead of closing the file.
+        event =
+            new ResourceChangeEvent.fromList(event.changes, filterRename: true);
         for (ChangeDelta delta in event.changes) {
           if (delta.isDelete && delta.resource.isFile) {
             _handleFileDeleted(delta.resource);
@@ -338,6 +341,9 @@ class EditorManager implements EditorProvider {
     if (wasDirty) {
       _eventBus.addEvent(
           new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
+    } else {
+      _eventBus.addEvent(
+          new SimpleBusEvent(BusEventType.EDITOR_MANAGER__NO_MODIFICATIONS));
     }
   }
 

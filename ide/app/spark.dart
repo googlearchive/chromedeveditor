@@ -122,9 +122,9 @@ abstract class Spark
     initScmManager();
     initNavigationManager();
 
-    createEditorComponents();
-    initEditorArea();
+    initAceManager();
     initEditorManager();
+    initEditorArea();
 
     createActions();
 
@@ -149,7 +149,13 @@ abstract class Spark
     addBuilder(new DartBuilder(this.services));
     addBuilder(new JsonBuilder());
 
-    return restoreWorkspace().then((_) => restoreLocationManager());
+    return restoreWorkspace().then((_) {
+      return restoreLocationManager().then((_) {
+        // Location manager might have overridden the Ace-related flags from
+        // "<project location>/.spark.json".
+        initAceThemeAndKeysManagers();
+      });
+    });
   }
 
   //
@@ -247,7 +253,7 @@ abstract class Spark
 
     // Track logged exceptions.
     Logger.root.onRecord.listen((LogRecord r) {
-      if (!SparkFlags.instance.developerMode && r.level <= Level.INFO) return;
+      if (!SparkFlags.developerMode && r.level <= Level.INFO) return;
 
       print(r.toString() + (r.error != null ? ', ${r.error}' : ''));
 
@@ -294,7 +300,7 @@ abstract class Spark
     _bowerManager = new BowerManager(workspace);
   }
 
-  void createEditorComponents() {
+  void initAceManager() {
     _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
@@ -312,7 +318,17 @@ abstract class Spark
     });
   }
 
+  void initAceThemeAndKeysManagers() {
+    _aceThemeManager = new ThemeManager(
+        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
+    _aceKeysManager = new KeyBindingManager(
+        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+  }
+
   void initEditorManager() {
+    _editorManager = new EditorManager(
+        workspace, aceManager, localPrefs, eventBus, services);
+
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
@@ -336,7 +352,10 @@ abstract class Spark
   }
 
   void initEditorArea() {
-    editorArea.onSelected.listen((EditorTab tab) {
+    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
+        workspace, allowsLabelBar: true);
+
+    _editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
       if (!_filesController.isFileSelected(tab.file)) {
@@ -392,9 +411,13 @@ abstract class Spark
     actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
-    actionManager.registerAction(new GitPullAction(this));
-    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
-    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
+    if (SparkFlags.showGitPull) {
+      actionManager.registerAction(new GitPullAction(this));
+    }
+    if (SparkFlags.showGitBranch) {
+      actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+      actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
+    }
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitRevertChangesAction(this));
@@ -447,6 +470,9 @@ abstract class Spark
     return ProjectLocationManager.restoreManager(localPrefs, workspace)
         .then((manager) {
       _projectLocationManager = manager;
+      // The manager might have overridden some dev flags from .spark.json
+      // under the user's project location.
+      refreshUI();
     });
   }
 
@@ -494,7 +520,7 @@ abstract class Spark
   }
 
   void unveil() {
-    if (SparkFlags.instance.developerMode) {
+    if (SparkFlags.developerMode) {
       RunTestsAction action = actionManager.getAction('run-tests');
       action.checkForTestListener();
     }
@@ -758,11 +784,27 @@ class ProjectLocationManager {
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return new ProjectLocationManager._(prefs, workspace,
-            new LocationResult(entry, entry, false));
+        return _initFlagsFromProjectLocation(entry).then((_) {
+          return new ProjectLocationManager._(
+            prefs, workspace, new LocationResult(entry, entry, false));
+        });
       }).catchError((e) {
         return new ProjectLocationManager._(prefs, workspace);
       });
+    });
+  }
+
+  /**
+   * Try to read and set the highest precedence developer flags from
+   * "<project_location>/.spark.json".
+   */
+  static Future _initFlagsFromProjectLocation(chrome.DirectoryEntry projDir) {
+    return projDir.getFile('.spark.json').then(
+        (chrome.ChromeFileEntry flagsFile) {
+      return SparkFlags.initFromFile(flagsFile.readText());
+    }).catchError((_) {
+      // Ignore missing file.
+      return new Future.value();
     });
   }
 
@@ -2683,7 +2725,7 @@ class RunTestsAction extends SparkAction {
   TestDriver testDriver;
 
   RunTestsAction(Spark spark) : super(spark, "run-tests", "Run Tests") {
-    if (SparkFlags.instance.developerMode) {
+    if (SparkFlags.developerMode) {
       addBinding('ctrl-shift-alt-t');
     }
   }
@@ -2691,7 +2733,7 @@ class RunTestsAction extends SparkAction {
   void checkForTestListener() => _initTestDriver();
 
   _invoke([Object context]) {
-    if (SparkFlags.instance.developerMode) {
+    if (SparkFlags.developerMode) {
       _initTestDriver();
       testDriver.runTests();
     }

@@ -186,12 +186,26 @@ class TextEditor extends Editor {
 }
 
 class DartEditor extends TextEditor {
+  int outlineScrollPosition = 0;
+
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
   DartEditor._create(AceManager aceManager, workspace.File file,
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   bool get supportsOutline => true;
+
+  @override
+  void activate() {
+    super.activate();
+    aceManager.outline.scrollPosition = outlineScrollPosition;
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    outlineScrollPosition = aceManager.outline.scrollPosition;
+  }
 
   void navigateToDeclaration() {
     int offset = _session.document.positionToIndex(
@@ -303,6 +317,7 @@ class AceManager {
 
   void _setupOutline(PreferenceStore prefs) {
     outline = new Outline(_analysisService, parentElement, prefs);
+
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);
@@ -330,7 +345,7 @@ class AceManager {
 
     // Set up the goto line dialog.
     gotoLineView = new GotoLineView();
-    gotoLineView.style.zIndex = '10';
+    gotoLineView.style.zIndex = '101';
     parentElement.children.add(gotoLineView);
     gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
     gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
@@ -373,6 +388,17 @@ class AceManager {
 
     markers.sort((x, y) => x.lineNum.compareTo(y.lineNum));
     int numberMarkers = markers.length.clamp(0, 100);
+
+    var isScrolling = (_aceEditor.lastVisibleRow -
+        _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
+
+    int documentHeight;
+    if (!isScrolling) {
+      var lineElements = parentElement.getElementsByClassName("ace_line");
+      documentHeight = (lineElements.last.offsetTo(parentElement).y -
+          lineElements.first.offsetTo(parentElement).y);
+    }
+
     for (int markerIndex = 0; markerIndex < numberMarkers; markerIndex++) {
       workspace.Marker marker = markers[markerIndex];
       String annotationType = _convertMarkerSeverity(marker.severity);
@@ -402,17 +428,25 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
+      double markerHorizontalPercentage = currentSession.documentToScreenRow(
+          marker.lineNum, aceColumn) / numberLines;
+
+      String markerPos;
+      if (!isScrolling) {
+        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
+      } else {
+        markerPos = (markerHorizontalPercentage * 100.0)
+            .toStringAsFixed(2) + "%";
+      }
+
       // TODO(ericarnold): This should also be based upon annotations so ace's
       //     immediate handling of deleting / adding lines gets used.
-      double markerPos =
-          currentSession.documentToScreenRow(marker.lineNum, aceColumn)
-          / numberLines * 100.0;
 
       // Only add errors and warnings to the mini-map.
       if (marker.severity >= workspace.Marker.SEVERITY_WARNING) {
         html.Element minimapMarker = new html.Element.div();
         minimapMarker.classes.add("minimap-marker ${marker.severityDescription}");
-        minimapMarker.style.top = '${markerPos.toStringAsFixed(2)}%';
+        minimapMarker.style.top = markerPos;
         minimapMarker.onClick.listen((e) => _miniMapMarkerClicked(e, marker));
 
         minimap.append(minimapMarker);
@@ -670,9 +704,9 @@ class ThemeManager {
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    if (SparkFlags.instance.useAceThemes) {
-      if (SparkFlags.instance.useDarkAceThemes) _themes.addAll(DARK_THEMES);
-      if (SparkFlags.instance.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+    if (SparkFlags.useAceThemes) {
+      if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
       _prefs.getValue('aceTheme').then((String theme) {
         if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
@@ -704,7 +738,7 @@ class ThemeManager {
   }
 
   void _updateTheme(String theme) {
-    if (SparkFlags.instance.useAceThemes) {
+    if (SparkFlags.useAceThemes) {
       _prefs.setValue('aceTheme', theme);
     }
     _aceEditor.theme = new ace.Theme.named(theme);
