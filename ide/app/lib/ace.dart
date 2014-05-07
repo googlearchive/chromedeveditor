@@ -181,7 +181,6 @@ class TextEditor extends Editor {
 
 class DartEditor extends TextEditor {
   int outlineScrollPosition = 0;
-  StreamSubscription scrollSubscription;
 
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
@@ -193,19 +192,13 @@ class DartEditor extends TextEditor {
   @override
   void activate() {
     super.activate();
-    print("activate");
     aceManager.outline.scrollPosition = outlineScrollPosition;
-    scrollSubscription = aceManager.outline.onScroll.listen((_) {
-      outlineScrollPosition = aceManager.outline.scrollPosition;
-    });
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    if (scrollSubscription != null) {
-      scrollSubscription.cancel();
-    }
+    outlineScrollPosition = aceManager.outline.scrollPosition;
   }
 
   void navigateToDeclaration() {
