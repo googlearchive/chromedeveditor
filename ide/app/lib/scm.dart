@@ -23,6 +23,7 @@ import 'git/http_fetcher.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
 import 'git/options.dart';
+import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
@@ -384,6 +385,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       return Revert.revert(options, resources.map((e) => e.entry).toList());
+    });
+  }
+
+  Future<List<FileStatus>> addFiles(List<chrome.Entry> files) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Add.addFiles(options, files);
     });
   }
 
