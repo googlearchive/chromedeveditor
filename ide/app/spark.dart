@@ -1961,7 +1961,7 @@ class GitPullAction extends SparkAction implements ContextAction {
 }
 
 class GitAddAction extends SparkAction implements ContextAction {
-  GitAddAction(Spark spark) : super(spark, "git-add", "Add file to git");
+  GitAddAction(Spark spark) : super(spark, "git-add", "Add  to Git");
   chrome.Entry entry;
 
   void _invoke([List<ws.Resource> resources]) {
@@ -1976,7 +1976,8 @@ class GitAddAction extends SparkAction implements ContextAction {
 
   String get category => 'git';
 
-  bool appliesTo(Object object) => _isFileList(object);
+  bool appliesTo(Object object)
+      => _isFileList(object) && _isUnderScmProject(object);
 }
 
 class GitBranchAction extends SparkActionWithDialog implements ContextAction {
