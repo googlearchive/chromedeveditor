@@ -45,7 +45,12 @@ class GitLocation {
 
   Future dispose() {
     if (entry == null) return new Future.value();
-    return entry.remove().catchError((e) => null);
+
+    try {
+      return entry.removeRecursively().catchError((e) => null);
+    } catch (e) {
+      return new Future.value();
+    }
   }
 
   Future _safeDelete(html.DirectoryEntry dir) {
