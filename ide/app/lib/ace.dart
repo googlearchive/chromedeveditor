@@ -613,7 +613,7 @@ class AceManager {
 
       setMarkers(file.getMarkers());
       buildOutline();
-      session.onChangeScrollTop.listen((_) {
+      session.onChangeScrollTop.listen((_) => Timer.run(() {
         if (outline.visible) {
           _aceEditor.firstVisibleRow;
           int firstCursorOffset = currentSession.document.positionToIndex(
@@ -623,7 +623,7 @@ class AceManager {
 
           outline.scrollToOffsets(firstCursorOffset, lastCursorOffset);
         }
-      });
+      }));
     }
   }
 

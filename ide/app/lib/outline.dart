@@ -192,13 +192,18 @@ class Outline {
   }
 
   void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
-    int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
-    int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+    List<html.Element> outlineElements =
+        _outlineDiv.getElementsByClassName("outlineItem");
 
-    html.Element firstElement = _outlineDiv.getElementsByClassName("outlineItem")[firstItemIndex];
-    html.Element lastElement = _outlineDiv.getElementsByClassName("outlineItem")[lastItemIndex];
-    _scrollIntoView(firstElement.offsetTop,
-        lastElement.offsetTop + lastElement.offsetHeight);
+    if (outlineElements.length > 0) {
+      int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
+      int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+
+      html.Element firstElement = outlineElements[firstItemIndex];
+      html.Element lastElement = outlineElements[lastItemIndex];
+      _scrollIntoView(firstElement.offsetTop,
+          lastElement.offsetTop + lastElement.offsetHeight);
+    }
   }
 
   int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
