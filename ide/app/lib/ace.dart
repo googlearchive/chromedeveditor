@@ -136,7 +136,7 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save([bool stripWhitespace = false]) {
+  Future save() {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
@@ -147,7 +147,8 @@ class TextEditor extends Editor {
 
       String text = _session.value;
 
-      if (stripWhitespace) text = text.replaceAll(whitespaceRegEx, '');
+      if (_prefs.stripWhitespaceOnSave) text =
+          text.replaceAll(whitespaceRegEx, '');
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.

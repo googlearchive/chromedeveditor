@@ -49,7 +49,9 @@ class SparkPreferences {
 
   // Getters and setters for the value of each preference:
   bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.value;
-  set stripWhitespaceOnSave(bool value) => _stripWhitespaceOnSave.value;
+  set stripWhitespaceOnSave(bool value) {
+    _stripWhitespaceOnSave.value = value;
+  }
 }
 
 /**

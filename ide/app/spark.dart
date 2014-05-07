@@ -302,14 +302,6 @@ abstract class Spark
 
   void initAceManager() {
     _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
-    _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
-    _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
-    _editorManager = new EditorManager(
-        workspace, aceManager, prefs, eventBus, services);
-    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
-        _workspace, allowsLabelBar: true);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
@@ -327,7 +319,7 @@ abstract class Spark
 
   void initEditorManager() {
     _editorManager = new EditorManager(
-        workspace, aceManager, localPrefs, eventBus, services);
+        workspace, aceManager, prefs, eventBus, services);
 
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
@@ -2689,7 +2681,7 @@ class SettingsAction extends SparkActionWithDialog {
     // showing the dialog:
     Future.wait([
       spark.prefs.onPreferencesReady.then((_) {
-            whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave;
+        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave;
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (PlatformInfo.isCros) {

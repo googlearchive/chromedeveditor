@@ -85,7 +85,7 @@ class MockAceEditor implements TextEditor {
   Stream get onDirtyChange => null;
   Stream get onModification => null;
 
-  Future save([bool stripWhitespace = false]) => new Future.value();
+  Future save() => new Future.value();
 
   void setSession(ace.EditSession value) { }
 
