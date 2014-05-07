@@ -784,12 +784,11 @@ class ProjectLocationManager {
    * Try to read and set the highest precedence developer flags from
    * "<project_location>/.spark.json".
    */
-  static Future _initFlagsFromProjectLocation(chrome.Entry entry) {
-    return (entry as chrome.DirectoryEntry).getFile('.spark.json').then(
-        (chrome.Entry flagsFile) {
-      return SparkFlags.initFromFile(
-          (flagsFile as chrome.ChromeFileEntry).readText());
-    }).catchError((_) {
+  static Future _initFlagsFromProjectLocation(chrome.DirectoryEntry projDir) {
+    return projDir.getFile('.spark.json').then(
+        (chrome.ChromeFileEntry flagsFile) =>
+            SparkFlags.initFromFile(flagsFile.readText())
+    ).catchError((_) {
       // Ignore missing file.
       return new Future.value();
     });
