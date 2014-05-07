@@ -43,7 +43,7 @@ class Index {
   void updateIndexForEntry(FileStatus status) {
 
     // Don't track index for git files.
-    if (status.path.contains('.git')) {
+    if (status.path != null && status.path.contains('.git')) {
       return;
     }
 
@@ -72,10 +72,6 @@ class Index {
             }
             break;
           case FileStatusType.UNTRACKED:
-            if (status.type != FileStatusType.MODIFIED) {
-              status.type = FileStatusType.UNTRACKED;
-            }
-            break;
           default:
             throw "Unsupported file status type.";
         }
