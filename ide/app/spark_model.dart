@@ -44,4 +44,9 @@ abstract class SparkModel extends Application {
    * Hide the splash screen; show the main UI.
    */
   void unveil();
+
+  /**
+   * Refresh the UI based on the changed model and/or flags and/or preferences.
+   */
+  void refreshUI();
 }

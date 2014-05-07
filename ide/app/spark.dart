@@ -120,9 +120,9 @@ abstract class Spark
     initScmManager();
     initNavigationManager();
 
-    createEditorComponents();
-    initEditorArea();
+    initAceManager();
     initEditorManager();
+    initEditorArea();
 
     createActions();
 
@@ -147,7 +147,13 @@ abstract class Spark
     addBuilder(new DartBuilder(this.services));
     addBuilder(new JsonBuilder());
 
-    return restoreWorkspace().then((_) => restoreLocationManager());
+    return restoreWorkspace().then((_) {
+      return restoreLocationManager().then((_) {
+        // Location manager might have overridden the Ace-related flags from
+        // "<project location>/.spark.json".
+        initAceThemeAndKeysManagers();
+      });
+    });
   }
 
   //
@@ -288,16 +294,8 @@ abstract class Spark
     _bowerManager = new BowerManager(workspace);
   }
 
-  void createEditorComponents() {
+  void initAceManager() {
     _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
-    _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
-    _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
-    _editorManager = new EditorManager(
-        workspace, aceManager, localPrefs, eventBus, services);
-    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
-        _workspace, allowsLabelBar: true);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
@@ -306,7 +304,17 @@ abstract class Spark
     });
   }
 
+  void initAceThemeAndKeysManagers() {
+    _aceThemeManager = new ThemeManager(
+        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
+    _aceKeysManager = new KeyBindingManager(
+        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+  }
+
   void initEditorManager() {
+    _editorManager = new EditorManager(
+        workspace, aceManager, localPrefs, eventBus, services);
+
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
       editorManager.files.forEach((file) {
@@ -330,7 +338,10 @@ abstract class Spark
   }
 
   void initEditorArea() {
-    editorArea.onSelected.listen((EditorTab tab) {
+    _editorArea = new EditorArea(querySelector('#editorArea'), editorManager,
+        workspace, allowsLabelBar: true);
+
+    _editorArea.onSelected.listen((EditorTab tab) {
       // We don't change the selection when the file was already selected
       // otherwise, it would break multi-selection (#260).
       if (!_filesController.isFileSelected(tab.file)) {
@@ -445,6 +456,9 @@ abstract class Spark
     return ProjectLocationManager.restoreManager(localPrefs, workspace)
         .then((manager) {
       _projectLocationManager = manager;
+      // The manager might have overridden some dev flags from .spark.json
+      // under the user's project location.
+      refreshUI();
     });
   }
 
@@ -756,11 +770,28 @@ class ProjectLocationManager {
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
-        return new ProjectLocationManager._(prefs, workspace,
-            new LocationResult(entry, entry, false));
+        return _initFlagsFromProjectLocation(entry).then((_) {
+          return new ProjectLocationManager._(
+            prefs, workspace, new LocationResult(entry, entry, false));
+        });
       }).catchError((e) {
         return new ProjectLocationManager._(prefs, workspace);
       });
+    });
+  }
+
+  /**
+   * Try to read and set the highest precedence developer flags from
+   * "<project_ocation>/.spark.json".
+   */
+  static Future _initFlagsFromProjectLocation(chrome.Entry entry) {
+    return (entry as chrome.DirectoryEntry).getFile('.spark.json').then(
+        (chrome.Entry flagsFile) {
+      return SparkFlags.initFromFile(
+          (flagsFile as chrome.ChromeFileEntry).readText());
+    }).catchError((_) {
+      // Ignore missing file.
+      return new Future.value();
     });
   }
 

@@ -156,7 +156,7 @@ class SparkPolymer extends Spark {
   void initWorkspace() => super.initWorkspace();
 
   @override
-  void createEditorComponents() => super.createEditorComponents();
+  void initAceManager() => super.initAceManager();
 
   @override
   void initEditorManager() => super.initEditorManager();
@@ -250,6 +250,7 @@ class SparkPolymer extends Spark {
     button.active = action.enabled;
   }
 
+  @override
   void unveil() {
     super.unveil();
 
@@ -263,6 +264,11 @@ class SparkPolymer extends Spark {
         element.parent.children.remove(element);
       });
     }
+  }
+
+  @override
+  void refreshUI() {
+    _ui.refreshFromModel();
   }
 
   Future _beforeSystemModal() {
