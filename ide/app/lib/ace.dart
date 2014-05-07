@@ -685,9 +685,9 @@ class ThemeManager {
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    if (SparkFlags.instance.useAceThemes) {
-      if (SparkFlags.instance.useDarkAceThemes) _themes.addAll(DARK_THEMES);
-      if (SparkFlags.instance.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+    if (SparkFlags.useAceThemes) {
+      if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
       _prefs.getValue('aceTheme').then((String theme) {
         if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
@@ -719,7 +719,7 @@ class ThemeManager {
   }
 
   void _updateTheme(String theme) {
-    if (SparkFlags.instance.useAceThemes) {
+    if (SparkFlags.useAceThemes) {
       _prefs.setValue('aceTheme', theme);
     }
     _aceEditor.theme = new ace.Theme.named(theme);

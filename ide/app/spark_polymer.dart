@@ -7,6 +7,7 @@ library spark_polymer;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
@@ -47,11 +48,18 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  SparkFlags.initFromFile('app.json').then((_) {
+  // app.json stores global per-app flags and is overwritten by the build
+  // process (`grind deploy`).
+  // user.json can be manually added to override some of the flags from app.json
+  // or add new flags that will survive the build process.
+  final List<Future<String>> flagsReaders = [
+      HttpRequest.getString(chrome.runtime.getURL('app.json')),
+      HttpRequest.getString(chrome.runtime.getURL('user.json'))
+  ];
+  SparkFlags.initFromFiles(flagsReaders).then((_) {
     // Don't set up the zone exception handler if we're running in dev mode.
     final Function maybeRunGuarded =
-        SparkFlags.instance.developerMode ?
-            (f) => f() : createSparkZone().runGuarded;
+        SparkFlags.developerMode ? (f) => f() : createSparkZone().runGuarded;
 
     maybeRunGuarded(() {
       SparkPolymer spark = new SparkPolymer._();
@@ -148,7 +156,7 @@ class SparkPolymer extends Spark {
   void initWorkspace() => super.initWorkspace();
 
   @override
-  void createEditorComponents() => super.createEditorComponents();
+  void initAceManager() => super.initAceManager();
 
   @override
   void initEditorManager() => super.initEditorManager();
@@ -247,6 +255,7 @@ class SparkPolymer extends Spark {
     button.active = action.enabled;
   }
 
+  @override
   void unveil() {
     super.unveil();
 
@@ -260,6 +269,11 @@ class SparkPolymer extends Spark {
         element.parent.children.remove(element);
       });
     }
+  }
+
+  @override
+  void refreshUI() {
+    _ui.refreshFromModel();
   }
 
   Future _beforeSystemModal() {
