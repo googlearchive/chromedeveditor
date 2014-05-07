@@ -786,9 +786,9 @@ class ProjectLocationManager {
    */
   static Future _initFlagsFromProjectLocation(chrome.DirectoryEntry projDir) {
     return projDir.getFile('.spark.json').then(
-        (chrome.ChromeFileEntry flagsFile) =>
-            SparkFlags.initFromFile(flagsFile.readText())
-    ).catchError((_) {
+        (chrome.ChromeFileEntry flagsFile) {
+      return SparkFlags.initFromFile(flagsFile.readText());
+    }).catchError((_) {
       // Ignore missing file.
       return new Future.value();
     });
