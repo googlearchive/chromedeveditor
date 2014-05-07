@@ -13,37 +13,33 @@ class SparkButton extends SparkWidget {
   @published bool primary = false;
 
   // TODO: changing this field does not cause the btnClasses to be re-calculated
-  bool _active = true;
-  @published bool get active => _active;
-  set active(bool value) {
-    _active = value;
-    getShadowDomElement('button').className = btnClasses;
+  bool _enabled = true;
+  @published bool get enabled => _enabled;
+  set enabled(bool value) {
+    _enabled = value;
+    _setClasses();
   }
 
   @published bool large = false;
   @published bool small = false;
   @published bool noPadding = false;
 
-  String get actionId => attributes['action-id'];
+  SparkButton.created() : super.created();
 
-  @observable String get btnClasses {
-    List classes = [
-        CSS_BUTTON,
-        primary ? CSS_PRIMARY : CSS_DEFAULT,
-        active ? SparkWidget.CSS_ENABLED : SparkWidget.CSS_DISABLED
-    ];
-
-    if (large) classes.add(CSS_LARGE);
-    if (small) classes.add(CSS_SMALL);
-
-    return joinClasses(classes);
+  @override
+  void enteredView() {
+    _setClasses();
   }
 
-  static const CSS_BUTTON = "btn";
-  static const CSS_DEFAULT = "btn-default";
-  static const CSS_PRIMARY = "btn-primary";
-  static const CSS_LARGE = "btn-lg";
-  static const CSS_SMALL = "btn-sm";
+  void enabledChanged() => _setClasses();
 
-  SparkButton.created() : super.created();
+  void _setClasses() {
+    $['button'].classes
+        ..toggle('btn-primary', primary)
+        ..toggle('btn-default', !primary)
+        ..toggle('enabled', enabled)
+        ..toggle('disabled', !enabled)
+        ..toggle('btn-lg', large)
+        ..toggle('btn-sm', small);
+  }
 }

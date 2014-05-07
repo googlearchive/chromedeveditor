@@ -13,9 +13,6 @@ const bool IS_DART2JS = identical(1, 1.0);
 // NOTE: This SparkWidget element is not intended to use directly.
 @CustomTag('spark-widget')
 class SparkWidget extends PolymerElement {
-  static const CSS_ENABLED = "enabled";
-  static const CSS_DISABLED = "disabled";
-
   SparkWidget.created() : super.created();
 
   String joinClasses(List<String> cls) => cls.join(" ");

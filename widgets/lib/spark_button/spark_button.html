@@ -7,7 +7,7 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-button" extends="spark-widget"
-    attributes="primary active large small noPadding">
+    attributes="primary enabled large small noPadding">
   <template>
     <link rel="stylesheet" href="spark_button.css">
     <template if="{{noPadding}}">
@@ -18,7 +18,7 @@
       </style>
     </template>
 
-    <button id="button" type="button" focused class="{{btnClasses}}">
+    <button id="button" type="button" class="btn" focused>
       <content></content>
     </button>
   </template>
