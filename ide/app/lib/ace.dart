@@ -367,7 +367,7 @@ class AceManager {
   String _formatAnnotationItemText(String text, [String type]) {
     if (type == null) return text;
 
-    return "<img src='images/${type}_icon.png'> ${text}";
+    return "<img class='ace-tooltip' src='images/${type}_icon.png'> ${text}";
   }
 
   void setMarkers(List<workspace.Marker> markers) {

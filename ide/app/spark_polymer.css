@@ -79,6 +79,13 @@ div.ace_gutter-cell.ace_info, .ace_dark div.ace_gutter-cell.ace_info {
   margin: 3px -4px;
 }
 
+img.ace-tooltip {
+  border: none;
+  display: inline;
+  margin-left: 3px;
+  margin-bottom: 3px;
+}
+
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;
