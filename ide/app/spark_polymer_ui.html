@@ -101,6 +101,10 @@
 
     <!-- OK / Cancel dialog -->
     <spark-modal id="okCancelDialog" class="dialog" animation="scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title"></h4>
+      </div>
       <div class="modal-body">
         <p id="okCancelMessage"></p>
       </div>
@@ -457,14 +461,16 @@
       </div>
     </spark-modal>
 
-    <!-- Setting dialog -->
+    <!-- Settings dialog -->
     <spark-modal id="settingsDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Settings</h4>
       </div>
       <div class="modal-body">
+
         <div class="form-group">
+          <label class="control-label">Whitespace</label>
           <div class="checkbox">
             <input id="stripWhitespace" type="checkbox">
             <label for="stripWhitespace">
@@ -472,46 +478,62 @@
             </label>
           </div>
         </div>
+
         <template if="{{useAceThemes}}">
-          <div class="form-group">
-            <div id="changeTheme">
-              <label class="settings-title">Editor theme</label>
-              <div>
-                <span class="settings-label"></span>
-                <span class="plus-minus-container">
-                  <a href="#" id="themeMinus" class="plus-minus-button"
-                      on-click="{{onThemeMinus}}">
-                    <span class="glyphicon glyphicon-chevron-left"></span>
-                  </a>
-                  <a href="#" id="themePlus" class="plus-minus-button"
-                      on-click="{{onThemePlus}}">
-                    <span class="glyphicon glyphicon-chevron-right"></span>
-                  </a>
-                </span>
-              </div>
-            </div>
-          </div>
-        </template>
-        <div class="form-group">
-          <div id="changeKeys">
-            <label class="settings-title">Key bindings</label>
+          <div class="form-group" id="changeTheme">
+            <label class="control-label">Editor theme</label>
             <div>
               <span class="settings-label"></span>
               <span class="plus-minus-container">
-                <a href="#" id="keysMinus" class="plus-minus-button"
-                    on-click="{{onKeysMinus}}">
+                <a href="#" id="themeMinus" class="plus-minus-button"
+                    on-click="{{onThemeMinus}}">
                   <span class="glyphicon glyphicon-chevron-left"></span>
                 </a>
-                <a href="#" id="keysPlus" class="plus-minus-button"
-                    on-click="{{onKeysPlus}}">
+                <a href="#" id="themePlus" class="plus-minus-button"
+                    on-click="{{onThemePlus}}">
                   <span class="glyphicon glyphicon-chevron-right"></span>
                 </a>
               </span>
             </div>
           </div>
+        </template>
+
+        <div class="form-group" id="changeFont">
+          <label class="control-label">Editor font</label>
+          <div>
+            <span class="settings-label"></span>
+            <span class="plus-minus-container">
+              <a href="#" id="fontMinus" class="plus-minus-button"
+                  on-click="{{onFontSmaller}}">
+                <span class="glyphicon glyphicon-minus"></span>
+              </a>
+              <a href="#" id="fontPlus" class="plus-minus-button"
+                  on-click="{{onFontLarger}}">
+                <span class="glyphicon glyphicon-plus"></span>
+              </a>
+            </span>
+          </div>
         </div>
+
+        <div class="form-group" id="changeKeys">
+          <label class="control-label">Key bindings</label>
+          <div>
+            <span class="settings-label"></span>
+            <span class="plus-minus-container">
+              <a href="#" id="keysMinus" class="plus-minus-button"
+                  on-click="{{onKeysMinus}}">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+              </a>
+              <a href="#" id="keysPlus" class="plus-minus-button"
+                  on-click="{{onKeysPlus}}">
+                <span class="glyphicon glyphicon-chevron-right"></span>
+              </a>
+            </span>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label class="settings-title">Git</label>
+          <label class="control-label">Git</label>
           <div>
             <spark-button on-click="{{onResetGit}}">
               Clear Git Credentials
@@ -519,17 +541,19 @@
             <span id="gitResetSettingsDone">Done</span>
           </div>
         </div>
+
         <template if="{{!chromeOS}}">
           <div class="form-group">
-            <label class="settings-title">Root directory</label>
+            <label class="control-label">Root directory</label>
             <div>
               <span id="directory-label" class="settings-label"></span>
             </div>
           </div>
         </template>
+
         <template if="{{developerMode}}">
           <div class="form-group">
-            <label class="settings-title">Preferences</label>
+            <label class="control-label">Preferences</label>
             <div>
               <spark-button on-click="{{onResetPreference}}">
                 Reset Preferences
@@ -538,6 +562,7 @@
             </div>
           </div>
         </template>
+
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary focused data-dismiss="modal">
@@ -683,6 +708,37 @@
             connection authorization.
           </div>
         </div>
+      </div>
+    </spark-modal>
+
+    <!-- project remove dialog -->
+    <spark-modal id="projectRemoveDialog" class="dialog" animation="scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Remove Project</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <div class="help-block">
+            Choose "Delete" if you want to remove
+            "<span id="projectRemoveProjectName"></span>" permanently from the
+            disk or choose "Remove Reference" if you'd like to remove it from
+            the list of projects in Spark but keep your files on the disk.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle data-dismiss="modal"
+            id="projectRemoveDeleteButton">
+          Delete
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal"
+            id="projectRemoveRemoveReferenceButton">
+          Remove Reference
+        </spark-button>
       </div>
     </spark-modal>
   </template>

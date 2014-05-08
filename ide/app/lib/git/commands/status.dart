@@ -37,6 +37,12 @@ class Status {
         return status;
       }
 
+      // Dont't track status for new and untracked files unless explicitly
+      // added.
+      if (status == null) {
+        return new FileStatus();
+      }
+
       // TODO(grv) : check the modification time when it is available.
       return getShaForEntry(entry, 'blob').then((String sha) {
         status = new FileStatus();

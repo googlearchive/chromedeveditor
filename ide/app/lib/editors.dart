@@ -18,7 +18,6 @@ import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
-import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 1000;
@@ -53,7 +52,7 @@ abstract class Editor {
   void resize();
   void focus();
   void fileContentsChanged();
-  Future save([bool stripWhitespace = false]);
+  Future save();
 }
 
 /**
@@ -76,13 +75,11 @@ class FileModifiedBusEvent extends BusEvent {
 class EditorManager implements EditorProvider {
   final Workspace _workspace;
   final ace.AceManager _aceContainer;
-  final PreferenceStore _prefs;
+  final SparkPreferences _prefs;
   final EventBus _eventBus;
 
   StreamController _newFileOpenedController = new StreamController.broadcast();
   Stream get onNewFileOpened => _newFileOpenedController.stream;
-
-  BoolCachedPreference stripWhitespaceOnSave;
 
   static final int PREFS_EDITORSTATES_VERSION = 1;
 
@@ -109,9 +106,9 @@ class EditorManager implements EditorProvider {
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {
-    stripWhitespaceOnSave =
-          new BoolCachedPreference(_prefs, "stripWhitespaceOnSave");
 
+    // TODO(ericarnold): This is temporary.  Everything should use
+    // [SparkPreferences]
     _workspace.whenAvailable().then((_) {
       _restoreState().then((_) {
         _loadedCompleter.complete(true);
@@ -130,6 +127,8 @@ class EditorManager implements EditorProvider {
       });
     });
   }
+
+  PreferenceStore get _prefStore => _prefs.prefStore;
 
   File get currentFile => _currentState != null ? _currentState.file : null;
 
@@ -181,7 +180,7 @@ class EditorManager implements EditorProvider {
       _removeState(state);
 
       if (editor.dirty) {
-        editor.save(stripWhitespaceOnSave.value);
+        editor.save();
       }
 
       if (_currentState == state) {
@@ -227,12 +226,12 @@ class EditorManager implements EditorProvider {
     });
     savedMap['filesState'] = filesState;
     savedMap['version'] = PREFS_EDITORSTATES_VERSION;
-    _prefs.setValue('editorStates', JSON.encode(savedMap));
+    _prefStore.setValue('editorStates', JSON.encode(savedMap));
   }
 
   // Restore state of the editor manager.
   Future _restoreState() {
-    return _prefs.getValue('editorStates').then((String data) {
+    return _prefStore.getValue('editorStates').then((String data) {
       if (data != null) {
         Map savedMap = JSON.decode(data);
         if (savedMap is Map) {
@@ -334,7 +333,7 @@ class EditorManager implements EditorProvider {
     // state changes between the timer start and now.
     for (Editor editor in editors) {
       if (editor.dirty) {
-        editor.save(stripWhitespaceOnSave.value);
+        editor.save();
         wasDirty = true;
       }
     }
@@ -390,7 +389,7 @@ class EditorManager implements EditorProvider {
     if (editorType(file.name) == EDITOR_TYPE_IMAGE) {
       editor = new ImageViewer(file);
     } else {
-      editor = new ace.TextEditor(_aceContainer, file);
+      editor = new ace.TextEditor(_aceContainer, file, _prefs);
     }
 
     _editorMap[file] = editor;

@@ -90,6 +90,7 @@ abstract class ObjectUtils {
           FileStatus status = new FileStatus();
           status.path = entry.fullPath;
           status.sha = blobSha;
+          status.headSha = blobSha;
           status.size = data.size;
           store.index.updateIndexForEntry(status);
         });

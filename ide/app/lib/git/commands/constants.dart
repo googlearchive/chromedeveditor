@@ -16,4 +16,6 @@ class FileStatusType {
   static const String STAGED = "STAGED";
   static const String COMMITTED = "COMMITTED";
   static const String UNMERGED = "UNMERGED";
+  static const String DELETED = "DELETED";
+  static const String ADDED = "ADDED";
 }

@@ -43,7 +43,7 @@ class Index {
   void updateIndexForEntry(FileStatus status) {
 
     // Don't track index for git files.
-    if (status.path.contains('.git')) {
+    if (status.path != null && status.path.contains('.git')) {
       return;
     }
 
@@ -72,17 +72,12 @@ class Index {
             }
             break;
           case FileStatusType.UNTRACKED:
-            status.type = FileStatusType.UNTRACKED;
-            break;
           default:
             throw "Unsupported file status type.";
         }
       } else {
         status.type = oldStatus.type;
       }
-    } else {
-      status.headSha = status.sha;
-      status.type = FileStatusType.UNTRACKED;
     }
     _statusIdx[status.path] = status;
     _scheduleWriteIndex();
@@ -249,16 +244,19 @@ class Index {
              return new Future.value();
            });
          } else {
-           return getShaForEntry(entry, 'blob').then((String sha) {
-             return entry.getMetadata().then((data) {
-               FileStatus status = new FileStatus();
-               status.path = entry.fullPath;
-               status.sha = sha;
-               status.size = data.size;
-               updateIndexForEntry(status);
-               filePaths.add(entry.fullPath);
+           // don't update index for untracked files.
+           if (_statusIdx[entry.fullPath] != null) {
+             return getShaForEntry(entry, 'blob').then((String sha) {
+               return entry.getMetadata().then((data) {
+                 FileStatus status = new FileStatus();
+                 status.path = entry.fullPath;
+                 status.sha = sha;
+                 status.size = data.size;
+                 updateIndexForEntry(status);
+                 filePaths.add(entry.fullPath);
+               });
              });
-           });
+           }
          }
       }).then((_) {
         _updateDeletedFiles(filePaths);
@@ -325,7 +323,23 @@ class FileStatus {
    */
   String type;
 
-  FileStatus();
+  FileStatus() {
+    this.type = FileStatusType.UNTRACKED;
+  }
+
+  static Future<FileStatus> createFromEntry(chrome.Entry entry) {
+    return entry.getMetadata().then((chrome.Metadata data) {
+      // TODO(grv) : check the modification time when it is available.
+      return getShaForEntry(entry, 'blob').then((String sha) {
+        FileStatus status = new FileStatus();
+        status.path = entry.fullPath;
+        status.sha = sha;
+        status.size = data.size;
+        status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
+        return status;
+      });
+    });
+  }
 
   FileStatus.fromMap(Map m) {
     path = m['path'];

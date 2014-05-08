@@ -194,7 +194,10 @@ class FilesController implements TreeViewDelegate {
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    assert(resource != null);
+    if (resource == null) {
+      print('no resource for ${nodeUid}');
+      assert(resource != null);
+    }
     FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
       cell.acceptDrop = true;

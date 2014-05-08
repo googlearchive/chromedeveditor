@@ -69,26 +69,21 @@ div.ace_gutter-cell.ace_warning {
   background-image: url("images/warning_icon.png");
 }
 
-div.ace_gutter-cell.ace_info {
+div.ace_gutter-cell.ace_info, .ace_dark div.ace_gutter-cell.ace_info {
   background-image: url("images/info_icon.png");
 }
 
-.ace_gutter-tooltip-divider {
+.ace-tooltip-divider {
   background-color: gray;
   height: 1px;
   margin: 3px -4px;
 }
 
-.ace_gutter-tooltip-label-error {
-  color: #F55;
-}
-
-.ace_gutter-tooltip-label-warning {
-  color: #DD3;
-}
-
-.ace_gutter-tooltip-label-info {
-  color: #9CC;
+img.ace-tooltip {
+  border: none;
+  display: inline;
+  margin-left: 3px;
+  margin-bottom: 3px;
 }
 
 div.ace_search {

@@ -30,6 +30,7 @@ import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
 import 'ui/polymer/goto_line_view/goto_line_view.dart';
+import 'utils.dart';
 
 export 'package:ace/ace.dart' show EditSession;
 
@@ -43,26 +44,29 @@ class TextEditor extends Editor {
   StreamController _dirtyController = new StreamController.broadcast();
   StreamController _modificationController = new StreamController.broadcast();
 
+  final SparkPreferences _prefs;
   ace.EditSession _session;
 
   String _lastSavedHash;
 
   bool _dirty = false;
 
-  factory TextEditor(AceManager aceManager, workspace.File file) {
+  factory TextEditor(AceManager aceManager, workspace.File file,
+      SparkPreferences prefs) {
     if (DartEditor.isDartFile(file)) {
-      return new DartEditor._create(aceManager, file);
+      return new DartEditor._create(aceManager, file, prefs);
     }
     if (CssEditor.isCssFile(file)) {
-      return new CssEditor._create(aceManager, file);
+      return new CssEditor._create(aceManager, file, prefs);
     }
-    return new TextEditor._create(aceManager, file);
+    return new TextEditor._create(aceManager, file, prefs);
   }
 
-  TextEditor._create(this.aceManager, this.file);
+  TextEditor._create(this.aceManager, this.file, this._prefs);
 
   void setSession(ace.EditSession value) {
     _session = value;
+    if (_aceSubscription != null) _aceSubscription.cancel();
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
   }
 
@@ -133,7 +137,7 @@ class TextEditor extends Editor {
     }
   }
 
-  Future save([bool stripWhitespace = false]) {
+  Future save() {
     // We store a hash of the contents when saving. When we get a change
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
@@ -143,7 +147,9 @@ class TextEditor extends Editor {
       //           but it might be a good idea to do so rather than passing it.
 
       String text = _session.value;
-      if (stripWhitespace) text = text.replaceAll(whitespaceRegEx, '');
+
+      if (_prefs.stripWhitespaceOnSave) text =
+          text.replaceAll(whitespaceRegEx, '');
       _lastSavedHash = _calcMD5(text);
 
       // TODO(ericarnold): Need to cache or re-analyze on file switch.
@@ -186,8 +192,8 @@ class DartEditor extends TextEditor {
 
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
-  DartEditor._create(AceManager aceManager, workspace.File file) :
-      super._create(aceManager, file);
+  DartEditor._create(AceManager aceManager, workspace.File file,
+      SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   bool get supportsOutline => true;
 
@@ -225,8 +231,8 @@ class DartEditor extends TextEditor {
 class CssEditor extends TextEditor {
   static bool isCssFile(workspace.File file) => file.name.endsWith('.css');
 
-  CssEditor._create(AceManager aceManager, workspace.File file) :
-      super._create(aceManager, file);
+  CssEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs);
 
   bool get supportsFormat => true;
 
@@ -365,12 +371,9 @@ class AceManager {
   }
 
   String _formatAnnotationItemText(String text, [String type]) {
-    String labelHtml = "";
-    if (type != null) {
-      String typeText = type.substring(0, 1).toUpperCase() + type.substring(1);
-      labelHtml = "<span class=ace_gutter-tooltip-label-$type>$typeText: </span>";
-    }
-    return "$labelHtml$text";
+    if (type == null) return text;
+
+    return "<img class='ace-tooltip' src='images/${type}_icon.png'> ${text}";
   }
 
   void setMarkers(List<workspace.Marker> markers) {
@@ -412,8 +415,8 @@ class AceManager {
       // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
       if (existingAnnotation != null) {
-        markerHtml = existingAnnotation.html
-            + "<div class=\"ace_gutter-tooltip-divider\"></div>$markerHtml";
+        markerHtml = '${existingAnnotation.html}'
+            '<div class="ace-tooltip-divider"></div>${markerHtml}';
         annotations.remove(existingAnnotation);
       }
 
@@ -570,6 +573,12 @@ class AceManager {
   void setKeyBinding(String name) {
     var handler = new ace.KeyboardHandler.named(name);
     handler.onLoad.then((_) => _aceEditor.keyBinding.keyboardHandler = handler);
+  }
+
+  num getFontSize() => _aceEditor.fontSize;
+
+  void setFontSize(num size) {
+    _aceEditor.fontSize = size;
   }
 
   void focus() => _aceEditor.focus();
@@ -781,6 +790,44 @@ class KeyBindingManager {
 
   void _updateName(String name) {
     _label.text = (name == null ? 'Default' : utils.capitalize(name));
+  }
+}
+
+class AceFontManager {
+  AceManager aceManager;
+  PreferenceStore prefs;
+  html.Element _label;
+  num _value;
+
+  AceFontManager(this.aceManager, this.prefs, this._label) {
+    _value = aceManager.getFontSize();
+    _updateLabel(_value);
+
+    prefs.getValue('fontSize').then((String pref) {
+      try {
+        _value = num.parse(pref);
+        aceManager.setFontSize(_value);
+        _updateLabel(_value);
+      } catch (e) {
+
+      }
+    });
+  }
+
+  void dec() => _adjustSize(_value - 2);
+
+  void inc() => _adjustSize(_value + 2);
+
+  void _adjustSize(num newValue) {
+    // Clamp to between 6pt and 36pt.
+    _value = math.min(36, math.max(6, newValue));
+    aceManager.setFontSize(_value);
+    _updateLabel(_value);
+    prefs.setValue('fontSize', _value.toString());
+  }
+
+  void _updateLabel(num size) {
+    _label.text = '${size}pt';
   }
 }
 

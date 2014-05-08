@@ -73,10 +73,12 @@ abstract class Spark
   Services services;
   final JobManager jobManager = new JobManager();
   SparkStatus statusComponent;
+  preferences.SparkPreferences prefs;
 
   AceManager _aceManager;
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
+  AceFontManager _aceFontManager;
   ws.Workspace _workspace;
   ScmManager scmManager;
   EditorManager _editorManager;
@@ -110,6 +112,7 @@ abstract class Spark
    * [Polymer.onReady] event.
    */
   Future init() {
+    initPreferences();
     initEventBus();
 
     initAnalytics();
@@ -151,7 +154,7 @@ abstract class Spark
       return restoreLocationManager().then((_) {
         // Location manager might have overridden the Ace-related flags from
         // "<project location>/.spark.json".
-        initAceThemeAndKeysManagers();
+        initAceManagers();
       });
     });
   }
@@ -163,6 +166,7 @@ abstract class Spark
   AceManager get aceManager => _aceManager;
   ThemeManager get aceThemeManager => _aceThemeManager;
   KeyBindingManager get aceKeysManager => _aceKeysManager;
+  AceFontManager get aceFontManager => _aceFontManager;
   ws.Workspace get workspace => _workspace;
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
@@ -225,6 +229,10 @@ abstract class Spark
   //
   // Parts of init():
   //
+
+  void initPreferences() {
+    prefs = new preferences.SparkPreferences(localPrefs);
+  }
 
   void initServices() {
     services = new Services(this.workspace, _pubManager);
@@ -304,16 +312,18 @@ abstract class Spark
     });
   }
 
-  void initAceThemeAndKeysManagers() {
+  void initAceManagers() {
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+    _aceFontManager = new AceFontManager(
+        aceManager, syncPrefs, getUIElement('#changeFont .settings-label'));
   }
 
   void initEditorManager() {
     _editorManager = new EditorManager(
-        workspace, aceManager, localPrefs, eventBus, services);
+        workspace, aceManager, prefs, eventBus, services);
 
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
@@ -406,6 +416,7 @@ abstract class Spark
     }
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
+    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -591,7 +602,8 @@ abstract class Spark
   SparkDialog _okCancelDialog;
   Completer<bool> _okCancelCompleter;
 
-  Future<bool> askUserOkCancel(String message, {String okButtonLabel: 'OK'}) {
+  Future<bool> askUserOkCancel(String message,
+      {String okButtonLabel: 'OK', String title}) {
     if (_okCancelDialog == null) {
       _okCancelDialog = createDialog(getDialogElement('#okCancelDialog'));
       _okCancelDialog.element.querySelector('#okText').onClick.listen((_) {
@@ -610,7 +622,23 @@ abstract class Spark
       });
     }
 
-    _okCancelDialog.element.querySelector('#okCancelMessage').text = message;
+    if (title == null) {
+      _okCancelDialog.element.querySelector('.modal-header').style.display = 'none';
+      _okCancelDialog.element.querySelector('.modal-header .modal-title').text = '';
+    } else {
+      _okCancelDialog.element.querySelector('.modal-header').style.display = 'block';
+      _okCancelDialog.element.querySelector('.modal-header .modal-title').text = title;
+    }
+    Element container = _okCancelDialog.element.querySelector('#okCancelMessage');
+
+    container.children.clear();
+    var lines = message.split('\n');
+    for(String line in lines) {
+      Element lineElement = new Element.p();
+      lineElement.text = line;
+      container.children.add(lineElement);
+    }
+
     _okCancelDialog.element.querySelector('#okText').text = okButtonLabel;
 
     _okCancelCompleter = new Completer();
@@ -1152,12 +1180,17 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       resources = sel;
     }
 
-    String message;
+    ws.Project project = resources.firstWhere((r) => r is ws.Project, orElse: () => null);
+    if (project != null) {
+      _removeProject(project);
+      return;
+    }
 
+    String message;
     if (resources.length == 1) {
-      message = "Are you sure you want to delete '${resources.first.name}'?";
+      message = "Do you really want to delete '${resources.first.name}'?\nThis will permanently delete this file from disk and cannot be undone.";
     } else {
-      message = "Are you sure you want to delete ${resources.length} files?";
+      message = "Do you really want to delete ${resources.length} files?\nThis will permanently delete the files from disk and cannot be undone.";
     }
 
     spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
@@ -1165,13 +1198,50 @@ class FileDeleteAction extends SparkAction implements ContextAction {
         spark.workspace.pauseResourceEvents();
         Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
           String ordinality = resources.length == 1 ? "File" : "Files";
-          spark.showErrorMessage("Error Deleting ${ordinality}", e.toString());
+          spark.showErrorMessage("Error while deleting ${ordinality}", e.toString());
         }).whenComplete(() {
           spark.workspace.resumeResourceEvents();
           spark.workspace.save();
         });
       }
     });
+  }
+
+  void _removeProject(ws.Project project) {
+    // If project is on sync filesystem, it can only be deleted.
+    // It can't be unlinked.
+    if (project.isSyncResource()) {
+      _deleteProject(project);
+      return;
+    }
+
+    SparkDialog _dialog =
+        spark.createDialog(spark.getDialogElement('#projectRemoveDialog'));
+    _dialog.element.querySelector("#projectRemoveProjectName").text =
+        project.name;
+    _dialog.element.querySelector("#projectRemoveDeleteButton")
+        .onClick.listen((_) => _deleteProject(project));
+    _dialog.element.querySelector("#projectRemoveRemoveReferenceButton")
+        .onClick.listen((_) => _removeProjectReference(project));
+    _dialog.show();
+  }
+
+  void _deleteProject(ws.Project project) {
+    spark.askUserOkCancel('''
+Do you really want to delete "${project.name}"?
+This will permanently delete the project contents from disk and cannot be undone.
+''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
+      if (val) {
+        project.delete().catchError((e) {
+          spark.showErrorMessage("Error while deleting project", e.toString());
+        });
+        spark.workspace.save();
+      }
+    });
+  }
+
+  void _removeProjectReference(ws.Project project) {
+    spark.workspace.unlink(project);
   }
 
   String get category => 'resource';
@@ -1989,6 +2059,31 @@ class GitPullAction extends SparkAction implements ContextAction {
   bool appliesTo(context) => _isScmProject(context);
 }
 
+class GitAddAction extends SparkAction implements ContextAction {
+  GitAddAction(Spark spark) : super(spark, "git-add", "Add  to Git");
+  chrome.Entry entry;
+
+  void _invoke([List<ws.Resource> resources]) {
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(resources.first.project);
+    List<chrome.Entry> files = [];
+    resources.forEach((resource) {
+      files.add(resource.entry);
+    });
+    spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(Object object)
+      => _isFileList(object) && _isUnderScmProject(object) && _valid(object);
+
+  bool _valid(List<ws.Resource> resources) {
+    return !resources.any((resource) => resource.getMetadata('scmStatus')
+        != 'untracked');
+  }
+}
+
 class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
@@ -2031,6 +2126,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   List<ws.File> modifiedFileList = [];
   List<ws.File> addedFileList = [];
+  List<ws.File> deletedFileList = [];
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
@@ -2050,6 +2146,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     gitOperations = spark.scmManager.getScmOperationsFor(project);
     modifiedFileList.clear();
     addedFileList.clear();
+    deletedFileList.clear();
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -2082,8 +2179,12 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     addedFileList.forEach((file){
       _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
     });
+    deletedFileList.forEach((file){
+      _gitChangeElement.innerHtml += 'Deleted:&emsp;' + file.path + '<br/>';
+    });
     final int modifiedCnt = modifiedFileList.length;
     final int addedCnt = addedFileList.length;
+    final int deletedCnt = deletedFileList.length;
     if (modifiedCnt + addedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
     } else {
@@ -2103,9 +2204,13 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         _calculateScmStatus(resource);
       } else if (resource is ws.File) {
         FileStatus status = gitOperations.getFileStatus(resource);
-        if (status == FileStatus.MODIFIED) {
+
+        // TODO(grv) : Add deleted files to resource.
+        if (status == FileStatus.DELETED) {
+          deletedFileList.add(resource);
+        } else if (status == FileStatus.MODIFIED) {
           modifiedFileList.add(resource);
-        } else if (status == FileStatus.UNTRACKED) {
+        } else if (status == FileStatus.ADDED) {
           addedFileList.add(resource);
         }
       }
@@ -2398,6 +2503,22 @@ class _GitPullJob extends Job {
   }
 }
 
+class _GitAddJob extends Job {
+  GitScmProjectOperations gitOperations;
+  Spark spark;
+  List<chrome.Entry> files;
+
+  _GitAddJob(this.gitOperations, this.files, this.spark) : super("Adding…");
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+    return gitOperations.addFiles(files).then((_) {
+    }).catchError((e) {
+      spark.showErrorMessage('Error adding file to git', e.toString());
+    });
+  }
+}
+
 class _GitBranchJob extends Job {
   GitScmProjectOperations gitOperations;
   String _branchName;
@@ -2674,9 +2795,8 @@ class SettingsAction extends SparkActionWithDialog {
     // Wait for each of the following to (simultaneously) complete before
     // showing the dialog:
     Future.wait([
-      spark.editorManager.stripWhitespaceOnSave.whenLoaded
-          .then((BoolCachedPreference pref) {
-            whitespaceCheckbox.checked = pref.value;
+      spark.prefs.onPreferencesReady.then((_) {
+        whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave;
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (PlatformInfo.isCros) {
@@ -2688,8 +2808,7 @@ class SettingsAction extends SparkActionWithDialog {
     ]).then((_) {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
-        spark.editorManager.stripWhitespaceOnSave.value =
-            whitespaceCheckbox.checked;
+        spark.prefs.stripWhitespaceOnSave = whitespaceCheckbox.checked;
       });
     });
   }

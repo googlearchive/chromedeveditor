@@ -1,5 +1,6 @@
 .settings/
 app/app.json
+app/user.json
 app/lib/mobile/nacl_android_rsa.nmf
 app/lib/mobile/nacl_android_rsa.pexe
 app/spark.dart.js
