@@ -22,7 +22,7 @@ class Add {
    * Adds a given [entry] to git. A file already known to git is ignored.
    * Returns the updated status of the [entry].
    */
-  static Future<FileStatus> add(GitOptions options, chrome.Entry entry) {
+  static Future<FileStatus> addEntry(GitOptions options, chrome.Entry entry) {
     return Status.getFileStatus(options.store, entry).then((FileStatus status) {
       if (status.type == FileStatusType.UNTRACKED) {
         return FileStatus.createFromEntry(entry).then((FileStatus status) {
@@ -39,11 +39,11 @@ class Add {
    * Adds the given [entries] to git. A file is already known to git is ignored.
    * Returns the list of updates status of the entries.
    */
-  static Future<List<FileStatus>> addFiles(GitOptions options,
+  static Future<List<FileStatus>> addEntries(GitOptions options,
       List<chrome.Entry> entries) {
     List<FileStatus> statuses = [];
     return Future.forEach(entries, (entry) {
-      return add(options, entry).then((status) {
+      return addEntry(options, entry).then((status) {
         statuses.add(status);
       });
     }).then((_) => statuses);

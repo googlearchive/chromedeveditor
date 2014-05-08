@@ -2410,7 +2410,7 @@ class _GitAddJob extends Job {
     monitor.start(name, 1);
     return gitOperations.addFiles(files).then((_) {
     }).catchError((e) {
-      spark.showErrorMessage('Git file add Error', e.toString());
+      spark.showErrorMessage('Error adding file to git', e.toString());
     });
   }
 }

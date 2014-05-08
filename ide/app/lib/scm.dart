@@ -398,7 +398,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<List<FileStatus>> addFiles(List<chrome.Entry> files) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
-      return Add.addFiles(options, files).then((_) {
+      return Add.addEntries(options, files).then((_) {
         return _refreshStatus(project: project);
       });
     });

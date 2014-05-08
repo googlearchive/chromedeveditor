@@ -37,7 +37,7 @@ class Status {
         return status;
       }
 
-      // Dont't track status for new and untracked files unless explictily
+      // Dont't track status for new and untracked files unless explicitly
       // added.
       if (status == null) {
         return new FileStatus();
