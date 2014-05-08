@@ -412,6 +412,7 @@ abstract class Spark
     }
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
+    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -2054,6 +2055,31 @@ class GitPullAction extends SparkAction implements ContextAction {
   bool appliesTo(context) => _isScmProject(context);
 }
 
+class GitAddAction extends SparkAction implements ContextAction {
+  GitAddAction(Spark spark) : super(spark, "git-add", "Add  to Git");
+  chrome.Entry entry;
+
+  void _invoke([List<ws.Resource> resources]) {
+    ScmProjectOperations operations =
+        spark.scmManager.getScmOperationsFor(resources.first.project);
+    List<chrome.Entry> files = [];
+    resources.forEach((resource) {
+      files.add(resource.entry);
+    });
+    spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
+  }
+
+  String get category => 'git';
+
+  bool appliesTo(Object object)
+      => _isFileList(object) && _isUnderScmProject(object) && _valid(object);
+
+  bool _valid(List<ws.Resource> resources) {
+    return !resources.any((resource) => resource.getMetadata('scmStatus')
+        != 'untracked');
+  }
+}
+
 class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
@@ -2096,6 +2122,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   List<ws.File> modifiedFileList = [];
   List<ws.File> addedFileList = [];
+  List<ws.File> deletedFileList = [];
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
@@ -2115,6 +2142,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     gitOperations = spark.scmManager.getScmOperationsFor(project);
     modifiedFileList.clear();
     addedFileList.clear();
+    deletedFileList.clear();
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -2147,8 +2175,12 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     addedFileList.forEach((file){
       _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
     });
+    deletedFileList.forEach((file){
+      _gitChangeElement.innerHtml += 'Deleted:&emsp;' + file.path + '<br/>';
+    });
     final int modifiedCnt = modifiedFileList.length;
     final int addedCnt = addedFileList.length;
+    final int deletedCnt = deletedFileList.length;
     if (modifiedCnt + addedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
     } else {
@@ -2168,9 +2200,13 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         _calculateScmStatus(resource);
       } else if (resource is ws.File) {
         FileStatus status = gitOperations.getFileStatus(resource);
-        if (status == FileStatus.MODIFIED) {
+
+        // TODO(grv) : Add deleted files to resource.
+        if (status == FileStatus.DELETED) {
+          deletedFileList.add(resource);
+        } else if (status == FileStatus.MODIFIED) {
           modifiedFileList.add(resource);
-        } else if (status == FileStatus.UNTRACKED) {
+        } else if (status == FileStatus.ADDED) {
           addedFileList.add(resource);
         }
       }
@@ -2459,6 +2495,22 @@ class _GitPullJob extends Job {
       spark.showSuccessMessage('Pull successful');
     }).catchError((e) {
       spark.showErrorMessage('Git Pull Status', e.toString());
+    });
+  }
+}
+
+class _GitAddJob extends Job {
+  GitScmProjectOperations gitOperations;
+  Spark spark;
+  List<chrome.Entry> files;
+
+  _GitAddJob(this.gitOperations, this.files, this.spark) : super("Adding…");
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+    return gitOperations.addFiles(files).then((_) {
+    }).catchError((e) {
+      spark.showErrorMessage('Error adding file to git', e.toString());
     });
   }
 }
