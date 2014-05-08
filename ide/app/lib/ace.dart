@@ -684,7 +684,10 @@ class AceManager {
     }
   }
 
-  void _showGotoLineView(_) => gotoLineView.show();
+  void _showGotoLineView(_) {
+    parentElement.querySelector('.ace_search').style.display = 'none';
+    gotoLineView.show();
+  }
 
   void _handleGotoLineViewEvent(int line) {
     _aceEditor.gotoLine(line);
