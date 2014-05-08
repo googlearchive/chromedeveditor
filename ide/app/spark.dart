@@ -577,7 +577,8 @@ abstract class Spark
   SparkDialog _okCancelDialog;
   Completer<bool> _okCancelCompleter;
 
-  Future<bool> askUserOkCancel(String message, {String okButtonLabel: 'OK'}) {
+  Future<bool> askUserOkCancel(String message,
+      {String okButtonLabel: 'OK', String title}) {
     if (_okCancelDialog == null) {
       _okCancelDialog = createDialog(getDialogElement('#okCancelDialog'));
       _okCancelDialog.element.querySelector('#okText').onClick.listen((_) {
@@ -596,7 +597,24 @@ abstract class Spark
       });
     }
 
-    _okCancelDialog.element.querySelector('#okCancelMessage').text = message;
+    if (title == null) {
+      _okCancelDialog.element.querySelector('.modal-header').style.display = 'none';
+      _okCancelDialog.element.querySelector('.modal-header .modal-title').text = '';
+    } else {
+      _okCancelDialog.element.querySelector('.modal-header').style.display = 'block';
+      _okCancelDialog.element.querySelector('.modal-header .modal-title').text = title;
+    }
+    //_okCancelDialog.element.querySelector('#okCancelMessage').text = message;
+    Element container = _okCancelDialog.element.querySelector('#okCancelMessage');
+
+    container.children.clear();
+    var lines = message.split('\n');
+    for(String line in lines) {
+      Element lineElement = new Element.p();
+      lineElement.text = line;
+      container.children.add(lineElement);
+    }
+
     _okCancelDialog.element.querySelector('#okText').text = okButtonLabel;
 
     _okCancelCompleter = new Completer();
@@ -1122,8 +1140,13 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       resources = sel;
     }
 
-    String message;
+    ws.Project project = resources.firstWhere((r) => r is ws.Project, orElse: () => null);
+    if (project != null) {
+      _removeProject(project);
+      return;
+    }
 
+    String message;
     if (resources.length == 1) {
       message = "Are you sure you want to delete '${resources.first.name}'?";
     } else {
@@ -1135,13 +1158,49 @@ class FileDeleteAction extends SparkAction implements ContextAction {
         spark.workspace.pauseResourceEvents();
         Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
           String ordinality = resources.length == 1 ? "File" : "Files";
-          spark.showErrorMessage("Error Deleting ${ordinality}", e.toString());
+          spark.showErrorMessage("Error while deleting ${ordinality}", e.toString());
         }).whenComplete(() {
           spark.workspace.resumeResourceEvents();
           spark.workspace.save();
         });
       }
     });
+  }
+
+  void _removeProject(ws.Project project) {
+    // If project is on sync filesystem, it can only be deleted.
+    // It can't be unlinked.
+    if (project.isSyncResource()) {
+      _deleteProject(project);
+      return;
+    }
+    SparkDialog _dialog =
+        spark.createDialog(spark.getDialogElement('#projectRemoveDialog'));
+    _dialog.element.querySelector("#projectRemoveProjectName").text =
+        project.name;
+    _dialog.element.querySelector("#projectRemoveDeleteButton")
+        .onClick.listen((_) => _deleteProject(project));
+    _dialog.element.querySelector("#projectRemoveRemoveReferenceButton")
+        .onClick.listen((_) => _removeProjectReference(project));
+    _dialog.show();
+  }
+
+  void _deleteProject(ws.Project project) {
+    spark.askUserOkCancel('''
+Do you really want to remove "${project.name}" permanently the project from the disk?
+You will lose all the data of this project and you won't be able to cancel this action.
+''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
+      if (val) {
+        project.delete().catchError((e) {
+          spark.showErrorMessage("Error while deleting a project", e.toString());
+        });
+        spark.workspace.save();
+      }
+    });
+  }
+
+  void _removeProjectReference(ws.Project project) {
+    spark.workspace.unlink(project);
   }
 
   String get category => 'resource';
