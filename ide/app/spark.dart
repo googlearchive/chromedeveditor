@@ -1147,9 +1147,9 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
     String message;
     if (resources.length == 1) {
-      message = "Are you sure you want to delete '${resources.first.name}'?";
+      message = "Do you really want to delete '${resources.first.name}'?\nThis will permanently delete this file from disk and cannot be undone.";
     } else {
-      message = "Are you sure you want to delete ${resources.length} files?";
+      message = "Do you really want to delete ${resources.length} files?\nThis will permanently delete the files from disk and cannot be undone.";
     }
 
     spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
@@ -1187,12 +1187,12 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
   void _deleteProject(ws.Project project) {
     spark.askUserOkCancel('''
-Do you really want to remove "${project.name}" permanently the project from the disk?
-You will lose all the data of this project and you won't be able to cancel this action.
+Do you really want to delete "${project.name}"?
+This will permanently delete the project contents from disk and cannot be undone.
 ''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
       if (val) {
         project.delete().catchError((e) {
-          spark.showErrorMessage("Error while deleting a project", e.toString());
+          spark.showErrorMessage("Error while deleting project", e.toString());
         });
         spark.workspace.save();
       }
