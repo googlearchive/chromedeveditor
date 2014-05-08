@@ -801,18 +801,23 @@ class AceFontManager {
     _updateLabel(_value);
 
     prefs.getValue('fontSize').then((String pref) {
-      try { _value = num.parse(pref); } catch (e) { }
-      aceManager.setFontSize(_value);
-      _updateLabel(_value);
+      try {
+        _value = num.parse(pref);
+        aceManager.setFontSize(_value);
+        _updateLabel(_value);
+      } catch (e) {
+
+      }
     });
   }
 
-  void dec() => _adjustSize(math.max(6, _value - 2));
+  void dec() => _adjustSize(_value - 2);
 
-  void inc() => _adjustSize(math.min(36, _value + 2));
+  void inc() => _adjustSize(_value + 2);
 
   void _adjustSize(num newValue) {
-    _value = newValue;
+    // Clamp to between 6pt and 36pt.
+    _value = math.min(36, math.max(6, newValue));
     aceManager.setFontSize(_value);
     _updateLabel(_value);
     prefs.setValue('fontSize', _value.toString());

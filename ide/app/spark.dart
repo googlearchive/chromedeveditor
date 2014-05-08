@@ -152,7 +152,7 @@ abstract class Spark
       return restoreLocationManager().then((_) {
         // Location manager might have overridden the Ace-related flags from
         // "<project location>/.spark.json".
-        initAceThemeAndKeysManagers();
+        initAceManagers();
       });
     });
   }
@@ -306,7 +306,7 @@ abstract class Spark
     });
   }
 
-  void initAceThemeAndKeysManagers() {
+  void initAceManagers() {
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(
