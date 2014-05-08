@@ -26,10 +26,28 @@ class GitLocation {
 
   String get name => _name;
 
-  Future init() => getLocalDataDir(name).then((e) => entry = e);
+  Future init() {
+    // Create `git/git_xxx`. Delete the directory if it already exists.
+    return getLocalDataDir('git').then((html.DirectoryEntry gitDir) {
+      return gitDir.getDirectory(name).then((dir) {
+        return _safeDelete(dir).then((_) {
+          return gitDir.createDirectory(name).then((d) {
+            entry = d;
+          });
+        });
+      }).catchError((e) {
+        return gitDir.createDirectory(name).then((d) {
+          entry = d;
+        });
+      });
+    });
+  }
 
   Future dispose() {
-    if (entry == null) return new Future.value();
-    return entry.remove().catchError((e) => null);
+    return new Future.value();
+  }
+
+  Future _safeDelete(html.DirectoryEntry dir) {
+    return dir.removeRecursively().catchError((e) => null);
   }
 }
