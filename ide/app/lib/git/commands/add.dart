@@ -42,7 +42,7 @@ class Add {
   static Future<List<FileStatus>> addFiles(GitOptions options,
       List<chrome.Entry> entries) {
     List<FileStatus> statuses = [];
-    Future.forEach(entries, (entry) {
+    return Future.forEach(entries, (entry) {
       return add(options, entry).then((status) {
         statuses.add(status);
       });

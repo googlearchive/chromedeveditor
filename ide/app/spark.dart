@@ -2022,6 +2022,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   List<ws.File> modifiedFileList = [];
   List<ws.File> addedFileList = [];
+  List<ws.File> deletedFileList = [];
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
@@ -2041,6 +2042,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     gitOperations = spark.scmManager.getScmOperationsFor(project);
     modifiedFileList.clear();
     addedFileList.clear();
+    deletedFileList.clear();
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -2073,8 +2075,12 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     addedFileList.forEach((file){
       _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
     });
+    deletedFileList.forEach((file){
+      _gitChangeElement.innerHtml += 'Deleted:&emsp;' + file.path + '<br/>';
+    });
     final int modifiedCnt = modifiedFileList.length;
     final int addedCnt = addedFileList.length;
+    final int deletedCnt = deletedFileList.length;
     if (modifiedCnt + addedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
     } else {
@@ -2094,9 +2100,13 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         _calculateScmStatus(resource);
       } else if (resource is ws.File) {
         FileStatus status = gitOperations.getFileStatus(resource);
-        if (status == FileStatus.MODIFIED) {
+
+        // TODO(grv) : Add deleted files to resource.
+        if (status == FileStatus.DELETED) {
+          deletedFileList.add(resource);
+        } else if (status == FileStatus.MODIFIED) {
           modifiedFileList.add(resource);
-        } else if (status == FileStatus.UNTRACKED) {
+        } else if (status == FileStatus.ADDED) {
           addedFileList.add(resource);
         }
       }
