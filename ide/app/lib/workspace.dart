@@ -178,7 +178,7 @@ class Workspace extends Container {
     });
   }
 
-  bool isSyncResource(Resource resource) {
+  bool _isSyncResource(Resource resource) {
     return _roots.any((root) => root is SyncFolderRoot && root.resource == resource);
   }
 
@@ -720,8 +720,6 @@ abstract class Resource {
    */
   bool isDerived() => parent != null && parent.isDerived();
 
-  bool isSyncResource() => workspace.isSyncResource(this);
-
   /**
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
@@ -1059,6 +1057,8 @@ class Project extends Folder {
   Project get project => this;
 
   String get uuid => '${_root.id}';
+
+  bool isSyncResource() => workspace._isSyncResource(this);
 
   Future refresh() {
     // Only allow one refresh call at a time.
