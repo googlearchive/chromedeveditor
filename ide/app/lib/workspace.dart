@@ -720,6 +720,8 @@ abstract class Resource {
    */
   bool isDerived() => parent != null && parent.isDerived();
 
+  bool isSyncResource() => workspace.isSyncResource(this);
+
   /**
    * Returns an iterable of the children of the resource as a pre-order traversal
    * of the tree of subcontainers and their children.
