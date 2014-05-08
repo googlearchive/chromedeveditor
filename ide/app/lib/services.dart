@@ -326,6 +326,8 @@ class ProjectAnalyzer {
 
     try {
       for (File file in result.getFiles()) {
+        if (file == null) continue;
+
         file.clearMarkers('dart');
 
         for (AnalysisError error in result.getErrorsFor(file)) {
