@@ -604,7 +604,6 @@ abstract class Spark
       _okCancelDialog.element.querySelector('.modal-header').style.display = 'block';
       _okCancelDialog.element.querySelector('.modal-header .modal-title').text = title;
     }
-    //_okCancelDialog.element.querySelector('#okCancelMessage').text = message;
     Element container = _okCancelDialog.element.querySelector('#okCancelMessage');
 
     container.children.clear();
@@ -1174,6 +1173,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       _deleteProject(project);
       return;
     }
+
     SparkDialog _dialog =
         spark.createDialog(spark.getDialogElement('#projectRemoveDialog'));
     _dialog.element.querySelector("#projectRemoveProjectName").text =
