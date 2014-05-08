@@ -23,6 +23,7 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
+import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
 import 'lib/launch.dart';
@@ -145,6 +146,7 @@ abstract class Spark
 
     // Add various builders.
     addBuilder(new DartBuilder(this.services));
+    addBuilder(new JavaScriptBuilder());
     addBuilder(new JsonBuilder());
 
     return restoreWorkspace().then((_) {
