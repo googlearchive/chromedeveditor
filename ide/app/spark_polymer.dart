@@ -248,6 +248,7 @@ class SparkPolymer extends Spark {
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
       button.enabled = action.enabled;
+      button.deliverChanges();
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();

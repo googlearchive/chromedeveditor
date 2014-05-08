@@ -11,14 +11,7 @@ import '../common/spark_widget.dart';
 @CustomTag('spark-button')
 class SparkButton extends SparkWidget {
   @published bool primary = false;
-  // TODO(ussuri): with `@published enabled`, changing the field from outside
-  // didn't immediately trigger enabledChanged(). Investigate why.
-  bool _enabled = true;
-  @published bool get enabled => _enabled;
-  @published set enabled(bool value) {
-    _enabled = value;
-    _setClasses();
-  }
+  @published bool enabled = true;
   @published bool large = false;
   @published bool small = false;
   @published bool noPadding = false;
@@ -28,6 +21,7 @@ class SparkButton extends SparkWidget {
   @override
   void enteredView() {
     _setClasses();
+    changes.listen((_) => _setClasses());
   }
 
   void _setClasses() {
