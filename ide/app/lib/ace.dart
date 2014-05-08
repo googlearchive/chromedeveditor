@@ -366,12 +366,9 @@ class AceManager {
   }
 
   String _formatAnnotationItemText(String text, [String type]) {
-    String labelHtml = "";
-    if (type != null) {
-      String typeText = type.substring(0, 1).toUpperCase() + type.substring(1);
-      labelHtml = "<span class=ace_gutter-tooltip-label-$type>$typeText: </span>";
-    }
-    return "$labelHtml$text";
+    if (type == null) return text;
+
+    return "<img class='ace-tooltip' src='images/${type}_icon.png'> ${text}";
   }
 
   void setMarkers(List<workspace.Marker> markers) {
@@ -413,8 +410,8 @@ class AceManager {
       // If there is an existing annotation, delete it and combine into one.
       var existingAnnotation = annotationByRow[aceRow];
       if (existingAnnotation != null) {
-        markerHtml = existingAnnotation.html
-            + "<div class=\"ace_gutter-tooltip-divider\"></div>$markerHtml";
+        markerHtml = '${existingAnnotation.html}'
+            '<div class="ace-tooltip-divider"></div>${markerHtml}';
         annotations.remove(existingAnnotation);
       }
 
