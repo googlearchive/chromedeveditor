@@ -1050,9 +1050,9 @@ abstract class SparkAction extends Action {
 
   /**
    * Returns true if `object` is a list of resources and one at least is a
-   * top-level [File].
+   * top-level [Resource].
    */
-  bool _hasTopLevelFile(Object object) {
+  bool _hasTopLevelResource(Object object) {
     if (!_isResourceList(object)) {
       return false;
     }
@@ -1251,7 +1251,7 @@ This will permanently delete the project contents from disk and cannot be undone
   String get category => 'resource';
 
   bool appliesTo(Object object) => _isResourceList(object) &&
-      !_hasTopLevelFile(object);
+      !_hasTopLevelResource(object);
 }
 
 class ProjectRemoveAction extends SparkAction implements ContextAction {
@@ -1656,7 +1656,7 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
 
   String get category => 'resource';
 
-  bool appliesTo(context) => _isResourceList(context) && !_hasTopLevelFile(context);
+  bool appliesTo(context) => _isSingleFolder(context);
 }
 
 class PrevMarkerAction extends SparkAction {
