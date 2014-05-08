@@ -78,6 +78,7 @@ abstract class Spark
   AceManager _aceManager;
   ThemeManager _aceThemeManager;
   KeyBindingManager _aceKeysManager;
+  AceFontManager _aceFontManager;
   ws.Workspace _workspace;
   ScmManager scmManager;
   EditorManager _editorManager;
@@ -153,7 +154,7 @@ abstract class Spark
       return restoreLocationManager().then((_) {
         // Location manager might have overridden the Ace-related flags from
         // "<project location>/.spark.json".
-        initAceThemeAndKeysManagers();
+        initAceManagers();
       });
     });
   }
@@ -165,6 +166,7 @@ abstract class Spark
   AceManager get aceManager => _aceManager;
   ThemeManager get aceThemeManager => _aceThemeManager;
   KeyBindingManager get aceKeysManager => _aceKeysManager;
+  AceFontManager get aceFontManager => _aceFontManager;
   ws.Workspace get workspace => _workspace;
   EditorManager get editorManager => _editorManager;
   EditorArea get editorArea => _editorArea;
@@ -310,11 +312,13 @@ abstract class Spark
     });
   }
 
-  void initAceThemeAndKeysManagers() {
+  void initAceManagers() {
     _aceThemeManager = new ThemeManager(
         aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
     _aceKeysManager = new KeyBindingManager(
         aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+    _aceFontManager = new AceFontManager(
+        aceManager, syncPrefs, getUIElement('#changeFont .settings-label'));
   }
 
   void initEditorManager() {

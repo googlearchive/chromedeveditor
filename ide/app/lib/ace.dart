@@ -575,6 +575,12 @@ class AceManager {
     handler.onLoad.then((_) => _aceEditor.keyBinding.keyboardHandler = handler);
   }
 
+  num getFontSize() => _aceEditor.fontSize;
+
+  void setFontSize(num size) {
+    _aceEditor.fontSize = size;
+  }
+
   void focus() => _aceEditor.focus();
 
   void resize() => _aceEditor.resize(false);
@@ -784,6 +790,44 @@ class KeyBindingManager {
 
   void _updateName(String name) {
     _label.text = (name == null ? 'Default' : utils.capitalize(name));
+  }
+}
+
+class AceFontManager {
+  AceManager aceManager;
+  PreferenceStore prefs;
+  html.Element _label;
+  num _value;
+
+  AceFontManager(this.aceManager, this.prefs, this._label) {
+    _value = aceManager.getFontSize();
+    _updateLabel(_value);
+
+    prefs.getValue('fontSize').then((String pref) {
+      try {
+        _value = num.parse(pref);
+        aceManager.setFontSize(_value);
+        _updateLabel(_value);
+      } catch (e) {
+
+      }
+    });
+  }
+
+  void dec() => _adjustSize(_value - 2);
+
+  void inc() => _adjustSize(_value + 2);
+
+  void _adjustSize(num newValue) {
+    // Clamp to between 6pt and 36pt.
+    _value = math.min(36, math.max(6, newValue));
+    aceManager.setFontSize(_value);
+    _updateLabel(_value);
+    prefs.setValue('fontSize', _value.toString());
+  }
+
+  void _updateLabel(num size) {
+    _label.text = '${size}pt';
   }
 }
 

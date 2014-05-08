@@ -54,6 +54,8 @@ class MockAceManager implements AceManager {
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);
   void setKeyBinding(String name) { }
+  num getFontSize() => null;
+  void setFontSize(num size) { }
   void setMarkers(List<workspace.Marker> markers) { }
   void clearMarkers() { }
   void selectNextMarker() { }
