@@ -700,9 +700,9 @@
         <div class="form-group">
           <div class="help-block">
             Choose "Delete" if you want to remove
-            "<span id="projectRemoveProjectName"></span>" permanently from the
+            "<span id="projectRemoveProjectName"></span>" permanently from
             disk or choose "Remove Reference" if you'd like to remove it from
-            the list of projects in Spark but keep your files on the disk.
+            the list of projects in Spark but keep your files on disk.
           </div>
         </div>
       </div>
@@ -716,6 +716,37 @@
         </spark-button>
         <spark-button overlay-toggle primary data-dismiss="modal"
             id="projectRemoveRemoveReferenceButton">
+          Remove Reference
+        </spark-button>
+      </div>
+    </spark-modal>
+
+    <!-- file remove dialog -->
+    <spark-modal id="fileRemoveDialog" class="dialog" animation="scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 class="modal-title">Remove File</h4>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <div class="help-block">
+            Choose "Delete" if you want to remove
+            "<span id="fileRemoveFileName"></span>" permanently from
+            disk or choose "Remove Reference" if you'd like to remove it from
+            Spark but keep the file on disk.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <spark-button overlay-toggle data-dismiss="modal">
+          Cancel
+        </spark-button>
+        <spark-button overlay-toggle data-dismiss="modal"
+            id="fileRemoveDeleteButton">
+          Delete
+        </spark-button>
+        <spark-button overlay-toggle primary data-dismiss="modal"
+            id="fileRemoveRemoveReferenceButton">
           Remove Reference
         </spark-button>
       </div>
