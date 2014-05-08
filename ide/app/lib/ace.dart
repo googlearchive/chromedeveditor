@@ -182,12 +182,26 @@ class TextEditor extends Editor {
 }
 
 class DartEditor extends TextEditor {
+  int outlineScrollPosition = 0;
+
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
   DartEditor._create(AceManager aceManager, workspace.File file) :
       super._create(aceManager, file);
 
   bool get supportsOutline => true;
+
+  @override
+  void activate() {
+    super.activate();
+    aceManager.outline.scrollPosition = outlineScrollPosition;
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    outlineScrollPosition = aceManager.outline.scrollPosition;
+  }
 
   void navigateToDeclaration() {
     int offset = _session.document.positionToIndex(
@@ -299,6 +313,7 @@ class AceManager {
 
   void _setupOutline(PreferenceStore prefs) {
     outline = new Outline(_analysisService, parentElement, prefs);
+
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);
@@ -685,9 +700,9 @@ class ThemeManager {
 
   ThemeManager(AceManager aceManager, this._prefs, this._label) :
       _aceEditor = aceManager._aceEditor {
-    if (SparkFlags.instance.useAceThemes) {
-      if (SparkFlags.instance.useDarkAceThemes) _themes.addAll(DARK_THEMES);
-      if (SparkFlags.instance.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
+    if (SparkFlags.useAceThemes) {
+      if (SparkFlags.useDarkAceThemes) _themes.addAll(DARK_THEMES);
+      if (SparkFlags.useLightAceThemes) _themes.addAll(LIGHT_THEMES);
 
       _prefs.getValue('aceTheme').then((String theme) {
         if (theme == null || theme.isEmpty || !_themes.contains(theme)) {
@@ -719,7 +734,7 @@ class ThemeManager {
   }
 
   void _updateTheme(String theme) {
-    if (SparkFlags.instance.useAceThemes) {
+    if (SparkFlags.useAceThemes) {
       _prefs.setValue('aceTheme', theme);
     }
     _aceEditor.theme = new ace.Theme.named(theme);
