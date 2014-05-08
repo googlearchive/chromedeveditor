@@ -26,8 +26,6 @@ class JavaScriptBuilder extends Builder {
   }
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    List<ChangeDelta> changes = event.changes.where(
-        (c) => c.resource is File && _includeFile(c.resource)).toList();
     List<ChangeDelta> projectDeletes = event.changes.where(
         (c) => c.resource is Project && c.isDelete).toList();
 
@@ -41,7 +39,6 @@ class JavaScriptBuilder extends Builder {
       if (files.isEmpty) return new Future.value();
 
       Project project = files.first.project;
-
       project.workspace.pauseMarkerStream();
 
       return Future.forEach(files, _processFile).whenComplete(() {
@@ -86,7 +83,7 @@ class JavaScriptBuilder extends Builder {
 
     int len = text.length;
     bool lastWasEol = false;
-    
+
     for (int i = 0; i < len; i++) {
       if (lastWasEol) result.add(i);
       lastWasEol = false;

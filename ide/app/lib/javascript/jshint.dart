@@ -12,7 +12,7 @@ library spark.jslint;
 import 'dart:js' as js;
 
 /**
- * TODO:
+ * A class to perform linting of JavaScript code.
  */
 class JsHint {
   Map<String, bool> _options = {};
@@ -40,14 +40,14 @@ class JsHint {
   JsResult _convertError(js.JsObject error) {
     String raw = error['raw'];
     String severity = 'warning';
-    
+
     //if (raw == 'Missing "use strict"') return null;
-    
+
     if (raw.startsWith("Unclosed ") || raw.startsWith("Unmatched ") ||
         raw.startsWith("Expected ") || raw.startsWith("Unexpected")) {
       severity = 'error';
     }
-    
+
     return new JsResult(
       error['reason'],
       severity,
@@ -59,10 +59,10 @@ class JsHint {
 class JsResult {
   /// The analysis message.
   final String message;
-  
+
   // `error`, `warning`, or `info`.
   final String severity;
-  
+
   /// The 0-based line.
   final int line;
 
