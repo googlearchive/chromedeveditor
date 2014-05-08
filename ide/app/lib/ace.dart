@@ -63,6 +63,7 @@ class TextEditor extends Editor {
 
   void setSession(ace.EditSession value) {
     _session = value;
+    if (_aceSubscription != null) _aceSubscription.cancel();
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
   }
 
