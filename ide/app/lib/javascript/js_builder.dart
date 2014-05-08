@@ -39,17 +39,15 @@ class JavaScriptBuilder extends Builder {
       if (files.isEmpty) return new Future.value();
 
       Project project = files.first.project;
-      project.workspace.pauseMarkerStream();
 
+      project.workspace.pauseMarkerStream();
       return Future.forEach(files, _processFile).whenComplete(() {
         project.workspace.resumeMarkerStream();
       });
     }
   }
 
-  bool _includeFile(File file) {
-    return file.name.endsWith('.js') && !file.isDerived();
-  }
+  bool _includeFile(File file) => file.name.endsWith('.js') && !file.isDerived();
 
   Future _processFile(File file) {
     return file.getContents().then((String source) {

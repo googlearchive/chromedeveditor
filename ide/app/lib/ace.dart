@@ -409,16 +409,15 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
-      double markerHorizontalPercentage = currentSession.documentToScreenRow(
+      double verticalPercentage = currentSession.documentToScreenRow(
           marker.lineNum, aceColumn) / numberLines;
 
       String markerPos;
-      
+
       if (!isScrolling) {
-        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
+        markerPos = '${verticalPercentage * documentHeight}px';
       } else {
-        markerPos = (markerHorizontalPercentage * 100.0)
-            .toStringAsFixed(2) + "%";
+        markerPos = (verticalPercentage * 100.0).toStringAsFixed(2) + "%";
       }
 
       // TODO(ericarnold): This should also be based upon annotations so ace's
