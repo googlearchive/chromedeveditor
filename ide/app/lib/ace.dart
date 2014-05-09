@@ -820,7 +820,7 @@ class AceFontManager {
 
   void _adjustSize(num newValue) {
     // Clamp to between 6pt and 36pt.
-    _value = math.min(36, math.max(6, newValue));
+    _value = newValue.clamp(6, 36);
     aceManager.setFontSize(_value);
     _updateLabel(_value);
     prefs.setValue('fontSize', _value.toString());
