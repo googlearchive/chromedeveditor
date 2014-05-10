@@ -25,10 +25,6 @@ class SparkButton extends SparkWidget {
     changes.listen((_) => _setClasses());
   }
 
-  void activeChanged() {
-    print("active changed");
-  }
-
   void _setClasses() {
     $['button'].classes
         ..toggle('btn-primary', primary)
