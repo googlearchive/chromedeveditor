@@ -31,7 +31,6 @@
         focused
         small
         noPadding
-        active?="{{opened}}"
         on-click="{{clickHandler}}"
         on-focus="{{focusHandler}}"
         on-blur="{{blurHandler}}">
@@ -42,7 +41,6 @@
       <spark-overlay id="overlay"
           autoClose
           animation="scale-slideup"
-          opened="{{opened}}"
           on-opened="{{overlayOpenedHandler}}">
 
         <div class="arrow"></div>
