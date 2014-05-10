@@ -128,6 +128,8 @@ void deploy(GrinderContext context) {
 
   Directory deployWeb = joinDir(destDir, ['web']);
 
+  // TODO(devoncarew): Remove this once smoke no longer generates code
+  // referencing Dartium's dart:nativewrappers library.
   _removeNativeWrappersReference(
       context, deployWeb, 'spark_polymer.html_bootstrap.dart');
 
@@ -595,28 +597,36 @@ void _removeNativeWrappersReference(
 
 String _replaceNativeWrappersReference(GrinderContext context, String contents) {
   // Look for `import 'dart:nativewrappers' as smoke_6;`.
-  String prefix;
+  String importPrefix;
 
   List<String> lines = contents.split('\n');
 
   for (String line in lines) {
-    if (line.contains("'dart:nativewrappers'")) {
+    if (line.contains("import 'dart:nativewrappers' as")) {
+      // Remove the trailing semi-colon.
       line = line.substring(1, line.length - 1);
-      line = line.substring(line.lastIndexOf(' ') + 1);
-      prefix = line;
+
+      // Remove everything preceeding the import prefix - the ` as ` and
+      // everything before it.
+      importPrefix = line.substring(line.lastIndexOf(' ') + 1);
+
       break;
     }
   }
 
-  // Couldn't find the prefix...
-  if (prefix == null) return contents;
+  // Couldn't find the import prefix...
+  if (importPrefix == null) return contents;
 
-  context.log('Found dart:nativewrappers prefix: ${prefix}.');
+  context.log('Found dart:nativewrappers prefix: ${importPrefix}.');
 
-  // Remove lines that contain `prefix;` or `prefix.` and return the modified
-  // content.
+  // Remove lines that contain `importPrefix;` or `importPrefix.` and return the
+  // modified content.
   return lines.map((String line) {
-    if (line.contains('${prefix}.') || line.contains('${prefix};')) {
+    if (line.contains('${importPrefix}.')) {
+      // Remove any line that uses the import prefix.
+      return '// ${line}';
+    } else if (line.contains('${importPrefix};')) {
+      // Remove the line declaring the import prefix.
       return '// ${line}';
     } else {
       return line;
