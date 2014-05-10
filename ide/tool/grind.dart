@@ -128,6 +128,9 @@ void deploy(GrinderContext context) {
 
   Directory deployWeb = joinDir(destDir, ['web']);
 
+  _removeNativeWrappersReference(
+      context, deployWeb, 'spark_polymer.html_bootstrap.dart');
+
   // Compile the main Spark app.
   _dart2jsCompile(context, deployWeb,
       'spark_polymer.html_bootstrap.dart', true);
@@ -571,6 +574,54 @@ void _removePackagesLinks(GrinderContext context, Directory target) {
       _removePackagesLinks(context, entity);
     }
   });
+}
+
+/**
+ * Remove a Dartium only reference to the dart:nativewrappers library. dart2js
+ * will not be able to compile code with these references.
+ */
+void _removeNativeWrappersReference(
+    GrinderContext context, Directory dir, String fileName) {
+  File file = joinFile(dir, [fileName]);
+  String contents = file.readAsStringSync();
+  String modified = _replaceNativeWrappersReference(context, contents);
+  if (modified == contents) {
+    context.log('No reference to dart:nativewrappers found!');
+  } else {
+    context.log('Removing reference to dart:nativewrappers.');
+    file.writeAsStringSync(modified);
+  }
+}
+
+String _replaceNativeWrappersReference(GrinderContext context, String contents) {
+  // Look for `import 'dart:nativewrappers' as smoke_6;`.
+  String prefix;
+
+  List<String> lines = contents.split('\n');
+
+  for (String line in lines) {
+    if (line.contains("'dart:nativewrappers'")) {
+      line = line.substring(1, line.length - 1);
+      line = line.substring(line.lastIndexOf(' ') + 1);
+      prefix = line;
+      break;
+    }
+  }
+
+  // Couldn't find the prefix...
+  if (prefix == null) return contents;
+
+  context.log('Found dart:nativewrappers prefix: ${prefix}.');
+
+  // Remove lines that contain `prefix;` or `prefix.` and return the modified
+  // content.
+  return lines.map((String line) {
+    if (line.contains('${prefix}.') || line.contains('${prefix};')) {
+      return '// ${line}';
+    } else {
+      return line;
+    }
+  }).join('\n');
 }
 
 /**
