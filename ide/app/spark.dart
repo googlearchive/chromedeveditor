@@ -1195,12 +1195,6 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       resources = sel;
     }
 
-    ws.Project project = resources.firstWhere((r) => r is ws.Project, orElse: () => null);
-    if (project != null) {
-      _removeProject(project);
-      return;
-    }
-
     String message;
     if (resources.length == 1) {
       message = "Do you really want to delete '${resources.first.name}'?\nThis will permanently delete this file from disk and cannot be undone.";
@@ -1220,43 +1214,6 @@ class FileDeleteAction extends SparkAction implements ContextAction {
         });
       }
     });
-  }
-
-  void _removeProject(ws.Project project) {
-    // If project is on sync filesystem, it can only be deleted.
-    // It can't be unlinked.
-    if (project.isSyncResource()) {
-      _deleteProject(project);
-      return;
-    }
-
-    SparkDialog _dialog =
-        spark.createDialog(spark.getDialogElement('#projectRemoveDialog'));
-    _dialog.element.querySelector("#projectRemoveProjectName").text =
-        project.name;
-    _dialog.element.querySelector("#projectRemoveDeleteButton")
-        .onClick.listen((_) => _deleteProject(project));
-    _dialog.element.querySelector("#projectRemoveRemoveReferenceButton")
-        .onClick.listen((_) => _removeProjectReference(project));
-    _dialog.show();
-  }
-
-  void _deleteProject(ws.Project project) {
-    spark.askUserOkCancel('''
-Do you really want to delete "${project.name}"?
-This will permanently delete the project contents from disk and cannot be undone.
-''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
-      if (val) {
-        project.delete().catchError((e) {
-          spark.showErrorMessage("Error while deleting project", e.toString());
-        });
-        spark.workspace.save();
-      }
-    });
-  }
-
-  void _removeProjectReference(ws.Project project) {
-    spark.workspace.unlink(project);
   }
 
   String get category => 'resource';
@@ -1304,6 +1261,7 @@ This will permanently delete the project contents from disk and cannot be undone
 
   void _removeProjectReference(ws.Project project) {
     spark.workspace.unlink(project);
+    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -1344,6 +1302,7 @@ This will permanently delete the file from disk and cannot be undone.
 
   void _removeFileReference(ws.File file) {
     spark.workspace.unlink(file);
+    spark.workspace.save();
   }
 
   String get category => 'resource';
