@@ -9,13 +9,18 @@ import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:chrome/chrome_app.dart'
+    show ConnectionHandle, Device, InterfaceDescriptor, TransferResultInfo;
 import 'package:cipher/cipher.dart';
 import 'package:cipher/impl/base.dart' as CipherBase;
+import 'package:logging/logging.dart';
 
 import '../preferences.dart';
 import '../utils.dart';
 import 'android_rsa.dart';
 import 'android_rsa_cipher.dart';
+
+Logger _logger = new Logger('spark.adb');
 
 // Most of these are helper classes that don't really need to be exported,
 // and might be better off in an internal library.
@@ -191,11 +196,11 @@ class AdbMessage {
 }
 
 class AndroidDevice {
-  chrome.Device androidDevice;
-  chrome.InterfaceDescriptor adbInterface;
+  Device androidDevice;
+  InterfaceDescriptor adbInterface;
   chrome.EndpointDescriptor inDescriptor;
   chrome.EndpointDescriptor outDescriptor;
-  chrome.ConnectionHandle adbConnectionHandle;
+  ConnectionHandle adbConnectionHandle;
   PreferenceStore _prefs;
 
   String deviceToken = 'DEVICE TOKEN NOT SET';
@@ -214,12 +219,11 @@ class AndroidDevice {
 
   // Returns the best device for an ADB connection.
   Future _getPluggedDevice(vendorId, productId) {
-    chrome.EnumerateDevicesOptions edo =
-        new chrome.EnumerateDevicesOptions(vendorId: vendorId, productId:
-            productId);
+    chrome.EnumerateDevicesOptions edo = new chrome.EnumerateDevicesOptions(
+          vendorId: vendorId, productId: productId);
 
     // Get the devices with the given vendor id and product id.
-    return chrome.usb.getDevices(edo).then((List<chrome.Device> devices) {
+    return chrome.usb.getDevices(edo).then((List<Device> devices) {
       if (devices.length == 0) {
         return new Future.error('no-device');
       }
@@ -227,13 +231,12 @@ class AndroidDevice {
       // For each such device, look for a specific device with ADB class,
       // subclass and protocol.
       // TODO(shepheb): Handle finding multiple ADB devices.
-      chrome.Device resultDevice = null;
-      return Future.forEach(devices, (chrome.Device device) {
+      Device resultDevice = null;
+      return Future.forEach(devices, (Device device) {
         chrome.EnumerateDevicesAndRequestAccessOptions opts =
             new chrome.EnumerateDevicesAndRequestAccessOptions(
                 vendorId: device.vendorId, productId: device.productId);
-        return chrome.usb.findDevices(opts).then(
-            (List<chrome.ConnectionHandle> connections) {
+        return chrome.usb.findDevices(opts).then((List<ConnectionHandle> connections) {
           if (connections.length == 0) {
             return new Future.error('no-connection');
           } else {
@@ -249,13 +252,13 @@ class AndroidDevice {
 
   // Either resolves on successful open, or rejects with an error message on failure.
   Future open(vendorId, productId) {
-    return _getPluggedDevice(vendorId, productId).then((chrome.Device device) {
+    return _getPluggedDevice(vendorId, productId).then((Device device) {
       chrome.EnumerateDevicesAndRequestAccessOptions opts =
           new chrome.EnumerateDevicesAndRequestAccessOptions(
               vendorId: device.vendorId, productId: device.productId);
       return chrome.usb.findDevices(opts).then(
-          (List<chrome.ConnectionHandle> connections) {
-        return Future.forEach(connections, (chrome.ConnectionHandle handle) {
+          (List<ConnectionHandle> connections) {
+        return Future.forEach(connections, (ConnectionHandle handle) {
           return _checkDevice(handle, device);
         });
       });
@@ -264,55 +267,54 @@ class AndroidDevice {
 
   // Returns an Error future when it finds a valid device. This is part of the
   // flow of open() above.
-  Future _checkDevice(chrome.ConnectionHandle handle, chrome.Device device) {
+  Future _checkDevice(ConnectionHandle handle, Device device) {
     // List all interfaces on this connection handle.
-    return chrome.usb.listInterfaces(handle)
-        .then((List<chrome.InterfaceDescriptor> interfaces) {
-          // For each interface, find the match for ADB class, subclass and
-          // protocol.
-          interfaces.forEach((interface) {
-            // Check to make sure interface class, subclass and protocol
-            // match ADB.
-            // Avoid opening mass storage endpoints (they're slow).
-            if (interface.interfaceClass == AdbUtil.ADB_CLASS &&
-                interface.interfaceSubclass == AdbUtil.ADB_SUBCLASS &&
-                interface.interfaceProtocol == AdbUtil.ADB_PROTOCOL) {
-              adbInterface = interface;
-              androidDevice = device;
-              this.adbConnectionHandle = handle;
-            }
+    return chrome.usb.listInterfaces(handle).then((List<InterfaceDescriptor> interfaces) {
+      // For each interface, find the match for ADB class, subclass and
+      // protocol.
+      interfaces.forEach((interface) {
+        // Check to make sure interface class, subclass and protocol
+        // match ADB.
+        // Avoid opening mass storage endpoints (they're slow).
+        if (interface.interfaceClass == AdbUtil.ADB_CLASS &&
+            interface.interfaceSubclass == AdbUtil.ADB_SUBCLASS &&
+            interface.interfaceProtocol == AdbUtil.ADB_PROTOCOL) {
+          adbInterface = interface;
+          androidDevice = device;
+          this.adbConnectionHandle = handle;
+        }
 
-            interface.endpoints.forEach((chrome.EndpointDescriptor desc) {
-              // Find the input and output descriptors.
-              if (desc.direction == chrome.Direction.IN &&
-                  interface.interfaceClass == AdbUtil.ADB_CLASS &&
-                  interface.interfaceSubclass == AdbUtil.ADB_SUBCLASS &&
-                  interface.interfaceProtocol == AdbUtil.ADB_PROTOCOL) {
-                inDescriptor = desc;
-              } else if (desc.direction == chrome.Direction.OUT &&
-                  interface.interfaceClass == AdbUtil.ADB_CLASS &&
-                  interface.interfaceSubclass == AdbUtil.ADB_SUBCLASS &&
-                  interface.interfaceProtocol == AdbUtil.ADB_PROTOCOL) {
-                outDescriptor = desc;
-              }
-            });
-          });
-
-          // Check if all parts of the device got assigned.
-          if (adbInterface != null && androidDevice != null &&
-              this.adbConnectionHandle != null && inDescriptor != null &&
-              outDescriptor != null) {
-            return new Future.value();
-          }
-          else {
-            return new Future.error('invalid-device');
+        interface.endpoints.forEach((chrome.EndpointDescriptor desc) {
+          // Find the input and output descriptors.
+          if (desc.direction == chrome.Direction.IN &&
+              interface.interfaceClass == AdbUtil.ADB_CLASS &&
+              interface.interfaceSubclass == AdbUtil.ADB_SUBCLASS &&
+              interface.interfaceProtocol == AdbUtil.ADB_PROTOCOL) {
+            inDescriptor = desc;
+          } else if (desc.direction == chrome.Direction.OUT &&
+              interface.interfaceClass == AdbUtil.ADB_CLASS &&
+              interface.interfaceSubclass == AdbUtil.ADB_SUBCLASS &&
+              interface.interfaceProtocol == AdbUtil.ADB_PROTOCOL) {
+            outDescriptor = desc;
           }
         });
+      });
+
+      // Check if all parts of the device got assigned.
+      if (adbInterface != null && androidDevice != null &&
+          this.adbConnectionHandle != null && inDescriptor != null &&
+          outDescriptor != null) {
+        return new Future.value();
+      }
+      else {
+        return new Future.error('invalid-device');
+      }
+    });
   }
 
   // This either resolves with a TransferResultInfo, or fails with an error
   // message.
-  Future<chrome.TransferResultInfo> sendBuffer(ByteData buffer) {
+  Future<TransferResultInfo> sendBuffer(ByteData buffer) {
     chrome.ArrayBuffer arrayBuffer = new chrome.ArrayBuffer.fromBytes(
         new Uint8List.view(buffer.buffer).toList());
 
@@ -323,7 +325,7 @@ class AndroidDevice {
         ..data = arrayBuffer;
 
     return chrome.usb.bulkTransfer(adbConnectionHandle, transferInfo).then(
-        (chrome.TransferResultInfo result) {
+        (TransferResultInfo result) {
       if (result.resultCode != 0) {
         return new Future.error('Failed to send');
       } else {
@@ -335,9 +337,8 @@ class AndroidDevice {
   // Sends both the message and data portions.
   // The future either resolves with a TransferResultInfo, or fails with an
   // error message.
-  Future<chrome.TransferResultInfo> sendMessage(AdbMessage message) {
-    return sendBuffer(message.messageBuffer).then(
-        (chrome.TransferResultInfo result) {
+  Future<TransferResultInfo> sendMessage(AdbMessage message) {
+    return sendBuffer(message.messageBuffer).then((TransferResultInfo result) {
       return message.dataLength > 0 ? sendBuffer(message.dataBuffer) : result;
     });
   }
@@ -346,10 +347,11 @@ class AndroidDevice {
   Future connect(SystemIdentity systemIdentity) {
     return chrome.usb.claimInterface(adbConnectionHandle,
         adbInterface.interfaceNumber).catchError((e) {
-      return new Future.error('''
-Could not open an ADB connection: "$e"
-Please check whether the Chrome ADT application is running on the Android device.
-Additionally, DevTools may not have released the USB connection. To check this go to chrome://inspect, Devices, uncheck 'Discover USB devices', then disconnect and re-connect your phone from USB.''');
+      throw 'Could not open an ADB connection: "${e}".\n Please check whether '
+          'the Chrome ADT application is running on the Android device. \n'
+          'Additionally, DevTools may not have released the USB connection. To '
+          'check this go to chrome://inspect, Devices, uncheck \'Discover USB '
+          'devices\', then disconnect and re-connect your phone from USB.';
     }).then((_) {
       AdbMessage adbMessage = new AdbMessage(AdbUtil.A_CNXN, AdbUtil.A_VERSION,
           AdbUtil.MAX_PAYLOAD, systemIdentity.toString());
@@ -422,14 +424,14 @@ Additionally, DevTools may not have released the USB connection. To check this g
               if (isDart2js()) {
                 return AndroidRSA.sign(key, new Uint8List.view(msg.dataBuffer.buffer))
                     .then((Uint8List signature) {
-                      AdbMessage response = new AdbMessage(AdbUtil.A_AUTH,
-                          AdbUtil.ADB_AUTH_SIGNATURE, 0);
-                      response.setData(new ByteData.view(signature.buffer));
-                      sentSignature = true;
-                      return sendMessage(response).then((_) {
-                          return handleConnectionMessage();
-                      });
-                    });
+                  AdbMessage response = new AdbMessage(AdbUtil.A_AUTH,
+                      AdbUtil.ADB_AUTH_SIGNATURE, 0);
+                  response.setData(new ByteData.view(signature.buffer));
+                  sentSignature = true;
+                  return sendMessage(response).then((_) {
+                      return handleConnectionMessage();
+                  });
+                });
               } else {
                 AsymmetricKeyPair keys = AndroidRSACipher.deserializeRSAKeys(key);
                 ByteData signature = AndroidRSACipher.sign(keys, msg.dataBuffer);
@@ -487,7 +489,7 @@ Additionally, DevTools may not have released the USB connection. To check this g
   }
 
   // Either resolves with an AdbMessage (including data portion, if applicable),
-  // or rejects with a chrome.TransferResultInfo giving the bad resultCode.
+  // or rejects with a TransferResultInfo giving the bad resultCode.
   Future<AdbMessage> receive() {
     AdbMessage readAdbMessage;
     chrome.GenericTransferInfo readTransferInfo =
@@ -497,7 +499,7 @@ Additionally, DevTools may not have released the USB connection. To check this g
             ..length = AdbUtil.MESSAGE_SIZE_PAYLOAD;
 
     return chrome.usb.bulkTransfer(adbConnectionHandle, readTransferInfo).then(
-        (chrome.TransferResultInfo readResult) {
+        (TransferResultInfo readResult) {
       // Read back a MessageBuffer for AUTH response.
       if (readResult.resultCode != 0) {
         return new Future.error(readResult);
@@ -514,7 +516,7 @@ Additionally, DevTools may not have released the USB connection. To check this g
                 ..length = readAdbMessage.dataLength;
 
         return chrome.usb.bulkTransfer(adbConnectionHandle, readDataInfo).then(
-            (chrome.TransferResultInfo readDataResult) {
+            (TransferResultInfo readDataResult) {
           if (readDataResult.resultCode != 0) {
             return new Future.error(readDataResult);
           }
@@ -554,83 +556,81 @@ Additionally, DevTools may not have released the USB connection. To check this g
     Queue<ByteData> responseChunks;
 
     // Send the open message.
-    return sendMessage(new AdbMessage(AdbUtil.A_OPEN, localID, 0,
-            'tcp:$port\x00'))
-        .catchError((e) {
-          // If we caught an error here, we probably got a CLSE instead.
-          // This means the remote end isn't listening to our port.
-          print(e);
-          return new Future.error('Connection on port $port refused.\n' +
-              'Please check whether Chrome ADT is running on your mobile device.');
-        }).then((_) { return awaitOkay(); })
-        .then((remoteID_) {
-          remoteID = remoteID_;
+    AdbMessage message = new AdbMessage(AdbUtil.A_OPEN, localID, 0, 'tcp:$port\x00');
+    return sendMessage(message).catchError((e) {
+      // If we caught an error here, we probably got a CLSE instead.
+      // This means the remote end isn't listening to our port.
+      _logger.severe('Error sending adb message', e);
+      return new Future.error('Connection on port $port refused.\n' +
+          'Please check whether Chrome ADT is running on your mobile device.');
+    }).then((_) { return awaitOkay(); }).then((remoteID_) {
+      remoteID = remoteID_;
 
-          // Prepare and send the parts of the message.
-          int chunkCount = (httpRequest.length / AdbUtil.MAX_PAYLOAD).ceil();
-          Iterable<ByteData> chunks = new Iterable.generate(chunkCount, (i) {
-            int start = i * AdbUtil.MAX_PAYLOAD;
-            int end = (i+1) * AdbUtil.MAX_PAYLOAD;
-            end = end > httpRequest.length ? httpRequest.length : end;
+      // Prepare and send the parts of the message.
+      int chunkCount = (httpRequest.length / AdbUtil.MAX_PAYLOAD).ceil();
+      Iterable<ByteData> chunks = new Iterable.generate(chunkCount, (i) {
+        int start = i * AdbUtil.MAX_PAYLOAD;
+        int end = (i+1) * AdbUtil.MAX_PAYLOAD;
+        end = end > httpRequest.length ? httpRequest.length : end;
 
-            ByteData chunk = new ByteData(end-start);
-            for (int j = start; j < end; j++) {
-              chunk.setUint8(j-start, httpRequest[j]);
-            }
-            return chunk;
-          });
+        ByteData chunk = new ByteData(end-start);
+        for (int j = start; j < end; j++) {
+          chunk.setUint8(j-start, httpRequest[j]);
+        }
+        return chunk;
+      });
 
-          return Future.forEach(chunks, (packet) {
-            // Prepare the message.
-            AdbMessage msg = new AdbMessage(AdbUtil.A_WRTE, localID, remoteID);
-            msg.setData(packet);
-            return sendMessage(msg).then((_) {
-              return awaitOkay();
-            }).timeout(new Duration(seconds: 10), onTimeout: () {
-              return new Future.error(
-                  'Push timed out: Single message took more than 10 seconds.');
-            });
-          });
-        }).then((_) {
-          // We've finished sending the request, now we await the response.
-          // Since we don't know when the response is all done, we simply await
-          // a 500ms pause after the last message.
-          // TODO(shepheb): Maybe make this HTTP-specific and understand the
-          // response and its Content-length?
-          responseChunks = new Queue<ByteData>();
-
-          Future readChunk() {
-            return receive().timeout(new Duration(milliseconds: 800)).then((msg) {
-              if (msg.command == AdbUtil.A_WRTE) {
-                responseChunks.add(msg.dataBuffer);
-                return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
-                    remoteID)).then((_) { return readChunk(); });
-              } else {
-                return new Future.error('Unexpected message from device.');
-              }
-            }).catchError((e) {
-              if (e is TimeoutException) {
-                return null;
-              } else {
-                return new Future.error(e);
-              }
-            });
-          };
-
-          return readChunk();
-        }).then((_) {
-          // Send a CLSE and expect a CLSE back.
-          return sendMessage(new AdbMessage(AdbUtil.A_CLSE, 0, remoteID));
-        }).then((_) {
-          // Turn responseChunks into a List<int> and return it.
-          List<int> ret = [];
-          for (ByteData chunk in responseChunks) {
-            for (int i = 0; i < chunk.lengthInBytes; i++) {
-              ret.add(chunk.getUint8(i));
-            }
-          }
-          return ret;
+      return Future.forEach(chunks, (packet) {
+        // Prepare the message.
+        AdbMessage msg = new AdbMessage(AdbUtil.A_WRTE, localID, remoteID);
+        msg.setData(packet);
+        return sendMessage(msg).then((_) {
+          return awaitOkay();
+        }).timeout(new Duration(seconds: 10), onTimeout: () {
+          return new Future.error(
+              'Push timed out: Single message took more than 10 seconds.');
         });
+      });
+    }).then((_) {
+      // We've finished sending the request, now we await the response.
+      // Since we don't know when the response is all done, we simply await
+      // a 500ms pause after the last message.
+      // TODO(shepheb): Maybe make this HTTP-specific and understand the
+      // response and its Content-length?
+      responseChunks = new Queue<ByteData>();
+
+      Future readChunk() {
+        return receive().timeout(new Duration(milliseconds: 800)).then((msg) {
+          if (msg.command == AdbUtil.A_WRTE) {
+            responseChunks.add(msg.dataBuffer);
+            return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
+                remoteID)).then((_) { return readChunk(); });
+          } else {
+            return new Future.error('Unexpected message from device.');
+          }
+        }).catchError((e) {
+          if (e is TimeoutException) {
+            return null;
+          } else {
+            return new Future.error(e);
+          }
+        });
+      };
+
+      return readChunk();
+    }).then((_) {
+      // Send a CLSE and expect a CLSE back.
+      return sendMessage(new AdbMessage(AdbUtil.A_CLSE, 0, remoteID));
+    }).then((_) {
+      // Turn responseChunks into a List<int> and return it.
+      List<int> ret = [];
+      for (ByteData chunk in responseChunks) {
+        for (int i = 0; i < chunk.lengthInBytes; i++) {
+          ret.add(chunk.getUint8(i));
+        }
+      }
+      return ret;
+    });
   }
 
   void handleMessage() {
