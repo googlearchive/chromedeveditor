@@ -688,7 +688,8 @@ class AceManager {
   }
 
   void _showGotoLineView(_) {
-    parentElement.querySelector('.ace_search').style.display = 'none';
+    html.Element searchElement = parentElement.querySelector('.ace_search');
+    if (searchElement != null) searchElement.style.display = 'none';
     gotoLineView.show();
   }
 
