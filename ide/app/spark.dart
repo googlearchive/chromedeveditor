@@ -466,7 +466,7 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(localPrefs, workspace)
+    return ProjectLocationManager.restoreManager(this)
         .then((manager) {
       _projectLocationManager = manager;
       // The manager might have overridden some dev flags from .spark.json
@@ -540,6 +540,7 @@ abstract class Spark
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
       _errorDialog.element.querySelector("[primary]").onClick.listen(_hideBackdropOnClick);
+      _errorDialog.element.querySelector(".close").onClick.listen(_hideBackdropOnClick);
     }
 
     _errorDialog.element.querySelector('#errorTitle').text = title;
@@ -784,28 +785,27 @@ abstract class Spark
  * Windows/Mac/linux.
  */
 class ProjectLocationManager {
-  preferences.PreferenceStore _prefs;
   LocationResult _projectLocation;
-  final ws.Workspace _workspace;
+  final Spark _spark;
 
   /**
    * Create a ProjectLocationManager asynchronously, restoring the default
    * project location from the given preferences.
    */
-  static Future<ProjectLocationManager> restoreManager(
-      preferences.PreferenceStore prefs, ws.Workspace workspace) {
-    return prefs.getValue('projectFolder').then((String folderToken) {
+  static Future<ProjectLocationManager> restoreManager(Spark spark) {
+    //localPrefs, workspace
+    return spark.localPrefs.getValue('projectFolder').then((String folderToken) {
       if (folderToken == null) {
-        return new ProjectLocationManager._(prefs, workspace);
+        return new ProjectLocationManager._(spark);
       }
 
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return _initFlagsFromProjectLocation(entry).then((_) {
-          return new ProjectLocationManager._(
-            prefs, workspace, new LocationResult(entry, entry, false));
+          return new ProjectLocationManager._(spark,
+              new LocationResult(entry, entry, false));
         });
       }).catchError((e) {
-        return new ProjectLocationManager._(prefs, workspace);
+        return new ProjectLocationManager._(spark);
       });
     });
   }
@@ -824,7 +824,8 @@ class ProjectLocationManager {
     });
   }
 
-  ProjectLocationManager._(this._prefs, this._workspace, [this._projectLocation]);
+  //this._prefs, this._workspace
+  ProjectLocationManager._(this._spark, [this._projectLocation]);
 
   /**
    * Returns the default location to create new projects in. For Chrome OS, this
@@ -846,25 +847,35 @@ class ProjectLocationManager {
     }
 
     // On Chrome OS, use the sync filesystem.
-    if (PlatformInfo.isCros && _workspace.syncFsIsAvailable) {
+    if (PlatformInfo.isCros && _spark.workspace.syncFsIsAvailable) {
       return chrome.syncFileSystem.requestFileSystem().then((fs) {
         var entry = fs.root;
         return new LocationResult(entry, entry, true);
       });
     }
 
-    // Display a dialog asking the user to choose a default project folder.
-    // TODO: We need to provide an explaination to the user about what this
-    // folder is for.
-    return _selectFolder(suggestedName: 'projects').then((entry) {
-      if (entry == null) {
+    // Show a dialog with explaination about what this folder is for.
+    return _showRequestFileSystemDialog().then((bool accepted) {
+      if (!accepted) {
         return null;
       }
+      // Display a dialog asking the user to choose a default project folder.
+      return _selectFolder(suggestedName: 'projects').then((entry) {
+        if (entry == null) {
+          return null;
+        }
 
-      _projectLocation = new LocationResult(entry, entry, false);
-      _prefs.setValue('projectFolder', chrome.fileSystem.retainEntry(entry));
-      return _projectLocation;
+        _projectLocation = new LocationResult(entry, entry, false);
+        _spark.localPrefs.setValue('projectFolder',
+            chrome.fileSystem.retainEntry(entry));
+        return _projectLocation;
+      });
     });
+  }
+
+  Future<bool> _showRequestFileSystemDialog() {
+    return _spark.askUserOkCancel('Please choose a folder to store your Spark projects.',
+        okButtonLabel: 'Choose Folder', title: 'Choose a main folder');
   }
 
   /**

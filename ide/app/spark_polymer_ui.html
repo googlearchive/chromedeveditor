@@ -86,9 +86,12 @@
 
     <!-- Error dialog -->
     <spark-modal id="errorDialog" class="dialog" animation="scale-slideup">
+      <div class="modal-header">
+        <a href="#" class="close" overlay-toggle>&times;</a>
+        <h4 id="errorTitle"></h4>
+      </div>
       <div class="modal-body">
         <div class="form-group">
-          <label id="errorTitle"></label>
           <div id="errorMessage" class="help-block"></div>
         </div>
       </div>
