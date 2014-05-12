@@ -15,6 +15,7 @@ import '../lib/navigation.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
 import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';
+import '../lib/preferences.dart';
 
 defineTests() {
   group('ace', () {
@@ -53,6 +54,8 @@ class MockAceManager implements AceManager {
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);
   void setKeyBinding(String name) { }
+  num getFontSize() => null;
+  void setFontSize(num size) { }
   void setMarkers(List<workspace.Marker> markers) { }
   void clearMarkers() { }
   void selectNextMarker() { }
@@ -76,6 +79,7 @@ class MockAceEditor implements TextEditor {
   void focus() { }
   void deactivate() { }
 
+  BoolCachedPreference get stripWhitespace => null;
   bool get dirty => false;
 
   set dirty(bool value) { }
@@ -83,7 +87,7 @@ class MockAceEditor implements TextEditor {
   Stream get onDirtyChange => null;
   Stream get onModification => null;
 
-  Future save([bool stripWhitespace = false]) => new Future.value();
+  Future save() => new Future.value();
 
   void setSession(ace.EditSession value) { }
 

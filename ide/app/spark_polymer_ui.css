@@ -51,7 +51,7 @@
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -103,7 +103,7 @@
   color: #fff;
   display: inline;
   overflow: hidden;
-  padding: 3px 8px;
+  padding: 5px 8px;
   margin-right: 6px;
 }
 

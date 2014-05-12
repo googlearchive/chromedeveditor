@@ -46,8 +46,8 @@ class SparkPolymerUI extends SparkWidget {
 
   void refreshFromModel() {
     // TODO(ussuri): This also could possibly be done using PathObservers.
-    developerMode = SparkFlags.instance.developerMode;
-    useAceThemes = SparkFlags.instance.useAceThemes;
+    developerMode = SparkFlags.developerMode;
+    useAceThemes = SparkFlags.useAceThemes;
     chromeOS = PlatformInfo.isCros;
   }
 
@@ -73,6 +73,16 @@ class SparkPolymerUI extends SparkWidget {
 
   void onKeysPlus(Event e) {
     _model.aceKeysManager.inc(e);
+  }
+
+  void onFontSmaller(Event e) {
+    e.stopPropagation();
+    _model.aceFontManager.dec();
+  }
+
+  void onFontLarger(Event e) {
+    e.stopPropagation();
+    _model.aceFontManager.inc();
   }
 
   void onSplitterUpdate(CustomEvent e, var detail) {

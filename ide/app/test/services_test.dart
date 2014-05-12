@@ -175,4 +175,23 @@ defineTests() {
     // TODO: Add integration level tests of ProjectAnalyzer.processChanges().
 
   });
+
+  group('services analyzer getDeclaration', () {
+    Workspace workspace = new Workspace();
+    Services services = new Services(workspace, new PubManager(workspace));;
+    AnalyzerService analyzer = services.getService("analyzer");
+
+    test('link to a declaration ', () {
+      DirectoryEntry dir = createSampleDirectory2('foo2');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.getDeclarationFor(file, 52)
+            .then((Declaration declaration) {
+
+          expect(declaration.getFile(project).name, "foo.dart");
+          expect(declaration.offset, 7);
+        });
+      });
+    });
+  });
 }

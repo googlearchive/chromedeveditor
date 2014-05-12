@@ -34,7 +34,7 @@
 .label {
   text-overflow: ellipsis;
   font-size: 13px;
-  font-family: Helvetica, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   font-weight: 500;
   color: #aaa;
   white-space: nowrap;
