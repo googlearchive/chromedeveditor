@@ -40,44 +40,41 @@ void main() {
         final btn = btnElt.getShadowDomElement('#button');
         expect(btn, isNotNull);
 
-        var done = expectAsync((){});
+        final Function done = expectAsync((){});
 
-        new async.Future.delayed(new Duration(milliseconds: 50), () {
-          btnElt.attributes['primary'] = 'true';
-          btnElt.attributes['large'] = 'true';
-          btnElt.attributes['small'] = 'false';
-          btnElt.attributes['noPadding'] = 'true';
-          btnElt.attributes['active'] = 'true';
-          btnElt.attributes['enabled'] = 'true';
-          btnElt.deliverChanges();
+        btnElt.attributes['primary'] = 'true';
+        btnElt.attributes['large'] = 'true';
+        btnElt.attributes['small'] = 'false';
+        btnElt.attributes['noPadding'] = 'true';
+        btnElt.attributes['active'] = 'true';
+        btnElt.attributes['enabled'] = 'true';
+        btnElt.deliverChanges();
 
-          expect(btn.classes.contains('btn-primary'), isTrue);
-          expect(btn.classes.contains('btn-default'), isFalse);
-          expect(btn.classes.contains('active'), isTrue);
-          expect(btn.classes.contains('disabled'), isFalse);
-          expect(btn.classes.contains('btn-lg'), isTrue);
-          expect(btn.classes.contains('btn-sm'), isFalse);
-          expect(btn.getComputedStyle().padding, equals('0px'));
+        expect(btn.classes.contains('btn-primary'), isTrue);
+        expect(btn.classes.contains('btn-default'), isFalse);
+        expect(btn.classes.contains('active'), isTrue);
+        expect(btn.classes.contains('disabled'), isFalse);
+        expect(btn.classes.contains('btn-lg'), isTrue);
+        expect(btn.classes.contains('btn-sm'), isFalse);
+        expect(btn.getComputedStyle().padding, equals('0px'));
 
-          btnElt.attributes['primary'] = 'false';
-          btnElt.attributes['large'] = 'false';
-          btnElt.attributes['small'] = 'true';
-          btnElt.attributes['noPadding'] = 'false';
-          btnElt.attributes['active'] = 'false';
-          btnElt.attributes['enabled'] = 'false';
-          btnElt.deliverChanges();
+        btnElt.attributes['primary'] = 'false';
+        btnElt.attributes['large'] = 'false';
+        btnElt.attributes['small'] = 'true';
+        btnElt.attributes['noPadding'] = 'false';
+        btnElt.attributes['active'] = 'false';
+        btnElt.attributes['enabled'] = 'false';
+        btnElt.deliverChanges();
 
-          new async.Future.delayed(new Duration(milliseconds: 550), () {
-            expect(btn.classes.contains('btn-primary'), isFalse);
-            expect(btn.classes.contains('btn-default'), isTrue);
-            expect(btn.classes.contains('active'), isFalse);
-            expect(btn.classes.contains('disabled'), isTrue);
-            expect(btn.classes.contains('btn-lg'), isFalse);
-            expect(btn.classes.contains('btn-sm'), isTrue);
-            expect(btn.getComputedStyle().padding, isNot(equals('0px')));
-            done();
-          });
-        });
+        expect(btn.classes.contains('btn-primary'), isFalse);
+        expect(btn.classes.contains('btn-default'), isTrue);
+        expect(btn.classes.contains('active'), isFalse);
+        expect(btn.classes.contains('disabled'), isTrue);
+        expect(btn.classes.contains('btn-lg'), isFalse);
+        expect(btn.classes.contains('btn-sm'), isTrue);
+        expect(btn.getComputedStyle().padding, isNot(equals('0px')));
+
+        done();
       });
     });
   });
