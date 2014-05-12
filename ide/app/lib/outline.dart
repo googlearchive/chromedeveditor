@@ -200,17 +200,24 @@ class Outline {
       int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
 
       html.Element firstElement = outlineElements[firstItemIndex];
-      html.Element lastElement = outlineElements[lastItemIndex];
-      _scrollIntoView(firstElement.offsetTop,
-          lastElement.offsetTop + lastElement.offsetHeight);
+
+      int bottomOffset;
+      if (outlineElements.length > lastItemIndex + 1) {
+        bottomOffset = outlineElements[lastItemIndex + 1].offsetTop;
+      } else {
+        html.Element lastElement = outlineElements[lastItemIndex];
+        bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;
+      }
+
+      _scrollIntoView(firstElement.offsetTop, bottomOffset);
     }
   }
 
   int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
-    int containerOffset = null;
     if (_outlineItemsByOffset != null) {
       int count = 0;
-      var outlineOffets = _outlineItemsByOffset.keys.toList()..sort();
+      List<int> outlineOffets = _outlineItemsByOffset.keys.toList()..sort();
+      int containerOffset = returnCodeOffset ? outlineOffets[0] : 0;
 
       // Finds the last outline item that *doesn't* satisfies this:
       for (int outlineOffset in outlineOffets) {
@@ -218,9 +225,10 @@ class Outline {
         containerOffset = returnCodeOffset ? outlineOffset : count;
         count++;
       }
+      return containerOffset;
+    } else {
+      return null;
     }
-
-    return containerOffset;
   }
 
   OutlineItem _itemAtCodeOffset(int codeOffset) {
