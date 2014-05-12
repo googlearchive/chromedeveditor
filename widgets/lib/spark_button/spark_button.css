@@ -14,10 +14,6 @@
   font-size: 13px;
 }
 
-#button:active {
-  border: 1px solid #aaa;
-}
-
 #button:focus {
   outline: -webkit-focus-ring-color solid 1px;
 }
