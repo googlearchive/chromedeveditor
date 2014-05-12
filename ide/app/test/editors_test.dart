@@ -21,7 +21,7 @@ defineTests() {
     test('general test', () {
       Workspace workspace = new Workspace();
       AceManager aceManager = new MockAceManager();
-      PreferenceStore store = new MapPreferencesStore();
+      SparkPreferences store = new SparkPreferences(new MapPreferencesStore());
       EditorManager manager = new EditorManager(
           workspace, aceManager, store, new EventBus(), null);
 

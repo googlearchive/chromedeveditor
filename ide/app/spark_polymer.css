@@ -61,6 +61,10 @@ body {
   color: #aaa;
 }
 
+div.ace_gutter {
+  z-index: 0;
+}
+
 div.ace_gutter-cell.ace_error {
   background-image: url("images/error_icon.png");
 }
@@ -69,29 +73,23 @@ div.ace_gutter-cell.ace_warning {
   background-image: url("images/warning_icon.png");
 }
 
-div.ace_gutter-cell.ace_info {
+div.ace_gutter-cell.ace_info, .ace_dark div.ace_gutter-cell.ace_info {
   background-image: url("images/info_icon.png");
 }
 
-.ace_gutter-tooltip-divider {
+.ace-tooltip-divider {
   background-color: gray;
   height: 1px;
   margin: 3px -4px;
 }
 
-.ace_gutter-tooltip-label-error {
-  color: #F55;
+img.ace-tooltip {
+  border: none;
+  display: inline;
+  margin-left: 3px;
+  margin-bottom: 3px;
 }
 
-.ace_gutter-tooltip-label-warning {
-  color: #DD3;
-}
-
-.ace_gutter-tooltip-label-info {
-  color: #9CC;
-}
-
-/* TODO: Remove when find bar has been implemented natively in Spark */
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;
@@ -116,12 +114,12 @@ div.ace_search_form, div.ace_replace_form {
 }
 
 .ace_search_field {
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 button.ace_replacebtn {
   color: #484848;
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
   padding-left: 5px;
   padding-right: 5px;
@@ -168,7 +166,7 @@ button.ace_searchbtn_close:active {
   opacity: 1;
   transition: opacity 250ms;
   text-align: center;
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
 
@@ -295,7 +293,7 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container .filename {
-  font-family: Helvetica, Sans-serif;
+  font-family: Helvetica, Arial, Sans-serif;
   font-size: 13px;
   overflow: hidden;
   position: absolute;

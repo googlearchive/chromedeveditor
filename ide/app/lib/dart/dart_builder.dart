@@ -25,7 +25,7 @@ class DartBuilder extends Builder {
   AnalyzerService analyzer;
 
   DartBuilder(this.services) {
-     analyzer = services.getService("analyzer");
+    analyzer = services.getService("analyzer");
   }
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {

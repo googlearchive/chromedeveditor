@@ -4,17 +4,18 @@
 
 :host {
   position: absolute;
-  left: 5px;
-  top: 5px;
+  right: 0;
+  top: 0;
 }
 
 #container {
   display: none;
-  background: #fafafa;
+  background: #eee;
   padding: 4px;
-  border: 1px solid #CCC;
-  border-radius: 1px 1px 3px 1px;
+  border: 1px solid #dadada;
+  border-radius: 0;
   border-top: 0;
+  border-right: none;
 }
 
 #container.showing {
@@ -23,6 +24,11 @@
 
 #queryText {
   display: inline;
+  border: 1px solid #cbcbcb;
+  border-radius: 3px;
+  padding: 0 7px;
+  margin: 0;
+  height: 22px;
 }
 
 #queryText:focus {
@@ -30,15 +36,25 @@
 }
 
 #closeButton {
-  color: #000;
+  position: relative;
+  top: 4px;
+  right: 3px;
+  margin: 0;
+  padding: 0;
   cursor: default;
   display: inline;
   font-size: 12px;
   height: 15px;
-  opacity: 0.2;
-  padding: 0 4px 2px 0;
+  width: 13px;
+  opacity: 0.5;
+  background: url(search_close.png);
+  border: 0 none;
 }
 
 #closeButton:hover {
-  opacity: 0.8;
+  opacity: 1.0;
+}
+
+#closeButton:active {
+  outline: none;
 }

@@ -128,6 +128,11 @@ void deploy(GrinderContext context) {
 
   Directory deployWeb = joinDir(destDir, ['web']);
 
+  // TODO(devoncarew): Remove this once smoke no longer generates code
+  // referencing Dartium's dart:nativewrappers library.
+  _removeNativeWrappersReference(
+      context, deployWeb, 'spark_polymer.html_bootstrap.dart');
+
   // Compile the main Spark app.
   _dart2jsCompile(context, deployWeb,
       'spark_polymer.html_bootstrap.dart', true);
@@ -571,6 +576,62 @@ void _removePackagesLinks(GrinderContext context, Directory target) {
       _removePackagesLinks(context, entity);
     }
   });
+}
+
+/**
+ * Remove a Dartium only reference to the dart:nativewrappers library. dart2js
+ * will not be able to compile code with these references.
+ */
+void _removeNativeWrappersReference(
+    GrinderContext context, Directory dir, String fileName) {
+  File file = joinFile(dir, [fileName]);
+  String contents = file.readAsStringSync();
+  String modified = _replaceNativeWrappersReference(context, contents);
+  if (modified == contents) {
+    context.log('No reference to dart:nativewrappers found!');
+  } else {
+    context.log('Removing reference to dart:nativewrappers.');
+    file.writeAsStringSync(modified);
+  }
+}
+
+String _replaceNativeWrappersReference(GrinderContext context, String contents) {
+  // Look for `import 'dart:nativewrappers' as smoke_6;`.
+  String importPrefix;
+
+  List<String> lines = contents.split('\n');
+
+  for (String line in lines) {
+    if (line.contains("import 'dart:nativewrappers' as")) {
+      // Remove the trailing semi-colon.
+      line = line.substring(1, line.length - 1);
+
+      // Remove everything preceeding the import prefix - the ` as ` and
+      // everything before it.
+      importPrefix = line.substring(line.lastIndexOf(' ') + 1);
+
+      break;
+    }
+  }
+
+  // Couldn't find the import prefix...
+  if (importPrefix == null) return contents;
+
+  context.log('Found dart:nativewrappers prefix: ${importPrefix}.');
+
+  // Remove lines that contain `importPrefix;` or `importPrefix.` and return the
+  // modified content.
+  return lines.map((String line) {
+    if (line.contains('${importPrefix}.')) {
+      // Remove any line that uses the import prefix.
+      return '// ${line}';
+    } else if (line.contains('${importPrefix};')) {
+      // Remove the line declaring the import prefix.
+      return '// ${line}';
+    } else {
+      return line;
+    }
+  }).join('\n');
 }
 
 /**

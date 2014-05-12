@@ -25,13 +25,14 @@ class DeviceInfo {
   DeviceInfo(this.vendorId, this.productId, this.description);
 }
 
-class HarnessPush {
+class MobileDeploy {
   static final int ADB_PORT = 5037;
+
   final Container appContainer;
   final PreferenceStore _prefs;
   List<DeviceInfo> _knownDevices = [];
 
-  HarnessPush(this.appContainer, this._prefs) {
+  MobileDeploy(this.appContainer, this._prefs) {
     if (appContainer == null) {
       throw new ArgumentError('must provide an app to push');
     }
@@ -46,6 +47,46 @@ class HarnessPush {
         }
       }
     }
+  }
+
+  /**
+   * Packages (a subdirectory of) the current project, and sends it via HTTP to
+   * a remote host.
+   *
+   * It expects the target host, and a [ProgressMonitor] for 10 units of work.
+   * All files under the project will be added to a (slightly broken, see
+   * below) CRX file, and sent via HTTP POST to the target host, using the /push
+   * protocol described [here](https://github.com/MobileChromeApps/harness-push).
+   *
+   *     MobileDeploy.pushToHost('192.168.1.121', monitor);
+   *
+   * Returns a Future for the push operation.
+   *
+   * Important Note: The CRX file that gets created and pushed is not correctly
+   * signed and does not include the application's key. Since the target of a
+   * push is intended to be a tool like the
+   * [Chrome ADT](https://github.com/MobileChromeApps/harness) on Android,
+   * and that tool doesn't care about the CRX metadata, this is not a problem.
+   */
+  Future pushToHost(String target, ProgressMonitor monitor) {
+    monitor.start('Deploying…', 10);
+
+    return _sendHttpPush(target, monitor);
+  }
+
+  /**
+   * Push the application via ADB. We try connecting to a local ADB server
+   * first. If that fails, then we try pushing via a USB connection.
+   */
+  Future pushAdb(ProgressMonitor monitor) {
+    monitor.start('Deploying…', 10);
+
+    // Try to find a local ADB server. If we fail, try to use USB.
+    return _connectToAdbServer().then((client) {
+      return _pushToAdbServer(client, monitor);
+    }, onError: (_) { // No server found, so use our own USB code.
+      return _pushViaUSB(monitor);
+    });
   }
 
   List<int> _buildHttpRequest(String target, List<int> payload) {
@@ -88,31 +129,6 @@ class HarnessPush {
     httpRequest.addAll(body);
 
     return httpRequest;
-  }
-
-  /**
-   * Packages (a subdirectory of) the current project, and sends it via HTTP to
-   * a remote host.
-   *
-   * It expects the target host, and a [ProgressMonitor] for 10 units of work.
-   * All files under the project will be added to a (slightly broken, see
-   * below) CRX file, and sent via HTTP POST to the target host, using the /push
-   * protocol described [here](https://github.com/MobileChromeApps/harness-push).
-   *
-   *     HarnessPush.push('192.168.1.121', monitor);
-   *
-   * Returns a Future for the push operation.
-   *
-   * Important Note: The CRX file that gets created and pushed is not correctly
-   * signed and does not include the application's key. Since the target of a
-   * push is intended to be a tool like the
-   * [Chrome ADT](https://github.com/MobileChromeApps/harness) on Android,
-   * and that tool doesn't care about the CRX metadata, this is not a problem.
-   */
-  Future pushToHost(String target, ProgressMonitor monitor) {
-    monitor.start('Deploying…', 10);
-
-    return _sendHttpPush(target, monitor);
   }
 
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
@@ -182,20 +198,9 @@ class HarnessPush {
     }).then((_) => device);
   }
 
-  Future pushAdb(ProgressMonitor monitor) {
-    monitor.start('Deploying…', 10);
-
-    // Try to find a local ADB server. If we fail, try to use USB.
-    return _connectToAdbServer().then((client) {
-      return _pushToAdbServer(client, monitor);
-    }, onError: (_) { // No server found, so use our own USB code.
-      return _pushViaUSB(monitor);
-    });
-  }
-
   Future<TcpClient> _connectToAdbServer() {
     // Try to connect to localhost:5037.
-    return TcpClient.createClient(LOCAL_HOST, HarnessPush.ADB_PORT);
+    return TcpClient.createClient(LOCAL_HOST, MobileDeploy.ADB_PORT);
   }
 
   void _sendAdbCommand(TcpClient client, String msg) {

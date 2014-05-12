@@ -9,6 +9,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
+import '../spark_button/spark_button.dart';
 import '../spark_menu/spark_menu.dart';
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
@@ -22,6 +23,7 @@ class SparkMenuButton extends SparkWidget {
   @published bool responsive = false;
   @published String valign = "center";
 
+  SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
 
@@ -31,6 +33,7 @@ class SparkMenuButton extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
+    _button = $['button'];
     _overlay = $['overlay'];
     _menu = $['menu'];
   }
@@ -39,10 +42,11 @@ class SparkMenuButton extends SparkWidget {
   void _toggle(bool inOpened) {
     if (inOpened != opened) {
       opened = inOpened;
-      // TODO(ussuri): A temporary plug to make spark-overlay see changes
-      // in 'opened'. Just binding via {{opened}} alone isn't detected and the
-      // menu doesn't open.
-      _overlay.opened = opened;
+      // TODO(ussuri): A temporary plug to make #overlay and #button see
+      // changes in 'opened'. Data binding via {{opened}} in the HTML isn't
+      // detected. deliverChanges() fixes #overlay, but not #button.
+      _overlay.opened = inOpened;
+      _button.active = inOpened;
       if (opened) {
         // Enforce focused state so the button can accept keyboard events.
         focus();

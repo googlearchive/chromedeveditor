@@ -48,48 +48,75 @@ abstract class FileOps {
    * Creates a file with a given [content] and [type]. Creates parent
    * directories if the immediate parent is absent.
    */
-  static Future<chrome.Entry> createFileWithContent(
+  static Future<chrome.FileEntry> createFileWithContent(
       chrome.DirectoryEntry root, String path, content, String type) {
-
-    createFile(chrome.DirectoryEntry dir, String fileName) {
-      return dir.createFile(fileName).then((chrome.ChromeFileEntry entry) {
-        if (type == 'Text') {
-          return entry.writeText(content).then((_) => entry);
-        } else if (type == 'blob') {
-          content = new chrome.ArrayBuffer.fromBytes(content as List);
-          return entry.writeBytes(content).then((_) => entry);
-        } else {
-          throw new UnsupportedError(
-              "Writing of content type:${type} is not supported.");
-        }
-      });
-    }
-
     if (path[0] == '/') path = path.substring(1);
     List<String> pathParts = path.split('/');
     if (pathParts.length != 1) {
       return createDirectoryRecursive(root, path.substring(0,
           path.lastIndexOf('/'))).then((dir) {
-        return createFile(dir, pathParts[pathParts.length - 1]);
+        return _createFile(dir, pathParts[pathParts.length - 1], content, type);
       });
     } else {
-      return createFile(root, path);
+      return _createFile(root, path, content, type);
     }
   }
 
-  static Future<dynamic> readFile(chrome.DirectoryEntry root, String path,
-      String type) {
-    return root.getFile(path).then((chrome.ChromeFileEntry entry) {
-
-      if (type == 'Text') {
-        return entry.readText();
-      } else if (type == 'ArrayBuffer') {
-        return entry.readBytes();
-      } else {
-        throw new UnsupportedError(
-            "Reading of content type:${type} is not supported.");
-      }
+  static Future<String> readFileText(chrome.DirectoryEntry root, String path) {
+    return root.getFile(path).then((chrome.FileEntry entry) {
+      return readText(entry);
     });
+  }
+
+  static Future<List<int>> readFileBytes(chrome.DirectoryEntry root, String path) {
+    return root.getFile(path).then((chrome.FileEntry entry) {
+      return readBytes(entry);
+    });
+  }
+
+  static Future<String> readText(chrome.FileEntry entry) {
+    if (entry is chrome.ChromeFileEntry) {
+      return entry.readText();
+    } else {
+      return entry.file().then((chrome.File file) {
+        Completer completer = new Completer();
+        chrome.FileReader reader = new chrome.FileReader();
+
+        reader.onLoadEnd.listen((_) => completer.complete(reader.result));
+        reader.onError.listen(completer.completeError);
+
+        reader.readAsText(file);
+        return completer.future;
+      });
+    }
+  }
+
+  static Future<List<int>> readBytes(chrome.FileEntry entry) {
+    if (entry is chrome.ChromeFileEntry) {
+      return entry.readBytes().then((chrome.ArrayBuffer buf) => buf.getBytes());
+    } else {
+      return entry.file().then((chrome.File file) {
+        Completer completer = new Completer();
+        chrome.FileReader reader = new chrome.FileReader();
+
+        reader.onLoadEnd.listen((_) {
+          if (reader.result is Uint8List) {
+            completer.complete(reader.result);
+          } else if (reader.result is ByteBuffer) {
+            ByteBuffer buf = reader.result;
+            completer.complete(new Uint8List.view(buf));
+          } else {
+            completer.completeError(
+                'unexpected type: ${reader.result.runtimeType}');
+          }
+        });
+
+        reader.onError.listen(completer.completeError);
+
+        reader.readAsArrayBuffer(file);
+        return completer.future;
+      });
+    }
   }
 
   /**
@@ -136,8 +163,7 @@ abstract class FileOps {
       return Future.forEach(entries, (chrome.Entry entry) {
         if (entry.isFile) {
           return (entry as chrome.ChromeFileEntry).readBytes().then((content) {
-            return createFileWithContent(dst, entry.name, content,
-                'blob');
+            return createFileWithContent(dst, entry.name, content, 'blob');
           });
         } else {
           return dst.createDirectory(entry.name).then(
@@ -148,4 +174,60 @@ abstract class FileOps {
       }).then((_) => dst);
     });
   }
+
+  static Future<chrome.FileEntry> _createFile(chrome.DirectoryEntry dir,
+      String fileName, content, String type) {
+    if (type != 'Text' && type != 'blob') {
+      return new Future.error(new UnsupportedError(
+          "Writing of content type ${type} is not supported."));
+    }
+
+    return dir.createFile(fileName).then((chrome.FileEntry entry) {
+      if (entry is chrome.ChromeFileEntry) {
+        if (type == 'Text') {
+          return entry.writeText(content).then((_) => entry);
+        } else if (type == 'blob') {
+          content = new chrome.ArrayBuffer.fromBytes(content as List);
+          return entry.writeBytes(content).then((_) => entry);
+        }
+      } else {
+        if (type == 'Text') {
+          return _writeTextContent(entry, content).then((_) => entry);
+        } else if (type == 'blob') {
+          return _writeBinaryContent(entry, content).then((_) => entry);
+        }
+      }
+    });
+  }
+
+  static Future _writeTextContent(chrome.FileEntry entry, String contents) {
+    chrome.Blob blob = new chrome.Blob([contents]);
+    return _writeBlob(entry, blob);
+  }
+
+  static Future _writeBinaryContent(chrome.FileEntry entry, List<int> contents) {
+    Uint8List list = new Uint8List.fromList(contents);
+    chrome.Blob blob = new chrome.Blob([list]);
+    return _writeBlob(entry, blob);
+  }
+
+  static Future _writeBlob(chrome.FileEntry entry, chrome.Blob blob) {
+    Completer completer = new Completer();
+
+    entry.createWriter().then((chrome.FileWriter writer) {
+      StreamSubscription writeSubscription;
+      writeSubscription = writer.onWrite.listen((_) {
+        writeSubscription.cancel();
+        writer.truncate(writer.position);
+        completer.complete();
+      });
+
+      writer.onError.listen(completer.completeError);
+
+      writer.write(blob);
+    });
+
+    return completer.future;
+  }
 }
+
