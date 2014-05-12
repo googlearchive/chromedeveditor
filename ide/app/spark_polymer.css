@@ -61,6 +61,10 @@ body {
   color: #aaa;
 }
 
+div.ace_gutter {
+  z-index: 0;
+}
+
 div.ace_gutter-cell.ace_error {
   background-image: url("images/error_icon.png");
 }
