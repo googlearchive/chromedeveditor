@@ -21,12 +21,12 @@ void main() {
 
     group('spark-button', () {
       test('default click', () {
-        var btn = (dom.document.querySelector('#default') as SparkButton);
+        final btn = (dom.document.querySelector('#default') as SparkButton);
         expect(btn, isNotNull);
 
         async.StreamSubscription clickSubsrc;
 
-        var clicked = expectAsync((dom.Event event) {
+        final clicked = expectAsync((dom.Event event) {
           expect(event.target, equals(btn));
           clickSubsrc.cancel();
         });
@@ -35,44 +35,46 @@ void main() {
       });
 
       test('attributes', () {
-        var btn = (dom.document.querySelector('#default') as SparkButton);
+        final btnElt = (dom.document.querySelector('#default') as SparkButton);
+        expect(btnElt, isNotNull);
+        final btn = btnElt.getShadowDomElement('#button');
         expect(btn, isNotNull);
-
-        btn.attributes['primary'] = 'true';
-        btn.attributes['active'] = 'true';
-        btn.attributes['large'] = 'true';
-        btn.attributes['small'] = 'false';
-        btn.attributes['noPadding'] = 'true';
 
         var done = expectAsync((){});
 
-        new async.Future.delayed(new Duration(milliseconds: 50),() {
+        new async.Future.delayed(new Duration(milliseconds: 50), () {
+          btnElt.attributes['primary'] = 'true';
+          btnElt.attributes['large'] = 'true';
+          btnElt.attributes['small'] = 'false';
+          btnElt.attributes['noPadding'] = 'true';
+          btnElt.attributes['active'] = 'true';
+          btnElt.attributes['enabled'] = 'true';
+          btnElt.deliverChanges();
+
           expect(btn.classes.contains('btn-primary'), isTrue);
           expect(btn.classes.contains('btn-default'), isFalse);
-          expect(btn.classes.contains('enabled'), isTrue);
+          expect(btn.classes.contains('active'), isTrue);
           expect(btn.classes.contains('disabled'), isFalse);
           expect(btn.classes.contains('btn-lg'), isTrue);
           expect(btn.classes.contains('btn-sm'), isFalse);
-          expect(btn.noPadding, isTrue);
-          expect(btn.getShadowDomElement('#button').getComputedStyle().padding,
-                 equals('0px'));
+          expect(btn.getComputedStyle().padding, equals('0px'));
 
-          btn.attributes['primary'] = 'false';
-          btn.attributes['active'] = 'false';
-          btn.attributes['large'] = 'false';
-          btn.attributes['small'] = 'true';
-          btn.attributes['noPadding'] = 'false';
+          btnElt.attributes['primary'] = 'false';
+          btnElt.attributes['large'] = 'false';
+          btnElt.attributes['small'] = 'true';
+          btnElt.attributes['noPadding'] = 'false';
+          btnElt.attributes['active'] = 'false';
+          btnElt.attributes['enabled'] = 'false';
+          btnElt.deliverChanges();
 
           new async.Future.delayed(new Duration(milliseconds: 550), () {
             expect(btn.classes.contains('btn-primary'), isFalse);
             expect(btn.classes.contains('btn-default'), isTrue);
-            expect(btn.classes.contains('enabled'), isFalse);
+            expect(btn.classes.contains('active'), isFalse);
             expect(btn.classes.contains('disabled'), isTrue);
             expect(btn.classes.contains('btn-lg'), isFalse);
             expect(btn.classes.contains('btn-sm'), isTrue);
-            expect(btn.noPadding, isFalse);
-            expect(btn.getShadowDomElement('#button').getComputedStyle().padding,
-                   isNot(equals('10px')));
+            expect(btn.getComputedStyle().padding, isNot(equals('0px')));
             done();
           });
         });
