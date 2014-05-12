@@ -378,6 +378,10 @@ button.ace_searchbtn_close:active {
   text-overflow: ellipsis;
 }
 
+.outlineItem:hover > a {
+  text-decoration: underline;
+}
+
 .outlineItem.selected {
   background-color: rgba(255, 255, 255, 0.1);
 }

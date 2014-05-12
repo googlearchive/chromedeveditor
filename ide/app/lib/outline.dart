@@ -216,7 +216,7 @@ abstract class OutlineItem {
     _element.classes.add("outlineItem $cssClassName");
   }
 
-  Stream get onClick => _anchor.onClick;
+  Stream get onClick => _element.onClick;
   int get nameStartOffset => _data.nameStartOffset;
   int get nameEndOffset => _data.nameEndOffset;
   int get bodyStartOffset => _data.bodyStartOffset;
