@@ -874,10 +874,8 @@ class ProjectLocationManager {
   }
 
   Future<bool> _showRequestFileSystemDialog() {
-    return _spark.askUserOkCancel('''
-You need to choose a folder where all projects will be stored.
-The next dialog that will appear will let you do that.
-''', okButtonLabel: 'Next', title: 'Choose a main folder');
+    return _spark.askUserOkCancel('Please choose a folder to store your Spark projects.',
+        okButtonLabel: 'Choose Folder', title: 'Choose a main folder');
   }
 
   /**
