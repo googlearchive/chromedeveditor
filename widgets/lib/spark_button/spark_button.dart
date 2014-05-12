@@ -4,6 +4,8 @@
 
 library spark_widgets.button;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -17,16 +19,20 @@ class SparkButton extends SparkWidget {
   @published bool enabled = true;
   @published bool active = false;
 
+  ButtonElement _button;
+
   SparkButton.created() : super.created();
 
   @override
   void enteredView() {
-    _setClasses();
-    changes.listen((_) => _setClasses());
+    _button = $['button'];
+
+    _refresh();
+    changes.listen((_) => _refresh());
   }
 
-  void _setClasses() {
-    $['button'].classes
+  void _refresh() {
+    _button.classes
         ..toggle('btn-primary', primary)
         ..toggle('btn-default', !primary)
         ..toggle('disabled', !enabled)
@@ -34,5 +40,6 @@ class SparkButton extends SparkWidget {
         ..toggle('btn-sm', small)
         ..toggle('enabled', enabled)
         ..toggle('active', active);
+    _button.style.padding = noPadding ? '0' : null;
   }
 }
