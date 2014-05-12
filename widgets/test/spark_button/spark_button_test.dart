@@ -21,7 +21,7 @@ void main() {
 
     group('spark-button', () {
       test('default click', () {
-        final btn = (dom.document.querySelector('#default') as SparkButton);
+        final SparkButton btn = dom.document.querySelector('#default');
         expect(btn, isNotNull);
 
         async.StreamSubscription clickSubsrc;
@@ -37,20 +37,21 @@ void main() {
       test('attributes', () {
         // TODO(ussuri): Add similar tests for statically declared attributes
         // (e.g. <spark-button primary large noPadding></>).
-        final btnElt = (dom.document.querySelector('#default') as SparkButton);
+        final SparkButton btnElt = dom.document.querySelector('#default');
         expect(btnElt, isNotNull);
         final btn = btnElt.getShadowDomElement('#button');
         expect(btn, isNotNull);
 
         final Function done = expectAsync((){});
 
-        btnElt.attributes['primary'] = 'true';
-        btnElt.attributes['large'] = 'true';
-        btnElt.attributes['small'] = 'false';
-        btnElt.attributes['noPadding'] = 'true';
-        btnElt.attributes['active'] = 'true';
-        btnElt.attributes['enabled'] = 'true';
-        btnElt.deliverChanges();
+        btnElt
+            ..primary = true
+            ..large = true
+            ..small = false
+            ..noPadding = true
+            ..active = true
+            ..enabled = true
+            ..deliverChanges();
 
         expect(btn.classes.contains('btn-primary'), isTrue);
         expect(btn.classes.contains('btn-default'), isFalse);
@@ -61,13 +62,14 @@ void main() {
         expect(btn.classes.contains('btn-sm'), isFalse);
         expect(btn.getComputedStyle().padding, equals('0px'));
 
-        btnElt.attributes['primary'] = 'false';
-        btnElt.attributes['large'] = 'false';
-        btnElt.attributes['small'] = 'true';
-        btnElt.attributes['noPadding'] = 'false';
-        btnElt.attributes['active'] = 'false';
-        btnElt.attributes['enabled'] = 'false';
-        btnElt.deliverChanges();
+        btnElt
+            ..primary = false
+            ..large = false
+            ..small = true
+            ..noPadding = false
+            ..active = false
+            ..enabled = false
+            ..deliverChanges();
 
         expect(btn.classes.contains('btn-primary'), isFalse);
         expect(btn.classes.contains('btn-default'), isTrue);
