@@ -33,11 +33,11 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future installPackages(Project project) =>
-      _installOrUpgradePackages(project, FetchMode.INSTALL);
+  Future installPackages(Container container) =>
+      _installOrUpgradePackages(container.project, FetchMode.INSTALL);
 
-  Future upgradePackages(Project project) =>
-      _installOrUpgradePackages(project, FetchMode.UPGRADE);
+  Future upgradePackages(Container container) =>
+      _installOrUpgradePackages(container.project, FetchMode.UPGRADE);
 
   Future _installOrUpgradePackages(Project project, FetchMode mode) {
     final File specFile = project.getChild(properties.packageSpecFileName);

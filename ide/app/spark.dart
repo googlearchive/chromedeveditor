@@ -1527,7 +1527,7 @@ abstract class PackageManagementAction
       resource = context.first;
     }
 
-    spark.jobManager.schedule(_createJob(resource.project));
+    spark.jobManager.schedule(_createJob(resource.parent));
   }
 
   String get category => 'application';
@@ -1536,7 +1536,7 @@ abstract class PackageManagementAction
 
   bool _appliesTo(ws.Resource resource);
 
-  Job _createJob(ws.Project project);
+  Job _createJob(ws.Container container);
 }
 
 abstract class PubAction extends PackageManagementAction {
@@ -1549,13 +1549,13 @@ abstract class PubAction extends PackageManagementAction {
 class PubGetAction extends PubAction {
   PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
 
-  Job _createJob(ws.Project project) => new PubGetJob(spark, project);
+  Job _createJob(ws.Container container) => new PubGetJob(spark, container);
 }
 
 class PubUpgradeAction extends PubAction {
   PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
 
-  Job _createJob(ws.Project project) => new PubUpgradeJob(spark, project);
+  Job _createJob(ws.Container container) => new PubUpgradeJob(spark, container);
 }
 
 abstract class BowerAction extends PackageManagementAction {
@@ -2709,10 +2709,10 @@ class _GitPushJob extends Job {
 
 abstract class PackageManagementJob extends Job {
   final Spark _spark;
-  final ws.Project _project;
+  final ws.Container _container;
   final String _commandName;
 
-  PackageManagementJob(this._spark, this._project, this._commandName) :
+  PackageManagementJob(this._spark, this._container, this._commandName) :
       super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
@@ -2729,31 +2729,31 @@ abstract class PackageManagementJob extends Job {
 }
 
 class PubGetJob extends PackageManagementJob {
-  PubGetJob(Spark spark, ws.Project project) :
-      super(spark, project, 'pub get');
+  PubGetJob(Spark spark, ws.Container container) :
+      super(spark, container, 'pub get');
 
-  Future _run() => _spark.pubManager.installPackages(_project);
+  Future _run() => _spark.pubManager.installPackages(_container);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
-  PubUpgradeJob(Spark spark, ws.Project project) :
-      super(spark, project, 'pub upgrade');
+  PubUpgradeJob(Spark spark, ws.Container container) :
+      super(spark, container, 'pub upgrade');
 
-  Future _run() => _spark.pubManager.upgradePackages(_project);
+  Future _run() => _spark.pubManager.upgradePackages(_container);
 }
 
 class BowerGetJob extends PackageManagementJob {
-  BowerGetJob(Spark spark, ws.Project project) :
+  BowerGetJob(Spark spark, ws.Container project) :
       super(spark, project, 'bower install');
 
-  Future _run() => _spark.bowerManager.installPackages(_project);
+  Future _run() => _spark.bowerManager.installPackages(_container);
 }
 
 class BowerUpgradeJob extends PackageManagementJob {
-  BowerUpgradeJob(Spark spark, ws.Project project) :
+  BowerUpgradeJob(Spark spark, ws.Container project) :
       super(spark, project, 'bower upgrade');
 
-  Future _run() => _spark.bowerManager.upgradePackages(_project);
+  Future _run() => _spark.bowerManager.upgradePackages(_container);
 }
 
 class CompileDartJob extends Job {
