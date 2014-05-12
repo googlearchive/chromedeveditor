@@ -16,6 +16,20 @@
   transform: scaleZ(1);
 }
 
+:host(.vertical-handle) {
+  background: url('handle_vert.png') no-repeat center;
+}
+
+:host(.horizontal-handle) {
+  background: url('handle_horiz.png') no-repeat center;
+}
+
+:host(.vertical-handle), :host(.horizontal-handle) {
+  border-left: 1px solid #DDD;
+  border-right: 1px solid #DDD;
+  background-color: #F7F7F7;
+}
+
 #draggable {
   position: absolute;
   z-index: 1;
