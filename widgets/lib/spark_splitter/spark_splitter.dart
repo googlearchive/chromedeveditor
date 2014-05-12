@@ -21,6 +21,8 @@ class SparkSplitter extends SparkWidget {
   @published String direction = 'left';
   /// Height or width of the split bar, depending on the direction.
   @published int size = 8;
+  /// Whether to show a drag handle image within the split bar.
+  @published bool handle = true;
   /// Whether to lock the split bar so it can't be dragged.
   @published bool locked = false;
 
@@ -103,6 +105,7 @@ class SparkSplitter extends SparkWidget {
     classes.toggle('horizontal', _isHorizontal);
     classes.toggle('vertical', !_isHorizontal);
     _setThickness();
+    if (handle) _addBackgroundHandle();
   }
 
   void _setThickness() {
@@ -114,6 +117,11 @@ class SparkSplitter extends SparkWidget {
       style.height = "auto";
       style.width = sizeStr;
     }
+  }
+
+  void _addBackgroundHandle() {
+    classes.toggle('horizontal-handle', _isHorizontal);
+    classes.toggle('vertical-handle', !_isHorizontal);
   }
 
   /// Cache the current size of the target.
