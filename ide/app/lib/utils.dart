@@ -15,13 +15,34 @@ import 'package:logging/logging.dart';
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
+chrome.DirectoryEntry _packageDirectoryEntry;
+
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
 String i18n(String messageId) => chrome.i18n.getMessage(messageId);
 
+/**
+ * Return the Chrome App's directory. This utility method ensures that we only
+ * make the `chrome.runtime.getPackageDirectoryEntry` once in the application's
+ * lifetime.
+ */
+Future<chrome.DirectoryEntry> getPackageDirectoryEntry() {
+  if (_packageDirectoryEntry != null) {
+    return new Future.value(_packageDirectoryEntry);
+  }
+
+  return chrome.runtime.getPackageDirectoryEntry().then((dir) {
+    _packageDirectoryEntry = dir;
+    return dir;
+  });
+}
+
+/**
+ * Returns the given word with the first character capitalized.
+ */
 String capitalize(String s) {
-  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
+  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1).toLowerCase());
 }
 
 /**
@@ -37,10 +58,6 @@ String toTitleCase(String s) {
     }
   }).join(' ');
 }
-
-bool isMac() => _platform().indexOf('mac') != -1;
-bool isWin() => _platform().indexOf('win') != -1;
-bool isLinuxLike() => !isMac() && !isWin();
 
 AudioContext _ctx;
 
@@ -86,6 +103,35 @@ Future<String> getAppContents(String path) {
  * Returns a Future that completes after the next tick.
  */
 Future nextTick() => new Future.delayed(Duration.ZERO);
+
+html.DirectoryEntry _html5FSRoot;
+
+/**
+ * Returns the root directory of the application's persistent local storage.
+ */
+Future<html.DirectoryEntry> getLocalDataRoot() {
+  // For now we request 100 MBs; would like this to be unlimited though.
+  final int requestedSize = 100 * 1024 * 1024;
+
+  if (_html5FSRoot != null) return new Future.value(_html5FSRoot);
+
+  return html.window.requestFileSystem(
+      requestedSize, persistent: true).then((html.FileSystem fs) {
+    _html5FSRoot = fs.root;
+    return _html5FSRoot;
+  });
+}
+
+/**
+ * Creates and returns a directory in persistent local storage. This can be used
+ * to cache application data, e.g `getLocalDataDir('workspace')` or
+ * `getLocalDataDir('pub')`.
+ */
+Future<html.DirectoryEntry> getLocalDataDir(String name) {
+  return getLocalDataRoot().then((html.DirectoryEntry root) {
+    return root.createDirectory(name, exclusive: false);
+  });
+}
 
 /**
  * A [Notifier] is used to present the user with a message.
@@ -259,4 +305,34 @@ String _removeExtPrefix(String str) {
 String _platform() {
   String str = html.window.navigator.platform;
   return (str != null) ? str.toLowerCase() : '';
+}
+
+class FutureHelper {
+  /**
+  * Perform an async operation for each element of the iterable, in turn.
+  * It refreshes the UI after each iteraton.
+  *
+  * Runs [f] for each element in [input] in order, moving to the next element
+  * only when the [Future] returned by [f] completes. Returns a [Future] that
+  * completes when all elements have been processed.
+  *
+  * The return values of all [Future]s are discarded. Any errors will cause the
+  * iteration to stop and will be piped through the returned [Future].
+  */
+  static Future forEachNonBlockingUI(Iterable input, Future f(element)) {
+    Completer doneSignal = new Completer();
+    Iterator iterator = input.iterator;
+    void nextElement(_) {
+      if (iterator.moveNext()) {
+        nextTick().then((_) {
+          f(iterator.current)
+             .then(nextElement,  onError: (e) => doneSignal.completeError(e));
+        });
+      } else {
+        doneSignal.complete(null);
+      }
+    }
+    nextElement(null);
+    return doneSignal.future;
+  }
 }

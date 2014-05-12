@@ -22,6 +22,7 @@ import 'object_utils.dart';
 import 'objectstore.dart';
 import 'utils.dart';
 import 'zlib.dart';
+import '../utils.dart';
 
 /**
  * Encapsulates a pack object header.
@@ -39,7 +40,7 @@ class PackObjectHeader {
  * TODO(grv) : add unittests.
  */
 class Pack {
-  Uint8List data;
+  final List<int> data;
   int _offset = 0;
   ObjectStore _store;
   List<PackedObject> objects = [];
@@ -240,7 +241,8 @@ class Pack {
     return _matchObjectData(_getObjectHeader());
   }
 
-  // TODO(grv) : add progress.
+  /// This function parses all the git objects. All the deltified objects
+  /// are expanded.
   Future parseAll([var progress]) {
     try {
       int numObjects;
@@ -250,32 +252,43 @@ class Pack {
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
-      for (int i = 0; i < numObjects; ++i) {
-        PackedObject object = _matchObjectAtOffset(_offset);
-        object.crc = getCrc32(data.sublist(object.offset, _offset));
+       Future parse(_) {
 
-        // hold on to the data for delta style objects.
-        switch (object.type) {
-          case ObjectTypes.OFS_DELTA_STR:
-          case ObjectTypes.REF_DELTA_STR:
-            deferredObjects.add(object);
-            break;
-          default:
-            object.shaBytes = getObjectHash(object.type, object.data);
-            object.data = null;
-            // TODO(grv) : add progress.
-            break;
-        }
+         PackedObject object = _matchObjectAtOffset(_offset);
+         object.crc = getCrc32(data.sublist(object.offset, _offset));
 
-        objects.add(object);
-      }
+         // hold on to the data for delta style objects.
+         switch (object.type) {
+           case ObjectTypes.OFS_DELTA_STR:
+           case ObjectTypes.REF_DELTA_STR:
+             deferredObjects.add(object);
+             break;
+           default:
+             object.shaBytes = getObjectHash(object.type, object.data);
+             object.data = null;
+             // TODO(grv) : add progress.
+             break;
+         }
 
-      return Future.forEach(deferredObjects, (PackedObject obj) {
-        return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
-          deltifiedObj.data = null;
-          // TODO(grv) : add progress.
-        });
-      });
+         objects.add(object);
+         return new Future.value();
+       }
+
+       Future expandDeltified(PackedObject obj) {
+         return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
+           deltifiedObj.data = null;
+           // TODO(grv) : add progress.
+         });
+       }
+
+       List iter = new List(numObjects);
+       // This is computational intense and may take several seconds. Refresh
+       // UI after each iteartion. First parse all the git objects. Expand
+       // any deltified object.
+       return FutureHelper.forEachNonBlockingUI(iter, parse).then((_) {
+         return FutureHelper.forEachNonBlockingUI(deferredObjects,
+             expandDeltified);
+       });
     } catch (e, st) {
       return new Future.error(e, st);
     }

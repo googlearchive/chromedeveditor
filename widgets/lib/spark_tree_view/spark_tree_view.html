@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ */
+-->
+
+<link rel="import" href="src/spark_tree_view_node.html"/>
+
+<polymer-element name="spark-tree-view" attributes="model">
+  <template>
+    <link rel="stylesheet" href="spark_tree_view.css">
+
+    <spark-tree-view-node
+        treeModel="{{model}}"
+        parent=""
+        name=""
+        level="0"
+        expanded="true">
+    </spark-tree-view-node>
+  </template>
+
+  <script type="application/dart;component=1" src="spark_tree_view.dart"></script>
+</polymer-element>

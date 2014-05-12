@@ -37,6 +37,12 @@ class Status {
         return status;
       }
 
+      // Dont't track status for new and untracked files unless explicitly
+      // added.
+      if (status == null) {
+        return new FileStatus();
+      }
+
       // TODO(grv) : check the modification time when it is available.
       return getShaForEntry(entry, 'blob').then((String sha) {
         status = new FileStatus();
@@ -74,6 +80,19 @@ class Status {
 
   static Future<Map<String, FileStatus>> getUntrackedChanges(ObjectStore store)
       => _getFileStatusesForTypes(store, [FileStatusType.UNTRACKED]);
+
+  static Future<Map<String, FileStatus>> getDeletedFiles(ObjectStore store) {
+    return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED]).then(
+        (Map<String, FileStatus> statuses) {
+      Map<String, FileStatus> deletedFilesStatus = {};
+      statuses.forEach((String filePath, FileStatus status) {
+        if (status.deleted) {
+          deletedFilesStatus[filePath] = status;
+        }
+      });
+      return deletedFilesStatus;
+    });
+  }
 
   static Future<Map<String, FileStatus>> _getFileStatusesForTypes(
       ObjectStore store, List<String> types) {

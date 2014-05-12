@@ -5,7 +5,7 @@
 library spark_widgets.toggle_button;
 
 import 'dart:html';
-import 'dart:math';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -20,43 +20,47 @@ class SparkToggleButton extends SparkWidget {
   /// Gets or sets the state, true is ON and false is OFF.
   @observable bool value = false;
 
-  SparkToggleButton.created(): super.created();
-
   int _x;
   int _w;
 
-  void toggle() {
-    value = !value;
+  SparkToggleButton.created(): super.created() {
+    onClick.listen(toggle);
+    // TODO(ussuri): Enable when tap events become supported.
+//    onTap.listen(toggle);
+//    onTrackStart.listen(trackStart);
+//    onTrack.listen(track);
+//    onTrackEnd.listen(trackEnd);
+//    onFlick.listen(flick);
   }
 
   void valueChanged() {
     $['toggle'].classes.toggle('on', value);
   }
 
-  void trackStart(Event e) {
-    _w = $['toggle'].offsetWidth - clientWidth;
-    $['toggle'].classes.add('dragging');
-    // TODO(terry): Add e.preventTap() when PointerEvents supported.
+  void toggle(Event e) {
+    value = !value;
   }
 
-  void track(MouseEvent e) {
-    _x = max(-_w, min(0, value ? e.client.x : e.client.y - _w));
-    $['toggle'].style.left = '${_x}px';
-  }
-
-  void trackEnd() {
-    $['toggle'].style.left = null;
-    $['toggle'].classes.remove('dragging');
-    value = _x.abs() < _w / 2;
-//    // make valueChanged calls immediately
+  // TODO(ussuri): Enable when tap events become supported.
+//  void trackStart(MouseEvent e) {
+//    _w = $['toggle'].offsetWidth - clientWidth;
+//    $['toggle'].classes.add('dragging');
+//    e.preventTap();
+//  }
+//
+//  void track(MouseEvent e) {
+//    _x = max(-_w, min(0, value ? e.client.x : e.client.y - _w));
+//    $['toggle'].style.left = '${_x}px';
+//  }
+//
+//  void trackEnd(MouseEvent e) {
+//    $['toggle'].style.left = null;
+//    $['toggle'].classes.remove('dragging');
+//    value = _x.abs() < _w / 2;
+//  }
+//
+//  void flick(Event e) {
+//    this.value = e.xVelocity > 0;
 //    Platform.flush();
-  }
-
-  // TODO(terry): When touch events supported enable.
-/*
-  void flick(Event e) {
-    this.value = e.xVelocity > 0;
-    Platform.flush();
-  }
-*/
+//  }
 }

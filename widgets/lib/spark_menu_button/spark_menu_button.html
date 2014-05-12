@@ -28,7 +28,9 @@
     <link rel="stylesheet" href="spark_menu_button.css">
 
     <spark-button id="button"
-        focused small noPadding
+        focused
+        small
+        noPadding
         on-click="{{clickHandler}}"
         on-focus="{{focusHandler}}"
         on-blur="{{blurHandler}}">
@@ -39,7 +41,6 @@
       <spark-overlay id="overlay"
           autoClose
           animation="scale-slideup"
-          opened="{{opened}}"
           on-opened="{{overlayOpenedHandler}}">
 
         <div class="arrow"></div>
@@ -55,5 +56,5 @@
     </div>
   </template>
 
-  <script type="application/dart" src="spark_menu_button.dart"></script>
+  <script type="application/dart;component=1" src="spark_menu_button.dart"></script>
 </polymer-element>

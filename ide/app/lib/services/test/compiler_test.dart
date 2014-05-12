@@ -9,15 +9,17 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 
 import '../compiler.dart';
+import '../services_common.dart';
 
 defineTests() {
   group('compiler', () {
     Compiler compiler;
 
     setUp(() {
-      return Compiler.createCompiler(new _MockContentsProvider()).then((c) {
-        compiler = c;
-      });
+      // TODO: Move over to calling createCompilerFrom().
+//      return Compiler.createCompiler(new _MockContentsProvider()).then((c) {
+//        compiler = c;
+//      });
     });
 
     test('is available', () {

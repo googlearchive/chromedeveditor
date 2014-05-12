@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:unittest/unittest.dart';
 
+import '../../lib/utils.dart';
 import '../../lib/git/object.dart';
 import '../../lib/git/pack.dart';
 import '../../lib/git/pack_index.dart';
@@ -18,8 +19,7 @@ final String PACK_FILE_PATH = 'test/data/pack_test.pack';
 final String PACK_INDEX_FILE_PATH = 'test/data/pack_index_test.idx';
 
 Future<Pack> initPack() {
-  Future f = chrome.runtime.getPackageDirectoryEntry();
-  return f.then((chrome.DirectoryEntry dir) {
+  return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
     return dir.getFile(PACK_FILE_PATH);
   }).then((chrome.ChromeFileEntry entry) {
     return entry.readBytes();
@@ -31,14 +31,12 @@ Future<Pack> initPack() {
 }
 
 Future<PackIndex> initPackIndex() {
-  Future f = chrome.runtime.getPackageDirectoryEntry();
-  return f.then((chrome.DirectoryEntry dir) {
+  return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
     return dir.getFile(PACK_INDEX_FILE_PATH);
   }).then((chrome.ChromeFileEntry entry) {
     return entry.readBytes();
   }).then((chrome.ArrayBuffer binaryData) {
-    Uint8List data = new Uint8List.fromList(binaryData.getBytes());
-    return new PackIndex(data.buffer);
+    return new PackIndex(binaryData.getBytes());
   });
 }
 

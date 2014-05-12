@@ -46,10 +46,13 @@ void main([List<String> args = const []]) {
 
   String appPath = null;
   String browserPath = null;
+  Map envVars = {};
 
   if (results['dartium']) {
     appPath = 'app';
     browserPath = _dartiumPath();
+    // Turn on checked mode when running the tests in Dartium.
+    envVars = {'DART_FLAGS': '--enable-checked-mode'};
   }
 
   if (results['chrome'] || results['chrome-stable']) {
@@ -79,11 +82,12 @@ void main([List<String> args = const []]) {
   TestListener.create().then((TestListener listener) {
     testListener = listener;
 
-    runApp(browserPath, appPath, verbose: results['verbose']);
+    runApp(browserPath, appPath, verbose: results['verbose'], envVars: envVars);
   }).catchError(_fatalError);
 }
 
-void runApp(String browserPath, String appPath, {bool verbose: false}) {
+void runApp(String browserPath, String appPath,
+            {bool verbose: false, Map envVars}) {
   tempDir = Directory.systemTemp.createTempSync('userDataDir-');
 
   String path = new Directory(appPath).absolute.path;
@@ -108,8 +112,8 @@ void runApp(String browserPath, String appPath, {bool verbose: false}) {
   log("starting chrome...");
   log('"${browserPath}" ${args.join(' ')}');
 
-  Process.start(browserPath, args, workingDirectory: appPath)
-    .then((Process process) {
+  Process.start(browserPath, args,
+      workingDirectory: appPath, environment: envVars).then((Process process) {
       chromeProcess = process;
 
       chromeProcess.stdout.transform(new Utf8Decoder())

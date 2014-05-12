@@ -10,6 +10,7 @@ import 'dart:html';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../constants.dart';
+import '../exception.dart';
 import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
@@ -43,9 +44,8 @@ class Checkout {
                   (CommitObject commit) {
                 return ObjectUtils.expandTree(root, store, commit.treeSha)
                     .then((_) {
-                  store.index.reset(false).then((_) {
-                    return store.setHeadRef(REFS_HEADS + branch, '');
-                  });
+                  store.index.reset(false);
+                  return store.setHeadRef(REFS_HEADS + branch, '');
                 });
               });
             });
@@ -56,7 +56,7 @@ class Checkout {
       });
     }, onError: (e) {
       if (e.code == FileError.NOT_FOUND_ERR) {
-        // TODO(grv) throw checkout branch does not exist.
+        throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
       } else {
         throw e;
       }

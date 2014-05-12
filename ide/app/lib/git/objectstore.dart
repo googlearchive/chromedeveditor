@@ -143,11 +143,10 @@ class ObjectStore {
   }
 
   Future<String> getHeadRef() {
-    return _rootDir.getFile(gitPath + HEAD_PATH).then(
-        (chrome.ChromeFileEntry entry) {
-      return entry.readBytes().then((chrome.ArrayBuffer buffer) {
-        String content = UTF8.decode(buffer.getBytes());
-        // get rid of the initial 'ref: ' plus newline at end.
+    return _rootDir.getFile(gitPath + HEAD_PATH).then((chrome.FileEntry entry) {
+      return FileOps.readBytes(entry).then((List<int> data) {
+        // Get rid of the initial 'ref: ' plus newline at end.
+        String content = UTF8.decode(data);
         return content.substring(5).trim();
       });
     });
@@ -168,14 +167,16 @@ class ObjectStore {
   }
 
   Future<String> getHeadForRef(String headRefName) {
-    return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
-      .then((String content) => content.substring(0, 40));
+    return FileOps.readFileText(_rootDir, gitPath + headRefName).then((content) {
+      return content.substring(0, 40);
+    });
   }
 
   Future<String> getRemoteHeadForRef(String headRefName) {
     String path = gitPath + REFS_REMOTE_HEADS + headRefName.split('/').last;
-    return FileOps.readFile(_rootDir, path, "Text")
-      .then((String content) => content.substring(0, 40));
+    return FileOps.readFileText(_rootDir, path).then((String content) {
+      return content.substring(0, 40);
+    });
   }
 
   Future<List<String>> getLocalBranches() => getAllHeads();
@@ -189,25 +190,22 @@ class ObjectStore {
     });
   }
 
-  Future _readPackEntry(chrome.DirectoryEntry packDir,
-      chrome.ChromeFileEntry entry) {
-    return entry.readBytes().then((chrome.ArrayBuffer packData) {
-      return FileOps.readFile(packDir, entry.name.substring(0,
-          entry.name.lastIndexOf('.pack')) + '.idx', 'ArrayBuffer').then(
-          (chrome.ArrayBuffer idxData) {
-            Pack pack = new Pack(new Uint8List.fromList(
-                packData.getBytes()), this);
-
-            PackIndex packIdx = new PackIndex(new Uint8List.fromList(
-                idxData.getBytes()).buffer);
-            packs.add(new PackEntry(pack, packIdx));
-            return new Future.value();
+  Future _readPackEntry(chrome.DirectoryEntry packDir, chrome.FileEntry entry) {
+    return FileOps.readBytes(entry).then((List<int> packData) {
+      String path = entry.name.substring(0, entry.name.lastIndexOf('.pack')) +
+          '.idx';
+      return FileOps.readFileBytes(packDir, path).then((List<int> indexData) {
+        Pack pack = new Pack(packData, this);
+        PackIndex packIdx = new PackIndex(indexData);
+        packs.add(new PackEntry(pack, packIdx));
+        return new Future.value();
       });
     });
   }
 
-  Future<chrome.FileEntry> _findLooseObject(String sha) => objectDir.getFile(
-      sha.substring(0, 2) + '/' + sha.substring(2));
+  Future<chrome.Entry> _findLooseObject(String sha) {
+    return objectDir.getFile(sha.substring(0, 2) + '/' + sha.substring(2));
+  }
 
   FindPackedObjectResult findPackedObject(List<int> shaBytes) {
     for (var i = 0; i < packs.length; ++i) {
@@ -652,10 +650,10 @@ class ObjectStore {
   }
 
   Future<Config> readConfig() {
-    return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
+    return FileOps.readFileText(_rootDir, '.git/config.json').then(
         (String configStr) => new Config(configStr),
-      // TODO: handle errors / build default GitConfig.
-      onError: (e) => this.config);
+        // TODO: handle errors / build default GitConfig.
+        onError: (e) => this.config);
   }
 
   Future<Entry> writeConfig() {

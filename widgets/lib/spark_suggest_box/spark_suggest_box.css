@@ -3,6 +3,8 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("../common/spark_widget.css");
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
+@import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
 #text-box {
   height: 31px;
@@ -35,7 +37,7 @@
 
 .suggestion-item {
   padding: 2px 12px;
-  font-family: Helvetica, Sans-serif;
+  font-family: Helvetica, Arial, Sans-serif;
   font-size: 13px;
   white-space: nowrap;
   text-overflow: ellipsis;

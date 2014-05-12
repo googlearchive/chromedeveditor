@@ -6,21 +6,27 @@
 
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
-<polymer-element name="spark-button" extends="spark-widget" class="{{btnClasses}}"
-    attributes="primary active large small noPadding">
+<polymer-element name="spark-button" extends="spark-widget"
+    attributes="primary
+                large
+                small
+                noPadding
+                enabled
+                active">
   <template>
     <link rel="stylesheet" href="spark_button.css">
+    <template if="{{noPadding}}">
+      <style>
+        #button {
+          padding: 0;
+        }
+      </style>
+    </template>
 
-    <style>
-      :host([noPadding]) #button {
-        padding: 0;
-      }
-    </style>
-
-    <button id="button" type="button" focused class="{{btnClasses}}">
+    <button id="button" type="button" class="btn" focused>
       <content></content>
     </button>
   </template>
 
-  <script type="application/dart" src="spark_button.dart"></script>
+  <script type="application/dart;component=1" src="spark_button.dart"></script>
 </polymer-element>
