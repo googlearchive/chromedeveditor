@@ -373,6 +373,10 @@ button.ace_searchbtn_close:active {
   border-radius: 5px;
 }
 
+.outlineItem >a {
+  display: block;
+}
+
 .outlineItem {
   overflow: hidden;
   text-overflow: ellipsis;
