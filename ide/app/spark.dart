@@ -1807,7 +1807,7 @@ class NewProjectAction extends SparkActionWithDialog {
       'polymer-ui-elements': 'PolymerLabs/polymer-ui-elements#master'
   };
   // Matches: "proj-template", "proj-template+polymer,polymer-elements".
-  static final _TEMPLATE_REGEX = new RegExp(r'([\w_-]+)(\+(([\w-],?)+))?');
+  static final _TEMPLATE_REGEX = new RegExp(r'([\w_-]+)(;(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
@@ -1861,7 +1861,7 @@ class NewProjectAction extends SparkActionWithDialog {
         // project type requires them.
         if (jsDepsStr != null) {
           List<String> jsDeps = [];
-          for (final depName in jsDepsStr.split(',')) {
+          for (final depName in jsDepsStr.split(':')) {
             final String depPath = _KNOWN_JS_PACKAGES[depName];
             assert(depPath != null);
             jsDeps.add('"$depName": "$depPath"');
