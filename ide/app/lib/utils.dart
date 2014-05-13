@@ -205,6 +205,59 @@ class PrintProfiler {
 }
 
 /**
+ * A utility class to make it easier to read a stream of lists of ints. Clients
+ * of the API can instead read the data as a sequence of Futures, where they
+ * request the number of bytes to read for each future.
+ */
+class StreamReader {
+  final Stream<List<int>> stream;
+  List<int> _buffer = [];
+  bool _done = false;
+  Completer _completer;
+  int _readLength;
+
+  StreamReader(this.stream) {
+    stream.listen((List<int> data) {
+      _buffer.addAll(data);
+      _checkListener();
+    }, onDone: () {
+      _done = true;
+      _checkListener();
+    });
+  }
+
+  Future<List<int>> read(int length) {
+    _readLength = length;
+    Completer completer = new Completer();
+    _completer = completer;
+    _checkListener();
+    return completer.future;
+  }
+
+  Future<List<int>> readRemaining() {
+    return read(-1);
+  }
+
+  void _checkListener() {
+    if (_completer == null) {
+      return;
+    } else if (_readLength != -1 && _buffer.length >= _readLength) {
+      List<int> result = _buffer.sublist(0, _readLength);
+      _buffer.removeRange(0, _readLength);
+      _completer.complete(result);
+      _completer = null;
+    } else if (_done && _readLength == -1) {
+      List<int> result = _buffer.sublist(0, _buffer.length);
+      _buffer.clear();
+      _completer.complete(result);
+      _completer = null;
+    } else if (_done) {
+      _completer.completeError('eof');
+    }
+  }
+}
+
+/**
  * Returns a minimal textual description of the stack trace. I.e., instead of a
  * stack trace several thousand chars long, this tries to return one that can
  * meaningfully fit into several hundred chars. So, it converts something like:
@@ -309,16 +362,16 @@ String _platform() {
 
 class FutureHelper {
   /**
-  * Perform an async operation for each element of the iterable, in turn.
-  * It refreshes the UI after each iteraton.
-  *
-  * Runs [f] for each element in [input] in order, moving to the next element
-  * only when the [Future] returned by [f] completes. Returns a [Future] that
-  * completes when all elements have been processed.
-  *
-  * The return values of all [Future]s are discarded. Any errors will cause the
-  * iteration to stop and will be piped through the returned [Future].
-  */
+   * Perform an async operation for each element of the iterable, in turn. It
+   * refreshes the UI after each iteraton.
+   *
+   * Runs [f] for each element in [input] in order, moving to the next element
+   * only when the [Future] returned by [f] completes. Returns a [Future] that
+   * completes when all elements have been processed.
+   *
+   * The return values of all [Future]s are discarded. Any errors will cause the
+   * iteration to stop and will be piped through the returned [Future].
+   */
   static Future forEachNonBlockingUI(Iterable input, Future f(element)) {
     Completer doneSignal = new Completer();
     Iterator iterator = input.iterator;

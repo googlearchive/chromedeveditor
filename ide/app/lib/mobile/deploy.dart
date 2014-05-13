@@ -2,6 +2,9 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/**
+ * A library to deploy a chrome app to an Android device.
+ */
 library spark.deploy;
 
 import 'dart:async';
@@ -9,6 +12,8 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'adb.dart';
+import 'adb_client.dart';
+import 'adb_client_tcp.dart';
 import '../jobs.dart';
 import '../preferences.dart';
 import '../tcp.dart';
@@ -26,8 +31,6 @@ class DeviceInfo {
 }
 
 class MobileDeploy {
-  static final int ADB_PORT = 5037;
-
   final Container appContainer;
   final PreferenceStore _prefs;
   List<DeviceInfo> _knownDevices = [];
@@ -82,9 +85,10 @@ class MobileDeploy {
     monitor.start('Deploying…', 10);
 
     // Try to find a local ADB server. If we fail, try to use USB.
-    return _connectToAdbServer().then((client) {
+    return AdbClientTcp.createClient().then((AdbClientTcp client) {
       return _pushToAdbServer(client, monitor);
-    }, onError: (_) { // No server found, so use our own USB code.
+    }, onError: (_) {
+      // No server found, so use our own USB code.
       return _pushViaUSB(monitor);
     });
   }
@@ -198,67 +202,16 @@ class MobileDeploy {
     }).then((_) => device);
   }
 
-  Future<TcpClient> _connectToAdbServer() {
-    // Try to connect to localhost:5037.
-    return TcpClient.createClient(LOCAL_HOST, MobileDeploy.ADB_PORT);
-  }
-
-  void _sendAdbCommand(TcpClient client, String msg) {
-    // ADB expects a four-character ASCII hex string at the start of a message.
-    // The value is the length of the rest of the message.
-    String lenStr = msg.length.toRadixString(16);
-    String padded = "0000".substring(lenStr.length);
-    String payload = '${padded}${lenStr}${msg}';
-    client.writeString(payload);
-  }
-
-  Future _pushToAdbServer(TcpClient client, ProgressMonitor monitor) {
-    Stream<List<int>> stream = client.stream;
-
-    // First, check how many devices there are connected.
-    _sendAdbCommand(client, 'host:devices');
-
-    return stream.take(1).single.then((List<int> deviceBytes) {
-      String deviceList = new String.fromCharCodes(deviceBytes);
-      if (!deviceList.startsWith('OKAY')) {
-        return new Future.error('Invalid response to device list request');
-      }
-
-      // Drop the OKAY and four-character hex length off the beginning,
-      // and then split on newlines. Each line is a device description.
-      // Remove any trailing newline first.
-      if (deviceList.endsWith('\n')) {
-        deviceList = deviceList.substring(0, deviceList.length-2);
-      }
-      List<String> devices = deviceList.substring(8).split('\n');
-      List<List<String>> deviceDetails = new List.from(
-          devices.map((d) => d.split('\t')));
-
-      // deviceDetails has one row for each device, and each device has two
-      // columns: [0] is the serial number, [1] is the description.
-      // TODO: Handle > 1 device!
-      if (deviceDetails.length < 1) {
-        return new Future.error(
-            'Connected to ADB server, but there are no devices attached.');
-      } else if (deviceDetails.length > 1) {
-        return new Future.error(
-            'Connect to ADB server, but there are multiple devices attached. FIXME TODO');
-      } else {
-        // The working case of exactly one device. We send a forwarding request
-        // to the server.
-        // Have to reconnect, these connections are single-use.
-        return _connectToAdbServer().then((TcpClient client) {
-          _sendAdbCommand(client,
-              'host-serial:${ deviceDetails[0][0] }:forward:tcp:2424;tcp:2424');
-          return _sendHttpPush('127.0.0.1', monitor);
-        });
-      }
-    }, onError: (e) {
-      return new Future.error(
-          'Error reading response from ADB server: ' + e);
+  Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
+    // Start ADT on the device.
+    return client.startActivity(AdbApplication.CHROME_ADT).then((_) {
+      // Setup port forwarding to 2424 on the device.
+      return client.forwardTcp(2424, 2424);
+    }).then((_) {
+      // Push the app binary to port 2424.
+      return _sendHttpPush('127.0.0.1', monitor);
     });
   }
-
 
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;

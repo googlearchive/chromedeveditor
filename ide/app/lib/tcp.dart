@@ -88,8 +88,16 @@ class TcpClient {
     chrome.sockets.tcp.onReceiveError.listen((chrome.ReceiveErrorInfo info) {
       StreamController controller = _clientMap[info.socketId];
       if (controller != null) {
-        controller.addError(
-            new SocketException("error reading stream: ${info.resultCode}"));
+        if (info.resultCode == -15) {
+          // An error code of -15 indicates the port is closed.
+          controller.close();
+          _clientMap.remove(info.socketId);
+        } else {
+          controller.addError(
+              new SocketException("error reading stream: ${info.resultCode}"));
+          controller.close();
+          _clientMap.remove(info.socketId);
+        }
       }
     });
   }
