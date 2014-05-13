@@ -48,7 +48,7 @@
   float: left;
 }
 
-#on-label, #off-label {
+#onLabel, #offLabel {
   width: 50%;
   height: 100%;
   line-height: 30px;
@@ -59,13 +59,13 @@
   font-size: 10px;
 }
 
-#on-label {
+#onLabel {
   paddinspark-right: 14px;
   background-color: #488afd;
   color: white;
 }
 
-#off-label {
+#offLabel {
   paddinspark-left: 14px;
   background-color: #bfbfbf;
   color: #716f6f;

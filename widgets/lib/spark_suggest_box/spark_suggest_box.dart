@@ -71,9 +71,9 @@ class SparkSuggestBox extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _textBox = $['text-box'];
-    _overlay = $['suggestion-list-overlay'];
-    _menu = $['suggestion-list-menu'];
+    _textBox = $['textBox'];
+    _overlay = $['suggestionListOverlay'];
+    _menu = $['suggestionListMenu'];
   }
 
   /**
