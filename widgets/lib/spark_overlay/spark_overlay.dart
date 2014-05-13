@@ -11,22 +11,21 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
-// Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-overlay")
 class SparkOverlay extends SparkWidget {
   // Track overlays for z-index and focus managemant.
   static List overlays = [];
 
-  static void _trackOverlays(inOverlay) {
+  static void _trackOverlays(SparkOverlay inOverlay) {
     if (inOverlay.opened) {
-      var z0 = _currentOverlayZ();
+      final int z0 = _currentOverlayZ();
       overlays.add(inOverlay);
-      var z1 = _currentOverlayZ();
+      final int z1 = _currentOverlayZ();
       if (z0 != null && z1 != null && z1 <= z0) {
         _applyOverlayZ(inOverlay, z0);
       }
     } else {
-      var i = overlays.indexOf(inOverlay);
+      final int i = overlays.indexOf(inOverlay);
       if (i >= 0) {
         overlays.removeAt(i);
         _setZ(inOverlay, null);
@@ -34,11 +33,11 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  static void _applyOverlayZ(inOverlay, inAboveZ) {
+  static void _applyOverlayZ(SparkOverlay inOverlay, int inAboveZ) {
     _setZ(inOverlay, inAboveZ + 2);
   }
 
-  static void _setZ(inNode, inZ) {
+  static void _setZ(Element inNode, int inZ) {
     inNode.style.zIndex = "$inZ";
   }
 
@@ -48,11 +47,11 @@ class SparkOverlay extends SparkWidget {
 
   // TODO(ussuri): This widget doesn't know in which z-index environment it's
   // going to live. Choosing an arbitrary starting z-index here is wrong. Redo.
-  static int _DEFAULT_Z = 1000;
+  static const int _DEFAULT_Z = 1000;
 
   static _currentOverlayZ() {
-    var z = _DEFAULT_Z;
-    var current = _currentOverlay();
+    int z = _DEFAULT_Z;
+    final SparkOverlay current = _currentOverlay();
     if (current != null) {
       final z1 = current.getComputedStyle().zIndex;
       z = int.parse(z1, onError: (source) { });
@@ -61,7 +60,7 @@ class SparkOverlay extends SparkWidget {
   }
 
   static void _focusOverlay() {
-    var current = _currentOverlay();
+    final SparkOverlay current = _currentOverlay();
     if (current != null) {
       current.focus();
     }
@@ -87,6 +86,7 @@ class SparkOverlay extends SparkWidget {
   @published bool get opened => _opened;
 
   @published set opened(bool val) {
+    print("overlay: $val");
     if (_opened != val) {
       _opened = val;
       // TODO(ussuri): Getter/setter were needed to fix the Menu and Modal not
@@ -223,20 +223,17 @@ class SparkOverlay extends SparkWidget {
   void _renderOpened() {
     classes.remove('closing');
     classes.add('revealed');
-    // continue styling after delay so display state can change without
-    // aborting transitions
+    // Continue styling after delay so display state can change without
+    // aborting transitions.
     Timer.run(() { _continueRenderOpened(); });
-//    asyncMethod('continueRenderOpened');
   }
 
   void _continueRenderOpened() {
     classes.toggle('opened', opened);
     classes.toggle('closing', !opened);
-//    this.animating = this.asyncMethod('completeOpening', null, this.timeout);
   }
 
   void _completeOpening() {
-//    clearTimeout(this.animating);
     classes.remove('closing');
     classes.toggle('revealed', opened);
     _applyFocus();
@@ -246,7 +243,7 @@ class SparkOverlay extends SparkWidget {
     if (!opened) {
       classes.remove('animation-in-progress');
     }
-    // same steps as when a transition ends
+    // Same steps as when a transition ends.
     _openedTransitionEnd(e);
   }
 

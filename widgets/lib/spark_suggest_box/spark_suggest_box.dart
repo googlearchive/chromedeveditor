@@ -200,7 +200,8 @@ class SparkSuggestBox extends SparkWidget {
       opened = newOpened;
       // TODO(ussuri): A temporary plug to make spark-overlay see changes
       // in 'opened' when run as deployed code. Just binding via {{opened}}
-      // alone isn't detected and the menu doesn't open.
+      // alone isn't detected and the menu doesn't open. Also, try
+      // _overlay.deliverChanges() instead.
       if (IS_DART2JS) {
         _overlay.opened = opened;
       }
