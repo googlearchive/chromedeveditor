@@ -68,7 +68,7 @@ abstract class PackageManager {
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
 
-  Future installPackages(Project container);
+  Future installPackages(Container container);
   Future upgradePackages(Container container);
 }
 
