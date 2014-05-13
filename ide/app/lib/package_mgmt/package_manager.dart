@@ -38,9 +38,9 @@ abstract class PackageServiceProperties {
            !isInPackagesFolder(resource);
   }
 
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
 
   String get packageServiceName;
   String get packageSpecFileName;
@@ -59,30 +59,34 @@ abstract class PackageManager {
     workspace.builderManager.builders.add(getBuilder());
   }
 
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
+
   PackageServiceProperties get properties;
 
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
 
-  Future installPackages(Project project);
-  Future upgradePackages(Project project);
+  Future installPackages(Project container);
+  Future upgradePackages(Container container);
 }
 
 abstract class PackageResolver {
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
+
   PackageServiceProperties get properties;
+
   File resolveRefToFile(String url);
   String getReferenceFor(File file);
 }
 
 abstract class PackageBuilder extends Builder {
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
+
   PackageServiceProperties get properties;
 }

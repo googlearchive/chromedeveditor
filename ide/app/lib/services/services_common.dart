@@ -9,6 +9,7 @@ import 'dart:async';
 import '../workspace.dart';
 import '../package_mgmt/package_manager.dart';
 import '../package_mgmt/pub.dart';
+import '../package_mgmt/pub_properties.dart';
 
 abstract class Serializable {
   // TODO(ericarnold): Implement as, and refactor any classes containing toMap
