@@ -11,6 +11,10 @@ import '../workspace.dart';
 final BowerProperties bowerProperties = new BowerProperties();
 
 class BowerProperties extends PackageServiceProperties {
+  //
+  // PackageServiceProperties virtual interface:
+  //
+
   String get packageServiceName => 'bower';
   String get packageSpecFileName => 'bower.json';
   // TODO(ussuri): Package name can be overridden in .bowerrc: handle that.
