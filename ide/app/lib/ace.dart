@@ -654,20 +654,34 @@ class AceManager {
       }
 
       setMarkers(file.getMarkers());
-      buildOutline();
+      buildOutline().then((_) {
+        outline.model.entries.forEach((svc.OutlineEntry item) {
+          ace.Point startPoint =
+              session.document.indexToPosition(item.nameStartOffset);
+          ace.Point endPoint =
+              session.document.indexToPosition(item.nameEndOffset);
+
+          /*%TRACE3*/ print("(4> 5/12/14): addMarker! $startPoint, $endPoint"); // TRACE%
+          session.addMarker(new ace.Range.fromPoints(startPoint,
+              endPoint), "ace_bracket", type: ace.Marker.TEXT, inFront: true);
+//          _aceEditor.renderer.
+//          session.screenToDocumentPosition(row, column)
+
+        });
+      });
     }
   }
 
   /**
    * Make a service call and build the outline view for the current file.
    */
-  void buildOutline() {
+  Future buildOutline() {
     String name = currentFile == null ? '' : currentFile.name;
 
-    if (!name.endsWith(".dart")) return;
+    if (!name.endsWith(".dart")) return new Future.value();
 
     String text = currentSession.value;
-    outline.build(name, text);
+    return outline.build(name, text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {

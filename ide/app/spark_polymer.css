@@ -61,6 +61,10 @@ body {
   color: #aaa;
 }
 
+.ace_bracket {
+  background: blue;
+}
+
 div.ace_gutter {
   z-index: 0;
 }
