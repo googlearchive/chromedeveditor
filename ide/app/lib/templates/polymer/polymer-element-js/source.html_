@@ -1,12 +1,12 @@
 <link rel="import" href="bower_components/polymer/polymer.html">
 
-<polymer-element name="``elementName``" attributes="attr">
+<polymer-element name="``tagName``" attributes="attr">
   <template>
     <link rel="stylesheet" href="``sourceName``.css">
     <content></content>
   </template>
   <script>
-    Polymer('``elementName``', {
+    Polymer('``tagName``', {
       attr: 'value',
       ready: function() {
       },

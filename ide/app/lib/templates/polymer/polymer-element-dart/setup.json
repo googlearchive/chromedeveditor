@@ -2,8 +2,8 @@
   "files": {
     { "source": "source.css_", "dest": "``sourceName``.css" },
     { "source": "source.dart_", "dest": "``sourceName``.dart" },
-    { "source": "source.html_", "dest": "``sourceName``.html" }
-    { "source": "index.html_", "dest": "index.html" }
+    { "source": "source.html_", "dest": "``sourceName``.html" },
+    { "source": "index.html_", "dest": "index.html" },
     { "source": "pubspec.yaml_", "dest": "pubspec.yaml" }
   ]
 }
