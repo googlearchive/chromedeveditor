@@ -206,7 +206,14 @@ class FilesController implements TreeViewDelegate {
     return cell;
   }
 
-  int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
+  int treeViewHeightForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    if (resource is Project) {
+      return 40;
+    } else {
+      return 20;
+    }
+  }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
@@ -934,6 +941,7 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
+      html.querySelector('#fileNotFoundPlaceholder').classes.add('hidden');
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
@@ -952,6 +960,11 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
+      if (_filteredFiles.length == 0) {
+        html.querySelector('#fileNotFoundPlaceholder').classes.remove('hidden');
+      } else {
+        html.querySelector('#fileNotFoundPlaceholder').classes.add('hidden');
+      }
       _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }

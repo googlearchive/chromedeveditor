@@ -20,11 +20,12 @@
 }
 
 #splitView {
-  position: absolute;
+  border-top: 1px solid #ddd;
   bottom: 0;
   left: 0;
+  position: absolute;
   right: 0;
-  top: 40px;
+  top: 0;
 }
 
 #leftNav, #rightNav {

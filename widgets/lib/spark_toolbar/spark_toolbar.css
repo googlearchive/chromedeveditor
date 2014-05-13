@@ -5,6 +5,14 @@
 @import url("../common/spark_widget.css");
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 
+:host {
+  display: block;
+  height: 48px;
+  background-color: #fafafa;
+  border-bottom: 1px solid #dadada;
+  padding: 0 5px;
+}
+
 .toolbar {
   display: -webkit-box;
   display: -webkit-flex;
@@ -14,10 +22,7 @@
   -webkit-align-items: center;
   -ms-flex-align: center;
   align-items: center;
-  min-height: 40px;
-  box-shadow: inset 0px 0px 3px rgba(255, 255, 255, 1);
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
+  height: 100%;
 }
 
 /* Toolbars can be made plain and nested toolbars are unstyled by default */

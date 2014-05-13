@@ -87,7 +87,50 @@
 
   <!-- Top-level UI element. -->
   <spark-polymer-ui id="topUi">
-    <div id="fileViewArea" beforeSplit></div>
+    <div beforeSplit>
+      <spark-toolbar id="toolbar">
+        <input type="search"
+            id="search"
+            placeholder="Filter"/>
+        <spark-button id="runButton">
+          <span class="glyphicon glyphicon-play"></span>
+        </spark-button>
+        <spark-menu-button
+            id="mainMenu"
+            src="images/overflow.png"
+            valueAttr="action-id"
+            valign="right">
+          <spark-menu-item action-id="file-open" label="Open File...">
+          </spark-menu-item>
+          <spark-menu-item action-id="folder-open" label="Open Folder...">
+          </spark-menu-item>
+          <spark-menu-separator></spark-menu-separator>
+          <spark-menu-item action-id="project-new" label="New Project...">
+          </spark-menu-item>
+          <spark-menu-item action-id="git-clone" label="Git Clone...">
+          </spark-menu-item>
+          <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
+          </spark-menu-item>
+          <spark-menu-separator></spark-menu-separator>
+          <spark-menu-item action-id="application-run" label="Run">
+          </spark-menu-item>
+          <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
+          </spark-menu-item>
+          <template if="{{developerMode}}">
+            <spark-menu-separator></spark-menu-separator>
+            <spark-menu-item action-id="run-tests" label="Run Tests">
+            </spark-menu-item>
+          </template>
+          <spark-menu-separator></spark-menu-separator>
+          <spark-menu-item action-id="settings" label="Settings...">
+          </spark-menu-item>
+          <spark-menu-item action-id="help-about" label="About Spark">
+          </spark-menu-item>
+        </spark-menu-button>
+      </spark-toolbar>
+      <div id="fileViewArea"></div>
+      <div id="fileNotFoundPlaceholder" class="hidden">No matching files</div>
+    </div>
     <div id="editorArea" afterSplit></div>
   </spark-polymer-ui>
 

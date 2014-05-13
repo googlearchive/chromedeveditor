@@ -132,6 +132,7 @@ abstract class Spark
     initFilesController();
 
     initToolbar();
+    initFilter();
     buildMenu();
     initSplitView();
     initSaveStatusListener();
@@ -454,7 +455,17 @@ abstract class Spark
     // Overridden in spark_polymer.dart.
   }
 
+  void initFilter() {
+    // Overridden in spark_polymer.dart.
+  }
+
   void buildMenu() {
+    querySelector('#mainMenu').addEventListener('activate',
+        menuActivateEventHandler);
+  }
+
+  void menuActivateEventHandler(CustomEvent event) {
+    // Overridden in spark_polymer.dart.
   }
 
   Future restoreWorkspace() {
@@ -1722,7 +1733,7 @@ class SearchAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    spark.getUIElement('#search').focus();
+    querySelector('#search').focus();
   }
 }
 
