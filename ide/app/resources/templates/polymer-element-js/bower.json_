@@ -1,0 +1,6 @@
+{
+  "name": "``elementName``",
+  "dependencies": {
+    "polymer": "Polymer/polymer#master"
+  }
+}

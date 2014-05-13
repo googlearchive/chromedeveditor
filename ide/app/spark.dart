@@ -1807,7 +1807,7 @@ class NewProjectAction extends SparkActionWithDialog {
       'polymer-ui-elements': 'PolymerLabs/polymer-ui-elements#master'
   };
   // Matches: "proj-template", "proj-template+polymer,polymer-elements".
-  static final _TEMPLATE_REGEX = new RegExp(r'([\w_-]+)(\+(([\w-],?)+))?');
+  static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
       : super(spark, "project-new", "New Project…", dialog) {
@@ -1839,7 +1839,7 @@ class NewProjectAction extends SparkActionWithDialog {
         root = new ws.FolderChildRoot(location.parent, locationEntry);
       }
 
-      // TODO(ussuri): Why is this no-op `return Future.value()` necessary?
+      // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
         List<ProjectTemplate> templates = [];
 

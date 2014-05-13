@@ -16,11 +16,11 @@ import 'workspace.dart';
 /**
  * Specifies a variable-to-value substitution in a template file text.
  */
-class TemplateVar {
+class _TemplateVar {
   final String name;
   final String value;
 
-  TemplateVar(this.name, this.value);
+  _TemplateVar(this.name, this.value);
 
   String interpolate(String text) => text.replaceAll('``$name``', value);
 }
@@ -84,7 +84,7 @@ class ProjectBuilder {
 class ProjectTemplate {
   String _id;
   String _sourceUri;
-  List<TemplateVar> _vars = [];
+  List<_TemplateVar> _vars = [];
 
   ProjectTemplate(this._id,
                   [Map<String, String> globalVars,
@@ -92,7 +92,7 @@ class ProjectTemplate {
     _sourceUri = 'resources/templates/$_id';
     for (var vars in [globalVars, localVars]) {
       if (vars != null) {
-        vars.forEach((name, value) => _vars.add(new TemplateVar(name, value)));
+        vars.forEach((name, value) => _vars.add(new _TemplateVar(name, value)));
       }
     }
   }
@@ -113,7 +113,7 @@ class ProjectTemplate {
   }
 
   String _interpolateTemplateVars(String text) {
-    return _vars.fold(text, (String t, TemplateVar v) => v.interpolate(t));
+    return _vars.fold(text, (String t, _TemplateVar v) => v.interpolate(t));
   }
 
   Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,

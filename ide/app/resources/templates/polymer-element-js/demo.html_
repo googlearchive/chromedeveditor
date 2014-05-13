@@ -1,0 +1,25 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>``projectName`` demo</title>
+
+    <script src="../platform/platform.js"></script>
+    <link rel="import" href="``sourceName``.html">
+
+    <style>
+    </style>
+  </head>
+
+  <body unresolved>
+    <``elementName`` id="element"></``elementName``>
+
+    <script>
+      document.addEventListener('polymer-ready', function() {
+        console.log('Polymer is ready');
+        var element = document.querySelector('#element');
+        // Do something with the element.
+      })
+    </script>
+  </body>
+</html>
