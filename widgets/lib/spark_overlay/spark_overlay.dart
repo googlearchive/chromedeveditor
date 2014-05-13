@@ -14,6 +14,12 @@ import '../common/spark_widget.dart';
 @CustomTag("spark-overlay")
 class SparkOverlay extends SparkWidget {
   // Track overlays for z-index and focus managemant.
+  // TODO(ussuri): The z-index management with a fixed base z-index is shaky at
+  // best. SparkOverlay doesn't know in what z-index environment its instances
+  // will live, so assumption that 1000 is always a good value is invalid.
+  // Consider:
+  // 1) Stacking contexts (https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context).
+  // 2) Some way to set the base z-index in the client.
   static List overlays = [];
 
   static void _trackOverlays(SparkOverlay inOverlay) {
