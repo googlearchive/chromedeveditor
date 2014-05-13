@@ -15,7 +15,6 @@ import 'preferences.dart';
  */
 class Outline {
   Map<int, OutlineItem> _outlineItemsByOffset;
-  services.Outline model;
   OutlineItem _selectedItem;
 
   StreamSubscription _currentOutlineOperation;
@@ -113,7 +112,6 @@ class Outline {
   }
 
   void _populate(services.Outline outline) {
-    this.model = outline;
     _outlineItemsByOffset = {};
     _rootList.children.clear();
     _scrollTarget = new html.SpanElement();
