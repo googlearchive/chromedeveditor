@@ -3,11 +3,12 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("../common/spark_widget.css");
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
+@import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
 :host {
   display: inline-block;
   box-sizing: border-box;
-  -moz-box-sizing: border-box;
   width: 30px;
   height: 30px;
 }
@@ -24,13 +25,13 @@
 }
 
 [valign=right] #overlay {
-  -webkit-transform: translateX(-90%);
-  transform: translateX(-90%);
+  -webkit-transform: translateX(-91%);
+  transform: translateX(-91%);
 }
 
 [valign=left] #overlay {
-  -webkit-transform: translateX(-10%);
-  transform: translateX(-10%);
+  -webkit-transform: translateX(-9%);
+  transform: translateX(-9%);
 }
 
 .arrow {
@@ -52,20 +53,11 @@
 [valign=right] .arrow {
   position: relative;
   left: -7px;
-  margin-left: 90%;
+  margin-left: 91%;
 }
 
 [valign=left] .arrow {
   position: relative;
   left: -7px;
-  margin-left: 10%;
+  margin-left: 9%;
 }
-
-#overlay-menu {
-  border: none;
-  display: block;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  margin: 5px 0;
-}
-

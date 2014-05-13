@@ -25,11 +25,7 @@
 <polymer-element name="spark-icon" extends="spark-widget"
     attributes="src tooltip size">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("packages/spark_widgets/spark_icon/spark_icon.css");
-    </style>
+    <link rel="stylesheet" href="spark_icon.css">
 
     <style>
       #icon {
@@ -42,5 +38,5 @@
     <div id="icon" title="{{tooltip}}"></div>
   </template>
 
-  <script type="application/dart" src="spark_icon.dart"></script>
+  <script type="application/dart;component=1" src="spark_icon.dart"></script>
 </polymer-element>

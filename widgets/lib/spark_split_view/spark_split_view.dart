@@ -19,7 +19,6 @@ class SparkSplitView extends SparkWidget {
   @published int splitterSize = 8;
   @published bool splitterHandle = true;
   @published bool locked = false;
-  @published SplitterUpdateFunction onUpdate;
 
   /// Constructor.
   SparkSplitView.created() : super.created();
@@ -34,8 +33,7 @@ class SparkSplitView extends SparkWidget {
     assert(children.length == 2 ||
            (children.length == 1 &&
             children[0] is ContentElement &&
-            (children[0] as ContentElement)
-                .getDistributedNodes().where((n) => n is Element).length == 2
+            SparkWidget.inlineNestedContentNodes(children[0]).length == 2
            )
     );
   }
@@ -45,5 +43,13 @@ class SparkSplitView extends SparkWidget {
    */
   set targetSize(num val) {
     ($['splitter'] as SparkSplitter).targetSize = val;
+  }
+
+  /**
+   * Re-fire an update event from the splitter for explicitness.
+   */
+  void splitterUpdateHandler(CustomEvent e, var detail) {
+    e..stopImmediatePropagation()..preventDefault();
+    asyncFire('update', detail: detail);
   }
 }

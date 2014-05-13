@@ -3,12 +3,18 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("packages/spark_widgets/common/spark_widget.css");
+@import url("packages/bootjack/css/bootstrap.min.css");
+@import url("packages/bootjack/css/bootstrap-theme.css");
 
-@import url("resources/font_awesome/css/font-awesome.min.css");
-
-#searchBox {
+#search {
   display: inline-block;
-  width: 250px;
+  position: relative;
+  top: 4px;
+  width: 200px;
+  height: 31px;
+}
+
+#mainMenu {
   position: relative;
   top: 4px;
 }
@@ -19,6 +25,11 @@
   left: 0;
   right: 0;
   top: 40px;
+}
+
+#leftNav, #rightNav {
+  position: relative;
+  top: 4px;
 }
 
 .dialog {
@@ -33,17 +44,21 @@
   width: 100%;
 }
 
+.dialog input:invalid {
+  color: red;
+}
+
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;
   overflow: hidden;
   background: white;
-  outline: 1px solid rgba(0,0,0,0.2);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  outline: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .dialog a.close {
@@ -73,6 +88,11 @@
   padding: 2px 5px;
 }
 
+#settingsDialog #directory-label {
+  height: 24px;
+  width: 250px;
+}
+
 #settingsDialog .plus-minus-container {
   margin-left: 15px;
 }
@@ -83,7 +103,8 @@
   color: #fff;
   display: inline;
   overflow: hidden;
-  padding: 3px 8px;
+  padding: 5px 8px;
+  margin-right: 6px;
 }
 
 #settingsDialog .plus-minus-button:hover {
@@ -97,7 +118,82 @@
   text-decoration: none;
 }
 
-#mainMenu {
+#gitResetSettingsDone {
+  margin-left: 15px;
+}
+
+#preferenceResetResult {
+  color: #F00;
+  font-weight: bold;
+}
+
+#gitPushDialog .modal-body {
+  margin: 0;
+  padding: 0;
+}
+
+#gitPushDialog .form-group {
+  margin: 0;
+}
+
+#gitPushDialog .modal-footer {
+  margin: 0;
+}
+
+#gitCommitList {
+  max-height: 250px;
+  overflow: scroll;
+  padding: 0 20px;
+}
+
+#gitCommitList h1 {
+  font-size: 15px;
+  margin-top: 20px;
+  margin-bottom: 0px;
+}
+
+#gitChangeList {
+  border-radius: 4px;
+  border: 1px solid #cccccc;
+  display: none;
+  margin-bottom: 15px;
+  max-height: 105px;
+  overflow: auto;
+  padding: 5px 14px;
+}
+
+#changeLabel {
+  top: 0px;
+}
+
+#gitStatusDiv {
+  width: 100%;
+}
+
+#gitUserInfo.hidden {
+  display: none;
+}
+
+.input-label {
+  display: flex;
+  margin: 10px 0;
+}
+
+.input-label label {
+  flex: 0 1 auto;
+  width: 150px;
   position: relative;
-  top: 3px;
+  top: 9px;
+}
+
+.input-label input {
+  flex: 1 1 auto;
+}
+
+#webStorePublishDialog label {
+  margin-left: 5px;
+}
+
+[selectableTxt] {
+  -webkit-user-select: text;
 }

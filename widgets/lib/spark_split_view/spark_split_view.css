@@ -8,11 +8,11 @@
   display: flex;
 }
 
-:host[direction="left"], :host[direction="right"] {
+:host([direction="left"], [direction="right"]) {
   flex-flow: row;
 }
 
-:host[direction="up"], :host[direction="down"] {
+:host([direction="up"], [direction="down"]) {
   flex-flow: column;
 }
 
@@ -20,24 +20,10 @@
   position: relative;
 }
 
-/* If the resizing target is to the left or up, make the other one flex so
-   it auto-adjusts.
+/* Make the passive target of resizing 'flex', so it auto-adjusts when the
+   active target is resized.
 */
-#marker[direction="left"] ~ content[select=":nth-child(2)"]::content > * {
-  flex: 1;
-}
-
-#marker[direction="up"] ~ content[select=":nth-child(2)"]::content > * {
-  flex: 1;
-}
-
-/* If the resizing target is to the right or down, make the other one flex so
-   it auto-adjusts.
-*/
-#marker[direction="right"] ~ content[select=":nth-child(1)"]::content > * {
-  flex: 1;
-}
-
-#marker[direction="down"] ~ content[select=":nth-child(1)"]::content > * {
+:host([direction="left"], [direction="up"]) > content[select="[afterSplit]"]::content > *,
+:host([direction="right"], [direction="down"]) > content[select="[beforeSplit]"]::content > * {
   flex: 1;
 }

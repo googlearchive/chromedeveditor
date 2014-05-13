@@ -13,29 +13,26 @@ import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 import 'package:utf/utf.dart';
 
+import 'fast_sha.dart';
 import 'file_operations.dart';
 import 'object.dart';
 import 'object_utils.dart';
 import 'objectstore.dart';
 import 'utils.dart';
 import 'zlib.dart';
+import '../utils.dart';
 
 /**
  * Encapsulates a pack object header.
  */
 class PackObjectHeader {
-  int size;
-  int type;
-  int offset;
+  final int size;
+  final int type;
+  final int offset;
 
-  PackObjectHeader(int size, int type, int offset) {
-    this.size = size;
-    this.type = type;
-    this.offset = offset;
-  }
+  PackObjectHeader(this.size, this.type, this.offset);
 }
 
 /**
@@ -43,16 +40,12 @@ class PackObjectHeader {
  * TODO(grv) : add unittests.
  */
 class Pack {
-
-  Uint8List data;
+  final List<int> data;
   int _offset = 0;
   ObjectStore _store;
   List<PackedObject> objects = [];
 
-  Pack(Uint8List data, store) {
-    this.data = data;
-    this._store = store;
-  }
+  Pack(this.data, [this._store]);
 
   Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
 
@@ -105,19 +98,15 @@ class Pack {
   /**
    * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(String type, Uint8List contentData) {
-    List<int> header = encodeUtf8(type + " ${contentData.length}\u0000");
+  List<int> getObjectHash(String type, Uint8List data) {
+    FastSha sha1 = new FastSha();
 
-    Uint8List fullContent = new Uint8List(header.length + contentData.length);
+    List<int> header = encodeUtf8("${type} ${data.length}\u0000");
+    sha1.add(header);
+    sha1.add(data);
 
-    fullContent.setAll(0, header);
-    fullContent.setAll(header.length, contentData);
-
-    crypto.SHA1 sha1 = new crypto.SHA1();
-    sha1.add(fullContent);
     return sha1.close();
   }
-
 
   String _padString(String str, int width, String padding) {
     String result = str;
@@ -178,17 +167,20 @@ class Pack {
       switch (baseObj.type) {
         case ObjectTypes.OFS_DELTA_STR:
         case ObjectTypes.REF_DELTA_STR:
-          return expandDeltifiedObject(baseObj).then((
-              PackedObject expandedObject) => doExpand(expandedObject, object));
+          return expandDeltifiedObject(baseObj).then((PackedObject expandedObject) {
+            return doExpand(expandedObject, object);
+          });
         default:
           completer.complete(doExpand(baseObj, object));
       }
     } else {
       // TODO(grv) : desing object class.
+      completer.completeError('todo');
       /*_store.retrieveRawObject(object.baseSha, 'ArrayBuffer').then((baseObj) {
         completer.complete(doExpand(baseObj, object));
       });*/
     }
+
     return completer.future;
   }
 
@@ -198,7 +190,7 @@ class Pack {
     // This has a very significant impact on performance.
     int end =  uncompressedLength + objOffset + 1000;
     if (end > data.length) end = data.length;
-    return Zlib.inflate(data.sublist(objOffset, end), uncompressedLength);
+    return Zlib.inflate(data.sublist(objOffset, end), expectedLength: uncompressedLength);
   }
 
 
@@ -225,9 +217,9 @@ class Pack {
     }
 
     ZlibResult objData = _uncompressObject(_offset, header.size);
-    object.data = new Uint8List.fromList(objData.buffer.getBytes());
+    object.data = new Uint8List.fromList(objData.data);
 
-    _advance(objData.expectedLength);
+    _advance(objData.readLength);
     return object;
   }
 
@@ -249,10 +241,9 @@ class Pack {
     return _matchObjectData(_getObjectHeader());
   }
 
-  // TODO(grv) : add progress.
-  Future parseAll(progress) {
-    Completer completer = new Completer();
-
+  /// This function parses all the git objects. All the deltified objects
+  /// are expanded.
+  Future parseAll([var progress]) {
     try {
       int numObjects;
       List<PackedObject> deferredObjects = [];
@@ -261,35 +252,46 @@ class Pack {
       _matchVersion(2);
       numObjects = _matchNumberOfObjects();
 
-      for (int i = 0; i < numObjects; ++i) {
-        PackedObject object = _matchObjectAtOffset(_offset);
-        object.crc = getCrc32(data.sublist(object.offset, _offset));
+       Future parse(_) {
 
-        // hold on to the data for delta style objects.
-        switch (object.type) {
-          case ObjectTypes.OFS_DELTA_STR:
-          case ObjectTypes.REF_DELTA_STR:
-            deferredObjects.add(object);
-            break;
-          default:
-            object.shaBytes = getObjectHash(object.type, object.data);
-            object.data = null;
-            // TODO(grv) : add progress.
-            break;
-        }
-        objects.add(object);
-      }
-      return Future.forEach(deferredObjects, (PackedObject obj) {
-        return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
-          deltifiedObj.data = null;
-          // TODO(grv) : add progress.
-        });
-      });
-    } catch (e) {
-      // TODO(grv) : throw custom error.
-      throw e;
+         PackedObject object = _matchObjectAtOffset(_offset);
+         object.crc = getCrc32(data.sublist(object.offset, _offset));
+
+         // hold on to the data for delta style objects.
+         switch (object.type) {
+           case ObjectTypes.OFS_DELTA_STR:
+           case ObjectTypes.REF_DELTA_STR:
+             deferredObjects.add(object);
+             break;
+           default:
+             object.shaBytes = getObjectHash(object.type, object.data);
+             object.data = null;
+             // TODO(grv) : add progress.
+             break;
+         }
+
+         objects.add(object);
+         return new Future.value();
+       }
+
+       Future expandDeltified(PackedObject obj) {
+         return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
+           deltifiedObj.data = null;
+           // TODO(grv) : add progress.
+         });
+       }
+
+       List iter = new List(numObjects);
+       // This is computational intense and may take several seconds. Refresh
+       // UI after each iteartion. First parse all the git objects. Expand
+       // any deltified object.
+       return FutureHelper.forEachNonBlockingUI(iter, parse).then((_) {
+         return FutureHelper.forEachNonBlockingUI(deferredObjects,
+             expandDeltified);
+       });
+    } catch (e, st) {
+      return new Future.error(e, st);
     }
-    return completer.future;
   }
 
   Uint8List applyDelta(Uint8List baseData, Uint8List deltaData) {
@@ -387,19 +389,17 @@ class Pack {
 }
 
 class PackBuilder {
-
   List<CommitObject> _commits;
   ObjectStore _store;
   List _packed;
   Map<String, bool> _visited;
-
 
   PackBuilder(this._commits, this._store) {
     _packed = [];
     _visited = {};
   }
 
-  Future build() {
+  Future<List<int>> build() {
     return Future.forEach(_commits, (CommitObject commit) {
       _packIt(commit.rawObj);
       return _walkTree(commit.treeSha);
@@ -428,7 +428,7 @@ class PackBuilder {
     var buf = object.data;
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
-      data = new Uint8List(buf);
+      data = buf.getBytes();
     } else if (buf is Uint8List) {
       data = buf;
     } else {
@@ -436,8 +436,7 @@ class PackBuilder {
       data = UTF8.encoder.convert(buf);
     }
     ByteBuffer compressed;
-    compressed = new Uint8List.fromList(Zlib.deflate(data).buffer
-        .getBytes()).buffer;
+    compressed = new Uint8List.fromList(Zlib.deflate(data).data).buffer;
     _packed.add(new Uint8List.fromList(
         _packTypeSizeBits(ObjectTypes.getType(object.type), data.length)));
     _packed.add(compressed);
@@ -459,7 +458,7 @@ class PackBuilder {
 
     return FileOps.readBlob(new Blob(_packed), 'ArrayBuffer').then(
         (Uint8List data) {
-      List<int> sha = getSha(data, true);
+      List<int> sha = getShaAsBytes(data);
       List<Uint8List> finalPack = [];
       finalPack.add(data);
       finalPack.add(new Uint8List.fromList(sha));
@@ -468,7 +467,7 @@ class PackBuilder {
   }
 
   Future _walkTree(String treeSha) {
-    if (_visited[treeSha]) {
+    if (_visited[treeSha] == true) {
       return new Future.value();
     }
 
@@ -489,7 +488,7 @@ class PackBuilder {
       return Future.forEach(tree.entries, (TreeEntry entry) {
         String nextSha = shaBytesToString(entry.shaBytes);
         if (entry.isBlob) {
-          if (_visited[nextSha]) {
+          if (_visited[nextSha] == true) {
             return new Future.value();
           } else {
             _visited[nextSha] = true;
@@ -510,15 +509,12 @@ class PackBuilder {
   }
 }
 
-
 /**
  * Defines a delta data object.
  */
 class DeltaDataStream {
-  Uint8List data;
+  final Uint8List data;
   int offset;
-  DeltaDataStream(Uint8List data, int offset) {
-    this.data = data;
-    this.offset = offset;
-  }
+
+  DeltaDataStream(this.data, this.offset);
 }

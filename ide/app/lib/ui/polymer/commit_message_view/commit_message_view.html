@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<polymer-element name="commit-message-view">
+  <template>
+    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
+    <!-- link rel="stylesheet" href="xyz.css" -->
+    <style>
+      @import url("commit_message_view.css");
+    </style>
+
+    <div id="message">{{commitInfo.message}}</div>
+    <div id="author-info">
+      <div id="author">
+        <div id="author-name">{{commitInfo.authorName}}</div>
+        <div id="author-email">&lt;{{commitInfo.authorEmail}}&gt;</div>
+      </div>
+      <div id="author-date">{{commitInfo.dateString}}</div>
+    </div>
+    <div id="identifier">{{commitInfo.identifier}}</div>
+  </template>
+
+  <script type="application/dart;component=1" src="commit_message_view.dart"></script>
+</polymer-element>

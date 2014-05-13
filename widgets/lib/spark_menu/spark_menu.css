@@ -4,38 +4,52 @@
 
 @import url("../common/spark_widget.css");
 
-/*@polyfill spark-menu-item */
-::content spark-menu-item {
+:host {
+  border: none;
   display: block;
   box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  min-height: 30px;
+  margin: 5px 0;
+}
+
+/*@polyfill spark-menu-item, spark-menu-separator */
+::content spark-menu-item, ::content spark-menu-separator {
+  display: block;
   min-width: 160px;
-  padding: 0 10px;
-  color: #000;
-  border: none;
-  font-family: Helvetica, Sans-serif;
-  font-size: 14px;
   cursor: default;
-  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+::content spark-menu-item {
+  min-height: 30px;
+  border: none;
+}
+
+::content spark-menu-item.selected {
+  background-color: #1a64a3;
+}
+
+/* BUG #1569 */
+::content spark-menu-item.selected ^ * {
+  color: white;
+}
+::content spark-menu-item.selected /deep/ * {
+  color: white;
+}
+
+::content spark-menu-item.active {
+  background-color: #3a84c3;
+}
+
+/* BUG #1569 */
+::content spark-menu-item.active ^ * {
+  color: white;
+}
+::content spark-menu-item.active /deep/ * {
+  color: white;
 }
 
 /*@polyfill spark-menu-separator */
 ::content spark-menu-separator {
-  display: block;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  min-height: 2px;
-  min-width: 160px;
+  height: 2px;
   margin: 2px 0px;
-  padding: 0 10px;
-  background-color: #EEE;
-  border-bottom: 1px solid #FEFEFE;
-  cursor: default;
-  color: #CCC;
-}
-
-/*@polyfill spark-menu-separator:hover */
-::content spark-menu-item:hover {
-  color: #fff;
 }

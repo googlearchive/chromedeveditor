@@ -33,6 +33,7 @@ We address this by using script based positioning =(
   z-index: 1000;
   outline: none;
   display: none;
+  /* Opacity < 1 creates a stacking context from this element */
   opacity: 0.99;
   -webkit-transition: opacity 0.001s;
   transition: opacity 0.001s;
@@ -50,18 +51,18 @@ We address this by using script based positioning =(
   It is then made visibility: visible when it is opened.
 */
 
-:host(.revealed), /*BUG #733*/:host.revealed {
+:host(.revealed) {
   display: block;
   visibility: hidden;
 }
 
-:host(.revealed.opened), /*BUG #733*/:host.revealed.opened {
+:host(.revealed.opened) {
   opacity: 1;
   display: block;
   visibility: visible;
 }
 
-:host(.revealed.closing), /*BUG #733*/:host.revealed.closing {
+:host(.revealed.closing) {
   display: block;
   visibility: visible;
 }
@@ -74,28 +75,28 @@ We address this by using script based positioning =(
   NOTE: if a rule such as a media query changes an overlay from using a css
   animation to a transition, the animation class must be altered or removed.
 */
-:host(.animation), /*BUG #733*/:host.animation {
+:host(.animation-in-progress) {
   -webkit-transition: none;
   transition: none;
 }
 
-:host(.spark-overlay-fade), /*BUG #733*/:host.spark-overlay-fade {
+:host([animation=fade]) {
   opacity: 0;
   -webkit-transition: all 0.218s;
   transition: all 0.218s;
 }
 
-:host(.spark-overlay-fade.opened), /*BUG #733*/:host.spark-overlay-fade.opened {
+:host([animation=fade].opened) {
   opacity: 1;
 }
 
-:host(.spark-overlay-scale-slideup), /*BUG #733*/:host.spark-overlay-scale-slideup {
+:host([animation=scale-slideup]) {
   opacity: 0.0;
   -webkit-transform: scale(1.05);
   transform: scale(1.05);
 }
 
-:host(.spark-overlay-scale-slideup.opened), /*BUG #733*/:host.spark-overlay-scale-slideup.opened {
+:host([animation=scale-slideup].opened) {
   opacity: 1.0;
   -webkit-transform: scale(1.0);
   transform: scale(1.0);
@@ -103,7 +104,7 @@ We address this by using script based positioning =(
   transition: all 0.218s;
 }
 
-:host(.spark-overlay-scale-slideup.closing), /*BUG #733*/:host.spark-overlay-scale-slideup.closing {
+:host([animation=scale-slideup].closing) {
   opacity: 0;
   -webkit-transform: translateY(-100%);
   transform: translateY(-100%);
@@ -111,25 +112,25 @@ We address this by using script based positioning =(
   transition: all 0.4s;
 }
 
-:host(.spark-overlay-shake.opened), /*BUG #733*/:host.spark-overlay-shake.opened {
+:host([animation=shake].opened) {
   -webkit-animation-duration: 0.5s;
   -webkit-animation-fill-mode: both;
-  -webkit-animation-name: spark-overlay-shakeFadeIn;
+  -webkit-animation-name: shake-fade-in;
   animation-duration: 0.5s;
   animation-fill-mode: both;
-  animation-name: spark-overlay-shakeFadeIn;
+  animation-name: shake-fade-in;
 }
 
-:host(.spark-overlay-shake.closing), /*BUG #733*/:host.spark-overlay-shake.closing {
+:host([animation=shake].closing) {
   -webkit-animation-duration: 0.5s;
   -webkit-animation-fill-mode: both;
-  -webkit-animation-name: spark-overlay-shakeFadeOut;
+  -webkit-animation-name: shake-fade-out;
   animation-duration: 0.5s;
   animation-fill-mode: both;
-  animation-name: spark-overlay-shakeFadeOut;
+  animation-name: shake-fade-out;
 }
 
-@-webkit-keyframes spark-overlay-shakeFadeIn {
+@-webkit-keyframes shake-fade-in {
   0% {
     opacity: 0;
     -webkit-transform: translateX(0);
@@ -155,7 +156,7 @@ We address this by using script based positioning =(
   }
 }
 
-@keyframes spark-overlay-shakeFadeIn {
+@keyframes shake-fade-in {
   0% {
     opacity: 0;
     transform: translateX(0);
@@ -181,7 +182,7 @@ We address this by using script based positioning =(
   }
 }
 
-@-webkit-keyframes spark-overlay-shakeFadeOut {
+@-webkit-keyframes shake-fade-out {
   0% {
     opacity: 1;
     -webkit-transform: translateX(0);
@@ -198,7 +199,7 @@ We address this by using script based positioning =(
   }
 }
 
-@keyframes spark-overlay-shakeFadeOut {
+@keyframes shake-fade-out {
   0% {
     opacity: 1;
     transform: translateX(0);

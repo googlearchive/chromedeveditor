@@ -189,8 +189,8 @@ class ImageViewer implements Editor {
 
   /// Get the cursor position of the event and map it to the virtual coordinate.
   html.Point _getEventPosition(html.WheelEvent e) {
-    int x = e.offset.x;
-    int y = e.offset.y;
+    num x = e.offset.x;
+    num y = e.offset.y;
     html.Element parent = e.target as html.Element;
     while (parent != _rootElement) {
       x += parent.offsetLeft - parent.scrollLeft;
@@ -206,12 +206,15 @@ class ImageViewer implements Editor {
 
   StreamController _dirtyController = new StreamController.broadcast();
   Stream get onDirtyChange => _dirtyController.stream;
+  Stream get onModification => _dirtyController.stream;
   bool get dirty => false;
   Future save() {
     return new Future.value();
   }
 
   void activate() {}
+
+  void deactivate() {}
 
   // TODO(devoncarew): implement
   void fileContentsChanged() {}

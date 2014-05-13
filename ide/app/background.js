@@ -36,8 +36,8 @@ App.prototype.launch = function(ui_opt) {
         'cannot_launch/cannot_launch.htm', {
         frame: 'chrome',
         bounds: {
-          width: 500,
-          height: 160
+          width: 600,
+          height: 220
         },
         resizable: false
     });
@@ -71,8 +71,8 @@ var EditorWindow = function(app) {
         width: Math.floor(screen.availWidth * (7/8)),
         height: Math.floor(screen.availHeight * (7/8))
       },
-      minWidth: 600,
-      minHeight: 350,
+      minWidth: 900,
+      minHeight: 640,
     },
     this.onCreated_.bind(this)
   );

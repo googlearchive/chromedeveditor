@@ -26,7 +26,7 @@ Process chromeProcess;
 int exitCode;
 Directory tempDir;
 
-final int TEST_TIMEOUT = 30;
+final int TEST_TIMEOUT = 45;
 final int CHROME_SHUTDOWN_TIMEOUT = 1;
 final int EXIT_PROCESS_TIMEOUT = 1;
 
@@ -46,10 +46,13 @@ void main([List<String> args = const []]) {
 
   String appPath = null;
   String browserPath = null;
+  Map envVars = {};
 
   if (results['dartium']) {
     appPath = 'app';
     browserPath = _dartiumPath();
+    // Turn on checked mode when running the tests in Dartium.
+    envVars = {'DART_FLAGS': '--enable-checked-mode'};
   }
 
   if (results['chrome'] || results['chrome-stable']) {
@@ -57,7 +60,7 @@ void main([List<String> args = const []]) {
     browserPath = _chromeStablePath();
   }
 
-  if (results['chrome-dev']) {
+  if (results['chrome-dev'] || results['chrome-unstable']) {
     appPath = 'build/deploy-out/web';
     browserPath = _chromeDevPath();
   }
@@ -79,11 +82,12 @@ void main([List<String> args = const []]) {
   TestListener.create().then((TestListener listener) {
     testListener = listener;
 
-    runApp(browserPath, appPath, verbose: results['verbose']);
+    runApp(browserPath, appPath, verbose: results['verbose'], envVars: envVars);
   }).catchError(_fatalError);
 }
 
-void runApp(String browserPath, String appPath, {bool verbose: false}) {
+void runApp(String browserPath, String appPath,
+            {bool verbose: false, Map envVars}) {
   tempDir = Directory.systemTemp.createTempSync('userDataDir-');
 
   String path = new Directory(appPath).absolute.path;
@@ -108,8 +112,8 @@ void runApp(String browserPath, String appPath, {bool verbose: false}) {
   log("starting chrome...");
   log('"${browserPath}" ${args.join(' ')}');
 
-  Process.start(browserPath, args, workingDirectory: appPath)
-    .then((Process process) {
+  Process.start(browserPath, args,
+      workingDirectory: appPath, environment: envVars).then((Process process) {
       chromeProcess = process;
 
       chromeProcess.stdout.transform(new Utf8Decoder())
@@ -141,6 +145,8 @@ ArgParser _createArgsParser() {
   parser.addFlag('chrome-dev',
       help: 'run in chrome dev, test the app in build/deploy-out/web/',
       negatable: false);
+  parser.addFlag('chrome-unstable',
+      help: 'an alias to --chrome-dev', negatable: false);
   parser.addFlag('verbose',
       help: 'show more logs when running unit tests in chrome',
       negatable: false);
@@ -211,6 +217,8 @@ String _chromeStablePath() {
 String _chromeDevPath() {
   if (Platform.isLinux) {
     return '/usr/bin/google-chrome-unstable';
+  } else if (Platform.isMacOS) {
+    return '/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary';
   } else {
     throw 'unable to locate Chrome dev; ${Platform.operatingSystem} not yet supported';
   }

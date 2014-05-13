@@ -11,8 +11,6 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
-typedef void SplitterUpdateFunction(int position);
-
 @CustomTag('spark-splitter')
 class SparkSplitter extends SparkWidget {
   /// Possible values are "left", "right", "up" and "down".
@@ -27,13 +25,11 @@ class SparkSplitter extends SparkWidget {
   @published bool handle = true;
   /// Whether to lock the split bar so it can't be dragged.
   @published bool locked = false;
-  /// Get notified of position changes.
-  @published SplitterUpdateFunction onUpdate;
 
   /**
    * Return the current splitter location.
    */
-  num get targetSize {
+  int get targetSize {
     final style = _target.getComputedStyle();
     final sizeStr = _isHorizontal ? style.height : style.width;
     return int.parse(_sizeRe.firstMatch(sizeStr).group(1));
@@ -42,7 +38,7 @@ class SparkSplitter extends SparkWidget {
   /**
    * Set the current splitter location.
    */
-  set targetSize(num val) {
+  set targetSize(int val) {
     final sizeStr = '${val.toInt()}px';
     if (_isHorizontal) {
       _target.style.height = sizeStr;
@@ -87,7 +83,7 @@ class SparkSplitter extends SparkWidget {
     // anything. But if the switch is made, "draggable" for the element should
     // be set as well.
     // See bug https://code.google.com/p/chromium/issues/detail?id=264983.
-    onMouseDown.listen(trackStart);
+    ($['draggable'] as DivElement).onMouseDown.listen(trackStart);
     directionChanged();
   }
 
@@ -101,37 +97,31 @@ class SparkSplitter extends SparkWidget {
     // If we're enclosed in another element and sandwiched between its
     // <content> tags, we recursively delve into the distributed nodes of
     // the target <content> in order to find the true target to resize.
-    while (_target is ContentElement) {
-      final List<Node> distrNodes =
-          (_target as ContentElement).getDistributedNodes();
+    if (_target is ContentElement) {
+      final Iterable<Node> distrNodes =
+          SparkWidget.inlineNestedContentNodes(_target);
       _target = _isTargetNextSibling ? distrNodes.first : distrNodes.last;
     }
     classes.toggle('horizontal', _isHorizontal);
+    classes.toggle('vertical', !_isHorizontal);
     _setThickness();
-    if (handle) {
-      _addBackgroundHandle();
-    }
+    if (handle) _addBackgroundHandle();
   }
 
   void _setThickness() {
     final sizeStr = '${size}px';
     if (_isHorizontal) {
-      this.style.height = sizeStr;
-      this.style.width = "auto";
+      style.height = sizeStr;
+      style.width = "auto";
     } else {
-      this.style.height = "auto";
-      this.style.width = sizeStr;
+      style.height = "auto";
+      style.width = sizeStr;
     }
   }
 
   void _addBackgroundHandle() {
-    if (_isHorizontal) {
-      classes.add('horizontal-handle');
-      classes.remove('vertical-handle');
-    } else {
-      classes.remove('horizontal-handle');
-      classes.add('vertical-handle');
-    }
+    classes.toggle('horizontal-handle', _isHorizontal);
+    classes.toggle('vertical-handle', !_isHorizontal);
   }
 
   /// Cache the current size of the target.
@@ -190,7 +180,7 @@ class SparkSplitter extends SparkWidget {
     _trackEndSubscr.cancel();
     _trackEndSubscr = null;
 
-    if (onUpdate != null) onUpdate(_targetSize);
+    asyncFire('update', detail: {'targetSize': _targetSize});
 
     // Prevent possible wrong use of the cached value.
     _targetSize = null;

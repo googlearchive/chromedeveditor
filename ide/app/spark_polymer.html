@@ -12,6 +12,7 @@
 
   <link rel="stylesheet" href="spark_polymer.css">
 
+  <link rel="import" href="packages/polymer/polymer.html">
   <link rel="import" href="spark_polymer_ui.html">
 
   <!-- template for FileItemCell -->
@@ -43,41 +44,51 @@
           <div>Spark can't show the content of files of this type.</div>
         </div>
         <div>
-          <spark-button class="view-as-text-button">Edit as text</spark-button>
+          <button class="view-as-text-button">Edit as text</button>
         </div>
       </div>
       <div class="always-view-as-text-button">
-        <a href="#">Always edit this kind of files as text</a>
+        <a href="#">Always edit this kind of file as text</a>
       </div>
     </div>
   </template>
 
-  <!-- analytics includes -->
-  <script src="analytics/google-analytics-bundle.js"></script>
-
-  <!-- git includes -->
-  <script src="git/third_party/zlib_inflate.js"></script>
-  <script src="git/third_party/zlib_deflate.js"></script>
-  <script src="git/third_party/diff3.js"></script>
+  <!-- template for Outline -->
+  <template id="outline-template" >
+    <div id="outline">
+      <ul></ul>
+    </div>
+  </template>
+  <template id="outline-button-template">
+    <button id="toggleOutlineButton">
+      <span class="glyphicon glyphicon-list"></span>
+    </button>
+  </template>
 
   <!-- ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
   <script src="packages/ace/src/js/ext-language_tools.js"></script>
 
-  <!-- this is necessary for dart:js -->
-  <script src="packages/browser/interop.js"></script>
+  <!-- analytics includes -->
+  <script src="third_party/analytics/google-analytics-bundle.js"></script>
 
-  <script type="application/dart" src="spark_polymer.dart" defer></script>
+  <!-- cssbeautify includes -->
+  <script src="third_party/cssbeautify/cssbeautify.js"></script>
+
+  <!-- git includes -->
+  <script src="git/third_party/zlib_inflate.js"></script>
+  <script src="git/third_party/zlib_deflate.js"></script>
+  <script src="git/third_party/diff3.js"></script>
 </head>
 
 <body>
+  <!-- Splash screen. -->
+  <div id="splashScreen"></div>
+
   <!-- Top-level UI element. -->
-  <!-- BUG: Polymer's own .polymer-veiled class: doesn't work - it gets removed
-       too soon, and doesn't prevent FOUC at all.
-       TODO(sergeygs): switch to Polymer's way once it's fixed.-->
-  <spark-polymer-ui id="topUi" class="veiled">
-    <div id="fileViewArea"></div>
-    <div id="editorArea"></div>
+  <spark-polymer-ui id="topUi">
+    <div id="fileViewArea" beforeSplit></div>
+    <div id="editorArea" afterSplit></div>
   </spark-polymer-ui>
 
   <!-- A backdrop veil used to make app appear modal when displaying dialogs. -->
@@ -89,6 +100,22 @@
     <ul class="dropdown-menu" role="menu">
     </ul>
   </div>
+
+  <div id="android-rsa-container">
+    <embed id="android-rsa" width=0 height=0
+           src="lib/mobile/nacl_android_rsa.nmf" type="application/x-pnacl" >
+  </div>
+
+  <script type="application/javascript" src="third_party/uuid.js/uuid.js">
+  </script>
+  <script type="application/javascript" src="lib/mobile/android_rsa.js">
+  </script>
+
+  <!-- Start Spark in a non-deployed build (running direct from Dartium). -->
+  <script type="application/dart" src="spark_bootstrap.dart"></script>
+
+  <!-- Start Spark in a deployed build. -->
+  <script type="application/dart;component=1" src="spark_polymer.dart"></script>
 </body>
 
 </html>

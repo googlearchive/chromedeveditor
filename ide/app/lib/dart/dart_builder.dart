@@ -6,68 +6,79 @@ library spark.dart_builder;
 
 import 'dart:async';
 
-import '../analyzer.dart';
+import 'package:logging/logging.dart';
+
 import '../builder.dart';
 import '../jobs.dart';
+import '../services.dart';
 import '../workspace.dart';
+
+final _disableDartAnalyzer = false;
+
+Logger _logger = new Logger('spark.dart_builder');
 
 /**
  * A [Builder] implementation that drives the Dart analyzer.
  */
 class DartBuilder extends Builder {
+  final Services services;
+  AnalyzerService analyzer;
+
+  DartBuilder(this.services) {
+    analyzer = services.getService("analyzer");
+  }
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    Iterable<File> dartFiles = event.modifiedFiles.where(
-        (file) => file.name.endsWith('.dart'));
+    if (_disableDartAnalyzer) return new Future.value();
 
-    if (dartFiles.isEmpty) return new Future.value();
+    List<ChangeDelta> changes = event.changes.where(
+        (c) => c.resource is File && _includeFile(c.resource)).toList();
+    List<ChangeDelta> projectDeletes = event.changes.where(
+        (c) => c.resource is Project && c.isDelete).toList();
 
-    Completer completer = new Completer();
+    if (projectDeletes.isNotEmpty) {
+      // If we get a project delete, it'll be the only thing that we have to
+      // process.
+      Project project = projectDeletes.first.resource;
+      ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
-    createSdk().then((ChromeDartSdk sdk) {
-      Future.forEach(dartFiles, (file) => _processFile(sdk, file)).then((_) {
-        completer.complete();
-      });
-    });
+      if (context != null) {
+        analyzer.disposeProjectAnalyzer(context);
+      }
 
-    return completer.future;
+      return new Future.value();
+    } else if (changes.isEmpty) {
+      return new Future.value();
+    } else {
+      Project project = changes.first.resource.project;
+
+      ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
+
+      if (context == null) {
+        return analyzer.createProjectAnalyzer(project);
+      } else {
+        List<File> addedFiles = changes.where(
+            (c) => c.isAdd).map((c) => c.resource).toList();
+        List<File> changedFiles = changes.where(
+            (c) => c.isChange).map((c) => c.resource).toList();
+        List<File> deletedFiles = changes.where(
+            (c) => c.isDelete).map((c) => c.resource).toList();
+
+        _removeSecondaryPackages(addedFiles);
+        _removeSecondaryPackages(changedFiles);
+        _removeSecondaryPackages(deletedFiles);
+
+        return context.processChanges(addedFiles, changedFiles, deletedFiles);
+      }
+    }
   }
 
-  /**
-   * Create markers for a `.dart` file.
-   */
-  Future _processFile(ChromeDartSdk sdk, File file) {
-    return file.getContents().then((String contents) {
-      return analyzeString(sdk, contents, performResolution: false).then((AnalyzerResult result) {
-        file.workspace.pauseMarkerStream();
-
-        try {
-          file.clearMarkers();
-
-          for (AnalysisError error in result.errors) {
-            LineInfo_Location location = result.getLineInfo(error);
-
-            file.createMarker(
-                'dart', _convertSeverity(error.errorCode.errorSeverity),
-                error.message, location.lineNumber,
-                error.offset, error.offset + error.length);
-          }
-        } finally {
-          file.workspace.resumeMarkerStream();
-        }
-      });
-    });
+  bool _includeFile(File file) {
+    return file.name.endsWith('.dart') && !file.isDerived();
   }
-}
 
-int _convertSeverity(ErrorSeverity sev) {
-  if (sev == ErrorSeverity.ERROR) {
-    return Marker.SEVERITY_ERROR;
-  } else  if (sev == ErrorSeverity.WARNING) {
-    return Marker.SEVERITY_WARNING;
-  } else  if (sev == ErrorSeverity.INFO) {
-    return Marker.SEVERITY_INFO;
-  } else {
-    return Marker.SEVERITY_NONE;
+  void _removeSecondaryPackages(List<File> files) {
+    files.removeWhere(
+        (file) => analyzer.getPackageManager().properties.isSecondaryPackage(file));
   }
 }

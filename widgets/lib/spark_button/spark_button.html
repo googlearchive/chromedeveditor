@@ -7,26 +7,19 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-button" extends="spark-widget"
-    attributes="primary active large small noPadding">
+    attributes="primary
+                large
+                small
+                noPadding
+                enabled
+                active">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("packages/spark_widgets/spark_button/spark_button.css");
-    </style>
+    <link rel="stylesheet" href="spark_button.css">
 
-    <template if="{{noPadding}}">
-      <style>
-        #button {
-          padding: 0;
-        }
-      </style>
-    </template>
-
-    <button id="button" type="button" focused class="{{btnClasses}}">
+    <button id="button" type="button" class="btn" focused>
       <content></content>
     </button>
   </template>
 
-  <script type="application/dart" src="spark_button.dart"></script>
+  <script type="application/dart;component=1" src="spark_button.dart"></script>
 </polymer-element>

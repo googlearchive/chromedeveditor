@@ -6,6 +6,12 @@ library spark.jobs;
 
 import 'dart:async';
 
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
+
+final Logger _logger = new Logger('spark.jobs');
+final NumberFormat _nf = new NumberFormat.decimalPattern();
+
 /**
  * A Job manager. This class can be used to schedule jobs, and provides event
  * notification for job progress.
@@ -18,8 +24,8 @@ class JobManager {
   List<Job> _waitingJobs = new List<Job>();
 
   /**
-   * Will schedule a [job] after all other queued jobs.  If no [Job] is
-   * currently waiting, it run [job].
+   * Will schedule a [job] after all other queued jobs. If no [Job] is currently
+   * waiting, [job] will run.
    */
   void schedule(Job job) {
     _waitingJobs.add(job);
@@ -41,22 +47,30 @@ class JobManager {
 
   void _scheduleNextJob() {
     if (!_waitingJobs.isEmpty) {
-      Timer.run(() => _runNextJob());
+      Job job = _waitingJobs.removeAt(0);
+      Timer.run(() => _runNextJob(job));
     }
   }
 
-  void _runNextJob() {
-    _runningJob = _waitingJobs.removeAt(0);
+  void _runNextJob(Job job) {
+    _runningJob = job;
 
     _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
     _jobStarted(_runningJob);
 
-    Future future = _runningJob.run(monitor).whenComplete(() {
-      _jobFinished(_runningJob);
+    try {
+      _runningJob.run(monitor).catchError((e, st) {
+        _logger.severe("${_runningJob} errored", e, st);
+      }).whenComplete(() {
+        _jobFinished(_runningJob);
+        _runningJob = null;
+        _scheduleNextJob();
+      });
+    } catch (e, st) {
+      _logger.severe('Error running job ${_runningJob}', e, st);
       _runningJob = null;
-
       _scheduleNextJob();
-    });
+    }
   }
 
   void _jobStarted(Job job) {
@@ -117,6 +131,20 @@ abstract class Job {
   Future run(ProgressMonitor monitor);
 
   String toString() => name;
+}
+
+/**
+ * A simple [Job]. It finishes when the given [Completer] completes.
+ */
+class ProgressJob extends Job {
+  Completer _completer;
+
+  ProgressJob(String name, this._completer) : super(name);
+
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name);
+    return _completer.future;
+  }
 }
 
 /**

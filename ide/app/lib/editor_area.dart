@@ -41,12 +41,18 @@ class AceEditorTab extends EditorTab {
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
+    editor.onModification.listen((_) => parent.persistTab(file));
   }
 
   void activate() {
     editor.activate();
     provider.activate(editor);
     super.activate();
+  }
+
+  void deactivate() {
+    editor.deactivate();
+    super.deactivate();
   }
 
   void focus() => editor.focus();
@@ -82,7 +88,7 @@ class ImageViewerTab extends EditorTab {
  */
 class EditorArea extends TabView {
   static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif)$', caseSensitive: false);
+      new RegExp(r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
 
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
@@ -99,9 +105,12 @@ class EditorArea extends TabView {
       : super(parentElement) {
     onClose.listen((EditorTab tab) => closeFile(tab.file));
     this.allowsLabelBar = allowsLabelBar;
-    showLabelBar = false;
+    showLabelBar = true;
 
     _workspace.onResourceChange.listen((ResourceChangeEvent event) {
+      // TODO(dvh): reflect name change instead of closing the file.
+      event =
+          new ResourceChangeEvent.fromList(event.changes, filterRename: true);
       for (ChangeDelta delta in event.changes) {
         if (delta.isDelete && delta.resource.isFile) {
           closeFile(delta.resource);
@@ -112,27 +121,22 @@ class EditorArea extends TabView {
     });
   }
 
-  bool get shouldDisplayName => tabs.length == 1;
-
   Stream<String> get onNameChange => _nameController.stream;
 
   bool get allowsLabelBar => _allowsLabelBar;
   set allowsLabelBar(bool value) {
     _allowsLabelBar = value;
-    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
   }
 
   // TabView
   Tab add(EditorTab tab, {bool switchesTab: true}) {
     _tabOfFile[tab.file] = tab;
-    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
     return super.add(tab, switchesTab: switchesTab);
   }
 
   // TabView
   Tab replace(EditorTab tabToReplace, EditorTab tab, {bool switchesTab: true}) {
     _tabOfFile[tab.file] = tab;
-    showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
     return super.replace(tabToReplace, tab, switchesTab: switchesTab);
   }
 
@@ -141,7 +145,6 @@ class EditorArea extends TabView {
     if (super.remove(tab, switchesTab: switchesTab, layoutNow: layoutNow)) {
       _tabOfFile.remove(tab.file);
       editorProvider.close(tab.file);
-      showLabelBar = _allowsLabelBar && _tabOfFile.length > 1;
       return true;
     }
     return false;
@@ -179,8 +182,24 @@ class EditorArea extends TabView {
         assert(false);
       }
 
+      // On explicit request to open a tab, persist the new tab.
+      if (!replaceCurrent) tab.persisted = true;
+
+      // Don't replace the current tab if it's persisted.
+      if ((selectedTab is AceEditorTab) &&
+          (selectedTab as AceEditorTab).persisted) {
+        replaceCurrent = false;
+      }
+
+      EditorTab tabToReplace = null;
       if (replaceCurrent) {
-        replace(selectedTab, tab, switchesTab: switchesTab);
+        tabToReplace = selectedTab;
+      } else {
+        tabToReplace = tabs.firstWhere((t) => !t.persisted, orElse: () => null);
+      }
+
+      if (tabToReplace != null) {
+        replace(tabToReplace, tab, switchesTab: switchesTab);
       } else {
         add(tab, switchesTab: switchesTab);
       }
@@ -189,6 +208,25 @@ class EditorArea extends TabView {
 
       _nameController.add(file.name);
     }
+
+    _savePersistedTabs();
+  }
+
+  void persistTab(File file) {
+    EditorTab tab = _tabOfFile[file];
+    if (tab != null) tab.persisted = true;
+    _savePersistedTabs();
+  }
+
+  void _savePersistedTabs() {
+    List<String> filesUuids = [];
+    for(EditorTab tab in tabs) {
+      if (tab.persisted) filesUuids.add(tab.file.uuid);
+    }
+
+    EditorManager manager = (editorProvider as EditorManager);
+    manager.persistedFilesUuids = filesUuids;
+    manager.persistState();
   }
 
   /// Closes the tab.
@@ -200,6 +238,8 @@ class EditorArea extends TabView {
       editorProvider.close(file);
       _nameController.add(selectedTab == null ? null : selectedTab.label);
     }
+
+    _savePersistedTabs();
   }
 
   // Replaces the file loaded in a tab with a renamed version of the file

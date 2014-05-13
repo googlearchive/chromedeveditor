@@ -11,24 +11,33 @@ library spark.scm;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
+import 'package:observe/observe.dart';
 
 import 'builder.dart';
 import 'jobs.dart';
 import 'workspace.dart';
+import 'git/config.dart';
+import 'git/http_fetcher.dart';
 import 'git/objectstore.dart';
+import 'git/object.dart';
 import 'git/options.dart';
+import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
 import 'git/commands/fetch.dart';
-import 'git/commands/index.dart' as index;
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
+import 'git/commands/revert.dart';
 import 'git/commands/status.dart';
 
 final List<ScmProvider> _providers = [new GitScmProvider()];
+
+final Logger _logger = new Logger('spark.scm');
 
 /**
  * Returns `true` if the given project is under SCM.
@@ -95,9 +104,11 @@ class ScmManager {
 
   Stream<ScmProjectOperations> get onStatusChange => _controller.stream;
 
-  void _updateStatusFor(Project project, List<ChangeDelta> changes) {
+  Future _updateStatusFor(Project project, List<ChangeDelta> changes) {
     if (_operations[project] != null) {
-      _operations[project].updateForChanges(changes);
+      return _operations[project].updateForChanges(changes);
+    } else {
+      return new Future.value();
     }
   }
 }
@@ -126,9 +137,11 @@ abstract class ScmProvider {
   ScmProjectOperations createOperationsFor(Project project);
 
   /**
-   * Clone the repo at the given url into the given directory.
+   * Clone the repo at the given url into the given directory. Returns a
+   * [ScmException] through the Future's error on a failure.
    */
-  Future clone(String url, chrome.DirectoryEntry dir);
+  Future clone(String url, chrome.DirectoryEntry dir,
+               {String username, String password, String branchName});
 }
 
 /**
@@ -157,9 +170,25 @@ abstract class ScmProjectOperations {
 
   Future checkoutBranch(String branchName);
 
-  Future commit(String commitMessage);
+  void markResolved(Resource resource);
 
-  void updateForChanges(List<ChangeDelta> changes);
+  Future revertChanges(List<Resource> resources);
+
+  Future commit(String userName, String userEmail, String commitMessage);
+
+  Future push(String username, String password);
+
+  Future updateForChanges(List<ChangeDelta> changes);
+}
+
+// TODO: Remove this when we have a generic spark exception class.
+class ScmException implements Exception {
+  final String message;
+  final bool needsAuth;
+
+  ScmException(this.message, [this.needsAuth = false]);
+
+  String toString() => message;
 }
 
 /**
@@ -170,7 +199,11 @@ class FileStatus {
   static const FileStatus UNTRACKED = const FileStatus._('untracked');
   static const FileStatus MODIFIED = const FileStatus._('modified');
   static const FileStatus STAGED = const FileStatus._('staged');
+  static const FileStatus UNMERGED = const FileStatus._('unmerged');
   static const FileStatus COMMITTED = const FileStatus._('committed');
+  static const FileStatus DELETED = const FileStatus._('deleted');
+  static const FileStatus ADDED = const FileStatus._('added');
+
 
   final String status;
 
@@ -180,17 +213,39 @@ class FileStatus {
     if (value == 'committed') return FileStatus.COMMITTED;
     if (value == 'modified') return FileStatus.MODIFIED;
     if (value == 'staged') return FileStatus.STAGED;
+    if (value == 'unmerged') return FileStatus.UNMERGED;
+    if (value == 'deleted') return FileStatus.DELETED;
+    if (value == 'added') return FileStatus.ADDED;
     return FileStatus.UNTRACKED;
   }
 
   factory FileStatus.fromIndexStatus(String status) {
+    if (status == FileStatusType.DELETED) return FileStatus.DELETED;
+    if (status == FileStatusType.ADDED) return FileStatus.ADDED;
     if (status == FileStatusType.COMMITTED) return FileStatus.COMMITTED;
     if (status == FileStatusType.MODIFIED) return FileStatus.MODIFIED;
     if (status == FileStatusType.STAGED) return FileStatus.STAGED;
+    if (status == FileStatusType.UNMERGED) return FileStatus.UNMERGED;
     return FileStatus.UNTRACKED;
   }
 
   String toString() => status;
+}
+
+/**
+ * The SCM commit information.
+ */
+@reflectable
+class CommitInfo {
+  String identifier;
+  String authorName;
+  String authorEmail;
+  DateTime date;
+  String message;
+
+  String _getDateString() => date == null ? '' : new DateFormat.yMd("en_US").format(date);
+  String _getTimeString() => date == null ? '' : new DateFormat("Hm", "en_US").format(date);
+  String get dateString => '${_getDateString()} ${_getTimeString()}';
 }
 
 /**
@@ -202,7 +257,11 @@ class GitScmProvider extends ScmProvider {
   String get id => 'git';
 
   bool isUnderScm(Project project) {
-    return project.getChild('.git') is Folder;
+    Folder gitFolder = project.getChild('.git');
+    if (gitFolder is! Folder) return false;
+    if (gitFolder.getChild('index2') is! File) return false;
+    if (gitFolder.getChild('index') is File) return false;
+    return true;
   }
 
   ScmProjectOperations createOperationsFor(Project project) {
@@ -213,13 +272,22 @@ class GitScmProvider extends ScmProvider {
     return null;
   }
 
-  Future clone(String url, chrome.DirectoryEntry dir) {
+  Future clone(String url, chrome.DirectoryEntry dir,
+               {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
-        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir));
+        root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir),
+        branchName : branchName, username: username, password: password);
 
     return options.store.init().then((_) {
-      Clone clone = new Clone(options);
-      return clone.clone();
+      return new Clone(options).clone().then((_) {
+        return options.store.index.flush();
+      });
+    }).catchError((e) {
+      if (e is HttpResult) {
+        throw new ScmException(e.toString(), e.needsAuth);
+      } else {
+        throw new ScmException(e.toString());
+      }
     });
   }
 }
@@ -241,8 +309,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     _completer = new Completer();
 
     _objectStore = new ObjectStore(project.entry);
-    _objectStore.init()
-      .then((_) {
+    _objectStore.init().then((_) {
         _completer.complete(_objectStore);
 
         // Populate the branch name.
@@ -254,6 +321,14 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // Update the SCM status for the files.
         _refreshStatus(project: project);
       }).catchError((e) => _completer.completeError(e));
+  }
+
+  Future<Map<String, dynamic>> getConfigMap() {
+    return objectStore.then((store) {
+      return store.readConfig().then((Config config) {
+        return config.toMap();
+      });
+    });
   }
 
   String getBranchName() {
@@ -305,9 +380,34 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future push() {
+  void markResolved(Resource resource) {
+    // TODO: implement
+    _logger.info('Implement markResolved()');
+
+    // When finished, fire an SCM changed event.
+    _statusController.add(this);
+  }
+
+  Future revertChanges(List<Resource> resources) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
+      return Revert.revert(options, resources.map((e) => e.entry).toList());
+    });
+  }
+
+  Future<List<FileStatus>> addFiles(List<chrome.Entry> files) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Add.addEntries(options, files).then((_) {
+        return _refreshStatus(project: project);
+      });
+    });
+  }
+
+  Future push(String username, String password) {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store,
+          username: username, password: password);
       return Push.push(options);
     });
   }
@@ -328,28 +428,47 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future commit(String commitMessage) {
+  Future commit(String userName, String userEmail, String commitMessage) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
-          root: entry, store: store, commitMessage: commitMessage);
+          root: entry, store: store, commitMessage: commitMessage,
+          name: userName, email: userEmail);
       return Commit.commit(options).then((_) {
         _refreshStatus(project: project);
       });
     });
   }
 
+  Future<List<CommitInfo>> getPendingCommits() {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Push.getPendingCommits(options).then((List commits) {
+        return commits.map((CommitObject item) {
+          CommitInfo result = new CommitInfo();
+          result.identifier = item.sha;
+          result.authorName = item.author.name;
+          result.authorEmail = item.author.email;
+          result.date = item.author.date;
+          result.message = item.message;
+          return result;
+        }).toList();
+      });
+    });
+  }
+
   Future<ObjectStore> get objectStore => _completer.future;
 
-  void updateForChanges(List<ChangeDelta> changes) {
-    _refreshStatus(files: changes
+  Future updateForChanges(List<ChangeDelta> changes) {
+    return _refreshStatus(files: changes
         .where((d) => d.type != EventType.DELETE && d.resource is File)
-        .map((d) => d.resource));
+        .map((d) => d.resource)
+        .where((File f) => f.parent != null && !f.parent.isScmPrivate()));
   }
 
   /**
    * Refresh either the entire given project, or the given list of files.
    */
-  void _refreshStatus({Project project, Iterable<File> files}) {
+  Future _refreshStatus({Project project, Iterable<File> files}) {
     assert(project != null || files != null);
 
     // Get a list of all files in the project.
@@ -358,13 +477,27 @@ class GitScmProjectOperations extends ScmProjectOperations {
     }
 
     // For each file, request the SCM status asynchronously.
-    objectStore.then((ObjectStore store) {
-      Future.forEach(files, (File file) {
-        return Status.getFileStatus(store, file.entry).then((index.FileStatus status) {
+    return objectStore.then((ObjectStore store) {
+      return Future.forEach(files, (File file) {
+        return Status.getFileStatus(store, file.entry).then((status) {
+          String fileStatus;
+          if (status.type == FileStatusType.MODIFIED) {
+            if (status.deleted) {
+              fileStatus = FileStatusType.DELETED;
+            } else if (status.headSha == null) {
+              fileStatus = FileStatusType.ADDED;
+            } else {
+              fileStatus = FileStatusType.MODIFIED;
+            }
+          } else {
+            fileStatus = status.type;
+          }
           file.setMetadata('scmStatus',
-              new FileStatus.fromIndexStatus(status.type).status);
+              new FileStatus.fromIndexStatus(fileStatus).status);
         });
       }).then((_) => _statusController.add(this));
+    }).catchError((e, st) {
+      _logger.severe("error calculating scm status", e, st);
     });
   }
 }
@@ -380,10 +513,10 @@ class _ScmBuilder extends Builder {
 
   Future build(ResourceChangeEvent changes, ProgressMonitor monitor) {
     // Get a list of all changed projects and fire SCM change events for them.
-    for (Project project in changes.modifiedProjects) {
-      scmManager._updateStatusFor(project, changes.getChangesFor(project));
-    }
-
-    return new Future.value();
+    changes =
+        new ResourceChangeEvent.fromList(changes.changes, filterRename: true);
+    return Future.forEach(changes.modifiedProjects, (project) {
+      return scmManager._updateStatusFor(project, changes.getChangesFor(project));
+    });
   }
 }

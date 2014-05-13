@@ -2,20 +2,22 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-library sdk_test;
+library spark.sdk_test;
 
 import 'package:unittest/unittest.dart';
 
-import '../lib/sdk.dart';
+import '../lib/dart/sdk.dart';
+
+DartSdk sdk;
 
 defineTests() {
   group('sdk', () {
-    DartSdk sdk;
-
     setUp(() {
-      return DartSdk.createSdk().then((result) {
-        sdk = result;
-      });
+      if (sdk == null) {
+        return DartSdk.createSdk().then((result) {
+          sdk = result;
+        });
+      }
     });
 
     test('exists', () {

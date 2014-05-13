@@ -11,7 +11,11 @@ import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
+import '../lib/navigation.dart';
+import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
+import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';
+import '../lib/preferences.dart';
 
 defineTests() {
   group('ace', () {
@@ -27,6 +31,8 @@ class MockAceManager implements AceManager {
   final Element parentElement = null;
   workspace.File currentFile = null;
   AceManagerDelegate delegate = null;
+  GotoLineView gotoLineView = null;
+  Outline outline = null;
 
   MockAceManager();
 
@@ -36,6 +42,9 @@ class MockAceManager implements AceManager {
 
   Point get cursorPosition => new Point(0, 0);
   void set cursorPosition(Point position) {}
+  void setSelectionAnchor(int row, int column) {}
+  void selectTo(int row, int column) {}
+
   ace.EditSession get currentSession => null;
   void focus() { }
   void resize() { }
@@ -45,12 +54,16 @@ class MockAceManager implements AceManager {
   String get theme => null;
   Future<String> getKeyBinding() => new Future.value(null);
   void setKeyBinding(String name) { }
+  num getFontSize() => null;
+  void setFontSize(num size) { }
   void setMarkers(List<workspace.Marker> markers) { }
   void clearMarkers() { }
   void selectNextMarker() { }
   void selectPrevMarker() { }
   void createDialog(String filename) { }
   bool isFileExtensionEditable(String extension) => false;
+  void buildOutline() { }
+  Stream get onGotoDeclaration => null;
 }
 
 class MockAceEditor implements TextEditor {
@@ -64,18 +77,29 @@ class MockAceEditor implements TextEditor {
   void activate() { }
   void resize() { }
   void focus() { }
+  void deactivate() { }
 
+  BoolCachedPreference get stripWhitespace => null;
   bool get dirty => false;
 
   set dirty(bool value) { }
 
   Stream get onDirtyChange => null;
+  Stream get onModification => null;
 
   Future save() => new Future.value();
 
   void setSession(ace.EditSession value) { }
 
   void fileContentsChanged() { }
+
+  bool get supportsOutline => false;
+  bool get supportsFormat => false;
+  bool get readOnly => false;
+
+  void select(Span span) { }
+  void format() { }
+  void navigateToDeclaration() { }
 }
 
 class MockEditSession implements EditSession {

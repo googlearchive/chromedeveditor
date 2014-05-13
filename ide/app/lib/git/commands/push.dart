@@ -7,11 +7,14 @@ library git.commands.push;
 import 'dart:async';
 
 import '../config.dart';
+import '../exception.dart';
 import '../http_fetcher.dart';
+import '../object.dart';
 import '../objectstore.dart';
 import '../options.dart';
 import '../pack.dart';
 import '../utils.dart';
+
 
 /**
  * This class implements the git push command.
@@ -23,20 +26,19 @@ class Push {
     String username = options.username;
     String password = options.password;
 
-    Function remotePushProgress;
+    Function pushProgress;
 
     if (options.progressCallback != null) {
       // TODO add progress chunker.
     } else {
-      remotePushProgress = nopFunction;
+      pushProgress = nopFunction;
     }
 
     Config config = store.config;
     String url = config.url != null ? config.url : options.repoUrl;
 
     if (url == null) {
-      // TODO throw push_no_remote.
-      return null;
+      throw new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE);
     }
 
     HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
@@ -45,19 +47,32 @@ class Push {
       return store.getCommitsForPush(refs, config.remoteHeads).then(
           (commits) {
         if (commits == null) {
-          // TODO(grv) : throw Custom exceptions.
-          throw "no commits to push.";
+          throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
         }
         PackBuilder builder = new PackBuilder(commits.commits, store);
-        return builder.build().then((packData) {
-          return fetcher.pushRefs([commits.ref], packData,
-              remotePushProgress).then((_) {
+        return builder.build().then((List<int> packData) {
+          return fetcher.pushRefs([commits.ref], packData, pushProgress).then((_) {
             config.remoteHeads[commits.ref.name] = commits.ref.head;
             config.url = url;
             return store.writeConfig();
           });
         });
       });
+    });
+  }
+
+  static Future<List<CommitObject>> getPendingCommits(GitOptions options) {
+    ObjectStore store = options.store;
+    Config config = store.config;
+    // TODO(dvh): we need to be able to get pending commits from other local
+    // branches to push to other branches than master.
+    GitRef ref = new GitRef(ObjectStore.HEAD_MASTER_SHA, null);
+    return store.getCommitsForPush([ref], config.remoteHeads).
+        then((CommitPushEntry commits) {
+      if (commits == null) {
+        throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
+      }
+      return commits.commits;
     });
   }
 }

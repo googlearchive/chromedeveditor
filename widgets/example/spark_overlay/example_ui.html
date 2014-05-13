@@ -3,12 +3,13 @@
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
 <polymer-element name="example-ui">
   <template>
-    <spark-overlay class="spark-overlay-scale-slideup" opened>
+    <spark-overlay animation="scale-slideup" opened>
       <h2>Dialog</h2>
-      <input placeholder="say something..." autofocus>
+      <input placeholder="say something..." focused>
       <div>I agree with this wholeheartedly.</div>
       <button overlay-toggle>OK</button>
     </spark-overlay>
   </template>
-  <script type="application/dart" src="example_ui.dart"></script>
+
+  <script type="application/dart;component=1" src="example_ui.dart"></script>
 </polymer-element>

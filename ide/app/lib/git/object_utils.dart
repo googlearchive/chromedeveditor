@@ -10,6 +10,7 @@ import 'dart:core';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'file_operations.dart';
+import 'commands/index.dart';
 import 'object.dart';
 import 'objectstore.dart';
 
@@ -84,7 +85,16 @@ abstract class ObjectUtils {
     return store.retrieveObject(blobSha, ObjectTypes.BLOB_STR).then(
         (BlobObject blob) {
       return FileOps.createFileWithContent(dir, fileName, blob.data,
-          ObjectTypes.BLOB_STR);
+          ObjectTypes.BLOB_STR).then((chrome.Entry entry) {
+        return entry.getMetadata().then((data) {
+          FileStatus status = new FileStatus();
+          status.path = entry.fullPath;
+          status.sha = blobSha;
+          status.headSha = blobSha;
+          status.size = data.size;
+          store.index.updateIndexForEntry(status);
+        });
+      });
     });
   }
 

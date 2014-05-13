@@ -9,10 +9,8 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
+import '../spark_button/spark_button.dart';
 import '../spark_menu/spark_menu.dart';
-
-// Ported from Polymer Javascript to Dart code.
-
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
 
@@ -24,32 +22,85 @@ class SparkMenuButton extends SparkWidget {
   @published bool opened = false;
   @published bool responsive = false;
   @published String valign = "center";
-  @published String selectedClass = "";
+
+  SparkButton _button;
+  SparkOverlay _overlay;
+  SparkMenu _menu;
 
   SparkMenuButton.created(): super.created();
 
-  //* Toggle the opened state of the dropdown.
-  void toggle() {
-    ($['overlay-menu'] as SparkMenu).clearSelection();
-    opened = !opened;
+  @override
+  void enteredView() {
+    super.enteredView();
 
-    // TODO(ussuri): This is a temporary plug to make spark-overlay see changes
-    // in 'opened' when run as deployed code. Just binding via {{opened}} alone
-    // isn't detected and the menu doesn't open.
-    if (IS_DART2JS) {
-      ($['overlay'] as SparkOverlay).opened = opened;
+    _button = $['button'];
+    _overlay = $['overlay'];
+    _menu = $['menu'];
+  }
+
+  //* Toggle the opened state of the dropdown.
+  void _toggle(bool inOpened) {
+    if (inOpened != opened) {
+      opened = inOpened;
+      // TODO(ussuri): A temporary plug to make #overlay and #button see
+      // changes in 'opened'. Data binding via {{opened}} in the HTML isn't
+      // detected. deliverChanges() fixes #overlay, but not #button.
+      _overlay.opened = inOpened;
+      _button.active = inOpened;
+      if (opened) {
+        // Enforce focused state so the button can accept keyboard events.
+        focus();
+        _menu.resetState();
+      }
     }
   }
 
+  void clickHandler(Event e) => _toggle(!opened);
+
+  void focusHandler(Event e) => _toggle(true);
+
+  void blurHandler(Event e) => _toggle(false);
+
   //* Handle the on-opened event from the dropdown. It will be fired e.g. when
   //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
-  void onOpened(CustomEvent e) {
+  void overlayOpenedHandler(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {
       opened = false;
     }
   }
 
-  //* Returns the selected item.
-  String get selection => ($['overlay-menu'] as SparkMenu).selection;
+  void menuActivateHandler(CustomEvent e, var details) {
+    if (details['isSelected']) {
+      _toggle(false);
+    }
+  }
+
+  void keyDownHandler(KeyboardEvent e) {
+    bool stopPropagation = true;
+
+    if (_menu.maybeHandleKeyStroke(e.keyCode)) {
+      e.preventDefault();
+    }
+
+    switch (e.keyCode) {
+      case KeyCode.UP:
+      case KeyCode.DOWN:
+      case KeyCode.PAGE_UP:
+      case KeyCode.PAGE_DOWN:
+      case KeyCode.ENTER:
+        if (!opened) opened = true;
+        break;
+      case KeyCode.ESC:
+        if (opened) opened = false;
+        break;
+      default:
+        stopPropagation = false;
+        break;
+    }
+
+    if (stopPropagation) {
+      e.stopPropagation();
+    }
+  }
 }

@@ -2,7 +2,7 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-@import url("../../../packages/bootjack/css/bootstrap.css");
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
 @import url("lib/ui/widgets/listview.css");
@@ -26,15 +26,31 @@ body {
 #topUi {
   height: 100%;
   width: 100%;
-}
-
-#topUi.veiled {
-  opacity: 0;
-}
-
-#topUi.unveiled {
   opacity: 1;
   transition: opacity 300ms;
+}
+
+#topUi:unresolved {
+  /*opacity: 0;*/
+}
+
+#splashScreen {
+  background: #F7F7F7;
+  background-image: url("images/spark_512.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 1;
+  transition: opacity 300ms;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+#splashScreen.closeSplash {
+  opacity: 0;
 }
 
 #editorArea {
@@ -45,34 +61,98 @@ body {
   color: #aaa;
 }
 
-.ace_gutter-cell.ace_error {
+div.ace_gutter {
+  z-index: 0;
+}
+
+div.ace_gutter-cell.ace_error {
   background-image: url("images/error_icon.png");
 }
 
-.ace_gutter-cell.ace_warning {
+div.ace_gutter-cell.ace_warning {
   background-image: url("images/warning_icon.png");
 }
 
-.ace_gutter-cell.ace_info {
+div.ace_gutter-cell.ace_info, .ace_dark div.ace_gutter-cell.ace_info {
   background-image: url("images/info_icon.png");
 }
 
-.ace_gutter-tooltip-divider {
+.ace-tooltip-divider {
   background-color: gray;
   height: 1px;
   margin: 3px -4px;
 }
 
-.ace_gutter-tooltip-label-error {
-  color: #F55;
+img.ace-tooltip {
+  border: none;
+  display: inline;
+  margin-left: 3px;
+  margin-bottom: 3px;
 }
 
-.ace_gutter-tooltip-label-warning {
-  color: #DD3;
+div.ace_search {
+  background: #fafafa;
+  padding-right: 4px;
 }
 
-.ace_gutter-tooltip-label-info {
-  color: #9CC;
+div.ace_search.right {
+  background-color: #eee;
+  border-radius: 0px;
+  border-right: none;
+  border-left: 1px solid #dadada;
+  width: 299px;
+  max-width: none;
+  z-index: 101;
+}
+
+div.ace_search_form, div.ace_replace_form {
+  width: 270px;
+}
+
+.ace_replace_form .ace_search_field {
+  width: 184px;
+}
+
+.ace_search_field {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+button.ace_replacebtn {
+  color: #484848;
+  font-family: Helvetica, Arial, sans-serif;
+  font-weight: bold;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+button.ace_searchbtn:hover, button.ace_replacebtn:hover {
+  background-color: #eee;
+}
+
+button.ace_replacebtn:active, button.ace_searchbtn:active {
+  outline: none;
+}
+
+div.ace_search_options {
+  display: none;
+}
+
+button.ace_searchbtn_close {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  opacity: 0.5;
+  background: url(images/search_close.png);
+}
+
+button.ace_searchbtn_close:hover {
+  background-color: transparent;
+  background-position: 0 0;
+  opacity: 1.0;
+}
+
+button.ace_searchbtn_close:active {
+  outline: none;
 }
 
 .editor-dialog {
@@ -86,7 +166,7 @@ body {
   opacity: 1;
   transition: opacity 250ms;
   text-align: center;
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
 
@@ -120,25 +200,21 @@ body {
 }
 
 .minimap {
-  right: 0px;
+  right: 15px;
   width: 10px;
-  bottom: 15px;
-  top: 0px;
+  bottom: 0;
+  top: 0;
   position: absolute;
-  z-index: 9;
-  /* TODO(ericarnold): Needs a background which inherits editor bg color.*/
+  z-index: 10;
 }
 
 .minimap-marker {
   border-radius: 2px;
   position: absolute;
-  height: 4px;
+  height: 6px;
   left: 1px;
   right: 1px;
   background: #DDD;
-}
-
-.minimap-marker:hover {
   cursor: pointer;
 }
 
@@ -217,7 +293,7 @@ body {
 }
 
 .fileview-filename-container .filename {
-  font-family: Helvetica, Sans-serif;
+  font-family: Helvetica, Arial, Sans-serif;
   font-size: 13px;
   overflow: hidden;
   position: absolute;
@@ -290,4 +366,120 @@ body {
   background-color: black;
   opacity: 0.25;
   z-index: 500;
+}
+
+.outlineItem.topLevel.class:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.outlineItem >a {
+  display: block;
+}
+
+.outlineItem {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outlineItem.selected {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+li.outlineItem.topLevel.class {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
+  color: #ddd;
+}
+
+.outlineItem.topLevel.function, .outlineItem.method,
+    .outlineItem.topLevel.function > a, .outlineItem.method > a {
+  color: #888;
+}
+
+.outlineItem.topLevel.function > a:after, .outlineItem.method > a:after {
+  content: '()';
+}
+
+.outlineItem.accessor,
+    .outlineItem.accessor > a {
+  color: #77c;
+}
+
+.outlineItem.accessor.getter > a:before,
+    .outlineItem.accessor.getter > a:before {
+  content: 'get ';
+  color: #888;
+}
+
+.outlineItem.accessor.setter > a:before,
+    .outlineItem.accessor.setter > a:before {
+  content: 'set ';
+  color: #888;
+}
+
+.outlineItem.topLevel.variable, .outlineItem.property,
+    .outlineItem.topLevel.variable > a, .outlineItem.property > a {
+  color: #77c;
+}
+
+#toggleOutlineButton {
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  border-radius: 5px;
+  bottom: 10px;
+  height: 30px;
+  position: absolute;
+  right: 30px;
+  width: 30px;
+  z-index: 100;
+}
+
+#toggleOutlineButton:hover {
+  background-color: rgba(255, 255, 255, 0.7);;
+}
+
+#toggleOutlineButton:active {
+  background-color: rgba(255, 255, 255, 1);;
+}
+
+#toggleOutlineButton:focus {
+  outline: none;
+}
+
+#outline {
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  bottom: 45px;
+  overflow-y: auto;
+  padding: 10px;
+  position: absolute;
+  right: 30px;
+  top: 10px;
+  transition: opacity 250ms;
+  width: 200px;
+  z-index: 100;
+}
+
+#outline.collapsed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#outline ul {
+  margin: 0;
+  margin-left: 15px;
+  padding: 0;
+}
+
+#outline > ul {
+  margin-left: 0;
+}
+
+li.outlineItem a {
+  white-space: nowrap;
 }

@@ -7,7 +7,6 @@ library git.config;
 import 'dart:convert';
 
 class Config {
-
   String url;
   String shallow;
   Map<String, String> remoteHeads = {};
@@ -45,7 +44,6 @@ class Config {
   }
 
   String toJson() {
-    JsonEncoder encoder = new JsonEncoder();
-    return encoder.convert(toMap());
+    return JSON.encode(toMap());
   }
 }

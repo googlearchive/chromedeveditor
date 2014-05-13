@@ -9,15 +9,11 @@
 <polymer-element name="spark-status" extends="spark-widget"
     attributes="spinning defaultMessage temporaryMessage progressMessage">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("packages/spark_widgets/spark_status/spark_status.css");
-    </style>
+    <link rel="stylesheet" href="spark_status.css">
 
     <div class="label"></div>
     <div class="throbber"></div>
   </template>
 
-  <script type="application/dart" src="spark_status.dart"></script>
+  <script type="application/dart;component=1" src="spark_status.dart"></script>
 </polymer-element>

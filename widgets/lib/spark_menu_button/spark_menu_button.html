@@ -21,32 +21,40 @@
                 valueAttr,
                 opened,
                 responsive,
-                valign">
+                valign"
+    on-keydown="{{keyDownHandler}}">
 
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("packages/spark_widgets/spark_menu_button/spark_menu_button.css");
-    </style>
+    <link rel="stylesheet" href="spark_menu_button.css">
 
-    <spark-button id="button" small noPadding touch-action="none" on-click="{{toggle}}">
+    <spark-button id="button"
+        focused
+        small
+        noPadding
+        on-click="{{clickHandler}}"
+        on-focus="{{focusHandler}}"
+        on-blur="{{blurHandler}}">
       <img src="{{icon}}">
     </spark-button>
 
     <div responsive="{{responsive}}" valign="{{valign}}">
-      <spark-overlay id="overlay" class="slideup" opened="{{opened}}" modal
-          on-activate="{{toggle}}" on-opened="{{onOpened}}">
+      <spark-overlay id="overlay"
+          autoClose
+          animation="scale-slideup"
+          on-opened="{{overlayOpenedHandler}}">
+
         <div class="arrow"></div>
-        <div class="arrow arrow-inner" on-click="{{toggle}}"></div>
-        <spark-menu id="overlay-menu"
+        <div class="arrow arrow-inner" on-click="{{clickHandler}}"></div>
+
+        <spark-menu id="menu"
             selected="{{selected}}"
-            valueAttr="{{valueAttr}}">
+            valueAttr="{{valueAttr}}"
+            on-activate="{{menuActivateHandler}}">
           <content></content>
         </spark-menu>
       </spark-overlay>
     </div>
   </template>
 
-  <script type="application/dart" src="spark_menu_button.dart"></script>
+  <script type="application/dart;component=1" src="spark_menu_button.dart"></script>
 </polymer-element>

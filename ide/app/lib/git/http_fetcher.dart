@@ -10,8 +10,7 @@ import 'dart:core';
 import 'dart:html';
 import 'dart:typed_data';
 
-import 'package:chrome/chrome_app.dart' as chrome;
-
+import 'exception.dart';
 import 'objectstore.dart';
 import 'upload_pack_parser.dart';
 
@@ -46,14 +45,14 @@ class HttpFetcher {
 
   Future<List<GitRef>> fetchUploadRefs() => _fetchRefs('git-upload-pack');
 
-  Future pushRefs(List<GitRef> refPaths, chrome.ArrayBuffer packData,
-      progress) {
+  Future pushRefs(List<GitRef> refPaths, List<int> packData, progress) {
     Completer completer = new Completer();
     String url = _makeUri('/git-receive-pack', {});
     Blob body = _pushRequest(refPaths, packData);
 
-    HttpRequest xhr = getNewHttpRequest();
+    var xhr = getNewHttpRequest();
     xhr.open("POST", url, async: true , user: username, password: password);
+    xhr.setRequestHeader('Content-Type', 'application/x-git-receive-pack-request');
     xhr.onLoad.listen((event) {
       if (xhr.readyState == 4) {
         if (xhr.status == 200) {
@@ -69,8 +68,7 @@ class HttpFetcher {
         }
       }
     });
-    xhr.setRequestHeader('Content-Type',
-        'application/x-git-receive-pack-request');
+    xhr.onError.listen((_) => completer.completeError(new HttpResult.fromXhr(xhr)));
     String bodySize = (body.size / 1024).toStringAsFixed(2);
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
@@ -78,7 +76,9 @@ class HttpFetcher {
         progress();
       }
     });
+
     xhr.send(body);
+
     return completer.future;
   }
 
@@ -88,7 +88,7 @@ class HttpFetcher {
     Completer completer = new Completer();
     String url = _makeUri('/git-upload-pack', {});
     String body = _refWantRequst(wantRefs, haveRefs, shallow, depth, moreHaves);
-    HttpRequest xhr = getNewHttpRequest();
+    var xhr = getNewHttpRequest();
 
     //TODO add progress.
     Function packProgress, receiveProgress;
@@ -125,11 +125,11 @@ class HttpFetcher {
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
 
     xhr.send(body);
@@ -144,7 +144,7 @@ class HttpFetcher {
   /*
    * Get a new instance of HttpRequest. Exposed for tests to inject fake xhr.
    */
-  HttpRequest getNewHttpRequest() => new HttpRequest();
+  getNewHttpRequest() => new HttpRequest();
 
   /**
    * Parses the uri and returns the query params map.
@@ -169,7 +169,7 @@ class HttpFetcher {
    */
   Future<String> _doGet(String url) {
     Completer completer = new Completer();
-    HttpRequest xhr = getNewHttpRequest();
+    var xhr = getNewHttpRequest();
     xhr.open("GET", url, async: true , user: username , password: password );
 
     xhr.onLoad.listen((event) {
@@ -177,20 +177,39 @@ class HttpFetcher {
         if (xhr.status == 200) {
           return completer.complete(xhr.responseText);
         } else {
-          completer.completeError(xhr.response);
+          completer.completeError(new HttpResult.fromXhr(xhr));
         }
       }
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(xhr.response);
+      completer.completeError(new HttpResult.fromXhr(xhr));
     });
+
     xhr.send();
     return completer.future;
+  }
+
+  /**
+   * Some git repositories do not end with '.git' suffix. Validate those urls
+   * by sending a request to the server.
+   */
+  Future<bool> isValidRepoUrl(String url) {
+    String uri = _makeUri('/info/refs', {"service": 'git-upload-pack'});
+    try {
+      return _doGet(uri).then((_) => true).catchError((e) {
+        if (e.status == 401) {
+          throw new GitException(GitErrorConstants.GIT_AUTH_ERROR);
+        }
+        return new Future.value(false);
+      });
+    } catch (e) {
+      return new Future.value(false);
+    }
   }
 
   String _makeUri(String path, Map<String, String> extraOptions) {
@@ -244,7 +263,7 @@ class HttpFetcher {
     return hex;
   }
 
-  Blob _pushRequest(List<GitRef> refPaths, packData) {
+  Blob _pushRequest(List<GitRef> refPaths, List<int> packData) {
     List blobParts = [];
     String header = refPaths[0].getPktLine() + '\u0000report-status\n';
     header = _padWithZeros(header.length + 4) + header;
@@ -318,4 +337,21 @@ class HttpFetcher {
       return new Future.value(discInfo["refs"]);
     });
   }
+}
+
+class HttpResult {
+  final int status;
+  final String statusText;
+
+  HttpResult(this.status, this.statusText);
+
+  HttpResult.fromXhr(HttpRequest request) :
+      status = request.status, statusText = request.statusText;
+
+  /**
+   * Returns `true` if the status is 401 Unauthorized.
+   */
+  bool get needsAuth => status == 401;
+
+  String toString() => '${status} ${statusText}';
 }

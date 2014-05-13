@@ -9,35 +9,45 @@ import 'lib/actions.dart';
 import 'lib/app.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
+import 'lib/event_bus.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/workspace.dart' as ws;
 
 abstract class SparkModel extends Application {
-  static SparkModel _instance;
+  static bool _instanceCreated = false;
 
   SparkModel() {
-    assert(_instance == null);
-    _instance = this;
+    assert(!_instanceCreated);
+    _instanceCreated = true;
   }
-
-  static SparkModel get instance => _instance;
-
-  bool get developerMode;
 
   AceManager get aceManager;
   ThemeManager get aceThemeManager;
   KeyBindingManager get aceKeysManager;
+  AceFontManager get aceFontManager;
   ws.Workspace get workspace;
   EditorManager get editorManager;
   EditorArea get editorArea;
+  ActionManager get actionManager;
+
+  EventBus get eventBus;
 
   preferences.PreferenceStore get localPrefs;
   preferences.PreferenceStore get syncPrefs;
-
-  ActionManager get actionManager;
 
   void showSuccessMessage(String message);
   void showErrorMessage(String title, String message);
 
   void onSplitViewUpdate(int position);
+  void setGitSettingsResetDoneVisible(bool visible);
+
+  /**
+   * Hide the splash screen; show the main UI.
+   */
+  void unveil();
+
+  /**
+   * Refresh the UI based on the changed model and/or flags and/or preferences.
+   */
+  void refreshUI();
 }

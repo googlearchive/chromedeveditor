@@ -33,14 +33,11 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-splitter" extends="spark-widget"
-    attributes="direction size handle locked onUpdate">
+    attributes="direction size handle locked">
   <template>
-    <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("packages/spark_widgets/spark_splitter/spark_splitter.css");
-    </style>
+    <link rel="stylesheet" href="spark_splitter.css">
+    <div id="draggable"></div>
   </template>
 
-  <script type="application/dart" src="spark_splitter.dart"></script>
+  <script type="application/dart;component=1" src="spark_splitter.dart"></script>
 </polymer-element>

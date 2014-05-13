@@ -13,7 +13,7 @@ dart --version
 pub get
 
 # Build the archive.
-if test x$DRONE_BRANCH = xmaster -o x$FORCE_NIGHTLY = xyes ; then
+if test x$DRONE_REPO_SLUG = xgithub.com/dart-lang/spark -o x$FORCE_NIGHTLY = xyes ; then
   ./grind release-nightly
 else
   ./grind archive

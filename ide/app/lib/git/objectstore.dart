@@ -12,10 +12,10 @@ import 'dart:js';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 
 import 'config.dart';
 import 'constants.dart';
+import 'fast_sha.dart';
 import 'file_operations.dart';
 import 'commands/index.dart';
 import 'object.dart';
@@ -143,11 +143,10 @@ class ObjectStore {
   }
 
   Future<String> getHeadRef() {
-    return _rootDir.getFile(gitPath + HEAD_PATH).then(
-        (chrome.ChromeFileEntry entry) {
-      return entry.readBytes().then((chrome.ArrayBuffer buffer) {
-        String content = UTF8.decode(buffer.getBytes());
-        // get rid of the initial 'ref: ' plus newline at end.
+    return _rootDir.getFile(gitPath + HEAD_PATH).then((chrome.FileEntry entry) {
+      return FileOps.readBytes(entry).then((List<int> data) {
+        // Get rid of the initial 'ref: ' plus newline at end.
+        String content = UTF8.decode(data);
         return content.substring(5).trim();
       });
     });
@@ -168,14 +167,16 @@ class ObjectStore {
   }
 
   Future<String> getHeadForRef(String headRefName) {
-    return FileOps.readFile(_rootDir, gitPath + headRefName, "Text")
-      .then((String content) => content.substring(0, 40));
+    return FileOps.readFileText(_rootDir, gitPath + headRefName).then((content) {
+      return content.substring(0, 40);
+    });
   }
 
   Future<String> getRemoteHeadForRef(String headRefName) {
     String path = gitPath + REFS_REMOTE_HEADS + headRefName.split('/').last;
-    return FileOps.readFile(_rootDir, path, "Text")
-      .then((String content) => content.substring(0, 40));
+    return FileOps.readFileText(_rootDir, path).then((String content) {
+      return content.substring(0, 40);
+    });
   }
 
   Future<List<String>> getLocalBranches() => getAllHeads();
@@ -189,25 +190,22 @@ class ObjectStore {
     });
   }
 
-  Future _readPackEntry(chrome.DirectoryEntry packDir,
-      chrome.ChromeFileEntry entry) {
-    return entry.readBytes().then((chrome.ArrayBuffer packData) {
-      return FileOps.readFile(packDir, entry.name.substring(0,
-          entry.name.lastIndexOf('.pack')) + '.idx', 'ArrayBuffer').then(
-          (chrome.ArrayBuffer idxData) {
-            Pack pack = new Pack(new Uint8List.fromList(
-                packData.getBytes()), this);
-
-            PackIndex packIdx = new PackIndex(new Uint8List.fromList(
-                idxData.getBytes()).buffer);
-            packs.add(new PackEntry(pack, packIdx));
-            return new Future.value();
+  Future _readPackEntry(chrome.DirectoryEntry packDir, chrome.FileEntry entry) {
+    return FileOps.readBytes(entry).then((List<int> packData) {
+      String path = entry.name.substring(0, entry.name.lastIndexOf('.pack')) +
+          '.idx';
+      return FileOps.readFileBytes(packDir, path).then((List<int> indexData) {
+        Pack pack = new Pack(packData, this);
+        PackIndex packIdx = new PackIndex(indexData);
+        packs.add(new PackEntry(pack, packIdx));
+        return new Future.value();
       });
     });
   }
 
-  Future<chrome.FileEntry> _findLooseObject(String sha) => objectDir.getFile(
-      sha.substring(0, 2) + '/' + sha.substring(2));
+  Future<chrome.Entry> _findLooseObject(String sha) {
+    return objectDir.getFile(sha.substring(0, 2) + '/' + sha.substring(2));
+  }
 
   FindPackedObjectResult findPackedObject(List<int> shaBytes) {
     for (var i = 0; i < packs.length; ++i) {
@@ -246,8 +244,8 @@ class ObjectStore {
 
     return this._findLooseObject(sha).then((chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
-        chrome.ArrayBuffer inflated = Zlib.inflate(
-            new Uint8List.fromList(buffer.getBytes()), 0).buffer;
+        chrome.ArrayBuffer inflated = new chrome.ArrayBuffer.fromBytes(
+            Zlib.inflate(new Uint8List.fromList(buffer.getBytes())).data);
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
           // TODO do trim buffer and return completer ;
           var buff;
@@ -410,7 +408,8 @@ class ObjectStore {
     // find the remote branch corresponding to the local one.
     GitRef remoteRef, headRef;
     return getHeadRef().then((String headRefName) {
-      remoteRef = baseRefs.firstWhere((GitRef ref) => ref.name == headRefName);
+      remoteRef = baseRefs.firstWhere(
+          (GitRef ref) => ref.name == headRefName, orElse: () => null);
       Map<String, bool> remoteShas = {};
       // Didn't find a remote branch for the local branch.
       if (remoteRef == null) {
@@ -442,8 +441,8 @@ class ObjectStore {
     });
   }
 
-  Future<CommitPushEntry> _getCommits(GitRef remoteRef, Map<String, bool>
-      remoteShas, String sha) {
+  Future<CommitPushEntry> _getCommits(GitRef remoteRef,
+      Map<String, bool> remoteShas, String sha) {
     var commits = [];
     Future<CommitPushEntry> getNextCommit(String sha) {
 
@@ -459,7 +458,7 @@ class ObjectStore {
           completer.completeError("");
         } else if (commitObj.parents.length == 0
             || commitObj.parents.first == remoteRef.sha
-            || remoteShas[commitObj.parents[0]]) {
+            || remoteShas[commitObj.parents[0]] == true) {
           completer.complete(new CommitPushEntry(commits, remoteRef));
         } else {
           return getNextCommit(commitObj.parents.first);
@@ -545,7 +544,6 @@ class ObjectStore {
   }
 
   Future<String> writeRawObject(String type, content) {
-
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
 
@@ -570,7 +568,7 @@ class ObjectStore {
 
     reader['onloadend'] = (var event) {
       var result = reader['result'];
-      crypto.SHA1 sha1 = new crypto.SHA1();
+      FastSha sha1 = new FastSha();
       Uint8List resultList;
 
       if (result is JsObject) {
@@ -585,16 +583,16 @@ class ObjectStore {
         throw "Unexpected result type.";
       }
 
-      Uint8List data = new Uint8List.fromList(resultList);
-      sha1.add(data);
+      sha1.add(resultList);
       Uint8List digest = new Uint8List.fromList(sha1.close());
 
       try {
         FindPackedObjectResult obj = findPackedObject(digest);
         completer.complete(shaBytesToString(digest));
       } catch (e) {
-        Future<String> str = _storeInFile(shaBytesToString(digest), data).then(
-            (str) => completer.complete(str));
+        _storeInFile(shaBytesToString(digest), resultList).then((str) {
+          completer.complete(str);
+        });
       }
     };
 
@@ -617,7 +615,8 @@ class ObjectStore {
         return fileEntry.file().then((File file) {
 
           Future<String> writeContent() {
-            chrome.ArrayBuffer content = Zlib.deflate(store).buffer;
+            chrome.ArrayBuffer content = new chrome.ArrayBuffer.fromBytes(
+                Zlib.deflate(store).data);
             // TODO: Use fileEntry.createWriter() once implemented in ChromeGen.
             return fileEntry.writeBytes(content).then((_) {
               return digest;
@@ -651,10 +650,10 @@ class ObjectStore {
   }
 
   Future<Config> readConfig() {
-    return FileOps.readFile(_rootDir, '.git/config.json', 'Text').then(
+    return FileOps.readFileText(_rootDir, '.git/config.json').then(
         (String configStr) => new Config(configStr),
-      // TODO: handle errors / build default GitConfig.
-      onError: (e) => this.config);
+        // TODO: handle errors / build default GitConfig.
+        onError: (e) => this.config);
   }
 
   Future<Entry> writeConfig() {

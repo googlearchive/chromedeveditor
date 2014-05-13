@@ -10,12 +10,14 @@ library spark.builder;
 
 import 'dart:async';
 
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'workspace.dart';
 import 'jobs.dart';
 
 final Logger _logger = new Logger('spark.builder');
+final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 /**
  * A [BuilderManager] listens for changes to a [Workspace], batches up those
@@ -40,6 +42,21 @@ class BuilderManager {
 
   bool get isRunning => _buildRunning;
 
+  List<Completer> _completers = [];
+
+  /**
+   * Returns a [Future] that will complete when all current builds are finished.
+   */
+  Future waitForAllBuilds() {
+    if (_events.isNotEmpty || isRunning) {
+      Completer completer = new Completer();
+      _completers.add(completer);
+      return completer.future;
+    } else {
+      return new Future.value();
+    }
+  }
+
   void _handleChange(ResourceChangeEvent event) {
     _events.add(event);
 
@@ -52,25 +69,36 @@ class BuilderManager {
     if (_timer != null) {
       _timer.cancel();
     }
+
     // Bundle up changes for ~50ms.
     _timer = new Timer(new Duration(milliseconds: 50), _runBuild);
   }
 
   void _runBuild() {
     ResourceChangeEvent event = _combineEvents(_events);
-
     _events.clear();
+
+    if (event.isEmpty) return;
+
+    _logger.info('starting build for ${event.changes}');
+    Stopwatch timer = new Stopwatch()..start();
+
     _buildRunning = true;
 
-    Future.forEach(builders, (builder) {
-      Completer completer = new Completer();
-      _BuildJob job = new _BuildJob(event, builder, completer);
-      jobManager.schedule(job);
-      return completer.future;
-    }).then((_) {
+    Completer completer = new Completer();
+    _BuildJob job = new _BuildJob(event, builders.toList(), completer);
+    jobManager.schedule(job);
+
+    completer.future.then((_) {
+      _logger.info('build finished in ${_nf.format(timer.elapsedMilliseconds)}ms');
+
       _buildRunning = false;
+
       if (_events.isNotEmpty) {
         _startTimer();
+      } else {
+        _completers.forEach((c) => c.complete());
+        _completers.clear();
       }
     });
   }
@@ -86,33 +114,35 @@ abstract class Builder {
   /**
    * Process a set of resource changes and complete the [Future] when finished.
    */
-  Future build(ResourceChangeEvent changes, ProgressMonitor monitor);
+  Future build(ResourceChangeEvent event, ProgressMonitor monitor);
 }
 
 class _BuildJob extends Job {
   final ResourceChangeEvent event;
-  final Builder builder;
+  final List<Builder> builders;
   final Completer completer;
 
-  _BuildJob(this.event, this.builder, this.completer) : super('Building…');
+  _BuildJob(this.event, this.builders, this.completer) : super('Building…');
 
-  Future<Job> run(ProgressMonitor monitor) {
-    Future f = builder.build(event, monitor);
-    assert(f != null);
-    assert(f is Future);
-    return f.then((_) {
+  Future run(ProgressMonitor monitor) {
+    return Future.forEach(builders, (Builder builder) {
+      Future f = builder.build(event, monitor);
+      assert(f != null);
+      assert(f is Future);
+      return f;
+    }).catchError((e, st) {
+      _logger.severe('Exception from build manager', e, st);
+    }).whenComplete(() {
       completer.complete();
-      return this;
-    }).catchError((e) {
-      _logger.log(Level.SEVERE, 'Exception from builder', e);
-      completer.complete();
-      return this;
     });
   }
 }
 
+// TODO: combine events better -
+
 ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
   List<ChangeDelta> deltas = [];
-  events.forEach((e) => deltas.addAll(e.changes));
-  return new ResourceChangeEvent.fromList(deltas);
+  events.forEach((e) => deltas.addAll(
+      e.changes.where((change) => !change.resource.isDerived())));
+  return new ResourceChangeEvent.fromList(deltas, filterRename: true);
 }

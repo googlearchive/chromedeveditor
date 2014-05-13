@@ -3,10 +3,12 @@
 *.pem
 *.swo
 *.swp
+*~
 .buildlog
 .DS_Store
 .idea
 .project
 .svn
+/.settings
 packages
 pubspec.lock

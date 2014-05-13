@@ -8,9 +8,9 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
 
 import '../constants.dart';
+import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
@@ -126,7 +126,7 @@ class Fetch {
           Uint8List sortedShas = packIdxData.sublist(offset,
               offset + result.objects.length * 20);
 
-          crypto.SHA1 sha1 = new crypto.SHA1();
+          FastSha sha1 = new FastSha();
           sha1.add(sortedShas);
           String packNameSha = shaBytesToString(sha1.close());
 
@@ -135,7 +135,7 @@ class Fetch {
           return _createPackFiles(packName, result.data.buffer,
               packIdxData.buffer).then((objectsDir) {
             store.objectDir = objectsDir;
-            PackIndex packIdx = new PackIndex(packIdxData.buffer);
+            PackIndex packIdx = new PackIndex(packIdxData);
             store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));
             return _createAndUpdateRef(branchRef, wantRef);
           });

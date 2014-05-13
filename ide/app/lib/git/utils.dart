@@ -6,14 +6,15 @@ library git.utils;
 
 import 'dart:async';
 import 'dart:core';
-import 'dart:html';
-import 'dart:js';
 import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
-import 'package:crypto/crypto.dart' as crypto;
+import 'package:logging/logging.dart';
 
+import 'fast_sha.dart';
 import 'file_operations.dart';
+
+Logger logger = new Logger('spark.git');
 
 /**
  * Convertes [sha] string to sha bytes.
@@ -29,86 +30,43 @@ Uint8List shaToBytes(String sha) {
 /**
  * Converts [shaBytes] to HEX string.
  */
-String shaBytesToString(List shaBytes) {
-  String sha = "";
-  shaBytes.forEach((int byte) {
-    String shaPart = byte.toRadixString(16);
-    if (shaPart.length == 1) shaPart = '0' + shaPart;
-    sha += shaPart;
-  });
-  return sha;
+String shaBytesToString(List<int> sha) {
+  StringBuffer buf = new StringBuffer();
+  int len = sha.length;
+  for (int i = 0; i < len; i++) {
+    String s = sha[i].toRadixString(16);
+    if (s.length == 1) buf.write('0');
+    buf.write(s);
+  }
+  return buf.toString();
 }
 
 Future<String> getShaForEntry(chrome.ChromeFileEntry entry, String type) {
-  return entry.readBytes().then(
-      (chrome.ArrayBuffer content) => _getShaForData(content.getBytes(), type));
+  return entry.readBytes().then((chrome.ArrayBuffer content) {
+    return getShaStringForData(content.getBytes(), type);
+  });
 }
 
-Future<String> getShaForString(String data, String type) {
-  return _getShaForData(data.codeUnits, type);
+String getShaForString(String data, String type) {
+  return getShaStringForData(data.codeUnits, type);
 }
 
-Future<String> _getShaForData(List<int> content, String type) {
-  Completer completer = new Completer();
-  List<dynamic> blobParts = [];
-
-  Uint8List data = new Uint8List.fromList(content);
-
-  String header = '${type} ${content.length}';
-
-  blobParts.add(header);
-  blobParts.add(new Uint8List.fromList([0]));
-  blobParts.add(data);
-
-  var reader = new JsObject(context['FileReader']);
-
-  reader['onloadend'] = (var event) {
-    var result = reader['result'];
-    crypto.SHA1 sha1 = new crypto.SHA1();
-    Uint8List resultList;
-
-    if (result is JsObject) {
-      var arrBuf = new chrome.ArrayBuffer.fromProxy(result);
-      resultList = new Uint8List.fromList(arrBuf.getBytes());
-    } else if (result is ByteBuffer) {
-      resultList = new Uint8List.view(result);
-    } else if (result is Uint8List) {
-      resultList = result;
-    } else {
-      // TODO: Check expected types here.
-      throw "Unexpected result type.";
-    }
-
-    Uint8List data = new Uint8List.fromList(resultList);
-    sha1.add(data);
-    Uint8List digest = new Uint8List.fromList(sha1.close());
-    completer.complete(shaBytesToString(digest));
-  };
-
-  reader['onerror'] = (var domError) {
-    completer.completeError(domError);
-  };
-
-  reader.callMethod('readAsArrayBuffer', [new Blob(blobParts)]);
-
-  return completer.future;
+String getShaStringForData(List<int> content, String type) {
+  FastSha sha1 = new FastSha();
+  sha1.add('${type} ${content.length}'.codeUnits);
+  sha1.add([0]);
+  sha1.add(content);
+  return shaBytesToString(sha1.close());
 }
 
 /**
  * Return sha for the given data.
  */
-
-dynamic getSha(dynamic data, [bool asBytes]) {
-  crypto.SHA1 sha1 = new crypto.SHA1();
+List<int> getShaAsBytes(List<int> data) {
+  FastSha sha1 = new FastSha();
   sha1.add(data);
-  Uint8List sha = sha1.close();
-  if (asBytes) {
-    return sha;
-  } else {
-    return shaBytesToString(sha);
-  }
+  return sha1.close();
 }
-
 
 /**
  * Clears the given working directory.

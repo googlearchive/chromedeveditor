@@ -1,7 +1,7 @@
 <!doctype html>
 
 <link rel="import" href="packages/spark_widgets/spark_selector/spark_selector.html">
-<link rel="import" href="packages/spark_widgets/spark_selection/spark_selection.html">
+
 <polymer-element name="example-ui">
   <template>
     <style>
@@ -9,11 +9,13 @@
         background: #eee;
       }
     </style>
+
     <spark-selector>
       <div class="item">Item 1</div>
       <div class="item">Item 2</div>
       <div class="item">Item 3</div>
     </spark-selector>
   </template>
-  <script type="application/dart" src="example_ui.dart"></script>
+
+  <script type="application/dart;component=1" src="example_ui.dart"></script>
 </polymer-element>

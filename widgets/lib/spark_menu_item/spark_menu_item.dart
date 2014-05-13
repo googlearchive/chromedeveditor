@@ -21,14 +21,16 @@ class SparkMenuItem extends SparkWidget {
   /// Specifies the label for the menu item.
   @published String label = "";
 
-  /// Description for this menu, ususually used for HotKey description.
+  /// Description for this menu, usually used for a keybinding description.
   @published String description = "";
+
+  @reflectable bool get hasIcon => icon.isNotEmpty || iconSize != 0;
 
   SparkMenuItem.created(): super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void ready() {
+    super.ready();
     if (icon.isNotEmpty && iconSize == 0) {
       iconSize = 24;
     }

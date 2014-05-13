@@ -4,22 +4,23 @@
 
 @import url("../common/spark_widget.css");
 
-.labelText {
-  margin: 0 5px;
-  position: relative;
-  top: 6px;
-}
-
-.descriptionText {
-  color: #bdbdbd;
-}
-
-spark-icon, .labelText, .labelText > * {
+:host {
   display: inline-block;
 }
 
-:host:hover {
-  color: #fff;
-  opacity: 1 !important;
-  background: #3a84c3;
+#text {
+  position: relative;
+  top: 6px;
+  padding: 0 10px;
+  color: #000;
+  font-family: Helvetica, Arial, Sans-serif;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#descriptionText {
+  color: #bdbdbd;
+  float: right;
+  overflow: hidden;
 }

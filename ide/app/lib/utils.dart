@@ -4,18 +4,45 @@
 
 library spark.utils;
 
+import 'dart:async';
 import 'dart:html' as html;
+import 'dart:typed_data' as typed_data;
 import 'dart:web_audio';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
+
+final NumberFormat _nf = new NumberFormat.decimalPattern();
+
+chrome.DirectoryEntry _packageDirectoryEntry;
 
 /**
  * This method is shorthand for [chrome.i18n.getMessage].
  */
 String i18n(String messageId) => chrome.i18n.getMessage(messageId);
 
+/**
+ * Return the Chrome App's directory. This utility method ensures that we only
+ * make the `chrome.runtime.getPackageDirectoryEntry` once in the application's
+ * lifetime.
+ */
+Future<chrome.DirectoryEntry> getPackageDirectoryEntry() {
+  if (_packageDirectoryEntry != null) {
+    return new Future.value(_packageDirectoryEntry);
+  }
+
+  return chrome.runtime.getPackageDirectoryEntry().then((dir) {
+    _packageDirectoryEntry = dir;
+    return dir;
+  });
+}
+
+/**
+ * Returns the given word with the first character capitalized.
+ */
 String capitalize(String s) {
-  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1));
+  return s.isEmpty ? '' : (s[0].toUpperCase() + s.substring(1).toLowerCase());
 }
 
 /**
@@ -31,10 +58,6 @@ String toTitleCase(String s) {
     }
   }).join(' ');
 }
-
-bool isMac() => _platform().indexOf('mac') != -1;
-bool isWin() => _platform().indexOf('win') != -1;
-bool isLinuxLike() => !isMac() && !isWin();
 
 AudioContext _ctx;
 
@@ -56,6 +79,77 @@ void beep() {
 bool isDart2js() => identical(1, 1.0);
 
 /**
+ * Return the contents of the file at the given path. The path is relative to
+ * the Chrome app's directory.
+ */
+Future<List<int>> getAppContentsBinary(String path) {
+  String url = chrome.runtime.getURL(path);
+
+  return html.HttpRequest.request(url, responseType: 'arraybuffer').then((request) {
+    typed_data.ByteBuffer buffer = request.response;
+    return new typed_data.Uint8List.view(buffer);
+  });
+}
+
+/**
+ * Return the contents of the file at the given path. The path is relative to
+ * the Chrome app's directory.
+ */
+Future<String> getAppContents(String path) {
+  return html.HttpRequest.getString(chrome.runtime.getURL(path));
+}
+
+/**
+ * Returns a Future that completes after the next tick.
+ */
+Future nextTick() => new Future.delayed(Duration.ZERO);
+
+html.DirectoryEntry _html5FSRoot;
+
+/**
+ * Returns the root directory of the application's persistent local storage.
+ */
+Future<html.DirectoryEntry> getLocalDataRoot() {
+  // For now we request 100 MBs; would like this to be unlimited though.
+  final int requestedSize = 100 * 1024 * 1024;
+
+  if (_html5FSRoot != null) return new Future.value(_html5FSRoot);
+
+  return html.window.requestFileSystem(
+      requestedSize, persistent: true).then((html.FileSystem fs) {
+    _html5FSRoot = fs.root;
+    return _html5FSRoot;
+  });
+}
+
+/**
+ * Creates and returns a directory in persistent local storage. This can be used
+ * to cache application data, e.g `getLocalDataDir('workspace')` or
+ * `getLocalDataDir('pub')`.
+ */
+Future<html.DirectoryEntry> getLocalDataDir(String name) {
+  return getLocalDataRoot().then((html.DirectoryEntry root) {
+    return root.createDirectory(name, exclusive: false);
+  });
+}
+
+/**
+ * A [Notifier] is used to present the user with a message.
+ */
+abstract class Notifier {
+  void showMessage(String title, String message);
+}
+
+/**
+ * A [Notifier] implementation that just logs the given [title] and [message].
+ */
+class NullNotifier implements Notifier {
+  void showMessage(String title, String message) {
+    Logger.root.info('${title}:${message}');
+  }
+}
+
+/**
  * A simple class to do `print()` profiling. It is used to profile a single
  * operation, and can time multiple sequential tasks within that operation.
  * Each call to [emit] reset the task timer, but does not effect the operation
@@ -63,7 +157,7 @@ bool isDart2js() => identical(1, 1.0);
  */
 class PrintProfiler {
   final String name;
-  final bool quiet;
+  final bool printToStdout;
 
   int _previousTaskTime = 0;
   Stopwatch _stopwatch = new Stopwatch();
@@ -71,7 +165,7 @@ class PrintProfiler {
   /**
    * Create a profiler to time a single operation (`name`).
    */
-  PrintProfiler(this.name, {this.quiet: false}) {
+  PrintProfiler(this.name, {this.printToStdout: false}) {
     _stopwatch.start();
   }
 
@@ -83,25 +177,25 @@ class PrintProfiler {
   /**
    * Finish the current task and print out that task's elapsed time.
    */
-  void emit(String taskName) {
+  String finishCurrentTask(String taskName) {
     _stopwatch.stop();
     int ms = _stopwatch.elapsedMilliseconds;
-    if (!quiet) {
-      print('${name}, ${taskName} ${ms / 1000}s');
-    }
     _previousTaskTime += ms;
     _stopwatch.reset();
     _stopwatch.start();
+    String output = '${name}, ${taskName} ${_nf.format(ms)}ms';
+    if (printToStdout) print(output);
+    return output;
   }
 
   /**
    * Stop the timer, and print out the total time for the operation.
    */
-  void finish() {
+  String finishProfiler() {
     _stopwatch.stop();
-    if (!quiet) {
-      print('${name} total: ${totalElapsedMs() / 1000}s');
-    }
+    String output = '${name} total: ${_nf.format(totalElapsedMs())}ms';
+    if (printToStdout) print(output);
+    return output;
   }
 
   /**
@@ -213,18 +307,32 @@ String _platform() {
   return (str != null) ? str.toLowerCase() : '';
 }
 
-
-/**
- * Defines a received action event.
- */
-class ServiceActionEvent {
-  // TODO(ericarnold): Extend Event?
-  // TODO(ericarnold): This should be shared between ServiceIsolate and Service.
-  String serviceId;
-  String actionId;
-  String callId;
-  bool response = false;
-  Map data;
-  ServiceActionEvent(this.serviceId, this.actionId, this.callId, this.data);
+class FutureHelper {
+  /**
+  * Perform an async operation for each element of the iterable, in turn.
+  * It refreshes the UI after each iteraton.
+  *
+  * Runs [f] for each element in [input] in order, moving to the next element
+  * only when the [Future] returned by [f] completes. Returns a [Future] that
+  * completes when all elements have been processed.
+  *
+  * The return values of all [Future]s are discarded. Any errors will cause the
+  * iteration to stop and will be piped through the returned [Future].
+  */
+  static Future forEachNonBlockingUI(Iterable input, Future f(element)) {
+    Completer doneSignal = new Completer();
+    Iterator iterator = input.iterator;
+    void nextElement(_) {
+      if (iterator.moveNext()) {
+        nextTick().then((_) {
+          f(iterator.current)
+             .then(nextElement,  onError: (e) => doneSignal.completeError(e));
+        });
+      } else {
+        doneSignal.complete(null);
+      }
+    }
+    nextElement(null);
+    return doneSignal.future;
+  }
 }
-

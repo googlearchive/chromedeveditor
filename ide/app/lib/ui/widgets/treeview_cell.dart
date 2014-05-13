@@ -78,7 +78,7 @@ class TreeViewCell implements ListViewCell {
     });
 
     _embeddedCellContainer.onDragStart.listen((event) {
-      _treeView.privateCheckSelectNode(_row.nodeUID);
+      _treeView.privateCheckSelectNode(_row.nodeUid);
       // Dragged data.
       Map dragInfo = {'uuid': _treeView.uuid, 'selection': _treeView.selection};
       event.dataTransfer.setData('application/x-spark-treeview',
@@ -119,7 +119,7 @@ class TreeViewCell implements ListViewCell {
     _treeView.listView.cellHighlightedOnDragOver = _dragOverlayVisible;
   }
 
-  String get nodeUID => _row.nodeUID;
+  String get nodeUid => _row.nodeUid;
 
   void toggleExpanded() {
     // Don't change the expanded state if it's already animating to change
@@ -136,7 +136,7 @@ class TreeViewCell implements ListViewCell {
     _animating = true;
     _arrow.onTransitionEnd.listen((event) {
       _animating = false;
-      _treeView.setNodeExpanded(_row.nodeUID, !_row.expanded);
+      _treeView.setNodeExpanded(_row.nodeUid, !_row.expanded);
     });
   }
 

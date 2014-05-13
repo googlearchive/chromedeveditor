@@ -14,10 +14,11 @@ import 'package:chrome/chrome_app.dart';
 import 'package:mime/mime.dart' as mime;
 import 'package:path/path.dart' as path;
 
+import '../lib/workspace.dart' as workspace;
+
 export 'package:chrome/chrome_app.dart'
   show Entry, FileEntry, DirectoryEntry, ChromeFileEntry;
-
-import '../lib/workspace.dart' as workspace;
+export '../lib/workspace.dart';
 
 /**
  * A mutable, memory resident file system.
@@ -105,6 +106,59 @@ class MockFileSystem implements FileSystem {
   }
 }
 
+/**
+ * Create a simple sample directory.
+ */
+DirectoryEntry createSampleDirectory1(String name) {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/bar.txt', contents: '123');
+  fs.createFile('${name}/web/index.html', contents:
+      '<html><body><script type="application/dart" src="sample.dart"></script></body></html>');
+  fs.createFile('${name}/web/sample.dart', contents:
+      'void main() {\n  print("hello");\n}\n');
+  fs.createFile('${name}/web/sample.css', contents: 'body { }');
+  return directory;
+}
+
+/**
+ * Create a sample directory, with one Dart file referencing another.
+ */
+DirectoryEntry createSampleDirectory2(String name) {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/web/index.html', contents:
+      '<html><body><script type="application/dart" src="sample.dart"></script></body></html>');
+  fs.createFile('${name}/web/sample.dart', contents:
+      'import "foo.dart";\n\nvoid main() {\n  print("hello \${foo()}");\n}\n');
+  fs.createFile('${name}/web/foo.dart', contents:
+      'String foo() => "there";\n');
+  fs.createFile('${name}/web/sample.css', contents: 'body { }');
+  return directory;
+}
+
+/**
+ * Create a sample directory with a package reference.
+ */
+DirectoryEntry createSampleDirectory3(String name) {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/web/index.html', contents:
+      '<html><body><script type="application/dart" src="sample.dart"></script></body></html>');
+  fs.createFile('${name}/web/sample.dart', contents:
+      'import "package:foo/foo.dart";\n\nvoid main() {\n  print("hello \${foo()}");\n}\n');
+  fs.createFile('${name}/packages/foo/foo.dart', contents:
+      'String foo() => "there";\n');
+  fs.createFile('${name}/web/sample.css', contents: 'body { }');
+  return directory;
+}
+
+Future<workspace.Project> linkSampleProject(
+    DirectoryEntry dir, [workspace.Workspace ws]) {
+  if (ws == null) ws = new workspace.Workspace();
+  return ws.link(createWsRoot(dir));
+}
+
 MockWorkspaceRoot createWsRoot(Entry entry) => new MockWorkspaceRoot(entry);
 
 class MockWorkspaceRoot extends workspace.WorkspaceRoot {
@@ -125,10 +179,13 @@ class MockWorkspaceRoot extends workspace.WorkspaceRoot {
   Map persistState() => {};
 
   Future restore() => new Future.value();
+
+  String retainEntry(Entry entry) => entry.name;
+  Future<Entry> restoreEntry(String id) => new Future.value(entry);
 }
 
 abstract class _MockEntry implements Entry {
-  final String name;
+  String name;
 
   _MockDirectoryEntry _parent;
   DateTime _modificationTime = new DateTime.now();
@@ -144,13 +201,29 @@ abstract class _MockEntry implements Entry {
     throw new UnimplementedError('Entry.copyTo()');
   }
 
+  _MockEntry clone() {
+    throw new UnimplementedError('Entry.clone()');
+  }
+
   Future<Metadata> getMetadata() => new Future.value(new _MockMetadata(this));
 
   Future<Entry> getParent() => new Future.value(_isRoot ? this : _parent);
 
   // TODO:
   Future<Entry> moveTo(DirectoryEntry parent, {String name}) {
-    throw new UnimplementedError('Entry.moveTo()');
+    remove();
+    if (parent == null) {
+      parent = (filesystem as MockFileSystem)._root;
+    }
+    assert(this is _MockFileEntry || this is _MockDirectoryEntry);
+    _MockEntry result = null;
+    String resultEntryName = name != null ? name : this.name;
+    result = this.clone();
+    result.name = resultEntryName;
+    result._parent = parent;
+    (parent as _MockDirectoryEntry)._children.add(result);
+    (parent as _MockDirectoryEntry)._touch();
+    return new Future.value(result);
   }
 
   String toUrl() => 'mock:/${fullPath}';
@@ -174,6 +247,8 @@ class _MockFileEntry extends _MockEntry implements FileEntry, ChromeFileEntry {
 
   bool get isDirectory => false;
   bool get isFile => true;
+
+  _MockEntry clone() => new _MockFileEntry(null, name);
 
   Future remove() => _parent._remove(this);
 
@@ -236,6 +311,15 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
   List<Entry> _children = [];
 
   _MockDirectoryEntry(DirectoryEntry parent, String name): super(parent, name);
+
+  _MockDirectoryEntry clone() {
+    _MockDirectoryEntry result = new _MockDirectoryEntry(null, name);
+    for(_MockEntry child in _children) {
+      result._children.add(child);
+      child._parent = result;
+    }
+    return result;
+  }
 
   bool get isDirectory => true;
   bool get isFile => false;
@@ -380,6 +464,8 @@ class _MockFile extends _MockBlob implements File {
   final _MockEntry entry;
 
   _MockFile(this.entry);
+
+  int get lastModified => lastModifiedDate.millisecondsSinceEpoch;
 
   DateTime get lastModifiedDate => entry._modificationTime;
 

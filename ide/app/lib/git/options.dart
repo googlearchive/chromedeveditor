@@ -35,7 +35,8 @@ class GitOptions {
   Function progressCallback;
 
   GitOptions({this.root, this.repoUrl, this.depth, this.store,
-              this.branchName, this.commitMessage});
+              this.branchName, this.commitMessage, this.email, this.name,
+              this.username, this.password});
 
   js.JsObject toJsMap() {
     Map<String, dynamic> options = new Map<String, dynamic>();

@@ -6,13 +6,35 @@ library git_clone_test;
 
 import 'package:unittest/unittest.dart';
 
-/**
- * TODO(grv) : Add tests and checks.
- */
+import '../../../lib/git/commands/clone.dart';
+import '../../../lib/git/objectstore.dart';
+import 'utils.dart';
+
 defineTests() {
   group('git.commands.clone', () {
-    test('todo', () {
+    GitLocation location;
 
+    setUp(() {
+      location = new GitLocation();
+      return location.init();
+    });
+
+    tearDown(() {
+      return location.dispose();
+    });
+
+    test('simple clone', () {
+      ObjectStore store = new ObjectStore(location.entry);
+      Clone clone = new Clone(new GitOptions(
+          repoUrl: sampleRepoUrl,
+          root: location.entry,
+          depth: 1,
+          store: store));
+      return clone.clone().then((_) {
+        expect(location.entry.getFile('.gitignore'), completion(isNotNull));
+        expect(location.entry.getFile('LICENSE'), completion(isNotNull));
+        expect(location.entry.getFile('README.md'), completion(isNotNull));
+      });
     });
   });
 }

@@ -1,0 +1,9 @@
+{
+  "files": [
+    { "source": "bower.json_", "dest": "bower.json" },
+    { "source": "demo.html_", "dest": "demo.html" },
+    { "source": "metadata.html_", "dest": "metadata.html" },
+    { "source": "source.css_", "dest": "``sourceName``.css" },
+    { "source": "source.html_", "dest": "``sourceName``.html" }
+  ]
+}

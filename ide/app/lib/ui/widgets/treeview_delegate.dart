@@ -16,37 +16,37 @@ import 'listview_cell.dart';
 abstract class TreeViewDelegate {
   /**
     * Returns the UID string for the n-th children of a node given by
-    * UID (`nodeUID`). `nodeUID` is null for the root node.
+    * UID (`nodeUid`). `nodeUid` is null for the root node.
     */
-  String treeViewChild(TreeView view, String nodeUID, int childIndex);
+  String treeViewChild(TreeView view, String nodeUid, int childIndex);
 
   /**
    * Returns true if the node given by node UID has children.
    * It will help the `TreeView` shows a disclosure arrow when needed.
    */
-  bool treeViewHasChildren(TreeView view, String nodeUID);
+  bool treeViewHasChildren(TreeView view, String nodeUid);
 
   /**
    * Returns the number of children of a given node.
    */
-  int treeViewNumberOfChildren(TreeView view, String nodeUID);
+  int treeViewNumberOfChildren(TreeView view, String nodeUid);
 
   /**
    * Returns the visual representation of a given node.
    */
-  ListViewCell treeViewCellForNode(TreeView view, String nodeUID);
+  ListViewCell treeViewCellForNode(TreeView view, String nodeUid);
 
   /**
    * Returns the height of the given node.
    */
-  int treeViewHeightForNode(TreeView view, String nodeUID);
+  int treeViewHeightForNode(TreeView view, String nodeUid);
 
   /**
    * The implementation of this method will be run when the selection
    * has changed.
    */
   void treeViewSelectedChanged(TreeView view,
-                               List<String> nodeUIDs);
+                               List<String> nodeUids);
 
   /**
    * The implementation of this method will be triggered when a node is
@@ -58,7 +58,7 @@ abstract class TreeViewDelegate {
    * This method will be called when the given node is double-clicked.
    */
   void treeViewDoubleClicked(TreeView view,
-                             List<String> nodeUIDs,
+                             List<String> nodeUids,
                              Event event) {}
 
   /**
@@ -66,8 +66,8 @@ abstract class TreeViewDelegate {
    * given node.
    */
   void treeViewContextMenu(TreeView view,
-                           List<String> nodeUIDs,
-                           String nodeUID,
+                           List<String> nodeUids,
+                           String nodeUid,
                            Event event);
 
   /**
@@ -78,13 +78,24 @@ abstract class TreeViewDelegate {
    */
   String treeViewDropEffect(TreeView view,
                             DataTransfer dataTransfer,
-                            String nodeUID) => null;
+                            String nodeUid) => null;
+                            
+  /**
+   * This method is called when a selection of TreeView is dragged,
+   * on dragenter.
+   * Return 'copy', 'move', 'link' or 'none'.
+   * It will adjust the visual of the mouse cursor when the item is
+   * dragged over the treeview.
+   */
+  String treeViewDropCellsEffect(TreeView view,
+                                 List<String> nodesUIDs,
+                                 String nodeUid) => null;
 
   /**
    * This method is called when the dragged item is actually dropped on the
    * tree or on a specific node in the treeview.
    */
-  void treeViewDrop(TreeView view, String nodeUID, DataTransfer dataTransfer) {}
+  void treeViewDrop(TreeView view, String nodeUid, DataTransfer dataTransfer) {}
 
   /**
    * This method is called when a selection of the TreeView is actually dropped

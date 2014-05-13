@@ -1,0 +1,53 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
+@import url("../../../packages/bootjack/css/bootstrap-theme.css");
+
+#text-box {
+  height: 31px;
+  width: 350px;
+}
+
+#suggestion-list-overlay {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  margin-top: 7px;
+  padding: 5px 0;
+  width: 350px;
+  max-height: 350px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+
+  /* BUG: #1320. Do not remove! */
+  -webkit-transform: scaleZ(1);
+  transform: scaleZ(1);
+}
+
+#suggestion-list-menu {
+  border: none;
+  display: block;
+  box-sizing: border-box;
+  margin: 0 0;
+}
+
+.suggestion-item {
+  padding: 2px 12px;
+  font-family: Helvetica, Arial, Sans-serif;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.suggestion-item.active {
+  background-color: #3a84c3;
+  color: white;
+}
+
+.text-muted {
+  color: #bdbdbd;
+}

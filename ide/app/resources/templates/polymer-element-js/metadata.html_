@@ -1,0 +1,8 @@
+<x-meta id="``elementName``" label="``projectName``">
+  <template>
+    <``elementName``></``elementName``>
+  </template>
+  <template id="imports">
+    <link rel="import" href="``sourceName``.html">
+  </template>
+</x-meta>
