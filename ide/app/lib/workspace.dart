@@ -258,7 +258,7 @@ class Workspace extends Container {
         }).whenComplete(() {
           _logger.info('Workspace restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
-          //_restoreSyncFs();
+          _restoreSyncFs();
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
         _logger.warning('Exception in workspace restore', e);
