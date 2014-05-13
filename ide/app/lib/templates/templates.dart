@@ -10,8 +10,8 @@ import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import 'utils.dart';
-import 'workspace.dart';
+import '../utils.dart';
+import '../workspace.dart';
 
 /**
  * Specifies a variable-to-value substitution in a template file text.
@@ -89,7 +89,7 @@ class ProjectTemplate {
   ProjectTemplate(this._id,
                   [Map<String, String> globalVars,
                    Map<String, String> localVars]) {
-    _sourceUri = 'resources/templates/$_id';
+    _sourceUri = 'lib/templates/$_id';
     for (var vars in [globalVars, localVars]) {
       if (vars != null) {
         vars.forEach((name, value) => _vars.add(new _TemplateVar(name, value)));

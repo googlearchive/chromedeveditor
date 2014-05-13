@@ -34,7 +34,7 @@ import 'lib/platform_info.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/services.dart';
 import 'lib/scm.dart';
-import 'lib/templates.dart';
+import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
@@ -1842,7 +1842,7 @@ class NewProjectAction extends SparkActionWithDialog {
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
-        List<ProjectTemplate> templates = [];
+        final List<ProjectTemplate> templates = [];
 
         final globalVars = {
             'projectName': name,
@@ -1872,7 +1872,7 @@ class NewProjectAction extends SparkActionWithDialog {
                 'dependencies': jsDeps.join(',\n    ')
             };
             templates.add(
-                new ProjectTemplate("bower-deps", globalVars, localVars));
+                new ProjectTemplate("addons/bower-deps", globalVars, localVars));
           }
         }
 
