@@ -20,7 +20,9 @@ class SparkOverlay extends SparkWidget {
   // Consider:
   // 1) Stacking contexts (https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context).
   // 2) Some way to set the base z-index in the client.
-  static List overlays = [];
+  // 3) Set the same z-index for all spark-overlays in the client, then bump
+  //    the current overlay's z-index if any other are currently opened.
+  static final List<SparkOverlay> overlays = [];
 
   static void _trackOverlays(SparkOverlay inOverlay) {
     if (inOverlay.opened) {
