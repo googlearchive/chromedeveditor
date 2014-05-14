@@ -108,9 +108,7 @@ class ProjectTemplate {
       List<TemplateVar> localVars) {
     _sourceUri = 'lib/templates/$id';
     final derivedVars = computeDerivedVars(globalVars, localVars);
-    _vars..addAll(globalVars);
-    _vars..addAll(localVars);
-    _vars..addAll(derivedVars);
+    _vars..addAll(globalVars)..addAll(localVars)..addAll(derivedVars);
   }
 
   /**
