@@ -12,15 +12,17 @@ import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../utils.dart';
 import '../workspace.dart';
+import 'addons/bower_deps/template.dart' as bower_deps;
+import 'polymer/template.dart' as polymer;
 
 /**
  * Specifies a variable-to-value substitution in a template file text.
  */
-class _TemplateVar {
+class TemplateVar {
   final String name;
   final String value;
 
-  _TemplateVar(this.name, this.value);
+  TemplateVar(this.name, this.value);
 
   String interpolate(String text) => text.replaceAll('``$name``', value);
 }
@@ -82,20 +84,40 @@ class ProjectBuilder {
  * provided global and local template variables.
  */
 class ProjectTemplate {
-  String _id;
   String _sourceUri;
-  List<_TemplateVar> _vars = [];
+  List<TemplateVar> _vars = [];
 
-  ProjectTemplate(this._id,
-                  [Map<String, String> globalVars,
-                   Map<String, String> localVars]) {
-    _sourceUri = 'lib/templates/$_id';
-    for (var vars in [globalVars, localVars]) {
-      if (vars != null) {
-        vars.forEach((name, value) => _vars.add(new _TemplateVar(name, value)));
-      }
+  factory ProjectTemplate(
+      String id,
+      [List<TemplateVar> globalVars = const [],
+       List<TemplateVar> localVars = const []]) {
+    switch (id) {
+      case 'addons/bower_deps':
+        return new bower_deps.Template(id, globalVars, localVars);
+      case 'polymer/polymer_element_js':
+      case 'polymer/polymer_element_dart':
+        return new polymer.Template(id, globalVars, localVars);
+      default:
+        return new ProjectTemplate.internal(id, globalVars, localVars);
     }
   }
+
+  ProjectTemplate.internal(
+      String id,
+      List<TemplateVar> globalVars,
+      List<TemplateVar> localVars) {
+    _sourceUri = 'lib/templates/$id';
+    final derivedVars = computeDerivedVars(globalVars, localVars);
+    _vars..addAll(globalVars);
+    _vars..addAll(localVars);
+    _vars..addAll(derivedVars);
+  }
+
+  /**
+   * This method can be overridden by subclasses to generate additional vars.
+   */
+  List<TemplateVar> computeDerivedVars(
+      List<TemplateVar> globalVars, List<TemplateVar> localVars) => [];
 
   Future build(DirectoryEntry destRoot) {
     DirectoryEntry sourceRoot;
@@ -113,7 +135,7 @@ class ProjectTemplate {
   }
 
   String _interpolateTemplateVars(String text) {
-    return _vars.fold(text, (String t, _TemplateVar v) => v.interpolate(t));
+    return _vars.fold(text, (String t, TemplateVar v) => v.interpolate(t));
   }
 
   Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
