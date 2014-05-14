@@ -46,6 +46,7 @@ abstract class Editor {
 
   Stream get onDirtyChange;
   Stream get onModification;
+  Future<Editor> get whenReady;
 
   void activate();
   void deactivate();
