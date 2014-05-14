@@ -128,7 +128,6 @@ class TextEditor extends Editor {
   void navigateToDeclaration() { }
 
   void fileContentsChanged() {
-    print("fileContentsChanged");
     if (_session != null) {
       // Check that we didn't cause this change event.
       file.getContents().then((String text) {
