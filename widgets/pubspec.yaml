@@ -1,12 +1,12 @@
 name: spark_widgets
-version: 0.0.1-dev
+version: 0.0.1
 author: Spark Team
 description: A general purpose Polymer widget library (used by Spark IDE)
 homepage: https://github.com/dart-lang/spark/
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  bootjack: '>=0.6.5 <0.6.6'
+  bootjack: '>=0.6.5 <0.7.0'
   polymer: '>=0.10.0-pre.9 <0.11.0'
 
 dev_dependencies:
