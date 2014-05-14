@@ -93,7 +93,7 @@ body {
 
 #sparkStatus {
   bottom: 10px;
-  left: 100px;
+  left: 10px;
   position: absolute;
   z-index: 101;
 }

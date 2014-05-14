@@ -208,11 +208,7 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    if (resource is Project) {
-      return 40;
-    } else {
-      return 20;
-    }
+    return resource is Project ? 40 : 20;
   }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
@@ -933,6 +929,8 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
+  html.Element get _fnfPlaceholder => html.querySelector('#fileNotFoundPlaceholder');
+
   void performFilter(String filterString) {
     if (filterString != null && filterString.isEmpty) {
       filterString = null;
@@ -941,7 +939,7 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
-      html.querySelector('#fileNotFoundPlaceholder').classes.add('hidden');
+      _fnfPlaceholder.classes.add('hidden');
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
@@ -960,11 +958,7 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
-      if (_filteredFiles.length == 0) {
-        html.querySelector('#fileNotFoundPlaceholder').classes.remove('hidden');
-      } else {
-        html.querySelector('#fileNotFoundPlaceholder').classes.add('hidden');
-      }
+      _fnfPlaceholder.classes.toggle('hidden', _filteredFiles.isNotEmpty);
       _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }

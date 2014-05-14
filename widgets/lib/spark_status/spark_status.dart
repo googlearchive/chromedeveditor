@@ -90,7 +90,7 @@ class SparkStatus extends SparkWidget {
     element.classes.toggle('temporary', showingTemporaryMessage);
     Element labelElement = getShadowDomElement('.label');
     String text = _calculateMessage();
-    element.classes.toggle('hidden', text == '');
+    element.classes.toggle('hidden', text.isEmpty);
     labelElement.text = text;
   }
 

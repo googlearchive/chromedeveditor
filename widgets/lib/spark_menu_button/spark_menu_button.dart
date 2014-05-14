@@ -27,7 +27,7 @@ class SparkMenuButton extends SparkWidget {
   SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
-  bool _disableClickHandler;
+  bool _disableClickHandler = false;
   Timer _timer;
 
   SparkMenuButton.created(): super.created();
@@ -63,9 +63,7 @@ class SparkMenuButton extends SparkWidget {
     _toggle(!opened);
   }
 
-  void focusHandler(Event e) {
-    _toggle(true);
-  }
+  void focusHandler(Event e) => _toggle(true);
 
   void blurHandler(Event e) {
     _toggle(false);
