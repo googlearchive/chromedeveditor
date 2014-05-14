@@ -30,7 +30,7 @@
   <template>
     <link rel="stylesheet" href="spark_suggest_box.css">
 
-    <input id="text-box"
+    <input id="textBox"
         type="search"
         class="form-control"
         focused
@@ -42,13 +42,13 @@
         on-input="{{textBoxInputHandler}}"
     />
 
-    <spark-overlay id="suggestion-list-overlay"
+    <spark-overlay id="suggestionListOverlay"
         autoClose
         animation="fade"
         opened="{{opened}}"
         on-opened="{{overlayOpenedHandler}}">
 
-      <spark-selector id="suggestion-list-menu"
+      <spark-selector id="suggestionListMenu"
           multi="false"
           activeClass="active"
           on-activate="{{menuActivateHandler}}">

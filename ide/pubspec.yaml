@@ -1,8 +1,8 @@
 name: spark
 version: 0.9.0-dev
-author: Chrome Team <apps-dev@chromium.org>
+author: Spark Team
 description: A Chrome app based development environment.
-homepage: https://github.com/GoogleChrome/spark
+homepage: https://github.com/dart-lang/spark/
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
