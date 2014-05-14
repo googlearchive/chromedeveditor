@@ -1,5 +1,6 @@
 {
   "name": "``projectName``",
+  "private": true,
   "dependencies": {
     "polymer": "Polymer/polymer#master"
   }
