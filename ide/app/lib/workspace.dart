@@ -1064,7 +1064,8 @@ class Project extends Folder {
 
   Future refresh() {
     // Only allow one refresh call at a time.
-    assert(_inRefresh == false);
+    if (_inRefresh) return new Future.value();
+
     _inRefresh = true;
 
     workspace.pauseResourceEvents();
