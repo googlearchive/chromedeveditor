@@ -20,6 +20,7 @@ class SparkFlags {
   static bool get useLightAceThemes => _flags['light-ace-themes'] == true;
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
   static bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
+  static bool get showWipProjectTemplates => _flags['wip-project-templates'];
   static bool get showGitPull => _flags['show-git-pull'] == true;
   static bool get showGitBranch => _flags['show-git-branch'] == true;
 
