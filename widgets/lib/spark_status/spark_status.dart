@@ -38,6 +38,8 @@ class SparkStatus extends SparkWidget {
 
   Timer _timer;
 
+  // TODO(ussuri): Get rid of @published getters/setters for everything.
+
   @published bool get spinning => _spinning;
 
   @published set spinning(bool value) {
