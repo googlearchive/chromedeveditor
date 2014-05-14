@@ -369,7 +369,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
         for (analyzer.VariableDeclaration variable in variables.variables) {
           outline.entries.add(_populateOutlineEntry(
-              new OutlineTopLevelVariable(variable.name.name),
+              new OutlineTopLevelVariable(variable.name.name,
+                  variables.type.name.name),
               new _Range.fromAstNode(declaration),
               new _Range.fromAstNode(declaration)));
         }

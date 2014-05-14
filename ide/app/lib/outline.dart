@@ -231,8 +231,18 @@ abstract class OutlineTopLevelItem extends OutlineItem {
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
+  services.OutlineTopLevelVariable get _variableData => _data;
+  html.SpanElement _typeSpan;
+  
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
-      : super(data, "variable");
+      : super(data, "variable"){
+    _typeSpan = new html.SpanElement();
+    _typeSpan.text = returnType;
+    _typeSpan.classes.add("returnType");
+    _anchor.append(_typeSpan);
+  }
+
+  String get returnType => _variableData.returnType;
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
@@ -298,9 +308,6 @@ class OutlineMethod extends OutlineClassMember {
 }
 
 class OutlineProperty extends OutlineClassMember {
-  services.OutlineProperty get _propertyData => _data;
-
-  String get returnType => _propertyData.returnType;
   html.SpanElement _typeSpan;
 
   OutlineProperty(services.OutlineProperty data)
@@ -310,6 +317,9 @@ class OutlineProperty extends OutlineClassMember {
     _typeSpan.classes.add("returnType");
     _anchor.append(_typeSpan);
   }
+  
+  services.OutlineProperty get _propertyData => _data;
+  String get returnType => _propertyData.returnType;
 }
 
 class OutlineAccessor extends OutlineClassMember {
