@@ -48,6 +48,6 @@
   padding-left: 0;
 }
 
-.status-container.hidden {
+#status-container.hidden {
   opacity: 0;
 }

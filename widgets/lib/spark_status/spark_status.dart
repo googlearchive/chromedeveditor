@@ -35,6 +35,7 @@ class SparkStatus extends SparkWidget {
 
   Element _label;
   Element _throbber;
+  Element _container;
 
   Timer _timer;
 
@@ -98,9 +99,9 @@ class SparkStatus extends SparkWidget {
 
   void _update() {
     String text = _calculateMessage();
-    _container.classes.toggle('default', showingDefaultMessage);
-    _container.classes.toggle('progressStyle', showingProgressMessage);
-    _container.classes.toggle('temporary', showingTemporaryMessage);
+    _container.classes.toggle('default', _showingDefaultMessage);
+    _container.classes.toggle('progressStyle', _showingProgressMessage);
+    _container.classes.toggle('temporary', _showingTemporaryMessage);
     _container.classes.toggle('hidden', text.isEmpty);
     _label.text = text;
   }
