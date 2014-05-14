@@ -1,0 +1,15 @@
+<!-- Import Polymer -->
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<!-- Define your custom element -->
+<polymer-element name="hello-world" attributes="who">
+    <template>
+        <p>Hello <strong>{{who}}</strong>!</p>
+    </template>
+
+    <script>
+        Polymer('hello-world', {
+            who: 'World'
+        });
+    </script>
+</polymer-element>

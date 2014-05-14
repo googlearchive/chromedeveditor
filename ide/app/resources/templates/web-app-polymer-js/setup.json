@@ -1,13 +1,9 @@
 {
   "directories": {
-    "web": {
-      "files": [
-        { "source": "source.css_", "dest": "``sourceName``.css" },
-        { "source": "source.js_", "dest": "``sourceName``.js" },
-        { "source": "source.html_", "dest": "``sourceName``.html" }
-      ]
-    }
   },
   "files": [
+    { "source": "bower.json_", "dest": "bower.json" },
+    { "source": "hello-world.html_", "dest": "hello-world.html" },
+    { "source": "index.html_", "dest": "index.html" }
   ]
 }

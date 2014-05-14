@@ -1,0 +1,13 @@
+{
+  "name": "``projectName``",
+  "description": "",
+  "homepage": "",
+  "keywords": [
+  ],
+  "author": "",
+  "private": true,
+  "dependencies": {
+    "platform": "Polymer/platform",
+    "polymer": "Polymer/polymer"
+  }
+}
