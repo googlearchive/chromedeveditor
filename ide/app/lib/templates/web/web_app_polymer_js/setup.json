@@ -7,7 +7,5 @@
         { "source": "source.html_", "dest": "``sourceName``.html" }
       ]
     }
-  },
-  "files": [
-  ]
+  }
 }
