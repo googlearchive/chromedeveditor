@@ -18,6 +18,7 @@ import 'package:logging/logging.dart';
 import 'builder.dart';
 import 'enum.dart';
 import 'jobs.dart';
+import 'package_mgmt/bower_properties.dart';
 import 'preferences.dart';
 import 'utils.dart';
 
@@ -872,7 +873,7 @@ class Folder extends Container {
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
-    if ((name == 'build' || name == 'cache' || name == 'bower_components') &&
+    if ((name == 'build' || name == 'cache' || name == bowerProperties.packagesDirName) &&
         parent is Project) {
       return true;
     } else {
