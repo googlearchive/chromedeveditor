@@ -21,62 +21,6 @@
   <template>
     <link rel="stylesheet" href="spark_polymer_ui.css">
 
-    <spark-toolbar id="toolbar">
-      <spark-button id="runButton" small primary>
-        <span class="glyphicon glyphicon-play"></span> Run
-      </spark-button>
-      <spark-button id="pushButton" small>
-        <span class="glyphicon glyphicon-phone"></span> Deploy
-      </spark-button>
-      <spark-button id="newProject" small>New Project...</spark-button>
-      <spark-button id="gitClone" small>Git Clone...</spark-button>
-
-      <spark-status id="sparkStatus"></spark-status>
-
-      <div id="toolbarRight">
-        <input type="search"
-            id="search"
-            class="form-control"
-            placeholder="Search"/>
-
-        <spark-button id="leftNav" small>
-          <span class="glyphicon glyphicon-chevron-left"></span>
-        </spark-button>
-        <spark-button id="rightNav" small>
-          <span class="glyphicon glyphicon-chevron-right"></span>
-        </spark-button>
-
-        <spark-menu-button
-            id="mainMenu"
-            icon="images/menu.png"
-            valueAttr="action-id"
-            valign="right"
-            on-activate={{onMenuSelected}}>
-          <spark-menu-item action-id="file-open" label="Open File...">
-          </spark-menu-item>
-          <spark-menu-item action-id="folder-open" label="Open Folder...">
-          </spark-menu-item>
-          <spark-menu-separator></spark-menu-separator>
-          <spark-menu-item action-id="project-new" label="New Project...">
-          </spark-menu-item>
-          <spark-menu-item action-id="git-clone" label="Git Clone...">
-          </spark-menu-item>
-          <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
-          </spark-menu-item>
-          <template if="{{developerMode}}">
-            <spark-menu-separator></spark-menu-separator>
-            <spark-menu-item action-id="run-tests" label="Run Tests">
-            </spark-menu-item>
-          </template>
-          <spark-menu-separator></spark-menu-separator>
-          <spark-menu-item action-id="settings" label="Settings...">
-          </spark-menu-item>
-          <spark-menu-item action-id="help-about" label="About Spark">
-          </spark-menu-item>
-        </spark-menu-button>
-      </div>
-    </spark-toolbar>
-
     <spark-split-view
         id="splitView"
         direction="left" splitterSize="1" splitterHandle="false"

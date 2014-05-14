@@ -206,7 +206,10 @@ class FilesController implements TreeViewDelegate {
     return cell;
   }
 
-  int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
+  int treeViewHeightForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    return resource is Project ? 40 : 20;
+  }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
@@ -926,6 +929,8 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
+  html.Element get _fnfPlaceholder => html.querySelector('#fileNotFoundPlaceholder');
+
   void performFilter(String filterString) {
     if (filterString != null && filterString.isEmpty) {
       filterString = null;
@@ -934,6 +939,7 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
+      _fnfPlaceholder.classes.add('hidden');
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
@@ -952,6 +958,7 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
+      _fnfPlaceholder.classes.toggle('hidden', _filteredFiles.isNotEmpty);
       _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }

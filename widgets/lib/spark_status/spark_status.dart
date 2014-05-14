@@ -35,6 +35,7 @@ class SparkStatus extends SparkWidget {
 
   Element _label;
   Element _throbber;
+  Element _container;
 
   Timer _timer;
 
@@ -83,6 +84,7 @@ class SparkStatus extends SparkWidget {
 
   @override
   void ready() {
+    _container = getShadowDomElement('#status-container');
     _label = getShadowDomElement('#label');
     _throbber = getShadowDomElement('#throbber');
   }
@@ -96,11 +98,12 @@ class SparkStatus extends SparkWidget {
   bool get _showingTemporaryMessage => _temporaryMessage != null;
 
   void _update() {
-    _label.classes
-        ..toggle('default', _showingDefaultMessage)
-        ..toggle('progress', _showingProgressMessage)
-        ..toggle('temporary', _showingTemporaryMessage);
-    _label.innerHtml = _calculateMessage();
+    String text = _calculateMessage();
+    _container.classes.toggle('default', _showingDefaultMessage);
+    _container.classes.toggle('progressStyle', _showingProgressMessage);
+    _container.classes.toggle('temporary', _showingTemporaryMessage);
+    _container.classes.toggle('hidden', text.isEmpty);
+    _label.text = text;
   }
 
   String _calculateMessage() {

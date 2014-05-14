@@ -6,7 +6,7 @@
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 
 :host {
-  background-color: #ddd;
+  background-color: #dadada;
   display: block;
   position: relative;
   /* Set a identity transform to make <spark-splitter> to be a stacking context.

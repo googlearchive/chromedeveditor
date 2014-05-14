@@ -20,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/ui/utils/html_utils.dart';
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -180,7 +181,7 @@ class SparkPolymer extends Spark {
   void initSaveStatusListener() {
     super.initSaveStatusListener();
 
-    statusComponent = getUIElement('#sparkStatus');
+    statusComponent = querySelector('#sparkStatus');
 
     // Listen for save events.
     eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {
@@ -214,15 +215,30 @@ class SparkPolymer extends Spark {
   void initToolbar() {
     super.initToolbar();
 
-    _bindButtonToAction('gitClone', 'git-clone');
-    _bindButtonToAction('newProject', 'project-new');
     _bindButtonToAction('runButton', 'application-run');
-    _bindButtonToAction('pushButton', 'application-push');
-    _bindButtonToAction('leftNav', 'navigate-back');
-    _bindButtonToAction('rightNav', 'navigate-forward');
+  }
 
-    InputElement input = getUIElement('#search');
+  @override
+  void initFilter() {
+    InputElement input = querySelector('#search');
+    input.onFocus.listen((e) {
+      querySelector('#mainMenu').hidden = true;
+      querySelector('#runButton').hidden = true;
+    });
+    input.onBlur.listen((e) {
+      querySelector('#mainMenu').hidden = false;
+      querySelector('#runButton').hidden = false;
+    });
     input.onInput.listen((e) => filterFilesList(input.value));
+    input.onKeyDown.listen((e) {
+      // When ESC key is pressed.
+      if (e.keyCode == KeyCode.ESC) {
+        input.value = '';
+        input.blur();
+        filterFilesList(null);
+        cancelEvent(e);
+      }
+    });
   }
 
   @override
@@ -234,6 +250,11 @@ class SparkPolymer extends Spark {
   @override
   Future restoreLocationManager() => super.restoreLocationManager();
 
+  @override
+  void menuActivateEventHandler(CustomEvent event) {
+    _ui.onMenuSelected(event, event.detail);
+  }
+
   //
   // - End parts of the parent's init().
   //
@@ -244,7 +265,7 @@ class SparkPolymer extends Spark {
   }
 
   void _bindButtonToAction(String buttonId, String actionId) {
-    SparkButton button = getUIElement('#${buttonId}');
+    SparkButton button = querySelector('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
       button.enabled = action.enabled;
