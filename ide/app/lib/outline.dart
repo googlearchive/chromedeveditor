@@ -205,14 +205,17 @@ abstract class OutlineItem {
   html.LIElement _element;
   services.OutlineEntry _data;
   html.AnchorElement _anchor;
+  html.SpanElement _nameSpan;
   String get displayName => _data.name;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
+    _nameSpan = new html.SpanElement();
     _anchor = new html.AnchorElement(href: "#");
-    _anchor.innerHtml = displayName;
+    _nameSpan.text = displayName;
 
     _element.append(_anchor);
+    _anchor.append(_nameSpan);
     _element.classes.add("outlineItem $cssClassName");
   }
 
@@ -309,12 +312,15 @@ class OutlineProperty extends OutlineClassMember {
   services.OutlineProperty get _propertyData => _data;
 
   String get type => _propertyData.returnType;
-  
+  html.SpanElement _typeSpan;
+
   OutlineProperty(services.OutlineProperty data)
       : super(data, "property") {
+    _typeSpan = new html.SpanElement();
+    _typeSpan.text = type;
+    _typeSpan.classes.add("returnType");
+    _anchor.append(_typeSpan);
   }
-  
-  String get displayName => "${super.displayName} &mdash; $type" ;
 }
 
 class OutlineAccessor extends OutlineClassMember {

@@ -482,6 +482,17 @@ li.outlineItem.topLevel.class {
   color: #77c;
 }
 
+.outlineItem.topLevel.variable .returnType,
+    .outlineItem.property .returnType {
+  opacity: .8;
+}
+
+.outlineItem.topLevel.variable .returnType:before,
+    .outlineItem.property .returnType:before {
+  content: ' \02014  ';
+}
+
+
 #toggleOutlineButton {
   background-color: rgba(255, 255, 255, 0.5);
   border: none;
