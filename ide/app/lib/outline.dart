@@ -210,7 +210,7 @@ abstract class OutlineItem {
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
     _anchor = new html.AnchorElement(href: "#");
-    _anchor.text = displayName;
+    _anchor.innerHtml = displayName;
 
     _element.append(_anchor);
     _element.classes.add("outlineItem $cssClassName");
@@ -306,8 +306,15 @@ class OutlineMethod extends OutlineClassMember {
 }
 
 class OutlineProperty extends OutlineClassMember {
+  services.OutlineProperty get _propertyData => _data;
+
+  String get type => _propertyData.returnType;
+  
   OutlineProperty(services.OutlineProperty data)
-      : super(data, "property");
+      : super(data, "property") {
+  }
+  
+  String get displayName => "${super.displayName} &mdash; $type" ;
 }
 
 class OutlineAccessor extends OutlineClassMember {
