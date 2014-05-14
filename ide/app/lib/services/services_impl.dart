@@ -370,7 +370,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
         for (analyzer.VariableDeclaration variable in variables.variables) {
           outline.entries.add(_populateOutlineEntry(
               new OutlineTopLevelVariable(variable.name.name,
-                  variables.type.name.name),
+                  getTypeNameFor(variables.type)),
               new _Range.fromAstNode(declaration),
               new _Range.fromAstNode(declaration)));
         }
@@ -398,7 +398,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
             analyzer.VariableDeclarationList fields = member.fields;
             for (analyzer.VariableDeclaration field in fields.variables) {
               outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineProperty(field.name.name, fields.type.name.name),
+                  new OutlineProperty(field.name.name,
+                      getTypeNameFor(fields.type)),
                   new _Range.fromAstNode(field),
                   new _Range.fromAstNode(field.parent)));
             }
@@ -430,6 +431,9 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     return outline;
   }
+    
+  String getTypeNameFor(analyzer.TypeName typeName) =>
+      (typeName == null) ? "" : typeName.name.name;
 
   OutlineEntry _populateOutlineEntry(OutlineEntry outlineEntry, _Range name,
       _Range body) {

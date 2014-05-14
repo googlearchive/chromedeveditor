@@ -236,10 +236,12 @@ class OutlineTopLevelVariable extends OutlineTopLevelItem {
   
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
       : super(data, "variable"){
-    _typeSpan = new html.SpanElement();
-    _typeSpan.text = returnType;
-    _typeSpan.classes.add("returnType");
-    _anchor.append(_typeSpan);
+    if (returnType != "") {
+      _typeSpan = new html.SpanElement();
+      _typeSpan.text = returnType;
+      _typeSpan.classes.add("returnType");
+      _anchor.append(_typeSpan);
+    }
   }
 
   String get returnType => _variableData.returnType;
@@ -312,10 +314,12 @@ class OutlineProperty extends OutlineClassMember {
 
   OutlineProperty(services.OutlineProperty data)
       : super(data, "property") {
-    _typeSpan = new html.SpanElement();
-    _typeSpan.text = returnType;
-    _typeSpan.classes.add("returnType");
-    _anchor.append(_typeSpan);
+    if (returnType != "") {
+      _typeSpan = new html.SpanElement();
+      _typeSpan.text = returnType;
+      _typeSpan.classes.add("returnType");
+      _anchor.append(_typeSpan);
+    }
   }
   
   services.OutlineProperty get _propertyData => _data;
