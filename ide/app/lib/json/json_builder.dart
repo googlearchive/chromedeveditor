@@ -38,8 +38,10 @@ class JsonBuilder extends Builder {
       file.clearMarkers('json');
 
       try {
-        JsonParser parser = new JsonParser(str, new _JsonParserListener(file));
-        parser.parse();
+        if (str.trim().isNotEmpty) {
+          JsonParser parser = new JsonParser(str, new _JsonParserListener(file));
+          parser.parse();
+        }
       } catch (e) {
         // Ignore e; already reported through the listener interface.
       }
