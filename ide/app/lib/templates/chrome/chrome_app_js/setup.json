@@ -8,9 +8,9 @@
     }
   },
   "files": [
-    { "source": "index.html_", "dest": "index.html" },
-    { "source": "main.js_", "dest": "main.js" },
     { "source": "manifest.json_", "dest": "manifest.json" },
-    { "source": "styles.css_", "dest": "styles.css"}
+    { "source": "source.html_", "dest": "``sourceName``.html" },
+    { "source": "source.js_", "dest": "``sourceName``.js" },
+    { "source": "source.css_", "dest": "``sourceName``.css"}
   ]
 }
