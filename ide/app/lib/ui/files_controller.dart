@@ -946,7 +946,7 @@ class FilesController implements TreeViewDelegate {
       _filteredFiles = [];
       _filteredChildrenCache = {};
       _filesMap.forEach((String key, Resource res) {
-        if (res.name.contains(_filterString)) {
+        if (res.name.contains(_filterString) && !res.isDerived()) {
           _filterAddResult(filtered, _filteredFiles, _filteredChildrenCache, res);
         }
       });
