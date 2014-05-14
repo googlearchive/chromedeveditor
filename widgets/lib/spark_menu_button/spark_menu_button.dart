@@ -16,7 +16,7 @@ import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends SparkWidget {
-  @published String src = "";
+  @published String icon = "";
   @published dynamic selected;
   @published String valueAttr = "";
   @published bool opened = false;
@@ -38,7 +38,9 @@ class SparkMenuButton extends SparkWidget {
     _menu = $['menu'];
   }
 
-  //* Toggle the opened state of the dropdown.
+  /**
+   * Toggle the opened state of the dropdown.
+   */
   void _toggle(bool inOpened) {
     if (inOpened != opened) {
       opened = inOpened;
@@ -61,8 +63,10 @@ class SparkMenuButton extends SparkWidget {
 
   void blurHandler(Event e) => _toggle(false);
 
-  //* Handle the on-opened event from the dropdown. It will be fired e.g. when
-  //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+  /**
+   * Handle the on-opened event from the dropdown. It will be fired e.g. when
+   * mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+   */
   void overlayOpenedHandler(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {

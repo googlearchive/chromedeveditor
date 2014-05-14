@@ -3,7 +3,6 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("../common/spark_widget.css");
-@import url("../../../packages/bootjack/css/bootstrap.min.css");
 
 :host {
   display: inline-block;
@@ -13,7 +12,7 @@
   padding-left: 0;
 }
 
-.throbber {
+#throbber {
   opacity: 0;
   display: inline-block;
   color: #aaa;
@@ -27,11 +26,11 @@
   background-position: -3px -3px;
 }
 
-.throbber.spinning {
+#throbber.spinning {
   opacity: 1;
 }
 
-.label {
+#label {
   text-overflow: ellipsis;
   font-size: 13px;
   font-family: Helvetica, Arial, sans-serif;
@@ -45,12 +44,12 @@
   padding-left: 0;
 }
 
-.default {
+#label.default {
 }
 
-.progressStyle {
+#label.progress {
   font-style: italic;
 }
 
-.temporary {
+#label.temporary {
 }
