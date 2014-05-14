@@ -51,28 +51,26 @@ class Checkout {
 
   static Future smartCheckout(chrome.DirectoryEntry dir, ObjectStore store,
     TreeObject oldTree, TreeObject newTree) {
-    return dir.createDirectory(newTree.sha).then((chrome.DirectoryEntry newDir) {
-      TreeDiffResult diff = Merge.diffTree(oldTree, newTree);
-      return Future.forEach(diff.adds, (TreeEntry entry) {
-        if (entry.isBlob) {
-          return ObjectUtils.expandBlob(newDir, store, entry.name, entry.sha);
-        } else {
-          return ObjectUtils.expandTree(dir, store, entry.sha);
-        }
+    TreeDiffResult diff = Merge.diffTree(oldTree, newTree);
+    return Future.forEach(diff.adds, (TreeEntry entry) {
+      if (entry.isBlob) {
+        return ObjectUtils.expandBlob(dir, store, entry.name, entry.sha);
+      } else {
+        return ObjectUtils.expandTree(dir, store, entry.sha);
+      }
+    }).then((_) {
+      return Future.forEach(diff.removes, (TreeEntry entry) {
+        return _removeEntryRecursively(store, dir, entry);
       }).then((_) {
-        return Future.forEach(diff.removes, (TreeEntry entry) {
-          return _removeEntryRecursively(store, dir, entry);
-        }).then((_) {
-          return Future.forEach(diff.merges, (mergeEntry) {
-            TreeEntry oldEntry = mergeEntry['old'];
-            TreeEntry newEntry = mergeEntry['new'];
-            if (newEntry.isBlob) {
-              return ObjectUtils.expandBlob(newDir, store, newEntry.name, newEntry.sha);
-            }
-            return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
-                "Tree").then((trees) {
-              return smartCheckout(newDir, store, trees[0], trees[1]);
-            });
+        return Future.forEach(diff.merges, (mergeEntry) {
+          TreeEntry oldEntry = mergeEntry['old'];
+          TreeEntry newEntry = mergeEntry['new'];
+          if (newEntry.isBlob) {
+            return ObjectUtils.expandBlob(dir, store, newEntry.name, newEntry.sha);
+          }
+          return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
+              "Tree").then((trees) {
+            return smartCheckout(dir, store, trees[0], trees[1]);
           });
         });
       });
