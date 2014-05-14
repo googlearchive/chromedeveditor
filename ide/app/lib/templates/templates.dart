@@ -10,8 +10,10 @@ import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import 'utils.dart';
-import 'workspace.dart';
+import '../utils.dart';
+import '../workspace.dart';
+import 'addons/bower_deps/template.dart' as bower_deps;
+import 'polymer/template.dart' as polymer;
 
 /**
  * Specifies a variable-to-value substitution in a template file text.
@@ -82,20 +84,38 @@ class ProjectBuilder {
  * provided global and local template variables.
  */
 class ProjectTemplate {
-  String _id;
   String _sourceUri;
   List<TemplateVar> _vars = [];
 
-  ProjectTemplate(this._id,
-                  [Map<String, String> globalVars,
-                   Map<String, String> localVars]) {
-    _sourceUri = 'resources/templates/$_id';
-    for (var vars in [globalVars, localVars]) {
-      if (vars != null) {
-        vars.forEach((name, value) => _vars.add(new TemplateVar(name, value)));
-      }
+  factory ProjectTemplate(
+      String id,
+      [List<TemplateVar> globalVars = const [],
+       List<TemplateVar> localVars = const []]) {
+    switch (id) {
+      case 'addons/bower_deps':
+        return new bower_deps.Template(id, globalVars, localVars);
+      case 'polymer/polymer_element_js':
+      case 'polymer/polymer_element_dart':
+        return new polymer.Template(id, globalVars, localVars);
+      default:
+        return new ProjectTemplate.internal(id, globalVars, localVars);
     }
   }
+
+  ProjectTemplate.internal(
+      String id,
+      List<TemplateVar> globalVars,
+      List<TemplateVar> localVars) {
+    _sourceUri = 'lib/templates/$id';
+    final derivedVars = computeDerivedVars(globalVars, localVars);
+    _vars..addAll(globalVars)..addAll(localVars)..addAll(derivedVars);
+  }
+
+  /**
+   * This method can be overridden by subclasses to generate additional vars.
+   */
+  List<TemplateVar> computeDerivedVars(
+      List<TemplateVar> globalVars, List<TemplateVar> localVars) => [];
 
   Future build(DirectoryEntry destRoot) {
     DirectoryEntry sourceRoot;
@@ -116,34 +136,41 @@ class ProjectTemplate {
     return _vars.fold(text, (String t, TemplateVar v) => v.interpolate(t));
   }
 
-  Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                          String sourceUri, Map element) {
+  Future _traverseElement(
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
+      String sourceUri,
+      Map<String, dynamic> element) {
     return _handleDirectories(destRoot, sourceRoot, sourceUri,
         element['directories']).then((_) =>
             _handleFiles(destRoot, sourceRoot, sourceUri, element['files']));
   }
 
-  Future _handleDirectories(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                            String sourceUri, Map directories) {
-    if (directories != null) {
-      return Future.forEach(directories.keys, (String directoryName) {
-        DirectoryEntry destDirectoryRoot;
-        return destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
-          destDirectoryRoot = entry;
-          return sourceRoot.getDirectory(directoryName);
-        }).then((DirectoryEntry sourceDirectoryRoot) {
-          return _traverseElement(destDirectoryRoot, sourceDirectoryRoot,
-              "$sourceUri/$directoryName", directories[directoryName]);
-        });
-      });
-    }
+  Future _handleDirectories(
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
+      String sourceUri,
+      Map<String, dynamic> directories) {
+    if (directories == null || directories.isEmpty) return new Future.value();
 
-    return new Future.value();
+    return Future.forEach(directories.keys, (String directoryName) {
+      DirectoryEntry destDirectoryRoot;
+      return destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
+        destDirectoryRoot = entry;
+        return sourceRoot.getDirectory(directoryName);
+      }).then((DirectoryEntry sourceDirectoryRoot) {
+        return _traverseElement(destDirectoryRoot, sourceDirectoryRoot,
+            "$sourceUri/$directoryName", directories[directoryName]);
+      });
+    });
   }
 
-  Future _handleFiles(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                      String sourceUri, List files) {
-    if (files == null) return new Future.value();
+  Future _handleFiles(
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
+      String sourceUri,
+      List<Map<String, String>> files) {
+    if (files == null || files.isEmpty) return new Future.value();
 
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];

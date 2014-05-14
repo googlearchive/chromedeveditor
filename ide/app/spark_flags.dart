@@ -6,51 +6,63 @@ library spark.flags;
 
 import 'dart:async';
 import 'dart:convert' show JSON;
-import 'dart:html';
-
-import 'package:chrome/chrome_app.dart' as chrome;
 
 /**
  * Stores global developer flags.
  */
 class SparkFlags {
-  bool developerMode;
-  bool useLightAceThemes;
-  bool useDarkAceThemes;
-  bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
-
-  static SparkFlags instance;
-
-  SparkFlags._(
-      this.developerMode, this.useLightAceThemes, this.useDarkAceThemes);
+  static final _flags = new Map<String, dynamic>();
 
   /**
-   * Initialize the flags. By default, assume developer mode and dark editor
-   * themes.
+   * Accessors to the currently supported flags.
    */
-  static void init({bool developerMode: true,
-                    bool ligtAceThemes: false,
-                    bool darkAceThemes: true}) {
-    assert(instance == null);
-    instance = new SparkFlags._(developerMode, ligtAceThemes, darkAceThemes);
+  static bool get developerMode => _flags['test-mode'] == true;
+  static bool get useLightAceThemes => _flags['light-ace-themes'] == true;
+  static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
+  static bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
+  static bool get showGitPull => _flags['show-git-pull'] == true;
+  static bool get showGitBranch => _flags['show-git-branch'] == true;
+  static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
+
+  static void setFlags(Map<String, dynamic> newFlags) {
+    if (newFlags != null) _flags.addAll(newFlags);
   }
 
   /**
-   * Initialize the flags from a JSON file. If the file does not exit, use
-   * the defaults (see [init]).
+   * Initialize the flags from a JSON file. If the file does not exit, use the
+   * defaults. If some flags have already been set, they will be overwritten.
    */
-  static Future initFromFile(String fileName) {
-    final String url = chrome.runtime.getURL(fileName);
-    return HttpRequest.getString(url).then((String contents) {
-      bool result = true;
-      Map flagsMap = JSON.decode(contents);
-      // Normalize missing/malformed values to bools via x==true.
-      init(developerMode: flagsMap['test-mode'] == true,
-           ligtAceThemes: flagsMap['light-ace-themes'] == true,
-           darkAceThemes: flagsMap['dark-ace-themes'] == true);
-    }).catchError((e) {
-      // If JSON is invalid/non-existent, use the defaults.
-      init();
+  static Future initFromFile(Future<String> fileReader) {
+    return _readFromFile(fileReader).then((Map<String, dynamic> flags) {
+      setFlags(flags);
+    });
+  }
+
+  /**
+   * Initialize the flags from several JSON files. Files should be sorted in the
+   * order of precedence, from left to right. Each new file overwrites the
+   * prior ones, and the flags
+   */
+  static Future initFromFiles(List<Future<String>> fileReaders) {
+    Iterable<Future<Map<String, dynamic>>> futures =
+        fileReaders.map((fr) => _readFromFile(fr));
+    return Future.wait(futures).then((List<Map<String, dynamic>> multiFlags) {
+      for (final flags in multiFlags) {
+        setFlags(flags);
+      }
+    });
+  }
+
+  /**
+   * Read flags from a JSON file. If the file does not exit or can't be parsed,
+   * return null.
+   */
+  static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
+    return fileReader.then((String contents) {
+      return JSON.decode(contents);
+    }).catchError((_) {
+      // The JSON file is non-existent or invalid.
+      return null;
     });
   }
 }

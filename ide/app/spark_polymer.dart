@@ -7,6 +7,7 @@ library spark_polymer;
 import 'dart:async';
 import 'dart:html';
 
+import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
@@ -19,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/ui/utils/html_utils.dart';
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -47,11 +49,18 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
-  SparkFlags.initFromFile('app.json').then((_) {
+  // app.json stores global per-app flags and is overwritten by the build
+  // process (`grind deploy`).
+  // user.json can be manually added to override some of the flags from app.json
+  // or add new flags that will survive the build process.
+  final List<Future<String>> flagsReaders = [
+      HttpRequest.getString(chrome.runtime.getURL('app.json')),
+      HttpRequest.getString(chrome.runtime.getURL('user.json'))
+  ];
+  SparkFlags.initFromFiles(flagsReaders).then((_) {
     // Don't set up the zone exception handler if we're running in dev mode.
     final Function maybeRunGuarded =
-        SparkFlags.instance.developerMode ?
-            (f) => f() : createSparkZone().runGuarded;
+        SparkFlags.developerMode ? (f) => f() : createSparkZone().runGuarded;
 
     maybeRunGuarded(() {
       SparkPolymer spark = new SparkPolymer._();
@@ -148,7 +157,7 @@ class SparkPolymer extends Spark {
   void initWorkspace() => super.initWorkspace();
 
   @override
-  void createEditorComponents() => super.createEditorComponents();
+  void initAceManager() => super.initAceManager();
 
   @override
   void initEditorManager() => super.initEditorManager();
@@ -172,10 +181,15 @@ class SparkPolymer extends Spark {
   void initSaveStatusListener() {
     super.initSaveStatusListener();
 
-    statusComponent = getUIElement('#sparkStatus');
+    statusComponent = querySelector('#sparkStatus');
 
     // Listen for save events.
     eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {
+      statusComponent.temporaryMessage = 'All changes saved';
+    });
+    // When nothing had to be saved, show the same feedback to make the user
+    // happy.
+    eventBus.onEvent(BusEventType.EDITOR_MANAGER__NO_MODIFICATIONS).listen((_) {
       statusComponent.temporaryMessage = 'All changes saved';
     });
 
@@ -201,15 +215,30 @@ class SparkPolymer extends Spark {
   void initToolbar() {
     super.initToolbar();
 
-    _bindButtonToAction('gitClone', 'git-clone');
-    _bindButtonToAction('newProject', 'project-new');
     _bindButtonToAction('runButton', 'application-run');
-    _bindButtonToAction('pushButton', 'application-push');
-    _bindButtonToAction('leftNav', 'navigate-back');
-    _bindButtonToAction('rightNav', 'navigate-forward');
+  }
 
-    InputElement input = getUIElement('#search');
+  @override
+  void initFilter() {
+    InputElement input = querySelector('#search');
+    input.onFocus.listen((e) {
+      querySelector('#mainMenu').hidden = true;
+      querySelector('#runButton').hidden = true;
+    });
+    input.onBlur.listen((e) {
+      querySelector('#mainMenu').hidden = false;
+      querySelector('#runButton').hidden = false;
+    });
     input.onInput.listen((e) => filterFilesList(input.value));
+    input.onKeyDown.listen((e) {
+      // When ESC key is pressed.
+      if (e.keyCode == KeyCode.ESC) {
+        input.value = '';
+        input.blur();
+        filterFilesList(null);
+        cancelEvent(e);
+      }
+    });
   }
 
   @override
@@ -221,6 +250,11 @@ class SparkPolymer extends Spark {
   @override
   Future restoreLocationManager() => super.restoreLocationManager();
 
+  @override
+  void menuActivateEventHandler(CustomEvent event) {
+    _ui.onMenuSelected(event, event.detail);
+  }
+
   //
   // - End parts of the parent's init().
   //
@@ -231,17 +265,19 @@ class SparkPolymer extends Spark {
   }
 
   void _bindButtonToAction(String buttonId, String actionId) {
-    SparkButton button = getUIElement('#${buttonId}');
+    SparkButton button = querySelector('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
-      button.active = action.enabled;
+      button.enabled = action.enabled;
+      button.deliverChanges();
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();
     });
-    button.active = action.enabled;
+    button.enabled = action.enabled;
   }
 
+  @override
   void unveil() {
     super.unveil();
 
@@ -255,6 +291,11 @@ class SparkPolymer extends Spark {
         element.parent.children.remove(element);
       });
     }
+  }
+
+  @override
+  void refreshUI() {
+    _ui.refreshFromModel();
   }
 
   Future _beforeSystemModal() {

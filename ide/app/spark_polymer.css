@@ -53,12 +53,57 @@ body {
   opacity: 0;
 }
 
+#search {
+  background: #fff url(images/search.png) 10px center no-repeat;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  height: 36px;
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  margin: 2px;
+  padding: 10px 10px 10px 44px;
+  right: 50px;
+}
+
+#search:focus {
+  border: 1px solid #9DBEFF;
+  outline: none;
+}
+
+#runButton, #mainMenu {
+  height: 36px;
+}
+
+#fileNotFoundPlaceholder {
+  color: #ccc;
+  display: block;
+  font-size: 18px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+#fileNotFoundPlaceholder.hidden {
+  display: none;
+}
+
 #editorArea {
   overflow: hidden;
 }
 
+#sparkStatus {
+  bottom: 10px;
+  left: 10px;
+  position: absolute;
+  z-index: 101;
+}
+
 .ace_gutter-cell {
   color: #aaa;
+}
+
+div.ace_gutter {
+  z-index: 0;
 }
 
 div.ace_gutter-cell.ace_error {
@@ -69,26 +114,21 @@ div.ace_gutter-cell.ace_warning {
   background-image: url("images/warning_icon.png");
 }
 
-div.ace_gutter-cell.ace_info {
+div.ace_gutter-cell.ace_info, .ace_dark div.ace_gutter-cell.ace_info {
   background-image: url("images/info_icon.png");
 }
 
-.ace_gutter-tooltip-divider {
+.ace-tooltip-divider {
   background-color: gray;
   height: 1px;
   margin: 3px -4px;
 }
 
-.ace_gutter-tooltip-label-error {
-  color: #F55;
-}
-
-.ace_gutter-tooltip-label-warning {
-  color: #DD3;
-}
-
-.ace_gutter-tooltip-label-info {
-  color: #9CC;
+img.ace-tooltip {
+  border: none;
+  display: inline;
+  margin-left: 3px;
+  margin-bottom: 3px;
 }
 
 div.ace_search {
@@ -115,12 +155,12 @@ div.ace_search_form, div.ace_replace_form {
 }
 
 .ace_search_field {
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 button.ace_replacebtn {
   color: #484848;
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
   padding-left: 5px;
   padding-right: 5px;
@@ -167,7 +207,7 @@ button.ace_searchbtn_close:active {
   opacity: 1;
   transition: opacity 250ms;
   text-align: center;
-  font-family: Helvetica;
+  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
 
@@ -238,6 +278,19 @@ button.ace_searchbtn_close:active {
   display: inline-block;
 }
 
+.fileview-filename-container.project .filename {
+  font-size: 16px;
+  top: 10px;
+}
+
+.listview-cell-highlighted .fileview-filename-container .filename {
+  color: #fff;
+}
+
+.listview-cell-highlighted .fileview-filename-container .infoField {
+  color: #fff;
+}
+
 .fileview-filename-container .fileStatus {
   background: #999;
 	border-radius: 2px;
@@ -294,7 +347,7 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container .filename {
-  font-family: Helvetica, Sans-serif;
+  font-family: Helvetica, Arial, Sans-serif;
   font-size: 13px;
   overflow: hidden;
   position: absolute;
@@ -308,8 +361,10 @@ button.ace_searchbtn_close:active {
 }
 
 #fileViewArea {
-  /* Default value overridden from the stored preferences programmatically. */
-  width: 300px;
+  bottom: 0;
+  position: absolute;
+  top: 48px;
+  width: 100%;
 }
 
 #fileViewArea .listview-container {
@@ -372,6 +427,10 @@ button.ace_searchbtn_close:active {
 .outlineItem.topLevel.class:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 5px;
+}
+
+.outlineItem >a {
+  display: block;
 }
 
 .outlineItem {

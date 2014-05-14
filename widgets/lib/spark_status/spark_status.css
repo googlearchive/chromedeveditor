@@ -3,40 +3,43 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("../common/spark_widget.css");
-@import url("../../../packages/bootjack/css/bootstrap.min.css");
 
 :host {
   display: inline-block;
   white-space: nowrap;
-  padding-top: 2px;
-  margin-left: 0;
-  padding-left: 0;
+  font-size: 14px;
+  pointer-events: none;
 }
 
-.throbber {
-  opacity: 0;
-  display: inline-block;
+.status-container {
+  background-color: rgba(66, 129, 244, 0.9);
+  border-radius: 22px;
+  padding: 10px 20px;
+  pointer-events: none;
+}
+
+#throbber {
+  display: none;
   color: #aaa;
   min-width: 26px;
   min-height: 26px;
   font-size: 24px;
   vertical-align: middle;
-  transition: opacity 0.15s linear;
   background-repeat: no-repeat;
   background-image: url("throbber3.gif");
   background-position: -3px -3px;
 }
 
-.throbber.spinning {
-  opacity: 1;
+#throbber.spinning {
+  display: inline-block;
 }
 
-.label {
+#label {
   text-overflow: ellipsis;
-  font-size: 13px;
-  font-family: Helvetica, sans-serif;
+  font-size: 14px;
+  font-family: Helvetica, Arial, sans-serif;
   font-weight: 500;
-  color: #aaa;
+  color: white;
   white-space: nowrap;
   max-width: 200px;
   overflow: hidden;
@@ -45,12 +48,6 @@
   padding-left: 0;
 }
 
-.default {
-}
-
-.progressStyle {
-  font-style: italic;
-}
-
-.temporary {
+#status-container.hidden {
+  opacity: 0;
 }

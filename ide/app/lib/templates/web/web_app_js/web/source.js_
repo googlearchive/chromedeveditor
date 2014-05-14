@@ -1,2 +1,2 @@
 var element = document.querySelector("#greeting");
-element.text = "Hello, world!";
+element.innerText = "Hello, world!";

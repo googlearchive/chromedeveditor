@@ -4,26 +4,31 @@
 
 library spark_widgets.menu_button;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
+import '../spark_button/spark_button.dart';
 import '../spark_menu/spark_menu.dart';
 // TODO(ussuri): Temporary. See the comment below.
 import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends SparkWidget {
-  @published String src = "";
+  @published String icon = "";
   @published dynamic selected;
   @published String valueAttr = "";
   @published bool opened = false;
   @published bool responsive = false;
   @published String valign = "center";
 
+  SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
+  bool _disableClickHandler = false;
+  Timer _timer;
 
   SparkMenuButton.created(): super.created();
 
@@ -31,18 +36,22 @@ class SparkMenuButton extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
+    _button = $['button'];
     _overlay = $['overlay'];
     _menu = $['menu'];
   }
 
-  //* Toggle the opened state of the dropdown.
+  /**
+   * Toggle the opened state of the dropdown.
+   */
   void _toggle(bool inOpened) {
     if (inOpened != opened) {
       opened = inOpened;
-      // TODO(ussuri): A temporary plug to make spark-overlay see changes
-      // in 'opened'. Just binding via {{opened}} alone isn't detected and the
-      // menu doesn't open.
-      _overlay.opened = opened;
+      // TODO(ussuri): A temporary plug to make #overlay and #button see
+      // changes in 'opened'. Data binding via {{opened}} in the HTML isn't
+      // detected. deliverChanges() fixes #overlay, but not #button.
+      _overlay.opened = inOpened;
+      _button.active = inOpened;
       if (opened) {
         // Enforce focused state so the button can accept keyboard events.
         focus();
@@ -51,18 +60,30 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void clickHandler(Event e) => _toggle(!opened);
+  void clickHandler(Event e) {
+    if (_disableClickHandler) return;
+    _toggle(!opened);
+  }
 
   void focusHandler(Event e) => _toggle(true);
 
-  void blurHandler(Event e) => _toggle(false);
+  void blurHandler(Event e) {
+    _toggle(false);
+    _disableClickHandler = true;
+    if (_timer != null) _timer.cancel();
+    _timer = new Timer(const Duration(milliseconds: 300), () {
+      _disableClickHandler = false;
+    });
+  }
 
-  //* Handle the on-opened event from the dropdown. It will be fired e.g. when
-  //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+  /**
+   * Handle the on-opened event from the dropdown. It will be fired e.g. when
+   * mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+   */
   void overlayOpenedHandler(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {
-      opened = false;
+      _toggle(false);
     }
   }
 
@@ -88,7 +109,7 @@ class SparkMenuButton extends SparkWidget {
         if (!opened) opened = true;
         break;
       case KeyCode.ESC:
-        if (opened) opened = false;
+        this.blur();
         break;
       default:
         stopPropagation = false;

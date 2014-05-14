@@ -185,7 +185,7 @@ class MockWorkspaceRoot extends workspace.WorkspaceRoot {
 }
 
 abstract class _MockEntry implements Entry {
-  final String name;
+  String name;
 
   _MockDirectoryEntry _parent;
   DateTime _modificationTime = new DateTime.now();
@@ -201,13 +201,29 @@ abstract class _MockEntry implements Entry {
     throw new UnimplementedError('Entry.copyTo()');
   }
 
+  _MockEntry clone() {
+    throw new UnimplementedError('Entry.clone()');
+  }
+
   Future<Metadata> getMetadata() => new Future.value(new _MockMetadata(this));
 
   Future<Entry> getParent() => new Future.value(_isRoot ? this : _parent);
 
   // TODO:
   Future<Entry> moveTo(DirectoryEntry parent, {String name}) {
-    throw new UnimplementedError('Entry.moveTo()');
+    remove();
+    if (parent == null) {
+      parent = (filesystem as MockFileSystem)._root;
+    }
+    assert(this is _MockFileEntry || this is _MockDirectoryEntry);
+    _MockEntry result = null;
+    String resultEntryName = name != null ? name : this.name;
+    result = this.clone();
+    result.name = resultEntryName;
+    result._parent = parent;
+    (parent as _MockDirectoryEntry)._children.add(result);
+    (parent as _MockDirectoryEntry)._touch();
+    return new Future.value(result);
   }
 
   String toUrl() => 'mock:/${fullPath}';
@@ -231,6 +247,8 @@ class _MockFileEntry extends _MockEntry implements FileEntry, ChromeFileEntry {
 
   bool get isDirectory => false;
   bool get isFile => true;
+
+  _MockEntry clone() => new _MockFileEntry(null, name);
 
   Future remove() => _parent._remove(this);
 
@@ -293,6 +311,15 @@ class _MockDirectoryEntry extends _MockEntry implements DirectoryEntry {
   List<Entry> _children = [];
 
   _MockDirectoryEntry(DirectoryEntry parent, String name): super(parent, name);
+
+  _MockDirectoryEntry clone() {
+    _MockDirectoryEntry result = new _MockDirectoryEntry(null, name);
+    for(_MockEntry child in _children) {
+      result._children.add(child);
+      child._parent = result;
+    }
+    return result;
+  }
 
   bool get isDirectory => true;
   bool get isFile => false;

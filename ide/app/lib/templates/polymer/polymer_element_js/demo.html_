@@ -1,0 +1,23 @@
+<!doctype html>
+
+<html>
+  <head>
+    <title>``tagName`` demo</title>
+
+    <script src="bower_components/platform.js"></script>
+
+    <link rel="import" href="``sourceName``.html">
+  </head>
+
+  <body unresolved>
+    <``tagName`` id="element"></``tagName``>
+
+    <script>
+      document.addEventListener('polymer-ready', function() {
+        console.log('Polymer is ready');
+        var element = document.querySelector('#element');
+        // Do something with the element.
+      })
+    </script>
+  </body>
+</html>

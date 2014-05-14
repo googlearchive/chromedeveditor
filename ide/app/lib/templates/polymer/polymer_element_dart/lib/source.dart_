@@ -1,19 +1,19 @@
-library x-``projectName``;
+library ``sourceName``;
 
 import 'package:polymer/polymer.dart';
 
-@CustomTag('x-``projectName``')
-class ``projectName`` extends PolymerElement {
+@CustomTag('``tagName``')
+class ``className`` extends PolymerElement {
   @published String who = "";
   @observable String greeting = "";
 
-  ``projectName``.created() : super.created();
-  
+  ``className``.created() : super.created();
+
   @override
   void ready() {
     super.ready();
   }
-  
+
   @override
   void enteredView() {
     super.enteredView();

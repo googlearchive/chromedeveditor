@@ -6,12 +6,12 @@
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
-#text-box {
+#textBox {
   height: 31px;
   width: 350px;
 }
 
-#suggestion-list-overlay {
+#suggestionListOverlay {
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 3px;
@@ -28,7 +28,7 @@
   transform: scaleZ(1);
 }
 
-#suggestion-list-menu {
+#suggestionListMenu {
   border: none;
   display: block;
   box-sizing: border-box;
@@ -37,7 +37,7 @@
 
 .suggestion-item {
   padding: 2px 12px;
-  font-family: Helvetica, Sans-serif;
+  font-family: Helvetica, Arial, Sans-serif;
   font-size: 13px;
   white-space: nowrap;
   text-overflow: ellipsis;

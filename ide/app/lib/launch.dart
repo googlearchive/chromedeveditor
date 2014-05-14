@@ -20,7 +20,6 @@ import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
-import 'package_mgmt/pub.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
@@ -36,13 +35,13 @@ final NumberFormat _nf = new NumberFormat.decimalPattern();
 class LaunchManager {
   List<LaunchDelegate> _delegates = [];
   Services _services;
-  PubManager _pubManager;
+  PackageManager _packageManager;
   CompilerService _compiler;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace, this._services, this._pubManager) {
+  LaunchManager(this._workspace, this._services, this._packageManager) {
     _compiler = _services.getService("compiler");
 
     // The order of registration here matters.
@@ -194,15 +193,19 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 
     return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
       // TODO: Use the returned appId once it has the correct results.
-      return _getAppId(launchContainer.name).then((String id) {
-        if (id == null) {
-          throw 'Unable to locate an application id.';
-        } else if (!management.available) {
-          throw 'The chrome.management API is not available.';
-        } else {
-          return management.launchApp(id);
-        }
-      });
+
+      // TODO: Delay a bit - there's a race condition.
+      return new Future.delayed(new Duration(milliseconds: 100));
+    }).then((_) {
+      return _getAppId(launchContainer.name);
+    }).then((String id) {
+      if (id == null) {
+        throw 'Unable to locate an application id.';
+      } else if (!management.available) {
+        throw 'The chrome.management API is not available.';
+      } else {
+        return management.launchApp(id);
+      }
     });
   }
 
@@ -241,9 +244,8 @@ class PackagesServlet extends PicoServlet {
     Container project = _launchManager.workspace.getChild(projectName);
 
     if (project is Project) {
-      // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
       PackageResolver resolver =
-          _launchManager._pubManager.getResolverFor(project);
+          _launchManager._packageManager.getResolverFor(project);
       File file = resolver.resolveRefToFile(_getPath(request));
       if (file != null) {
         return _serveFileResponse(file);

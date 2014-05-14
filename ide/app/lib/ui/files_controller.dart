@@ -92,8 +92,9 @@ class FilesController implements TreeViewDelegate {
     _workspace.whenAvailable().then((_) => _addAllFiles());
 
     _workspace.onResourceChange.listen((event) {
-      bool hasAddsDeletes = event.changes.any((d) => d.isAdd || d.isDelete);
-      if (hasAddsDeletes) _processEvents(event);
+      bool shouldProcessEvent = event.changes.any((d) =>
+          d.isAdd || d.isDelete || d.isRename);
+      if (shouldProcessEvent) _processEvents(event);
     });
 
     _workspace.onMarkerChange.listen((_) => _processMarkerChange());
@@ -193,7 +194,10 @@ class FilesController implements TreeViewDelegate {
 
   ListViewCell treeViewCellForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    assert(resource != null);
+    if (resource == null) {
+      print('no resource for ${nodeUid}');
+      assert(resource != null);
+    }
     FileItemCell cell = new FileItemCell(resource);
     if (resource is Folder) {
       cell.acceptDrop = true;
@@ -202,7 +206,10 @@ class FilesController implements TreeViewDelegate {
     return cell;
   }
 
-  int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
+  int treeViewHeightForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    return resource is Project ? 40 : 20;
+  }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
@@ -621,6 +628,7 @@ class FilesController implements TreeViewDelegate {
     List<String> selection = _treeView.selection;
     for(String nodeUid in selection) {
       Resource res = _filesMap[nodeUid];
+      if (res == null) continue;
       List<Container> parents = _collectParents(res, []);
       List<String> parentsUuid =
           parents.map((Container container) => container.uuid).toList();
@@ -655,27 +663,78 @@ class FilesController implements TreeViewDelegate {
    * Event handler for workspace events.
    */
   void _processEvents(ResourceChangeEvent event) {
-    event.changes.where((d) => _showResource(d.resource)).forEach((change) {
+    bool needsReloadData = false;
+    bool needsSortTopLevel = false;
+    bool needsUpdateExpandedState = false;
+    bool needsUpdateSelection = false;
+    List<String> updatedSelection = new List.from(_treeView.selection);
+    List<String> updatedExpanded = new List.from(_treeView.expandedState);
+
+    event.changes.where((d) => _showResource(d.resource))
+        .forEach((ChangeDelta change) {
       if (change.type == EventType.ADD) {
         var resource = change.resource;
         if (resource.isTopLevel) {
           _files.add(resource);
+          needsSortTopLevel = true;
         }
         _filesMap[resource.uuid] = resource;
+        needsReloadData = true;
       } else if (change.type == EventType.DELETE) {
         var resource = change.resource;
         if (resource.isTopLevel) {
           _files.remove(resource);
+          needsSortTopLevel = true;
         }
         _filesMap.remove(resource.uuid);
-      } else if (change.type == EventType.CHANGE) {
+        needsReloadData = true;
+      } else if (change.type == EventType.RENAME) {
+        // Update expanded state of the tree view.
+        List<String> expanded = [];
+        for(String uuid in updatedExpanded) {
+          String newUuid = change.resourceUuidsMapping[uuid];
+          if (newUuid != null) {
+            expanded.add(newUuid);
+          } else {
+            expanded.add(uuid);
+          }
+        }
+        updatedExpanded = expanded;
+        needsUpdateExpandedState = true;
+        // Update the selection of the tree view.
+        updatedSelection = [change.resource.uuid];
+        needsUpdateSelection = true;
+
         var resource = change.resource;
-        _filesMap[resource.uuid] = resource;
+        if (resource.isTopLevel) {
+          _files.remove(change.originalResource);
+          _files.add(resource);
+          needsSortTopLevel = true;
+        }
+        // Remove old resources from map.
+        change.resourceUuidsMapping.forEach((String oldUuid, String newUuid) {
+          _filesMap.remove(oldUuid);
+        });
+        // Add new resources.
+        _recursiveAddResource(resource);
       }
     });
 
-    _sortTopLevel();
-    _reloadData();
+    if (needsSortTopLevel) {
+      _sortTopLevel();
+      needsReloadData = true;
+    }
+    if (needsUpdateExpandedState) {
+      _reloadDataAndRestoreExpandedState(updatedExpanded);
+        // Save expanded state in prefs.
+      treeViewSaveExpandedState(_treeView);
+    }
+    else if (needsReloadData) {
+      _reloadData();
+    }
+    if (needsUpdateSelection) {
+      _treeView.selection = updatedSelection;
+    }
   }
 
   /**
@@ -870,6 +929,8 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
+  html.Element get _fnfPlaceholder => html.querySelector('#fileNotFoundPlaceholder');
+
   void performFilter(String filterString) {
     if (filterString != null && filterString.isEmpty) {
       filterString = null;
@@ -878,13 +939,14 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
+      _fnfPlaceholder.classes.add('hidden');
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
       _filteredChildrenCache = {};
       _filesMap.forEach((String key, Resource res) {
-        if (res.name.contains(_filterString)) {
+        if (res.name.contains(_filterString) && !res.isDerived()) {
           _filterAddResult(filtered, _filteredFiles, _filteredChildrenCache, res);
         }
       });
@@ -896,6 +958,7 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
+      _fnfPlaceholder.classes.toggle('hidden', _filteredFiles.isNotEmpty);
       _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }

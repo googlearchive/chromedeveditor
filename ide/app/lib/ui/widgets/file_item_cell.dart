@@ -24,6 +24,9 @@ class FileItemCell implements ListViewCell {
         (querySelector('#fileview-filename-template') as TemplateElement).content;
     DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.fileview-filename-container');
+    if (resource is Project) {
+      _element.classes.add('project');
+    }
     fileNameElement.innerHtml = resource.name;
     acceptDrop = false;
     updateFileStatus();

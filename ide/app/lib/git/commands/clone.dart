@@ -24,6 +24,8 @@ import '../upload_pack_parser.dart';
 import '../utils.dart';
 import '../../utils.dart';
 
+export '../options.dart';
+
 /**
  * This class implements the git clone command.
  */
@@ -38,6 +40,10 @@ class Clone {
       _options.progressCallback = nopFunction;
     }
   }
+
+  chrome.DirectoryEntry get root => _options.root;
+
+  ObjectStore get store => _options.store;
 
   Future _writeRefs(chrome.DirectoryEntry dir, List<GitRef> refs) {
     return Future.forEach(refs, (GitRef ref) {
@@ -64,7 +70,6 @@ class Clone {
   }
 
   Future _clone(String url) {
-
     HttpFetcher fetcher = getHttpFetcher(_options.store, "origin", url,
         _options.username, _options.password);
 
@@ -74,8 +79,7 @@ class Clone {
       } else if (!url.endsWith('.git')) {
         return _clone(url + '.git');
       } else {
-        return new Future.error(
-            new GitException(GitErrorConstants.GIT_INVALID_REPO_URL));
+        throw new GitException(GitErrorConstants.GIT_INVALID_REPO_URL);
       }
     });
   }
@@ -83,9 +87,9 @@ class Clone {
   /**
    * Public for testing purpose.
    */
-  Future startClone(HttpFetcher  fetcher) {
-    return _checkDirectory(_options.root, _options.store, nopFunction).then((_) {
-      return  _options.root.createDirectory(".git").then(
+  Future startClone(HttpFetcher fetcher) {
+    return _checkDirectory(_options.root, _options.store, true).then((_) {
+      return _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
         return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
           logger.info(_stopwatch.finishCurrentTask('fetchUploadRefs'));
@@ -138,51 +142,40 @@ class Clone {
   Future _createCurrentTreeFromPack(chrome.DirectoryEntry dir, ObjectStore store,
       String headSha) {
     return store.retrieveObject(headSha, ObjectTypes.COMMIT_STR).then((commit) {
-          return ObjectUtils.expandTree(dir, store, commit.treeSha);
+      return ObjectUtils.expandTree(dir, store, commit.treeSha);
     });
   }
 
-  // TODO error handling.
-  Future _checkDirectory(chrome.DirectoryEntry dir, ObjectStore store, ferror) {
-
-    return FileOps.listFiles(dir).then((entries) {
-      if (entries.length == 0) {
+  // TODO: error handling.
+  Future _checkDirectory(chrome.DirectoryEntry dir, ObjectStore store,
+                         [bool uninitializedOk = false]) {
+    return FileOps.listFiles(dir).then((List entries) {
+      if (entries.length == 0 && uninitializedOk) {
+        return null;
+      } else if (entries.length == 0) {
         throw "CLONE_DIR_NOT_INTIALIZED";
-      } else if (entries.length != 1 || entries.first.isFile
-          || entries.first.name != '.git') {
+      } else if (entries.length != 1 || entries.first.isFile ||
+          entries.first.name != '.git') {
         throw "CLONE_DIR_NOT_EMPTY";
       } else {
-        return FileOps.listFiles(store.objectDir).then((entries) {
+        return FileOps.listFiles(store.objectDir).then((List entries) {
           if (entries.length > 1) {
             throw "CLONE_GIT_DIR_IN_USE";
           } else if (entries.length == 1) {
             if (entries.first.name == "pack") {
-              return store.objectDir.getDirectory('pack').then(
-                  (chrome.DirectoryEntry packDir) {
+              return store.objectDir.getDirectory('pack').then((packDir) {
                 return FileOps.listFiles(packDir).then((entries) {
                   if (entries.length > 0) {
                     throw "CLONE_GIT_DIR_IN_USE";
                   } else {
                     return null;
                   }
-                }, onError: (e) {
-                  ferror();
-                  throw e;
                 });
-              }, onError: (e) {
-                ferror();
-                throw e;
               });
             }
           }
-        }, onError: (e) {
-          ferror();
-          throw e;
         });
       }
-    }, onError: (e) {
-      ferror();
-      throw e;
     });
   }
 
@@ -240,10 +233,10 @@ class Clone {
             return _createPackFiles(objectsDir, packName, packData,
                 packIdxData).then((_) {
               logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
-              PackIndex packIdx = new PackIndex(packIdxData.buffer);
+              PackIndex packIdx = new PackIndex(packIdxData);
               Pack pack = new Pack(packData, _options.store);
               _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
-              //TODO add progress
+              // TODO: add progress
               //progress({pct: 95, msg: "Building file tree from pack. Be patient..."});
               return _createCurrentTreeFromPack(_options.root, _options.store,
                   localHeadRef.sha).then((_) {

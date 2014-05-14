@@ -53,20 +53,22 @@ class Commit {
           chrome.ChromeFileEntry fileEntry = entry;
 
           return Status.getFileStatus(store, entry).then((FileStatus status) {
-            store.index.updateIndexForEntry(status);
-            status = store.index.getStatusForEntry(entry);
+            if (status.type != FileStatusType.UNTRACKED) {
+              store.index.updateIndexForEntry(status);
+              status = store.index.getStatusForEntry(entry);
 
-            if (status.type != FileStatusType.COMMITTED) {
-              return fileEntry.readBytes().then((chrome.ArrayBuffer buf) {
-                return store.writeRawObject(
-                    'blob', new Uint8List.fromList(buf.getBytes()));
-              }).then((String sha) {
-                treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
-                return store.index.commitEntry(status);
-              });
-            } else {
-              treeEntries.add(
-                  new TreeEntry(entry.name, shaToBytes(status.sha), true));
+              if (status.type == FileStatusType.STAGED ||
+                  status.type == FileStatusType.MODIFIED) {
+                return fileEntry.readBytes().then((chrome.ArrayBuffer buf) {
+                  return store.writeRawObject(
+                      'blob', new Uint8List.fromList(buf.getBytes()));
+                }).then((String sha) {
+                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
+                });
+              } else if (status.type == FileStatusType.COMMITTED){
+                treeEntries.add(
+                    new TreeEntry(entry.name, shaToBytes(status.sha), true));
+              }
             }
           });
         }
@@ -155,6 +157,8 @@ class Commit {
     ObjectStore store = options.store;
 
     return walkFiles(options.root, store).then((String sha) {
+      // update the index.
+      store.index.onCommit();
       return createCommit(options, parent, sha, refName);
     });
   }

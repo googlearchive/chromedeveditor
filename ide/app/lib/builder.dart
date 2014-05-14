@@ -144,5 +144,5 @@ ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
   List<ChangeDelta> deltas = [];
   events.forEach((e) => deltas.addAll(
       e.changes.where((change) => !change.resource.isDerived())));
-  return new ResourceChangeEvent.fromList(deltas);
+  return new ResourceChangeEvent.fromList(deltas, filterRename: true);
 }

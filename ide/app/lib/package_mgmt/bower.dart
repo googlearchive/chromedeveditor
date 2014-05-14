@@ -26,6 +26,10 @@ Logger _logger = new Logger('spark.bower');
 class BowerManager extends PackageManager {
   BowerManager(Workspace workspace) : super(workspace);
 
+  //
+  // PackageManager abstract interface:
+  //
+
   PackageServiceProperties get properties => bowerProperties;
 
   PackageBuilder getBuilder() => new _BowerBuilder();
@@ -33,11 +37,15 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future installPackages(Project project) =>
-      _installOrUpgradePackages(project, FetchMode.INSTALL);
+  Future installPackages(Container container) =>
+      _installOrUpgradePackages(container.project, FetchMode.INSTALL);
 
-  Future upgradePackages(Project project) =>
-      _installOrUpgradePackages(project, FetchMode.UPGRADE);
+  Future upgradePackages(Container container) =>
+      _installOrUpgradePackages(container.project, FetchMode.UPGRADE);
+
+  //
+  // - end PackageManager abstract interface.
+  //
 
   Future _installOrUpgradePackages(Project project, FetchMode mode) {
     final File specFile = project.getChild(properties.packageSpecFileName);
@@ -69,6 +77,10 @@ class BowerManager extends PackageManager {
 class _BowerResolver extends PackageResolver {
   _BowerResolver._(Project project);
 
+  //
+  // PackageResolver virtual interface:
+  //
+
   PackageServiceProperties get properties => bowerProperties;
 
   File resolveRefToFile(String url) => null;
@@ -82,6 +94,10 @@ class _BowerResolver extends PackageResolver {
  */
 class _BowerBuilder extends PackageBuilder {
   _BowerBuilder();
+
+  //
+  // PackageBuilder virtual interface:
+  //
 
   PackageServiceProperties get properties => bowerProperties;
 
@@ -100,6 +116,10 @@ class _BowerBuilder extends PackageBuilder {
 
     return Future.wait(futures);
   }
+
+  //
+  // - end PackageBuilder virtual interface.
+  //
 
   Future _handlePackageSpecChange(ChangeDelta delta) {
     File file = delta.resource;
