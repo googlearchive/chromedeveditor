@@ -136,34 +136,41 @@ class ProjectTemplate {
     return _vars.fold(text, (String t, TemplateVar v) => v.interpolate(t));
   }
 
-  Future _traverseElement(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                          String sourceUri, Map element) {
+  Future _traverseElement(
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
+      String sourceUri,
+      Map<String, dynamic> element) {
     return _handleDirectories(destRoot, sourceRoot, sourceUri,
         element['directories']).then((_) =>
             _handleFiles(destRoot, sourceRoot, sourceUri, element['files']));
   }
 
-  Future _handleDirectories(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                            String sourceUri, Map directories) {
-    if (directories != null) {
-      return Future.forEach(directories.keys, (String directoryName) {
-        DirectoryEntry destDirectoryRoot;
-        return destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
-          destDirectoryRoot = entry;
-          return sourceRoot.getDirectory(directoryName);
-        }).then((DirectoryEntry sourceDirectoryRoot) {
-          return _traverseElement(destDirectoryRoot, sourceDirectoryRoot,
-              "$sourceUri/$directoryName", directories[directoryName]);
-        });
-      });
-    }
+  Future _handleDirectories(
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
+      String sourceUri,
+      Map<String, dynamic> directories) {
+    if (directories == null || directories.isEmpty) return new Future.value();
 
-    return new Future.value();
+    return Future.forEach(directories.keys, (String directoryName) {
+      DirectoryEntry destDirectoryRoot;
+      return destRoot.createDirectory(directoryName).then((DirectoryEntry entry) {
+        destDirectoryRoot = entry;
+        return sourceRoot.getDirectory(directoryName);
+      }).then((DirectoryEntry sourceDirectoryRoot) {
+        return _traverseElement(destDirectoryRoot, sourceDirectoryRoot,
+            "$sourceUri/$directoryName", directories[directoryName]);
+      });
+    });
   }
 
-  Future _handleFiles(DirectoryEntry destRoot, DirectoryEntry sourceRoot,
-                      String sourceUri, List files) {
-    if (files == null) return new Future.value();
+  Future _handleFiles(
+      DirectoryEntry destRoot,
+      DirectoryEntry sourceRoot,
+      String sourceUri,
+      List<Map<String, String>> files) {
+    if (files == null || files.isEmpty) return new Future.value();
 
     return Future.forEach(files, (fileElement) {
       String source = fileElement['source'];
