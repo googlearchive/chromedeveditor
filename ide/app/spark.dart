@@ -146,7 +146,9 @@ abstract class Spark
 
     // Add various builders.
     addBuilder(new DartBuilder(this.services));
-    addBuilder(new JavaScriptBuilder());
+    if (SparkFlags.performJavaScriptAnalysis) {
+      addBuilder(new JavaScriptBuilder());
+    }
     addBuilder(new JsonBuilder());
 
     return restoreWorkspace().then((_) {
