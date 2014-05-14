@@ -211,7 +211,6 @@ class EditorArea extends TabView {
       if (forceFocus) tab.select(forceFocus: forceFocus);
 
       _nameController.add(file.name);
-      return editor.whenReady;
     } else {
       editorReadyFuture = new Future.value();
     }
