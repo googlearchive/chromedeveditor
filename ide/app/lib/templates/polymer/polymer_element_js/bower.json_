@@ -1,5 +1,5 @@
 {
-  "name": "``elementName``",
+  "name": "``projectName``",
   "dependencies": {
     "polymer": "Polymer/polymer#master"
   }

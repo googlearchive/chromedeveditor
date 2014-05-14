@@ -1,6 +1,6 @@
-<x-meta id="``elementName``" label="``projectName``">
+<x-meta id="``tagName``" label="``projectName``">
   <template>
-    <``elementName``></``elementName``>
+    <``tagName``></``tagName``>
   </template>
   <template id="imports">
     <link rel="import" href="``sourceName``.html">

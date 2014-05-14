@@ -34,7 +34,7 @@ import 'lib/platform_info.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/services.dart';
 import 'lib/scm.dart';
-import 'lib/templates.dart';
+import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
@@ -1842,21 +1842,21 @@ class NewProjectAction extends SparkActionWithDialog {
 
       // TODO(ussuri): Can this no-op `return Future.value()` be removed?
       return new Future.value().then((_) {
-        List<ProjectTemplate> templates = [];
+        final List<ProjectTemplate> templates = [];
 
-        final globalVars = {
-            'projectName': name,
-            'sourceName': name.toLowerCase()
-        };
+        final globalVars = [
+            new TemplateVar('projectName', name),
+            new TemplateVar('sourceName', name.toLowerCase())
+        ];
 
         // Add a template for the main project type.
         final SelectElement projectTypeElt = getElement('select[name="type"]');
         final Match match = _TEMPLATE_REGEX.matchAsPrefix(projectTypeElt.value);
         assert(match.groupCount > 0);
-        final String templName = match.group(1);
+        final String templId = match.group(1);
         final String jsDepsStr = match.group(3);
 
-        templates.add(new ProjectTemplate(templName, globalVars));
+        templates.add(new ProjectTemplate(templId, globalVars));
 
         // Possibly also add a mix-in template for JS dependencies, if the
         // project type requires them.
@@ -1868,11 +1868,11 @@ class NewProjectAction extends SparkActionWithDialog {
             jsDeps.add('"$depName": "$depPath"');
           }
           if (jsDeps.isNotEmpty) {
-            final localVars = {
-                'dependencies': jsDeps.join(',\n    ')
-            };
+            final localVars = [
+                new TemplateVar('dependencies', jsDeps.join(',\n    '))
+            ];
             templates.add(
-                new ProjectTemplate("bower-deps", globalVars, localVars));
+                new ProjectTemplate("addons/bower-deps", globalVars, localVars));
           }
         }
 

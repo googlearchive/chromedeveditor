@@ -2,17 +2,15 @@
 
 <html>
   <head>
-    <title>``projectName`` demo</title>
+    <title>``tagName`` demo</title>
 
-    <script src="../platform/platform.js"></script>
+    <script src="bower_components/platform.js"></script>
+
     <link rel="import" href="``sourceName``.html">
-
-    <style>
-    </style>
   </head>
 
   <body unresolved>
-    <``elementName`` id="element"></``elementName``>
+    <``tagName`` id="element"></``tagName``>
 
     <script>
       document.addEventListener('polymer-ready', function() {
