@@ -94,7 +94,6 @@ class SparkOverlay extends SparkWidget {
   @published bool get opened => _opened;
 
   @published set opened(bool val) {
-    print("overlay: $val");
     if (_opened != val) {
       _opened = val;
       // TODO(ussuri): Getter/setter were needed to fix the Menu and Modal not
