@@ -74,11 +74,6 @@
   right: 0;
 }
 
-#toolbarRight {
-  position: absolute;
-  right: 0;
-}
-
 #settingsDialog .settings-label {
   display: inline-block;
   width: 130px;

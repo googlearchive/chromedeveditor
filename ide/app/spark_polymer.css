@@ -91,6 +91,13 @@ body {
   overflow: hidden;
 }
 
+#sparkStatus {
+  bottom: 10px;
+  left: 100px;
+  position: absolute;
+  z-index: 101;
+}
+
 .ace_gutter-cell {
   color: #aaa;
 }

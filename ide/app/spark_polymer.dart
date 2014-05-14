@@ -181,7 +181,7 @@ class SparkPolymer extends Spark {
   void initSaveStatusListener() {
     super.initSaveStatusListener();
 
-    statusComponent = getUIElement('#sparkStatus');
+    statusComponent = querySelector('#sparkStatus');
 
     // Listen for save events.
     eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {

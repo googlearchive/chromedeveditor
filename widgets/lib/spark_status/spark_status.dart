@@ -84,11 +84,14 @@ class SparkStatus extends SparkWidget {
   bool get showingTemporaryMessage => _temporaryMessage != null;
 
   void _update() {
-    Element element = getShadowDomElement('.label');
+    Element element = getShadowDomElement('.status-container');
     element.classes.toggle('default', showingDefaultMessage);
     element.classes.toggle('progressStyle', showingProgressMessage);
     element.classes.toggle('temporary', showingTemporaryMessage);
-    element.innerHtml = _calculateMessage();
+    Element labelElement = getShadowDomElement('.label');
+    String text = _calculateMessage();
+    element.classes.toggle('hidden', text == '');
+    labelElement.text = text;
   }
 
   String _calculateMessage() {
