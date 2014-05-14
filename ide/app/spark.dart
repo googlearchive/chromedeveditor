@@ -1872,7 +1872,7 @@ class NewProjectAction extends SparkActionWithDialog {
                 new TemplateVar('dependencies', jsDeps.join(',\n    '))
             ];
             templates.add(
-                new ProjectTemplate("addons/bower-deps", globalVars, localVars));
+                new ProjectTemplate("addons/bower_deps", globalVars, localVars));
           }
         }
 
