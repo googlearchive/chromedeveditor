@@ -37,17 +37,12 @@ class Outline {
 
   Outline(this._analyzer, this._container, this._prefs) {
     // Use template to create the UI of outline.
-    html.DocumentFragment template =
-        (html.querySelector('#outline-template') as
-        html.TemplateElement).content;
+    html.DocumentFragment template = (html.querySelector('#outline-template') as html.TemplateElement).content;
     html.DocumentFragment templateClone = template.clone(true);
     _outlineDiv = templateClone.querySelector('#outline');
-    _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
-        event.stopPropagation());
+    _outlineDiv.onMouseWheel.listen((html.MouseEvent event) => event.stopPropagation());
     _rootList = templateClone.querySelector('#outline ul');
-    template =
-        (html.querySelector('#outline-button-template') as
-        html.TemplateElement).content;
+    template = (html.querySelector('#outline-button-template') as html.TemplateElement).content;
     templateClone = template.clone(true);
     _outlineButton = templateClone.querySelector('#toggleOutlineButton');
     _outlineButton.onClick.listen((e) => _toggle());
@@ -103,9 +98,7 @@ class Outline {
 
     _buildCompleter = new Completer();
 
-    _currentOutlineOperation =
-        _analyzer.getOutlineFor(code, name).asStream().listen(
-            (services.Outline model) => _populate(model));
+    _currentOutlineOperation = _analyzer.getOutlineFor(code, name).asStream().listen((services.Outline model) => _populate(model));
     _currentOutlineOperation.onDone(() => _buildCompleter.complete);
 
     return _buildCompleter.future;
@@ -152,16 +145,13 @@ class Outline {
     return item;
   }
 
-  OutlineTopLevelVariable _addVariable(services.OutlineTopLevelVariable data) =>
-      _addItem(new OutlineTopLevelVariable(data));
+  OutlineTopLevelVariable _addVariable(services.OutlineTopLevelVariable data) => _addItem(new OutlineTopLevelVariable(data));
 
-  OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
-      _addItem(new OutlineTopLevelFunction(data));
+  OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) => _addItem(new OutlineTopLevelFunction(data));
 
   OutlineClass _addClass(services.OutlineClass data) {
     OutlineClass classItem = new OutlineClass(data, _outlineItemsByOffset);
-    classItem.onChildSelected.listen((event) =>
-        _childSelectedController.add(event));
+    classItem.onChildSelected.listen((event) => _childSelectedController.add(event));
     _addItem(classItem);
     return classItem;
   }
@@ -202,20 +192,22 @@ class Outline {
 }
 
 abstract class OutlineItem {
-  html.LIElement _element;
   services.OutlineEntry _data;
+  html.LIElement _element;
   html.AnchorElement _anchor;
   html.SpanElement _nameSpan;
   String get displayName => _data.name;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
-    _nameSpan = new html.SpanElement();
+    
     _anchor = new html.AnchorElement(href: "#");
-    _nameSpan.text = displayName;
-
     _element.append(_anchor);
+    
+    _nameSpan = new html.SpanElement()
+        ..text = displayName;
     _anchor.append(_nameSpan);
+    
     _element.classes.add("outlineItem $cssClassName");
   }
 
@@ -288,14 +280,11 @@ class OutlineClass extends OutlineTopLevelItem {
     }
   }
 
-  OutlineMethod addMethod(services.OutlineMethod data) =>
-      _addItem(new OutlineMethod(data));
+  OutlineMethod addMethod(services.OutlineMethod data) => _addItem(new OutlineMethod(data));
 
-  OutlineProperty addProperty(services.OutlineProperty data) =>
-      _addItem(new OutlineProperty(data));
+  OutlineProperty addProperty(services.OutlineProperty data) => _addItem(new OutlineProperty(data));
 
-  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
-      _addItem(new OutlineAccessor(data));
+  OutlineAccessor addAccessor(services.OutlineAccessor data) => _addItem(new OutlineAccessor(data));
 }
 
 abstract class OutlineClassMember extends OutlineItem {
@@ -311,13 +300,13 @@ class OutlineMethod extends OutlineClassMember {
 class OutlineProperty extends OutlineClassMember {
   services.OutlineProperty get _propertyData => _data;
 
-  String get type => _propertyData.returnType;
+  String get returnType => _propertyData.returnType;
   html.SpanElement _typeSpan;
 
   OutlineProperty(services.OutlineProperty data)
       : super(data, "property") {
     _typeSpan = new html.SpanElement();
-    _typeSpan.text = type;
+    _typeSpan.text = returnType;
     _typeSpan.classes.add("returnType");
     _anchor.append(_typeSpan);
   }
