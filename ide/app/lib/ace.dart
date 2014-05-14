@@ -409,10 +409,10 @@ class AceManager {
       String markerHtml = _formatAnnotationItemText(marker.message,
           annotationType);
 
-      // Ace uses 0-based lines.
       ace.Point charPoint = currentSession.document.indexToPosition(
           marker.charStart);
-      int aceRow = charPoint.row;
+      // Ace uses 0-based lines.
+      int aceRow = marker.lineNum - 1;
       int aceColumn = charPoint.column;
 
       // If there is an existing annotation, delete it and combine into one.
@@ -430,15 +430,15 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
-      double markerHorizontalPercentage = currentSession.documentToScreenRow(
+      double verticalPercentage = currentSession.documentToScreenRow(
           marker.lineNum, aceColumn) / numberLines;
 
       String markerPos;
+
       if (!isScrolling) {
-        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
+        markerPos = '${verticalPercentage * documentHeight}px';
       } else {
-        markerPos = (markerHorizontalPercentage * 100.0)
-            .toStringAsFixed(2) + "%";
+        markerPos = (verticalPercentage * 100.0).toStringAsFixed(2) + "%";
       }
 
       // TODO(ericarnold): This should also be based upon annotations so ace's
