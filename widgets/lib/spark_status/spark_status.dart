@@ -98,10 +98,7 @@ class SparkStatus extends SparkWidget {
   bool get _showingTemporaryMessage => _temporaryMessage != null;
 
   void _update() {
-    String text = _calculateMessage();
-    _container.classes.toggle('default', _showingDefaultMessage);
-    _container.classes.toggle('progressStyle', _showingProgressMessage);
-    _container.classes.toggle('temporary', _showingTemporaryMessage);
+    final String text = _calculateMessage();
     _container.classes.toggle('hidden', text.isEmpty);
     _label.text = text;
   }
