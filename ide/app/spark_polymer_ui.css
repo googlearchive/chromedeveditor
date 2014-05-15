@@ -15,8 +15,7 @@
 }
 
 #mainMenu {
-  position: relative;
-  top: 4px;
+  display: block;
 }
 
 #splitView {
@@ -72,6 +71,50 @@
   position: absolute;
   left: 0;
   right: 0;
+}
+
+#fileFilter {
+  background: #fff url(images/search.png) 10px center no-repeat;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  height: 36px;
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  margin: 2px;
+  padding: 10px 10px 10px 44px;
+  right: 50px;
+}
+
+#fileFilter:focus {
+  border: 1px solid #9DBEFF;
+  outline: none;
+}
+
+#runButton, #mainMenu {
+  height: 36px;
+}
+
+#fileNotFoundPlaceholder {
+  color: #ccc;
+  display: block;
+  font-size: 18px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+#fileNotFoundPlaceholder.hidden {
+  display: none;
+}
+
+#sparkStatusContainer {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  pointer-events: none;
+  right: 0;
+  text-align: center;
+  z-index: 101;
 }
 
 #settingsDialog .settings-label {

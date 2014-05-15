@@ -133,7 +133,6 @@ abstract class Spark
     initFilesController();
 
     initToolbar();
-    initFilter();
     buildMenu();
     initSplitView();
     initSaveStatusListener();
@@ -459,13 +458,8 @@ abstract class Spark
     // Overridden in spark_polymer.dart.
   }
 
-  void initFilter() {
-    // Overridden in spark_polymer.dart.
-  }
-
   void buildMenu() {
-    querySelector('#mainMenu').addEventListener('activate',
-        menuActivateEventHandler);
+    // Overridden in spark_polymer.dart.
   }
 
   void menuActivateEventHandler(CustomEvent event) {
@@ -766,7 +760,7 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  void filterFilesList(String searchString) {
+  void filterFileList(String searchString) {
     if ( _filterTimer != null) {
       _filterTimer.cancel();
       _filterTimer = null;
@@ -1737,7 +1731,7 @@ class SearchAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    querySelector('#search').focus();
+    spark.getUIElement('#fileFilter').focus();
   }
 }
 

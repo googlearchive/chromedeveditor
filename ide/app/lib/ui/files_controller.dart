@@ -929,8 +929,6 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
-  html.Element get _fnfPlaceholder => html.querySelector('#fileNotFoundPlaceholder');
-
   void performFilter(String filterString) {
     if (filterString != null && filterString.isEmpty) {
       filterString = null;
@@ -939,7 +937,8 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
-      _fnfPlaceholder.classes.add('hidden');
+      _eventBus.addEvent(new SimpleBusEvent(
+          BusEventType.FILES_CONTROLLER__FILE_NOT_FOUND, false));
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
@@ -958,7 +957,9 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
-      _fnfPlaceholder.classes.toggle('hidden', _filteredFiles.isNotEmpty);
+      _eventBus.addEvent(new SimpleBusEvent(
+          BusEventType.FILES_CONTROLLER__FILE_NOT_FOUND,
+          _filteredFiles.isNotEmpty));
       _reloadDataAndRestoreExpandedState(filtered.toList());
     }
   }

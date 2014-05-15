@@ -19,17 +19,24 @@ import 'lib/platform_info.dart';
 class SparkPolymerUI extends SparkWidget {
   SparkModel _model;
 
-  // NOTE: The initial values have to be true so the app can find all the
-  // UI elements it theoretically could need.
+  // NOTE: The initial values for these have to be true so the app can find all
+  // the UI elements it theoretically could need.
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
   @observable bool chromeOS = true;
+
+  @observable bool hideFileNotFound = false;
+  @observable bool fileFilterActive = false;
+
+  InputElement _fileFilter;
 
   SparkPolymerUI.created() : super.created();
 
   @override
   void enteredView() {
     super.enteredView();
+
+    _fileFilter = getShadowDomElement('#fileFilter');
   }
 
   void modelReady(SparkModel model) {
@@ -38,9 +45,13 @@ class SparkPolymerUI extends SparkWidget {
     refreshFromModel();
     // Changed selection may mean some menu items become disabled.
     // TODO(ussuri): Perhaps listen to more events, e.g. tab switch.
-    _model.eventBus
-        .onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED).listen((_) {
+    _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
+        .listen((_) {
       refreshFromModel();
+    });
+    _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__FILE_NOT_FOUND)
+        .listen((SimpleBusEvent e) {
+      hideFileNotFound = e.negate;
     });
   }
 
@@ -110,5 +121,26 @@ class SparkPolymerUI extends SparkWidget {
     e..preventDefault()..stopPropagation();
     AnchorElement anchor = e.target;
     window.open(anchor.href, '_blank');
+  }
+
+  void activateFileFilter(Event e) {
+    fileFilterActive = true;
+  }
+
+  void deactivateFileFilter(Event e) {
+    fileFilterActive = false;
+  }
+
+  void maybeClearFileFilter(KeyboardEvent e) {
+    if (e.keyCode == KeyCode.ESC) {
+      _fileFilter.value = '';
+      _fileFilter.blur();
+      _model.filterFileList(null);
+      e..preventDefault()..stopPropagation();
+    }
+  }
+
+  void filterFileList(Event e) {
+    _model.filterFileList(_fileFilter.value);
   }
 }

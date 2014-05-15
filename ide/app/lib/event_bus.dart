@@ -30,6 +30,8 @@ class BusEventType extends Enum<String> {
       const BusEventType._('FILES_CONTROLLER__ERROR');
   static const FILES_CONTROLLER__PERSIST_TAB =
       const BusEventType._('FILES_CONTROLLER__PERSIST_TAB');
+  static const FILES_CONTROLLER__FILE_NOT_FOUND =
+      const BusEventType._('FILES_CONTROLLER__FILE_NOT_FOUND');
 }
 
 /**
@@ -43,8 +45,9 @@ abstract class BusEvent {
 
 class SimpleBusEvent extends BusEvent {
   final BusEventType _type;
+  final bool negate;
 
-  SimpleBusEvent(this._type);
+  SimpleBusEvent(this._type, [bool this.negate = false]);
 
   BusEventType get type => _type;
 }

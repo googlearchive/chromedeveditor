@@ -20,7 +20,6 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
-import 'lib/ui/utils/html_utils.dart';
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -181,7 +180,7 @@ class SparkPolymer extends Spark {
   void initSaveStatusListener() {
     super.initSaveStatusListener();
 
-    statusComponent = querySelector('#sparkStatus');
+    statusComponent = getUIElement('#sparkStatus');
 
     // Listen for save events.
     eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {
@@ -219,29 +218,6 @@ class SparkPolymer extends Spark {
   }
 
   @override
-  void initFilter() {
-    InputElement input = querySelector('#search');
-    input.onFocus.listen((e) {
-      querySelector('#mainMenu').hidden = true;
-      querySelector('#runButton').hidden = true;
-    });
-    input.onBlur.listen((e) {
-      querySelector('#mainMenu').hidden = false;
-      querySelector('#runButton').hidden = false;
-    });
-    input.onInput.listen((e) => filterFilesList(input.value));
-    input.onKeyDown.listen((e) {
-      // When ESC key is pressed.
-      if (e.keyCode == KeyCode.ESC) {
-        input.value = '';
-        input.blur();
-        filterFilesList(null);
-        cancelEvent(e);
-      }
-    });
-  }
-
-  @override
   void buildMenu() => super.buildMenu();
 
   @override
@@ -265,7 +241,7 @@ class SparkPolymer extends Spark {
   }
 
   void _bindButtonToAction(String buttonId, String actionId) {
-    SparkButton button = querySelector('#${buttonId}');
+    SparkButton button = getUIElement('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
       button.enabled = action.enabled;
