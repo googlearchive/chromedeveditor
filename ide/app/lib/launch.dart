@@ -37,11 +37,12 @@ class LaunchManager {
   Services _services;
   PackageManager _packageManager;
   CompilerService _compiler;
+  Notifier _notifier;
 
   Workspace _workspace;
   Workspace get workspace => _workspace;
 
-  LaunchManager(this._workspace, this._services, this._packageManager) {
+  LaunchManager(this._workspace, this._services, this._packageManager, this._notifier) {
     _compiler = _services.getService("compiler");
 
     // The order of registration here matters.
@@ -395,12 +396,25 @@ class Dart2JsServlet extends PicoServlet {
 
     return _compiler.compileFile(file).then((CompilerResult result) {
       if (!result.hasOutput) {
-        // TODO: Log this to something like a console window.
-        _logger.warning('Error compiling ${file.path} with dart2js.');
-        for (CompilerProblem problem in result.problems) {
-          _logger.warning('${problem}');
-        }
-        return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
+        //_logger.warning('Error compiling ${file.path} with dart2js.');
+        //for (CompilerProblem problem in result.problems) {
+        //  _logger.warning('${problem}');
+        //}
+
+        // Display a message to the user. In the future, we may want to write
+        // this to a tools console.
+        _launchManager._notifier.showMessage(
+            'Error Compiling File',
+            'Error compiling ${file.path}: ${result.problems.first}');
+
+        HttpResponse response = new HttpResponse.ok();
+        response.setContentTypeFrom('foo.js');
+
+        String errorText = _createTextForError(file, result);
+        String js = _convertToJavaScript(errorText);
+        response.setContent(js);
+
+        return response;
       } else {
         _logger.info('compiled ${file.path} in '
             '${_nf.format(stopwatch.elapsedMilliseconds)} ms, '
@@ -415,3 +429,30 @@ class Dart2JsServlet extends PicoServlet {
 }
 
 String _getPath(HttpRequest request) => request.uri.pathSegments.join('/');
+
+String _createTextForError(File file, CompilerResult result) {
+  StringBuffer buf = new StringBuffer();
+
+  buf.write('Error compiling ${file.path}:<br><br>');
+
+  for (CompilerProblem problem in result.problems) {
+    buf.write('[${problem.kind}] ${problem.message}<br>');
+    buf.write('&nbsp;&nbsp;${problem.uri}:${problem.begin}:${problem.end}<br>');
+  }
+
+  return buf.toString();
+}
+
+String _convertToJavaScript(String text) {
+  String style = 'z-index: 100; border: 1px solid black; position: absolute; '
+      'top: 10px; left: 10px; right: 10px; padding: 5px; background: #F89797; '
+      'border-radius: 4px;';
+  text = text.replaceAll("'", r"\'").replaceAll('\n', r'\n');
+
+  return """
+    var div = document.createElement('code');
+    div.setAttribute('style', \'${style}\');
+    div.innerHTML = '${text}';
+    document.body.appendChild(div);
+""";
+}

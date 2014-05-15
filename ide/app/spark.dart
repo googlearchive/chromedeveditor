@@ -280,7 +280,7 @@ abstract class Spark
 
   void initLaunchManager() {
     // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
-    _launchManager = new LaunchManager(_workspace, services, pubManager);
+    _launchManager = new LaunchManager(_workspace, services, pubManager, this);
   }
 
   void initNavigationManager() {
