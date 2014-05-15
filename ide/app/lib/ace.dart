@@ -43,7 +43,7 @@ class TextEditor extends Editor {
   StreamSubscription _aceSubscription;
   StreamController _dirtyController = new StreamController.broadcast();
   StreamController _modificationController = new StreamController.broadcast();
-  Completer<TextEditor> _whenReadyCompleter = new Completer();
+  Completer<Editor> _whenReadyCompleter = new Completer();
 
   final SparkPreferences _prefs;
   ace.EditSession _session;
@@ -62,11 +62,11 @@ class TextEditor extends Editor {
     }
     return new TextEditor._create(aceManager, file, prefs);
   }
-  
+
   TextEditor._create(this.aceManager, this.file, this._prefs);
 
-  Future<TextEditor> get whenReady => _whenReadyCompleter.future;
-  
+  Future<Editor> get whenReady => _whenReadyCompleter.future;
+
   void setSession(ace.EditSession value) {
     _session = value;
     if (_aceSubscription != null) _aceSubscription.cancel();
@@ -189,7 +189,6 @@ class TextEditor extends Editor {
       _aceSubscription = _session.onChange.listen((_) => dirty = true);
     }
   }
-
 }
 
 class DartEditor extends TextEditor {

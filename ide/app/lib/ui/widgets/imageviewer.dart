@@ -51,8 +51,8 @@ class ImageViewer implements Editor {
     _rootElement.onScroll.listen((_) => _updateOffset());
     _loadFile();
   }
-  
-  Future<ImageViewer> get whenReady => new Future.value();
+
+  Future<Editor> get whenReady => new Future.value();
 
   _loadFile() {
     _image.onLoad.listen((_) => resize());

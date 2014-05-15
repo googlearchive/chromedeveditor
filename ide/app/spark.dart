@@ -284,19 +284,21 @@ abstract class Spark
     _navigationManager.onNavigate.listen((NavigationLocation location) {
       _selectFile(location.file).then((_) {
         if (location.selection != null) {
-          nextTick().then((_) {
-            for (Editor editor in editorManager.editors) {
-              if (editor.file == location.file) {
-                if (editor is TextEditor) {
-                  editor.select(location.selection);
-                }
-                return;
-              }
-            }
-          });
+          nextTick().then((_) => _selectLocation(location));
         }
       });
     });
+  }
+
+  void _selectLocation(NavigationLocation location) {
+    for (Editor editor in editorManager.editors) {
+      if (editor.file == location.file) {
+        if (editor is TextEditor) {
+          editor.select(location.selection);
+        }
+        return;
+      }
+    }
   }
 
   void initPackageManagers() {
