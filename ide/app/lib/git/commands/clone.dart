@@ -244,7 +244,6 @@ class Clone {
                 return _createInitialConfig(result.shallow, localHeadRef)
                     .then((_) {
                   logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
-                  _options.store.index.reset(true);
                 });
               });
             });
