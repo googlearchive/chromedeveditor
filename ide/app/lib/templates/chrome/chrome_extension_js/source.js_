@@ -4,5 +4,5 @@
  * @see http://developer.chrome.com/extensions/tabs.html
  */
 chrome.runtime.onInstalled.addListener(function() {
-  chrome.tabs.create({url: "index.html", active: true});
+  chrome.tabs.create({url: "``sourceName``.html", active: true});
 });
