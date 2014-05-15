@@ -91,10 +91,13 @@ body {
   overflow: hidden;
 }
 
-#sparkStatus {
-  bottom: 10px;
-  left: 10px;
+#sparkStatusContainer {
   position: absolute;
+  bottom: 10px;
+  left: 0;
+  pointer-events: none;
+  right: 0;
+  text-align: center;
   z-index: 101;
 }
 
