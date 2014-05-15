@@ -43,6 +43,7 @@ class TextEditor extends Editor {
   StreamSubscription _aceSubscription;
   StreamController _dirtyController = new StreamController.broadcast();
   StreamController _modificationController = new StreamController.broadcast();
+  Completer<Editor> _whenReadyCompleter = new Completer();
 
   final SparkPreferences _prefs;
   ace.EditSession _session;
@@ -64,10 +65,13 @@ class TextEditor extends Editor {
 
   TextEditor._create(this.aceManager, this.file, this._prefs);
 
+  Future<Editor> get whenReady => _whenReadyCompleter.future;
+
   void setSession(ace.EditSession value) {
     _session = value;
     if (_aceSubscription != null) _aceSubscription.cancel();
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
+    if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
   }
 
   bool get dirty => _dirty;
