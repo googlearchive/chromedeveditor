@@ -324,20 +324,26 @@ class AnalyzerServiceImpl extends ServiceImpl {
     Declaration _getDeclarationFor(analyzer.ProjectContext context,
         String fileUuid, int offset) {
       analyzer.FileSource source = context.getSource(fileUuid);
+      print("Source: $source");
 
       List<analyzer.Source> librarySources =
           context.context.getLibrariesContaining(source);
+      print("librarySources: $librarySources");
 
       if (librarySources.isEmpty) return null;
-
+      print("here");
       analyzer.CompilationUnit ast =
           context.context.resolveCompilationUnit2(source, librarySources[0]);
 
       analyzer.AstNode node =
           new analyzer.NodeLocator.con1(offset).searchWithin(ast);
+
+      print("node type: ${node.runtimeType}");
       if (node is! analyzer.SimpleIdentifier) return null;
 
       analyzer.Element element = analyzer.ElementLocator.locate(node);
+      print("element: $element");
+
       if (element == null) return null;
 
       if (element.nameOffset == -1 || element.source == null) {
@@ -345,13 +351,18 @@ class AnalyzerServiceImpl extends ServiceImpl {
       }
 
       // TODO:(devoncarew): Handle sdk sources.
-      if (element.source is! analyzer.FileSource) return null;
+      if (element.source is analyzer.FileSource) {
+        analyzer.FileSource fileSource = element.source;
 
-      analyzer.FileSource fileSource = element.source;
-
-      return new Declaration(
-          element.displayName, fileSource.uuid,
-          element.nameOffset, element.name.length);
+        return new CodeDeclaration(
+            element.displayName, fileSource.uuid,
+            element.nameOffset, element.name.length);
+      } else if (element.source is analyzer.SdkSource) {
+        return new ApiDeclaration(
+            element.displayName, "http://www.google.com");
+      } else {
+        return null;
+      }
     }
 
     Outline _getOutline(analyzer.CompilationUnit ast) {

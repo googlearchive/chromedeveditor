@@ -161,18 +161,39 @@ class ErrorSeverity {
 /**
  * Defines an object containing information about a declaration.
  */
-class Declaration {
+abstract class Declaration {
   final String name;
-  final String fileUuid;
-  final int offset;
-  final int length;
 
-  Declaration(this.name, this.fileUuid, this.offset, this.length);
+  Declaration(this.name);
 
   factory Declaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new Declaration(map["name"], map["fileUuid"],
+    if (map["fileUuid"] != null) {
+      return new CodeDeclaration.fromMap(map);
+    } else {
+      return new ApiDeclaration.fromMap(map);
+    }
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+    };
+  }
+}
+
+class CodeDeclaration extends Declaration {
+  final String fileUuid;
+  final int offset;
+  final int length;
+
+  CodeDeclaration(name, this.fileUuid, this.offset, this.length) : super(name);
+
+  factory CodeDeclaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new CodeDeclaration(map["name"], map["fileUuid"],
         map["offset"], map["length"]);
   }
 
@@ -202,6 +223,25 @@ class Declaration {
   }
 
   String toString() => '${fileUuid} [${offset}:${length}]';
+}
+
+class ApiDeclaration extends Declaration {
+  final String url;
+
+  ApiDeclaration(String name, this.url) : super(name);
+
+  factory ApiDeclaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new ApiDeclaration(map["name"], map["url"]);
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+      "url": url,
+    };
+  }
 }
 
 /**
