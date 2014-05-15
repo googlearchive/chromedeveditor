@@ -36,11 +36,11 @@ class Checkout {
       return store.retrieveObject(treeEntry.sha, "Tree").then((GitObject tree) {
         return Future.forEach((tree as TreeObject).entries, (TreeEntry entry) {
           return _removeEntryRecursively(store, newDir, entry);
-          }).then((_) {
-          // There might be untracked files in the project.Only delete the
+        }).then((_) {
+          // There might be untracked files in the project. Only delete the
           // directory if it is empty.
           return FileOps.listFiles(newDir).then((entries) {
-            if (entries.length == 0) {
+            if (entries.isEmpty) {
               return newDir.remove();
             }
           });
@@ -50,7 +50,7 @@ class Checkout {
   }
 
   static Future smartCheckout(chrome.DirectoryEntry dir, ObjectStore store,
-    TreeObject oldTree, TreeObject newTree) {
+      TreeObject oldTree, TreeObject newTree) {
     TreeDiffResult diff = Merge.diffTree(oldTree, newTree);
     return Future.forEach(diff.adds, (TreeEntry entry) {
       if (entry.isBlob) {
@@ -66,12 +66,14 @@ class Checkout {
           TreeEntry oldEntry = mergeEntry['old'];
           TreeEntry newEntry = mergeEntry['new'];
           if (newEntry.isBlob) {
-            return ObjectUtils.expandBlob(dir, store, newEntry.name, newEntry.sha);
+            return ObjectUtils.expandBlob(dir, store, newEntry.name,
+                newEntry.sha);
+          } else {
+            return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
+                "Tree").then((trees) {
+              return smartCheckout(dir, store, trees[0], trees[1]);
+            });
           }
-          return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
-              "Tree").then((trees) {
-            return smartCheckout(dir, store, trees[0], trees[1]);
-          });
         });
       });
     });
