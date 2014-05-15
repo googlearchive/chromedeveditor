@@ -1,0 +1,16 @@
+{
+  "directories": {
+    "assets": {
+      "files": [
+        { "source": "icon_128.png_", "dest": "icon_128.png"},
+        { "source": "icon_16.png_", "dest": "icon_16.png"}
+      ]
+    }
+  },
+  "files": [
+    { "source": "manifest.json_", "dest": "manifest.json" },
+    { "source": "source.html_", "dest": "``sourceName``.html" },
+    { "source": "source.js_", "dest": "``sourceName``.js" },
+    { "source": "source.css_", "dest": "``sourceName``.css"}
+  ]
+}
