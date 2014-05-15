@@ -338,11 +338,9 @@ class AnalyzerServiceImpl extends ServiceImpl {
       analyzer.AstNode node =
           new analyzer.NodeLocator.con1(offset).searchWithin(ast);
 
-      print("node type: ${node.runtimeType}");
       if (node is! analyzer.SimpleIdentifier) return null;
 
       analyzer.Element element = analyzer.ElementLocator.locate(node);
-      print("element: $element");
 
       if (element == null) return null;
 
@@ -353,13 +351,25 @@ class AnalyzerServiceImpl extends ServiceImpl {
       // TODO:(devoncarew): Handle sdk sources.
       if (element.source is analyzer.FileSource) {
         analyzer.FileSource fileSource = element.source;
-
         return new CodeDeclaration(
             element.displayName, fileSource.uuid,
             element.nameOffset, element.name.length);
       } else if (element.source is analyzer.SdkSource) {
-        return new ApiDeclaration(
-            element.displayName, "http://www.google.com");
+        analyzer.SdkSource sdkSource = element.source;
+        String libraryName = element.library.name.replaceAll(".", "-");
+//        String fullName = sdkSource.fullName;
+//        String package = fullName.substring(fullName.indexOf("/"));
+        String baseUrl =
+            "https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer";
+        String className;
+        String memberName;
+        analyzer.Element enclosingElement = element.enclosingElement;
+        if (enclosingElement is analyzer.ClassElement) {
+          className = enclosingElement.name;
+          memberName = element.name;
+        }
+        String url = "$baseUrl/$libraryName.$className#id_$memberName";
+        return new ApiDeclaration(element.displayName, url);
       } else {
         return null;
       }
