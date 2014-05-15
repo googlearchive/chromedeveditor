@@ -94,6 +94,10 @@ class SparkPolymerUI extends SparkWidget {
     _model.setGitSettingsResetDoneVisible(true);
   }
 
+  void onSendFeedback() {
+    window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
+  }
+
   void onResetPreference() {
     Element resultElement = getShadowDomElement('#preferenceResetResult');
     resultElement.text = '';
