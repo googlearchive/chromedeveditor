@@ -84,6 +84,11 @@ We address this by using script based positioning =(
 
 :host([animation=none]) {
   opacity: 0;
+  /* This is essentially a no-op transition. We need it for the opening/closing
+     sequences in .dart to function as designed.
+  */
+  -webkit-transition: all 0.001s;
+  transition: all 0.001s;
 }
 
 :host([animation=none].opened) {
