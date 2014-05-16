@@ -362,13 +362,22 @@ class AnalyzerServiceImpl extends ServiceImpl {
         String baseUrl =
             "https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer";
         String className;
-        String memberName;
+        String memberAnchor = "";
         analyzer.Element enclosingElement = element.enclosingElement;
-        if (enclosingElement is analyzer.ClassElement) {
+        /*%TRACE3*/ print("""(4> 5/15/14): enclosingElement: ${enclosingElement.runtimeType}"""); // TRACE%
+        /*%TRACE3*/ print("""(4> 5/15/14): runtimeType: ${element.runtimeType}"""); // TRACE%
+        if (element is analyzer.ClassElement) {
+          /*%TRACE3*/ print("""(4> 5/15/14): element.name: ${element.name}"""); // TRACE%
+          className = element.name;
+        } else if (enclosingElement is analyzer.ClassElement) {
           className = enclosingElement.name;
-          memberName = element.name;
+          memberAnchor = "#id_${element.name}";
+        } else {
+          // TODO: Top level variables and functions
+          return null;
         }
-        String url = "$baseUrl/$libraryName.$className#id_$memberName";
+
+        String url = "$baseUrl/$libraryName.$className$memberAnchor";
         return new ApiDeclaration(element.displayName, url);
       } else {
         return null;
