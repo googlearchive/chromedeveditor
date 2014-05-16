@@ -96,7 +96,9 @@ Future<List<int>> getAppContentsBinary(String path) {
  * the Chrome app's directory.
  */
 Future<String> getAppContents(String path) {
-  return html.HttpRequest.getString(chrome.runtime.getURL(path));
+  return html.HttpRequest.getString(chrome.runtime.getURL(path))
+      .catchError((e, s) =>
+          throw "Couldn't download $path: error code ${e.target.status}");
 }
 
 /**

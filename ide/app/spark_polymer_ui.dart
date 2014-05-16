@@ -23,6 +23,7 @@ class SparkPolymerUI extends SparkWidget {
   // the UI elements it theoretically could need.
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
+  @observable bool showWipProjectTemplates = true;
   @observable bool chromeOS = true;
 
   @observable bool hideFileNotFound = false;
@@ -59,6 +60,7 @@ class SparkPolymerUI extends SparkWidget {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.developerMode;
     useAceThemes = SparkFlags.useAceThemes;
+    showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
   }
 
@@ -103,6 +105,10 @@ class SparkPolymerUI extends SparkWidget {
   void onResetGit() {
     _model.syncPrefs.removeValue(['git-auth-info', 'git-user-info']);
     _model.setGitSettingsResetDoneVisible(true);
+  }
+
+  void onSendFeedback() {
+    window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
   }
 
   void onResetPreference() {

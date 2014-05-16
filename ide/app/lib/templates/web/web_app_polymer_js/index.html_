@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>``projectName``</title>
+
+  <link rel="stylesheet" href="styles.css">
+
+  <script src="bower_components/platform/platform.js"></script>
+  <link rel="import" href="bower_components/polymer-ui-card/polymer-ui-card.html">
+</head>
+
+<body>
+  <polymer-ui-card>
+    <div id="greeting"></div>
+  </polymer-ui-card>
+
+  <script src="main.js"></script> 
+</body>
+</html>

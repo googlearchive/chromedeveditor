@@ -8,8 +8,8 @@
 </head>
 
 <body>
-  <h1 id="greeting"></h1>
+  <div id="greeting"></div>
 
-  <script src="main.js"></script>
+  <script src="main.js"></script> 
 </body>
 </html>

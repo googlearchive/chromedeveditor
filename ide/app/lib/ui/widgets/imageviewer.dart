@@ -52,6 +52,8 @@ class ImageViewer implements Editor {
     _loadFile();
   }
 
+  Future<Editor> get whenReady => new Future.value();
+
   _loadFile() {
     _image.onLoad.listen((_) => resize());
     _file.getBytes().then((chrome.ArrayBuffer content) {

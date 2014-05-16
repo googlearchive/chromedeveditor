@@ -54,7 +54,7 @@
             <spark-menu-item action-id="git-clone" label="Git Clone...">
             </spark-menu-item>
             <spark-menu-separator></spark-menu-separator>
-            <spark-menu-item action-id="application-run" label="Run Applciation">
+            <spark-menu-item action-id="application-run" label="Run Application">
             </spark-menu-item>
             <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
             </spark-menu-item>
@@ -216,37 +216,43 @@
               Blank project
             </option>
             <optgroup label="Web apps">
+              <option value="web/web_app_dart">
+                Dart Web app
+              </option>
               <option value="web/web_app_js">
-                Web app (JavaScript)
+                JavaScript Web app
               </option>
               <option value="web/web_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
-                Web app (JavaScript + Polymer)
-              </option>
-              <option value="web/web_app_dart">
-                Web app (Dart)
+                JavaScript Web app using Polymer
               </option>
             </optgroup>
-            <optgroup label="Chrome apps and extensions">
+            <optgroup label="Chrome apps">
               <option value="chrome/chrome_app_js">
-                Chrome app (JavaScript)
+                JavaScript Chrome app
               </option>
-              <option value="chrome/chrome_app_js;polymer,polymer-elements,polymer-ui-elements">
-                Chrome app (JavaScript + Polymer)
-              </option>
-              <option value="chrom/chrome_extension_js">
-                Chrome extension (JavaScript)
-              </option>
-              <option value="chrome/chrome_extension_js;polymer,polymer-elements,polymer-ui-elements">
-                Chrome extension (JavaScript + Polymer)
-              </option>
+              <template if="{{showWipProjectTemplates}}">
+                <!-- This one currently can't possibly work due to Polymer
+                     JS breaking the CSP. BUG #1933. -->
+                <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
+                  JavaScript Chrome app using Polymer
+                </option>
+                <!-- This one works when installed in Chrome manually, but
+                     launching via the 'Run' button is broken. BUG #1935. -->
+                <option value="chrome/chrome_extension_js">
+                  JavaScript Chrome extension
+                </option>
+              </template>
             </optgroup>
             <optgroup label="Other">
               <option value="polymer/polymer_element_js">
-                Polymer custom element (JavaScript)
+                JavaScript Polymer custom element
               </option>
-              <option value="polymer/polymer_element_dart">
-                Polymer custom element (Dart)
-              </option>
+              <template if="{{showWipProjectTemplates}}">
+                <!-- This one just needs some additional work. -->
+                <option value="polymer/polymer_element_dart">
+                  Dart Polymer custom element
+                </option>
+              </template>
             </optgroup>
           </select>
         </div>
@@ -465,6 +471,11 @@
             </label>
           </div>
         </div>
+        <div class="form-group">
+          <spark-button on-click="{{onSendFeedback}}">
+            Send feedback about Spark...
+          </spark-button>
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary focused data-dismiss="modal">
@@ -574,7 +585,6 @@
             </div>
           </div>
         </template>
-
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary focused data-dismiss="modal">

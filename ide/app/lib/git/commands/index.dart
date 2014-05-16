@@ -40,6 +40,22 @@ class Index {
 
   Index(this._store);
 
+  void deleteIndexForEntry(FileStatus status) {
+    if (_statusIdx.containsKey(status.path)) {
+      _statusIdx.remove(status.path);
+    }
+  }
+
+  /**
+   * Creats a index entry for a given [status]. If entry already exists delete
+   * and create a new entry.
+   */
+  void createIndexForEntry(FileStatus status) {
+    deleteIndexForEntry(status);
+    status.type = FileStatusType.COMMITTED;
+    updateIndexForEntry(status);
+  }
+
   void updateIndexForEntry(FileStatus status) {
 
     // Don't track index for git files.
