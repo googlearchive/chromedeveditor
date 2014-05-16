@@ -75,6 +75,15 @@ body {
   height: 36px;
 }
 
+#mainMenu {
+  margin: 0 3px;
+  width: 24px;
+}
+
+#runButton {
+  margin: 0 2px 0 4px;
+}
+
 #fileNotFoundPlaceholder {
   color: #ccc;
   display: block;
