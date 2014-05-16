@@ -2,6 +2,6 @@ import 'dart:html';
 
 void main() {
   var element = new DivElement();
-  element.text = "Hello world!";
+  element.text = "Hello, World!";
   document.body.children.add(element);
 }
