@@ -6,14 +6,6 @@
 @import url("packages/bootjack/css/bootstrap.min.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
 
-#search {
-  display: inline-block;
-  position: relative;
-  top: 4px;
-  width: 200px;
-  height: 31px;
-}
-
 #mainMenu {
   display: block;
 }
@@ -103,7 +95,7 @@
   text-align: center;
 }
 
-#fileNotFoundPlaceholder.hidden {
+#fileNotFoundPlaceholder[hidden] {
   display: none;
 }
 
