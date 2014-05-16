@@ -170,9 +170,9 @@ abstract class Declaration {
     if (map == null || map.isEmpty) return null;
 
     if (map["fileUuid"] != null) {
-      return new CodeDeclaration.fromMap(map);
+      return new SourceDeclaration.fromMap(map);
     } else {
-      return new ApiDeclaration.fromMap(map);
+      return new DocDeclaration.fromMap(map);
     }
   }
 
@@ -183,17 +183,20 @@ abstract class Declaration {
   }
 }
 
-class CodeDeclaration extends Declaration {
+/**
+ * Defines an object containing information about a declaration found in source.
+ */
+class SourceDeclaration extends Declaration {
   final String fileUuid;
   final int offset;
   final int length;
 
-  CodeDeclaration(name, this.fileUuid, this.offset, this.length) : super(name);
+  SourceDeclaration(name, this.fileUuid, this.offset, this.length) : super(name);
 
-  factory CodeDeclaration.fromMap(Map map) {
+  factory SourceDeclaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new CodeDeclaration(map["name"], map["fileUuid"],
+    return new SourceDeclaration(map["name"], map["fileUuid"],
         map["offset"], map["length"]);
   }
 
@@ -225,15 +228,18 @@ class CodeDeclaration extends Declaration {
   String toString() => '${fileUuid} [${offset}:${length}]';
 }
 
-class ApiDeclaration extends Declaration {
+/**
+ * Defines an object containing information about a declaration's doc location.
+ */
+class DocDeclaration extends Declaration {
   final String url;
 
-  ApiDeclaration(String name, this.url) : super(name);
+  DocDeclaration(String name, this.url) : super(name);
 
-  factory ApiDeclaration.fromMap(Map map) {
+  factory DocDeclaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new ApiDeclaration(map["name"], map["url"]);
+    return new DocDeclaration(map["name"], map["url"]);
   }
 
   Map toMap() {

@@ -329,51 +329,53 @@ class AnalyzerServiceImpl extends ServiceImpl {
           context.context.getLibrariesContaining(source);
 
       if (librarySources.isEmpty) return null;
+
       analyzer.CompilationUnit ast =
           context.context.resolveCompilationUnit2(source, librarySources[0]);
 
       analyzer.AstNode node =
           new analyzer.NodeLocator.con1(offset).searchWithin(ast);
-
       if (node is! analyzer.SimpleIdentifier) return null;
 
       analyzer.Element element = analyzer.ElementLocator.locate(node);
-
       if (element == null) return null;
 
       if (element.nameOffset == -1 || element.source == null) {
         return null;
       }
 
-      // TODO:(devoncarew): Handle sdk sources.
       if (element.source is analyzer.FileSource) {
         analyzer.FileSource fileSource = element.source;
-        return new CodeDeclaration(
-            element.displayName, fileSource.uuid,
+        return new SourceDeclaration(element.displayName, fileSource.uuid,
             element.nameOffset, element.name.length);
       } else if (element.source is analyzer.SdkSource) {
-        analyzer.SdkSource sdkSource = element.source;
-        String libraryName = element.library.name.replaceAll(".", "-");
-        String baseUrl =
-            "https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer";
-        String className;
-        String memberAnchor = "";
-        analyzer.Element enclosingElement = element.enclosingElement;
-        if (element is analyzer.ClassElement) {
-          className = element.name;
-        } else if (enclosingElement is analyzer.ClassElement) {
-          className = enclosingElement.name;
-          memberAnchor = "#id_${element.name}";
-        } else {
-          // TODO: Top level variables and functions
-          return null;
-        }
-
-        String url = "$baseUrl/$libraryName.$className$memberAnchor";
-        return new ApiDeclaration(element.displayName, url);
+        String url = _getUrlForElement(element);
+        if (url == null) return null;
+        return new DocDeclaration(element.displayName, url);
       } else {
         return null;
       }
+    }
+
+    String _getUrlForElement(analyzer.Element element) {
+      analyzer.SdkSource sdkSource = element.source;
+      String libraryName = element.library.name.replaceAll(".", "-");
+      String baseUrl =
+          "https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer";
+      String className;
+      String memberAnchor = "";
+      analyzer.Element enclosingElement = element.enclosingElement;
+      if (element is analyzer.ClassElement) {
+        className = element.name;
+      } else if (enclosingElement is analyzer.ClassElement) {
+        className = enclosingElement.name;
+        memberAnchor = "#id_${element.name}";
+      } else {
+        // TODO: Top level variables and functions
+        return null;
+      }
+
+      return "$baseUrl/$libraryName.$className$memberAnchor";
     }
 
     Outline _getOutline(analyzer.CompilationUnit ast) {
