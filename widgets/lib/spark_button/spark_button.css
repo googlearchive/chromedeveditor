@@ -18,3 +18,7 @@
 #button:focus {
   outline: -webkit-focus-ring-color solid 1px;
 }
+
+:host([noPadding]:host) #button {
+  padding: 0;
+}
