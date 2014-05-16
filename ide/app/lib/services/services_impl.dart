@@ -324,14 +324,11 @@ class AnalyzerServiceImpl extends ServiceImpl {
     Declaration _getDeclarationFor(analyzer.ProjectContext context,
         String fileUuid, int offset) {
       analyzer.FileSource source = context.getSource(fileUuid);
-      print("Source: $source");
 
       List<analyzer.Source> librarySources =
           context.context.getLibrariesContaining(source);
-      print("librarySources: $librarySources");
 
       if (librarySources.isEmpty) return null;
-      print("here");
       analyzer.CompilationUnit ast =
           context.context.resolveCompilationUnit2(source, librarySources[0]);
 
@@ -357,17 +354,12 @@ class AnalyzerServiceImpl extends ServiceImpl {
       } else if (element.source is analyzer.SdkSource) {
         analyzer.SdkSource sdkSource = element.source;
         String libraryName = element.library.name.replaceAll(".", "-");
-//        String fullName = sdkSource.fullName;
-//        String package = fullName.substring(fullName.indexOf("/"));
         String baseUrl =
             "https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer";
         String className;
         String memberAnchor = "";
         analyzer.Element enclosingElement = element.enclosingElement;
-        /*%TRACE3*/ print("""(4> 5/15/14): enclosingElement: ${enclosingElement.runtimeType}"""); // TRACE%
-        /*%TRACE3*/ print("""(4> 5/15/14): runtimeType: ${element.runtimeType}"""); // TRACE%
         if (element is analyzer.ClassElement) {
-          /*%TRACE3*/ print("""(4> 5/15/14): element.name: ${element.name}"""); // TRACE%
           className = element.name;
         } else if (enclosingElement is analyzer.ClassElement) {
           className = enclosingElement.name;
