@@ -33,12 +33,11 @@ We address this by using script based positioning =(
   z-index: 1000;
   outline: none;
   display: none;
-  /* Set a identity transform to make <spark-splitter> to be a stacking context.
-     Then, z-index in #draggable becomes relative to :host.
-     Read more about stacking context here:
-     https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context*/
-  transform: scaleZ(1);
   opacity: 0;
+  /* The no-op scaleZ(1) creates an independent stacking context for :host.
+     See: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context
+  */
+  transform: scaleZ(1);
 }
 
 /*
