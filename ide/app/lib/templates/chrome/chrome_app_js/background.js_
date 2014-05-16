@@ -6,7 +6,7 @@
  */
 chrome.app.runtime.onLaunched.addListener(function() {
   chrome.app.window.create(
-    "``sourceName``.html", 
+    "index.html",
     {
       id: "mainWindow",
       bounds: {

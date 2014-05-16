@@ -4,12 +4,12 @@
 <head>
   <title>``projectName``</title>
 
-  <link rel="stylesheet" href="``sourceName``.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
   <div id="greeting"></div>
 
-  <script src="``sourceName``.js"></script> 
+  <script src="main.js"></script> 
 </body>
 </html>

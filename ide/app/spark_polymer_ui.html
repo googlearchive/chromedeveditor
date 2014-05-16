@@ -225,14 +225,15 @@
                 JavaScript Chrome app
               </option>
               <template if="{{showWipProjectTemplates}}">
+                <!-- This one currently can't possibly work due to Polymer
+                     JS breaking the CSP. BUG #1933. -->
                 <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
                   JavaScript Chrome app using Polymer
                 </option>
+                <!-- This one works when installed in Chrome manually, but
+                     launching via the 'Run' button is broken. BUG #1935. -->
                 <option value="chrome/chrome_extension_js">
                   JavaScript Chrome extension
-                </option>
-                <option value="chrome/chrome_extension_js;polymer,polymer-elements,polymer-ui-elements">
-                  JavaScript Chrome extension using Polymer
                 </option>
               </template>
             </optgroup>
@@ -241,6 +242,7 @@
                 JavaScript Polymer custom element
               </option>
               <template if="{{showWipProjectTemplates}}">
+                <!-- This one just needs some additional work. -->
                 <option value="polymer/polymer_element_dart">
                   Dart Polymer custom element
                 </option>

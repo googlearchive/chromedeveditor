@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>``projectName``</title>
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <h1 id="greeting"></h1>
+
+  <script src="main.js"></script>
+</body>
+</html>

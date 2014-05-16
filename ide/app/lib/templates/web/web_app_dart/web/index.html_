@@ -3,11 +3,11 @@
 <html>
 <head>
   <title>``projectName``</title>
-  <link rel="stylesheet" href="``sourceName``.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-  <script type="application/dart" src="``sourceName``.dart"></script>
+  <script type="application/dart" src="main.dart"></script>
   <script src="packages/browser/dart.js"></script>
 </body>
 </html>

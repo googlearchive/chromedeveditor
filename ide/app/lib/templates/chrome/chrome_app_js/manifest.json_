@@ -1,6 +1,7 @@
 {
   "manifest_version": 2,
   "name": "``projectName``",
+  "description": "",
   "version": "0.0.1",
   "minimum_chrome_version": "23",
   "icons": {
@@ -9,7 +10,7 @@
   },
   "app": {
     "background": {
-      "scripts": ["``sourceName``.js"]
+      "scripts": ["background.js"]
     }
   }
 }

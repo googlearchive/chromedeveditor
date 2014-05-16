@@ -8,9 +8,10 @@
     }
   },
   "files": [
+    { "source": "background.js_", "dest": "background.js" },
+    { "source": "index.html_", "dest": "index.html" },
+    { "source": "main.js_", "dest": "main.js" },
     { "source": "manifest.json_", "dest": "manifest.json" },
-    { "source": "source.html_", "dest": "``sourceName``.html" },
-    { "source": "source.js_", "dest": "``sourceName``.js" },
-    { "source": "source.css_", "dest": "``sourceName``.css"}
+    { "source": "styles.css_", "dest": "styles.css"}
   ]
 }

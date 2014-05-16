@@ -8,9 +8,11 @@
     }
   },
   "files": [
+    { "source": "background.js_", "dest": "background.js" },
+    { "source": "intro.html_", "dest": "intro.html" },
     { "source": "manifest.json_", "dest": "manifest.json" },
-    { "source": "source.html_", "dest": "``sourceName``.html" },
-    { "source": "source.js_", "dest": "``sourceName``.js" },
-    { "source": "source.css_", "dest": "``sourceName``.css"}
+    { "source": "popup.css_", "dest": "popup.css" },
+    { "source": "popup.html_", "dest": "popup.html" },
+    { "source": "popup.js_", "dest": "popup.js" }
   ]
 }
