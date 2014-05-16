@@ -28,8 +28,10 @@ class Checkout {
     chrome.DirectoryEntry dir, TreeEntry treeEntry) {
 
     if (treeEntry.isBlob) {
-      return dir.getFile(treeEntry.name).then(
-          (fileEntry) => fileEntry.remove());
+      return dir.getFile(treeEntry.name).then((fileEntry) {
+        store.index.deleteIndexForEntry(fileEntry.fullPath);
+        return fileEntry.remove();
+      });
     }
 
     return dir.getDirectory(treeEntry.name).then((newDir) {
