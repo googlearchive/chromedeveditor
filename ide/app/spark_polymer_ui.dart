@@ -61,9 +61,8 @@ class SparkPolymerUI extends SparkWidget {
   }
 
   void _noFileFilterMatchesHandler(SimpleBusEvent e) {
-    print("cancel == ${e.cancel}");
-    noFileFilterMatches = !e.cancel;
-    refreshFromModel();
+    noFileFilterMatches = e.active;
+    deliverChanges();
   }
 
   void onMenuSelected(CustomEvent event, var detail) {

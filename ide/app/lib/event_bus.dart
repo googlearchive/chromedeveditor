@@ -45,9 +45,9 @@ abstract class BusEvent {
 
 class SimpleBusEvent extends BusEvent {
   final BusEventType _type;
-  final bool cancel;
+  final bool active;
 
-  SimpleBusEvent(this._type, [bool this.cancel = false]);
+  SimpleBusEvent(this._type, {this.active: true});
 
   BusEventType get type => _type;
 }
