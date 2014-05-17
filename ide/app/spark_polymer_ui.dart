@@ -140,5 +140,6 @@ class SparkPolymerUI extends SparkWidget {
 
   void fileFilterInputHandler(Event e) {
     _model.filterFileTreeView(_fileFilter.value);
+    _fileFilter.classes.toggle('active', _fileFilter.value.isNotEmpty);
   }
 }

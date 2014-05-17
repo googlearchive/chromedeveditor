@@ -86,11 +86,11 @@
   height: 36px;
 }
 
-#fileFilter:focus ~ #runButton {
+#fileFilter:focus.active ~ #runButton {
   display: none;
 }
 
-#fileFilter:focus ~ #mainMenu {
+#fileFilter:focus.active ~ #mainMenu {
   display: none;
 }
 
