@@ -3143,7 +3143,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
 class ToggleOutlineVisibilityAction extends SparkAction {
   ToggleOutlineVisibilityAction(Spark spark)
       : super(spark, 'toggleOutlineVisibility', 'Toggle Outline') {
-    addBinding('alt-l');
+    addBinding('alt-o');
   }
 
   @override
