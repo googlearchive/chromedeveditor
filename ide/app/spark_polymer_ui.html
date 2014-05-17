@@ -30,19 +30,18 @@
           <input type="fileFilter"
               id="fileFilter"
               placeholder="Filter"
-              on-focus="{{activateFileFilter}}"
-              on-blur="{{deactivateFileFilter}}"
-              on-keydown="{{maybeClearFileFilter}}"
-              on-input="{{filterFileList}}">
-          <spark-button id="runButton" hidden?="{{fileFilterActive}}">
+              on-keydown="{{fileFilterKeydownHandler}}"
+              on-input="{{fileFilterInputHandler}}"/>
+
+          <spark-button id="runButton">
             <span class="glyphicon glyphicon-play"></span>
           </spark-button>
+
           <spark-menu-button
               id="mainMenu"
               icon="images/overflow.png"
               valueAttr="action-id"
               valign="left"
-              hidden="{{fileFilterActive}}"
               on-activate="{{onMenuSelected}}">
             <spark-menu-item action-id="project-new" label="New Project...">
             </spark-menu-item>

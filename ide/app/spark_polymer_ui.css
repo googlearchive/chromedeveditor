@@ -75,7 +75,6 @@
   font-size: 14px;
   margin: 2px;
   padding: 10px 10px 10px 44px;
-  right: 50px;
 }
 
 #fileFilter:focus {
@@ -85,6 +84,14 @@
 
 #runButton, #mainMenu {
   height: 36px;
+}
+
+#fileFilter:focus ~ #runButton {
+  display: none;
+}
+
+#fileFilter:focus ~ #mainMenu {
+  display: none;
 }
 
 #fileNotFoundPlaceholder {

@@ -19,14 +19,14 @@ import 'lib/platform_info.dart';
 class SparkPolymerUI extends SparkWidget {
   SparkModel _model;
 
-  // NOTE: The initial values for these have to be true so the app can find all
-  // the UI elements it theoretically could need.
+  // NOTE: The initial values for these have to be true, because the app
+  // uses querySelector to find the affected elements that would be not
+  // rendered if these were false.
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
   @observable bool showWipProjectTemplates = true;
   @observable bool chromeOS = true;
 
-  @observable bool fileFilterActive = false;
   @observable bool noFileFilterMatches = false;
 
   InputElement _fileFilter;
@@ -131,15 +131,7 @@ class SparkPolymerUI extends SparkWidget {
     window.open(anchor.href, '_blank');
   }
 
-  void activateFileFilter(Event e) {
-    fileFilterActive = true;
-  }
-
-  void deactivateFileFilter(Event e) {
-    fileFilterActive = false;
-  }
-
-  void maybeClearFileFilter(KeyboardEvent e) {
+  void fileFilterKeydownHandler(KeyboardEvent e) {
     if (e.keyCode == KeyCode.ESC) {
       _fileFilter.value = '';
       _fileFilter.blur();
@@ -148,7 +140,7 @@ class SparkPolymerUI extends SparkWidget {
     }
   }
 
-  void filterFileList(Event e) {
+  void fileFilterInputHandler(Event e) {
     _model.filterFileList(_fileFilter.value);
   }
 }
