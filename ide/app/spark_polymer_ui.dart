@@ -43,27 +43,27 @@ class SparkPolymerUI extends SparkWidget {
   void modelReady(SparkModel model) {
     assert(_model == null);
     _model = model;
-    refreshFromModel();
     // Changed selection may mean some menu items become disabled.
-    // TODO(ussuri): Perhaps listen to more events, e.g. tab switch.
     _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
-        .listen((_) {
-      refreshFromModel();
-    });
+        .listen(refreshFromModel);
     _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__NO_MATCHING_FILES)
-        .listen((SimpleBusEvent e) {
-      noFileFilterMatches = !e.cancel;
-      refreshFromModel();
-    });
+        .listen(_noFileFilterMatchesHandler);
+    refreshFromModel();
   }
 
-  void refreshFromModel() {
+  void refreshFromModel([_]) {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.developerMode;
     useAceThemes = SparkFlags.useAceThemes;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
     deliverChanges();
+  }
+
+  void _noFileFilterMatchesHandler(SimpleBusEvent e) {
+    print("cancel == ${e.cancel}");
+    noFileFilterMatches = !e.cancel;
+    refreshFromModel();
   }
 
   void onMenuSelected(CustomEvent event, var detail) {
