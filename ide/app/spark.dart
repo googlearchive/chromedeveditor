@@ -764,7 +764,7 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  void filterFileList(String searchString) {
+  void filterFileTreeView(String searchString) {
     if ( _filterTimer != null) {
       _filterTimer.cancel();
       _filterTimer = null;

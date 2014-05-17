@@ -134,12 +134,12 @@ class SparkPolymerUI extends SparkWidget {
     if (e.keyCode == KeyCode.ESC) {
       _fileFilter.value = '';
       _fileFilter.blur();
-      _model.filterFileList(null);
+      _model.filterFileTreeView(null);
       e..preventDefault()..stopPropagation();
     }
   }
 
   void fileFilterInputHandler(Event e) {
-    _model.filterFileList(_fileFilter.value);
+    _model.filterFileTreeView(_fileFilter.value);
   }
 }

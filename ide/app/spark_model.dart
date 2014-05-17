@@ -41,7 +41,7 @@ abstract class SparkModel extends Application {
   void onSplitViewUpdate(int position);
   void setGitSettingsResetDoneVisible(bool visible);
 
-  void filterFileList(String filter);
+  void filterFileTreeView(String filter);
 
   /**
    * Hide the splash screen; show the main UI.
