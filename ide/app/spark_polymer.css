@@ -467,9 +467,8 @@ li.outlineItem.topLevel.class {
 
 #outline {
   background: rgba(0, 0, 0, 0.8);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  bottom: 45px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  bottom: 40px;
   overflow-y: auto;
   padding: 10px;
   position: absolute;
