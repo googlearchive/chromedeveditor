@@ -26,8 +26,8 @@ class SparkPolymerUI extends SparkWidget {
   @observable bool showWipProjectTemplates = true;
   @observable bool chromeOS = true;
 
-  @observable bool hideFileNotFound = false;
   @observable bool fileFilterActive = false;
+  @observable bool noFileFilterMatches = false;
 
   InputElement _fileFilter;
 
@@ -50,9 +50,10 @@ class SparkPolymerUI extends SparkWidget {
         .listen((_) {
       refreshFromModel();
     });
-    _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__FILE_NOT_FOUND)
+    _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__NO_MATCHING_FILES)
         .listen((SimpleBusEvent e) {
-      hideFileNotFound = e.negate;
+      noFileFilterMatches = !e.cancel;
+      refreshFromModel();
     });
   }
 
@@ -62,6 +63,7 @@ class SparkPolymerUI extends SparkWidget {
     useAceThemes = SparkFlags.useAceThemes;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
+    deliverChanges();
   }
 
   void onMenuSelected(CustomEvent event, var detail) {

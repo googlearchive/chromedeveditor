@@ -91,12 +91,8 @@
   color: #ccc;
   display: block;
   font-size: 18px;
-  margin-top: 40px;
+  margin-top: 60px;
   text-align: center;
-}
-
-#fileNotFoundPlaceholder[hidden] {
-  display: none;
 }
 
 #sparkStatusContainer {

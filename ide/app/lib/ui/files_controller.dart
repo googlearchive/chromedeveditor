@@ -938,7 +938,7 @@ class FilesController implements TreeViewDelegate {
       _filteredFiles = null;
       _filteredChildrenCache = null;
       _eventBus.addEvent(new SimpleBusEvent(
-          BusEventType.FILES_CONTROLLER__FILE_NOT_FOUND, false));
+          BusEventType.FILES_CONTROLLER__NO_MATCHING_FILES, false));
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
     } else {
       Set<String> filtered = new Set();
@@ -958,7 +958,7 @@ class FilesController implements TreeViewDelegate {
       });
 
       _eventBus.addEvent(new SimpleBusEvent(
-          BusEventType.FILES_CONTROLLER__FILE_NOT_FOUND,
+          BusEventType.FILES_CONTROLLER__NO_MATCHING_FILES,
           _filteredFiles.isNotEmpty));
       _reloadDataAndRestoreExpandedState(filtered.toList());
     }

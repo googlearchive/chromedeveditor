@@ -75,9 +75,11 @@
 
         <content select="#fileViewArea"></content>
 
-        <div id="fileNotFoundPlaceholder" hidden?="{{hideFileNotFound}}">
-          No matching files
-        </div>
+        <template if="{{noFileFilterMatches}}">
+          <div id="fileNotFoundPlaceholder">
+            No matching files
+          </div>
+        </template>
       </div>
 
       <div afterSplit>
