@@ -133,7 +133,6 @@ class SparkPolymerUI extends SparkWidget {
   void fileFilterKeydownHandler(KeyboardEvent e) {
     if (e.keyCode == KeyCode.ESC) {
       _fileFilter.value = '';
-      _fileFilter.blur();
       _model.filterFileTreeView(null);
       e..preventDefault()..stopPropagation();
     }
