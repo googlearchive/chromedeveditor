@@ -73,7 +73,9 @@ class Checkout {
           } else {
             return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
                 "Tree").then((trees) {
-              return smartCheckout(dir, store, trees[0], trees[1]);
+              return dir.createDirectory(newEntry.name).then((newDir) {
+                return smartCheckout(newDir, store, trees[0], trees[1]);
+              });
             });
           }
         });
