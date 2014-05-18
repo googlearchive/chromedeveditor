@@ -6,6 +6,7 @@ library spark_widgets.splitter;
 
 import 'dart:html';
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:polymer/polymer.dart';
 
@@ -13,6 +14,8 @@ import '../common/spark_widget.dart';
 
 @CustomTag('spark-splitter')
 class SparkSplitter extends SparkWidget {
+  static const _MIN_DRAGGABLE_SIZE = 6;
+  
   /// Possible values are "left", "right", "up" and "down".
   /// The direction specifies:
   /// 1) whether the split is horizontal or vertical;
@@ -99,7 +102,10 @@ class SparkSplitter extends SparkWidget {
   }
 
   void _setThickness() {
-    final sizeStr = '${size}px';
+    final String sizeStr = '${size}px';
+    final int draggableSize = math.max(size, _MIN_DRAGGABLE_SIZE);
+    final int draggableStart = ((draggableSize - size) / 2).ceil();
+    
     if (_isHorizontal) {
       style
           ..height = sizeStr
@@ -107,8 +113,8 @@ class SparkSplitter extends SparkWidget {
       _draggable.style
           ..left = "0"
           ..right = "0"
-          ..top = "-3px"
-          ..height = "7px";
+          ..top = "-${draggableStart}px"
+          ..height = "${draggableSize}px";
     } else {
       style
           ..height = "auto"
@@ -116,8 +122,8 @@ class SparkSplitter extends SparkWidget {
       _draggable.style
           ..bottom = "0"
           ..top = "0"
-          ..left = "-3px"
-          ..width = "7px";
+          ..left = "-${draggableStart}px"
+          ..width = "${draggableSize}px";
     }
   }
 
