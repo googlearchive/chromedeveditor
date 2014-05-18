@@ -24,11 +24,15 @@ class SparkSplitter extends SparkWidget {
   @published String direction = 'left';
   /// Height or width of the split bar, depending on the direction.
   @published int size = 8;
+  /// Whether to show a drag handle image within the split bar.
+  @published bool handle = true;
   /// Initial/current height or width of the splitter target. If unspecified,
   /// the actual target's size will be left unchanged on initialization.
   @published int targetSize;
-  /// Whether to show a drag handle image within the split bar.
-  @published bool handle = true;
+  /// Minumum height or width of the splitter target.
+  @published int minTargetSize = 0;
+  /// Maximum height or width of the splitter target.
+  @published int maxTargetSize = 100000;
   /// Whether to lock the split bar so it can't be dragged.
   @published bool locked = false;
 
@@ -98,7 +102,7 @@ class SparkSplitter extends SparkWidget {
   }
 
   void targetSizeChanged() {
-    _commitTargetSize(targetSize);
+    if (targetSize != null) _commitTargetSize(targetSize);
   }
 
   void _setThickness() {
@@ -137,6 +141,7 @@ class SparkSplitter extends SparkWidget {
   /// Update the cached and the actual size of the target.
   void _updateTargetSize(int delta) {
     _targetSize += (_isTargetNextSibling ? -delta : delta);
+    _targetSize = _targetSize.clamp(minTargetSize, maxTargetSize);
     _commitTargetSize(_targetSize);
   }
 

@@ -36,6 +36,8 @@
                 splitterSize
                 splitterHandle
                 targetSize
+                minTargetSize
+                maxTargetSize
                 locked">
   <template>
     <link rel="stylesheet" href="spark_split_view.css">
@@ -49,6 +51,8 @@
         size="{{splitterSize}}"
         handle="{{splitterHandle}}"
         targetSize="{{targetSize}}"
+        minTargetSize="{{minTargetSize}}"
+        maxTargetSize="{{maxTargetSize}}"
         locked="{{locked}}"
         on-update="{{splitterUpdateHandler}}">
     </spark-splitter>

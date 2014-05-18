@@ -19,6 +19,8 @@ class SparkSplitView extends SparkWidget {
   @published int splitterSize = 8;
   @published bool splitterHandle = true;
   @published int targetSize;
+  @published int minTargetSize = 0;
+  @published int maxTargetSize = 100000;
   @published bool locked = false;
 
   /// Constructor.
