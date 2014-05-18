@@ -15,7 +15,7 @@ import '../common/spark_widget.dart';
 @CustomTag('spark-splitter')
 class SparkSplitter extends SparkWidget {
   static const _MIN_DRAGGABLE_SIZE = 6;
-  
+
   /// Possible values are "left", "right", "up" and "down".
   /// The direction specifies:
   /// 1) whether the split is horizontal or vertical;
@@ -101,15 +101,21 @@ class SparkSplitter extends SparkWidget {
     _setThickness();
   }
 
+  /// Automatically called whenever targetSize is changed by the client.
   void targetSizeChanged() {
-    if (targetSize != null) _commitTargetSize(targetSize);
+    final size = (targetSize != null) ? targetSize : _extractTargetSize();
+    final clampedSize = size.clamp(minTargetSize, maxTargetSize);
+    if (clampedSize != targetSize) {
+      targetSize = clampedSize;
+    }
+    _commitTargetSize(targetSize);
   }
 
   void _setThickness() {
     final String sizeStr = '${size}px';
     final int draggableSize = math.max(size, _MIN_DRAGGABLE_SIZE);
     final int draggableStart = ((draggableSize - size) / 2).ceil();
-    
+
     if (_isHorizontal) {
       style
           ..height = sizeStr
@@ -131,11 +137,26 @@ class SparkSplitter extends SparkWidget {
     }
   }
 
-  /// Cache the current actual size of the target.
-  void _cacheTargetSize() {
+  /// Extract the current size of the actual target.
+  int _extractTargetSize() {
     final style = _target.getComputedStyle();
     final sizeStr = _isHorizontal ? style.height : style.width;
-    _targetSize = int.parse(_sizeRe.firstMatch(sizeStr).group(1));
+    return int.parse(_sizeRe.firstMatch(sizeStr).group(1));
+  }
+
+  /// Set the size of the actual target to the specified value.
+  void _commitTargetSize(int val) {
+    final sizeStr = '${val}px';
+    if (_isHorizontal) {
+      _target.style.height = sizeStr;
+    } else {
+      _target.style.width = sizeStr;
+    }
+  }
+
+  /// Cache the current actual size of the target.
+  void _cacheTargetSize() {
+    _targetSize = _extractTargetSize();
   }
 
   /// Update the cached and the actual size of the target.
@@ -143,16 +164,6 @@ class SparkSplitter extends SparkWidget {
     _targetSize += (_isTargetNextSibling ? -delta : delta);
     _targetSize = _targetSize.clamp(minTargetSize, maxTargetSize);
     _commitTargetSize(_targetSize);
-  }
-
-  /// Set the size to the actual target to the specified value.
-  _commitTargetSize(int val) {
-    final sizeStr = '${val}px';
-    if (_isHorizontal) {
-      _target.style.height = sizeStr;
-    } else {
-      _target.style.width = sizeStr;
-    }
   }
 
   /// When dragging starts, cache the target's size and temporarily subscribe
