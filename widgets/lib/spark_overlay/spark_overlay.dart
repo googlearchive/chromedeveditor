@@ -120,10 +120,10 @@ class SparkOverlay extends SparkWidget {
   /**
    * The kind of animation that the overlay should perform on open/close.
    */
-  @published String animation = '';
+  @published String animation = 'none';
 
   static final List<String> _SUPPORTED_ANIMATIONS = [
-    'fade', 'shake', 'scale-slideup'
+    'none', 'fade', 'shake', 'scale-slideup'
   ];
 
   /**
