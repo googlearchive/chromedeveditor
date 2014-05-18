@@ -169,9 +169,10 @@ class SparkPolymer extends Spark {
   void initSplitView() {
     syncPrefs.getValue('splitViewPosition').then((String position) {
       if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          (getUIElement('#splitView') as dynamic).targetSize = value;
+        int value = int.parse(position, onError: (_) => null);
+        if (value != null) {
+          _ui.splitViewPosition = value;
+          _ui.deliverChanges();
         }
       }
     });

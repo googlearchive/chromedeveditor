@@ -18,6 +18,7 @@ class SparkSplitView extends SparkWidget {
   @published String direction = 'left';
   @published int splitterSize = 8;
   @published bool splitterHandle = true;
+  @published int targetSize;
   @published bool locked = false;
 
   /// Constructor.
@@ -36,13 +37,6 @@ class SparkSplitView extends SparkWidget {
             SparkWidget.inlineNestedContentNodes(children[0]).length == 2
            )
     );
-  }
-
-  /**
-   * Set the current splitter location.
-   */
-  set targetSize(num val) {
-    ($['splitter'] as SparkSplitter).targetSize = val;
   }
 
   /**
