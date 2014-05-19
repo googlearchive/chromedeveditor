@@ -1753,6 +1753,8 @@ class GotoDeclarationAction extends SparkAction {
     addBinding('ctrl-.');
     addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
+
+    // Needed for ACCEL + click support
     spark.aceManager.onGotoDeclaration.listen((_) => gotoDeclaration());
   }
 

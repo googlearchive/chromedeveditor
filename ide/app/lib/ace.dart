@@ -220,12 +220,18 @@ class DartEditor extends TextEditor {
     aceManager._analysisService.getDeclarationFor(file, offset).then(
         (svc.Declaration declaration) {
       if (declaration != null) {
-        workspace.File targetFile = declaration.getFile(file.project);
+        if (declaration is svc.SourceDeclaration) {
+          svc.SourceDeclaration codeDeclaration = declaration;
+          workspace.File targetFile = declaration.getFile(file.project);
 
-        // Open targetFile and select the range of text.
-        if (targetFile != null) {
-          Span selection = new Span(declaration.offset, declaration.length);
-          aceManager.delegate.openEditor(targetFile, selection: selection);
+          // Open targetFile and select the range of text.
+          if (targetFile != null) {
+            Span selection = new Span(declaration.offset, declaration.length);
+            aceManager.delegate.openEditor(targetFile, selection: selection);
+          }
+        } else if (declaration is svc.DocDeclaration) {
+          svc.DocDeclaration apiDeclaration = declaration;
+          html.window.open(declaration.url, "_blank");
         }
       }
     });

@@ -161,18 +161,42 @@ class ErrorSeverity {
 /**
  * Defines an object containing information about a declaration.
  */
-class Declaration {
+abstract class Declaration {
   final String name;
-  final String fileUuid;
-  final int offset;
-  final int length;
 
-  Declaration(this.name, this.fileUuid, this.offset, this.length);
+  Declaration(this.name);
 
   factory Declaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new Declaration(map["name"], map["fileUuid"],
+    if (map["fileUuid"] != null) {
+      return new SourceDeclaration.fromMap(map);
+    } else {
+      return new DocDeclaration.fromMap(map);
+    }
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+    };
+  }
+}
+
+/**
+ * Defines an object containing information about a declaration found in source.
+ */
+class SourceDeclaration extends Declaration {
+  final String fileUuid;
+  final int offset;
+  final int length;
+
+  SourceDeclaration(name, this.fileUuid, this.offset, this.length) : super(name);
+
+  factory SourceDeclaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new SourceDeclaration(map["name"], map["fileUuid"],
         map["offset"], map["length"]);
   }
 
@@ -202,6 +226,28 @@ class Declaration {
   }
 
   String toString() => '${fileUuid} [${offset}:${length}]';
+}
+
+/**
+ * Defines an object containing information about a declaration's doc location.
+ */
+class DocDeclaration extends Declaration {
+  final String url;
+
+  DocDeclaration(String name, this.url) : super(name);
+
+  factory DocDeclaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new DocDeclaration(map["name"], map["url"]);
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+      "url": url,
+    };
+  }
 }
 
 /**
