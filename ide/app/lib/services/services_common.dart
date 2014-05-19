@@ -165,7 +165,9 @@ abstract class Declaration {
   final String name;
 
   Declaration(this.name);
-
+  
+  static String _nameFromMap(Map map) => map["name"];
+  
   factory Declaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
@@ -191,12 +193,13 @@ class SourceDeclaration extends Declaration {
   final int offset;
   final int length;
 
-  SourceDeclaration(name, this.fileUuid, this.offset, this.length) : super(name);
+  SourceDeclaration(name, this.fileUuid, this.offset, this.length)
+      : super(name);
 
   factory SourceDeclaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new SourceDeclaration(map["name"], map["fileUuid"],
+    return new SourceDeclaration(Declaration._nameFromMap(map), map["fileUuid"],
         map["offset"], map["length"]);
   }
 
@@ -217,12 +220,11 @@ class SourceDeclaration extends Declaration {
   }
 
   Map toMap() {
-    return {
-      "name": name,
+    return super.toMap()..addAll({
       "fileUuid": fileUuid,
       "offset": offset,
       "length": length,
-    };
+    });
   }
 
   String toString() => '${fileUuid} [${offset}:${length}]';
@@ -239,15 +241,10 @@ class DocDeclaration extends Declaration {
   factory DocDeclaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new DocDeclaration(map["name"], map["url"]);
+    return new DocDeclaration(Declaration._nameFromMap(map), map["url"]);
   }
 
-  Map toMap() {
-    return {
-      "name": name,
-      "url": url,
-    };
-  }
+  Map toMap() => super.toMap()..addAll({"url": url});
 }
 
 /**

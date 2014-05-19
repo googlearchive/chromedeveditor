@@ -221,7 +221,6 @@ class DartEditor extends TextEditor {
         (svc.Declaration declaration) {
       if (declaration != null) {
         if (declaration is svc.SourceDeclaration) {
-          svc.SourceDeclaration codeDeclaration = declaration;
           workspace.File targetFile = declaration.getFile(file.project);
 
           // Open targetFile and select the range of text.
@@ -230,8 +229,7 @@ class DartEditor extends TextEditor {
             aceManager.delegate.openEditor(targetFile, selection: selection);
           }
         } else if (declaration is svc.DocDeclaration) {
-          svc.DocDeclaration apiDeclaration = declaration;
-          html.window.open(declaration.url, "_blank");
+          html.window.open(declaration.url, "spark_doc");
         }
       }
     });

@@ -357,6 +357,9 @@ class AnalyzerServiceImpl extends ServiceImpl {
       }
     }
 
+    /**
+     * Convert a dart: library reference into the corresponding dartdoc url.
+     */
     String _getUrlForElement(analyzer.Element element) {
       analyzer.SdkSource sdkSource = element.source;
       String libraryName = element.library.name.replaceAll(".", "-");
