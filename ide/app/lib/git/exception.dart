@@ -30,8 +30,14 @@ class GitErrorConstants {
   static final String GIT_BRANCH_NOT_FOUND
      = "git.branch_not_found";
 
-  static final String GIT_CLONE_GIT_DIR_IN_USE
-     = "git.clone_dir_in_use";
+  static final String GIT_CLONE_DIR_IN_USE
+     = "git.dir_in_use";
+
+  static final String GIT_CLONE_DIR_NOT_EMPTY
+     = "git.clone_dir_not_empty";
+
+  static final String GIT_CLONE_DIR_NOT_INITIALIZED
+      = "git.clone_dir_not_initialized";
 
   static final String GIT_PUSH_NO_REMOTE
       = "git.push_no_remote";
@@ -53,4 +59,7 @@ class GitErrorConstants {
 
   static final String GIT_INVALID_REPO_URL
       = "git.invalid_repo_url";
+
+  static final String GIT_CLONE_CANCEL
+      = "git.clone_cancel";
 }
