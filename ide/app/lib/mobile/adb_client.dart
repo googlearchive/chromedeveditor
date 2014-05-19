@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /**
- *
+ * A general library for ADB functionality.
  */
 library spark.adb_client;
 

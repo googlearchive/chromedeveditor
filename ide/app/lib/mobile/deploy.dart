@@ -10,6 +10,7 @@ library spark.deploy;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:logging/logging.dart';
 
 import 'adb.dart';
 import 'adb_client.dart';
@@ -19,6 +20,8 @@ import '../preferences.dart';
 import '../tcp.dart';
 import '../workspace.dart';
 import '../workspace_utils.dart';
+
+Logger _logger = new Logger('spark.deploy');
 
 class DeviceInfo {
   final int vendorId;
@@ -74,6 +77,8 @@ class MobileDeploy {
   Future pushToHost(String target, ProgressMonitor monitor) {
     monitor.start('Deploying…', 10);
 
+    _logger.info('deploying application to ip host');
+
     return _sendHttpPush(target, monitor);
   }
 
@@ -86,8 +91,12 @@ class MobileDeploy {
 
     // Try to find a local ADB server. If we fail, try to use USB.
     return AdbClientTcp.createClient().then((AdbClientTcp client) {
+      _logger.info('deploying application via adb server');
+
       return _pushToAdbServer(client, monitor);
     }, onError: (_) {
+      _logger.info('deploying application via ADB over USB');
+
       // No server found, so use our own USB code.
       return _pushViaUSB(monitor);
     });

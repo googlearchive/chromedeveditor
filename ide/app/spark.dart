@@ -1919,6 +1919,11 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
     _pushUrlElement = _triggerOnReturn("#pushUrl");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+
+    // When the IP address field is selected, check the `IP` checkbox.
+    getElement('#pushUrl').onFocus.listen((e) {
+      (getElement('#ip') as InputElement).checked = true;
+    });
   }
 
   void _invoke([context]) {
