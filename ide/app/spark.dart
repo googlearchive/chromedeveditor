@@ -2111,6 +2111,11 @@ class GitCloneAction extends SparkActionWithDialog {
     _show();
   }
 
+  void _onCancel() {
+    ScmProvider scmProvider = getProviderType('git');
+    scmProvider.cancelClone();
+  }
+
   void _commit() {
     String url = _repoUrlElement.value;
     String projectName;
@@ -2132,6 +2137,8 @@ class GitCloneAction extends SparkActionWithDialog {
 
     _GitCloneJob job = new _GitCloneJob(url, projectName, spark);
     spark.jobManager.schedule(job);
+    SparkDialog dialog = spark.createDialog(spark.getDialogElement('#gitCloneDialog'));
+    dialog.element.querySelector("[primary]").onClick.listen((_) => _onCancel());
   }
 }
 
@@ -2560,12 +2567,12 @@ class _GitCloneJob extends Job {
 
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Cloned into ${project.name}');
-                 
+
           Timer.run(() {
             spark._filesController.selectFile(project);
             spark._filesController.setFolderExpanded(project);
           });
-          
+
           // Run Pub if the new project has a pubspec file.
           if (spark.pubManager.properties.isProjectWithPackages(project)) {
             spark.jobManager.schedule(new PubGetJob(spark, project));
@@ -2708,17 +2715,17 @@ class _OpenFolderJob extends Job {
         spark._filesController.selectFile(resource);
         spark._filesController.setFolderExpanded(resource);
       });
-      
+
       // Run Pub if the folder has a pubspec file.
       if (spark.pubManager.properties.isProjectWithPackages(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
-      
+
       // Run Bower if the folder has a bower.json file.
       if (spark.bowerManager.properties.isProjectWithPackages(resource)) {
         spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
-      
+
       return spark.workspace.save();
     }).then((_) {
       spark.showSuccessMessage('Opened folder ${_entry.fullPath}');

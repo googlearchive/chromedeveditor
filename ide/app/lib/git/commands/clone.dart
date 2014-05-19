@@ -32,7 +32,7 @@ export '../options.dart';
 class Clone {
   PrintProfiler _stopwatch;
 
-  Cancel cancel;
+  Cancel _cancel;
 
   GitOptions _options;
 
@@ -42,7 +42,7 @@ class Clone {
       _options.progressCallback = nopFunction;
     }
 
-    cancel = new CloneCancel();
+    _cancel = new CloneCancel();
   }
 
   chrome.DirectoryEntry get root => _options.root;
@@ -272,11 +272,17 @@ class Clone {
   Future _callMethod(Function func, List args,
       [Map<Symbol, dynamic> namedArgs]) {
     return Function.apply(func, args, namedArgs).then((result) {
-      cancel.check();
+      _cancel.check();
       return result;
     });
   }
 
+  /**
+   * Cancels the clone operation.
+   */
+  void cancel() {
+    _cancel.cancel = true;
+  }
 }
 
 class CloneCancel extends Cancel {

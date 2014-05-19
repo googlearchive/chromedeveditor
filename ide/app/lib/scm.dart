@@ -142,6 +142,11 @@ abstract class ScmProvider {
    */
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName});
+
+  /**
+   * Cancels the active clone in progress.
+   */
+  void cancelClone();
 }
 
 /**
@@ -256,6 +261,8 @@ class GitScmProvider extends ScmProvider {
 
   String get id => 'git';
 
+  Clone activeClone;
+
   bool isUnderScm(Project project) {
     Folder gitFolder = project.getChild('.git');
     if (gitFolder is! Folder) return false;
@@ -280,15 +287,24 @@ class GitScmProvider extends ScmProvider {
 
     return options.store.init().then((_) {
       return new Clone(options).clone().then((_) {
-        return options.store.index.flush();
+        return options.store.index.flush().then((_) {
+          activeClone = null;
+        });
       });
     }).catchError((e) {
+      activeClone = null;
       if (e is HttpResult) {
         throw new ScmException(e.toString(), e.needsAuth);
       } else {
         throw new ScmException(e.toString());
       }
     });
+  }
+
+  void cancelClone() {
+    if (activeClone != null) {
+      activeClone.cancel();
+    }
   }
 }
 
