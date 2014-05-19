@@ -44,8 +44,9 @@ class Pack {
   int _offset = 0;
   ObjectStore _store;
   List<PackedObject> objects = [];
+  Cancel _cancel;
 
-  Pack(this.data, [this._store]);
+  Pack(this.data, [this._store, this._cancel]);
 
   Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
 
@@ -254,6 +255,7 @@ class Pack {
 
        Future parse(_) {
 
+         _cancel.check();
          PackedObject object = _matchObjectAtOffset(_offset);
          object.crc = getCrc32(data.sublist(object.offset, _offset));
 
@@ -275,6 +277,7 @@ class Pack {
        }
 
        Future expandDeltified(PackedObject obj) {
+         _cancel.check();
          return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
            deltifiedObj.data = null;
            // TODO(grv) : add progress.
