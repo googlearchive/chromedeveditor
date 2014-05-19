@@ -293,8 +293,22 @@ class AceManager {
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
-    _aceEditor.setOption('enableMultiselect', false);
+    ace.require('ace/ext/linking');
 
+    _aceEditor.setOptions({'enableMultiselect' : false, 'enableLinking' : true});
+
+    new Future.delayed(const Duration(milliseconds: 2000)).then((_){
+      /*%TRACE3*/ print("(4> 5/16/14): Future.delayed!"); // TRACE%
+
+      _aceEditor.onLinkClick.listen((ace.Point documentPoint) {
+        /*%*/ print("Link: ${documentPoint.column}, ${documentPoint.row}"); //%
+      });
+      _aceEditor.onLinkHover.listen((ace.Point documentPoint) {
+        /*%*/ print("hover: ${documentPoint.column}, ${documentPoint.row}"); //%
+//      editor.session.addMarker(new ace.Range(documentPoint.row, documentPoint.column, documentPoint.row, documentPoint.column + 2), "ace_bracket", type: ace.Marker.TEXT);
+      });
+
+    });
     // Override Ace's `gotoline` command.
     var command = new ace.Command(
         'gotoline',
