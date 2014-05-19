@@ -2570,6 +2570,12 @@ class _GitCloneJob extends Job {
           if (spark.pubManager.properties.isProjectWithPackages(project)) {
             spark.jobManager.schedule(new PubGetJob(spark, project));
           }
+
+          // Run Bower if the new project has a bower.json file.
+          if (spark.bowerManager.properties.isProjectWithPackages(project)) {
+            spark.jobManager.schedule(new BowerGetJob(spark, project));
+          }
+
           spark.workspace.save();
         });
       });
@@ -2706,6 +2712,11 @@ class _OpenFolderJob extends Job {
       // Run Pub if the folder has a pubspec file.
       if (spark.pubManager.properties.isProjectWithPackages(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
+      }
+      
+      // Run Bower if the folder has a bower.json file.
+      if (spark.bowerManager.properties.isProjectWithPackages(resource)) {
+        spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
       
       return spark.workspace.save();
