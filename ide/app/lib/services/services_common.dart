@@ -526,6 +526,8 @@ class _ContentRetriever {
     String source = fileMap[file];
     int lineCount = 0;
 
+    if (source == null) return lineCount;
+
     for (int index = 0; index < source.length; index++) {
       if (source[index] == '\n') lineCount++;
       if (index == offset) return lineCount + 1;
