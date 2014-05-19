@@ -412,6 +412,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
+  Future<List<String>> getDeletedFiles() {
+    return objectStore.then((store) {
+      return Status.getDeletedFiles(store);
+    });
+  }
+
   Future fetch() {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
