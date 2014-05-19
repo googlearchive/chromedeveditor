@@ -224,14 +224,8 @@ class SparkPolymer extends Spark {
 
   @override
   void initFilter() {
-    _filterField.onFocus.listen((e) {
-      _filterFieldFocused = true;
-      _updateFilterFieldState();
-    });
-    _filterField.onBlur.listen((e) {
-      _filterFieldFocused = false;
-      _updateFilterFieldState();
-    });
+    _filterField.onFocus.listen((e) => _updateFilterFieldState(true));
+    _filterField.onBlur.listen((e) => _updateFilterFieldState(false));
     _filterField.onInput.listen((e) {
       _updateFilterFieldState();
       filterFilesList(_filterField.value);
@@ -247,7 +241,10 @@ class SparkPolymer extends Spark {
     });
   }
 
-  void _updateFilterFieldState() {
+  void _updateFilterFieldState([bool focused]) {
+    if (focused != null) {
+      _filterFieldFocused = focused;
+    }
     bool value = _filterFieldFocused && _filterField.value.isNotEmpty;
     _mainMenuButton.hidden = value;
     _runButton.hidden = value;
