@@ -12,18 +12,18 @@ import '../workspace.dart';
 // TODO(ussuri): Add comments.
 
 abstract class PackageServiceProperties {
-  bool isProjectWithPackages(Project project) =>
+  bool isProjectWithPackages(Container project) =>
       project.getChild(packageSpecFileName) != null;
 
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
-           (resource is Project && isProjectWithPackages(resource));
+           (resource is Container && isProjectWithPackages(resource));
   }
 
   bool isInPackagesFolder(Resource resource) {
     while (resource.parent != null) {
-      if (resource.parent is Project) {
-        return resource.name == packagesDirName && resource is Folder;
+      if (resource.name == packagesDirName && resource is Folder) {
+        return true;
       }
       resource = resource.parent;
     }

@@ -309,6 +309,19 @@ class AceManager {
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         _showGotoLineView);
     _aceEditor.commands.addCommand(command);
+    if (PlatformInfo.isMac) {
+      command = new ace.Command(
+          'scrolltobeginningofdocument',
+          const ace.BindKey(mac: 'Home'),
+          _scrollToBeginningOfDocument);
+      _aceEditor.commands.addCommand(command);
+
+      command = new ace.Command(
+          'scrolltoendofdocument',
+          const ace.BindKey(mac: 'End'),
+          _scrollToEndOfDocument);
+      _aceEditor.commands.addCommand(command);
+    }
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
@@ -707,6 +720,15 @@ class AceManager {
   }
 
   void _handleGotoLineViewClosed(_) => focus();
+
+  void _scrollToBeginningOfDocument(_) {
+    _aceEditor.session.scrollTop = 0;
+  }
+
+  void _scrollToEndOfDocument(_) {
+    int lineHeight = html.querySelector('.ace_gutter-cell').clientHeight;
+    _aceEditor.session.scrollTop = _aceEditor.session.document.length * lineHeight;
+  }
 }
 
 class ThemeManager {

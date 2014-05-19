@@ -19,8 +19,11 @@ import 'lib/platform_info.dart';
 class SparkPolymerUI extends SparkWidget {
   SparkModel _model;
 
-  // NOTE: The initial values have to be true so the app can find all the
-  // UI elements it theoretically could need.
+  @published int splitViewPosition;
+
+  // NOTE: The initial values for these have to be true, because the app
+  // uses querySelector to find the affected elements that would be not
+  // rendered if these were false.
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
   @observable bool showWipProjectTemplates = true;
@@ -51,6 +54,9 @@ class SparkPolymerUI extends SparkWidget {
     useAceThemes = SparkFlags.useAceThemes;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
+
+    // This propagates external changes down to the enclosed widgets.
+    Observable.dirtyCheck();
   }
 
   void onMenuSelected(CustomEvent event, var detail) {

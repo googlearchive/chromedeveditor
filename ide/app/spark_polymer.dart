@@ -100,6 +100,10 @@ class SparkPolymerDialog implements SparkDialog {
 
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
+  bool _filterFieldFocused = false;
+  Element _mainMenuButton = querySelector('#mainMenu');
+  Element _runButton = querySelector('#runButton');
+  InputElement _filterField = querySelector('#search');
 
   Future openFolder() {
     return _beforeSystemModal()
@@ -169,9 +173,10 @@ class SparkPolymer extends Spark {
   void initSplitView() {
     syncPrefs.getValue('splitViewPosition').then((String position) {
       if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          (getUIElement('#splitView') as dynamic).targetSize = value;
+        int value = int.parse(position, onError: (_) => null);
+        if (value != null) {
+          _ui.splitViewPosition = value;
+          _ui.deliverChanges();
         }
       }
     });
@@ -220,25 +225,30 @@ class SparkPolymer extends Spark {
 
   @override
   void initFilter() {
-    InputElement input = querySelector('#search');
-    input.onFocus.listen((e) {
-      querySelector('#mainMenu').hidden = true;
-      querySelector('#runButton').hidden = true;
+    _filterField.onFocus.listen((e) => _updateFilterFieldState(true));
+    _filterField.onBlur.listen((e) => _updateFilterFieldState(false));
+    _filterField.onInput.listen((e) {
+      _updateFilterFieldState();
+      filterFilesList(_filterField.value);
     });
-    input.onBlur.listen((e) {
-      querySelector('#mainMenu').hidden = false;
-      querySelector('#runButton').hidden = false;
-    });
-    input.onInput.listen((e) => filterFilesList(input.value));
-    input.onKeyDown.listen((e) {
+    _filterField.onKeyDown.listen((e) {
       // When ESC key is pressed.
       if (e.keyCode == KeyCode.ESC) {
-        input.value = '';
-        input.blur();
+        _filterField.value = '';
+        _updateFilterFieldState();
         filterFilesList(null);
         cancelEvent(e);
       }
     });
+  }
+
+  void _updateFilterFieldState([bool focused]) {
+    if (focused != null) {
+      _filterFieldFocused = focused;
+    }
+    bool value = _filterFieldFocused && _filterField.value.isNotEmpty;
+    _mainMenuButton.hidden = value;
+    _runButton.hidden = value;
   }
 
   @override
