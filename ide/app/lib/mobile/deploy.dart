@@ -212,11 +212,15 @@ class MobileDeploy {
   }
 
   Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
-    // Start ADT on the device.
-    return client.startActivity(AdbApplication.CHROME_ADT).then((_) {
-      // Setup port forwarding to 2424 on the device.
-      return client.forwardTcp(2424, 2424);
-    }).then((_) {
+//  // Start ADT on the device.
+//  return client.startActivity(AdbApplication.CHROME_ADT);
+
+    client.getDevices();
+
+    // Setup port forwarding to 2424 on the device.
+    return client.forwardTcp(2424, 2424).then((_) {
+      // TODO: a SocketException, code == -100 here often means that Chrome ADT
+      // is not running on the device.
       // Push the app binary to port 2424.
       return _sendHttpPush('127.0.0.1', monitor);
     });

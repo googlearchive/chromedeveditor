@@ -212,6 +212,7 @@ class PrintProfiler {
 class StreamReader {
   final Stream<List<int>> stream;
   List<int> _buffer = [];
+  // `_done` is true when there's no more data available to read.
   bool _done = false;
   Completer _completer;
   int _readLength;
@@ -226,12 +227,17 @@ class StreamReader {
     });
   }
 
+  /**
+   * Return a Future which completes with the requested number of read bytes. If
+   * `length` is given as `-1`, the Future will complete with all the remaining
+   * bytes on the stream (see also, [readRemaining]).
+   */
   Future<List<int>> read(int length) {
     _readLength = length;
-    Completer completer = new Completer();
-    _completer = completer;
+    _completer = new Completer();
+    Completer c = _completer;
     _checkListener();
-    return completer.future;
+    return c.future;
   }
 
   Future<List<int>> readRemaining() {
@@ -253,6 +259,7 @@ class StreamReader {
       _completer = null;
     } else if (_done) {
       _completer.completeError('eof');
+      _completer = null;
     }
   }
 }

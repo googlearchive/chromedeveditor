@@ -4,6 +4,10 @@
 
 /**
  * A library to communicate with a running ADB server.
+ *
+ * Documentation for the ADB server protocol:
+ * - https://github.com/jcs/adb/blob/master/SERVICES.TXT
+ * - https://github.com/mozilla/libadb.js/blob/master/android-tools/adb-bin/OVERVIEW.TXT
  */
 library spark.adb_client_tcp;
 
@@ -170,19 +174,19 @@ class AdbResponse {
 
     StreamReader reader = new StreamReader(client.stream);
 
-    return reader.read(4).then((List<int> data1) {
-      String str = new String.fromCharCodes(data1);
+    return reader.read(4).then((List<int> data) {
+      String str = new String.fromCharCodes(data);
       response = new AdbResponse._(str);
 
       if (response.isOkay() && !expectPayload) {
         return response;
       } else {
-        return reader.read(4).then((List<int> data2) {
-          String str = new String.fromCharCodes(data2);
+        return reader.read(4).then((List<int> data) {
+          String str = new String.fromCharCodes(data);
           int len = int.parse(str, radix: 16);
           return reader.read(len);
-        }).then((List<int> data3) {
-          response._data = data3;
+        }).then((List<int> data) {
+          response._data = data;
           return response;
         });
       }
@@ -195,26 +199,26 @@ class AdbResponse {
       {bool expectResponse: true, bool parseStream: false}) {
     AdbResponse response;
 
-    return reader.read(4).then((List<int> data1) {
-      String str = new String.fromCharCodes(data1);
+    return reader.read(4).then((List<int> data) {
+      String str = new String.fromCharCodes(data);
       response = new AdbResponse._(str);
 
       if (response.isOkay() && !expectResponse) {
         return response;
       } else if (!response.isOkay() || !parseStream) {
-        return reader.read(4).then((List<int> data2) {
-          String str = new String.fromCharCodes(data2);
+        return reader.read(4).then((List<int> data) {
+          String str = new String.fromCharCodes(data);
           int len = int.parse(str, radix: 16);
           return reader.read(len);
-        }).then((List<int> data3) {
-          response._data = data3;
+        }).then((List<int> data) {
+          response._data = data;
           if (response.isFail()) throw response;
           return response;
         });
       } else {
         // parseStream == true
-        return reader.readRemaining().then((List<int> data4) {
-          response._data = data4;
+        return reader.readRemaining().then((List<int> data) {
+          response._data = data;
           return response;
         });
       }

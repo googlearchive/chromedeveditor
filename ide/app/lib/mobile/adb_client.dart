@@ -11,6 +11,9 @@ library spark.adb_client;
  * An ADB device.
  */
 class AdbDevice {
+  /**
+   * [id] can take on values like `emulator-5556` and `02b8372308e43795`.
+   */
   final String id;
   final String description;
 
