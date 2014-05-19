@@ -6,6 +6,7 @@ library spark_widgets.splitter;
 
 import 'dart:html';
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:polymer/polymer.dart';
 
@@ -13,6 +14,8 @@ import '../common/spark_widget.dart';
 
 @CustomTag('spark-splitter')
 class SparkSplitter extends SparkWidget {
+  static const _MIN_DRAGGABLE_SIZE = 6;
+
   /// Possible values are "left", "right", "up" and "down".
   /// The direction specifies:
   /// 1) whether the split is horizontal or vertical;
@@ -23,33 +26,20 @@ class SparkSplitter extends SparkWidget {
   @published int size = 8;
   /// Whether to show a drag handle image within the split bar.
   @published bool handle = true;
+  /// Initial/current height or width of the splitter target. If unspecified,
+  /// the actual target's size will be left unchanged on initialization.
+  @published int targetSize;
+  /// Minumum height or width of the splitter target.
+  @published int minTargetSize = 0;
+  /// Maximum height or width of the splitter target.
+  @published int maxTargetSize = 100000;
   /// Whether to lock the split bar so it can't be dragged.
   @published bool locked = false;
-
-  /**
-   * Return the current splitter location.
-   */
-  int get targetSize {
-    final style = _target.getComputedStyle();
-    final sizeStr = _isHorizontal ? style.height : style.width;
-    return int.parse(_sizeRe.firstMatch(sizeStr).group(1));
-  }
-
-  /**
-   * Set the current splitter location.
-   */
-  set targetSize(int val) {
-    final sizeStr = '${val.toInt()}px';
-    if (_isHorizontal) {
-      _target.style.height = sizeStr;
-    } else {
-      _target.style.width = sizeStr;
-    }
-  }
 
   /// Whether the split view is horizontal or vertical.
   bool _isHorizontal;
 
+  DivElement _draggable;
   /// The target sibling whose size will be changed when the splitter is
   /// dragged. The other sibling is expected to auto-adjust, e.g. using flexbox.
   HtmlElement _target;
@@ -77,21 +67,25 @@ class SparkSplitter extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    // TODO(sergeygs): Perhaps switch to using onDrag* instead of onMouse* once
+    _draggable = $['draggable'];
+    // TODO(ussuri): Perhaps switch to using onDrag* instead of onMouse* once
     // support for drag-and-drop in shadow DOM is fixed. It is less important
     // here, because the element is not actually supposed to be dropped onto
     // anything. But if the switch is made, "draggable" for the element should
     // be set as well.
     // See bug https://code.google.com/p/chromium/issues/detail?id=264983.
-    ($['draggable'] as DivElement).onMouseDown.listen(trackStart);
+    _draggable.onMouseDown.listen(trackStart);
+
+    // Initial settings.
     directionChanged();
+    targetSizeChanged();
   }
 
   /// Triggered when [direction] is externally changed.
   // NOTE: The name must be exactly like this -- do not change.
   void directionChanged() {
-    _isTargetNextSibling = direction == 'right' || direction == 'down';
     _isHorizontal = direction == 'up' || direction == 'down';
+    _isTargetNextSibling = direction == 'right' || direction == 'down';
     _target =
         _isTargetNextSibling ? nextElementSibling : previousElementSibling;
     // If we're enclosed in another element and sandwiched between its
@@ -105,41 +99,72 @@ class SparkSplitter extends SparkWidget {
     classes.toggle('horizontal', _isHorizontal);
     classes.toggle('vertical', !_isHorizontal);
     _setThickness();
-    if (handle) _addBackgroundHandle();
+  }
+
+  /// Automatically called whenever targetSize is changed by the client.
+  void targetSizeChanged() {
+    if (targetSize == null) return;
+
+    final size = (targetSize != null) ? targetSize : _extractTargetSize();
+    final clampedSize = size.clamp(minTargetSize, maxTargetSize);
+    if (clampedSize != targetSize) {
+      targetSize = clampedSize;
+    }
+    _commitTargetSize(targetSize);
   }
 
   void _setThickness() {
-    final sizeStr = '${size}px';
+    final int draggableSize = math.max(size, _MIN_DRAGGABLE_SIZE);
+    final int draggableStart = ((draggableSize - size) / 2).ceil();
+
     if (_isHorizontal) {
-      style.height = sizeStr;
-      style.width = "auto";
+      style
+          ..height = '${size}px'
+          ..width = "auto";
+      _draggable.style
+          ..left = "0"
+          ..right = "0"
+          ..top = "-${draggableStart}px"
+          ..height = "${draggableSize}px";
     } else {
-      style.height = "auto";
-      style.width = sizeStr;
+      style
+          ..height = "auto"
+          ..width = '${size}px';
+      _draggable.style
+          ..top = "0"
+          ..bottom = "0"
+          ..left = "-${draggableStart}px"
+          ..width = "${draggableSize}px";
     }
   }
 
-  void _addBackgroundHandle() {
-    classes.toggle('horizontal-handle', _isHorizontal);
-    classes.toggle('vertical-handle', !_isHorizontal);
-  }
-
-  /// Cache the current size of the target.
-  void _cacheTargetSize() {
+  /// Extract the current size of the actual target.
+  int _extractTargetSize() {
     final style = _target.getComputedStyle();
     final sizeStr = _isHorizontal ? style.height : style.width;
-    _targetSize = int.parse(_sizeRe.firstMatch(sizeStr).group(1));
+    return int.parse(_sizeRe.firstMatch(sizeStr).group(1));
   }
 
-  /// Update the cached and the actual size of the target.
-  void _updateTargetSize(int delta) {
-    _targetSize += (_isTargetNextSibling ? -delta : delta);
-    final sizeStr = '${_targetSize}px';
+  /// Set the size of the actual target to the specified value.
+  void _commitTargetSize(int val) {
+    final sizeStr = '${val}px';
     if (_isHorizontal) {
       _target.style.height = sizeStr;
     } else {
       _target.style.width = sizeStr;
     }
+  }
+
+  /// Cache the current actual size of the target.
+  void _cacheTargetSize() {
+    _targetSize = _extractTargetSize();
+  }
+
+  /// Update the cached and the actual size of the target.
+  void _updateTargetSize(int delta) {
+    _targetSize += (_isTargetNextSibling ? -delta : delta);
+    _targetSize = _targetSize.clamp(minTargetSize, maxTargetSize);
+    _commitTargetSize(_targetSize);
   }
 
   /// When dragging starts, cache the target's size and temporarily subscribe
@@ -180,6 +205,9 @@ class SparkSplitter extends SparkWidget {
     _trackEndSubscr.cancel();
     _trackEndSubscr = null;
 
+    // Set the published attribute to the current actual target size and notify
+    // clients.
+    targetSize = _targetSize;
     asyncFire('update', detail: {'targetSize': _targetSize});
 
     // Prevent possible wrong use of the cached value.

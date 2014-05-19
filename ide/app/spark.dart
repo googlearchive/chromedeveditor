@@ -2211,7 +2211,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   List<ws.File> modifiedFileList = [];
   List<ws.File> addedFileList = [];
-  List<ws.File> deletedFileList = [];
+  List<String> deletedFileList = [];
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
@@ -2250,9 +2250,12 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _gitChangeElement.text = '';
       _gitChangeElement.style.display = 'none';
 
-      _addGitStatus();
+      gitOperations.getDeletedFiles().then((List<String> paths) {
+        deletedFileList = paths;
+        _addGitStatus();
+        _show();
+      });
 
-      _show();
     });
   }
 
@@ -2264,18 +2267,19 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     addedFileList.forEach((file){
       _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
     });
-    deletedFileList.forEach((file){
-      _gitChangeElement.innerHtml += 'Deleted:&emsp;' + file.path + '<br/>';
+    deletedFileList.forEach((path){
+      _gitChangeElement.innerHtml += 'Deleted:&emsp;' + path + '<br/>';
     });
     final int modifiedCnt = modifiedFileList.length;
     final int addedCnt = addedFileList.length;
     final int deletedCnt = deletedFileList.length;
-    if (modifiedCnt + addedCnt == 0) {
+    if (modifiedCnt + addedCnt + deletedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
     } else {
       _gitStatusElement.text =
           '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
-          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.';
+          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.' +
+          '$deletedCnt ${(deletedCnt > 1) ? 'files' : 'file'} deleted.';
     // TODO(sunglim): show the count of deletetd files.
     }
   }
@@ -2554,12 +2558,12 @@ class _GitCloneJob extends Job {
 
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Cloned into ${project.name}');
-                 
+
           Timer.run(() {
             spark._filesController.selectFile(project);
             spark._filesController.setFolderExpanded(project);
           });
-          
+
           // Run Pub if the new project has a pubspec file.
           if (spark.pubManager.properties.isProjectWithPackages(project)) {
             spark.jobManager.schedule(new PubGetJob(spark, project));
@@ -2702,17 +2706,17 @@ class _OpenFolderJob extends Job {
         spark._filesController.selectFile(resource);
         spark._filesController.setFolderExpanded(resource);
       });
-      
+
       // Run Pub if the folder has a pubspec file.
       if (spark.pubManager.properties.isProjectWithPackages(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
-      
+
       // Run Bower if the folder has a bower.json file.
       if (spark.bowerManager.properties.isProjectWithPackages(resource)) {
         spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
-      
+
       return spark.workspace.save();
     }).then((_) {
       spark.showSuccessMessage('Opened folder ${_entry.fullPath}');

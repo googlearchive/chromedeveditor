@@ -19,6 +19,8 @@ import 'lib/platform_info.dart';
 class SparkPolymerUI extends SparkWidget {
   SparkModel _model;
 
+  @published int splitViewPosition;
+
   // NOTE: The initial values for these have to be true, because the app
   // uses querySelector to find the affected elements that would be not
   // rendered if these were false.
@@ -57,7 +59,9 @@ class SparkPolymerUI extends SparkWidget {
     useAceThemes = SparkFlags.useAceThemes;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
-    deliverChanges();
+
+    // This propagates external changes down to the enclosed widgets.
+    Observable.dirtyCheck();
   }
 
   void _noFileFilterMatchesHandler(SimpleBusEvent e) {
