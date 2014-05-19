@@ -78,7 +78,7 @@ defineTests() {
     test('hello world', () {
       final String str = "void main() { print('hello world'); }";
 
-      return compiler.compileString(str).then((CompilerResult result) {
+      return compiler.compileString(str).then((CompileResult result) {
         expect(result.getSuccess(), true);
         expect(result.output.length, greaterThan(100));
       });
@@ -88,7 +88,7 @@ defineTests() {
       // Missing semi-colon.
       final String str = "void main() { print('hello world') }";
 
-      return compiler.compileString(str).then((CompilerResult result) {
+      return compiler.compileString(str).then((CompileResult result) {
         expect(result.getSuccess(), false);
         expect(result.problems.length, 1);
         expect(result.output, null);
@@ -99,7 +99,7 @@ defineTests() {
       DirectoryEntry dir = createSampleDirectory1('foo1');
       return linkSampleProject(dir, workspace).then((Project project) {
         File file = project.getChildPath('web/sample.dart');
-        return compiler.compileFile(file).then((CompilerResult result) {
+        return compiler.compileFile(file).then((CompileResult result) {
           expect(result.getSuccess(), true);
           expect(result.problems.length, 0);
           expect(result.output.length, greaterThan(100));
@@ -111,7 +111,7 @@ defineTests() {
       DirectoryEntry dir = createSampleDirectory2('foo2');
       return linkSampleProject(dir, workspace).then((Project project) {
         File file = project.getChildPath('web/sample.dart');
-        return compiler.compileFile(file).then((CompilerResult result) {
+        return compiler.compileFile(file).then((CompileResult result) {
           expect(result.getSuccess(), true);
           expect(result.problems.length, 0);
           expect(result.output.length, greaterThan(100));
@@ -123,7 +123,7 @@ defineTests() {
       DirectoryEntry dir = createSampleDirectory3('foo3');
       return linkSampleProject(dir, workspace).then((Project project) {
         File file = project.getChildPath('web/sample.dart');
-        return compiler.compileFile(file).then((CompilerResult result) {
+        return compiler.compileFile(file).then((CompileResult result) {
           expect(result.getSuccess(), true);
           expect(result.problems.length, 0);
           expect(result.output.length, greaterThan(100));

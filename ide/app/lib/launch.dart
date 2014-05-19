@@ -16,7 +16,6 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'apps/app_utils.dart';
-import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
@@ -394,7 +393,7 @@ class Dart2JsServlet extends PicoServlet {
     file.workspace.builderManager.jobManager.schedule(
         new ProgressJob('Compiling ${file.name}…', completer));
 
-    return _compiler.compileFile(file).then((CompilerResult result) {
+    return _compiler.compileFile(file).then((CompileResult result) {
       if (!result.hasOutput) {
         //_logger.warning('Error compiling ${file.path} with dart2js.');
         //for (CompilerProblem problem in result.problems) {
@@ -430,14 +429,14 @@ class Dart2JsServlet extends PicoServlet {
 
 String _getPath(HttpRequest request) => request.uri.pathSegments.join('/');
 
-String _createTextForError(File file, CompilerResult result) {
+String _createTextForError(File file, CompileResult result) {
   StringBuffer buf = new StringBuffer();
 
   buf.write('Error compiling ${file.path}:<br><br>');
 
-  for (CompilerProblem problem in result.problems) {
-    buf.write('[${problem.kind}] ${problem.message}<br>');
-    buf.write('&nbsp;&nbsp;${problem.uri}:${problem.begin}:${problem.end}<br>');
+  for (CompileError problem in result.problems) {
+    buf.write('[${problem.kind}] ${problem.message} '
+        '(${problem.file.path}:${problem.line})<br>');
   }
 
   return buf.toString();

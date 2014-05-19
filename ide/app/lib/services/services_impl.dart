@@ -183,7 +183,7 @@ class CompilerServiceImpl extends ServiceImpl {
 
   Future<ServiceActionEvent> compileString(ServiceActionEvent request) {
     String string = request.data['string'];
-    return compiler.compileString(string).then((CompilerResult result) {
+    return compiler.compileString(string).then((CompilerResultHolder result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
@@ -193,7 +193,7 @@ class CompilerServiceImpl extends ServiceImpl {
     String project = request.data['project'];
     bool csp = request.data['csp'];
 
-    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResult result) {
+    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResultHolder result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }

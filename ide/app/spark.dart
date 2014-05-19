@@ -2784,7 +2784,7 @@ class CompileDartJob extends Job {
 
     CompilerService compiler = spark.services.getService("compiler");
 
-    return compiler.compileFile(file, csp: true).then((CompilerResult result) {
+    return compiler.compileFile(file, csp: true).then((CompileResult result) {
       if (!result.getSuccess()) {
         throw result;
       }

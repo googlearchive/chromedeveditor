@@ -10,12 +10,10 @@ import 'dart:isolate';
 import 'package:logging/logging.dart';
 
 import 'package_mgmt/package_manager.dart';
-import 'services/compiler.dart';
 import 'services/services_common.dart';
 import 'utils.dart';
 import 'workspace.dart';
 
-export 'services/compiler.dart' show CompilerResult;
 export 'services/services_common.dart';
 
 Logger _logger = new Logger('spark.services');
@@ -124,10 +122,13 @@ class CompilerService extends Service {
   CompilerService(Services services, _IsolateHandler handler)
       : super(services, 'compiler', handler);
 
-  Future<CompilerResult> compileString(String string) {
+  Future<CompileResult> compileString(String string) {
     Map args = {"string": string};
-    return _sendAction("compileString", args).then((ServiceActionEvent result) {
-      return new CompilerResult.fromMap(result.data);
+
+    return _sendAction("compileString", args).then((ServiceActionEvent event) {
+      CompileResult result = new CompileResult.fromMap(event.data);
+      _UuidResolver resolver = new _UuidResolver(services._packageManager);
+      return result.resolve(resolver).then((_) => result);
     });
   }
 
@@ -136,15 +137,38 @@ class CompilerService extends Service {
    * any errors and the generated JavaScript output. You can optionally pass in
    * [csp] `true` to select the content security policy output from dart2js.
    */
-  Future<CompilerResult> compileFile(File file, {bool csp: false}) {
+  Future<CompileResult> compileFile(File file, {bool csp: false}) {
     Map args = {
         "fileUuid" : file.uuid,
         "project" : file.project.name,
         "csp" : csp
     };
-    return _sendAction("compileFile", args).then((ServiceActionEvent result) {
-      return new CompilerResult.fromMap(result.data);
+
+    return _sendAction("compileFile", args).then((ServiceActionEvent event) {
+      CompileResult result = new CompileResult.fromMap(event.data);
+      _UuidResolver resolver = new _UuidResolver(
+          services._packageManager, file.project);
+      return result.resolve(resolver).then((_) => result);
     });
+  }
+}
+
+class _UuidResolver extends UuidResolver {
+  final PackageManager packageManager;
+  final Project project;
+
+  _UuidResolver(this.packageManager, [this.project]);
+
+  File getResource(String uri) {
+    if (uri.startsWith('/')) uri = uri.substring(1);
+
+    if (uri.startsWith('package:')) {
+      return packageManager.getResolverFor(project).resolveRefToFile(uri);
+    } else if (project != null) {
+      return project.workspace.restoreResource(uri);
+    } else {
+      return null;
+    }
   }
 }
 
