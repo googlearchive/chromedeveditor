@@ -2872,9 +2872,7 @@ class SettingsAction extends SparkActionWithDialog {
   bool _initialized = false;
 
   SettingsAction(Spark spark, Element dialog)
-      : super(spark, "settings", "Settings", dialog) {
-    addBinding('ctrl-shift-alt-p');
-  }
+      : super(spark, "settings", "Settings", dialog);
 
   void _invoke([Object context]) {
     if (!_initialized) {
