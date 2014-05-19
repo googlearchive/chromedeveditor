@@ -155,7 +155,6 @@ class CompileResult {
     // Find all files.
     problems.forEach((CompileError error) {
       error.file = resolver.getResource(error._uri);
-      print('${error._uri} resolves to ${error.file}');
       if (error.file != null) retriever.addFile(error.file);
     });
 
@@ -518,17 +517,13 @@ class _ContentRetriever {
   Future loadContent() {
     return Future.forEach(fileMap.keys, (File file) {
       return file.getContents().then((String contents) {
-        print('got contents for ${file}');
         fileMap[file] = contents;
       });
     });
   }
 
   int getLineFor(File file, int offset) {
-    print('looking for contents for ${file}');
-
     String source = fileMap[file];
-
     int lineCount = 0;
 
     for (int index = 0; index < source.length; index++) {

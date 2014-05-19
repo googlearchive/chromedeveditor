@@ -395,11 +395,6 @@ class Dart2JsServlet extends PicoServlet {
 
     return _compiler.compileFile(file).then((CompileResult result) {
       if (!result.hasOutput) {
-        //_logger.warning('Error compiling ${file.path} with dart2js.');
-        //for (CompilerProblem problem in result.problems) {
-        //  _logger.warning('${problem}');
-        //}
-
         // Display a message to the user. In the future, we may want to write
         // this to a tools console.
         _launchManager._notifier.showMessage(
@@ -429,6 +424,9 @@ class Dart2JsServlet extends PicoServlet {
 
 String _getPath(HttpRequest request) => request.uri.pathSegments.join('/');
 
+/**
+ * Get user disaplyable text for the given error.
+ */
 String _createTextForError(File file, CompileResult result) {
   StringBuffer buf = new StringBuffer();
 
@@ -442,6 +440,10 @@ String _createTextForError(File file, CompileResult result) {
   return buf.toString();
 }
 
+/**
+ * Given some text, return back JavaScript source which will display that
+ * message in-line in a web page when executed.
+ */
 String _convertToJavaScript(String text) {
   String style = 'z-index: 100; border: 1px solid black; position: absolute; '
       'top: 10px; left: 10px; right: 10px; padding: 5px; background: #F89797; '
