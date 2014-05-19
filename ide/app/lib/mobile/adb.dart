@@ -2,6 +2,9 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+/**
+ * A library to communicate over the Android ADB protocol.
+ */
 library spark.adb;
 
 import 'dart:async';
