@@ -115,7 +115,10 @@ String getCurrentTimeAsString() {
 void nopFunction() => null;
 
 /**
- * A class useful to pass on a cancellable state.
+ * This class defines a cancellable object.
+ * A caller must call check function to find out if the operation has been
+ * cancelled. The check function calls the onCancel handler if operation
+ * is cancelled.
  */
 abstract class Cancel {
 

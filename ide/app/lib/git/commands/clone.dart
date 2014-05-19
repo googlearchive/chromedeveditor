@@ -89,26 +89,13 @@ class Clone {
   }
 
   /**
-   * Calls the [func] with given [args] and [namedArgs] which returns a future.
-   * On completion checks and returns a gir_clone_cancel exception if the
-   * operation was cancelled. The caller must catch the exception and do the
-   * necessary cleanup.
-   */
-  Future callMethod(Function func, List args, [Map<Symbol, dynamic> namedArgs]) {
-    return Function.apply(func, args, namedArgs).then((result) {
-      cancel.check();
-      return result;
-    });
-  }
-
-  /**
    * Public for testing purpose.
    */
   Future startClone(HttpFetcher fetcher) {
     return _checkDirectory(_options.root, _options.store, true).then((_) {
       return _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
-        return callMethod(fetcher.fetchUploadRefs,[]).then((List<GitRef> refs) {
+        return _callMethod(fetcher.fetchUploadRefs,[]).then((List<GitRef> refs) {
           logger.info(_stopwatch.finishCurrentTask('fetchUploadRefs'));
 
           if (refs.isEmpty) {
@@ -118,7 +105,7 @@ class Clone {
           GitRef remoteHeadRef, localHeadRef;
           String remoteHead;
 
-          return callMethod(_writeRefs, [gitDir, refs]).then((_) {
+          return _callMethod(_writeRefs, [gitDir, refs]).then((_) {
             refs.forEach((GitRef ref) {
               if (ref.name == "HEAD") {
                 remoteHead = ref.sha;
@@ -142,7 +129,7 @@ class Clone {
 
             logger.info(_stopwatch.finishCurrentTask('_writeRefs'));
 
-            return callMethod(_processClone, [gitDir, localHeadRef, fetcher]);
+            return _callMethod(_processClone, [gitDir, localHeadRef, fetcher]);
           });
         }, onError: (e) {
           // Clean-up git directory and then re-throw error.
@@ -187,7 +174,8 @@ class Clone {
               return store.objectDir.getDirectory('pack').then((packDir) {
                 return FileOps.listFiles(packDir).then((entries) {
                   if (entries.length > 0) {
-                    throw new GitException(GitErrorConstants.GIT_CLONE_DIR_IN_USE);
+                    throw new GitException(
+                        GitErrorConstants.GIT_CLONE_DIR_IN_USE);
                   } else {
                     return null;
                   }
@@ -231,7 +219,7 @@ class Clone {
         "ref: ${localHeadRef.name}\n", "Text").then((_) {
       return FileOps.createFileWithContent(gitDir, localHeadRef.name,
           localHeadRef.sha, "Text").then((_) {
-        return callMethod(fetcher.fetchRef, [[localHeadRef.sha], null, null,
+        return _callMethod(fetcher.fetchRef, [[localHeadRef.sha], null, null,
             _options.depth, null, nopFunction, nopFunction, cancel]).then(
             (PackParseResult result) {
           Uint8List packData = result.data;
@@ -252,20 +240,21 @@ class Clone {
 
           return gitDir.createDirectory('objects').then(
               (chrome.DirectoryEntry objectsDir) {
-            return callMethod(_createPackFiles, [objectsDir, packName, packData,
+            return _callMethod(_createPackFiles, [objectsDir, packName, packData,
                 packIdxData]).then((_) {
               logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
               PackIndex packIdx = new PackIndex(packIdxData);
               Pack pack = new Pack(packData, _options.store);
               _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
               // TODO: add progress
-              //progress({pct: 95, msg: "Building file tree from pack. Be patient..."});
               return _createCurrentTreeFromPack(_options.root, _options.store,
                   localHeadRef.sha).then((_) {
-                logger.info(_stopwatch.finishCurrentTask('createCurrentTreeFromPack'));
+                logger.info(_stopwatch.finishCurrentTask(
+                    'createCurrentTreeFromPack'));
                 return _createInitialConfig(result.shallow, localHeadRef)
                     .then((_) {
-                  logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
+                  logger.info(_stopwatch.finishCurrentTask(
+                      'createInitialConfig'));
                 });
               });
             });
@@ -274,6 +263,20 @@ class Clone {
       });
     });
   }
+
+  /**
+   * Calls the [func] with given [args] and [namedArgs] which returns a future.
+   * On completion checks the cancel object and calls onCancel if the operation
+   * is cancelled.
+   */
+  Future _callMethod(Function func, List args,
+      [Map<Symbol, dynamic> namedArgs]) {
+    return Function.apply(func, args, namedArgs).then((result) {
+      cancel.check();
+      return result;
+    });
+  }
+
 }
 
 class CloneCancel extends Cancel {
