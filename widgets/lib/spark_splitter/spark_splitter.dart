@@ -115,26 +115,26 @@ class SparkSplitter extends SparkWidget {
 
   void _setThickness() {
     final int draggableSize = math.max(size, _MIN_DRAGGABLE_SIZE);
-    final int draggableHalfSize = ((draggableSize - size) / 2).ceil();
+    final int draggableStart = ((draggableSize - size) / 2).ceil();
 
     if (_isHorizontal) {
       style
-          ..height = "${size}px"
+          ..height = '${size}px'
           ..width = "auto";
       _draggable.style
           ..left = "0"
-          ..top = "-${draggableHalfSize}px"
           ..right = "0"
-          ..bottom = "-${draggableHalfSize}px";
+          ..top = "-${draggableStart}px"
+          ..height = "${draggableSize}px";
     } else {
       style
           ..height = "auto"
-          ..width = "${size}px";
+          ..width = '${size}px';
       _draggable.style
-          ..left = "-${draggableHalfSize}px"
           ..top = "0"
-          ..right = "-${draggableHalfSize}px"
-          ..bottom = "0";
+          ..bottom = "0"
+          ..left = "-${draggableStart}px"
+          ..width = "${draggableSize}px";
     }
   }
 
