@@ -158,8 +158,9 @@ class Commit {
 
     return walkFiles(options.root, store).then((String sha) {
       // update the index.
-      store.index.onCommit();
-      return createCommit(options, parent, sha, refName);
+      return store.index.onCommit().then((_) {
+        return createCommit(options, parent, sha, refName);
+      });
     });
   }
 }

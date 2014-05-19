@@ -28,8 +28,10 @@ class Checkout {
     chrome.DirectoryEntry dir, TreeEntry treeEntry) {
 
     if (treeEntry.isBlob) {
-      return dir.getFile(treeEntry.name).then(
-          (fileEntry) => fileEntry.remove());
+      return dir.getFile(treeEntry.name).then((fileEntry) {
+        store.index.deleteIndexForEntry(fileEntry.fullPath);
+        return fileEntry.remove();
+      });
     }
 
     return dir.getDirectory(treeEntry.name).then((newDir) {
@@ -71,7 +73,9 @@ class Checkout {
           } else {
             return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
                 "Tree").then((trees) {
-              return smartCheckout(dir, store, trees[0], trees[1]);
+              return dir.createDirectory(newEntry.name).then((newDir) {
+                return smartCheckout(newDir, store, trees[0], trees[1]);
+              });
             });
           }
         });
