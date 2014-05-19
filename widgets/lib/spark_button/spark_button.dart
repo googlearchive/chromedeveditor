@@ -21,6 +21,7 @@ class SparkButton extends SparkWidget {
   // the widgets via SparkWidget attr/CSS.
   @published bool enabled = true;
   @published bool active = false;
+  @published bool noBorder = false;
 
   ButtonElement _button;
 
@@ -42,7 +43,8 @@ class SparkButton extends SparkWidget {
         ..toggle('btn-sm', small)
         ..toggle('enabled', enabled)
         ..toggle('disabled', !enabled)
-        ..toggle('active', active);
+        ..toggle('active', active)
     // NOTE: noPadding is accounted for in the CSS.
+        ..toggle('no-border', noBorder);
   }
 }

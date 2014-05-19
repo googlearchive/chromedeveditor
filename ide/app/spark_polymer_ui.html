@@ -33,7 +33,7 @@
               on-keydown="{{fileFilterKeydownHandler}}"
               on-input="{{fileFilterInputHandler}}"/>
 
-          <spark-button id="runButton">
+          <spark-button id="runButton" noBorder>
             <span class="glyphicon glyphicon-play"></span>
           </spark-button>
 
@@ -41,8 +41,7 @@
               id="mainMenu"
               icon="images/overflow.png"
               valueAttr="action-id"
-              valign="left"
-              on-activate="{{onMenuSelected}}">
+              valign="left">
             <spark-menu-item action-id="project-new" label="New Project...">
             </spark-menu-item>
             <spark-menu-separator></spark-menu-separator>

@@ -82,16 +82,25 @@
   outline: none;
 }
 
-#runButton, #mainMenu {
-  height: 36px;
-}
-
 #fileFilter:focus.active ~ #runButton {
   display: none;
 }
 
 #fileFilter:focus.active ~ #mainMenu {
   display: none;
+}
+
+#runButton, #mainMenu {
+  height: 36px;
+}
+
+#mainMenu {
+  margin: 0 3px;
+  width: 24px;
+}
+
+#runButton {
+  margin: 0 2px 0 4px;
 }
 
 #fileNotFoundPlaceholder {

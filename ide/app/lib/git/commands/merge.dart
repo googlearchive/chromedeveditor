@@ -82,7 +82,7 @@ class Merge {
         removes.add(oldEntry);
         oldIdx++;
       } else {
-        if (newEntry.shaBytes != oldEntry.shaBytes) {
+        if (newEntry.sha != oldEntry.sha) {
           if (newEntry.isBlob != oldEntry.isBlob) {
             removes.add(oldEntry);
             adds.add(newEntry);
