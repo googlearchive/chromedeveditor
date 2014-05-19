@@ -453,6 +453,7 @@ abstract class Spark
     actionManager.registerAction(new GotoDeclarationAction(this));
     actionManager.registerAction(new HistoryAction.back(this));
     actionManager.registerAction(new HistoryAction.forward(this));
+    actionManager.registerAction(new ToggleOutlineVisibilityAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1812,7 +1813,7 @@ class FocusMainMenuAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    spark.getUIElement('#mainMenu').focus();
+    querySelector('#mainMenu').focus();
   }
 }
 
@@ -3149,6 +3150,18 @@ class ImportFolderAction extends SparkAction implements ContextAction {
   String get category => 'folder';
 
   bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+class ToggleOutlineVisibilityAction extends SparkAction {
+  ToggleOutlineVisibilityAction(Spark spark)
+      : super(spark, 'toggleOutlineVisibility', 'Toggle Outline') {
+    addBinding('alt-o');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    spark._aceManager.outline.toggle();
+  }
 }
 
 // Analytics code.

@@ -33,10 +33,11 @@ We address this by using script based positioning =(
   z-index: 1000;
   outline: none;
   display: none;
-  /* Opacity < 1 creates a stacking context from this element */
-  opacity: 0.99;
-  -webkit-transition: opacity 0.001s;
-  transition: opacity 0.001s;
+  opacity: 0;
+  /* The no-op scaleZ(1) creates an independent stacking context for :host.
+     See: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context
+  */
+  transform: scaleZ(1);
 }
 
 /*
@@ -78,6 +79,19 @@ We address this by using script based positioning =(
 :host(.animation-in-progress) {
   -webkit-transition: none;
   transition: none;
+}
+
+:host([animation=none]) {
+  opacity: 0;
+  /* This is essentially a no-op transition. We need it for the opening/closing
+     sequences in .dart to function as designed.
+  */
+  -webkit-transition: all 0.001s;
+  transition: all 0.001s;
+}
+
+:host([animation=none].opened) {
+  opacity: 1;
 }
 
 :host([animation=fade]) {

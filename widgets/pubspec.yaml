@@ -1,5 +1,5 @@
 name: spark_widgets
-version: 0.0.1
+version: 0.0.2
 author: Spark Team
 description: A general purpose Polymer widget library (used by Spark IDE)
 homepage: https://github.com/dart-lang/spark/
