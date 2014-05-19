@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 /**
- * TODO: doc
+ * A library to communicate with a running ADB server.
  */
 library spark.adb_client_tcp;
 
@@ -91,8 +91,8 @@ class AdbClientTcp {
       }
 
       // Response is a list of installed packages:
-      // package:/system/app/NetworkLocation.apk=com.google.android.location
-      // package:/system/app/Launcher2.apk=com.android.launcher
+      //   package:/system/app/NetworkLocation.apk=com.google.android.location
+      //   package:/system/app/Launcher2.apk=com.android.launcher
 
       List<AdbPackage> packages = response.payloadAsString.split('\n').map((str) {
         if (!str.startsWith('package:')) return null;
@@ -106,10 +106,6 @@ class AdbClientTcp {
 
       return packages;
     });
-  }
-
-  Future<AdbResponse> foo({AdbDevice device}) {
-    return _sendShellCommand('pm');
   }
 
   Future<AdbResponse> startActivity(AdbApplication application,
@@ -160,62 +156,6 @@ class AdbClientTcp {
 
   String toString() => 'AdbClientTcp on port ${port}, version ${version}';
 }
-
-//class AdbDeviceConnection {
-//  final AdbDevice device;
-//  final TcpClient _client;
-//
-//  StreamReader _reader;
-//
-//  AdbDeviceConnection._(this.device, this._client) {
-//    _reader = new StreamReader(_client.stream);
-//  }
-//
-//  Future<AdbResponse> _switchToDevice() {
-//    // Use either host:transport-usb or host:transport:<serial-number>.
-//    return _sendCommand('host:transport:${device.id}', expectPayload: false).then((response) {
-//    //return _sendCommand('host:transport-usb', expectPayload: false).then((response) {
-//      if (response.isFail()) throw response;
-//      return response;
-//    });
-//  }
-//
-//  Future<AdbResponse> foo() {
-//    String command = 'shell:pm';
-//    return _sendCommand(command);
-//  }
-//
-//  void dispose() {
-//    _client.dispose();
-//  }
-//
-//  Future<AdbResponse> _sendCommand(String command, {bool expectPayload: true}) {
-//    _client.writeString(_packMessage(command));
-//    return _parseResponse(expectPayload);
-//  }
-//
-//  Future<AdbResponse> _parseResponse([bool expectPayload = true]) {
-//    AdbResponse response;
-//
-//    return _reader.read(4).then((List<int> data1) {
-//      String str = new String.fromCharCodes(data1);
-//      response = new AdbResponse._(str);
-//
-//      if (response.isOkay() && !expectPayload) {
-//        return response;
-//      } else {
-//        return _reader.read(4).then((List<int> data2) {
-//          String str = new String.fromCharCodes(data2);
-//          int len = int.parse(str, radix: 16);
-//          return _reader.read(len);
-//        }).then((List<int> data3) {
-//          response._data = data3;
-//          return response;
-//        });
-//      }
-//    });
-//  }
-//}
 
 /**
  * One of 'OKAY' or 'FAIL'.
