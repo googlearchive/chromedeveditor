@@ -59,6 +59,38 @@ String toTitleCase(String s) {
   }).join(' ');
 }
 
+/**
+ * A helper to pass as the default to [collapseDups] and [trimEnds].
+ */
+bool _identity(dynamic a, dynamic b) => a == b;
+
+/**
+ * Removes adjacent duplicates from a container. Adjacent elements a and b are
+ * considered duplicates if [test] returns true for them.
+ */
+List<dynamic> collapseDups(
+    List<dynamic> input, [bool test(dynamic a, dynamic b) = _identity]) {
+  List output = [];
+  input.forEach((elt) {
+    if (output.isEmpty || !test(elt, output.last)) {
+      output.add(elt);
+    }
+  });
+  return output;
+}
+
+/**
+ * Removes one or more values from the beginning and end of a container.
+ * A value is removed if [test] returns true for it.
+ */
+List<dynamic> trimEnds(List<dynamic> input, bool test(dynamic v)) {
+  List<dynamic> output = input.skipWhile(test);
+  while (output.isNotEmpty && test(output.last)) {
+    output.removeLast();
+  }
+  return output;
+}
+
 AudioContext _ctx;
 
 void beep() {

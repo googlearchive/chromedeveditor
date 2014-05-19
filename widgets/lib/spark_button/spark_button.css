@@ -22,3 +22,14 @@
 :host([noPadding]:host) #button {
   padding: 0;
 }
+
+:host([noBorder]:host) #button {
+  border: none;
+  border-radius: 5px;
+  background: none;
+  box-shadow: none;
+}
+
+:host([noBorder]:host) #button:hover {
+  background: #ddd;
+}

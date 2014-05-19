@@ -453,6 +453,7 @@ abstract class Spark
     actionManager.registerAction(new GotoDeclarationAction(this));
     actionManager.registerAction(new HistoryAction.back(this));
     actionManager.registerAction(new HistoryAction.forward(this));
+    actionManager.registerAction(new ToggleOutlineVisibilityAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1812,7 +1813,7 @@ class FocusMainMenuAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    spark.getUIElement('#mainMenu').focus();
+    querySelector('#mainMenu').focus();
   }
 }
 
@@ -2559,10 +2560,22 @@ class _GitCloneJob extends Job {
 
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Cloned into ${project.name}');
+                 
           Timer.run(() {
             spark._filesController.selectFile(project);
             spark._filesController.setFolderExpanded(project);
           });
+          
+          // Run Pub if the new project has a pubspec file.
+          if (spark.pubManager.properties.isProjectWithPackages(project)) {
+            spark.jobManager.schedule(new PubGetJob(spark, project));
+          }
+
+          // Run Bower if the new project has a bower.json file.
+          if (spark.bowerManager.properties.isProjectWithPackages(project)) {
+            spark.jobManager.schedule(new BowerGetJob(spark, project));
+          }
+
           spark.workspace.save();
         });
       });
@@ -2695,6 +2708,17 @@ class _OpenFolderJob extends Job {
         spark._filesController.selectFile(resource);
         spark._filesController.setFolderExpanded(resource);
       });
+      
+      // Run Pub if the folder has a pubspec file.
+      if (spark.pubManager.properties.isProjectWithPackages(resource)) {
+        spark.jobManager.schedule(new PubGetJob(spark, resource));
+      }
+      
+      // Run Bower if the folder has a bower.json file.
+      if (spark.bowerManager.properties.isProjectWithPackages(resource)) {
+        spark.jobManager.schedule(new BowerGetJob(spark, resource));
+      }
+      
       return spark.workspace.save();
     }).then((_) {
       spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
@@ -3137,6 +3161,18 @@ class ImportFolderAction extends SparkAction implements ContextAction {
   String get category => 'folder';
 
   bool appliesTo(Object object) => _isSingleFolder(object);
+}
+
+class ToggleOutlineVisibilityAction extends SparkAction {
+  ToggleOutlineVisibilityAction(Spark spark)
+      : super(spark, 'toggleOutlineVisibility', 'Toggle Outline') {
+    addBinding('alt-o');
+  }
+
+  @override
+  void _invoke([Object context]) {
+    spark._aceManager.outline.toggle();
+  }
 }
 
 // Analytics code.
