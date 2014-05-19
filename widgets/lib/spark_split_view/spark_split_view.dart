@@ -41,6 +41,13 @@ class SparkSplitView extends SparkWidget {
     );
   }
 
+  // TODO(ussuri): Somehow this was critical to ensure correct propagation of
+  // [targetSize] changed by our client to the enclosed splitter. Without this,
+  // the splitter didn't see the change. Investigate.
+  void targetSizeChanged() {
+    ($['splitter'] as SparkSplitter).targetSize = targetSize;
+  }
+
   /**
    * Re-fire an update event from the splitter for explicitness.
    */

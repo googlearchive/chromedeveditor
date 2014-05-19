@@ -68,7 +68,6 @@ class SparkSplitter extends SparkWidget {
     super.enteredView();
 
     _draggable = $['draggable'];
-
     // TODO(ussuri): Perhaps switch to using onDrag* instead of onMouse* once
     // support for drag-and-drop in shadow DOM is fixed. It is less important
     // here, because the element is not actually supposed to be dropped onto
@@ -76,6 +75,7 @@ class SparkSplitter extends SparkWidget {
     // be set as well.
     // See bug https://code.google.com/p/chromium/issues/detail?id=264983.
     _draggable.onMouseDown.listen(trackStart);
+
     // Initial settings.
     directionChanged();
     targetSizeChanged();
@@ -103,6 +103,8 @@ class SparkSplitter extends SparkWidget {
 
   /// Automatically called whenever targetSize is changed by the client.
   void targetSizeChanged() {
+    if (targetSize == null) return;
+
     final size = (targetSize != null) ? targetSize : _extractTargetSize();
     final clampedSize = size.clamp(minTargetSize, maxTargetSize);
     if (clampedSize != targetSize) {
@@ -112,13 +114,12 @@ class SparkSplitter extends SparkWidget {
   }
 
   void _setThickness() {
-    final String sizeStr = '${size}px';
     final int draggableSize = math.max(size, _MIN_DRAGGABLE_SIZE);
     final int draggableStart = ((draggableSize - size) / 2).ceil();
 
     if (_isHorizontal) {
       style
-          ..height = sizeStr
+          ..height = '${size}px'
           ..width = "auto";
       _draggable.style
           ..left = "0"
@@ -128,10 +129,10 @@ class SparkSplitter extends SparkWidget {
     } else {
       style
           ..height = "auto"
-          ..width = sizeStr;
+          ..width = '${size}px';
       _draggable.style
-          ..bottom = "0"
           ..top = "0"
+          ..bottom = "0"
           ..left = "-${draggableStart}px"
           ..width = "${draggableSize}px";
     }

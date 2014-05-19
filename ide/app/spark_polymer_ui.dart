@@ -54,6 +54,9 @@ class SparkPolymerUI extends SparkWidget {
     useAceThemes = SparkFlags.useAceThemes;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
+
+    // This propagates external changes down to the enclosed widgets.
+    Observable.dirtyCheck();
   }
 
   void onMenuSelected(CustomEvent event, var detail) {
