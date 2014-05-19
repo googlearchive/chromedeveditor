@@ -11,6 +11,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
+import 'exception.dart';
 import 'fast_sha.dart';
 import 'file_operations.dart';
 
@@ -112,3 +113,28 @@ String getCurrentTimeAsString() {
  * An empty function.
  */
 void nopFunction() => null;
+
+/**
+ * A class useful to pass on a cancellable state.
+ */
+abstract class Cancel {
+
+  bool _cancel = false;
+  String _errorCode;
+  bool canIgnore;
+
+  get cancel => _cancel;
+  set cancel(bool value) => _cancel = value;
+  Cancel([this._cancel]);
+
+  bool check() {
+    if (cancel) {
+      onCancel();
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  void onCancel();
+}
