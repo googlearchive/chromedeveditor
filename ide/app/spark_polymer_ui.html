@@ -17,13 +17,17 @@
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 <link rel="import" href="lib/ui/polymer/goto_line_view/goto_line_view.html">
 
-<polymer-element name="spark-polymer-ui">
+<polymer-element name="spark-polymer-ui" attributes="splitViewPosition">
   <template>
     <link rel="stylesheet" href="spark_polymer_ui.css">
 
     <spark-split-view
         id="splitView"
-        direction="left" splitterSize="1" splitterHandle="false"
+        direction="left"
+        splitterSize="1"
+        splitterHandle="false"
+        targetSize="{{splitViewPosition}}"
+        minTargetSize="200"
         on-update="{{onSplitterUpdate}}">
       <content></content>
     </spark-split-view>
