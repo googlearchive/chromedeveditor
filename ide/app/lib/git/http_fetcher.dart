@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import 'exception.dart';
 import 'objectstore.dart';
 import 'upload_pack_parser.dart';
+import 'utils.dart';
 
 final int COMMIT_LIMIT = 32;
 
@@ -84,7 +85,7 @@ class HttpFetcher {
 
   Future<PackParseResult> fetchRef(List<String> wantRefs,
       List<String> haveRefs, String shallow, int depth, List<String> moreHaves,
-      noCommon, Function progress) {
+      noCommon, Function progress, [Cancel cancel]) {
     Completer completer = new Completer();
     String url = _makeUri('/git-upload-pack', {});
     String body = _refWantRequst(wantRefs, haveRefs, shallow, depth, moreHaves);
@@ -116,7 +117,7 @@ class HttpFetcher {
         }
 
         // TODO add UploadPackParser class.
-        UploadPackParser parser = getUploadPackParser();
+        UploadPackParser parser = getUploadPackParser(cancel);
         return parser.parse(buffer, store, packProgress).then(
             (PackParseResult obj) {
            completer.complete(obj);
@@ -139,7 +140,8 @@ class HttpFetcher {
   /*
    * Get a new instance of uploadPackParser. Exposed for tests to inject fake parser.
    */
-  UploadPackParser getUploadPackParser() => new UploadPackParser();
+  UploadPackParser getUploadPackParser([Cancel cancel])
+      => new UploadPackParser(cancel);
 
   /*
    * Get a new instance of HttpRequest. Exposed for tests to inject fake xhr.
