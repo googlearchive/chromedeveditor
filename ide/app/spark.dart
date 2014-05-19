@@ -484,12 +484,8 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(this)
-        .then((manager) {
+    return ProjectLocationManager.restoreManager(this).then((manager) {
       _projectLocationManager = manager;
-      // The manager might have overridden some dev flags from .spark.json
-      // under the user's project location.
-      refreshUI();
     });
   }
 
