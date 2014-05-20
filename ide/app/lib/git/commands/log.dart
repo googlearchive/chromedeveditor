@@ -41,7 +41,7 @@ class Log {
   static Future<String> _getBaseSha(ObjectStore store, String branch) {
     if (branch == null || branch.isEmpty)
       return store.getHeadSha();
-    return store.getAllHeads().then((List<String> branches) {
+    return store.getLocalHeads().then((List<String> branches) {
       // TODO: Improve error handling.
       if (!branches.contains(branch))
         throw "No such branch exists.";
