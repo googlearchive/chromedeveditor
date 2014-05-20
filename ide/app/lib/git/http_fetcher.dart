@@ -203,7 +203,7 @@ class HttpFetcher {
     try {
       return _doGet(uri).then((_) => true).catchError((e) {
         if (e.status == 401) {
-          throw new GitException(GitErrorConstants.GIT_AUTH_ERROR);
+          throw new GitException(GitErrorConstants.GIT_AUTH_REQUIRED);
         }
         return new Future.value(false);
       });
