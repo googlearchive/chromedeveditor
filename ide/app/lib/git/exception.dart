@@ -30,6 +30,12 @@ class GitErrorConstants {
   static final String GIT_BRANCH_NOT_FOUND
      = "git.branch_not_found";
 
+  static final String GIT_BRANCH_EXISTS
+     = "git.branch_exists";
+
+  static final String GIT_INVALID_BRANCH_NAME
+      = "git.invalid_branch_name";
+
   static final String GIT_CLONE_GIT_DIR_IN_USE
      = "git.clone_dir_in_use";
 
