@@ -56,6 +56,14 @@ class Pack {
     _offset += length;
   }
 
+  bool _checkCancel() {
+    if (_cancel != null) {
+      return _cancel.check();
+    } else {
+      return true;
+    }
+  }
+
   void _matchPrefix() {
     if (UTF8.decode(_peek(4)) == 'PACK') {
       _advance(4);
@@ -255,7 +263,7 @@ class Pack {
 
        Future parse(_) {
 
-         _cancel.check();
+         _checkCancel();
          PackedObject object = _matchObjectAtOffset(_offset);
          object.crc = getCrc32(data.sublist(object.offset, _offset));
 
@@ -277,7 +285,7 @@ class Pack {
        }
 
        Future expandDeltified(PackedObject obj) {
-         _cancel.check();
+         _checkCancel();
          return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
            deltifiedObj.data = null;
            // TODO(grv) : add progress.
