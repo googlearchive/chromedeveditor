@@ -13,7 +13,6 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import 'adb.dart';
-import 'adb_client.dart';
 import 'adb_client_tcp.dart';
 import '../jobs.dart';
 import '../preferences.dart';

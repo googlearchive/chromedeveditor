@@ -574,11 +574,15 @@ abstract class ServiceImpl {
       return new Future.value(
           event.createErrorReponse("no such method: ${event.actionId}"));
     } else {
-      Future f = responder(event);
-      assert(f != null);
-      return f.catchError((e, st) {
-        return event.createErrorReponse('${e}\n${st}');
-      });
+      try {
+        Future f = responder(event);
+        assert(f != null);
+        return f.catchError((e, st) {
+          return event.createErrorReponse('${e}\n${st}');
+        });
+      } catch (e, st) {
+        return new Future.value(event.createErrorReponse('${e}\n${st}'));
+      }
     }
   }
 }

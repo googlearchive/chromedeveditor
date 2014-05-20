@@ -83,6 +83,8 @@ class ServiceActionEvent {
       throw new ServiceException(data['message'], serviceId, actionId);
     }
   }
+
+  String toString() => '${serviceId}.${actionId}';
 }
 
 class ServiceException {
@@ -165,9 +167,9 @@ abstract class Declaration {
   final String name;
 
   Declaration(this.name);
-  
+
   static String _nameFromMap(Map map) => map["name"];
-  
+
   factory Declaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 

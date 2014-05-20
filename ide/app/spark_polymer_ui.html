@@ -235,29 +235,28 @@
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome app
               </option>
-              <template if="{{showWipProjectTemplates}}">
-                <!-- This one currently can't possibly work due to Polymer
-                     JS breaking the CSP. BUG #1933. -->
-                <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
-                  JavaScript Chrome app using Polymer
-                </option>
-                <!-- This one works when installed in Chrome manually, but
-                     launching via the 'Run' button is broken. BUG #1935. -->
-                <option value="chrome/chrome_extension_js">
-                  JavaScript Chrome extension
-                </option>
-              </template>
+              <!-- This one currently can't possibly work due to Polymer
+                   JS breaking the CSP. BUG #1933. -->
+              <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements"
+                   template if="{{showWipProjectTemplates}}">
+                JavaScript Chrome app using Polymer
+              </option>
+              <!-- This one works when installed in Chrome manually, but
+                   launching via the 'Run' button is broken. BUG #1935. -->
+              <option value="chrome/chrome_extension_js"
+                   template if="{{showWipProjectTemplates}}">
+                JavaScript Chrome extension
+              </option>
             </optgroup>
             <optgroup label="Other">
               <option value="polymer/polymer_element_js">
                 JavaScript Polymer custom element
               </option>
-              <template if="{{showWipProjectTemplates}}">
-                <!-- This one just needs some additional work. -->
-                <option value="polymer/polymer_element_dart">
-                  Dart Polymer custom element
-                </option>
-              </template>
+              <!-- This one just needs some additional work. -->
+              <option value="polymer/polymer_element_dart"
+                  template if="{{showWipProjectTemplates}}">
+                Dart Polymer custom element
+              </option>
             </optgroup>
           </select>
         </div>
@@ -273,7 +272,7 @@
     </spark-modal>
 
     <!-- Harness Push dialog -->
-    <spark-modal id="pushDialog" class="dialog" animation="scale-slideup">
+    <spark-modal id="mobileDeployDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>
@@ -281,12 +280,12 @@
       <div class="modal-body">
         <h4>Deploy a Chrome App to an Android Device</h4>
         <p>
-          You need to have the
+          Please make sure you have
           <a href="https://github.com/MobileChromeApps/harness/releases/"
               on-click="{{handleAnchorClick}}">
-            ChromeAPT.apk
+            Chrome ADT
           </a>
-          installed on your Android phone or tablet.
+          installed and running on your Android device.
         </p>
         <div class="form-group">
           <form>

@@ -15,7 +15,27 @@
   <link rel="import" href="packages/polymer/polymer.html">
   <link rel="import" href="spark_polymer_ui.html">
 
-  <!-- template for FileItemCell -->
+  <!-- Ace includes -->
+  <script src="packages/ace/src/js/ace.js"></script>
+  <script src="packages/ace/src/js/ext-language_tools.js"></script>
+
+  <!-- Analytics includes -->
+  <script src="third_party/analytics/google-analytics-bundle.js"></script>
+
+  <!-- CSSBeautify includes -->
+  <script src="third_party/cssbeautify/cssbeautify.js"></script>
+
+  <!-- JSHint includes -->
+  <script src="third_party/jshint/jshint.js"></script>
+
+  <!-- Git includes -->
+  <script src="git/third_party/zlib_inflate.js"></script>
+  <script src="git/third_party/zlib_deflate.js"></script>
+  <script src="git/third_party/diff3.js"></script>
+</head>
+
+<body>
+  <!-- Template for FileItemCell -->
   <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
       <div class="filename">
@@ -27,7 +47,7 @@
     </div>
   </template>
 
-  <!-- template for TreeViewCell -->
+  <!-- Template for TreeViewCell -->
   <template id="treeview-cell-template" >
     <div class="treeviewcell">
       <div class="treeviewcell-content"></div>
@@ -36,7 +56,7 @@
     </div>
   </template>
 
-  <!-- template for Editor Dialog -->
+  <!-- Template for Editor Dialog -->
   <template id="editor-dialog" >
     <div class="editor-dialog">
       <div>
@@ -53,7 +73,7 @@
     </div>
   </template>
 
-  <!-- template for Outline -->
+  <!-- Template for Outline -->
   <template id="outline-template" >
     <div id="outline">
       <ul></ul>
@@ -65,26 +85,6 @@
     </button>
   </template>
 
-  <!-- ace includes -->
-  <script src="packages/ace/src/js/ace.js"></script>
-  <script src="packages/ace/src/js/ext-language_tools.js"></script>
-
-  <!-- analytics includes -->
-  <script src="third_party/analytics/google-analytics-bundle.js"></script>
-
-  <!-- cssbeautify includes -->
-  <script src="third_party/cssbeautify/cssbeautify.js"></script>
-
-  <!-- jshint includes -->
-  <script src="third_party/jshint/jshint.js"></script>
-
-  <!-- git includes -->
-  <script src="git/third_party/zlib_inflate.js"></script>
-  <script src="git/third_party/zlib_deflate.js"></script>
-  <script src="git/third_party/diff3.js"></script>
-</head>
-
-<body>
   <!-- Splash screen. -->
   <div id="splashScreen"></div>
 
@@ -109,10 +109,8 @@
            src="lib/mobile/nacl_android_rsa.nmf" type="application/x-pnacl" >
   </div>
 
-  <script type="application/javascript" src="third_party/uuid.js/uuid.js">
-  </script>
-  <script type="application/javascript" src="lib/mobile/android_rsa.js">
-  </script>
+  <script type="application/javascript" src="third_party/uuid.js/uuid.js"></script>
+  <script type="application/javascript" src="lib/mobile/android_rsa.js"></script>
 
   <!-- Start Spark in a non-deployed build (running direct from Dartium). -->
   <script type="application/dart" src="spark_bootstrap.dart"></script>
