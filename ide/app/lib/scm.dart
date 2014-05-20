@@ -16,10 +16,11 @@ import 'package:logging/logging.dart';
 import 'package:observe/observe.dart';
 
 import 'builder.dart';
+import 'exception.dart';
 import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
-import 'git/http_fetcher.dart';
+import 'git/exception.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
 import 'git/exception.dart';
@@ -187,17 +188,6 @@ abstract class ScmProjectOperations {
   Future updateForChanges(List<ChangeDelta> changes);
 }
 
-// TODO: Remove this when we have a generic spark exception class.
-class ScmException implements Exception {
-  final String message;
-  final bool needsAuth;
-  final canIgnore;
-
-  ScmException(this.message, [this.needsAuth = false, this.canIgnore = false]);
-
-  String toString() => message;
-}
-
 /**
  * The possible SCM file statuses (`untracked`, `modified`, `staged`, or
  * `committed`).
@@ -296,16 +286,16 @@ class GitScmProvider extends ScmProvider {
       });
     }).catchError((e) {
       activeClone = null;
-      if (e is GitException) {
-        if (e.errorCode == GitErrorConstants.GIT_AUTH_ERROR) {
-          throw new ScmException(e.toString(), true);
-        } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
-          throw new ScmException(e.toString(), false, true );
-        } else {
-          throw new ScmException(e.toString());
-        }
+      if (e is GitException && e.errorCode
+          == GitErrorConstants.GIT_AUTH_REQUIRED) {
+        throw new SparkException(e.toString(),
+            SparkErrorConstants.AUTH_REQUIRED);
+      } else if (e is GitException && e.errorCode
+          == GitErrorConstants.GIT_CLONE_CANCEL) {
+        throw new SparkException(e.toString(),
+            SparkErrorConstants.BRANCH_NOT_FOUND, true);
       } else {
-        throw new ScmException(e.toString());
+        throw new SparkException(e.toString());
       }
     });
   }
@@ -434,6 +424,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
       return Push.push(options);
+    });
+  }
+
+  Future<List<String>> getDeletedFiles() {
+    return objectStore.then((store) {
+      return Status.getDeletedFiles(store);
     });
   }
 

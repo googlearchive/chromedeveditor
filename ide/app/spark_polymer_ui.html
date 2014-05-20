@@ -17,13 +17,17 @@
 <link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
 <link rel="import" href="lib/ui/polymer/goto_line_view/goto_line_view.html">
 
-<polymer-element name="spark-polymer-ui">
+<polymer-element name="spark-polymer-ui" attributes="splitViewPosition">
   <template>
     <link rel="stylesheet" href="spark_polymer_ui.css">
 
     <spark-split-view
         id="splitView"
-        direction="left" splitterSize="1" splitterHandle="false"
+        direction="left"
+        splitterSize="1"
+        splitterHandle="false"
+        targetSize="{{splitViewPosition}}"
+        minTargetSize="200"
         on-update="{{onSplitterUpdate}}">
       <content></content>
     </spark-split-view>
@@ -144,7 +148,7 @@
         <div class="form-group">
           <label for="name">Project name</label>
           <input id="name" type="text" class="form-control"
-              pattern="\S+" placeholder="HelloWorld" spellcheck="false"
+              pattern="[^\/ ]+" placeholder="HelloWorld" spellcheck="false"
               autosave focused />
         </div>
         <div class="form-group">
@@ -206,7 +210,7 @@
     </spark-modal>
 
     <!-- Harness Push dialog -->
-    <spark-modal id="pushDialog" class="dialog" animation="scale-slideup">
+    <spark-modal id="mobileDeployDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>

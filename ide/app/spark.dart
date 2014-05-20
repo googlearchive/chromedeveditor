@@ -23,6 +23,7 @@ import 'lib/dart/dart_builder.dart';
 import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
+import 'lib/exception.dart';
 import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
@@ -51,7 +52,6 @@ import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
-Logger _logger = new Logger('spark');
 
 /**
  * Create a [Zone] that logs uncaught exceptions.
@@ -412,7 +412,7 @@ abstract class Spark
     actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new BowerUpgradeAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
-    actionManager.registerAction(new ApplicationPushAction(this, getDialogElement('#pushDialog')));
+    actionManager.registerAction(new DeployToMobileAction(this, getDialogElement('#mobileDeployDialog')));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     if (SparkFlags.showGitPull) {
@@ -485,12 +485,8 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(this)
-        .then((manager) {
+    return ProjectLocationManager.restoreManager(this).then((manager) {
       _projectLocationManager = manager;
-      // The manager might have overridden some dev flags from .spark.json
-      // under the user's project location.
-      refreshUI();
     });
   }
 
@@ -1753,6 +1749,8 @@ class GotoDeclarationAction extends SparkAction {
     addBinding('ctrl-.');
     addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
+
+    // Needed for ACCEL + click support
     spark.aceManager.onGotoDeclaration.listen((_) => gotoDeclaration());
   }
 
@@ -1930,15 +1928,20 @@ class FolderOpenAction extends SparkAction {
   }
 }
 
-class ApplicationPushAction extends SparkActionWithDialog implements ContextAction {
+class DeployToMobileAction extends SparkActionWithDialog implements ContextAction {
   InputElement _pushUrlElement;
   ws.Container deployContainer;
 
-  ApplicationPushAction(Spark spark, Element dialog)
+  DeployToMobileAction(Spark spark, Element dialog)
       : super(spark, "application-push", "Deploy to Mobile", dialog) {
     _pushUrlElement = _triggerOnReturn("#pushUrl");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+
+    // When the IP address field is selected, check the `IP` checkbox.
+    getElement('#pushUrl').onFocus.listen((e) {
+      (getElement('#ip') as InputElement).checked = true;
+    });
   }
 
   void _invoke([context]) {
@@ -2230,7 +2233,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   List<ws.File> modifiedFileList = [];
   List<ws.File> addedFileList = [];
-  List<ws.File> deletedFileList = [];
+  List<String> deletedFileList = [];
 
   GitCommitAction(Spark spark, Element dialog)
       : super(spark, "git-commit", "Commit Changes…", dialog) {
@@ -2269,9 +2272,12 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       _gitChangeElement.text = '';
       _gitChangeElement.style.display = 'none';
 
-      _addGitStatus();
+      gitOperations.getDeletedFiles().then((List<String> paths) {
+        deletedFileList = paths;
+        _addGitStatus();
+        _show();
+      });
 
-      _show();
     });
   }
 
@@ -2283,19 +2289,21 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     addedFileList.forEach((file){
       _gitChangeElement.innerHtml += 'Added:&emsp;' + file.path + '<br/>';
     });
-    deletedFileList.forEach((file){
-      _gitChangeElement.innerHtml += 'Deleted:&emsp;' + file.path + '<br/>';
+    deletedFileList.forEach((path){
+      _gitChangeElement.innerHtml += 'Deleted:&emsp;' + path + '<br/>';
     });
+
     final int modifiedCnt = modifiedFileList.length;
     final int addedCnt = addedFileList.length;
     final int deletedCnt = deletedFileList.length;
-    if (modifiedCnt + addedCnt == 0) {
+
+    if (modifiedCnt + addedCnt + deletedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
     } else {
       _gitStatusElement.text =
           '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
-          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.';
-    // TODO(sunglim): show the count of deletetd files.
+          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.' +
+          '$deletedCnt ${(deletedCnt > 1) ? 'files' : 'file'} deleted.';
     }
   }
 
@@ -2311,7 +2319,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
         // TODO(grv) : Add deleted files to resource.
         if (status == FileStatus.DELETED) {
-          deletedFileList.add(resource);
+          deletedFileList.add(resource.path);
         } else if (status == FileStatus.MODIFIED) {
           modifiedFileList.add(resource);
         } else if (status == FileStatus.ADDED) {
@@ -2595,10 +2603,15 @@ class _GitCloneJob extends Job {
         });
       });
     }).catchError((e) {
-      if (e != null) {
-        if (e is! ScmException || !e.canIgnore) {
-          spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
-        }
+      if (e is SparkException && e.errorCode
+          == SparkErrorConstants.AUTH_REQUIRED) {
+        spark.showErrorMessage(
+            'Authorization Required',
+            'Authorization required - private git repositories are not yet supported.');
+      } else if (e is SparkException &&
+          e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
+      } else {
+        spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
       }
     });
   }

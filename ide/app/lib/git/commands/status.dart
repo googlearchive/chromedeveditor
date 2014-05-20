@@ -81,13 +81,13 @@ class Status {
   static Future<Map<String, FileStatus>> getUntrackedChanges(ObjectStore store)
       => _getFileStatusesForTypes(store, [FileStatusType.UNTRACKED]);
 
-  static Future<Map<String, FileStatus>> getDeletedFiles(ObjectStore store) {
+  static Future<List<String>> getDeletedFiles(ObjectStore store) {
     return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED]).then(
         (Map<String, FileStatus> statuses) {
-      Map<String, FileStatus> deletedFilesStatus = {};
+      List<String> deletedFilesStatus = [];
       statuses.forEach((String filePath, FileStatus status) {
         if (status.deleted) {
-          deletedFilesStatus[filePath] = status;
+          deletedFilesStatus.add(filePath);
         }
       });
       return deletedFilesStatus;

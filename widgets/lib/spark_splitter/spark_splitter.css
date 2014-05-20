@@ -16,37 +16,34 @@
   transform: scaleZ(1);
 }
 
-:host(.vertical-handle) {
-  background: url('handle_vert.png') no-repeat center;
-}
-
-:host(.horizontal-handle) {
-  background: url('handle_horiz.png') no-repeat center;
-}
-
-:host(.vertical-handle), :host(.horizontal-handle) {
+:host([handle]:host) {
   border-left: 1px solid #DDD;
   border-right: 1px solid #DDD;
   background-color: #F7F7F7;
 }
 
+:host([handle].vertical:host) {
+  background: url('handle_vert.png') no-repeat center;
+}
+
+:host([handle].horizontal:host) {
+  background: url('handle_horiz.png') no-repeat center;
+}
+
 #draggable {
   position: absolute;
   z-index: 1;
+  /* With fully transparent #draggable, the mouse sometimes didn't react
+     to hovering over it, depending on the surrounding elements. A CSS bug?
+  */
+  background-color: white;
+  opacity: 0.001;
 }
 
-:host(.vertical) #draggable {
-  bottom: 0;
+:host(.vertical:host) #draggable {
   cursor: col-resize;
-  left: -3px;
-  top: 0;
-  width: 7px;
 }
 
-:host(.horizontal) #draggable {
+:host(.horizontal:host) #draggable {
   cursor: row-resize;
-  height: 7px;
-  left: 0;
-  right: 0;
-  top: -3px;
 }

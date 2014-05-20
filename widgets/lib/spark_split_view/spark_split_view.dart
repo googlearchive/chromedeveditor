@@ -18,6 +18,9 @@ class SparkSplitView extends SparkWidget {
   @published String direction = 'left';
   @published int splitterSize = 8;
   @published bool splitterHandle = true;
+  @published int targetSize;
+  @published int minTargetSize = 0;
+  @published int maxTargetSize = 100000;
   @published bool locked = false;
 
   /// Constructor.
@@ -38,11 +41,11 @@ class SparkSplitView extends SparkWidget {
     );
   }
 
-  /**
-   * Set the current splitter location.
-   */
-  set targetSize(num val) {
-    ($['splitter'] as SparkSplitter).targetSize = val;
+  // TODO(ussuri): Somehow this was critical to ensure correct propagation of
+  // [targetSize] changed by our client to the enclosed splitter. Without this,
+  // the splitter didn't see the change. Investigate.
+  void targetSizeChanged() {
+    ($['splitter'] as SparkSplitter).targetSize = targetSize;
   }
 
   /**
