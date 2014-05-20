@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import '../exception.dart';
 import '../objectstore.dart';
 import '../options.dart';
 
@@ -30,36 +31,43 @@ class Branch {
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    var branchRegex = new RegExp(BRANCH_PATTERN);
-    return name.isNotEmpty && name.matchAsPrefix(name) != null;
+    //var branchRegex = new RegExp(BRANCH_PATTERN);
+    return name.isNotEmpty /*&& name.matchAsPrefix(name) != null*/;
   }
 
   /**
    * Creates a new branch. Throws error if the branch already exist.
    */
-  static Future<chrome.FileEntry> branch(GitOptions options) {
+  static Future<chrome.FileEntry> branch(GitOptions options,
+      [String remoteBranchName]) {
     ObjectStore store = options.store;
     String branchName = options.branchName;
 
     // TODO(grv) : fix bug with branchname regex.
-   /* if (!_verifyBranchName(branchName)) {
-      // TODO(grv) throw error.
-      throw "invalid branch name.";
-    }*/
+   if (!_verifyBranchName(branchName)) {
+     throw new GitException(GitErrorConstants.GIT_INVALID_BRANCH_NAME);
+    }
 
     return store.getHeadForRef('refs/heads/' + branchName).then((_) {
       // TODO(Grv) : throw branch already exists.
-      throw "branch already exists.";
+      throw new GitException(GitErrorConstants.GIT_BRANCH_EXISTS);
     }, onError: (e) {
-      //if (e.code == FileError.NOT_FOUND_ERR) {
-        return store.getHeadRef().then((String refName) {
-          return store.getHeadForRef(refName).then((String sha) {
-            return store.createNewRef('refs/heads/' + branchName, sha);
-          });
-        });
-     // } else {
-       // throw e;
-     // }
+      return _getHeadRef(store, branchName, remoteBranchName).then(
+          (String sha) {
+        print(sha);
+        return store.createNewRef('refs/heads/' + branchName, sha);
+      });
     });
+  }
+
+  static Future<String> _getHeadRef(ObjectStore store, String branchName,
+      String remoteBranchName) {
+    if (remoteBranchName != null && remoteBranchName != "") {
+      return store.getRemoteHeadForRef(remoteBranchName);
+    } else {
+      return store.getHeadRef().then((String headRefName) {
+        return store.getHeadForRef(headRefName);
+      });
+    }
   }
 }

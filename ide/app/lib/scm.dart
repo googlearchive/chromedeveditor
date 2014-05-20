@@ -164,7 +164,7 @@ abstract class ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange;
 
-  Future<List<String>> getAllBranchNames();
+  Future<List<String>> getLocalBranchNames();
 
   Future createBranch(String branchName);
 
@@ -355,14 +355,17 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
-  Future<List<String>> getAllBranchNames() =>
+  Future<List<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
-  Future createBranch(String branchName) {
+  Future<List<String>> getRemoteBranchNames() =>
+      objectStore.then((store) => store.getRemoteHeads());
+
+  Future createBranch(String branchName, [String remoteBranchName]) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
-      return Branch.branch(options);
+      return Branch.branch(options, remoteBranchName);
     });
   }
 
