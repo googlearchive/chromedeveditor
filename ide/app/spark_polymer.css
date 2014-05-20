@@ -542,3 +542,39 @@ li.outlineItem.topLevel.class {
 li.outlineItem a {
   white-space: nowrap;
 }
+
+#toast {
+  background: rgba(255, 0, 0, 0.8);
+  border-radius: 0 0 5px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  opacity: 1;
+  position: absolute;
+  height: 100px;
+  right: 30px;
+  left: 30px;
+  top: 0px;
+  margin: 10px;
+  transition: height 250ms,
+              border 250ms;
+  z-index: 200;
+  overflow: hidden;
+}
+
+#toast.content {
+  margin: 10px;
+}
+
+#toast.collapsed {
+  height: 0px;
+  border: 0px;
+  pointer-events: none;
+}
+
+
+.toast-button {
+  position: absolute;
+  right: 20px;
+  color: #444;
+}
+
+

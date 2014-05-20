@@ -34,7 +34,7 @@
 }
 
 .dialog {
-  top: 72px;
+  top: 0px;
   left: 50%;
   width: 512px;
   margin-left: -256px;

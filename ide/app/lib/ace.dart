@@ -262,6 +262,7 @@ class AceManager {
   final AceManagerDelegate delegate;
 
   Outline outline;
+  ToastBar toastBar;
 
   StreamController _onGotoDeclarationController = new StreamController();
   Stream get onGotoDeclaration => _onGotoDeclarationController.stream;
@@ -314,6 +315,11 @@ class AceManager {
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
     _setupOutline(prefs);
+    toastBar = new ToastBar(parentElement);
+    new Timer.periodic(new Duration(seconds: 3), (_) {
+      toastBar.hide();
+    });
+
     var node = parentElement.getElementsByClassName("ace_content")[0];
     node.onClick.listen((e) {
       bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
@@ -350,17 +356,17 @@ class AceManager {
     });
 
     // Set up the goto line dialog.
-    gotoLineView = new GotoLineView();
-    if (gotoLineView is! GotoLineView) {
-      html.querySelector('#splashScreen').style.backgroundColor = 'red';
-    }
-    gotoLineView.style.zIndex = '101';
-    parentElement.children.add(gotoLineView);
-    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
-    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
-    parentElement.onKeyDown
-        .where((e) => e.keyCode == html.KeyCode.ESC)
-        .listen((_) => gotoLineView.hide());
+//    gotoLineView = new GotoLineView();
+//    if (gotoLineView is! GotoLineView) {
+//      html.querySelector('#splashScreen').style.backgroundColor = 'red';
+//    }
+//    gotoLineView.style.zIndex = '101';
+//    parentElement.children.add(gotoLineView);
+//    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
+//    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
+//    parentElement.onKeyDown
+//        .where((e) => e.keyCode == html.KeyCode.ESC)
+//        .listen((_) => gotoLineView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -703,6 +709,24 @@ class AceManager {
   }
 
   void _handleGotoLineViewClosed(_) => focus();
+}
+
+class ToastBar {
+  html.Element _container;
+  html.DivElement _toastDiv;
+
+  ToastBar(this._container) {
+    html.DocumentFragment template =
+        (html.querySelector('#toast-template') as
+        html.TemplateElement).content;
+    html.DocumentFragment templateClone = template.clone(true);
+    _toastDiv = templateClone.querySelector('#toast');
+    _container.children.add(_toastDiv);
+  }
+
+  void hide() {
+    _toastDiv.classes.toggle("collapsed");
+  }
 }
 
 class ThemeManager {
