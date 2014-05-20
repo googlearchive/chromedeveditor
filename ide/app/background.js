@@ -33,7 +33,7 @@ App.prototype.launch = function(ui_opt) {
   var div = document.createElement('div');
   if (div.createShadowRoot == null) {
     chrome.app.window.create(
-        'cannot_launch/cannot_launch.htm', {
+        'cannot_launch/cannot_launch.html', {
         frame: 'chrome',
         bounds: {
           width: 600,
