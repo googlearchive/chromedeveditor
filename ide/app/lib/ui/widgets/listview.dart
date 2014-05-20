@@ -145,6 +145,18 @@ class ListView {
     int count = _delegate.listViewNumberOfRows(this);
     int y = 0;
     for(int i = 0 ; i < count ; i ++) {
+      Element separator = _delegate.listViewSeparatorForRow(this, i);
+      int separatorHeight = _delegate.listViewSeparatorHeightForRow(this, i);
+      if (separator != null) {
+        separator.style
+          ..position = 'absolute'
+          ..width = '100%'
+          ..height = separatorHeight.toString() + 'px'
+          ..top = y.toString() + 'px';
+        _container.children.add(separator);
+        y += separatorHeight;
+      }
+
       int cellHeight = _delegate.listViewHeightForRow(this, i);
       ListViewRow row = new ListViewRow();
       row.cell = _delegate.listViewCellForRow(this, i);
