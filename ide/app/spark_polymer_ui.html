@@ -418,14 +418,13 @@
 
     <!-- Progress dialog -->
     <spark-modal id="progressDialog" class="dialog" animation="scale-slideup">
-      <div class="modal-header">
-        <a href="#" class="close" overlay-toggle>&times;</a>
-        <h4 class="modal-title">Progress</h4>
-      </div>
-      <div class="modal-footer">
-        <spark-button overlay-toggle primary focused data-dismiss="modal">
-          Close
-        </spark-button>
+      <div class="modal-content toast">
+        <span class="modal-title">Analyzing ...</span>
+        <span class="buttons">
+          <spark-button overlay-toggle primary focused data-dismiss="modal">
+            Cancel
+          </spark-button>
+        </span>
       </div>
     </spark-modal>
 
