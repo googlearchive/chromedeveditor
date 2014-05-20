@@ -585,7 +585,7 @@ class FilesController implements TreeViewDelegate {
         JSON.encode(_treeView.expandedState));
   }
 
-  Element treeViewSeparatorForNode(TreeView view, String nodeUid) {
+  html.Element treeViewSeparatorForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
     if (resource is! Project) return null;
     if (_files.length == 0) return null;
