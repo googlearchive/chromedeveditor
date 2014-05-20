@@ -69,7 +69,7 @@ class HttpFetcher {
         }
       }
     });
-    xhr.onError.listen((_) => completer.completeError(new HttpResult.fromXhr(xhr)));
+    xhr.onError.listen((_) => completer.completeError(HttpGitException.fromXhr(xhr)));
     String bodySize = (body.size / 1024).toStringAsFixed(2);
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
@@ -121,16 +121,18 @@ class HttpFetcher {
         return parser.parse(buffer, store, packProgress).then(
             (PackParseResult obj) {
            completer.complete(obj);
+        }, onError: (e) {
+          completer.completeError(e);
         });
       }
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.send(body);
@@ -179,17 +181,17 @@ class HttpFetcher {
         if (xhr.status == 200) {
           return completer.complete(xhr.responseText);
         } else {
-          completer.completeError(new HttpResult.fromXhr(xhr));
+          completer.completeError(HttpGitException.fromXhr(xhr));
         }
       }
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.send();
@@ -341,14 +343,27 @@ class HttpFetcher {
   }
 }
 
-class HttpResult {
-  final int status;
-  final String statusText;
+class HttpGitException extends GitException {
+  int status;
+  String statusText;
 
-  HttpResult(this.status, this.statusText);
+  HttpGitException(this.status, this.statusText, [String errorCode,
+      String message, bool canIgnore]) : super(errorCode, message, canIgnore);
 
-  HttpResult.fromXhr(HttpRequest request) :
-      status = request.status, statusText = request.statusText;
+  static fromXhr(HttpRequest request) {
+    String errorCode;
+
+    if (request.status == 401) {
+      errorCode = GitErrorConstants.GIT_AUTH_ERROR;
+    } else if (request.status == 404) {
+        errorCode = GitErrorConstants.GIT_HTTP_404_ERROR;
+    } else {
+      errorCode = GitErrorConstants.GIT_HTTP_ERROR;
+    }
+
+    return new HttpGitException(request.status, request.statusText, errorCode,
+        "", false);
+  }
 
   /**
    * Returns `true` if the status is 401 Unauthorized.
