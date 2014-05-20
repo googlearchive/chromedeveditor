@@ -191,8 +191,9 @@ abstract class ScmProjectOperations {
 class ScmException implements Exception {
   final String message;
   final bool needsAuth;
+  final canIgnore;
 
-  ScmException(this.message, [this.needsAuth = false]);
+  ScmException(this.message, [this.needsAuth = false, this.canIgnore = false]);
 
   String toString() => message;
 }
@@ -295,8 +296,14 @@ class GitScmProvider extends ScmProvider {
       });
     }).catchError((e) {
       activeClone = null;
-      if (e is HttpResult) {
-        throw new ScmException(e.toString(), e.needsAuth);
+      if (e is GitException) {
+        if (e.errorCode == GitErrorConstants.GIT_AUTH_ERROR) {
+          throw new ScmException(e.toString(), true);
+        } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
+          throw new ScmException(e.toString(), false, true );
+        } else {
+          throw new ScmException(e.toString());
+        }
       } else {
         throw new ScmException(e.toString());
       }
