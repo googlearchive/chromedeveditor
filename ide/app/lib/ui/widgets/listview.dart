@@ -151,8 +151,8 @@ class ListView {
         separator.style
           ..position = 'absolute'
           ..width = '100%'
-          ..height = separatorHeight.toString() + 'px'
-          ..top = y.toString() + 'px';
+          ..height = '${separatorHeight}px'
+          ..top = '${y}px';
         _container.children.add(separator);
         y += separatorHeight;
       }
@@ -164,9 +164,9 @@ class ListView {
       row.container.children.add(row.cell.element);
       row.container.style
         ..width = '100%'
-        ..height = cellHeight.toString() + 'px'
+        ..height = '${cellHeight}px'
         ..position = 'absolute'
-        ..top = y.toString() + 'px';
+        ..top = '${y}px';
       // Set events callback.
       row.container.onClick.listen((event) {
         _onClicked(i, event);
