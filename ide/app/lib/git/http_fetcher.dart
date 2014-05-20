@@ -198,12 +198,12 @@ class HttpFetcher {
    * Some git repositories do not end with '.git' suffix. Validate those urls
    * by sending a request to the server.
    */
-  Future<bool> isValidRepoUrl(String url) {
+  Future<bool> isValidRepoUrl() {
     String uri = _makeUri('/info/refs', {"service": 'git-upload-pack'});
     try {
       return _doGet(uri).then((_) => true).catchError((e) {
         if (e.status == 401) {
-          throw new GitException(GitErrorConstants.GIT_AUTH_ERROR);
+          throw new GitException(GitErrorConstants.GIT_AUTH_REQUIRED);
         }
         return new Future.value(false);
       });
