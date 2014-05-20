@@ -85,7 +85,7 @@ class Commit {
 
   static Future checkTreeChanged(ObjectStore store, String parent,
       String sha) {
-    if (parent.isEmpty) {
+    if (parent != null && parent.isEmpty) {
       return null;
     } else {
       return store.retrieveObject(parent, ObjectTypes.COMMIT_STR).then(
