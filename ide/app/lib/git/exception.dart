@@ -57,6 +57,9 @@ class GitErrorConstants {
   static final String GIT_HTTP_404_ERROR
       = "git.http_404_error";
 
+  static final String GIT_HTTP_ERROR
+      = "git.http_error";
+
   static final String GIT_INVALID_REPO_URL
       = "git.invalid_repo_url";
 

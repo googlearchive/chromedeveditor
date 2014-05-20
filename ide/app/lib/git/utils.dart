@@ -131,7 +131,7 @@ abstract class Cancel {
   Cancel([this._cancel]);
 
   bool check() {
-    if (cancel) {
+    if (_cancel) {
       onCancel();
       return false;
     } else {

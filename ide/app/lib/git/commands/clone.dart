@@ -129,16 +129,18 @@ class Clone {
 
             logger.info(_stopwatch.finishCurrentTask('_writeRefs'));
 
-            return _callMethod(_processClone, [gitDir, localHeadRef, fetcher]);
+            return _callMethod(_processClone, [gitDir, localHeadRef, fetcher])
+                .catchError((e) {
+              // Clean-up git directory and then re-throw error.
+              _options.root.getDirectory(".git").then(
+                  (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively());
+              throw e;
+            });
           });
         }, onError: (e) {
           // Clean-up git directory and then re-throw error.
           _options.root.getDirectory(".git").then(
               (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively());
-          if (e is GitException && e.errorCode
-              == GitErrorConstants.GIT_CLONE_CANCEL) {
-            throw e;
-          }
           throw "unable to load remote repo";
         }).whenComplete(() {
           logger.info(_stopwatch.finishProfiler());
@@ -220,7 +222,7 @@ class Clone {
       return FileOps.createFileWithContent(gitDir, localHeadRef.name,
           localHeadRef.sha, "Text").then((_) {
         return _callMethod(fetcher.fetchRef, [[localHeadRef.sha], null, null,
-            _options.depth, null, nopFunction, nopFunction, cancel]).then(
+            _options.depth, null, nopFunction, nopFunction, _cancel]).then(
             (PackParseResult result) {
           Uint8List packData = result.data;
           List<int> packSha = packData.sublist(packData.length - 20);
@@ -286,6 +288,8 @@ class Clone {
 }
 
 class CloneCancel extends Cancel {
+
+  CloneCancel() : super(false);
 
   onCancel() {
     throw new GitException(GitErrorConstants.GIT_CLONE_CANCEL);
