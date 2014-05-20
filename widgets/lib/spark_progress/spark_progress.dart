@@ -46,7 +46,7 @@ class SparkProgress extends SparkWidget {
   set visible(bool val) {
     _visible = val;
 
-    style.display = _visible ? 'block' : 'none';
+    style.visibility = _visible ? 'visible' : 'hidden';
   }
 
   @published bool showProgressMessage = false;
@@ -57,7 +57,7 @@ class SparkProgress extends SparkWidget {
 
   Stream get onCancelled => _cancelController.stream;
 
-  void cancelClicked(evt) => _cancelController.add(null);
+  void cancelClickHandler(evt) => _cancelController.add(null);
 
   SparkProgress.created() : super.created() {
     _progressDiv = $['progressDiv'];

@@ -12,6 +12,8 @@
 
 #progressMessage {
   text-overflow: ellipsis;
+  min-height: 1em;
+  min-width: 1em;
 }
 
 #progressDiv {

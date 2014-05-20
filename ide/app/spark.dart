@@ -1985,8 +1985,6 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
   }
 
   void _commit() {
-    // TODO: listen for cancellation -
-
     SparkProgress progressComponent = getElement('#deployProgress');
     progressComponent.visible = true;
     progressComponent.progressMessage = "Deploying...";
@@ -2006,7 +2004,9 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
       _hide();
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
-      spark.showMessage('Push Failure', e.toString());
+      if (e is! UserCancelledException) {
+        spark.showMessage('Push Failure', e.toString());
+      }
     }).whenComplete(() {
       progressComponent.visible = false;
     });
@@ -2047,6 +2047,7 @@ class ProgressMonitorImpl extends ProgressMonitor {
   }
 }
 
+/** TODO: no longer used. */
 class _HarnessPushJob extends Job {
   final Spark spark;
   final ws.Container deployContainer;

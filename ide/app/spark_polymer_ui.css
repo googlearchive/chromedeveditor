@@ -123,11 +123,6 @@
   font-weight: bold;
 }
 
-#pushDialog div.modal-body {
-  padding-top: 10px;
-  padding-bottom: 0;
-}
-
 #gitPushDialog .modal-body {
   margin: 0;
   padding: 0;
@@ -176,6 +171,11 @@
 }
 
 /* Deploy to mobile dialog */
+#mobileDeployDialog div.modal-body {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
 #pushUrl {
   margin-left: 17px;
   width: 20em;
