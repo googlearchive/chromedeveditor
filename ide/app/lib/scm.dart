@@ -22,6 +22,7 @@ import 'git/config.dart';
 import 'git/http_fetcher.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
+import 'git/exception.dart';
 import 'git/options.dart';
 import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
@@ -286,7 +287,8 @@ class GitScmProvider extends ScmProvider {
         branchName : branchName, username: username, password: password);
 
     return options.store.init().then((_) {
-      return new Clone(options).clone().then((_) {
+      activeClone = new Clone(options);
+      return activeClone.clone().then((_) {
         return options.store.index.flush().then((_) {
           activeClone = null;
         });
