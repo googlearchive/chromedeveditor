@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'fetch.dart';
 import '../exception.dart';
 import '../objectstore.dart';
 import '../options.dart';
@@ -54,8 +55,10 @@ class Branch {
     }, onError: (e) {
       return _getHeadRef(store, branchName, remoteBranchName).then(
           (String sha) {
-        print(sha);
-        return store.createNewRef('refs/heads/' + branchName, sha);
+        return store.createNewRef('refs/heads/' + branchName, sha).then((_) {
+          Fetch fetch = new Fetch(options);
+          return fetch.fetch();
+        });
       });
     });
   }

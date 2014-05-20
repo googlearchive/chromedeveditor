@@ -2200,7 +2200,8 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
        int index = _selectElement.selectedIndex;
        if (index != 0) {
          _branchNameElement.disabled = true;
-         _branchNameElement.value = _selectElement.children[index].value;
+         _branchNameElement.value = (_selectElement.children[index]
+             as OptionElement).value;
        } else {
          _branchNameElement.disabled = false;
        }

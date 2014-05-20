@@ -77,6 +77,7 @@ class Clone {
       if (isValid) {
         return startClone(fetcher);
       } else if (!url.endsWith('.git')) {
+        _options.repoUrl += '.git';
         return _clone(url + '.git');
       } else {
         throw new GitException(GitErrorConstants.GIT_INVALID_REPO_URL);
