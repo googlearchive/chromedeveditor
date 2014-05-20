@@ -2098,6 +2098,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
 class GitCloneAction extends SparkActionWithDialog {
   InputElement _repoUrlElement;
+  SparkDialog _progressDialog;
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
@@ -2112,6 +2113,7 @@ class GitCloneAction extends SparkActionWithDialog {
   }
 
   void _onCancel() {
+    _progressDialog.show();
     ScmProvider scmProvider = getProviderType('git');
     scmProvider.cancelClone();
   }
@@ -2135,13 +2137,14 @@ class GitCloneAction extends SparkActionWithDialog {
       projectName = projectName.substring(0, projectName.length - 4);
     }
 
-    _GitCloneJob job = new _GitCloneJob(url, projectName, spark);
-    spark.jobManager.schedule(job);
-    SparkDialog dialog = spark.createDialog(spark.getDialogElement(
-        '#gitCloneProgressDialog'));
-    dialog.show();
-    dialog.element.querySelector("[primary]").onClick.listen((_)
+    _progressDialog = spark.createDialog(spark.getDialogElement(
+       '#gitCloneProgressDialog'));
+    _progressDialog.element.querySelector("[primary]").onClick.listen((_)
         => _onCancel());
+    _GitCloneJob job = new _GitCloneJob(url, projectName, spark,
+        _progressDialog);
+    _progressDialog.show();
+    spark.jobManager.schedule(job);
   }
 }
 
@@ -2543,8 +2546,9 @@ class _GitCloneJob extends Job {
   String url;
   String _projectName;
   Spark spark;
+  SparkDialog _cancelDialog;
 
-  _GitCloneJob(this.url, String projectName, this.spark)
+  _GitCloneJob(this.url, String projectName, this.spark, this._cancelDialog)
       : super("Cloning ${projectName}…") {
     _projectName = projectName;
   }
@@ -2574,6 +2578,7 @@ class _GitCloneJob extends Job {
           Timer.run(() {
             spark._filesController.selectFile(project);
             spark._filesController.setFolderExpanded(project);
+            _cancelDialog.hide();
           });
 
           // Run Pub if the new project has a pubspec file.
