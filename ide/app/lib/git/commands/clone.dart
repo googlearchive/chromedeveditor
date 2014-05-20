@@ -133,15 +133,16 @@ class Clone {
                 .catchError((e) {
               // Clean-up git directory and then re-throw error.
               _options.root.getDirectory(".git").then(
-                  (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively());
+                  (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively())
+                  .catchError((_));
               throw e;
             });
           });
         }, onError: (e) {
           // Clean-up git directory and then re-throw error.
-          _options.root.getDirectory(".git").then(
-              (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively());
-          throw "unable to load remote repo";
+          _options.root.getDirectory(".git").then((chrome.DirectoryEntry gitDir)
+              => gitDir.removeRecursively()).catchError((_));
+          throw e;
         }).whenComplete(() {
           logger.info(_stopwatch.finishProfiler());
         });
