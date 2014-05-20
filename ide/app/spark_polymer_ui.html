@@ -211,7 +211,7 @@
     </spark-modal>
 
     <!-- Harness Push dialog -->
-    <spark-modal id="pushDialog" class="dialog" animation="scale-slideup">
+    <spark-modal id="mobileDeployDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close">&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>
@@ -219,12 +219,12 @@
       <div class="modal-body">
         <h4>Deploy a Chrome App to an Android Device</h4>
         <p>
-          You need to have the
+          Please make sure you have
           <a href="https://github.com/MobileChromeApps/harness/releases/"
               on-click="{{handleAnchorClick}}">
-            ChromeAPT.apk
+            Chrome ADT
           </a>
-          installed on your Android phone or tablet.
+          installed and running on your Android device.
         </p>
         <div class="form-group">
           <form>
