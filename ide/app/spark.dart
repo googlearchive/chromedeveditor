@@ -2137,8 +2137,11 @@ class GitCloneAction extends SparkActionWithDialog {
 
     _GitCloneJob job = new _GitCloneJob(url, projectName, spark);
     spark.jobManager.schedule(job);
-    SparkDialog dialog = spark.createDialog(spark.getDialogElement('#gitCloneDialog'));
-    dialog.element.querySelector("[primary]").onClick.listen((_) => _onCancel());
+    SparkDialog dialog = spark.createDialog(spark.getDialogElement(
+        '#gitCloneProgressDialog'));
+    dialog.show();
+    dialog.element.querySelector("[primary]").onClick.listen((_)
+        => _onCancel());
   }
 }
 
@@ -2588,7 +2591,9 @@ class _GitCloneJob extends Job {
       });
     }).catchError((e) {
       if (e != null) {
-        spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
+        if (e is! ScmException || !e.canIgnore) {
+          spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
+        }
       }
     });
   }
