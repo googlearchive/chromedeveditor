@@ -51,7 +51,6 @@ import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
-Logger _logger = new Logger('spark');
 
 /**
  * Create a [Zone] that logs uncaught exceptions.
@@ -485,12 +484,8 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(this)
-        .then((manager) {
+    return ProjectLocationManager.restoreManager(this).then((manager) {
       _projectLocationManager = manager;
-      // The manager might have overridden some dev flags from .spark.json
-      // under the user's project location.
-      refreshUI();
     });
   }
 
