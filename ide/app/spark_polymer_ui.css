@@ -170,6 +170,12 @@
   display: none;
 }
 
+/* Deploy to mobile dialog */
+#pushUrl {
+  margin-left: 17px;
+  width: 20em;
+}
+
 .input-label {
   display: flex;
   margin: 10px 0;

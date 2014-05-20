@@ -33,6 +33,11 @@
 #draggable {
   position: absolute;
   z-index: 1;
+  /* With fully transparent #draggable, the mouse sometimes didn't react
+     to hovering over it, depending on the surrounding elements. A CSS bug?
+  */
+  background-color: white;
+  opacity: 0.001;
 }
 
 :host(.vertical:host) #draggable {
