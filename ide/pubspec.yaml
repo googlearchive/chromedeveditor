@@ -22,7 +22,7 @@ dependencies:
   logging: any
   mime: any
   path: any
-  polymer: 0.10.0-pre.9
+  polymer: 0.10.0-pre.11
   spark_widgets:
     path: ../widgets
   tavern:
