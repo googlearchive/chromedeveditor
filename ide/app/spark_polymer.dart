@@ -64,9 +64,7 @@ void main() {
 
     maybeRunGuarded(() {
       SparkPolymer spark = new SparkPolymer._();
-      spark.start().then((_) {
-        spark.actionManager.getAction("progress-modal").invoke();
-      });
+      spark.start();
     });
   }).catchError((error) {
     _logger.logError(error);
