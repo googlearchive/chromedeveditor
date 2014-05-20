@@ -51,7 +51,6 @@ import 'spark_model.dart';
 
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
-Logger _logger = new Logger('spark');
 
 /**
  * Create a [Zone] that logs uncaught exceptions.
@@ -479,12 +478,8 @@ abstract class Spark
   }
 
   Future restoreLocationManager() {
-    return ProjectLocationManager.restoreManager(this)
-        .then((manager) {
+    return ProjectLocationManager.restoreManager(this).then((manager) {
       _projectLocationManager = manager;
-      // The manager might have overridden some dev flags from .spark.json
-      // under the user's project location.
-      refreshUI();
     });
   }
 
@@ -1747,6 +1742,8 @@ class GotoDeclarationAction extends SparkAction {
     addBinding('ctrl-.');
     addBinding('F3');
     _analysisService = spark.services.getService('analyzer');
+
+    // Needed for ACCEL + click support
     spark.aceManager.onGotoDeclaration.listen((_) => gotoDeclaration());
   }
 
@@ -1933,6 +1930,11 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
     _pushUrlElement = _triggerOnReturn("#pushUrl");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+
+    // When the IP address field is selected, check the `IP` checkbox.
+    getElement('#pushUrl').onFocus.listen((e) {
+      (getElement('#ip') as InputElement).checked = true;
+    });
   }
 
   void _invoke([context]) {

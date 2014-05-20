@@ -5,7 +5,6 @@
 /**
  * A library to manage Android RSA key generation and signature.
  */
-
 library spark.android_rsa_cipher;
 
 import 'dart:convert';
