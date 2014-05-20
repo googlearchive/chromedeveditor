@@ -430,6 +430,7 @@ abstract class Spark
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
+    actionManager.registerAction(new ModalProgressSparkAction(this, getDialogElement('#progressDialog')));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
@@ -1761,7 +1762,16 @@ class GotoDeclarationAction extends SparkAction {
   void gotoDeclaration() {
     Editor editor = spark.getCurrentEditor();
     if (editor is TextEditor) {
-      editor.navigateToDeclaration();
+      bool complete = false;
+      editor.navigateToDeclaration().then((_) {
+        complete = true;
+      });
+
+      new Future.delayed(new Duration(milliseconds: 500)).then((_) {
+        if (!complete) {
+          spark.actionManager.getAction("progress-modal").invoke();
+        }
+      });
     }
   }
 }
@@ -2865,6 +2875,22 @@ class AboutSparkAction extends SparkActionWithDialog {
     _show();
   }
 }
+
+class ModalProgressSparkAction extends SparkActionWithDialog {
+  bool _initialized = false;
+
+  ModalProgressSparkAction(Spark spark, Element dialog)
+      : super(spark, "progress-modal", "About Spark", dialog);
+
+  void _invoke([Object context]) {
+    if (!_initialized) {
+      _initialized = true;
+    }
+
+    _show();
+  }
+}
+
 
 class SettingsAction extends SparkActionWithDialog {
   // TODO(ussuri): This is essentially unused. Remove.

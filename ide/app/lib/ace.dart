@@ -125,7 +125,7 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  void navigateToDeclaration() { }
+  Future navigateToDeclaration() { }
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -861,3 +861,4 @@ String _calcMD5(String text) {
   md5.add(text.codeUnits);
   return crypto.CryptoUtils.bytesToHex(md5.close());
 }
+                                                    
