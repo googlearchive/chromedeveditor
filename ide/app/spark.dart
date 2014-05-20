@@ -2181,23 +2181,56 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
   InputElement _branchNameElement;
+  SelectElement _selectElement;
 
   GitBranchAction(Spark spark, Element dialog)
       : super(spark, "git-branch", "Create Branch…", dialog) {
     _branchNameElement = _triggerOnReturn("#gitBranchName");
+    _selectElement = getElement("#gitRemoteBranches");
   }
 
   void _invoke([context]) {
     project = context.first;
     gitOperations = spark.scmManager.getScmOperationsFor(project);
-    _show();
+
+    // Clear out the old select options.
+    _selectElement.length = 0;
+
+    _selectElement.onChange.listen((e) {
+       int index = _selectElement.selectedIndex;
+       if (index != 0) {
+         _branchNameElement.disabled = true;
+         _branchNameElement.value = _selectElement.children[index].value;
+       } else {
+         _branchNameElement.disabled = false;
+       }
+    });
+
+    gitOperations.getRemoteBranchNames().then((List<String> branchNames) {
+      branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      _selectElement.append(
+          new OptionElement(data: "(none)", value: ""));
+      for (String branchName in branchNames) {
+        _selectElement.append(
+            new OptionElement(data: branchName, value: branchName));
+      }
+      _selectElement.selectedIndex = 0;
+    }).then((_) {
+      _show();
+    });
   }
 
   void _commit() {
     // TODO(grv): Add verify checks.
-    _GitBranchJob job =
-        new _GitBranchJob(gitOperations, _branchNameElement.value, spark);
+    String remoteBranchName = "";
+    int selectIndex = _selectElement.selectedIndex;
+    remoteBranchName = (_selectElement.children[selectIndex]
+        as OptionElement).value;
+
+    _GitBranchJob job = new _GitBranchJob(gitOperations,
+        _branchNameElement.value, remoteBranchName, spark);
     spark.jobManager.schedule(job);
+    _branchNameElement.disabled = false;
   }
 
   String get category => 'git';
@@ -2358,7 +2391,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
     // Clear out the old select options.
     _selectElement.length = 0;
 
-    gitOperations.getAllBranchNames().then((List<String> branchNames) {
+    gitOperations.getLocalBranchNames().then((List<String> branchNames) {
       branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       for (String branchName in branchNames) {
         _selectElement.append(
@@ -2631,18 +2664,19 @@ class _GitAddJob extends Job {
 class _GitBranchJob extends Job {
   GitScmProjectOperations gitOperations;
   String _branchName;
+  String _remoteBranchName;
   String url;
   Spark spark;
 
-  _GitBranchJob(this.gitOperations, String branchName, this.spark)
-      : super("Creating ${branchName}…") {
+  _GitBranchJob(this.gitOperations, String branchName, this._remoteBranchName,
+      this.spark) : super("Creating ${branchName}…") {
     _branchName = branchName;
   }
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return gitOperations.createBranch(_branchName).then((_) {
+    return gitOperations.createBranch(_branchName, _remoteBranchName).then((_) {
       return gitOperations.checkoutBranch(_branchName).then((_) {
         spark.showSuccessMessage('Created ${_branchName}');
       });
