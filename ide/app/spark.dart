@@ -430,7 +430,6 @@ abstract class Spark
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
-    actionManager.registerAction(new ModalProgressSparkAction(this, getDialogElement('#progressDialog')));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
@@ -1120,41 +1119,6 @@ abstract class SparkDialog {
   void hide();
   Element get element;
 }
-
-//abstract class SparkActionWithTopBar extends SparkAction {
-//  SparkDialog _dialog;
-//
-//  SparkActionWithTopBar(Spark spark,
-//                        String id,
-//                        String name,
-//                        Element dialogElement)
-//      : super(spark, id, name) {
-//    _dialog = spark.createDialog(dialogElement);
-//    _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
-//  }
-//
-//  void _cancel() { }
-//
-//  Element getElement(String selectors) =>
-//      _dialog.element.querySelector(selectors);
-//
-//  List<Element> getElements(String selectors) =>
-//      _dialog.element.querySelectorAll(selectors);
-//
-//  Element _triggerOnEscape(String selectors) {
-//    var element = _dialog.element.querySelector(selectors);
-//    element.onKeyDown.listen((event) {
-//      if (event.keyCode == KeyCode.ESC) {
-//        _cancel();
-//        _dialog.hide();
-//      }
-//    });
-//    return element;
-//  }
-//
-//  void _show() => _dialog.show();
-//  void _close() => _dialog.hide();
-//}
 
 abstract class SparkActionWithDialog extends SparkAction {
   SparkDialog _dialog;
@@ -2899,23 +2863,6 @@ class AboutSparkAction extends SparkActionWithDialog {
     }
 
     _show();
-  }
-}
-
-// TODO(terry):  When only polymer overlays are used remove _initialized and
-//               isPolymer's defintion and usage.
-class ModalProgressSparkAction extends SparkActionWithDialog {
-  bool _initialized = false;
-
-  ModalProgressSparkAction(Spark spark, Element dialog)
-     : super(spark, "progress-modal", "About Spark", dialog);
-
-  void _invoke([Object context]) {
-   if (!_initialized) {
-     _initialized = true;
-   }
-
-   _show();
   }
 }
 

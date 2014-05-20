@@ -33,7 +33,6 @@ class MockAceManager implements AceManager {
   AceManagerDelegate delegate = null;
   GotoLineView gotoLineView = null;
   Outline outline = null;
-  ToastBar toastBar = null;
 
   MockAceManager();
 
