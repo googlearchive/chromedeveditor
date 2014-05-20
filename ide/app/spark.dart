@@ -12,6 +12,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
+import 'package:spark_widgets/spark_progress/spark_progress.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
 
 import 'lib/ace.dart';
@@ -1125,10 +1126,12 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
+    _dialog.element.querySelector("a.close").onClick.listen((_) => _cancel());
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
   }
 
-  void _commit() { }
+  void _commit() => _hide();
+  void _cancel() => _hide();
 
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
@@ -1148,6 +1151,7 @@ abstract class SparkActionWithDialog extends SparkAction {
   }
 
   void _show() => _dialog.show();
+  void _hide() => _dialog.hide();
 }
 
 class FileOpenAction extends SparkAction {
@@ -1937,6 +1941,9 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
+    _dialog.element.querySelector(
+        "div.modal-footer spark-button").onClick.listen((_) => _cancel());
+
     // When the IP address field is selected, check the `IP` checkbox.
     getElement('#pushUrl').onFocus.listen((e) {
       (getElement('#ip') as InputElement).checked = true;
@@ -1954,7 +1961,14 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
 
     deployContainer = getAppContainerFor(resource);
 
-    _show();
+    if (deployContainer == null) {
+      spark.showErrorMessage(
+          'Unable to Deploy',
+          'Unable to deploy the current selection; please select a Chrome App '
+          'to deploy.');
+    } else {
+      _show();
+    }
   }
 
   String get category => 'application';
@@ -1970,16 +1984,65 @@ class ApplicationPushAction extends SparkActionWithDialog implements ContextActi
   }
 
   void _commit() {
+    // TODO: listen for cancellation -
+
+    SparkProgress progressComponent = getElement('#deployProgress');
+    progressComponent.visible = true;
+    progressComponent.progressMessage = "Deploying...";
+
+    ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
+
     String type = getElement('input[name="type"]:checked').id;
-    Job job;
-    if (type == 'adb') {
-      job = new _HarnessPushJob.pushToAdb(spark, deployContainer);
+    bool useAdb = type == 'adb';
+    String url = _pushUrlElement.value;
+
+    MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
+
+    Future f = useAdb ?
+        deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
+
+    monitor.checkForCancelled(f).then((_) {
+      _hide();
+      spark.showSuccessMessage('Successfully pushed');
+    }).catchError((e) {
+      spark.showMessage('Push Failure', e.toString());
+    }).whenComplete(() {
+      progressComponent.visible = false;
+    });
+  }
+}
+
+class ProgressMonitorImpl extends ProgressMonitor {
+  final SparkProgress progressComponent;
+
+  ProgressMonitorImpl(this.progressComponent) {
+    progressComponent.onCancelled.listen((_) {
+      cancelled = true;
+    });
+  }
+
+  void start(String title, [num maxWork = 0]) {
+    super.start(title, maxWork);
+
+    progressComponent.progressMessage = title == null ? '' : title;
+
+    if (maxWork == 0) {
+      progressComponent.indeterminate = true;
     } else {
-      String url = _pushUrlElement.value;
-      // TODO(braden): Input validation.
-      job = new _HarnessPushJob.pushToUrl(spark, deployContainer, url);
+      progressComponent.value = 0;
     }
-    spark.jobManager.schedule(job);
+  }
+
+  void worked(num amount) {
+    super.worked(amount);
+
+    progressComponent.value = progress * 100;
+  }
+
+  set cancelled(bool val) {
+    super.cancelled = val;
+
+    progressComponent.indeterminate = true;
   }
 }
 
@@ -1995,7 +2058,7 @@ class _HarnessPushJob extends Job {
   }
 
   _HarnessPushJob.pushToUrl(this.spark, this.deployContainer, this._url)
-      : super('Deploying to mobile…') { }
+      : super('Deploying to mobile…');
 
   Future run(ProgressMonitor monitor) {
     if (_adb) {

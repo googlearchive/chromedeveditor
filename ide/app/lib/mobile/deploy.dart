@@ -13,7 +13,6 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import 'adb.dart';
-import 'adb_client.dart';
 import 'adb_client_tcp.dart';
 import '../jobs.dart';
 import '../preferences.dart';
@@ -214,8 +213,6 @@ class MobileDeploy {
   Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
 //  // Start ADT on the device.
 //  return client.startActivity(AdbApplication.CHROME_ADT);
-
-    client.getDevices();
 
     // Setup port forwarding to 2424 on the device.
     return client.forwardTcp(2424, 2424).then((_) {

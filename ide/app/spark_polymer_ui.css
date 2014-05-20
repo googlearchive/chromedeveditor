@@ -123,6 +123,11 @@
   font-weight: bold;
 }
 
+#pushDialog div.modal-body {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
 #gitPushDialog .modal-body {
   margin: 0;
   padding: 0;
