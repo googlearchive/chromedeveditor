@@ -28,6 +28,7 @@ class SparkException implements Exception {
  */
 class SparkErrorConstants {
   static final String BRANCH_NOT_FOUND = "branch_not_found";
-  static final String CLONE_GIT_DIR_IN_USE = "clone_dir_in_use";
+  static final String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
   static final String AUTH_REQUIRED = "auth.required";
+  static final String GIT_CLONE_CANCEL = "git.clone_cancel";
 }
