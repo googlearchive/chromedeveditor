@@ -2403,6 +2403,9 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
     gitOperations = spark.scmManager.getScmOperationsFor(project);
     gitOperations.getPendingCommits().then((List<CommitInfo> commits) {
+      if (commits.isEmpty) {
+        spark.showErrorMessage('Push failed', 'No commits to push');
+      }
       // Fill commits.
       _commitsList.innerHtml = '';
       String summaryString = commits.length == 1 ? "1 commit" : "${commits.length} commits";
@@ -2430,7 +2433,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
         _show();
       });
     }).catchError((e) {
-      spark.showErrorMessage('Push failed', 'No commits to push');
+      spark.showErrorMessage('Push failed', 'Something went wrong.');
     });
   }
 
