@@ -41,19 +41,19 @@
   border-radius: 5px;
 }
 
-.dialog.toast span.title {
+#progressToast #title {
   font-size: 15px;
 }
 
-.dialog.toast {
+#progressToast  {
   top: 0px;
 }
 
-.dialog.toast .buttons {
+#progressToast #buttons {
   float: right;
 }
 
-.dialog.toast .modal-content {
+#progressToast .modal-content {
   border-radius: 0 0 5px 5px;
   height: 50px;
   padding: 10px

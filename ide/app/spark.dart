@@ -2884,14 +2884,12 @@ class ModalProgressSparkAction extends SparkActionWithDialog {
   ModalProgressSparkAction(Spark spark, Element dialog)
       : super(spark, "progress-modal", "Progress Bar", dialog);
 
-  HtmlElement get _titleEl =>
-      _dialog.element.getElementsByClassName("title").single;
-  String get title => _titleEl.text;
-  set title(String newText) => _titleEl.text = newText;
+  HtmlElement get _titleElement =>
+      _dialog.element.querySelector("#title");
+  String get title => _titleElement.text;
+  set title(String newText) => _titleElement.text = newText;
 
   void showMessage(String message) {
-    // TODO(ericarnold): Multiple messages
-    // TODO(ericarnold): Intermixed modal / non-modal toasts?
     title = message;
 
     _invoke();
