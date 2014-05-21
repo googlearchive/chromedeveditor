@@ -11,6 +11,13 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
+/**
+ * A Polymer component to display a progress bar.
+ *
+ * The progress bar can have an optional textual message, and an optional cancel
+ * button. The progress can either be determinate - from 0 to 100 - or
+ * indeterminate.
+ */
 @CustomTag("spark-progress")
 class SparkProgress extends SparkWidget {
   StreamController _cancelController = new StreamController.broadcast();
@@ -63,6 +70,8 @@ class SparkProgress extends SparkWidget {
   @override
   void enteredView() {
     _progressDiv = $['progressDiv'];
+
+    // TODO(ussuri): Investigate why this explicit assignment is necessary.
     visible = visible;
     indeterminate = indeterminate;
   }
