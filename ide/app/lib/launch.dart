@@ -264,7 +264,19 @@ class PubPackagesServlet extends PicoServlet {
 }
 
 /**
- * A servlet that can serve bower content from `bower_components`.
+ * A servlet that can serve Bower content from `bower_components`. This looks
+ * for requests that match content in a `bower_components` directory and serves
+ * that content. Our process looks like:
+ *
+ * - record the current project (the last launched project)
+ * - use that to determine the correct `bower_components` directory
+ * - look inside that directory for a file matching the current request
+ *
+ * So, a file `/FooProject/demo.html` will include a relative reference to a
+ * polymer file. This reference will look like `../polymer/polymer.js`. The
+ * browser will canonicalize that and ask our server for `/polymer/polymer.js`.
+ * We'll convert that into a request for
+ * `/FooProject/bower_components/polymer/polymer.js` and serve that file back.
  */
 class BowerPackagesServlet extends PicoServlet {
   LaunchManager _launchManager;
