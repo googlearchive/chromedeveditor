@@ -11,6 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="spark_polymer.css">
+  <link rel="stylesheet" href="third_party/font_awesome/css/font-awesome.min.css">
 
   <link rel="import" href="packages/polymer/polymer.html">
   <link rel="import" href="spark_polymer_ui.html">
@@ -149,6 +150,14 @@
       <div id="fileNotFoundPlaceholder" class="hidden">No matching files</div>
     </div>
     <div id="editorArea" afterSplit>
+      <spark-toolbar id="navigationButtons">
+        <spark-button id="leftNav" noBorder>
+          <i class="fa fa-arrow-left"></i>
+        </spark-button>
+        <spark-button id="rightNav" noBorder>
+          <i class="fa fa-arrow-right"></i>
+        </spark-button>
+      </spark-toolbar>
       <div id="sparkStatusContainer">
        <spark-status id="sparkStatus"></spark-status>
       </div>
