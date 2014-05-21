@@ -2883,7 +2883,7 @@ class ModalProgressSparkAction extends SparkActionWithDialog {
   bool _initialized = false;
 
   ModalProgressSparkAction(Spark spark, Element dialog)
-      : super(spark, "progress-modal", "About Spark", dialog);
+      : super(spark, "progress-modal", "Progress Bar", dialog);
 
   void _invoke([Object context]) {
     if (!_initialized) {
@@ -2897,7 +2897,6 @@ class ModalProgressSparkAction extends SparkActionWithDialog {
     _dialog.hide();
   }
 }
-
 
 class SettingsAction extends SparkActionWithDialog {
   // TODO(ussuri): This is essentially unused. Remove.

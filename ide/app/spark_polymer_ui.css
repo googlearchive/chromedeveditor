@@ -45,11 +45,11 @@
   top: 0px;
 }
 
-.buttons {
+.dialog.toast .buttons {
   float: right;
 }
 
-.modal-content.toast {
+.dialog.toast .modal-content {
   border-radius: 0 0 5px 5px;
   height: 50px;
   padding: 10px

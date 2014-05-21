@@ -349,18 +349,18 @@ class AceManager {
       lastCursorPosition = newCursorPosition;
     });
 
-//    // Set up the goto line dialog.
-//    gotoLineView = new GotoLineView();
-//    if (gotoLineView is! GotoLineView) {
-//      html.querySelector('#splashScreen').style.backgroundColor = 'red';
-//    }
-//    gotoLineView.style.zIndex = '101';
-//    parentElement.children.add(gotoLineView);
-//    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
-//    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
-//    parentElement.onKeyDown
-//        .where((e) => e.keyCode == html.KeyCode.ESC)
-//        .listen((_) => gotoLineView.hide());
+    // Set up the goto line dialog.
+    gotoLineView = new GotoLineView();
+    if (gotoLineView is! GotoLineView) {
+      html.querySelector('#splashScreen').style.backgroundColor = 'red';
+    }
+    gotoLineView.style.zIndex = '101';
+    parentElement.children.add(gotoLineView);
+    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
+    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
+    parentElement.onKeyDown
+        .where((e) => e.keyCode == html.KeyCode.ESC)
+        .listen((_) => gotoLineView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
