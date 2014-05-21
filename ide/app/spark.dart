@@ -430,7 +430,7 @@ abstract class Spark
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
-    actionManager.registerAction(new ModalProgressSparkAction(this, getDialogElement('#progressDialog')));
+    actionManager.registerAction(new ModalProgressSparkAction(this, getDialogElement('#progressToast')));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
