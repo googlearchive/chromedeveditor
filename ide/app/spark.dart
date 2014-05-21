@@ -2058,6 +2058,12 @@ class ProgressMonitorImpl extends ProgressMonitor {
     _sparkProgress.value = progress * 100;
   }
 
+  void done() {
+    super.done();
+
+    _sparkProgress.value = progress * 100;
+  }
+
   set cancelled(bool val) {
     super.cancelled = val;
 

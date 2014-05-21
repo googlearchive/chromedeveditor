@@ -14,6 +14,7 @@
   text-overflow: ellipsis;
   min-height: 1.4em;
   min-width: 1em;
+  margin-bottom: 3px;
 }
 
 #progressDiv {

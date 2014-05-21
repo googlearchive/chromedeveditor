@@ -202,7 +202,9 @@ abstract class ProgressMonitor {
   /**
    * Sets the work as completely done (work == maxWork).
    */
-  void done() => worked(maxWork - work);
+  void done() {
+    _work = maxWork;
+  }
 
   bool get cancelled => _cancelled;
 
