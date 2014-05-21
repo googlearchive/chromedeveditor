@@ -1765,6 +1765,9 @@ class GotoDeclarationAction extends SparkAction {
       bool complete = false;
       editor.navigateToDeclaration().then((_) {
         complete = true;
+        ModalProgressSparkAction progressAction =
+            spark.actionManager.getAction("progress-modal");
+        progressAction.dismiss();
       });
 
       new Future.delayed(new Duration(milliseconds: 500)).then((_) {
@@ -2888,6 +2891,10 @@ class ModalProgressSparkAction extends SparkActionWithDialog {
     }
 
     _show();
+  }
+
+  void dismiss() {
+    _dialog.hide();
   }
 }
 

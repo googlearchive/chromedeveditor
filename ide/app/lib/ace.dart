@@ -125,7 +125,7 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  Future navigateToDeclaration() { }
+  Future navigateToDeclaration() => new Future.value();
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -213,11 +213,11 @@ class DartEditor extends TextEditor {
     outlineScrollPosition = aceManager.outline.scrollPosition;
   }
 
-  void navigateToDeclaration() {
+  Future navigateToDeclaration() {
     int offset = _session.document.positionToIndex(
         aceManager._aceEditor.cursorPosition);
 
-    aceManager._analysisService.getDeclarationFor(file, offset).then(
+    return aceManager._analysisService.getDeclarationFor(file, offset).then(
         (svc.Declaration declaration) {
       if (declaration != null) {
         workspace.File targetFile = declaration.getFile(file.project);
@@ -349,18 +349,18 @@ class AceManager {
       lastCursorPosition = newCursorPosition;
     });
 
-    // Set up the goto line dialog.
-    gotoLineView = new GotoLineView();
-    if (gotoLineView is! GotoLineView) {
-      html.querySelector('#splashScreen').style.backgroundColor = 'red';
-    }
-    gotoLineView.style.zIndex = '101';
-    parentElement.children.add(gotoLineView);
-    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
-    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
-    parentElement.onKeyDown
-        .where((e) => e.keyCode == html.KeyCode.ESC)
-        .listen((_) => gotoLineView.hide());
+//    // Set up the goto line dialog.
+//    gotoLineView = new GotoLineView();
+//    if (gotoLineView is! GotoLineView) {
+//      html.querySelector('#splashScreen').style.backgroundColor = 'red';
+//    }
+//    gotoLineView.style.zIndex = '101';
+//    parentElement.children.add(gotoLineView);
+//    gotoLineView.onTriggered.listen(_handleGotoLineViewEvent);
+//    gotoLineView.onClosed.listen(_handleGotoLineViewClosed);
+//    parentElement.onKeyDown
+//        .where((e) => e.keyCode == html.KeyCode.ESC)
+//        .listen((_) => gotoLineView.hide());
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -861,4 +861,3 @@ String _calcMD5(String text) {
   md5.add(text.codeUnits);
   return crypto.CryptoUtils.bytesToHex(md5.close());
 }
-                                                    
