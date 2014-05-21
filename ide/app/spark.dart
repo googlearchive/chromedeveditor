@@ -2270,6 +2270,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _addGitStatus() {
     _calculateScmStatus(project);
+    _gitChangeElement.innerHtml = '';
     modifiedFileList.forEach((file) {
       _gitChangeElement.innerHtml += 'Modified:&emsp;' + file.path + '<br/>';
     });
