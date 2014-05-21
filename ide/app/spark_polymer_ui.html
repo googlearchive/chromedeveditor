@@ -11,6 +11,7 @@
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
+<link rel="import" href="packages/spark_widgets/spark_progress/spark_progress.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
@@ -211,18 +212,16 @@
     <!-- Harness Push dialog -->
     <spark-modal id="mobileDeployDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
-        <a href="#" class="close" overlay-toggle>&times;</a>
+        <a href="#" class="close">&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>
       </div>
       <div class="modal-body">
         <h4>Deploy a Chrome App to an Android Device</h4>
         <p>
-          Please make sure you have
+          Please start the
           <a href="https://github.com/MobileChromeApps/harness/releases/"
-              on-click="{{handleAnchorClick}}">
-            Chrome ADT
-          </a>
-          installed and running on your Android device.
+              on-click="{{handleAnchorClick}}">Chrome ADT</a>
+          application on your Android device.
         </p>
         <div class="form-group">
           <form>
@@ -239,12 +238,18 @@
             </div>
           </form>
         </div>
+        <spark-progress id="deployProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
+        <div id='deployCheckDeviceMessage'>
+          Please check for a connection authorization dialog on your device.
+        </div>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
+        <spark-button>
           Cancel
         </spark-button>
-        <spark-button overlay-toggle primary focused data-dismiss="modal">
+        <spark-button primary focused>
           Deploy
         </spark-button>
       </div>
@@ -653,19 +658,6 @@
         <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
-      </div>
-    </spark-modal>
-
-    <!-- Dialog shown while pushing an application to ADB. -->
-    <spark-modal id="pushADBProgressDialog" class="dialog" animation="scale-slideup">
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Push to the mobile device in progress</label>
-          <div class="help-block">
-            Please unlock the phone and check whether it's asking for a
-            connection authorization.
-          </div>
-        </div>
       </div>
     </spark-modal>
 

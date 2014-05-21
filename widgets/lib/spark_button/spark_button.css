@@ -23,6 +23,10 @@
   padding: 0;
 }
 
+:host([minPadding]:host) #button {
+  padding: 2px 5px 0 4px;
+}
+
 :host([noBorder]:host) #button {
   border: none;
   border-radius: 5px;

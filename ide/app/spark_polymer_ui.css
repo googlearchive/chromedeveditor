@@ -171,6 +171,11 @@
 }
 
 /* Deploy to mobile dialog */
+#mobileDeployDialog .modal-body {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
 #pushUrl {
   margin-left: 17px;
   width: 20em;
