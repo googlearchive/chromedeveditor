@@ -454,6 +454,7 @@ abstract class Spark
     actionManager.registerAction(new HistoryAction.back(this));
     actionManager.registerAction(new HistoryAction.forward(this));
     actionManager.registerAction(new ToggleOutlineVisibilityAction(this));
+    actionManager.registerAction(new SendFeedbackAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -3184,6 +3185,15 @@ class ToggleOutlineVisibilityAction extends SparkAction {
   @override
   void _invoke([Object context]) {
     spark._aceManager.outline.toggle();
+  }
+}
+
+class SendFeedbackAction extends SparkAction {
+  SendFeedbackAction(Spark spark)
+      : super(spark, 'send-feedback', 'Send Feedback…');
+
+  void _invoke([context]) {
+    window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
   }
 }
 
