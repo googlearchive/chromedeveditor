@@ -221,6 +221,8 @@ class SparkPolymer extends Spark {
     super.initToolbar();
 
     _bindButtonToAction('runButton', 'application-run');
+    _bindButtonToAction('leftNav', 'navigate-back');
+    _bindButtonToAction('rightNav', 'navigate-forward');
   }
 
   @override
