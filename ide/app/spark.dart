@@ -1759,20 +1759,21 @@ class GotoDeclarationAction extends SparkAction {
   @override
   void _invoke([Object context]) => gotoDeclaration();
 
+  ModalProgressSparkAction get progressAction =>
+      spark.actionManager.getAction("progress-modal");
+
   void gotoDeclaration() {
     Editor editor = spark.getCurrentEditor();
     if (editor is TextEditor) {
       bool complete = false;
       editor.navigateToDeclaration().then((_) {
         complete = true;
-        ModalProgressSparkAction progressAction =
-            spark.actionManager.getAction("progress-modal");
         progressAction.dismiss();
       });
 
       new Future.delayed(new Duration(milliseconds: 500)).then((_) {
         if (!complete) {
-          spark.actionManager.getAction("progress-modal").invoke();
+          progressAction.showMessage("Analyzing ...");
         }
       });
     }
@@ -2880,16 +2881,23 @@ class AboutSparkAction extends SparkActionWithDialog {
 }
 
 class ModalProgressSparkAction extends SparkActionWithDialog {
-  bool _initialized = false;
-
   ModalProgressSparkAction(Spark spark, Element dialog)
       : super(spark, "progress-modal", "Progress Bar", dialog);
 
-  void _invoke([Object context]) {
-    if (!_initialized) {
-      _initialized = true;
-    }
+  SpanElement get _titleEl =>
+      _dialog.element.getElementsByClassName("modal-title").single;
+  String get title => _titleEl.text;
+  set title(String newText) => _titleEl.text = newText;
 
+  void showMessage(String message) {
+    // TODO(ericarnold): Multiple messages
+    // TODO(ericarnold): Intermixed modal / non-modal toasts?
+    title = message;
+
+    _invoke();
+  }
+
+  void _invoke([Object context]) {
     _show();
   }
 
