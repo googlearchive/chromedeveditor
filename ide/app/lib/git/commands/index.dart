@@ -258,8 +258,8 @@ class Index {
          }
 
          if (entry.isDirectory) {
-           return walkFilesAndUpdateIndex(entry as chrome.DirectoryEntry,
-               updateSha).then((List<String> paths) {
+           return walkFilesAndUpdateIndex(entry, updateSha).then(
+               (List<String> paths) {
              filePaths.addAll(paths);
              return filePaths;
            });
