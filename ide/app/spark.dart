@@ -1972,7 +1972,7 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
           'Unable to deploy the current selection; please select a Chrome App '
           'to deploy.');
     } else {
-      _deployDeviceMessage.style.visibility = 'hidden';
+      _toggleProgressVisible(false);
       _show();
     }
   }
@@ -1991,14 +1991,8 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
 
   void _commit() {
     SparkProgress progressComponent = getElement('#deployProgress');
-    progressComponent.visible = true;
     progressComponent.progressMessage = "Deploying...";
-    progressComponent.deliverChanges();
-
-    _deployDeviceMessage.style.visibility = 'visible';
-
-    _deployButton.enabled = false;
-    _deployButton.deliverChanges();
+    _toggleProgressVisible(true);
 
     ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
 
@@ -2019,11 +2013,19 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
         spark.showMessage('Push Failure', e.toString());
       }
     }).whenComplete(() {
-      progressComponent.visible = false;
-      _deployDeviceMessage.style.visibility = 'hidden';
-      _deployButton.enabled = true;
-      _deployButton.deliverChanges();
+      _toggleProgressVisible(false);
     });
+  }
+
+  void _toggleProgressVisible(bool visible) {
+    SparkProgress progressComponent = getElement('#deployProgress');
+    progressComponent.visible = visible;
+    progressComponent.deliverChanges();
+
+    _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
+
+    _deployButton.enabled = !visible;
+    _deployButton.deliverChanges();
   }
 }
 
