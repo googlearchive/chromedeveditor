@@ -173,29 +173,28 @@
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome app
               </option>
-              <template if="{{showWipProjectTemplates}}">
-                <!-- This one currently can't possibly work due to Polymer
-                     JS breaking the CSP. BUG #1933. -->
-                <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
-                  JavaScript Chrome app using Polymer
-                </option>
-                <!-- This one works when installed in Chrome manually, but
-                     launching via the 'Run' button is broken. BUG #1935. -->
-                <option value="chrome/chrome_extension_js">
-                  JavaScript Chrome extension
-                </option>
-              </template>
+              <!-- This one currently can't possibly work due to Polymer
+                   JS breaking the CSP. BUG #1933. -->
+              <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements"
+                   template if="{{showWipProjectTemplates}}">
+                JavaScript Chrome app using Polymer
+              </option>
+              <!-- This one works when installed in Chrome manually, but
+                   launching via the 'Run' button is broken. BUG #1935. -->
+              <option value="chrome/chrome_extension_js"
+                   template if="{{showWipProjectTemplates}}">
+                JavaScript Chrome extension
+              </option>
             </optgroup>
             <optgroup label="Other">
               <option value="polymer/polymer_element_js">
                 JavaScript Polymer custom element
               </option>
-              <template if="{{showWipProjectTemplates}}">
-                <!-- This one just needs some additional work. -->
-                <option value="polymer/polymer_element_dart">
-                  Dart Polymer custom element
-                </option>
-              </template>
+              <!-- This one just needs some additional work. -->
+              <option value="polymer/polymer_element_dart"
+                  template if="{{showWipProjectTemplates}}">
+                Dart Polymer custom element
+              </option>
             </optgroup>
           </select>
         </div>
@@ -417,11 +416,6 @@
               Allow Spark to collect anonymous usage statistics
             </label>
           </div>
-        </div>
-        <div class="form-group">
-          <spark-button on-click="{{onSendFeedback}}">
-            Send feedback about Spark...
-          </spark-button>
         </div>
       </div>
       <div class="modal-footer">

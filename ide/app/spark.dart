@@ -282,7 +282,8 @@ abstract class Spark
 
   void initLaunchManager() {
     // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
-    _launchManager = new LaunchManager(_workspace, services, pubManager);
+    _launchManager = new LaunchManager(_workspace, services,
+        pubManager, bowerManager);
   }
 
   void initNavigationManager() {
@@ -456,6 +457,7 @@ abstract class Spark
     actionManager.registerAction(new HistoryAction.back(this));
     actionManager.registerAction(new HistoryAction.forward(this));
     actionManager.registerAction(new ToggleOutlineVisibilityAction(this));
+    actionManager.registerAction(new SendFeedbackAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -2445,6 +2447,9 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
     gitOperations = spark.scmManager.getScmOperationsFor(project);
     gitOperations.getPendingCommits().then((List<CommitInfo> commits) {
+      if (commits.isEmpty) {
+        spark.showErrorMessage('Push failed', 'No commits to push');
+      }
       // Fill commits.
       _commitsList.innerHtml = '';
       String summaryString = commits.length == 1 ? "1 commit" : "${commits.length} commits";
@@ -2472,7 +2477,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
         _show();
       });
     }).catchError((e) {
-      spark.showErrorMessage('Push failed', 'No commits to push');
+      spark.showErrorMessage('Push failed', 'Something went wrong.');
     });
   }
 
@@ -2634,6 +2639,10 @@ class _GitCloneJob extends Job {
         spark.showErrorMessage(
             'Authorization Required',
             'Authorization required - private git repositories are not yet supported.');
+      } else if (e is SparkException && e.errorCode
+          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+        spark.showErrorMessage('Error cloning ${_projectName}',
+            'Repositories with submodules are currently not supported.');
       } else {
         spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
       }
@@ -3226,6 +3235,15 @@ class ToggleOutlineVisibilityAction extends SparkAction {
   @override
   void _invoke([Object context]) {
     spark._aceManager.outline.toggle();
+  }
+}
+
+class SendFeedbackAction extends SparkAction {
+  SendFeedbackAction(Spark spark)
+      : super(spark, 'send-feedback', 'Send Feedback…');
+
+  void _invoke([context]) {
+    window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
   }
 }
 

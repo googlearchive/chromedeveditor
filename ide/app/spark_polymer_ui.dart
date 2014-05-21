@@ -8,6 +8,7 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
+import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
@@ -29,11 +30,15 @@ class SparkPolymerUI extends SparkWidget {
   @observable bool showWipProjectTemplates = true;
   @observable bool chromeOS = true;
 
+  SparkSplitView _splitView;
+
   SparkPolymerUI.created() : super.created();
 
   @override
   void enteredView() {
     super.enteredView();
+
+    _splitView = $['splitView'];
   }
 
   void modelReady(SparkModel model) {
@@ -57,6 +62,15 @@ class SparkPolymerUI extends SparkWidget {
 
     // This propagates external changes down to the enclosed widgets.
     Observable.dirtyCheck();
+  }
+
+  void splitViewPositionChanged() {
+    // TODO(ussuri): In deployed code, this was critical for correct
+    // propagation of the client's changes in [splitViewPosition] to _splitView.
+    // Investigate.
+    if (IS_DART2JS) {
+      _splitView..targetSize = splitViewPosition..targetSizeChanged();
+    }
   }
 
   void onMenuSelected(CustomEvent event, var detail) {
@@ -100,10 +114,6 @@ class SparkPolymerUI extends SparkWidget {
   void onResetGit() {
     _model.syncPrefs.removeValue(['git-auth-info', 'git-user-info']);
     _model.setGitSettingsResetDoneVisible(true);
-  }
-
-  void onSendFeedback() {
-    window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
   }
 
   void onResetPreference() {

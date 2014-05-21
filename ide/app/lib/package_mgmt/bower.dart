@@ -71,11 +71,12 @@ class BowerManager extends PackageManager {
 }
 
 /**
- * A dummy class that currently doesn't resolve anything, since the definition
- * of a Bower package reference in JS code is yet unclear.
+ * A package resolver for Bower.
  */
 class _BowerResolver extends PackageResolver {
-  _BowerResolver._(Project project);
+  final Project project;
+
+  _BowerResolver._(this.project);
 
   //
   // PackageResolver virtual interface:
@@ -83,8 +84,18 @@ class _BowerResolver extends PackageResolver {
 
   PackageServiceProperties get properties => bowerProperties;
 
-  File resolveRefToFile(String url) => null;
+  File resolveRefToFile(String url) {
+    if (url.startsWith('/')) url = url.substring(1);
+    if (url.isEmpty) return null;
 
+    Folder folder = project.getChild(bowerProperties.packagesDirName);
+    if (folder == null) return null;
+
+    return folder.getChildPath(url);
+  }
+
+  // Not used by anybody, but could return something like
+  // `/bower_components/foo/bar.js`.
   String getReferenceFor(File file) => null;
 }
 

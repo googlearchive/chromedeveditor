@@ -372,6 +372,11 @@ button.ace_searchbtn_close:active {
 .fileview-filename-container:hover .filename {
 }
 
+.fileview-separator .line {
+  margin-top: 15px;
+  border-top: 1px solid #ddd;
+}
+
 #fileViewArea {
   bottom: 0;
   position: absolute;
