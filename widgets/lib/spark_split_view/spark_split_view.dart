@@ -23,6 +23,8 @@ class SparkSplitView extends SparkWidget {
   @published int maxTargetSize = 100000;
   @published bool locked = false;
 
+  SparkSplitter _splitter;
+
   /// Constructor.
   SparkSplitView.created() : super.created();
 
@@ -39,13 +41,18 @@ class SparkSplitView extends SparkWidget {
             SparkWidget.inlineNestedContentNodes(children[0]).length == 2
            )
     );
+    _splitter = $['splitter'];
   }
 
-  // TODO(ussuri): Somehow this was critical to ensure correct propagation of
-  // [targetSize] changed by our client to the enclosed splitter. Without this,
-  // the splitter didn't see the change. Investigate.
   void targetSizeChanged() {
-    ($['splitter'] as SparkSplitter).targetSize = targetSize;
+    print("split-view.targetSizeChanged: $targetSize");
+    // TODO(ussuri): This was critical for correct propagation of the client's
+    // changes in [targetSize] to the enclosed splitter. Investigate.
+    _splitter.targetSize = targetSize;
+    if (IS_DART2JS) {
+      // TODO(ussuri): In the deployed code, even the above wasn't enough.
+      _splitter.targetSizeChanged();
+    }
   }
 
   /**

@@ -58,11 +58,6 @@ class Index {
 
   void updateIndexForEntry(FileStatus status) {
 
-    // Don't track index for git files.
-    if (status.path != null && status.path.contains('.git')) {
-      return;
-    }
-
     FileStatus oldStatus = _statusIdx[status.path];
 
     if (oldStatus != null) {
@@ -138,8 +133,9 @@ class Index {
       _scheduleWriteIndex();
   }
 
-  Future updateIndex() {
-    return walkFilesAndUpdateIndex(_store.root).then((List<String> filePaths) {
+  Future updateIndex([bool updateSha=true]) {
+    return walkFilesAndUpdateIndex(_store.root, updateSha).then(
+        (List<String> filePaths) {
       _updateDeletedFiles(filePaths);
       return new Future.value();
     });
@@ -248,7 +244,8 @@ class Index {
    * Walks over all the files in the working tree. Returns sha of the
    * working tree.
    */
-   Future<List<String>> walkFilesAndUpdateIndex(chrome.DirectoryEntry root) {
+   Future<List<String>> walkFilesAndUpdateIndex(chrome.DirectoryEntry root,
+       bool updateSha) {
      List<String> filePaths = [];
      return FileOps.listFiles(root).then((List<chrome.ChromeFileEntry> entries) {
        if (entries.isEmpty) {
@@ -261,24 +258,26 @@ class Index {
          }
 
          if (entry.isDirectory) {
-           return walkFilesAndUpdateIndex(entry as chrome.DirectoryEntry)
-               .then((List<String> paths) {
+           return walkFilesAndUpdateIndex(entry, updateSha).then(
+               (List<String> paths) {
              filePaths.addAll(paths);
              return filePaths;
            });
          } else {
            // don't update index for untracked files.
            if (_statusIdx[entry.fullPath] != null) {
-             return getShaForEntry(entry, 'blob').then((String sha) {
-               return entry.getMetadata().then((data) {
-                 FileStatus status = new FileStatus();
-                 status.path = entry.fullPath;
-                 status.sha = sha;
-                 status.size = data.size;
-                 updateIndexForEntry(status);
-                 filePaths.add(entry.fullPath);
+             filePaths.add(entry.fullPath);
+             if (updateSha) {
+               return getShaForEntry(entry, 'blob').then((String sha) {
+                 return entry.getMetadata().then((data) {
+                   FileStatus status = new FileStatus();
+                   status.path = entry.fullPath;
+                   status.sha = sha;
+                   status.size = data.size;
+                   updateIndexForEntry(status);
+                 });
                });
-             });
+             }
            }
          }
       }).then((_) {

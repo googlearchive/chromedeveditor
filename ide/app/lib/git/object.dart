@@ -10,6 +10,7 @@ import 'dart:typed_data';
 
 import 'package:chrome/src/common_exp.dart' as chrome;
 
+import 'exception.dart';
 import 'object_utils.dart';
 import 'utils.dart';
 
@@ -116,10 +117,16 @@ class TreeObject extends GitObject {
         idx++;
       }
       bool isBlob = buffer[entryStart] == 49; // '1' character
+      if (buffer[entryStart + 1] == 54) {  // '6' character
+        // Contains a submodule commit object, not supported yet.
+        throw new GitException(
+            GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
+      }
       String nameStr = UTF8.decode(buffer.sublist(
           entryStart + (isBlob ? 7: 6), idx++));
       nameStr = Uri.decodeComponent(HTML_ESCAPE.convert(nameStr));
-      TreeEntry entry = new TreeEntry(nameStr, buffer.sublist(idx, idx + 20), isBlob);
+      TreeEntry entry = new TreeEntry(nameStr, buffer.sublist(idx, idx + 20),
+          isBlob);
       treeEntries.add(entry);
       idx += 20;
     }

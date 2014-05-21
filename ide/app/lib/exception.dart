@@ -31,4 +31,6 @@ class SparkErrorConstants {
   static final String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
   static final String AUTH_REQUIRED = "auth.required";
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
+  static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
+      = "git.submodules_not_yet_supported";
 }

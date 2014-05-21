@@ -294,6 +294,10 @@ class GitScmProvider extends ScmProvider {
           == GitErrorConstants.GIT_CLONE_CANCEL) {
         throw new SparkException(e.toString(),
             SparkErrorConstants.GIT_CLONE_CANCEL, true);
+      } else if ( e is GitException && e.errorCode
+          == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
+        throw new SparkException(e.toString(),
+            SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
       } else {
         throw new SparkException(e.toString());
       }

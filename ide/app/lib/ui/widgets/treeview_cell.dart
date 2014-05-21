@@ -65,7 +65,7 @@ class TreeViewCell implements ListViewCell {
 
     // Adds an arrow in front the cell.
     _arrow = _element.querySelector('.treeviewcell-disclosure');
-    _arrow.style.left = '${margin + 4}px';
+    _arrow.style.left = '${margin + 6}px';
     _applyExpanded(_row.expanded);
     if (!hasChildren) {
       _arrow.style.visibility = 'hidden';

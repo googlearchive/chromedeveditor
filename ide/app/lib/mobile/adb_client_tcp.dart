@@ -71,12 +71,12 @@ class AdbClientTcp {
       // Each line of the response is a device description.
       String devStr = response.payloadAsString.trimRight();
 
-      List<AdbDevice> devices = devStr.split('\n').map((str) {
+      if (devStr.isEmpty) return [];
+
+      return devStr.split('\n').map((str) {
         List<String> info = str.split('\t');
         return new AdbDevice(info[0], info[1]);
       }).toList();
-
-      return devices;
     });
   }
 

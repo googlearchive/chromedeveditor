@@ -30,7 +30,7 @@ defineTests() {
         expect(e.progress, equals(1.0));
 
         e = events.removeAt(0);
-        expect(true, e.finished);
+        expect(e.finished, true);
       });
 
       MockJob job = new MockJob();

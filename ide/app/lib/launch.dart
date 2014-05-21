@@ -33,15 +33,17 @@ final NumberFormat _nf = new NumberFormat.decimalPattern();
  * Manages all the launches and calls the appropriate delegate.
  */
 class LaunchManager {
+  final Workspace workspace;
+  final Services _services;
+  final PackageManager _pubManager;
+  final PackageManager _bowerManager;
+
   List<LaunchDelegate> _delegates = [];
-  Services _services;
-  PackageManager _packageManager;
   CompilerService _compiler;
+  Project _lastLaunchedProject;
 
-  Workspace _workspace;
-  Workspace get workspace => _workspace;
-
-  LaunchManager(this._workspace, this._services, this._packageManager) {
+  LaunchManager(this.workspace, this._services, this._pubManager,
+      this._bowerManager) {
     _compiler = _services.getService("compiler");
 
     // The order of registration here matters.
@@ -60,12 +62,16 @@ class LaunchManager {
   Future run(Resource resource) {
     for (LaunchDelegate delegate in _delegates) {
       if (delegate.canRun(resource)) {
+        _lastLaunchedProject = resource.project;
         return delegate.run(resource);
       }
     }
 
     return new Future.value();
   }
+
+  // This statefulness is for use by Bower, and will go away at some point.
+  Project get lastLaunchedProject => _lastLaunchedProject;
 
   void dispose() {
     _delegates.forEach((delegate) => delegate.dispose());
@@ -102,8 +108,9 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
       _server = server;
       _server.addServlet(new StaticResourcesServlet());
       _server.addServlet(new Dart2JsServlet(launchManager));
-      _server.addServlet(new PackagesServlet(launchManager));
+      _server.addServlet(new PubPackagesServlet(launchManager));
       _server.addServlet(new WorkspaceServlet(launchManager));
+      _server.addServlet(new BowerPackagesServlet(launchManager));
 
       _logger.info('embedded web server listening on port ${_server.port}');
     }).catchError((error) {
@@ -230,10 +237,10 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 /**
  * A servlet that can serve `package:` urls (`/packages/`).
  */
-class PackagesServlet extends PicoServlet {
+class PubPackagesServlet extends PicoServlet {
   LaunchManager _launchManager;
 
-  PackagesServlet(this._launchManager);
+  PubPackagesServlet(this._launchManager);
 
   bool canServe(HttpRequest request) {
     return request.uri.pathSegments.contains('packages');
@@ -245,7 +252,7 @@ class PackagesServlet extends PicoServlet {
 
     if (project is Project) {
       PackageResolver resolver =
-          _launchManager._packageManager.getResolverFor(project);
+          _launchManager._pubManager.getResolverFor(project);
       File file = resolver.resolveRefToFile(_getPath(request));
       if (file != null) {
         return _serveFileResponse(file);
@@ -253,6 +260,59 @@ class PackagesServlet extends PicoServlet {
     }
 
     return new Future.value(new HttpResponse.notFound());
+  }
+}
+
+/**
+ * A servlet that can serve Bower content from `bower_components`. This looks
+ * for requests that match content in a `bower_components` directory and serves
+ * that content. Our process looks like:
+ *
+ * - record the current project (the last launched project)
+ * - use that to determine the correct `bower_components` directory
+ * - look inside that directory for a file matching the current request
+ *
+ * So, a file `/FooProject/demo.html` will include a relative reference to a
+ * polymer file. This reference will look like `../polymer/polymer.js`. The
+ * browser will canonicalize that and ask our server for `/polymer/polymer.js`.
+ * We'll convert that into a request for
+ * `/FooProject/bower_components/polymer/polymer.js` and serve that file back.
+ */
+class BowerPackagesServlet extends PicoServlet {
+  LaunchManager _launchManager;
+
+  // TODO(devoncarew): We will want to change this from trying to serve
+  // content from the last launch, to creating a server per project. This will
+  // let us do something better then just guessing the project the user wants to
+  // serve bower content from.
+  BowerPackagesServlet(this._launchManager);
+
+  bool canServe(HttpRequest request) {
+    return _resolveRequest(request) != null;
+  }
+
+  Future<HttpResponse> serve(HttpRequest request) {
+    File file = _resolveRequest(request);
+
+    if (file != null) {
+      return _serveFileResponse(file);
+    } else {
+      return new Future.value(new HttpResponse.notFound());
+    }
+  }
+
+  File _resolveRequest(HttpRequest request) {
+    Project project = _launchManager.lastLaunchedProject;
+
+    if (project == null) return null;
+
+    PackageManager bowerManager = _launchManager._bowerManager;
+
+    if (!bowerManager.properties.isProjectWithPackages(project)) return null;
+
+    String url = request.uri.path;
+    File file = bowerManager.getResolverFor(project).resolveRefToFile(url);
+    return file;
   }
 }
 

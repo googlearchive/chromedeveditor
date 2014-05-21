@@ -12,6 +12,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
+import 'package:spark_widgets/spark_button/spark_button.dart';
+import 'package:spark_widgets/spark_progress/spark_progress.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
 
 import 'lib/ace.dart';
@@ -280,7 +282,8 @@ abstract class Spark
 
   void initLaunchManager() {
     // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
-    _launchManager = new LaunchManager(_workspace, services, pubManager);
+    _launchManager = new LaunchManager(_workspace, services,
+        pubManager, bowerManager);
   }
 
   void initNavigationManager() {
@@ -454,6 +457,7 @@ abstract class Spark
     actionManager.registerAction(new HistoryAction.back(this));
     actionManager.registerAction(new HistoryAction.forward(this));
     actionManager.registerAction(new ToggleOutlineVisibilityAction(this));
+    actionManager.registerAction(new SendFeedbackAction(this));
 
     actionManager.registerKeyListener();
   }
@@ -1126,10 +1130,12 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
+    _dialog.element.querySelector("a.close").onClick.listen((_) => _cancel());
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
   }
 
-  void _commit() { }
+  void _commit() => _hide();
+  void _cancel() => _hide();
 
   Element getElement(String selectors) =>
       _dialog.element.querySelector(selectors);
@@ -1149,6 +1155,7 @@ abstract class SparkActionWithDialog extends SparkAction {
   }
 
   void _show() => _dialog.show();
+  void _hide() => _dialog.hide();
 }
 
 class FileOpenAction extends SparkAction {
@@ -1938,11 +1945,17 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
+    getElement(".modal-footer spark-button").onClick.listen((_) => _cancel());
+
     // When the IP address field is selected, check the `IP` checkbox.
     getElement('#pushUrl').onFocus.listen((e) {
       (getElement('#ip') as InputElement).checked = true;
     });
   }
+
+  Element get _deployDeviceMessage => getElement('#deployCheckDeviceMessage');
+
+  SparkButton get _deployButton => getElement("[primary]");
 
   void _invoke([context]) {
     ws.Resource resource;
@@ -1955,7 +1968,15 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
 
     deployContainer = getAppContainerFor(resource);
 
-    _show();
+    if (deployContainer == null) {
+      spark.showErrorMessage(
+          'Unable to Deploy',
+          'Unable to deploy the current selection; please select a Chrome App '
+          'to deploy.');
+    } else {
+      _toggleProgressVisible(false);
+      _show();
+    }
   }
 
   String get category => 'application';
@@ -1971,53 +1992,82 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
   }
 
   void _commit() {
+    SparkProgress progressComponent = getElement('#deployProgress');
+    progressComponent.progressMessage = "Deploying...";
+    _toggleProgressVisible(true);
+
+    ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
+
     String type = getElement('input[name="type"]:checked').id;
-    Job job;
-    if (type == 'adb') {
-      job = new _HarnessPushJob.pushToAdb(spark, deployContainer);
-    } else {
-      String url = _pushUrlElement.value;
-      // TODO(braden): Input validation.
-      job = new _HarnessPushJob.pushToUrl(spark, deployContainer, url);
-    }
-    spark.jobManager.schedule(job);
-  }
-}
-
-class _HarnessPushJob extends Job {
-  final Spark spark;
-  final ws.Container deployContainer;
-  String _url;
-  bool _adb = false;
-
-  _HarnessPushJob.pushToAdb(this.spark, this.deployContainer)
-      : super('Deploying via ADB…') {
-    _adb = true;
-  }
-
-  _HarnessPushJob.pushToUrl(this.spark, this.deployContainer, this._url)
-      : super('Deploying to mobile…') { }
-
-  Future run(ProgressMonitor monitor) {
-    if (_adb) {
-      spark.showProgressDialog('#pushADBProgressDialog');
-    }
+    bool useAdb = type == 'adb';
+    String url = _pushUrlElement.value;
 
     MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
 
-    Future push = _adb ? deployer.pushAdb(monitor) :
-        deployer.pushToHost(_url, monitor);
-    return push.then((_) {
-      if (_adb) {
-        spark.hideProgressDialog();
-      }
+    Future f = useAdb ?
+        deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
+
+    monitor.runCancellableFuture(f).then((_) {
+      _hide();
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
-      if (_adb) {
-        spark.hideProgressDialog();
+      if (e is! UserCancelledException) {
+        spark.showMessage('Push Failure', e.toString());
       }
-      spark.showMessage('Push failure', e.toString());
+    }).whenComplete(() {
+      _toggleProgressVisible(false);
     });
+  }
+
+  void _toggleProgressVisible(bool visible) {
+    SparkProgress progressComponent = getElement('#deployProgress');
+    progressComponent.visible = visible;
+    progressComponent.deliverChanges();
+
+    _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
+
+    _deployButton.enabled = !visible;
+    _deployButton.deliverChanges();
+  }
+}
+
+class ProgressMonitorImpl extends ProgressMonitor {
+  final SparkProgress _sparkProgress;
+
+  ProgressMonitorImpl(this._sparkProgress) {
+    _sparkProgress.onCancelled.listen((_) {
+      cancelled = true;
+    });
+  }
+
+  void start(String title, [num maxWork = 0]) {
+    super.start(title, maxWork);
+
+    _sparkProgress.progressMessage = title == null ? '' : title;
+
+    if (maxWork == 0) {
+      _sparkProgress.indeterminate = true;
+    } else {
+      _sparkProgress.value = 0;
+    }
+  }
+
+  void worked(num amount) {
+    super.worked(amount);
+
+    _sparkProgress.value = progress * 100;
+  }
+
+  void done() {
+    super.done();
+
+    _sparkProgress.value = progress * 100;
+  }
+
+  set cancelled(bool val) {
+    super.cancelled = val;
+
+    _sparkProgress.indeterminate = true;
   }
 }
 
@@ -2283,6 +2333,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _addGitStatus() {
     _calculateScmStatus(project);
+    _gitChangeElement.innerHtml = '';
     modifiedFileList.forEach((file) {
       _gitChangeElement.innerHtml += 'Modified:&emsp;' + file.path + '<br/>';
     });
@@ -2416,6 +2467,9 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
     gitOperations = spark.scmManager.getScmOperationsFor(project);
     gitOperations.getPendingCommits().then((List<CommitInfo> commits) {
+      if (commits.isEmpty) {
+        spark.showErrorMessage('Push failed', 'No commits to push');
+      }
       // Fill commits.
       _commitsList.innerHtml = '';
       String summaryString = commits.length == 1 ? "1 commit" : "${commits.length} commits";
@@ -2443,7 +2497,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
         _show();
       });
     }).catchError((e) {
-      spark.showErrorMessage('Push failed', 'No commits to push');
+      spark.showErrorMessage('Push failed', 'Something went wrong.');
     });
   }
 
@@ -2610,6 +2664,10 @@ class _GitCloneJob extends Job {
             'Authorization required - private git repositories are not yet supported.');
       } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
+      } else if (e is SparkException && e.errorCode
+          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+        spark.showErrorMessage('Error cloning ${_projectName}',
+            'Repositories with submodules are currently not supported.');
       } else {
         spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
       }
@@ -3202,6 +3260,15 @@ class ToggleOutlineVisibilityAction extends SparkAction {
   @override
   void _invoke([Object context]) {
     spark._aceManager.outline.toggle();
+  }
+}
+
+class SendFeedbackAction extends SparkAction {
+  SendFeedbackAction(Spark spark)
+      : super(spark, 'send-feedback', 'Send Feedback…');
+
+  void _invoke([context]) {
+    window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
   }
 }
 
