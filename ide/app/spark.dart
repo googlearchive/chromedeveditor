@@ -2597,6 +2597,10 @@ class _GitCloneJob extends Job {
         spark.showErrorMessage(
             'Authorization Required',
             'Authorization required - private git repositories are not yet supported.');
+      } else if (e is SparkException && e.errorCode
+          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+        spark.showErrorMessage('Error cloning ${_projectName}',
+            'Repositories with submodules are currently not supported.');
       } else {
         spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
       }
