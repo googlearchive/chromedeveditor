@@ -75,11 +75,13 @@ class PicoServer {
       }
 
       HttpResponse response = new HttpResponse.notFound();
+      _logger.info('==> ${response}');
       response._send(client).then((_) {
         client.dispose();
       });
     }).catchError((e) {
       HttpResponse response = new HttpResponse.badRequest();
+      _logger.info('==> ${response}');
       response._send(client).then((_) {
         client.dispose();
       });
