@@ -12,6 +12,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
+import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_progress/spark_progress.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
 
@@ -1942,14 +1943,17 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
-    _dialog.element.querySelector(
-        "div.modal-footer spark-button").onClick.listen((_) => _cancel());
+    getElement(".modal-footer spark-button").onClick.listen((_) => _cancel());
 
     // When the IP address field is selected, check the `IP` checkbox.
     getElement('#pushUrl').onFocus.listen((e) {
       (getElement('#ip') as InputElement).checked = true;
     });
   }
+
+  Element get _deployDeviceMessage => getElement('#deployCheckDeviceMessage');
+
+  SparkButton get _deployButton => getElement("[primary]");
 
   void _invoke([context]) {
     ws.Resource resource;
@@ -1968,6 +1972,7 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
           'Unable to deploy the current selection; please select a Chrome App '
           'to deploy.');
     } else {
+      _deployDeviceMessage.style.visibility = 'hidden';
       _show();
     }
   }
@@ -1988,6 +1993,12 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
     SparkProgress progressComponent = getElement('#deployProgress');
     progressComponent.visible = true;
     progressComponent.progressMessage = "Deploying...";
+    progressComponent.deliverChanges();
+
+    _deployDeviceMessage.style.visibility = 'visible';
+
+    _deployButton.enabled = false;
+    _deployButton.deliverChanges();
 
     ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
 
@@ -2000,7 +2011,7 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
     Future f = useAdb ?
         deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
 
-    monitor.checkForCancelled(f).then((_) {
+    monitor.runCancellableFuture(f).then((_) {
       _hide();
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
@@ -2009,15 +2020,18 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
       }
     }).whenComplete(() {
       progressComponent.visible = false;
+      _deployDeviceMessage.style.visibility = 'hidden';
+      _deployButton.enabled = true;
+      _deployButton.deliverChanges();
     });
   }
 }
 
 class ProgressMonitorImpl extends ProgressMonitor {
-  final SparkProgress progressComponent;
+  final SparkProgress _sparkProgress;
 
-  ProgressMonitorImpl(this.progressComponent) {
-    progressComponent.onCancelled.listen((_) {
+  ProgressMonitorImpl(this._sparkProgress) {
+    _sparkProgress.onCancelled.listen((_) {
       cancelled = true;
     });
   }
@@ -2025,63 +2039,25 @@ class ProgressMonitorImpl extends ProgressMonitor {
   void start(String title, [num maxWork = 0]) {
     super.start(title, maxWork);
 
-    progressComponent.progressMessage = title == null ? '' : title;
+    _sparkProgress.progressMessage = title == null ? '' : title;
 
     if (maxWork == 0) {
-      progressComponent.indeterminate = true;
+      _sparkProgress.indeterminate = true;
     } else {
-      progressComponent.value = 0;
+      _sparkProgress.value = 0;
     }
   }
 
   void worked(num amount) {
     super.worked(amount);
 
-    progressComponent.value = progress * 100;
+    _sparkProgress.value = progress * 100;
   }
 
   set cancelled(bool val) {
     super.cancelled = val;
 
-    progressComponent.indeterminate = true;
-  }
-}
-
-/** TODO: no longer used. */
-class _HarnessPushJob extends Job {
-  final Spark spark;
-  final ws.Container deployContainer;
-  String _url;
-  bool _adb = false;
-
-  _HarnessPushJob.pushToAdb(this.spark, this.deployContainer)
-      : super('Deploying via ADB…') {
-    _adb = true;
-  }
-
-  _HarnessPushJob.pushToUrl(this.spark, this.deployContainer, this._url)
-      : super('Deploying to mobile…');
-
-  Future run(ProgressMonitor monitor) {
-    if (_adb) {
-      spark.showProgressDialog('#pushADBProgressDialog');
-    }
-
-    MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
-
-    Future push = _adb ? deployer.pushAdb(monitor) :
-        deployer.pushToHost(_url, monitor);
-    return push.then((_) {
-      if (_adb) {
-        spark.hideProgressDialog();
-      }
-      spark.showSuccessMessage('Successfully pushed');
-    }).catchError((e) {
-      if (_adb) {
-        spark.hideProgressDialog();
-      }
-      spark.showMessage('Push failure', e.toString());
-    });
+    _sparkProgress.indeterminate = true;
   }
 }
 

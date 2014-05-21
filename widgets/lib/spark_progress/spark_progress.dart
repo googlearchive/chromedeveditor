@@ -13,55 +13,62 @@ import '../common/spark_widget.dart';
 
 @CustomTag("spark-progress")
 class SparkProgress extends SparkWidget {
+  StreamController _cancelController = new StreamController.broadcast();
   Element _progressDiv;
 
-  bool _indeterminate;
-  num _value;
-  bool _visible;
+  num _value = 0;
+  bool _visible = true;
 
-  StreamController _cancelController = new StreamController.broadcast();
-
-  /**
-   * A value between 0 and 100.
-   */
+  /// A value between 0 and 100.
   @published
   num get value => indeterminate ? 100 : _value;
+
+  @published
   set value(num val) {
     _value = val.clamp(0, 100);
   }
 
+  /// Whether to display the progress component or not.
   @published
-  bool get indeterminate => _indeterminate != null ? _indeterminate : false;
-  set indeterminate(bool val) {
-    _indeterminate = val == true;
-
-    if (_progressDiv != null) {
-      _progressDiv.classes.toggle('progress-striped', _indeterminate);
-      _progressDiv.classes.toggle('active', _indeterminate);
-    }
-  }
+  bool get visible => _visible;
 
   @published
-  bool get visible => _visible != null ? _visible : true;
   set visible(bool val) {
     _visible = val;
 
     style.visibility = _visible ? 'visible' : 'hidden';
   }
 
+  /// Whether the progress component should be indeterminate or not.
+  @published bool indeterminate = false;
+
+  void indeterminateChanged() {
+    if (_progressDiv != null) {
+      _progressDiv.classes.toggle('progress-striped', indeterminate);
+      _progressDiv.classes.toggle('active', indeterminate);
+    }
+  }
+
+  /// Whether to display a textual progress message.
   @published bool showProgressMessage = false;
 
-  @published String progressMessage = '';
+  /// The textual progress message.
+  @published String progressMessage = ' ';
 
+  /// Whether to show a cancel button.
   @published bool showCancel = false;
 
-  Stream get onCancelled => _cancelController.stream;
+  SparkProgress.created() : super.created();
 
-  void cancelClickHandler(evt) => _cancelController.add(null);
-
-  SparkProgress.created() : super.created() {
+  @override
+  void enteredView() {
     _progressDiv = $['progressDiv'];
-    indeterminate = indeterminate;
     visible = visible;
+    indeterminate = indeterminate;
   }
+
+  Stream get onCancelled => on['cancelled'];
+
+  /// Public for Polymer.
+  void cancelClickHandler(_) => asyncFire('cancelled');
 }

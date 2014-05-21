@@ -217,10 +217,10 @@ abstract class ProgressMonitor {
 
   /**
    * Return a Future that completes with the given value of [f]. If the user
-   * cancels this ProgressMonitor, this Future will throw a
-   * [UserCancelledException] instead.
+   * cancels this ProgressMonitor, this Future will instead throw a
+   * [UserCancelledException].
    */
-  Future checkForCancelled(Future f) {
+  Future runCancellableFuture(Future f) {
     _cancelledCompleter = new Completer();
 
     f.then((result) {
