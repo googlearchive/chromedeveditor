@@ -2884,8 +2884,8 @@ class ModalProgressSparkAction extends SparkActionWithDialog {
   ModalProgressSparkAction(Spark spark, Element dialog)
       : super(spark, "progress-modal", "Progress Bar", dialog);
 
-  SpanElement get _titleEl =>
-      _dialog.element.getElementsByClassName("modal-title").single;
+  HtmlElement get _titleEl =>
+      _dialog.element.getElementsByClassName("title").single;
   String get title => _titleEl.text;
   set title(String newText) => _titleEl.text = newText;
 

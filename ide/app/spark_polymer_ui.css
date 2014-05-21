@@ -41,6 +41,10 @@
   border-radius: 5px;
 }
 
+.dialog.toast span.title {
+  font-size: 15px;
+}
+
 .dialog.toast {
   top: 0px;
 }
