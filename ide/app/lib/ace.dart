@@ -20,6 +20,7 @@ import 'package:path/path.dart' as path;
 import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'markdown.dart';
 import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub_properties.dart';
@@ -59,6 +60,9 @@ class TextEditor extends Editor {
     }
     if (CssEditor.isCssFile(file)) {
       return new CssEditor._create(aceManager, file, prefs);
+    }
+    if (MarkdownEditor.isMarkdownFile(file)) {
+      return new MarkdownEditor._create(aceManager, file, prefs);
     }
     return new TextEditor._create(aceManager, file, prefs);
   }
@@ -285,6 +289,33 @@ class CssEditor extends TextEditor {
       _replaceContents(newValue);
       dirty = true;
     }
+  }
+}
+
+class MarkdownEditor extends TextEditor {
+  static bool isMarkdownFile(workspace.File file) => file.name.toLowerCase()
+      .endsWith('.md');
+
+  Markdown _markdown;
+  StreamSubscription _markdownOnDirtySubscription;
+  MarkdownEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs) {
+       _markdown = new Markdown(element, file);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _markdown.activate();
+    _markdownOnDirtySubscription = onDirtyChange.listen((_) =>
+        _markdown.renderHtml());
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _markdownOnDirtySubscription.cancel();
+    _markdown.deactivate();
   }
 }
 

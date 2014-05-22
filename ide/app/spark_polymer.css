@@ -560,3 +560,38 @@ li.outlineItem a {
   margin-right: 95px;
 }
 
+#togglePreviewButton {
+  background-color: rgba(255, 255, 255, 0.5);
+  border: none;
+  border-radius: 5px;
+  position: absolute;
+  right: 0px;
+  width: 30px;
+  z-index: 100;
+}
+
+#togglePreviewButton:hover {
+  background-color: rgba(255, 255, 255, 0.7);;
+}
+
+#togglePreviewButton:active {
+  background-color: rgba(255, 255, 255, 1);;
+}
+
+#togglePreviewButton:focus {
+  outline: none;
+}
+
+#markdownContent {
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  bottom: 40px;
+  overflow-y: auto;
+  padding: 10px;
+  position: absolute;
+  right: 30px;
+  top: 10px;
+  transition: opacity 250ms;
+  width: 400px;
+  z-index: 100;
+}
