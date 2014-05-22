@@ -213,7 +213,7 @@ class DartEditor extends TextEditor {
     outlineScrollPosition = aceManager.outline.scrollPosition;
   }
 
-  Future navigateToDeclaration() {
+  Future<svc.Declaration> navigateToDeclaration() {
     int offset = _session.document.positionToIndex(
         aceManager._aceEditor.cursorPosition);
 
@@ -232,6 +232,7 @@ class DartEditor extends TextEditor {
           html.window.open(declaration.url, "spark_doc");
         }
       }
+      return declaration;
     });
   }
 }
