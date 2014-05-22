@@ -1128,7 +1128,6 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
-    _dialog.element.querySelector("a.close").onClick.listen((_) => _cancel());
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
   }
 
@@ -1943,8 +1942,6 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
-    getElement(".modal-footer spark-button").onClick.listen((_) => _cancel());
-
     // When the IP address field is selected, check the `IP` checkbox.
     getElement('#pushUrl').onFocus.listen((e) {
       (getElement('#ip') as InputElement).checked = true;
@@ -2088,6 +2085,8 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
+
+  void _commit() => _hide();
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
@@ -2956,6 +2955,8 @@ class AboutSparkAction extends SparkActionWithDialog {
 
     _show();
   }
+
+  void _commit() => _hide();
 }
 
 class SettingsAction extends SparkActionWithDialog {
@@ -2994,6 +2995,8 @@ class SettingsAction extends SparkActionWithDialog {
       });
     });
   }
+
+  void _commit() => _hide();
 
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
