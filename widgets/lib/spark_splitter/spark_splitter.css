@@ -13,7 +13,6 @@
      Then, z-index in #draggable becomes relative to :host.
      Read more about stacking context here:
      https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context*/
-  transform: scaleZ(1);
 }
 
 :host([handle]:host) {
@@ -32,12 +31,7 @@
 
 #draggable {
   position: absolute;
-  z-index: 1;
-  /* With fully transparent #draggable, the mouse sometimes didn't react
-     to hovering over it, depending on the surrounding elements. A CSS bug?
-  */
-  background-color: white;
-  opacity: 0.001;
+  z-index: 150;
 }
 
 :host(.vertical:host) #draggable {
