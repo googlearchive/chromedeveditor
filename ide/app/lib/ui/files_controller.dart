@@ -952,7 +952,7 @@ class FilesController implements TreeViewDelegate {
    * filtering and returns true.
    */
   bool performFilter(String filterString) {
-    if (filterString != null && filterString.isEmpty) {
+    if (filterString != null && filterString.length < 2) {
       filterString = null;
     }
     _filterString = filterString;
