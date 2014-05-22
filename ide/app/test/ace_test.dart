@@ -100,7 +100,7 @@ class MockAceEditor implements TextEditor {
 
   void select(Span span) { }
   void format() { }
-  void navigateToDeclaration() { }
+  Future navigateToDeclaration() => null;
 }
 
 class MockEditSession implements EditSession {

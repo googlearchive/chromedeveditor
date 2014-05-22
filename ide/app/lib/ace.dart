@@ -125,7 +125,7 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  void navigateToDeclaration() { }
+  Future navigateToDeclaration() => new Future.value();
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -213,11 +213,11 @@ class DartEditor extends TextEditor {
     outlineScrollPosition = aceManager.outline.scrollPosition;
   }
 
-  void navigateToDeclaration() {
+  Future navigateToDeclaration() {
     int offset = _session.document.positionToIndex(
         aceManager._aceEditor.cursorPosition);
 
-    aceManager._analysisService.getDeclarationFor(file, offset).then(
+    return aceManager._analysisService.getDeclarationFor(file, offset).then(
         (svc.Declaration declaration) {
       if (declaration != null) {
         if (declaration is svc.SourceDeclaration) {

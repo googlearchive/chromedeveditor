@@ -432,6 +432,7 @@ abstract class Spark
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
+    actionManager.registerAction(new ModalProgressSparkAction(this, getDialogElement('#progressToast')));
     actionManager.registerAction(new FileRenameAction(this, getDialogElement('#renameDialog')));
     actionManager.registerAction(new ResourceRefreshAction(this));
     // The top-level 'Close' action is removed for now: #1037.
@@ -1761,10 +1762,23 @@ class GotoDeclarationAction extends SparkAction {
   @override
   void _invoke([Object context]) => gotoDeclaration();
 
+  ModalProgressSparkAction get progressAction =>
+      spark.actionManager.getAction("progress-modal");
+
   void gotoDeclaration() {
     Editor editor = spark.getCurrentEditor();
     if (editor is TextEditor) {
-      editor.navigateToDeclaration();
+      bool complete = false;
+      editor.navigateToDeclaration().then((_) {
+        complete = true;
+        progressAction.dismiss();
+      });
+
+      new Future.delayed(new Duration(milliseconds: 500)).then((_) {
+        if (!complete) {
+          progressAction.showMessage("Analyzing ...");
+        }
+      });
     }
   }
 }
@@ -2957,6 +2971,30 @@ class AboutSparkAction extends SparkActionWithDialog {
   }
 
   void _commit() => _hide();
+}
+
+class ModalProgressSparkAction extends SparkActionWithDialog {
+  ModalProgressSparkAction(Spark spark, Element dialog)
+      : super(spark, "progress-modal", "Progress Bar", dialog);
+
+  HtmlElement get _titleElement =>
+      _dialog.element.querySelector("#title");
+  String get title => _titleElement.text;
+  set title(String newText) => _titleElement.text = newText;
+
+  void showMessage(String message) {
+    title = message;
+
+    _invoke();
+  }
+
+  void _invoke([Object context]) {
+    _show();
+  }
+
+  void dismiss() {
+    _dialog.hide();
+  }
 }
 
 class SettingsAction extends SparkActionWithDialog {
