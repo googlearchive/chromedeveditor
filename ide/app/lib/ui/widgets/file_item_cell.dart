@@ -8,9 +8,10 @@
 
 library spark.ui.widgets.fileitem_cell;
 
-import 'dart:html';
+import 'dart:html' hide File;
 
 import 'listview_cell.dart';
+import '../../utils.dart';
 import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
@@ -62,6 +63,23 @@ class FileItemCell implements ListViewCell {
       element.classes.add('error');
     } else if (severity == Marker.SEVERITY_WARNING) {
       element.classes.add('warning');
+    }
+
+    // Add classes to display file icons.
+    if (resource is Project) {
+      // Don't display an icon for projects.
+
+    } else if (resource is Folder) {
+      fileNameElement.classes.toggle('typeFolder', true);
+    } else if (resource is File) {
+      if (isImageFilename(resource.name)) {
+        fileNameElement.classes.toggle('typeImageFile', true);
+      } else if (!resource.name.contains('.')) {
+        // Files without extensions.
+        fileNameElement.classes.toggle('typeFile', true);
+      } else {
+        fileNameElement.classes.toggle('typeTextFile', true);
+      }
     }
   }
 

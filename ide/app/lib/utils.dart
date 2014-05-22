@@ -15,6 +15,9 @@ import 'package:logging/logging.dart';
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
+final RegExp _imageFileType = new RegExp(
+    r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
+
 chrome.DirectoryEntry _packageDirectoryEntry;
 
 /**
@@ -132,6 +135,11 @@ Future<String> getAppContents(String path) {
       .catchError((e, s) =>
           throw "Couldn't download $path: error code ${e.target.status}");
 }
+
+/**
+ * Returns true if the given [filename] matches common image file name patterns.
+ */
+bool isImageFilename(String filename) => _imageFileType.hasMatch(filename);
 
 /**
  * Returns a Future that completes after the next tick.

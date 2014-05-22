@@ -395,6 +395,36 @@ button.ace_searchbtn_close:active {
   background-color: rgba(0, 0, 0, 0);
 }
 
+.nameField.typeFolder::before {
+  content: '\f114';
+  font-family: 'FontAwesome';
+  margin-right: 3px;
+}
+
+.nameField.typeFile::before {
+  content: '\f016';
+  font-family: 'FontAwesome';
+  margin-right: 4px;
+}
+
+.nameField.typeTextFile::before {
+  content: '\f0f6';
+  font-family: 'FontAwesome';
+  margin-right: 4px;
+}
+
+.nameField.typeHtmlFile::before {
+  content: '\f1c9';
+  font-family: 'FontAwesome';
+  margin-right: 4px;
+}
+
+.nameField.typeImageFile::before {
+  content: '\f1c5';
+  font-family: 'FontAwesome';
+  margin-right: 4px;
+}
+
 #modalBackdrop {
   display:none;
   position: absolute;

@@ -18,6 +18,7 @@ import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
+import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 1000;
@@ -101,9 +102,6 @@ class EditorManager implements EditorProvider {
 
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
-
-  static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {
@@ -349,7 +347,7 @@ class EditorManager implements EditorProvider {
   }
 
   int editorType(String filename) {
-    if (_imageFileType.hasMatch(filename)) {
+    if (isImageFilename(filename)) {
       return EDITOR_TYPE_IMAGE;
     } else {
       return EDITOR_TYPE_TEXT;
