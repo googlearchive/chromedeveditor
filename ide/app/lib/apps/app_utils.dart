@@ -11,7 +11,7 @@ import '../workspace.dart';
  * for the Chrome app. Returns `null` if no Chrome app can be found.
  */
 Container getAppContainerFor(Resource resource) {
-  if (resource.project == null) return null;
+  if (resource == null || resource.project == null) return null;
 
   // Look in the current container(s).
   Container container = resource is Container ? resource : resource.parent;

@@ -4,6 +4,8 @@
 
 library spark.utils_test;
 
+import 'dart:async';
+
 import 'package:unittest/unittest.dart';
 
 import '../lib/utils.dart';
@@ -48,6 +50,36 @@ defineTests() {
         expect(description.contains('('), false);
         expect(description.startsWith('#'), false);
       }
+    });
+
+    test('StreamReader, read 1', () {
+      StreamReader reader = new StreamReader(new Stream.fromIterable([[1, 2, 3, 4]]));
+      return reader.read(2).then((result) {
+        expect(result.length, 2);
+        reader.read(2).then((result) {
+          expect(result.length, 2);
+        });
+      });
+    });
+
+    test('StreamReader, read 2', () {
+      StreamReader reader = new StreamReader(new Stream.fromIterable([[1], [2, 3, 4]]));
+      return reader.read(2).then((result) {
+        expect(result.length, 2);
+        reader.read(2).then((result) {
+          expect(result.length, 2);
+        });
+      });
+    });
+
+    test('StreamReader, read until eos', () {
+      StreamReader reader = new StreamReader(new Stream.fromIterable([[1, 2, 3, 4]]));
+      return reader.read(1).then((result) {
+        expect(result.length, 1);
+        reader.readRemaining().then((result) {
+          expect(result.length, 3);
+        });
+      });
     });
   });
 }

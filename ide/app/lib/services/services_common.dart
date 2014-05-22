@@ -9,6 +9,7 @@ import 'dart:async';
 import '../workspace.dart';
 import '../package_mgmt/package_manager.dart';
 import '../package_mgmt/pub.dart';
+import '../package_mgmt/pub_properties.dart';
 
 abstract class Serializable {
   // TODO(ericarnold): Implement as, and refactor any classes containing toMap
@@ -82,6 +83,8 @@ class ServiceActionEvent {
       throw new ServiceException(data['message'], serviceId, actionId);
     }
   }
+
+  String toString() => '${serviceId}.${actionId}';
 }
 
 class ServiceException {
@@ -160,18 +163,45 @@ class ErrorSeverity {
 /**
  * Defines an object containing information about a declaration.
  */
-class Declaration {
+abstract class Declaration {
   final String name;
-  final String fileUuid;
-  final int offset;
-  final int length;
 
-  Declaration(this.name, this.fileUuid, this.offset, this.length);
+  Declaration(this.name);
+
+  static String _nameFromMap(Map map) => map["name"];
 
   factory Declaration.fromMap(Map map) {
     if (map == null || map.isEmpty) return null;
 
-    return new Declaration(map["name"], map["fileUuid"],
+    if (map["fileUuid"] != null) {
+      return new SourceDeclaration.fromMap(map);
+    } else {
+      return new DocDeclaration.fromMap(map);
+    }
+  }
+
+  Map toMap() {
+    return {
+      "name": name,
+    };
+  }
+}
+
+/**
+ * Defines an object containing information about a declaration found in source.
+ */
+class SourceDeclaration extends Declaration {
+  final String fileUuid;
+  final int offset;
+  final int length;
+
+  SourceDeclaration(name, this.fileUuid, this.offset, this.length)
+      : super(name);
+
+  factory SourceDeclaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new SourceDeclaration(Declaration._nameFromMap(map), map["fileUuid"],
         map["offset"], map["length"]);
   }
 
@@ -192,15 +222,31 @@ class Declaration {
   }
 
   Map toMap() {
-    return {
-      "name": name,
+    return super.toMap()..addAll({
       "fileUuid": fileUuid,
       "offset": offset,
       "length": length,
-    };
+    });
   }
 
   String toString() => '${fileUuid} [${offset}:${length}]';
+}
+
+/**
+ * Defines an object containing information about a declaration's doc location.
+ */
+class DocDeclaration extends Declaration {
+  final String url;
+
+  DocDeclaration(String name, this.url) : super(name);
+
+  factory DocDeclaration.fromMap(Map map) {
+    if (map == null || map.isEmpty) return null;
+
+    return new DocDeclaration(Declaration._nameFromMap(map), map["url"]);
+  }
+
+  Map toMap() => super.toMap()..addAll({"url": url});
 }
 
 /**

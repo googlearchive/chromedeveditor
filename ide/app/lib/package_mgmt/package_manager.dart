@@ -12,18 +12,18 @@ import '../workspace.dart';
 // TODO(ussuri): Add comments.
 
 abstract class PackageServiceProperties {
-  bool isProjectWithPackages(Project project) =>
+  bool isProjectWithPackages(Container project) =>
       project.getChild(packageSpecFileName) != null;
 
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
-           (resource is Project && isProjectWithPackages(resource));
+           (resource is Container && isProjectWithPackages(resource));
   }
 
   bool isInPackagesFolder(Resource resource) {
     while (resource.parent != null) {
-      if (resource.parent is Project) {
-        return resource.name == packagesDirName && resource is Folder;
+      if (resource.name == packagesDirName && resource is Folder) {
+        return true;
       }
       resource = resource.parent;
     }
@@ -38,9 +38,9 @@ abstract class PackageServiceProperties {
            !isInPackagesFolder(resource);
   }
 
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
 
   String get packageServiceName;
   String get packageSpecFileName;
@@ -59,30 +59,34 @@ abstract class PackageManager {
     workspace.builderManager.builders.add(getBuilder());
   }
 
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
+
   PackageServiceProperties get properties;
 
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
 
-  Future installPackages(Project project);
-  Future upgradePackages(Project project);
+  Future installPackages(Container container);
+  Future upgradePackages(Container container);
 }
 
 abstract class PackageResolver {
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
+
   PackageServiceProperties get properties;
+
   File resolveRefToFile(String url);
   String getReferenceFor(File file);
 }
 
 abstract class PackageBuilder extends Builder {
-  /**
-   * Pure virtual interface.
-   */
+  //
+  // Pure virtual interface.
+  //
+
   PackageServiceProperties get properties;
 }

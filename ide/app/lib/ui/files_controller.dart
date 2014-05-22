@@ -206,7 +206,10 @@ class FilesController implements TreeViewDelegate {
     return cell;
   }
 
-  int treeViewHeightForNode(TreeView view, String nodeUid) => 20;
+  int treeViewHeightForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    return resource is Project ? 40 : 20;
+  }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
@@ -582,6 +585,23 @@ class FilesController implements TreeViewDelegate {
         JSON.encode(_treeView.expandedState));
   }
 
+  html.Element treeViewSeparatorForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    if (resource is! Project) return null;
+    if (_files.length == 0) return null;
+
+    // Don't show a separator before the first item.
+    if (_files[0] == resource) return null;
+
+    html.DocumentFragment template =
+        (html.querySelector('#fileview-separator') as html.TemplateElement)
+        .content;
+    html.DocumentFragment templateClone = template.clone(true);
+    return templateClone.querySelector('.fileview-separator');
+  }
+
+  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 25;
+
   // Cache management for sorted list of resources.
 
   void _cacheChildren(String nodeUid) {
@@ -926,7 +946,12 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
-  void performFilter(String filterString) {
+  /**
+   * Filters the files using [filterString] as part of the name and returns
+   * true if matches are found. If [filterString] is null, cancells all
+   * filtering and returns true.
+   */
+  bool performFilter(String filterString) {
     if (filterString != null && filterString.isEmpty) {
       filterString = null;
     }
@@ -935,12 +960,13 @@ class FilesController implements TreeViewDelegate {
       _filteredFiles = null;
       _filteredChildrenCache = null;
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
+      return true;
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
       _filteredChildrenCache = {};
       _filesMap.forEach((String key, Resource res) {
-        if (res.name.contains(_filterString)) {
+        if (res.name.contains(_filterString) && !res.isDerived()) {
           _filterAddResult(filtered, _filteredFiles, _filteredChildrenCache, res);
         }
       });
@@ -953,6 +979,7 @@ class FilesController implements TreeViewDelegate {
       });
 
       _reloadDataAndRestoreExpandedState(filtered.toList());
+      return _filteredFiles.isNotEmpty;
     }
   }
 }

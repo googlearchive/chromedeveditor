@@ -22,7 +22,7 @@ import 'css/cssbeautify.dart';
 import 'editors.dart';
 import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
-import 'package_mgmt/pub.dart';
+import 'package_mgmt/pub_properties.dart';
 import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
@@ -43,6 +43,7 @@ class TextEditor extends Editor {
   StreamSubscription _aceSubscription;
   StreamController _dirtyController = new StreamController.broadcast();
   StreamController _modificationController = new StreamController.broadcast();
+  Completer<Editor> _whenReadyCompleter = new Completer();
 
   final SparkPreferences _prefs;
   ace.EditSession _session;
@@ -64,10 +65,13 @@ class TextEditor extends Editor {
 
   TextEditor._create(this.aceManager, this.file, this._prefs);
 
+  Future<Editor> get whenReady => _whenReadyCompleter.future;
+
   void setSession(ace.EditSession value) {
     _session = value;
     if (_aceSubscription != null) _aceSubscription.cancel();
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
+    if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
   }
 
   bool get dirty => _dirty;
@@ -216,12 +220,16 @@ class DartEditor extends TextEditor {
     aceManager._analysisService.getDeclarationFor(file, offset).then(
         (svc.Declaration declaration) {
       if (declaration != null) {
-        workspace.File targetFile = declaration.getFile(file.project);
+        if (declaration is svc.SourceDeclaration) {
+          workspace.File targetFile = declaration.getFile(file.project);
 
-        // Open targetFile and select the range of text.
-        if (targetFile != null) {
-          Span selection = new Span(declaration.offset, declaration.length);
-          aceManager.delegate.openEditor(targetFile, selection: selection);
+          // Open targetFile and select the range of text.
+          if (targetFile != null) {
+            Span selection = new Span(declaration.offset, declaration.length);
+            aceManager.delegate.openEditor(targetFile, selection: selection);
+          }
+        } else if (declaration is svc.DocDeclaration) {
+          html.window.open(declaration.url, "spark_doc");
         }
       }
     });
@@ -315,6 +323,19 @@ class AceManager {
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         _showGotoLineView);
     _aceEditor.commands.addCommand(command);
+    if (PlatformInfo.isMac) {
+      command = new ace.Command(
+          'scrolltobeginningofdocument',
+          const ace.BindKey(mac: 'Home'),
+          _scrollToBeginningOfDocument);
+      _aceEditor.commands.addCommand(command);
+
+      command = new ace.Command(
+          'scrolltoendofdocument',
+          const ace.BindKey(mac: 'End'),
+          _scrollToEndOfDocument);
+      _aceEditor.commands.addCommand(command);
+    }
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
@@ -423,10 +444,10 @@ class AceManager {
       String markerHtml = _formatAnnotationItemText(marker.message,
           annotationType);
 
-      // Ace uses 0-based lines.
       ace.Point charPoint = currentSession.document.indexToPosition(
           marker.charStart);
-      int aceRow = charPoint.row;
+      // Ace uses 0-based lines.
+      int aceRow = marker.lineNum - 1;
       int aceColumn = charPoint.column;
 
       // If there is an existing annotation, delete it and combine into one.
@@ -444,15 +465,15 @@ class AceManager {
       annotations.add(annotation);
       annotationByRow[aceRow] = annotation;
 
-      double markerHorizontalPercentage = currentSession.documentToScreenRow(
+      double verticalPercentage = currentSession.documentToScreenRow(
           marker.lineNum, aceColumn) / numberLines;
 
       String markerPos;
+
       if (!isScrolling) {
-        markerPos = (markerHorizontalPercentage * documentHeight).toString() + "px";
+        markerPos = '${verticalPercentage * documentHeight}px';
       } else {
-        markerPos = (markerHorizontalPercentage * 100.0)
-            .toStringAsFixed(2) + "%";
+        markerPos = (verticalPercentage * 100.0).toStringAsFixed(2) + "%";
       }
 
       // TODO(ericarnold): This should also be based upon annotations so ace's
@@ -713,6 +734,15 @@ class AceManager {
   }
 
   void _handleGotoLineViewClosed(_) => focus();
+
+  void _scrollToBeginningOfDocument(_) {
+    _aceEditor.session.scrollTop = 0;
+  }
+
+  void _scrollToEndOfDocument(_) {
+    int lineHeight = html.querySelector('.ace_gutter-cell').clientHeight;
+    _aceEditor.session.scrollTop = _aceEditor.session.document.length * lineHeight;
+  }
 }
 
 class ThemeManager {

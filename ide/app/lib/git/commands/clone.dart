@@ -66,18 +66,19 @@ class Clone {
 
   Future clone() {
     _stopwatch = new PrintProfiler('clone');
-    return _clone(_options.repoUrl);
+    return _clone();
   }
 
-  Future _clone(String url) {
-    HttpFetcher fetcher = getHttpFetcher(_options.store, "origin", url,
-        _options.username, _options.password);
+  Future _clone() {
+    HttpFetcher fetcher = getHttpFetcher(_options.store, "origin",
+        _options.repoUrl, _options.username, _options.password);
 
-    return fetcher.isValidRepoUrl(_options.repoUrl).then((isValid) {
+    return fetcher.isValidRepoUrl().then((isValid) {
       if (isValid) {
         return startClone(fetcher);
-      } else if (!url.endsWith('.git')) {
-        return _clone(url + '.git');
+      } else if (!_options.repoUrl.endsWith('.git')) {
+        _options.repoUrl += '.git';
+        return _clone();
       } else {
         throw new GitException(GitErrorConstants.GIT_INVALID_REPO_URL);
       }
@@ -244,7 +245,6 @@ class Clone {
                 return _createInitialConfig(result.shallow, localHeadRef)
                     .then((_) {
                   logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
-                  _options.store.index.reset(true);
                 });
               });
             });

@@ -1,8 +1,0 @@
-/**
- * Opens a new "Hello, world!" tab upon installation.
- *
- * @see http://developer.chrome.com/extensions/tabs.html
- */
-chrome.runtime.onInstalled.addListener(function() {
-  chrome.tabs.create({url: "index.html", active: true});
-});

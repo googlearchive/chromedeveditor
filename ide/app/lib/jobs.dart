@@ -156,6 +156,8 @@ abstract class ProgressMonitor {
   String _title;
   num _maxWork;
   num _work = 0;
+  bool _cancelled = false;
+  Completer _cancelledCompleter;
 
   /**
    * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
@@ -198,11 +200,49 @@ abstract class ProgressMonitor {
   }
 
   /**
-   * Sets the work as completely done (work = maxWork).
+   * Sets the work as completely done (work == maxWork).
    */
   void done() {
     _work = maxWork;
   }
+
+  bool get cancelled => _cancelled;
+
+  set cancelled(bool val) {
+    _cancelled = val;
+
+    if (_cancelledCompleter != null) {
+      _cancelledCompleter.completeError(new UserCancelledException());
+      _cancelledCompleter = null;
+    }
+  }
+
+  /**
+   * Return a Future that completes with the given value of [f]. If the user
+   * cancels this ProgressMonitor, this Future will instead throw a
+   * [UserCancelledException].
+   */
+  Future runCancellableFuture(Future f) {
+    _cancelledCompleter = new Completer();
+
+    f.then((result) {
+      if (_cancelledCompleter != null) {
+        _cancelledCompleter.complete(result);
+        _cancelledCompleter = null;
+      }
+    }).catchError((e) {
+      if (_cancelledCompleter != null) {
+        _cancelledCompleter.completeError(e);
+        _cancelledCompleter = null;
+      }
+    });
+
+    return _cancelledCompleter.future;
+  }
+}
+
+class UserCancelledException implements Exception {
+
 }
 
 class _ProgressMonitorImpl extends ProgressMonitor {

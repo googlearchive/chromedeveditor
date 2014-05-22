@@ -1,0 +1,14 @@
+{
+  "directories": {
+    "web": {
+      "files": [
+        { "source": "index.html_", "dest": "index.html" },
+        { "source": "main.dart_", "dest": "main.dart" },
+        { "source": "styles.css_", "dest": "styles.css" }
+      ]
+    }
+  },
+  "files": [
+    { "source": "pubspec.yaml_", "dest": "pubspec.yaml" }
+  ]
+}

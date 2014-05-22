@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>``tagName`` demo</title>
+
+    <link rel="import" href="../lib/``sourceName``.html">
+  </head>
+
+  <body>
+    <``tagName`` who="world">
+      Hello to you, too!
+    </``tagName``>
+  </body>
+</html>

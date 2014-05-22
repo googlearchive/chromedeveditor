@@ -16,10 +16,11 @@ import 'package:logging/logging.dart';
 import 'package:observe/observe.dart';
 
 import 'builder.dart';
+import 'exception.dart';
 import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
-import 'git/http_fetcher.dart';
+import 'git/exception.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
 import 'git/options.dart';
@@ -181,16 +182,6 @@ abstract class ScmProjectOperations {
   Future updateForChanges(List<ChangeDelta> changes);
 }
 
-// TODO: Remove this when we have a generic spark exception class.
-class ScmException implements Exception {
-  final String message;
-  final bool needsAuth;
-
-  ScmException(this.message, [this.needsAuth = false]);
-
-  String toString() => message;
-}
-
 /**
  * The possible SCM file statuses (`untracked`, `modified`, `staged`, or
  * `committed`).
@@ -283,10 +274,14 @@ class GitScmProvider extends ScmProvider {
         return options.store.index.flush();
       });
     }).catchError((e) {
-      if (e is HttpResult) {
-        throw new ScmException(e.toString(), e.needsAuth);
+      if (e is GitException && e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
+        throw new SparkException(e.toString(), SparkErrorConstants.AUTH_REQUIRED);
+      } else if ( e is GitException && e.errorCode
+          == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+        throw new SparkException(e.toString(),
+            SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
       } else {
-        throw new ScmException(e.toString());
+        throw new SparkException(e.toString());
       }
     });
   }
@@ -409,6 +404,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
       return Push.push(options);
+    });
+  }
+
+  Future<List<String>> getDeletedFiles() {
+    return objectStore.then((store) {
+      return Status.getDeletedFiles(store);
     });
   }
 

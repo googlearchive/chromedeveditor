@@ -26,10 +26,16 @@
     attributes="src tooltip size">
   <template>
     <link rel="stylesheet" href="spark_icon.css">
-    <div id="icon"
-        style="background-image:url({{src}}); width:{{size}}px; height:{{size}}px"
-        title="{{tooltip}}">
-    </div>
+
+    <style>
+      #icon {
+        background-image: url({{src}});
+        width: {{size}}px;
+        height: {{size}}px;
+      }
+    </style>
+
+    <div id="icon" title="{{tooltip}}"></div>
   </template>
 
   <script type="application/dart;component=1" src="spark_icon.dart"></script>

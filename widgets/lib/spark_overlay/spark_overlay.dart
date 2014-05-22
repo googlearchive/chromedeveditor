@@ -11,22 +11,29 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
-// Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-overlay")
 class SparkOverlay extends SparkWidget {
   // Track overlays for z-index and focus managemant.
-  static List overlays = [];
+  // TODO(ussuri): The z-index management with a fixed base z-index is shaky at
+  // best. SparkOverlay doesn't know in what z-index environment its instances
+  // will live, so assumption that 1000 is always a good value is invalid.
+  // Consider:
+  // 1) Stacking contexts (https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context).
+  // 2) Some way to set the base z-index in the client.
+  // 3) Set the same z-index for all spark-overlays in the client, then bump
+  //    the current overlay's z-index if any other are currently opened.
+  static final List<SparkOverlay> overlays = [];
 
-  static void _trackOverlays(inOverlay) {
+  static void _trackOverlays(SparkOverlay inOverlay) {
     if (inOverlay.opened) {
-      var z0 = _currentOverlayZ();
+      final int z0 = _currentOverlayZ();
       overlays.add(inOverlay);
-      var z1 = _currentOverlayZ();
+      final int z1 = _currentOverlayZ();
       if (z0 != null && z1 != null && z1 <= z0) {
         _applyOverlayZ(inOverlay, z0);
       }
     } else {
-      var i = overlays.indexOf(inOverlay);
+      final int i = overlays.indexOf(inOverlay);
       if (i >= 0) {
         overlays.removeAt(i);
         _setZ(inOverlay, null);
@@ -34,11 +41,11 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
-  static void _applyOverlayZ(inOverlay, inAboveZ) {
+  static void _applyOverlayZ(SparkOverlay inOverlay, int inAboveZ) {
     _setZ(inOverlay, inAboveZ + 2);
   }
 
-  static void _setZ(inNode, inZ) {
+  static void _setZ(Element inNode, int inZ) {
     inNode.style.zIndex = "$inZ";
   }
 
@@ -48,11 +55,11 @@ class SparkOverlay extends SparkWidget {
 
   // TODO(ussuri): This widget doesn't know in which z-index environment it's
   // going to live. Choosing an arbitrary starting z-index here is wrong. Redo.
-  static int _DEFAULT_Z = 1000;
+  static const int _DEFAULT_Z = 1000;
 
   static _currentOverlayZ() {
-    var z = _DEFAULT_Z;
-    var current = _currentOverlay();
+    int z = _DEFAULT_Z;
+    final SparkOverlay current = _currentOverlay();
     if (current != null) {
       final z1 = current.getComputedStyle().zIndex;
       z = int.parse(z1, onError: (source) { });
@@ -61,7 +68,7 @@ class SparkOverlay extends SparkWidget {
   }
 
   static void _focusOverlay() {
-    var current = _currentOverlay();
+    final SparkOverlay current = _currentOverlay();
     if (current != null) {
       current.focus();
     }
@@ -113,10 +120,10 @@ class SparkOverlay extends SparkWidget {
   /**
    * The kind of animation that the overlay should perform on open/close.
    */
-  @published String animation = '';
+  @published String animation = 'none';
 
   static final List<String> _SUPPORTED_ANIMATIONS = [
-    'fade', 'shake', 'scale-slideup'
+    'none', 'fade', 'shake', 'scale-slideup'
   ];
 
   /**
@@ -223,20 +230,17 @@ class SparkOverlay extends SparkWidget {
   void _renderOpened() {
     classes.remove('closing');
     classes.add('revealed');
-    // continue styling after delay so display state can change without
-    // aborting transitions
+    // Continue styling after delay so display state can change without
+    // aborting transitions.
     Timer.run(() { _continueRenderOpened(); });
-//    asyncMethod('continueRenderOpened');
   }
 
   void _continueRenderOpened() {
     classes.toggle('opened', opened);
     classes.toggle('closing', !opened);
-//    this.animating = this.asyncMethod('completeOpening', null, this.timeout);
   }
 
   void _completeOpening() {
-//    clearTimeout(this.animating);
     classes.remove('closing');
     classes.toggle('revealed', opened);
     _applyFocus();
@@ -246,7 +250,7 @@ class SparkOverlay extends SparkWidget {
     if (!opened) {
       classes.remove('animation-in-progress');
     }
-    // same steps as when a transition ends
+    // Same steps as when a transition ends.
     _openedTransitionEnd(e);
   }
 

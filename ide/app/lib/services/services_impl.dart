@@ -344,14 +344,41 @@ class AnalyzerServiceImpl extends ServiceImpl {
         return null;
       }
 
-      // TODO:(devoncarew): Handle sdk sources.
-      if (element.source is! analyzer.FileSource) return null;
+      if (element.source is analyzer.FileSource) {
+        analyzer.FileSource fileSource = element.source;
+        return new SourceDeclaration(element.displayName, fileSource.uuid,
+            element.nameOffset, element.name.length);
+      } else if (element.source is analyzer.SdkSource) {
+        String url = _getUrlForElement(element);
+        if (url == null) return null;
+        return new DocDeclaration(element.displayName, url);
+      } else {
+        return null;
+      }
+    }
 
-      analyzer.FileSource fileSource = element.source;
+    /**
+     * Convert a dart: library reference into the corresponding dartdoc url.
+     */
+    String _getUrlForElement(analyzer.Element element) {
+      analyzer.SdkSource sdkSource = element.source;
+      String libraryName = element.library.name.replaceAll(".", "-");
+      String baseUrl =
+          "https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer";
+      String className;
+      String memberAnchor = "";
+      analyzer.Element enclosingElement = element.enclosingElement;
+      if (element is analyzer.ClassElement) {
+        className = element.name;
+      } else if (enclosingElement is analyzer.ClassElement) {
+        className = enclosingElement.name;
+        memberAnchor = "#id_${element.name}";
+      } else {
+        // TODO: Top level variables and functions
+        return null;
+      }
 
-      return new Declaration(
-          element.displayName, fileSource.uuid,
-          element.nameOffset, element.name.length);
+      return "$baseUrl/$libraryName.$className$memberAnchor";
     }
 
     Outline _getOutline(analyzer.CompilationUnit ast) {
@@ -547,11 +574,15 @@ abstract class ServiceImpl {
       return new Future.value(
           event.createErrorReponse("no such method: ${event.actionId}"));
     } else {
-      Future f = responder(event);
-      assert(f != null);
-      return f.catchError((e, st) {
-        return event.createErrorReponse('${e}\n${st}');
-      });
+      try {
+        Future f = responder(event);
+        assert(f != null);
+        return f.catchError((e, st) {
+          return event.createErrorReponse('${e}\n${st}');
+        });
+      } catch (e, st) {
+        return new Future.value(event.createErrorReponse('${e}\n${st}'));
+      }
     }
   }
 }

@@ -79,7 +79,7 @@ abstract class TreeViewDelegate {
   String treeViewDropEffect(TreeView view,
                             DataTransfer dataTransfer,
                             String nodeUid) => null;
-                            
+
   /**
    * This method is called when a selection of TreeView is dragged,
    * on dragenter.
@@ -137,4 +137,16 @@ abstract class TreeViewDelegate {
    * tree.
    */
   void treeViewSaveExpandedState(TreeView view) {}
+
+  /**
+   * This method should return an HTML element that will be used as a separator
+   * shown before the given node.
+   */
+  Element treeViewSeparatorForNode(TreeView view, String nodeUID) => null;
+
+  /**
+   * This method should return the height of the separator shown before the
+   * given node.
+   */
+  int treeViewSeparatorHeightForNode(TreeView view, String nodeUID) => 1;
 }

@@ -14,34 +14,18 @@ import 'package:tavern/tavern.dart' as tavern;
 import 'package:yaml/yaml.dart' as yaml;
 
 import 'package_manager.dart';
+import 'pub_properties.dart';
 import '../jobs.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
 
-// TODO(ussuri): Make package-private once no longer used outside.
-final PubProperties pubProperties = new PubProperties();
-
-class PubProperties extends PackageServiceProperties {
-  String get packageServiceName => 'pub';
-  String get packageSpecFileName => 'pubspec.yaml';
-  String get packagesDirName => 'packages';
-  String get libDirName => 'lib';
-  String get packageRefPrefix => 'package:';
-  // This will get both the "package:foo/bar.dart" variant when used directly
-  // in Dart and the "baz/packages/foo/bar.dart" variant when served over HTTP.
-  RegExp get packageRefPrefixRegexp =>
-      new RegExp(r'^(package:|.*/packages/)(.*)$');
-
-  void setSelfReference(Project project, String selfReference) =>
-      project.setMetadata('${packageServiceName}SelfReference', selfReference);
-
-  String getSelfReference(Project project) =>
-      project.getMetadata('${packageServiceName}SelfReference');
-}
-
 class PubManager extends PackageManager {
   PubManager(Workspace workspace) : super(workspace);
+
+  //
+  // PackageManager abstract interface:
+  //
 
   PackageServiceProperties get properties => pubProperties;
 
@@ -49,17 +33,21 @@ class PubManager extends PackageManager {
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
-  Future installPackages(Project project) =>
-      _installUpgradePackages(project, 'get', false);
+  Future installPackages(Container container) =>
+      _installUpgradePackages(container, 'get', false);
 
-  Future upgradePackages(Project project) =>
-      _installUpgradePackages(project, 'upgrade', true);
+  Future upgradePackages(Container container) =>
+      _installUpgradePackages(container, 'upgrade', true);
+
+  //
+  // - end PackageManager abstract interface.
+  //
 
   Future _installUpgradePackages(
-      Project project, String commandName, bool isUpgrade) {
-    return tavern.getDependencies(project.entry, _handleLog, isUpgrade).
+      Container container, String commandName, bool isUpgrade) {
+    return tavern.getDependencies(container.entry, _handleLog, isUpgrade).
         whenComplete(() {
-      return project.refresh();
+      return container.project.refresh();
     }).catchError((e, st) {
       _logger.severe('Error running pub $commandName', e, st);
       return new Future.error(e, st);
@@ -78,6 +66,10 @@ class _PubResolver extends PackageResolver {
   final Project project;
 
   _PubResolver._(this.project);
+
+  //
+  // PackageResolver virtual interface:
+  //
 
   PackageServiceProperties get properties => pubProperties;
 
@@ -153,6 +145,10 @@ class _PubResolver extends PackageResolver {
 class _PubBuilder extends PackageBuilder {
   _PubBuilder();
 
+  //
+  // PackageBuilder virtual interface:
+  //
+
   PackageServiceProperties get properties => pubProperties;
 
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
@@ -192,6 +188,10 @@ class _PubBuilder extends PackageBuilder {
 
     return new Future.value();
   }
+
+  //
+  // - PackageBuilder virtual interface.
+  //
 
   Future _analyzePubspec(File file) {
     file.clearMarkers(_packageServiceName);

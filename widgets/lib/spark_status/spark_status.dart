@@ -33,34 +33,41 @@ class SparkStatus extends SparkWidget {
   String _progressMessage;
   String _temporaryMessage;
 
+  Element _label;
+  Element _throbber;
+  Element _container;
+
   Timer _timer;
+
+  // TODO(ussuri): Get rid of @published getters/setters for everything.
 
   @published bool get spinning => _spinning;
 
-  set spinning(bool value) {
+  @published set spinning(bool value) {
     _spinning = value;
-
-    Element element = getShadowDomElement('.throbber');
-    element.classes.toggle('spinning', _spinning);
+    _update();
   }
 
-  @published String get defaultMessage => _defaultMessage == null ? '' : _defaultMessage;
+  @published String get defaultMessage =>
+      _defaultMessage == null ? '' : _defaultMessage;
 
-  set defaultMessage(String value) {
+  @published set defaultMessage(String value) {
     _defaultMessage = value;
     _update();
   }
 
-  @published String get progressMessage => _progressMessage == null ? '' : _progressMessage;
+  @published String get progressMessage =>
+      _progressMessage == null ? '' : _progressMessage;
 
-  set progressMessage(String value) {
+  @published set progressMessage(String value) {
     _progressMessage = value;
     _update();
   }
 
-  @published String get temporaryMessage => _temporaryMessage == null ? '' : _temporaryMessage;
+  @published String get temporaryMessage =>
+      _temporaryMessage == null ? '' : _temporaryMessage;
 
-  set temporaryMessage(String value) {
+  @published set temporaryMessage(String value) {
     if (_timer != null) {
       _timer.cancel();
     }
@@ -75,20 +82,27 @@ class SparkStatus extends SparkWidget {
     }
   }
 
-  bool get showingProgressMessage =>
+  @override
+  void ready() {
+    _container = getShadowDomElement('#status-container');
+    _label = getShadowDomElement('#label');
+    _throbber = getShadowDomElement('#throbber');
+  }
+
+  bool get _showingProgressMessage =>
       _temporaryMessage == null && _progressMessage != null;
 
-  bool get showingDefaultMessage =>
+  bool get _showingDefaultMessage =>
       _temporaryMessage == null && _progressMessage == null;
 
-  bool get showingTemporaryMessage => _temporaryMessage != null;
+  bool get _showingTemporaryMessage => _temporaryMessage != null;
 
   void _update() {
-    Element element = getShadowDomElement('.label');
-    element.classes.toggle('default', showingDefaultMessage);
-    element.classes.toggle('progressStyle', showingProgressMessage);
-    element.classes.toggle('temporary', showingTemporaryMessage);
-    element.innerHtml = _calculateMessage();
+    _throbber.classes.toggle('spinning',
+        _spinning && (_temporaryMessage == null));
+    final String text = _calculateMessage();
+    _container.classes.toggle('hidden', text.isEmpty);
+    _label.text = text;
   }
 
   String _calculateMessage() {
