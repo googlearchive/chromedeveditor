@@ -125,7 +125,7 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  Future navigateToDeclaration() => new Future.value();
+  Future navigateToDeclaration([Duration timeLimit]) => new Future.value();
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -213,12 +213,12 @@ class DartEditor extends TextEditor {
     outlineScrollPosition = aceManager.outline.scrollPosition;
   }
 
-  Future<svc.Declaration> navigateToDeclaration() {
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
     int offset = _session.document.positionToIndex(
         aceManager._aceEditor.cursorPosition);
 
-    return aceManager._analysisService.getDeclarationFor(file, offset).then(
-        (svc.Declaration declaration) {
+    Future declarationFuture = aceManager._analysisService.getDeclarationFor(
+        file, offset).then((svc.Declaration declaration) {
       if (declaration != null) {
         if (declaration is svc.SourceDeclaration) {
           workspace.File targetFile = declaration.getFile(file.project);
@@ -234,6 +234,13 @@ class DartEditor extends TextEditor {
       }
       return declaration;
     });
+
+    if (timeLimit != null) {
+      declarationFuture.timeout(timeLimit, onTimeout: () =>
+          throw new TimeoutException("navigateToDeclaration timed out"));
+    }
+
+    return declarationFuture;
   }
 }
 
