@@ -45,7 +45,6 @@ class SparkSplitView extends SparkWidget {
   }
 
   void targetSizeChanged() {
-    print("split-view.targetSizeChanged: $targetSize");
     // TODO(ussuri): This was critical for correct propagation of the client's
     // changes in [targetSize] to the enclosed splitter. Investigate.
     _splitter.targetSize = targetSize;
