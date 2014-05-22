@@ -78,10 +78,7 @@
   outline: none;
 }
 
-#fileFilter:focus.active ~ #runButton {
-  display: none;
-}
-
+#fileFilter:focus.active ~ #runButton,
 #fileFilter:focus.active ~ #mainMenu {
   display: none;
 }

@@ -764,7 +764,9 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  void filterFileTreeView(String searchString) {
+  Future<bool> filterFileTreeView(String searchString) {
+    final completer = new Completer<bool>();
+
     if ( _filterTimer != null) {
       _filterTimer.cancel();
       _filterTimer = null;
@@ -772,12 +774,14 @@ abstract class Spark
 
     _filterTimer = new Timer(new Duration(milliseconds: 500), () {
       _filterTimer = null;
-      _reallyFilterFilesList(searchString);
+      completer.complete(_reallyFilterFilesList(searchString));
     });
+
+    return completer.future;
   }
 
-  void _reallyFilterFilesList(String searchString) {
-    _filesController.performFilter(searchString);
+  bool _reallyFilterFilesList(String searchString) {
+    return _filesController.performFilter(searchString);
   }
 
   void _refreshOpenFiles() {

@@ -946,7 +946,7 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
-  void performFilter(String filterString) {
+  bool performFilter(String filterString) {
     if (filterString != null && filterString.isEmpty) {
       filterString = null;
     }
@@ -954,9 +954,8 @@ class FilesController implements TreeViewDelegate {
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
-      _eventBus.addEvent(new SimpleBusEvent(
-          BusEventType.FILES_CONTROLLER__NO_MATCHING_FILES, active: false));
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
+      return true;
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
@@ -974,10 +973,8 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
-      _eventBus.addEvent(new SimpleBusEvent(
-          BusEventType.FILES_CONTROLLER__NO_MATCHING_FILES,
-          active: !_filteredFiles.isNotEmpty));
       _reloadDataAndRestoreExpandedState(filtered.toList());
+      return _filteredFiles.isNotEmpty;
     }
   }
 }

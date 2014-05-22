@@ -30,7 +30,7 @@ class SparkPolymerUI extends SparkWidget {
   @observable bool showWipProjectTemplates = true;
   @observable bool chromeOS = true;
 
-  @observable bool noFileFilterMatches = false;
+  @observable bool showNoFileFilterMatches = false;
 
   SparkSplitView _splitView;
   InputElement _fileFilter;
@@ -51,8 +51,6 @@ class SparkPolymerUI extends SparkWidget {
     // Changed selection may mean some menu items become disabled.
     _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen(refreshFromModel);
-    _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__NO_MATCHING_FILES)
-        .listen(_noFileFilterMatchesHandler);
     refreshFromModel();
   }
 
@@ -142,21 +140,19 @@ class SparkPolymerUI extends SparkWidget {
       e..preventDefault()..stopPropagation();
       _fileFilter.value = '';
       _model.filterFileTreeView(null);
-      _updateFileFilterStatus();
+      _updateFileFilterStatus(showNoMatchesFound: false);
     }
   }
 
   void fileFilterInputHandler(Event e) {
-    _model.filterFileTreeView(_fileFilter.value);
-    _updateFileFilterStatus();
+    _model.filterFileTreeView(_fileFilter.value).then((bool matchesFound) {
+      _updateFileFilterStatus(showNoMatchesFound: !matchesFound);
+    });
   }
 
-  void _updateFileFilterStatus() {
+  void _updateFileFilterStatus({showNoMatchesFound}) {
     _fileFilter.classes.toggle('active', _fileFilter.value.isNotEmpty);
-  }
-
-  void _noFileFilterMatchesHandler(SimpleBusEvent e) {
-    noFileFilterMatches = e.active;
+    showNoFileFilterMatches = showNoMatchesFound;
     deliverChanges();
   }
 }

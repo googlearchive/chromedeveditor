@@ -4,6 +4,8 @@
 
 library spark.model;
 
+import 'dart:async';
+
 import 'lib/ace.dart';
 import 'lib/actions.dart';
 import 'lib/app.dart';
@@ -41,7 +43,14 @@ abstract class SparkModel extends Application {
   void onSplitViewUpdate(int position);
   void setGitSettingsResetDoneVisible(bool visible);
 
-  void filterFileTreeView(String filter);
+  /**
+   * Filter files in the tree view and return the virtual success of the
+   * operation, i.e. true if:
+   * * matches are found for [filter], or
+   * * there are no files to filter, or
+   * * [filter] is empty
+   */
+  Future<bool> filterFileTreeView(String filter);
 
   /**
    * Hide the splash screen; show the main UI.
