@@ -110,7 +110,6 @@ class SparkSplitter extends SparkWidget {
 
   /// Automatically called whenever targetSize is changed by the client.
   void targetSizeChanged() {
-    print("splitter 2: $targetSize");
     if (targetSize != null) _commitTargetSize(targetSize);
   }
 
