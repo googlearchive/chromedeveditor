@@ -282,6 +282,7 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
+  ace.Marker _currentHover;
 
   AceManager(this.parentElement,
              this.delegate,
@@ -301,22 +302,39 @@ class AceManager {
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
+    _aceEditor.setOption('enableMultiselect', false);
+
     ace.require('ace/ext/linking');
+    _aceEditor.setOptions({'enableMultiselect' : false,
+        'enableLinking' : true});
+    _aceEditor.onLinkClick.listen((ace.LinkEvent e) {
+      int startColumn = e.token.start;
+      ace.Point startPosition = new ace.Point(e.position.row, startColumn);
+      /*%*/ print("hover: ${startPosition.column}, ${startPosition.row}"); //%
+      int endColumn = startColumn + e.token.value.length;
+      ace.Point endPosition = new ace.Point(e.position.row, endColumn);
+      /*%*/ print("hover: ${endPosition.column}, ${endPosition.row}"); //%
+      ace.Range markerRange = new ace.Range.fromPoints(startPosition, endPosition);
 
-    _aceEditor.setOptions({'enableMultiselect' : false, 'enableLinking' : true});
+      currentSession.addMarker(markerRange, "ace_bracket", type: ace.Marker.TEXT);
+    });
+    _aceEditor.onLinkHover.listen((ace.LinkEvent e) {
+      int startColumn = e.token.start;
+      ace.Point startPosition = new ace.Point(e.position.row, startColumn);
+      /*%*/ print("hover: ${startPosition.column}, ${startPosition.row}"); //%
+      int endColumn = startColumn + e.token.value.length;
+      ace.Point endPosition = new ace.Point(e.position.row, endColumn);
+      /*%*/ print("hover: ${endPosition.column}, ${endPosition.row}"); //%
 
-    new Future.delayed(const Duration(milliseconds: 2000)).then((_){
-      /*%TRACE3*/ print("(4> 5/16/14): Future.delayed!"); // TRACE%
-
-      _aceEditor.onLinkClick.listen((ace.Point documentPoint) {
-        /*%*/ print("Link: ${documentPoint.column}, ${documentPoint.row}"); //%
-      });
-      _aceEditor.onLinkHover.listen((ace.Point documentPoint) {
-        /*%*/ print("hover: ${documentPoint.column}, ${documentPoint.row}"); //%
-//      editor.session.addMarker(new ace.Range(documentPoint.row, documentPoint.column, documentPoint.row, documentPoint.column + 2), "ace_bracket", type: ace.Marker.TEXT);
-      });
+      /*%TRACE3*/ print("""(4> 5/22/14): e.token.type: ${e.token.type}"""); // TRACE%
+//      ace.Point indexStartPosition = currentSession.document.indexToPosition(e.token.start);
+//      ace.Point indexEndPosition = currentSession.document.indexToPosition(e.token.start + e.token.value.length);
+//      ace.Range markerRange = new ace.Range.fromPoints(indexStartPosition, indexEndPosition);
+//      ace.Range markerRange = new ace.Range.fromPoints(indexStartPosition, indexEndPosition);
+//      /*%TRACE3*/ print("""(4> 5/22/14): markerRange: ${markerRange}"""); // TRACE%
 
     });
+
     // Override Ace's `gotoline` command.
     var command = new ace.Command(
         'gotoline',
