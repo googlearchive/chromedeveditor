@@ -764,7 +764,7 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  Future<bool> filterFileTreeView(String searchString) {
+  Future<bool> filterFilesList(String searchString) {
     final completer = new Completer<bool>();
 
     if ( _filterTimer != null) {

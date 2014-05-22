@@ -50,7 +50,7 @@ abstract class SparkModel extends Application {
    * * there are no files to filter, or
    * * [filter] is empty
    */
-  Future<bool> filterFileTreeView(String filter);
+  Future<bool> filterFilesList(String filter);
 
   /**
    * Hide the splash screen; show the main UI.

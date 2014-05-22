@@ -139,18 +139,18 @@ class SparkPolymerUI extends SparkWidget {
     if (e.keyCode == KeyCode.ESC) {
       e..preventDefault()..stopPropagation();
       _fileFilter.value = '';
-      _model.filterFileTreeView(null);
+      _model.filterFilesList(null);
       _updateFileFilterStatus(showNoMatchesFound: false);
     }
   }
 
   void fileFilterInputHandler(Event e) {
-    _model.filterFileTreeView(_fileFilter.value).then((bool matchesFound) {
+    _model.filterFilesList(_fileFilter.value).then((bool matchesFound) {
       _updateFileFilterStatus(showNoMatchesFound: !matchesFound);
     });
   }
 
-  void _updateFileFilterStatus({showNoMatchesFound}) {
+  void _updateFileFilterStatus({bool showNoMatchesFound}) {
     _fileFilter.classes.toggle('active', _fileFilter.value.isNotEmpty);
     showNoFileFilterMatches = showNoMatchesFound;
     deliverChanges();
