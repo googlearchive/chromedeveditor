@@ -33,7 +33,7 @@ class SparkSplitter extends SparkWidget {
   @published int minTargetSize = 0;
   /// Maximum height or width of the splitter target.
   @published int maxTargetSize = 100000;
-  /// Whether to lock the split bar so it can't be dragged.
+  /// Whether to lock the splitter so it can't be dragged.
   @published bool locked = false;
 
   /// Whether the split view is horizontal or vertical.
@@ -78,7 +78,6 @@ class SparkSplitter extends SparkWidget {
 
     // Initial settings.
     directionChanged();
-    targetSizeChanged();
   }
 
   /// Triggered when [direction] is externally changed.
@@ -99,18 +98,20 @@ class SparkSplitter extends SparkWidget {
     classes.toggle('horizontal', _isHorizontal);
     classes.toggle('vertical', !_isHorizontal);
     _setThickness();
+
+    if (IS_DART2JS) {
+      // TODO(ussuri): In deployed code, this is needed to fixate the target's
+      // size in case it's not explicitly set by the client and the client
+      // changes the target's children later such that the target wants to
+      // auto-resize. This prevents auto-resizing. Investigate.
+      _commitTargetSize(_extractTargetSize());
+    }
   }
 
   /// Automatically called whenever targetSize is changed by the client.
   void targetSizeChanged() {
-    if (targetSize == null) return;
-
-    final size = (targetSize != null) ? targetSize : _extractTargetSize();
-    final clampedSize = size.clamp(minTargetSize, maxTargetSize);
-    if (clampedSize != targetSize) {
-      targetSize = clampedSize;
-    }
-    _commitTargetSize(targetSize);
+    print("splitter 2: $targetSize");
+    if (targetSize != null) _commitTargetSize(targetSize);
   }
 
   void _setThickness() {
@@ -146,8 +147,9 @@ class SparkSplitter extends SparkWidget {
   }
 
   /// Set the size of the actual target to the specified value.
-  void _commitTargetSize(int val) {
-    final sizeStr = '${val}px';
+  void _commitTargetSize(int size) {
+    final clampedSize = size.clamp(minTargetSize, maxTargetSize);
+    final sizeStr = '${clampedSize}px';
     if (_isHorizontal) {
       _target.style.height = sizeStr;
     } else {

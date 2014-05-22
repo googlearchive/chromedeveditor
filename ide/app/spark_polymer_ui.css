@@ -5,6 +5,7 @@
 @import url("packages/spark_widgets/common/spark_widget.css");
 @import url("packages/bootjack/css/bootstrap.min.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
+@import url("third_party/font_awesome/css/font-awesome.min.css");
 
 #mainMenu {
   display: block;
@@ -17,11 +18,6 @@
   position: absolute;
   right: 0;
   top: 0;
-}
-
-#leftNav, #rightNav {
-  position: relative;
-  top: 4px;
 }
 
 .dialog {
@@ -109,6 +105,23 @@
   font-size: 18px;
   margin-top: 60px;
   text-align: center;
+}
+
+#navigationButtons {
+  position: absolute;
+  right: 0;
+  width: 100px;
+  padding: 0;
+  z-index: 150;
+}
+
+#navigationButtons > spark-button {
+  height: 36px;
+  margin: 0;
+}
+
+#navigationButtons > spark-button > i {
+  font-size: 16px;
 }
 
 #sparkStatusContainer {
@@ -218,6 +231,11 @@
 }
 
 /* Deploy to mobile dialog */
+#mobileDeployDialog .modal-body {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
 #pushUrl {
   margin-left: 17px;
   width: 20em;

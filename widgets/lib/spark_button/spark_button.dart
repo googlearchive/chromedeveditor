@@ -15,6 +15,7 @@ class SparkButton extends SparkWidget {
   @published bool primary = false;
   @published bool large = false;
   @published bool small = false;
+  @published bool minPadding = false;
   @published bool noPadding = false;
   // TODO(ussuri): Perhaps convert to 'disabled', seems more natural.
   // Also, after switching from Bootstrap to in-house CSS, generalize for all

@@ -266,6 +266,10 @@ button.ace_searchbtn_close:active {
   width: 0;
 }
 
+.fileview-filename-container.project .fileStatus {
+  top: 12px;
+}
+
 .fileview-filename-container .fileStatus.error {
   width: 5px;
   background: #F55;
@@ -281,6 +285,10 @@ button.ace_searchbtn_close:active {
   background: #9CC;
 }
 
+.listview-cell-highlighted .fileview-filename-container .fileStatus {
+  background: #fff;
+}
+
 .fileview-filename-container .gitStatus {
   border-radius: 2px;
   background: #999;
@@ -292,9 +300,17 @@ button.ace_searchbtn_close:active {
   transition: width 0.4s;
 }
 
+.fileview-filename-container.project .gitStatus {
+  top: 12px;
+}
+
 .fileview-filename-container .gitStatus.dirty {
   width: 5px;
   background: #008ab8;
+}
+
+.listview-cell-highlighted .fileview-filename-container .gitStatus {
+  background: #fff;
 }
 
 .fileview-filename-container .menu {
@@ -320,6 +336,11 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container:hover .filename {
+}
+
+.fileview-separator .line {
+  margin-top: 15px;
+  border-top: 1px solid #ddd;
 }
 
 #fileViewArea {
@@ -500,3 +521,8 @@ li.outlineItem.topLevel.class {
 li.outlineItem a {
   white-space: nowrap;
 }
+
+.tabview-tabbar {
+  margin-right: 100px;
+}
+

@@ -82,7 +82,8 @@ class Status {
       => _getFileStatusesForTypes(store, [FileStatusType.UNTRACKED]);
 
   static Future<List<String>> getDeletedFiles(ObjectStore store) {
-    return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED]).then(
+    return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED], false)
+        .then(
         (Map<String, FileStatus> statuses) {
       List<String> deletedFilesStatus = [];
       statuses.forEach((String filePath, FileStatus status) {
@@ -95,8 +96,8 @@ class Status {
   }
 
   static Future<Map<String, FileStatus>> _getFileStatusesForTypes(
-      ObjectStore store, List<String> types) {
-    return store.index.updateIndex().then((_) {
+      ObjectStore store, List<String> types, [bool updateSha=true]) {
+    return store.index.updateIndex(updateSha).then((_) {
       Map result = {};
       store.index.statusMap.forEach((k, v) {
         if (types.any((type) => v.type == type)) {

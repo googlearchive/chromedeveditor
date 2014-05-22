@@ -1,0 +1,30 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
+@import url("../../../packages/bootjack/css/bootstrap-theme.css");
+
+#progressLayout {
+  display: flex;
+}
+
+#progressMessage {
+  text-overflow: ellipsis;
+  min-height: 1.4em;
+  min-width: 1em;
+  margin-bottom: 3px;
+}
+
+#progressDiv {
+  flex: 20;
+}
+
+spark-button {
+  margin-left: 4px;
+}
+
+.progress, .progress-bar {
+  margin-bottom: 5px;
+}

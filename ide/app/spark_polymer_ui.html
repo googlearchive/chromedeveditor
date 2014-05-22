@@ -11,6 +11,7 @@
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
+<link rel="import" href="packages/spark_widgets/spark_progress/spark_progress.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
@@ -49,27 +50,36 @@
               on-activate="{{onMenuSelected}}">
             <spark-menu-item action-id="project-new" label="New Project...">
             </spark-menu-item>
+
             <spark-menu-separator></spark-menu-separator>
+
             <spark-menu-item action-id="file-open" label="Open File...">
             </spark-menu-item>
             <spark-menu-item action-id="folder-open" label="Open Folder...">
             </spark-menu-item>
             <spark-menu-item action-id="git-clone" label="Git Clone...">
             </spark-menu-item>
+
             <spark-menu-separator></spark-menu-separator>
+
             <spark-menu-item action-id="application-run" label="Run Application">
             </spark-menu-item>
             <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
             </spark-menu-item>
             <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
             </spark-menu-item>
+
             <template if="{{developerMode}}">
               <spark-menu-separator></spark-menu-separator>
               <spark-menu-item action-id="run-tests" label="Run Tests">
               </spark-menu-item>
             </template>
+
             <spark-menu-separator></spark-menu-separator>
+
             <spark-menu-item action-id="settings" label="Settings...">
+            </spark-menu-item>
+            <spark-menu-item action-id="send-feedback" label="Send Feedback...">
             </spark-menu-item>
             <spark-menu-item action-id="help-about" label="About Spark">
             </spark-menu-item>
@@ -86,8 +96,16 @@
       </div>
 
       <div afterSplit>
-
         <content select="#editorArea"></content>
+
+        <spark-toolbar id="navigationButtons">
+          <spark-button id="leftNav" noBorder>
+            <i class="fa fa-arrow-left"></i>
+          </spark-button>
+          <spark-button id="rightNav" noBorder>
+            <i class="fa fa-arrow-right"></i>
+          </spark-button>
+        </spark-toolbar>
 
         <div id="sparkStatusContainer">
          <spark-status id="sparkStatus"></spark-status>
@@ -274,18 +292,16 @@
     <!-- Harness Push dialog -->
     <spark-modal id="mobileDeployDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
-        <a href="#" class="close" overlay-toggle>&times;</a>
+        <a href="#" class="close">&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>
       </div>
       <div class="modal-body">
         <h4>Deploy a Chrome App to an Android Device</h4>
         <p>
-          Please make sure you have
+          Please start the
           <a href="https://github.com/MobileChromeApps/harness/releases/"
-              on-click="{{handleAnchorClick}}">
-            Chrome ADT
-          </a>
-          installed and running on your Android device.
+              on-click="{{handleAnchorClick}}">Chrome ADT</a>
+          application on your Android device.
         </p>
         <div class="form-group">
           <form>
@@ -302,12 +318,18 @@
             </div>
           </form>
         </div>
+        <spark-progress id="deployProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
+        <div id='deployCheckDeviceMessage'>
+          Please check for a connection authorization dialog on your device.
+        </div>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
+        <spark-button>
           Cancel
         </spark-button>
-        <spark-button overlay-toggle primary focused data-dismiss="modal">
+        <spark-button primary focused>
           Deploy
         </spark-button>
       </div>
@@ -474,11 +496,6 @@
               Allow Spark to collect anonymous usage statistics
             </label>
           </div>
-        </div>
-        <div class="form-group">
-          <spark-button on-click="{{onSendFeedback}}">
-            Send feedback about Spark...
-          </spark-button>
         </div>
       </div>
       <div class="modal-footer">
@@ -721,19 +738,6 @@
         <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
-      </div>
-    </spark-modal>
-
-    <!-- Dialog shown while pushing an application to ADB. -->
-    <spark-modal id="pushADBProgressDialog" class="dialog" animation="scale-slideup">
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Push to the mobile device in progress</label>
-          <div class="help-block">
-            Please unlock the phone and check whether it's asking for a
-            connection authorization.
-          </div>
-        </div>
       </div>
     </spark-modal>
 

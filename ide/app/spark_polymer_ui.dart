@@ -8,6 +8,7 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
+import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
@@ -31,6 +32,7 @@ class SparkPolymerUI extends SparkWidget {
 
   @observable bool noFileFilterMatches = false;
 
+  SparkSplitView _splitView;
   InputElement _fileFilter;
 
   SparkPolymerUI.created() : super.created();
@@ -39,7 +41,8 @@ class SparkPolymerUI extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _fileFilter = getShadowDomElement('#fileFilter');
+    _splitView = $['splitView'];
+    _fileFilter = $['fileFilter'];
   }
 
   void modelReady(SparkModel model) {
@@ -64,9 +67,13 @@ class SparkPolymerUI extends SparkWidget {
     Observable.dirtyCheck();
   }
 
-  void _noFileFilterMatchesHandler(SimpleBusEvent e) {
-    noFileFilterMatches = e.active;
-    deliverChanges();
+  void splitViewPositionChanged() {
+    // TODO(ussuri): In deployed code, this was critical for correct
+    // propagation of the client's changes in [splitViewPosition] to _splitView.
+    // Investigate.
+    if (IS_DART2JS) {
+      _splitView..targetSize = splitViewPosition..targetSizeChanged();
+    }
   }
 
   void onMenuSelected(CustomEvent event, var detail) {
@@ -112,10 +119,6 @@ class SparkPolymerUI extends SparkWidget {
     _model.setGitSettingsResetDoneVisible(true);
   }
 
-  void onSendFeedback() {
-    window.open('https://github.com/dart-lang/spark/issues/new', '_blank');
-  }
-
   void onResetPreference() {
     Element resultElement = getShadowDomElement('#preferenceResetResult');
     resultElement.text = '';
@@ -150,5 +153,10 @@ class SparkPolymerUI extends SparkWidget {
 
   void _updateFileFilterStatus() {
     _fileFilter.classes.toggle('active', _fileFilter.value.isNotEmpty);
+  }
+
+  void _noFileFilterMatchesHandler(SimpleBusEvent e) {
+    noFileFilterMatches = e.active;
+    deliverChanges();
   }
 }

@@ -70,6 +70,9 @@ void main() {
   });
 }
 
+// TODO(devoncarew): We need to de-couple a request to close the dialog
+// from actually closing it. So, cancel() => close(), and
+// performOk() => close(), but subclasses can override.
 class SparkPolymerDialog implements SparkDialog {
   SparkModal _dialogElement;
 
@@ -216,6 +219,8 @@ class SparkPolymer extends Spark {
     super.initToolbar();
 
     _bindButtonToAction('runButton', 'application-run');
+    _bindButtonToAction('leftNav', 'navigate-back');
+    _bindButtonToAction('rightNav', 'navigate-forward');
   }
 
   @override

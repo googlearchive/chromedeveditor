@@ -211,10 +211,8 @@ class MobileDeploy {
   }
 
   Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
-//  // Start ADT on the device.
-//  return client.startActivity(AdbApplication.CHROME_ADT);
-
-    client.getDevices();
+    // Start ADT on the device.
+    //return client.startActivity(AdbApplication.CHROME_ADT);
 
     // Setup port forwarding to 2424 on the device.
     return client.forwardTcp(2424, 2424).then((_) {
