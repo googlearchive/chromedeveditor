@@ -158,6 +158,11 @@ abstract class ProgressMonitor {
   num _work = 0;
   bool _cancelled = false;
   Completer _cancelledCompleter;
+  StreamController _cancelController = new StreamController.broadcast();
+
+  // The job itself can listen to the cancel event, and do the appropriate
+  // action.
+  Stream get onCancel => _cancelController.stream;
 
   /**
    * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
@@ -211,9 +216,11 @@ abstract class ProgressMonitor {
   set cancelled(bool val) {
     _cancelled = val;
 
+    _cancelController.add(true);
+
     if (_cancelledCompleter != null) {
-      _cancelledCompleter.completeError(new UserCancelledException());
-      _cancelledCompleter = null;
+      //_cancelledCompleter.completeError(new UserCancelledException());
+      //_cancelledCompleter = null;
     }
   }
 
@@ -269,3 +276,25 @@ class _ProgressMonitorImpl extends ProgressMonitor {
     manager._monitorDone(this, job);
   }
 }
+
+/**
+ *  Listenes to the cancel task event and notifies the running job.
+ * The implementing job must implemnt the onCancel to take proper
+ * action on being cancelled.
+ */
+ abstract class TaskCancel {
+  bool _cancelled = false;
+  get cancelled => _cancelled;
+
+  ProgressMonitor _monitor;
+
+  TaskCancel(this._monitor) {
+    _monitor.onCancel.listen((_) {
+      _cancelled = true;
+      onCancel();
+    });
+  }
+
+  onCancel();
+}
+
