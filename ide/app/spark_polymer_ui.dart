@@ -30,7 +30,10 @@ class SparkPolymerUI extends SparkWidget {
   @observable bool showWipProjectTemplates = true;
   @observable bool chromeOS = true;
 
+  @observable bool showNoFileFilterMatches = false;
+
   SparkSplitView _splitView;
+  InputElement _fileFilter;
 
   SparkPolymerUI.created() : super.created();
 
@@ -39,21 +42,19 @@ class SparkPolymerUI extends SparkWidget {
     super.enteredView();
 
     _splitView = $['splitView'];
+    _fileFilter = $['fileFilter'];
   }
 
   void modelReady(SparkModel model) {
     assert(_model == null);
     _model = model;
-    refreshFromModel();
     // Changed selection may mean some menu items become disabled.
-    // TODO(ussuri): Perhaps listen to more events, e.g. tab switch.
-    _model.eventBus
-        .onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED).listen((_) {
-      refreshFromModel();
-    });
+    _model.eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
+        .listen(refreshFromModel);
+    refreshFromModel();
   }
 
-  void refreshFromModel() {
+  void refreshFromModel([_]) {
     // TODO(ussuri): This also could possibly be done using PathObservers.
     developerMode = SparkFlags.developerMode;
     useAceThemes = SparkFlags.useAceThemes;
@@ -132,5 +133,26 @@ class SparkPolymerUI extends SparkWidget {
     e..preventDefault()..stopPropagation();
     AnchorElement anchor = e.target;
     window.open(anchor.href, '_blank');
+  }
+
+  void fileFilterKeydownHandler(KeyboardEvent e) {
+    if (e.keyCode == KeyCode.ESC) {
+      e..preventDefault()..stopPropagation();
+      _fileFilter.value = '';
+      _model.filterFilesList(null);
+      _updateFileFilterStatus(showNoMatchesFound: false);
+    }
+  }
+
+  void fileFilterInputHandler(Event e) {
+    _model.filterFilesList(_fileFilter.value).then((bool matchesFound) {
+      _updateFileFilterStatus(showNoMatchesFound: !matchesFound);
+    });
+  }
+
+  void _updateFileFilterStatus({bool showNoMatchesFound}) {
+    _fileFilter.classes.toggle('active', _fileFilter.value.isNotEmpty);
+    showNoFileFilterMatches = showNoMatchesFound;
+    deliverChanges();
   }
 }

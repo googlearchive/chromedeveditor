@@ -53,61 +53,11 @@ body {
   opacity: 0;
 }
 
-#search {
-  background: #fff url(images/search.png) 10px center no-repeat;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  height: 36px;
-  flex: 1;
-  font: inherit;
-  font-size: 14px;
-  margin: 2px;
-  padding: 10px 10px 10px 44px;
-  right: 50px;
-}
-
-#search:focus {
-  border: 1px solid #9DBEFF;
-  outline: none;
-}
-
-#runButton, #mainMenu {
-  height: 36px;
-}
-
-#mainMenu {
-  margin: 0 3px;
-  width: 24px;
-}
-
-#runButton {
-  margin: 0 2px 0 4px;
-}
-
-#fileNotFoundPlaceholder {
-  color: #ccc;
-  display: block;
-  font-size: 18px;
-  margin-top: 40px;
-  text-align: center;
-}
-
-#fileNotFoundPlaceholder.hidden {
-  display: none;
-}
-
 #editorArea {
-  overflow: hidden;
-}
-
-#sparkStatusContainer {
   position: absolute;
-  bottom: 10px;
-  left: 0;
-  pointer-events: none;
-  right: 0;
-  text-align: center;
-  z-index: 101;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .ace_gutter-cell {
@@ -576,17 +526,3 @@ li.outlineItem a {
   margin-right: 100px;
 }
 
-#navigationButtons {
-  position: absolute;
-  right: 0;
-  z-index: 150;
-  width: 100px;
-}
-
-#navigationButtons spark-button {
-  height: 36px;
-}
-
-#navigationButtons spark-button > i {
-  font-size: 16px;
-}
