@@ -1964,6 +1964,8 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
       resource = context.first;
     }
 
+    if (resource == null) return;
+
     deployContainer = getAppContainerFor(resource);
 
     if (deployContainer == null) {
