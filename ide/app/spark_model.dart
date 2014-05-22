@@ -44,11 +44,9 @@ abstract class SparkModel extends Application {
   void setGitSettingsResetDoneVisible(bool visible);
 
   /**
-   * Filter files in the tree view and return the virtual success of the
-   * operation, i.e. true if:
-   * * matches are found for [filter], or
-   * * there are no files to filter, or
-   * * [filter] is empty
+   * Should filter files in the tree view and return the success of the
+   * operation, i.e. true if matches are found for [filter],
+   * or [filter] is null.
    */
   Future<bool> filterFilesList(String filter);
 

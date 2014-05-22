@@ -946,6 +946,11 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
+  /**
+   * Filters the files using [filterString] as part of the name and returns
+   * true if matches are found. If [filterString] is null, cancells all
+   * filtering and returns true.
+   */
   bool performFilter(String filterString) {
     if (filterString != null && filterString.isEmpty) {
       filterString = null;
