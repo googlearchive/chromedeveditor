@@ -65,11 +65,11 @@ class MockHttpRequestClone extends MockHttpRequest {
         break;
       case PRIVATE_REPO_AUTHORIZATION_ERROR:
         if (!verifyCredentials(_username, _password))
-          throw new GitException(GitErrorConstants.GIT_AUTH_ERROR);
+          throw new GitException(GitErrorConstants.GIT_AUTH_REQUIRED);
         break;
       case PRIVATE_REPO_WITH_CREDENTIALS:
         if (!verifyCredentials(_username, _password))
-          throw new GitException(GitErrorConstants.GIT_AUTH_ERROR);
+          throw new GitException(GitErrorConstants.GIT_AUTH_REQUIRED);
         break;
     }
 

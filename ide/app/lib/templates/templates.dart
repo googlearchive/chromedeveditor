@@ -69,6 +69,9 @@ class ProjectBuilder {
       if (r != null) return r;
     }
 
+    r = project.getChild('index.html');
+    if (r != null) return r;
+
     return project;
   }
 }

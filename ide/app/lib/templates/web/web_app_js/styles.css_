@@ -1,8 +1,6 @@
-body {
+#greeting {
   background-color: #F8F8F8;
   font-family: 'Open Sans', sans-serif;
-  font-size: 14px;
-  font-weight: normal;
-  line-height: 1.2em;
+  font-size: 24px;
   margin: 15px;
 }

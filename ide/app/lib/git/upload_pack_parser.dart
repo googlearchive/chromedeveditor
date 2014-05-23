@@ -14,6 +14,7 @@ import 'file_operations.dart';
 import 'object.dart';
 import 'objectstore.dart';
 import 'pack.dart';
+import 'utils.dart';
 
 class PktLine {
   int offset;
@@ -38,6 +39,9 @@ class UploadPackParser {
   var objects = null;
   var remoteLines = null;
   Uint8List data;
+  Cancel _cancel;
+
+  UploadPackParser([this._cancel]);
 
   /**
    * Parses a git http smart protcol request result.
@@ -98,7 +102,7 @@ class UploadPackParser {
     Blob packDataBlob = new Blob(packDataLines);
 
     return FileOps.readBlob(packDataBlob, "ArrayBuffer").then((data) {
-      Pack pack = new Pack(data, store);
+      Pack pack = new Pack(data, store, _cancel);
       return pack.parseAll(progress).then((_) {
         objects = pack.objects;
         return new PackParseResult(pack.objects, pack.data, shallow, common);

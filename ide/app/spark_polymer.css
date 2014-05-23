@@ -53,49 +53,11 @@ body {
   opacity: 0;
 }
 
-#search {
-  background: #fff url(images/search.png) 10px center no-repeat;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  height: 36px;
-  flex: 1;
-  font: inherit;
-  font-size: 14px;
-  margin: 2px;
-  padding: 10px 10px 10px 44px;
-  right: 50px;
-}
-
-#search:focus {
-  border: 1px solid #9DBEFF;
-  outline: none;
-}
-
-#runButton, #mainMenu {
-  height: 36px;
-}
-
-#fileNotFoundPlaceholder {
-  color: #ccc;
-  display: block;
-  font-size: 18px;
-  margin-top: 40px;
-  text-align: center;
-}
-
-#fileNotFoundPlaceholder.hidden {
-  display: none;
-}
-
 #editorArea {
-  overflow: hidden;
-}
-
-#sparkStatus {
-  bottom: 10px;
-  left: 10px;
   position: absolute;
-  z-index: 101;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 .ace_gutter-cell {
@@ -304,6 +266,10 @@ button.ace_searchbtn_close:active {
   width: 0;
 }
 
+.fileview-filename-container.project .fileStatus {
+  top: 12px;
+}
+
 .fileview-filename-container .fileStatus.error {
   width: 5px;
   background: #F55;
@@ -319,6 +285,10 @@ button.ace_searchbtn_close:active {
   background: #9CC;
 }
 
+.listview-cell-highlighted .fileview-filename-container .fileStatus {
+  background: #fff;
+}
+
 .fileview-filename-container .gitStatus {
   border-radius: 2px;
   background: #999;
@@ -330,9 +300,17 @@ button.ace_searchbtn_close:active {
   transition: width 0.4s;
 }
 
+.fileview-filename-container.project .gitStatus {
+  top: 12px;
+}
+
 .fileview-filename-container .gitStatus.dirty {
   width: 5px;
   background: #008ab8;
+}
+
+.listview-cell-highlighted .fileview-filename-container .gitStatus {
+  background: #fff;
 }
 
 .fileview-filename-container .menu {
@@ -358,6 +336,11 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container:hover .filename {
+}
+
+.fileview-separator .line {
+  margin-top: 15px;
+  border-top: 1px solid #ddd;
 }
 
 #fileViewArea {
@@ -410,6 +393,36 @@ button.ace_searchbtn_close:active {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0);
+}
+
+.nameField.typeFolder::before {
+  content: '\f114'; /* fa-folder-o */
+  font-family: 'FontAwesome';
+  margin-right: 3px;
+}
+
+.nameField.typeFile::before {
+  content: '\f016'; /* fa-file-o */
+  font-family: 'FontAwesome';
+  margin-right: 4px;
+}
+
+.nameField.typeTextFile::before {
+  content: '\f0f6'; /* fa-file-text-o */
+  font-family: 'FontAwesome';
+  margin-right: 4px;
+}
+
+.nameField.typeHtmlFile::before {
+  content: '\f1c9'; /* fa-file-code-o */
+  font-family: 'FontAwesome';
+  margin-right: 4px;
+}
+
+.nameField.typeImageFile::before {
+  content: '\f1c5'; /* fa-file-image-o */
+  font-family: 'FontAwesome';
+  margin-right: 4px;
 }
 
 #modalBackdrop {
@@ -518,9 +531,8 @@ li.outlineItem.topLevel.class {
 
 #outline {
   background: rgba(0, 0, 0, 0.8);
-  border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  bottom: 45px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  bottom: 40px;
   overflow-y: auto;
   padding: 10px;
   position: absolute;
@@ -549,3 +561,8 @@ li.outlineItem.topLevel.class {
 li.outlineItem a {
   white-space: nowrap;
 }
+
+.tabview-tabbar {
+  margin-right: 95px;
+}
+

@@ -85,7 +85,7 @@ class Commit {
 
   static Future checkTreeChanged(ObjectStore store, String parent,
       String sha) {
-    if (parent.isEmpty) {
+    if (parent != null && parent.isEmpty) {
       return null;
     } else {
       return store.retrieveObject(parent, ObjectTypes.COMMIT_STR).then(
@@ -158,8 +158,9 @@ class Commit {
 
     return walkFiles(options.root, store).then((String sha) {
       // update the index.
-      store.index.onCommit();
-      return createCommit(options, parent, sha, refName);
+      return store.index.onCommit().then((_) {
+        return createCommit(options, parent, sha, refName);
+      });
     });
   }
 }

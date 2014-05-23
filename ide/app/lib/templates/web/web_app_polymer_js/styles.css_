@@ -1,8 +1,6 @@
 #greeting {
   font-family: 'Open Sans', sans-serif;
   font-size: 24px;
-  font-weight: normal;
-  line-height: 1.2em;
   margin: 15px;
 }
 

@@ -48,7 +48,7 @@ class TreeViewCell implements ListViewCell {
     _element = templateClone.querySelector('.treeviewcell');
 
     _embeddedCellContainer = _element.querySelector('.treeviewcell-content');
-    int margin = (_row.level * 10);
+    int margin = _row.level == 0 ? 0 : (_row.level - 1) * 15 + 1;
     _embeddedCellContainer.classes.add('treeviewcell-content');
     _embeddedCellContainer.style.left = '${margin + 20}px';
     int offsetX = margin + 20;
@@ -65,7 +65,7 @@ class TreeViewCell implements ListViewCell {
 
     // Adds an arrow in front the cell.
     _arrow = _element.querySelector('.treeviewcell-disclosure');
-    _arrow.style.left = '${margin + 4}px';
+    _arrow.style.left = '${margin + 5}px';
     _applyExpanded(_row.expanded);
     if (!hasChildren) {
       _arrow.style.visibility = 'hidden';

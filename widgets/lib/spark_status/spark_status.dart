@@ -45,7 +45,7 @@ class SparkStatus extends SparkWidget {
 
   @published set spinning(bool value) {
     _spinning = value;
-    _throbber.classes.toggle('spinning', _spinning);
+    _update();
   }
 
   @published String get defaultMessage =>
@@ -98,10 +98,9 @@ class SparkStatus extends SparkWidget {
   bool get _showingTemporaryMessage => _temporaryMessage != null;
 
   void _update() {
-    String text = _calculateMessage();
-    _container.classes.toggle('default', _showingDefaultMessage);
-    _container.classes.toggle('progressStyle', _showingProgressMessage);
-    _container.classes.toggle('temporary', _showingTemporaryMessage);
+    _throbber.classes.toggle('spinning',
+        _spinning && (_temporaryMessage == null));
+    final String text = _calculateMessage();
     _container.classes.toggle('hidden', text.isEmpty);
     _label.text = text;
   }

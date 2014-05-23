@@ -50,7 +50,7 @@ class Outline {
         html.TemplateElement).content;
     templateClone = template.clone(true);
     _outlineButton = templateClone.querySelector('#toggleOutlineButton');
-    _outlineButton.onClick.listen((e) => _toggle());
+    _outlineButton.onClick.listen((e) => toggle());
 
     _container.children.add(_outlineButton);
     _prefs.getValue('OutlineCollapsed').then((String data) {
@@ -138,9 +138,9 @@ class Outline {
   }
 
   /**
-   * Toggles visibility of the outline.  Returns true if showing.
+   * Toggles visibility of the outline.
    */
-  void _toggle() {
+  void toggle() {
     _outlineDiv.classes.toggle('collapsed');
     String value = _outlineDiv.classes.contains('collapsed') ? 'true' : 'false';
     _prefs.setValue('OutlineCollapsed', value);

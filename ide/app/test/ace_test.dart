@@ -64,6 +64,7 @@ class MockAceManager implements AceManager {
   bool isFileExtensionEditable(String extension) => false;
   void buildOutline() { }
   Stream get onGotoDeclaration => null;
+  NavigationLocation get navigationLocation => null;
 }
 
 class MockAceEditor implements TextEditor {
@@ -86,6 +87,7 @@ class MockAceEditor implements TextEditor {
 
   Stream get onDirtyChange => null;
   Stream get onModification => null;
+  Future whenReady = null;
 
   Future save() => new Future.value();
 
@@ -99,7 +101,7 @@ class MockAceEditor implements TextEditor {
 
   void select(Span span) { }
   void format() { }
-  void navigateToDeclaration() { }
+  Future navigateToDeclaration([Duration timeLimit]) => null;
 }
 
 class MockEditSession implements EditSession {
