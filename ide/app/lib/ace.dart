@@ -218,7 +218,14 @@ class DartEditor extends TextEditor {
         aceManager._aceEditor.cursorPosition);
 
     Future declarationFuture = aceManager._analysisService.getDeclarationFor(
-        file, offset).then((svc.Declaration declaration) {
+        file, offset);
+
+    if (timeLimit != null) {
+      declarationFuture = declarationFuture.timeout(timeLimit, onTimeout: () =>
+          throw new TimeoutException("navigateToDeclaration timed out"));
+    }
+
+    return declarationFuture.then((svc.Declaration declaration) {
       if (declaration != null) {
         if (declaration is svc.SourceDeclaration) {
           workspace.File targetFile = declaration.getFile(file.project);
@@ -234,13 +241,6 @@ class DartEditor extends TextEditor {
       }
       return declaration;
     });
-
-    if (timeLimit != null) {
-      declarationFuture.timeout(timeLimit, onTimeout: () =>
-          throw new TimeoutException("navigateToDeclaration timed out"));
-    }
-
-    return declarationFuture;
   }
 }
 
