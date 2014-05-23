@@ -33,6 +33,7 @@ if [ "$DRONE" = "true" ]; then
   # TODO(devoncarew): disable dart2js tests on drone...
   # https://github.com/dart-lang/spark/issues/2054
   #dart tool/test_runner.dart --dartium --appPath=build/deploy-out/web
+  echo "testing of JavaScript version temporarily disabled (#2054)"
 else
   dart tool/test_runner.dart --chrome
 fi
