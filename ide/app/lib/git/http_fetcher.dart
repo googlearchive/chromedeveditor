@@ -13,6 +13,7 @@ import 'dart:typed_data';
 import 'exception.dart';
 import 'objectstore.dart';
 import 'upload_pack_parser.dart';
+import 'utils.dart';
 
 final int COMMIT_LIMIT = 32;
 
@@ -68,7 +69,7 @@ class HttpFetcher {
         }
       }
     });
-    xhr.onError.listen((_) => completer.completeError(new HttpResult.fromXhr(xhr)));
+    xhr.onError.listen((_) => completer.completeError(HttpGitException.fromXhr(xhr)));
     String bodySize = (body.size / 1024).toStringAsFixed(2);
     xhr.upload.onProgress.listen((event) {
       // TODO add progress.
@@ -84,7 +85,7 @@ class HttpFetcher {
 
   Future<PackParseResult> fetchRef(List<String> wantRefs,
       List<String> haveRefs, String shallow, int depth, List<String> moreHaves,
-      noCommon, Function progress) {
+      noCommon, Function progress, [Cancel cancel]) {
     Completer completer = new Completer();
     String url = _makeUri('/git-upload-pack', {});
     String body = _refWantRequst(wantRefs, haveRefs, shallow, depth, moreHaves);
@@ -116,20 +117,22 @@ class HttpFetcher {
         }
 
         // TODO add UploadPackParser class.
-        UploadPackParser parser = getUploadPackParser();
+        UploadPackParser parser = getUploadPackParser(cancel);
         return parser.parse(buffer, store, packProgress).then(
             (PackParseResult obj) {
            completer.complete(obj);
+        }, onError: (e) {
+          completer.completeError(e);
         });
       }
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.send(body);
@@ -139,7 +142,8 @@ class HttpFetcher {
   /*
    * Get a new instance of uploadPackParser. Exposed for tests to inject fake parser.
    */
-  UploadPackParser getUploadPackParser() => new UploadPackParser();
+  UploadPackParser getUploadPackParser([Cancel cancel])
+      => new UploadPackParser(cancel);
 
   /*
    * Get a new instance of HttpRequest. Exposed for tests to inject fake xhr.
@@ -177,17 +181,17 @@ class HttpFetcher {
         if (xhr.status == 200) {
           return completer.complete(xhr.responseText);
         } else {
-          completer.completeError(new HttpResult.fromXhr(xhr));
+          completer.completeError(HttpGitException.fromXhr(xhr));
         }
       }
     });
 
     xhr.onError.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.onAbort.listen((_) {
-      completer.completeError(new HttpResult.fromXhr(xhr));
+      completer.completeError(HttpGitException.fromXhr(xhr));
     });
 
     xhr.send();
@@ -339,14 +343,27 @@ class HttpFetcher {
   }
 }
 
-class HttpResult {
-  final int status;
-  final String statusText;
+class HttpGitException extends GitException {
+  int status;
+  String statusText;
 
-  HttpResult(this.status, this.statusText);
+  HttpGitException(this.status, this.statusText, [String errorCode,
+      String message, bool canIgnore]) : super(errorCode, message, canIgnore);
 
-  HttpResult.fromXhr(HttpRequest request) :
-      status = request.status, statusText = request.statusText;
+  static fromXhr(HttpRequest request) {
+    String errorCode;
+
+    if (request.status == 401) {
+      errorCode = GitErrorConstants.GIT_AUTH_ERROR;
+    } else if (request.status == 404) {
+        errorCode = GitErrorConstants.GIT_HTTP_404_ERROR;
+    } else {
+      errorCode = GitErrorConstants.GIT_HTTP_ERROR;
+    }
+
+    return new HttpGitException(request.status, request.statusText, errorCode,
+        "", false);
+  }
 
   /**
    * Returns `true` if the status is 401 Unauthorized.

@@ -447,8 +447,12 @@ class FutureHelper {
     void nextElement(_) {
       if (iterator.moveNext()) {
         nextTick().then((_) {
-          f(iterator.current)
+          try {
+            f(iterator.current)
              .then(nextElement,  onError: (e) => doneSignal.completeError(e));
+          } catch (e) {
+            doneSignal.completeError(e);
+          }
         });
       } else {
         doneSignal.complete(null);

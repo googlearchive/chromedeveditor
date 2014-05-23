@@ -1140,12 +1140,14 @@ abstract class SparkActionWithDialog extends SparkAction {
   List<Element> getElements(String selectors) =>
       _dialog.element.querySelectorAll(selectors);
 
-  Element _triggerOnReturn(String selectors) {
+  Element _triggerOnReturn(String selectors, [bool hideDialog = true]) {
     var element = _dialog.element.querySelector(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
-        _dialog.hide();
+        if (hideDialog) {
+          _dialog.hide();
+        }
       }
     });
     return element;
@@ -2160,17 +2162,59 @@ class GitCloneAction extends SparkActionWithDialog {
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
+    _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
+  }
+
+  void _onClose() {
+     _hide();
   }
 
   void _invoke([Object context]) {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
 
+    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+
     _show();
   }
 
+  void _toggleProgressVisible(bool visible) {
+    SparkProgress progressComponent = getElement('#cloneProgress');
+    progressComponent.visible = visible;
+    progressComponent.deliverChanges();
+  }
+
+  void _restoreDialog() {
+    SparkButton cloneButton = getElement('#clone');
+    cloneButton.enabled = true;
+    cloneButton.text = "Clone";
+    SparkButton closeButton = getElement('#cloneClose');
+    closeButton.enabled = true;
+    _toggleProgressVisible(false);
+  }
+
   void _commit() {
+
+    SparkProgress progressComponent = getElement('#cloneProgress');
+    progressComponent.progressMessage = "Cloning...";
+    _toggleProgressVisible(true);
+
+    SparkButton closeButton = getElement('#cloneClose');
+    closeButton.enabled = false;
+    closeButton.deliverChanges();
+
+    SparkButton cloneButton = getElement('#clone');
+    cloneButton.enabled = false;
+    cloneButton.text = "Cloning...";
+    cloneButton.deliverChanges();
+
+    progressComponent.onCancelled.listen((_) {
+      SparkButton cloneButton = getElement('#clone');
+      cloneButton.text = "Cancelling...";
+    });
+
+    ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
+
     String url = _repoUrlElement.value;
     String projectName;
 
@@ -2189,8 +2233,29 @@ class GitCloneAction extends SparkActionWithDialog {
       projectName = projectName.substring(0, projectName.length - 4);
     }
 
-    _GitCloneJob job = new _GitCloneJob(url, projectName, spark);
-    spark.jobManager.schedule(job);
+    _GitCloneTask cloneTask = new _GitCloneTask(url, projectName, spark, monitor);
+
+    cloneTask.run().then((_) {
+      spark.showSuccessMessage('Cloned $projectName');
+    }).catchError((e) {
+      if (e is SparkException && e.errorCode
+          == SparkErrorConstants.AUTH_REQUIRED) {
+        spark.showErrorMessage('Authorization Required',
+          'Authorization required - private git repositories are not yet supported.');
+      } else if (e is SparkException &&
+          e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
+        spark.showSuccessMessage('Clone cancelled');
+      } else if (e is SparkException && e.errorCode
+          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+        spark.showErrorMessage('Error cloning ${projectName}',
+            'Repositories with sub-modules are currently not supported.');
+      } else {
+        spark.showErrorMessage('Error cloning ${projectName}', '${e}');
+      }
+    }).whenComplete(() {
+      _restoreDialog();
+      _hide();
+    });
   }
 }
 
@@ -2597,20 +2662,31 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
   }
 }
 
-class _GitCloneJob extends Job {
+class CloneTaskCancel extends TaskCancel {
+
+  CloneTaskCancel(ProgressMonitor monitor) : super(monitor);
+
+  void performCancel() {
+    ScmProvider scmProvider = getProviderType('git');
+    scmProvider.cancelClone();
+  }
+}
+
+class _GitCloneTask {
   String url;
   String _projectName;
   Spark spark;
+  ProgressMonitor _monitor;
+  CloneTaskCancel _cancel;
 
-  _GitCloneJob(this.url, String projectName, this.spark)
-      : super("Cloning ${projectName}…") {
-    _projectName = projectName;
+  _GitCloneTask(this.url, this._projectName, this.spark, this._monitor) {
+    _cancel = new CloneTaskCancel(_monitor);
   }
 
-  Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+  Future run() {
 
-    return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
+    return spark.projectLocationManager.createNewFolder(_projectName).then(
+        (LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
@@ -2625,7 +2701,6 @@ class _GitCloneJob extends Job {
         } else {
           root = new ws.FolderChildRoot(location.parent, location.entry);
         }
-
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Cloned into ${project.name}');
 
@@ -2647,18 +2722,6 @@ class _GitCloneJob extends Job {
           spark.workspace.save();
         });
       });
-    }).catchError((e) {
-      if (e is SparkException && e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
-        spark.showErrorMessage(
-            'Authorization Required',
-            'Authorization required - private git repositories are not yet supported.');
-      } else if (e is SparkException && e.errorCode
-          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
-        spark.showErrorMessage('Error cloning ${_projectName}',
-            'Repositories with submodules are currently not supported.');
-      } else {
-        spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
-      }
     });
   }
 }

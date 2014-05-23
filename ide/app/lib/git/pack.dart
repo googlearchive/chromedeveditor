@@ -44,8 +44,9 @@ class Pack {
   int _offset = 0;
   ObjectStore _store;
   List<PackedObject> objects = [];
+  Cancel _cancel;
 
-  Pack(this.data, [this._store]);
+  Pack(this.data, [this._store, this._cancel]);
 
   Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
 
@@ -53,6 +54,14 @@ class Pack {
 
   void _advance(int length) {
     _offset += length;
+  }
+
+  bool _checkCancel() {
+    if (_cancel != null) {
+      return _cancel.check();
+    } else {
+      return true;
+    }
   }
 
   void _matchPrefix() {
@@ -254,6 +263,7 @@ class Pack {
 
        Future parse(_) {
 
+         _checkCancel();
          PackedObject object = _matchObjectAtOffset(_offset);
          object.crc = getCrc32(data.sublist(object.offset, _offset));
 
@@ -275,6 +285,7 @@ class Pack {
        }
 
        Future expandDeltified(PackedObject obj) {
+         _checkCancel();
          return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
            deltifiedObj.data = null;
            // TODO(grv) : add progress.
