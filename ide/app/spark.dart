@@ -1746,6 +1746,10 @@ class SearchAction extends SparkAction {
 }
 
 class GotoDeclarationAction extends SparkAction {
+  static const String TIMEOUT_ERROR =
+      "Declaration information not available until analyzing is finished";
+  static const String NOT_FOUND_ERROR = "No declaration found";
+
   AnalyzerService _analysisService;
 
   GotoDeclarationAction(Spark spark)
@@ -1764,7 +1768,12 @@ class GotoDeclarationAction extends SparkAction {
   void gotoDeclaration() {
     Editor editor = spark.getCurrentEditor();
     if (editor is TextEditor) {
-      editor.navigateToDeclaration();
+      editor.navigateToDeclaration(new Duration(milliseconds: 500)).then(
+          (Declaration declaration) {
+            if (declaration == null) spark.showSuccessMessage(NOT_FOUND_ERROR);
+          }).catchError((TimeoutException e) {
+            spark.showSuccessMessage(TIMEOUT_ERROR);
+          });
     }
   }
 }

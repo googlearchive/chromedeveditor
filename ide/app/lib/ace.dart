@@ -125,7 +125,7 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  void navigateToDeclaration() { }
+  Future navigateToDeclaration([Duration timeLimit]) => new Future.value();
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -213,12 +213,19 @@ class DartEditor extends TextEditor {
     outlineScrollPosition = aceManager.outline.scrollPosition;
   }
 
-  void navigateToDeclaration() {
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
     int offset = _session.document.positionToIndex(
         aceManager._aceEditor.cursorPosition);
 
-    aceManager._analysisService.getDeclarationFor(file, offset).then(
-        (svc.Declaration declaration) {
+    Future declarationFuture = aceManager._analysisService.getDeclarationFor(
+        file, offset);
+
+    if (timeLimit != null) {
+      declarationFuture = declarationFuture.timeout(timeLimit, onTimeout: () =>
+          throw new TimeoutException("navigateToDeclaration timed out"));
+    }
+
+    return declarationFuture.then((svc.Declaration declaration) {
       if (declaration != null) {
         if (declaration is svc.SourceDeclaration) {
           workspace.File targetFile = declaration.getFile(file.project);
@@ -232,6 +239,7 @@ class DartEditor extends TextEditor {
           html.window.open(declaration.url, "spark_doc");
         }
       }
+      return declaration;
     });
   }
 }
