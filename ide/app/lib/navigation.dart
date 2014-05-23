@@ -12,7 +12,7 @@ import 'dart:async';
 import 'workspace.dart';
 
 abstract class NavigationLocationProvider{
-  NavigationLocation get navigationLocation => null;
+  NavigationLocation get navigationLocation;
 }
 
 /**
@@ -94,7 +94,6 @@ class NavigationManager {
     }
     _position++;
     _locations.add(newLocation);
-    print('location: ${_position} ${_locations}');
 
     if (fireEvent) {
       _controller.add(newLocation);
