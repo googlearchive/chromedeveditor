@@ -107,8 +107,8 @@
 #navigationButtons {
   position: absolute;
   right: 0;
-  width: 100px;
-  padding: 0;
+  width: 95px;
+  padding: 0 0 0 10px;
   z-index: 150;
 }
 
