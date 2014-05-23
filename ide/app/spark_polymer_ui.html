@@ -268,12 +268,15 @@
               placeholder="https://github.com/dart-lang/spark.git"
               spellcheck="false" autosave focused>
         </div>
+        <spark-progress id="cloneProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
+        <spark-button id="cloneClose" overlay-toggle data-dismiss="modal">
+          Close
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button id="clone" primary data-dismiss="modal">
           Clone
         </spark-button>
       </div>

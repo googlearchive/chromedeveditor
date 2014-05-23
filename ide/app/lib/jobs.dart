@@ -219,8 +219,8 @@ abstract class ProgressMonitor {
     _cancelController.add(true);
 
     if (_cancelledCompleter != null) {
-      //_cancelledCompleter.completeError(new UserCancelledException());
-      //_cancelledCompleter = null;
+      _cancelledCompleter.completeError(new UserCancelledException());
+      _cancelledCompleter = null;
     }
   }
 
