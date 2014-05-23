@@ -469,12 +469,15 @@
         <div class="form-group">
            <div id="gitCommitList"></div>
         </div>
+        <spark-progress id="gitPushProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
+        <spark-button id="gitPushClose" overlay-toggle data-dismiss="modal">
+          Close
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button id="gitPush" overlay-toggle primary data-dismiss="modal">
           Push
         </spark-button>
       </div>
