@@ -402,7 +402,6 @@ class EditorManager implements EditorProvider {
   void activate(Editor editor) {
     _EditorState state = _getStateFor(editor.file);
     _switchState(state);
-    _aceContainer.createDialog(editor.file.name);
   }
 }
 
