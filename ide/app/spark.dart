@@ -2525,7 +2525,11 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
     _commitsList = getElement('#gitCommitList');
   }
 
+  void _onClose() => _hide();
+
   void _invoke([context]) {
+    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+    _triggerOnReturn("#gitPush", false);
     project = context.first;
 
     gitOperations = spark.scmManager.getScmOperationsFor(project);
@@ -2565,8 +2569,48 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _push() {
-    _GitPushJob job = new _GitPushJob(gitOperations, _gitUsername, _gitPassword, spark);
-    spark.jobManager.schedule(job);
+    SparkProgress progressComponent = getElement('#cloneProgress');
+    progressComponent.progressMessage = "Pushing...";
+    _toggleProgressVisible(true);
+
+    SparkButton closeButton = getElement('#gitPushClose');
+    closeButton.enabled = false;
+    closeButton.deliverChanges();
+
+    SparkButton pushButton = getElement('#gitPush');
+    pushButton.enabled = false;
+    pushButton.text = "Pushing...";
+    pushButton.deliverChanges();
+
+    ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
+    _GitPushTask task = new _GitPushTask(gitOperations, _gitUsername, _gitPassword,
+        spark, monitor);
+    task.run().then((_) {
+      spark.showSuccessMessage('Changes pushed successfully');
+
+    }).catchError((e) {
+      spark.showErrorMessage('Error while pushing changes', e.toString());
+
+    }).whenComplete(() {
+      _restoreDialog();
+      _hide();
+    });
+
+  }
+
+  void _toggleProgressVisible(bool visible) {
+    SparkProgress progressComponent = getElement('#gitPushProgress');
+    progressComponent.visible = visible;
+    progressComponent.deliverChanges();
+  }
+
+  void _restoreDialog() {
+    SparkButton cloneButton = getElement('#gitPush');
+    cloneButton.enabled = true;
+    cloneButton.text = "Push";
+    SparkButton closeButton = getElement('#GitPushClose');
+    closeButton.enabled = true;
+    _toggleProgressVisible(false);
   }
 
   void _commit() {
@@ -2873,24 +2917,19 @@ class _OpenFolderJob extends Job {
   }
 }
 
-class _GitPushJob extends Job {
+class _GitPushTask {
   GitScmProjectOperations gitOperations;
   Spark spark;
   String username;
   String password;
+  ProgressMonitor monitor;
 
-  _GitPushJob(this.gitOperations, this.username, this.password, this.spark)
-      : super("Pushing changes…") {
+  _GitPushTask(this.gitOperations, this.username, this.password, this.spark,
+      this.monitor){
   }
 
-  Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
-
-    return gitOperations.push(username, password).then((_) {
-      spark.showSuccessMessage('Changes pushed successfully');
-    }).catchError((e) {
-      spark.showErrorMessage('Error while pushing changes', e.toString());
-    });
+  Future run() {
+    return gitOperations.push(username, password);
   }
 }
 
