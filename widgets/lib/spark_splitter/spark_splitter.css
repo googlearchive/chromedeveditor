@@ -13,6 +13,7 @@
      Then, z-index in #draggable becomes relative to :host.
      Read more about stacking context here:
      https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context*/
+  -webkit-transform: scaleZ(1);
 }
 
 :host([handle]:host) {
@@ -31,7 +32,7 @@
 
 #draggable {
   position: absolute;
-  z-index: 150;
+  z-index: 1;
 }
 
 :host(.vertical:host) #draggable {
