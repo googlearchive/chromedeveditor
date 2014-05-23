@@ -537,54 +537,6 @@ class AceManager {
     }
   }
 
-  /**
-   * Show an overlay dialog to tell the user that a binary file cannot be
-   * shown.
-   *
-   * TODO(dvh): move this logic to editors/editor_area.
-   * See https://github.com/dart-lang/spark/issues/906
-   */
-  void createDialog(String filename) {
-    if (_editorElement == null) {
-      return;
-    }
-    html.Element dialog = _editorElement.querySelector('.editor-dialog');
-    if (dialog != null) {
-      // Dialog already exists.
-      return;
-    }
-
-    dialog = new html.Element.div();
-    dialog.classes.add("editor-dialog");
-
-    // Add an overlay dialog using the template #editor-dialog.
-    html.DocumentFragment template =
-        (html.querySelector('#editor-dialog') as html.TemplateElement).content;
-    html.DocumentFragment templateClone = template.clone(true);
-    html.Element element = templateClone.querySelector('.editor-dialog');
-    element.classes.remove('editor-dialog');
-    dialog.append(element);
-
-    // Set actions of the dialog.
-    html.ButtonElement button = dialog.querySelector('.view-as-text-button');
-    button.onClick.listen((_) {
-      dialog.classes.add("transition-hidden");
-      focus();
-    });
-    html.Element link = dialog.querySelector('.always-view-as-text-button');
-    link.onClick.listen((_) {
-      dialog.classes.add("transition-hidden");
-      delegate.setShowFileAsText(currentFile.name, true);
-      focus();
-    });
-
-    if (delegate.canShowFileAsText(filename)) {
-      dialog.classes.add('hidden');
-    }
-
-    _editorElement.append(dialog);
-  }
-
   void clearMarkers() => currentSession.clearAnnotations();
 
   Future<String> getKeyBinding() {
