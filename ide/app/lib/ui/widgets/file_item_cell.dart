@@ -74,11 +74,12 @@ class FileItemCell implements ListViewCell {
     } else if (resource is File) {
       if (isImageFilename(resource.name)) {
         fileNameElement.classes.toggle('typeImageFile', true);
-      } else if (!resource.name.contains('.')) {
-        // Files without extensions.
-        fileNameElement.classes.toggle('typeFile', true);
-      } else {
+      } else if (isXmlFilename(resource.name)) {
+        fileNameElement.classes.toggle('typeHtmlFile', true);
+      } else if (isTextFilename(resource.name)) {
         fileNameElement.classes.toggle('typeTextFile', true);
+      } else {
+        fileNameElement.classes.toggle('typeFile', true);
       }
     }
   }
