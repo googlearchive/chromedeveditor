@@ -245,7 +245,7 @@ class OutlineTopLevelVariable extends OutlineTopLevelItem {
   html.SpanElement _typeSpan;
   
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
-      : super(data, "variable"){
+      : super(data, "variable") {
     if (returnType != "") {
       _typeSpan = new html.SpanElement();
       _typeSpan.text = returnType;
