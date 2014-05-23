@@ -64,6 +64,7 @@ class MockAceManager implements AceManager {
   bool isFileExtensionEditable(String extension) => false;
   void buildOutline() { }
   Stream get onGotoDeclaration => null;
+  NavigationLocation get navigationLocation => null;
 }
 
 class MockAceEditor implements TextEditor {
