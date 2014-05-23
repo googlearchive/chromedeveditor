@@ -2195,14 +2195,15 @@ class GitCloneAction extends SparkActionWithDialog {
 
     SparkButton closeButton = getElement('#cloneClose');
     closeButton.enabled = false;
+    closeButton.deliverChanges();
 
     SparkButton cloneButton = getElement('#clone');
     cloneButton.enabled = false;
     cloneButton.text = "Clonning...";
+    cloneButton.deliverChanges();
 
     progressComponent.onCancelled.listen((_) {
       SparkButton cloneButton = getElement('#clone');
-      cloneButton.enabled = false;
       cloneButton.text = "Cancelling...";
     });
 
