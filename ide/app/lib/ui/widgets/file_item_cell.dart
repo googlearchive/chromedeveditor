@@ -74,7 +74,7 @@ class FileItemCell implements ListViewCell {
     } else if (resource is File) {
       if (isImageFilename(resource.name)) {
         fileNameElement.classes.toggle('typeImageFile', true);
-      } else if (isXmlFilename(resource.name)) {
+      } else if (isWebLikeFilename(resource.name)) {
         fileNameElement.classes.toggle('typeHtmlFile', true);
       } else if (isTextFilename(resource.name)) {
         fileNameElement.classes.toggle('typeTextFile', true);

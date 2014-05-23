@@ -396,31 +396,31 @@ button.ace_searchbtn_close:active {
 }
 
 .nameField.typeFolder::before {
-  content: '\f114';
+  content: '\f114'; /* fa-folder-o */
   font-family: 'FontAwesome';
   margin-right: 3px;
 }
 
 .nameField.typeFile::before {
-  content: '\f016';
+  content: '\f016'; /* fa-file-o */
   font-family: 'FontAwesome';
   margin-right: 4px;
 }
 
 .nameField.typeTextFile::before {
-  content: '\f0f6';
+  content: '\f0f6'; /* fa-file-text-o */
   font-family: 'FontAwesome';
   margin-right: 4px;
 }
 
 .nameField.typeHtmlFile::before {
-  content: '\f1c9';
+  content: '\f1c9'; /* fa-file-code-o */
   font-family: 'FontAwesome';
   margin-right: 4px;
 }
 
 .nameField.typeImageFile::before {
-  content: '\f1c5';
+  content: '\f1c5'; /* fa-file-image-o */
   font-family: 'FontAwesome';
   margin-right: 4px;
 }

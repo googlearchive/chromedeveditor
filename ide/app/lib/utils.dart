@@ -16,10 +16,10 @@ import 'package:logging/logging.dart';
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
-final RegExp _imageFileType = new RegExp(r'\.(jpe?g|png|gif|ico)$',
+final RegExp _imageFileTypes = new RegExp(r'\.(jpe?g|png|gif|ico)$',
     caseSensitive: false);
 
-final RegExp _xmlFileType = new RegExp(r'\.(htm?l|xml)$',
+final RegExp _webFileTypes = new RegExp(r'\.(css|htm?l|xml)$',
     caseSensitive: false);
 
 chrome.DirectoryEntry _packageDirectoryEntry;
@@ -143,12 +143,12 @@ Future<String> getAppContents(String path) {
 /**
  * Returns true if the given [filename] matches common image file name patterns.
  */
-bool isImageFilename(String filename) => _imageFileType.hasMatch(filename);
+bool isImageFilename(String filename) => _imageFileTypes.hasMatch(filename);
 
 /**
- * Returns true if the given [filename] matches xml/html file types.
+ * Returns true if the given [filename] matches html/css/xml file types.
  */
-bool isXmlFilename(String filename) => _xmlFileType.hasMatch(filename);
+bool isWebLikeFilename(String filename) => _webFileTypes.hasMatch(filename);
 
 /**
  * Returns true if we can open the given file as text.
