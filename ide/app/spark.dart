@@ -124,11 +124,11 @@ abstract class Spark
     initPackageManagers();
     initServices();
     initScmManager();
-    initNavigationManager();
 
     initAceManager();
     initEditorManager();
     initEditorArea();
+    initNavigationManager();
 
     createActions();
 
@@ -286,7 +286,7 @@ abstract class Spark
   }
 
   void initNavigationManager() {
-    _navigationManager = new NavigationManager();
+    _navigationManager = new NavigationManager(_editorManager);
     _navigationManager.onNavigate.listen((NavigationLocation location) {
       _selectFile(location.file).then((_) {
         if (location.selection != null) {

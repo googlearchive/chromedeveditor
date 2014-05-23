@@ -729,6 +729,15 @@ class AceManager {
     int lineHeight = html.querySelector('.ace_gutter-cell').clientHeight;
     _aceEditor.session.scrollTop = _aceEditor.session.document.length * lineHeight;
   }
+
+  NavigationLocation get navigationLocation {
+    if (currentFile == null) return null;
+    ace.Range range = _aceEditor.selection.range;
+    int offsetStart = _aceEditor.session.document.positionToIndex(range.start);
+    int offsetEnd = _aceEditor.session.document.positionToIndex(range.end);
+    Span span = new Span(offsetStart, offsetEnd - offsetStart);
+    return new NavigationLocation(currentFile, span);
+  }
 }
 
 class ThemeManager {

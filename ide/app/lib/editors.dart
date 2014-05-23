@@ -14,6 +14,7 @@ import 'dart:html' as html;
 
 import 'ace.dart' as ace;
 import 'event_bus.dart';
+import 'navigation.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
@@ -73,7 +74,7 @@ class FileModifiedBusEvent extends BusEvent {
 /**
  * Manage a list of open editors.
  */
-class EditorManager implements EditorProvider {
+class EditorManager implements EditorProvider, NavigationLocationProvider {
   final Workspace _workspace;
   final ace.AceManager _aceContainer;
   final SparkPreferences _prefs;
@@ -404,6 +405,8 @@ class EditorManager implements EditorProvider {
     _switchState(state);
     _aceContainer.createDialog(editor.file.name);
   }
+
+  NavigationLocation get navigationLocation => _aceContainer.navigationLocation;
 }
 
 /**
