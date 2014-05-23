@@ -37,12 +37,17 @@ class Outline {
 
   Outline(this._analyzer, this._container, this._prefs) {
     // Use template to create the UI of outline.
-    html.DocumentFragment template = (html.querySelector('#outline-template') as html.TemplateElement).content;
+    html.DocumentFragment template =
+        (html.querySelector('#outline-template') as
+        html.TemplateElement).content;
     html.DocumentFragment templateClone = template.clone(true);
     _outlineDiv = templateClone.querySelector('#outline');
-    _outlineDiv.onMouseWheel.listen((html.MouseEvent event) => event.stopPropagation());
+    _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
+        event.stopPropagation());
     _rootList = templateClone.querySelector('#outline ul');
-    template = (html.querySelector('#outline-button-template') as html.TemplateElement).content;
+    template =
+        (html.querySelector('#outline-button-template') as
+        html.TemplateElement).content;
     templateClone = template.clone(true);
     _outlineButton = templateClone.querySelector('#toggleOutlineButton');
     _outlineButton.onClick.listen((e) => _toggle());
@@ -98,7 +103,9 @@ class Outline {
 
     _buildCompleter = new Completer();
 
-    _currentOutlineOperation = _analyzer.getOutlineFor(code, name).asStream().listen((services.Outline model) => _populate(model));
+    _currentOutlineOperation =
+        _analyzer.getOutlineFor(code, name).asStream().listen(
+            (services.Outline model) => _populate(model));
     _currentOutlineOperation.onDone(() => _buildCompleter.complete);
 
     return _buildCompleter.future;
@@ -145,13 +152,16 @@ class Outline {
     return item;
   }
 
-  OutlineTopLevelVariable _addVariable(services.OutlineTopLevelVariable data) => _addItem(new OutlineTopLevelVariable(data));
+  OutlineTopLevelVariable _addVariable(services.OutlineTopLevelVariable data) =>
+      _addItem(new OutlineTopLevelVariable(data));
 
-  OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) => _addItem(new OutlineTopLevelFunction(data));
+  OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
+      _addItem(new OutlineTopLevelFunction(data));
 
   OutlineClass _addClass(services.OutlineClass data) {
     OutlineClass classItem = new OutlineClass(data, _outlineItemsByOffset);
-    classItem.onChildSelected.listen((event) => _childSelectedController.add(event));
+    classItem.onChildSelected.listen((event) =>
+        _childSelectedController.add(event));
     _addItem(classItem);
     return classItem;
   }
@@ -292,11 +302,14 @@ class OutlineClass extends OutlineTopLevelItem {
     }
   }
 
-  OutlineMethod addMethod(services.OutlineMethod data) => _addItem(new OutlineMethod(data));
+  OutlineMethod addMethod(services.OutlineMethod data) =>
+      _addItem(new OutlineMethod(data));
 
-  OutlineProperty addProperty(services.OutlineProperty data) => _addItem(new OutlineProperty(data));
+  OutlineProperty addProperty(services.OutlineProperty data) =>
+      _addItem(new OutlineProperty(data));
 
-  OutlineAccessor addAccessor(services.OutlineAccessor data) => _addItem(new OutlineAccessor(data));
+  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
+      _addItem(new OutlineAccessor(data));
 }
 
 abstract class OutlineClassMember extends OutlineItem {
