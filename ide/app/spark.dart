@@ -2218,7 +2218,12 @@ class GitCloneAction extends SparkActionWithDialog {
     String url = _repoUrlElement.value;
     String projectName;
 
-    if (url.isEmpty) return;
+    if (url.isEmpty) {
+      _restoreDialog();
+      spark.showErrorMessage('Error in Cloning',
+          'Repository url required.');
+      return;
+    }
 
     // TODO(grv): Add verify checks.
 
