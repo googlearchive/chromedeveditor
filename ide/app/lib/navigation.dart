@@ -67,8 +67,7 @@ class NavigationManager {
     _position++;
   }
 
-  void gotoLocation(NavigationLocation newLocation,
-                    {bool fireEvent: true}) {
+  void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
     if (canGoForward()) {
       _locations.removeRange(_position + 1, _locations.length);
     }
