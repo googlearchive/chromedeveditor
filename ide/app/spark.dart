@@ -2215,7 +2215,7 @@ class GitCloneAction extends SparkActionWithDialog {
     if (url.isEmpty) {
       _restoreDialog();
       spark.showErrorMessage('Error in Cloning',
-          'Project name cannot be empty');
+          'Repository url required.');
       return;
     }
 
