@@ -1772,10 +1772,10 @@ class GotoDeclarationAction extends SparkAction {
     if (editor is TextEditor) {
       editor.navigateToDeclaration(new Duration(milliseconds: 500)).then(
           (Declaration declaration) {
-            if (declaration == null) spark.showSuccessMessage(NOT_FOUND_ERROR);
-          }).catchError((TimeoutException e) {
-            spark.showSuccessMessage(TIMEOUT_ERROR);
-          });
+        if (declaration == null) spark.showSuccessMessage(NOT_FOUND_ERROR);
+      }).catchError((TimeoutException e) {
+        spark.showSuccessMessage(TIMEOUT_ERROR);
+      });
     }
   }
 }
