@@ -286,21 +286,7 @@ class GitScmProvider extends ScmProvider {
       });
     }).catchError((e) {
       activeClone = null;
-      if (e is GitException && e.errorCode
-          == GitErrorConstants.GIT_AUTH_REQUIRED) {
-        throw new SparkException(e.toString(),
-            SparkErrorConstants.AUTH_REQUIRED);
-      } else if (e is GitException && e.errorCode
-          == GitErrorConstants.GIT_CLONE_CANCEL) {
-        throw new SparkException(e.toString(),
-            SparkErrorConstants.GIT_CLONE_CANCEL, true);
-      } else if ( e is GitException && e.errorCode
-          == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
-        throw new SparkException(e.toString(),
-            SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
-      } else {
-        throw new SparkException(e.toString());
-      }
+      throw SparkException.fromException(e);
     });
   }
 

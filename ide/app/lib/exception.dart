@@ -4,6 +4,8 @@
 
 library spark.exception;
 
+import 'git/exception.dart';
+
 /**
  * A wrapper class for all errors thrown inside spark. Each error is represented
  * by a unique [errorCode] pre-defined by SparkErrorConstants class.
@@ -17,6 +19,32 @@ class SparkException implements Exception {
   bool canIgnore = false;
 
   SparkException(this.message, [this.errorCode, this.canIgnore]);
+
+  static SparkException fromException(Exception e) {
+    if (e is GitException) {
+      return _fromGitException(e);
+    } else if (e != null) {
+      throw new SparkException(e.toString());
+    } else {
+      throw new SparkException("Unknown error.");
+    }
+  }
+
+  static SparkException _fromGitException(GitException e) {
+    if (e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
+      return new SparkException(e.toString(),
+            SparkErrorConstants.AUTH_REQUIRED);
+    } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
+      return new SparkException(e.toString(),
+        SparkErrorConstants.GIT_CLONE_CANCEL, true);
+    } else if (e.errorCode
+        == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
+      return new SparkException(e.toString(),
+        SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
+    } else {
+      throw new SparkException(e.toString());
+    }
+  }
 
   String toString() => errorCode == null ?
       "SparkException: $message" : "SparkException($errorCode): $message";
