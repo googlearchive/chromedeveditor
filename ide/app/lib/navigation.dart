@@ -46,6 +46,15 @@ class NavigationManager {
     }
   }
 
+  // For unit tests.
+  NavigationLocation get currentLocation {
+    if (_position >= 0 && _position < _locations.length) {
+      return _locations[_position];
+    } else {
+      return null;
+    }
+  }
+
   NavigationLocation get _editorCurrentLocation =>
       _locationProvider.navigationLocation;
 
@@ -85,6 +94,7 @@ class NavigationManager {
     }
     _position++;
     _locations.add(newLocation);
+    print('location: ${_position} ${_locations}');
 
     if (fireEvent) {
       _controller.add(newLocation);
