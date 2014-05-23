@@ -270,7 +270,7 @@ class Clone {
 
   /**
    * Calls the [func] with given [args] and [namedArgs] which returns a future.
-   * On completion checks the cancel object and calls onCancel if the operation
+   * On completion checks the cancel object and calls performCancel if the operation
    * is cancelled.
    */
   Future _callMethod(Function func, List args,
@@ -293,7 +293,7 @@ class CloneCancel extends Cancel {
 
   CloneCancel() : super(false);
 
-  onCancel() {
+  void performCancel() {
     throw new GitException(GitErrorConstants.GIT_CLONE_CANCEL);
   }
 }

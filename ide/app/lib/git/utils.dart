@@ -11,7 +11,6 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
-import 'exception.dart';
 import 'fast_sha.dart';
 import 'file_operations.dart';
 
@@ -117,7 +116,7 @@ void nopFunction() => null;
 /**
  * This class defines a cancellable object.
  * A caller must call check function to find out if the operation has been
- * cancelled. The check function calls the onCancel handler if operation
+ * cancelled. The check function calls the performCancel handler if operation
  * is cancelled.
  */
 abstract class Cancel {
@@ -132,12 +131,12 @@ abstract class Cancel {
 
   bool check() {
     if (_cancel) {
-      onCancel();
+      performCancel();
       return false;
     } else {
       return true;
     }
   }
 
-  void onCancel();
+  void performCancel();
 }

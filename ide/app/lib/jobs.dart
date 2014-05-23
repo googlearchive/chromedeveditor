@@ -278,7 +278,7 @@ class _ProgressMonitorImpl extends ProgressMonitor {
 }
 
 /**
- *  Listenes to the cancel task event and notifies the running job.
+ * Listenes to the cancel task event and notifies the running job.
  * The implementing job must implemnt the onCancel to take proper
  * action on being cancelled.
  */
@@ -291,10 +291,10 @@ class _ProgressMonitorImpl extends ProgressMonitor {
   TaskCancel(this._monitor) {
     _monitor.onCancel.listen((_) {
       _cancelled = true;
-      onCancel();
+      performCancel();
     });
   }
 
-  onCancel();
+  void performCancel();
 }
 

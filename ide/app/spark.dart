@@ -1143,7 +1143,7 @@ abstract class SparkActionWithDialog extends SparkAction {
   List<Element> getElements(String selectors) =>
       _dialog.element.querySelectorAll(selectors);
 
-  Element _triggerOnReturn(String selectors, [bool hideDialog=true]) {
+  Element _triggerOnReturn(String selectors, [bool hideDialog = true]) {
     var element = _dialog.element.querySelector(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
@@ -2190,7 +2190,7 @@ class GitCloneAction extends SparkActionWithDialog {
   void _commit() {
 
     SparkProgress progressComponent = getElement('#cloneProgress');
-    progressComponent.progressMessage = "Clonning...";
+    progressComponent.progressMessage = "Cloning...";
     _toggleProgressVisible(true);
 
     SparkButton closeButton = getElement('#cloneClose');
@@ -2199,7 +2199,7 @@ class GitCloneAction extends SparkActionWithDialog {
 
     SparkButton cloneButton = getElement('#clone');
     cloneButton.enabled = false;
-    cloneButton.text = "Clonning...";
+    cloneButton.text = "Cloning...";
     cloneButton.deliverChanges();
 
     progressComponent.onCancelled.listen((_) {
@@ -2230,19 +2230,19 @@ class GitCloneAction extends SparkActionWithDialog {
     _GitCloneTask cloneTask = new _GitCloneTask(url, projectName, spark, monitor);
 
     cloneTask.run().then((_) {
-      spark.showSuccessMessage('Successfully Cloned');
+      spark.showSuccessMessage('Cloned $projectName');
     }).catchError((e) {
       if (e is SparkException && e.errorCode
           == SparkErrorConstants.AUTH_REQUIRED) {
         spark.showErrorMessage('Authorization Required',
           'Authorization required - private git repositories are not yet supported.');
       } else if (e is SparkException &&
-        e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
+          e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
         spark.showSuccessMessage('Clone cancelled');
       } else if (e is SparkException && e.errorCode
-        == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
         spark.showErrorMessage('Error cloning ${projectName}',
-            'Repositories with submodules are currently not supported.');
+            'Repositories with sub-modules are currently not supported.');
       } else {
         spark.showErrorMessage('Error cloning ${projectName}', '${e}');
       }
@@ -2660,7 +2660,7 @@ class CloneTaskCancel extends TaskCancel {
 
   CloneTaskCancel(ProgressMonitor monitor) : super(monitor);
 
-  void onCancel() {
+  void performCancel() {
     ScmProvider scmProvider = getProviderType('git');
     scmProvider.cancelClone();
   }
