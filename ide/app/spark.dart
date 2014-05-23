@@ -2202,7 +2202,7 @@ class GitCloneAction extends SparkActionWithDialog {
 
     progressComponent.onCancelled.listen((_) {
       SparkButton cloneButton = getElement('#clone');
-      clonecloButton.enabled = false;
+      cloneButton.enabled = false;
       cloneButton.text = "Cancelling...";
     });
 
@@ -2230,17 +2230,13 @@ class GitCloneAction extends SparkActionWithDialog {
 
     cloneTask.run().then((_) {
       spark.showSuccessMessage('Successfully Cloned');
-      _hide();
     }).catchError((e) {
-      print(e);
       if (e is SparkException && e.errorCode
           == SparkErrorConstants.AUTH_REQUIRED) {
-        print('some exception');
         spark.showErrorMessage('Authorization Required',
           'Authorization required - private git repositories are not yet supported.');
       } else if (e is SparkException &&
         e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
-        print('clone cancelled');
       } else if (e is SparkException && e.errorCode
         == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
         spark.showErrorMessage('Error cloning ${projectName}',
