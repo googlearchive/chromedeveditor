@@ -68,11 +68,13 @@ class NavigationManager {
   }
 
   void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
+    NavigationLocation previousLocation = _editorCurrentLocation;
+    if (previousLocation == newLocation) return;
+
     if (canGoForward()) {
       _locations.removeRange(_position + 1, _locations.length);
     }
 
-    NavigationLocation previousLocation = _editorCurrentLocation;
     if (previousLocation != null) {
       if (_position < _locations.length) {
         _locations[_position] = previousLocation;
@@ -101,6 +103,11 @@ class NavigationLocation {
 
   NavigationLocation(this.file, [this.selection = null]);
 
+  bool operator==(NavigationLocation other) {
+    if (other is! NavigationLocation) return false;
+    return file == other.file && selection == other.selection;
+  }
+
   String toString() => selection == null ? '[${file}]' : '[${file}, ${selection}]';
 }
 
@@ -112,6 +119,11 @@ class Span {
   final int length;
 
   Span(this.offset, [this.length = 0]);
+
+  bool operator==(Span other) {
+    if (other is! Span) return false;
+    return offset == other.offset && other.length == other.length;
+  }
 
   String toString() => '${offset}:${length}';
 }
