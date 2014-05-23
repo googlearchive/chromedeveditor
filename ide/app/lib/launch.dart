@@ -8,6 +8,7 @@
 library spark.launch;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:html' show window;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -28,6 +29,12 @@ import 'workspace.dart';
 final Logger _logger = new Logger('spark.launch');
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
+
+final String SPARK_NIGHTLY_KEY
+    = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwqXKrcvbi1a1IjFM5COs07Ee9xvPyOSh9dhEF6kwBGjAH6/4F7MHOfPk+W04PURi707E8SsS2iCkvrMiJPh4GnrZ3fWqFUzlsAcUljcYbkyorKxglwdZEXWbFgcKVR/uzuzXD8mOcuXRLu0YyVSdEGzhfZ1HkeMQCKEncUCL5ziE4ZkZJ7I8YVhVG+uiROeMg3zjxxSQrYHOfG5HOqmVslRPCfyiRbIHH3JPD0lax5FudngdKy0+1nkkqVJCpRSf75cRRnxGPjdEvNzTEFmf5oGFxSVs7iXoVQvNXB35Qfyw5rV6N+JyERdu6a7xEnz9lbw41m/noKInlfP+uBQuaQIDAQAB";
+
+final String SPARK_RELEASE_KEY
+    = "";
 
 /**
  * Manages all the launches and calls the appropriate delegate.
@@ -195,8 +202,24 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     return getAppContainerFor(resource) != null;
   }
 
+
+  Future updateManifest(chrome.DirectoryEntry dir) {
+    print(dir.name);
+
+    return dir.getFile('manifest.json').then((entry) {
+      return entry.readText().then((content) {
+        var manifestDict = JSON.decode(content);
+
+        manifestDict['key'] = 'somethingnew';
+        return entry.writeText(new JsonPrinter().print(manifestDict));
+      });
+    });
+  }
+
   Future run(Resource resource) {
     Container launchContainer = getAppContainerFor(resource);
+    window.console.log(launchContainer.entry);
+    return updateManifest(launchContainer.entry).then((_) {
 
     return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
       // TODO: Use the returned appId once it has the correct results.
@@ -213,6 +236,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
       } else {
         return management.launchApp(id);
       }
+    });
     });
   }
 
@@ -471,6 +495,60 @@ class Dart2JsServlet extends PicoServlet {
         return response;
       }
     }).whenComplete(() => completer.complete());
+  }
+}
+
+/**
+ * Pretty print Json text.
+ *
+ * Usage:
+ *     String str = new JsonPrinter().print(jsonObject);
+ */
+class JsonPrinter {
+  String _in = '';
+
+  JsonPrinter();
+
+  /**
+   * Given a structured, json-like object, print it to a well-formatted, valid
+   * json string.
+   */
+  String print(dynamic json) {
+    return _print(json) + '\n';
+  }
+
+  String _print(var obj) {
+    if (obj is List) {
+      return _printList(obj);
+    } else if (obj is Map) {
+      return _printMap(obj);
+    } else if (obj is String) {
+      return '"${obj}"';
+    } else {
+      return '${obj}';
+    }
+  }
+
+  String _printList(List list) {
+    return "[${_indent()}${list.map(_print).join(',${_newLine}')}${_unIndent()}]";
+  }
+
+  String _printMap(Map map) {
+    return "{${_indent()}${map.keys.map((key) {
+      return '"${key}": ${_print(map[key])}';
+    }).join(',${_newLine}')}${_unIndent()}}";
+  }
+
+  String get _newLine => '\n${_in}';
+
+  String _indent() {
+    _in += '  ';
+    return '\n${_in}';
+  }
+
+  String _unIndent() {
+    _in = _in.substring(2);
+    return '\n${_in}';
   }
 }
 
