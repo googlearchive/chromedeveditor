@@ -24,7 +24,7 @@
   transform: translateX(-50%);
 }
 
-/* TODO(ussuri): The values in 2 translateX()'s below are very ad-hoc.
+/* TODO(ussuri): The values in the 2 translateX()'s below are very ad-hoc.
    They currently align well with the menu button icon in Spark, but
    don't work well e.g. for the one in examples/spark_menu_button. Fix.
  */
@@ -35,6 +35,7 @@
 }
 
 [valign=left] #overlay {
+  /* NOTE: Don't use an odd percentage here; see above why. */
   -webkit-transform: translateX(-10px);
 }
 
