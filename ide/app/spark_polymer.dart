@@ -123,6 +123,13 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
   
+  Future importFolder([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFolder(resources))
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
+  }
+
   Future importFile([List<ws.Resource> resources]) {
     return _beforeSystemModal()
         .then((_) => super.importFile(resources))
@@ -130,13 +137,6 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
 
-  Future importFolder([List<ws.Resource> resources]) {
-    return _beforeSystemModal()
-        .then((_) => super.importFolder(resources))
-        .then((_) => _systemModalComplete())
-        .catchError((e) => _systemModalComplete());
-  }
-  
   static set backdropShowing(bool showing) {
     var appModal = querySelector("#modalBackdrop");
     appModal.style.display = showing ? "block" : "none";

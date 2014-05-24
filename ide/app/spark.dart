@@ -527,14 +527,11 @@ abstract class Spark
     });
   }
   
-//  Future importFolder() {
-//    return 
-//  }
-  
   Future importFile([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_FILE);
-    return chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
       
       if (entry != null) {
@@ -546,10 +543,11 @@ abstract class Spark
     });
   }
 
-  void importFolder([List<ws.Resource> resources]) {
+  Future importFolder([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
         ws.Folder folder = resources.first;
