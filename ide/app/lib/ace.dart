@@ -638,7 +638,6 @@ class AceManager {
       buildOutline();
       session.onChangeScrollTop.listen((_) => Timer.run(() {
         if (outline.visible) {
-          _aceEditor.firstVisibleRow;
           int firstCursorOffset = currentSession.document.positionToIndex(
               new ace.Point(_aceEditor.firstVisibleRow, 0));
           int lastCursorOffset = currentSession.document.positionToIndex(
