@@ -465,7 +465,7 @@ li.outlineItem.topLevel.class {
 }
 
 .outlineItem.topLevel.function, .outlineItem.method,
-    .outlineItem.topLevel.function > a, .outlineItem.method > a {
+.outlineItem.topLevel.function > a, .outlineItem.method > a {
   color: #888;
 }
 
@@ -474,25 +474,35 @@ li.outlineItem.topLevel.class {
 }
 
 .outlineItem.accessor,
-    .outlineItem.accessor > a {
+.outlineItem.accessor > a {
   color: #77c;
 }
 
 .outlineItem.accessor.getter > a:before,
-    .outlineItem.accessor.getter > a:before {
+.outlineItem.accessor.getter > a:before {
   content: 'get ';
   color: #888;
 }
 
 .outlineItem.accessor.setter > a:before,
-    .outlineItem.accessor.setter > a:before {
+.outlineItem.accessor.setter > a:before {
   content: 'set ';
   color: #888;
 }
 
 .outlineItem.topLevel.variable, .outlineItem.property,
-    .outlineItem.topLevel.variable > a, .outlineItem.property > a {
+.outlineItem.topLevel.variable > a, .outlineItem.property > a {
   color: #77c;
+}
+
+.outlineItem.topLevel.variable .returnType,
+.outlineItem.property .returnType {
+  opacity: .8;
+}
+
+.outlineItem.topLevel.variable .returnType:before,
+.outlineItem.property .returnType:before {
+  content: ' \02014  ';
 }
 
 #toggleOutlineButton {

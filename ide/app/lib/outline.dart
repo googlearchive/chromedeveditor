@@ -202,17 +202,22 @@ class Outline {
 }
 
 abstract class OutlineItem {
-  html.LIElement _element;
   services.OutlineEntry _data;
+  html.LIElement _element;
   html.AnchorElement _anchor;
+  html.SpanElement _nameSpan;
   String get displayName => _data.name;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
+    
     _anchor = new html.AnchorElement(href: "#");
-    _anchor.text = displayName;
-
     _element.append(_anchor);
+    
+    _nameSpan = new html.SpanElement()
+        ..text = displayName;
+    _anchor.append(_nameSpan);
+    
     _element.classes.add("outlineItem $cssClassName");
   }
 
@@ -236,8 +241,20 @@ abstract class OutlineTopLevelItem extends OutlineItem {
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
+  services.OutlineTopLevelVariable get _variableData => _data;
+  html.SpanElement _typeSpan;
+  
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
-      : super(data, "variable");
+      : super(data, "variable") {
+    if (returnType != "") {
+      _typeSpan = new html.SpanElement();
+      _typeSpan.text = returnType;
+      _typeSpan.classes.add("returnType");
+      _anchor.append(_typeSpan);
+    }
+  }
+
+  String get returnType => _variableData.returnType;
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
@@ -306,8 +323,20 @@ class OutlineMethod extends OutlineClassMember {
 }
 
 class OutlineProperty extends OutlineClassMember {
+  html.SpanElement _typeSpan;
+
   OutlineProperty(services.OutlineProperty data)
-      : super(data, "property");
+      : super(data, "property") {
+    if (returnType != "") {
+      _typeSpan = new html.SpanElement();
+      _typeSpan.text = returnType;
+      _typeSpan.classes.add("returnType");
+      _anchor.append(_typeSpan);
+    }
+  }
+  
+  services.OutlineProperty get _propertyData => _data;
+  String get returnType => _propertyData.returnType;
 }
 
 class OutlineAccessor extends OutlineClassMember {
