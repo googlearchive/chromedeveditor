@@ -10,7 +10,6 @@
          if we remove this, we'd have to review entire UI */
 #button {
   outline: none;
-  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
   height: 100%;
 }

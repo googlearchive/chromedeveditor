@@ -16,7 +16,7 @@
   border-radius: 3px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   margin-left: 14px;
-  margin-top: 11px;
+  margin-top: 7px;
   -webkit-transform: translateX(-50%);
 }
 
@@ -32,7 +32,7 @@
 
 :host([valign=left]:host) #overlay {
   /* NOTE: Don't use an odd percentage here; see above why. */
-  -webkit-transform: translateX(-10px);
+  -webkit-transform: translateX(-24px);
 }
 
 .arrow {
