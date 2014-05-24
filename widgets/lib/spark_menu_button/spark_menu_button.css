@@ -8,9 +8,6 @@
 
 :host {
   display: inline-block;
-  box-sizing: border-box;
-  width: 30px;
-  height: 30px;
 }
 
 #overlay {
@@ -21,20 +18,19 @@
   margin-left: 14px;
   margin-top: 7px;
   -webkit-transform: translateX(-50%);
-  transform: translateX(-50%);
 }
 
 /* TODO(ussuri): The values in the 2 translateX()'s below are very ad-hoc.
    They currently align well with the menu button icon in Spark, but
    don't work well e.g. for the one in examples/spark_menu_button. Fix.
  */
-[valign=right] #overlay {
+:host([valign=right]:host) #overlay {
   /* NOTE: calc() and 100% are important -- if just a percentage is used,
      e.g. translateX(-91%), the fonts may get blurry. */
   -webkit-transform: translateX(calc(-100% + 38px));
 }
 
-[valign=left] #overlay {
+:host([valign=left]:host) #overlay {
   /* NOTE: Don't use an odd percentage here; see above why. */
   -webkit-transform: translateX(-24px);
 }
@@ -49,19 +45,19 @@
   cursor: pointer;
 }
 
-.arrow-inner {
+#arrowInner {
   border-bottom-color: white;
   margin-top: -15px;
   top: 1px;
 }
 
-[valign=right] .arrow {
+:host([valign=right]:host) .arrow {
   position: relative;
   left: -7px;
   margin-left: 91%;
 }
 
-[valign=left] .arrow {
+:host([valign=left]:host) .arrow {
   position: relative;
   left: -7px;
   margin-left: 9%;

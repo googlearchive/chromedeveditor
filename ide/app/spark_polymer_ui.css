@@ -47,8 +47,8 @@
   -moz-user-select: none;
   overflow: hidden;
   background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .dialog a.close {

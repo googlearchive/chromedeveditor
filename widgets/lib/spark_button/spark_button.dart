@@ -17,12 +17,12 @@ class SparkButton extends SparkWidget {
   @published bool small = false;
   @published bool minPadding = false;
   @published bool noPadding = false;
+  @published bool noBorder = false;
   // TODO(ussuri): Perhaps convert to 'disabled', seems more natural.
   // Also, after switching from Bootstrap to in-house CSS, generalize for all
   // the widgets via SparkWidget attr/CSS.
   @published bool enabled = true;
   @published bool active = false;
-  @published bool noBorder = false;
 
   ButtonElement _button;
 
@@ -44,8 +44,7 @@ class SparkButton extends SparkWidget {
         ..toggle('btn-sm', small)
         ..toggle('enabled', enabled)
         ..toggle('disabled', !enabled)
-        ..toggle('active', active)
-    // NOTE: noPadding is accounted for in the CSS.
-        ..toggle('no-border', noBorder);
+        // NOTE: active, noPadding, noBorder are accounted for in the CSS.
+        ;
   }
 }
