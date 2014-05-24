@@ -21,6 +21,7 @@ import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
 import 'lib/ui/utils/html_utils.dart';
+import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -121,7 +122,21 @@ class SparkPolymer extends Spark {
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
   }
+  
+  Future importFile([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFile(resources))
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
+  }
 
+  Future importFolder([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFolder(resources))
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
+  }
+  
   static set backdropShowing(bool showing) {
     var appModal = querySelector("#modalBackdrop");
     appModal.style.display = showing ? "block" : "none";
