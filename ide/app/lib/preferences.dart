@@ -240,7 +240,7 @@ class _ChromePreferenceStore implements PreferenceStore {
    */
   Future<String> getValue(String key, [String defaultVal]) {
     if (_map.containsKey(key)) {
-      return _map[key];
+      return new Future.value(_map[key]);
     } else {
       return _storageArea.get(key).then((Map<String, String> map) {
         // TODO(ussuri): Shouldn't we cache the just read value in _map?
