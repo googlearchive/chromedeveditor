@@ -7,7 +7,6 @@
 :host {
   display: block;
   border: none;
-  box-sizing: border-box;
   margin: 5px 0;
 }
 
@@ -16,7 +15,6 @@
   display: block;
   min-width: 160px;
   cursor: default;
-  box-sizing: border-box;
 }
 
 ::content spark-menu-item {
