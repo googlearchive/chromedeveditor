@@ -1,7 +1,7 @@
 .listview-cell-highlighted {
-  background-color: #ddf;
+  background-color: #9DBEFF;
 }
 
 .listview-container:focus .listview-cell-highlighted {
-  background-color: #aaf;
+  background-color: #4281f4;
 }

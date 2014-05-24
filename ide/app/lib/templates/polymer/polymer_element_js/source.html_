@@ -1,0 +1,59 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<!--
+##### Example
+
+    <``tagName``></``tagName``>
+
+@element ``tagName``
+@blurb Element providing solution to [...].
+@status [...]
+@url https://.../``tagName``
+-->
+
+<polymer-element name="``tagName``" attributes="title">
+  <template>
+    <link rel="stylesheet" href="``sourceName``.css">
+
+    <div id="title">{{title}}</div>
+    <content></content>
+  </template>
+
+  <script>
+    Polymer('``tagName``', {
+      /**
+       * The `noevent` event is not actually fired from here,
+       * we document it as an example of documenting events.
+       *
+       * @event noevent
+       */
+
+      /**
+       * The `attr` attribute does not yet have a purpose.
+       *
+       * @attribute attr
+       * @type string
+       */
+      title: '',
+
+      ready: function() {
+      },
+
+      /**
+       * This function will be invoked every time `attr` gets changed.
+       */
+      attrChanged: function() {
+      },
+
+      /**
+       * The `task` method does [...]
+       *
+       * @method task
+       * @return {Object} Returns [...].
+       * @param {String} dummy Defines [...].
+       */
+      task: function(dummy) {
+      }
+    });
+  </script>
+</polymer-element>

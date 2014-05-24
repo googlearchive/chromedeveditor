@@ -1,7 +1,0 @@
-{
-  "directories": {
-  },
-  "files": [
-    { "source": "bower.json_", "dest": "bower.json" }
-  ]
-}

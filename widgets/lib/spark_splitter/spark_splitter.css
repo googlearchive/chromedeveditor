@@ -6,28 +6,28 @@
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 
 :host {
-  background-color: #ddd;
+  background-color: #dadada;
   display: block;
   position: relative;
   /* Set a identity transform to make <spark-splitter> to be a stacking context.
      Then, z-index in #draggable becomes relative to :host.
      Read more about stacking context here:
      https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context*/
-  transform: scaleZ(1);
+  -webkit-transform: scaleZ(1);
 }
 
-:host(.vertical-handle) {
-  background: url('handle_vert.png') no-repeat center;
-}
-
-:host(.horizontal-handle) {
-  background: url('handle_horiz.png') no-repeat center;
-}
-
-:host(.vertical-handle), :host(.horizontal-handle) {
+:host([handle]:host) {
   border-left: 1px solid #DDD;
   border-right: 1px solid #DDD;
   background-color: #F7F7F7;
+}
+
+:host([handle].vertical:host) {
+  background: url('handle_vert.png') no-repeat center;
+}
+
+:host([handle].horizontal:host) {
+  background: url('handle_horiz.png') no-repeat center;
 }
 
 #draggable {
@@ -35,18 +35,10 @@
   z-index: 1;
 }
 
-:host(.vertical) #draggable {
-  bottom: 0;
+:host(.vertical:host) #draggable {
   cursor: col-resize;
-  left: -3px;
-  top: 0;
-  width: 7px;
 }
 
-:host(.horizontal) #draggable {
+:host(.horizontal:host) #draggable {
   cursor: row-resize;
-  height: 7px;
-  left: 0;
-  right: 0;
-  top: -3px;
 }

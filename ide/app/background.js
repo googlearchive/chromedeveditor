@@ -45,13 +45,13 @@ App.prototype.launch = function(ui_opt) {
   }
 
   this.editorWin_ = new EditorWindow(this);
-}
+};
 
 App.prototype.switchUi = function() {
   var nextSkinIdx =
       (this.uis_.indexOf(this.settings.ui) + 1) % this.uis_.length;
   this.launch(this.uis_[nextSkinIdx]);
-}
+};
 
 
 // EditorWindow class. Encapsulates the state of a Spark app's main window.
@@ -83,7 +83,7 @@ EditorWindow.prototype.onCreated_ = function(win) {
   this.window = win;
   this.window.contentWindow.addEventListener(
       'DOMContentLoaded', this.onLoad_.bind(this));
-}
+};
 
 // A listener called after the DOM has been constructed for the content window.
 EditorWindow.prototype.onLoad_ = function() {
@@ -99,14 +99,14 @@ EditorWindow.prototype.onLoad_ = function() {
       }
     }.bind(this));
   }
-}
+};
 
 // Destroy the window, if any.
 EditorWindow.prototype.destroy = function() {
   if (this.window) {
     this.window.close();
   }
-}
+};
 
 // Create a new app window.
 chrome.app.runtime.onLaunched.addListener(function(launchData) {

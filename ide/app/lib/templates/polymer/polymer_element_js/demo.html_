@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>``tagName`` Demo</title>
+
+  <script src="bower_components/platform/platform.js"></script>
+  <link rel="import" href="``sourceName``.html">
+</head>
+
+<body unresolved>
+  <p>An example of ``tagName`` looks like this:</p>
+
+  <``tagName`` id="element" title="Hello, I'm &lt;``tagName``&gt;...">
+    <span>...and here are my user-provided contents!<span>
+  </``tagName``>
+</body>
+</html>

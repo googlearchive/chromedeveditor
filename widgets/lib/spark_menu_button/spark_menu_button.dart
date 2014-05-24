@@ -4,6 +4,7 @@
 
 library spark_widgets.menu_button;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -16,7 +17,7 @@ import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends SparkWidget {
-  @published String src = "";
+  @published String icon = "";
   @published dynamic selected;
   @published String valueAttr = "";
   @published bool opened = false;
@@ -26,6 +27,8 @@ class SparkMenuButton extends SparkWidget {
   SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
+  bool _disableClickHandler = false;
+  Timer _timer;
 
   SparkMenuButton.created(): super.created();
 
@@ -38,7 +41,9 @@ class SparkMenuButton extends SparkWidget {
     _menu = $['menu'];
   }
 
-  //* Toggle the opened state of the dropdown.
+  /**
+   * Toggle the opened state of the dropdown.
+   */
   void _toggle(bool inOpened) {
     if (inOpened != opened) {
       opened = inOpened;
@@ -55,18 +60,30 @@ class SparkMenuButton extends SparkWidget {
     }
   }
 
-  void clickHandler(Event e) => _toggle(!opened);
+  void clickHandler(Event e) {
+    if (_disableClickHandler) return;
+    _toggle(!opened);
+  }
 
   void focusHandler(Event e) => _toggle(true);
 
-  void blurHandler(Event e) => _toggle(false);
+  void blurHandler(Event e) {
+    _toggle(false);
+    _disableClickHandler = true;
+    if (_timer != null) _timer.cancel();
+    _timer = new Timer(const Duration(milliseconds: 300), () {
+      _disableClickHandler = false;
+    });
+  }
 
-  //* Handle the on-opened event from the dropdown. It will be fired e.g. when
-  //* mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+  /**
+   * Handle the on-opened event from the dropdown. It will be fired e.g. when
+   * mouse is clicked outside the dropdown (with autoClosedDisabled == false).
+   */
   void overlayOpenedHandler(CustomEvent e) {
     // Autoclosing is the only event we're interested in.
     if (e.detail == false) {
-      opened = false;
+      _toggle(false);
     }
   }
 
@@ -92,7 +109,7 @@ class SparkMenuButton extends SparkWidget {
         if (!opened) opened = true;
         break;
       case KeyCode.ESC:
-        if (opened) opened = false;
+        this.blur();
         break;
       default:
         stopPropagation = false;

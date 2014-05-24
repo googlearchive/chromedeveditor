@@ -14,6 +14,9 @@ library spark.preferences;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:logging/logging.dart';
+
+final Logger _logger = new Logger('preferences');
 
 /**
  * A PreferenceStore backed by `chome.storage.local`.
@@ -281,6 +284,7 @@ class _ChromePreferenceStore implements PreferenceStore {
   void flush() {
     if (_map.isNotEmpty) {
       _storageArea.set(_map);
+      _logger.info('saved preferences: ${_map.keys}');
       _map.clear();
     }
 

@@ -4,6 +4,8 @@
 
 library spark_widgets.button;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -13,26 +15,37 @@ class SparkButton extends SparkWidget {
   @published bool primary = false;
   @published bool large = false;
   @published bool small = false;
+  @published bool minPadding = false;
   @published bool noPadding = false;
+  // TODO(ussuri): Perhaps convert to 'disabled', seems more natural.
+  // Also, after switching from Bootstrap to in-house CSS, generalize for all
+  // the widgets via SparkWidget attr/CSS.
   @published bool enabled = true;
   @published bool active = false;
+  @published bool noBorder = false;
+
+  ButtonElement _button;
 
   SparkButton.created() : super.created();
 
   @override
   void enteredView() {
-    _setClasses();
-    changes.listen((_) => _setClasses());
+    _button = $['button'];
+
+    _refresh();
+    changes.listen((_) => _refresh());
   }
 
-  void _setClasses() {
-    $['button'].classes
+  void _refresh() {
+    _button.classes
         ..toggle('btn-primary', primary)
         ..toggle('btn-default', !primary)
-        ..toggle('disabled', !enabled)
         ..toggle('btn-lg', large)
         ..toggle('btn-sm', small)
         ..toggle('enabled', enabled)
-        ..toggle('active', active);
+        ..toggle('disabled', !enabled)
+        ..toggle('active', active)
+    // NOTE: noPadding is accounted for in the CSS.
+        ..toggle('no-border', noBorder);
   }
 }

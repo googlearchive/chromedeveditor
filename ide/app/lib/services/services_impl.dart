@@ -241,120 +241,147 @@ class AnalyzerServiceImpl extends ServiceImpl {
   }
 
   Future<Map<String, List<Map>>> _buildFiles(List<Map> fileUuids) {
-      Map<String, List<Map>> errorsPerFile = {};
+    Map<String, List<Map>> errorsPerFile = {};
 
-      return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
-        return Future.forEach(fileUuids, (String fileUuid) {
-          return _processFile(sdk, fileUuid).then((analyzer.AnalyzerResult result) {
-            List<analyzer.AnalysisError> errors = result.errors;
-            List<Map> responseErrors = [];
+    return dartSdkFuture.then((analyzer.ChromeDartSdk sdk) {
+      return Future.forEach(fileUuids, (String fileUuid) {
+        return _processFile(sdk, fileUuid).then((analyzer.AnalyzerResult result) {
+          List<analyzer.AnalysisError> errors = result.errors;
+          List<Map> responseErrors = [];
 
-            if (errors != null) {
-              for (analyzer.AnalysisError error in errors) {
-                AnalysisError responseError = new AnalysisError();
-                responseError.message = error.message;
-                responseError.offset = error.offset;
-                analyzer.LineInfo_Location location = result.getLineInfo(error);
-                responseError.lineNumber = location.lineNumber;
-                responseError.errorSeverity =
-                    _errorSeverityToInt(error.errorCode.errorSeverity);
-                responseError.length = error.length;
-                responseErrors.add(responseError.toMap());
-              }
+          if (errors != null) {
+            for (analyzer.AnalysisError error in errors) {
+              AnalysisError responseError = new AnalysisError();
+              responseError.message = error.message;
+              responseError.offset = error.offset;
+              analyzer.LineInfo_Location location = result.getLineInfo(error);
+              responseError.lineNumber = location.lineNumber;
+              responseError.errorSeverity =
+                  _errorSeverityToInt(error.errorCode.errorSeverity);
+              responseError.length = error.length;
+              responseErrors.add(responseError.toMap());
             }
+          }
 
-            return responseErrors;
-          }).then((List<Map> errors) {
-            errorsPerFile[fileUuid] = errors;
-          });
+          return responseErrors;
+        }).then((List<Map> errors) {
+          errorsPerFile[fileUuid] = errors;
         });
-      }).then((_) => errorsPerFile);
-    }
-
-    Future<ServiceActionEvent> createContext(ServiceActionEvent request) {
-      String id = request.data['contextId'];
-      _contexts[id] = new analyzer.ProjectContext(id, dartSdk,
-          new _ServiceContentsProvider(isolate.chromeService));
-      return new Future.value(request.createReponse());
-    }
-
-    Future<ServiceActionEvent> processContextChanges(ServiceActionEvent request) {
-      String id = request.data['contextId'];
-
-      List<String> addedUuids = request.data['added'];
-      List<String> changedUuids = request.data['changed'];
-      List<String> deletedUuids = request.data['deleted'];
-
-      analyzer.ProjectContext context = _contexts[id];
-
-      if (context != null) {
-        return context.processChanges(addedUuids, changedUuids,
-            deletedUuids).then((analyzer.AnalysisResultUuid result) {
-          return new Future.value(request.createReponse(result.toMap()));
-        });
-      } else {
-        return new Future.value(
-            request.createErrorReponse('no context associated with id ${id}'));
-      }
-    }
-
-    Future<ServiceActionEvent> disposeContext(ServiceActionEvent request) {
-      String id = request.data['contextId'];
-      _contexts.remove(id);
-      return new Future.value(request.createReponse());
-    }
-
-    Future<ServiceActionEvent> getOutlineFor(ServiceActionEvent request) {
-      var codeString = request.data['string'];
-      return analyzer.analyzeString(dartSdk, codeString).then((result) {
-        return request.createReponse(_getOutline(result.ast).toMap());
       });
+    }).then((_) => errorsPerFile);
+  }
+
+  Future<ServiceActionEvent> createContext(ServiceActionEvent request) {
+    String id = request.data['contextId'];
+    _contexts[id] = new analyzer.ProjectContext(id, dartSdk,
+        new _ServiceContentsProvider(isolate.chromeService));
+    return new Future.value(request.createReponse());
+  }
+
+  Future<ServiceActionEvent> processContextChanges(ServiceActionEvent request) {
+    String id = request.data['contextId'];
+
+    List<String> addedUuids = request.data['added'];
+    List<String> changedUuids = request.data['changed'];
+    List<String> deletedUuids = request.data['deleted'];
+
+    analyzer.ProjectContext context = _contexts[id];
+
+    if (context != null) {
+      return context.processChanges(addedUuids, changedUuids,
+          deletedUuids).then((analyzer.AnalysisResultUuid result) {
+        return new Future.value(request.createReponse(result.toMap()));
+      });
+    } else {
+      return new Future.value(
+          request.createErrorReponse('no context associated with id ${id}'));
+    }
+  }
+
+  Future<ServiceActionEvent> disposeContext(ServiceActionEvent request) {
+    String id = request.data['contextId'];
+    _contexts.remove(id);
+    return new Future.value(request.createReponse());
+  }
+
+  Future<ServiceActionEvent> getOutlineFor(ServiceActionEvent request) {
+    var codeString = request.data['string'];
+    return analyzer.analyzeString(dartSdk, codeString).then((result) {
+      return request.createReponse(_getOutline(result.ast).toMap());
+    });
+  }
+
+  Future<ServiceActionEvent> getDeclarationFor(ServiceActionEvent request) {
+    analyzer.ProjectContext context = _contexts[request.data['contextId']];
+    String fileUuid = request.data['fileUuid'];
+    int offset = request.data['offset'];
+
+    Declaration declaration = _getDeclarationFor(context, fileUuid, offset);
+    return new Future.value(request.createReponse(
+        declaration != null ? declaration.toMap() : null));
+  }
+
+  Declaration _getDeclarationFor(analyzer.ProjectContext context,
+      String fileUuid, int offset) {
+    analyzer.FileSource source = context.getSource(fileUuid);
+
+    List<analyzer.Source> librarySources =
+        context.context.getLibrariesContaining(source);
+
+    if (librarySources.isEmpty) return null;
+
+    analyzer.CompilationUnit ast =
+        context.context.resolveCompilationUnit2(source, librarySources[0]);
+
+    analyzer.AstNode node =
+        new analyzer.NodeLocator.con1(offset).searchWithin(ast);
+    if (node is! analyzer.SimpleIdentifier) return null;
+
+    analyzer.Element element = analyzer.ElementLocator.locate(node);
+    if (element == null) return null;
+
+    if (element.nameOffset == -1 || element.source == null) {
+      return null;
     }
 
-    Future<ServiceActionEvent> getDeclarationFor(ServiceActionEvent request) {
-      analyzer.ProjectContext context = _contexts[request.data['contextId']];
-      String fileUuid = request.data['fileUuid'];
-      int offset = request.data['offset'];
-
-      Declaration declaration = _getDeclarationFor(context, fileUuid, offset);
-      return new Future.value(request.createReponse(
-          declaration != null ? declaration.toMap() : null));
-    }
-
-    Declaration _getDeclarationFor(analyzer.ProjectContext context,
-        String fileUuid, int offset) {
-      analyzer.FileSource source = context.getSource(fileUuid);
-
-      List<analyzer.Source> librarySources =
-          context.context.getLibrariesContaining(source);
-
-      if (librarySources.isEmpty) return null;
-
-      analyzer.CompilationUnit ast =
-          context.context.resolveCompilationUnit2(source, librarySources[0]);
-
-      analyzer.AstNode node =
-          new analyzer.NodeLocator.con1(offset).searchWithin(ast);
-      if (node is! analyzer.SimpleIdentifier) return null;
-
-      analyzer.Element element = analyzer.ElementLocator.locate(node);
-      if (element == null) return null;
-
-      if (element.nameOffset == -1 || element.source == null) {
-        return null;
-      }
-
-      // TODO:(devoncarew): Handle sdk sources.
-      if (element.source is! analyzer.FileSource) return null;
-
+    if (element.source is analyzer.FileSource) {
       analyzer.FileSource fileSource = element.source;
-
-      return new Declaration(
-          element.displayName, fileSource.uuid,
+      return new SourceDeclaration(element.displayName, fileSource.uuid,
           element.nameOffset, element.name.length);
+    } else if (element.source is analyzer.SdkSource) {
+      String url = _getUrlForElement(element);
+      if (url == null) return null;
+      return new DocDeclaration(element.displayName, url);
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Convert a dart: library reference into the corresponding dartdoc url.
+   */
+  String _getUrlForElement(analyzer.Element element) {
+    analyzer.SdkSource sdkSource = element.source;
+    String libraryName = element.library.name.replaceAll(".", "-");
+    String baseUrl =
+        "https://api.dartlang.org/apidocs/channels/stable/dartdoc-viewer";
+    String className;
+    String memberAnchor = "";
+    analyzer.Element enclosingElement = element.enclosingElement;
+    if (element is analyzer.ClassElement) {
+      className = element.name;
+    } else if (enclosingElement is analyzer.ClassElement) {
+      className = enclosingElement.name;
+      memberAnchor = "#id_${element.name}";
+    } else {
+      // TODO: Top level variables and functions
+      return null;
     }
 
-    Outline _getOutline(analyzer.CompilationUnit ast) {
+    return "$baseUrl/$libraryName.$className$memberAnchor";
+  }
+
+  Outline _getOutline(analyzer.CompilationUnit ast) {
     Outline outline = new Outline();
 
     // Ideally, we'd get an AST back, even for very badly formed files.
@@ -365,63 +392,11 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     for (analyzer.Declaration declaration in ast.declarations) {
       if (declaration is analyzer.TopLevelVariableDeclaration) {
-        analyzer.VariableDeclarationList variables = declaration.variables;
-
-        for (analyzer.VariableDeclaration variable in variables.variables) {
-          outline.entries.add(_populateOutlineEntry(
-              new OutlineTopLevelVariable(variable.name.name),
-              new _Range.fromAstNode(declaration),
-              new _Range.fromAstNode(declaration)));
-        }
-      } else if (declaration is analyzer.ClassDeclaration) {
-        OutlineClass outlineClass = new OutlineClass(declaration.name.name);
-        outline.entries.add(
-            _populateOutlineEntry(outlineClass,
-                                  new _Range.fromAstNode(declaration.name),
-                                  new _Range.fromAstNode(declaration)));
-
-        for (analyzer.ClassMember member in declaration.members) {
-          if (member is analyzer.MethodDeclaration) {
-            if (member.isGetter || member.isSetter) {
-              outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineAccessor(member.name.name, member.isSetter),
-                  new _Range.fromAstNode(member.name),
-                  new _Range.fromAstNode(member)));
-            } else {
-              outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineMethod(member.name.name),
-                  new _Range.fromAstNode(member.name),
-                  new _Range.fromAstNode(member)));
-            }
-          } else if (member is analyzer.FieldDeclaration) {
-            analyzer.VariableDeclarationList fields = member.fields;
-            for (analyzer.VariableDeclaration field in fields.variables) {
-              outlineClass.members.add(_populateOutlineEntry(
-                  new OutlineProperty(field.name.name),
-                  new _Range.fromAstNode(field),
-                  new _Range.fromAstNode(field.parent)));
-            }
-          } else if (member is analyzer.ConstructorDeclaration) {
-            analyzer.ConstructorDeclaration constructor = member;
-
-            var nameIdentifier = constructor.name;
-            String name = declaration.name.name +
-                (nameIdentifier != null ? ".${nameIdentifier.name}" : "");
-            _Range nameRange = new _Range(constructor.beginToken.offset,
-                nameIdentifier == null ? constructor.beginToken.end :
-                nameIdentifier.end);
-
-            outlineClass.members.add(_populateOutlineEntry(
-                new OutlineMethod(name),
-                nameRange,
-                new _Range.fromAstNode(declaration)));
-          }
-        }
+        _addVariableToOutline(outline, declaration);
       } else if (declaration is analyzer.FunctionDeclaration) {
-        outline.entries.add(_populateOutlineEntry(
-            new OutlineTopLevelFunction(declaration.name.name),
-            new _Range.fromAstNode(declaration.name),
-            new _Range.fromAstNode(declaration)));
+        _addFunctionToOutline(outline, declaration);
+      } else if (declaration is analyzer.ClassDeclaration) {
+        _addClassToOutline(outline, declaration);
       } else {
         print("${declaration.runtimeType} is unknown");
       }
@@ -429,6 +404,94 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     return outline;
   }
+  
+  void _addVariableToOutline(Outline outline,
+      analyzer.TopLevelVariableDeclaration declaration) {
+    analyzer.VariableDeclarationList variables = declaration.variables;
+
+    for (analyzer.VariableDeclaration variable in variables.variables) {
+      outline.entries.add(_populateOutlineEntry(
+          new OutlineTopLevelVariable(variable.name.name,
+              getTypeNameFor(variables.type)),
+          new _Range.fromAstNode(declaration),
+          new _Range.fromAstNode(declaration)));
+    }
+  }
+  
+  void _addFunctionToOutline(Outline outline,
+      analyzer.FunctionDeclaration declaration) {
+    outline.entries.add(_populateOutlineEntry(
+        new OutlineTopLevelFunction(declaration.name.name),
+        new _Range.fromAstNode(declaration.name),
+        new _Range.fromAstNode(declaration)));
+  }
+
+  void _addClassToOutline(Outline outline,
+      analyzer.ClassDeclaration declaration) {
+    OutlineClass outlineClass = new OutlineClass(declaration.name.name);
+    outline.entries.add(
+        _populateOutlineEntry(outlineClass,
+                              new _Range.fromAstNode(declaration.name),
+                              new _Range.fromAstNode(declaration)));
+
+    for (analyzer.ClassMember member in declaration.members) {
+      if (member is analyzer.MethodDeclaration) {
+        _addMethodToOutlineClass(outlineClass, member);
+      } else if (member is analyzer.FieldDeclaration) {
+        _addFieldToOutlineClass(outlineClass, member);
+      } else if (member is analyzer.ConstructorDeclaration) {
+        _addConstructorToOutlineClass(outlineClass, member, declaration);
+      }
+    }
+  }
+  
+  void _addMethodToOutlineClass(OutlineClass outlineClass,
+      analyzer.MethodDeclaration member) {
+    if (member.isGetter || member.isSetter) {
+      outlineClass.members.add(_populateOutlineEntry(
+          new OutlineAccessor(member.name.name, member.isSetter),
+          new _Range.fromAstNode(member.name),
+          new _Range.fromAstNode(member)));
+    } else {
+      outlineClass.members.add(_populateOutlineEntry(
+          new OutlineMethod(member.name.name),
+          new _Range.fromAstNode(member.name),
+          new _Range.fromAstNode(member)));
+    }
+  }
+  
+  void _addFieldToOutlineClass(OutlineClass outlineClass,
+      analyzer.FieldDeclaration member) {
+    analyzer.VariableDeclarationList fields = member.fields;
+    for (analyzer.VariableDeclaration field in fields.variables) {
+      outlineClass.members.add(_populateOutlineEntry(
+          new OutlineProperty(field.name.name,
+              getTypeNameFor(fields.type)),
+          new _Range.fromAstNode(field),
+          new _Range.fromAstNode(field.parent)));
+    }
+  }
+  
+  void _addConstructorToOutlineClass(OutlineClass outlineClass,
+      analyzer.ConstructorDeclaration member,
+      analyzer.ClassDeclaration classDeclaration) {
+    analyzer.ConstructorDeclaration constructor = member;
+
+    var nameIdentifier = constructor.name;
+    String name = classDeclaration.name.name +
+        (nameIdentifier != null ? ".${nameIdentifier.name}" : "");
+    _Range nameRange = new _Range(constructor.beginToken.offset,
+        nameIdentifier == null ? constructor.beginToken.end :
+        nameIdentifier.end);
+
+    outlineClass.members.add(_populateOutlineEntry(
+        new OutlineMethod(name),
+        nameRange,
+        new _Range.fromAstNode(classDeclaration)));
+  }
+  
+  String getTypeNameFor(analyzer.TypeName typeName) =>
+      (typeName == null) ? "" : typeName.name.name;
 
   OutlineEntry _populateOutlineEntry(OutlineEntry outlineEntry, _Range name,
       _Range body) {
@@ -547,11 +610,15 @@ abstract class ServiceImpl {
       return new Future.value(
           event.createErrorReponse("no such method: ${event.actionId}"));
     } else {
-      Future f = responder(event);
-      assert(f != null);
-      return f.catchError((e, st) {
-        return event.createErrorReponse('${e}\n${st}');
-      });
+      try {
+        Future f = responder(event);
+        assert(f != null);
+        return f.catchError((e, st) {
+          return event.createErrorReponse('${e}\n${st}');
+        });
+      } catch (e, st) {
+        return new Future.value(event.createErrorReponse('${e}\n${st}'));
+      }
     }
   }
 }

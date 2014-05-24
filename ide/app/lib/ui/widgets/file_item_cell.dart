@@ -8,9 +8,10 @@
 
 library spark.ui.widgets.fileitem_cell;
 
-import 'dart:html';
+import 'dart:html' hide File;
 
 import 'listview_cell.dart';
+import '../../utils.dart';
 import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
@@ -24,6 +25,9 @@ class FileItemCell implements ListViewCell {
         (querySelector('#fileview-filename-template') as TemplateElement).content;
     DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.fileview-filename-container');
+    if (resource is Project) {
+      _element.classes.add('project');
+    }
     fileNameElement.innerHtml = resource.name;
     acceptDrop = false;
     updateFileStatus();
@@ -59,6 +63,24 @@ class FileItemCell implements ListViewCell {
       element.classes.add('error');
     } else if (severity == Marker.SEVERITY_WARNING) {
       element.classes.add('warning');
+    }
+
+    // Add classes to display file icons.
+    if (resource is Project) {
+      // Don't display an icon for projects.
+
+    } else if (resource is Folder) {
+      fileNameElement.classes.toggle('typeFolder', true);
+    } else if (resource is File) {
+      if (isImageFilename(resource.name)) {
+        fileNameElement.classes.toggle('typeImageFile', true);
+      } else if (isWebLikeFilename(resource.name)) {
+        fileNameElement.classes.toggle('typeHtmlFile', true);
+      } else if (isTextFilename(resource.name)) {
+        fileNameElement.classes.toggle('typeTextFile', true);
+      } else {
+        fileNameElement.classes.toggle('typeFile', true);
+      }
     }
   }
 

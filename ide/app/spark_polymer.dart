@@ -70,6 +70,9 @@ void main() {
   });
 }
 
+// TODO(devoncarew): We need to de-couple a request to close the dialog
+// from actually closing it. So, cancel() => close(), and
+// performOk() => close(), but subclasses can override.
 class SparkPolymerDialog implements SparkDialog {
   SparkModal _dialogElement;
 
@@ -91,7 +94,9 @@ class SparkPolymerDialog implements SparkDialog {
   // TODO(ussuri): Currently, this never gets called (the dialog closes in
   // another way). Make symmetrical when merging Polymer and non-Polymer.
   @override
-  void hide() => _dialogElement.toggle();
+  void hide() {
+    if (_dialogElement.opened) _dialogElement.toggle();
+  }
 
   @override
   Element get element => _dialogElement;
@@ -168,9 +173,10 @@ class SparkPolymer extends Spark {
   void initSplitView() {
     syncPrefs.getValue('splitViewPosition').then((String position) {
       if (position != null) {
-        int value = int.parse(position, onError: (_) => 0);
-        if (value != 0) {
-          (getUIElement('#splitView') as dynamic).targetSize = value;
+        int value = int.parse(position, onError: (_) => null);
+        if (value != null) {
+          _ui.splitViewPosition = value;
+          _ui.deliverChanges();
         }
       }
     });
@@ -214,15 +220,9 @@ class SparkPolymer extends Spark {
   void initToolbar() {
     super.initToolbar();
 
-    _bindButtonToAction('gitClone', 'git-clone');
-    _bindButtonToAction('newProject', 'project-new');
     _bindButtonToAction('runButton', 'application-run');
-    _bindButtonToAction('pushButton', 'application-push');
     _bindButtonToAction('leftNav', 'navigate-back');
     _bindButtonToAction('rightNav', 'navigate-forward');
-
-    InputElement input = getUIElement('#search');
-    input.onInput.listen((e) => filterFilesList(input.value));
   }
 
   @override
@@ -233,6 +233,11 @@ class SparkPolymer extends Spark {
 
   @override
   Future restoreLocationManager() => super.restoreLocationManager();
+
+  @override
+  void menuActivateEventHandler(CustomEvent event) {
+    _ui.onMenuSelected(event, event.detail);
+  }
 
   //
   // - End parts of the parent's init().

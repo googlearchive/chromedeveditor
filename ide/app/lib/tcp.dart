@@ -25,8 +25,9 @@ const LOCAL_HOST = '127.0.0.1';
  */
 class SocketException implements Exception {
   final String message;
+  final int code;
 
-  const SocketException([this.message = ""]);
+  const SocketException([this.message = "", this.code = 0]);
 
   String toString() => "SocketException: $message";
 }
@@ -86,10 +87,20 @@ class TcpClient {
     });
 
     chrome.sockets.tcp.onReceiveError.listen((chrome.ReceiveErrorInfo info) {
-      StreamController controller = _clientMap[info.socketId];
+      int socket = info.socketId;
+      StreamController controller = _clientMap[socket];
+
       if (controller != null) {
-        controller.addError(
-            new SocketException("error reading stream: ${info.resultCode}"));
+        if (info.resultCode == -15) {
+          // An error code of -15 indicates the port is closed.
+          controller.close();
+          _clientMap.remove(socket);
+        } else {
+          controller.addError(new SocketException(
+              "error reading stream: ${info.resultCode}", info.resultCode));
+          controller.close();
+          _clientMap.remove(socket);
+        }
       }
     });
   }

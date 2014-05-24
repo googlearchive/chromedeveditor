@@ -26,6 +26,10 @@ Logger _logger = new Logger('spark.bower');
 class BowerManager extends PackageManager {
   BowerManager(Workspace workspace) : super(workspace);
 
+  //
+  // PackageManager abstract interface:
+  //
+
   PackageServiceProperties get properties => bowerProperties;
 
   PackageBuilder getBuilder() => new _BowerBuilder();
@@ -33,11 +37,15 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future installPackages(Project project) =>
-      _installOrUpgradePackages(project, FetchMode.INSTALL);
+  Future installPackages(Container container) =>
+      _installOrUpgradePackages(container.project, FetchMode.INSTALL);
 
-  Future upgradePackages(Project project) =>
-      _installOrUpgradePackages(project, FetchMode.UPGRADE);
+  Future upgradePackages(Container container) =>
+      _installOrUpgradePackages(container.project, FetchMode.UPGRADE);
+
+  //
+  // - end PackageManager abstract interface.
+  //
 
   Future _installOrUpgradePackages(Project project, FetchMode mode) {
     final File specFile = project.getChild(properties.packageSpecFileName);
@@ -63,16 +71,31 @@ class BowerManager extends PackageManager {
 }
 
 /**
- * A dummy class that currently doesn't resolve anything, since the definition
- * of a Bower package reference in JS code is yet unclear.
+ * A package resolver for Bower.
  */
 class _BowerResolver extends PackageResolver {
-  _BowerResolver._(Project project);
+  final Project project;
+
+  _BowerResolver._(this.project);
+
+  //
+  // PackageResolver virtual interface:
+  //
 
   PackageServiceProperties get properties => bowerProperties;
 
-  File resolveRefToFile(String url) => null;
+  File resolveRefToFile(String url) {
+    if (url.startsWith('/')) url = url.substring(1);
+    if (url.isEmpty) return null;
 
+    Folder folder = project.getChild(bowerProperties.packagesDirName);
+    if (folder == null) return null;
+
+    return folder.getChildPath(url);
+  }
+
+  // Not used by anybody, but could return something like
+  // `/bower_components/foo/bar.js`.
   String getReferenceFor(File file) => null;
 }
 
@@ -82,6 +105,10 @@ class _BowerResolver extends PackageResolver {
  */
 class _BowerBuilder extends PackageBuilder {
   _BowerBuilder();
+
+  //
+  // PackageBuilder virtual interface:
+  //
 
   PackageServiceProperties get properties => bowerProperties;
 
@@ -100,6 +127,10 @@ class _BowerBuilder extends PackageBuilder {
 
     return Future.wait(futures);
   }
+
+  //
+  // - end PackageBuilder virtual interface.
+  //
 
   Future _handlePackageSpecChange(ChangeDelta delta) {
     File file = delta.resource;

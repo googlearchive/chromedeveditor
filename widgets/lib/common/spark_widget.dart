@@ -15,8 +15,6 @@ const bool IS_DART2JS = identical(1, 1.0);
 class SparkWidget extends PolymerElement {
   SparkWidget.created() : super.created();
 
-  String joinClasses(List<String> cls) => cls.join(" ");
-
   Element getShadowDomElement(String selectors) =>
       shadowRoot.querySelector(selectors);
 
@@ -129,8 +127,7 @@ class SparkWidget extends PolymerElement {
     final Iterable<Node> fdn = dn.where(
         (Node e) => (e is Element) && e.localName != "template");
     final Iterable<Node> edn = fdn.expand(
-        (Node e) => e is ContentElement ?
-            inlineNestedContentNodes(e) : [e]);
+        (Node e) => e is ContentElement ? inlineNestedContentNodes(e) : [e]);
     return edn;
   }
 }

@@ -16,12 +16,14 @@ import 'package:logging/logging.dart';
 import 'package:observe/observe.dart';
 
 import 'builder.dart';
+import 'exception.dart';
 import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
-import 'git/http_fetcher.dart';
+import 'git/exception.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
+import 'git/exception.dart';
 import 'git/options.dart';
 import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
@@ -142,6 +144,11 @@ abstract class ScmProvider {
    */
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName});
+
+  /**
+   * Cancels the active clone in progress.
+   */
+  void cancelClone();
 }
 
 /**
@@ -179,16 +186,6 @@ abstract class ScmProjectOperations {
   Future push(String username, String password);
 
   Future updateForChanges(List<ChangeDelta> changes);
-}
-
-// TODO: Remove this when we have a generic spark exception class.
-class ScmException implements Exception {
-  final String message;
-  final bool needsAuth;
-
-  ScmException(this.message, [this.needsAuth = false]);
-
-  String toString() => message;
 }
 
 /**
@@ -256,6 +253,8 @@ class GitScmProvider extends ScmProvider {
 
   String get id => 'git';
 
+  Clone activeClone;
+
   bool isUnderScm(Project project) {
     Folder gitFolder = project.getChild('.git');
     if (gitFolder is! Folder) return false;
@@ -279,16 +278,22 @@ class GitScmProvider extends ScmProvider {
         branchName : branchName, username: username, password: password);
 
     return options.store.init().then((_) {
-      return new Clone(options).clone().then((_) {
-        return options.store.index.flush();
+      activeClone = new Clone(options);
+      return activeClone.clone().then((_) {
+        return options.store.index.flush().then((_) {
+          activeClone = null;
+        });
       });
     }).catchError((e) {
-      if (e is HttpResult) {
-        throw new ScmException(e.toString(), e.needsAuth);
-      } else {
-        throw new ScmException(e.toString());
-      }
+      activeClone = null;
+      throw SparkException.fromException(e);
     });
+  }
+
+  void cancelClone() {
+    if (activeClone != null) {
+      activeClone.cancel();
+    }
   }
 }
 
@@ -409,6 +414,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
       return Push.push(options);
+    });
+  }
+
+  Future<List<String>> getDeletedFiles() {
+    return objectStore.then((store) {
+      return Status.getDeletedFiles(store);
     });
   }
 

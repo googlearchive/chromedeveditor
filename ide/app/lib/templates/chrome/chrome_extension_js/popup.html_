@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>``projectName`` popup</title>
+
+  <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+  <div id="greeting"></div>
+  <div>
+    <button id="addToPage">Add to page</button>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

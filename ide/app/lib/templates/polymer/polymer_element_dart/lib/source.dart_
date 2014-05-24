@@ -1,0 +1,22 @@
+library ``sourceName``;
+
+import 'package:polymer/polymer.dart';
+
+@CustomTag('``tagName``')
+class ``className`` extends PolymerElement {
+  @published String who = "";
+  @observable String greeting = "";
+
+  ``className``.created() : super.created();
+
+  @override
+  void ready() {
+    super.ready();
+  }
+
+  @override
+  void enteredView() {
+    super.enteredView();
+    greeting = "Hello, $who!"; 
+  }
+}

@@ -145,8 +145,6 @@ class TabView {
   StreamSubscription<MouseEvent> _tabBarMouseLeaveStream;
 
   TabView(this.parentElement) {
-    List<Element> originalElements = parentElement.children.toList();
-
     _tabBar = new DivElement()..classes.add('tabview-tabbar');
     _tabBarScroller = new DivElement()
         ..classes.add('tabview-tabbar-scroller');
@@ -172,15 +170,7 @@ class TabView {
     _tabViewContainer = new DivElement()..classes.add('tabview-container');
     _tabViewContainer.children.addAll([_tabBar, _tabViewWorkspace]);
 
-    parentElement.children.clear();
     parentElement.children.add(_tabViewContainer);
-
-    originalElements.forEach((Element element){
-      Tab tab = add(new Tab(this, page: element));
-      if (element.attributes['data-title'] != null) {
-        tab.label = element.attributes['data-title'];
-      }
-    });
 
     window.onResize.listen((e) => _layoutTabItemsOnResize());
   }

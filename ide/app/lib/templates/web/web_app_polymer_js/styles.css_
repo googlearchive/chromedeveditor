@@ -1,0 +1,13 @@
+#greeting {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 24px;
+  margin: 15px;
+}
+
+polymer-ui-card {
+  display: block;
+  height: 200px;
+  width: 240px;
+  margin: 20px auto;
+  padding: 30px;
+}
