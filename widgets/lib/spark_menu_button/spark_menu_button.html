@@ -16,11 +16,11 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_menu/spark_menu.html"/>
 
 <polymer-element name="spark-menu-button" extends="spark-widget"
-    attributes="icon,
-                selected,
-                valueAttr,
-                opened,
-                responsive,
+    attributes="icon
+                selected
+                valueAttr
+                opened
+                responsive
                 valign"
     on-keydown="{{keyDownHandler}}">
 
@@ -30,8 +30,8 @@
     <spark-button id="button"
         small
         noPadding
-        focused
         noBorder
+        focused
         on-click="{{clickHandler}}"
         on-focus="{{focusHandler}}"
         on-blur="{{blurHandler}}">
@@ -45,7 +45,7 @@
           on-opened="{{overlayOpenedHandler}}">
 
         <div class="arrow"></div>
-        <div class="arrow arrow-inner" on-click="{{clickHandler}}"></div>
+        <div id="arrowInner" class="arrow" on-click="{{clickHandler}}"></div>
 
         <spark-menu id="menu"
             selected="{{selected}}"
