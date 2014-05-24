@@ -10,6 +10,10 @@
 @import url("lib/ui/widgets/tabview.css");
 @import url("lib/ui/widgets/imageviewer.css");
 
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
 body {
   bottom: 0;
   display: flex;

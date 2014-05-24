@@ -7,6 +7,10 @@
 @import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
+* {
+  -webkit-font-smoothing: antialiased;
+}
+
 #mainMenu {
   display: block;
 }

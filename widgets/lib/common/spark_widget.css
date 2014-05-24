@@ -9,3 +9,8 @@
 :host(.unveiled) {
   opacity: 1;
 }
+
+:host * {
+  /* Prevent blurry fonts, at least on OSX in some cases */
+  -webkit-font-smoothing: antialiased;
+}
