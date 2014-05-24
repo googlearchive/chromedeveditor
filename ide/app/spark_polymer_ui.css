@@ -7,9 +7,7 @@
 @import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
-* {
-  -webkit-font-smoothing: antialiased;
-}
+@import url("spark_common.css");
 
 #mainMenu {
   display: block;
@@ -43,7 +41,6 @@
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;

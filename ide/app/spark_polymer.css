@@ -10,10 +10,6 @@
 @import url("lib/ui/widgets/tabview.css");
 @import url("lib/ui/widgets/imageviewer.css");
 
-* {
-  -webkit-font-smoothing: antialiased;
-}
-
 body {
   bottom: 0;
   display: flex;
@@ -120,13 +116,8 @@ div.ace_search_form, div.ace_replace_form {
   width: 184px;
 }
 
-.ace_search_field {
-  font-family: Helvetica, Arial, sans-serif;
-}
-
 button.ace_replacebtn {
   color: #484848;
-  font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
   padding-left: 5px;
   padding-right: 5px;
@@ -173,7 +164,7 @@ button.ace_searchbtn_close:active {
   opacity: 1;
   transition: opacity 250ms;
   text-align: center;
-  font-family: Helvetica, Arial, sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
 
@@ -329,7 +320,7 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container .filename {
-  font-family: Helvetica, Arial, Sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, Sans-serif;
   font-size: 13px;
   overflow: hidden;
   position: absolute;

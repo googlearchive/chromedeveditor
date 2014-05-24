@@ -1,17 +1,11 @@
-/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details. */
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-:host(.veiled) {
-  opacity: 0;
-}
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
+@import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
-:host(.unveiled) {
-  opacity: 1;
-}
-
-/* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
-:host * {
+* {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   /* Improve font rendering, especially on OSX, and especially for light fonts
      on a dark background. */
