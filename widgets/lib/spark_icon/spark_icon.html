@@ -23,19 +23,21 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-icon" extends="spark-widget"
-    attributes="src tooltip size">
+    attributes="src
+                tooltip
+                size">
   <template>
     <link rel="stylesheet" href="spark_icon.css">
 
     <style>
       #icon {
         background-image: url({{src}});
-        width: {{size}}px;
-        height: {{size}}px;
+        width: {{size}};
+        height: {{size}};
       }
     </style>
 
-    <div id="icon" title="{{tooltip}}"></div>
+    <div id="icon" title?="{{tooltip}}"></div>
   </template>
 
   <script type="application/dart;component=1" src="spark_icon.dart"></script>

@@ -9,3 +9,23 @@
 :host(.unveiled) {
   opacity: 1;
 }
+
+.stacking-context {
+  /* This no-op scaleZ(1) creates an independent stacking context for :host. */
+  -webkit-transform: scaleZ(1);
+}
+
+/* Uncomment these 2 rules, or selectively apply the .debug class,
+ * to facilitate debuging of Spark widgets.
+ */
+/*
+:host > * {
+  outline: red dashed 1px;
+}
+::content > * {
+  outline: green dotted 1px;
+}
+*/
+.debug {
+  outline: blue solid 1px;
+}
