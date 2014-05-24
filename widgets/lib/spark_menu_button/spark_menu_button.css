@@ -13,12 +13,10 @@
 
 #overlay {
   background: white;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-left: 14px;
-  margin-top: 11px;
-  -webkit-transform: translateX(-50%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  margin-top: 8px;
 }
 
 /* TODO(ussuri): The values in the 2 translateX()'s below are very ad-hoc.
@@ -55,11 +53,11 @@
 :host([valign=right]:host) .arrow {
   position: relative;
   left: -7px;
-  margin-left: 91%;
+  margin-right: 10px;
 }
 
 :host([valign=left]:host) .arrow {
   position: relative;
   left: -7px;
-  margin-left: 9%;
+  margin-left: 20px;
 }

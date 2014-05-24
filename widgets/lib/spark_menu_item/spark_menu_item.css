@@ -5,22 +5,49 @@
 @import url("../common/spark_widget.css");
 
 :host {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px 0 20px;
+  border: none;
+  cursor: pointer;
 }
 
-#text {
-  position: relative;
-  top: 6px;
-  padding: 0 10px;
-  color: #000;
+:host *,
+::content * {
+  overflow: hidden;
+  cursor: default;
+}
+
+#label,
+#description,
+::content * {
+  color: black;
   font-family: Helvetica, Arial, Sans-serif;
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
+  font-size: 14px;
 }
 
-#descriptionText {
+#label,
+#description {
+  text-transform: uppercase;
+}
+
+#description {
   color: #bdbdbd;
-  float: right;
-  overflow: hidden;
+  justify-content: flex-end;
+}
+
+:host(.active:host, .selected:host) #label,
+:host(.active:host, .selected:host) #description,
+:host(.active:host, .selected:host) ::content * {
+  color: white;
+}
+
+:host(.selected:host) {
+  background-color: rgba(66, 129, 244, 0.5);
+}
+
+:host(.active:host) {
+  background-color: rgba(66, 129, 244, 1.0);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
