@@ -16,6 +16,15 @@
   opacity: 1;
 }
 
+/* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
+:host * {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  /* Improve font rendering, especially on OSX, and especially for light fonts
+     on a dark background. */
+  -webkit-font-smoothing: antialiased !important;
+}
+
 .stacking-context {
   /* This no-op scaleZ(1) creates an independent stacking context for :host. */
   -webkit-transform: scaleZ(1);

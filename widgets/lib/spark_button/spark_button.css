@@ -9,7 +9,6 @@
 /* TODO: Remove font-size. This override the bootstrap styling,
          if we remove this, we'd have to review entire UI */
 #button {
-  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
   height: 100%;
   /* Override Bootstrap */
