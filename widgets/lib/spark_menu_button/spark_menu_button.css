@@ -24,14 +24,18 @@
   transform: translateX(-50%);
 }
 
+/* TODO(ussuri): The values in 2 translateX()'s below are very ad-hoc.
+   They currently align well with the menu button icon in Spark, but
+   don't work well e.g. for the one in examples/spark_menu_button. Fix.
+ */
 [valign=right] #overlay {
-  -webkit-transform: translateX(-91%);
-  transform: translateX(-91%);
+  /* NOTE: calc() and 100% are important -- if just a percentage is used,
+     e.g. translateX(-91%), the fonts may get blurry. */
+  -webkit-transform: translateX(calc(-100% + 38px));
 }
 
 [valign=left] #overlay {
-  -webkit-transform: translateX(-9%);
-  transform: translateX(-9%);
+  -webkit-transform: translateX(-10px);
 }
 
 .arrow {
