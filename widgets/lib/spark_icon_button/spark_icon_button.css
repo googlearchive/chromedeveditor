@@ -9,11 +9,8 @@
 :host {
   display: inline-block;
   position: relative;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
   width: 44px;
   height: 44px;
-  line-height: 24px;
   padding: 10px;
   cursor: pointer;
   border: none;
