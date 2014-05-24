@@ -9,11 +9,18 @@ import 'dart:html' as html;
 import 'dart:typed_data' as typed_data;
 import 'dart:web_audio';
 
+import 'package:ace/ace.dart' as ace;
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
+
+final RegExp _imageFileTypes = new RegExp(r'\.(jpe?g|png|gif|ico)$',
+    caseSensitive: false);
+
+final RegExp _webFileTypes = new RegExp(r'\.(css|htm?l|xml)$',
+    caseSensitive: false);
 
 chrome.DirectoryEntry _packageDirectoryEntry;
 
@@ -131,6 +138,27 @@ Future<String> getAppContents(String path) {
   return html.HttpRequest.getString(chrome.runtime.getURL(path))
       .catchError((e, s) =>
           throw "Couldn't download $path: error code ${e.target.status}");
+}
+
+/**
+ * Returns true if the given [filename] matches common image file name patterns.
+ */
+bool isImageFilename(String filename) => _imageFileTypes.hasMatch(filename);
+
+/**
+ * Returns true if the given [filename] matches html/css/xml file types.
+ */
+bool isWebLikeFilename(String filename) => _webFileTypes.hasMatch(filename);
+
+/**
+ * Returns true if we can open the given file as text.
+ */
+bool isTextFilename(String name) {
+  int index = name.indexOf('.');
+  if (index == -1) return false;
+
+  String ext = name.substring(index + 1);
+  return ace.Mode.extensionMap.containsKey(ext);
 }
 
 /**
@@ -419,8 +447,12 @@ class FutureHelper {
     void nextElement(_) {
       if (iterator.moveNext()) {
         nextTick().then((_) {
-          f(iterator.current)
+          try {
+            f(iterator.current)
              .then(nextElement,  onError: (e) => doneSignal.completeError(e));
+          } catch (e) {
+            doneSignal.completeError(e);
+          }
         });
       } else {
         doneSignal.complete(null);

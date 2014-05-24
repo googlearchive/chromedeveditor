@@ -23,6 +23,7 @@ import 'git/config.dart';
 import 'git/exception.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
+import 'git/exception.dart';
 import 'git/options.dart';
 import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
@@ -143,6 +144,11 @@ abstract class ScmProvider {
    */
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName});
+
+  /**
+   * Cancels the active clone in progress.
+   */
+  void cancelClone();
 }
 
 /**
@@ -247,6 +253,8 @@ class GitScmProvider extends ScmProvider {
 
   String get id => 'git';
 
+  Clone activeClone;
+
   bool isUnderScm(Project project) {
     Folder gitFolder = project.getChild('.git');
     if (gitFolder is! Folder) return false;
@@ -270,20 +278,22 @@ class GitScmProvider extends ScmProvider {
         branchName : branchName, username: username, password: password);
 
     return options.store.init().then((_) {
-      return new Clone(options).clone().then((_) {
-        return options.store.index.flush();
+      activeClone = new Clone(options);
+      return activeClone.clone().then((_) {
+        return options.store.index.flush().then((_) {
+          activeClone = null;
+        });
       });
     }).catchError((e) {
-      if (e is GitException && e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
-        throw new SparkException(e.toString(), SparkErrorConstants.AUTH_REQUIRED);
-      } else if ( e is GitException && e.errorCode
-          == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
-        throw new SparkException(e.toString(),
-            SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
-      } else {
-        throw new SparkException(e.toString());
-      }
+      activeClone = null;
+      throw SparkException.fromException(e);
     });
+  }
+
+  void cancelClone() {
+    if (activeClone != null) {
+      activeClone.cancel();
+    }
   }
 }
 

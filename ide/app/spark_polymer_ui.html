@@ -30,7 +30,87 @@
         targetSize="{{splitViewPosition}}"
         minTargetSize="200"
         on-update="{{onSplitterUpdate}}">
-      <content></content>
+      <div beforeSplit>
+        <spark-toolbar id="toolbar">
+          <input type="fileFilter"
+              id="fileFilter"
+              placeholder="Filter"
+              on-keydown="{{fileFilterKeydownHandler}}"
+              on-input="{{fileFilterInputHandler}}"/>
+
+          <spark-button id="runButton" noBorder>
+            <span class="glyphicon glyphicon-play"></span>
+          </spark-button>
+
+          <spark-menu-button
+              id="mainMenu"
+              icon="images/overflow.png"
+              valueAttr="action-id"
+              valign="left"
+              on-activate="{{onMenuSelected}}">
+            <spark-menu-item action-id="project-new" label="New Project...">
+            </spark-menu-item>
+
+            <spark-menu-separator></spark-menu-separator>
+
+            <spark-menu-item action-id="file-open" label="Open File...">
+            </spark-menu-item>
+            <spark-menu-item action-id="folder-open" label="Open Folder...">
+            </spark-menu-item>
+            <spark-menu-item action-id="git-clone" label="Git Clone...">
+            </spark-menu-item>
+
+            <spark-menu-separator></spark-menu-separator>
+
+            <spark-menu-item action-id="application-run" label="Run Application">
+            </spark-menu-item>
+            <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
+            </spark-menu-item>
+            <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
+            </spark-menu-item>
+
+            <template if="{{developerMode}}">
+              <spark-menu-separator></spark-menu-separator>
+              <spark-menu-item action-id="run-tests" label="Run Tests">
+              </spark-menu-item>
+            </template>
+
+            <spark-menu-separator></spark-menu-separator>
+
+            <spark-menu-item action-id="settings" label="Settings...">
+            </spark-menu-item>
+            <spark-menu-item action-id="send-feedback" label="Send Feedback...">
+            </spark-menu-item>
+            <spark-menu-item action-id="help-about" label="About Spark">
+            </spark-menu-item>
+          </spark-menu-button>
+        </spark-toolbar>
+
+        <content select="#fileViewArea"></content>
+
+        <template if="{{showNoFileFilterMatches}}">
+          <div id="fileNotFoundPlaceholder">
+            No matching files
+          </div>
+        </template>
+      </div>
+
+      <div afterSplit>
+        <content select="#editorArea"></content>
+
+        <spark-toolbar id="navigationButtons">
+          <spark-button id="leftNav" noBorder>
+            <i class="fa fa-arrow-left"></i>
+          </spark-button>
+          <spark-button id="rightNav" noBorder>
+            <i class="fa fa-arrow-right"></i>
+          </spark-button>
+        </spark-toolbar>
+
+        <div id="sparkStatusContainer">
+         <spark-status id="sparkStatus"></spark-status>
+        </div>
+      </div>
     </spark-split-view>
 
     <!-- Error dialog -->
@@ -212,7 +292,7 @@
     <!-- Harness Push dialog -->
     <spark-modal id="mobileDeployDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
-        <a href="#" class="close">&times;</a>
+        <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>
       </div>
       <div class="modal-body">
@@ -246,7 +326,7 @@
         </div>
       </div>
       <div class="modal-footer">
-        <spark-button>
+        <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
         <spark-button primary focused>
@@ -268,12 +348,15 @@
               placeholder="https://github.com/dart-lang/spark.git"
               spellcheck="false" autosave focused>
         </div>
+        <spark-progress id="cloneProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
+        <spark-button id="cloneClose" overlay-toggle data-dismiss="modal">
+          Close
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button id="clone" primary data-dismiss="modal">
           Clone
         </spark-button>
       </div>
@@ -426,7 +509,8 @@
     </spark-modal>
 
     <!-- Settings dialog -->
-    <spark-modal id="settingsDialog" class="dialog" animation="scale-slideup">
+    <spark-modal id="settingsDialog" class="dialog"
+        animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Settings</h4>

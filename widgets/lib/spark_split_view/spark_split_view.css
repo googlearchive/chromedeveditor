@@ -6,6 +6,8 @@
 
 :host {
   display: flex;
+  /* Form an independent stacking context */
+  -webkit-transform: scaleZ(1);
 }
 
 :host([direction="left"], [direction="right"]) {
@@ -16,8 +18,15 @@
   flex-flow: column;
 }
 
+/* Z-order the splitter higher than the two split halves */
 ::content > * {
   position: relative;
+}
+
+#splitter {
+  position: relative;
+  /* This z-index is local to :host. */
+  z-index: 1;
 }
 
 /* Make the passive target of resizing 'flex', so it auto-adjusts when the

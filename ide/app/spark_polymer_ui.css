@@ -5,18 +5,10 @@
 @import url("packages/spark_widgets/common/spark_widget.css");
 @import url("packages/bootjack/css/bootstrap.min.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
-
-#search {
-  display: inline-block;
-  position: relative;
-  top: 4px;
-  width: 200px;
-  height: 31px;
-}
+@import url("third_party/font_awesome/css/font-awesome.min.css");
 
 #mainMenu {
-  position: relative;
-  top: 4px;
+  display: block;
 }
 
 #splitView {
@@ -26,11 +18,6 @@
   position: absolute;
   right: 0;
   top: 0;
-}
-
-#leftNav, #rightNav {
-  position: relative;
-  top: 4px;
 }
 
 .dialog {
@@ -72,6 +59,76 @@
   position: absolute;
   left: 0;
   right: 0;
+}
+
+#fileFilter {
+  background: #fff url(images/search.png) 10px center no-repeat;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  height: 36px;
+  flex: 1;
+  font: inherit;
+  font-size: 14px;
+  margin: 2px;
+  padding: 10px 10px 10px 44px;
+}
+
+#fileFilter:focus {
+  border: 1px solid #9DBEFF;
+  outline: none;
+}
+
+#fileFilter:focus.active ~ #runButton,
+#fileFilter:focus.active ~ #mainMenu {
+  display: none;
+}
+
+#runButton, #mainMenu {
+  height: 36px;
+}
+
+#mainMenu {
+  margin: 0 3px;
+  width: 24px;
+}
+
+#runButton {
+  margin: 0 2px 0 4px;
+}
+
+#fileNotFoundPlaceholder {
+  color: #ccc;
+  display: block;
+  font-size: 18px;
+  margin-top: 60px;
+  text-align: center;
+}
+
+#navigationButtons {
+  position: absolute;
+  right: 0;
+  width: 95px;
+  padding: 0 0 0 10px;
+  z-index: 150;
+}
+
+#navigationButtons > spark-button {
+  height: 36px;
+  margin: 0;
+}
+
+#navigationButtons > spark-button > i {
+  font-size: 16px;
+}
+
+#sparkStatusContainer {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  pointer-events: none;
+  right: 0;
+  text-align: center;
+  z-index: 101;
 }
 
 #settingsDialog .settings-label {

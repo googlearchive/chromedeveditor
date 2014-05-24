@@ -124,18 +124,17 @@ abstract class Spark
     initPackageManagers();
     initServices();
     initScmManager();
-    initNavigationManager();
 
     initAceManager();
     initEditorManager();
     initEditorArea();
+    initNavigationManager();
 
     createActions();
 
     initFilesController();
 
     initToolbar();
-    initFilter();
     buildMenu();
     initSplitView();
     initSaveStatusListener();
@@ -287,7 +286,7 @@ abstract class Spark
   }
 
   void initNavigationManager() {
-    _navigationManager = new NavigationManager();
+    _navigationManager = new NavigationManager(_editorManager);
     _navigationManager.onNavigate.listen((NavigationLocation location) {
       _selectFile(location.file).then((_) {
         if (location.selection != null) {
@@ -466,13 +465,8 @@ abstract class Spark
     // Overridden in spark_polymer.dart.
   }
 
-  void initFilter() {
-    // Overridden in spark_polymer.dart.
-  }
-
   void buildMenu() {
-    querySelector('#mainMenu').addEventListener('activate',
-        menuActivateEventHandler);
+    // Overridden in spark_polymer.dart.
   }
 
   void menuActivateEventHandler(CustomEvent event) {
@@ -801,7 +795,9 @@ abstract class Spark
 
   Timer _filterTimer = null;
 
-  void filterFilesList(String searchString) {
+  Future<bool> filterFilesList(String searchString) {
+    final completer = new Completer<bool>();
+
     if ( _filterTimer != null) {
       _filterTimer.cancel();
       _filterTimer = null;
@@ -809,12 +805,14 @@ abstract class Spark
 
     _filterTimer = new Timer(new Duration(milliseconds: 500), () {
       _filterTimer = null;
-      _reallyFilterFilesList(searchString);
+      completer.complete(_reallyFilterFilesList(searchString));
     });
+
+    return completer.future;
   }
 
-  void _reallyFilterFilesList(String searchString) {
-    _filesController.performFilter(searchString);
+  bool _reallyFilterFilesList(String searchString) {
+    return _filesController.performFilter(searchString);
   }
 
   void _refreshOpenFiles() {
@@ -1161,7 +1159,6 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
-    _dialog.element.querySelector("a.close").onClick.listen((_) => _cancel());
     _dialog.element.querySelector("[primary]").onClick.listen((_) => _commit());
   }
 
@@ -1174,12 +1171,14 @@ abstract class SparkActionWithDialog extends SparkAction {
   List<Element> getElements(String selectors) =>
       _dialog.element.querySelectorAll(selectors);
 
-  Element _triggerOnReturn(String selectors) {
+  Element _triggerOnReturn(String selectors, [bool hideDialog = true]) {
     var element = _dialog.element.querySelector(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
-        _dialog.hide();
+        if (hideDialog) {
+          _dialog.hide();
+        }
       }
     });
     return element;
@@ -1775,11 +1774,15 @@ class SearchAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    querySelector('#search').focus();
+    spark.getUIElement('#fileFilter').focus();
   }
 }
 
 class GotoDeclarationAction extends SparkAction {
+  static const String TIMEOUT_ERROR =
+      "Declaration information not available until analyzing is finished";
+  static const String NOT_FOUND_ERROR = "No declaration found";
+
   AnalyzerService _analysisService;
 
   GotoDeclarationAction(Spark spark)
@@ -1798,7 +1801,12 @@ class GotoDeclarationAction extends SparkAction {
   void gotoDeclaration() {
     Editor editor = spark.getCurrentEditor();
     if (editor is TextEditor) {
-      editor.navigateToDeclaration();
+      editor.navigateToDeclaration(new Duration(milliseconds: 500)).then(
+          (Declaration declaration) {
+        if (declaration == null) spark.showSuccessMessage(NOT_FOUND_ERROR);
+      }).catchError((TimeoutException e) {
+        spark.showSuccessMessage(TIMEOUT_ERROR);
+      });
     }
   }
 }
@@ -1976,8 +1984,6 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
-    getElement(".modal-footer spark-button").onClick.listen((_) => _cancel());
-
     // When the IP address field is selected, check the `IP` checkbox.
     getElement('#pushUrl').onFocus.listen((e) {
       (getElement('#ip') as InputElement).checked = true;
@@ -2122,6 +2128,8 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     _buildProperties().then((_) => _show());
   }
 
+  void _commit() => _hide();
+
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
     return _getLocation().then((location) {
@@ -2185,21 +2193,68 @@ class GitCloneAction extends SparkActionWithDialog {
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
-    _repoUrlElement = _triggerOnReturn("#gitRepoUrl");
+    _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
+  }
+
+  void _onClose() {
+     _hide();
   }
 
   void _invoke([Object context]) {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
 
+    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+
     _show();
   }
 
+  void _toggleProgressVisible(bool visible) {
+    SparkProgress progressComponent = getElement('#cloneProgress');
+    progressComponent.visible = visible;
+    progressComponent.deliverChanges();
+  }
+
+  void _restoreDialog() {
+    SparkButton cloneButton = getElement('#clone');
+    cloneButton.enabled = true;
+    cloneButton.text = "Clone";
+    SparkButton closeButton = getElement('#cloneClose');
+    closeButton.enabled = true;
+    _toggleProgressVisible(false);
+  }
+
   void _commit() {
+
+    SparkProgress progressComponent = getElement('#cloneProgress');
+    progressComponent.progressMessage = "Cloning...";
+    _toggleProgressVisible(true);
+
+    SparkButton closeButton = getElement('#cloneClose');
+    closeButton.enabled = false;
+    closeButton.deliverChanges();
+
+    SparkButton cloneButton = getElement('#clone');
+    cloneButton.enabled = false;
+    cloneButton.text = "Cloning...";
+    cloneButton.deliverChanges();
+
+    progressComponent.onCancelled.listen((_) {
+      SparkButton cloneButton = getElement('#clone');
+      cloneButton.text = "Cancelling...";
+    });
+
+    ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
+
     String url = _repoUrlElement.value;
     String projectName;
 
-    if (url.isEmpty) return;
+    if (url.isEmpty) {
+      _restoreDialog();
+      spark.showErrorMessage('Error in Cloning',
+          'Repository url required.');
+      return;
+    }
 
     // TODO(grv): Add verify checks.
 
@@ -2214,8 +2269,29 @@ class GitCloneAction extends SparkActionWithDialog {
       projectName = projectName.substring(0, projectName.length - 4);
     }
 
-    _GitCloneJob job = new _GitCloneJob(url, projectName, spark);
-    spark.jobManager.schedule(job);
+    _GitCloneTask cloneTask = new _GitCloneTask(url, projectName, spark, monitor);
+
+    cloneTask.run().then((_) {
+      spark.showSuccessMessage('Cloned $projectName');
+    }).catchError((e) {
+      if (e is SparkException && e.errorCode
+          == SparkErrorConstants.AUTH_REQUIRED) {
+        spark.showErrorMessage('Authorization Required',
+          'Authorization required - private git repositories are not yet supported.');
+      } else if (e is SparkException &&
+          e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
+        spark.showSuccessMessage('Clone cancelled');
+      } else if (e is SparkException && e.errorCode
+          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
+        spark.showErrorMessage('Error cloning ${projectName}',
+            'Repositories with sub-modules are currently not supported.');
+      } else {
+        spark.showErrorMessage('Error cloning ${projectName}', '${e}');
+      }
+    }).whenComplete(() {
+      _restoreDialog();
+      _hide();
+    });
   }
 }
 
@@ -2351,6 +2427,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
   void _addGitStatus() {
     _calculateScmStatus(project);
+    _gitChangeElement.innerHtml = '';
     modifiedFileList.forEach((file) {
       _gitChangeElement.innerHtml += 'Modified:&emsp;' + file.path + '<br/>';
     });
@@ -2621,20 +2698,31 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
   }
 }
 
-class _GitCloneJob extends Job {
+class CloneTaskCancel extends TaskCancel {
+
+  CloneTaskCancel(ProgressMonitor monitor) : super(monitor);
+
+  void performCancel() {
+    ScmProvider scmProvider = getProviderType('git');
+    scmProvider.cancelClone();
+  }
+}
+
+class _GitCloneTask {
   String url;
   String _projectName;
   Spark spark;
+  ProgressMonitor _monitor;
+  CloneTaskCancel _cancel;
 
-  _GitCloneJob(this.url, String projectName, this.spark)
-      : super("Cloning ${projectName}…") {
-    _projectName = projectName;
+  _GitCloneTask(this.url, this._projectName, this.spark, this._monitor) {
+    _cancel = new CloneTaskCancel(_monitor);
   }
 
-  Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+  Future run() {
 
-    return spark.projectLocationManager.createNewFolder(_projectName).then((LocationResult location) {
+    return spark.projectLocationManager.createNewFolder(_projectName).then(
+        (LocationResult location) {
       if (location == null) {
         return new Future.value();
       }
@@ -2649,7 +2737,6 @@ class _GitCloneJob extends Job {
         } else {
           root = new ws.FolderChildRoot(location.parent, location.entry);
         }
-
         return spark.workspace.link(root).then((ws.Project project) {
           spark.showSuccessMessage('Cloned into ${project.name}');
 
@@ -2671,18 +2758,6 @@ class _GitCloneJob extends Job {
           spark.workspace.save();
         });
       });
-    }).catchError((e) {
-      if (e is SparkException && e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
-        spark.showErrorMessage(
-            'Authorization Required',
-            'Authorization required - private git repositories are not yet supported.');
-      } else if (e is SparkException && e.errorCode
-          == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
-        spark.showErrorMessage('Error cloning ${_projectName}',
-            'Repositories with submodules are currently not supported.');
-      } else {
-        spark.showErrorMessage('Error cloning ${_projectName}', '${e}');
-      }
     });
   }
 }
@@ -2988,6 +3063,8 @@ class AboutSparkAction extends SparkActionWithDialog {
 
     _show();
   }
+
+  void _commit() => _hide();
 }
 
 class SettingsAction extends SparkActionWithDialog {
@@ -3026,6 +3103,8 @@ class SettingsAction extends SparkActionWithDialog {
       });
     });
   }
+
+  void _commit() => _hide();
 
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
