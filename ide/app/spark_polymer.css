@@ -10,6 +10,9 @@
 @import url("lib/ui/widgets/tabview.css");
 @import url("lib/ui/widgets/imageviewer.css");
 
+/* Order is important */
+@import url("spark_common.css");
+
 body {
   bottom: 0;
   display: flex;
@@ -164,7 +167,6 @@ button.ace_searchbtn_close:active {
   opacity: 1;
   transition: opacity 250ms;
   text-align: center;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
 
@@ -320,7 +322,6 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container .filename {
-  font-family: 'Helvetica Neue', Helvetica, Arial, Sans-serif;
   font-size: 13px;
   overflow: hidden;
   position: absolute;

@@ -13,7 +13,8 @@
 /* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
 :host * {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
   /* Improve font rendering, especially on OSX, and especially for light fonts
      on a dark background. */
-  -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased important!;
 }

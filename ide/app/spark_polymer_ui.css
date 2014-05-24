@@ -7,6 +7,7 @@
 @import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
+/* Order is important */
 @import url("spark_common.css");
 
 #mainMenu {
