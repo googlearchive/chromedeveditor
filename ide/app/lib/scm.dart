@@ -111,6 +111,10 @@ class ScmManager {
       return new Future.value();
     }
   }
+
+  void removeProject(Project project) {
+    _operations.remove(project);
+  }
 }
 
 /**
