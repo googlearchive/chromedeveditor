@@ -50,13 +50,12 @@ void main() {
             ..small = false
             ..noPadding = true
             ..active = true
-            ..enabled = true
+            ..disabled = false
             ..deliverChanges();
 
         expect(btn.classes.contains('btn-primary'), isTrue);
         expect(btn.classes.contains('btn-default'), isFalse);
         expect(btn.classes.contains('active'), isTrue);
-        expect(btn.classes.contains('enabled'), isTrue);
         expect(btn.classes.contains('disabled'), isFalse);
         expect(btn.classes.contains('btn-lg'), isTrue);
         expect(btn.classes.contains('btn-sm'), isFalse);
@@ -68,13 +67,12 @@ void main() {
             ..small = true
             ..noPadding = false
             ..active = false
-            ..enabled = false
+            ..disabled = true
             ..deliverChanges();
 
         expect(btn.classes.contains('btn-primary'), isFalse);
         expect(btn.classes.contains('btn-default'), isTrue);
         expect(btn.classes.contains('active'), isFalse);
-        expect(btn.classes.contains('enabled'), isFalse);
         expect(btn.classes.contains('disabled'), isTrue);
         expect(btn.classes.contains('btn-lg'), isFalse);
         expect(btn.classes.contains('btn-sm'), isTrue);

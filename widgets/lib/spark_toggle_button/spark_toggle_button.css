@@ -57,13 +57,13 @@
 }
 
 #onLabel {
-  paddinspark-right: 14px;
+  padding-right: 14px;
   background-color: #488afd;
   color: white;
 }
 
 #offLabel {
-  paddinspark-left: 14px;
+  padding-left: 14px;
   background-color: #bfbfbf;
   color: #716f6f;
 }
