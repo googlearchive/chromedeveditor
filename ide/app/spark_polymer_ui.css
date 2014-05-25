@@ -42,7 +42,6 @@
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;
   overflow: hidden;
@@ -70,7 +69,6 @@
   height: 36px;
   flex: 1;
   font: inherit;
-  font-size: 14px;
   margin: 2px;
   padding: 10px 10px 10px 44px;
 }

@@ -7,7 +7,6 @@
 :host {
   display: inline-block;
   white-space: nowrap;
-  font-size: 14px;
   pointer-events: none;
 }
 
@@ -34,7 +33,6 @@
 
 #label {
   text-overflow: ellipsis;
-  font-size: 14px;
   font-weight: 500;
   color: white;
   display: inline;
