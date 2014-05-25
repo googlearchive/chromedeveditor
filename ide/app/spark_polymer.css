@@ -10,6 +10,9 @@
 @import url("lib/ui/widgets/tabview.css");
 @import url("lib/ui/widgets/imageviewer.css");
 
+/* Order is important */
+@import url("spark_common.css");
+
 body {
   bottom: 0;
   display: flex;
@@ -116,13 +119,8 @@ div.ace_search_form, div.ace_replace_form {
   width: 184px;
 }
 
-.ace_search_field {
-  font-family: Helvetica, Arial, sans-serif;
-}
-
 button.ace_replacebtn {
   color: #484848;
-  font-family: Helvetica, Arial, sans-serif;
   font-weight: bold;
   padding-left: 5px;
   padding-right: 5px;
@@ -169,7 +167,6 @@ button.ace_searchbtn_close:active {
   opacity: 1;
   transition: opacity 250ms;
   text-align: center;
-  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
 }
 
@@ -325,7 +322,6 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container .filename {
-  font-family: Helvetica, Arial, Sans-serif;
   font-size: 13px;
   overflow: hidden;
   position: absolute;
@@ -465,7 +461,7 @@ li.outlineItem.topLevel.class {
 }
 
 .outlineItem.topLevel.function, .outlineItem.method,
-    .outlineItem.topLevel.function > a, .outlineItem.method > a {
+.outlineItem.topLevel.function > a, .outlineItem.method > a {
   color: #888;
 }
 
@@ -474,25 +470,35 @@ li.outlineItem.topLevel.class {
 }
 
 .outlineItem.accessor,
-    .outlineItem.accessor > a {
+.outlineItem.accessor > a {
   color: #77c;
 }
 
 .outlineItem.accessor.getter > a:before,
-    .outlineItem.accessor.getter > a:before {
+.outlineItem.accessor.getter > a:before {
   content: 'get ';
   color: #888;
 }
 
 .outlineItem.accessor.setter > a:before,
-    .outlineItem.accessor.setter > a:before {
+.outlineItem.accessor.setter > a:before {
   content: 'set ';
   color: #888;
 }
 
 .outlineItem.topLevel.variable, .outlineItem.property,
-    .outlineItem.topLevel.variable > a, .outlineItem.property > a {
+.outlineItem.topLevel.variable > a, .outlineItem.property > a {
   color: #77c;
+}
+
+.outlineItem.topLevel.variable .returnType,
+.outlineItem.property .returnType {
+  opacity: .8;
+}
+
+.outlineItem.topLevel.variable .returnType:before,
+.outlineItem.property .returnType:before {
+  content: ' \02014  ';
 }
 
 #toggleOutlineButton {

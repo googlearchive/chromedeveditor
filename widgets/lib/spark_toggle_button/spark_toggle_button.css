@@ -52,10 +52,7 @@
   width: 50%;
   height: 100%;
   line-height: 30px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
   text-align: center;
-  font-family: Helvetica, Arial, Sans-serif;
   font-size: 10px;
 }
 

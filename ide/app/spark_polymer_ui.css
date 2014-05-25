@@ -7,6 +7,9 @@
 @import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
+/* Order is important */
+@import url("spark_common.css");
+
 #mainMenu {
   display: block;
 }
@@ -39,14 +42,13 @@
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-family: Helvetica, Arial, sans-serif;
   font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;
   overflow: hidden;
   background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .dialog a.close {

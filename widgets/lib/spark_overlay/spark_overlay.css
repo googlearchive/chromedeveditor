@@ -19,25 +19,17 @@
   'closing' class.
 */
 
-/* Note that trbl: 0 + position: fixed will not 'fit to window'
-if a transform is applied to a parent of this element. That parent
-becomes the containing block; see:
-http://dev.w3.org/csswg/css3-transforms/#transform-rendering
-We address this by using script based positioning =(
-*/
-
 @import url("../common/spark_widget.css");
 
 :host {
   position: fixed;
-  z-index: 1000;
   outline: none;
   display: none;
   opacity: 0;
   /* The no-op scaleZ(1) creates an independent stacking context for :host.
      See: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context
   */
-  transform: scaleZ(1);
+  -webkit-transform: scaleZ(1);
 }
 
 /*
@@ -107,13 +99,11 @@ We address this by using script based positioning =(
 :host([animation=scale-slideup]) {
   opacity: 0.0;
   -webkit-transform: scale(1.05);
-  transform: scale(1.05);
 }
 
 :host([animation=scale-slideup].opened) {
   opacity: 1.0;
   -webkit-transform: scale(1.0);
-  transform: scale(1.0);
   -webkit-transition: all 0.218s;
   transition: all 0.218s;
 }
@@ -121,7 +111,6 @@ We address this by using script based positioning =(
 :host([animation=scale-slideup].closing) {
   opacity: 0;
   -webkit-transform: translateY(-100%);
-  transform: translateY(-100%);
   -webkit-transition: all 0.4s;
   transition: all 0.4s;
 }
@@ -170,32 +159,6 @@ We address this by using script based positioning =(
   }
 }
 
-@keyframes shake-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateX(0);
-  }
-  10% {
-    transform: translateX(-50px);
-  }
-  30% {
-    transform: translateX(50px);
-  }
-  50% {
-    transform: translateX(-25px);
-  }
-  70% {
-    transform: translateX(25px);
-  }
-  90% {
-    transform: translateX(-13px);
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 @-webkit-keyframes shake-fade-out {
   0% {
     opacity: 1;
@@ -209,23 +172,6 @@ We address this by using script based positioning =(
   }
   100% {
     -webkit-transform: translateX(-100%);
-    opacity: 0;
-  }
-}
-
-@keyframes shake-fade-out {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  10% {
-    transform: translateX(-50px);
-  }
-  30% {
-    transform: translateX(50px);
-  }
-  100% {
-    transform: translateX(-100%);
     opacity: 0;
   }
 }

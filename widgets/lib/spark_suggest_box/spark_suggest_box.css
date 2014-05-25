@@ -13,9 +13,9 @@
 
 #suggestionListOverlay {
   background: white;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   margin-top: 7px;
   padding: 5px 0;
   width: 350px;
@@ -25,19 +25,16 @@
 
   /* BUG: #1320. Do not remove! */
   -webkit-transform: scaleZ(1);
-  transform: scaleZ(1);
 }
 
 #suggestionListMenu {
   border: none;
   display: block;
-  box-sizing: border-box;
   margin: 0 0;
 }
 
 .suggestion-item {
   padding: 2px 12px;
-  font-family: Helvetica, Arial, Sans-serif;
   font-size: 13px;
   white-space: nowrap;
   text-overflow: ellipsis;
