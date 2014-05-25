@@ -8,13 +8,22 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
-// Ported from Polymer Javascript to Dart code.
 @CustomTag("spark-toolbar")
 class SparkToolbar extends SparkWidget {
-  @published bool responsive = false;
-  @published bool touch = false;
+  @published String size = '100%ß';
+  @published String direction = 'horizontal';
+  @published bool flex = false;
 
   SparkToolbar.created(): super.created();
 
-  String get touchAction =>  touch ? "" : "none";
+  @override
+  void enteredView() {
+    assert(['horizontal', 'vertical'].contains(direction));
+
+    if (direction == 'horizontal') {
+      style.height = size;
+    } else {
+      style.width = size;
+    }
+  }
 }

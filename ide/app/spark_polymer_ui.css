@@ -56,10 +56,9 @@
   text-align: center;
 }
 
-#toolbar {
-  position: absolute;
-  left: 0;
-  right: 0;
+.toolbar {
+  height: 48px;
+  border-bottom: 1px solid #ddd;
 }
 
 #fileFilter {
