@@ -9,9 +9,6 @@ export "spark_button/spark_button.dart";
 import "spark_icon/spark_icon.dart";
 export "spark_icon/spark_icon.dart";
 
-import "spark_icon_button/spark_icon_button.dart";
-export "spark_icon_button/spark_icon_button.dart";
-
 import "spark_menu/spark_menu.dart";
 export "spark_menu/spark_menu.dart";
 
