@@ -705,13 +705,14 @@ abstract class Spark
     }
   }
 
-  void _openFile(ws.Resource resource) {
-    if (currentEditedFile == resource) return;
+  Future _openFile(ws.Resource resource) {
+    if (currentEditedFile == resource) return new Future.value();
 
     if (resource is ws.File) {
       navigationManager.gotoLocation(new NavigationLocation(resource));
+      return new Future.value();
     } else {
-      _selectFile(resource);
+      return _selectFile(resource);
     }
   }
 
@@ -1195,7 +1196,9 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark._openFile(file);
+            spark._openFile(file).then((_) {
+              spark.editorArea.persistTab(file);
+            });
             spark._aceManager.focus();
           });
         }).catchError((e) {
