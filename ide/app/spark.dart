@@ -2035,7 +2035,7 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
 
     _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
 
-    _deployButton.enabled = !visible;
+    _deployButton.disabled = visible;
     _deployButton.deliverChanges();
   }
 }
@@ -2189,10 +2189,10 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _restoreDialog() {
     SparkButton cloneButton = getElement('#clone');
-    cloneButton.enabled = true;
+    cloneButton.disabled = false;
     cloneButton.text = "Clone";
     SparkButton closeButton = getElement('#cloneClose');
-    closeButton.enabled = true;
+    closeButton.disabled = false;
     _toggleProgressVisible(false);
   }
 
@@ -2203,11 +2203,11 @@ class GitCloneAction extends SparkActionWithDialog {
     _toggleProgressVisible(true);
 
     SparkButton closeButton = getElement('#cloneClose');
-    closeButton.enabled = false;
+    closeButton.disabled = true;
     closeButton.deliverChanges();
 
     SparkButton cloneButton = getElement('#clone');
-    cloneButton.enabled = false;
+    cloneButton.disabled = true;
     cloneButton.text = "Cloning...";
     cloneButton.deliverChanges();
 
