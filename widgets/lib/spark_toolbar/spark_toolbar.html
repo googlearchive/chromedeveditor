@@ -21,13 +21,13 @@
 -->
 
 <polymer-element name="spark-toolbar" extends="spark-widget"
-    attributes="responsive touch">
-  <template>
+    attributes="horizontal
+                vertical
+                justify">
+  <template class="debug">
     <link rel="stylesheet" href="spark_toolbar.css">
 
-    <div class="toolbar" responsive="{{responsive}}" touch-action="{{touchAction}}">
-      <content></content>
-    </div>
+    <content></content>
   </template>
 
   <script type="application/dart;component=1" src="spark_toolbar.dart"></script>
