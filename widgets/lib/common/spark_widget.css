@@ -30,8 +30,8 @@
   -webkit-transform: scaleZ(1);
 }
 
-/* Uncomment these 2 rules, or selectively apply the .debug class,
- * to facilitate debuging of Spark widgets.
+/* Uncomment these 2 rules, or selectively apply the .debug class or debug
+ * attribute, to facilitate debuging of Spark widgets.
  */
 /*
 :host > * {
@@ -41,6 +41,6 @@
   outline: green dotted 1px;
 }
 */
-.debug {
+.debug, [debug] {
   outline: blue solid 1px;
 }
