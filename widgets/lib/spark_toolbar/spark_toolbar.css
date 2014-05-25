@@ -11,37 +11,40 @@
   background-color: #fafafa;
 }
 
-:host,
-:host([direction=horizontal]) {
+:host([horizontal]) {
   padding: 0 5px;
   flex-flow: row;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  border-left: none;
-  border-right: none;
 }
 
-:host([direction=vertical]) {
+:host([vertical]) {
   padding: 5px 0;
   flex-flow: column;
-  border-top: none;
-  border-bottom: none;
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
 }
 
-:host([flex]:host) {
-  justify-content: spaces-between;
+:host([justify=left]:host) {
+  justify-content: flex-start;
 }
 
-:host([direction=horizontal]) ::content > * {
+:host([justify=right]:host) {
+  justify-content: flex-end;
+}
+
+:host([justify=center]:host) {
+  justify-content: center;
+}
+
+:host([justify=spaced]:host) {
+  justify-content: space-around;
+}
+
+:host([horizontal]) ::content > * {
   margin: 0 2px;
 }
 
-:host([direction=vertical]) ::content > * {
+:host([vertical]) ::content > * {
   margin: 2px 0;
 }
 
-::content > .flex {
+::content > [flex] {
   flex: 1;
 }

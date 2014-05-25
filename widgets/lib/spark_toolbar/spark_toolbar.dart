@@ -10,20 +10,17 @@ import '../common/spark_widget.dart';
 
 @CustomTag("spark-toolbar")
 class SparkToolbar extends SparkWidget {
-  @published String size = '100%ß';
-  @published String direction = 'horizontal';
-  @published bool flex = false;
+  /// The client must specify one, and only one, of [vertical] and [horizontal].
+  @published bool horizontal = false;
+  @published bool vertical = false;
+  @published String justify = 'left';
 
   SparkToolbar.created(): super.created();
 
   @override
   void enteredView() {
-    assert(['horizontal', 'vertical'].contains(direction));
-
-    if (direction == 'horizontal') {
-      style.height = size;
-    } else {
-      style.width = size;
-    }
+    assert(horizontal || vertical);
+    assert(horizontal != vertical);
+    assert(['left', 'right', 'center', 'spaced'].contains(justify));
   }
 }
