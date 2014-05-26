@@ -47,6 +47,7 @@ class Markdown {
     _previewDiv.classes.add('hidden');
     _container.children.add(_previewDiv);
 
+    previewButton.text = "Show Preview";
     previewButton.onClick.listen((_) => toggle());
   }
 
@@ -69,8 +70,7 @@ class Markdown {
   set visible(bool value) {
     _visible = value;
     _previewDiv.classes.toggle('hidden', !_visible);
-    previewButton.children.first.classes.toggle('glyphicon-eye-open', !_visible);
-    previewButton.children.first.classes.toggle('glyphicon-eye-close', _visible);
+    previewButton.text = _visible ? "Show Source" : "Show Preview";
   }
 
   void activate() {
