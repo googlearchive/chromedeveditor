@@ -7,7 +7,6 @@
 :host {
   display: block;
   border: none;
-  box-sizing: border-box;
   margin: 10px 0;
 }
 

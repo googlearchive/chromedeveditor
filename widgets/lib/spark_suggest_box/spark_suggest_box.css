@@ -30,14 +30,11 @@
 #suggestionListMenu {
   border: none;
   display: block;
-  box-sizing: border-box;
   margin: 0 0;
 }
 
 .suggestion-item {
   padding: 2px 12px;
-  font-family: Helvetica, Arial, Sans-serif;
-  font-size: 13px;
   white-space: nowrap;
   text-overflow: ellipsis;
 }

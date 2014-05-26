@@ -6,12 +6,8 @@
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
-/* TODO: Remove font-size. This override the bootstrap styling,
-         if we remove this, we'd have to review entire UI */
 #button {
   outline: none;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 13px;
   height: 100%;
 }
 

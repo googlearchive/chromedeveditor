@@ -8,7 +8,6 @@
 
 :host {
   display: inline-block;
-  box-sizing: border-box;
 }
 
 #overlay {
@@ -16,7 +15,7 @@
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  margin-top: 8px;
+  margin-top: 7px;
 }
 
 /* TODO(ussuri): The values in the 2 translateX()'s below are very ad-hoc.
@@ -31,7 +30,7 @@
 
 :host([valign=left]:host) #overlay {
   /* NOTE: Don't use an odd percentage here; see above why. */
-  -webkit-transform: translateX(-10px);
+  -webkit-transform: translateX(-24px);
 }
 
 .arrow {
