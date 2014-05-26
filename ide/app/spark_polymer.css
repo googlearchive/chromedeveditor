@@ -567,17 +567,18 @@ li.outlineItem a {
   border-style: solid;
   border-color: rgba(255, 255, 255, 1.0);
   border-radius: 0px;
+  font-family: 'FontAwesome';
+  font-weight: bold;
   position: absolute;
+  padding-left: 15px;
+  padding-right: 15px;
   right: 0px;
+  width: 125px;
   z-index: 100;
 }
 
 #togglePreviewButton:hover {
-  background-color: rgba(255, 255, 255, 0.7);;
-}
-
-#togglePreviewButton:active {
-  background-color: rgba(255, 255, 255, 1);;
+  background-color: rgba(78, 134, 244, 0.7);
 }
 
 #togglePreviewButton:focus {
