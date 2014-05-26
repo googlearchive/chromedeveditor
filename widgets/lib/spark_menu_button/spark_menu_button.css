@@ -10,14 +10,17 @@
   display: inline-block;
 }
 
+#button {
+  height: 100%;
+  width: 100%;
+}
+
 #overlay {
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  background-color: #fafafa;
+  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  margin-left: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   margin-top: 7px;
-  -webkit-transform: translateX(-50%);
 }
 
 /* TODO(ussuri): The values in the 2 translateX()'s below are very ad-hoc.
@@ -32,13 +35,14 @@
 
 :host([valign=left]:host) #overlay {
   /* NOTE: Don't use an odd percentage here; see above why. */
-  -webkit-transform: translateX(-24px);
+  -webkit-transform: translateX(-10px);
 }
 
 .arrow {
   height: 1px;
   width: 0;
   margin: -17px auto 0;
+  fill: #fafafa;
   border-color: transparent transparent #cfcfcf transparent;
   border-style: solid;
   border-width: 8px;
@@ -46,19 +50,24 @@
 }
 
 #arrowInner {
-  border-bottom-color: white;
+  fill: #fafafa;
+  border-bottom-color: #fafafa;
   margin-top: -15px;
   top: 1px;
 }
 
-:host([valign=right]:host) .arrow {
+:host([valign=right]) .arrow {
   position: relative;
   left: -7px;
-  margin-left: 91%;
+  margin-right: 10px;
 }
 
-:host([valign=left]:host) .arrow {
+:host([valign=left]) .arrow {
   position: relative;
   left: -7px;
-  margin-left: 9%;
+  margin-left: 20px;
+}
+
+#menu{
+  margin: 10px 0;
 }
