@@ -10,6 +10,8 @@ import 'dart:html' as html;
 import '../lib/services.dart' as services;
 import 'preferences.dart';
 
+final bool _INCLUDE_TYPES = true;
+
 /**
  * Defines a class to build an outline UI for a given block of code.
  */
@@ -205,21 +207,27 @@ abstract class OutlineItem {
   services.OutlineEntry _data;
   html.LIElement _element;
   html.AnchorElement _anchor;
-  html.SpanElement _nameSpan;
-  String get displayName => _data.name;
+  html.SpanElement _typeSpan;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
-    
+
     _anchor = new html.AnchorElement(href: "#");
+    _anchor.text = displayName;
     _element.append(_anchor);
-    
-    _nameSpan = new html.SpanElement()
-        ..text = displayName;
-    _anchor.append(_nameSpan);
-    
-    _element.classes.add("outlineItem $cssClassName");
+
+    if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
+     _typeSpan = new html.SpanElement();
+     _typeSpan.text = returnType;
+     _typeSpan.classes.add("returnType");
+     _element.append(_typeSpan);
+    }
+
+    _element.classes.add("outlineItem ${cssClassName}");
   }
+
+  String get displayName => _data.name;
+  String get returnType => null;
 
   Stream get onClick => _anchor.onClick;
   int get nameStartOffset => _data.nameStartOffset;
@@ -241,25 +249,19 @@ abstract class OutlineTopLevelItem extends OutlineItem {
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
-  services.OutlineTopLevelVariable get _variableData => _data;
-  html.SpanElement _typeSpan;
-  
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
-      : super(data, "variable") {
-    if (returnType != "") {
-      _typeSpan = new html.SpanElement();
-      _typeSpan.text = returnType;
-      _typeSpan.classes.add("returnType");
-      _anchor.append(_typeSpan);
-    }
-  }
+      : super(data, "variable");
 
+  services.OutlineTopLevelVariable get _variableData => _data;
   String get returnType => _variableData.returnType;
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
   OutlineTopLevelFunction(services.OutlineTopLevelFunction data)
       : super(data, "function");
+
+  services.OutlineTopLevelFunction get _functionData => _data;
+  String get returnType => _functionData.returnType;
 }
 
 class OutlineClass extends OutlineTopLevelItem {
@@ -318,29 +320,25 @@ abstract class OutlineClassMember extends OutlineItem {
 }
 
 class OutlineMethod extends OutlineClassMember {
-  OutlineMethod(services.OutlineMethod data)
-      : super(data, "method");
+  OutlineMethod(services.OutlineMethod data) : super(data, "method");
+
+  services.OutlineMethod get _methodData => _data;
+  String get returnType => _methodData.returnType;
 }
 
 class OutlineProperty extends OutlineClassMember {
-  html.SpanElement _typeSpan;
+  OutlineProperty(services.OutlineProperty data) : super(data, "property");
 
-  OutlineProperty(services.OutlineProperty data)
-      : super(data, "property") {
-    if (returnType != "") {
-      _typeSpan = new html.SpanElement();
-      _typeSpan.text = returnType;
-      _typeSpan.classes.add("returnType");
-      _anchor.append(_typeSpan);
-    }
-  }
-  
   services.OutlineProperty get _propertyData => _data;
   String get returnType => _propertyData.returnType;
 }
 
 class OutlineAccessor extends OutlineClassMember {
-  String get displayName => _data.name;
   OutlineAccessor(services.OutlineAccessor data)
       : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
+
+  services.OutlineAccessor get _accessorData => _data;
+
+  String get displayName => _data.name;
+  String get returnType => _accessorData.returnType;
 }

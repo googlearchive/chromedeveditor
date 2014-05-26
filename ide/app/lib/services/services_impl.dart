@@ -404,7 +404,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     return outline;
   }
-  
+
   void _addVariableToOutline(Outline outline,
       analyzer.TopLevelVariableDeclaration declaration) {
     analyzer.VariableDeclarationList variables = declaration.variables;
@@ -412,16 +412,17 @@ class AnalyzerServiceImpl extends ServiceImpl {
     for (analyzer.VariableDeclaration variable in variables.variables) {
       outline.entries.add(_populateOutlineEntry(
           new OutlineTopLevelVariable(variable.name.name,
-              getTypeNameFor(variables.type)),
+              _getTypeNameString(variables.type)),
           new _Range.fromAstNode(declaration),
           new _Range.fromAstNode(declaration)));
     }
   }
-  
+
   void _addFunctionToOutline(Outline outline,
       analyzer.FunctionDeclaration declaration) {
     outline.entries.add(_populateOutlineEntry(
-        new OutlineTopLevelFunction(declaration.name.name),
+        new OutlineTopLevelFunction(
+            declaration.name.name, _getTypeNameString(declaration.returnType)),
         new _Range.fromAstNode(declaration.name),
         new _Range.fromAstNode(declaration)));
   }
@@ -444,34 +445,39 @@ class AnalyzerServiceImpl extends ServiceImpl {
       }
     }
   }
-  
+
   void _addMethodToOutlineClass(OutlineClass outlineClass,
       analyzer.MethodDeclaration member) {
-    if (member.isGetter || member.isSetter) {
+    if (member.isGetter) {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineAccessor(member.name.name, member.isSetter),
+          new OutlineAccessor(member.name.name,
+              _getTypeNameString(member.returnType)),
+          new _Range.fromAstNode(member.name),
+          new _Range.fromAstNode(member)));
+    } else if (member.isSetter) {
+      outlineClass.members.add(_populateOutlineEntry(
+          new OutlineAccessor(member.name.name, null, true),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     } else {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineMethod(member.name.name),
+          new OutlineMethod(member.name.name, _getTypeNameString(member.returnType)),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     }
   }
-  
+
   void _addFieldToOutlineClass(OutlineClass outlineClass,
       analyzer.FieldDeclaration member) {
     analyzer.VariableDeclarationList fields = member.fields;
     for (analyzer.VariableDeclaration field in fields.variables) {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineProperty(field.name.name,
-              getTypeNameFor(fields.type)),
+          new OutlineProperty(field.name.name, _getTypeNameString(fields.type)),
           new _Range.fromAstNode(field),
           new _Range.fromAstNode(field.parent)));
     }
   }
-  
+
   void _addConstructorToOutlineClass(OutlineClass outlineClass,
       analyzer.ConstructorDeclaration member,
       analyzer.ClassDeclaration classDeclaration) {
@@ -489,9 +495,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
         nameRange,
         new _Range.fromAstNode(classDeclaration)));
   }
-  
-  String getTypeNameFor(analyzer.TypeName typeName) =>
-      (typeName == null) ? "" : typeName.name.name;
 
   OutlineEntry _populateOutlineEntry(OutlineEntry outlineEntry, _Range name,
       _Range body) {
@@ -621,4 +624,17 @@ abstract class ServiceImpl {
       }
     }
   }
+}
+
+String _getTypeNameString(analyzer.TypeName typeName) {
+  if (typeName == null) return null;
+
+  analyzer.Identifier identifier = typeName.name;
+  if (identifier == null) return null;
+
+  String name = identifier.name;
+  if (name == null) return null;
+
+  int index = name.lastIndexOf('.');
+  return index == -1 ? name : name.substring(index + 1);
 }
