@@ -30,7 +30,7 @@
 
 :host([valign=left]:host) #overlay {
   /* NOTE: Don't use an odd percentage here; see above why. */
-  -webkit-transform: translateX(-24px);
+  -webkit-transform: translateX(-10px);
 }
 
 .arrow {
@@ -49,14 +49,18 @@
   top: 1px;
 }
 
-:host([valign=right]:host) .arrow {
+:host([valign=right]) .arrow {
   position: relative;
   left: -7px;
   margin-right: 10px;
 }
 
-:host([valign=left]:host) .arrow {
+:host([valign=left]) .arrow {
   position: relative;
   left: -7px;
   margin-left: 20px;
+}
+
+#menu{
+  margin: 10px 0;
 }

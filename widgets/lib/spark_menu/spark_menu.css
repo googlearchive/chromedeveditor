@@ -7,7 +7,6 @@
 :host {
   display: block;
   border: none;
-  margin: 10px 0;
 }
 
 ::content spark-menu-item,
@@ -16,7 +15,7 @@
 }
 
 ::content spark-menu-item {
-  min-height: 40px;
+  min-height: 35px;
 }
 
 ::content spark-menu-separator {

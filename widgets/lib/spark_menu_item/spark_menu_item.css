@@ -10,18 +10,17 @@
   justify-content: space-between;
   padding: 0 20px 0 20px;
   border: none;
+  overflow: hidden;
   cursor: pointer;
 }
 
-:host *,
 ::content * {
   overflow: hidden;
-  cursor: default;
 }
 
 #label,
 ::content * {
-  color: black;
+  color: #000;
 }
 
 #label,
@@ -34,17 +33,17 @@
   justify-content: flex-end;
 }
 
-:host(.active:host, .selected:host) #label,
-:host(.active:host, .selected:host) #description,
-:host(.active:host, .selected:host) ::content * {
+:host(.active, .selected) #label,
+:host(.active, .selected) #description,
+:host(.active, .selected) ::content * {
   color: white;
 }
 
-:host(.selected:host) {
+:host(.selected) {
   background-color: rgba(66, 129, 244, 0.5);
 }
 
-:host(.active:host) {
+:host(.active) {
   background-color: rgba(66, 129, 244, 1.0);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
