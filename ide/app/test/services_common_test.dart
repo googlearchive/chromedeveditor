@@ -77,8 +77,8 @@ Map outlineClassVariableMap = {
 
 
 defineTests() {
-  group('Outline Instantiation Tests', () {
-    test('Instantiate individual entries', () {
+  group('services.outline', () {
+    test('instantiate individual entries', () {
       // Make copies before we mutate the test data.
       Map outlineClassMap = new Map.from(_outlineClassMap);
       outlineClassMap['members'] = [];
@@ -86,8 +86,7 @@ defineTests() {
       OutlineTopLevelVariable outlineTopLevelVariable =
           new OutlineTopLevelEntry.fromMap(outlineTopLevelVariableMap);
       expectOutlineTopLevelVariable(outlineTopLevelVariable);
-      expect(outlineTopLevelVariable.toMap(),
-          equals(outlineTopLevelVariableMap));
+      expect(outlineTopLevelVariable.toMap(), equals(outlineTopLevelVariableMap));
 
       OutlineClass outlineEmptyClass =
           new OutlineTopLevelEntry.fromMap(outlineClassMap);
@@ -109,7 +108,7 @@ defineTests() {
       expect(outlineFunction.toMap(), equals(outlineFunctionMap));
     });
 
-    test('Instantiate full outline', () {
+    test('instantiate full outline', () {
       Map outlineClassMap = new Map.from(_outlineClassMap);
 
       Outline outline = new Outline.fromMap({
