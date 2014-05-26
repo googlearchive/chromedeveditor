@@ -10,8 +10,13 @@
   display: inline-block;
 }
 
+#button {
+  height: 100%;
+  width: 100%;
+}
+
 #overlay {
-  background: white;
+  background-color: #fafafa;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -37,6 +42,7 @@
   height: 1px;
   width: 0;
   margin: -17px auto 0;
+  fill: #fafafa;
   border-color: transparent transparent #cfcfcf transparent;
   border-style: solid;
   border-width: 8px;
@@ -44,7 +50,8 @@
 }
 
 #arrowInner {
-  border-bottom-color: white;
+  fill: #fafafa;
+  border-bottom-color: #fafafa;
   margin-top: -15px;
   top: 1px;
 }
