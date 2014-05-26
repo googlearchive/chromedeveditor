@@ -42,7 +42,6 @@
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;
   overflow: hidden;
@@ -57,10 +56,9 @@
   text-align: center;
 }
 
-#toolbar {
-  position: absolute;
-  left: 0;
-  right: 0;
+.toolbar {
+  height: 48px;
+  border-bottom: 1px solid #ddd;
 }
 
 #fileFilter {
@@ -70,7 +68,6 @@
   height: 36px;
   flex: 1;
   font: inherit;
-  font-size: 14px;
   margin: 2px;
   padding: 10px 10px 10px 44px;
 }
@@ -110,7 +107,6 @@
   position: absolute;
   right: 0;
   width: 95px;
-  padding: 0 0 0 10px;
   z-index: 150;
 }
 

@@ -31,7 +31,7 @@
         minTargetSize="200"
         on-update="{{onSplitterUpdate}}">
       <div beforeSplit>
-        <spark-toolbar id="toolbar">
+        <spark-toolbar class="toolbar" horizontal justify="spaced">
           <input type="fileFilter"
               id="fileFilter"
               placeholder="Filter"
@@ -98,7 +98,8 @@
       <div afterSplit>
         <content select="#editorArea"></content>
 
-        <spark-toolbar id="navigationButtons">
+        <spark-toolbar id="navigationButtons" class="toolbar"
+            horizontal justify="right">
           <spark-button id="leftNav" noBorder>
             <i class="fa fa-arrow-left"></i>
           </spark-button>

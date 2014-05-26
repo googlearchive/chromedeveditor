@@ -167,7 +167,6 @@ button.ace_searchbtn_close:active {
   opacity: 1;
   transition: opacity 250ms;
   text-align: center;
-  font-size: 13px;
 }
 
 .editor-dialog .editor-dialog-message {
@@ -322,7 +321,6 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container .filename {
-  font-size: 13px;
   overflow: hidden;
   position: absolute;
   top: 1px;

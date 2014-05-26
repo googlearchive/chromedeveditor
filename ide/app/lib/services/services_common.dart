@@ -414,10 +414,10 @@ class OutlineMethod extends OutlineMember {
   }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-      "returnType": returnType
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
 
@@ -437,10 +437,10 @@ class OutlineProperty extends OutlineMember {
   }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-      "returnType": returnType
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
 
@@ -466,11 +466,11 @@ class OutlineAccessor extends OutlineMember {
   }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-      "returnType": returnType,
-      "setter": setter
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    m['setter'] = setter;
+    return m;
   }
 }
 
@@ -480,7 +480,7 @@ class OutlineAccessor extends OutlineMember {
 class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   static String _type = "function";
 
-  String returnType = null;
+  String returnType;
 
   OutlineTopLevelFunction([String name, this.returnType]) : super(name);
 
@@ -490,10 +490,10 @@ class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-      "returnType": returnType
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
 
@@ -502,7 +502,8 @@ class OutlineTopLevelFunction extends OutlineTopLevelEntry {
  */
 class OutlineTopLevelVariable extends OutlineTopLevelEntry {
   static String _type = "top-level-variable";
-  String returnType = null;
+
+  String returnType;
 
   OutlineTopLevelVariable([String name, this.returnType]) : super(name);
 
@@ -512,9 +513,9 @@ class OutlineTopLevelVariable extends OutlineTopLevelEntry {
   }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-      "returnType": returnType,
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
