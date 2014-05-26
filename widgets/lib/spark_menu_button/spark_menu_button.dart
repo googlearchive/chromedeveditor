@@ -50,8 +50,8 @@ class SparkMenuButton extends SparkWidget {
       // TODO(ussuri): A temporary plug to make #overlay and #button see
       // changes in 'opened'. Data binding via {{opened}} in the HTML isn't
       // detected. deliverChanges() fixes #overlay, but not #button.
-      _overlay.opened = inOpened;
-      _button.active = inOpened;
+      _overlay..opened = inOpened..deliverChanges();
+      _button..active = inOpened..deliverChanges();
       if (opened) {
         // Enforce focused state so the button can accept keyboard events.
         focus();
