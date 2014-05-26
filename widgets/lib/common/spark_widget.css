@@ -35,12 +35,12 @@
  */
 /*
 :host > * {
-  outline: red dashed 1px;
+  outline: red dashed 1px !important;
 }
 ::content > * {
-  outline: green dotted 1px;
+  outline: green dotted 1px !important;
 }
 */
 .debug, [debug] {
-  outline: blue solid 1px;
+  outline: blue solid 1px !important;
 }
