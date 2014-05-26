@@ -561,12 +561,14 @@ li.outlineItem a {
 }
 
 #togglePreviewButton {
-  background-color: rgba(255, 255, 255, 0.5);
-  border: none;
-  border-radius: 5px;
+  color: rgba(255, 255, 255, 1.0);
+  background-color: rgba(39, 40, 34, 1.0);
+  border: 1px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 1.0);
+  border-radius: 0px;
   position: absolute;
   right: 0px;
-  width: 30px;
   z-index: 100;
 }
 
@@ -583,15 +585,13 @@ li.outlineItem a {
 }
 
 #markdownContent {
-  background: rgba(0, 0, 0, 0.8);
+  background-color: rgba(39, 40, 34, 1.0);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  bottom: 40px;
+  bottom: 0px;
   overflow-y: auto;
   padding: 10px;
   position: absolute;
-  right: 30px;
-  top: 10px;
+  top: 0px;
   transition: opacity 250ms;
-  width: 400px;
   z-index: 100;
 }
