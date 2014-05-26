@@ -307,15 +307,17 @@ class MarkdownEditor extends TextEditor {
   void activate() {
     super.activate();
     _markdown.activate();
-    _markdownOnDirtySubscription = onDirtyChange.listen((_) =>
-        _markdown.renderHtml());
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    _markdownOnDirtySubscription.cancel();
     _markdown.deactivate();
+  }
+
+  @override
+  void reconcile() {
+    _markdown.renderHtml()
   }
 }
 
