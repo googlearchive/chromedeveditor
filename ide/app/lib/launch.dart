@@ -234,7 +234,6 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 
   Future run(Resource resource) {
     Container launchContainer = getAppContainerFor(resource);
-    window.console.log(launchContainer.entry);
     return updateManifest(launchContainer.entry).then((_) {
 
     return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
