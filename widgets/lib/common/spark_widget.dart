@@ -35,12 +35,13 @@ class SparkWidget extends PolymerElement {
     if (elts.isEmpty) {
       elts = shadowRoot.querySelectorAll('[focused]');
     }
-    if (elts.isNotEmpty) {
-      // At most one element is expected to have an `focused` attribute.
-      // Use [first] vs [single] to be more lax to errors in production.
-      assert(elts.length == 1);
-      return elts.first;
-    }
+
+    if (elts.isEmpty) return null;
+
+    // At most one element is expected to have an `focused` attribute.
+    // Use [first] vs [single] to be more lax to errors in production.
+    assert(elts.length == 1);
+    return elts.first;
   }
 
   /**
