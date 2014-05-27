@@ -317,7 +317,7 @@ class MarkdownEditor extends TextEditor {
 
   @override
   void reconcile() {
-    _markdown.renderHtml()
+    _markdown.renderHtml();
   }
 }
 
