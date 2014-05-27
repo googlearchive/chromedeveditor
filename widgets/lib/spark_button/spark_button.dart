@@ -39,6 +39,5 @@ class SparkButton extends SparkWidget {
     } else {
       raised = true;
     }
-    deliverChanges();
   }
 }
