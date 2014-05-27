@@ -54,7 +54,7 @@ class SparkMenuButton extends SparkWidget {
     _toggleQueue.add(inOpened);
     if (_toggleTimer == null) {
       _toggleTimer = new Timer(
-          const Duration(milliseconds: 50), _completeToggle);
+          const Duration(milliseconds: 200), _completeToggle);
     }
   }
 
