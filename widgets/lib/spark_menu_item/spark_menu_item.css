@@ -25,7 +25,7 @@
 
 #label,
 #description {
-  text-transform: uppercase;
+  text-transform: capitalize;
 }
 
 #description {
