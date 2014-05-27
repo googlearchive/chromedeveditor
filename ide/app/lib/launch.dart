@@ -8,6 +8,7 @@
 library spark.launch;
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:html' show window;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -28,6 +29,13 @@ import 'workspace.dart';
 final Logger _logger = new Logger('spark.launch');
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
+
+final String SPARK_NIGHTLY_KEY
+    = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwqXKrcvbi1a1IjFM5COs07Ee9xvPyOSh9dhEF6kwBGjAH6/4F7MHOfPk+W04PURi707E8SsS2iCkvrMiJPh4GnrZ3fWqFUzlsAcUljcYbkyorKxglwdZEXWbFgcKVR/uzuzXD8mOcuXRLu0YyVSdEGzhfZ1HkeMQCKEncUCL5ziE4ZkZJ7I8YVhVG+uiROeMg3zjxxSQrYHOfG5HOqmVslRPCfyiRbIHH3JPD0lax5FudngdKy0+1nkkqVJCpRSf75cRRnxGPjdEvNzTEFmf5oGFxSVs7iXoVQvNXB35Qfyw5rV6N+JyERdu6a7xEnz9lbw41m/noKInlfP+uBQuaQIDAQAB";
+final String SPARK_RELEASE_KEY
+    = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2OvldPjAqgEboHyyZM7GpCMmGMSQ8aExOlQyOhN3C9fDRXqnAN/Ie20TEwD9Eb2CciV3Ru4Gm7PmDnkHzsljD84qLgBdN39FzPGDyViXTS442xTElWRZMZQfJYQpbMpiePL720kTHgLLAcwTgdP9DnvRPrKukIs/U4Y76NFk7NNbsNOc6FWisLJykw2POTB1RR5ZlZrA4Ax1P7kt7qQdomE6i8wy1TA1jDhG8AhEXKRfpyELvJmzyVIyR9uiSHDHCdihiS5oyjADjmmbklvL7Ns0cSAgEX/lWN8UX8r17zoKZzJ0MkmCQ5Nlfql8qUtn2oZXaHztkkAcXCxkq9/37QIDAQAB";
+final String SPARK_RELEASE_ID ="pnoffddplpippgcfjdhbmhkofpnaalpg";
+final String SPARK_NIGHTLY_ID ="kcjgcakhgelcejampmijgkjkadfcncjl";
 
 /**
  * Manages all the launches and calls the appropriate delegate.
@@ -195,24 +203,54 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     return getAppContainerFor(resource) != null;
   }
 
+  Future updateManifest(chrome.DirectoryEntry dir) {
+    String id = chrome.runtime.id;
+
+    // Special logic for launching spark within spark.
+    // TODO (grv) : Implement a better way of handling launch of spark from
+    // spark.
+    if (id == SPARK_NIGHTLY_ID || id == SPARK_RELEASE_ID) {
+      return dir.getFile('manifest.json').then((entry) {
+        return entry.readText().then((content) {
+          var manifestDict = JSON.decode(content);
+
+          String key = manifestDict['key'];
+          if (id == SPARK_NIGHTLY_ID && key == SPARK_NIGHTLY_KEY) {
+            manifestDict['key'] = SPARK_RELEASE_KEY;
+          } else if (id == SPARK_RELEASE_ID && key == SPARK_RELEASE_KEY) {
+            manifestDict['key'] = SPARK_NIGHTLY_KEY;
+          } else {
+            return new Future.value();
+          }
+          // This modifies the manifest file permanently.
+          return entry.writeText(new JsonPrinter().print(manifestDict));
+        });
+      });
+    } else {
+      return new Future.value();
+    }
+  }
+
   Future run(Resource resource) {
     Container launchContainer = getAppContainerFor(resource);
+    return updateManifest(launchContainer.entry).then((_) {
+      return developerPrivate.loadDirectory(launchContainer.entry).then(
+          (String appId) {
+        // TODO: Use the returned appId once it has the correct results.
 
-    return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
-      // TODO: Use the returned appId once it has the correct results.
-
-      // TODO: Delay a bit - there's a race condition.
-      return new Future.delayed(new Duration(milliseconds: 100));
-    }).then((_) {
-      return _getAppId(launchContainer.name);
-    }).then((String id) {
-      if (id == null) {
-        throw 'Unable to locate an application id.';
-      } else if (!management.available) {
-        throw 'The chrome.management API is not available.';
-      } else {
-        return management.launchApp(id);
-      }
+        // TODO: Delay a bit - there's a race condition.
+        return new Future.delayed(new Duration(milliseconds: 100));
+      }).then((_) {
+        return _getAppId(launchContainer.name);
+      }).then((String id) {
+        if (id == null) {
+          throw 'Unable to locate an application id.';
+        } else if (!management.available) {
+          throw 'The chrome.management API is not available.';
+        } else {
+          return management.launchApp(id);
+        }
+      });
     });
   }
 
