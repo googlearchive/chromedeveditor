@@ -2582,7 +2582,6 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
     SparkButton pushButton = getElement('#gitPush');
     pushButton.enabled = false;
-    pushButton.text = "Pushing...";
     pushButton.deliverChanges();
 
     ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
@@ -2590,15 +2589,12 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
         spark, monitor);
     task.run().then((_) {
       spark.showSuccessMessage('Changes pushed successfully');
-
     }).catchError((e) {
       spark.showErrorMessage('Error while pushing changes', e.toString());
-
     }).whenComplete(() {
       _restoreDialog();
       _hide();
     });
-
   }
 
   void _toggleProgressVisible(bool visible) {
@@ -2608,9 +2604,9 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _restoreDialog() {
-    SparkButton cloneButton = getElement('#gitPush');
-    cloneButton.enabled = true;
-    cloneButton.text = "Push";
+    SparkButton pushButton = getElement('#gitPush');
+    pushButton.enabled = true;
+    pushButton.text = "Push";
     SparkButton closeButton = getElement('#gitPushClose');
     closeButton.enabled = true;
     _toggleProgressVisible(false);
@@ -2928,12 +2924,9 @@ class _GitPushTask {
   ProgressMonitor monitor;
 
   _GitPushTask(this.gitOperations, this.username, this.password, this.spark,
-      this.monitor){
-  }
+      this.monitor);
 
-  Future run() {
-    return gitOperations.push(username, password);
-  }
+  Future run() => gitOperations.push(username, password);
 }
 
 abstract class PackageManagementJob extends Job {
