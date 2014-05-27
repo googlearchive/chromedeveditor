@@ -434,3 +434,57 @@ class FutureHelper {
     return doneSignal.future;
   }
 }
+
+/**
+ * Pretty print Json text.
+ *
+ * Usage:
+ *     String str = new JsonPrinter().print(jsonObject);
+ */
+class JsonPrinter {
+  String _in = '';
+
+  JsonPrinter();
+
+  /**
+   * Given a structured, json-like object, print it to a well-formatted, valid
+   * json string.
+   */
+  String print(dynamic json) {
+    return _print(json) + '\n';
+  }
+
+  String _print(var obj) {
+    if (obj is List) {
+      return _printList(obj);
+    } else if (obj is Map) {
+      return _printMap(obj);
+    } else if (obj is String) {
+      return '"${obj}"';
+    } else {
+      return '${obj}';
+    }
+  }
+
+  String _printList(List list) {
+    return "[${_indent()}${list.map(_print).join(',${_newLine}')}${_unIndent()}]";
+  }
+
+  String _printMap(Map map) {
+    return "{${_indent()}${map.keys.map((key) {
+      return '"${key}": ${_print(map[key])}';
+    }).join(',${_newLine}')}${_unIndent()}}";
+  }
+
+  String get _newLine => '\n${_in}';
+
+  String _indent() {
+    _in += '  ';
+    return '\n${_in}';
+  }
+
+  String _unIndent() {
+    _in = _in.substring(2);
+    return '\n${_in}';
+  }
+}
