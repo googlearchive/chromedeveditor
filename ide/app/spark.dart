@@ -1829,7 +1829,7 @@ class FocusMainMenuAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    querySelector('#mainMenu').focus();
+    spark.getUIElement('#mainMenu').focus();
   }
 }
 
