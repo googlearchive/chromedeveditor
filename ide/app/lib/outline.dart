@@ -17,9 +17,6 @@ class Outline {
   Map<int, OutlineItem> _outlineItemsByOffset;
   OutlineItem _selectedItem;
 
-  StreamSubscription _currentOutlineOperation;
-  Completer _buildCompleter;
-
   html.Element _container;
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
@@ -90,25 +87,11 @@ class Outline {
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
-   * Returns a subscription which can be canceled to cancel the outline.
    */
   Future build(String name, String code) {
-    if (_currentOutlineOperation != null) {
-      _currentOutlineOperation.cancel();
-    }
-
-    if (_buildCompleter != null && !_buildCompleter.isCompleted) {
-      _buildCompleter.complete();
-    }
-
-    _buildCompleter = new Completer();
-
-    _currentOutlineOperation =
-        _analyzer.getOutlineFor(code, name).asStream().listen(
-            (services.Outline model) => _populate(model));
-    _currentOutlineOperation.onDone(() => _buildCompleter.complete);
-
-    return _buildCompleter.future;
+    return _analyzer.getOutlineFor(code, name).then((services.Outline model) {
+      _populate(model);
+    });
   }
 
   void _populate(services.Outline outline) {
@@ -210,14 +193,14 @@ abstract class OutlineItem {
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
-    
+
     _anchor = new html.AnchorElement(href: "#");
     _element.append(_anchor);
-    
+
     _nameSpan = new html.SpanElement()
         ..text = displayName;
     _anchor.append(_nameSpan);
-    
+
     _element.classes.add("outlineItem $cssClassName");
   }
 
@@ -243,7 +226,7 @@ abstract class OutlineTopLevelItem extends OutlineItem {
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
   services.OutlineTopLevelVariable get _variableData => _data;
   html.SpanElement _typeSpan;
-  
+
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
       : super(data, "variable") {
     if (returnType != "") {
@@ -334,7 +317,7 @@ class OutlineProperty extends OutlineClassMember {
       _anchor.append(_typeSpan);
     }
   }
-  
+
   services.OutlineProperty get _propertyData => _data;
   String get returnType => _propertyData.returnType;
 }
