@@ -44,3 +44,14 @@
 .debug, [debug] {
   outline: blue solid 1px !important;
 }
+
+/* Uncomment this rule to debug focus changes, e.g. when cycling the focus
+ * using TAB.
+ */
+/*
+:host(:focus),
+*:focus,
+::content > *:focus {
+  box-shadow: 0 0 10px 10px pink !important;  
+}
+*/
