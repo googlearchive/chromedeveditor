@@ -171,13 +171,11 @@ class SparkPolymer extends Spark {
 
   @override
   void initSplitView() {
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => null);
-        if (value != null) {
-          _ui.splitViewPosition = value;
-          _ui.deliverChanges();
-        }
+    syncPrefs.getValue('splitViewPosition', '300').then((String position) {
+      int value = int.parse(position, onError: (_) => null);
+      if (value != null) {
+        _ui.splitViewPosition = value;
+        _ui.deliverChanges();
       }
     });
   }
@@ -252,13 +250,13 @@ class SparkPolymer extends Spark {
     SparkButton button = getUIElement('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
-      button.enabled = action.enabled;
+      button.disabled = !action.enabled;
       button.deliverChanges();
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();
     });
-    button.enabled = action.enabled;
+    button.disabled = !action.enabled;
   }
 
   @override

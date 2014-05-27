@@ -16,7 +16,7 @@ class SparkMenuItem extends SparkWidget {
   @published String icon = "";
 
   /// Size of the icon.
-  @published int iconSize = 0;
+  @published String iconSize = '24px';
 
   /// Specifies the label for the menu item.
   @published String label = "";
@@ -24,15 +24,10 @@ class SparkMenuItem extends SparkWidget {
   /// Description for this menu, usually used for a keybinding description.
   @published String description = "";
 
-  @reflectable bool get hasIcon => icon.isNotEmpty || iconSize != 0;
-
   SparkMenuItem.created(): super.created();
 
   @override
-  void ready() {
-    super.ready();
-    if (icon.isNotEmpty && iconSize == 0) {
-      iconSize = 24;
-    }
+  void enteredView() {
+    super.enteredView();
   }
 }

@@ -7,20 +7,23 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-button" extends="spark-widget"
-    attributes="primary
-                large
-                small
+    attributes="raised
+                flat
+                round
+                primary
                 minPadding
                 noPadding
-                enabled
-                active
-                noBorder">
+                disabled
+                active">
   <template>
     <link rel="stylesheet" href="spark_button.css">
 
-    <button id="button" type="button" class="btn" focused>
-      <content></content>
-    </button>
+    <div id="button" focused tabindex="0">
+      <div id="focusBg"></div>
+      <div id="content">
+        <content></content>
+      </div>
+    </div>
   </template>
 
   <script type="application/dart;component=1" src="spark_button.dart"></script>

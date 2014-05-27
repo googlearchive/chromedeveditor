@@ -705,13 +705,14 @@ abstract class Spark
     }
   }
 
-  void _openFile(ws.Resource resource) {
-    if (currentEditedFile == resource) return;
+  Future _openFile(ws.Resource resource) {
+    if (currentEditedFile == resource) return new Future.value();
 
     if (resource is ws.File) {
       navigationManager.gotoLocation(new NavigationLocation(resource));
+      return new Future.value();
     } else {
-      _selectFile(resource);
+      return _selectFile(resource);
     }
   }
 
@@ -1195,7 +1196,9 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
           // the resource creation event; we should remove the possibility for
           // this to occur.
           Timer.run(() {
-            spark._openFile(file);
+            spark._openFile(file).then((_) {
+              spark.editorArea.persistTab(file);
+            });
             spark._aceManager.focus();
           });
         }).catchError((e) {
@@ -1284,6 +1287,8 @@ Do you really want to delete "${project.name}"?
 This will permanently delete the project contents from disk and cannot be undone.
 ''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
       if (val) {
+        // TODO(grv) : scmManger should listen to the delete project event.
+        spark.scmManager.removeProject(project);
         project.delete().catchError((e) {
           spark.showErrorMessage("Error while deleting project", e.toString());
         });
@@ -1826,7 +1831,7 @@ class FocusMainMenuAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    querySelector('#mainMenu').focus();
+    spark.getUIElement('#mainMenu').focus();
   }
 }
 
@@ -2032,7 +2037,7 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
 
     _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
 
-    _deployButton.enabled = !visible;
+    _deployButton.disabled = visible;
     _deployButton.deliverChanges();
   }
 }
@@ -2186,25 +2191,25 @@ class GitCloneAction extends SparkActionWithDialog {
 
   void _restoreDialog() {
     SparkButton cloneButton = getElement('#clone');
-    cloneButton.enabled = true;
+    cloneButton.disabled = false;
     cloneButton.text = "Clone";
+
     SparkButton closeButton = getElement('#cloneClose');
-    closeButton.enabled = true;
+    closeButton.disabled = false;
     _toggleProgressVisible(false);
   }
 
   void _commit() {
-
     SparkProgress progressComponent = getElement('#cloneProgress');
     progressComponent.progressMessage = "Cloning...";
     _toggleProgressVisible(true);
 
     SparkButton closeButton = getElement('#cloneClose');
-    closeButton.enabled = false;
+    closeButton.disabled = true;
     closeButton.deliverChanges();
 
     SparkButton cloneButton = getElement('#clone');
-    cloneButton.enabled = false;
+    cloneButton.disabled = true;
     cloneButton.text = "Cloning...";
     cloneButton.deliverChanges();
 
@@ -2525,7 +2530,11 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
     _commitsList = getElement('#gitCommitList');
   }
 
+  void _onClose() => _hide();
+
   void _invoke([context]) {
+    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+    _triggerOnReturn("#gitPush", false);
     project = context.first;
 
     gitOperations = spark.scmManager.getScmOperationsFor(project);
@@ -2565,8 +2574,44 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _push() {
-    _GitPushJob job = new _GitPushJob(gitOperations, _gitUsername, _gitPassword, spark);
-    spark.jobManager.schedule(job);
+    SparkProgress progressComponent = getElement('#gitPushProgress');
+    progressComponent.progressMessage = "Pushing...";
+    _toggleProgressVisible(true);
+
+    SparkButton closeButton = getElement('#gitPushClose');
+    closeButton.disabled = true;
+    closeButton.deliverChanges();
+
+    SparkButton pushButton = getElement('#gitPush');
+    pushButton.disabled = true;
+    pushButton.deliverChanges();
+
+    ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
+    _GitPushTask task = new _GitPushTask(gitOperations, _gitUsername, _gitPassword,
+        spark, monitor);
+    task.run().then((_) {
+      spark.showSuccessMessage('Changes pushed successfully');
+    }).catchError((e) {
+      spark.showErrorMessage('Error while pushing changes', e.toString());
+    }).whenComplete(() {
+      _restoreDialog();
+      _hide();
+    });
+  }
+
+  void _toggleProgressVisible(bool visible) {
+    SparkProgress progressComponent = getElement('#gitPushProgress');
+    progressComponent.visible = visible;
+    progressComponent.deliverChanges();
+  }
+
+  void _restoreDialog() {
+    SparkButton pushButton = getElement('#gitPush');
+    pushButton.disabled = false;
+
+    SparkButton closeButton = getElement('#gitPushClose');
+    closeButton.disabled = false;
+    _toggleProgressVisible(false);
   }
 
   void _commit() {
@@ -2873,25 +2918,17 @@ class _OpenFolderJob extends Job {
   }
 }
 
-class _GitPushJob extends Job {
+class _GitPushTask {
   GitScmProjectOperations gitOperations;
   Spark spark;
   String username;
   String password;
+  ProgressMonitor monitor;
 
-  _GitPushJob(this.gitOperations, this.username, this.password, this.spark)
-      : super("Pushing changes…") {
-  }
+  _GitPushTask(this.gitOperations, this.username, this.password, this.spark,
+      this.monitor);
 
-  Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
-
-    return gitOperations.push(username, password).then((_) {
-      spark.showSuccessMessage('Changes pushed successfully');
-    }).catchError((e) {
-      spark.showErrorMessage('Error while pushing changes', e.toString());
-    });
-  }
+  Future run() => gitOperations.push(username, password);
 }
 
 abstract class PackageManagementJob extends Job {

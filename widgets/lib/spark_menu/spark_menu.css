@@ -5,51 +5,19 @@
 @import url("../common/spark_widget.css");
 
 :host {
-  border: none;
   display: block;
-  box-sizing: border-box;
-  margin: 5px 0;
+  border: none;
 }
 
-/*@polyfill spark-menu-item, spark-menu-separator */
-::content spark-menu-item, ::content spark-menu-separator {
-  display: block;
+::content spark-menu-item,
+::content spark-menu-separator {
   min-width: 160px;
-  cursor: default;
-  box-sizing: border-box;
 }
 
 ::content spark-menu-item {
-  min-height: 30px;
-  border: none;
+  min-height: 35px;
 }
 
-::content spark-menu-item.selected {
-  background-color: #1a64a3;
-}
-
-/* BUG #1569 */
-::content spark-menu-item.selected ^ * {
-  color: white;
-}
-::content spark-menu-item.selected /deep/ * {
-  color: white;
-}
-
-::content spark-menu-item.active {
-  background-color: #3a84c3;
-}
-
-/* BUG #1569 */
-::content spark-menu-item.active ^ * {
-  color: white;
-}
-::content spark-menu-item.active /deep/ * {
-  color: white;
-}
-
-/*@polyfill spark-menu-separator */
 ::content spark-menu-separator {
-  height: 2px;
   margin: 2px 0px;
 }

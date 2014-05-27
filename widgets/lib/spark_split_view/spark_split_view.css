@@ -10,11 +10,11 @@
   -webkit-transform: scaleZ(1);
 }
 
-:host([direction="left"], [direction="right"]) {
+:host([direction="left"]:host, [direction="right"]:host) {
   flex-flow: row;
 }
 
-:host([direction="up"], [direction="down"]) {
+:host([direction="up"]:host, [direction="down"]:host) {
   flex-flow: column;
 }
 

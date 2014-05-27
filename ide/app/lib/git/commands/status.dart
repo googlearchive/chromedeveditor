@@ -40,7 +40,15 @@ class Status {
       // Dont't track status for new and untracked files unless explicitly
       // added.
       if (status == null) {
-        return new FileStatus();
+
+        status = new FileStatus();
+
+        // Ignore status of .lock files.
+        // TODO (grv) : Implement gitignore support.
+        if (entry.name.endsWith('.lock')) {
+          status.type = FileStatusType.COMMITTED;
+        }
+        return status;
       }
 
       // TODO(grv) : check the modification time when it is available.

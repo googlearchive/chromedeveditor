@@ -20,10 +20,8 @@ import 'exception.dart';
 import 'jobs.dart';
 import 'workspace.dart';
 import 'git/config.dart';
-import 'git/exception.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
-import 'git/exception.dart';
 import 'git/options.dart';
 import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
@@ -112,6 +110,10 @@ class ScmManager {
     } else {
       return new Future.value();
     }
+  }
+
+  void removeProject(Project project) {
+    _operations.remove(project);
   }
 }
 

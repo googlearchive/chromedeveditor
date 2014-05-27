@@ -79,6 +79,7 @@ class MockAceEditor implements TextEditor {
   void resize() { }
   void focus() { }
   void deactivate() { }
+  void reconcile() { }
 
   BoolCachedPreference get stripWhitespace => null;
   bool get dirty => false;

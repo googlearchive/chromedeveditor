@@ -72,6 +72,8 @@ class TextEditor extends Editor {
     if (_aceSubscription != null) _aceSubscription.cancel();
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
     if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
+
+    _invokeReconcile();
   }
 
   bool get dirty => _dirty;
@@ -93,6 +95,11 @@ class TextEditor extends Editor {
     aceManager.outline.visible = supportsOutline;
     aceManager._aceEditor.readOnly = readOnly;
   }
+
+  /**
+   * Called a short delay after the file's content has been altered.
+   */
+  void reconcile() { }
 
   void deactivate() { }
 
@@ -146,21 +153,19 @@ class TextEditor extends Editor {
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
-      // Remove the trailing whitespace if asked to do so.
-      // TODO(ericarnold): Can't think of an easy way to share this preference,
-      //           but it might be a good idea to do so rather than passing it.
-
       String text = _session.value;
 
-      if (_prefs.stripWhitespaceOnSave) text =
-          text.replaceAll(whitespaceRegEx, '');
+      // Remove the trailing whitespace if asked to do so.
+      if (_prefs.stripWhitespaceOnSave) {
+        text = text.replaceAll(whitespaceRegEx, '');
+      }
+
       _lastSavedHash = _calcMD5(text);
 
-      // TODO(ericarnold): Need to cache or re-analyze on file switch.
-      // TODO(ericarnold): Need to analyze on initial file load.
-      aceManager.buildOutline();
-
-      return file.setContents(text).then((_) => dirty = false);
+      return file.setContents(text).then((_) {
+        dirty = false;
+        _invokeReconcile();
+      });
     } else {
       return new Future.value();
     }
@@ -185,16 +190,22 @@ class TextEditor extends Editor {
       if (cursorPos != null) {
         aceManager.cursorPosition = cursorPos;
       }
+
+      _invokeReconcile();
     } finally {
       _aceSubscription = _session.onChange.listen((_) => dirty = true);
     }
   }
+
+  void _invokeReconcile() {
+    reconcile();
+  }
 }
 
 class DartEditor extends TextEditor {
-  int outlineScrollPosition = 0;
-
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
+
+  int outlineScrollPosition = 0;
 
   DartEditor._create(AceManager aceManager, workspace.File file,
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
@@ -204,14 +215,29 @@ class DartEditor extends TextEditor {
   @override
   void activate() {
     super.activate();
-    aceManager.outline.scrollPosition = outlineScrollPosition;
+
+    if (_session != null) {
+      _outline.build(file.name, _session.value);
+    }
+
+    _outline.scrollPosition = outlineScrollPosition;
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    outlineScrollPosition = aceManager.outline.scrollPosition;
+
+    outlineScrollPosition = _outline.scrollPosition;
   }
+
+  void reconcile() {
+    int pos = _outline.scrollPosition;
+    _outline.build(file.name, _session.value).then((_) {
+      _outline.scrollPosition = pos;
+    });
+  }
+
+  Outline get _outline => aceManager.outline;
 
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
     int offset = _session.document.positionToIndex(
@@ -339,6 +365,8 @@ class AceManager {
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
     _setupOutline(prefs);
+    _setupGotoLine();
+
     var node = parentElement.getElementsByClassName("ace_content")[0];
     node.onClick.listen((e) {
       bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
@@ -373,7 +401,9 @@ class AceManager {
       }
       lastCursorPosition = newCursorPosition;
     });
+  }
 
+  void _setupGotoLine() {
     // Set up the goto line dialog.
     gotoLineView = new GotoLineView();
     if (gotoLineView is! GotoLineView) {
@@ -635,7 +665,6 @@ class AceManager {
       }
 
       setMarkers(file.getMarkers());
-      buildOutline();
       session.onChangeScrollTop.listen((_) => Timer.run(() {
         if (outline.visible) {
           int firstCursorOffset = currentSession.document.positionToIndex(
@@ -647,18 +676,6 @@ class AceManager {
         }
       }));
     }
-  }
-
-  /**
-   * Make a service call and build the outline view for the current file.
-   */
-  void buildOutline() {
-    String name = currentFile == null ? '' : currentFile.name;
-
-    if (!name.endsWith(".dart")) return;
-
-    String text = currentSession.value;
-    outline.build(name, text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
