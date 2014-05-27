@@ -34,7 +34,10 @@ final String SPARK_NIGHTLY_KEY
     = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwqXKrcvbi1a1IjFM5COs07Ee9xvPyOSh9dhEF6kwBGjAH6/4F7MHOfPk+W04PURi707E8SsS2iCkvrMiJPh4GnrZ3fWqFUzlsAcUljcYbkyorKxglwdZEXWbFgcKVR/uzuzXD8mOcuXRLu0YyVSdEGzhfZ1HkeMQCKEncUCL5ziE4ZkZJ7I8YVhVG+uiROeMg3zjxxSQrYHOfG5HOqmVslRPCfyiRbIHH3JPD0lax5FudngdKy0+1nkkqVJCpRSf75cRRnxGPjdEvNzTEFmf5oGFxSVs7iXoVQvNXB35Qfyw5rV6N+JyERdu6a7xEnz9lbw41m/noKInlfP+uBQuaQIDAQAB";
 
 final String SPARK_RELEASE_KEY
-    = "";
+    = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2OvldPjAqgEboHyyZM7GpCMmGMSQ8aExOlQyOhN3C9fDRXqnAN/Ie20TEwD9Eb2CciV3Ru4Gm7PmDnkHzsljD84qLgBdN39FzPGDyViXTS442xTElWRZMZQfJYQpbMpiePL720kTHgLLAcwTgdP9DnvRPrKukIs/U4Y76NFk7NNbsNOc6FWisLJykw2POTB1RR5ZlZrA4Ax1P7kt7qQdomE6i8wy1TA1jDhG8AhEXKRfpyELvJmzyVIyR9uiSHDHCdihiS5oyjADjmmbklvL7Ns0cSAgEX/lWN8UX8r17zoKZzJ0MkmCQ5Nlfql8qUtn2oZXaHztkkAcXCxkq9/37QIDAQAB";
+
+final String SPARK_RELEASE_ID ="pnoffddplpippgcfjdhbmhkofpnaalpg";
+final String SPARK_NIGHTLY_ID ="kcjgcakhgelcejampmijgkjkadfcncjl";
 
 /**
  * Manages all the launches and calls the appropriate delegate.
@@ -204,16 +207,29 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 
 
   Future updateManifest(chrome.DirectoryEntry dir) {
-    print(dir.name);
 
-    return dir.getFile('manifest.json').then((entry) {
-      return entry.readText().then((content) {
-        var manifestDict = JSON.decode(content);
+    String id = chrome.runtime.id;
 
-        manifestDict['key'] = 'somethingnew';
-        return entry.writeText(new JsonPrinter().print(manifestDict));
+    // Special logic for launching spark within spark.
+    // TODO (grv) : Implement a better way of handling launch of spark from
+    // spark.
+    if (id == SPARK_NIGHTLY_ID || id == SPARK_RELEASE_ID) {
+      return dir.getFile('manifest.json').then((entry) {
+        return entry.readText().then((content) {
+          var manifestDict = JSON.decode(content);
+
+          if (id == SPARK_NIGHTLY_ID) {
+            manifestDict['key'] = SPARK_RELEASE_KEY;
+          } else {
+            manifestDict['key'] = SPARK_NIGHTLY_KEY;
+          }
+          // This modifies the manifest file permanently.
+          return entry.writeText(new JsonPrinter().print(manifestDict));
+        });
       });
-    });
+    } else {
+      return new Future.value();
+    }
   }
 
   Future run(Resource resource) {
