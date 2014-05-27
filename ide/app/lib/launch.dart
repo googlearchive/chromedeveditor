@@ -235,22 +235,23 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     Container launchContainer = getAppContainerFor(resource);
     return updateManifest(launchContainer.entry).then((_) {
 
-    return developerPrivate.loadDirectory(launchContainer.entry).then((String appId) {
-      // TODO: Use the returned appId once it has the correct results.
+      return developerPrivate.loadDirectory(launchContainer.entry).then(
+          (String appId) {
+        // TODO: Use the returned appId once it has the correct results.
 
-      // TODO: Delay a bit - there's a race condition.
-      return new Future.delayed(new Duration(milliseconds: 100));
-    }).then((_) {
-      return _getAppId(launchContainer.name);
-    }).then((String id) {
-      if (id == null) {
-        throw 'Unable to locate an application id.';
-      } else if (!management.available) {
-        throw 'The chrome.management API is not available.';
-      } else {
-        return management.launchApp(id);
-      }
-    });
+        // TODO: Delay a bit - there's a race condition.
+        return new Future.delayed(new Duration(milliseconds: 100));
+      }).then((_) {
+        return _getAppId(launchContainer.name);
+      }).then((String id) {
+        if (id == null) {
+          throw 'Unable to locate an application id.';
+        } else if (!management.available) {
+          throw 'The chrome.management API is not available.';
+        } else {
+          return management.launchApp(id);
+        }
+      });
     });
   }
 
