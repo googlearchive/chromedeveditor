@@ -27,8 +27,8 @@ class SparkButton extends SparkWidget {
   SparkButton.created() : super.created();
 
   @override
-  void ready() {
-    super.ready();
+  void enteredView() {
+    super.enteredView();
 
     // Make sure at most one of [raised] or [flat] is defined by the client.
     // TODO(ussuri): This is really clumsy. Find a better way to provide
