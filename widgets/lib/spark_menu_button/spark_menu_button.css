@@ -10,7 +10,7 @@
   display: inline-block;
 }
 
-#button {
+#button::content > * {
   height: 100%;
   width: 100%;
 }

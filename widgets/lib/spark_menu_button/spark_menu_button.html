@@ -6,7 +6,19 @@
 
 <!--
 /**
- * See g-menu-button https://github.com/Polymer/toolkit-ui/tree/master/elements.
+ * A menu triggerred by a button. 
+ *
+ * For flexibility, the button should be supplied by the client in the
+ * tag's content: it must be a [spark-button] (all [spark-buttons] in the
+ * content will be grabbed, but only the first one will activate the menu).
+ *
+ * The menu itself is formed from the rest of the nodes supplied in the tag's
+ * content. However, only [spark-menu-item]s will be treated as selectable
+ * menu items that will fire an event when clicked. The rest of the nodes, 
+ * in particular [spark-menu-separator]s, will become inactive menu content.
+ *
+ * When a selectable menu item is clicked, an 'activate' event will be fired.
+ * See spark-selector and spark-selection for more information on this event.
  */
 -->
 
@@ -16,8 +28,7 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_menu/spark_menu.html"/>
 
 <polymer-element name="spark-menu-button" extends="spark-widget"
-    attributes="icon
-                selected
+    attributes="selected
                 valueAttr
                 opened
                 responsive
@@ -27,16 +38,7 @@
   <template>
     <link rel="stylesheet" href="spark_menu_button.css">
 
-    <spark-button id="button"
-        flat
-        round
-        noPadding
-        focused
-        on-click="{{clickHandler}}"
-        on-focus="{{focusHandler}}"
-        on-blur="{{blurHandler}}">
-      <img src="{{icon}}">
-    </spark-button>
+    <content id="button" select="spark-button"></content>
 
     <div responsive="{{responsive}}" valign="{{valign}}">
       <spark-overlay id="overlay"
