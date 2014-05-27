@@ -20,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -115,6 +116,20 @@ class SparkPolymer extends Spark {
   Future openFile() {
     return _beforeSystemModal()
         .then((_) => super.openFile())
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
+  }
+  
+  Future importFolder([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFolder(resources))
+        .then((_) => _systemModalComplete())
+        .catchError((e) => _systemModalComplete());
+  }
+
+  Future importFile([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFile(resources))
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
   }
