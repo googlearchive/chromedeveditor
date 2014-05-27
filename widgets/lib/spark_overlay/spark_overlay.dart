@@ -171,7 +171,10 @@ class SparkOverlay extends SparkWidget {
 
     style.visibility = "visible";
 
-    enableKeyboardEvents();
+    // TODO(ussuri): This has been causing problems with ghost overlays
+    // lingering after closing and reacting to mouse clicks etc.
+    // E.g. try to open and close the menu and click in the area where it was.
+    // enableKeyboardEvents();
 
     addEventListener('webkitAnimationStart', _openedAnimationStart);
     addEventListener('animationStart', _openedAnimationStart);
