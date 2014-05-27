@@ -2192,14 +2192,13 @@ class GitCloneAction extends SparkActionWithDialog {
   void _restoreDialog() {
     SparkButton cloneButton = getElement('#clone');
     cloneButton.disabled = false;
-    cloneButton.text = "Clone";
+
     SparkButton closeButton = getElement('#cloneClose');
     closeButton.disabled = false;
     _toggleProgressVisible(false);
   }
 
   void _commit() {
-
     SparkProgress progressComponent = getElement('#cloneProgress');
     progressComponent.progressMessage = "Cloning...";
     _toggleProgressVisible(true);
@@ -2608,7 +2607,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   void _restoreDialog() {
     SparkButton pushButton = getElement('#gitPush');
     pushButton.disabled = false;
-    pushButton.text = "Push";
+
     SparkButton closeButton = getElement('#gitPushClose');
     closeButton.disabled = false;
     _toggleProgressVisible(false);
