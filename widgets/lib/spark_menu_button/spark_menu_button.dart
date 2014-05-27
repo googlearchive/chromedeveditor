@@ -39,7 +39,7 @@ class SparkMenuButton extends SparkWidget {
     _overlay = $['overlay'];
     _menu = $['menu'];
 
-    ContentElement buttonCont = $['button'];
+    final ContentElement buttonCont = $['button'];
     assert(buttonCont.getDistributedNodes().isNotEmpty);
     _button = buttonCont.getDistributedNodes().first;
     _button
