@@ -386,7 +386,7 @@ class Workspace extends Container {
     Completer progressCompleter = new Completer();
 
     _builderManager.jobManager.schedule(
-        new ProgressJob('Opening sync filesystem���', progressCompleter));
+        new ProgressJob('Opening sync filesystem…', progressCompleter));
 
     return chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
       _syncFileSystem = fs;
