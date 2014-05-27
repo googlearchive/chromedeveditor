@@ -386,7 +386,7 @@ class Workspace extends Container {
     Completer progressCompleter = new Completer();
 
     _builderManager.jobManager.schedule(
-        new ProgressJob('Opening sync filesystem…', progressCompleter));
+        new ProgressJob('Opening sync filesystem���', progressCompleter));
 
     return chrome.syncFileSystem.requestFileSystem().then((/*chrome.FileSystem*/ fs) {
       _syncFileSystem = fs;
@@ -869,7 +869,8 @@ class Folder extends Container {
     return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
   }
 
-  bool isScmPrivate() => name == '.git' || name == '.svn';
+  //TODO(keertip): remove check for 'cache' 
+  bool isScmPrivate() => name == '.git' || name == '.svn' || (name =='cache' && parent is Project);
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
