@@ -36,14 +36,16 @@ class SparkMenuButton extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _button = ($['button'] as ContentElement).getDistributedNodes().first;
-    print(_button);
     _overlay = $['overlay'];
     _menu = $['menu'];
 
-    _button.onClick.listen(clickHandler);
-    _button.onFocus.listen(focusHandler);
-    _button.onBlur.listen(blurHandler);
+    ContentElement buttonCont = $['button'];
+    assert(buttonCont.getDistributedNodes().isNotEmpty);
+    _button = buttonCont.getDistributedNodes().first;
+    _button
+        ..onClick.listen(clickHandler)
+        ..onFocus.listen(focusHandler)
+        ..onBlur.listen(blurHandler);
   }
 
   /**
