@@ -216,11 +216,11 @@ class Outline {
   int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
     if (_outlineItemsByOffset != null) {
       int count = 0;
-      List<int> outlineOffets = _outlineItemsByOffset.keys.toList()..sort();
-      int containerOffset = returnCodeOffset ? outlineOffets[0] : 0;
+      List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
+      int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;
 
       // Finds the last outline item that *doesn't* satisfies this:
-      for (int outlineOffset in outlineOffets) {
+      for (int outlineOffset in outlineOffsets) {
         if (outlineOffset > codeOffset) break;
         containerOffset = returnCodeOffset ? outlineOffset : count;
         count++;
