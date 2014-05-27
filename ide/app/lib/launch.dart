@@ -263,8 +263,6 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
   Future launchId(String id) {
     if (id == null) {
       throw 'Unable to locate an application id.';
-    } else if (!management.available) {
-      throw 'The chrome.management API is not available.';
     } else {
       return management.launchApp(id);
     }
