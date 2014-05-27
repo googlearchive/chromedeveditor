@@ -47,7 +47,9 @@ class SparkMenuButton extends SparkWidget {
    * away, as there can be multiple events coming in a quick succession
    * following a user gesture (e.g. a click on the button can trigger
    * blur->click->focus, and possibly on-closed as well). Instead,
-   * wait a while, then compute the net effect of
+   * aggregate arriving events for a short while after the first one,
+   * then compute their net effect and commit (most likely, all events in a
+   * series will have the same value, but we don't count on that).
    */
   void _toggle(bool inOpened) {
     _toggleQueue.add(inOpened);
