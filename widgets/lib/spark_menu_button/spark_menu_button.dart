@@ -17,7 +17,6 @@ import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends SparkWidget {
-  @published String icon = "";
   @published dynamic selected;
   @published String valueAttr = "";
   @published bool opened = false;
@@ -37,9 +36,16 @@ class SparkMenuButton extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _button = $['button'];
     _overlay = $['overlay'];
     _menu = $['menu'];
+
+    final ContentElement buttonCont = $['button'];
+    assert(buttonCont.getDistributedNodes().isNotEmpty);
+    _button = buttonCont.getDistributedNodes().first;
+    _button
+        ..onClick.listen(clickHandler)
+        ..onFocus.listen(focusHandler)
+        ..onBlur.listen(blurHandler);
   }
 
   /**

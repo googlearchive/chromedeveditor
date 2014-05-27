@@ -665,6 +665,16 @@ class AceManager {
       }
 
       setMarkers(file.getMarkers());
+      session.onChangeScrollTop.listen((_) => Timer.run(() {
+        if (outline.visible) {
+          int firstCursorOffset = currentSession.document.positionToIndex(
+              new ace.Point(_aceEditor.firstVisibleRow, 0));
+          int lastCursorOffset = currentSession.document.positionToIndex(
+              new ace.Point(_aceEditor.lastVisibleRow, 0));
+
+          outline.scrollToOffsets(firstCursorOffset, lastCursorOffset);
+        }
+      }));
     }
   }
 
