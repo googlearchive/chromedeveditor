@@ -20,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -117,6 +118,18 @@ class SparkPolymer extends Spark {
         .then((_) => super.openFile())
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
+  }
+
+  Future importFolder([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFolder(resources))
+        .whenComplete(() => _systemModalComplete());
+  }
+
+  Future importFile([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFile(resources))
+        .whenComplete(() => _systemModalComplete());
   }
 
   static set backdropShowing(bool showing) {
