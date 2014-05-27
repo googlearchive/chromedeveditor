@@ -203,9 +203,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     return getAppContainerFor(resource) != null;
   }
 
-
   Future updateManifest(chrome.DirectoryEntry dir) {
-
     String id = chrome.runtime.id;
 
     // Special logic for launching spark within spark.
