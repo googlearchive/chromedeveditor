@@ -203,8 +203,9 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     return getAppContainerFor(resource) != null;
   }
 
-  Future updateManifest(chrome.DirectoryEntry dir) {
+  Future<String> updateManifest(chrome.DirectoryEntry dir) {
     String id = chrome.runtime.id;
+    String launchId;
 
     // Special logic for launching spark within spark.
     // TODO (grv) : Implement a better way of handling launch of spark from
@@ -217,13 +218,18 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
           String key = manifestDict['key'];
           if (id == SPARK_NIGHTLY_ID && key == SPARK_NIGHTLY_KEY) {
             manifestDict['key'] = SPARK_RELEASE_KEY;
+            launchId = SPARK_RELEASE_ID;
           } else if (id == SPARK_RELEASE_ID && key == SPARK_RELEASE_KEY) {
             manifestDict['key'] = SPARK_NIGHTLY_KEY;
+            launchId = SPARK_NIGHTLY_ID;
           } else {
             return new Future.value();
           }
           // This modifies the manifest file permanently.
-          return entry.writeText(new JsonPrinter().print(manifestDict));
+          return entry.writeText(new JsonPrinter().print(manifestDict)).then(
+              (_) {
+            return new Future.value(launchId);
+          });
         });
       });
     } else {
@@ -233,7 +239,7 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
 
   Future run(Resource resource) {
     Container launchContainer = getAppContainerFor(resource);
-    return updateManifest(launchContainer.entry).then((_) {
+    return updateManifest(launchContainer.entry).then((String id) {
       return developerPrivate.loadDirectory(launchContainer.entry).then(
           (String appId) {
         // TODO: Use the returned appId once it has the correct results.
@@ -241,17 +247,27 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
         // TODO: Delay a bit - there's a race condition.
         return new Future.delayed(new Duration(milliseconds: 100));
       }).then((_) {
-        return _getAppId(launchContainer.name);
-      }).then((String id) {
-        if (id == null) {
-          throw 'Unable to locate an application id.';
-        } else if (!management.available) {
-          throw 'The chrome.management API is not available.';
+        if (id != null) {
+          return launchId(id);
         } else {
-          return management.launchApp(id);
+           return _getAppId(launchContainer.name).then((String id)
+               => launchId(id));
         }
       });
     });
+  }
+
+  /**
+  * Launches a chrome app with given [id].
+  */
+  Future launchId(String id) {
+    if (id == null) {
+      throw 'Unable to locate an application id.';
+    } else if (!management.available) {
+      throw 'The chrome.management API is not available.';
+    } else {
+      return management.launchApp(id);
+    }
   }
 
   /**
