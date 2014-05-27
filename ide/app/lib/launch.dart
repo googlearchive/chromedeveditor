@@ -18,6 +18,7 @@ import 'package:logging/logging.dart';
 import 'apps/app_utils.dart';
 import 'services/compiler.dart';
 import 'developer_private.dart';
+import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'server.dart';
@@ -78,6 +79,87 @@ class LaunchManager {
   }
 }
 
+class LaunchManager2 {
+  final Workspace workspace;
+  final Services _services;
+  final PackageManager _pubManager;
+  final PackageManager _bowerManager;
+
+  CompilerService _compiler;
+  Project _lastLaunchedProject;
+
+  List<ApplicationLocator> applicationLocators = [];
+  List<LaunchTargetHandler> launchTargetHandlers = [];
+
+  LaunchManager2(this.workspace, this._services, this._pubManager,
+      this._bowerManager) {
+    _compiler = _services.getService("compiler");
+
+    // TODO: init applicationLocators
+    // TODO: init launchTargetHandlers
+
+  }
+
+  /**
+   * Indicates whether a particular [Resource] can be run.
+   */
+  bool canLaunch(Resource resource, LaunchTarget target) {
+    Application application = _locateApplication(resource);
+    if (application == null) return false;
+
+    LaunchTargetHandler handler = _locateLaunchHandler(application, target);
+    return handler != null;
+  }
+
+  /**
+   * Launches the given [Resouce].
+   */
+  Future performLaunch(Resource resource, LaunchTarget target) {
+    Application application = _locateApplication(resource);
+    if (application == null) return new Future.value();
+
+    LaunchTargetHandler handler = _locateLaunchHandler(application, target);
+    if (handler == null) return new Future.value();
+
+    return handler.launch(application, target);
+  }
+
+  // This statefulness is for use by Bower, and will go away at some point.
+  Project get lastLaunchedProject => _lastLaunchedProject;
+
+  void dispose() {
+    launchTargetHandlers.forEach((handler) => handler.dispose());
+  }
+
+  Application _locateApplication(Resource initialResource) {
+    List<ApplicationResult> results = [];
+
+    applicationLocators.forEach((locator) {
+      ApplicationResult result = locator.locateAssociatedApplication(initialResource);
+      if (result != null) {
+        results.add(result);
+      }
+    });
+
+    if (results.isEmpty) return null;
+
+    results.sort();
+
+    return results.last.application;
+  }
+
+  LaunchTargetHandler _locateLaunchHandler(Application application,
+      LaunchTarget target) {
+    for (LaunchTargetHandler handler in launchTargetHandlers) {
+      if (handler.canLaunch(application, target)) {
+        return handler;
+      }
+    }
+
+    return null;
+  }
+}
+
 /**
  * Provides convenience methods for launching. Clients can customize the launch
  * delegate.
@@ -95,6 +177,92 @@ abstract class LaunchDelegate {
   Future run(Resource resource);
 
   void dispose();
+}
+
+/**
+ * The environments we know how to run applications in.
+ */
+class LaunchTarget extends Enum<String> {
+  /// A local target - executing on the local device.
+  static const LOCAL = const LaunchTarget._('local');
+
+  /// A remote deploy - typically, executing on a mobile device.
+  static const REMOTE = const LaunchTarget._('remote');
+
+  const LaunchTarget._(String val) : super(val);
+
+  String get enumName => 'LaunchTarget';
+}
+
+/**
+ * The type of applications we know how to launch.
+ */
+class ApplicationType extends Enum<String> {
+  static const CHROME_APP = const LaunchTarget._('chrome_app');
+  static const WEB_APP = const LaunchTarget._('web_app');
+
+  const ApplicationType._(String val) : super(val);
+
+  String get enumName => 'ApplicationType';
+}
+
+/**
+ * An instance of an ApplicationType.
+ */
+class Application {
+  final File primaryResource;
+  final Map<String, String> _properties = {};
+
+  Application(this.primaryResource);
+
+  String get name => primaryResource.name;
+
+  String getProperty(String key) => _properties[key];
+
+  void setProperty(String key, String value) {
+    _properties[key] = value;
+  }
+
+  bool get isDart => getProperty('dart') != null;
+
+  String toString() => name;
+}
+
+/**
+ * Given a starting resource, return an associated [Application], if any.
+ */
+abstract class ApplicationLocator {
+  ApplicationResult locateAssociatedApplication(Resource resource);
+}
+
+/**
+ * TODO:
+ */
+class ApplicationResult implements Comparable {
+  final Application application;
+  final num affinity;
+
+  ApplicationResult(this.application, this.affinity);
+
+  int compareTo(ApplicationResult other) => affinity - other.affinity;
+
+  String toString() => '[${application}, ${affinity}]';
+}
+
+/**
+ * Can launch a certain type of [Application] for a given [LaunchTarget].
+ */
+abstract class LaunchTargetHandler {
+
+  String get name;
+
+  bool canLaunch(Application application, LaunchTarget launchTarget);
+
+  Future launch(Application application, LaunchTarget launchTarget);
+
+  void dispose();
+
+  String toString() => name;
 }
 
 /**
