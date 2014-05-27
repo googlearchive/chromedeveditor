@@ -30,12 +30,12 @@
 :host([valign=right]:host) #overlay {
   /* NOTE: calc() and 100% are important -- if just a percentage is used,
      e.g. translateX(-91%), the fonts may get blurry. */
-  -webkit-transform: translateX(calc(-100% + 38px));
+  -webkit-transform: translateX(calc(-100% + 32px));
 }
 
 :host([valign=left]:host) #overlay {
   /* NOTE: Don't use an odd percentage here; see above why. */
-  -webkit-transform: translateX(-10px);
+  -webkit-transform: translateX(-4px);
 }
 
 .arrow {

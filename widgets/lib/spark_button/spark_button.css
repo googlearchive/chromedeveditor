@@ -3,62 +3,141 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("../common/spark_widget.css");
-@import url("../../../packages/bootjack/css/bootstrap.min.css");
-@import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
-#button {
-  height: 100%;
-  /* Override Bootstrap */
-  outline: none;
+:host {
+  display: inline-block;
+  border: none;
+  background: transparent;
+  text-align: center;
+  text-transform: uppercase;
+  border-radius: 2px;
+  -webkit-user-select: none;
+  cursor: pointer;
 }
 
-:host([noPadding]:host) > #button {
+:host([round]) {
+  border-radius: 50%;
+}
+
+:host(:hover, 
+      :active, 
+      [active]) {
+  background: #e4e4e4;
+}
+
+:host([raised]) {
+  background: #dfdfdf;
+  box-shadow: 0 2px 10px 0px #ddd;
+}
+
+:host([raised]:hover, 
+      [raised]:active, 
+      [raised][active]) {
+  background: #d6d6d6;
+}
+
+:host([primary]) {
+  color: rgb(66, 128, 244);
+}
+
+:host([primary][raised]) {
+  color: #fff;
+  background: rgb(66, 128, 244);
+}
+
+:host([primary][raised]:hover, 
+      [primary][raised]:active, 
+      [primary][raised][active]) {
+  color: #fff;
+  background: rgb(51, 103, 214);
+}
+
+:host([disabled]) {
+  background: #eaeaea !important;
+  color: #a8a8a8 !important;
+  opacity: 0.4 !important;
+  box-shadow: none !important;
+  cursor: auto !important;
+  pointer-events: none !important;
+}
+
+:host([primary][raised][disabled]) {
+  background: rgb(66, 128, 244, 0.4) !important;
+  color: #a8a8a8 !important;
+}
+
+:host(:active, 
+      [active]) {
+  box-shadow: 0 7px 10px 0px #ddd;
+  -webkit-transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#button {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+#focusBg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  border-radius: inherit;
+  background: #c3c3c3;
+  -webkit-transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#content {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+}
+
+:host([minPadding]) #content {
+  padding: 2px;
+}
+
+:host([noPadding]) #content {
   padding: 0;
 }
 
-:host([minPadding]:host) > #button {
-  padding: 1px 1px 1px 1px;
+:host(:focus) #focusBg {
+  -webkit-transition: none;
+  transition: none;
+  -webkit-animation: focus-fade 0.7s infinite alternate;
+  animation: focus-fade 0.7s infinite alternate;
 }
 
-:host([noBorder]:host) > #button {
-  border: 1px solid transparent;
-  border-radius: 2px;
-  background: none;
-  box-shadow: none;
+@-webkit-keyframes focus-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
-#button:hover {
-  border: 1px solid #ddd;
+@keyframes focus-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
-#button:focus {
-  border: 1px solid #9dbeff;
-}
-
-#button:active,
-:host([active]:host) > #button {
-  border: 1px solid #9dbeff;
-  background-color: #ddd;
-}
-
-::content > * {
+::content * {
+  /* Needed to put ink behind the contents */
   position: relative;
-  text-align: center;
-  top: 50%;
-  vertical-align: middle;
-}
-
-/* TODO(ussuri): The below is very ad-hoc, probably fitting just a particular
-   font size. Figure out the right settings to center the content.
-*/
-
-/* Bootstrap icons */
-::content > .glyphicon {
-  top: -1px;
-  left: 1px;
-}
-
-/* font-awesome icons */
-::content > .fa {
-  top: -1px;
 }
