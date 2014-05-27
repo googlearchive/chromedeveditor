@@ -48,8 +48,7 @@ class SparkMenuButton extends SparkWidget {
    * following a user gesture (e.g. a click on the button can trigger
    * blur->click->focus, and possibly on-closed as well). Instead,
    * aggregate arriving events for a short while after the first one,
-   * then compute their net effect and commit (most likely, all events in a
-   * series will have the same value, but we don't count on that).
+   * then compute their net effect and commit.
    */
   void _toggle(bool inOpened) {
     _toggleQueue.add(inOpened);
@@ -63,6 +62,9 @@ class SparkMenuButton extends SparkWidget {
    * Complete the toggling process, see [_toggle].
    */
   void _completeToggle() {
+    // Most likely, all aggregated events for a single gesture will have the 
+    // same value (either 'close' or 'open'), but we don't count on that and
+    // formally && all the values just in case.
     final bool newOpened = _toggleQueue.reduce((a, b) => a && b);
     if (newOpened != opened) {
       opened = newOpened;
