@@ -36,18 +36,23 @@
               id="fileFilter"
               placeholder="Filter"
               on-keydown="{{fileFilterKeydownHandler}}"
-              on-input="{{fileFilterInputHandler}}"/>
+              on-input="{{fileFilterInputHandler}}"
+              tabindex="0"/>
 
-          <spark-button id="runButton" noBorder>
-            <span class="glyphicon glyphicon-play"></span>
+          <spark-button id="runButton" flat round noPadding>
+            <i class="glyphicon glyphicon-play"></i>
           </spark-button>
 
           <spark-menu-button
               id="mainMenu"
-              icon="images/overflow.png"
               valueAttr="action-id"
               valign="left"
               on-activate="{{onMenuSelected}}">
+
+            <spark-button flat round noPadding menuButton>
+              <img src="images/overflow.png">
+            </spark-button>
+
             <spark-menu-item action-id="project-new" label="New Project...">
             </spark-menu-item>
 
@@ -83,6 +88,7 @@
             </spark-menu-item>
             <spark-menu-item action-id="help-about" label="About Spark">
             </spark-menu-item>
+
           </spark-menu-button>
         </spark-toolbar>
 
@@ -100,10 +106,10 @@
 
         <spark-toolbar id="navigationButtons" class="toolbar"
             horizontal justify="right">
-          <spark-button id="leftNav" noBorder>
+          <spark-button id="leftNav" flat round noPadding>
             <i class="fa fa-arrow-left"></i>
           </spark-button>
-          <spark-button id="rightNav" noBorder>
+          <spark-button id="rightNav" flat round noPadding>
             <i class="fa fa-arrow-right"></i>
           </spark-button>
         </spark-toolbar>
@@ -254,28 +260,29 @@
               <option value="chrome/chrome_app_js">
                 JavaScript Chrome app
               </option>
-              <!-- This one currently can't possibly work due to Polymer
-                   JS breaking the CSP. BUG #1933. -->
-              <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements"
-                   template if="{{showWipProjectTemplates}}">
-                JavaScript Chrome app using Polymer
-              </option>
-              <!-- This one works when installed in Chrome manually, but
-                   launching via the 'Run' button is broken. BUG #1935. -->
-              <option value="chrome/chrome_extension_js"
-                   template if="{{showWipProjectTemplates}}">
-                JavaScript Chrome extension
-              </option>
+              <template if="{{showWipProjectTemplates}}">
+                <!-- This one currently can't possibly work due to Polymer
+                     JS breaking the CSP. BUG #1933. -->
+                <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
+                  JavaScript Chrome app using Polymer
+                </option>
+                <!-- This one works when installed in Chrome manually, but
+                     launching via the 'Run' button is broken. BUG #1935. -->
+                <option value="chrome/chrome_extension_js">
+                  JavaScript Chrome extension
+                </option>
+              </template>
             </optgroup>
             <optgroup label="Other">
               <option value="polymer/polymer_element_js">
                 JavaScript Polymer custom element
               </option>
-              <!-- This one just needs some additional work. -->
-              <option value="polymer/polymer_element_dart"
-                  template if="{{showWipProjectTemplates}}">
-                Dart Polymer custom element
-              </option>
+              <template if="{{showWipProjectTemplates}}">
+                <!-- This one just needs some additional work. -->
+                <option value="polymer/polymer_element_dart">
+                  Dart Polymer custom element
+                </option>
+              </template>
             </optgroup>
           </select>
         </div>
@@ -470,12 +477,15 @@
         <div class="form-group">
            <div id="gitCommitList"></div>
         </div>
+        <spark-progress id="gitPushProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
+        <spark-button id="gitPushClose" overlay-toggle data-dismiss="modal">
+          Close
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button id="gitPush" overlay-toggle primary data-dismiss="modal">
           Push
         </spark-button>
       </div>

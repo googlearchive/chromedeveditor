@@ -17,9 +17,6 @@ class Outline {
   Map<int, OutlineItem> _outlineItemsByOffset;
   OutlineItem _selectedItem;
 
-  StreamSubscription _currentOutlineOperation;
-  Completer _buildCompleter;
-
   html.Element _container;
   html.DivElement _outlineDiv;
   html.UListElement _rootList;
@@ -70,15 +67,18 @@ class Outline {
     // If the outline has not been built yet, just save the position
     _initialScrollPosition = position;
     if (_scrollTarget != null) {
-      // Hack for scrollTop not working
-      _scrollTarget.hidden = false;
-      _scrollTarget.style
-          ..position = "absolute"
-          ..height = "${_outlineDiv.clientHeight}px"
-          ..top = "${position}px";
-      _scrollTarget.scrollIntoView();
-      _scrollTarget.hidden = true;
+      _scrollIntoView(_outlineDiv.clientHeight, position);
     }
+  }
+  void _scrollIntoView(int top, int bottom) {
+    // Hack for scrollTop not working
+    _scrollTarget.hidden = false;
+    _scrollTarget.style
+        ..position = "absolute"
+        ..height = "${bottom - top}px"
+        ..top = "${top}px";
+    _scrollTarget.scrollIntoView();
+    _scrollTarget.hidden = true;
   }
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
@@ -90,25 +90,11 @@ class Outline {
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
-   * Returns a subscription which can be canceled to cancel the outline.
    */
   Future build(String name, String code) {
-    if (_currentOutlineOperation != null) {
-      _currentOutlineOperation.cancel();
-    }
-
-    if (_buildCompleter != null && !_buildCompleter.isCompleted) {
-      _buildCompleter.complete();
-    }
-
-    _buildCompleter = new Completer();
-
-    _currentOutlineOperation =
-        _analyzer.getOutlineFor(code, name).asStream().listen(
-            (services.Outline model) => _populate(model));
-    _currentOutlineOperation.onDone(() => _buildCompleter.complete);
-
-    return _buildCompleter.future;
+    return _analyzer.getOutlineFor(code, name).then((services.Outline model) {
+      _populate(model);
+    });
   }
 
   void _populate(services.Outline outline) {
@@ -182,22 +168,58 @@ class Outline {
   }
 
   void selectItemAtOffset(int cursorOffset) {
-    Map<int, OutlineItem> outlineItems = _outlineItemsByOffset;
-    if (outlineItems != null) {
-      int containerOffset = -1;
+    OutlineItem itemAtCursor = _itemAtCodeOffset(cursorOffset);
+    if (itemAtCursor != null) {
+      setSelected(itemAtCursor);
+    }
+  }
 
-      var outlineOffets = outlineItems.keys.toList()..sort();
+  void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
+    List<html.Element> outlineElements =
+        _outlineDiv.getElementsByClassName("outlineItem");
+
+    if (outlineElements.length > 0) {
+      int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
+      int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+
+      html.Element firstElement = outlineElements[firstItemIndex];
+
+      int bottomOffset;
+      if (outlineElements.length > lastItemIndex + 1) {
+        bottomOffset = outlineElements[lastItemIndex + 1].offsetTop;
+      } else {
+        html.Element lastElement = outlineElements[lastItemIndex];
+        bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;
+      }
+
+      _scrollIntoView(firstElement.offsetTop, bottomOffset);
+    }
+  }
+
+  int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
+    if (_outlineItemsByOffset != null) {
+      int count = 0;
+      List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
+      int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;
 
       // Finds the last outline item that *doesn't* satisfies this:
-      for (int outlineOffset in outlineOffets) {
-        if (outlineOffset > cursorOffset) break;
-        containerOffset = outlineOffset;
+      for (int outlineOffset in outlineOffsets) {
+        if (outlineOffset > codeOffset) break;
+        containerOffset = returnCodeOffset ? outlineOffset : count;
+        count++;
       }
-
-      if (containerOffset != -1) {
-        setSelected(outlineItems[containerOffset]);
-      }
+      return containerOffset;
+    } else {
+      return null;
     }
+  }
+
+  OutlineItem _itemAtCodeOffset(int codeOffset) {
+    int itemIndex = _itemIndexAtCodeOffset(codeOffset, returnCodeOffset: true);
+    if (itemIndex != null) {
+      return _outlineItemsByOffset[itemIndex];
+    }
+    return null;
   }
 }
 
@@ -210,14 +232,14 @@ abstract class OutlineItem {
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
-    
+
     _anchor = new html.AnchorElement(href: "#");
     _element.append(_anchor);
-    
+
     _nameSpan = new html.SpanElement()
         ..text = displayName;
     _anchor.append(_nameSpan);
-    
+
     _element.classes.add("outlineItem $cssClassName");
   }
 
@@ -243,7 +265,7 @@ abstract class OutlineTopLevelItem extends OutlineItem {
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
   services.OutlineTopLevelVariable get _variableData => _data;
   html.SpanElement _typeSpan;
-  
+
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
       : super(data, "variable") {
     if (returnType != "") {
@@ -334,7 +356,7 @@ class OutlineProperty extends OutlineClassMember {
       _anchor.append(_typeSpan);
     }
   }
-  
+
   services.OutlineProperty get _propertyData => _data;
   String get returnType => _propertyData.returnType;
 }

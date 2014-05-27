@@ -520,6 +520,37 @@ abstract class Spark
       }
     });
   }
+  
+  Future importFile([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_FILE);
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
+      
+      if (entry != null) {
+        ws.Folder folder = resources.first;
+        folder.importFileEntry(entry).catchError((e) {
+          showErrorMessage('Error while importing file', e);
+        });
+      }
+    });
+  }
+
+  Future importFolder([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        ws.Folder folder = resources.first;
+        folder.importDirectoryEntry(entry).catchError((e) {
+          showErrorMessage('Error while importing folder', e);
+        });
+      }
+    });
+  }
 
   void showSuccessMessage(String message) {
     statusComponent.temporaryMessage = message;
@@ -1287,6 +1318,8 @@ Do you really want to delete "${project.name}"?
 This will permanently delete the project contents from disk and cannot be undone.
 ''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
       if (val) {
+        // TODO(grv) : scmManger should listen to the delete project event.
+        spark.scmManager.removeProject(project);
         project.delete().catchError((e) {
           spark.showErrorMessage("Error while deleting project", e.toString());
         });
@@ -1829,7 +1862,7 @@ class FocusMainMenuAction extends SparkAction {
 
   @override
   void _invoke([Object context]) {
-    querySelector('#mainMenu').focus();
+    spark.getUIElement('#mainMenu').focus();
   }
 }
 
@@ -2191,13 +2224,13 @@ class GitCloneAction extends SparkActionWithDialog {
     SparkButton cloneButton = getElement('#clone');
     cloneButton.disabled = false;
     cloneButton.text = "Clone";
+
     SparkButton closeButton = getElement('#cloneClose');
     closeButton.disabled = false;
     _toggleProgressVisible(false);
   }
 
   void _commit() {
-
     SparkProgress progressComponent = getElement('#cloneProgress');
     progressComponent.progressMessage = "Cloning...";
     _toggleProgressVisible(true);
@@ -2528,7 +2561,11 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
     _commitsList = getElement('#gitCommitList');
   }
 
+  void _onClose() => _hide();
+
   void _invoke([context]) {
+    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+    _triggerOnReturn("#gitPush", false);
     project = context.first;
 
     gitOperations = spark.scmManager.getScmOperationsFor(project);
@@ -2568,8 +2605,44 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _push() {
-    _GitPushJob job = new _GitPushJob(gitOperations, _gitUsername, _gitPassword, spark);
-    spark.jobManager.schedule(job);
+    SparkProgress progressComponent = getElement('#gitPushProgress');
+    progressComponent.progressMessage = "Pushing...";
+    _toggleProgressVisible(true);
+
+    SparkButton closeButton = getElement('#gitPushClose');
+    closeButton.disabled = true;
+    closeButton.deliverChanges();
+
+    SparkButton pushButton = getElement('#gitPush');
+    pushButton.disabled = true;
+    pushButton.deliverChanges();
+
+    ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
+    _GitPushTask task = new _GitPushTask(gitOperations, _gitUsername, _gitPassword,
+        spark, monitor);
+    task.run().then((_) {
+      spark.showSuccessMessage('Changes pushed successfully');
+    }).catchError((e) {
+      spark.showErrorMessage('Error while pushing changes', e.toString());
+    }).whenComplete(() {
+      _restoreDialog();
+      _hide();
+    });
+  }
+
+  void _toggleProgressVisible(bool visible) {
+    SparkProgress progressComponent = getElement('#gitPushProgress');
+    progressComponent.visible = visible;
+    progressComponent.deliverChanges();
+  }
+
+  void _restoreDialog() {
+    SparkButton pushButton = getElement('#gitPush');
+    pushButton.disabled = false;
+
+    SparkButton closeButton = getElement('#gitPushClose');
+    closeButton.disabled = false;
+    _toggleProgressVisible(false);
   }
 
   void _commit() {
@@ -2876,25 +2949,17 @@ class _OpenFolderJob extends Job {
   }
 }
 
-class _GitPushJob extends Job {
+class _GitPushTask {
   GitScmProjectOperations gitOperations;
   Spark spark;
   String username;
   String password;
+  ProgressMonitor monitor;
 
-  _GitPushJob(this.gitOperations, this.username, this.password, this.spark)
-      : super("Pushing changes…") {
-  }
+  _GitPushTask(this.gitOperations, this.username, this.password, this.spark,
+      this.monitor);
 
-  Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
-
-    return gitOperations.push(username, password).then((_) {
-      spark.showSuccessMessage('Changes pushed successfully');
-    }).catchError((e) {
-      spark.showErrorMessage('Error while pushing changes', e.toString());
-    });
-  }
+  Future run() => gitOperations.push(username, password);
 }
 
 abstract class PackageManagementJob extends Job {
@@ -3274,17 +3339,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
   ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…");
 
   void _invoke([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.ChromeFileEntry entry = res.entry;
-      if (entry != null) {
-        ws.Folder folder = resources.first;
-        folder.importFileEntry(entry).catchError((e) {
-          spark.showErrorMessage('Error while importing file', e);
-        });
-      }
-    });
+    spark.importFile(resources);
   }
 
   String get category => 'folder';
@@ -3296,17 +3351,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
   ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…");
 
   void _invoke([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        ws.Folder folder = resources.first;
-        folder.importDirectoryEntry(entry).catchError((e) {
-          spark.showErrorMessage('Error while importing folder', e);
-        });
-      }
-    });
+    spark.importFolder(resources);
   }
 
   String get category => 'folder';

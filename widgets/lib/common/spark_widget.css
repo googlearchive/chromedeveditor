@@ -6,6 +6,7 @@
 :host *,
 ::content * {
   box-sizing: border-box;
+  outline: none;
 }
 
 :host(.veiled) {
@@ -35,12 +36,23 @@
  */
 /*
 :host > * {
-  outline: red dashed 1px;
+  outline: red dashed 1px !important;
 }
 ::content > * {
-  outline: green dotted 1px;
+  outline: green dotted 1px !important;
 }
 */
 .debug, [debug] {
-  outline: blue solid 1px;
+  outline: blue solid 1px !important;
 }
+
+/* Uncomment this rule to debug focus changes, e.g. when cycling the focus
+ * using TAB.
+ */
+/*
+:host(:focus),
+*:focus,
+::content > *:focus {
+  box-shadow: 0 0 10px 10px pink !important;  
+}
+*/

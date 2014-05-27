@@ -17,7 +17,6 @@ import '../spark_overlay/spark_overlay.dart';
 
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends SparkWidget {
-  @published String icon = "";
   @published dynamic selected;
   @published String valueAttr = "";
   @published bool opened = false;
@@ -27,8 +26,9 @@ class SparkMenuButton extends SparkWidget {
   SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
-  bool _disableClickHandler = false;
-  Timer _timer;
+
+  final List<bool> _toggleQueue = [];
+  Timer _toggleTimer;
 
   SparkMenuButton.created(): super.created();
 
@@ -36,45 +36,65 @@ class SparkMenuButton extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _button = $['button'];
     _overlay = $['overlay'];
     _menu = $['menu'];
+
+    final ContentElement buttonCont = $['button'];
+    assert(buttonCont.getDistributedNodes().isNotEmpty);
+    _button = buttonCont.getDistributedNodes().first;
+    _button
+        ..onClick.listen(clickHandler)
+        ..onFocus.listen(focusHandler)
+        ..onBlur.listen(blurHandler);
   }
 
   /**
-   * Toggle the opened state of the dropdown.
+   * Schedule a toggle of the opened state of the dropdown. Don't toggle right
+   * away, as there can be multiple events coming in a quick succession
+   * following a user gesture (e.g. a click on the button can trigger
+   * blur->click->focus, and possibly on-closed as well). Instead,
+   * aggregate arriving events for a short while after the first one,
+   * then compute their net effect and commit.
    */
   void _toggle(bool inOpened) {
-    if (inOpened != opened) {
-      opened = inOpened;
+    _toggleQueue.add(inOpened);
+    if (_toggleTimer == null) {
+      _toggleTimer = new Timer(
+          const Duration(milliseconds: 200), _completeToggle);
+    }
+  }
+
+  /**
+   * Complete the toggling process, see [_toggle].
+   */
+  void _completeToggle() {
+    // Most likely, all aggregated events for a single gesture will have the 
+    // same value (either 'close' or 'open'), but we don't count on that and
+    // formally && all the values just in case.
+    final bool newOpened = _toggleQueue.reduce((a, b) => a && b);
+    if (newOpened != opened) {
+      opened = newOpened;
       // TODO(ussuri): A temporary plug to make #overlay and #button see
       // changes in 'opened'. Data binding via {{opened}} in the HTML isn't
       // detected. deliverChanges() fixes #overlay, but not #button.
-      _overlay.opened = inOpened;
-      _button.active = inOpened;
-      if (opened) {
+      _overlay..opened = newOpened..deliverChanges();
+      _button..active = newOpened..deliverChanges();
+      if (newOpened) {
         // Enforce focused state so the button can accept keyboard events.
         focus();
         _menu.resetState();
       }
     }
+    _toggleQueue.clear();
+    _toggleTimer.cancel();
+    _toggleTimer = null;
   }
 
-  void clickHandler(Event e) {
-    if (_disableClickHandler) return;
-    _toggle(!opened);
-  }
+  void clickHandler(Event e) => _toggle(!opened);
 
   void focusHandler(Event e) => _toggle(true);
 
-  void blurHandler(Event e) {
-    _toggle(false);
-    _disableClickHandler = true;
-    if (_timer != null) _timer.cancel();
-    _timer = new Timer(const Duration(milliseconds: 300), () {
-      _disableClickHandler = false;
-    });
-  }
+  void blurHandler(Event e) => _toggle(false);
 
   /**
    * Handle the on-opened event from the dropdown. It will be fired e.g. when
