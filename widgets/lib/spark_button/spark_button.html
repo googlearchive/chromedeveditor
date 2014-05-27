@@ -4,6 +4,27 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
+<!--
+/**
+ * spark-button is a clickable element that can have arbitrary content provided
+ * in the inner HTML. A button can be:
+ *
+ * * [raised] (default) or [flat], 
+ * * rectangular (default) or [round]
+ * * [primary] (changes the background and/or text colors)
+ * * enabled (default) or [disabled]
+ * * padded (default), minimally padded ([minPadding]) or not padded ([noPadding])
+ *
+ * Example:
+ *
+ *     <spark-button raised on-click="{{onClose}}">Close</spark-button>
+ *
+ *     <spark-button flat round on-click="{{openMenu}}">
+ *       <spark-icon src="menu.png"></spark-icon>
+ *     <spark-button>
+ */
+-->
+
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-button" extends="spark-widget"

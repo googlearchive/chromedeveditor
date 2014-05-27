@@ -4,6 +4,25 @@
      All rights reserved. Use of this source code is governed by a BSD-style
      license that can be found in the LICENSE file. -->
 
+<!--
+/**
+ * spark-progress can be used to sommunicate ongoing activities in an app
+ * to the user. It can be a true progress indicator with a completed pecentage
+ * periodically updated via the [value] attribute (the default), or it can be
+ * [indeterminate], ie. a value-less visual indicator to let the user know
+ * that the app is doing something.
+ *
+ * It can also display a progress message, and provide a "stop" button to
+ * cancel the activity (when [showCancel] is specified).
+ */
+/**
+ * Fired when the "stop" button is clicked, if provided via [showCancel].
+ *
+ * @event cancelled
+ * @param {bool} detail['opened'] the opened state
+ */
+-->
+
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 <link rel="import" href="../../../packages/spark_widgets/spark_button/spark_button.html"/>
 
