@@ -14,15 +14,15 @@ const bool IS_DART2JS = identical(1, 1.0);
 @CustomTag('spark-widget')
 class SparkWidget extends PolymerElement {
   Element _focusableChild;
-  
+
   SparkWidget.created() : super.created();
 
   @override
   void enteredView() {
     super.enteredView();
-    
+
     _focusableChild = _findFocusableChild();
-    if (_focusableChild) {
+    if (_focusableChild != null) {
       enableKeyboardEvents(_focusableChild);
     }
   }

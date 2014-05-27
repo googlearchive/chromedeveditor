@@ -2579,11 +2579,11 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
     _toggleProgressVisible(true);
 
     SparkButton closeButton = getElement('#gitPushClose');
-    closeButton.enabled = false;
+    closeButton.disabled = true;
     closeButton.deliverChanges();
 
     SparkButton pushButton = getElement('#gitPush');
-    pushButton.enabled = false;
+    pushButton.disabled = true;
     pushButton.deliverChanges();
 
     ProgressMonitor monitor = new ProgressMonitorImpl(progressComponent);
@@ -2607,10 +2607,10 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
   void _restoreDialog() {
     SparkButton pushButton = getElement('#gitPush');
-    pushButton.enabled = true;
+    pushButton.disabled = false;
     pushButton.text = "Push";
     SparkButton closeButton = getElement('#gitPushClose');
-    closeButton.enabled = true;
+    closeButton.disabled = false;
     _toggleProgressVisible(false);
   }
 
