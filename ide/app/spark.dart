@@ -1287,6 +1287,8 @@ Do you really want to delete "${project.name}"?
 This will permanently delete the project contents from disk and cannot be undone.
 ''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
       if (val) {
+        // TODO(grv) : scmManger should listen to the delete project event.
+        spark.scmManager.removeProject(project);
         project.delete().catchError((e) {
           spark.showErrorMessage("Error while deleting project", e.toString());
         });
