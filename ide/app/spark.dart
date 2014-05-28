@@ -282,7 +282,7 @@ abstract class Spark
   void initLaunchManager() {
     // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
     _launchManager = new LaunchManager(_workspace, services,
-        pubManager, bowerManager);
+        pubManager, bowerManager, this);
   }
 
   void initNavigationManager() {
@@ -520,14 +520,14 @@ abstract class Spark
       }
     });
   }
-  
+
   Future importFile([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_FILE);
     return chrome.fileSystem.chooseEntry(options).then(
         (chrome.ChooseEntryResult res) {
       chrome.ChromeFileEntry entry = res.entry;
-      
+
       if (entry != null) {
         ws.Folder folder = resources.first;
         folder.importFileEntry(entry).catchError((e) {
@@ -3023,7 +3023,7 @@ class CompileDartJob extends Job {
 
     CompilerService compiler = spark.services.getService("compiler");
 
-    return compiler.compileFile(file, csp: true).then((CompilerResult result) {
+    return compiler.compileFile(file, csp: true).then((CompileResult result) {
       if (!result.getSuccess()) {
         throw result;
       }

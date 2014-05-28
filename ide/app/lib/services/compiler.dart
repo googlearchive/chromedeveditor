@@ -33,11 +33,11 @@ class Compiler {
 
   Compiler._(this._sdk, this._contentsProvider);
 
-  Future<CompilerResult> compileFile(String fileUuid, {bool csp: false}) {
+  Future<CompilerResultHolder> compileFile(String fileUuid, {bool csp: false}) {
     _CompilerProvider provider =
         new _CompilerProvider.fromUuid(_sdk, _contentsProvider, fileUuid);
 
-    CompilerResult result = new CompilerResult._(csp).._start();
+    CompilerResultHolder result = new CompilerResultHolder(csp: csp);
 
     return compiler.compile(
         provider.getInitialUri(),
@@ -46,16 +46,16 @@ class Compiler {
         provider.inputProvider,
         result._diagnosticHandler,
         [],
-        result._outputProvider).then((_) => result._stop());
+        result._outputProvider).then((_) => result);
   }
 
   /**
    * Compile the given string and return the resulting [CompilerResult].
    */
-  Future<CompilerResult> compileString(String input) {
+  Future<CompilerResultHolder> compileString(String input) {
     _CompilerProvider provider = new _CompilerProvider.fromString(_sdk, input);
 
-    CompilerResult result = new CompilerResult._().._start();
+    CompilerResultHolder result = new CompilerResultHolder();
 
     return compiler.compile(
         provider.getInitialUri(),
@@ -64,38 +64,25 @@ class Compiler {
         provider.inputProvider,
         result._diagnosticHandler,
         [],
-        result._outputProvider).then((_) => result._stop());
+        result._outputProvider).then((_) => result);
   }
 }
 
 /**
  * The result of a dart2js compile.
  */
-class CompilerResult {
+class CompilerResultHolder {
   final bool csp;
   List<CompilerProblem> _problems = [];
   StringBuffer _output;
-  Duration _compileTime;
-  DateTime _startTime;
 
-  CompilerResult._([this.csp = false]);
-
-  void _start() {
-    _startTime = new DateTime.now();
-  }
-
-  CompilerResult _stop() {
-    _compileTime = new DateTime.now().difference(_startTime);
-    return this;
-  }
+  CompilerResultHolder({this.csp: false});
 
   List<CompilerProblem> get problems => _problems;
 
   String get output => _output == null ? null : _output.toString();
 
   bool get hasOutput => output != null;
-
-  Duration get compileTime => _compileTime;
 
   /**
    * This is true if none of the reported problems were errors.
@@ -126,21 +113,10 @@ class CompilerResult {
     }
   }
 
-  CompilerResult.fromMap(Map data) : csp = false {
-    _compileTime = new Duration(milliseconds: data['compileMilliseconds']);
-    String outputString = data['output'];
-    _output = (outputString == null) ? null : new StringBuffer(outputString);
-
-    for (Map problem in data['problems']) {
-      problems.add(new CompilerProblem.fromMap(problem));
-    }
-  }
-
   Map toMap() {
     List responseProblems = problems.map((p) => p.toMap()).toList();
 
     return {
-      "compileMilliseconds": compileTime.inMilliseconds,
       "output": output,
       "problems": responseProblems,
     };
@@ -151,19 +127,13 @@ class CompilerResult {
  * An error, warning, hint, or into associated with a [CompilerResult].
  */
 class CompilerProblem {
-  /**
-   * The Uri for the compilation unit; can be `null`.
-   */
+  /// The Uri for the compilation unit; can be `null`.
   final Uri uri;
 
-  /**
-   * The starting (0-based) character offset; can be `null`.
-   */
+  /// The starting (0-based) character offset; can be `null`.
   final int begin;
 
-  /**
-   * The ending (0-based) character offset; can be `null`.
-   */
+  /// The ending (0-based) character offset; can be `null`.
   final int end;
 
   final String message;
@@ -182,13 +152,6 @@ class CompilerProblem {
     }
   }
 
-  CompilerProblem.fromMap(Map data) :
-    begin = data['begin'],
-    end = data['end'],
-    message = data['message'],
-    uri = new Uri.file(data['uri']),
-    kind = _diagnosticFrom(data['kind']);
-
   Map toMap() {
     return {
       "begin": begin,
@@ -197,15 +160,6 @@ class CompilerProblem {
       "uri": (uri == null) ? "" : uri.path,
       "kind": kind.name
     };
-  }
-
-  static compiler.Diagnostic _diagnosticFrom(String name) {
-    if (name == 'warning') return compiler.Diagnostic.WARNING;
-    if (name == 'hint') return compiler.Diagnostic.HINT;
-    if (name == 'into') return compiler.Diagnostic.INFO;
-    if (name == 'verbose info') return compiler.Diagnostic.VERBOSE_INFO;
-    if (name == 'crash') return compiler.Diagnostic.CRASH;
-    return compiler.Diagnostic.ERROR;
   }
 }
 

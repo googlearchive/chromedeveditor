@@ -17,7 +17,6 @@ import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 import 'apps/app_utils.dart';
-import 'services/compiler.dart';
 import 'developer_private.dart';
 import 'enum.dart';
 import 'jobs.dart';
@@ -54,16 +53,15 @@ class LaunchManager {
   final Services _services;
   final PackageManager _pubManager;
   final PackageManager _bowerManager;
+  final Notifier _notifier;
 
-  CompilerService _compiler;
   Project _lastLaunchedProject;
 
   List<ApplicationLocator> applicationLocators = [];
   List<LaunchTargetHandler> launchTargetHandlers = [];
 
   LaunchManager(this.workspace, this._services, this._pubManager,
-      this._bowerManager) {
-    _compiler = _services.getService("compiler");
+      this._bowerManager, this._notifier) {
 
     applicationLocators.add(new ChromeAppLocator());
     applicationLocators.add(new WebAppLocator());
@@ -71,7 +69,7 @@ class LaunchManager {
     launchTargetHandlers.add(new ChromeAppLocalLaunchHandler());
     // TODO: add ChromeAppRemoteLaunchHandler
     launchTargetHandlers.add(new WebAppLocalLaunchHandler(
-        workspace, _services, _pubManager, _bowerManager));
+        workspace, _services, _pubManager, _bowerManager, _notifier));
     // TODO: add WebAppRemoteLaunchHandler
   }
 
@@ -411,12 +409,12 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
   PicoServer _server;
 
   WebAppLocalLaunchHandler(this.workspace, this.services, this.pubManager,
-      this.bowerManager) {
+      this.bowerManager, Notifier notifier) {
     PicoServer.createServer().then((server) {
       _server = server;
       _server.addServlet(new StaticResourcesServlet());
       _server.addServlet(new Dart2JsServlet(workspace,
-          services.getService("compiler")));
+          services.getService("compiler"), notifier));
       _server.addServlet(new PubPackagesServlet(workspace, pubManager));
       _server.addServlet(new WorkspaceServlet(workspace));
       _server.addServlet(new BowerPackagesServlet(this, bowerManager));
@@ -642,8 +640,9 @@ class StaticResourcesServlet extends PicoServlet {
 class Dart2JsServlet extends PicoServlet {
   final Workspace workspace;
   final CompilerService compiler;
+  final Notifier notifier;
 
-  Dart2JsServlet(this.workspace, this.compiler);
+  Dart2JsServlet(this.workspace, this.compiler, this.notifier);
 
   bool canServe(HttpRequest request) {
     String path = _getPath(request);
@@ -667,14 +666,22 @@ class Dart2JsServlet extends PicoServlet {
     file.workspace.builderManager.jobManager.schedule(
         new ProgressJob('Compiling ${file.name}…', completer));
 
-    return compiler.compileFile(file).then((CompilerResult result) {
+    return compiler.compileFile(file).then((CompileResult result) {
       if (!result.hasOutput) {
-        // TODO: Log this to something like a console window.
-        _logger.warning('Error compiling ${file.path} with dart2js.');
-        for (CompilerProblem problem in result.problems) {
-          _logger.warning('${problem}');
-        }
-        return new HttpResponse(statusCode: HttpStatus.INTERNAL_SERVER_ERROR);
+        // Display a message to the user. In the future, we may want to write
+        // this to a tools console.
+        notifier.showMessage(
+            'Error Compiling File',
+            'Error compiling ${file.path}: ${result.problems.first}');
+
+        HttpResponse response = new HttpResponse.ok();
+        response.setContentTypeFrom('foo.js');
+
+        String errorText = _createTextForError(file, result);
+        String js = _convertToJavaScript(errorText);
+        response.setContent(js);
+
+        return response;
       } else {
         _logger.info('compiled ${file.path} in '
             '${_nf.format(stopwatch.elapsedMilliseconds)} ms, '
@@ -689,3 +696,37 @@ class Dart2JsServlet extends PicoServlet {
 }
 
 String _getPath(HttpRequest request) => request.uri.pathSegments.join('/');
+
+/**
+ * Get user disaplyable text for the given error.
+ */
+String _createTextForError(File file, CompileResult result) {
+  StringBuffer buf = new StringBuffer();
+
+  buf.write('Error compiling ${file.path}:<br><br>');
+
+  for (CompileError problem in result.problems) {
+    buf.write('[${problem.kind}] ${problem.message} '
+        '(${problem.file.path}:${problem.line})<br>');
+  }
+
+  return buf.toString();
+}
+
+/**
+ * Given some text, return back JavaScript source which will display that
+ * message in-line in a web page when executed.
+ */
+String _convertToJavaScript(String text) {
+  String style = 'z-index: 100; border: 1px solid black; position: absolute; '
+      'top: 10px; left: 10px; right: 10px; padding: 5px; background: #F89797; '
+      'border-radius: 4px;';
+  text = text.replaceAll("'", r"\'").replaceAll('\n', r'\n');
+
+  return """
+    var div = document.createElement('code');
+    div.setAttribute('style', \'${style}\');
+    div.innerHTML = '${text}';
+    document.body.appendChild(div);
+""";
+}
