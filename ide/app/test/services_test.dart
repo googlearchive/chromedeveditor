@@ -193,5 +193,17 @@ defineTests() {
         });
       });
     });
+
+    test('link to an imported file ', () {
+      DirectoryEntry dir = createSampleDirectory2('foo2');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.getDeclarationFor(file, 10)
+            .then((SourceDeclaration declaration) {
+          expect(declaration.getFile(project).name, "foo.dart");
+          expect(declaration.offset, 0);
+        });
+      });
+    });
   });
 }
