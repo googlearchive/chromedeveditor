@@ -10,17 +10,19 @@ import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import '../utils.dart';
+import '../utils.dart' as utils;
 import '../workspace.dart';
-import 'addons/bower_deps/template.dart' as bower_deps;
-import 'polymer/template.dart' as polymer;
+
+part 'addons/bower_deps/template.dart';
+part 'polymer/template.dart';
+part 'polymer/polymer_element_dart/template.dart';
 
 /**
  * Specifies a variable-to-value substitution in a template file text.
  */
 class TemplateVar {
   final String name;
-  final String value;
+  String value;
 
   TemplateVar(this.name, this.value);
 
@@ -88,7 +90,7 @@ class ProjectBuilder {
  */
 class ProjectTemplate {
   String _sourceUri;
-  List<TemplateVar> _vars = [];
+  Map<String, TemplateVar> _vars = {};
 
   factory ProjectTemplate(
       String id,
@@ -96,38 +98,46 @@ class ProjectTemplate {
        List<TemplateVar> localVars = const []]) {
     switch (id) {
       case 'addons/bower_deps':
-        return new bower_deps.Template(id, globalVars, localVars);
+        return new BowerDepsTemplate(id, globalVars, localVars);
       case 'polymer/polymer_element_js':
+        return new PolymerTemplate(id, globalVars, localVars);
       case 'polymer/polymer_element_dart':
-        return new polymer.Template(id, globalVars, localVars);
+        return new PolymerDartTemplate(id, globalVars, localVars);
       default:
-        return new ProjectTemplate.internal(id, globalVars, localVars);
+        return new ProjectTemplate._(id, globalVars, localVars);
     }
   }
 
-  ProjectTemplate.internal(
+  /**
+   * Subclasses can add or redefine any of the variables in the resulting _vars.
+   */
+  ProjectTemplate._(
       String id,
       List<TemplateVar> globalVars,
       List<TemplateVar> localVars) {
     _sourceUri = 'lib/templates/$id';
-    final derivedVars = computeDerivedVars(globalVars, localVars);
-    _vars..addAll(globalVars)..addAll(localVars)..addAll(derivedVars);
+    _addOrReplaceVars(globalVars);
+    _addOrReplaceVars(localVars);
+    _addOrReplaceVars([
+      // For copyrights etc.
+      new TemplateVar('year', new DateTime.now().year.toString())
+    ]);
   }
 
-  /**
-   * This method can be overridden by subclasses to generate additional vars.
-   */
-  List<TemplateVar> computeDerivedVars(
-      List<TemplateVar> globalVars, List<TemplateVar> localVars) => [];
+  void _addOrReplaceVars(List<TemplateVar> vars) {
+    for (var v in vars) {
+      _vars[v.name] = v;
+    }
+  }
 
   Future build(DirectoryEntry destRoot) {
     DirectoryEntry sourceRoot;
 
-    return getPackageDirectoryEntry().then((root) {
+    return utils.getPackageDirectoryEntry().then((root) {
       return root.getDirectory(_sourceUri);
     }).then((dir) {
       sourceRoot = dir;
-      return getAppContents("$_sourceUri/setup.json");
+      return utils.getAppContents("$_sourceUri/setup.json");
     }).then((String contents) {
       contents = _interpolateTemplateVars(contents);
       final Map m = JSON.decode(contents);
@@ -136,7 +146,10 @@ class ProjectTemplate {
   }
 
   String _interpolateTemplateVars(String text) {
-    return _vars.fold(text, (String t, TemplateVar v) => v.interpolate(t));
+    _vars.values.forEach((v) {
+      text = v.interpolate(text);
+    });
+    return text;
   }
 
   Future _traverseElement(
@@ -183,11 +196,12 @@ class ProjectTemplate {
       return destRoot.createFile(dest).then((chrome.ChromeFileEntry entry) {
         fileEntry = entry;
         if (dest.endsWith(".png")) {
-          return getAppContentsBinary("$sourceUri/$source").then((List<int> data) {
+          return utils.getAppContentsBinary("$sourceUri/$source").then(
+              (List<int> data) {
             return fileEntry.writeBytes(new chrome.ArrayBuffer.fromBytes(data));
           });
         } else {
-          return getAppContents("$sourceUri/$source").then((String data) {
+          return utils.getAppContents("$sourceUri/$source").then((String data) {
             return fileEntry.writeText(_interpolateTemplateVars(data));
           });
         }
