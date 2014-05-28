@@ -19,6 +19,7 @@ import 'package:logging/logging.dart';
 import 'apps/app_utils.dart';
 import 'services/compiler.dart';
 import 'developer_private.dart';
+import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'server.dart';
@@ -30,114 +31,236 @@ final Logger _logger = new Logger('spark.launch');
 
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
-final String SPARK_NIGHTLY_KEY
-    = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwqXKrcvbi1a1IjFM5COs07Ee9xvPyOSh9dhEF6kwBGjAH6/4F7MHOfPk+W04PURi707E8SsS2iCkvrMiJPh4GnrZ3fWqFUzlsAcUljcYbkyorKxglwdZEXWbFgcKVR/uzuzXD8mOcuXRLu0YyVSdEGzhfZ1HkeMQCKEncUCL5ziE4ZkZJ7I8YVhVG+uiROeMg3zjxxSQrYHOfG5HOqmVslRPCfyiRbIHH3JPD0lax5FudngdKy0+1nkkqVJCpRSf75cRRnxGPjdEvNzTEFmf5oGFxSVs7iXoVQvNXB35Qfyw5rV6N+JyERdu6a7xEnz9lbw41m/noKInlfP+uBQuaQIDAQAB";
-final String SPARK_RELEASE_KEY
-    = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2OvldPjAqgEboHyyZM7GpCMmGMSQ8aExOlQyOhN3C9fDRXqnAN/Ie20TEwD9Eb2CciV3Ru4Gm7PmDnkHzsljD84qLgBdN39FzPGDyViXTS442xTElWRZMZQfJYQpbMpiePL720kTHgLLAcwTgdP9DnvRPrKukIs/U4Y76NFk7NNbsNOc6FWisLJykw2POTB1RR5ZlZrA4Ax1P7kt7qQdomE6i8wy1TA1jDhG8AhEXKRfpyELvJmzyVIyR9uiSHDHCdihiS5oyjADjmmbklvL7Ns0cSAgEX/lWN8UX8r17zoKZzJ0MkmCQ5Nlfql8qUtn2oZXaHztkkAcXCxkq9/37QIDAQAB";
-final String SPARK_RELEASE_ID ="pnoffddplpippgcfjdhbmhkofpnaalpg";
 final String SPARK_NIGHTLY_ID ="kcjgcakhgelcejampmijgkjkadfcncjl";
+final String SPARK_NIGHTLY_KEY =
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwqXKrcvbi1a1IjFM5COs07Ee9xvPyO"
+    "Sh9dhEF6kwBGjAH6/4F7MHOfPk+W04PURi707E8SsS2iCkvrMiJPh4GnrZ3fWqFUzlsAcUljcY"
+    "bkyorKxglwdZEXWbFgcKVR/uzuzXD8mOcuXRLu0YyVSdEGzhfZ1HkeMQCKEncUCL5ziE4ZkZJ7"
+    "I8YVhVG+uiROeMg3zjxxSQrYHOfG5HOqmVslRPCfyiRbIHH3JPD0lax5FudngdKy0+1nkkqVJC"
+    "pRSf75cRRnxGPjdEvNzTEFmf5oGFxSVs7iXoVQvNXB35Qfyw5rV6N+JyERdu6a7xEnz9lbw41m"
+    "/noKInlfP+uBQuaQIDAQAB";
 
-/**
- * Manages all the launches and calls the appropriate delegate.
- */
+final String SPARK_RELEASE_ID ="pnoffddplpippgcfjdhbmhkofpnaalpg";
+final String SPARK_RELEASE_KEY =
+    "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2OvldPjAqgEboHyyZM7GpCMmGMSQ8a"
+    "ExOlQyOhN3C9fDRXqnAN/Ie20TEwD9Eb2CciV3Ru4Gm7PmDnkHzsljD84qLgBdN39FzPGDyViX"
+    "TS442xTElWRZMZQfJYQpbMpiePL720kTHgLLAcwTgdP9DnvRPrKukIs/U4Y76NFk7NNbsNOc6F"
+    "WisLJykw2POTB1RR5ZlZrA4Ax1P7kt7qQdomE6i8wy1TA1jDhG8AhEXKRfpyELvJmzyVIyR9ui"
+    "SHDHCdihiS5oyjADjmmbklvL7Ns0cSAgEX/lWN8UX8r17zoKZzJ0MkmCQ5Nlfql8qUtn2oZXaH"
+    "ztkkAcXCxkq9/37QIDAQAB";
+
 class LaunchManager {
   final Workspace workspace;
   final Services _services;
   final PackageManager _pubManager;
   final PackageManager _bowerManager;
 
-  List<LaunchDelegate> _delegates = [];
   CompilerService _compiler;
   Project _lastLaunchedProject;
+
+  List<ApplicationLocator> applicationLocators = [];
+  List<LaunchTargetHandler> launchTargetHandlers = [];
 
   LaunchManager(this.workspace, this._services, this._pubManager,
       this._bowerManager) {
     _compiler = _services.getService("compiler");
 
-    // The order of registration here matters.
-    _delegates.add(new ChromeAppLaunchDelegate(this));
-    _delegates.add(new DartWebAppLaunchDelegate(this));
+    applicationLocators.add(new ChromeAppLocator());
+    applicationLocators.add(new WebAppLocator());
+
+    launchTargetHandlers.add(new ChromeAppLocalLaunchHandler());
+    // TODO: add ChromeAppRemoteLaunchHandler
+    launchTargetHandlers.add(new WebAppLocalLaunchHandler(
+        workspace, _services, _pubManager, _bowerManager));
+    // TODO: add WebAppRemoteLaunchHandler
   }
 
   /**
    * Indicates whether a particular [Resource] can be run.
    */
-  bool canRun(Resource resource) => _delegates.any((delegate) => delegate.canRun(resource));
+  bool canLaunch(Resource resource, LaunchTarget target) {
+    Application application = _locateApplication(resource);
+    if (application == null) return false;
+
+    LaunchTargetHandler handler = _locateLaunchHandler(application, target);
+    return handler != null;
+  }
 
   /**
    * Launches the given [Resouce].
    */
-  Future run(Resource resource) {
-    for (LaunchDelegate delegate in _delegates) {
-      if (delegate.canRun(resource)) {
-        _lastLaunchedProject = resource.project;
-        return delegate.run(resource);
-      }
+  Future performLaunch(Resource resource, LaunchTarget target) {
+    Application application = _locateApplication(resource);
+    if (application == null) {
+      _logger.warning('application to launch is null');
+      return new Future.value();
     }
 
-    return new Future.value();
+    LaunchTargetHandler handler = _locateLaunchHandler(application, target);
+    if (handler == null) return new Future.value();
+
+    return handler.launch(application, target);
   }
 
   // This statefulness is for use by Bower, and will go away at some point.
   Project get lastLaunchedProject => _lastLaunchedProject;
 
   void dispose() {
-    _delegates.forEach((delegate) => delegate.dispose());
+    launchTargetHandlers.forEach((handler) => handler.dispose());
+  }
+
+  Application _locateApplication(Resource initialResource) {
+    List<ApplicationResult> results = [];
+
+    applicationLocators.forEach((locator) {
+      ApplicationResult result = locator.locateAssociatedApplication(initialResource);
+      if (result != null) {
+        results.add(result);
+      }
+    });
+
+    if (results.isEmpty) return null;
+
+    results.sort();
+
+    return results.last.application;
+  }
+
+  LaunchTargetHandler _locateLaunchHandler(Application application,
+      LaunchTarget target) {
+    for (LaunchTargetHandler handler in launchTargetHandlers) {
+      if (handler.canLaunch(application, target)) {
+        return handler;
+      }
+    }
+
+    return null;
   }
 }
 
 /**
- * Provides convenience methods for launching. Clients can customize the launch
- * delegate.
+ * The environments we know how to run applications in.
  */
-abstract class LaunchDelegate {
-  final LaunchManager launchManager;
+class LaunchTarget extends Enum<String> {
+  /// A local target - executing on the local device.
+  static const LOCAL = const LaunchTarget._('local');
 
-  LaunchDelegate(this.launchManager);
+  /// A remote deploy - typically, executing on a mobile device.
+  static const REMOTE = const LaunchTarget._('remote');
+
+  const LaunchTarget._(String val) : super(val);
+
+  String get enumName => 'LaunchTarget';
+}
+
+/**
+ * The type of applications we know how to launch.
+ */
+class ApplicationType extends Enum<String> {
+  static const CHROME_APP = const ApplicationType._('chrome_app');
+  static const WEB_APP = const ApplicationType._('web_app');
+
+  const ApplicationType._(String val) : super(val);
+
+  String get enumName => 'ApplicationType';
+}
+
+/**
+ * An instance of an ApplicationType.
+ */
+class Application {
+  final Resource primaryResource;
+  final ApplicationType appType;
+
+  final Map<String, String> _properties = {};
+
+  Application(this.primaryResource, this.appType);
+
+  String get name => primaryResource.name;
+
+  String getProperty(String key) => _properties[key];
+
+  void setProperty(String key, String value) {
+    _properties[key] = value;
+  }
+
+  bool get isDart => getProperty('dart') != null;
+
+  String toString() => name;
+}
+
+/**
+ * Given a starting resource, return an associated [Application], if any.
+ */
+abstract class ApplicationLocator {
+  ApplicationResult locateAssociatedApplication(Resource resource);
+}
+
+/**
+ * TODO:
+ */
+class ApplicationResult implements Comparable {
+  /**
+   * The application that was located.
+   */
+  final Application application;
 
   /**
-   * The delegate can launch the given resource
+   * How certain we are that the application found is the correct one to launch.
+   * `0.0` means not at all certain. `1.0` means absolutely certain. As an
+   * example of affinities, a resource that is contained inside a chrome app
+   * will return an affinity of `0.7` for launching that chrome app. An html
+   * resource in the same app will return an affinity of `0.5` for launching a
+   * web app. This ensures that the chrome app is choosen by the framework as
+   * the app to launch.
    */
-  bool canRun(Resource resource);
+  final num affinity;
 
-  Future run(Resource resource);
+  ApplicationResult(this.application, this.affinity);
 
-  void dispose();
+  int compareTo(ApplicationResult other) => affinity.compareTo(other.affinity);
+
+  String toString() => '[${application}, ${affinity}]';
 }
 
 /**
- * Launcher for running Dart web apps.
+ * Can launch a certain type of [Application] for a given [LaunchTarget].
  */
-class DartWebAppLaunchDelegate extends LaunchDelegate {
-  PicoServer _server;
+abstract class LaunchTargetHandler {
 
-  DartWebAppLaunchDelegate(LaunchManager launchManager) : super(launchManager) {
-    PicoServer.createServer().then((server) {
-      _server = server;
-      _server.addServlet(new StaticResourcesServlet());
-      _server.addServlet(new Dart2JsServlet(launchManager));
-      _server.addServlet(new PubPackagesServlet(launchManager));
-      _server.addServlet(new WorkspaceServlet(launchManager));
-      _server.addServlet(new BowerPackagesServlet(launchManager));
+  String get name;
 
-      _logger.info('embedded web server listening on port ${_server.port}');
-    }).catchError((error) {
-      _logger.severe('Error starting up embedded server', error);
-    });
+  bool canLaunch(Application application, LaunchTarget launchTarget);
+
+  Future launch(Application application, LaunchTarget launchTarget);
+
+  void dispose();
+
+  String toString() => name;
+}
+
+class ChromeAppLocator extends ApplicationLocator {
+
+  @override
+  ApplicationResult locateAssociatedApplication(Resource resource) {
+    Container container = getAppContainerFor(resource);
+    if (container == null) return null;
+
+    return new ApplicationResult(
+        new Application(container, ApplicationType.CHROME_APP), 0.8);
   }
+}
 
-  // For now launching only web/index.html.
-  bool canRun(Resource resource) {
-    return getLaunchResourceFor(resource) != null;
-  }
-
-  Resource getLaunchResourceFor(Resource resource) {
+class WebAppLocator extends ApplicationLocator {
+  @override
+  ApplicationResult locateAssociatedApplication(Resource resource) {
     if (resource.project == null) return null;
 
     // We can always launch .htm and .html files.
     if (resource is File) {
       if (resource.name.endsWith('.html') || resource.name.endsWith('.htm')) {
-        return resource;
+        return new ApplicationResult(
+            new Application(resource, ApplicationType.WEB_APP), 0.7);
       }
     }
 
@@ -149,19 +272,25 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
       parent = resource.parent;
     }
 
-    if (getLaunchResourceIn(parent) != null) {
-      return getLaunchResourceIn(parent);
+    if (_getLaunchResourceIn(parent) != null) {
+      Resource r = _getLaunchResourceIn(parent);
+      return new ApplicationResult(
+          new Application(r, ApplicationType.WEB_APP), 0.6);
     }
 
     // Check for a launchable file in web/.
     if (resource.project.getChild('web') is Container) {
-      return getLaunchResourceIn(resource.project.getChild('web'));
+      Resource r = _getLaunchResourceIn(resource.project.getChild('web'));
+      if (r != null) {
+        return new ApplicationResult(
+            new Application(r, ApplicationType.WEB_APP), 0.6);
+      }
     }
 
     return null;
   }
 
-  Resource getLaunchResourceIn(Container container) {
+  Resource _getLaunchResourceIn(Container container) {
     if (container.getChild('index.html') is File) {
       return container.getChild('index.html');
     }
@@ -176,34 +305,65 @@ class DartWebAppLaunchDelegate extends LaunchDelegate {
 
     return null;
   }
-
-  Future run(Resource resource) {
-    window.open(_getUrlFor(getLaunchResourceFor(resource)), '_blank');
-    return new Future.value();
-  }
-
-  void dispose() {
-    if (_server != null) {
-      _server.dispose();
-    }
-  }
-
-  String _getUrlFor(Resource resource) {
-    return 'http://127.0.0.1:${_server.port}${resource.path}';
-  }
 }
 
-/**
- * Launcher for Chrome Apps.
- */
-class ChromeAppLaunchDelegate extends LaunchDelegate {
-  ChromeAppLaunchDelegate(LaunchManager launchManager) : super(launchManager);
+class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
+  String get name => 'Chrome App';
 
-  bool canRun(Resource resource) {
-    return getAppContainerFor(resource) != null;
+  bool canLaunch(Application application, LaunchTarget launchTarget) {
+    return launchTarget == LaunchTarget.LOCAL &&
+        application.appType == ApplicationType.CHROME_APP;
   }
 
-  Future<String> updateManifest(chrome.DirectoryEntry dir) {
+  Future launch(Application application, LaunchTarget launchTarget) {
+    Container container = application.primaryResource;
+
+    String idToLaunch;
+
+    // Check if we need to fiddle with the app id to launch Spark.
+    return _rewriteManifest(container.entry).then((String id) {
+      idToLaunch = id;
+      return developerPrivate.loadDirectory(container.entry);
+    }).then((String appId) {
+      // TODO: Use the returned appId once it has the correct results.
+      // TODO: Delay a bit - there's a race condition.
+      return new Future.delayed(new Duration(milliseconds: 100));
+    }).then((_) {
+      if (idToLaunch != null) return idToLaunch;
+      return _getAppId(container.name);
+    }).then((String launchId) {
+      _launchId(launchId);
+    });
+  }
+
+  /**
+   * Launches a chrome app with given [id].
+   */
+  Future _launchId(String id) {
+    if (id == null) throw 'Unable to locate an application id.';
+
+    return management.launchApp(id);
+  }
+
+  /**
+   * TODO(grv): This is a temporary function until loadDirectory returns the
+   * app_id.
+   */
+  Future<String> _getAppId(String name) {
+    return developerPrivate.getItemsInfo(false, false).then((List<ItemInfo> items) {
+      for (ItemInfo item in items) {
+        if (item.is_unpacked && item.path.endsWith(name)) {
+          return item.id;
+        }
+      };
+      return null;
+    });
+  }
+
+  /**
+   * Update the manifest to re-write the app id if we are launching Spark.
+   */
+  Future<String> _rewriteManifest(chrome.DirectoryEntry dir) {
     String id = chrome.runtime.id;
     String launchId;
 
@@ -225,9 +385,9 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
           } else {
             return new Future.value();
           }
+
           // This modifies the manifest file permanently.
-          return entry.writeText(new JsonPrinter().print(manifestDict)).then(
-              (_) {
+          return entry.writeText(new JsonPrinter().print(manifestDict)).then((_) {
             return new Future.value(launchId);
           });
         });
@@ -237,62 +397,70 @@ class ChromeAppLaunchDelegate extends LaunchDelegate {
     }
   }
 
-  Future run(Resource resource) {
-    Container launchContainer = getAppContainerFor(resource);
-    return updateManifest(launchContainer.entry).then((String id) {
-      return developerPrivate.loadDirectory(launchContainer.entry).then(
-          (String appId) {
-        // TODO: Use the returned appId once it has the correct results.
+  void dispose() { }
+}
 
-        // TODO: Delay a bit - there's a race condition.
-        return new Future.delayed(new Duration(milliseconds: 100));
-      }).then((_) {
-        if (id != null) {
-          return launchId(id);
-        } else {
-           return _getAppId(launchContainer.name).then((String id)
-               => launchId(id));
-        }
-      });
+class WebAppLocalLaunchHandler extends LaunchTargetHandler {
+  final Workspace workspace;
+  final Services services;
+  final PackageManager pubManager;
+  final PackageManager bowerManager;
+
+  Project lastLaunchedProject;
+
+  PicoServer _server;
+
+  WebAppLocalLaunchHandler(this.workspace, this.services, this.pubManager,
+      this.bowerManager) {
+    PicoServer.createServer().then((server) {
+      _server = server;
+      _server.addServlet(new StaticResourcesServlet());
+      _server.addServlet(new Dart2JsServlet(workspace,
+          services.getService("compiler")));
+      _server.addServlet(new PubPackagesServlet(workspace, pubManager));
+      _server.addServlet(new WorkspaceServlet(workspace));
+      _server.addServlet(new BowerPackagesServlet(this, bowerManager));
+
+      _logger.info('embedded web server listening on port ${_server.port}');
+    }).catchError((error) {
+      _logger.severe('Error starting up embedded server', error);
     });
   }
 
-  /**
-  * Launches a chrome app with given [id].
-  */
-  Future launchId(String id) {
-    if (id == null) {
-      throw 'Unable to locate an application id.';
-    } else {
-      return management.launchApp(id);
+  String get name => 'Web app';
+
+  bool canLaunch(Application application, LaunchTarget launchTarget) {
+    return launchTarget == LaunchTarget.LOCAL &&
+        application.appType == ApplicationType.WEB_APP;
+  }
+
+  Future launch(Application application, LaunchTarget launchTarget) {
+    lastLaunchedProject = application.primaryResource.project;
+
+    window.open(_getUrlFor(application.primaryResource), '_blank');
+
+    return new Future.value();
+  }
+
+  String _getUrlFor(Resource resource) {
+    return 'http://127.0.0.1:${_server.port}${resource.path}';
+  }
+
+  void dispose() {
+    if (_server != null) {
+      _server.dispose();
     }
   }
-
-  /**
-   * TODO(grv): This is a temporary function until loadDirectory returns the
-   * app_id.
-   */
-  Future<String> _getAppId(String name) {
-    return developerPrivate.getItemsInfo(false, false).then((List<ItemInfo> items) {
-      for (ItemInfo item in items) {
-        if (item.is_unpacked && item.path.endsWith(name)) {
-          return item.id;
-        }
-      };
-      return null;
-    });
-  }
-
-  void dispose() { }
 }
 
 /**
  * A servlet that can serve `package:` urls (`/packages/`).
  */
 class PubPackagesServlet extends PicoServlet {
-  LaunchManager _launchManager;
+  final Workspace workspace;
+  final PackageManager pubManager;
 
-  PubPackagesServlet(this._launchManager);
+  PubPackagesServlet(this.workspace, this.pubManager);
 
   bool canServe(HttpRequest request) {
     return request.uri.pathSegments.contains('packages');
@@ -300,11 +468,10 @@ class PubPackagesServlet extends PicoServlet {
 
   Future<HttpResponse> serve(HttpRequest request) {
     String projectName = request.uri.pathSegments[0];
-    Container project = _launchManager.workspace.getChild(projectName);
+    Container project = workspace.getChild(projectName);
 
     if (project is Project) {
-      PackageResolver resolver =
-          _launchManager._pubManager.getResolverFor(project);
+      PackageResolver resolver = pubManager.getResolverFor(project);
       File file = resolver.resolveRefToFile(_getPath(request));
       if (file != null) {
         return _serveFileResponse(file);
@@ -331,13 +498,14 @@ class PubPackagesServlet extends PicoServlet {
  * `/FooProject/bower_components/polymer/polymer.js` and serve that file back.
  */
 class BowerPackagesServlet extends PicoServlet {
-  LaunchManager _launchManager;
+  final WebAppLocalLaunchHandler webLaunchHandler;
+  final PackageManager bowerManager;
 
   // TODO(devoncarew): We will want to change this from trying to serve
   // content from the last launch, to creating a server per project. This will
   // let us do something better then just guessing the project the user wants to
   // serve bower content from.
-  BowerPackagesServlet(this._launchManager);
+  BowerPackagesServlet(this.webLaunchHandler, this.bowerManager);
 
   bool canServe(HttpRequest request) {
     return _resolveRequest(request) != null;
@@ -354,11 +522,8 @@ class BowerPackagesServlet extends PicoServlet {
   }
 
   File _resolveRequest(HttpRequest request) {
-    Project project = _launchManager.lastLaunchedProject;
-
+    Project project = webLaunchHandler.lastLaunchedProject;
     if (project == null) return null;
-
-    PackageManager bowerManager = _launchManager._bowerManager;
 
     if (!bowerManager.properties.isProjectWithPackages(project)) return null;
 
@@ -372,14 +537,13 @@ class BowerPackagesServlet extends PicoServlet {
  * A servlet that can serve files from any of the [Project]s in the [Workspace]
  */
 class WorkspaceServlet extends PicoServlet {
-  LaunchManager _launchManager;
+  final Workspace workspace;
 
-  WorkspaceServlet(this._launchManager);
+  WorkspaceServlet(this.workspace);
 
   bool canServe(HttpRequest request) {
     if (request.uri.pathSegments.length <= 1) return false;
-    var projectNamesList =
-        _launchManager.workspace.getProjects().map((project) => project.name);
+    var projectNamesList = workspace.getProjects().map((project) => project.name);
     return projectNamesList.contains(request.uri.pathSegments[0]);
   }
 
@@ -390,7 +554,7 @@ class WorkspaceServlet extends PicoServlet {
       path = path.substring(1);
     }
 
-    Resource resource = _launchManager.workspace.getChildPath(path);
+    Resource resource = workspace.getChildPath(path);
 
     if (resource is File) {
       return _serveFileResponse(resource);
@@ -439,33 +603,33 @@ class StaticResourcesServlet extends PicoServlet {
   }
 }
 
-/**
- * Servlet that redirects to the landing page for the project that was run.
- */
-class ProjectRedirectServlet extends PicoServlet {
-  final LaunchManager _launchManager;
-  final PicoServer _server;
-  Resource _launchFile;
-
-  ProjectRedirectServlet(this._launchManager, this._server);
-
-  bool canServe(HttpRequest request) {
-    return request.uri.path == '/';
-  }
-
-  Future<HttpResponse> serve(HttpRequest request) {
-    String url = 'http://127.0.0.1:${_server.port}${launchPath}';
-
-    // Issue a 302 redirect.
-    HttpResponse response = new HttpResponse(statusCode: HttpStatus.FOUND);
-    response.headers.set(HttpHeaders.LOCATION, url);
-    response.headers.set(HttpHeaders.CONTENT_LENGTH, 0);
-
-    return new Future.value(response);
-  }
-
-  String get launchPath => _launchFile.path;
-}
+///**
+// * Servlet that redirects to the landing page for the project that was run.
+// */
+//class ProjectRedirectServlet extends PicoServlet {
+//  final LaunchManager _launchManager;
+//  final PicoServer _server;
+//  Resource _launchFile;
+//
+//  ProjectRedirectServlet(this._launchManager, this._server);
+//
+//  bool canServe(HttpRequest request) {
+//    return request.uri.path == '/';
+//  }
+//
+//  Future<HttpResponse> serve(HttpRequest request) {
+//    String url = 'http://127.0.0.1:${_server.port}${launchPath}';
+//
+//    // Issue a 302 redirect.
+//    HttpResponse response = new HttpResponse(statusCode: HttpStatus.FOUND);
+//    response.headers.set(HttpHeaders.LOCATION, url);
+//    response.headers.set(HttpHeaders.CONTENT_LENGTH, 0);
+//
+//    return new Future.value(response);
+//  }
+//
+//  String get launchPath => _launchFile.path;
+//}
 
 // 3 successive launches; dart2js warms up quite a bit.
 // [INFO] spark.launch: compiled /solar/web/solar.dart in 6,446 ms
@@ -476,12 +640,10 @@ class ProjectRedirectServlet extends PicoServlet {
  * Servlet that compiles and serves up the JavaScript for Dart sources.
  */
 class Dart2JsServlet extends PicoServlet {
-  LaunchManager _launchManager;
-  CompilerService _compiler;
+  final Workspace workspace;
+  final CompilerService compiler;
 
-  Dart2JsServlet(this._launchManager){
-    _compiler = _launchManager._compiler;
-  }
+  Dart2JsServlet(this.workspace, this.compiler);
 
   bool canServe(HttpRequest request) {
     String path = _getPath(request);
@@ -494,7 +656,7 @@ class Dart2JsServlet extends PicoServlet {
     }
     // check if there is a corresponding dart file
     var dartFileName = path.substring(0, path.length - 3);
-    return _launchManager.workspace.getChildPath(dartFileName);
+    return workspace.getChildPath(dartFileName);
   }
 
   Future<HttpResponse> serve(HttpRequest request) {
@@ -505,7 +667,7 @@ class Dart2JsServlet extends PicoServlet {
     file.workspace.builderManager.jobManager.schedule(
         new ProgressJob('Compiling ${file.name}…', completer));
 
-    return _compiler.compileFile(file).then((CompilerResult result) {
+    return compiler.compileFile(file).then((CompilerResult result) {
       if (!result.hasOutput) {
         // TODO: Log this to something like a console window.
         _logger.warning('Error compiling ${file.path} with dart2js.');

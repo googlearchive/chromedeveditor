@@ -1548,7 +1548,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 
     Completer completer = new Completer();
     ProgressJob job = new ProgressJob("Running application…", completer);
-    spark.launchManager.run(resource).then((_) {
+    spark.launchManager.performLaunch(resource, LaunchTarget.LOCAL).then((_) {
       completer.complete();
     }).catchError((e) {
       completer.complete();
@@ -1561,7 +1561,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
-    return spark.launchManager.canRun(resource);
+    return spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
   }
 
   void _updateEnablement(ws.Resource resource) {
