@@ -63,13 +63,20 @@
 
 <polymer-element name="spark-overlay"
      extends="spark-widget"
-     attributes="opened
+     attributes="arrow
                  modal
                  autoClose
-                 animation">
+                 animation
+                 opened">
 
   <template>
     <link rel="stylesheet" href="spark_overlay.css">
+    
+    <template if="{{arrow != 'none'}}">
+      <div class="arrow"></div>
+      <div id="arrowInner" class="arrow"></div>
+    </template>
+    
     <content></content>
   </template>
 
