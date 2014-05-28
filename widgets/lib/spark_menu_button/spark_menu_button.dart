@@ -18,11 +18,14 @@ import '../spark_overlay/spark_overlay.dart';
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends SparkWidget {
   @published dynamic selected;
-  @published String valueAttr = "";
+  @published String valueAttr = '';
   @published bool opened = false;
   @published bool responsive = false;
-  @published String valign = "center";
-
+  @published String arrow = 'none';
+  static final List<String> _SUPPORTED_ARROWS = [
+    'none', 'top-center', 'top-left', 'top-right'
+  ];
+  
   SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
@@ -35,6 +38,8 @@ class SparkMenuButton extends SparkWidget {
   @override
   void enteredView() {
     super.enteredView();
+
+    assert(_SUPPORTED_ARROWS.contains(arrow));
 
     _overlay = $['overlay'];
     _menu = $['menu'];

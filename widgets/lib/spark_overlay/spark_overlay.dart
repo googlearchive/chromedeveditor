@@ -105,6 +105,15 @@ class SparkOverlay extends SparkWidget {
   }
 
   /**
+   * Adds an arrow on a side of the overlay at a specified location.
+   */
+  @published String arrow = 'none';
+
+  static final List<String> _SUPPORTED_ARROWS = [
+    'none', 'top-center', 'top-left', 'top-right'
+  ];
+
+  /**
    * Prevents other elements in the document from receiving [_captureEventTypes]
    * events. This essentially disables the rest of the UI while the overlay
    * is open.
@@ -167,6 +176,7 @@ class SparkOverlay extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
+    assert(_SUPPORTED_ARROWS.contains(arrow));
     assert(_SUPPORTED_ANIMATIONS.contains(animation));
 
     style.visibility = "visible";
