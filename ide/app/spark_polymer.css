@@ -588,9 +588,12 @@ li.outlineItem a {
 }
 
 #markdownContent {
+  -webkit-font-smoothing: antialiased;
   background-color: rgba(39, 40, 34, 1.0);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  /*border: 1px solid rgba(255, 255, 255, 0.2);*/
   bottom: 0px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
   overflow-y: auto;
   width: 100%;
   padding: 10px;
