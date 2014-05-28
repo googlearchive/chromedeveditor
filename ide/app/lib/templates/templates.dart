@@ -118,6 +118,10 @@ class ProjectTemplate {
     _sourceUri = 'lib/templates/$id';
     _addOrReplaceVars(globalVars);
     _addOrReplaceVars(localVars);
+    _addOrReplaceVars([
+      // For copyrights etc.
+      new TemplateVar('year', new DateTime.now().year.toString())
+    ]);
   }
 
   void _addOrReplaceVars(List<TemplateVar> vars) {
