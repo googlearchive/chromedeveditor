@@ -67,15 +67,18 @@ class Outline {
     // If the outline has not been built yet, just save the position
     _initialScrollPosition = position;
     if (_scrollTarget != null) {
-      // Hack for scrollTop not working
-      _scrollTarget.hidden = false;
-      _scrollTarget.style
-          ..position = "absolute"
-          ..height = "${_outlineDiv.clientHeight}px"
-          ..top = "${position}px";
-      _scrollTarget.scrollIntoView();
-      _scrollTarget.hidden = true;
+      _scrollIntoView(_outlineDiv.clientHeight, position);
     }
+  }
+  void _scrollIntoView(int top, int bottom) {
+    // Hack for scrollTop not working
+    _scrollTarget.hidden = false;
+    _scrollTarget.style
+        ..position = "absolute"
+        ..height = "${bottom - top}px"
+        ..top = "${top}px";
+    _scrollTarget.scrollIntoView();
+    _scrollTarget.hidden = true;
   }
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
@@ -165,22 +168,58 @@ class Outline {
   }
 
   void selectItemAtOffset(int cursorOffset) {
-    Map<int, OutlineItem> outlineItems = _outlineItemsByOffset;
-    if (outlineItems != null) {
-      int containerOffset = -1;
+    OutlineItem itemAtCursor = _itemAtCodeOffset(cursorOffset);
+    if (itemAtCursor != null) {
+      setSelected(itemAtCursor);
+    }
+  }
 
-      var outlineOffets = outlineItems.keys.toList()..sort();
+  void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
+    List<html.Element> outlineElements =
+        _outlineDiv.getElementsByClassName("outlineItem");
+
+    if (outlineElements.length > 0) {
+      int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
+      int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+
+      html.Element firstElement = outlineElements[firstItemIndex];
+
+      int bottomOffset;
+      if (outlineElements.length > lastItemIndex + 1) {
+        bottomOffset = outlineElements[lastItemIndex + 1].offsetTop;
+      } else {
+        html.Element lastElement = outlineElements[lastItemIndex];
+        bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;
+      }
+
+      _scrollIntoView(firstElement.offsetTop, bottomOffset);
+    }
+  }
+
+  int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
+    if (_outlineItemsByOffset != null) {
+      int count = 0;
+      List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
+      int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;
 
       // Finds the last outline item that *doesn't* satisfies this:
-      for (int outlineOffset in outlineOffets) {
-        if (outlineOffset > cursorOffset) break;
-        containerOffset = outlineOffset;
+      for (int outlineOffset in outlineOffsets) {
+        if (outlineOffset > codeOffset) break;
+        containerOffset = returnCodeOffset ? outlineOffset : count;
+        count++;
       }
-
-      if (containerOffset != -1) {
-        setSelected(outlineItems[containerOffset]);
-      }
+      return containerOffset;
+    } else {
+      return null;
     }
+  }
+
+  OutlineItem _itemAtCodeOffset(int codeOffset) {
+    int itemIndex = _itemIndexAtCodeOffset(codeOffset, returnCodeOffset: true);
+    if (itemIndex != null) {
+      return _outlineItemsByOffset[itemIndex];
+    }
+    return null;
   }
 }
 

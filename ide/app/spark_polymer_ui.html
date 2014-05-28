@@ -45,10 +45,14 @@
 
           <spark-menu-button
               id="mainMenu"
-              icon="images/overflow.png"
               valueAttr="action-id"
-              valign="left"
+              arrow="none"
               on-activate="{{onMenuSelected}}">
+
+            <spark-button flat round noPadding menuButton>
+              <img src="images/overflow.png">
+            </spark-button>
+
             <spark-menu-item action-id="project-new" label="New Project...">
             </spark-menu-item>
 
@@ -84,6 +88,7 @@
             </spark-menu-item>
             <spark-menu-item action-id="help-about" label="About Spark">
             </spark-menu-item>
+
           </spark-menu-button>
         </spark-toolbar>
 

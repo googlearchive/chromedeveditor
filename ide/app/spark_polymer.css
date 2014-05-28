@@ -560,3 +560,47 @@ li.outlineItem a {
   margin-right: 95px;
 }
 
+#togglePreviewButton {
+  color: rgba(255, 255, 255, 1.0);
+  background-color: rgba(39, 40, 34, 1.0);
+  border: 1px;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 1.0);
+  border-radius: 0px;
+  font-weight: bold;
+  position: absolute;
+  padding-left: 15px;
+  padding-right: 15px;
+  right: 0px;
+  width: 150px;
+  z-index: 100;
+}
+
+#togglePreviewButton:hover {
+  background-color: #ddd;
+}
+
+#togglePreviewButton:active {
+  background-color: #eee;
+}
+
+#togglePreviewButton:focus {
+  outline: none;
+}
+
+#markdownContent {
+  background-color: rgba(39, 40, 34, 1.0);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  bottom: 0px;
+  overflow-y: auto;
+  width: 100%;
+  padding: 10px;
+  position: absolute;
+  top: 0px;
+  transition: opacity 250ms;
+  z-index: 100;
+}
+
+.tabview-workspace * {
+  -webkit-font-smoothing: antialiased;
+}
