@@ -10,19 +10,13 @@ class PolymerTemplate extends ProjectTemplate {
       : super._(id, globalVars, localVars) {
     final String projName = _vars['projectName'].value;
 
-    String tagName = projName.toLowerCase().replaceAll(new RegExp(r'\W'), '-');
+    String tagName = projName.toLowerCase().replaceAll(new RegExp(r'\W|_'), '-');
     if (!tagName.contains('-')) {
       tagName = 'x-$tagName';
+    } else if (tagName.startsWith('-')) {
+      tagName = 'x$tagName';
     }
 
-    String className =
-        utils.capitalize(tagName).replaceAllMapped(
-            new RegExp(r'\W(.)'), (Match m) => utils.capitalize(m[1]));
-
-    _addOrReplaceVars([
-      new TemplateVar('tagName', tagName),
-      new TemplateVar('sourceName', tagName),
-      new TemplateVar('className', className)
-    ]);
+    _addOrReplaceVars([new TemplateVar('tagName', tagName)]);
   }
 }
