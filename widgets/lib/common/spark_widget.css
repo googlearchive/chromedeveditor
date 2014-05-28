@@ -25,8 +25,8 @@
 }
 
 .stacking-context {
-  /* This no-op scaleZ(1) creates an independent stacking context for :host. */
-  -webkit-transform: scaleZ(1);
+  /* This no-op transform creates an independent stacking context. */
+  -webkit-transform: translateX(0);
 }
 
 /* Uncomment these 2 rules, or selectively apply the .debug class or debug
