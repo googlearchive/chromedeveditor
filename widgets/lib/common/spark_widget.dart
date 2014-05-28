@@ -38,9 +38,13 @@ class SparkWidget extends PolymerElement {
 
     if (elts.isEmpty) return null;
 
-    // At most one element is expected to have an `focused` attribute.
-    // Use [first] vs [single] to be more lax to errors in production.
-    assert(elts.length == 1);
+    // Theoretically, only one element in a widget is expected to have
+    // `focused` attribute. However, this may not be true if a widget
+    // instantiates other widgets and passes some focusable nodes to them
+    // via <content>. So for now just print a warning and return first element.
+    if (elts.length > 1) {
+      print("WARNING: more than one child with 'focused' attribute");
+    }
     return elts.first;
   }
 
