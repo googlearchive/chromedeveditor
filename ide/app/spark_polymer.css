@@ -561,27 +561,26 @@ li.outlineItem a {
 }
 
 #togglePreviewButton {
-  color: rgba(255, 255, 255, 1.0);
+  color: #666;
   background-color: rgba(39, 40, 34, 1.0);
-  border: 1px;
-  border-style: solid;
-  border-color: rgba(255, 255, 255, 1.0);
+  border: none;
+  border-bottom: 1px solid #444;
+  border-left: 1px solid #444;
   border-radius: 0px;
-  font-weight: bold;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   position: absolute;
-  padding-left: 15px;
-  padding-right: 15px;
+  padding: 8px;
   right: 0px;
-  width: 150px;
+  width: 120px;
   z-index: 100;
 }
 
 #togglePreviewButton:hover {
-  background-color: #ddd;
+  color: #888;
 }
 
 #togglePreviewButton:active {
-  background-color: #eee;
+  color: #eee;
 }
 
 #togglePreviewButton:focus {
@@ -589,9 +588,12 @@ li.outlineItem a {
 }
 
 #markdownContent {
+  -webkit-font-smoothing: antialiased;
   background-color: rgba(39, 40, 34, 1.0);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  /*border: 1px solid rgba(255, 255, 255, 0.2);*/
   bottom: 0px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
   overflow-y: auto;
   width: 100%;
   padding: 10px;
