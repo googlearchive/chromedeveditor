@@ -69,5 +69,5 @@ void defineTests() {
 }
 
 void oneTest() {
-  services_test.defineTests();
+  services_test.oneTest();
 }
