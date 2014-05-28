@@ -16,6 +16,7 @@ import '../workspace.dart';
 part 'addons/bower_deps/template.dart';
 part 'polymer/template.dart';
 part 'polymer/polymer_element_dart/template.dart';
+part 'polymer/spark_widget/template.dart';
 
 /**
  * Specifies a variable-to-value substitution in a template file text.
@@ -103,6 +104,8 @@ class ProjectTemplate {
         return new PolymerTemplate(id, globalVars, localVars);
       case 'polymer/polymer_element_dart':
         return new PolymerDartTemplate(id, globalVars, localVars);
+      case 'polymer/spark_widget':
+        return new SparkWidgetTemplate(id, globalVars, localVars);
       default:
         return new ProjectTemplate._(id, globalVars, localVars);
     }
