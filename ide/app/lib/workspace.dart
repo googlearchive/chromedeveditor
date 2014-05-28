@@ -19,6 +19,7 @@ import 'builder.dart';
 import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/bower_properties.dart';
+import 'package_mgmt/pub_properties.dart';
 import 'preferences.dart';
 import 'utils.dart';
 
@@ -869,7 +870,9 @@ class Folder extends Container {
     return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
   }
 
-  bool isScmPrivate() => name == '.git' || name == '.svn';
+  //TODO(keertip): remove check for 'cache' 
+  bool isScmPrivate() => name == '.git' || name == '.svn'
+      || (name =='cache' && pubProperties.isProjectWithPackages(parent));
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
