@@ -600,3 +600,7 @@ li.outlineItem a {
   transition: opacity 250ms;
   z-index: 100;
 }
+
+.tabview-workspace * {
+  -webkit-font-smoothing: antialiased;
+}
