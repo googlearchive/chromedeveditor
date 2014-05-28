@@ -560,3 +560,6 @@ li.outlineItem a {
   margin-right: 95px;
 }
 
+.tabview-workspace * {
+  -webkit-font-smoothing: antialiased;
+}
