@@ -96,6 +96,11 @@ img.ace-tooltip {
   margin-bottom: 3px;
 }
 
+.ace_link_marker {
+  position: absolute;
+  border-bottom: 1px solid white;
+}
+
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;

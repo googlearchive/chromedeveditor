@@ -316,7 +316,7 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
-  ace.Marker _currentHover;
+  int _linkingMarkerId;
 
   AceManager(this.parentElement,
              this.delegate,
@@ -341,16 +341,43 @@ class AceManager {
     ace.require('ace/ext/linking');
     _aceEditor.setOptions({'enableMultiselect' : false,
         'enableLinking' : true});
-    _aceEditor.onLinkClick.listen((ace.LinkEvent e) {
+
+    html.DivElement contentElement =
+        _aceEditor.renderer.containerElement.querySelector(".ace_content");
+
+    _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
+      ace.Token token = event.token;
+
+      if (_linkingMarkerId != null) {
+        currentSession.removeMarker(_linkingMarkerId);
+      }
+
+      if (token != null && token.type == "identifier") {
+        contentElement.style.cursor = "pointer";
+        int startColumn = event.token.start;
+        ace.Point startPosition =
+            new ace.Point(event.position.row, startColumn);
+        int endColumn = startColumn + event.token.value.length;
+        ace.Point endPosition = new ace.Point(event.position.row, endColumn);
+        ace.Range markerRange =
+            new ace.Range.fromPoints(startPosition, endPosition);
+        _linkingMarkerId = currentSession.addMarker(markerRange,
+            "ace_link_marker", type: ace.Marker.TEXT);
+      } else {
+        contentElement.style.cursor = null;
+      }
     });
-    _aceEditor.onLinkHover.listen((ace.LinkEvent e) {
-      int startColumn = e.token.start;
-      ace.Point startPosition = new ace.Point(e.position.row, startColumn);
-      int endColumn = startColumn + e.token.value.length;
-      ace.Point endPosition = new ace.Point(e.position.row, endColumn);
-      ace.Range markerRange = new ace.Range.fromPoints(startPosition, endPosition);
-      // currentSession.addMarker(markerRange, "ace_bracket", type: ace.Marker.TEXT);
+
+    parentElement.onKeyUp.listen((event) {
+      if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
+          (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
+        if (_linkingMarkerId != null) {
+          currentSession.removeMarker(_linkingMarkerId);
+        }
+        contentElement.style.cursor = null;
+      }
     });
+
 
     // Override Ace's `gotoline` command.
     var command = new ace.Command(
