@@ -44,11 +44,11 @@ class Markdown {
     templateClone = template.clone(true);
     previewButton = templateClone.querySelector('#togglePreviewButton');
 
-    _previewDiv.classes.add('hidden');
     _container.children.add(_previewDiv);
 
-    previewButton.text = "Show Preview";
     previewButton.onClick.listen((_) => toggle());
+
+    _applyVisibleValue();
   }
 
   void toggle() {
@@ -69,8 +69,12 @@ class Markdown {
   bool get visible => _visible;
   set visible(bool value) {
     _visible = value;
+    _applyVisibleValue();
+  }
+
+  void _applyVisibleValue() {
     _previewDiv.classes.toggle('hidden', !_visible);
-    previewButton.text = _visible ? "Show Source" : "Show Preview";
+    previewButton.text = _visible ? "Edit" : "Show Preview";
   }
 
   void activate() {
