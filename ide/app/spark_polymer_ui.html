@@ -39,16 +39,20 @@
               on-input="{{fileFilterInputHandler}}"
               tabindex="0"/>
 
-          <spark-button id="runButton" noBorder>
-            <span class="glyphicon glyphicon-play"></span>
+          <spark-button id="runButton" flat round noPadding>
+            <i class="glyphicon glyphicon-play"></i>
           </spark-button>
 
           <spark-menu-button
               id="mainMenu"
-              icon="images/overflow.png"
               valueAttr="action-id"
-              valign="left"
+              arrow="none"
               on-activate="{{onMenuSelected}}">
+
+            <spark-button flat round noPadding menuButton>
+              <img src="images/overflow.png">
+            </spark-button>
+
             <spark-menu-item action-id="project-new" label="New Project...">
             </spark-menu-item>
 
@@ -84,6 +88,7 @@
             </spark-menu-item>
             <spark-menu-item action-id="help-about" label="About Spark">
             </spark-menu-item>
+
           </spark-menu-button>
         </spark-toolbar>
 
@@ -101,10 +106,10 @@
 
         <spark-toolbar id="navigationButtons" class="toolbar"
             horizontal justify="right">
-          <spark-button id="leftNav" noBorder>
+          <spark-button id="leftNav" flat round noPadding>
             <i class="fa fa-arrow-left"></i>
           </spark-button>
-          <spark-button id="rightNav" noBorder>
+          <spark-button id="rightNav" flat round noPadding>
             <i class="fa fa-arrow-right"></i>
           </spark-button>
         </spark-toolbar>
@@ -276,6 +281,10 @@
                 <!-- This one just needs some additional work. -->
                 <option value="polymer/polymer_element_dart">
                   Dart Polymer custom element
+                </option>
+                <!-- This one is internal for now. -->
+                <option value="polymer/spark_widget">
+                  Spark widget
                 </option>
               </template>
             </optgroup>

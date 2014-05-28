@@ -520,6 +520,37 @@ abstract class Spark
       }
     });
   }
+  
+  Future importFile([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_FILE);
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
+      chrome.ChromeFileEntry entry = res.entry;
+      
+      if (entry != null) {
+        ws.Folder folder = resources.first;
+        folder.importFileEntry(entry).catchError((e) {
+          showErrorMessage('Error while importing file', e);
+        });
+      }
+    });
+  }
+
+  Future importFolder([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        ws.Folder folder = resources.first;
+        folder.importDirectoryEntry(entry).catchError((e) {
+          showErrorMessage('Error while importing folder', e);
+        });
+      }
+    });
+  }
 
   void showSuccessMessage(String message) {
     statusComponent.temporaryMessage = message;
@@ -2192,6 +2223,7 @@ class GitCloneAction extends SparkActionWithDialog {
   void _restoreDialog() {
     SparkButton cloneButton = getElement('#clone');
     cloneButton.disabled = false;
+    cloneButton.text = "Clone";
 
     SparkButton closeButton = getElement('#cloneClose');
     closeButton.disabled = false;
@@ -3307,17 +3339,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
   ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…");
 
   void _invoke([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_FILE);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.ChromeFileEntry entry = res.entry;
-      if (entry != null) {
-        ws.Folder folder = resources.first;
-        folder.importFileEntry(entry).catchError((e) {
-          spark.showErrorMessage('Error while importing file', e);
-        });
-      }
-    });
+    spark.importFile(resources);
   }
 
   String get category => 'folder';
@@ -3329,17 +3351,7 @@ class ImportFolderAction extends SparkAction implements ContextAction {
   ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…");
 
   void _invoke([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        ws.Folder folder = resources.first;
-        folder.importDirectoryEntry(entry).catchError((e) {
-          spark.showErrorMessage('Error while importing folder', e);
-        });
-      }
-    });
+    spark.importFolder(resources);
   }
 
   String get category => 'folder';

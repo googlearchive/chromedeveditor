@@ -1,0 +1,7 @@
+{
+  "files": [
+    { "source": "source.css_", "dest": "``sourceName``.css" },
+    { "source": "source.dart_", "dest": "``sourceName``.dart" },
+    { "source": "source.html_", "dest": "``sourceName``.html" }
+  ]
+}

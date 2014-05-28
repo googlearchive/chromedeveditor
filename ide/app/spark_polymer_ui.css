@@ -10,10 +10,6 @@
 /* Order is important */
 @import url("spark_common.css");
 
-#mainMenu {
-  display: block;
-}
-
 #splitView {
   border-top: 1px solid #ddd;
   bottom: 0;
@@ -61,6 +57,16 @@
   border-bottom: 1px solid #ddd;
 }
 
+.toolbar > * {
+  height: 36px;
+}
+
+.toolbar > spark-button,
+.toolbar > spark-menu-button {
+  width: 36px;
+  margin: 0;
+}
+
 #fileFilter {
   background: #fff url(images/search.png) 10px center no-repeat;
   border: 1px solid #ddd;
@@ -82,19 +88,6 @@
   display: none;
 }
 
-#runButton, #mainMenu {
-  height: 36px;
-}
-
-#mainMenu {
-  margin: 0 3px;
-  width: 24px;
-}
-
-#runButton {
-  margin: 0 2px 0 4px;
-}
-
 #fileNotFoundPlaceholder {
   color: #ccc;
   display: block;
@@ -110,12 +103,9 @@
   z-index: 150;
 }
 
-#navigationButtons > spark-button {
-  height: 36px;
-  margin: 0;
-}
-
-#navigationButtons > spark-button > i {
+#runButton > i,
+#leftNav > i,
+#rightNav > i {
   font-size: 16px;
 }
 

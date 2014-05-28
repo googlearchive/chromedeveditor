@@ -6,8 +6,8 @@
 
 :host {
   display: flex;
-  /* Form an independent stacking context */
-  -webkit-transform: scaleZ(1);
+  /* The no-op transform forms an independent stacking context */
+  -webkit-transform: translateX(0);
 }
 
 :host([direction="left"]:host, [direction="right"]:host) {

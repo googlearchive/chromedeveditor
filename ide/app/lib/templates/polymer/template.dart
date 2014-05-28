@@ -2,20 +2,13 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-library spark.templates.polymer;
+part of spark.templates;
 
-import '../templates.dart';
-import '../../utils.dart' as utils;
-
-class Template extends ProjectTemplate {
-  Template(String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
-      : super.internal(id, globalVars, localVars);
-
-  @override
-  List<TemplateVar> computeDerivedVars(
-      List<TemplateVar>globalVars, List<TemplateVar>localVars) {
-    final String projName =
-        globalVars.singleWhere((e) => e.name == 'projectName').value;
+class PolymerTemplate extends ProjectTemplate {
+  PolymerTemplate(
+      String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
+      : super._(id, globalVars, localVars) {
+    final String projName = _vars['projectName'].value;
 
     String tagName = projName.toLowerCase().replaceAll(new RegExp(r'\W'), '-');
     if (!tagName.contains('-')) {
@@ -26,9 +19,10 @@ class Template extends ProjectTemplate {
         utils.capitalize(tagName).replaceAllMapped(
             new RegExp(r'\W(.)'), (Match m) => utils.capitalize(m[1]));
 
-    return <TemplateVar>[
+    _addOrReplaceVars([
       new TemplateVar('tagName', tagName),
+      new TemplateVar('sourceName', tagName),
       new TemplateVar('className', className)
-    ];
+    ]);
   }
 }

@@ -6,7 +6,6 @@ import 'package:polymer/polymer.dart';
 class Examples extends PolymerElement {
   final links = ['spark_button',
                  'spark_icon',
-                 'spark_icon_button',
                  'spark_menu',
                  'spark_menu_button',
                  'spark_menu_item',

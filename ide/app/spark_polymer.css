@@ -560,3 +560,45 @@ li.outlineItem a {
   margin-right: 95px;
 }
 
+#togglePreviewButton {
+  color: #666;
+  background-color: rgba(39, 40, 34, 1.0);
+  border: none;
+  border-bottom: 1px solid #444;
+  border-left: 1px solid #444;
+  border-radius: 0px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  position: absolute;
+  padding: 8px;
+  right: 0px;
+  width: 120px;
+  z-index: 100;
+}
+
+#togglePreviewButton:hover {
+  color: #888;
+}
+
+#togglePreviewButton:active {
+  color: #eee;
+}
+
+#togglePreviewButton:focus {
+  outline: none;
+}
+
+#markdownContent {
+  -webkit-font-smoothing: antialiased;
+  background-color: rgba(39, 40, 34, 1.0);
+  /*border: 1px solid rgba(255, 255, 255, 0.2);*/
+  bottom: 0px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  overflow-y: auto;
+  width: 100%;
+  padding: 10px;
+  position: absolute;
+  top: 0px;
+  transition: opacity 250ms;
+  z-index: 100;
+}

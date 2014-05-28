@@ -91,7 +91,10 @@ class LaunchManager {
    */
   Future performLaunch(Resource resource, LaunchTarget target) {
     Application application = _locateApplication(resource);
-    if (application == null) return new Future.value();
+    if (application == null) {
+      _logger.warning('application to launch is null');
+      return new Future.value();
+    }
 
     LaunchTargetHandler handler = _locateLaunchHandler(application, target);
     if (handler == null) return new Future.value();
@@ -315,25 +318,31 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
   Future launch(Application application, LaunchTarget launchTarget) {
     Container container = application.primaryResource;
 
+    String idToLaunch;
+
     // Check if we need to fiddle with the app id to launch Spark.
-    return _updateManifest(container.entry).then((_) {
+    return _rewriteManifest(container.entry).then((String id) {
+      idToLaunch = id;
       return developerPrivate.loadDirectory(container.entry);
     }).then((String appId) {
       // TODO: Use the returned appId once it has the correct results.
-
       // TODO: Delay a bit - there's a race condition.
       return new Future.delayed(new Duration(milliseconds: 100));
     }).then((_) {
+      if (idToLaunch != null) return idToLaunch;
       return _getAppId(container.name);
-    }).then((String id) {
-      if (id == null) {
-        throw 'Unable to locate an application id.';
-      } else if (!management.available) {
-        throw 'The chrome.management API is not available.';
-      } else {
-        return management.launchApp(id);
-      }
+    }).then((String launchId) {
+      _launchId(launchId);
     });
+  }
+
+  /**
+   * Launches a chrome app with given [id].
+   */
+  Future _launchId(String id) {
+    if (id == null) throw 'Unable to locate an application id.';
+
+    return management.launchApp(id);
   }
 
   /**
@@ -352,10 +361,11 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
   }
 
   /**
-   * Update the manifest to re-write the app id, if we are launching Spark.
+   * Update the manifest to re-write the app id if we are launching Spark.
    */
-  Future _updateManifest(chrome.DirectoryEntry dir) {
+  Future<String> _rewriteManifest(chrome.DirectoryEntry dir) {
     String id = chrome.runtime.id;
+    String launchId;
 
     // Special logic for launching spark within spark.
     // TODO (grv) : Implement a better way of handling launch of spark from
@@ -368,13 +378,18 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
           String key = manifestDict['key'];
           if (id == SPARK_NIGHTLY_ID && key == SPARK_NIGHTLY_KEY) {
             manifestDict['key'] = SPARK_RELEASE_KEY;
+            launchId = SPARK_RELEASE_ID;
           } else if (id == SPARK_RELEASE_ID && key == SPARK_RELEASE_KEY) {
             manifestDict['key'] = SPARK_NIGHTLY_KEY;
+            launchId = SPARK_NIGHTLY_ID;
           } else {
             return new Future.value();
           }
+
           // This modifies the manifest file permanently.
-          return entry.writeText(new JsonPrinter().print(manifestDict));
+          return entry.writeText(new JsonPrinter().print(manifestDict)).then((_) {
+            return new Future.value(launchId);
+          });
         });
       });
     } else {

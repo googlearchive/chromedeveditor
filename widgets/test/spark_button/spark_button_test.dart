@@ -35,8 +35,8 @@ void main() {
       });
 
       test('attributes', () {
-        // TODO(ussuri): Add similar tests for statically declared attributes
-        // (e.g. <spark-button primary large noPadding></>).
+        // TODO(ussuri): Revise tests after the button redesign is
+        // finished [2014-05].
         final SparkButton btnElt = dom.document.querySelector('#default');
         expect(btnElt, isNotNull);
         final btn = btnElt.getShadowDomElement('#button');
@@ -46,36 +46,22 @@ void main() {
 
         btnElt
             ..primary = true
-            ..large = true
-            ..small = false
             ..noPadding = true
             ..active = true
-            ..disabled = false
             ..deliverChanges();
 
-        expect(btn.classes.contains('btn-primary'), isTrue);
-        expect(btn.classes.contains('btn-default'), isFalse);
+        expect(btn.classes.contains('primary'), isTrue);
         expect(btn.classes.contains('active'), isTrue);
-        expect(btn.classes.contains('disabled'), isFalse);
-        expect(btn.classes.contains('btn-lg'), isTrue);
-        expect(btn.classes.contains('btn-sm'), isFalse);
         expect(btn.getComputedStyle().padding, equals('0px'));
 
         btnElt
             ..primary = false
-            ..large = false
-            ..small = true
             ..noPadding = false
             ..active = false
-            ..disabled = true
             ..deliverChanges();
 
-        expect(btn.classes.contains('btn-primary'), isFalse);
-        expect(btn.classes.contains('btn-default'), isTrue);
+        expect(btn.classes.contains('primary'), isFalse);
         expect(btn.classes.contains('active'), isFalse);
-        expect(btn.classes.contains('disabled'), isTrue);
-        expect(btn.classes.contains('btn-lg'), isFalse);
-        expect(btn.classes.contains('btn-sm'), isTrue);
         expect(btn.getComputedStyle().padding, isNot(equals('0px')));
 
         done();
