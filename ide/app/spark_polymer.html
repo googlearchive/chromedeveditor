@@ -11,11 +11,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="spark_polymer.css">
+  <link rel="stylesheet" href="third_party/font_awesome/css/font-awesome.min.css">
 
   <link rel="import" href="packages/polymer/polymer.html">
   <link rel="import" href="spark_polymer_ui.html">
 
-  <!-- template for FileItemCell -->
+  <!-- Ace includes -->
+  <script src="packages/ace/src/js/ace.js"></script>
+  <script src="packages/ace/src/js/ext-language_tools.js"></script>
+
+  <!-- Analytics includes -->
+  <script src="third_party/analytics/google-analytics-bundle.js"></script>
+
+  <!-- CSSBeautify includes -->
+  <script src="third_party/cssbeautify/cssbeautify.js"></script>
+
+  <!-- JSHint includes -->
+  <script src="third_party/jshint/jshint.js"></script>
+
+  <!-- Git includes -->
+  <script src="git/third_party/zlib_inflate.js"></script>
+  <script src="git/third_party/zlib_deflate.js"></script>
+  <script src="git/third_party/diff3.js"></script>
+</head>
+
+<body>
+  <!-- Template for FileItemCell -->
   <template id="fileview-filename-template" >
     <div class="fileview-filename-container">
       <div class="filename">
@@ -27,7 +48,12 @@
     </div>
   </template>
 
-  <!-- template for TreeViewCell -->
+  <!-- Template for Files View separator -->
+  <template id="fileview-separator">
+    <div class="fileview-separator"><div class="line"></div></div>
+  </template>
+
+  <!-- Template for TreeViewCell -->
   <template id="treeview-cell-template" >
     <div class="treeviewcell">
       <div class="treeviewcell-content"></div>
@@ -36,7 +62,7 @@
     </div>
   </template>
 
-  <!-- template for Editor Dialog -->
+  <!-- Template for Editor Dialog -->
   <template id="editor-dialog" >
     <div class="editor-dialog">
       <div>
@@ -53,7 +79,7 @@
     </div>
   </template>
 
-  <!-- template for Outline -->
+  <!-- Template for Outline -->
   <template id="outline-template" >
     <div id="outline">
       <ul></ul>
@@ -64,81 +90,24 @@
       <span class="glyphicon glyphicon-list"></span>
     </button>
   </template>
+  
+  <!-- Markdown template -->
+  <template id="markdown-template" >
+    <div id="markdownContent">
+    </div>
+  </template>
+  <template id="markdown-preview-button-template">
+    <button id="togglePreviewButton">
+    </button>
+  </template>
 
-  <!-- ace includes -->
-  <script src="packages/ace/src/js/ace.js"></script>
-  <script src="packages/ace/src/js/ext-language_tools.js"></script>
-
-  <!-- analytics includes -->
-  <script src="third_party/analytics/google-analytics-bundle.js"></script>
-
-  <!-- cssbeautify includes -->
-  <script src="third_party/cssbeautify/cssbeautify.js"></script>
-
-  <!-- jshint includes -->
-  <script src="third_party/jshint/jshint.js"></script>
-
-  <!-- git includes -->
-  <script src="git/third_party/zlib_inflate.js"></script>
-  <script src="git/third_party/zlib_deflate.js"></script>
-  <script src="git/third_party/diff3.js"></script>
-</head>
-
-<body>
   <!-- Splash screen. -->
   <div id="splashScreen"></div>
 
   <!-- Top-level UI element. -->
   <spark-polymer-ui id="topUi">
-    <div beforeSplit>
-      <spark-toolbar id="toolbar">
-        <input type="search"
-            id="search"
-            placeholder="Filter"/>
-        <spark-button id="runButton">
-          <span class="glyphicon glyphicon-play"></span>
-        </spark-button>
-        <spark-menu-button
-            id="mainMenu"
-            icon="images/overflow.png"
-            valueAttr="action-id"
-            valign="left">
-          <spark-menu-item action-id="project-new" label="New Project...">
-          </spark-menu-item>
-          <spark-menu-separator></spark-menu-separator>
-          <spark-menu-item action-id="file-open" label="Open File...">
-          </spark-menu-item>
-          <spark-menu-item action-id="folder-open" label="Open Folder...">
-          </spark-menu-item>
-          <spark-menu-item action-id="git-clone" label="Git Clone...">
-          </spark-menu-item>
-          <spark-menu-separator></spark-menu-separator>
-          <spark-menu-item action-id="application-run" label="Run Application">
-          </spark-menu-item>
-          <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
-          </spark-menu-item>
-          <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
-          </spark-menu-item>
-          <template if="{{developerMode}}">
-            <spark-menu-separator></spark-menu-separator>
-            <spark-menu-item action-id="run-tests" label="Run Tests">
-            </spark-menu-item>
-          </template>
-          <spark-menu-separator></spark-menu-separator>
-          <spark-menu-item action-id="settings" label="Settings...">
-          </spark-menu-item>
-          <spark-menu-item action-id="help-about" label="About Spark">
-          </spark-menu-item>
-        </spark-menu-button>
-      </spark-toolbar>
-      <div id="fileViewArea"></div>
-      <div id="fileNotFoundPlaceholder" class="hidden">No matching files</div>
-    </div>
-    <div id="editorArea" afterSplit>
-      <div id="sparkStatusContainer">
-       <spark-status id="sparkStatus"></spark-status>
-      </div>
-    </div>
+    <div id="fileViewArea" tabindex="0" beforeSplit></div>
+    <div id="editorArea" tabIndex="-1" afterSplit></div>
   </spark-polymer-ui>
 
   <!-- A backdrop veil used to make app appear modal when displaying dialogs. -->
@@ -156,10 +125,8 @@
            src="lib/mobile/nacl_android_rsa.nmf" type="application/x-pnacl" >
   </div>
 
-  <script type="application/javascript" src="third_party/uuid.js/uuid.js">
-  </script>
-  <script type="application/javascript" src="lib/mobile/android_rsa.js">
-  </script>
+  <script type="application/javascript" src="third_party/uuid.js/uuid.js"></script>
+  <script type="application/javascript" src="lib/mobile/android_rsa.js"></script>
 
   <!-- Start Spark in a non-deployed build (running direct from Dartium). -->
   <script type="application/dart" src="spark_bootstrap.dart"></script>

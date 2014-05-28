@@ -5,6 +5,7 @@
      license that can be found in the LICENSE file. -->
 
 <!--
+
 /**
  * spark-split-view inserts a split bar between two nodes provided by inner
  * HTML, which, when dragged, will resize one of them.
@@ -32,7 +33,13 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_splitter/spark_splitter.html"/>
 
 <polymer-element name="spark-split-view" extends="spark-widget"
-    attributes="direction splitterSize splitterHandle locked">
+    attributes="direction
+                splitterSize
+                splitterHandle
+                targetSize
+                minTargetSize
+                maxTargetSize
+                locked">
   <template>
     <link rel="stylesheet" href="spark_split_view.css">
 
@@ -44,6 +51,9 @@
         direction="{{direction}}"
         size="{{splitterSize}}"
         handle="{{splitterHandle}}"
+        targetSize="{{targetSize}}"
+        minTargetSize="{{minTargetSize}}"
+        maxTargetSize="{{maxTargetSize}}"
         locked="{{locked}}"
         on-update="{{splitterUpdateHandler}}">
     </spark-splitter>

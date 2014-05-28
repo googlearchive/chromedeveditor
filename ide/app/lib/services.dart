@@ -127,7 +127,7 @@ class CompilerService extends Service {
 
     return _sendAction("compileString", args).then((ServiceActionEvent event) {
       CompileResult result = new CompileResult.fromMap(event.data);
-      _UuidResolver resolver = new _UuidResolver(services._packageManager);
+      UuidResolver resolver = new _ServicesUuidResolver(services._packageManager);
       return result.resolve(resolver).then((_) => result);
     });
   }
@@ -146,18 +146,18 @@ class CompilerService extends Service {
 
     return _sendAction("compileFile", args).then((ServiceActionEvent event) {
       CompileResult result = new CompileResult.fromMap(event.data);
-      _UuidResolver resolver = new _UuidResolver(
+      UuidResolver resolver = new _ServicesUuidResolver(
           services._packageManager, file.project);
       return result.resolve(resolver).then((_) => result);
     });
   }
 }
 
-class _UuidResolver extends UuidResolver {
+class _ServicesUuidResolver extends UuidResolver {
   final PackageManager packageManager;
   final Project project;
 
-  _UuidResolver(this.packageManager, [this.project]);
+  _ServicesUuidResolver(this.packageManager, [this.project]);
 
   File getResource(String uri) {
     if (uri.startsWith('/')) uri = uri.substring(1);
@@ -498,7 +498,11 @@ class _IsolateHandler {
         if (event.response == true) {
           Completer<ServiceActionEvent> completer =
               _serviceCallCompleters.remove(event.callId);
-          completer.complete(event);
+          if (event.error) {
+            completer.completeError(event.getErrorMessage());
+          } else {
+            completer.complete(event);
+          }
         } else {
           _messageController.add(event);
         }
@@ -549,11 +553,12 @@ class _IsolateHandler {
 
 List<String> _filesToUuid(
     PackageManager manager, PackageResolver resolver, List<File> files) {
-  return files.map((File file) {
+  Iterable uuids = files.map((File file) {
     if (resolver != null && manager.properties.isInPackagesFolder(file)) {
       return resolver.getReferenceFor(file);
     } else {
       return file.uuid;
     }
-  }).toList();
+  });
+  return uuids.where((uuid) => uuid != null).toList();
 }

@@ -13,7 +13,8 @@ import '../lib/navigation.dart';
 defineTests() {
   group('navigation', () {
     test('canNavigate', () {
-      NavigationManager manager = new NavigationManager();
+      NavigationManager manager =
+          new NavigationManager(new MockNavigationLocationProvider());
       expect(manager.canGoForward(), false);
       expect(manager.canGoBack(), false);
 
@@ -27,7 +28,8 @@ defineTests() {
     });
 
     test('navigate', () {
-      NavigationManager manager = new NavigationManager();
+      NavigationManager manager =
+          new NavigationManager(new MockNavigationLocationProvider());
       Future f = manager.onNavigate.take(2).toList();
       manager.gotoLocation(_mockLocation());
       manager.gotoLocation(_mockLocation());
@@ -42,21 +44,46 @@ defineTests() {
     });
 
     test('location', () {
-      NavigationManager manager = new NavigationManager();
-      expect(manager.location, isNull);
+      NavigationManager manager =
+          new NavigationManager(new MockNavigationLocationProvider());
+      expect(manager.backLocation, isNull);
 
       manager.gotoLocation(_mockLocation());
       expect(manager.canGoBack(), false);
-      expect(manager.location, isNotNull);
+      expect(manager.backLocation, isNull);
+      expect(manager.currentLocation, isNotNull);
+      expect(manager.forwardLocation, isNull);
 
       manager.gotoLocation(_mockLocation());
       expect(manager.canGoForward(), false);
       expect(manager.canGoBack(), true);
-      expect(manager.location, isNotNull);
+      expect(manager.backLocation, isNotNull);
+      expect(manager.currentLocation, isNotNull);
+      expect(manager.forwardLocation, isNull);
+
+      manager.goBack();
+      expect(manager.backLocation, isNull);
+      expect(manager.currentLocation, isNotNull);
+      expect(manager.forwardLocation, isNotNull);
     });
   });
 }
 
+int navigationOffset = 0;
+
 NavigationLocation _mockLocation() {
-  return new NavigationLocation(null, new Span(0, 0));
+  return new NavigationLocation(null, new Span(navigationOffset++, 0));
+}
+
+class MockNavigationLocationProvider implements NavigationLocationProvider {
+  bool first = true;
+
+  NavigationLocation get navigationLocation {
+    if (first) {
+      first = false;
+      return null;
+    } else {
+      return _mockLocation();
+    }
+  }
 }

@@ -20,6 +20,7 @@ import 'package:path/path.dart' as path;
 import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'markdown.dart';
 import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub_properties.dart';
@@ -43,6 +44,7 @@ class TextEditor extends Editor {
   StreamSubscription _aceSubscription;
   StreamController _dirtyController = new StreamController.broadcast();
   StreamController _modificationController = new StreamController.broadcast();
+  Completer<Editor> _whenReadyCompleter = new Completer();
 
   final SparkPreferences _prefs;
   ace.EditSession _session;
@@ -59,15 +61,23 @@ class TextEditor extends Editor {
     if (CssEditor.isCssFile(file)) {
       return new CssEditor._create(aceManager, file, prefs);
     }
+    if (MarkdownEditor.isMarkdownFile(file)) {
+      return new MarkdownEditor._create(aceManager, file, prefs);
+    }
     return new TextEditor._create(aceManager, file, prefs);
   }
 
   TextEditor._create(this.aceManager, this.file, this._prefs);
 
+  Future<Editor> get whenReady => _whenReadyCompleter.future;
+
   void setSession(ace.EditSession value) {
     _session = value;
     if (_aceSubscription != null) _aceSubscription.cancel();
     _aceSubscription = _session.onChange.listen((_) => dirty = true);
+    if (!_whenReadyCompleter.isCompleted) _whenReadyCompleter.complete(this);
+
+    _invokeReconcile();
   }
 
   bool get dirty => _dirty;
@@ -89,6 +99,11 @@ class TextEditor extends Editor {
     aceManager.outline.visible = supportsOutline;
     aceManager._aceEditor.readOnly = readOnly;
   }
+
+  /**
+   * Called a short delay after the file's content has been altered.
+   */
+  void reconcile() { }
 
   void deactivate() { }
 
@@ -121,7 +136,7 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  void navigateToDeclaration() { }
+  Future navigateToDeclaration([Duration timeLimit]) => new Future.value();
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -142,21 +157,19 @@ class TextEditor extends Editor {
     // notification (in fileContentsChanged()), we compare the last write to the
     // contents on disk.
     if (_dirty) {
-      // Remove the trailing whitespace if asked to do so.
-      // TODO(ericarnold): Can't think of an easy way to share this preference,
-      //           but it might be a good idea to do so rather than passing it.
-
       String text = _session.value;
 
-      if (_prefs.stripWhitespaceOnSave) text =
-          text.replaceAll(whitespaceRegEx, '');
+      // Remove the trailing whitespace if asked to do so.
+      if (_prefs.stripWhitespaceOnSave) {
+        text = text.replaceAll(whitespaceRegEx, '');
+      }
+
       _lastSavedHash = _calcMD5(text);
 
-      // TODO(ericarnold): Need to cache or re-analyze on file switch.
-      // TODO(ericarnold): Need to analyze on initial file load.
-      aceManager.buildOutline();
-
-      return file.setContents(text).then((_) => dirty = false);
+      return file.setContents(text).then((_) {
+        dirty = false;
+        _invokeReconcile();
+      });
     } else {
       return new Future.value();
     }
@@ -181,16 +194,22 @@ class TextEditor extends Editor {
       if (cursorPos != null) {
         aceManager.cursorPosition = cursorPos;
       }
+
+      _invokeReconcile();
     } finally {
       _aceSubscription = _session.onChange.listen((_) => dirty = true);
     }
   }
+
+  void _invokeReconcile() {
+    reconcile();
+  }
 }
 
 class DartEditor extends TextEditor {
-  int outlineScrollPosition = 0;
-
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
+
+  int outlineScrollPosition = 0;
 
   DartEditor._create(AceManager aceManager, workspace.File file,
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
@@ -200,30 +219,57 @@ class DartEditor extends TextEditor {
   @override
   void activate() {
     super.activate();
-    aceManager.outline.scrollPosition = outlineScrollPosition;
+
+    if (_session != null) {
+      _outline.build(file.name, _session.value);
+    }
+
+    _outline.scrollPosition = outlineScrollPosition;
   }
 
   @override
   void deactivate() {
     super.deactivate();
-    outlineScrollPosition = aceManager.outline.scrollPosition;
+
+    outlineScrollPosition = _outline.scrollPosition;
   }
 
-  void navigateToDeclaration() {
+  void reconcile() {
+    int pos = _outline.scrollPosition;
+    _outline.build(file.name, _session.value).then((_) {
+      _outline.scrollPosition = pos;
+    });
+  }
+
+  Outline get _outline => aceManager.outline;
+
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
     int offset = _session.document.positionToIndex(
         aceManager._aceEditor.cursorPosition);
 
-    aceManager._analysisService.getDeclarationFor(file, offset).then(
-        (svc.Declaration declaration) {
-      if (declaration != null) {
-        workspace.File targetFile = declaration.getFile(file.project);
+    Future declarationFuture = aceManager._analysisService.getDeclarationFor(
+        file, offset);
 
-        // Open targetFile and select the range of text.
-        if (targetFile != null) {
-          Span selection = new Span(declaration.offset, declaration.length);
-          aceManager.delegate.openEditor(targetFile, selection: selection);
+    if (timeLimit != null) {
+      declarationFuture = declarationFuture.timeout(timeLimit, onTimeout: () =>
+          throw new TimeoutException("navigateToDeclaration timed out"));
+    }
+
+    return declarationFuture.then((svc.Declaration declaration) {
+      if (declaration != null) {
+        if (declaration is svc.SourceDeclaration) {
+          workspace.File targetFile = declaration.getFile(file.project);
+
+          // Open targetFile and select the range of text.
+          if (targetFile != null) {
+            Span selection = new Span(declaration.offset, declaration.length);
+            aceManager.delegate.openEditor(targetFile, selection: selection);
+          }
+        } else if (declaration is svc.DocDeclaration) {
+          html.window.open(declaration.url, "spark_doc");
         }
       }
+      return declaration;
     });
   }
 }
@@ -243,6 +289,35 @@ class CssEditor extends TextEditor {
       _replaceContents(newValue);
       dirty = true;
     }
+  }
+}
+
+class MarkdownEditor extends TextEditor {
+  static bool isMarkdownFile(workspace.File file) => file.name.toLowerCase()
+      .endsWith('.md');
+
+  Markdown _markdown;
+  StreamSubscription _markdownOnDirtySubscription;
+  MarkdownEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs) {
+       _markdown = new Markdown(element, file);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _markdown.activate();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _markdown.deactivate();
+  }
+
+  @override
+  void reconcile() {
+    _markdown.renderHtml();
   }
 }
 
@@ -301,6 +376,19 @@ class AceManager {
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         _showGotoLineView);
     _aceEditor.commands.addCommand(command);
+    if (PlatformInfo.isMac) {
+      command = new ace.Command(
+          'scrolltobeginningofdocument',
+          const ace.BindKey(mac: 'Home'),
+          _scrollToBeginningOfDocument);
+      _aceEditor.commands.addCommand(command);
+
+      command = new ace.Command(
+          'scrolltoendofdocument',
+          const ace.BindKey(mac: 'End'),
+          _scrollToEndOfDocument);
+      _aceEditor.commands.addCommand(command);
+    }
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
@@ -310,6 +398,8 @@ class AceManager {
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
     _setupOutline(prefs);
+    _setupGotoLine();
+
     var node = parentElement.getElementsByClassName("ace_content")[0];
     node.onClick.listen((e) {
       bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
@@ -344,7 +434,9 @@ class AceManager {
       }
       lastCursorPosition = newCursorPosition;
     });
+  }
 
+  void _setupGotoLine() {
     // Set up the goto line dialog.
     gotoLineView = new GotoLineView();
     if (gotoLineView is! GotoLineView) {
@@ -516,54 +608,6 @@ class AceManager {
     }
   }
 
-  /**
-   * Show an overlay dialog to tell the user that a binary file cannot be
-   * shown.
-   *
-   * TODO(dvh): move this logic to editors/editor_area.
-   * See https://github.com/dart-lang/spark/issues/906
-   */
-  void createDialog(String filename) {
-    if (_editorElement == null) {
-      return;
-    }
-    html.Element dialog = _editorElement.querySelector('.editor-dialog');
-    if (dialog != null) {
-      // Dialog already exists.
-      return;
-    }
-
-    dialog = new html.Element.div();
-    dialog.classes.add("editor-dialog");
-
-    // Add an overlay dialog using the template #editor-dialog.
-    html.DocumentFragment template =
-        (html.querySelector('#editor-dialog') as html.TemplateElement).content;
-    html.DocumentFragment templateClone = template.clone(true);
-    html.Element element = templateClone.querySelector('.editor-dialog');
-    element.classes.remove('editor-dialog');
-    dialog.append(element);
-
-    // Set actions of the dialog.
-    html.ButtonElement button = dialog.querySelector('.view-as-text-button');
-    button.onClick.listen((_) {
-      dialog.classes.add("transition-hidden");
-      focus();
-    });
-    html.Element link = dialog.querySelector('.always-view-as-text-button');
-    link.onClick.listen((_) {
-      dialog.classes.add("transition-hidden");
-      delegate.setShowFileAsText(currentFile.name, true);
-      focus();
-    });
-
-    if (delegate.canShowFileAsText(filename)) {
-      dialog.classes.add('hidden');
-    }
-
-    _editorElement.append(dialog);
-  }
-
   void clearMarkers() => currentSession.clearAnnotations();
 
   Future<String> getKeyBinding() {
@@ -654,20 +698,17 @@ class AceManager {
       }
 
       setMarkers(file.getMarkers());
-      buildOutline();
+      session.onChangeScrollTop.listen((_) => Timer.run(() {
+        if (outline.visible) {
+          int firstCursorOffset = currentSession.document.positionToIndex(
+              new ace.Point(_aceEditor.firstVisibleRow, 0));
+          int lastCursorOffset = currentSession.document.positionToIndex(
+              new ace.Point(_aceEditor.lastVisibleRow, 0));
+
+          outline.scrollToOffsets(firstCursorOffset, lastCursorOffset);
+        }
+      }));
     }
-  }
-
-  /**
-   * Make a service call and build the outline view for the current file.
-   */
-  void buildOutline() {
-    String name = currentFile == null ? '' : currentFile.name;
-
-    if (!name.endsWith(".dart")) return;
-
-    String text = currentSession.value;
-    outline.build(name, text);
   }
 
   void _handleMarkerChange(workspace.MarkerChangeEvent event) {
@@ -699,6 +740,24 @@ class AceManager {
   }
 
   void _handleGotoLineViewClosed(_) => focus();
+
+  void _scrollToBeginningOfDocument(_) {
+    _aceEditor.session.scrollTop = 0;
+  }
+
+  void _scrollToEndOfDocument(_) {
+    int lineHeight = html.querySelector('.ace_gutter-cell').clientHeight;
+    _aceEditor.session.scrollTop = _aceEditor.session.document.length * lineHeight;
+  }
+
+  NavigationLocation get navigationLocation {
+    if (currentFile == null) return null;
+    ace.Range range = _aceEditor.selection.range;
+    int offsetStart = _aceEditor.session.document.positionToIndex(range.start);
+    int offsetEnd = _aceEditor.session.document.positionToIndex(range.end);
+    Span span = new Span(offsetStart, offsetEnd - offsetStart);
+    return new NavigationLocation(currentFile, span);
+  }
 }
 
 class ThemeManager {

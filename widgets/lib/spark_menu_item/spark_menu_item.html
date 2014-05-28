@@ -6,9 +6,8 @@
 
 <!--
 /**
- * See g-menu-item https://github.com/Polymer/toolkit-ui/tree/master/elements.
- *
- * spark-menu-item is intended for use in a spark-menu.
+ * spark-menu-item is intended to be used as a selectable element of a
+ * spark-menu and its derivatives (e.g. spark-menu-button).
  */
 -->
 
@@ -16,19 +15,21 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_icon/spark_icon.html">
 
 <polymer-element name="spark-menu-item" extends="spark-widget"
-    attributes="icon iconSize label description">
+    attributes="icon
+                iconSize
+                label
+                description">
   <template>
     <link rel="stylesheet" href="spark_menu_item.css">
 
-    <template if="{{hasIcon}}">
-      <spark-icon src="{{icon}}" size="{{iconSize}}"></spark-icon>
-    </template>
-
-    <div id="text">
-      <span>{{label}}</span>
+    <span id="main">
+      <template if="{{icon.isNotEmpty}}">
+        <spark-icon id="icon" src="{{icon}}" size="{{iconSize}}"></spark-icon>
+      </template>
+      <span id="label">{{label}}</span>
       <content></content>
-      <span id="descriptionText">{{description}}</span>
-    </div>
+    </span>
+    <span id="description">{{description}}</span>
   </template>
 
   <script type="application/dart;component=1" src="spark_menu_item.dart"></script>

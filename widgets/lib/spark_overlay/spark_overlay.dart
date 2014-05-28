@@ -105,6 +105,15 @@ class SparkOverlay extends SparkWidget {
   }
 
   /**
+   * Adds an arrow on a side of the overlay at a specified location.
+   */
+  @published String arrow = 'none';
+
+  static final List<String> _SUPPORTED_ARROWS = [
+    'none', 'top-center', 'top-left', 'top-right'
+  ];
+
+  /**
    * Prevents other elements in the document from receiving [_captureEventTypes]
    * events. This essentially disables the rest of the UI while the overlay
    * is open.
@@ -120,10 +129,10 @@ class SparkOverlay extends SparkWidget {
   /**
    * The kind of animation that the overlay should perform on open/close.
    */
-  @published String animation = '';
+  @published String animation = 'none';
 
   static final List<String> _SUPPORTED_ANIMATIONS = [
-    'fade', 'shake', 'scale-slideup'
+    'none', 'fade', 'shake', 'scale-slideup'
   ];
 
   /**
@@ -167,11 +176,15 @@ class SparkOverlay extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
+    assert(_SUPPORTED_ARROWS.contains(arrow));
     assert(_SUPPORTED_ANIMATIONS.contains(animation));
 
     style.visibility = "visible";
 
-    enableKeyboardEvents();
+    // TODO(ussuri): This has been causing problems with ghost overlays
+    // lingering after closing and reacting to mouse clicks etc.
+    // E.g. try to open and close the menu and click in the area where it was.
+    // enableKeyboardEvents();
 
     addEventListener('webkitAnimationStart', _openedAnimationStart);
     addEventListener('animationStart', _openedAnimationStart);

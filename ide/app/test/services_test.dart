@@ -186,7 +186,7 @@ defineTests() {
       return linkSampleProject(dir, workspace).then((Project project) {
         File file = project.getChildPath('web/sample.dart');
         return analyzer.getDeclarationFor(file, 52)
-            .then((Declaration declaration) {
+            .then((SourceDeclaration declaration) {
 
           expect(declaration.getFile(project).name, "foo.dart");
           expect(declaration.offset, 7);

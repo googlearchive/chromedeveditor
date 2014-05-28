@@ -5,19 +5,10 @@
 @import url("packages/spark_widgets/common/spark_widget.css");
 @import url("packages/bootjack/css/bootstrap.min.css");
 @import url("packages/bootjack/css/bootstrap-theme.css");
+@import url("third_party/font_awesome/css/font-awesome.min.css");
 
-#search {
-  display: inline-block;
-  position: relative;
-  top: 4px;
-  width: 200px;
-  height: 31px;
-}
-
-#mainMenu {
-  position: relative;
-  top: 4px;
-}
+/* Order is important */
+@import url("spark_common.css");
 
 #splitView {
   border-top: 1px solid #ddd;
@@ -26,11 +17,6 @@
   position: absolute;
   right: 0;
   top: 0;
-}
-
-#leftNav, #rightNav {
-  position: relative;
-  top: 4px;
 }
 
 .dialog {
@@ -52,14 +38,12 @@
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;
   overflow: hidden;
   background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .dialog a.close {
@@ -68,10 +52,71 @@
   text-align: center;
 }
 
-#toolbar {
+.toolbar {
+  height: 48px;
+  border-bottom: 1px solid #ddd;
+}
+
+.toolbar > * {
+  height: 36px;
+}
+
+.toolbar > spark-button,
+.toolbar > spark-menu-button {
+  width: 36px;
+  margin: 0;
+}
+
+#fileFilter {
+  background: #fff url(images/search.png) 10px center no-repeat;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  height: 36px;
+  flex: 1;
+  font: inherit;
+  margin: 2px;
+  padding: 10px 10px 10px 44px;
+}
+
+#fileFilter:focus {
+  border: 1px solid #9DBEFF;
+  outline: none;
+}
+
+#fileFilter:focus.active ~ #runButton,
+#fileFilter:focus.active ~ #mainMenu {
+  display: none;
+}
+
+#fileNotFoundPlaceholder {
+  color: #ccc;
+  display: block;
+  font-size: 18px;
+  margin-top: 60px;
+  text-align: center;
+}
+
+#navigationButtons {
   position: absolute;
-  left: 0;
   right: 0;
+  width: 95px;
+  z-index: 150;
+}
+
+#runButton > i,
+#leftNav > i,
+#rightNav > i {
+  font-size: 16px;
+}
+
+#sparkStatusContainer {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  pointer-events: none;
+  right: 0;
+  text-align: center;
+  z-index: 101;
 }
 
 #settingsDialog .settings-label {
@@ -168,6 +213,17 @@
 
 #gitUserInfo.hidden {
   display: none;
+}
+
+/* Deploy to mobile dialog */
+#mobileDeployDialog .modal-body {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
+#pushUrl {
+  margin-left: 17px;
+  width: 20em;
 }
 
 .input-label {

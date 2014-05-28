@@ -16,13 +16,13 @@
  *
  * Examples:
  *
- *     <div class="flexbox">
+ *     <div style="display: flex">
  *       <div>left</div>
  *       <spark-splitter direction="left"></spark-splitter>
  *       <div flex>right</div>
  *     </div>
  *
- *     <div class="flexbox column">
+ *     <div style="display: flex; flex-flow: column">
  *       <div>top</div>
  *       <spark-splitter direction="up"></spark-splitter>
  *       <div flex>bottom</div>
@@ -33,7 +33,13 @@
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
 <polymer-element name="spark-splitter" extends="spark-widget"
-    attributes="direction size handle locked">
+    attributes="direction
+                size
+                handle
+                targetSize
+                minTargetSize
+                maxTargetSize
+                locked">
   <template>
     <link rel="stylesheet" href="spark_splitter.css">
     <div id="draggable"></div>

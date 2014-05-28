@@ -14,6 +14,9 @@ library spark.preferences;
 import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
+import 'package:logging/logging.dart';
+
+final Logger _logger = new Logger('preferences');
 
 /**
  * A PreferenceStore backed by `chome.storage.local`.
@@ -138,7 +141,7 @@ abstract class PreferenceStore {
   /**
    * Get the value for the given key. The value is returned as a [Future].
    */
-  Future<String> getValue(String key);
+  Future<String> getValue(String key, [String defaultVal]);
 
   /**
    * Set the value for the given key. The returned [Future] has the same value
@@ -174,7 +177,10 @@ class MapPreferencesStore implements PreferenceStore {
 
   bool get isDirty => _dirty;
 
-  Future<String> getValue(String key) => new Future.value(_map[key]);
+  Future<String> getValue(String key, [String defaultVal]) {
+    final String val = _map[key];
+    return new Future.value(val != null ? val : defaultVal);
+  }
 
   Future<String> setValue(String key, String value) {
     _dirty = true;
@@ -232,12 +238,14 @@ class _ChromePreferenceStore implements PreferenceStore {
   /**
    * Get the value for the given key. The value is returned as a [Future].
    */
-  Future<String> getValue(String key) {
+  Future<String> getValue(String key, [String defaultVal]) {
     if (_map.containsKey(key)) {
       return new Future.value(_map[key]);
     } else {
       return _storageArea.get(key).then((Map<String, String> map) {
-        return map == null ? null : map[key];
+        // TODO(ussuri): Shouldn't we cache the just read value in _map?
+        final String val = map == null ? null : map[key];
+        return val != null ? val : defaultVal;
       });
     }
   }
@@ -281,6 +289,7 @@ class _ChromePreferenceStore implements PreferenceStore {
   void flush() {
     if (_map.isNotEmpty) {
       _storageArea.set(_map);
+      _logger.info('saved preferences: ${_map.keys}');
       _map.clear();
     }
 

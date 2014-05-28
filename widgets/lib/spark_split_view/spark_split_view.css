@@ -6,18 +6,27 @@
 
 :host {
   display: flex;
+  /* The no-op transform forms an independent stacking context */
+  -webkit-transform: translateX(0);
 }
 
-:host([direction="left"], [direction="right"]) {
+:host([direction="left"]:host, [direction="right"]:host) {
   flex-flow: row;
 }
 
-:host([direction="up"], [direction="down"]) {
+:host([direction="up"]:host, [direction="down"]:host) {
   flex-flow: column;
 }
 
+/* Z-order the splitter higher than the two split halves */
 ::content > * {
   position: relative;
+}
+
+#splitter {
+  position: relative;
+  /* This z-index is local to :host. */
+  z-index: 1;
 }
 
 /* Make the passive target of resizing 'flex', so it auto-adjusts when the

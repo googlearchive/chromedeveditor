@@ -92,7 +92,7 @@ abstract class ObjectUtils {
           status.sha = blobSha;
           status.headSha = blobSha;
           status.size = data.size;
-          store.index.updateIndexForEntry(status);
+          store.index.createIndexForEntry(status);
         });
       });
     });

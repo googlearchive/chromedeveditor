@@ -585,6 +585,23 @@ class FilesController implements TreeViewDelegate {
         JSON.encode(_treeView.expandedState));
   }
 
+  html.Element treeViewSeparatorForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    if (resource is! Project) return null;
+    if (_files.length == 0) return null;
+
+    // Don't show a separator before the first item.
+    if (_files[0] == resource) return null;
+
+    html.DocumentFragment template =
+        (html.querySelector('#fileview-separator') as html.TemplateElement)
+        .content;
+    html.DocumentFragment templateClone = template.clone(true);
+    return templateClone.querySelector('.fileview-separator');
+  }
+
+  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 25;
+
   // Cache management for sorted list of resources.
 
   void _cacheChildren(String nodeUid) {
@@ -929,18 +946,21 @@ class FilesController implements TreeViewDelegate {
     _filterAddResult(result, roots, childrenCache, res.parent);
   }
 
-  html.Element get _fnfPlaceholder => html.querySelector('#fileNotFoundPlaceholder');
-
-  void performFilter(String filterString) {
-    if (filterString != null && filterString.isEmpty) {
+  /**
+   * Filters the files using [filterString] as part of the name and returns
+   * true if matches are found. If [filterString] is null, cancells all
+   * filtering and returns true.
+   */
+  bool performFilter(String filterString) {
+    if (filterString != null && filterString.length < 2) {
       filterString = null;
     }
     _filterString = filterString;
     if (_filterString == null) {
       _filteredFiles = null;
       _filteredChildrenCache = null;
-      _fnfPlaceholder.classes.add('hidden');
       _reloadDataAndRestoreExpandedState(_currentExpandedState);
+      return true;
     } else {
       Set<String> filtered = new Set();
       _filteredFiles = [];
@@ -958,8 +978,8 @@ class FilesController implements TreeViewDelegate {
         });
       });
 
-      _fnfPlaceholder.classes.toggle('hidden', _filteredFiles.isNotEmpty);
       _reloadDataAndRestoreExpandedState(filtered.toList());
+      return _filteredFiles.isNotEmpty;
     }
   }
 }

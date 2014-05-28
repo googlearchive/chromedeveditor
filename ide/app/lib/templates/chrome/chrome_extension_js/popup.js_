@@ -1,0 +1,22 @@
+/**
+ * Clicking on the extension's icon in the main Chrome toolbar opens a 
+ * "Hello, World!" popup with a button. The button adds the same greeting to 
+ * the top of the page in the current tab.
+ *
+ * @see https://developer.chrome.com/extensions/browserAction
+ * @see http://developer.chrome.com/extensions/tabs
+ */
+
+var greeting = document.querySelector('#greeting');
+greeting.innerText = "Hello, World!";
+
+var addToPage = document.querySelector('#addToPage');
+addToPage.onclick = function(e) {
+  chrome.tabs.executeScript({
+    code: 
+      'var greeting = document.createElement("h1");' +
+      'greeting.innerText = "Hello, World!";' +
+      'document.body.insertBefore(greeting, document.body.firstChild);' +
+      'greeting.scrollIntoView(true);'
+  });
+}

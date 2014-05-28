@@ -6,16 +6,16 @@
 
 <!--
 /**
- * See g-menu https://github.com/Polymer/toolkit-ui/tree/master/elements.
- * spark-menu is a spark-selector styled to look like a menu. Use it
- * in conjunction with spark-menu-item.
+ * spark-menu is a spark-selector styled to look like a menu. It's best to use
+ * it in conjunction with spark-menu-items and spark-menu-separators.
  *
  * Example:
  *
- *     <spark-menu selected="email">
+ *     <spark-menu selected="email" on-activate="{{onMenuActivated}}">
  *       <spark-menu-item name="post" src="images/comment.png">Post a Comment</spark-menu-item>
  *       <spark-menu-item name="share" src="images/hangout.png">Share Link</spark-menu-item>
  *       <spark-menu-item name="email" src="images/mail.png">Email Link</spark-menu-item>
+ *       <spark-menu-separator></spark-menu-separator>
  *       <spark-menu-item name="favorite" src="images/favorite.png">Add to Favorites</spark-menu-item>
  *     </spark-menu>
  *

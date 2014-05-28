@@ -19,24 +19,17 @@
   'closing' class.
 */
 
-/* Note that trbl: 0 + position: fixed will not 'fit to window'
-if a transform is applied to a parent of this element. That parent
-becomes the containing block; see:
-http://dev.w3.org/csswg/css3-transforms/#transform-rendering
-We address this by using script based positioning =(
-*/
-
 @import url("../common/spark_widget.css");
 
 :host {
   position: fixed;
-  z-index: 1000;
   outline: none;
   display: none;
-  /* Opacity < 1 creates a stacking context from this element */
-  opacity: 0.99;
-  -webkit-transition: opacity 0.001s;
-  transition: opacity 0.001s;
+  opacity: 0;
+  /* The no-op transform creates an independent stacking context for :host.
+     See: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context
+  */
+  -webkit-transform: translateX(0);
 }
 
 /*
@@ -80,6 +73,19 @@ We address this by using script based positioning =(
   transition: none;
 }
 
+:host([animation=none]) {
+  opacity: 0;
+  /* This is essentially a no-op transition. We need it for the opening/closing
+     sequences in .dart to function as designed.
+  */
+  -webkit-transition: all 0.001s;
+  transition: all 0.001s;
+}
+
+:host([animation=none].opened) {
+  opacity: 1;
+}
+
 :host([animation=fade]) {
   opacity: 0;
   -webkit-transition: all 0.218s;
@@ -93,13 +99,11 @@ We address this by using script based positioning =(
 :host([animation=scale-slideup]) {
   opacity: 0.0;
   -webkit-transform: scale(1.05);
-  transform: scale(1.05);
 }
 
 :host([animation=scale-slideup].opened) {
   opacity: 1.0;
   -webkit-transform: scale(1.0);
-  transform: scale(1.0);
   -webkit-transition: all 0.218s;
   transition: all 0.218s;
 }
@@ -107,7 +111,6 @@ We address this by using script based positioning =(
 :host([animation=scale-slideup].closing) {
   opacity: 0;
   -webkit-transform: translateY(-100%);
-  transform: translateY(-100%);
   -webkit-transition: all 0.4s;
   transition: all 0.4s;
 }
@@ -156,32 +159,6 @@ We address this by using script based positioning =(
   }
 }
 
-@keyframes shake-fade-in {
-  0% {
-    opacity: 0;
-    transform: translateX(0);
-  }
-  10% {
-    transform: translateX(-50px);
-  }
-  30% {
-    transform: translateX(50px);
-  }
-  50% {
-    transform: translateX(-25px);
-  }
-  70% {
-    transform: translateX(25px);
-  }
-  90% {
-    transform: translateX(-13px);
-  }
-  100% {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
 @-webkit-keyframes shake-fade-out {
   0% {
     opacity: 1;
@@ -199,19 +176,40 @@ We address this by using script based positioning =(
   }
 }
 
-@keyframes shake-fade-out {
-  0% {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  10% {
-    transform: translateX(-50px);
-  }
-  30% {
-    transform: translateX(50px);
-  }
-  100% {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
+/* TODO(ussuri): Inconsistency here: overlay's bg & border colors are specified
+   by the client, yet arrow's are hardcoded here. Could specify in the clien
+   (e.g. spark-menu-button) using ::shadow -- easy for `fill`, but trickier for
+   border-bottom-color. 
+*/
+.arrow {
+  position: relative;
+  height: 1px;
+  width: 0;
+  margin-top: -17px;
+  margin-bottom: 0;
+  fill: #fafafa;
+  border-color: transparent transparent #cfcfcf transparent;
+  border-style: solid;
+  border-width: 8px;
+  cursor: pointer;
+}
+
+#arrowInner {
+  fill: #fafafa;
+  border-bottom-color: #fafafa;
+  margin-top: -15px;
+  top: 1px;
+}
+
+:host([arrow="top-center"]) .arrow {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+:host([arrow="top-left"]) .arrow {
+  left: 15px;
+}
+
+:host([arrow="top-right"]) .arrow {
+  right: calc(-100% + 30px);
 }
