@@ -11,16 +11,43 @@ import 'dart:async';
 
 import 'workspace.dart';
 
+abstract class NavigationLocationProvider{
+  NavigationLocation get navigationLocation;
+}
+
 /**
  * A class to handle the history of navigation locations in Spark.
  */
 class NavigationManager {
+  final NavigationLocationProvider _locationProvider;
+
+  NavigationManager(this._locationProvider);
+
   StreamController<NavigationLocation> _controller = new StreamController.broadcast();
 
   List<NavigationLocation> _locations = [];
   int _position = -1;
 
-  NavigationLocation get location {
+  NavigationLocation get backLocation {
+    int backPosition = _position - 1;
+    if (backPosition >= 0 && backPosition < _locations.length) {
+      return _locations[backPosition];
+    } else {
+      return null;
+    }
+  }
+
+  NavigationLocation get forwardLocation {
+    int forwardPosition = _position + 1;
+    if (forwardPosition >= 0 && forwardPosition < _locations.length) {
+      return _locations[forwardPosition];
+    } else {
+      return null;
+    }
+  }
+
+  // For unit tests.
+  NavigationLocation get currentLocation {
     if (_position >= 0 && _position < _locations.length) {
       return _locations[_position];
     } else {
@@ -28,32 +55,48 @@ class NavigationManager {
     }
   }
 
-  bool canGoBack() => _position > 0;
+  NavigationLocation get _editorCurrentLocation =>
+      _locationProvider.navigationLocation;
+
+  bool canGoBack() => backLocation != null;
 
   void goBack() {
     if (!canGoBack()) return;
+    _locations[_position] = _editorCurrentLocation;
+    _controller.add(backLocation);
     _position--;
-    _controller.add(location);
   }
 
-  bool canGoForward() => (_position + 1) < _locations.length;
+  bool canGoForward() => forwardLocation != null;
 
   void goForward() {
     if (!canGoForward()) return;
+    _locations[_position] = _editorCurrentLocation;
+    _controller.add(forwardLocation);
     _position++;
-    _controller.add(location);
   }
 
   void gotoLocation(NavigationLocation newLocation, {bool fireEvent: true}) {
+    NavigationLocation previousLocation = _editorCurrentLocation;
+    if (previousLocation == newLocation) return;
+
     if (canGoForward()) {
-      _locations.removeRange(_position + 1, _locations.length - 1);
+      _locations.removeRange(_position + 1, _locations.length);
     }
 
+    if (previousLocation != null) {
+      if (_position < _locations.length) {
+        _locations[_position] = previousLocation;
+      } else {
+        _position++;
+        _locations.add(previousLocation);
+      }
+    }
+    _position++;
     _locations.add(newLocation);
-    _position = _locations.length - 1;
 
     if (fireEvent) {
-      _controller.add(location);
+      _controller.add(newLocation);
     }
   }
 
@@ -69,6 +112,11 @@ class NavigationLocation {
 
   NavigationLocation(this.file, [this.selection = null]);
 
+  bool operator==(NavigationLocation other) {
+    if (other is! NavigationLocation) return false;
+    return file == other.file && selection == other.selection;
+  }
+
   String toString() => selection == null ? '[${file}]' : '[${file}, ${selection}]';
 }
 
@@ -80,6 +128,11 @@ class Span {
   final int length;
 
   Span(this.offset, [this.length = 0]);
+
+  bool operator==(Span other) {
+    if (other is! Span) return false;
+    return offset == other.offset && other.length == other.length;
+  }
 
   String toString() => '${offset}:${length}';
 }

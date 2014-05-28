@@ -7,9 +7,8 @@
 @import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
-#mainMenu {
-  display: block;
-}
+/* Order is important */
+@import url("spark_common.css");
 
 #splitView {
   border-top: 1px solid #ddd;
@@ -39,14 +38,12 @@
 .dialog {
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  font-family: Helvetica, Arial, sans-serif;
-  font-size: 13px;
   -webkit-user-select: none;
   -moz-user-select: none;
   overflow: hidden;
   background: white;
-  outline: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .dialog a.close {
@@ -55,10 +52,19 @@
   text-align: center;
 }
 
-#toolbar {
-  position: absolute;
-  left: 0;
-  right: 0;
+.toolbar {
+  height: 48px;
+  border-bottom: 1px solid #ddd;
+}
+
+.toolbar > * {
+  height: 36px;
+}
+
+.toolbar > spark-button,
+.toolbar > spark-menu-button {
+  width: 36px;
+  margin: 0;
 }
 
 #fileFilter {
@@ -68,7 +74,6 @@
   height: 36px;
   flex: 1;
   font: inherit;
-  font-size: 14px;
   margin: 2px;
   padding: 10px 10px 10px 44px;
 }
@@ -83,19 +88,6 @@
   display: none;
 }
 
-#runButton, #mainMenu {
-  height: 36px;
-}
-
-#mainMenu {
-  margin: 0 3px;
-  width: 24px;
-}
-
-#runButton {
-  margin: 0 2px 0 4px;
-}
-
 #fileNotFoundPlaceholder {
   color: #ccc;
   display: block;
@@ -107,17 +99,13 @@
 #navigationButtons {
   position: absolute;
   right: 0;
-  width: 100px;
-  padding: 0;
+  width: 95px;
   z-index: 150;
 }
 
-#navigationButtons > spark-button {
-  height: 36px;
-  margin: 0;
-}
-
-#navigationButtons > spark-button > i {
+#runButton > i,
+#leftNav > i,
+#rightNav > i {
   font-size: 16px;
 }
 

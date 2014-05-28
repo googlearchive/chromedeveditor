@@ -20,7 +20,9 @@ import 'lib/platform_info.dart';
 class SparkPolymerUI extends SparkWidget {
   SparkModel _model;
 
-  @published int splitViewPosition;
+  // Just some value to start with in case the client doesn't provide it on
+  // startup.
+  @published int splitViewPosition = 100;
 
   // NOTE: The initial values for these have to be true, because the app
   // uses querySelector to find the affected elements that would be not

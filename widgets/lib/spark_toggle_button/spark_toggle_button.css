@@ -52,21 +52,18 @@
   width: 50%;
   height: 100%;
   line-height: 30px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
   text-align: center;
-  font-family: Helvetica, Arial, Sans-serif;
   font-size: 10px;
 }
 
 #onLabel {
-  paddinspark-right: 14px;
+  padding-right: 14px;
   background-color: #488afd;
   color: white;
 }
 
 #offLabel {
-  paddinspark-left: 14px;
+  padding-left: 14px;
   background-color: #bfbfbf;
   color: #716f6f;
 }

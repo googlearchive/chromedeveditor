@@ -2,23 +2,10 @@
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
 
-:host,
-:host *,
-::content * {
-  box-sizing: border-box;
-  outline: none;
-}
+@import url("../../../packages/bootjack/css/bootstrap.min.css");
+@import url("../../../packages/bootjack/css/bootstrap-theme.css");
 
-:host(.veiled) {
-  opacity: 0;
-}
-
-:host(.unveiled) {
-  opacity: 1;
-}
-
-/* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
-:host * {
+body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 13px;
   /* Improve font rendering, especially on OSX, and especially for light fonts
@@ -26,13 +13,8 @@
   -webkit-font-smoothing: antialiased !important;
 }
 
-.stacking-context {
-  /* This no-op scaleZ(1) creates an independent stacking context for :host. */
-  -webkit-transform: scaleZ(1);
-}
-
 /* Uncomment these 2 rules, or selectively apply the .debug class or debug
- * attribute, to facilitate debuging of Spark widgets.
+ * attribute, to facilitate debuging of elements.
  */
 /*
 :host > * {
@@ -50,9 +32,7 @@
  * using TAB.
  */
 /*
-:host(:focus),
-*:focus,
-::content > *:focus {
+*:focus {
   box-shadow: 0 0 10px 10px pink !important;  
 }
 */

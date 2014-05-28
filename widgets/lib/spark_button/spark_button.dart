@@ -4,48 +4,41 @@
 
 library spark_widgets.button;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
+// TODO(ussuri): Add comments.
+
 @CustomTag('spark-button')
 class SparkButton extends SparkWidget {
-  @published bool primary = false;
-  @published bool large = false;
-  @published bool small = false;
-  @published bool minPadding = false;
-  @published bool noPadding = false;
-  // TODO(ussuri): Perhaps convert to 'disabled', seems more natural.
-  // Also, after switching from Bootstrap to in-house CSS, generalize for all
-  // the widgets via SparkWidget attr/CSS.
-  @published bool enabled = true;
-  @published bool active = false;
-  @published bool noBorder = false;
-
-  ButtonElement _button;
+  // [raised] is the default.
+  @published bool raised;
+  // [flat] is just a negation of [raised], provided for convenience.
+  // It's not used in the CSS.
+  @published bool flat;
+  @published bool round;
+  @published bool primary;
+  @published bool minPadding;
+  @published bool noPadding;
+  @published bool disabled;
+  @published bool active;
 
   SparkButton.created() : super.created();
 
   @override
   void enteredView() {
-    _button = $['button'];
+    super.enteredView();
 
-    _refresh();
-    changes.listen((_) => _refresh());
-  }
-
-  void _refresh() {
-    _button.classes
-        ..toggle('btn-primary', primary)
-        ..toggle('btn-default', !primary)
-        ..toggle('btn-lg', large)
-        ..toggle('btn-sm', small)
-        ..toggle('enabled', enabled)
-        ..toggle('disabled', !enabled)
-        ..toggle('active', active)
-    // NOTE: noPadding is accounted for in the CSS.
-        ..toggle('no-border', noBorder);
+    // Make sure at most one of [raised] or [flat] is defined by the client.
+    // TODO(ussuri): This is really clumsy. Find a better way to provide
+    // mutually exclusive flags.
+    assert(raised == null || flat == null);
+    if (flat != null) {
+      raised = !flat;
+    } else {
+      raised = true;
+    }
+    deliverChanges();
   }
 }

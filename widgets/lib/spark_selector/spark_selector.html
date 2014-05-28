@@ -6,10 +6,8 @@
 
 <!--
 /**
- * See g-selector https://github.com/Polymer/toolkit-ui/tree/master/elements.
- *
  * spark-selector is used to display a list of elements that can be selected.
- * The attribute "selected" indicates which element is being selected.
+ * The attribute [selected] indicates which element is being selected.
  * Tapping on the element to change selection would fire "activate"
  * event.
  *
@@ -21,27 +19,24 @@
  *       <div>Item 3</div>
  *     </spark-selector>
  *
- * spark-selector is not styled.  So one needs to use "selected" CSS class
- * to style the selected element.
+ * spark-selector is not styled: one needs to supply CSS attributes and/or
+ * classes to apply to elements when they become active (on hover) or selected 
+ * (on a tap). The names of these attributes/classes can be passed via
+ * [activeClass], [activeAttr], [selectedClass] and [selectedAttr] attributes.
  *
- *     <style>
- *       .item.selected {
- *         background: #eee;
- *       } *
- *     </style>
- *     ...
- *     <spark-selector>
- *       <div class="item">Item 1</div>
- *       <div class="item">Item 2</div>
- *       <div class="item">Item 3</div>
- *     </spark-selector>
+ * Only ligth DOM content nodes satisfying the [itemFilter] will participate in
+ * the activation/selection process. The rest of the nodes (e.g. separators)
+ * will become inactive content.
  */
 /**
- * Fired when an element is selected via tap.
+ * Fired when an element changes it's selected state (gains or loses selection)
+ * via a tap. That means that there can be more than one events fired per click
+ * (e.g. the previsously selected item or items lose selection, and the new one
+ * gains it).
  *
  * @event activate
- * @param {Object} inDetail
- * @param {Object} inDetail.item the selected element
+ * @param {String} detail['value'] the item's [valueAttr] attribute
+ * @param {bool} detail['isSelected'] the item's new selected state
  */
 -->
 
@@ -49,13 +44,13 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_selection/spark_selection.html">
 
 <polymer-element name="spark-selector" extends="spark-widget"
-    attributes="multi,
-                inSelection,
-                valueAttr,
-                itemFilter,
-                activeClass,
-                activeAttr,
-                selectedClass,
+    attributes="multi
+                inSelection
+                valueAttr
+                itemFilter
+                activeClass
+                activeAttr
+                selectedClass
                 selectedAttr">
   <template>
     <link rel="stylesheet" href="spark_selector.css">

@@ -20,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -94,7 +95,9 @@ class SparkPolymerDialog implements SparkDialog {
   // TODO(ussuri): Currently, this never gets called (the dialog closes in
   // another way). Make symmetrical when merging Polymer and non-Polymer.
   @override
-  void hide() => _dialogElement.toggle();
+  void hide() {
+    if (_dialogElement.opened) _dialogElement.toggle();
+  }
 
   @override
   Element get element => _dialogElement;
@@ -115,6 +118,18 @@ class SparkPolymer extends Spark {
         .then((_) => super.openFile())
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
+  }
+
+  Future importFolder([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFolder(resources))
+        .whenComplete(() => _systemModalComplete());
+  }
+
+  Future importFile([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFile(resources))
+        .whenComplete(() => _systemModalComplete());
   }
 
   static set backdropShowing(bool showing) {
@@ -169,13 +184,11 @@ class SparkPolymer extends Spark {
 
   @override
   void initSplitView() {
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => null);
-        if (value != null) {
-          _ui.splitViewPosition = value;
-          _ui.deliverChanges();
-        }
+    syncPrefs.getValue('splitViewPosition', '300').then((String position) {
+      int value = int.parse(position, onError: (_) => null);
+      if (value != null) {
+        _ui.splitViewPosition = value;
+        _ui.deliverChanges();
       }
     });
   }
@@ -250,13 +263,13 @@ class SparkPolymer extends Spark {
     SparkButton button = getUIElement('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
-      button.enabled = action.enabled;
+      button.disabled = !action.enabled;
       button.deliverChanges();
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();
     });
-    button.enabled = action.enabled;
+    button.disabled = !action.enabled;
   }
 
   @override

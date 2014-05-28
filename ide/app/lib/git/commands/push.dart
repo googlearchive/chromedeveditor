@@ -70,7 +70,7 @@ class Push {
     return store.getCommitsForPush([ref], config.remoteHeads).
         then((CommitPushEntry commits) {
       if (commits == null) {
-        throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
+        return [];
       }
       return commits.commits;
     });
