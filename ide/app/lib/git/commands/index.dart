@@ -249,7 +249,7 @@ class Index {
      List<String> filePaths = [];
      return FileOps.listFiles(root).then((List<chrome.ChromeFileEntry> entries) {
        if (entries.isEmpty) {
-         return new Future.value();
+         return filePaths;
        }
 
        return Future.forEach(entries, (chrome.Entry entry) {
