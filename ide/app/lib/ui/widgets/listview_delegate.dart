@@ -107,4 +107,15 @@ abstract class ListViewDelegate {
    * while the user is dragging an item.
    */
   void listViewDragLeave(ListView view, MouseEvent event) {}
+
+  /**
+   * This method returns the separator before a cell.
+   */
+  Element listViewSeparatorForRow(ListView view, int rowIndex) => null;
+
+  /**
+   * This method returns the height of the separator.
+   */
+  int listViewSeparatorHeightForRow(ListView view, int rowIndex) => 1;
+
 }

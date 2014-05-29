@@ -14,10 +14,12 @@ import 'dart:html' as html;
 
 import 'ace.dart' as ace;
 import 'event_bus.dart';
+import 'navigation.dart';
 import 'preferences.dart';
 import 'workspace.dart';
 import 'services.dart';
 import 'ui/widgets/imageviewer.dart';
+import 'utils.dart';
 
 // The auto-save delay - the time from the last user edit to the file auto-save.
 final int _DELAY_MS = 1000;
@@ -73,7 +75,7 @@ class FileModifiedBusEvent extends BusEvent {
 /**
  * Manage a list of open editors.
  */
-class EditorManager implements EditorProvider {
+class EditorManager implements EditorProvider, NavigationLocationProvider {
   final Workspace _workspace;
   final ace.AceManager _aceContainer;
   final SparkPreferences _prefs;
@@ -101,9 +103,6 @@ class EditorManager implements EditorProvider {
 
   final StreamController<File> _selectedController =
       new StreamController.broadcast();
-
-  static final RegExp _imageFileType =
-      new RegExp(r'\.(jpe?g|png|gif|ico)$', caseSensitive: false);
 
   EditorManager(this._workspace, this._aceContainer, this._prefs,
       this._eventBus, this._services) {
@@ -349,7 +348,7 @@ class EditorManager implements EditorProvider {
   }
 
   int editorType(String filename) {
-    if (_imageFileType.hasMatch(filename)) {
+    if (isImageFilename(filename)) {
       return EDITOR_TYPE_IMAGE;
     } else {
       return EDITOR_TYPE_TEXT;
@@ -402,8 +401,9 @@ class EditorManager implements EditorProvider {
   void activate(Editor editor) {
     _EditorState state = _getStateFor(editor.file);
     _switchState(state);
-    _aceContainer.createDialog(editor.file.name);
   }
+
+  NavigationLocation get navigationLocation => _aceContainer.navigationLocation;
 }
 
 /**

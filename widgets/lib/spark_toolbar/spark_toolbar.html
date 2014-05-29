@@ -6,28 +6,28 @@
 
 <!--
 /**
- * See g-toolbar https://github.com/Polymer/toolkit-ui/tree/master/elements.
- *
  * spark-toolbar is a horizontal bar containing elements that can perform actions.
  *
  * Example:
  *
  *     <spark-toolbar>
- *       <spark-icon-button src="menu.png" on-click="{{menuAction}}"></spark-icon-button>
- *       <div class="flex">Title</div>
- *       <spark-icon-button src="more.png" on-click="{{moreAction}}"></spark-icon-button>
+ *       <spark-button on-click="{{menuAction}}">Menu</spark-button>
+ *       <div style="flex: 1">Title</div>
+ *       <spark-button on-click="{{moreAction}}">More</spark-icon-button>
  *     </spark-toolbar>
  */
 -->
 
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
 <polymer-element name="spark-toolbar" extends="spark-widget"
-    attributes="responsive touch">
-  <template>
+    attributes="horizontal
+                vertical
+                justify">
+  <template class="debug">
     <link rel="stylesheet" href="spark_toolbar.css">
 
-    <div class="toolbar" responsive="{{responsive}}" touch-action="{{touchAction}}">
-      <content></content>
-    </div>
+    <content></content>
   </template>
 
   <script type="application/dart;component=1" src="spark_toolbar.dart"></script>

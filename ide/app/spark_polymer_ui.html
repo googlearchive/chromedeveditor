@@ -11,6 +11,7 @@
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
 <link rel="import" href="packages/spark_widgets/spark_modal/spark_modal.html">
+<link rel="import" href="packages/spark_widgets/spark_progress/spark_progress.html">
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
@@ -29,7 +30,94 @@
         targetSize="{{splitViewPosition}}"
         minTargetSize="200"
         on-update="{{onSplitterUpdate}}">
-      <content></content>
+      <div beforeSplit>
+        <spark-toolbar class="toolbar" horizontal justify="spaced">
+          <input type="fileFilter"
+              id="fileFilter"
+              placeholder="Filter"
+              on-keydown="{{fileFilterKeydownHandler}}"
+              on-input="{{fileFilterInputHandler}}"
+              tabindex="0"/>
+
+          <spark-button id="runButton" flat round noPadding>
+            <i class="glyphicon glyphicon-play"></i>
+          </spark-button>
+
+          <spark-menu-button
+              id="mainMenu"
+              valueAttr="action-id"
+              arrow="none"
+              on-activate="{{onMenuSelected}}">
+
+            <spark-button flat round noPadding menuButton>
+              <img src="images/overflow.png">
+            </spark-button>
+
+            <spark-menu-item action-id="project-new" label="New Project...">
+            </spark-menu-item>
+
+            <spark-menu-separator></spark-menu-separator>
+
+            <spark-menu-item action-id="file-open" label="Open File...">
+            </spark-menu-item>
+            <spark-menu-item action-id="folder-open" label="Open Folder...">
+            </spark-menu-item>
+            <spark-menu-item action-id="git-clone" label="Git Clone...">
+            </spark-menu-item>
+
+            <spark-menu-separator></spark-menu-separator>
+
+            <spark-menu-item action-id="application-run" label="Run Application">
+            </spark-menu-item>
+            <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
+            </spark-menu-item>
+            <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
+            </spark-menu-item>
+
+            <template if="{{developerMode}}">
+              <spark-menu-separator></spark-menu-separator>
+              <spark-menu-item action-id="run-tests" label="Run Tests">
+              </spark-menu-item>
+            </template>
+
+            <spark-menu-separator></spark-menu-separator>
+
+            <spark-menu-item action-id="settings" label="Settings...">
+            </spark-menu-item>
+            <spark-menu-item action-id="send-feedback" label="Send Feedback...">
+            </spark-menu-item>
+            <spark-menu-item action-id="help-about" label="About Spark">
+            </spark-menu-item>
+
+          </spark-menu-button>
+        </spark-toolbar>
+
+        <content select="#fileViewArea"></content>
+
+        <template if="{{showNoFileFilterMatches}}">
+          <div id="fileNotFoundPlaceholder">
+            No matching files
+          </div>
+        </template>
+      </div>
+
+      <div afterSplit>
+        <content select="#editorArea"></content>
+
+        <spark-toolbar id="navigationButtons" class="toolbar"
+            horizontal justify="right">
+          <spark-button id="leftNav" flat round noPadding>
+            <i class="fa fa-arrow-left"></i>
+          </spark-button>
+          <spark-button id="rightNav" flat round noPadding>
+            <i class="fa fa-arrow-right"></i>
+          </spark-button>
+        </spark-toolbar>
+
+        <div id="sparkStatusContainer">
+         <spark-status id="sparkStatus"></spark-status>
+        </div>
+      </div>
     </spark-split-view>
 
     <!-- Error dialog -->
@@ -194,6 +282,10 @@
                 <option value="polymer/polymer_element_dart">
                   Dart Polymer custom element
                 </option>
+                <!-- This one is internal for now. -->
+                <option value="polymer/spark_widget">
+                  Spark widget
+                </option>
               </template>
             </optgroup>
           </select>
@@ -210,7 +302,7 @@
     </spark-modal>
 
     <!-- Harness Push dialog -->
-    <spark-modal id="pushDialog" class="dialog" animation="scale-slideup">
+    <spark-modal id="mobileDeployDialog" class="dialog" animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Deploy to Mobile</h4>
@@ -218,12 +310,10 @@
       <div class="modal-body">
         <h4>Deploy a Chrome App to an Android Device</h4>
         <p>
-          You need to have the
+          Please start the
           <a href="https://github.com/MobileChromeApps/harness/releases/"
-              on-click="{{handleAnchorClick}}">
-            ChromeAPT.apk
-          </a>
-          installed on your Android phone or tablet.
+              on-click="{{handleAnchorClick}}">Chrome ADT</a>
+          application on your Android device.
         </p>
         <div class="form-group">
           <form>
@@ -240,12 +330,18 @@
             </div>
           </form>
         </div>
+        <spark-progress id="deployProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
+        <div id='deployCheckDeviceMessage'>
+          Please check for a connection authorization dialog on your device.
+        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle data-dismiss="modal">
           Cancel
         </spark-button>
-        <spark-button overlay-toggle primary focused data-dismiss="modal">
+        <spark-button primary focused>
           Deploy
         </spark-button>
       </div>
@@ -264,12 +360,15 @@
               placeholder="https://github.com/dart-lang/spark.git"
               spellcheck="false" autosave focused>
         </div>
+        <spark-progress id="cloneProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
+        <spark-button id="cloneClose" overlay-toggle data-dismiss="modal">
+          Close
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button id="clone" primary data-dismiss="modal">
           Clone
         </spark-button>
       </div>
@@ -386,12 +485,15 @@
         <div class="form-group">
            <div id="gitCommitList"></div>
         </div>
+        <spark-progress id="gitPushProgress"
+            indeterminate showProgressMessage showCancel visible="false">
+        </spark-progress>
       </div>
       <div class="modal-footer">
-        <spark-button overlay-toggle data-dismiss="modal">
-          Cancel
+        <spark-button id="gitPushClose" overlay-toggle data-dismiss="modal">
+          Close
         </spark-button>
-        <spark-button overlay-toggle primary data-dismiss="modal">
+        <spark-button id="gitPush" overlay-toggle primary data-dismiss="modal">
           Push
         </spark-button>
       </div>
@@ -417,11 +519,6 @@
             </label>
           </div>
         </div>
-        <div class="form-group">
-          <spark-button on-click="{{onSendFeedback}}">
-            Send feedback about Spark...
-          </spark-button>
-        </div>
       </div>
       <div class="modal-footer">
         <spark-button overlay-toggle primary focused data-dismiss="modal">
@@ -431,7 +528,8 @@
     </spark-modal>
 
     <!-- Settings dialog -->
-    <spark-modal id="settingsDialog" class="dialog" animation="scale-slideup">
+    <spark-modal id="settingsDialog" class="dialog"
+        animation="scale-slideup">
       <div class="modal-header">
         <a href="#" class="close" overlay-toggle>&times;</a>
         <h4 class="modal-title">Settings</h4>
@@ -663,19 +761,6 @@
         <spark-button overlay-toggle primary focused data-dismiss="modal">
           Close
         </spark-button>
-      </div>
-    </spark-modal>
-
-    <!-- Dialog shown while pushing an application to ADB. -->
-    <spark-modal id="pushADBProgressDialog" class="dialog" animation="scale-slideup">
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Push to the mobile device in progress</label>
-          <div class="help-block">
-            Please unlock the phone and check whether it's asking for a
-            connection authorization.
-          </div>
-        </div>
       </div>
     </spark-modal>
 

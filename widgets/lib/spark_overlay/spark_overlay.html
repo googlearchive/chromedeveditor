@@ -6,27 +6,30 @@
 
 <!--
 /**
- * See g-overlay https://github.com/Polymer/toolkit-ui/tree/master/elements.
- *
  * spark-overlay displays overlayed on top of other content. It starts out
  * hidden and is displayed by setting it's opened property
  * to true. A spark-overlay's opened state can be toggled by calling the toggle
  * method.
  *
  * It's common to want a spark-overlay to animate to and from its opened position.
- * The 'animation' attribute provides some basic open/close animations. For example,
+ * The [animation] attribute provides some basic open/close animations. For example,
  * assigning animation="fade" to a spark-overlay will make it fade into
  * and out of view as it opens and closes. Note, if multiple spark-overlay's are
  * opened, they should stack on top of each other.
  *
  * Styling: The size and position of a spark-overlay should be setup via css.
- * spark-overlay is natually sized around its content. When a spark-overlay is opened
- * it is shown and the 'opened' class is added to it. This is typically where
- * css transitions and animations are applied. When the spark-overlay is closed,
- * the 'opened' class is removed and a 'closing' class is added. Use 'closing'
- * to customize the closing animation.
+ * spark-overlay is naturally sized around its content. When a spark-overlay is
+ * opened, it is shown and the 'opened' class is added to it. This is typically
+ * where CSS transitions and animations are applied. When the spark-overlay is
+ * closed, the 'opened' class is removed and a 'closing' class is added. Use 
+ * 'closing' to customize the closing animation.
  *
- * Supported values for the 'animation' attribute:
+ * In addition, when the overlay is opened/closed, the [opened] event is fired.
+ * This is useful e.g. when [autoClose] is true: the client then can listen to
+ * the event to take appropriate action (e.g. transition the overlay-triggering
+ * button into an inactive state).
+ *
+ * Supported values for the [animation] attribute:
  *
  * * fade: fade in/out when opened/closed
  * * scale-slideup: open - fade in and shrink; close - grow and slide up
@@ -35,26 +38,24 @@
  * It's common to use spark-overlay to gather user input, for example a login
  * dialog. To facilitate this, spark-overlay supports automatic focusing of a
  * specific element when it's opened. The element to be focused should be given
- * an `focused` attribute.
+ * a [focused] attribute.
  *
  * An element that should close the spark-overlay will automatically do so if it
  * is given the overlay-toggle attribute. Please note that spark-overlay will
  * close whenever the user taps outside it or presses the escape key. The
  * behavior can be turned on and off via the autoClose property.
  *
- *     <spark-overlay class="spark-overlay-scale-slideup">
+ *     <spark-overlay animation="scale-slideup">
  *       <h2>Dialog</h2>
  *       <input placeholder="say something..." focused>
  *       <div>I agree with this wholeheartedly.</div>
  *       <button overlay-toggle>OK</button>
  *     </spark-overlay>
- */
 /**
- * Fired when the spark-overlay opened property is set.
+ * Fired when the spark-overlay changes its opened state.
  *
- * @event open
- * @param {Object} inDetail
- * @param {Object} inDetail.opened the opened state
+ * @event opened
+ * @param {bool} detail['opened'] the opened state
  */
 -->
 
@@ -62,13 +63,20 @@
 
 <polymer-element name="spark-overlay"
      extends="spark-widget"
-     attributes="opened,
-                 modal,
-                 autoClose,
-                 animation">
+     attributes="arrow
+                 modal
+                 autoClose
+                 animation
+                 opened">
 
   <template>
     <link rel="stylesheet" href="spark_overlay.css">
+    
+    <template if="{{arrow != 'none'}}">
+      <div class="arrow"></div>
+      <div id="arrowInner" class="arrow"></div>
+    </template>
+    
     <content></content>
   </template>
 

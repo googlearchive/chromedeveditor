@@ -1,16 +1,29 @@
 <!doctype html>
 
 <link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
+<link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
+<link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
 <polymer-element name="example-ui">
   <template>
-    <!-- TODO: throws Exception: Class 'HtmlElement' has no instance method 'select'.
-    issue is with SparkSelector::valueToSelection(value); -->
-    <spark-menu selected="email">
-      <spark-menu-button name="post" src="/widgets/example/assets/add.png">Post a Comment</spark-menu-item>
-      <spark-menu-button name="share" src="/widgets/example/assets/add.png">Share Link</spark-menu-item>
-      <spark-menu-button name="email" src="/widgets/example/assets/add.png">Email Link</spark-menu-item>
-      <spark-menu-button name="favorite" src="/widgets/example/assets/add.png">Add to Favorites</spark-menu-item>
-    </spark-menu>
+    <spark-menu-button id="menuButton"
+        icon="../assets/open.png"
+        valign="left"
+        valueAttr="action"
+        selected="email">
+      <spark-menu-item name="post" label="Post a Comment" description="Ctrl-P">
+      </spark-menu-item>
+      <spark-menu-separator></spark-menu-separator>
+      <spark-menu-item name="share" label="Share Link">
+      </spark-menu-item>
+      <spark-menu-item name="email" label="Email Link">
+        <span>to johndoe@somewhere.com</span>
+      </spark-menu-item>
+      <spark-menu-item name="favorite" icon="../assets/add.png" label="Add to Favorites">
+      </spark-menu-item>
+      <spark-menu-separator></spark-menu-separator>
+      <spark-menu-item name="bookmark" icon="../assets/add.png" label="Add Bookmark" description="Ctrl-B">
+      </spark-menu-item>
+    </spark-menu-button>
   </template>
 
   <script type="application/dart;component=1" src="example_ui.dart"></script>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ * spark-progress can be used to sommunicate ongoing activities in an app
+ * to the user. It can be a true progress indicator with a completed pecentage
+ * periodically updated via the [value] attribute (the default), or it can be
+ * [indeterminate], ie. a value-less visual indicator to let the user know
+ * that the app is doing something.
+ *
+ * It can also display a progress message, and provide a "stop" button to
+ * cancel the activity (when [showCancel] is specified).
+ */
+/**
+ * Fired when the "stop" button is clicked, if provided via [showCancel].
+ *
+ * @event cancelled
+ * @param {bool} detail['opened'] the opened state
+ */
+-->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+<link rel="import" href="../../../packages/spark_widgets/spark_button/spark_button.html"/>
+
+<polymer-element name="spark-progress" extends="spark-widget"
+    attributes="indeterminate
+                progressMessage
+                showProgressMessage
+                showCancel
+                value
+                visible">
+  <template>
+    <link rel="stylesheet" href="spark_progress.css">
+
+    <template if="{{showProgressMessage}}">
+      <div id="progressMessage">{{progressMessage}}</div>
+    </template>
+
+    <div id="progressLayout">
+      <div id="progressDiv" class="progress">
+        <div id="progressBar" class="progress-bar" role="progressbar"
+            style="width: {{value}}%;">
+        </div>
+      </div>
+
+      <template if="{{showCancel}}">
+        <spark-button flat minPadding on-click="{{cancelClickHandler}}">
+          <span class="glyphicon glyphicon-stop"></span>
+        </spark-button>
+      </template>
+    </div>
+  </template>
+
+  <script type="application/dart;component=1" src="spark_progress.dart"></script>
+</polymer-element>

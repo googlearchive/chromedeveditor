@@ -20,7 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
-import 'lib/ui/utils/html_utils.dart';
+import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -71,6 +71,9 @@ void main() {
   });
 }
 
+// TODO(devoncarew): We need to de-couple a request to close the dialog
+// from actually closing it. So, cancel() => close(), and
+// performOk() => close(), but subclasses can override.
 class SparkPolymerDialog implements SparkDialog {
   SparkModal _dialogElement;
 
@@ -92,7 +95,9 @@ class SparkPolymerDialog implements SparkDialog {
   // TODO(ussuri): Currently, this never gets called (the dialog closes in
   // another way). Make symmetrical when merging Polymer and non-Polymer.
   @override
-  void hide() => _dialogElement.toggle();
+  void hide() {
+    if (_dialogElement.opened) _dialogElement.toggle();
+  }
 
   @override
   Element get element => _dialogElement;
@@ -100,10 +105,6 @@ class SparkPolymerDialog implements SparkDialog {
 
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
-  bool _filterFieldFocused = false;
-  Element _mainMenuButton = querySelector('#mainMenu');
-  Element _runButton = querySelector('#runButton');
-  InputElement _filterField = querySelector('#search');
 
   Future openFolder() {
     return _beforeSystemModal()
@@ -117,6 +118,18 @@ class SparkPolymer extends Spark {
         .then((_) => super.openFile())
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
+  }
+
+  Future importFolder([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFolder(resources))
+        .whenComplete(() => _systemModalComplete());
+  }
+
+  Future importFile([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFile(resources))
+        .whenComplete(() => _systemModalComplete());
   }
 
   static set backdropShowing(bool showing) {
@@ -171,13 +184,11 @@ class SparkPolymer extends Spark {
 
   @override
   void initSplitView() {
-    syncPrefs.getValue('splitViewPosition').then((String position) {
-      if (position != null) {
-        int value = int.parse(position, onError: (_) => null);
-        if (value != null) {
-          _ui.splitViewPosition = value;
-          _ui.deliverChanges();
-        }
+    syncPrefs.getValue('splitViewPosition', '300').then((String position) {
+      int value = int.parse(position, onError: (_) => null);
+      if (value != null) {
+        _ui.splitViewPosition = value;
+        _ui.deliverChanges();
       }
     });
   }
@@ -186,7 +197,7 @@ class SparkPolymer extends Spark {
   void initSaveStatusListener() {
     super.initSaveStatusListener();
 
-    statusComponent = querySelector('#sparkStatus');
+    statusComponent = getUIElement('#sparkStatus');
 
     // Listen for save events.
     eventBus.onEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED).listen((_) {
@@ -221,34 +232,8 @@ class SparkPolymer extends Spark {
     super.initToolbar();
 
     _bindButtonToAction('runButton', 'application-run');
-  }
-
-  @override
-  void initFilter() {
-    _filterField.onFocus.listen((e) => _updateFilterFieldState(true));
-    _filterField.onBlur.listen((e) => _updateFilterFieldState(false));
-    _filterField.onInput.listen((e) {
-      _updateFilterFieldState();
-      filterFilesList(_filterField.value);
-    });
-    _filterField.onKeyDown.listen((e) {
-      // When ESC key is pressed.
-      if (e.keyCode == KeyCode.ESC) {
-        _filterField.value = '';
-        _updateFilterFieldState();
-        filterFilesList(null);
-        cancelEvent(e);
-      }
-    });
-  }
-
-  void _updateFilterFieldState([bool focused]) {
-    if (focused != null) {
-      _filterFieldFocused = focused;
-    }
-    bool value = _filterFieldFocused && _filterField.value.isNotEmpty;
-    _mainMenuButton.hidden = value;
-    _runButton.hidden = value;
+    _bindButtonToAction('leftNav', 'navigate-back');
+    _bindButtonToAction('rightNav', 'navigate-forward');
   }
 
   @override
@@ -275,16 +260,16 @@ class SparkPolymer extends Spark {
   }
 
   void _bindButtonToAction(String buttonId, String actionId) {
-    SparkButton button = querySelector('#${buttonId}');
+    SparkButton button = getUIElement('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
-      button.enabled = action.enabled;
+      button.disabled = !action.enabled;
       button.deliverChanges();
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();
     });
-    button.enabled = action.enabled;
+    button.disabled = !action.enabled;
   }
 
   @override

@@ -14,8 +14,8 @@ class SparkIcon extends SparkWidget {
   /// URL of an image for the icon.
   @published String src = "";
 
-  /// Size of the icon defaults to 24.
-  @published String size = "24";
+  /// Size of the icon.
+  @published String size = '24px';
 
   @published String tooltip = "";
 

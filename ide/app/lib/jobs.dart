@@ -156,6 +156,13 @@ abstract class ProgressMonitor {
   String _title;
   num _maxWork;
   num _work = 0;
+  bool _cancelled = false;
+  Completer _cancelledCompleter;
+  StreamController _cancelController = new StreamController.broadcast();
+
+  // The job itself can listen to the cancel event, and do the appropriate
+  // action.
+  Stream get onCancel => _cancelController.stream;
 
   /**
    * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
@@ -198,11 +205,51 @@ abstract class ProgressMonitor {
   }
 
   /**
-   * Sets the work as completely done (work = maxWork).
+   * Sets the work as completely done (work == maxWork).
    */
   void done() {
     _work = maxWork;
   }
+
+  bool get cancelled => _cancelled;
+
+  set cancelled(bool val) {
+    _cancelled = val;
+
+    _cancelController.add(true);
+
+    if (_cancelledCompleter != null) {
+      _cancelledCompleter.completeError(new UserCancelledException());
+      _cancelledCompleter = null;
+    }
+  }
+
+  /**
+   * Return a Future that completes with the given value of [f]. If the user
+   * cancels this ProgressMonitor, this Future will instead throw a
+   * [UserCancelledException].
+   */
+  Future runCancellableFuture(Future f) {
+    _cancelledCompleter = new Completer();
+
+    f.then((result) {
+      if (_cancelledCompleter != null) {
+        _cancelledCompleter.complete(result);
+        _cancelledCompleter = null;
+      }
+    }).catchError((e) {
+      if (_cancelledCompleter != null) {
+        _cancelledCompleter.completeError(e);
+        _cancelledCompleter = null;
+      }
+    });
+
+    return _cancelledCompleter.future;
+  }
+}
+
+class UserCancelledException implements Exception {
+
 }
 
 class _ProgressMonitorImpl extends ProgressMonitor {
@@ -229,3 +276,25 @@ class _ProgressMonitorImpl extends ProgressMonitor {
     manager._monitorDone(this, job);
   }
 }
+
+/**
+ * Listenes to the cancel task event and notifies the running job.
+ * The implementing job must implemnt the onCancel to take proper
+ * action on being cancelled.
+ */
+ abstract class TaskCancel {
+  bool _cancelled = false;
+  get cancelled => _cancelled;
+
+  ProgressMonitor _monitor;
+
+  TaskCancel(this._monitor) {
+    _monitor.onCancel.listen((_) {
+      _cancelled = true;
+      performCancel();
+    });
+  }
+
+  void performCancel();
+}
+

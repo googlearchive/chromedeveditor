@@ -120,7 +120,7 @@ class ObjectStore {
                 => e.name.endsWith('.pack'));
 
             return Future.forEach(packEntries, (chrome.Entry entry) {
-              _readPackEntry(packDir, entry);
+              return _readPackEntry(packDir, entry);
             }).then((_) {
               return _initHelper();
             });

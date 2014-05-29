@@ -7,11 +7,7 @@
 <polymer-element name="commit-message-view">
   <template>
     <!-- BUG: https://code.google.com/p/dart/issues/detail?id=14382 -->
-    <!-- link rel="stylesheet" href="xyz.css" -->
-    <style>
-      @import url("commit_message_view.css");
-    </style>
-
+    <link rel="stylesheet" href="commit_message_view.css">
     <div id="message">{{commitInfo.message}}</div>
     <div id="author-info">
       <div id="author">

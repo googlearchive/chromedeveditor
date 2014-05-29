@@ -89,9 +89,13 @@ class SparkSelector extends SparkWidget {
 
     selection = $['selection'];
 
-    onMouseOver.listen(mouseOverHandler);
     // TODO(terry): Should be onTap when PointerEvents are supported.
-    onClick.listen(clickHandler);
+    onMouseOver.listen(mouseOverHandler);
+    // TODO(ussuri): BUG #1991. We really want onClick or onMouseUp here, but
+    // both have stopped working ca. 2014-05-20 -- Chrome & Dartium updates may
+    // have played a role, perhaps in combination with Polymer 0.10.0-pre.11.
+    // Investigate later. Baffling, but onMouseDown works.
+    onMouseDown.listen(clickHandler);
     onKeyDown.listen(keyDownHandler);
 
     // Observe external changes to the lightDOM items inserted in our <content>.
@@ -196,7 +200,7 @@ class SparkSelector extends SparkWidget {
       _commitActiveToSelected();
     } else {
       // This will happen if the user clicks on some element not designated as
-      // an item via [selectableFilter], e.g. on a menu separator.
+      // an item via [itemFilter], e.g. on a menu separator.
       assert(!_items.contains(e.target));
     }
   }

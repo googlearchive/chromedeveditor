@@ -18,6 +18,7 @@ import 'package:spark_widgets/spark_menu_button/spark_menu_button.dart';
 import 'package:spark_widgets/spark_menu_item/spark_menu_item.dart';
 import 'package:spark_widgets/spark_menu_separator/spark_menu_separator.dart';
 import 'package:spark_widgets/spark_modal/spark_modal.dart';
+import 'package:spark_widgets/spark_progress/spark_progress.dart';
 import 'package:spark_widgets/spark_splitter/spark_splitter.dart';
 import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
@@ -47,6 +48,7 @@ void main() {
   Polymer.register('spark-menu-item', SparkMenuItem);
   Polymer.register('spark-menu-separator', SparkMenuSeparator);
   Polymer.register('spark-modal', SparkModal);
+  Polymer.register('spark-progress', SparkProgress);
   Polymer.register('spark-splitter', SparkSplitter);
   Polymer.register('spark-split-view', SparkSplitView);
   Polymer.register('spark-status', SparkStatus);

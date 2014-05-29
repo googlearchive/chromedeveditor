@@ -496,6 +496,14 @@ class TreeView implements ListViewDelegate {
     }
   }
 
+  Element listViewSeparatorForRow(ListView view, int rowIndex) {
+    return _delegate.treeViewSeparatorForNode(this, _rows[rowIndex].nodeUid);
+  }
+
+  int listViewSeparatorHeightForRow(ListView view, int rowIndex) {
+    return _delegate.treeViewSeparatorHeightForNode(this, _rows[rowIndex].nodeUid);
+  }
+
   ListView get listView => _listView;
 
   void set dropEnabled(bool enabled) {

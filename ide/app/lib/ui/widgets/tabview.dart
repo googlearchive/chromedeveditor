@@ -26,7 +26,9 @@ class Tab {
   DivElement _pageContainer;
 
   Tab(this.tabView, {Element page: null, bool closable: true}) {
-    _label = new DivElement()..classes.add('tabview-tablabel');
+    _label = new DivElement()
+        ..classes.add('tabview-tablabel')
+        ..tabIndex = -1;
     _label.onClick.listen((e) {
       select(forceFocus: true);
       e.stopPropagation();
@@ -38,7 +40,8 @@ class Tab {
     _closeButton = new ButtonElement()
         ..classes.add('tabview-tablabel-closebutton')
         ..classes.add('close')
-        ..type = 'button';
+        ..type = 'button'
+        ..tabIndex = -1;
     _closeButton.onClick.listen((e) {
       bool layoutNow = (this == tabView.tabs.last);
       tabView.remove(this, layoutNow: layoutNow);
@@ -46,7 +49,9 @@ class Tab {
       e.preventDefault();
     });
     _label.children.addAll([_labelCaption, _closeButton]);
-    _pageContainer = new DivElement()..classes.add('tabview-page-container');
+    _pageContainer = new DivElement()
+        ..classes.add('tabview-page-container')
+        ..tabIndex = -1;
 
     this.closable = closable;
     this.page = page;

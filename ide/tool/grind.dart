@@ -39,20 +39,21 @@ void main([List<String> args]) {
   defineTask('lint', taskFunction: lint, depends: ['setup']);
 
   defineTask('deploy', taskFunction: deploy, depends: ['lint']);
-  defineTask('dartium', taskFunction: deployForDartium, depends: ['lint']);
+  //defineTask('dartium', taskFunction: deployForDartium, depends: ['lint']);
 
   defineTask('docs', taskFunction: docs, depends : ['setup']);
   defineTask('stats', taskFunction: stats);
-  defineTask('archive', taskFunction: archive, depends : ['mode-notest', 'deploy']);
+  defineTask('archive', taskFunction: archive,
+      depends : ['mode-notest', 'deploy']);
   defineTask('createSdk', taskFunction: createSdk);
 
   // For now, we won't be building the webstore version from Windows.
   if (!Platform.isWindows) {
     defineTask('build-android-rsa', taskFunction: buildAndroidRSA);
-    defineTask('release', taskFunction: release, depends : ['mode-notest', 'deploy']);
-    defineTask('release-nightly',
-               taskFunction : releaseNightly,
-               depends : ['mode-notest', 'deploy']);
+    defineTask('release', taskFunction: release,
+        depends : ['mode-notest', 'deploy']);
+    defineTask('release-nightly', taskFunction : releaseNightly,
+        depends : ['mode-notest', 'deploy']);
   }
 
   defineTask('clean', taskFunction: clean);
@@ -109,6 +110,12 @@ void lint(context) {
  * Similar to [deploy] but creates a layout suitable for Dartium.
  * Does not run dart2js.
  */
+@deprecated
+// TODO(devoncarew): I believe we do not need this anymore. This was to work
+// around an issue with Dartium not being able to run multiple scripts. Polymer
+// relies on generating Javascript at runtime to work around this; that fails
+// for Chrome Apps because of CSP mode. We now work around this via the
+// `app/spark_bootstrap.dart` script.
 void deployForDartium(GrinderContext context) {
   Directory sourceDir = joinDir(BUILD_DIR, ['dartium']);
   Directory destDir = joinDir(BUILD_DIR, ['dartium-out']);

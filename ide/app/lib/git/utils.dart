@@ -112,3 +112,31 @@ String getCurrentTimeAsString() {
  * An empty function.
  */
 void nopFunction() => null;
+
+/**
+ * This class defines a cancellable object.
+ * A caller must call check function to find out if the operation has been
+ * cancelled. The check function calls the performCancel handler if operation
+ * is cancelled.
+ */
+abstract class Cancel {
+
+  bool _cancel = false;
+  String _errorCode;
+  bool canIgnore;
+
+  get cancel => _cancel;
+  set cancel(bool value) => _cancel = value;
+  Cancel([this._cancel]);
+
+  bool check() {
+    if (_cancel) {
+      performCancel();
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  void performCancel();
+}
