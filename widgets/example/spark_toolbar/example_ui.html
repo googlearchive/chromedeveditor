@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 
 <link rel="import"
+href="packages/spark_widgets/common/spark_widget.html">
+<link rel="import"
 href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 <link rel="import"
-href="packages/spark_widgets/spark_icon_button/spark_icon_button.html">
+href="packages/spark_widgets/spark_icon/spark_icon.html">
 <polymer-element name="example-ui">
   <template>
     <spark-toolbar>
-      <spark-icon-button src="menu.png" on-click="{{menuAction}}">
-      </spark-icon-button>
+      <spark-icon src="menu.png" on-click="{{menuAction}}">
+      </spark-icon>
       <div class="flex">Title</div>
     </spark-toolbar>
   </template>
