@@ -669,11 +669,11 @@ abstract class Spark
     }
 
     if (title == null) {
-      _okCancelDialog.getShadowDomElement('[header]').style.display = 'none';
-      _okCancelDialog.getShadowDomElement('[header] #title').text = '';
+      _okCancelDialog.getShadowDomElement('#header').style.display = 'none';
+      _okCancelDialog.getShadowDomElement('#title').text = '';
     } else {
-      _okCancelDialog.getShadowDomElement('[header]').style.display = 'block';
-      _okCancelDialog.getShadowDomElement('[header] #title').text = title;
+      _okCancelDialog.getShadowDomElement('#header').style.display = 'block';
+      _okCancelDialog.getShadowDomElement('#title').text = title;
     }
     Element container = _okCancelDialog.getElement('#okCancelMessage');
 
@@ -1162,7 +1162,10 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
-    _dialog.getElement("[submit]").onClick.listen((_) => _commit());
+    final Element submitBtn = _dialog.getElement("[submit]");
+    if (submitBtn != null) {
+      submitBtn.onClick.listen((_) => _commit());
+    }
   }
 
   void _commit() => _hide();
