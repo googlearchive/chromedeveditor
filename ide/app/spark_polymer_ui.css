@@ -19,39 +19,6 @@
   top: 0;
 }
 
-.dialog {
-  top: 72px;
-  left: 50%;
-  width: 512px;
-  margin-left: -256px;
-  border-radius: 5px;
-}
-
-.dialog input[type="text"] {
-  width: 100%;
-}
-
-.dialog input:invalid {
-  color: red;
-}
-
-.dialog {
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  overflow: hidden;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.dialog a.close {
-  width: 21px;
-  height: 21px;
-  text-align: center;
-}
-
 .toolbar {
   height: 48px;
   border-bottom: 1px solid #ddd;
@@ -166,19 +133,6 @@
 #preferenceResetResult {
   color: #F00;
   font-weight: bold;
-}
-
-#gitPushDialog .modal-body {
-  margin: 0;
-  padding: 0;
-}
-
-#gitPushDialog .form-group {
-  margin: 0;
-}
-
-#gitPushDialog .modal-footer {
-  margin: 0;
 }
 
 #gitCommitList {
