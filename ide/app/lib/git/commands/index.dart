@@ -178,7 +178,8 @@ class Index {
     String out = JSON.encode(statusIdxToMap());
     return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
         (chrome.DirectoryEntry entry) {
-      return FileOps.createFileWithContent(entry, 'index2', out, 'Text').then((_) {
+      return FileOps.createFileWithContent(entry, 'index2', out, 'Text')
+          .then((_) {
         Completer completer = _writeIndexCompleter;
         _writeIndexCompleter = null;
         _writingIndex = false;
@@ -255,7 +256,8 @@ class Index {
    Future<List<FileStatus>> walkFilesAndUpdateIndex(chrome.DirectoryEntry root,
        bool updateSha) {
      List<FileStatus> fileStatuses = [];
-     return FileOps.listFiles(root).then((List<chrome.ChromeFileEntry> entries) {
+     return FileOps.listFiles(root).then(
+         (List<chrome.ChromeFileEntry> entries) {
        if (entries.isEmpty) {
          deleteIndexForEntry(root.fullPath);
          return fileStatuses;
