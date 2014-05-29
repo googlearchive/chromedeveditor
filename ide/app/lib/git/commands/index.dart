@@ -280,7 +280,8 @@ class Index {
            }
          }
        }).then((_) {
-         if (fileStatuses.isEmpty) {
+         if (root.fullPath == ".git") {
+         } else if (fileStatuses.isEmpty) {
            deleteIndexForEntry(root.fullPath);
          } else if (fileStatuses.any((status) => status.type
              != FileStatusType.COMMITTED)) {
