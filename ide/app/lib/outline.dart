@@ -175,7 +175,7 @@ class Outline {
   }
 
   void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
-    List<html.Element> outlineElements =
+    List<html.Node> outlineElements =
         _outlineDiv.getElementsByClassName("outlineItem");
 
     if (outlineElements.length > 0) {
@@ -186,7 +186,8 @@ class Outline {
 
       int bottomOffset;
       if (outlineElements.length > lastItemIndex + 1) {
-        bottomOffset = outlineElements[lastItemIndex + 1].offsetTop;
+        html.Element element = outlineElements[lastItemIndex + 1];
+        bottomOffset = element.offsetTop;
       } else {
         html.Element lastElement = outlineElements[lastItemIndex];
         bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;
