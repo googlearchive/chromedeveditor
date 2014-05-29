@@ -349,11 +349,12 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
+  StreamSubscription _declarationClickSubscription = null;
 
   AceManager(this.parentElement,
              this.delegate,
              svc.Services services,
-             PreferenceStore prefs) {
+             SparkPreferences prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -368,7 +369,6 @@ class AceManager {
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
-    _aceEditor.setOption('enableMultiselect', false);
 
     // Override Ace's `gotoline` command.
     var command = new ace.Command(
@@ -400,15 +400,31 @@ class AceManager {
     _setupOutline(prefs);
     _setupGotoLine();
 
-    var node = parentElement.getElementsByClassName("ace_content")[0];
-    node.onClick.listen((e) {
-      bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
-      if (accelKey) _onGotoDeclarationController.add(null);
+    prefs.onPreferencesReady.then((_) {
+      declarationClickEnabled = prefs.accelKeyLinking;
     });
   }
 
-  void _setupOutline(PreferenceStore prefs) {
-    outline = new Outline(_analysisService, parentElement, prefs);
+  void set declarationClickEnabled(bool enable) {
+    // Don't change if already set to the right value
+    if ((_declarationClickSubscription != null) == enable) return;
+
+    html.DivElement node = parentElement.getElementsByClassName("ace_content")[0];
+
+    if (enable) {
+      _declarationClickSubscription = node.onClick.listen((e) {
+        bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
+        if (accelKey) _onGotoDeclarationController.add(null);
+      });
+    } else {
+      _declarationClickSubscription.cancel();
+    }
+
+    _aceEditor.setOption('enableMultiselect', !enable);
+  }
+
+  void _setupOutline(SparkPreferences prefs) {
+    outline = new Outline(_analysisService, parentElement, prefs.prefStore);
 
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =

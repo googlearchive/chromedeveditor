@@ -313,7 +313,7 @@ abstract class Spark
   }
 
   void initAceManager() {
-    _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
+    _aceManager = new AceManager(new DivElement(), this, services, prefs);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
@@ -3119,12 +3119,14 @@ class SettingsAction extends SparkActionWithDialog {
     spark.setGitSettingsResetDoneVisible(false);
 
     var whitespaceCheckbox = getElement('#stripWhitespace');
+    var multipleCursorsCheckbox = getElement('#enableMultipleCursors');
 
     // Wait for each of the following to (simultaneously) complete before
     // showing the dialog:
     Future.wait([
       spark.prefs.onPreferencesReady.then((_) {
         whitespaceCheckbox.checked = spark.prefs.stripWhitespaceOnSave;
+        multipleCursorsCheckbox.checked = !spark.prefs.accelKeyLinking;
       }), new Future.value().then((_) {
         // For now, don't show the location field on Chrome OS; we always use syncFS.
         if (PlatformInfo.isCros) {
@@ -3137,6 +3139,13 @@ class SettingsAction extends SparkActionWithDialog {
       _show();
       whitespaceCheckbox.onChange.listen((e) {
         spark.prefs.stripWhitespaceOnSave = whitespaceCheckbox.checked;
+      });
+      multipleCursorsCheckbox.onChange.listen((e) {
+        spark.prefs.accelKeyLinking = !multipleCursorsCheckbox.checked;
+        // TODO(ericarnold): enabling / disabling multiple cursors in the
+        // middle of session does not work.  Fix
+        //spark.aceManager.declarationClickEnabled =
+        //      accelKeyLinkingCheckbox.checked;
       });
     });
   }

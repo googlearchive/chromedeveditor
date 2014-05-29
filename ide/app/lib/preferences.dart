@@ -39,12 +39,15 @@ class SparkPreferences {
 
   // [CachedPreference] subclass instance for each preference:
   BoolCachedPreference _stripWhitespaceOnSave;
+  BoolCachedPreference _accelKeyLinking;
 
   SparkPreferences(this.prefStore) {
     // Initialize each preference:
     List<CachedPreference> allPreferences = [
         _stripWhitespaceOnSave = new BoolCachedPreference(
             prefStore, "stripWhitespaceOnSave"),
+        _accelKeyLinking = new BoolCachedPreference(
+            prefStore, "accelKeyLinking"),
         ];
 
     onPreferencesReady = Future.wait(allPreferences.map((p) => p.whenLoaded));
@@ -54,6 +57,11 @@ class SparkPreferences {
   bool get stripWhitespaceOnSave => _stripWhitespaceOnSave.value;
   set stripWhitespaceOnSave(bool value) {
     _stripWhitespaceOnSave.value = value;
+  }
+
+  bool get accelKeyLinking => _accelKeyLinking.value;
+  set accelKeyLinking(bool value) {
+    _accelKeyLinking.value = value;
   }
 }
 

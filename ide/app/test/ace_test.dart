@@ -42,6 +42,7 @@ class MockAceManager implements AceManager {
 
   Point get cursorPosition => new Point(0, 0);
   void set cursorPosition(Point position) {}
+  void set declarationClickEnabled(bool v) {}
   void setSelectionAnchor(int row, int column) {}
   void selectTo(int row, int column) {}
 
