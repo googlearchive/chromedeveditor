@@ -1010,7 +1010,7 @@ Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
  * The abstract parent class of Spark related actions.
  */
 abstract class SparkAction extends Action {
-  Spark spark;
+  final Spark spark;
 
   SparkAction(this.spark, String id, String name) : super(id, name);
 
@@ -1018,7 +1018,11 @@ abstract class SparkAction extends Action {
     // Send an action event with the 'main' event category.
     _analyticsTracker.sendEvent('main', id);
 
-    _invoke(context);
+    try {
+      _invoke(context);
+    } catch (e) {
+      spark.showErrorMessage('Error Invoking ${name}', '${e}');
+    }
   }
 
   void _invoke([Object context]);
@@ -2015,6 +2019,8 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
           'Unable to Deploy',
           'Unable to deploy the current selection; please select a Chrome App '
           'to deploy.');
+    } else if (!MobileDeploy.isAvailable()) {
+      spark.showErrorMessage('Unable to Deploy', 'No USB devices available.');
     } else {
       _toggleProgressVisible(false);
       _show();
