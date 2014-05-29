@@ -11,6 +11,8 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
+// TODO(ussuri): add more comments.
+
 class _SparkOverlayManager {
   // Track overlays for z-index and focus managemant.
   // TODO(ussuri): The z-index management with a fixed base z-index is shaky at
@@ -290,12 +292,12 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
+  /**
+   * If a mouse or keyboard event is outside the overlay, handle auto-closing
+   * and modality, as set.
+   */
   void _captureHandler(Event e) {
-    final bool inOverlay =
-        (e is MouseEvent && isPointInWidget(e.client)) ||
-        this == e.target ||
-        this.contains(e.target) ||
-        shadowRoot.contains(e.target);
+    final bool inOverlay = isEventInWidget(e);
 
     if (!inOverlay) {
       if (modal) {

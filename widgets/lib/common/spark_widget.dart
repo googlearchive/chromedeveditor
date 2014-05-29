@@ -125,6 +125,18 @@ class SparkWidget extends PolymerElement {
     return super.getBoundingClientRect().containsPoint(xyGlobal);
   }
 
+  /**
+   * Returns true if the event is within the widget's boundary or targets the
+   * widget or one of its light DOM or shadow DOM children.
+   */
+  bool isEventInWidget(Event e) {
+    return
+        (e is MouseEvent && isPointInWidget(e.client)) ||
+        this == e.target ||
+        this.contains(e.target) ||
+        shadowRoot.contains(e.target);
+  }
+
   static void addRemoveEventHandlers(
       dynamic node,
       Iterable<String> eventTypes,
