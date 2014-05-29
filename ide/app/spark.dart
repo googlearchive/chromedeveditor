@@ -2332,11 +2332,11 @@ class GitAddAction extends SparkAction implements ContextAction {
   String get category => 'git';
 
   bool appliesTo(Object object)
-      => _isFileList(object) && _isUnderScmProject(object) && _valid(object);
+      => _isUnderScmProject(object) && _valid(object);
 
   bool _valid(List<ws.Resource> resources) {
-    return !resources.any((resource) => resource.getMetadata('scmStatus')
-        != 'untracked');
+    return resources.any((resource) =>
+      !(resource.isFile && (resource.getMetadata('scmStatus') != 'untracked')));
   }
 }
 
