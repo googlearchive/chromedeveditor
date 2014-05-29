@@ -4,7 +4,6 @@
 
 library spark.markdown;
 
-import 'dart:async';
 import 'dart:html' as html;
 
 import 'package:markdown/markdown.dart' show markdownToHtml;
@@ -12,7 +11,7 @@ import 'package:markdown/markdown.dart' show markdownToHtml;
 import 'workspace.dart' as workspace;
 
 class Markdown {
-  // Parent conatiner
+  // Parent conatiner.
   final html.Element _container;
 
   // Workspace file
@@ -24,7 +23,7 @@ class Markdown {
   // Preview overlay.
   html.DivElement _previewDiv;
 
-  // Is the markdown in preview window open
+  // Is the markdown in preview window open.
   bool _visible = false;
 
   Markdown(this._container, this._file) {
