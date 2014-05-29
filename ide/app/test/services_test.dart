@@ -205,5 +205,18 @@ defineTests() {
         });
       });
     });
+
+    test('link to an instantiated class with no constructor', () {
+      DirectoryEntry dir = createDirectoryWithDartFile('foo3',
+          'void main() {var a = new MyClass();} class MyClass { }\n');
+      return linkSampleProject(dir, workspace).then((Project project) {
+        File file = project.getChildPath('web/sample.dart');
+        return analyzer.getDeclarationFor(file, 27)
+            .then((SourceDeclaration declaration) {
+          expect(declaration.getFile(project).name, "sample.dart");
+          expect(declaration.offset, 43);
+        });
+      });
+    });
   });
 }
