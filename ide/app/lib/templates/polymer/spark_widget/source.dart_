@@ -11,7 +11,7 @@ import 'package:polymer/polymer.dart';
 import '../common/spark_widget.dart';
 
 @CustomTag('``tagName``')
-class ``className`` extends PolymerElement {
+class ``className`` extends SparkWidget {
   @published String x = "";
   @observable String y = "";
 

@@ -12,7 +12,7 @@
 
 <link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 
-<polymer-element name="``tagName``" attributes="who">
+<polymer-element name="``tagName``" extends="spark-widget" attributes="x">
   <template>
     <link rel="stylesheet" href="``sourceName``.css">
 
