@@ -2046,8 +2046,11 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
 
     MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
 
-    Future f = useAdb ?
-        deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
+    // Invoke the deployer methods in Futures in order to capture exceptions.
+    Future f = new Future(() {
+      return useAdb ?
+          deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
+    });
 
     monitor.runCancellableFuture(f).then((_) {
       _hide();
