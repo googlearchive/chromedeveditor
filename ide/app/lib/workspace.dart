@@ -1270,6 +1270,7 @@ class EventType extends Enum<String> {
   const EventType._(String value) : super(value);
 
   String get enumName => 'WorkspaceEventType';
+
   /**
    * Event type indicates resource has been added to workspace.
    */

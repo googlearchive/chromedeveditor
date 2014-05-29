@@ -183,7 +183,7 @@ class CompilerServiceImpl extends ServiceImpl {
 
   Future<ServiceActionEvent> compileString(ServiceActionEvent request) {
     String string = request.data['string'];
-    return compiler.compileString(string).then((CompilerResult result) {
+    return compiler.compileString(string).then((CompilerResultHolder result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
@@ -193,7 +193,7 @@ class CompilerServiceImpl extends ServiceImpl {
     String project = request.data['project'];
     bool csp = request.data['csp'];
 
-    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResult result) {
+    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResultHolder result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
@@ -335,13 +335,32 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     analyzer.AstNode node =
         new analyzer.NodeLocator.con1(offset).searchWithin(ast);
+
+    if (node is analyzer.SimpleStringLiteral &&
+        node.parent is analyzer.ImportDirective) {
+      analyzer.SimpleStringLiteral importString = node;
+      analyzer.ImportDirective importNode = node.parent;
+      if (importNode.source is analyzer.FileSource) {
+        analyzer.FileSource fileSource = importNode.source;
+        return new SourceDeclaration(importString.value, fileSource.uuid, 0, 0);
+      } else {
+        // TODO(ericarnold): Handle SDK import
+        return null;
+      }
+    }
+
     if (node is! analyzer.SimpleIdentifier) return null;
 
     analyzer.Element element = analyzer.ElementLocator.locate(node);
     if (element == null) return null;
 
-    if (element.nameOffset == -1 || element.source == null) {
-      return null;
+    if (element.nameOffset == -1) {
+      if (element is analyzer.ConstructorElement) {
+        analyzer.ConstructorElement constructorElement = element;
+        element = constructorElement.enclosingElement;
+      } else if (element.source == null) {
+        return null;
+      }
     }
 
     if (element.source is analyzer.FileSource) {
@@ -404,7 +423,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     return outline;
   }
-  
+
   void _addVariableToOutline(Outline outline,
       analyzer.TopLevelVariableDeclaration declaration) {
     analyzer.VariableDeclarationList variables = declaration.variables;
@@ -417,7 +436,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           new _Range.fromAstNode(declaration)));
     }
   }
-  
+
   void _addFunctionToOutline(Outline outline,
       analyzer.FunctionDeclaration declaration) {
     outline.entries.add(_populateOutlineEntry(
@@ -444,7 +463,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
       }
     }
   }
-  
+
   void _addMethodToOutlineClass(OutlineClass outlineClass,
       analyzer.MethodDeclaration member) {
     if (member.isGetter || member.isSetter) {
@@ -459,7 +478,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           new _Range.fromAstNode(member)));
     }
   }
-  
+
   void _addFieldToOutlineClass(OutlineClass outlineClass,
       analyzer.FieldDeclaration member) {
     analyzer.VariableDeclarationList fields = member.fields;
@@ -471,7 +490,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
           new _Range.fromAstNode(field.parent)));
     }
   }
-  
+
   void _addConstructorToOutlineClass(OutlineClass outlineClass,
       analyzer.ConstructorDeclaration member,
       analyzer.ClassDeclaration classDeclaration) {
@@ -489,7 +508,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
         nameRange,
         new _Range.fromAstNode(classDeclaration)));
   }
-  
+
   String getTypeNameFor(analyzer.TypeName typeName) =>
       (typeName == null) ? "" : typeName.name.name;
 

@@ -62,7 +62,7 @@ class Outline {
 
   Stream get onScroll => _outlineDiv.onScroll;
 
-  int get scrollPosition => _rootList.parent.scrollTop;
+  int get scrollPosition => _rootList.parent.scrollTop.toInt();
   void set scrollPosition(int position) {
     // If the outline has not been built yet, just save the position
     _initialScrollPosition = position;
@@ -70,7 +70,8 @@ class Outline {
       _scrollIntoView(_outlineDiv.clientHeight, position);
     }
   }
-  void _scrollIntoView(int top, int bottom) {
+
+  void _scrollIntoView(num top, num bottom) {
     // Hack for scrollTop not working
     _scrollTarget.hidden = false;
     _scrollTarget.style
@@ -175,7 +176,7 @@ class Outline {
   }
 
   void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
-    List<html.Element> outlineElements =
+    List<html.Node> outlineElements =
         _outlineDiv.getElementsByClassName("outlineItem");
 
     if (outlineElements.length > 0) {
@@ -184,9 +185,10 @@ class Outline {
 
       html.Element firstElement = outlineElements[firstItemIndex];
 
-      int bottomOffset;
+      num bottomOffset;
       if (outlineElements.length > lastItemIndex + 1) {
-        bottomOffset = outlineElements[lastItemIndex + 1].offsetTop;
+        html.Element element = outlineElements[lastItemIndex + 1];
+        bottomOffset = element.offsetTop;
       } else {
         html.Element lastElement = outlineElements[lastItemIndex];
         bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;

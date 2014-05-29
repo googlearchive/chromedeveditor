@@ -289,7 +289,7 @@ abstract class Spark
   void initLaunchManager() {
     // TODO(ussuri): Switch to MetaPackageManager as soon as it's done.
     _launchManager = new LaunchManager(_workspace, services,
-        pubManager, bowerManager);
+        pubManager, bowerManager, this);
   }
 
   void initNavigationManager() {
@@ -1009,7 +1009,7 @@ Future<chrome.DirectoryEntry> _selectFolder({String suggestedName}) {
  * The abstract parent class of Spark related actions.
  */
 abstract class SparkAction extends Action {
-  Spark spark;
+  final Spark spark;
 
   SparkAction(this.spark, String id, String name) : super(id, name);
 
@@ -1017,7 +1017,11 @@ abstract class SparkAction extends Action {
     // Send an action event with the 'main' event category.
     _analyticsTracker.sendEvent('main', id);
 
-    _invoke(context);
+    try {
+      _invoke(context);
+    } catch (e) {
+      spark.showErrorMessage('Error Invoking ${name}', '${e}');
+    }
   }
 
   void _invoke([Object context]);
@@ -1555,7 +1559,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 
     Completer completer = new Completer();
     ProgressJob job = new ProgressJob("Running application…", completer);
-    spark.launchManager.run(resource).then((_) {
+    spark.launchManager.performLaunch(resource, LaunchTarget.LOCAL).then((_) {
       completer.complete();
     }).catchError((e) {
       completer.complete();
@@ -1568,7 +1572,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
-    return spark.launchManager.canRun(resource);
+    return spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
   }
 
   void _updateEnablement(ws.Resource resource) {
@@ -2022,6 +2026,8 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
           'Unable to Deploy',
           'Unable to deploy the current selection; please select a Chrome App '
           'to deploy.');
+    } else if (!MobileDeploy.isAvailable()) {
+      spark.showErrorMessage('Unable to Deploy', 'No USB devices available.');
     } else {
       _toggleProgressVisible(false);
       _show();
@@ -2053,8 +2059,11 @@ class DeployToMobileAction extends SparkActionWithDialog implements ContextActio
 
     MobileDeploy deployer = new MobileDeploy(deployContainer, spark.localPrefs);
 
-    Future f = useAdb ?
-        deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
+    // Invoke the deployer methods in Futures in order to capture exceptions.
+    Future f = new Future(() {
+      return useAdb ?
+          deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
+    });
 
     monitor.runCancellableFuture(f).then((_) {
       _hide();
@@ -3032,7 +3041,7 @@ class CompileDartJob extends Job {
 
     CompilerService compiler = spark.services.getService("compiler");
 
-    return compiler.compileFile(file, csp: true).then((CompilerResult result) {
+    return compiler.compileFile(file, csp: true).then((CompileResult result) {
       if (!result.getSuccess()) {
         throw result;
       }

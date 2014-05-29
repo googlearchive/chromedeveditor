@@ -8,9 +8,11 @@ class PolymerDartTemplate extends PolymerTemplate {
   PolymerDartTemplate(
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
       : super(id, globalVars, localVars) {
-    // Alter the source name produced by [PolymerTemplate] to satisfy
-    // Polymer Dart requirements dictated by Pub.
-    TemplateVar sourceName = _vars['sourceName'];
-    sourceName.value = sourceName.value.replaceAll('-', '_');
+    final String tagName = _vars['tagName'].value;
+    String className =
+        utils.capitalize(tagName).replaceAllMapped(
+            new RegExp(r'\W(.)'), (Match m) => utils.capitalize(m[1]));
+
+    _addOrReplaceVars([new TemplateVar('className', className)]);
   }
 }
