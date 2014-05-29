@@ -501,8 +501,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
       } else {
         // For each file, request the SCM status asynchronously.
         return Future.forEach(resources, (Resource resource) {
-          return Status.getFileStatus(store, resource.entry).then((status) {
-            _setStatus(resource, status);
+          return Status.updateAndGetStatus(store, resource.entry).then((status) {
+            _updateStatusForAncestors(store, resource);
             return new Future.value();
           });
         });
@@ -510,6 +510,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
     }).catchError((e, st) {
       _logger.severe("error calculating scm status", e, st);
     }).whenComplete(() => _statusController.add(this));
+  }
+
+  void _updateStatusForAncestors(ObjectStore store, Resource resource) {
+    _setStatus(resource, Status.getStatusForEntry(store, resource.entry));
+    if (resource.entry.fullPath != store.root.fullPath) {
+      _updateStatusForAncestors(store, resource.parent);
+    }
   }
 
   void _setStatus(Resource resource, gitIndex.FileStatus status) {
