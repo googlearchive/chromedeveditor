@@ -7,7 +7,6 @@ library spark_widgets.spark_dialog_button;
 import 'package:polymer/polymer.dart';
 
 import '../spark_button/spark_button.dart';
-//import '../common/spark_widget.dart';
 
 @CustomTag('spark-dialog-button')
 class SparkDialogButton extends SparkButton {
