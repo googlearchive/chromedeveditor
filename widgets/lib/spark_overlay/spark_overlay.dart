@@ -286,7 +286,7 @@ class SparkOverlay extends SparkWidget {
 
   void _tapHandler(MouseEvent e) {
     Element target = e.target;
-    if (target != null && target.attributes.containsKey('overlay-toggle')) {
+    if (target != null && target.attributes.containsKey('overlayToggle')) {
       toggle();
     } else if (_autoCloseTask != null) {
       _autoCloseTask.cancel();
