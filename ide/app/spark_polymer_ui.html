@@ -121,28 +121,24 @@
       </div>
     </spark-split-view>
 
+
+    <!---------------------------- DIALOGS --------------------------------->
+
+
     <!-- Error dialog -->
     <spark-dialog id="errorDialog" title="PLACEHOLDER">
       <label id="errorTitle"></label>
       <div id="errorMessage" class="help-block"></div>
-      <div class="modal-footer">
-        <spark-dialog-button id="errorClose" dismiss focused>
-          Close
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button id="errorClose" dismiss focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- OK / Cancel dialog -->
     <spark-dialog id="okCancelDialog" title="PLACEHOLDER">
       <p id="okCancelMessage"></p>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button id="okText" submit focused>
-          OK
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="okText" submit focused>OK</spark-dialog-button>
     </spark-dialog>
 
     <!-- Rename File dialog -->
@@ -150,14 +146,9 @@
       <label for="renameFileName">New name</label>
       <input id="renameFileName" type="text" class="form-control"
           spellcheck="false" focused>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Rename
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Rename</spark-dialog-button>
     </spark-dialog>
 
     <!-- New File dialog -->
@@ -165,14 +156,9 @@
       <label for="fileName">New file name</label>
       <input id="fileName" type="text" class="form-control"
           spellcheck="false" focused>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Create
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Create</spark-dialog-button>
     </spark-dialog>
 
     <!-- New Folder dialog -->
@@ -180,14 +166,9 @@
       <label for="folderName">New folder name</label>
       <input id="folderName" type="text" class="form-control"
           spellcheck="false" focused>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Create
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Create</spark-dialog-button>
     </spark-dialog>
 
     <!-- New Project dialog -->
@@ -249,14 +230,9 @@
           </optgroup>
         </select>
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Create
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Create</spark-dialog-button>
     </spark-dialog>
 
     <!-- Harness Push dialog -->
@@ -289,14 +265,9 @@
       <div id='deployCheckDeviceMessage'>
         Please check for a connection authorization dialog on your device.
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit focused>
-          Deploy
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit focused>Deploy</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Clone dialog -->
@@ -310,14 +281,9 @@
       <spark-progress id="cloneProgress"
           indeterminate showProgressMessage showCancel visible="false">
       </spark-progress>
-      <div class="modal-footer">
-        <spark-dialog-button id="cloneClose" cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button id="clone" submit>
-          Clone
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button id="cloneClose" cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="clone" submit>Clone</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Commit dialog -->
@@ -352,14 +318,9 @@
           Enter a brief description of the changes.
         </span>
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Commit
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Commit</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Branch dialog -->
@@ -368,14 +329,9 @@
       <input id="gitBranchName" type="text" class="form-control"
           pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
       <span class="help-block">Create a new git branch.</span>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Create Branch
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Create Branch</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Checkout dialog -->
@@ -389,14 +345,9 @@
         <label for="gitCheckout">Switch to branch</label>
         <select id="gitCheckout" class="form-control"></select>
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Checkout
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Checkout</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Push dialog -->
@@ -407,14 +358,8 @@
       <spark-progress id="gitPushProgress"
           indeterminate showProgressMessage showCancel visible="false">
       </spark-progress>
-      <div class="modal-footer">
-        <spark-dialog-button id="gitPushClose">
-          Close
-        </spark-dialog-button>
-        <spark-dialog-button id="gitPush" submit>
-          Push
-        </spark-dialog-button>
-      </div>
+      <spark-dialog-button id="gitPushClose">Cancel</spark-dialog-button>
+      <spark-dialog-button id="gitPush" submit>Push</spark-dialog-button>
     </spark-dialog>
 
     <!-- About dialog -->
@@ -432,11 +377,8 @@
           </label>
         </div>
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button submit focused>
-          Close
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button dismiss focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- Settings dialog -->
@@ -534,11 +476,8 @@
           </div>
         </div>
       </template>
-      <div class="modal-footer">
-        <spark-dialog-button submit focused>
-          Close
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button submit focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git authentication dialog -->
@@ -556,14 +495,9 @@
               placeholder="Required">
         </div>
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit>
-          Login
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Login</spark-dialog-button>
     </spark-dialog>
 
     <!-- Publish on webstore -->
@@ -586,25 +520,17 @@
             placeholder="abcdefghijklmnopqrstuvwxyzabcdef" pattern="[a-z]{32}"
             spellcheck="false" autosave>
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button submit focused>
-          Publish
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit focused>Publish</spark-dialog-button>
     </spark-dialog>
 
     <!-- Properties dialog -->
     <spark-dialog id="propertiesDialog" title="Properties">
       <div id="body">
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button submit focused>
-          Close
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button dismiss focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- Chrome WebStore published dialog -->
@@ -613,14 +539,13 @@
         An updated version of your application has been uploaded and
         published. You can now see it on the Chrome Web Store.
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button id="webStorePublishedAction">
-          Open in the WebStore
-        </spark-dialog-button>
-        <spark-dialog-button submit focused>
-          Close
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button id="webStorePublishedAction">
+        Open in Chrome Web Store
+      </spark-dialog-button>
+      <spark-dialog-button dismiss focused>
+        Close
+      </spark-dialog-button>
     </spark-dialog>
 
     <!-- Chrome WebStore first upload dialog -->
@@ -630,14 +555,13 @@
         You still need to fill out some additional information in the
         Developer Dashboard before publishing it.
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button id="webStoreUploadedAction">
-          Open in the Developer Dashboard
-        </spark-dialog-button>
-        <spark-dialog-button submit focused>
-          Close
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button id="webStoreUploadedAction">
+        Open in the Developer Dashboard
+      </spark-dialog-button>
+      <spark-dialog-button submit focused>
+        Close
+      </spark-dialog-button>
     </spark-dialog>
 
     <!-- Project remove dialog -->
@@ -648,17 +572,16 @@
         disk or choose "Remove Reference" if you'd like to remove it from
         the list of projects in Spark but keep your files on disk.
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button id="projectRemoveDeleteButton" submit>
-          Delete
-        </spark-dialog-button>
-        <spark-dialog-button id="projectRemoveRemoveReferenceButton" submit>
-          Remove Reference
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>
+        Cancel
+      </spark-dialog-button>
+      <spark-dialog-button id="projectRemoveDeleteButton" submit primary="false">
+        Delete
+      </spark-dialog-button>
+      <spark-dialog-button id="projectRemoveRemoveReferenceButton" submit>
+        Remove Reference
+      </spark-dialog-button>
     </spark-modal>
 
     <!-- File remove dialog -->
@@ -669,17 +592,16 @@
         disk or choose "Remove Reference" if you'd like to remove it from
         Spark but keep the file on disk.
       </div>
-      <div class="modal-footer">
-        <spark-dialog-button cancel>
-          Cancel
-        </spark-dialog-button>
-        <spark-dialog-button id="fileRemoveDeleteButton" submit>
-          Delete
-        </spark-dialog-button>
-        <spark-dialog-button id="fileRemoveRemoveReferenceButton" submit>
-          Remove Reference
-        </spark-dialog-button>
-      </div>
+
+      <spark-dialog-button cancel>
+        Cancel
+      </spark-dialog-button>
+      <spark-dialog-button id="fileRemoveDeleteButton" submit primary="false">
+        Delete
+      </spark-dialog-button>
+      <spark-dialog-button id="fileRemoveRemoveReferenceButton" submit>
+        Remove Reference
+      </spark-dialog-button>
     </spark-modal>
   </template>
 
