@@ -3,8 +3,6 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("packages/spark_widgets/common/spark_widget.css");
-@import url("packages/bootjack/css/bootstrap.min.css");
-@import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
 /* Order is important */
