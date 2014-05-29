@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html">
+<link rel="import" href="../../../packages/spark_widgets/spark_modal/spark_modal.html">
+
+<polymer-element name="spark-dialog" extends="spark-widget"
+    attributes="title animation">
+  <template>
+    <link rel="stylesheet" href="spark_dialog.css">
+
+    <spark-modal id="modal" animation="{{animation}}">
+      <template if="{{title != null}}">
+        <div id="header">
+          <h4 id="title" class="modal-title">{{title}}</h4>
+          <spark-button id="closingX" flat round overlayToggle>
+            &times;
+          </spark-button>
+        </div>
+      </template>
+
+      <div id="body">
+        <content></content>
+      </div>
+
+      <div id="footer">
+        <!--content select="spark-dialog-button"></content-->
+      </div>
+    </spark-modal>
+  </template>
+
+  <script type="application/dart;component=1" src="spark_dialog.dart"></script>
+</polymer-element>
