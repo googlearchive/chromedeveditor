@@ -135,8 +135,8 @@ class Index {
 
   Future updateIndex([bool updateSha=true]) {
     return walkFilesAndUpdateIndex(_store.root, updateSha).then(
-        (List<String> filePaths) {
-      _updateDeletedFiles(filePaths);
+        (List<FileStatus> statuses) {
+      _updateDeletedFiles(statuses);
       return new Future.value();
     });
   }
@@ -244,29 +244,28 @@ class Index {
    * Walks over all the files in the working tree. Returns sha of the
    * working tree.
    */
-   Future<List<String>> walkFilesAndUpdateIndex(chrome.DirectoryEntry root,
+   Future<List<FileStatus>> walkFilesAndUpdateIndex(chrome.DirectoryEntry root,
        bool updateSha) {
-     List<String> filePaths = [];
+     List<FileStatus> fileStatuses = [];
      return FileOps.listFiles(root).then((List<chrome.ChromeFileEntry> entries) {
        if (entries.isEmpty) {
-         return filePaths;
+         deleteIndexForEntry(root.fullPath);
+         return fileStatuses;
        }
 
        return Future.forEach(entries, (chrome.Entry entry) {
          if (entry.name == '.git') {
-           return filePaths;
+           return fileStatuses;
          }
 
          if (entry.isDirectory) {
-           return walkFilesAndUpdateIndex(entry, updateSha).then(
-               (List<String> paths) {
-             filePaths.addAll(paths);
-             return filePaths;
+           return walkFilesAndUpdateIndex(entry, updateSha).then((statuses) {
+             fileStatuses.addAll(statuses);
            });
          } else {
            // don't update index for untracked files.
            if (_statusIdx[entry.fullPath] != null) {
-             filePaths.add(entry.fullPath);
+             fileStatuses.add(_statusIdx[entry.fullPath]);
              if (updateSha) {
                return getShaForEntry(entry, 'blob').then((String sha) {
                  return entry.getMetadata().then((data) {
@@ -280,17 +279,33 @@ class Index {
              }
            }
          }
-      }).then((_) {
-         return filePaths;
+       }).then((_) {
+         if (fileStatuses.isEmpty) {
+           deleteIndexForEntry(root.fullPath);
+         } else if (fileStatuses.any((status) => status.type
+             != FileStatusType.COMMITTED)) {
+           FileStatus status = FileStatus.createForDirectory(root);
+           status.type = FileStatusType.MODIFIED;
+           _statusIdx[root.fullPath] = status;
+           fileStatuses.add(status);
+         } else {
+           FileStatus status = FileStatus.createForDirectory(root);
+           status.type = FileStatusType.COMMITTED;
+           status.path = root.fullPath;
+           _statusIdx[root.fullPath] = status;
+           fileStatuses.add(status);
+         }
+         return fileStatuses;
        });
-    });
-  }
+     });
+   }
 
   /**
    * Update the index saving the information for deleted files. If the files
    * are added back, they will be restored back and not treated as untracked.
    */
-  void _updateDeletedFiles(List<String> filePaths) {
+  void _updateDeletedFiles(List<FileStatus> statuses) {
+    List<String> filePaths = statuses.map((status) => status.path).toList();
     _statusIdx.forEach((String filePath, FileStatus status) {
       if (!filePaths.contains(filePath)) {
         status.deleted = true;
@@ -360,6 +375,12 @@ class FileStatus {
         return status;
       });
     });
+  }
+
+  static FileStatus createForDirectory(chrome.Entry entry) {
+    FileStatus status = new FileStatus();
+    status.path = entry.fullPath;
+    return status;
   }
 
   FileStatus.fromMap(Map m) {
