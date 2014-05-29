@@ -1308,7 +1308,7 @@ class ProjectRemoveAction extends SparkAction implements ContextAction {
 
     Dialog _dialog =
         spark.createDialog(spark.getDialogElement('#projectRemoveDialog'));
-    _dialog.element.querySelector("#projectRemoveProjectName").text =
+    _dialog.getElement("#projectRemoveProjectName").text =
         project.name;
     _dialog.getElement("#projectRemoveDeleteButton")
         .onClick.listen((_) => _deleteProject(project));
@@ -1353,7 +1353,7 @@ class TopLevelFileRemoveAction extends SparkAction implements ContextAction {
 
     Dialog _dialog =
         spark.createDialog(spark.getDialogElement('#fileRemoveDialog'));
-    _dialog.element.querySelector("#fileRemoveFileName").text =
+    _dialog.getElement("#fileRemoveFileName").text =
         file.name;
     _dialog.getElement("#fileRemoveDeleteButton")
         .onClick.listen((_) => _deleteFile(file));
