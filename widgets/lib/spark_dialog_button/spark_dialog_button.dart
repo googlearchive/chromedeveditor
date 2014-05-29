@@ -25,11 +25,11 @@ class SparkDialogButton extends SparkButton {
     assert([submit, cancel, dismiss].where((e) => e == true).length <= 1);
 
     if (submit || dismiss) {
-      primary = true;
-      raised = true;
+      if (primary == null) primary = true;
+      if (raised == null) raised = true;
     } else {
-      primary = false;
-      flat = true;
+      if (primary == null) primary = false;
+      if (flat == null) flat = true;
     }
     if (submit || dismiss || cancel) {
       // spark-overlay analyzes all clicks and auto-closes if the clicked
