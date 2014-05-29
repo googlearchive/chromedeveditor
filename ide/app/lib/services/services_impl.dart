@@ -354,8 +354,13 @@ class AnalyzerServiceImpl extends ServiceImpl {
     analyzer.Element element = analyzer.ElementLocator.locate(node);
     if (element == null) return null;
 
-    if (element.nameOffset == -1 || element.source == null) {
-      return null;
+    if (element.nameOffset == -1) {
+      if (element is analyzer.ConstructorElement) {
+        analyzer.ConstructorElement constructorElement = element;
+        element = constructorElement.enclosingElement;
+      } else if (element.source == null) {
+        return null;
+      }
     }
 
     if (element.source is analyzer.FileSource) {
