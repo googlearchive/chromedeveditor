@@ -4,7 +4,7 @@
 
 // App class. Implements the windowless top part of Spark app that
 // caches/saves/restores settings, manages app's window(s), and performs UI
-// ui switching when requested.
+// switching when requested.
 var App = function() {
   this.uis_ = [ "spark_polymer.html", "spark.html" ];
   this.DEFAULT_UI_ = 0;
@@ -30,20 +30,6 @@ App.prototype.launch = function(ui_opt) {
     delete this.editorWin_;
   }
 
-  var div = document.createElement('div');
-  if (div.createShadowRoot == null) {
-    chrome.app.window.create(
-        'cannot_launch/cannot_launch.htm', {
-        frame: 'chrome',
-        bounds: {
-          width: 600,
-          height: 220
-        },
-        resizable: false
-    });
-    return;
-  }
-
   this.editorWin_ = new EditorWindow(this);
 };
 
@@ -52,7 +38,6 @@ App.prototype.switchUi = function() {
       (this.uis_.indexOf(this.settings.ui) + 1) % this.uis_.length;
   this.launch(this.uis_[nextSkinIdx]);
 };
-
 
 // EditorWindow class. Encapsulates the state of a Spark app's main window.
 var EditorWindow = function(app) {
