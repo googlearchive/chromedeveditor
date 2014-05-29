@@ -53,10 +53,18 @@ class Index {
   void createIndexForEntry(FileStatus status) {
     deleteIndexForEntry(status.path);
     status.type = FileStatusType.COMMITTED;
-    updateIndexForEntry(status);
+    updateIndexForFile(status);
   }
 
-  void updateIndexForEntry(FileStatus status) {
+  void updateIndexForEntry(chrome.Entry entry, FileStatus status) {
+    if (entry.isDirectory) {
+      _statusIdx[status.path] = status;
+    } else {
+      updateIndexForFile(status);
+    }
+  }
+
+  void updateIndexForFile(FileStatus status) {
 
     FileStatus oldStatus = _statusIdx[status.path];
 
@@ -273,7 +281,7 @@ class Index {
                    status.path = entry.fullPath;
                    status.sha = sha;
                    status.size = data.size;
-                   updateIndexForEntry(status);
+                   updateIndexForFile(status);
                  });
                });
              }
