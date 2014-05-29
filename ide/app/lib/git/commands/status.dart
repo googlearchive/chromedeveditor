@@ -25,35 +25,39 @@ class Status {
     });
   }
 
+  static FileStatus getStatusForEntry(ObjectStore store, chrome.Entry entry) {
+    FileStatus status = store.index.getStatusForEntry(entry);
+
+    // untracked file.
+    if (status == null) {
+      status = new FileStatus();
+
+      // Ignore status of .lock files.
+
+      // TODO (grv) : Implement gitignore support.
+      if (entry.name.endsWith('.lock')) {
+        status.type = FileStatusType.COMMITTED;
+      }
+    }
+    return status;
+  }
+
   /**
-   * Return the status for an individual file entry.
+   * Update and return the status for an individual file entry.
    */
-  static Future<FileStatus> getFileStatus(ObjectStore store,
+  static Future<FileStatus> updateAndGetStatus(ObjectStore store,
       chrome.Entry entry) {
     FileStatus status;
     return entry.getMetadata().then((chrome.Metadata data) {
-      status = store.index.getStatusForEntry(entry);
-      if (status != null &&
-          status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
+      status = getStatusForEntry(store, entry);
+
+      if (status.type == FileStatusType.UNTRACKED || entry.isDirectory) {
+        return status;
+      }
+
+      if (status.modificationTime
+          == data.modificationTime.millisecondsSinceEpoch) {
         // Unchanged file since last update.
-        return status;
-      }
-
-      // Dont't track status for new and untracked files unless explicitly
-      // added.
-      if (status == null) {
-
-        status = new FileStatus();
-
-        // Ignore status of .lock files.
-        // TODO (grv) : Implement gitignore support.
-        if (entry.name.endsWith('.lock')) {
-          status.type = FileStatusType.COMMITTED;
-        }
-        return status;
-      }
-
-      if (entry.isDirectory) {
         return status;
       }
 
@@ -64,32 +68,30 @@ class Status {
         status.sha = sha;
         status.size = data.size;
         status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
-        store.index.updateIndexForEntry(status);
-
+        store.index.updateIndexForFile(status);
       });
     }).then((_) {
-      return _updateParent(store, entry).then((_) => status);
-
+      if (status.type != FileStatusType.UNTRACKED) {
+        return _updateParent(store, entry).then((_) => status);
+      } else {
+        return new Future.value();
+      }
     });
   }
 
   static Future _updateParent(ObjectStore store, chrome.Entry entry) {
-    print('up parent');
     return entry.getParent().then((chrome.DirectoryEntry root) {
-      print(root.fullPath);
       return FileOps.listFiles(root).then((entries) {
-        bool isChanged = entries.any((entry) {
-          FileStatus status = store.index.getStatusForEntry(entry);
-            return status != null && status.type != FileStatusType.COMMITTED;
-        });
+        entries.removeWhere((e) => e.name == ".git");
+        bool isChanged = entries.any((entry) => getStatusForEntry(store,
+            entry).type != FileStatusType.COMMITTED);
         FileStatus status = FileStatus.createForDirectory(root);
         if (isChanged) {
           status.type = FileStatusType.MODIFIED;
         } else {
           status.type = FileStatusType.COMMITTED;
         }
-        store.index.updateIndexForEntry(status);
-        print('asdf');
+        store.index.updateIndexForEntry(root, status);
         if (root.fullPath != store.root.fullPath) {
           return _updateParent(store, root);
         }
