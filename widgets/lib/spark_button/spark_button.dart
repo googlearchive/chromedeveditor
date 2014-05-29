@@ -12,11 +12,11 @@ import '../common/spark_widget.dart';
 
 @CustomTag('spark-button')
 class SparkButton extends SparkWidget {
-  // [raised] is the default.
-  @published bool raised;
-  // [flat] is just a negation of [raised], provided for convenience.
-  // It's not used in the CSS.
+  // [flat] is the default.
   @published bool flat;
+  // [raised] is just a negation of [flat], provided for convenience.
+  // It's not used in the CSS.
+  @published bool raised;
   @published bool round;
   @published bool primary;
   @published bool minPadding;
@@ -36,9 +36,10 @@ class SparkButton extends SparkWidget {
     assert(raised == null || flat == null);
     if (flat != null) {
       raised = !flat;
+    } else if (raised != null) {
+      flat = !raised;
     } else {
-      raised = true;
+      flat = true;
     }
-    deliverChanges();
   }
 }
