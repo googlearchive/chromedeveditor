@@ -30,6 +30,7 @@ class SparkDialog extends SparkWidget {
     super.enteredView();
 
     _modal = $['modal'];
+    SparkWidget.enableKeyboardEvents(_modal);
   }
 
   void show() {
