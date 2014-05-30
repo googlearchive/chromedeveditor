@@ -95,7 +95,8 @@ spark-dialog {
   flex: 1;
   text-overflow: ellipsis;
   color: #666;
-  border-bottom: 1px solid #ddd;
+  border: 1px solid #DDD;
+  border-radius: 3px;
   padding: 5px;
   text-align: center;
 }
