@@ -450,9 +450,9 @@
       <div class="form-group">
         <label class="control-label">Git</label>
         <div>
-          <spark-dialog-button on-click="{{onResetGit}}">
+          <spark-button raised on-click="{{onResetGit}}">
             Clear Git Credentials
-          </spark-dialog-button>
+          </spark-button>
           <span id="gitResetSettingsDone">Done</span>
         </div>
       </div>
@@ -470,7 +470,7 @@
         <div class="form-group">
           <label class="control-label">Preferences</label>
           <div>
-            <spark-button on-click="{{onResetPreference}}">
+            <spark-button raised on-click="{{onResetPreference}}">
               Reset Preferences
             </spark-button>
             <span id="preferenceResetResult"></span>
@@ -478,7 +478,7 @@
         </div>
       </template>
 
-      <spark-dialog-button submit focused>Close</spark-dialog-button>
+      <spark-dialog-button dismiss focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git authentication dialog -->
