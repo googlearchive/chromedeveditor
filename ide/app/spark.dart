@@ -1788,8 +1788,7 @@ class SearchAction extends SparkAction {
 }
 
 class GotoDeclarationAction extends SparkAction {
-  static const String TIMEOUT_ERROR =
-      "Declaration information not available until analyzing is finished";
+  static const String TIMEOUT_ERROR = "Declaration information not yet available";
   static const String NOT_FOUND_ERROR = "No declaration found";
 
   AnalyzerService _analysisService;
