@@ -46,9 +46,6 @@ defineTests() {
     });
 
     test('persist workspace roots', () {
-      // Disabled because it doesn't work on Chrome < 31.
-      if (isDart2js()) return null;
-
       var prefs = new MapPreferencesStore();
       ws.Workspace workspace = new ws.Workspace(prefs);
       return getPackageDirectoryEntry().then((chrome.DirectoryEntry dir) {
