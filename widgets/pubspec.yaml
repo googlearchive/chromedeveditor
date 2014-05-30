@@ -14,4 +14,17 @@ dev_dependencies:
 
 transformers:
 - polymer:
-    entry_points: example/index.html
+    entry_points:
+      - example/index.html
+      - example/spark_button/index.html
+      - example/spark_icon/index.html
+      - example/spark_menu/index.html
+      - example/spark_menu_button/index.html
+      - example/spark_menu_item/index.html
+      - example/spark_overlay/index.html
+      - example/spark_selection/index.html
+      - example/spark_selector/index.html
+      - example/spark_splitter/index.html
+      - example/spark_split_view/index.html
+      - example/spark_toggle_button/index.html
+      - example/spark_toolbar/index.html
