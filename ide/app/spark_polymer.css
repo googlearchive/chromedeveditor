@@ -95,6 +95,8 @@ img.ace-tooltip {
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
 }
 
 div.ace_search.right {
