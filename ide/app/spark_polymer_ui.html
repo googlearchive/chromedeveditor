@@ -408,11 +408,16 @@
               <span class="settings-label"></span>
               <spark-button id="themeMinus" class="plus-minus-button"
                   flat round noPadding on-click="{{onThemeMinus}}">
-                <span class="glyphicon glyphicon-chevron-left"></span>
+                <!--TODO(ussuri): Use SVG <use> directives instead here and below.-->
+                <svg viewBox="0 0 24 24">
+                  <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
+                </svg>  
               </spark-button>
               <spark-button id="themePlus" class="plus-minus-button"
                   flat round noPadding on-click="{{onThemePlus}}">
-                <span class="glyphicon glyphicon-chevron-right"></span>
+                <svg viewBox="0 0 24 24">
+                  <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
+                </svg>  
               </spark-button>
             </spark-toolbar>
           </div>
@@ -427,11 +432,15 @@
             <span class="settings-label"></span>
             <spark-button id="fontMinus" class="plus-minus-button"
                 flat round noPadding on-click="{{onFontSmaller}}">
-              <span class="glyphicon glyphicon-minus"></span>
+              <svg viewBox="0 0 24 24">
+                <path d="M19,13H5v-2h14V13z"></path>
+              </svg>
             </spark-button>
             <spark-button id="fontPlus" class="plus-minus-button"
                 flat round noPadding on-click="{{onFontLarger}}">
-              <span class="glyphicon glyphicon-plus"></span>
+              <svg viewBox="0 0 24 24">
+                <path d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>
+              </svg>
             </spark-button>
           </spark-toolbar>
         </div>
@@ -445,11 +454,15 @@
             <span class="settings-label"></span>
             <spark-button id="keysMinus" class="plus-minus-button"
                 flat round noPadding on-click="{{onKeysMinus}}">
-              <span class="glyphicon glyphicon-chevron-left"></span>
+              <svg viewBox="0 0 24 24">
+                <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
+              </svg>  
             </spark-button>
             <spark-button id="keysPlus" class="plus-minus-button"
                 flat round noPadding on-click="{{onKeysPlus}}">
-              <span class="glyphicon glyphicon-chevron-right"></span>
+              <svg viewBox="0 0 24 24">
+                <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
+              </svg>  
             </spark-button>
           </spark-toolbar>
         </div>
