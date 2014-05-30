@@ -146,7 +146,7 @@ class TabView {
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
   bool _tabItemsLayoutListenerEnabled = false;
-  int _lastLayoutWidth = 0;
+  num _lastLayoutWidth = 0;
   StreamSubscription<MouseEvent> _tabBarMouseLeaveStream;
 
   TabView(this.parentElement) {

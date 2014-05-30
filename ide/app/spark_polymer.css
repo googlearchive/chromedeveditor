@@ -95,6 +95,8 @@ img.ace-tooltip {
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
 }
 
 div.ace_search.right {
@@ -432,10 +434,6 @@ button.ace_searchbtn_close:active {
   border-radius: 5px;
 }
 
-.outlineItem >a {
-  display: block;
-}
-
 .outlineItem {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -485,14 +483,9 @@ li.outlineItem.topLevel.class {
   color: #77c;
 }
 
-.outlineItem.topLevel.variable .returnType,
-.outlineItem.property .returnType {
-  opacity: .8;
-}
-
-.outlineItem.topLevel.variable .returnType:before,
-.outlineItem.property .returnType:before {
-  content: ' \02014  ';
+.outlineItem .returnType {
+  color: #666;
+  margin-left: 0.5em;
 }
 
 #toggleOutlineButton {
@@ -586,7 +579,6 @@ li.outlineItem a {
 #markdownContent {
   -webkit-font-smoothing: antialiased;
   background-color: rgba(39, 40, 34, 1.0);
-  /*border: 1px solid rgba(255, 255, 255, 0.2);*/
   bottom: 0px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14px;
