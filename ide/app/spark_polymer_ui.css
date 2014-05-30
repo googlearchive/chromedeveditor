@@ -17,6 +17,13 @@
   top: 0;
 }
 
+spark-dialog {
+  top: 72px;
+  left: 50%;
+  width: 512px;
+  margin-left: -256px;
+}
+
 .toolbar {
   height: 48px;
   border-bottom: 1px solid #ddd;

@@ -5,12 +5,11 @@
 @import url("../common/spark_widget.css");
 
 :host {
+  position: absolute;
 }
 
 #modal {
-  width: 512px;
-  left: calc(50% - 256px);
-  box-sizing: border-box;
+  position: relative;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
