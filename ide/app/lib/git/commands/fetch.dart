@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../constants.dart';
+import '../exception.dart';
 import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
@@ -34,11 +35,13 @@ class Fetch {
   chrome.DirectoryEntry root;
   ObjectStore store;
   Function progress;
+  String branchName;
 
   Fetch(this.options){
     root = options.root;
     store = options.store;
     progress = options.progressCallback;
+    branchName = options.branchName == null ? 'master' : options.branchName;
 
     if (progress == null) progress = nopFunction;
   }
@@ -57,31 +60,30 @@ class Fetch {
           password);
 
       // get current branch.
-      return store.getHeadRef().then((String headRefName) {
-        return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-          GitRef branchRef = refs.firstWhere((GitRef ref) =>
-              ref.name == headRefName);
+      String headRefName = 'refs/heads/' + branchName;
+      return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
+        GitRef branchRef = refs.firstWhere((GitRef ref) =>
+            ref.name == headRefName);
 
-          if (branchRef != null) {
-            // see if we know about the branch's head commit. If so we're up to
-            // date. If not, request from remote.
-            return store.getRemoteHeadForRef(headRefName).then((sha) {
-              if (sha == branchRef.sha) {
-                // Branch is uptodate
-                throw "fetch up to date.";
-              } else {
-                return _handleFetch(branchRef, branchRef, fetcher);
-              }
-            });
-          } else {
-            //TODO better error handling.
-            throw "Remote branch not found";
-          }
-        });
-      }, onError: (e) {
-        // TODO throw branch not found error.
-        throw "branch not found.";
+        if (branchRef != null) {
+          // see if we know about the branch's head commit. If so we're up to
+          // date. If not, request from remote.
+          return store.getRemoteHeadForRef(headRefName).then((sha) {
+            if (sha == branchRef.sha) {
+              // Branch is uptodate
+              return _handleFetch(branchRef, branchRef, fetcher);
+              //throw "fetch up to date.";
+            } else {
+              return _handleFetch(branchRef, branchRef, fetcher);
+            }
+          });
+        } else {
+          //TODO better error handling.
+          throw "Remote branch not found";
+        }
       });
+    }, onError: (e) {
+      throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
     });
   }
 
@@ -115,6 +117,9 @@ class Fetch {
       return store.getCommitGraph([sha], 32).then((CommitGraph graph) {
         List<String> haveRefs = graph.commits.map((CommitObject commit)
             => commit.treeSha).toList();
+        if (haveRefs.isEmpty) {
+          haveRefs = null;
+        }
         return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
             null, graph.nextLevel, null, progress).then((PackParseResult result) {
           List<int> packSha = result.data.sublist(result.data.length - 20);
