@@ -11,6 +11,7 @@ import 'package:unittest/unittest.dart';
 import 'files_mock.dart';
 import '../lib/package_mgmt/pub.dart';
 import '../lib/services.dart';
+import '../lib/utils.dart';
 
 defineTests() {
   Workspace workspace = new Workspace();
