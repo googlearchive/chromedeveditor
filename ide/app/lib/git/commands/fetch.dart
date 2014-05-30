@@ -86,8 +86,6 @@ class Fetch {
               GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
         }
       });
-    }, onError: (e) {
-      throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
     });
   }
 
@@ -125,7 +123,8 @@ class Fetch {
           haveRefs = null;
         }
         return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
-            null, graph.nextLevel, null, progress).then((PackParseResult result) {
+            options.depth, graph.nextLevel, null, progress).then(
+                (PackParseResult result) {
           List<int> packSha = result.data.sublist(result.data.length - 20);
           Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
               packSha);

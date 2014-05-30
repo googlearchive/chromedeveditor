@@ -47,6 +47,7 @@ class GitErrorConstants {
   static final String GIT_AUTH_REQUIRED = "git.auth_required";
   static final String GIT_HTTP_404_ERROR = "git.http_404_error";
   static final String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
+  static final String GIT_WORKING_TREE_NOT_CLEAN = "git.working_tree_not_clean";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
 }
