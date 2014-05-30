@@ -403,17 +403,18 @@
         <div class="form-group" id="changeTheme">
           <label class="control-label">Editor theme</label>
           <div>
-            <span class="settings-label"></span>
-            <span class="plus-minus-container">
-              <a href="#" id="themeMinus" class="plus-minus-button"
-                  on-click="{{onThemeMinus}}">
+            <spark-toolbar class="plus-minus-container"
+                horizontal justify="spaced">
+              <span class="settings-label"></span>
+              <spark-button id="themeMinus" class="plus-minus-button"
+                  flat round noPadding on-click="{{onThemeMinus}}">
                 <span class="glyphicon glyphicon-chevron-left"></span>
-              </a>
-              <a href="#" id="themePlus" class="plus-minus-button"
-                  on-click="{{onThemePlus}}">
+              </spark-button>
+              <spark-button id="themePlus" class="plus-minus-button"
+                  flat round noPadding on-click="{{onThemePlus}}">
                 <span class="glyphicon glyphicon-chevron-right"></span>
-              </a>
-            </span>
+              </spark-button>
+            </spark-toolbar>
           </div>
         </div>
       </template>
@@ -421,41 +422,43 @@
       <div class="form-group" id="changeFont">
         <label class="control-label">Editor font</label>
         <div>
-          <span class="settings-label"></span>
-          <span class="plus-minus-container">
-            <a href="#" id="fontMinus" class="plus-minus-button"
-                on-click="{{onFontSmaller}}">
+          <spark-toolbar class="plus-minus-container"
+              horizontal justify="spaced">
+            <span class="settings-label"></span>
+            <spark-button id="fontMinus" class="plus-minus-button"
+                flat round noPadding on-click="{{onFontSmaller}}">
               <span class="glyphicon glyphicon-minus"></span>
-            </a>
-            <a href="#" id="fontPlus" class="plus-minus-button"
-                on-click="{{onFontLarger}}">
+            </spark-button>
+            <spark-button id="fontPlus" class="plus-minus-button"
+                flat round noPadding on-click="{{onFontLarger}}">
               <span class="glyphicon glyphicon-plus"></span>
-            </a>
-          </span>
+            </spark-button>
+          </spark-toolbar>
         </div>
       </div>
 
       <div class="form-group" id="changeKeys">
         <label class="control-label">Key bindings</label>
         <div>
-          <span class="settings-label"></span>
-          <span class="plus-minus-container">
-            <a href="#" id="keysMinus" class="plus-minus-button"
-                on-click="{{onKeysMinus}}">
+          <spark-toolbar class="plus-minus-container"
+              horizontal justify="spaced">
+            <span class="settings-label"></span>
+            <spark-button id="keysMinus" class="plus-minus-button"
+                flat round noPadding on-click="{{onKeysMinus}}">
               <span class="glyphicon glyphicon-chevron-left"></span>
-            </a>
-            <a href="#" id="keysPlus" class="plus-minus-button"
-                on-click="{{onKeysPlus}}">
+            </spark-button>
+            <spark-button id="keysPlus" class="plus-minus-button"
+                flat round noPadding on-click="{{onKeysPlus}}">
               <span class="glyphicon glyphicon-chevron-right"></span>
-            </a>
-          </span>
+            </spark-button>
+          </spark-toolbar>
         </div>
       </div>
 
       <div class="form-group">
         <label class="control-label">Git</label>
         <div>
-          <spark-button raised on-click="{{onResetGit}}">
+          <spark-button flat on-click="{{onResetGit}}">
             Clear Git Credentials
           </spark-button>
           <span id="gitResetSettingsDone">Done</span>
@@ -475,7 +478,7 @@
         <div class="form-group">
           <label class="control-label">Preferences</label>
           <div>
-            <spark-button raised on-click="{{onResetPreference}}">
+            <spark-button flat on-click="{{onResetPreference}}">
               Reset Preferences
             </spark-button>
             <span id="preferenceResetResult"></span>

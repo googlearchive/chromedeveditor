@@ -92,43 +92,28 @@ spark-dialog {
 }
 
 #settingsDialog .settings-label {
-  display: inline-block;
-  width: 130px;
+  flex: 1;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  background: #EEE;
-  border: 1px solid #DDD;
-  padding: 2px 5px;
+  color: #666;
+  border-bottom: 1px solid #ddd;
+  padding: 5px;
+  text-align: center;
 }
 
 #settingsDialog #directory-label {
   height: 24px;
-  width: 250px;
+  width: 100%;
 }
 
 #settingsDialog .plus-minus-container {
-  margin-left: 15px;
+  width: 100%;
+  background-color: white;
 }
 
 #settingsDialog .plus-minus-button {
-  background-color: #3a84c3;
-  border-radius: 5px;
-  color: #fff;
-  display: inline;
-  overflow: hidden;
-  padding: 5px 8px;
-  margin-right: 6px;
-}
-
-#settingsDialog .plus-minus-button:hover {
-  color: #fff;
-  text-decoration: none;
-}
-
-#settingsDialog .plus-minus-button:active {
-  background-color: #19197A;
-  color: #fff;
-  text-decoration: none;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
 }
 
 #gitResetSettingsDone {
