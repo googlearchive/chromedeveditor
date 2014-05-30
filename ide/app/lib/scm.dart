@@ -111,6 +111,10 @@ class ScmManager {
       return new Future.value();
     }
   }
+
+  void removeProject(Project project) {
+    _operations.remove(project);
+  }
 }
 
 /**
@@ -198,7 +202,6 @@ class FileStatus {
   static const FileStatus COMMITTED = const FileStatus._('committed');
   static const FileStatus DELETED = const FileStatus._('deleted');
   static const FileStatus ADDED = const FileStatus._('added');
-
 
   final String status;
 
