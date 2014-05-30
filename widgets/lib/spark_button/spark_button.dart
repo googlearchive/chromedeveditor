@@ -15,10 +15,10 @@ class SparkButton extends SparkWidget {
   // [flat] is the default.
   @published bool flat;
   // [raised] is just a negation of [flat], provided for convenience.
-  // It's not used in the CSS.
   @published bool raised;
   @published bool round;
   @published bool primary;
+  // TODO(ussuri): Transition to padding="small" etc.
   @published bool minPadding;
   @published bool noPadding;
   @published bool disabled;

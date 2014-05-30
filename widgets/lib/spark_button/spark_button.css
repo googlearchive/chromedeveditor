@@ -103,6 +103,10 @@
   padding: 5px 10px;
 }
 
+:host([maxPadding]) #content {
+  padding: 5px 20px;
+}
+
 :host([minPadding]) #content {
   padding: 2px;
 }
@@ -139,4 +143,5 @@
 ::content * {
   /* Needed to put ink behind the contents */
   position: relative;
+  pointer-events: none;
 }
