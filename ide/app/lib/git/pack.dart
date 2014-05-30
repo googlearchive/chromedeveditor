@@ -48,7 +48,7 @@ class Pack {
 
   Pack(this.data, [this._store, this._cancel]);
 
-  Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
+  List<int> _peek(int length) => data.sublist(_offset, _offset + length);
 
   Uint8List _rest() => data.sublist(_offset);
 
@@ -215,7 +215,7 @@ class Pack {
         object.desiredOffset = findDeltaBaseOffset(header);
         break;
       case ObjectTypes.REF_DELTA:
-        Uint8List shaBytes = _peek(20);
+        List<int> shaBytes = _peek(20);
         _advance(20);
         object.baseSha = shaBytes.map((int byte) {
           _padString(byte.toRadixString(16), 2, '0');

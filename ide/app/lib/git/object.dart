@@ -58,7 +58,7 @@ abstract class GitObject {
 class TreeEntry {
 
   String name;
-  Uint8List shaBytes;
+  List<int> shaBytes;
   bool isBlob;
 
   String get sha => shaBytesToString(shaBytes);
