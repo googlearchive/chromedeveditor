@@ -455,7 +455,7 @@ abstract class OutlineMember extends OutlineEntry {
 
   Map toMap() {
     return super.toMap()..addAll({
-      "static": static,
+      "static": static
     });
   }
 }
@@ -466,12 +466,20 @@ abstract class OutlineMember extends OutlineEntry {
 class OutlineMethod extends OutlineMember {
   static String _type = "method";
 
-  OutlineMethod([String name]) : super(name);
+  String returnType;
+
+  OutlineMethod([String name, this.returnType]) : super(name);
+
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    returnType = mapData["returnType"];
+  }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
 
@@ -480,7 +488,8 @@ class OutlineMethod extends OutlineMember {
  */
 class OutlineProperty extends OutlineMember {
   static String _type = "class-variable";
-  String returnType = null;
+
+  String returnType;
 
   OutlineProperty([String name, this.returnType]) : super(name);
 
@@ -503,23 +512,27 @@ class OutlineProperty extends OutlineMember {
 class OutlineAccessor extends OutlineMember {
   static String _type = "class-accessor";
 
-  bool setter = false;
+  String returnType;
+  bool setter;
 
-  OutlineAccessor([String name, this.setter]) : super(name);
+  OutlineAccessor([String name, this.returnType, this.setter = false]) :
+      super(name);
 
   /**
    * Populates values and children from a map
    */
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
+    returnType = mapData["returnType"];
     setter = mapData["setter"];
   }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-      "setter": setter,
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    m['setter'] = setter;
+    return m;
   }
 }
 
@@ -529,12 +542,20 @@ class OutlineAccessor extends OutlineMember {
 class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   static String _type = "function";
 
-  OutlineTopLevelFunction([String name]) : super(name);
+  String returnType;
+
+  OutlineTopLevelFunction([String name, this.returnType]) : super(name);
+
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    returnType = mapData["returnType"];
+  }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
 
@@ -543,7 +564,8 @@ class OutlineTopLevelFunction extends OutlineTopLevelEntry {
  */
 class OutlineTopLevelVariable extends OutlineTopLevelEntry {
   static String _type = "top-level-variable";
-  String returnType = null;
+
+  String returnType;
 
   OutlineTopLevelVariable([String name, this.returnType]) : super(name);
 
