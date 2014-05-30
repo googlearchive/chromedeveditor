@@ -37,6 +37,10 @@
   justify-content: space-around;
 }
 
+:host([justify=edges]:host) {
+  justify-content: space-between;
+}
+
 :host([horizontal]) ::content > * {
   margin: 0 2px;
 }
