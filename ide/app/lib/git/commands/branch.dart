@@ -55,9 +55,10 @@ class Branch {
     }, onError: (e) {
       return _getHeadRef(store, branchName, remoteBranchName).then(
           (String sha) {
-        return store.createNewRef('refs/heads/' + branchName, sha).then((_) {
-          Fetch fetch = new Fetch(options);
-          return fetch.fetch();
+        options.depth = 1;
+        Fetch fetch = new Fetch(options);
+        return fetch.fetch().then((_) {
+          return store.createNewRef('refs/heads/' + branchName, sha);
         });
       });
     });
