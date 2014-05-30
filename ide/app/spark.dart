@@ -591,7 +591,7 @@ abstract class Spark
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
-      _errorDialog.getElement("[submit]").onClick.listen(_hideBackdropOnClick);
+      _errorDialog.getElement("[dismiss]").onClick.listen(_hideBackdropOnClick);
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
@@ -2219,15 +2219,9 @@ class GitCloneAction extends SparkActionWithDialog {
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
   }
 
-  void _onClose() {
-     _hide();
-  }
-
   void _invoke([Object context]) {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
-
-    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
 
     _show();
   }
