@@ -116,7 +116,7 @@ class HttpFetcher {
           packProgress({'pct': 0, 'msg': "Parsing pack data"});
         }
 
-        // TODO add UploadPackParser class.
+
         UploadPackParser parser = getUploadPackParser(cancel);
         return parser.parse(buffer, store, packProgress).then(
             (PackParseResult obj) {
