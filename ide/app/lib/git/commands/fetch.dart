@@ -70,16 +70,20 @@ class Fetch {
           // date. If not, request from remote.
           return store.getRemoteHeadForRef(headRefName).then((sha) {
             if (sha == branchRef.sha) {
-              // Branch is uptodate
-              return _handleFetch(branchRef, branchRef, fetcher);
-              //throw "fetch up to date.";
+              return store.getCommitGraph([sha]).then((CommitGraph graph) {
+                if (graph.commits.isNotEmpty) {
+                  throw new GitException(GitErrorConstants.GIT_BRANCH_UPTO_DATE);
+                } else {
+                  return _handleFetch(branchRef, branchRef, fetcher);
+                }
+              });
             } else {
               return _handleFetch(branchRef, branchRef, fetcher);
             }
           });
         } else {
-          //TODO better error handling.
-          throw "Remote branch not found";
+          return new GitException(
+              GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
         }
       });
     }, onError: (e) {
