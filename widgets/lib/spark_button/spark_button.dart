@@ -19,8 +19,7 @@ class SparkButton extends SparkWidget {
   @published bool raised;
   @published bool round;
   @published bool primary;
-  @published bool minPadding;
-  @published bool noPadding;
+  @published String padding;
   @published bool disabled;
   @published bool active;
 
@@ -41,5 +40,7 @@ class SparkButton extends SparkWidget {
     } else {
       flat = true;
     }
+
+    assert(['none', 'small', 'medium', 'large', 'huge'].contains(padding));
   }
 }
