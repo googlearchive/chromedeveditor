@@ -4,6 +4,8 @@
 
 library test.spark_button;
 
+export "package:polymer/init.dart";
+
 import 'dart:async' as async;
 import 'dart:html' as dom;
 
