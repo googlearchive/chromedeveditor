@@ -11,6 +11,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'constants.dart';
 import 'index.dart';
 import 'status.dart';
+import '../file_operations.dart';
 import '../options.dart';
 
 /**
@@ -37,15 +38,29 @@ class Add {
 
   /**
    * Adds the given [entries] to git. A file is already known to git is ignored.
+   */
+  static Future _addEntries(GitOptions options,
+      List<chrome.Entry> entries, List<FileStatus> statuses) {
+    return Future.forEach(entries, (chrome.Entry entry) {
+      if (entry.isDirectory) {
+        return FileOps.listFiles(entry).then((newEntries) {
+          return _addEntries(options, newEntries, statuses);
+        });
+      } else {
+        return addEntry(options, entry).then((status) {
+          statuses.add(status);
+        });
+      }
+    });
+  }
+
+  /**
+   * Adds the given [entries] to git. A file is already known to git is ignored.
    * Returns the list of updates status of the entries.
    */
   static Future<List<FileStatus>> addEntries(GitOptions options,
       List<chrome.Entry> entries) {
     List<FileStatus> statuses = [];
-    return Future.forEach(entries, (entry) {
-      return addEntry(options, entry).then((status) {
-        statuses.add(status);
-      });
-    }).then((_) => statuses);
+    return _addEntries(options, entries, statuses).then((_) => statuses);
   }
 }
