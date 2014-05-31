@@ -925,7 +925,7 @@ class ProjectLocationManager {
 
   Future<bool> _showRequestFileSystemDialog() {
     return _spark.askUserOkCancel('Please choose a folder to store your Spark projects.',
-        okButtonLabel: 'Choose Folder', title: 'Choose a main folder');
+        okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
   }
 
   /**
