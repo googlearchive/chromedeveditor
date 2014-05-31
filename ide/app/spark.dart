@@ -2336,7 +2336,8 @@ class GitAddAction extends SparkAction implements ContextAction {
 
   bool _valid(List<ws.Resource> resources) {
     return resources.any((resource) =>
-      !(resource.isFile && (resource.getMetadata('scmStatus') != 'untracked')));
+      !(resource.isFile && (resource.getMetadata('scmStatus')
+          != FileStatus.UNTRACKED)));
   }
 }
 
