@@ -14,15 +14,21 @@
   <template>
     <link rel="stylesheet" href="spark_dialog.css">
 
-    <spark-modal id="modal" animation="{{animation}}">
-      <template if="{{title != null}}">
-        <div id="header">
-          <h4 id="title" class="modal-title">{{title}}</h4>
-          <spark-button id="closingX" flat round overlayToggle>
-            &times;
-          </spark-button>
-        </div>
-      </template>
+    <spark-modal id="modal" focused animation="{{animation}}">
+      <spark-toolbar id="header" 
+          horizontal 
+          justify="edges">
+        <span id="title">{{title}}</span>
+        <spark-button id="closingX" 
+            flat
+            round
+            minPadding
+            overlayToggle>
+          <svg id="closingXGlyph" viewBox="0 0 24 24">
+            <polygon points="19,6.4 17.6,5 12,10.6 6.4,5 5,6.4 10.6,12 5,17.6 6.4,19 12,13.4 17.6,19 19,17.6 13.4,12 "></polygon>
+          </svg>
+        </spark-button>
+      </spark-toolbar>
 
       <div id="body">
         <content select="div,span,label,input,p,h4,spark-progress,template"></content>
@@ -32,7 +38,10 @@
         <!--content select=":not(spark-dialog-button)"></content-->
       </div>
 
-      <spark-toolbar id="footer" horizontal justify="right">
+      <spark-toolbar id="footer" 
+          horizontal 
+          justify="right" 
+          spacing="medium">
         <content select="spark-dialog-button"></content>
       </spark-toolbar>
     </spark-modal>

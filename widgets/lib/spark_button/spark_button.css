@@ -68,7 +68,7 @@
 
 :host(:active,
       [active]) {
-  box-shadow: 0 7px 10px 0px #ddd;
+  box-shadow: 0 10px 5px 0px #ddd;
   -webkit-transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -159,4 +159,5 @@
 ::content * {
   /* Needed to put ink behind the contents */
   position: relative;
+  pointer-events: none;
 }

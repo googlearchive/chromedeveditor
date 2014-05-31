@@ -14,8 +14,6 @@ import '../common/spark_widget.dart';
 class SparkButton extends SparkWidget {
   // [flat] is the default.
   @published bool flat;
-  // [raised] is just a negation of [flat], provided for convenience.
-  // It's not used in the CSS.
   @published bool raised;
   @published bool round;
   @published bool primary;
