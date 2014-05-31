@@ -14,13 +14,10 @@ import '../common/spark_widget.dart';
 class SparkButton extends SparkWidget {
   // [flat] is the default.
   @published bool flat;
-  // [raised] is just a negation of [flat], provided for convenience.
   @published bool raised;
   @published bool round;
   @published bool primary;
-  // TODO(ussuri): Transition to padding="small" etc.
-  @published bool minPadding;
-  @published bool noPadding;
+  @published String padding;
   @published bool disabled;
   @published bool active;
 
@@ -41,5 +38,7 @@ class SparkButton extends SparkWidget {
     } else {
       flat = true;
     }
+
+    assert(['none', 'small', 'medium', 'large', 'huge'].contains(padding));
   }
 }
