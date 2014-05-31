@@ -70,7 +70,7 @@
       [active]) {
   box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.26);
   -webkit-transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  transition: box-shadow 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #button {
