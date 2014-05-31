@@ -584,6 +584,9 @@ abstract class Spark
     return null;
   }
 
+  // TODO(ussuri): The whole show...Message/Dialog() family: polymerize,
+  // generalize and offload to SparkPolymerUI.
+
   /**
    * Show a model error dialog.
    */
@@ -595,7 +598,8 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
-    _errorDialog.getElement('#errorTitle').text = title;
+    _errorDialog.dialog.title = title;
+
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     var lines = message.split('\n');
@@ -668,18 +672,12 @@ abstract class Spark
       });
     }
 
-    if (title == null) {
-      _okCancelDialog.getShadowDomElement('#header').style.display = 'none';
-      _okCancelDialog.getShadowDomElement('#title').text = '';
-    } else {
-      _okCancelDialog.getShadowDomElement('#header').style.display = 'block';
-      _okCancelDialog.getShadowDomElement('#title').text = title;
-    }
-    Element container = _okCancelDialog.getElement('#okCancelMessage');
+    _okCancelDialog.dialog.title = title;
 
+    Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
     var lines = message.split('\n');
-    for(String line in lines) {
+    for (String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
       container.children.add(lineElement);
@@ -2299,10 +2297,12 @@ class GitCloneAction extends SparkActionWithDialog {
         spark.showSuccessMessage('Clone cancelled');
       } else if (e is SparkException && e.errorCode
           == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
-        spark.showErrorMessage('Error cloning ${projectName}',
-            'Repositories with sub-modules are currently not supported.');
+        spark.showErrorMessage('Error cloning Git project',
+            'Could not clone "${projectName}": '
+            'repositories with sub-modules are currently unsupported.');
       } else {
-        spark.showErrorMessage('Error cloning ${projectName}', '${e}');
+        spark.showErrorMessage('Error cloning Git project',
+            'Error while cloning "${projectName}":\n${e}');
       }
     }).whenComplete(() {
       _restoreDialog();
