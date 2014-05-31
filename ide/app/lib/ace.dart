@@ -20,6 +20,7 @@ import 'package:path/path.dart' as path;
 import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'markdown.dart';
 import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub_properties.dart';
@@ -59,6 +60,9 @@ class TextEditor extends Editor {
     }
     if (CssEditor.isCssFile(file)) {
       return new CssEditor._create(aceManager, file, prefs);
+    }
+    if (MarkdownEditor.isMarkdownFile(file)) {
+      return new MarkdownEditor._create(aceManager, file, prefs);
     }
     return new TextEditor._create(aceManager, file, prefs);
   }
@@ -288,6 +292,35 @@ class CssEditor extends TextEditor {
   }
 }
 
+class MarkdownEditor extends TextEditor {
+  static bool isMarkdownFile(workspace.File file) => file.name.toLowerCase()
+      .endsWith('.md');
+
+  Markdown _markdown;
+  StreamSubscription _markdownOnDirtySubscription;
+  MarkdownEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs) {
+       _markdown = new Markdown(element, file);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _markdown.activate();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _markdown.deactivate();
+  }
+
+  @override
+  void reconcile() {
+    _markdown.renderHtml();
+  }
+}
+
 /**
  * A wrapper around an Ace editor instance.
  */
@@ -453,7 +486,7 @@ class AceManager {
     var isScrolling = (_aceEditor.lastVisibleRow -
         _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
 
-    int documentHeight;
+    num documentHeight;
     if (!isScrolling) {
       var lineElements = parentElement.getElementsByClassName("ace_line");
       documentHeight = (lineElements.last.offsetTo(parentElement).y -
@@ -665,6 +698,16 @@ class AceManager {
       }
 
       setMarkers(file.getMarkers());
+      session.onChangeScrollTop.listen((_) => Timer.run(() {
+        if (outline.visible) {
+          int firstCursorOffset = currentSession.document.positionToIndex(
+              new ace.Point(_aceEditor.firstVisibleRow, 0));
+          int lastCursorOffset = currentSession.document.positionToIndex(
+              new ace.Point(_aceEditor.lastVisibleRow, 0));
+
+          outline.scrollToOffsets(firstCursorOffset, lastCursorOffset);
+        }
+      }));
     }
   }
 

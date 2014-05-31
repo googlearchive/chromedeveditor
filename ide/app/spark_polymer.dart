@@ -10,7 +10,7 @@ import 'dart:html';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 import 'package:spark_widgets/spark_button/spark_button.dart';
-import 'package:spark_widgets/spark_modal/spark_modal.dart';
+import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 
 import 'spark.dart';
 import 'spark_flags.dart';
@@ -20,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
   final _stepStopwatch = new Stopwatch()..start();
@@ -73,8 +74,8 @@ void main() {
 // TODO(devoncarew): We need to de-couple a request to close the dialog
 // from actually closing it. So, cancel() => close(), and
 // performOk() => close(), but subclasses can override.
-class SparkPolymerDialog implements SparkDialog {
-  SparkModal _dialogElement;
+class SparkPolymerDialog implements Dialog {
+  SparkDialog _dialogElement;
 
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement {
@@ -85,21 +86,25 @@ class SparkPolymerDialog implements SparkDialog {
   }
 
   @override
-  void show() {
-    if (!_dialogElement.opened) {
-      _dialogElement.toggle();
-    }
-  }
-
-  // TODO(ussuri): Currently, this never gets called (the dialog closes in
-  // another way). Make symmetrical when merging Polymer and non-Polymer.
-  @override
-  void hide() {
-    if (_dialogElement.opened) _dialogElement.toggle();
-  }
+  void show() => _dialogElement.show();
 
   @override
-  Element get element => _dialogElement;
+  void hide() => _dialogElement.hide();
+
+  @override
+  Element get dialog => _dialogElement;
+
+  @override
+  Element getElement(String selectors) =>
+      _dialogElement.querySelector(selectors);
+
+  @override
+  List<Element> getElements(String selectors) =>
+      _dialogElement.querySelectorAll(selectors);
+
+  @override
+  Element getShadowDomElement(String selectors) =>
+      _dialogElement.shadowRoot.querySelector(selectors);
 }
 
 class SparkPolymer extends Spark {
@@ -117,6 +122,18 @@ class SparkPolymer extends Spark {
         .then((_) => super.openFile())
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
+  }
+
+  Future importFolder([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFolder(resources))
+        .whenComplete(() => _systemModalComplete());
+  }
+
+  Future importFile([List<ws.Resource> resources]) {
+    return _beforeSystemModal()
+        .then((_) => super.importFile(resources))
+        .whenComplete(() => _systemModalComplete());
   }
 
   static set backdropShowing(bool showing) {
@@ -147,7 +164,7 @@ class SparkPolymer extends Spark {
       _ui.getShadowDomElement(selectors);
 
   @override
-  SparkDialog createDialog(Element dialogElement) =>
+  Dialog createDialog(Element dialogElement) =>
       new SparkPolymerDialog(dialogElement);
 
   //

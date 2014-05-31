@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<!-- Copyright (c) ``year``, Google Inc. Please see the AUTHORS file for details.
+     All rights reserved. Use of this source code is governed by a BSD-style
+     license that can be found in the LICENSE file. -->
+
+<!--
+/**
+ * ``tagName``
+ */
+-->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
+
+<polymer-element name="``tagName``" extends="spark-widget" attributes="x">
+  <template>
+    <link rel="stylesheet" href="``sourceName``.css">
+
+    <content></content>
+  </template>
+
+  <script type="application/dart;component=1" src="``sourceName``.dart"></script>
+</polymer-element>

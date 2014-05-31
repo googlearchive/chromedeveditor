@@ -20,6 +20,7 @@ dependencies:
   intl: any
   json: any
   logging: any
+  markdown: ">=0.7.0 <0.8.0"
   mime: any
   path: any
   polymer: 0.10.0-pre.11

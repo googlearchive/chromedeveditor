@@ -10,6 +10,8 @@ import 'dart:html' as html;
 import '../lib/services.dart' as services;
 import 'preferences.dart';
 
+final bool _INCLUDE_TYPES = true;
+
 /**
  * Defines a class to build an outline UI for a given block of code.
  */
@@ -62,20 +64,24 @@ class Outline {
 
   Stream get onScroll => _outlineDiv.onScroll;
 
-  int get scrollPosition => _rootList.parent.scrollTop;
+  int get scrollPosition => _rootList.parent.scrollTop.toInt();
   void set scrollPosition(int position) {
     // If the outline has not been built yet, just save the position
     _initialScrollPosition = position;
     if (_scrollTarget != null) {
-      // Hack for scrollTop not working
-      _scrollTarget.hidden = false;
-      _scrollTarget.style
-          ..position = "absolute"
-          ..height = "${_outlineDiv.clientHeight}px"
-          ..top = "${position}px";
-      _scrollTarget.scrollIntoView();
-      _scrollTarget.hidden = true;
+      _scrollIntoView(_outlineDiv.clientHeight, position);
     }
+  }
+
+  void _scrollIntoView(num top, num bottom) {
+    // Hack for scrollTop not working
+    _scrollTarget.hidden = false;
+    _scrollTarget.style
+        ..position = "absolute"
+        ..height = "${bottom - top}px"
+        ..top = "${top}px";
+    _scrollTarget.scrollIntoView();
+    _scrollTarget.hidden = true;
   }
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
@@ -165,22 +171,59 @@ class Outline {
   }
 
   void selectItemAtOffset(int cursorOffset) {
-    Map<int, OutlineItem> outlineItems = _outlineItemsByOffset;
-    if (outlineItems != null) {
-      int containerOffset = -1;
+    OutlineItem itemAtCursor = _itemAtCodeOffset(cursorOffset);
+    if (itemAtCursor != null) {
+      setSelected(itemAtCursor);
+    }
+  }
 
-      var outlineOffets = outlineItems.keys.toList()..sort();
+  void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
+    List<html.Node> outlineElements =
+        _outlineDiv.getElementsByClassName("outlineItem");
+
+    if (outlineElements.length > 0) {
+      int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
+      int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+
+      html.Element firstElement = outlineElements[firstItemIndex];
+
+      num bottomOffset;
+      if (outlineElements.length > lastItemIndex + 1) {
+        html.Element element = outlineElements[lastItemIndex + 1];
+        bottomOffset = element.offsetTop;
+      } else {
+        html.Element lastElement = outlineElements[lastItemIndex];
+        bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;
+      }
+
+      _scrollIntoView(firstElement.offsetTop, bottomOffset);
+    }
+  }
+
+  int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
+    if (_outlineItemsByOffset != null) {
+      int count = 0;
+      List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
+      int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;
 
       // Finds the last outline item that *doesn't* satisfies this:
-      for (int outlineOffset in outlineOffets) {
-        if (outlineOffset > cursorOffset) break;
-        containerOffset = outlineOffset;
+      for (int outlineOffset in outlineOffsets) {
+        if (outlineOffset > codeOffset) break;
+        containerOffset = returnCodeOffset ? outlineOffset : count;
+        count++;
       }
-
-      if (containerOffset != -1) {
-        setSelected(outlineItems[containerOffset]);
-      }
+      return containerOffset;
+    } else {
+      return null;
     }
+  }
+
+  OutlineItem _itemAtCodeOffset(int codeOffset) {
+    int itemIndex = _itemIndexAtCodeOffset(codeOffset, returnCodeOffset: true);
+    if (itemIndex != null) {
+      return _outlineItemsByOffset[itemIndex];
+    }
+    return null;
   }
 }
 
@@ -188,21 +231,27 @@ abstract class OutlineItem {
   services.OutlineEntry _data;
   html.LIElement _element;
   html.AnchorElement _anchor;
-  html.SpanElement _nameSpan;
-  String get displayName => _data.name;
+  html.SpanElement _typeSpan;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
 
     _anchor = new html.AnchorElement(href: "#");
+    _anchor.text = displayName;
     _element.append(_anchor);
 
-    _nameSpan = new html.SpanElement()
-        ..text = displayName;
-    _anchor.append(_nameSpan);
+    if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
+     _typeSpan = new html.SpanElement();
+     _typeSpan.text = returnType;
+     _typeSpan.classes.add("returnType");
+     _element.append(_typeSpan);
+    }
 
-    _element.classes.add("outlineItem $cssClassName");
+    _element.classes.add("outlineItem ${cssClassName}");
   }
+
+  String get displayName => _data.name;
+  String get returnType => null;
 
   Stream get onClick => _anchor.onClick;
   int get nameStartOffset => _data.nameStartOffset;
@@ -224,25 +273,19 @@ abstract class OutlineTopLevelItem extends OutlineItem {
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
-  services.OutlineTopLevelVariable get _variableData => _data;
-  html.SpanElement _typeSpan;
-
   OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
-      : super(data, "variable") {
-    if (returnType != "") {
-      _typeSpan = new html.SpanElement();
-      _typeSpan.text = returnType;
-      _typeSpan.classes.add("returnType");
-      _anchor.append(_typeSpan);
-    }
-  }
+      : super(data, "variable");
 
+  services.OutlineTopLevelVariable get _variableData => _data;
   String get returnType => _variableData.returnType;
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
   OutlineTopLevelFunction(services.OutlineTopLevelFunction data)
       : super(data, "function");
+
+  services.OutlineTopLevelFunction get _functionData => _data;
+  String get returnType => _functionData.returnType;
 }
 
 class OutlineClass extends OutlineTopLevelItem {
@@ -301,29 +344,25 @@ abstract class OutlineClassMember extends OutlineItem {
 }
 
 class OutlineMethod extends OutlineClassMember {
-  OutlineMethod(services.OutlineMethod data)
-      : super(data, "method");
+  OutlineMethod(services.OutlineMethod data) : super(data, "method");
+
+  services.OutlineMethod get _methodData => _data;
+  String get returnType => _methodData.returnType;
 }
 
 class OutlineProperty extends OutlineClassMember {
-  html.SpanElement _typeSpan;
-
-  OutlineProperty(services.OutlineProperty data)
-      : super(data, "property") {
-    if (returnType != "") {
-      _typeSpan = new html.SpanElement();
-      _typeSpan.text = returnType;
-      _typeSpan.classes.add("returnType");
-      _anchor.append(_typeSpan);
-    }
-  }
+  OutlineProperty(services.OutlineProperty data) : super(data, "property");
 
   services.OutlineProperty get _propertyData => _data;
   String get returnType => _propertyData.returnType;
 }
 
 class OutlineAccessor extends OutlineClassMember {
-  String get displayName => _data.name;
   OutlineAccessor(services.OutlineAccessor data)
       : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
+
+  services.OutlineAccessor get _accessorData => _data;
+
+  String get displayName => _data.name;
+  String get returnType => _accessorData.returnType;
 }

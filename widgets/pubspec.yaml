@@ -7,7 +7,24 @@ environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
   bootjack: '>=0.6.5 <0.7.0'
-  polymer: '>=0.10.0-pre.11 <0.11.0'
+  polymer: 0.10.0-pre.11
 
 dev_dependencies:
   unittest: '>=0.10.1+1 <0.11.0'
+
+transformers:
+- polymer:
+    entry_points:
+      - example/index.html
+      - example/spark_button/index.html
+      - example/spark_icon/index.html
+      - example/spark_menu/index.html
+      - example/spark_menu_button/index.html
+      - example/spark_menu_item/index.html
+      - example/spark_overlay/index.html
+      - example/spark_selection/index.html
+      - example/spark_selector/index.html
+      - example/spark_splitter/index.html
+      - example/spark_split_view/index.html
+      - example/spark_toggle_button/index.html
+      - example/spark_toolbar/index.html

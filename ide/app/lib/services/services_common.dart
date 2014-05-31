@@ -11,13 +11,6 @@ import '../package_mgmt/package_manager.dart';
 import '../package_mgmt/pub.dart';
 import '../package_mgmt/pub_properties.dart';
 
-abstract class Serializable {
-  // TODO(ericarnold): Implement as, and refactor any classes containing toMap
-  // to implement Serializable:
-  // Map toMap();
-  // void populateFromMap(Map mapData);
-}
-
 /**
  * Defines a received action event.
  */
@@ -148,6 +141,71 @@ class AnalysisResult {
   List<AnalysisError> getErrorsFor(File file) => _results[file];
 }
 
+class CompileResult {
+  String _output;
+  List<CompileError> _problems;
+
+  CompileResult.fromMap(Map map) {
+    _output = map['output'];
+    _problems = (map['problems'] as List).map(
+        (p) => new CompileError.fromMap(p)).toList();
+  }
+
+  Future resolve(UuidResolver resolver) {
+    _ContentRetriever retriever = new _ContentRetriever();
+
+    // Find all files.
+    problems.forEach((CompileError error) {
+      error.file = resolver.getResource(error._uri);
+      if (error.file != null) retriever.addFile(error.file);
+    });
+
+    // Get content.
+    return retriever.loadContent().then((_) {
+      // Calculate line numbers.
+      problems.forEach((CompileError error) {
+        error.line = retriever.getLineFor(error.file, error._offset);
+      });
+    });
+  }
+
+  bool get hasOutput => output != null;
+
+  String get output => _output;
+
+  List<CompileError> get problems => _problems;
+
+  /// This is true if none of the reported problems were errors.
+  bool getSuccess() => !_problems.any((p) => p.isError);
+}
+
+/**
+ * The results of a dart2js compile.
+ */
+class CompileError {
+  final String kind;
+  final String message;
+  File file;
+  int line = 0;
+
+  String _uri;
+  int _offset;
+
+  CompileError(this.kind, this.message, [this.file, this.line]);
+
+  factory CompileError.fromMap(Map map) {
+    CompileError result = new CompileError(map['kind'], map['message']);
+    result._uri = map['uri'];
+    result._offset = map['begin'];
+    return result;
+  }
+
+  bool get isError => kind == 'error';
+
+  String toString() =>
+      '[${kind}] ${message} (${file == null ? '' : file.path}:${line})';
+}
+
 abstract class ContentsProvider {
   Future<String> getFileContents(String uuid);
   Future<String> getPackageContents(String relativeUuid, String packageRef);
@@ -158,6 +216,10 @@ class ErrorSeverity {
   static int ERROR = 1;
   static int WARNING = 2;
   static int INFO = 3;
+}
+
+abstract class UuidResolver {
+  File getResource(String uri);
 }
 
 /**
@@ -393,7 +455,7 @@ abstract class OutlineMember extends OutlineEntry {
 
   Map toMap() {
     return super.toMap()..addAll({
-      "static": static,
+      "static": static
     });
   }
 }
@@ -404,12 +466,20 @@ abstract class OutlineMember extends OutlineEntry {
 class OutlineMethod extends OutlineMember {
   static String _type = "method";
 
-  OutlineMethod([String name]) : super(name);
+  String returnType;
+
+  OutlineMethod([String name, this.returnType]) : super(name);
+
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    returnType = mapData["returnType"];
+  }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
 
@@ -418,7 +488,8 @@ class OutlineMethod extends OutlineMember {
  */
 class OutlineProperty extends OutlineMember {
   static String _type = "class-variable";
-  String returnType = null;
+
+  String returnType;
 
   OutlineProperty([String name, this.returnType]) : super(name);
 
@@ -441,23 +512,27 @@ class OutlineProperty extends OutlineMember {
 class OutlineAccessor extends OutlineMember {
   static String _type = "class-accessor";
 
-  bool setter = false;
+  String returnType;
+  bool setter;
 
-  OutlineAccessor([String name, this.setter]) : super(name);
+  OutlineAccessor([String name, this.returnType, this.setter = false]) :
+      super(name);
 
   /**
    * Populates values and children from a map
    */
   void populateFromMap(Map mapData) {
     super.populateFromMap(mapData);
+    returnType = mapData["returnType"];
     setter = mapData["setter"];
   }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type,
-      "setter": setter,
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    m['setter'] = setter;
+    return m;
   }
 }
 
@@ -467,12 +542,20 @@ class OutlineAccessor extends OutlineMember {
 class OutlineTopLevelFunction extends OutlineTopLevelEntry {
   static String _type = "function";
 
-  OutlineTopLevelFunction([String name]) : super(name);
+  String returnType;
+
+  OutlineTopLevelFunction([String name, this.returnType]) : super(name);
+
+  void populateFromMap(Map mapData) {
+    super.populateFromMap(mapData);
+    returnType = mapData["returnType"];
+  }
 
   Map toMap() {
-    return super.toMap()..addAll({
-      "type": _type
-    });
+    Map m = super.toMap();
+    m['type'] = _type;
+    if (returnType != null) m['returnType'] = returnType;
+    return m;
   }
 }
 
@@ -481,7 +564,8 @@ class OutlineTopLevelFunction extends OutlineTopLevelEntry {
  */
 class OutlineTopLevelVariable extends OutlineTopLevelEntry {
   static String _type = "top-level-variable";
-  String returnType = null;
+
+  String returnType;
 
   OutlineTopLevelVariable([String name, this.returnType]) : super(name);
 
@@ -495,5 +579,41 @@ class OutlineTopLevelVariable extends OutlineTopLevelEntry {
     m['type'] = _type;
     if (returnType != null) m['returnType'] = returnType;
     return m;
+  }
+}
+
+/**
+ * A class to retrieve the content for several files, and then provide
+ * line-mapping information for those files.
+ */
+class _ContentRetriever {
+  Map<File, String> fileMap = {};
+
+  void addFile(File file) {
+    if (!fileMap.containsKey(file)) {
+      fileMap[file] = null;
+    }
+  }
+
+  Future loadContent() {
+    return Future.forEach(fileMap.keys, (File file) {
+      return file.getContents().then((String contents) {
+        fileMap[file] = contents;
+      });
+    });
+  }
+
+  int getLineFor(File file, int offset) {
+    String source = fileMap[file];
+    int lineCount = 0;
+
+    if (source == null) return lineCount;
+
+    for (int index = 0; index < source.length; index++) {
+      if (source[index] == '\n') lineCount++;
+      if (index == offset) return lineCount + 1;
+    }
+
+    return lineCount;
   }
 }

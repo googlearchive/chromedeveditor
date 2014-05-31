@@ -1,10 +1,6 @@
 /* Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details. */
 /* All rights reserved.  Use of this source code is governed by a BSD-style */
 /* license that can be found in the LICENSE file. */
-
-@import url("../../../packages/bootjack/css/bootstrap.min.css");
-@import url("../../../packages/bootjack/css/bootstrap-theme.css");
-
 @import url("lib/ui/widgets/listview.css");
 @import url("lib/ui/widgets/treeview.css");
 @import url("lib/ui/widgets/tabview.css");
@@ -99,6 +95,8 @@ img.ace-tooltip {
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 12px;
 }
 
 div.ace_search.right {
@@ -436,10 +434,6 @@ button.ace_searchbtn_close:active {
   border-radius: 5px;
 }
 
-.outlineItem >a {
-  display: block;
-}
-
 .outlineItem {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -489,14 +483,9 @@ li.outlineItem.topLevel.class {
   color: #77c;
 }
 
-.outlineItem.topLevel.variable .returnType,
-.outlineItem.property .returnType {
-  opacity: .8;
-}
-
-.outlineItem.topLevel.variable .returnType:before,
-.outlineItem.property .returnType:before {
-  content: ' \02014  ';
+.outlineItem .returnType {
+  color: #666;
+  margin-left: 0.5em;
 }
 
 #toggleOutlineButton {
@@ -560,3 +549,44 @@ li.outlineItem a {
   margin-right: 95px;
 }
 
+#togglePreviewButton {
+  color: #666;
+  background-color: rgba(39, 40, 34, 1.0);
+  border: none;
+  border-bottom: 1px solid #444;
+  border-left: 1px solid #444;
+  border-radius: 0px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  position: absolute;
+  padding: 8px;
+  right: 0px;
+  width: 120px;
+  z-index: 100;
+}
+
+#togglePreviewButton:hover {
+  color: #888;
+}
+
+#togglePreviewButton:active {
+  color: #eee;
+}
+
+#togglePreviewButton:focus {
+  outline: none;
+}
+
+#markdownContent {
+  -webkit-font-smoothing: antialiased;
+  background-color: rgba(39, 40, 34, 1.0);
+  bottom: 0px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  overflow-y: auto;
+  width: 100%;
+  padding: 10px;
+  position: absolute;
+  top: 0px;
+  transition: opacity 250ms;
+  z-index: 100;
+}
