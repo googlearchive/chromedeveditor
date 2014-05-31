@@ -23,13 +23,14 @@ class SparkPolymerUI extends SparkWidget {
   // startup.
   @published int splitViewPosition = 100;
 
-  // NOTE: The initial values for these have to be true, because the app
-  // uses querySelector to find the affected elements that would be not
-  // rendered if these were false.
+  // NOTE: The initial values for these have to be such that dependent
+  // <template if> blocks in the .html are turned on, because the app
+  // uses [querySelector] upon startup to find elements in those blocks.
+  // The values are later set to their actual values in [refreshFromModel].
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
   @observable bool showWipProjectTemplates = true;
-  @observable bool chromeOS = true;
+  @observable bool chromeOS = false;
 
   @observable bool showNoFileFilterMatches = false;
 

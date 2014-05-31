@@ -331,11 +331,11 @@ abstract class Spark
 
   void initAceManagers() {
     _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, syncPrefs, getUIElement('#changeFont .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -3116,6 +3116,7 @@ class AboutSparkAction extends SparkActionWithDialog {
   void _commit() => _hide();
 }
 
+// TODO(ussuri): Polymerize.
 class SettingsAction extends SparkActionWithDialog {
   // TODO(ussuri): This is essentially unused. Remove.
   bool _initialized = false;
@@ -3158,12 +3159,12 @@ class SettingsAction extends SparkActionWithDialog {
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
       if (folderToken == null) {
-        getElement('#directory-label').text = '';
+        getElement('#directoryLabel').text = '';
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return chrome.fileSystem.getDisplayPath(entry).then((path) {
-          getElement('#directory-label').text = path;
+          getElement('#directoryLabel').text = path;
         });
       });
     });
