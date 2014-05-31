@@ -4,19 +4,14 @@
 
 part of spark.templates;
 
-class PolymerDartTemplate extends PolymerTemplate {
-  PolymerDartTemplate(
+class PolymerJSTemplate extends PolymerTemplate {
+  PolymerJSTemplate(
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
       : super(id, globalVars, localVars) {
-    final String tagName = _vars['tagName'].value;
-    final String className =
-        utils.capitalize(tagName).replaceAllMapped(
-            new RegExp(r'\W(.)'), (Match m) => utils.capitalize(m[1]));
     // Override the standard source name with one matching the generated tag.
-    final String sourceName = tagName.replaceAll('-', '_');
+    final String sourceName = _vars['tagName'].value;
 
     _addOrReplaceVars([
-        new TemplateVar('className', className),
         new TemplateVar('sourceName', sourceName)
     ]);
   }
