@@ -690,8 +690,11 @@ abstract class Spark
     return _okCancelCompleter.future;
   }
 
+  // TODO(ussuri): Find a better way to achieve this (the global progress
+  // indicator?).
   void setGitSettingsResetDoneVisible(bool enabled) {
-    getUIElement('#gitResetSettingsDone').hidden = !enabled;
+    getUIElement('#gitResetSettingsDone').style.display =
+        enabled ? 'block' : 'none';
   }
 
   List<ws.Resource> _getSelection() => _filesController.getSelection();

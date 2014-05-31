@@ -119,15 +119,17 @@ class SparkPolymerUI extends SparkWidget {
     _model.setGitSettingsResetDoneVisible(true);
   }
 
+  // TODO(ussuri): Find a better way to achieve this.
   void onResetPreference() {
-    Element resultElement = getShadowDomElement('#preferenceResetResult');
+    Element resultElement = $['preferenceResetResult'];
+    resultElement.style.display = 'block';
     resultElement.text = '';
     _model.syncPrefs.clear().then((_) {
       _model.localPrefs.clear();
     }).catchError((e) {
-      resultElement.text = '<error reset preferences>';
+      resultElement.text = 'Error resetting preferences';
     }).then((_) {
-      resultElement.text = 'Preferences are reset. Restart Spark.';
+      resultElement.text = 'Preferences have been reset - restart Spark';
     });
   }
 

@@ -131,6 +131,7 @@ spark-dialog {
   display: none;
   color: #F00;
   font-weight: bold;
+  margin: 4px 0 0 4px;
 }
 
 #gitCommitList {
