@@ -2578,7 +2578,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   void _onClose() => _hide();
 
   void _invoke([context]) {
-    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+    getElement("#gitPushClose").onClick.listen((_) => _onClose());
     _triggerOnReturn("#gitPush", false);
     project = context.first;
 
