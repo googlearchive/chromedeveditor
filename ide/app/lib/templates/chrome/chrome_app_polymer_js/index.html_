@@ -11,7 +11,7 @@
   <link rel="import" href="bower_components/polymer-ui-icon-button/polymer-ui-icon-button.html">
 </head>
 
-<body>
+<body unresolved>
   <polymer-ui-card>
     <h1 id="greeting"></h1>
     <polymer-ui-icon-button>OK</polymer-ui-icon-button>
