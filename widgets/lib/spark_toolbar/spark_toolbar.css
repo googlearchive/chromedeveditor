@@ -21,28 +21,50 @@
   flex-flow: column;
 }
 
-:host([justify=left]:host) {
+:host([justify=left]) {
   justify-content: flex-start;
 }
 
-:host([justify=right]:host) {
+:host([justify=right]) {
   justify-content: flex-end;
 }
 
-:host([justify=center]:host) {
+:host([justify=center]) {
   justify-content: center;
 }
 
-:host([justify=spaced]:host) {
+:host([justify=spaced]) {
   justify-content: space-around;
 }
 
+:host([justify=edges]) {
+  justify-content: space-between;
+}
+
+:host([spacing=none]) ::content > * {
+  margin: 0;
+}
+
+:host([spacing=small]) ::content > * {
+  margin: 2px;
+}
+
+:host([spacing=medium]) ::content > * {
+  margin: 5px;
+}
+
+:host([spacing=large]) ::content > * {
+  margin: 10px;
+}
+
 :host([horizontal]) ::content > * {
-  margin: 0 2px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 :host([vertical]) ::content > * {
-  margin: 2px 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 ::content > [flex] {

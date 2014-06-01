@@ -41,7 +41,7 @@
  * a [focused] attribute.
  *
  * An element that should close the spark-overlay will automatically do so if it
- * is given the overlay-toggle attribute. Please note that spark-overlay will
+ * is given the `overlayToggle` attribute. Please note that spark-overlay will
  * close whenever the user taps outside it or presses the escape key. The
  * behavior can be turned on and off via the autoClose property.
  *
@@ -71,12 +71,12 @@
 
   <template>
     <link rel="stylesheet" href="spark_overlay.css">
-    
+
     <template if="{{arrow != 'none'}}">
       <div class="arrow"></div>
       <div id="arrowInner" class="arrow"></div>
     </template>
-    
+
     <content></content>
   </template>
 

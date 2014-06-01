@@ -1,0 +1,71 @@
+/* Copyright (c) 2014, Google Inc. Please see the AUTHORS file for details. */
+/* All rights reserved.  Use of this source code is governed by a BSD-style */
+/* license that can be found in the LICENSE file. */
+
+@import url("../common/spark_widget.css");
+
+:host {
+  position: absolute;
+}
+
+#modal {
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  background: white;
+}
+
+#body {
+  padding: 20px;
+}
+
+#header,
+#footer {
+  height: 50px;
+  /* Compensate for the border */
+  margin: -1px;
+}
+
+#header {
+  padding: 0 10px 0 20px;
+  background-color: rgb(66, 128, 244);
+  color: white;
+  fill: white;
+}
+
+#footer {
+  padding: 0 20px;
+  background-color: white;
+}
+
+#title {
+  font-size: 20px;
+  font-weight: 200;
+  text-transform: uppercase;
+}
+
+#closingX {
+  width: 28px;
+  height: 28px;
+}
+
+/* TODO(ussuri): Replace all these with dedicated Spark widgets. */
+
+::content label {
+  margin-left: 5px;
+  vertical-align: text-top;
+}
+
+::content input {
+  -webkit-user-select: text;
+}
+
+::content input[type=radio] {
+  margin-left: 2px;
+}
+
+::content input[type=text] {
+  margin: 2px;
+  font-size: 14px;
+}

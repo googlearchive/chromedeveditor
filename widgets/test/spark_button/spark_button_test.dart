@@ -46,7 +46,7 @@ void main() {
 
         btnElt
             ..primary = true
-            ..noPadding = true
+            ..padding = 'none'
             ..active = true
             ..deliverChanges();
 
@@ -56,7 +56,7 @@ void main() {
 
         btnElt
             ..primary = false
-            ..noPadding = false
+            ..padding = 'medium'
             ..active = false
             ..deliverChanges();
 

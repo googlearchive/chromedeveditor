@@ -119,6 +119,36 @@ class SparkWidget extends PolymerElement {
   }
 
   /**
+   * Returns true if the point is within the widget's boundary.
+   */
+  bool isPointInWidget(Point xyGlobal) {
+    return super.getBoundingClientRect().containsPoint(xyGlobal);
+  }
+
+  /**
+   * Returns true if the event is within the widget's boundary or targets the
+   * widget or one of its light DOM or shadow DOM children.
+   */
+  bool isEventInWidget(Event e) {
+    return
+        (e is MouseEvent && isPointInWidget(e.client)) ||
+        this == e.target ||
+        this.contains(e.target) ||
+        shadowRoot.contains(e.target);
+  }
+
+  static void addRemoveEventHandlers(
+      dynamic node,
+      Iterable<String> eventTypes,
+      Function handler,
+      {bool enable: true,
+       bool capture: false}) {
+    final Function addRemoveFunc =
+        enable ? node.addEventListener : node.removeEventListener;
+    eventTypes.forEach((event) => addRemoveFunc(event, handler, capture));
+  }
+
+  /**
    * Find a <content> element using a CSS selector and expand it, and any
    * recursively nested <content> elements distributed from light DOM as a result
    * of multi-level element embedding, with their children.

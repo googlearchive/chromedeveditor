@@ -7,5 +7,12 @@ part of spark.templates;
 class PolymerJSTemplate extends PolymerTemplate {
   PolymerJSTemplate(
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
-      : super(id, globalVars, localVars);
+      : super(id, globalVars, localVars) {
+    // Override the standard source name with one matching the generated tag.
+    final String sourceName = _vars['tagName'].value;
+
+    _addOrReplaceVars([
+        new TemplateVar('sourceName', sourceName)
+    ]);
+  }
 }

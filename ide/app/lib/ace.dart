@@ -486,7 +486,7 @@ class AceManager {
     var isScrolling = (_aceEditor.lastVisibleRow -
         _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
 
-    int documentHeight;
+    num documentHeight;
     if (!isScrolling) {
       var lineElements = parentElement.getElementsByClassName("ace_line");
       documentHeight = (lineElements.last.offsetTo(parentElement).y -

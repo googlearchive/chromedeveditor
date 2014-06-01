@@ -146,7 +146,7 @@ class TabView {
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
   bool _tabItemsLayoutListenerEnabled = false;
-  int _lastLayoutWidth = 0;
+  num _lastLayoutWidth = 0;
   StreamSubscription<MouseEvent> _tabBarMouseLeaveStream;
 
   TabView(this.parentElement) {
@@ -245,7 +245,7 @@ class TabView {
   }
 
   void _layoutTabItems() {
-    int remainingWidth = _tabBarScrollable.clientWidth;
+    num remainingWidth = _tabBarScrollable.clientWidth;
     int remainingTabs = tabs.length;
     if (remainingTabs == 0) {
       // There's no tab to layout.
@@ -290,7 +290,7 @@ class TabView {
         scroller.scrollLeft = label.offsetWidth + label.offsetLeft -
             scroller.offsetWidth + scroller.offsetLeft + SCROLL_MARGIN;
       } else if (label.offsetLeft < scroller.scrollLeft + SCROLL_MARGIN) {
-        scroller.scrollLeft = label.offsetLeft - SCROLL_MARGIN;
+        scroller.scrollLeft = label.offsetLeft.toInt() - SCROLL_MARGIN;
       }
   }
 

@@ -9,10 +9,15 @@ class PolymerDartTemplate extends PolymerTemplate {
       String id, List<TemplateVar> globalVars, List<TemplateVar> localVars)
       : super(id, globalVars, localVars) {
     final String tagName = _vars['tagName'].value;
-    String className =
+    final String className =
         utils.capitalize(tagName).replaceAllMapped(
             new RegExp(r'\W(.)'), (Match m) => utils.capitalize(m[1]));
+    // Override the standard source name with one matching the generated tag.
+    final String sourceName = tagName.replaceAll('-', '_');
 
-    _addOrReplaceVars([new TemplateVar('className', className)]);
+    _addOrReplaceVars([
+        new TemplateVar('className', className),
+        new TemplateVar('sourceName', sourceName)
+    ]);
   }
 }
