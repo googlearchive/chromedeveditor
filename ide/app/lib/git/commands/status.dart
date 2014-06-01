@@ -81,6 +81,9 @@ class Status {
   }
 
   static Future _updateParent(ObjectStore store, chrome.Entry entry) {
+    if (entry.fullPath == store.root.fullPath) {
+      return new Future.value();
+    }
     return entry.getParent().then((chrome.DirectoryEntry root) {
       return FileOps.listFiles(root).then((entries) {
         entries.removeWhere((e) => e.name == ".git");
