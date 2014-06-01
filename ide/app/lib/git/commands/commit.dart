@@ -76,6 +76,12 @@ class Commit {
           });
         }
       }).then((_) {
+
+        // Either the folder is empty, or untracked.
+        if (treeEntries.isEmpty) {
+          return null;
+        }
+
         treeEntries.sort((TreeEntry a, TreeEntry b) {
           String aName = a.isBlob ? a.name : (a.name + '/');
           String bName = b.isBlob ? b.name : (b.name + '/');
