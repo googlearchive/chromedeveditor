@@ -61,7 +61,6 @@ class Status {
         return status;
       }
 
-      // TODO(grv) : check the modification time when it is available.
       return getShaForEntry(entry, 'blob').then((String sha) {
         status = new FileStatus();
         status.path = entry.fullPath;
@@ -69,12 +68,13 @@ class Status {
         status.size = data.size;
         status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
         store.index.updateIndexForFile(status);
+        return status;
       });
     }).then((_) {
       if (status.type != FileStatusType.UNTRACKED) {
         return _updateParent(store, entry).then((_) => status);
       } else {
-        return new Future.value();
+        return status;
       }
     });
   }
