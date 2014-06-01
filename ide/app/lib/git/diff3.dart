@@ -4,17 +4,14 @@
 
 library git.diff3;
 
-import 'dart:js' as js;
 import 'dart:math' as Math;
 
 /**
  * Wrapper for the diff3.js library.
  */
 class Diff3 {
-  static js.JsObject _diff = js.context['Diff'];
-
   static Diff3Result diff(String our, String base, String their) {
-    var result = _diff.callMethod("diff3_dig", [our, base, their]);
+    Map result = new Diff().diff3_dig(our, base, their);
     return new Diff3Result(result['text'], result['conflict']);
   }
 }
