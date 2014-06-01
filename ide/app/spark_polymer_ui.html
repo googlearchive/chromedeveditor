@@ -321,10 +321,6 @@
            <span id="gitStatus"></span>
            <a href="#" id="gitStatusDetail">Details...</a>
         </div>
-        <div class="form-group">
-          <label for="gitRemoteBranches">Choose a remote branch</label>
-          <select id="gitRemoteBranches" class="form-control"></select>
-        </div>
       </div>
       <div id="gitChangeList"></div>
       <div class="form-group">
@@ -346,7 +342,10 @@
       <input id="gitBranchName" type="text" class="form-control"
           pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
       <span class="help-block">Create a new git branch.</span>
-
+      <div class="form-group">
+        <label for="gitRemoteBranches">Choose a remote branch</label>
+        <select id="gitRemoteBranches" class="form-control"></select>
+      </div>
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Create Branch</spark-dialog-button>
     </spark-dialog>
