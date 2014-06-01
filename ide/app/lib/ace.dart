@@ -293,11 +293,11 @@ class CssEditor extends TextEditor {
 }
 
 class MarkdownEditor extends TextEditor {
-  static bool isMarkdownFile(workspace.File file) => file.name.toLowerCase()
-      .endsWith('.md');
+  static bool isMarkdownFile(workspace.File file) =>
+      file.name.toLowerCase().endsWith('.md');
 
   Markdown _markdown;
-  StreamSubscription _markdownOnDirtySubscription;
+
   MarkdownEditor._create(AceManager aceManager, workspace.File file,
     SparkPreferences prefs) : super._create(aceManager, file, prefs) {
        _markdown = new Markdown(element, file);
@@ -311,8 +311,8 @@ class MarkdownEditor extends TextEditor {
 
   @override
   void deactivate() {
-    super.deactivate();
     _markdown.deactivate();
+    super.deactivate();
   }
 
   @override
@@ -339,6 +339,7 @@ class AceManager {
   GotoLineView gotoLineView;
 
   ace.Editor _aceEditor;
+  ace.EditSession _currentSession;
 
   workspace.Marker _currentMarker;
 
@@ -395,6 +396,7 @@ class AceManager {
     ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
+    ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
     _setupOutline(prefs);
@@ -666,7 +668,7 @@ class AceManager {
     session.useWorker = false;
   }
 
-  ace.EditSession get currentSession => _aceEditor.session;
+  ace.EditSession get currentSession => _currentSession;
 
   void switchTo(ace.EditSession session, [workspace.File file]) {
     if (_foldListenerSubscription != null) {
@@ -675,9 +677,11 @@ class AceManager {
     }
 
     if (session == null) {
-      _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
+      _currentSession = ace.createEditSession('', new ace.Mode('ace/mode/text'));
+      _aceEditor.session = _currentSession;
     } else {
-      _aceEditor.session = session;
+      _currentSession = session;
+      _aceEditor.session = _currentSession;
 
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
         setMarkers(file.getMarkers());
@@ -742,19 +746,19 @@ class AceManager {
   void _handleGotoLineViewClosed(_) => focus();
 
   void _scrollToBeginningOfDocument(_) {
-    _aceEditor.session.scrollTop = 0;
+    _currentSession.scrollTop = 0;
   }
 
   void _scrollToEndOfDocument(_) {
     int lineHeight = html.querySelector('.ace_gutter-cell').clientHeight;
-    _aceEditor.session.scrollTop = _aceEditor.session.document.length * lineHeight;
+    _currentSession.scrollTop = _currentSession.document.length * lineHeight;
   }
 
   NavigationLocation get navigationLocation {
     if (currentFile == null) return null;
     ace.Range range = _aceEditor.selection.range;
-    int offsetStart = _aceEditor.session.document.positionToIndex(range.start);
-    int offsetEnd = _aceEditor.session.document.positionToIndex(range.end);
+    int offsetStart = _currentSession.document.positionToIndex(range.start);
+    int offsetEnd = _currentSession.document.positionToIndex(range.end);
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
   }
