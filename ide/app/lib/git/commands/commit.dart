@@ -44,17 +44,19 @@ class Commit {
         }
 
         if (entry.isDirectory) {
-          return walkFiles(entry as chrome.DirectoryEntry, store).then((String sha) {
+          return walkFiles(entry, store).then((String sha) {
             if (sha != null) {
-              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), false));
+              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
+                  false));
             }
           });
         } else {
           chrome.ChromeFileEntry fileEntry = entry;
 
-          return Status.getFileStatus(store, entry).then((FileStatus status) {
+          return Status.updateAndGetStatus(store, entry).then(
+              (FileStatus status) {
             if (status.type != FileStatusType.UNTRACKED) {
-              store.index.updateIndexForEntry(status);
+              store.index.updateIndexForFile(status);
               status = store.index.getStatusForEntry(entry);
 
               if (status.type == FileStatusType.STAGED ||
@@ -63,7 +65,8 @@ class Commit {
                   return store.writeRawObject(
                       'blob', new Uint8List.fromList(buf.getBytes()));
                 }).then((String sha) {
-                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
+                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
+                      true));
                 });
               } else if (status.type == FileStatusType.COMMITTED){
                 treeEntries.add(
