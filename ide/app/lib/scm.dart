@@ -30,7 +30,7 @@ import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
 import 'git/commands/fetch.dart';
-import 'git/commands/index.dart' as gitIndex;
+import 'git/commands/index.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
@@ -170,7 +170,7 @@ abstract class ScmProjectOperations {
   /**
    * Return the SCM status for the given file or folder.
    */
-  FileStatus getFileStatus(Resource resource);
+  ScmFileStatus getFileStatus(Resource resource);
 
   Stream<ScmProjectOperations> get onStatusChange;
 
@@ -195,37 +195,37 @@ abstract class ScmProjectOperations {
  * The possible SCM file statuses (`untracked`, `modified`, `staged`, or
  * `committed`).
  */
-class FileStatus {
-  static const FileStatus UNTRACKED = const FileStatus._('untracked');
-  static const FileStatus MODIFIED = const FileStatus._('modified');
-  static const FileStatus STAGED = const FileStatus._('staged');
-  static const FileStatus UNMERGED = const FileStatus._('unmerged');
-  static const FileStatus COMMITTED = const FileStatus._('committed');
-  static const FileStatus DELETED = const FileStatus._('deleted');
-  static const FileStatus ADDED = const FileStatus._('added');
+class ScmFileStatus {
+  static const ScmFileStatus UNTRACKED = const ScmFileStatus._('untracked');
+  static const ScmFileStatus MODIFIED = const ScmFileStatus._('modified');
+  static const ScmFileStatus STAGED = const ScmFileStatus._('staged');
+  static const ScmFileStatus UNMERGED = const ScmFileStatus._('unmerged');
+  static const ScmFileStatus COMMITTED = const ScmFileStatus._('committed');
+  static const ScmFileStatus DELETED = const ScmFileStatus._('deleted');
+  static const ScmFileStatus ADDED = const ScmFileStatus._('added');
 
   final String status;
 
-  const FileStatus._(this.status);
+  const ScmFileStatus._(this.status);
 
-  factory FileStatus.createFrom(String value) {
-    if (value == 'committed') return FileStatus.COMMITTED;
-    if (value == 'modified') return FileStatus.MODIFIED;
-    if (value == 'staged') return FileStatus.STAGED;
-    if (value == 'unmerged') return FileStatus.UNMERGED;
-    if (value == 'deleted') return FileStatus.DELETED;
-    if (value == 'added') return FileStatus.ADDED;
-    return FileStatus.UNTRACKED;
+  factory ScmFileStatus.createFrom(String value) {
+    if (value == 'committed') return ScmFileStatus.COMMITTED;
+    if (value == 'modified') return ScmFileStatus.MODIFIED;
+    if (value == 'staged') return ScmFileStatus.STAGED;
+    if (value == 'unmerged') return ScmFileStatus.UNMERGED;
+    if (value == 'deleted') return ScmFileStatus.DELETED;
+    if (value == 'added') return ScmFileStatus.ADDED;
+    return ScmFileStatus.UNTRACKED;
   }
 
-  factory FileStatus.fromIndexStatus(String status) {
-    if (status == FileStatusType.DELETED) return FileStatus.DELETED;
-    if (status == FileStatusType.ADDED) return FileStatus.ADDED;
-    if (status == FileStatusType.COMMITTED) return FileStatus.COMMITTED;
-    if (status == FileStatusType.MODIFIED) return FileStatus.MODIFIED;
-    if (status == FileStatusType.STAGED) return FileStatus.STAGED;
-    if (status == FileStatusType.UNMERGED) return FileStatus.UNMERGED;
-    return FileStatus.UNTRACKED;
+  factory ScmFileStatus.fromIndexStatus(String status) {
+    if (status == FileStatusType.DELETED) return ScmFileStatus.DELETED;
+    if (status == FileStatusType.ADDED) return ScmFileStatus.ADDED;
+    if (status == FileStatusType.COMMITTED) return ScmFileStatus.COMMITTED;
+    if (status == FileStatusType.MODIFIED) return ScmFileStatus.MODIFIED;
+    if (status == FileStatusType.STAGED) return ScmFileStatus.STAGED;
+    if (status == FileStatusType.UNMERGED) return ScmFileStatus.UNMERGED;
+    return ScmFileStatus.UNTRACKED;
   }
 
   String toString() => status;
@@ -355,8 +355,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return _branchName;
   }
 
-  FileStatus getFileStatus(Resource resource) {
-    return new FileStatus.createFrom(
+  ScmFileStatus getFileStatus(Resource resource) {
+    return new ScmFileStatus.createFrom(
         resource.getMetadata('scmStatus', 'committed'));
   }
 
@@ -402,7 +402,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future<List<FileStatus>> addFiles(List<chrome.Entry> files) {
+  Future<List<ScmFileStatus>> addFiles(List<chrome.Entry> files) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       return Add.addEntries(options, files).then((_) {
@@ -518,7 +518,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     }
   }
 
-  void _setStatus(Resource resource, gitIndex.FileStatus status) {
+  void _setStatus(Resource resource, FileStatus status) {
     String fileStatus;
     if (status == null) {
       fileStatus = FileStatusType.UNTRACKED;
@@ -537,7 +537,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     } else {
         fileStatus = status.type;
     }
-    resource.setMetadata('scmStatus', new FileStatus.fromIndexStatus(
+    resource.setMetadata('scmStatus', new ScmFileStatus.fromIndexStatus(
         fileStatus).status);
   }
 }

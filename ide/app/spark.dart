@@ -2348,9 +2348,11 @@ class GitAddAction extends SparkAction implements ContextAction {
       => _isUnderScmProject(object) && _valid(object);
 
   bool _valid(List<ws.Resource> resources) {
+    resources.forEach((resource) {
+      print(resource.getMetadata('scmStatus') + ' ' + resource.entry.fullPath);
+    });
     return resources.any((resource) =>
-      !(resource.isFile && (resource.getMetadata('scmStatus')
-          != FileStatus.UNTRACKED)));
+      (resource.getMetadata('scmStatus') == ScmFileStatus.UNTRACKED));
   }
 }
 
@@ -2479,14 +2481,14 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         }
         _calculateScmStatus(resource);
       } else if (resource is ws.File) {
-        FileStatus status = gitOperations.getFileStatus(resource);
+        ScmFileStatus status = gitOperations.getFileStatus(resource);
 
         // TODO(grv) : Add deleted files to resource.
-        if (status == FileStatus.DELETED) {
+        if (status == ScmFileStatus.DELETED) {
           deletedFileList.add(resource.path);
-        } else if (status == FileStatus.MODIFIED) {
+        } else if (status == ScmFileStatus.MODIFIED) {
           modifiedFileList.add(resource);
-        } else if (status == FileStatus.ADDED) {
+        } else if (status == ScmFileStatus.ADDED) {
           addedFileList.add(resource);
         }
       }
@@ -2702,7 +2704,7 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
     ws.Resource file = _getResource(context);
     ScmProjectOperations operations =
         spark.scmManager.getScmOperationsFor(file.project);
-    return operations.getFileStatus(file) == FileStatus.UNMERGED;
+    return operations.getFileStatus(file) == ScmFileStatus.UNMERGED;
   }
 
   ws.Resource _getResource(context) {
@@ -2748,7 +2750,7 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
 
     for (ws.Resource resource in resources) {
       // TODO: Should we also check UNTRACKED?
-      if (operations.getFileStatus(resource) != FileStatus.MODIFIED) {
+      if (operations.getFileStatus(resource) != ScmFileStatus.MODIFIED) {
         return false;
       }
     }
