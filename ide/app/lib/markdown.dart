@@ -11,10 +11,10 @@ import 'package:markdown/markdown.dart' show markdownToHtml;
 import 'workspace.dart' as workspace;
 
 class Markdown {
-  // Parent conatiner.
+  // Parent container.
   final html.Element _container;
 
-  // Workspace file
+  // Workspace file.
   final workspace.File _file;
 
   // Preview button.
