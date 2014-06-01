@@ -35,6 +35,7 @@ class Checkout {
     }
 
     return dir.getDirectory(treeEntry.name).then((newDir) {
+      store.index.deleteIndexForEntry(newDir.fullPath);
       return store.retrieveObject(treeEntry.sha, "Tree").then((GitObject tree) {
         return Future.forEach((tree as TreeObject).entries, (TreeEntry entry) {
           return _removeEntryRecursively(store, newDir, entry);
