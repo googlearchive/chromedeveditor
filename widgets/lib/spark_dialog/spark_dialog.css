@@ -20,14 +20,10 @@
   padding: 20px;
 }
 
-#header,
-#footer {
-  height: 50px;
-  /* Compensate for the border */
-  margin: -1px;
-}
-
 #header {
+  height: 50px;
+  /* Compensate for the dialog border */
+  margin: -1px -1px 0px -1px;
   padding: 0 10px 0 20px;
   background-color: rgb(66, 128, 244);
   color: white;
@@ -35,7 +31,10 @@
 }
 
 #footer {
-  padding: 0 20px;
+  height: 60px;
+  /* Compensate for the dialog border */
+  margin: 0 -1px -1px -1px;
+  padding: 0 10px;
   background-color: white;
 }
 
@@ -52,13 +51,30 @@
 
 /* TODO(ussuri): Replace all these with dedicated Spark widgets. */
 
-::content label {
-  margin-left: 5px;
-  vertical-align: text-top;
+::content .form-control {
+  border: 1ps solid black;
+  border-radius: 3px;
+  width: 100%;
+  height: 34px;
+  margin: 2px 0;
+  line-height: 1.428571429;
+  color: #666;
+  background-color: #fff;
+  margin: 2px 0;
+  -webkit-box-shadow: none;
+  box-shadow: none;
 }
 
-::content input {
-  -webkit-user-select: text;
+::content .form-control:focus {
+  outline: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border-color: rgb(66, 128, 244);
+  transition: border-color ease-in-out 0.4s;
+}
+
+::content .form-control:invalid {
+  color: red;
 }
 
 ::content input[type=radio] {
@@ -66,6 +82,5 @@
 }
 
 ::content input[type=text] {
-  margin: 2px;
-  font-size: 14px;
+  -webkit-user-select: text;
 }

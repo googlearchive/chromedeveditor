@@ -331,11 +331,11 @@ abstract class Spark
 
   void initAceManagers() {
     _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, syncPrefs, getUIElement('#changeFont .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -584,6 +584,9 @@ abstract class Spark
     return null;
   }
 
+  // TODO(ussuri): The whole show...Message/Dialog() family: polymerize,
+  // generalize and offload to SparkPolymerUI.
+
   /**
    * Show a model error dialog.
    */
@@ -595,7 +598,8 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
-    _errorDialog.getElement('#errorTitle').text = title;
+    _errorDialog.dialog.title = title;
+
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     var lines = message.split('\n');
@@ -668,18 +672,12 @@ abstract class Spark
       });
     }
 
-    if (title == null) {
-      _okCancelDialog.getShadowDomElement('#header').style.display = 'none';
-      _okCancelDialog.getShadowDomElement('#title').text = '';
-    } else {
-      _okCancelDialog.getShadowDomElement('#header').style.display = 'block';
-      _okCancelDialog.getShadowDomElement('#title').text = title;
-    }
-    Element container = _okCancelDialog.getElement('#okCancelMessage');
+    _okCancelDialog.dialog.title = title;
 
+    Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
     var lines = message.split('\n');
-    for(String line in lines) {
+    for (String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
       container.children.add(lineElement);
@@ -692,8 +690,11 @@ abstract class Spark
     return _okCancelCompleter.future;
   }
 
+  // TODO(ussuri): Find a better way to achieve this (the global progress
+  // indicator?).
   void setGitSettingsResetDoneVisible(bool enabled) {
-    getUIElement('#gitResetSettingsDone').hidden = !enabled;
+    getUIElement('#gitResetSettingsDone').style.display =
+        enabled ? 'block' : 'none';
   }
 
   List<ws.Resource> _getSelection() => _filesController.getSelection();
@@ -923,7 +924,7 @@ class ProjectLocationManager {
 
   Future<bool> _showRequestFileSystemDialog() {
     return _spark.askUserOkCancel('Please choose a folder to store your Spark projects.',
-        okButtonLabel: 'Choose Folder', title: 'Choose a main folder');
+        okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
   }
 
   /**
@@ -2301,10 +2302,12 @@ class GitCloneAction extends SparkActionWithDialog {
         spark.showSuccessMessage('Clone cancelled');
       } else if (e is SparkException && e.errorCode
           == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
-        spark.showErrorMessage('Error cloning ${projectName}',
-            'Repositories with sub-modules are currently not supported.');
+        spark.showErrorMessage('Error cloning Git project',
+            'Could not clone "${projectName}": '
+            'repositories with sub-modules are currently unsupported.');
       } else {
-        spark.showErrorMessage('Error cloning ${projectName}', '${e}');
+        spark.showErrorMessage('Error cloning Git project',
+            'Error while cloning "${projectName}":\n${e}');
       }
     }).whenComplete(() {
       _restoreDialog();
@@ -3118,6 +3121,7 @@ class AboutSparkAction extends SparkActionWithDialog {
   void _commit() => _hide();
 }
 
+// TODO(ussuri): Polymerize.
 class SettingsAction extends SparkActionWithDialog {
   // TODO(ussuri): This is essentially unused. Remove.
   bool _initialized = false;
@@ -3164,12 +3168,12 @@ class SettingsAction extends SparkActionWithDialog {
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
       if (folderToken == null) {
-        getElement('#directory-label').text = '';
+        getElement('#directoryLabel').text = '';
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return chrome.fileSystem.getDisplayPath(entry).then((path) {
-          getElement('#directory-label').text = path;
+          getElement('#directoryLabel').text = path;
         });
       });
     });
