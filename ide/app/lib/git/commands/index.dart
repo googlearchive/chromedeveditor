@@ -277,15 +277,7 @@ class Index {
            if (_statusIdx[entry.fullPath] != null) {
              fileStatuses.add(_statusIdx[entry.fullPath]);
              if (updateSha) {
-               return getShaForEntry(entry, 'blob').then((String sha) {
-                 return entry.getMetadata().then((data) {
-                   FileStatus status = new FileStatus();
-                   status.path = entry.fullPath;
-                   status.sha = sha;
-                   status.size = data.size;
-                   updateIndexForFile(status);
-                 });
-               });
+               return _updateSha(entry);
              }
            }
          }
@@ -309,6 +301,24 @@ class Index {
          }
          return fileStatuses;
        });
+     });
+   }
+
+   Future _updateSha(chrome.FileEntry entry) {
+     return entry.getMetadata().then((data) {
+       FileStatus status = _statusIdx[entry.fullPath];
+       if (status != null && status.modificationTime
+           == data.modificationTime.millisecondsSinceEpoch) {
+         return new Future.value();
+       } else {
+         return getShaForEntry(entry, 'blob').then((String sha) {
+           FileStatus status = new FileStatus();
+           status.path = entry.fullPath;
+           status.sha = sha;
+           status.size = data.size;
+           updateIndexForFile(status);
+         });
+       }
      });
    }
 
