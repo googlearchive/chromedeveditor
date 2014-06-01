@@ -26,10 +26,10 @@
   outline: none;
   display: none;
   opacity: 0;
-  /* The no-op scaleZ(1) creates an independent stacking context for :host.
+  /* The no-op transform creates an independent stacking context for :host.
      See: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context
   */
-  -webkit-transform: scaleZ(1);
+  -webkit-transform: translateX(0);
 }
 
 /*

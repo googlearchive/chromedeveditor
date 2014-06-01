@@ -11,8 +11,9 @@ import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
 
-@CustomTag("spark-overlay")
-class SparkOverlay extends SparkWidget {
+// TODO(ussuri): add more comments.
+
+class _SparkOverlayManager {
   // Track overlays for z-index and focus managemant.
   // TODO(ussuri): The z-index management with a fixed base z-index is shaky at
   // best. SparkOverlay doesn't know in what z-index environment its instances
@@ -24,7 +25,7 @@ class SparkOverlay extends SparkWidget {
   //    the current overlay's z-index if any other are currently opened.
   static final List<SparkOverlay> overlays = [];
 
-  static void _trackOverlays(SparkOverlay inOverlay) {
+  static void trackOverlays(SparkOverlay inOverlay) {
     if (inOverlay.opened) {
       final int z0 = _currentOverlayZ();
       overlays.add(inOverlay);
@@ -67,23 +68,16 @@ class SparkOverlay extends SparkWidget {
     return z;
   }
 
-  static void _focusOverlay() {
+  static void focusOverlay() {
     final SparkOverlay current = _currentOverlay();
     if (current != null) {
       current.focus();
     }
   }
+}
 
-  // Function closures aren't canonicalized: need to have one pointer for the
-  // listener's handler that is added/removed.
-  EventListener _captureHandlerInst;
-  EventListener _resizeHandlerInst;
-
-  SparkOverlay.created(): super.created() {
-    _captureHandlerInst = _captureHandler;
-    _resizeHandlerInst = _resizeHandler;
-  }
-
+@CustomTag("spark-overlay")
+class SparkOverlay extends SparkWidget {
   bool _opened = false;
 
   /**
@@ -171,6 +165,15 @@ class SparkOverlay extends SparkWidget {
   ];
 
   Timer _autoCloseTask = null;
+  // Function closures aren't canonicalized: need to have one pointer for the
+  // listener's handler that is added/removed.
+  EventListener _captureHandlerInst;
+  EventListener _resizeHandlerInst;
+
+  SparkOverlay.created(): super.created() {
+    _captureHandlerInst = _captureHandler;
+    _resizeHandlerInst = resizeHandler;
+  }
 
   @override
   void enteredView() {
@@ -203,7 +206,8 @@ class SparkOverlay extends SparkWidget {
 
   void openedChanged() {
     _renderOpened();
-    _trackOverlays(this);
+
+    _SparkOverlayManager.trackOverlays(this);
 
     _enableResizeHandler(opened);
 
@@ -217,18 +221,14 @@ class SparkOverlay extends SparkWidget {
     asyncFire('opened', detail: opened);
   }
 
-  void _enableResizeHandler(inEnable) {
-    if (inEnable) {
-      window.addEventListener('resize', _resizeHandlerInst);
-    } else {
-      window.removeEventListener('resize', _resizeHandlerInst);
-    }
+  void _enableResizeHandler(bool enable) {
+    SparkWidget.addRemoveEventHandlers(
+        window, ['resize'], _resizeHandlerInst, enable: enable);
   }
 
   void _enableCaptureHandler(bool enable, Iterable<String> eventTypes) {
-    final Function addRemoveFunc =
-        enable ? document.addEventListener : document.removeEventListener;
-    eventTypes.forEach((et) => addRemoveFunc(et, _captureHandlerInst, true));
+    SparkWidget.addRemoveEventHandlers(
+        document, eventTypes, _captureHandlerInst, enable: enable, capture: true);
   }
 
   void _applyFocus() {
@@ -236,7 +236,7 @@ class SparkOverlay extends SparkWidget {
       focus();
     } else {
       // Focus the next overlay in the stack.
-      _focusOverlay();
+      _SparkOverlayManager.focusOverlay();
     }
   }
 
@@ -273,20 +273,18 @@ class SparkOverlay extends SparkWidget {
     // Remove when that bug is addressed.
     if (e.target == this) {
       _completeOpening();
-      e.stopImmediatePropagation();
-      e.preventDefault();
+      e..stopImmediatePropagation()..preventDefault();
     }
   }
 
   void _openedAnimationStart(AnimationEvent e) {
     classes.add('animation-in-progress');
-    e.stopImmediatePropagation();
-    e.preventDefault();
+    e..stopImmediatePropagation()..preventDefault();
   }
 
   void _tapHandler(MouseEvent e) {
     Element target = e.target;
-    if (target != null && target.attributes.containsKey('overlay-toggle')) {
+    if (target != null && target.attributes.containsKey('overlayToggle')) {
       toggle();
     } else if (_autoCloseTask != null) {
       _autoCloseTask.cancel();
@@ -294,12 +292,12 @@ class SparkOverlay extends SparkWidget {
     }
   }
 
+  /**
+   * If a mouse or keyboard event is outside the overlay, handle auto-closing
+   * and modality, as set.
+   */
   void _captureHandler(Event e) {
-    final bool inOverlay =
-        (e is MouseEvent && _isPointInOverlay(e.client)) ||
-        this == e.target ||
-        this.contains(e.target) ||
-        shadowRoot.contains(e.target);
+    final bool inOverlay = isEventInWidget(e);
 
     if (!inOverlay) {
       if (modal) {
@@ -309,10 +307,6 @@ class SparkOverlay extends SparkWidget {
         _autoCloseTask = new Timer(Duration.ZERO, () { opened = false; });
       }
     }
-  }
-
-  bool _isPointInOverlay(Point xyGlobal) {
-    return super.getBoundingClientRect().containsPoint(xyGlobal);
   }
 
   void _keyDownHandler(KeyboardEvent e) {
@@ -326,6 +320,6 @@ class SparkOverlay extends SparkWidget {
    * method to adjust the size and position of the overlay when the
    * browser window resizes.
    */
-  void _resizeHandler(e) {
+  void resizeHandler(e) {
   }
 }

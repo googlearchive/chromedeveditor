@@ -260,7 +260,7 @@ class Workspace extends Container {
         }).whenComplete(() {
           _logger.info('Workspace restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
-          return _restoreSyncFs();
+          _restoreSyncFs();
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
         _logger.warning('Exception in workspace restore', e);
@@ -870,7 +870,7 @@ class Folder extends Container {
     return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
   }
 
-  //TODO(keertip): remove check for 'cache' 
+  //TODO(keertip): remove check for 'cache'
   bool isScmPrivate() => name == '.git' || name == '.svn'
       || (name =='cache' && pubProperties.isProjectWithPackages(parent));
 
@@ -1270,6 +1270,7 @@ class EventType extends Enum<String> {
   const EventType._(String value) : super(value);
 
   String get enumName => 'WorkspaceEventType';
+
   /**
    * Event type indicates resource has been added to workspace.
    */

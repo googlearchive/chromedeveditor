@@ -31,7 +31,7 @@ defineTests() {
 void main() {
   print('hello');
 }
-''').then((CompilerResult r) {
+''').then((CompilerResultHolder r) {
         expect(r.problems, isEmpty);
         expect(r.getSuccess(), true);
         expect(r.output.length, greaterThan(1000));

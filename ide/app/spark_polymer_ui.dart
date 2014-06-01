@@ -12,7 +12,6 @@ import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
-
 import 'lib/event_bus.dart';
 import 'lib/platform_info.dart';
 

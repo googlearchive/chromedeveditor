@@ -46,7 +46,7 @@ defineTests() {
     });
 
     test('persist workspace roots', () {
-      // Disabled because it doesn't work on Chrome < 31.
+      // Test failing in dart2js.
       if (isDart2js()) return null;
 
       var prefs = new MapPreferencesStore();
