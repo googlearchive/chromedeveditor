@@ -45,7 +45,7 @@ class GitErrorConstants {
   static final String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
   static final String GIT_UNCOMMITTED_CHANGES_IN_TREE
       = "git.uncommitted_changes_in_tree";
-  static final String GIT_NO_CHANGES_TO_COMMIT = "git.no_changes_to_commit";
+  static final String GIT_COMMIT_NO_CHANGES = "git.commit_no_changes";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
 }
