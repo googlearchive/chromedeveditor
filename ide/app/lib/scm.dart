@@ -203,7 +203,6 @@ class FileStatus {
   static const FileStatus DELETED = const FileStatus._('deleted');
   static const FileStatus ADDED = const FileStatus._('added');
 
-
   final String status;
 
   const FileStatus._(this.status);

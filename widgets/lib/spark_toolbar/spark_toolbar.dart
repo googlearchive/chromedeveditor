@@ -13,7 +13,9 @@ class SparkToolbar extends SparkWidget {
   /// The client must specify one, and only one, of [vertical] and [horizontal].
   @published bool horizontal = false;
   @published bool vertical = false;
-  @published String justify = 'left';
+  // TODO(ussuri): Default values don't work on the CSS: force client to specify.
+  @published String justify;
+  @published String spacing;
 
   SparkToolbar.created(): super.created();
 
@@ -21,6 +23,7 @@ class SparkToolbar extends SparkWidget {
   void enteredView() {
     assert(horizontal || vertical);
     assert(horizontal != vertical);
-    assert(['left', 'right', 'center', 'spaced'].contains(justify));
+    assert(['left', 'right', 'center', 'spaced', 'edges'].contains(justify));
+    assert(['small', 'medium', 'large'].contains(spacing));
   }
 }

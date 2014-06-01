@@ -19,8 +19,8 @@
   border-radius: 50%;
 }
 
-:host(:hover, 
-      :active, 
+:host(:hover,
+      :active,
       [active]) {
   background: #e4e4e4;
 }
@@ -30,8 +30,8 @@
   box-shadow: 0 2px 10px 0px #ddd;
 }
 
-:host([raised]:hover, 
-      [raised]:active, 
+:host([raised]:hover,
+      [raised]:active,
       [raised][active]) {
   background: #d6d6d6;
 }
@@ -45,8 +45,8 @@
   background: rgb(66, 128, 244);
 }
 
-:host([primary][raised]:hover, 
-      [primary][raised]:active, 
+:host([primary][raised]:hover,
+      [primary][raised]:active,
       [primary][raised][active]) {
   color: #fff;
   background: rgb(51, 103, 214);
@@ -66,9 +66,9 @@
   color: #a8a8a8 !important;
 }
 
-:host(:active, 
+:host(:active,
       [active]) {
-  box-shadow: 0 7px 10px 0px #ddd;
+  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.26);
   -webkit-transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   transition: box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -101,15 +101,34 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5px 10px;
 }
 
-:host([minPadding]) #content {
+:host([padding="small"]) #content {
   padding: 2px;
 }
 
-:host([noPadding]) #content {
+:host([padding="none"]) #content {
   padding: 0;
+}
+
+:host([padding="medium"]) #content {
+  padding: 5px;
+}
+
+:host([padding="large"]) #content {
+  padding: 5px 10px;
+}
+
+:host([padding="large"][round]) #content {
+  padding: 8px;
+}
+
+:host([padding="huge"]) #content {
+  padding: 8px 20px;
+}
+
+:host([padding="huge"][round]) #content {
+  padding: 11px;
 }
 
 :host(:focus) #focusBg {
@@ -140,4 +159,5 @@
 ::content * {
   /* Needed to put ink behind the contents */
   position: relative;
+  pointer-events: none;
 }

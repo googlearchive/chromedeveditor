@@ -32,9 +32,15 @@ class DeviceInfo {
   DeviceInfo(this.vendorId, this.productId, this.description);
 }
 
+/**
+ * A class to encapsulate deploying an application to a mobile device.
+ */
 class MobileDeploy {
+  static bool isAvailable() => chrome.usb.available;
+
   final Container appContainer;
   final PreferenceStore _prefs;
+
   List<DeviceInfo> _knownDevices = [];
 
   MobileDeploy(this.appContainer, this._prefs) {
@@ -43,6 +49,7 @@ class MobileDeploy {
     }
 
     final List permissions = chrome.runtime.getManifest()['permissions'];
+
     for (final p in permissions) {
       if (p is Map && (p as Map).containsKey('usbDevices')) {
         final List usbDevices = (p as Map)['usbDevices'];
