@@ -1882,8 +1882,7 @@ class NewProjectAction extends SparkActionWithDialog {
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
-      'polymer-elements': 'PolymerLabs/polymer-elements#master',
-      'polymer-ui-elements': 'PolymerLabs/polymer-ui-elements#master'
+      'core-elements': 'PolymerLabs/core-elements#master'
   };
   // Matches: "proj-template", "proj-template+polymer,polymer-elements".
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');

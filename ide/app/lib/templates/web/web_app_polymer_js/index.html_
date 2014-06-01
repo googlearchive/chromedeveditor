@@ -10,11 +10,11 @@
   <link rel="import" href="bower_components/polymer-ui-card/polymer-ui-card.html">
 </head>
 
-<body>
+<body unresolved>
   <polymer-ui-card>
     <div id="greeting"></div>
   </polymer-ui-card>
 
-  <script src="main.js"></script> 
+  <script src="main.js"></script>
 </body>
 </html>
