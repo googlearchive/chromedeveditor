@@ -217,7 +217,7 @@ class _Package {
   // formats, including paths to local git repos and explicit GitHub URLs.
   // Handle at least those two.
 
-  /// E.g.: "Polymer/polymer-elements".
+  /// E.g.: "Polymer/core-elements".
   static const _PACKAGE_SPEC_PATH = r'[-\w./]+';
   /// E.g.: "#master", "#1.2.3".
   static const _PACKAGE_SPEC_BRANCH = r'[-\w.]+';

@@ -205,7 +205,7 @@
             <option value="web/web_app_js">
               JavaScript Web app
             </option>
-            <option value="web/web_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
+            <option value="web/web_app_polymer_js;polymer,core-elements">
               JavaScript Web app using Polymer
             </option>
           </optgroup>
@@ -216,7 +216,7 @@
             <template if="{{showWipProjectTemplates}}">
               <!-- This one currently can't possibly work due to Polymer
                    JS breaking the CSP. BUG #1933. -->
-              <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
+              <option value="chrome/chrome_app_polymer_js;polymer,core-elements">
                 JavaScript Chrome app using Polymer
               </option>
               <!-- This one works when installed in Chrome manually, but

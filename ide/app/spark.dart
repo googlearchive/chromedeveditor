@@ -1884,7 +1884,7 @@ class NewProjectAction extends SparkActionWithDialog {
       'polymer': 'Polymer/polymer#master',
       'core-elements': 'PolymerLabs/core-elements#master'
   };
-  // Matches: "proj-template", "proj-template+polymer,polymer-elements".
+  // Matches: "proj-template", "proj-template;polymer,core-elements".
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
