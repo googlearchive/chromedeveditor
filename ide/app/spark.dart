@@ -822,7 +822,7 @@ abstract class Spark
     // deleted files. For any other changes it is the user's responsibility to
     // explicitly refresh the affected project.
     Set<ws.Resource> resources = new Set.from(
-        editorManager.files.map((r) => r.project != null ? r.parent : r));
+        editorManager.files.map((r) => r.project != null ? r.project : r));
     resources.forEach((ws.Resource r) => r.refresh());
   }
 }
