@@ -2348,11 +2348,9 @@ class GitAddAction extends SparkAction implements ContextAction {
       => _isUnderScmProject(object) && _valid(object);
 
   bool _valid(List<ws.Resource> resources) {
-    resources.forEach((resource) {
-      print(resource.getMetadata('scmStatus') + ' ' + resource.entry.fullPath);
-    });
     return resources.any((resource) =>
-      (resource.getMetadata('scmStatus') == ScmFileStatus.UNTRACKED));
+      new ScmFileStatus.createFrom(resource.getMetadata('scmStatus'))
+          == ScmFileStatus.UNTRACKED);
   }
 }
 
