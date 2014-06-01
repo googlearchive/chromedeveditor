@@ -29,7 +29,8 @@ class Add {
       if (status.type == FileStatusType.UNTRACKED) {
         return FileStatus.createFromEntry(entry).then((FileStatus status) {
           status.type = FileStatusType.MODIFIED;
-          return options.store.index.updateIndexForEntry(status);
+          options.store.index.updateIndexForEntry(entry, status);
+          return status;
         });
       } else {
         return status;
