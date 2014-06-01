@@ -92,7 +92,7 @@ class SparkPolymerDialog implements Dialog {
   void hide() => _dialogElement.hide();
 
   @override
-  Element get dialog => _dialogElement;
+  SparkDialog get dialog => _dialogElement;
 
   @override
   Element getElement(String selectors) =>
