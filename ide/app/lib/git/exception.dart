@@ -40,10 +40,12 @@ class GitErrorConstants {
   static final String GIT_PUSH_NO_REMOTE = "git.push_no_remote";
   static final String GIT_PUSH_NO_COMMITS = "git.push_no_commits";
   static final String GIT_OBJECT_STORE_CORRUPTED = "git.object_store_corrupted";
-  static final String GIT_COMMIT_NO_CHANGES = "git.commit_no_changes";
   static final String GIT_AUTH_REQUIRED = "git.auth_required";
   static final String GIT_HTTP_404_ERROR = "git.http_404_error";
   static final String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
+  static final String GIT_UNCOMMITTED_CHANGES_IN_TREE
+      = "git.uncommitted_changes_in_tree";
+  static final String GIT_COMMIT_NO_CHANGES = "git.commit_no_changes";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
 }
