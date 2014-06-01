@@ -250,7 +250,7 @@ class Index {
   }
 
   /**
-   * Walks over all the files in the working tree. Returns sha of the
+   * Walks over all the files in the working tree. Returns status of the
    * working tree.
    */
    Future<List<FileStatus>> walkFilesAndUpdateIndex(chrome.DirectoryEntry root,
@@ -291,6 +291,7 @@ class Index {
          }
        }).then((_) {
          if (root.fullPath == ".git") {
+           // ignore `.git` folder.
          } else if (fileStatuses.isEmpty) {
            deleteIndexForEntry(root.fullPath);
          } else if (fileStatuses.any((status) => status.type
