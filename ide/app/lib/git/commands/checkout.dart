@@ -58,7 +58,9 @@ class Checkout {
       if (entry.isBlob) {
         return ObjectUtils.expandBlob(dir, store, entry.name, entry.sha);
       } else {
-        return ObjectUtils.expandTree(dir, store, entry.sha);
+        return dir.createDirectory(entry.name).then((newDir) {
+          return ObjectUtils.expandTree(newDir, store, entry.sha);
+        });
       }
     }).then((_) {
       return Future.forEach(diff.removes, (TreeEntry entry) {
