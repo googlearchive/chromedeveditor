@@ -30,6 +30,7 @@ import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
 import 'git/commands/fetch.dart';
+import 'git/commands/index.dart' as gitIndex;
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
 import 'git/commands/revert.dart';
@@ -471,46 +472,73 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<ObjectStore> get objectStore => _completer.future;
 
   Future updateForChanges(List<ChangeDelta> changes) {
-    return _refreshStatus(files: changes
-        .where((d) => d.type != EventType.DELETE && d.resource is File)
+    return _refreshStatus(resources: changes
+        .where((d) => d.type != EventType.DELETE)
         .map((d) => d.resource)
-        .where((File f) => f.parent != null && !f.parent.isScmPrivate()));
+        .where((Resource f) => f.parent != null && !f.parent.isScmPrivate()));
   }
 
   /**
-   * Refresh either the entire given project, or the given list of files.
+   * Refresh either the entire given project, or the given list of Resources.
    */
-  Future _refreshStatus({Project project, Iterable<File> files}) {
-    assert(project != null || files != null);
+  Future _refreshStatus({Project project, Iterable<Resource> resources}) {
+    assert(project != null || resources != null);
 
     // Get a list of all files in the project.
     if (project != null) {
-      files = project.traverse().where((r) => r is File);
+      resources = project.traverse().where((r) => r is File);
     }
 
-    // For each file, request the SCM status asynchronously.
     return objectStore.then((ObjectStore store) {
-      return Future.forEach(files, (File file) {
-        return Status.getFileStatus(store, file.entry).then((status) {
-          String fileStatus;
-          if (status.type == FileStatusType.MODIFIED) {
-            if (status.deleted) {
-              fileStatus = FileStatusType.DELETED;
-            } else if (status.headSha == null) {
-              fileStatus = FileStatusType.ADDED;
-            } else {
-              fileStatus = FileStatusType.MODIFIED;
-            }
-          } else {
-            fileStatus = status.type;
-          }
-          file.setMetadata('scmStatus',
-              new FileStatus.fromIndexStatus(fileStatus).status);
+      if (project != null) {
+        return Status.getFileStatuses(store).then((statuses) {
+          resources.forEach((resource) {
+            _setStatus(resource, statuses[resource.entry.fullPath]);
+          });
+          return new Future.value();
         });
-      }).then((_) => _statusController.add(this));
+      } else {
+        // For each file, request the SCM status asynchronously.
+        return Future.forEach(resources, (Resource resource) {
+          return Status.updateAndGetStatus(store, resource.entry).then((status) {
+            _updateStatusForAncestors(store, resource);
+            return new Future.value();
+          });
+        });
+      }
     }).catchError((e, st) {
       _logger.severe("error calculating scm status", e, st);
-    });
+    }).whenComplete(() => _statusController.add(this));
+  }
+
+  void _updateStatusForAncestors(ObjectStore store, Resource resource) {
+    _setStatus(resource, Status.getStatusForEntry(store, resource.entry));
+    if (resource.entry.fullPath != store.root.fullPath) {
+      _updateStatusForAncestors(store, resource.parent);
+    }
+  }
+
+  void _setStatus(Resource resource, gitIndex.FileStatus status) {
+    String fileStatus;
+    if (status == null) {
+      fileStatus = FileStatusType.UNTRACKED;
+    } else if (resource.isFile) {
+      if (status.type == FileStatusType.MODIFIED) {
+        if (status.deleted) {
+          fileStatus = FileStatusType.DELETED;
+        } else if (status.headSha == null) {
+          fileStatus = FileStatusType.ADDED;
+        } else {
+          fileStatus = FileStatusType.MODIFIED;
+        }
+      } else {
+        fileStatus = status.type;
+      }
+    } else {
+        fileStatus = status.type;
+    }
+    resource.setMetadata('scmStatus', new FileStatus.fromIndexStatus(
+        fileStatus).status);
   }
 }
 
