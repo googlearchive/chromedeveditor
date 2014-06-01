@@ -486,7 +486,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
     // Get a list of all files in the project.
     if (project != null) {
-      resources = project.traverse().where((r) => r is File);
+      resources = project.traverse();
     }
 
     return objectStore.then((ObjectStore store) {
