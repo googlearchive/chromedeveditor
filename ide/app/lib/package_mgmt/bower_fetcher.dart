@@ -19,6 +19,7 @@ import 'package:logging/logging.dart';
 
 import '../enum.dart';
 import '../scm.dart';
+import '../../spark_flags.dart';
 
 Logger _logger = new Logger('spark.bower_fetcher');
 
@@ -222,7 +223,9 @@ class _Package {
   static const _PACKAGE_SPEC_BRANCH = r'[-\w.]+';
   /// E.g.: "Polymer/polymer#master";
   static final RegExp _PACKAGE_SPEC_REGEXP =
-      new RegExp('^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$');
+      SparkFlags.laxBowerBranches ?
+          new RegExp('^($_PACKAGE_SPEC_PATH)(?:#(.*))?\$') :
+          new RegExp('^($_PACKAGE_SPEC_PATH)(?:#($_PACKAGE_SPEC_BRANCH))?\$');
 
   static const _GITHUB_ROOT_URL = 'https://github.com';
   static const _GITHUB_USER_CONTENT_URL = 'https://raw.githubusercontent.com';
@@ -240,6 +243,9 @@ class _Package {
     path = match.group(1);
     branch = match.group(2);
     if (branch == null) {
+      branch = 'master';
+    } else if (SparkFlags.laxBowerBranches &&
+               !_PACKAGE_SPEC_BRANCH.matchAsPrefix(branch)) {
       branch = 'master';
     }
   }

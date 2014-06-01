@@ -16,6 +16,7 @@ class SparkFlags {
   /**
    * Accessors to the currently supported flags.
    */
+  // NOTE: '...== true' below are on purpose: flag values can be null.
   static bool get developerMode => _flags['test-mode'] == true;
   static bool get useLightAceThemes => _flags['light-ace-themes'] == true;
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
@@ -24,6 +25,7 @@ class SparkFlags {
   static bool get showGitPull => _flags['show-git-pull'] == true;
   static bool get showGitBranch => _flags['show-git-branch'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
+  static bool get laxBowerBranches => _flags['lax-bower-branches'] == true;
 
   static void setFlags(Map<String, dynamic> newFlags) {
     if (newFlags != null) _flags.addAll(newFlags);
