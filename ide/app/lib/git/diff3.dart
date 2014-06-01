@@ -103,7 +103,12 @@ class Diff {
         }
       }
 
-      candidates[r] = c;
+      // candidates[r] = c;
+      if (r == candidates.length) {
+        candidates.add(c);
+      } else {
+        candidates[r] = c;
+      }
     }
 
     // At this point, we know the LCS: it's in the reverse of the
@@ -113,7 +118,52 @@ class Diff {
     return candidates[candidates.length - 1];
   }
 
-  diff_comm(file1, file2) { throw new UnimplementedError(); }
+  diff_comm(List<String> file1, List<String> file2) {
+    // We apply the LCS to build a "comm"-style picture of the
+    // differences between file1 and file2.
+
+    List<Map<String, List>> result = [];
+    int tail1 = file1.length;
+    int tail2 = file2.length;
+    Map<String, List> common = {"common": []};
+
+    void processCommon() {
+      if (common["common"].length > 0) {
+        common["common"] = common["common"].reversed.toList();
+        result.add(common);
+        common = {"common": []};
+      }
+    }
+
+    var candidate = longest_common_subsequence(file1, file2);
+    for (; candidate != null; candidate = candidate["chain"]) {
+      Map<String, List> different = {"file1": [], "file2": []};
+
+      while (--tail1 > candidate["file1index"]) {
+        different["file1"].add(file1[tail1]);
+      }
+
+      while (--tail2 > candidate["file2index"]) {
+        different["file2"].add(file2[tail2]);
+      }
+
+      if (different["file1"].length > 0 || different["file2"].length > 0) {
+        processCommon();
+        different["file1"] = different["file1"].reversed.toList();
+        different["file2"] = different["file2"].reversed.toList();
+        result.add(different);
+      }
+
+      if (tail1 >= 0) {
+        common["common"].add(file1[tail1]);
+      }
+    }
+
+    processCommon();
+    result = result.reversed.toList();
+    return result;
+  }
+
   diff_patch(file1, file2) { throw new UnimplementedError(); }
   strip_patch(patch) { throw new UnimplementedError(); }
   invert_patch(patch) { throw new UnimplementedError(); }
@@ -127,16 +177,6 @@ class Diff {
     int tail1 = file1.length;
     int tail2 = file2.length;
 
-    Map chunkDescription(file, int offset, int length) {
-      List chunk = [];
-      for (int i = 0; i < length; i++) {
-        chunk.add(file[offset + i]);
-      }
-
-      // TODO(adam): class `ChunkDescription`
-      return {"offset": offset, "length": length, "chunk": chunk};
-    }
-
     // TODO(adam): class `Candidate`
     var candidate = longest_common_subsequence(file1, file2);
 
@@ -148,8 +188,8 @@ class Diff {
 
       if (mismatchLength1 != 0 || mismatchLength2 != 0) {
         result.add({
-          "file1": chunkDescription(file1, candidate["file1index"] + 1, mismatchLength1),
-          "file2": chunkDescription(file2, candidate["file2index"] + 1, mismatchLength2)
+          "file1": [tail1 + 1, mismatchLength1],
+          "file2": [tail2 + 1, mismatchLength2]
         });
       }
     }
@@ -177,7 +217,7 @@ class Diff {
 
     List<List> hunks = [];
     void addHunk(h, int side) {
-      hunks.add([h.file1[0], side, h.file1[1], h.file2[0], h.file2[1]]);
+      hunks.add([h["file1"][0], side, h["file1"][1], h["file2"][0], h["file2"][1]]);
     }
 
     for (int i = 0; i < m1.length; i++) {
@@ -188,7 +228,15 @@ class Diff {
       addHunk(m2[i], 2);
     }
 
-    hunks.sort();
+    hunks.sort((a, b) {
+      // a[0] file1 offset
+      // a[1] side
+      if (a[0] != b[0]) {
+        return a[0].compareTo(b[0]);
+      } else {
+        return a[1].compareTo(b[1]);
+      }
+    });
 
     List result = [];
     int commonOffset = 0;
@@ -315,23 +363,23 @@ class Diff {
       int side = x[0];
       if (side == -1) {
         if (excludeFalseConflicts && !isTrueConflict(x)) {
-          pushOk(files[0].getRange(x[1], x[1] + x[2]));
+          pushOk(files[0].getRange(x[1], x[1] + x[2]).toList());
         } else {
           flushOk();
           // TODO(adam): class `Conflict`
           result.add({
             "conflict": {
-              "a": a.getRange(x[1], x[1] + x[2]),
+              "a": a.getRange(x[1], x[1] + x[2]).toList(),
               "aIndex": x[1],
-              "o": o.getRange(x[3], x[3] + x[4]),
+              "o": o.getRange(x[3], x[3] + x[4]).toList(),
               "oIndex": x[3],
-              "b": b.getRange(x[5], x[5] + x[6]),
+              "b": b.getRange(x[5], x[5] + x[6]).toList(),
               "bIndex": x[5]
             }
           });
         }
       } else {
-        pushOk(files[side].getRange(x[1], x[1] + x[2]));
+        pushOk(files[side].getRange(x[1], x[1] + x[2]).toList());
       }
     }
 
@@ -355,13 +403,13 @@ class Diff {
         List<Map> c = diff_comm(item["conflict"]["a"], item["conflict"]["b"]);
         for (int j = 0; j < c.length; j++) {
           var inner = c[j];
-          if (inner.containsKey(["common"])) {
-            lines.addAll(item["common"]);
+          if (inner.containsKey("common")) {
+            lines.addAll(inner["common"]);
           } else {
             conflict = true;
-            lines.addAll([ ["<<<<<<<<<"], inner["file1"],
-                           ["========="], inner["file2"],
-                           [">>>>>>>>>"]  ]);
+            lines.addAll(["<<<<<<<<<", inner["file1"].join("\n"),
+                          "=========", inner["file2"].join("\n"),
+                          ">>>>>>>>>"]);
           }
         }
       }
