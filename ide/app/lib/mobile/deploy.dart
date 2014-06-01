@@ -191,7 +191,7 @@ class MobileDeploy {
       }
       if (index >= _knownDevices.length) {
         return new Future.error('No known mobile device connected.\n'
-            'Please check whether you plugged your mobile device properly.');
+            'Please ensure that you have a mobile device connected.');
       }
 
       DeviceInfo di = _knownDevices[index];

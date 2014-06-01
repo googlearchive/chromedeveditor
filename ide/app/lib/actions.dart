@@ -200,7 +200,8 @@ class KeyBinding {
           "TAB": KeyCode.TAB,
           "[" : KeyCode.OPEN_SQUARE_BRACKET,
           "]" : KeyCode.CLOSE_SQUARE_BRACKET,
-          ".": KeyCode.PERIOD
+          "." : KeyCode.PERIOD,
+          "," : KeyCode.COMMA
       };
     }
     return __bindingMap;
@@ -288,6 +289,11 @@ class KeyBinding {
   int _codeFor(String str) {
     if (_bindingMap[str] != null) {
       return _bindingMap[str];
+    }
+
+    // Look for specific hex key codes.
+    if (str.startsWith('0x')) {
+      return int.parse(str.substring(2), radix: 16);
     }
 
     return str.codeUnitAt(0);

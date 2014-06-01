@@ -376,6 +376,7 @@ class AceManager {
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         _showGotoLineView);
     _aceEditor.commands.addCommand(command);
+
     if (PlatformInfo.isMac) {
       command = new ace.Command(
           'scrolltobeginningofdocument',
@@ -389,6 +390,9 @@ class AceManager {
           _scrollToEndOfDocument);
       _aceEditor.commands.addCommand(command);
     }
+
+    // Remove the `ctrl-,` binding.
+    _aceEditor.commands.removeCommand('showSettingsMenu');
 
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
@@ -436,8 +440,8 @@ class AceManager {
     });
   }
 
+  // Set up the goto line dialog.
   void _setupGotoLine() {
-    // Set up the goto line dialog.
     gotoLineView = new GotoLineView();
     if (gotoLineView is! GotoLineView) {
       html.querySelector('#splashScreen').style.backgroundColor = 'red';

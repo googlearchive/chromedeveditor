@@ -431,9 +431,9 @@ abstract class Spark
       actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
       actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     }
+    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
-    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -816,13 +816,12 @@ abstract class Spark
   }
 
   void _refreshOpenFiles() {
-    // In order to scope how much work we do when Spark re-gains focus, we do
-    // not refresh the entire workspace or even the active projects. We refresh
-    // the currently opened files and their parent containers. This lets us
-    // capture changed files and deleted files. For any other changes it is the
-    // user's responsibility to explicitly refresh the affected project.
+    // In order to scope how much work we do when Spark re-gains focus, we only
+    // refresh the active projects. This lets us capture changed files and
+    // deleted files. For any other changes it is the user's responsibility to
+    // explicitly refresh the affected project.
     Set<ws.Resource> resources = new Set.from(
-        editorManager.files.map((r) => r.parent != null ? r.parent : r));
+        editorManager.files.map((r) => r.project != null ? r.parent : r));
     resources.forEach((ws.Resource r) => r.refresh());
   }
 }
@@ -1685,7 +1684,8 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
       spark, "resource-refresh", "Refresh") {
     // On Chrome OS, bind to the dedicated refresh key.
     if (PlatformInfo.isCros) {
-      addBinding('f5', linuxBinding: 'f3');
+      // 168 (0xA8) is the key code of the refresh key on ChromeOS.
+      addBinding('f5', linuxBinding: '0xA8');
     } else {
       addBinding('f5');
     }
@@ -2155,6 +2155,9 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     return _getLocation().then((location) {
       _addProperty(_propertiesElement, 'Location', location);
     }).then((_) {
+      // Only show repo info for projects.
+      if (_selectedResource is! ws.Project) return null;
+
       GitScmProjectOperations gitOperations =
           spark.scmManager.getScmOperationsFor(_selectedResource.project);
 
@@ -2326,7 +2329,7 @@ class GitPullAction extends SparkAction implements ContextAction {
 }
 
 class GitAddAction extends SparkAction implements ContextAction {
-  GitAddAction(Spark spark) : super(spark, "git-add", "Add  to Git");
+  GitAddAction(Spark spark) : super(spark, "git-add", "Git Add");
   chrome.Entry entry;
 
   void _invoke([List<ws.Resource> resources]) {
@@ -3120,7 +3123,11 @@ class SettingsAction extends SparkActionWithDialog {
   bool _initialized = false;
 
   SettingsAction(Spark spark, Element dialog)
-      : super(spark, "settings", "Settings", dialog);
+      : super(spark, "settings", "Settings", dialog) {
+    if (PlatformInfo.isMac) {
+      addBinding('ctrl-,');
+    }
+  }
 
   void _invoke([Object context]) {
     if (!_initialized) {
