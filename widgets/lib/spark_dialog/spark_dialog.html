@@ -15,12 +15,12 @@
     <link rel="stylesheet" href="spark_dialog.css">
 
     <spark-modal id="modal" focused animation="{{animation}}">
-      <spark-toolbar id="header" 
-          horizontal 
+      <spark-toolbar id="header"
+          horizontal
           justify="edges"
           spacing="small">
         <span id="title">{{title}}</span>
-        <spark-button id="closingX" 
+        <spark-button id="closingX"
             flat
             round
             padding="small"
@@ -39,9 +39,9 @@
         <!--content select=":not(spark-dialog-button)"></content-->
       </div>
 
-      <spark-toolbar id="footer" 
-          horizontal 
-          justify="right" 
+      <spark-toolbar id="footer"
+          horizontal
+          justify="right"
           spacing="medium">
         <content select="spark-dialog-button"></content>
       </spark-toolbar>

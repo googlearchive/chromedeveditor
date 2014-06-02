@@ -10,6 +10,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
 import 'index.dart';
+import '../exception.dart';
 import '../file_operations.dart';
 import '../objectstore.dart';
 import '../utils.dart';
@@ -113,8 +114,7 @@ class Status {
      Map<String, FileStatus> statuses = _getFileStatusesForTypes(store,
          [FileStatusType.MODIFIED, FileStatusType.STAGED]);
       if (!statuses.isEmpty) {
-        //TODO(grv) : throw custom exception.
-        throw "Uncommitted changes in the working tree.";
+        throw new GitException(GitErrorConstants.GIT_UNCOMMITTED_CHANGES_IN_TREE);
       }
     });
   }

@@ -198,10 +198,10 @@ class KeyBinding {
           "SPACE": KeyCode.SPACE,
           "ENTER": KeyCode.ENTER,
           "TAB": KeyCode.TAB,
-          "[" : KeyCode.OPEN_SQUARE_BRACKET,
-          "]" : KeyCode.CLOSE_SQUARE_BRACKET,
-          "." : KeyCode.PERIOD,
-          "," : KeyCode.COMMA
+          "[": KeyCode.OPEN_SQUARE_BRACKET,
+          "]": KeyCode.CLOSE_SQUARE_BRACKET,
+          ".": KeyCode.PERIOD,
+          ",": KeyCode.COMMA
       };
     }
     return __bindingMap;

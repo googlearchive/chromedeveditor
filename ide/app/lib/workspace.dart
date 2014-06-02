@@ -312,7 +312,8 @@ class Workspace extends Container {
     }
 
     // Add new roots from syncFS.
-    futures.add(_syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
+    futures.add(_syncFileSystem.root.createReader().readEntries().then(
+        (List<chrome.Entry> entries) {
       List<Future> newAdditions = [];
       Set<String> newPaths = new Set();
       for(chrome.Entry entry in entries) {
@@ -365,7 +366,7 @@ class Workspace extends Container {
     }
 
     // Wait for 10 seconds before performing the refresh.
-    _timerSyncFSRefresh = new Timer(new Duration(seconds:10), () {
+    _timerSyncFSRefresh = new Timer(new Duration(seconds: 10), () {
       _refreshSyncFSAfterDelay();
       _timerSyncFSRefresh = null;
     });
@@ -395,7 +396,9 @@ class Workspace extends Container {
       chrome.syncFileSystem.onFileStatusChanged.listen((chrome.FileInfo info) {
         // Trigger refresh when changes are coming from the server.
         if (info.direction == chrome.SyncDirection.REMOTE_TO_LOCAL) {
-          _scheduleRefreshSyncFSForEntry(info.fileEntry);
+          chrome.Entry entry = info.fileEntry;
+          _logger.info('syncfs change for ${entry}');
+          _scheduleRefreshSyncFSForEntry(entry);
         }
       });
 

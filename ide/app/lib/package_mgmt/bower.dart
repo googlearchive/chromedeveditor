@@ -60,11 +60,11 @@ class BowerManager extends PackageManager {
       final fetcher = new BowerFetcher(
           packagesDir.entry, properties.packageSpecFileName);
 
-      return fetcher.fetchDependencies(specFile.entry, mode).whenComplete(() {
-        return project.refresh();
-      }).catchError((e) {
+      return fetcher.fetchDependencies(specFile.entry, mode).catchError((e) {
         _logger.severe('Error getting Bower packages', e);
         return new Future.error(e);
+      }).then((_) {
+        return project.refresh();
       });
     });
   }

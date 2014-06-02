@@ -311,8 +311,8 @@ class MarkdownEditor extends TextEditor {
 
   @override
   void deactivate() {
-    _markdown.deactivate();
     super.deactivate();
+    _markdown.deactivate();
   }
 
   @override
@@ -326,6 +326,7 @@ class MarkdownEditor extends TextEditor {
  */
 class AceManager {
   static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
+
   /**
    * The container for the Ace editor.
    */
@@ -431,14 +432,13 @@ class AceManager {
 
     ace.Point lastCursorPosition =  new ace.Point(-1, -1);
     _aceEditor.onChangeSelection.listen((_) {
-      ace.Point newCursorPosition = _aceEditor.cursorPosition;
-      // Cancel the last outline selection update
-      if (lastCursorPosition != newCursorPosition) {
-        int cursorOffset = currentSession.document.positionToIndex(
-            newCursorPosition);
-        outline.selectItemAtOffset(cursorOffset);
+      ace.Point currentPosition = _aceEditor.cursorPosition;
+      // Cancel the last outline selection update.
+      if (lastCursorPosition != currentPosition) {
+        outline.selectItemAtOffset(
+            currentSession.document.positionToIndex(currentPosition));
+        lastCursorPosition = currentPosition;
       }
-      lastCursorPosition = newCursorPosition;
     });
   }
 

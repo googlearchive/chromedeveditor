@@ -49,6 +49,7 @@ class GitErrorConstants {
   static final String GIT_PUSH_NON_FAST_FORWARD = "git.push_non_fast_forward";
 
   static final String GIT_OBJECT_STORE_CORRUPTED = "git.object_store_corrupted";
+
   static final String GIT_COMMIT_NO_CHANGES = "git.commit_no_changes";
 
   static final String GIT_FETCH_UP_TO_DATE = "git.fetch_up_to_date";
@@ -57,6 +58,8 @@ class GitErrorConstants {
 
   static final String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
   static final String GIT_FILE_STATUS_TYPE_UNKNOWN = "git.file_status_type_unknown";
+  static final String GIT_UNCOMMITTED_CHANGES_IN_TREE
+      = "git.uncommitted_changes_in_tree";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
 }

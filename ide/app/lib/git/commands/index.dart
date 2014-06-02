@@ -109,20 +109,19 @@ class Index {
    * Status of untracked files are left as untracked.
    */
   Future onCommit() {
-    return updateIndex().then((_) {
-      Map<String, FileStatus> statusIdx = {};
-      _statusIdx.forEach((key, FileStatus status) {
-        if (status.type != FileStatusType.UNTRACKED) {
-          status.headSha = status.sha;
-          status.type = FileStatusType.COMMITTED;
-        }
-        if (status.deleted == false) {
-          statusIdx[key] = status;
-        }
-      });
-      _statusIdx = statusIdx;
-      _scheduleWriteIndex();
+    Map<String, FileStatus> statusIdx = {};
+    _statusIdx.forEach((key, FileStatus status) {
+      if (status.type != FileStatusType.UNTRACKED) {
+        status.headSha = status.sha;
+        status.type = FileStatusType.COMMITTED;
+      }
+      if (status.deleted == false) {
+        statusIdx[key] = status;
+      }
     });
+    _statusIdx = statusIdx;
+    _scheduleWriteIndex();
+    return updateIndex();
   }
 
   FileStatus getStatusForEntry(chrome.Entry entry)
@@ -281,10 +280,11 @@ class Index {
              if (updateSha) {
                return getShaForEntry(entry, 'blob').then((String sha) {
                  return entry.getMetadata().then((data) {
-                   FileStatus status = new FileStatus();
-                   status.path = entry.fullPath;
+                   FileStatus status = _statusIdx[entry.fullPath];
                    status.sha = sha;
                    status.size = data.size;
+                   status.modificationTime
+                       = data.modificationTime.millisecondsSinceEpoch;
                    updateIndexForFile(status);
                  });
                });

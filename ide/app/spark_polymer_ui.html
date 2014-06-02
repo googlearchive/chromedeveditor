@@ -194,18 +194,20 @@
       <div class="form-group">
         <label for="type">Project type</label>
         <select name="type" class="form-control" autosave>
-          <option value="empty">
-            Blank project
-          </option>
+          <optgroup label="Default">
+            <option value="empty">
+              Blank project
+            </option>
+          </optgroup>
           <optgroup label="Web apps">
             <option value="web/web_app_dart">
-              Dart Web app
+              Dart web app
             </option>
             <option value="web/web_app_js">
-              JavaScript Web app
+              JavaScript web app
             </option>
-            <option value="web/web_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
-              JavaScript Web app using Polymer
+            <option value="web/web_app_polymer_js;polymer,core-elements">
+              JavaScript web app using Polymer
             </option>
           </optgroup>
           <optgroup label="Chrome apps">
@@ -215,7 +217,7 @@
             <template if="{{showWipProjectTemplates}}">
               <!-- This one currently can't possibly work due to Polymer
                    JS breaking the CSP. BUG #1933. -->
-              <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
+              <option value="chrome/chrome_app_polymer_js;polymer,core-elements">
                 JavaScript Chrome app using Polymer
               </option>
               <!-- This one works when installed in Chrome manually, but
@@ -225,7 +227,7 @@
               </option>
             </template>
           </optgroup>
-          <optgroup label="Other">
+          <optgroup label="Polymer elements">
             <option value="polymer/polymer_element_js">
               JavaScript Polymer custom element
             </option>
@@ -397,7 +399,8 @@
     <!-- Settings dialog -->
     <spark-dialog id="settingsDialog" title="Settings">
       <div class="form-group">
-        <spark-toolbar class="settings-block" horizontal justify="left">
+        <spark-toolbar class="settings-block"
+            horizontal justify="left" spacing="small">
           <label class="settings-label">Whitespace:</label>
           <span class="checkbox">
             <input id="stripWhitespace" type="checkbox">
@@ -410,7 +413,8 @@
 
       <template if="{{useAceThemes}}">
         <div class="form-group" id="changeTheme">
-          <spark-toolbar class="settings-block" horizontal justify="spaced">
+          <spark-toolbar class="settings-block"
+              horizontal justify="spaced" spacing="small">
             <label class="settings-label">Editor theme:</label>
             <span class="settings-value"></span>
             <spark-button id="themeMinus" class="plus-minus-button"
@@ -432,7 +436,7 @@
 
       <div class="form-group" id="changeFont">
         <spark-toolbar class="settings-block"
-            horizontal justify="spaced">
+            horizontal justify="spaced" spacing="small">
           <label class="settings-label">Editor font:</label>
           <span class="settings-value"></span>
           <spark-button id="fontMinus" class="plus-minus-button"
@@ -452,7 +456,7 @@
 
       <div class="form-group" id="changeKeys">
         <spark-toolbar class="settings-block"
-            horizontal justify="spaced">
+            horizontal justify="spaced" spacing="small">
           <label class="settings-label">Key bindings:</label>
           <span class="settings-value"></span>
           <spark-button id="keysMinus" class="plus-minus-button"
@@ -473,7 +477,7 @@
       <template if="{{!chromeOS}}">
         <div class="form-group" id="rootDirectory">
           <spark-toolbar class="settings-block"
-              horizontal justify="spaced">
+              horizontal justify="spaced" spacing="small">
             <label class="settings-label">Root directory:</label>
             <span id="directoryLabel" class="settings-value"></span>
           </spark-toolbar>
@@ -482,7 +486,7 @@
 
       <div class="form-group" id="gitCredentials">
         <spark-toolbar class="settings-block"
-            horizontal justify="edges">
+            horizontal justify="edges" spacing="small">
           <label class="settings-label">Git credentials:</label>
           <spark-button class="reset-setting-button"
               flat primary on-click="{{onResetGit}}">
@@ -497,7 +501,7 @@
       <template if="{{developerMode}}">
         <div class="form-group" id="resetPreferences">
           <spark-toolbar class="settings-block"
-              horizontal justify="edges">
+              horizontal justify="edges" spacing="small">
             <label class="settings-label">Preferences:</label>
             <spark-button class="reset-setting-button"
                 flat primary on-click="{{onResetPreference}}">
@@ -607,13 +611,13 @@
       <spark-dialog-button cancel>
         Cancel
       </spark-dialog-button>
-      <spark-dialog-button id="projectRemoveDeleteButton" submit primary="false">
+      <spark-dialog-button id="projectRemoveDeleteButton" submit secondary>
         Delete
       </spark-dialog-button>
       <spark-dialog-button id="projectRemoveRemoveReferenceButton" submit>
         Remove Reference
       </spark-dialog-button>
-    </spark-modal>
+    </spark-dialog>
 
     <!-- File remove dialog -->
     <spark-dialog id="fileRemoveDialog" title="Remove File">
@@ -633,7 +637,7 @@
       <spark-dialog-button id="fileRemoveRemoveReferenceButton" submit>
         Remove Reference
       </spark-dialog-button>
-    </spark-modal>
+    </spark-dialog>
   </template>
 
   <script type="application/dart;component=1" src="spark_polymer_ui.dart"></script>
