@@ -6,13 +6,20 @@ library spark_widgets.spark_dialog_button;
 
 import 'package:polymer/polymer.dart';
 
-import '../spark_button/spark_button.dart';
+import '../common/spark_widget.dart';
+
+// TODO(ussuri): SparkDialogButton originally derived from SparkButton. That
+// worked fine in Dartium, however in dart2js version Polymer refused to see
+// and apply such changes, while setting HTML attrs on a contained button here
+// works. See original version under git tag 'before-button-hack-to-fix-states'.
 
 @CustomTag('spark-dialog-button')
-class SparkDialogButton extends SparkButton {
+class SparkDialogButton extends SparkWidget {
   @published bool submit = false;
   @published bool cancel = false;
   @published bool dismiss = false;
+  @published bool secondary = false;
+  @published bool disabled = false;
 
   SparkDialogButton.created() : super.created();
 
@@ -23,17 +30,8 @@ class SparkDialogButton extends SparkButton {
     // At most one of [submit] and [cancel] can be true.
     assert([submit, cancel, dismiss].where((e) => e == true).length <= 1);
 
-    if (submit || dismiss) {
-      if (primary == null) primary = true;
-      if (raised == null) raised = true;
-    } else {
-      if (primary == null) primary = false;
-      if (flat == null) flat = true;
-    }
-    if (submit || dismiss || cancel) {
-      // spark-overlay analyzes all clicks and auto-closes if the clicked
-      // element has [overlayToggle] attribute.
-      attributes['overlayToggle'] = '';
-    }
+    // spark-overlay analyzes all clicks and auto-closes if the clicked
+    // element has [overlayToggle] attribute.
+    setAttr(['overlayToggle'], submit || dismiss || cancel);
   }
 }

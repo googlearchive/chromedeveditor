@@ -10,16 +10,29 @@
  */
 -->
 
+<!-- TODO(ussuri): See comment in .dart -->
+
+<link rel="import" href="../../../packages/spark_widgets/common/spark_widget.html"/>
 <link rel="import" href="../../../packages/spark_widgets/spark_button/spark_button.html"/>
 
-<polymer-element name="spark-dialog-button" extends="spark-button"
+<polymer-element name="spark-dialog-button" extends="spark-widget"
     attributes="submit
                 cancel
-                dismiss"
-    padding="huge">
+                dismiss
+                secondary
+                disabled">
   <template>
     <link rel="stylesheet" href="spark_dialog_button.css">
-    <shadow></shadow>
+
+    <spark-button
+        primary?="{{(submit || dismiss) && !secondary}}"
+        raised?="{{submit || dismiss}}"
+        disabled="{{disabled}}"
+        padding="huge"
+        overlayToggle?="{{submit || dismiss || cancel}}"
+        focused>
+      <content></content>
+    </spark-button>
   </template>
 
   <script type="application/dart;component=1" src="spark_dialog_button.dart"></script>
