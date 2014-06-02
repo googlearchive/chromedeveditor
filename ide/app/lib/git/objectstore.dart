@@ -15,6 +15,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'config.dart';
 import 'constants.dart';
+import 'exception.dart';
 import 'fast_sha.dart';
 import 'file_operations.dart';
 import 'commands/index.dart';
@@ -379,19 +380,18 @@ class ObjectStore {
     return walkLevel(nodes);
   }
 
-  _nonFastForward() {
+  // TODO (grv) : Support non fast forward push.
+  void _nonFastForwardPush() {
+    throw new GitException(GitErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
     //TODO throw some error.
   }
 
-  Future<CommitObject> _checkRemoteHead(GitRef remoteRef) {
+  Future _checkRemoteHead(GitRef remoteRef) {
     // Check if the remote head exists in the local repo.
     if (remoteRef.sha != HEAD_MASTER_SHA) {
-      return retrieveObject(remoteRef.sha, ObjectTypes.COMMIT_STR).then(
-          (obj) => obj,
+      return retrieveObject(remoteRef.sha, ObjectTypes.COMMIT_STR).then((r) => r,
         onError: (e) {
-          //TODO support non-fast forward.
-          _nonFastForward();
-          throw(e);
+          _nonFastForwardPush();
       });
     }
     return new Future.value();
@@ -434,8 +434,7 @@ class ObjectStore {
           return _getCommits(remoteRef, remoteShas, sha);
 
         }, onError: (e) {
-          // no commits to push.
-          throw "no commits to push.";
+          throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
         });
       });
     });
@@ -454,7 +453,7 @@ class ObjectStore {
 
         if (commitObj.parents.length > 1) {
           // this means a local merge commit.
-          _nonFastForward();
+          _nonFastForwardPush();
           completer.completeError("");
         } else if (commitObj.parents.length == 0
             || commitObj.parents.first == remoteRef.sha
@@ -467,7 +466,7 @@ class ObjectStore {
         return completer.future;
 
       }, onError: (e) {
-        _nonFastForward();
+        _nonFastForwardPush();
       });
     }
     return getNextCommit(sha);
