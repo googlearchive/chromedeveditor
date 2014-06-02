@@ -33,7 +33,6 @@ class GitErrorConstants {
   static final String GIT_AUTH_REQUIRED = "git.auth_required";
   static final String GIT_AUTH_ERROR = "git.auth_error";
 
-
   static final String GIT_CLONE_DIR_NOT_EMPTY = "git.clone_dir_not_empty";
   static final String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
   static final String GIT_CLONE_DIR_NOT_INITIALIZED
@@ -53,6 +52,7 @@ class GitErrorConstants {
   static final String GIT_FETCH_UPTO_DATE = "git.fetch_upto_date";
 
   static final String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
+  static final String GIT_FILE_STATUS_TYPE_UNKNOWN = "git.file_status_type_unknown";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
 }
