@@ -795,8 +795,8 @@ class FilesController implements TreeViewDelegate {
         fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
       }
 
-      FileStatus status = scmOperations.getFileStatus(resource);
-      fileItemCell.setGitStatus(dirty: (status != FileStatus.COMMITTED));
+      ScmFileStatus status = scmOperations.getFileStatus(resource);
+      fileItemCell.setGitStatus(dirty: (status != ScmFileStatus.COMMITTED));
     }
   }
 
