@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
+import '../exception.dart';
 import '../file_operations.dart';
 import '../objectstore.dart';
 import '../utils.dart';
@@ -92,7 +93,8 @@ class Index {
             break;
           case FileStatusType.UNTRACKED:
           default:
-            throw "Unsupported file status type.";
+            throw new GitException(GitErrorConstants.GIT_FILE_STATUS_TYPE_UNKNOWN,
+                "Unknown file status type: ${oldStatus.type}");
         }
       } else {
         status.type = oldStatus.type;
