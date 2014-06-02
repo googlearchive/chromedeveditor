@@ -32,6 +32,6 @@ class SparkDialogButton extends SparkWidget {
 
     // spark-overlay analyzes all clicks and auto-closes if the clicked
     // element has [overlayToggle] attribute.
-    setAttr(['overlayToggle'], submit || dismiss || cancel);
+    setAttr('overlayToggle', submit || dismiss || cancel);
   }
 }
