@@ -39,6 +39,7 @@ class GitErrorConstants {
       = "git.clone_dir_not_initialized";
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
 
+  static final String GIT_BRANCH_UPTO_DATE = "git.branch_upto_date";
   static final String GIT_BRANCH_NOT_FOUND = "git.branch_not_found";
   static final String GIT_BRANCH_EXISTS = "git.branch_exists";
   static final String GIT_REMOTE_BRANCH_NOT_FOUND = "git.remote_branch_not_found";
@@ -50,6 +51,8 @@ class GitErrorConstants {
   static final String GIT_COMMIT_NO_CHANGES = "git.commit_no_changes";
 
   static final String GIT_FETCH_UPTO_DATE = "git.fetch_upto_date";
+
+  static final String GIT_MERGE_ERROR = "git.merge_error";
 
   static final String GIT_INVALID_REPO_URL = "git.invalid_repo_url";
   static final String GIT_FILE_STATUS_TYPE_UNKNOWN = "git.file_status_type_unknown";

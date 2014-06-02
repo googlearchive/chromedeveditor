@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import '../exception.dart';
 import '../file_operations.dart';
 import '../objectstore.dart';
 import '../options.dart';
@@ -52,13 +53,12 @@ class Pull {
           return store.getRemoteHeadForRef(headRefName).then(
               (String remoteSha) {
             if (remoteSha == localSha) {
-              throw "Branch is up-to-date.";
+              throw new GitException(GitErrorConstants.GIT_BRANCH_UPTO_DATE);
             }
             return store.getCommonAncestor([remoteSha, localSha]).then(
                 (commonSha) {
               if (commonSha == remoteSha) {
-                // Branch up-to-date. Nothing to do.
-                throw "Branch up-to-date. Nothing to do.";
+                throw new GitException(GitErrorConstants.GIT_BRANCH_UPTO_DATE);
               } else if (commonSha == localSha) {
                 // Move the localHead to remoteHead, and checkout.
                 return FileOps.createFileWithContent(root,
@@ -84,7 +84,7 @@ class Pull {
                       });
                     });
                   }).catchError((e) {
-                    throw "Error duing merging.";
+                    return throw new GitException(GitErrorConstants.GIT_MERGE_ERROR);
                   });
                 });
               }
