@@ -330,8 +330,11 @@ class AceManager {
   /**
    * The container for the Ace editor.
    */
-  final html.Element parentElement;
+  final html.Element _parentElement;
+  html.Element get parentElement =>
+      _parentElement;
   final AceManagerDelegate delegate;
+  final PreferenceStore _prefs;
 
   Outline outline;
 
@@ -351,11 +354,12 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
+  
 
-  AceManager(this.parentElement,
+  AceManager(this._parentElement,
              this.delegate,
              svc.Services services,
-             PreferenceStore prefs) {
+             this._prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -404,7 +408,6 @@ class AceManager {
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    _setupOutline(prefs);
     _setupGotoLine();
 
     var node = parentElement.getElementsByClassName("ace_content")[0];
@@ -414,10 +417,11 @@ class AceManager {
     });
   }
 
-  void _setupOutline(PreferenceStore prefs) {
-    outline = new Outline(_analysisService, parentElement, prefs);
+  void setupOutline() {
+    outline = new Outline(_analysisService, parentElement.parent, _prefs);
 
     outline.onChildSelected.listen((OutlineItem item) {
+      Stopwatch timer = new Stopwatch()..start();
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);
       ace.Point endPoint =
@@ -428,10 +432,12 @@ class AceManager {
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
+      print('selection finished in ${timer.elapsedMilliseconds}ms');
     });
 
     ace.Point lastCursorPosition =  new ace.Point(-1, -1);
     _aceEditor.onChangeSelection.listen((_) {
+      return;
       ace.Point currentPosition = _aceEditor.cursorPosition;
       // Cancel the last outline selection update.
       if (lastCursorPosition != currentPosition) {

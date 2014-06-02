@@ -404,6 +404,10 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
   }
 
   NavigationLocation get navigationLocation => _aceContainer.navigationLocation;
+  
+  void setupOutline() {
+    this._aceContainer.setupOutline();
+  }
 }
 
 /**

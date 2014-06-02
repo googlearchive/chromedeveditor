@@ -6,7 +6,8 @@ homepage: https://github.com/dart-lang/spark/
 environment:
   sdk: '>=1.0.0 <2.0.0'
 dependencies:
-  ace: '>=0.3.6 <0.4.0'
+  ace:
+    path: /Users/dev/projects/spark/ace.dart
   analyzer: '>=0.13.0 <0.14.0'
   archive: '>=1.0.16 <1.1.0'
   barback: any
@@ -20,7 +21,7 @@ dependencies:
   intl: any
   json: any
   logging: any
-  markdown: ">=0.7.0 <0.8.0"
+  markdown: '>=0.7.0 <0.8.0'
   mime: any
   path: any
   polymer: 0.10.0-pre.11

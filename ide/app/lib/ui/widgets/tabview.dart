@@ -88,7 +88,8 @@ class Tab {
     if (value == _page) return;
     if (_page != null) _page.remove();
     _page = value;
-    if (value != null) _pageContainer.append(value);
+    if (value != null)
+      _pageContainer.append(value);
   }
 
   void deactivate() {
