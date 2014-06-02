@@ -38,7 +38,7 @@ class SparkFlags {
     newFlags.forEach((key, newValue) {
       var value;
       var oldValue = _flags[key];
-      if (oldValue != null && oldValue is Map && value is Map) {
+      if (oldValue != null && oldValue is Map && newValue is Map) {
         value = oldValue;
         value.addAll(newValue);
       } else {
@@ -80,9 +80,12 @@ class SparkFlags {
   static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
     return fileReader.then((String contents) {
       return JSON.decode(contents);
-    }).catchError((_) {
-      // The JSON file is non-existent or invalid.
-      return null;
+    }).catchError((e) {
+      if (e is FormatException) {
+        throw 'Config file has invalid format: $e';
+      } else {
+        return null;
+      }
     });
   }
 }
