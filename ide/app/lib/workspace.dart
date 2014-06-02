@@ -875,7 +875,7 @@ class Folder extends Container {
 
   //TODO(keertip): remove check for 'cache'
   bool isScmPrivate() => name == '.git' || name == '.svn'
-      || (name =='cache' && pubProperties.isProjectWithPackages(parent));
+      || (name =='cache' && pubProperties.isFolderWithPackages(parent));
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
