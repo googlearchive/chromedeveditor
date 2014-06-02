@@ -16,7 +16,7 @@ class SparkFlags {
   /**
    * Accessors to the currently supported flags.
    */
-  // NOTE: '...== true' below are on purpose: flag values can be null.
+  // NOTE: '...== true' below are on purpose: missing flags default to false.
   static bool get developerMode => _flags['test-mode'] == true;
   static bool get useLightAceThemes => _flags['light-ace-themes'] == true;
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
@@ -27,8 +27,25 @@ class SparkFlags {
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
   static bool get laxBowerBranches => _flags['lax-bower-branches'] == true;
 
+  /**
+   * Add new flags to the set, possibly overwriting the existing values.
+   * Maps are treated specially, updating the top-level map entries rather
+   * than overwriting the whole map.
+   */
   static void setFlags(Map<String, dynamic> newFlags) {
-    if (newFlags != null) _flags.addAll(newFlags);
+    // TODO(ussuri): Also recursively update maps on 2nd level and below.
+    if (newFlags == null) return;
+    newFlags.forEach((key, newValue) {
+      var value;
+      var oldValue = _flags[key];
+      if (oldValue != null && oldValue is Map && value is Map) {
+        value = oldValue;
+        value.addAll(newValue);
+      } else {
+        value = newValue;
+      }
+      _flags[key] = value;
+    });
   }
 
   /**
