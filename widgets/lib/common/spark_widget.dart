@@ -32,7 +32,7 @@ class SparkWidget extends PolymerElement {
 
   void setAttr(String attr, bool add, [String value = '']) {
     if (add) {
-        attributes[attr] = value;
+      attributes[attr] = value;
     } else {
       attributes.remove(attr);
     }
