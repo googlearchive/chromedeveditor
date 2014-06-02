@@ -51,6 +51,7 @@ class Outline {
     _outlineButton = templateClone.querySelector('#toggleOutlineButton');
     _outlineButton.onClick.listen((e) => toggle());
 
+    print(_container.toString());
     _container.children.add(_outlineButton);
     _prefs.getValue('OutlineCollapsed').then((String data) {
       if (data == 'true') {
@@ -137,7 +138,7 @@ class Outline {
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
     _rootList.append(item.element);
-    item.onClick.listen((event) => _childSelectedController.add(item));
+//    item.onClick.listen((event) => _childSelectedController.add(item));
     return item;
   }
 
@@ -158,6 +159,7 @@ class Outline {
   OutlineItem get selectedItem => _selectedItem;
 
   void setSelected(OutlineItem item) {
+    return;
     if (_selectedItem != null) {
       _selectedItem.setSelected(false);
     }
@@ -166,7 +168,10 @@ class Outline {
 
     if (_selectedItem != null) {
       _selectedItem.setSelected(true);
-      _selectedItem.scrollIntoView();
+      Stopwatch timer = new Stopwatch()..start();
+//      _selectedItem._element.scrollIntoView();
+      print('selection finished in ${timer.elapsedMilliseconds}ms');
+
     }
   }
 
@@ -230,15 +235,15 @@ class Outline {
 abstract class OutlineItem {
   services.OutlineEntry _data;
   html.LIElement _element;
-  html.AnchorElement _anchor;
+//  html.AnchorElement _anchor;
   html.SpanElement _typeSpan;
 
   OutlineItem(this._data, String cssClassName) {
     _element = new html.LIElement();
 
-    _anchor = new html.AnchorElement(href: "#");
-    _anchor.text = displayName;
-    _element.append(_anchor);
+//    _anchor = new html.AnchorElement(href: "#");
+//    _anchor.text = displayName;
+//    _element.append(_anchor);
 
     if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
      _typeSpan = new html.SpanElement();
@@ -253,7 +258,7 @@ abstract class OutlineItem {
   String get displayName => _data.name;
   String get returnType => null;
 
-  Stream get onClick => _anchor.onClick;
+//  Stream get onClick => _anchor.onClick;
   int get nameStartOffset => _data.nameStartOffset;
   int get nameEndOffset => _data.nameEndOffset;
   int get bodyStartOffset => _data.bodyStartOffset;
@@ -304,7 +309,7 @@ class OutlineClass extends OutlineTopLevelItem {
 
   OutlineClassMember _addItem(OutlineClassMember item) {
     _childrenRootElement.append(item.element);
-    item.onClick.listen((event) => childSelectedController.add(item));
+//    item.onClick.listen((event) => childSelectedController.add(item));
     members.add(item);
     return item;
   }
