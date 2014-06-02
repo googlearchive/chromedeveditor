@@ -194,18 +194,20 @@
       <div class="form-group">
         <label for="type">Project type</label>
         <select name="type" class="form-control" autosave>
-          <option value="empty">
-            Blank project
-          </option>
+          <optgroup label="Default">
+            <option value="empty">
+              Blank project
+            </option>
+          </optgroup>
           <optgroup label="Web apps">
             <option value="web/web_app_dart">
-              Dart Web app
+              Dart web app
             </option>
             <option value="web/web_app_js">
-              JavaScript Web app
+              JavaScript web app
             </option>
             <option value="web/web_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
-              JavaScript Web app using Polymer
+              JavaScript web app using Polymer
             </option>
           </optgroup>
           <optgroup label="Chrome apps">
@@ -225,7 +227,7 @@
               </option>
             </template>
           </optgroup>
-          <optgroup label="Other">
+          <optgroup label="Polymer elements">
             <option value="polymer/polymer_element_js">
               JavaScript Polymer custom element
             </option>
