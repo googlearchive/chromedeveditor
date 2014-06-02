@@ -1686,7 +1686,9 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
     // On Chrome OS, bind to the dedicated refresh key.
     if (PlatformInfo.isCros) {
       // 168 (0xA8) is the key code of the refresh key on ChromeOS.
-      addBinding('f5', linuxBinding: '0xA8');
+      // TODO(devoncarew): Figure out how to get the F3 key event on ChromeOS.
+      //addBinding('f5', linuxBinding: '0xA8');
+      addBinding('f5', linuxBinding: 'f3');
     } else {
       addBinding('f5');
     }
