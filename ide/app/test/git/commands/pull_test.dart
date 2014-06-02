@@ -8,6 +8,7 @@ import 'package:unittest/unittest.dart';
 
 import '../../../lib/git/commands/clone.dart';
 import '../../../lib/git/commands/pull.dart';
+import '../../../lib/git/exception.dart';
 import '../../../lib/git/objectstore.dart';
 import 'utils.dart';
 
@@ -37,11 +38,8 @@ defineTests() {
       }).then((_) {
         Pull pull = new Pull(
             new GitOptions(root: clone.root, store: clone.store));
-        return pull.pull().catchError((e) {
-          // TODO: It would be nice if this exception was a little more
-          // semantic. For instance, a non-error result that is `null`, or a
-          // result status object that indicated no changes.
-          expect(e, 'Branch is up-to-date.');
+        return pull.pull().catchError((GitException e) {
+          expect(e.errorCode, GitErrorConstants.GIT_BRANCH_UP_TO_DATE);
         });
       });
     });
