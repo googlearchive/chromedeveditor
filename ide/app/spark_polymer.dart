@@ -267,13 +267,12 @@ class SparkPolymer extends Spark {
     SparkButton button = getUIElement('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
-      button.disabled = !action.enabled;
-      button.deliverChanges();
+      button..disabled = !action.enabled..deliverChanges();
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();
     });
-    button.disabled = !action.enabled;
+    button..disabled = !action.enabled..deliverChanges();
   }
 
   @override
