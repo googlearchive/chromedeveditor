@@ -94,7 +94,7 @@ class Index {
           case FileStatusType.UNTRACKED:
           default:
             throw new GitException(GitErrorConstants.GIT_FILE_STATUS_TYPE_UNKNOWN,
-                "Unknown file status type: $oldStatus.type");
+                "Unknown file status type: ${oldStatus.type}");
         }
       } else {
         status.type = oldStatus.type;

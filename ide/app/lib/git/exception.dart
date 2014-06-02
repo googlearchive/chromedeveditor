@@ -39,18 +39,19 @@ class GitErrorConstants {
       = "git.clone_dir_not_initialized";
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
 
-  static final String GIT_BRANCH_UPTO_DATE = "git.branch_upto_date";
+  static final String GIT_BRANCH_UP_TO_DATE = "git.branch_up_to_date";
   static final String GIT_BRANCH_NOT_FOUND = "git.branch_not_found";
   static final String GIT_BRANCH_EXISTS = "git.branch_exists";
   static final String GIT_REMOTE_BRANCH_NOT_FOUND = "git.remote_branch_not_found";
 
   static final String GIT_PUSH_NO_REMOTE = "git.push_no_remote";
   static final String GIT_PUSH_NO_COMMITS = "git.push_no_commits";
+  static final String GIT_PUSH_NON_FAST_FORWARD = "git.push_non_fast_forward";
 
   static final String GIT_OBJECT_STORE_CORRUPTED = "git.object_store_corrupted";
   static final String GIT_COMMIT_NO_CHANGES = "git.commit_no_changes";
 
-  static final String GIT_FETCH_UPTO_DATE = "git.fetch_upto_date";
+  static final String GIT_FETCH_UP_TO_DATE = "git.fetch_up_to_date";
 
   static final String GIT_MERGE_ERROR = "git.merge_error";
 

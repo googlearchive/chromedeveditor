@@ -53,12 +53,12 @@ class Pull {
           return store.getRemoteHeadForRef(headRefName).then(
               (String remoteSha) {
             if (remoteSha == localSha) {
-              throw new GitException(GitErrorConstants.GIT_BRANCH_UPTO_DATE);
+              throw new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE);
             }
             return store.getCommonAncestor([remoteSha, localSha]).then(
                 (commonSha) {
               if (commonSha == remoteSha) {
-                throw new GitException(GitErrorConstants.GIT_BRANCH_UPTO_DATE);
+                throw new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE);
               } else if (commonSha == localSha) {
                 // Move the localHead to remoteHead, and checkout.
                 return FileOps.createFileWithContent(root,

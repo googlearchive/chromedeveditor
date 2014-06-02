@@ -69,7 +69,7 @@ class Fetch {
             return store.getRemoteHeadForRef(headRefName).then((sha) {
               if (sha == branchRef.sha) {
                 // Branch is uptodate
-                throw new GitException(GitErrorConstants.GIT_FETCH_UPTO_DATE);
+                throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
               } else {
                 return _handleFetch(branchRef, branchRef, fetcher);
               }
