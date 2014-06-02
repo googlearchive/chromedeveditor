@@ -37,6 +37,7 @@ class GitErrorConstants {
   static final String GIT_AUTH_ERROR = "git.auth_error";
   static final String GIT_HTTP_ERROR = "git.http_error";
   static final String GIT_BRANCH_NOT_FOUND = "git.branch_not_found";
+  static final String GIT_BRANCH_EXISTS = "git.branch_exists";
   static final String GIT_PUSH_NO_REMOTE = "git.push_no_remote";
   static final String GIT_PUSH_NO_COMMITS = "git.push_no_commits";
   static final String GIT_OBJECT_STORE_CORRUPTED = "git.object_store_corrupted";
