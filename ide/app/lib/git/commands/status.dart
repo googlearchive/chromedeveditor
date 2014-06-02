@@ -10,6 +10,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
 import 'index.dart';
+import '../exception.dart';
 import '../file_operations.dart';
 import '../objectstore.dart';
 import '../utils.dart';
@@ -61,7 +62,6 @@ class Status {
         return status;
       }
 
-      // TODO(grv) : check the modification time when it is available.
       return getShaForEntry(entry, 'blob').then((String sha) {
         status = new FileStatus();
         status.path = entry.fullPath;
@@ -69,17 +69,21 @@ class Status {
         status.size = data.size;
         status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
         store.index.updateIndexForFile(status);
+        return status;
       });
     }).then((_) {
       if (status.type != FileStatusType.UNTRACKED) {
         return _updateParent(store, entry).then((_) => status);
       } else {
-        return new Future.value();
+        return status;
       }
     });
   }
 
   static Future _updateParent(ObjectStore store, chrome.Entry entry) {
+    if (entry.fullPath == store.root.fullPath) {
+      return new Future.value();
+    }
     return entry.getParent().then((chrome.DirectoryEntry root) {
       return FileOps.listFiles(root).then((entries) {
         entries.removeWhere((e) => e.name == ".git");
@@ -110,8 +114,7 @@ class Status {
      Map<String, FileStatus> statuses = _getFileStatusesForTypes(store,
          [FileStatusType.MODIFIED, FileStatusType.STAGED]);
       if (!statuses.isEmpty) {
-        //TODO(grv) : throw custom exception.
-        throw "Uncommitted changes in the working tree.";
+        throw new GitException(GitErrorConstants.GIT_UNCOMMITTED_CHANGES_IN_TREE);
       }
     });
   }

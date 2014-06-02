@@ -32,9 +32,9 @@
         minTargetSize="200"
         on-update="{{onSplitterUpdate}}">
       <div beforeSplit>
-        <spark-toolbar class="toolbar" 
-            horizontal 
-            justify="spaced" 
+        <spark-toolbar class="toolbar"
+            horizontal
+            justify="spaced"
             spacing="small">
           <input type="fileFilter"
               id="fileFilter"
@@ -113,7 +113,7 @@
         <content select="#editorArea"></content>
 
         <spark-toolbar id="navigationButtons" class="toolbar"
-            horizontal 
+            horizontal
             justify="right"
             spacing="small">
           <spark-button id="leftNav" flat round padding="medium">
@@ -135,12 +135,11 @@
     </spark-split-view>
 
 
-    <!---------------------------- DIALOGS --------------------------------->
+    <!-- =========================== DIALOGS =============================== -->
 
 
     <!-- Error dialog -->
     <spark-dialog id="errorDialog" title="PLACEHOLDER">
-      <label id="errorTitle"></label>
       <div id="errorMessage" class="help-block"></div>
 
       <spark-dialog-button id="errorClose" dismiss focused>Close</spark-dialog-button>
@@ -398,96 +397,114 @@
     <!-- Settings dialog -->
     <spark-dialog id="settingsDialog" title="Settings">
       <div class="form-group">
-        <label class="control-label">Whitespace</label>
-        <div class="checkbox">
-          <input id="stripWhitespace" type="checkbox">
-          <label for="stripWhitespace">
-            Strip trailing whitespace on save
-          </label>
-        </div>
+        <spark-toolbar class="settings-block" horizontal justify="left">
+          <label class="settings-label">Whitespace:</label>
+          <span class="checkbox">
+            <input id="stripWhitespace" type="checkbox">
+            <label for="stripWhitespace">
+              Strip trailing whitespace on save
+            </label>
+          </span>
+        </spark-toolbar>
       </div>
 
       <template if="{{useAceThemes}}">
         <div class="form-group" id="changeTheme">
-          <label class="control-label">Editor theme</label>
-          <div>
-            <span class="settings-label"></span>
-            <span class="plus-minus-container">
-              <a href="#" id="themeMinus" class="plus-minus-button"
-                  on-click="{{onThemeMinus}}">
-                <span class="glyphicon glyphicon-chevron-left"></span>
-              </a>
-              <a href="#" id="themePlus" class="plus-minus-button"
-                  on-click="{{onThemePlus}}">
-                <span class="glyphicon glyphicon-chevron-right"></span>
-              </a>
-            </span>
-          </div>
+          <spark-toolbar class="settings-block" horizontal justify="spaced">
+            <label class="settings-label">Editor theme:</label>
+            <span class="settings-value"></span>
+            <spark-button id="themeMinus" class="plus-minus-button"
+                flat round padding="small" on-click="{{onThemeMinus}}">
+              <!--TODO(ussuri): Use SVG <use> directives instead here and below.-->
+              <svg viewBox="0 0 24 24">
+                <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
+              </svg>
+            </spark-button>
+            <spark-button id="themePlus" class="plus-minus-button"
+                flat round padding="small" on-click="{{onThemePlus}}">
+              <svg viewBox="0 0 24 24">
+                <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
+              </svg>
+            </spark-button>
+          </spark-toolbar>
         </div>
       </template>
 
       <div class="form-group" id="changeFont">
-        <label class="control-label">Editor font</label>
-        <div>
-          <span class="settings-label"></span>
-          <span class="plus-minus-container">
-            <a href="#" id="fontMinus" class="plus-minus-button"
-                on-click="{{onFontSmaller}}">
-              <span class="glyphicon glyphicon-minus"></span>
-            </a>
-            <a href="#" id="fontPlus" class="plus-minus-button"
-                on-click="{{onFontLarger}}">
-              <span class="glyphicon glyphicon-plus"></span>
-            </a>
-          </span>
-        </div>
+        <spark-toolbar class="settings-block"
+            horizontal justify="spaced">
+          <label class="settings-label">Editor font:</label>
+          <span class="settings-value"></span>
+          <spark-button id="fontMinus" class="plus-minus-button"
+              flat round padding="small" on-click="{{onFontSmaller}}">
+            <svg viewBox="0 0 24 24">
+              <path d="M19,13H5v-2h14V13z"></path>
+            </svg>
+          </spark-button>
+          <spark-button id="fontPlus" class="plus-minus-button"
+              flat round padding="small" on-click="{{onFontLarger}}">
+            <svg viewBox="0 0 24 24">
+              <path d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>
+            </svg>
+          </spark-button>
+        </spark-toolbar>
       </div>
 
       <div class="form-group" id="changeKeys">
-        <label class="control-label">Key bindings</label>
-        <div>
-          <span class="settings-label"></span>
-          <span class="plus-minus-container">
-            <a href="#" id="keysMinus" class="plus-minus-button"
-                on-click="{{onKeysMinus}}">
-              <span class="glyphicon glyphicon-chevron-left"></span>
-            </a>
-            <a href="#" id="keysPlus" class="plus-minus-button"
-                on-click="{{onKeysPlus}}">
-              <span class="glyphicon glyphicon-chevron-right"></span>
-            </a>
-          </span>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="control-label">Git</label>
-        <div>
-          <spark-button raised on-click="{{onResetGit}}">
-            Clear Git Credentials
+        <spark-toolbar class="settings-block"
+            horizontal justify="spaced">
+          <label class="settings-label">Key bindings:</label>
+          <span class="settings-value"></span>
+          <spark-button id="keysMinus" class="plus-minus-button"
+              flat round padding="small" on-click="{{onKeysMinus}}">
+            <svg viewBox="0 0 24 24">
+              <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
+            </svg>
           </spark-button>
-          <span id="gitResetSettingsDone">Done</span>
-        </div>
+          <spark-button id="keysPlus" class="plus-minus-button"
+              flat round padding="small" on-click="{{onKeysPlus}}">
+            <svg viewBox="0 0 24 24">
+              <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
+            </svg>
+          </spark-button>
+        </spark-toolbar>
       </div>
 
       <template if="{{!chromeOS}}">
-        <div class="form-group">
-          <label class="control-label">Root directory</label>
-          <div>
-            <span id="directory-label" class="settings-label"></span>
-          </div>
+        <div class="form-group" id="rootDirectory">
+          <spark-toolbar class="settings-block"
+              horizontal justify="spaced">
+            <label class="settings-label">Root directory:</label>
+            <span id="directoryLabel" class="settings-value"></span>
+          </spark-toolbar>
         </div>
       </template>
 
+      <div class="form-group" id="gitCredentials">
+        <spark-toolbar class="settings-block"
+            horizontal justify="edges">
+          <label class="settings-label">Git credentials:</label>
+          <spark-button class="reset-setting-button"
+              flat primary on-click="{{onResetGit}}">
+            Clear Git Credentials
+          </spark-button>
+        </spark-toolbar>
+        <div id="gitResetSettingsDone" class="reset-setting-result">
+          Done
+        </div>
+      </div>
+
       <template if="{{developerMode}}">
-        <div class="form-group">
-          <label class="control-label">Preferences</label>
-          <div>
-            <spark-button raised on-click="{{onResetPreference}}">
+        <div class="form-group" id="resetPreferences">
+          <spark-toolbar class="settings-block"
+              horizontal justify="edges">
+            <label class="settings-label">Preferences:</label>
+            <spark-button class="reset-setting-button"
+                flat primary on-click="{{onResetPreference}}">
               Reset Preferences
             </spark-button>
-            <span id="preferenceResetResult"></span>
-          </div>
+          </spark-toolbar>
+          <div id="preferenceResetResult" class="reset-setting-result"></div>
         </div>
       </template>
 
@@ -581,10 +598,10 @@
     <!-- Project remove dialog -->
     <spark-dialog id="projectRemoveDialog" title="Remove Project">
       <div class="help-block">
-        Choose "Delete" if you want to remove
-        &quot;<span id="projectRemoveProjectName"></span>&quot; permanently from
-        disk or choose "Remove Reference" if you'd like to remove it from
-        the list of projects in Spark but keep your files on disk.
+        "DELETE" will permanently delete
+        &quot;<span id="projectRemoveProjectName"></span>&quot; from disk.<br>
+        "REMOVE REFERENCE" will remove the reference to it from
+        the list of projects in Spark, but keep its files on disk.
       </div>
 
       <spark-dialog-button cancel>
@@ -601,10 +618,10 @@
     <!-- File remove dialog -->
     <spark-dialog id="fileRemoveDialog" title="Remove File">
       <div class="help-block">
-        Choose "Delete" if you want to remove
-        &quot;<span id="name"></span>&quot; permanently from
-        disk or choose "Remove Reference" if you'd like to remove it from
-        Spark but keep the file on disk.
+        "DELETE" will permanently delete &quot;<span id="name"></span>&quot;
+        from disk.<br>
+        "REMOVE REFERENCE" will remove the reference to it from
+        Spark, but keep it on disk.
       </div>
 
       <spark-dialog-button cancel>

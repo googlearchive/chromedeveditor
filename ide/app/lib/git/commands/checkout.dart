@@ -35,6 +35,7 @@ class Checkout {
     }
 
     return dir.getDirectory(treeEntry.name).then((newDir) {
+      store.index.deleteIndexForEntry(newDir.fullPath);
       return store.retrieveObject(treeEntry.sha, "Tree").then((GitObject tree) {
         return Future.forEach((tree as TreeObject).entries, (TreeEntry entry) {
           return _removeEntryRecursively(store, newDir, entry);
@@ -58,7 +59,9 @@ class Checkout {
       if (entry.isBlob) {
         return ObjectUtils.expandBlob(dir, store, entry.name, entry.sha);
       } else {
-        return ObjectUtils.expandTree(dir, store, entry.sha);
+        return dir.createDirectory(entry.name).then((newDir) {
+          return ObjectUtils.expandTree(newDir, store, entry.sha);
+        });
       }
     }).then((_) {
       return Future.forEach(diff.removes, (TreeEntry entry) {

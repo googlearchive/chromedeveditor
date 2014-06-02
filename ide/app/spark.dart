@@ -331,11 +331,11 @@ abstract class Spark
 
   void initAceManagers() {
     _aceThemeManager = new ThemeManager(
-        aceManager, syncPrefs, getUIElement('#changeTheme .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeTheme .settings-value'));
     _aceKeysManager = new KeyBindingManager(
-        aceManager, syncPrefs, getUIElement('#changeKeys .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeKeys .settings-value'));
     _aceFontManager = new AceFontManager(
-        aceManager, syncPrefs, getUIElement('#changeFont .settings-label'));
+        aceManager, syncPrefs, getUIElement('#changeFont .settings-value'));
   }
 
   void initEditorManager() {
@@ -431,9 +431,9 @@ abstract class Spark
       actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
       actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     }
+    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
-    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -584,6 +584,9 @@ abstract class Spark
     return null;
   }
 
+  // TODO(ussuri): The whole show...Message/Dialog() family: polymerize,
+  // generalize and offload to SparkPolymerUI.
+
   /**
    * Show a model error dialog.
    */
@@ -595,7 +598,8 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
-    _errorDialog.getElement('#errorTitle').text = title;
+    _errorDialog.dialog.title = title;
+
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     var lines = message.split('\n');
@@ -668,18 +672,12 @@ abstract class Spark
       });
     }
 
-    if (title == null) {
-      _okCancelDialog.getShadowDomElement('#header').style.display = 'none';
-      _okCancelDialog.getShadowDomElement('#title').text = '';
-    } else {
-      _okCancelDialog.getShadowDomElement('#header').style.display = 'block';
-      _okCancelDialog.getShadowDomElement('#title').text = title;
-    }
-    Element container = _okCancelDialog.getElement('#okCancelMessage');
+    _okCancelDialog.dialog.title = title;
 
+    Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
     var lines = message.split('\n');
-    for(String line in lines) {
+    for (String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
       container.children.add(lineElement);
@@ -692,8 +690,11 @@ abstract class Spark
     return _okCancelCompleter.future;
   }
 
+  // TODO(ussuri): Find a better way to achieve this (the global progress
+  // indicator?).
   void setGitSettingsResetDoneVisible(bool enabled) {
-    getUIElement('#gitResetSettingsDone').hidden = !enabled;
+    getUIElement('#gitResetSettingsDone').style.display =
+        enabled ? 'block' : 'none';
   }
 
   List<ws.Resource> _getSelection() => _filesController.getSelection();
@@ -816,13 +817,12 @@ abstract class Spark
   }
 
   void _refreshOpenFiles() {
-    // In order to scope how much work we do when Spark re-gains focus, we do
-    // not refresh the entire workspace or even the active projects. We refresh
-    // the currently opened files and their parent containers. This lets us
-    // capture changed files and deleted files. For any other changes it is the
-    // user's responsibility to explicitly refresh the affected project.
+    // In order to scope how much work we do when Spark re-gains focus, we only
+    // refresh the active projects. This lets us capture changed files and
+    // deleted files. For any other changes it is the user's responsibility to
+    // explicitly refresh the affected project.
     Set<ws.Resource> resources = new Set.from(
-        editorManager.files.map((r) => r.parent != null ? r.parent : r));
+        editorManager.files.map((r) => r.project != null ? r.project : r));
     resources.forEach((ws.Resource r) => r.refresh());
   }
 }
@@ -924,7 +924,7 @@ class ProjectLocationManager {
 
   Future<bool> _showRequestFileSystemDialog() {
     return _spark.askUserOkCancel('Please choose a folder to store your Spark projects.',
-        okButtonLabel: 'Choose Folder', title: 'Choose a main folder');
+        okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
   }
 
   /**
@@ -1685,7 +1685,8 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
       spark, "resource-refresh", "Refresh") {
     // On Chrome OS, bind to the dedicated refresh key.
     if (PlatformInfo.isCros) {
-      addBinding('f5', linuxBinding: 'f3');
+      // 168 (0xA8) is the key code of the refresh key on ChromeOS.
+      addBinding('f5', linuxBinding: '0xA8');
     } else {
       addBinding('f5');
     }
@@ -2155,6 +2156,9 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     return _getLocation().then((location) {
       _addProperty(_propertiesElement, 'Location', location);
     }).then((_) {
+      // Only show repo info for projects.
+      if (_selectedResource is! ws.Project) return null;
+
       GitScmProjectOperations gitOperations =
           spark.scmManager.getScmOperationsFor(_selectedResource.project);
 
@@ -2298,10 +2302,12 @@ class GitCloneAction extends SparkActionWithDialog {
         spark.showSuccessMessage('Clone cancelled');
       } else if (e is SparkException && e.errorCode
           == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
-        spark.showErrorMessage('Error cloning ${projectName}',
-            'Repositories with sub-modules are currently not supported.');
+        spark.showErrorMessage('Error cloning Git project',
+            'Could not clone "${projectName}": '
+            'repositories with sub-modules are currently unsupported.');
       } else {
-        spark.showErrorMessage('Error cloning ${projectName}', '${e}');
+        spark.showErrorMessage('Error cloning Git project',
+            'Error while cloning "${projectName}":\n${e}');
       }
     }).whenComplete(() {
       _restoreDialog();
@@ -2326,7 +2332,7 @@ class GitPullAction extends SparkAction implements ContextAction {
 }
 
 class GitAddAction extends SparkAction implements ContextAction {
-  GitAddAction(Spark spark) : super(spark, "git-add", "Add  to Git");
+  GitAddAction(Spark spark) : super(spark, "git-add", "Git Add");
   chrome.Entry entry;
 
   void _invoke([List<ws.Resource> resources]) {
@@ -2575,7 +2581,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   void _onClose() => _hide();
 
   void _invoke([context]) {
-    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+    getElement("#gitPushClose").onClick.listen((_) => _onClose());
     _triggerOnReturn("#gitPush", false);
     project = context.first;
 
@@ -3115,18 +3121,16 @@ class AboutSparkAction extends SparkActionWithDialog {
   void _commit() => _hide();
 }
 
+// TODO(ussuri): Polymerize.
 class SettingsAction extends SparkActionWithDialog {
-  // TODO(ussuri): This is essentially unused. Remove.
-  bool _initialized = false;
-
   SettingsAction(Spark spark, Element dialog)
-      : super(spark, "settings", "Settings", dialog);
+      : super(spark, "settings", "Settings", dialog) {
+    if (PlatformInfo.isMac) {
+      addBinding('ctrl-,');
+    }
+  }
 
   void _invoke([Object context]) {
-    if (!_initialized) {
-      _initialized = true;
-    }
-
     spark.setGitSettingsResetDoneVisible(false);
 
     var whitespaceCheckbox = getElement('#stripWhitespace');
@@ -3157,12 +3161,12 @@ class SettingsAction extends SparkActionWithDialog {
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
       if (folderToken == null) {
-        getElement('#directory-label').text = '';
+        getElement('#directoryLabel').text = '';
         return new Future.value();
       }
       return chrome.fileSystem.restoreEntry(folderToken).then((chrome.Entry entry) {
         return chrome.fileSystem.getDisplayPath(entry).then((path) {
-          getElement('#directory-label').text = path;
+          getElement('#directoryLabel').text = path;
         });
       });
     });
