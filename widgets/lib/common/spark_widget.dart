@@ -30,6 +30,14 @@ class SparkWidget extends PolymerElement {
   Element getShadowDomElement(String selectors) =>
       shadowRoot.querySelector(selectors);
 
+  void setAttr(String attr, bool add, [String value = '']) {
+    if (add) {
+      attributes[attr] = value;
+    } else {
+      attributes.remove(attr);
+    }
+  }
+
   Element _findFocusableChild() {
     ElementList elts = this.querySelectorAll('[focused]');
     if (elts.isEmpty) {

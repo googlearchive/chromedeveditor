@@ -25,7 +25,7 @@ class SparkMenuButton extends SparkWidget {
   static final List<String> _SUPPORTED_ARROWS = [
     'none', 'top-center', 'top-left', 'top-right'
   ];
-  
+
   SparkButton _button;
   SparkOverlay _overlay;
   SparkMenu _menu;
@@ -42,6 +42,10 @@ class SparkMenuButton extends SparkWidget {
     assert(_SUPPORTED_ARROWS.contains(arrow));
 
     _overlay = $['overlay'];
+    // TODO(ussuri): This lets _overlay handle ESC but breaks _button's
+    // active state when menu is open.
+    //SparkWidget.enableKeyboardEvents(_overlay);
+
     _menu = $['menu'];
 
     final ContentElement buttonCont = $['button'];
@@ -73,17 +77,18 @@ class SparkMenuButton extends SparkWidget {
    * Complete the toggling process, see [_toggle].
    */
   void _completeToggle() {
-    // Most likely, all aggregated events for a single gesture will have the 
+    // Most likely, all aggregated events for a single gesture will have the
     // same value (either 'close' or 'open'), but we don't count on that and
     // formally && all the values just in case.
     final bool newOpened = _toggleQueue.reduce((a, b) => a && b);
     if (newOpened != opened) {
       opened = newOpened;
-      // TODO(ussuri): A temporary plug to make #overlay and #button see
-      // changes in 'opened'. Data binding via {{opened}} in the HTML isn't
-      // detected. deliverChanges() fixes #overlay, but not #button.
-      _overlay..opened = newOpened..deliverChanges();
-      _button..active = newOpened..deliverChanges();
+      // TODO(ussuri): A hack to make #overlay and #button see
+      // changes in 'opened'. Data binding via {{opened}} in the HTML wasn't
+      // detected. deliverChanges() here fixed #overlay, but not #button.
+      // Only direct attribute setting helps.
+      _overlay.setAttr('opened', newOpened);
+      _button.setAttr('active', newOpened);
       if (newOpened) {
         // Enforce focused state so the button can accept keyboard events.
         focus();

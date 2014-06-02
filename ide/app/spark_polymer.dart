@@ -267,13 +267,16 @@ class SparkPolymer extends Spark {
     SparkButton button = getUIElement('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
-      button.disabled = !action.enabled;
-      button.deliverChanges();
+      // TODO(ussuri): This and similar line below should be
+      // `button.disabled = ...`, however in dart2js version
+      // Polymer refused to see and apply such changes; HTML attr here works.
+      // See original version under git tag 'before-button-hack-to-fix-states'.
+      button.setAttr('disabled', !action.enabled);
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();
     });
-    button.disabled = !action.enabled;
+    button.setAttr('disabled', !action.enabled);
   }
 
   @override
