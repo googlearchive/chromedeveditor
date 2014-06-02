@@ -397,7 +397,8 @@
     <!-- Settings dialog -->
     <spark-dialog id="settingsDialog" title="Settings">
       <div class="form-group">
-        <spark-toolbar class="settings-block" horizontal justify="left">
+        <spark-toolbar class="settings-block"
+            horizontal justify="left" spacing="small">
           <label class="settings-label">Whitespace:</label>
           <span class="checkbox">
             <input id="stripWhitespace" type="checkbox">
@@ -410,7 +411,8 @@
 
       <template if="{{useAceThemes}}">
         <div class="form-group" id="changeTheme">
-          <spark-toolbar class="settings-block" horizontal justify="spaced">
+          <spark-toolbar class="settings-block"
+              horizontal justify="spaced" spacing="small">
             <label class="settings-label">Editor theme:</label>
             <span class="settings-value"></span>
             <spark-button id="themeMinus" class="plus-minus-button"
@@ -432,7 +434,7 @@
 
       <div class="form-group" id="changeFont">
         <spark-toolbar class="settings-block"
-            horizontal justify="spaced">
+            horizontal justify="spaced" spacing="small">
           <label class="settings-label">Editor font:</label>
           <span class="settings-value"></span>
           <spark-button id="fontMinus" class="plus-minus-button"
@@ -452,7 +454,7 @@
 
       <div class="form-group" id="changeKeys">
         <spark-toolbar class="settings-block"
-            horizontal justify="spaced">
+            horizontal justify="spaced" spacing="small">
           <label class="settings-label">Key bindings:</label>
           <span class="settings-value"></span>
           <spark-button id="keysMinus" class="plus-minus-button"
@@ -473,7 +475,7 @@
       <template if="{{!chromeOS}}">
         <div class="form-group" id="rootDirectory">
           <spark-toolbar class="settings-block"
-              horizontal justify="spaced">
+              horizontal justify="spaced" spacing="small">
             <label class="settings-label">Root directory:</label>
             <span id="directoryLabel" class="settings-value"></span>
           </spark-toolbar>
@@ -482,7 +484,7 @@
 
       <div class="form-group" id="gitCredentials">
         <spark-toolbar class="settings-block"
-            horizontal justify="edges">
+            horizontal justify="edges" spacing="small">
           <label class="settings-label">Git credentials:</label>
           <spark-button class="reset-setting-button"
               flat primary on-click="{{onResetGit}}">
@@ -497,7 +499,7 @@
       <template if="{{developerMode}}">
         <div class="form-group" id="resetPreferences">
           <spark-toolbar class="settings-block"
-              horizontal justify="edges">
+              horizontal justify="edges" spacing="small">
             <label class="settings-label">Preferences:</label>
             <spark-button class="reset-setting-button"
                 flat primary on-click="{{onResetPreference}}">
