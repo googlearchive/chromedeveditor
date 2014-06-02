@@ -1885,9 +1885,9 @@ class NewProjectAction extends SparkActionWithDialog {
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
-      'core-elements': 'PolymerLabs/core-elements#master'
+      'core-elements': 'Polymer/core-elements#master'
   };
-  // Matches: "proj-template", "proj-template+polymer,polymer-elements".
+  // Matches: "proj-template", "proj-template;polymer,core-elements".
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
@@ -2354,8 +2354,8 @@ class GitAddAction extends SparkAction implements ContextAction {
 
   bool _valid(List<ws.Resource> resources) {
     return resources.any((resource) =>
-      !(resource.isFile && (resource.getMetadata('scmStatus')
-          != FileStatus.UNTRACKED)));
+      new ScmFileStatus.createFrom(resource.getMetadata('scmStatus'))
+          == ScmFileStatus.UNTRACKED);
   }
 }
 
@@ -2484,14 +2484,14 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         }
         _calculateScmStatus(resource);
       } else if (resource is ws.File) {
-        FileStatus status = gitOperations.getFileStatus(resource);
+        ScmFileStatus status = gitOperations.getFileStatus(resource);
 
         // TODO(grv) : Add deleted files to resource.
-        if (status == FileStatus.DELETED) {
+        if (status == ScmFileStatus.DELETED) {
           deletedFileList.add(resource.path);
-        } else if (status == FileStatus.MODIFIED) {
+        } else if (status == ScmFileStatus.MODIFIED) {
           modifiedFileList.add(resource);
-        } else if (status == FileStatus.ADDED) {
+        } else if (status == ScmFileStatus.ADDED) {
           addedFileList.add(resource);
         }
       }
@@ -2707,7 +2707,7 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
     ws.Resource file = _getResource(context);
     ScmProjectOperations operations =
         spark.scmManager.getScmOperationsFor(file.project);
-    return operations.getFileStatus(file) == FileStatus.UNMERGED;
+    return operations.getFileStatus(file) == ScmFileStatus.UNMERGED;
   }
 
   ws.Resource _getResource(context) {
@@ -2753,7 +2753,7 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
 
     for (ws.Resource resource in resources) {
       // TODO: Should we also check UNTRACKED?
-      if (operations.getFileStatus(resource) != FileStatus.MODIFIED) {
+      if (operations.getFileStatus(resource) != ScmFileStatus.MODIFIED) {
         return false;
       }
     }

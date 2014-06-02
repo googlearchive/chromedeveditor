@@ -25,7 +25,13 @@ class SparkFlags {
   static bool get showGitPull => _flags['show-git-pull'] == true;
   static bool get showGitBranch => _flags['show-git-branch'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
-  static bool get laxBowerBranches => _flags['lax-bower-branches'] == true;
+  // Bower:
+  static bool get bowerMapComplexVerToLatestStable =>
+      _flags['bower-map-complex-ver-to-latest-stable'] == true;
+  static Map<String, String> get bowerOverriddenDeps =>
+      _flags['bower-override-dependencies'];
+  static List<String> get bowerIgnoredDeps =>
+      _flags['bower-ignore-dependencies'];
 
   /**
    * Add new flags to the set, possibly overwriting the existing values.

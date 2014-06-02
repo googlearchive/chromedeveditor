@@ -206,7 +206,7 @@
             <option value="web/web_app_js">
               JavaScript web app
             </option>
-            <option value="web/web_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
+            <option value="web/web_app_polymer_js;polymer,core-elements">
               JavaScript web app using Polymer
             </option>
           </optgroup>
@@ -217,7 +217,7 @@
             <template if="{{showWipProjectTemplates}}">
               <!-- This one currently can't possibly work due to Polymer
                    JS breaking the CSP. BUG #1933. -->
-              <option value="chrome/chrome_app_polymer_js;polymer,polymer-elements,polymer-ui-elements">
+              <option value="chrome/chrome_app_polymer_js;polymer,core-elements">
                 JavaScript Chrome app using Polymer
               </option>
               <!-- This one works when installed in Chrome manually, but
@@ -611,7 +611,7 @@
       <spark-dialog-button cancel>
         Cancel
       </spark-dialog-button>
-      <spark-dialog-button id="projectRemoveDeleteButton" submit primary="false">
+      <spark-dialog-button id="projectRemoveDeleteButton" submit secondary>
         Delete
       </spark-dialog-button>
       <spark-dialog-button id="projectRemoveRemoveReferenceButton" submit>
