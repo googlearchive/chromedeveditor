@@ -330,9 +330,7 @@ class AceManager {
   /**
    * The container for the Ace editor.
    */
-  final html.Element _parentElement;
-  html.Element get parentElement =>
-      _parentElement;
+  final html.Element parentElement;
   final AceManagerDelegate delegate;
   final PreferenceStore _prefs;
 
@@ -355,8 +353,7 @@ class AceManager {
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
 
-
-  AceManager(this._parentElement,
+  AceManager(this.parentElement,
              this.delegate,
              svc.Services services,
              this._prefs) {
@@ -418,11 +415,9 @@ class AceManager {
   }
 
   void setupOutline() {
-    /*%TRACE3*/ print("""(4> 6/3/14): parentElement.parent: ${parentElement.parent.className}"""); // TRACE%
     outline = new Outline(_analysisService, parentElement.parent.parent, _prefs);
 
     outline.onChildSelected.listen((OutlineItem item) {
-      Stopwatch timer = new Stopwatch()..start();
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);
       ace.Point endPoint =
@@ -433,12 +428,10 @@ class AceManager {
       selection.setSelectionAnchor(startPoint.row, startPoint.column);
       selection.selectTo(endPoint.row, endPoint.column);
       _aceEditor.focus();
-      print('selection finished in ${timer.elapsedMilliseconds}ms');
     });
 
     ace.Point lastCursorPosition =  new ace.Point(-1, -1);
     _aceEditor.onChangeSelection.listen((_) {
-      return;
       ace.Point currentPosition = _aceEditor.cursorPosition;
       // Cancel the last outline selection update.
       if (lastCursorPosition != currentPosition) {
