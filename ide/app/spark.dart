@@ -427,10 +427,8 @@ abstract class Spark
     if (SparkFlags.showGitPull) {
       actionManager.registerAction(new GitPullAction(this));
     }
-    if (SparkFlags.showGitBranch) {
-      actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
-      actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
-    }
+    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
