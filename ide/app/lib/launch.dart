@@ -523,7 +523,7 @@ class BowerPackagesServlet extends PicoServlet {
     Project project = webLaunchHandler.lastLaunchedProject;
     if (project == null) return null;
 
-    if (!bowerManager.properties.isProjectWithPackages(project)) return null;
+    if (!bowerManager.properties.isFolderWithPackages(project)) return null;
 
     String url = request.uri.path;
     File file = bowerManager.getResolverFor(project).resolveRefToFile(url);
@@ -588,7 +588,9 @@ Future<HttpResponse> _serveFileResponse(File file) {
  */
 class StaticResourcesServlet extends PicoServlet {
   bool canServe(HttpRequest request) {
-    return request.uri.path == '/favicon.ico';
+    // TODO(devoncarew): Find a good favicon to use for Spark.
+    //return request.uri.path == '/favicon.ico';
+    return false;
   }
 
   Future<HttpResponse> serve(HttpRequest request) {

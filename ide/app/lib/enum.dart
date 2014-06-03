@@ -5,8 +5,8 @@
 library spark.enumerations;
 
 abstract class Enum<T> {
-  final T _value;
-  const Enum(this._value);
+  final T value;
+  const Enum(this.value);
   String get enumName;
-  String toString() => '$enumName.$_value';
+  String toString() => '$enumName.$value';
 }

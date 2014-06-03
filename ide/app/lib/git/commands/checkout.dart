@@ -5,7 +5,6 @@
 library git.commands.checkout;
 
 import 'dart:async';
-import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
@@ -35,6 +34,7 @@ class Checkout {
     }
 
     return dir.getDirectory(treeEntry.name).then((newDir) {
+      store.index.deleteIndexForEntry(newDir.fullPath);
       return store.retrieveObject(treeEntry.sha, "Tree").then((GitObject tree) {
         return Future.forEach((tree as TreeObject).entries, (TreeEntry entry) {
           return _removeEntryRecursively(store, newDir, entry);
@@ -58,7 +58,9 @@ class Checkout {
       if (entry.isBlob) {
         return ObjectUtils.expandBlob(dir, store, entry.name, entry.sha);
       } else {
-        return ObjectUtils.expandTree(dir, store, entry.sha);
+        return dir.createDirectory(entry.name).then((newDir) {
+          return ObjectUtils.expandTree(newDir, store, entry.sha);
+        });
       }
     }).then((_) {
       return Future.forEach(diff.removes, (TreeEntry entry) {
@@ -85,7 +87,7 @@ class Checkout {
 
   /**
    * Switches the workspace to a given git branch.
-   * Throws a BRANCH_NOT_FOUND error if the branch does not exist.
+   * Throws a BRANCH_NOT_FOUND exception if the branch does not exist.
    *
    * TODO(grv) : Support checkout of single file, commit heads etc.
    */
@@ -111,11 +113,7 @@ class Checkout {
         }
       });
     }, onError: (e) {
-      if (e.code == FileError.NOT_FOUND_ERR) {
-        throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
-      } else {
-        throw e;
-      }
+      throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
     });
   }
 }

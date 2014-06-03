@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../constants.dart';
+import '../exception.dart';
 import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
@@ -68,19 +69,17 @@ class Fetch {
             return store.getRemoteHeadForRef(headRefName).then((sha) {
               if (sha == branchRef.sha) {
                 // Branch is uptodate
-                throw "fetch up to date.";
+                throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
               } else {
                 return _handleFetch(branchRef, branchRef, fetcher);
               }
             });
           } else {
-            //TODO better error handling.
-            throw "Remote branch not found";
+            throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
           }
         });
       }, onError: (e) {
-        // TODO throw branch not found error.
-        throw "branch not found.";
+        throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
       });
     });
   }

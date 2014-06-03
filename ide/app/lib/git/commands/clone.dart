@@ -178,8 +178,7 @@ class Clone {
               return store.objectDir.getDirectory('pack').then((packDir) {
                 return FileOps.listFiles(packDir).then((entries) {
                   if (entries.length > 0) {
-                    throw new GitException(
-                        GitErrorConstants.GIT_CLONE_DIR_IN_USE);
+                    throw new GitException(GitErrorConstants.GIT_CLONE_DIR_IN_USE);
                   } else {
                     return null;
                   }

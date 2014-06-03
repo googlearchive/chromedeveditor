@@ -7,6 +7,7 @@ library git.commands.log;
 import 'dart:async';
 
 import '../constants.dart';
+import '../exception.dart';
 import '../object.dart';
 import '../objectstore.dart';
 
@@ -44,7 +45,7 @@ class Log {
     return store.getAllHeads().then((List<String> branches) {
       // TODO: Improve error handling.
       if (!branches.contains(branch))
-        throw "No such branch exists.";
+        throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
       return store.getHeadForRef('${REFS_HEADS}${branch}');
     });
   }

@@ -23,11 +23,6 @@
   color: #000;
 }
 
-#label,
-#description {
-  text-transform: capitalize;
-}
-
 #description {
   color: #bdbdbd;
   justify-content: flex-end;
