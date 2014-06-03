@@ -1,6 +1,45 @@
 body {
-  background-color: #F8F8F8;
-  font-family: 'Open Sans', sans-serif;
-  font-size: 14px;
-  margin: 15px;
+  font-family: sans-serif;
+  font-size: 16px;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+}
+
+core-header-panel {
+  float: left;
+  width: 360px;
+  height: 400px;
+  margin: 5px;
+}
+
+core-header-panel::shadow #mainContainer {
+  margin: 0 10px;
+  box-shadow: 0 10px 40px 0 #aaa;
+}
+
+.core-header {
+  height: 60px;
+  line-height: 60px;
+  font-size: 18px;
+  padding: 0 10px;
+  background-color: #4F7DC9;
+  color: #FFF;
+  transition: height 0.2s;
+}
+
+.core-header.tall {
+  height: 180px;
+}
+    
+.core-header.medium-tall {
+  height: 120px;
+}
+
+.content {
+  height: auto;
+  color: black;
+  background: linear-gradient(rgb(214, 227, 231), lightblue);
+  text-align: center;
 }

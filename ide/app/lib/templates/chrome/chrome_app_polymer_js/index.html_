@@ -7,14 +7,15 @@
   <link rel="stylesheet" href="styles.css">
 
   <script src="bower_components/platform/platform.js"></script>
-  <link rel="import" href="bower_components/polymer-ui-card/polymer-ui-card.html">
-  <link rel="import" href="bower_components/polymer-ui-icon-button/polymer-ui-icon-button.html">
+  <link rel="import" href="bower_components/core-header-panel/core-header-panel.html">
 </head>
 
 <body unresolved>
-  <polymer-ui-card>
-    <h1 id="greeting"></h1>
-    <polymer-ui-icon-button>OK</polymer-ui-icon-button>
-  </polymer-ui-card>
+  <core-header-panel>
+    <div class="core-header">I'm ``projectName``, a Chrome App with Polymer!</div>
+    <div class="content"></div>
+  </core-header-panel>
+    
+  <script src="main.js"></script>
 </body>
 </html>

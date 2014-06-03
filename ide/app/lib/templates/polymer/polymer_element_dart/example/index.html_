@@ -7,7 +7,7 @@
     <link rel="import" href="../lib/``sourceName``.html">
   </head>
 
-  <body>
+  <body unresolved>
     <``tagName`` who="world">
       Hello to you, too!
     </``tagName``>
