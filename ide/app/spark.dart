@@ -2582,7 +2582,6 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
 
   void _invoke([context]) {
     getElement("#gitPushClose").onClick.listen((_) => _onClose());
-    _triggerOnReturn("#gitPush", false);
     project = context.first;
 
     spark.syncPrefs.getValue("git-auth-info").then((String value) {
