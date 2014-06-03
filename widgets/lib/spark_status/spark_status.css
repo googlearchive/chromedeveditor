@@ -11,7 +11,7 @@
 }
 
 #status-container {
-  background-color: rgba(66, 129, 244, 1.0);
+  background-color: rgba(66, 129, 244, 0.9);
   border-radius: 22px;
   padding: 10px 20px;
   pointer-events: none;
