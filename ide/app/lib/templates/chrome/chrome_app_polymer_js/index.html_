@@ -12,7 +12,7 @@
 
 <body unresolved>
   <core-header-panel>
-    <div class="core-header">I'm ``projectName``, a Chrome app with Polymer!</div>
+    <div class="core-header">I'm ``projectName``, a Chrome App with Polymer!</div>
     <div class="content"></div>
   </core-header-panel>
     
