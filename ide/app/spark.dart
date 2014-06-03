@@ -1589,12 +1589,21 @@ abstract class PackageManagementAction
     if (context == null) {
       resource = spark.focusManager.currentResource;
     } else {
-      // TODO(ussuri): This seems like a stop-gap solution. Should we run for
-      // all elements that match?
+      // NOTE: [appliesTo] should ensure that this is the right choice.
       resource = context.first;
     }
 
-    spark.jobManager.schedule(_createJob(resource.parent));
+    // [appliesTo] delegates to [PackageServiceProperties.isPackageResource],
+    // which is expected to return true if:
+    // - the resourse is a folder that contains a package spec file: this is our
+    //   target, a "package dir" by definition.
+    // - the resource is a package spec file itself: our target is its parent,
+    //   which would fall into the case above if the user clicked on it instead.
+    if (resource is ws.File) {
+      resource = resource.parent;
+    }
+
+    spark.jobManager.schedule(_createJob(resource as ws.Folder));
   }
 
   String get category => 'application';
@@ -1616,13 +1625,13 @@ abstract class PubAction extends PackageManagementAction {
 class PubGetAction extends PubAction {
   PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
 
-  Job _createJob(ws.Container container) => new PubGetJob(spark, container);
+  Job _createJob(ws.Folder container) => new PubGetJob(spark, container);
 }
 
 class PubUpgradeAction extends PubAction {
   PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
 
-  Job _createJob(ws.Container container) => new PubUpgradeJob(spark, container);
+  Job _createJob(ws.Folder container) => new PubUpgradeJob(spark, container);
 }
 
 abstract class BowerAction extends PackageManagementAction {
@@ -1635,13 +1644,13 @@ abstract class BowerAction extends PackageManagementAction {
 class BowerGetAction extends BowerAction {
   BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
 
-  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+  Job _createJob(ws.Folder container) => new BowerGetJob(spark, container);
 }
 
 class BowerUpgradeAction extends BowerAction {
   BowerUpgradeAction(Spark spark) : super(spark, "bower-upgrade", "Bower Update");
 
-  Job _createJob(ws.Project project) => new BowerUpgradeJob(spark, project);
+  Job _createJob(ws.Folder container) => new BowerUpgradeJob(spark, container);
 }
 
 /**
@@ -1963,12 +1972,12 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isProjectWithPackages(project)) {
+            if (spark.pubManager.properties.isFolderWithPackages(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isProjectWithPackages(project)) {
+            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });
@@ -2808,12 +2817,12 @@ class _GitCloneTask {
           });
 
           // Run Pub if the new project has a pubspec file.
-          if (spark.pubManager.properties.isProjectWithPackages(project)) {
+          if (spark.pubManager.properties.isFolderWithPackages(project)) {
             spark.jobManager.schedule(new PubGetJob(spark, project));
           }
 
           // Run Bower if the new project has a bower.json file.
-          if (spark.bowerManager.properties.isProjectWithPackages(project)) {
+          if (spark.bowerManager.properties.isFolderWithPackages(project)) {
             spark.jobManager.schedule(new BowerGetJob(spark, project));
           }
 
@@ -2947,12 +2956,12 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.properties.isProjectWithPackages(resource)) {
+      if (spark.pubManager.properties.isFolderWithPackages(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
 
       // Run Bower if the folder has a bower.json file.
-      if (spark.bowerManager.properties.isProjectWithPackages(resource)) {
+      if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
         spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
 
@@ -3001,29 +3010,29 @@ abstract class PackageManagementJob extends Job {
 }
 
 class PubGetJob extends PackageManagementJob {
-  PubGetJob(Spark spark, ws.Container container) :
+  PubGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub get');
 
   Future _run() => _spark.pubManager.installPackages(_container);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
-  PubUpgradeJob(Spark spark, ws.Container container) :
+  PubUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub upgrade');
 
   Future _run() => _spark.pubManager.upgradePackages(_container);
 }
 
 class BowerGetJob extends PackageManagementJob {
-  BowerGetJob(Spark spark, ws.Container project) :
-      super(spark, project, 'bower install');
+  BowerGetJob(Spark spark, ws.Folder container) :
+      super(spark, container, 'bower install');
 
   Future _run() => _spark.bowerManager.installPackages(_container);
 }
 
 class BowerUpgradeJob extends PackageManagementJob {
-  BowerUpgradeJob(Spark spark, ws.Container project) :
-      super(spark, project, 'bower upgrade');
+  BowerUpgradeJob(Spark spark, ws.Folder container) :
+      super(spark, container, 'bower upgrade');
 
   Future _run() => _spark.bowerManager.upgradePackages(_container);
 }
