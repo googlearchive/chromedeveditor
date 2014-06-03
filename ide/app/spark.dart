@@ -598,7 +598,8 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
-    _errorDialog.dialog.title = title;
+    // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
+    _errorDialog.dialog.setAttr('title', true, title);
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
@@ -672,7 +673,8 @@ abstract class Spark
       });
     }
 
-    _okCancelDialog.dialog.title = title;
+    // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
+    _okCancelDialog.dialog.setAttr('title', true, title);
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
