@@ -4,11 +4,24 @@
 <polymer-element name="example-ui">
   <template>
     <spark-button>default</spark-button>
-    <spark-button primary>primary</spark-button>
     <spark-button flat>flat</spark-button>
+    <spark-button raised>raised</spark-button>
     <spark-button flat primary>flat primary</spark-button>
-    <spark-button padding="small">min padding</spark-button>
-    <spark-button padding="none">no padding</spark-button>
+    <spark-button raised primary>raised primary</spark-button>
+    <spark-button flat round>
+      <svg viewBox="0 0 24 24">
+        <polygon points="8,5 8,19 19,12 "></polygon>
+      </svg>
+    </spark-button>
+    <spark-button raised round primary>
+      <svg viewBox="0 0 24 24">
+        <polygon points="8,5 8,19 19,12 "></polygon>
+      </svg>
+    </spark-button>
+    <spark-button raised padding="none">no padding</spark-button>
+    <spark-button raised padding="small">small padding</spark-button>
+    <spark-button raised padding="large">large padding</spark-button>
+    <spark-button raised padding="huge">huge padding</spark-button>
     <spark-button active>active</spark-button>
     <spark-button>0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789</spark-button>
     <spark-button></spark-button>
