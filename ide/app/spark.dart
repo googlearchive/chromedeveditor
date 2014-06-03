@@ -2602,6 +2602,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
           (List<CommitInfo> commits) {
         if (commits.isEmpty) {
           spark.showErrorMessage('Push failed', 'No commits to push');
+          return;
         }
         // Fill commits.
         _commitsList.innerHtml = '';
