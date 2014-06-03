@@ -55,8 +55,8 @@ spark-dialog {
   outline: none;
 }
 
-#fileFilter:focus ~ #runButton,
-#fileFilter:focus ~ #mainMenu {
+#fileFilter:focus.active ~ #runButton,
+#fileFilter:focus.active ~ #mainMenu {
   opacity: 0;
   width: 0;
   transition: opacity 0.5s, width 0.5s ease-out 0.2s;
