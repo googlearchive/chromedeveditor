@@ -354,7 +354,7 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
-  
+
 
   AceManager(this._parentElement,
              this.delegate,
@@ -418,7 +418,8 @@ class AceManager {
   }
 
   void setupOutline() {
-    outline = new Outline(_analysisService, parentElement.parent, _prefs);
+    /*%TRACE3*/ print("""(4> 6/3/14): parentElement.parent: ${parentElement.parent.className}"""); // TRACE%
+    outline = new Outline(_analysisService, parentElement.parent.parent, _prefs);
 
     outline.onChildSelected.listen((OutlineItem item) {
       Stopwatch timer = new Stopwatch()..start();
