@@ -46,7 +46,7 @@ class Push {
     return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
       return store.getCommitsForPush(refs, config.remoteHeads).then(
           (commits) {
-        if (commits == null) {
+        if (commits.commits.isEmpty) {
           throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
         }
         PackBuilder builder = new PackBuilder(commits.commits, store);
@@ -69,9 +69,6 @@ class Push {
     GitRef ref = new GitRef(ObjectStore.HEAD_MASTER_SHA, null);
     return store.getCommitsForPush([ref], config.remoteHeads).
         then((CommitPushEntry commits) {
-      if (commits == null) {
-        return [];
-      }
       return commits.commits;
     });
   }

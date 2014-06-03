@@ -422,7 +422,7 @@ class ObjectStore {
         return getHeadForRef(headRefName).then((String sha) {
           if (sha == remoteRef.sha) {
           // no changes to push.
-            return new Future.value();
+            return new Future.value(new CommitPushEntry([], remoteRef));
           }
 
           remoteRef.head = sha;
