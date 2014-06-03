@@ -1542,7 +1542,7 @@ class FileExitAction extends SparkAction {
 
 class ApplicationRunAction extends SparkAction implements ContextAction {
   ApplicationRunAction(Spark spark) : super(
-      spark, "application-run", "Run Application") {
+      spark, "application-run", "Run") {
     addBinding("ctrl-r");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
@@ -1993,7 +1993,7 @@ class NewProjectAction extends SparkActionWithDialog {
 }
 
 class FolderOpenAction extends SparkAction {
-  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Add Folder to Workspace…");
 
   void _invoke([Object context]) {
     spark.openFolder();
@@ -3374,7 +3374,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
 }
 
 class ImportFolderAction extends SparkAction implements ContextAction {
-  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…");
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Add Folder to Workspace…");
 
   void _invoke([List<ws.Resource> resources]) {
     spark.importFolder(resources);
