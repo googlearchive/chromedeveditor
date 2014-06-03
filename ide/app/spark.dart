@@ -427,13 +427,11 @@ abstract class Spark
     if (SparkFlags.showGitPull) {
       actionManager.registerAction(new GitPullAction(this));
     }
-    if (SparkFlags.showGitBranch) {
-      actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
-      actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
-    }
+    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
+    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
-    actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitRevertChangesAction(this));
     actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
@@ -817,13 +815,12 @@ abstract class Spark
   }
 
   void _refreshOpenFiles() {
-    // In order to scope how much work we do when Spark re-gains focus, we do
-    // not refresh the entire workspace or even the active projects. We refresh
-    // the currently opened files and their parent containers. This lets us
-    // capture changed files and deleted files. For any other changes it is the
-    // user's responsibility to explicitly refresh the affected project.
+    // In order to scope how much work we do when Spark re-gains focus, we only
+    // refresh the active projects. This lets us capture changed files and
+    // deleted files. For any other changes it is the user's responsibility to
+    // explicitly refresh the affected project.
     Set<ws.Resource> resources = new Set.from(
-        editorManager.files.map((r) => r.parent != null ? r.parent : r));
+        editorManager.files.map((r) => r.project != null ? r.project : r));
     resources.forEach((ws.Resource r) => r.refresh());
   }
 }
@@ -1686,6 +1683,9 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
       spark, "resource-refresh", "Refresh") {
     // On Chrome OS, bind to the dedicated refresh key.
     if (PlatformInfo.isCros) {
+      // 168 (0xA8) is the key code of the refresh key on ChromeOS.
+      // TODO(devoncarew): Figure out how to get the F3 key event on ChromeOS.
+      //addBinding('f5', linuxBinding: '0xA8');
       addBinding('f5', linuxBinding: 'f3');
     } else {
       addBinding('f5');
@@ -1883,9 +1883,9 @@ class NewProjectAction extends SparkActionWithDialog {
 
   static const _KNOWN_JS_PACKAGES = const {
       'polymer': 'Polymer/polymer#master',
-      'core-elements': 'PolymerLabs/core-elements#master'
+      'core-elements': 'Polymer/core-elements#master'
   };
-  // Matches: "proj-template", "proj-template+polymer,polymer-elements".
+  // Matches: "proj-template", "proj-template;polymer,core-elements".
   static final _TEMPLATE_REGEX = new RegExp(r'([\/\w_-]+)(;(([\w-],?)+))?');
 
   NewProjectAction(Spark spark, Element dialog)
@@ -2156,6 +2156,9 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     return _getLocation().then((location) {
       _addProperty(_propertiesElement, 'Location', location);
     }).then((_) {
+      // Only show repo info for projects.
+      if (_selectedResource is! ws.Project) return null;
+
       GitScmProjectOperations gitOperations =
           spark.scmManager.getScmOperationsFor(_selectedResource.project);
 
@@ -2329,7 +2332,7 @@ class GitPullAction extends SparkAction implements ContextAction {
 }
 
 class GitAddAction extends SparkAction implements ContextAction {
-  GitAddAction(Spark spark) : super(spark, "git-add", "Add  to Git");
+  GitAddAction(Spark spark) : super(spark, "git-add", "Git Add");
   chrome.Entry entry;
 
   void _invoke([List<ws.Resource> resources]) {
@@ -2349,8 +2352,8 @@ class GitAddAction extends SparkAction implements ContextAction {
 
   bool _valid(List<ws.Resource> resources) {
     return resources.any((resource) =>
-      !(resource.isFile && (resource.getMetadata('scmStatus')
-          != FileStatus.UNTRACKED)));
+      new ScmFileStatus.createFrom(resource.getMetadata('scmStatus'))
+          == ScmFileStatus.UNTRACKED);
   }
 }
 
@@ -2513,14 +2516,14 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
         }
         _calculateScmStatus(resource);
       } else if (resource is ws.File) {
-        FileStatus status = gitOperations.getFileStatus(resource);
+        ScmFileStatus status = gitOperations.getFileStatus(resource);
 
         // TODO(grv) : Add deleted files to resource.
-        if (status == FileStatus.DELETED) {
+        if (status == ScmFileStatus.DELETED) {
           deletedFileList.add(resource.path);
-        } else if (status == FileStatus.MODIFIED) {
+        } else if (status == ScmFileStatus.MODIFIED) {
           modifiedFileList.add(resource);
-        } else if (status == FileStatus.ADDED) {
+        } else if (status == ScmFileStatus.ADDED) {
           addedFileList.add(resource);
         }
       }
@@ -2612,7 +2615,7 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
   void _onClose() => _hide();
 
   void _invoke([context]) {
-    getElement(".modal-footer spark-button").onClick.listen((_) => _onClose());
+    getElement("#gitPushClose").onClick.listen((_) => _onClose());
     _triggerOnReturn("#gitPush", false);
     project = context.first;
 
@@ -2736,7 +2739,7 @@ class GitResolveConflictsAction extends SparkAction implements ContextAction {
     ws.Resource file = _getResource(context);
     ScmProjectOperations operations =
         spark.scmManager.getScmOperationsFor(file.project);
-    return operations.getFileStatus(file) == FileStatus.UNMERGED;
+    return operations.getFileStatus(file) == ScmFileStatus.UNMERGED;
   }
 
   ws.Resource _getResource(context) {
@@ -2782,7 +2785,7 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
 
     for (ws.Resource resource in resources) {
       // TODO: Should we also check UNTRACKED?
-      if (operations.getFileStatus(resource) != FileStatus.MODIFIED) {
+      if (operations.getFileStatus(resource) != ScmFileStatus.MODIFIED) {
         return false;
       }
     }
@@ -3155,17 +3158,14 @@ class AboutSparkAction extends SparkActionWithDialog {
 
 // TODO(ussuri): Polymerize.
 class SettingsAction extends SparkActionWithDialog {
-  // TODO(ussuri): This is essentially unused. Remove.
-  bool _initialized = false;
-
   SettingsAction(Spark spark, Element dialog)
-      : super(spark, "settings", "Settings", dialog);
+      : super(spark, "settings", "Settings", dialog) {
+    if (PlatformInfo.isMac) {
+      addBinding('ctrl-,');
+    }
+  }
 
   void _invoke([Object context]) {
-    if (!_initialized) {
-      _initialized = true;
-    }
-
     spark.setGitSettingsResetDoneVisible(false);
 
     var whitespaceCheckbox = getElement('#stripWhitespace');

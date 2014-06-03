@@ -88,7 +88,7 @@ class Checkout {
 
   /**
    * Switches the workspace to a given git branch.
-   * Throws a BRANCH_NOT_FOUND error if the branch does not exist.
+   * Throws a BRANCH_NOT_FOUND exception if the branch does not exist.
    *
    * TODO(grv) : Support checkout of single file, commit heads etc.
    */
@@ -114,11 +114,7 @@ class Checkout {
         }
       });
     }, onError: (e) {
-      if (e.code == FileError.NOT_FOUND_ERR) {
-        throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
-      } else {
-        throw e;
-      }
+      throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
     });
   }
 }

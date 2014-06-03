@@ -11,6 +11,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'fetch.dart';
 import '../exception.dart';
 import '../objectstore.dart';
+import '../exception.dart';
 import '../options.dart';
 
 /**
@@ -50,7 +51,6 @@ class Branch {
     }
 
     return store.getHeadForRef('refs/heads/' + branchName).then((_) {
-      // TODO(Grv) : throw branch already exists.
       throw new GitException(GitErrorConstants.GIT_BRANCH_EXISTS);
     }, onError: (e) {
       return _getHeadRef(store, branchName, remoteBranchName).then(

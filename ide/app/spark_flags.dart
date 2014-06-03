@@ -16,19 +16,42 @@ class SparkFlags {
   /**
    * Accessors to the currently supported flags.
    */
-  // NOTE: '...== true' below are on purpose: flag values can be null.
+  // NOTE: '...== true' below are on purpose: missing flags default to false.
   static bool get developerMode => _flags['test-mode'] == true;
   static bool get useLightAceThemes => _flags['light-ace-themes'] == true;
   static bool get useDarkAceThemes => _flags['dark-ace-themes'] == true;
   static bool get useAceThemes => useLightAceThemes || useDarkAceThemes;
-  static bool get showWipProjectTemplates => _flags['wip-project-templates'];
+  static bool get showWipProjectTemplates => _flags['wip-project-templates'] == true;
   static bool get showGitPull => _flags['show-git-pull'] == true;
   static bool get showGitBranch => _flags['show-git-branch'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
-  static bool get laxBowerBranches => _flags['lax-bower-branches'] == true;
+  // Bower:
+  static bool get bowerMapComplexVerToLatestStable =>
+      _flags['bower-map-complex-ver-to-latest-stable'] == true;
+  static Map<String, String> get bowerOverriddenDeps =>
+      _flags['bower-override-dependencies'];
+  static List<String> get bowerIgnoredDeps =>
+      _flags['bower-ignore-dependencies'];
 
+  /**
+   * Add new flags to the set, possibly overwriting the existing values.
+   * Maps are treated specially, updating the top-level map entries rather
+   * than overwriting the whole map.
+   */
   static void setFlags(Map<String, dynamic> newFlags) {
-    if (newFlags != null) _flags.addAll(newFlags);
+    // TODO(ussuri): Also recursively update maps on 2nd level and below.
+    if (newFlags == null) return;
+    newFlags.forEach((key, newValue) {
+      var value;
+      var oldValue = _flags[key];
+      if (oldValue != null && oldValue is Map && newValue is Map) {
+        value = oldValue;
+        value.addAll(newValue);
+      } else {
+        value = newValue;
+      }
+      _flags[key] = value;
+    });
   }
 
   /**
@@ -63,9 +86,12 @@ class SparkFlags {
   static Future<Map<String, dynamic>> _readFromFile(Future<String> fileReader) {
     return fileReader.then((String contents) {
       return JSON.decode(contents);
-    }).catchError((_) {
-      // The JSON file is non-existent or invalid.
-      return null;
+    }).catchError((e) {
+      if (e is FormatException) {
+        throw 'Config file has invalid format: $e';
+      } else {
+        return null;
+      }
     });
   }
 }

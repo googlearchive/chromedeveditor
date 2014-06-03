@@ -72,7 +72,7 @@ class Fetch {
             if (sha == branchRef.sha) {
               return store.getCommitGraph([sha]).then((CommitGraph graph) {
                 if (graph.commits.isNotEmpty) {
-                  throw new GitException(GitErrorConstants.GIT_BRANCH_UPTO_DATE);
+                  throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
                 } else {
                   return _handleFetch(branchRef, branchRef, fetcher);
                 }
@@ -82,9 +82,9 @@ class Fetch {
             }
           });
         } else {
-          return new GitException(
-              GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
+          return new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
         }
+
       });
     });
   }
