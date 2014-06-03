@@ -64,12 +64,19 @@ class Push {
   static Future<List<CommitObject>> getPendingCommits(GitOptions options) {
     ObjectStore store = options.store;
     Config config = store.config;
-    // TODO(dvh): we need to be able to get pending commits from other local
-    // branches to push to other branches than master.
-    GitRef ref = new GitRef(ObjectStore.HEAD_MASTER_SHA, null);
-    return store.getCommitsForPush([ref], config.remoteHeads).
-        then((CommitPushEntry commits) {
-      return commits.commits;
-    });
-  }
+    String username = options.username;
+    String password = options.password;
+
+    String url = config.url != null ? config.url : options.repoUrl;
+
+    if (url == null) {
+       throw new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE);
+    }
+
+   HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username, password);
+   return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
+     return store.getCommitsForPush(refs, config.remoteHeads).then((commits)
+         => commits.commits);
+   });
+ }
 }
