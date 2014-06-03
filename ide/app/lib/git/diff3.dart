@@ -11,9 +11,9 @@ import "package:diff/diff.dart" as diff3;
  */
 class Diff3 {
   static Diff3Result diff(String our, String base, String their) {
-    diff3.Diff3DigResult diff3DigResult = diff3.diff3_dig(our, base, their);
-    return new Diff3Result(diff3DigResult.Text.join("\n"),
-        diff3DigResult.Conflict);
+    diff3.Diff3DigResult diff3DigResult = diff3.diff3Dig(our, base, their);
+    return new Diff3Result(diff3DigResult.text.join("\n"),
+        diff3DigResult.conflict);
   }
 }
 
