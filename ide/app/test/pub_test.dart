@@ -38,9 +38,9 @@ defineTests() {
     });
 
     test('PubManager isPubProject', () {
-      expect(pubManager.properties.isProjectWithPackages(project), true);
+      expect(pubManager.properties.isFolderWithPackages(project), true);
       return project.getChild('pubspec.yaml').delete().then((_) {
-        expect(pubManager.properties.isProjectWithPackages(project), false);
+        expect(pubManager.properties.isFolderWithPackages(project), false);
       });
     });
 

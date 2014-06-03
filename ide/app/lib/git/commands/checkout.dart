@@ -5,7 +5,6 @@
 library git.commands.checkout;
 
 import 'dart:async';
-import 'dart:html';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 

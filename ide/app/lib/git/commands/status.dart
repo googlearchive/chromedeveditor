@@ -84,6 +84,12 @@ class Status {
     if (entry.fullPath == store.root.fullPath) {
       return new Future.value();
     }
+
+    // Don't update status for .git folder and sub-folders.
+    if (entry.fullPath.contains('/.git/') || entry.name == '.git') {
+      return new Future.value();
+    }
+
     return entry.getParent().then((chrome.DirectoryEntry root) {
       return FileOps.listFiles(root).then((entries) {
         entries.removeWhere((e) => e.name == ".git");

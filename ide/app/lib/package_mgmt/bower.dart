@@ -37,25 +37,26 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future installPackages(Container container) =>
+  Future installPackages(Folder container) =>
       _installOrUpgradePackages(container.project, FetchMode.INSTALL);
 
-  Future upgradePackages(Container container) =>
+  Future upgradePackages(Folder container) =>
       _installOrUpgradePackages(container.project, FetchMode.UPGRADE);
 
   //
   // - end PackageManager abstract interface.
   //
 
-  Future _installOrUpgradePackages(Project project, FetchMode mode) {
-    final File specFile = project.getChild(properties.packageSpecFileName);
+  Future _installOrUpgradePackages(Folder container, FetchMode mode) {
+    final File specFile = container.getChild(properties.packageSpecFileName);
 
     // The client is expected to call us only when the project has bower.json.
     if (specFile == null) {
-      throw new StateError('installPackages() called, but there is no bower.json');
+      throw new StateError(
+          '${properties.packageSpecFileName} not found under ${container.name}');
     }
 
-    return project.getOrCreateFolder(properties.packagesDirName, true)
+    return container.getOrCreateFolder(properties.packagesDirName, true)
         .then((Folder packagesDir) {
       final fetcher = new BowerFetcher(
           packagesDir.entry, properties.packageSpecFileName);
@@ -64,7 +65,7 @@ class BowerManager extends PackageManager {
         _logger.severe('Error getting Bower packages', e);
         return new Future.error(e);
       }).then((_) {
-        return project.refresh();
+        return container.refresh();
       });
     });
   }

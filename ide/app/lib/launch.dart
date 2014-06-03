@@ -523,7 +523,7 @@ class BowerPackagesServlet extends PicoServlet {
     Project project = webLaunchHandler.lastLaunchedProject;
     if (project == null) return null;
 
-    if (!bowerManager.properties.isProjectWithPackages(project)) return null;
+    if (!bowerManager.properties.isFolderWithPackages(project)) return null;
 
     String url = request.uri.path;
     File file = bowerManager.getResolverFor(project).resolveRefToFile(url);
