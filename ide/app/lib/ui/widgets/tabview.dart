@@ -287,8 +287,8 @@ class TabView {
     var scroller = _tabBarScroller;
       if (label.offsetWidth + label.offsetLeft > scroller.offsetWidth +
           scroller.scrollLeft - scroller.offsetLeft - SCROLL_MARGIN) {
-        scroller.scrollLeft = label.offsetWidth + label.offsetLeft -
-            scroller.offsetWidth + scroller.offsetLeft + SCROLL_MARGIN;
+        scroller.scrollLeft = (label.offsetWidth + label.offsetLeft -
+            scroller.offsetWidth + scroller.offsetLeft + SCROLL_MARGIN).toInt();
       } else if (label.offsetLeft < scroller.scrollLeft + SCROLL_MARGIN) {
         scroller.scrollLeft = label.offsetLeft.toInt() - SCROLL_MARGIN;
       }
