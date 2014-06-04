@@ -17,6 +17,7 @@ dependencies:
   cipher: '>=0.7.0 <0.8.0'
   compiler_unsupported: 0.7.1
   crypto: any
+  diff: '>=0.1.0 <0.2.0'
   intl: any
   json: any
   logging: any

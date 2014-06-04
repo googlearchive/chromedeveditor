@@ -33,10 +33,10 @@ class PubManager extends PackageManager {
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
-  Future installPackages(Container container) =>
+  Future installPackages(Folder container) =>
       _installUpgradePackages(container, 'get', false);
 
-  Future upgradePackages(Container container) =>
+  Future upgradePackages(Folder container) =>
       _installUpgradePackages(container, 'upgrade', true);
 
   //
@@ -44,7 +44,7 @@ class PubManager extends PackageManager {
   //
 
   Future _installUpgradePackages(
-      Container container, String commandName, bool isUpgrade) {
+      Folder container, String commandName, bool isUpgrade) {
     return tavern.getDependencies(container.entry, _handleLog, isUpgrade).
         whenComplete(() {
       return container.project.refresh();

@@ -34,10 +34,11 @@ body {
 }
 
 #splashScreen {
-  background: #F7F7F7;
+  background: #fff;
   background-image: url("images/spark_512.png");
   background-position: center;
   background-repeat: no-repeat;
+  background-size: 256px 256px;
   opacity: 1;
   transition: opacity 300ms;
   position: fixed;
@@ -46,6 +47,15 @@ body {
   top: 0;
   bottom: 0;
   z-index: 1000;
+}
+
+#splashScreenProgress {
+  background-image: url("images/progress.gif");
+  height: 48px;
+  left: calc(50% - 24px);
+  position: absolute;
+  top: calc(50% + 150px);
+  width: 48px;
 }
 
 #splashScreen.closeSplash {

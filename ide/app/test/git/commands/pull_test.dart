@@ -38,7 +38,12 @@ defineTests() {
       }).then((_) {
         Pull pull = new Pull(
             new GitOptions(root: clone.root, store: clone.store));
-        return pull.pull().catchError((GitException e) {
+        return pull.pull().then((_) {
+          throw 'Expected a git_branch_up_to_date exception';
+        }).catchError((GitException e) {
+          if (e is! GitException) {
+            throw e;
+          }
           expect(e.errorCode, GitErrorConstants.GIT_BRANCH_UP_TO_DATE);
         });
       });
