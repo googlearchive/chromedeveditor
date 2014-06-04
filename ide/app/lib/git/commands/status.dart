@@ -116,11 +116,12 @@ class Status {
    * usage in the future.
    */
   static Future isWorkingTreeClean(ObjectStore store) {
+
     return store.index.updateIndex(true).then((_) {
-     Map<String, FileStatus> statuses = _getFileStatusesForTypes(store,
-         [FileStatusType.MODIFIED, FileStatusType.STAGED]);
-      if (!statuses.isEmpty) {
-        throw new GitException(GitErrorConstants.GIT_UNCOMMITTED_CHANGES_IN_TREE);
+      Map<String, FileStatus> statuses = _getFileStatusesForTypes(store,
+          [FileStatusType.MODIFIED, FileStatusType.STAGED]);
+      if (statuses.isNotEmpty) {
+        throw new GitException(GitErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
       }
     });
   }
