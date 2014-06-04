@@ -2549,9 +2549,9 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
 
   Future _startJob() {
     // TODO(grv): Add verify checks.
-    _GitCommitTask task = new _GitCommitTask(gitOperations, _gitName, _gitEmail,
+    _GitCommitJob commitJob = new _GitCommitJob(gitOperations, _gitName, _gitEmail,
         _commitMessageElement.value, spark);
-    return task.run().then((_) {
+    spark.jobManager.schedule(commitJob).then((_) {
       _restoreDialog();
       _hide();
     });
@@ -2881,17 +2881,18 @@ class _GitCloneTask {
   }
 }
 
-class _GitCommitTask {
+class _GitCommitJob extends Job {
   GitScmProjectOperations gitOperations;
   String _commitMessage;
   String _userName;
   String _userEmail;
   Spark spark;
 
-  _GitCommitTask(this.gitOperations, this._userName, this._userEmail,
-      this._commitMessage, this.spark);
+  _GitCommitJob(this.gitOperations, this._userName, this._userEmail,
+      this._commitMessage, this.spark) : super("Committing...");
 
-  Future run() {
+  Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
     return gitOperations.commit(_userName, _userEmail, _commitMessage).
         then((_) {
       spark.showSuccessMessage('Committed changes');
