@@ -410,6 +410,7 @@ button.ace_searchbtn_close:active {
 }
 
 .outlineItem {
+  font-size: 13px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -419,6 +420,7 @@ button.ace_searchbtn_close:active {
 }
 
 li.outlineItem.topLevel.class {
+  font-size: 16px;
   margin-top: 10px;
   margin-bottom: 10px;
 }
