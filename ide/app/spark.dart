@@ -2585,15 +2585,15 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
     project = context.first;
 
     spark.syncPrefs.getValue("git-auth-info").then((String value) {
-      _gitUsername = null;
-      _gitPassword = null;
+
       if (value != null) {
         Map<String,String> info = JSON.decode(value);
         _needsUsernamePassword = false;
         _gitUsername = info['username'];
         _gitPassword = info['password'];
-      }
-      else  {
+      } else  {
+        _gitUsername = null;
+        _gitPassword = null;
         _showAuthDialog(context);
         return;
       }
@@ -2606,7 +2606,8 @@ class GitPushAction extends SparkActionWithDialog implements ContextAction {
         }
         // Fill commits.
         _commitsList.innerHtml = '';
-        String summaryString = commits.length == 1 ? "1 commit" : "${commits.length} commits";
+        String summaryString =
+            commits.length == 1 ? '1 commit' : '${commits.length} commits';
         Element title = document.createElement("h1");
         title.appendText(summaryString);
         _commitsList.append(title);

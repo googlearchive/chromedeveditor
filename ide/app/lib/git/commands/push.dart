@@ -41,18 +41,19 @@ class Push {
       throw new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE);
     }
 
+    // Currently only pushing to 'origin' is supported.
     HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
         password);
     return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
       return store.getCommitsForPush(refs, config.remoteHeads).then(
-          (commits) {
-        if (commits.commits.isEmpty) {
+          (CommitPushEntry pushEntry) {
+        if (pushEntry == null) {
           throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
         }
-        PackBuilder builder = new PackBuilder(commits.commits, store);
+        PackBuilder builder = new PackBuilder(pushEntry.commits, store);
         return builder.build().then((List<int> packData) {
-          return fetcher.pushRefs([commits.ref], packData, pushProgress).then((_) {
-            config.remoteHeads[commits.ref.name] = commits.ref.head;
+          return fetcher.pushRefs([pushEntry.ref], packData, pushProgress).then((_) {
+            config.remoteHeads[pushEntry.ref.name] = pushEntry.ref.head;
             config.url = url;
             return store.writeConfig();
           });
@@ -75,8 +76,8 @@ class Push {
 
    HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username, password);
    return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
-     return store.getCommitsForPush(refs, config.remoteHeads).then((commits)
-         => commits.commits);
+     return store.getCommitsForPush(refs, config.remoteHeads).then((CommitPushEntry pushEntry)
+         => pushEntry.commits);
    });
  }
 }
