@@ -29,13 +29,14 @@ class Branch {
    * 6) cannot end with '.lock'.
   */
   static const BRANCH_PATTERN
-      = r"^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+$";
+    = r"^(?!build-|/|.*([/.][.]|//|@\\{|\\\\))[^\\040\\177 ~^:?*\\[]+$";
 
   static final branchRegex = new RegExp(BRANCH_PATTERN);
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    return name.isNotEmpty && branchRegex.matchAsPrefix(name) != null;
+    return (name.isNotEmpty && branchRegex.matchAsPrefix(name) != null &&
+        !name.endsWith('.') && !name.endsWith('.lock') && !name.endsWith('/'));
   }
 
   /**
