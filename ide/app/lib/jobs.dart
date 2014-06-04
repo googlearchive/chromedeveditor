@@ -28,12 +28,13 @@ class JobManager {
    * waiting, [job] will run.
    */
   Future schedule(Job job) {
+    Completer completer = job.completer;
     _waitingJobs.add(job);
 
     if (!isJobRunning) {
       _scheduleNextJob();
     }
-    return job.future;
+    return completer.future;
   }
 
   /**
