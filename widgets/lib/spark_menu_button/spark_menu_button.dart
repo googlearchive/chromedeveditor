@@ -85,9 +85,9 @@ class SparkMenuButton extends SparkWidget {
       opened = newOpened;
       // TODO(ussuri): A hack to make #overlay and #button see
       // changes in 'opened'. Data binding via {{opened}} in the HTML wasn't
-      // detected. deliverChanges() here fixed #overlay, but not #button.
-      // Only direct attribute setting helps.
-      _overlay.setAttr('opened', newOpened);
+      // detected. deliverChanges() here fix #overlay, but not #button.
+      // setAttr() fixes #button, but break #overlay. See BUG #2252.
+      _overlay..opened = newOpened..deliverChanges();
       _button.setAttr('active', newOpened);
       if (newOpened) {
         // Enforce focused state so the button can accept keyboard events.
