@@ -51,40 +51,37 @@ class Fetch {
     String password = options.password;
 
     Function fetchProgress;
-    // TODO add fetchProgress chunker.
+    // TODO Add fetchProgress chunker.
 
     return Status.isWorkingTreeClean(store).then((_) {
       String url = store.config.url;
 
-      HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
-          password);
+      HttpFetcher fetcher = new HttpFetcher(
+          store, 'origin', url, username, password);
 
       // get current branch.
       String headRefName = 'refs/heads/' + branchName;
       return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-        GitRef branchRef = refs.firstWhere((GitRef ref) =>
-            ref.name == headRefName);
+        GitRef branchRef = refs.firstWhere(
+            (GitRef ref) => ref.name == headRefName);
 
-        if (branchRef != null) {
-          // see if we know about the branch's head commit. If so we're up to
-          // date. If not, request from remote.
-          return store.getRemoteHeadForRef(headRefName).then((sha) {
-            if (sha == branchRef.sha) {
-              return store.getCommitGraph([sha]).then((CommitGraph graph) {
-                if (graph.commits.isNotEmpty) {
-                  throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
-                } else {
-                  return _handleFetch(branchRef, branchRef, fetcher);
-                }
-              });
+        if (branchRef == null) {
+          throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
+        }
+        // See if we know about the branch's head commit. If so we're up to
+        // date. If not, request from remote.
+        return store.getRemoteHeadForRef(headRefName).then((sha) {
+          if (sha != branchRef.sha) {
+            return _handleFetch(branchRef, branchRef, fetcher);
+          }
+          return store.getCommitGraph([sha]).then((CommitGraph graph) {
+            if (graph.commits.isNotEmpty) {
+              throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
             } else {
               return _handleFetch(branchRef, branchRef, fetcher);
             }
           });
-        } else {
-          return new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
-        }
-
+        });
       });
     });
   }
@@ -122,9 +119,16 @@ class Fetch {
         if (haveRefs.isEmpty) {
           haveRefs = null;
         }
-        return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
-            options.depth, graph.nextLevel, null, progress).then(
-                (PackParseResult result) {
+
+        Future<PackParseResult> fetcherFuture = fetcher.fetchRef(
+            [wantRef.sha],
+            haveRefs,
+            store.config.shallow,
+            options.depth,
+            graph.nextLevel,
+            null,
+            progress);
+        return fetcherFuture.then((result) {
           List<int> packSha = result.data.sublist(result.data.length - 20);
           Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
               packSha);

@@ -40,6 +40,7 @@ class PackObjectHeader {
  * TODO(grv) : add unittests.
  */
 class Pack {
+  static final SHA_LENGTH = 20;
   final List<int> data;
   int _offset = 0;
   ObjectStore _store;
@@ -215,8 +216,8 @@ class Pack {
         object.desiredOffset = findDeltaBaseOffset(header);
         break;
       case ObjectTypes.REF_DELTA:
-        List<int> shaBytes = _peek(20);
-        _advance(20);
+        List<int> shaBytes = _peek(SHA_LENGTH);
+        _advance(SHA_LENGTH);
         object.baseSha = shaBytes.map((int byte) {
           _padString(byte.toRadixString(16), 2, '0');
         }).join('');

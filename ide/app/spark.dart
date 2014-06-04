@@ -2374,6 +2374,7 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
     gitOperations = spark.scmManager.getScmOperationsFor(project);
 
     // Clear out the old select options.
+    // TODO (ussuri) : Polymerize.
     _selectElement.length = 0;
     _branchNameElement.value = '';
 
@@ -2387,8 +2388,8 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
        }
     });
 
-    gitOperations.getRemoteBranchNames().then((List<String> branchNames) {
-      branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    gitOperations.getRemoteBranchNames().then((Iterable<String> branchNames) {
+      branchNames.toList().sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       _selectElement.append(
           new OptionElement(data: "(none)", value: ""));
       for (String branchName in branchNames) {

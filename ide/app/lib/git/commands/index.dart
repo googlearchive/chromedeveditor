@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
+import '../constants.dart';
 import '../exception.dart';
 import '../file_operations.dart';
 import '../objectstore.dart';
@@ -154,7 +155,7 @@ class Index {
    * Reads the index file and loads it.
    */
   Future readIndex() {
-    return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
+    return _store.root.getDirectory(GIT_FOLDER_PATH).then(
         (chrome.DirectoryEntry entry) {
       return entry.getFile('index2').then((chrome.ChromeFileEntry entry) {
         return entry.readText().then((String content) {
@@ -177,7 +178,7 @@ class Index {
     _writingIndex = true;
     _writeIndexCompleter = new Completer();
     String out = JSON.encode(statusIdxToMap());
-    return _store.root.getDirectory(ObjectStore.GIT_FOLDER_PATH).then(
+    return _store.root.getDirectory(GIT_FOLDER_PATH).then(
         (chrome.DirectoryEntry entry) {
       return FileOps.createFileWithContent(entry, 'index2', out, 'Text')
           .then((_) {
@@ -308,16 +309,15 @@ class Index {
    Future _updateSha(chrome.FileEntry entry) {
      return entry.getMetadata().then((data) {
        FileStatus status = _statusIdx[entry.fullPath];
-       if (status != null && status.modificationTime
-           == data.modificationTime.millisecondsSinceEpoch) {
+       if (status != null && status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
          return new Future.value();
        } else {
          return getShaForEntry(entry, 'blob').then((String sha) {
-           FileStatus status = new FileStatus();
-           status.path = entry.fullPath;
-           status.sha = sha;
-           status.size = data.size;
-           status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
+           FileStatus status = new FileStatus()
+               ..path = entry.fullPath
+               ..sha = sha
+               ..size = data.size
+               ..modificationTime = data.modificationTime.millisecondsSinceEpoch;
            updateIndexForFile(status);
          });
        }

@@ -75,12 +75,6 @@ class CommitGraph {
 
 class ObjectStore {
 
-  static final GIT_FOLDER_PATH = '.git/';
-  static final OBJECT_FOLDER_PATH = 'objects';
-  static final HEAD_PATH = 'HEAD';
-  static final HEAD_MASTER_REF_PATH = 'refs/head/master';
-  static final HEAD_MASTER_SHA = '0000000000000000000000000000000000000000';
-
   // The root directory of the git checkout the objectstore represents.
   chrome.DirectoryEntry _rootDir;
 
@@ -159,19 +153,17 @@ class ObjectStore {
   }
 
   Future<List<String>> getLocalHeads() {
-    return _rootDir.getDirectory('.git/refs/heads').then((
-        chrome.DirectoryEntry dir) {
+    return _rootDir.getDirectory(GIT_REFS_HEADS_PATH).then((dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
         return entries.map((entry) => entry.name).toList();
       });
     });
   }
 
-  Future<List<String>> getRemoteHeads() {
-    return _rootDir.getDirectory('.git/refs/remotes/origin').then((
-        chrome.DirectoryEntry dir) {
+  Future<Iterable<String>> getRemoteHeads() {
+    return _rootDir.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then((dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
-        return entries.map((entry) => entry.name).toList();
+        return entries.map((entry) => entry.name);
       });
     });
   }
@@ -259,7 +251,7 @@ class ObjectStore {
         chrome.ArrayBuffer inflated = new chrome.ArrayBuffer.fromBytes(
             Zlib.inflate(new Uint8List.fromList(buffer.getBytes())).data);
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
-          // TODO do trim buffer and return completer ;
+          // TODO (grv) : do trim buffer and return completer ;
           var buff;
           return new LooseObject(inflated);
         } else {
@@ -502,12 +494,6 @@ class ObjectStore {
       return load();
     }, onError: (FileError e) {
       return _init();
-      // TODO(grv) : error handling.
-      /*if (e.code == FileError.NOT_FOUND_ERR) {
-        return _init();
-      } else {
-        throw e;
-      }*/
     });
   }
 
@@ -516,7 +502,7 @@ class ObjectStore {
         gitPath + OBJECT_FOLDER_PATH).then((chrome.DirectoryEntry objectDir) {
       this.objectDir = objectDir;
       return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
-          'ref: refs/heads/master\n', 'Text').then((entry)  {
+          GIT_HEAD_FILE_DEFAULT_CONTENT, 'Text').then((entry)  {
             return _initHelper();
           }, onError: (e) {
             print(e);
@@ -565,7 +551,7 @@ class ObjectStore {
     } else if (content is String) {
       size = content.length;
     } else {
-      // TODO: Check expected types here.
+      // TODO (grv) : Check expected types here.
       throw "Unexpected content type.";
     }
 
@@ -589,7 +575,7 @@ class ObjectStore {
       } else if (result is Uint8List) {
         resultList = result;
       } else {
-        // TODO: Check expected types here.
+        // TODO (grv) : Check expected types here.
         throw "Unexpected result type.";
       }
 
@@ -627,7 +613,7 @@ class ObjectStore {
           Future<String> writeContent() {
             chrome.ArrayBuffer content = new chrome.ArrayBuffer.fromBytes(
                 Zlib.deflate(store).data);
-            // TODO: Use fileEntry.createWriter() once implemented in ChromeGen.
+            // TODO (grv): Use fileEntry.createWriter() once implemented in ChromeGen.
             return fileEntry.writeBytes(content).then((_) {
               return digest;
             });
@@ -660,7 +646,7 @@ class ObjectStore {
   }
 
   Future<Config> readConfig() {
-    return FileOps.readFileText(_rootDir, '.git/config.json').then(
+    return FileOps.readFileText(_rootDir, GIT_CONFIG_PATH).then(
         (String configStr) => new Config(configStr),
         // TODO: handle errors / build default GitConfig.
         onError: (e) => this.config);
@@ -668,7 +654,7 @@ class ObjectStore {
 
   Future<Entry> writeConfig() {
     String configStr = config.toJson();
-    return FileOps.createFileWithContent(_rootDir, '.git/config.json',
+    return FileOps.createFileWithContent(_rootDir, GIT_CONFIG_PATH,
         configStr, 'Text');
   }
 }
