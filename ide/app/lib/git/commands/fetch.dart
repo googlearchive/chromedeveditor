@@ -26,7 +26,7 @@ import 'status.dart';
 /**
  * A git fetch command implementation.
  *
- * TODO add unittests.
+ * TODO(grv): Add unittests.
 */
 
 class Fetch {
@@ -35,11 +35,13 @@ class Fetch {
   chrome.DirectoryEntry root;
   ObjectStore store;
   Function progress;
+  String branchName;
 
-  Fetch(this.options){
+  Fetch(this.options) {
     root = options.root;
     store = options.store;
     progress = options.progressCallback;
+    branchName = options.branchName == null ? 'master' : options.branchName;
 
     if (progress == null) progress = nopFunction;
   }
@@ -49,37 +51,38 @@ class Fetch {
     String password = options.password;
 
     Function fetchProgress;
-    // TODO add fetchProgress chunker.
+    // TODO(grv): Add fetchProgress chunker.
 
     return Status.isWorkingTreeClean(store).then((_) {
       String url = store.config.url;
 
-      HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
-          password);
+      HttpFetcher fetcher = new HttpFetcher(
+          store, 'origin', url, username, password);
 
       // get current branch.
-      return store.getHeadRef().then((String headRefName) {
-        return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-          GitRef branchRef = refs.firstWhere((GitRef ref) =>
-              ref.name == headRefName);
+      String headRefName = 'refs/heads/' + branchName;
+      return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
+        GitRef branchRef = refs.firstWhere(
+            (GitRef ref) => ref.name == headRefName);
 
-          if (branchRef != null) {
-            // see if we know about the branch's head commit. If so we're up to
-            // date. If not, request from remote.
-            return store.getRemoteHeadForRef(headRefName).then((sha) {
-              if (sha == branchRef.sha) {
-                // Branch is uptodate
-                throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
-              } else {
-                return _handleFetch(branchRef, branchRef, fetcher);
-              }
-            });
-          } else {
-            throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
+        if (branchRef == null) {
+          throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
+        }
+
+        // See if we know about the branch's head commit. If so we're up to
+        // date. If not, request from remote.
+        return store.getRemoteHeadForRef(headRefName).then((sha) {
+          if (sha != branchRef.sha) {
+            return _handleFetch(branchRef, branchRef, fetcher);
           }
+          return store.getCommitGraph([sha]).then((CommitGraph graph) {
+            if (graph.commits.isNotEmpty) {
+              throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
+            } else {
+              return _handleFetch(branchRef, branchRef, fetcher);
+            }
+          });
         });
-      }, onError: (e) {
-        throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
       });
     });
   }
@@ -114,8 +117,19 @@ class Fetch {
       return store.getCommitGraph([sha], 32).then((CommitGraph graph) {
         List<String> haveRefs = graph.commits.map((CommitObject commit)
             => commit.treeSha).toList();
-        return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
-            null, graph.nextLevel, null, progress).then((PackParseResult result) {
+        if (haveRefs.isEmpty) {
+          haveRefs = null;
+        }
+
+        Future<PackParseResult> fetcherFuture = fetcher.fetchRef(
+            [wantRef.sha],
+            haveRefs,
+            store.config.shallow,
+            options.depth,
+            graph.nextLevel,
+            null,
+            progress);
+        return fetcherFuture.then((result) {
           List<int> packSha = result.data.sublist(result.data.length - 20);
           Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
               packSha);
