@@ -99,7 +99,7 @@ class TreeObject extends GitObject {
   }
 
   sortEntries() {
-    //TODO implement.
+    // TODO(grv): Implement.
   }
 
   // Parses the byte stream and constructs the tree object.
@@ -111,7 +111,7 @@ class TreeObject extends GitObject {
       int entryStart = idx;
       while (buffer[idx] != 0) {
         if (idx >= buffer.length) {
-          //TODO(grv) : better exception handling.
+          //TODO(grv): Better exception handling.
           throw new ParseError("Unable to parse git tree object");
         }
         idx++;
@@ -182,7 +182,7 @@ class CommitObject extends GitObject {
     } else if (data is String) {
       this.data = data;
     } else {
-      // TODO: Clarify this exception.
+      // TODO(grv): Clarify this exception.
       throw "Data is in incompatible format.";
     }
     _parseData();

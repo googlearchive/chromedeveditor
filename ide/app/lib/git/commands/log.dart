@@ -43,7 +43,6 @@ class Log {
     if (branch == null || branch.isEmpty)
       return store.getHeadSha();
     return store.getLocalHeads().then((List<String> branches) {
-      // TODO: Improve error handling.
       if (!branches.contains(branch))
         throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
       return store.getHeadForRef('${REFS_HEADS}${branch}');

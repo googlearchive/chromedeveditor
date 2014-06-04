@@ -219,7 +219,7 @@ class ObjectStore {
         return new FindPackedObjectResult(packs[i].pack, offset);
       }
     }
-    // TODO More specific error.
+    // TODO(grv): More specific error.
     return throw("Not found.");
   }
 
@@ -251,7 +251,7 @@ class ObjectStore {
         chrome.ArrayBuffer inflated = new chrome.ArrayBuffer.fromBytes(
             Zlib.inflate(new Uint8List.fromList(buffer.getBytes())).data);
         if (dataType == 'Raw' || dataType == 'ArrayBuffer') {
-          // TODO (grv) : do trim buffer and return completer ;
+          // TODO(grv): Do trim buffer and return completer ;
           var buff;
           return new LooseObject(inflated);
         } else {
@@ -383,10 +383,9 @@ class ObjectStore {
     return walkLevel(nodes);
   }
 
-  // TODO (grv) : Support non fast forward push.
+  // TODO(grv): Support non fast forward push.
   void _nonFastForwardPush() {
     throw new GitException(GitErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
-    //TODO throw some error.
   }
 
   Future _checkRemoteHead(GitRef remoteRef) {
@@ -430,7 +429,7 @@ class ObjectStore {
 
           remoteRef.head = sha;
 
-         //TODO handle case of new branch with no commits.
+         // TODO(grv): Handle case of new branch with no commits.
 
           // At present local merge commits are not supported. Thus, look for
           // non-brancing list of ancestors of the current commit.
@@ -551,7 +550,7 @@ class ObjectStore {
     } else if (content is String) {
       size = content.length;
     } else {
-      // TODO (grv) : Check expected types here.
+      // TODO(grv): Check expected types here.
       throw "Unexpected content type.";
     }
 
@@ -575,7 +574,7 @@ class ObjectStore {
       } else if (result is Uint8List) {
         resultList = result;
       } else {
-        // TODO (grv) : Check expected types here.
+        // TODO(grv): Check expected types here.
         throw "Unexpected result type.";
       }
 
@@ -613,7 +612,7 @@ class ObjectStore {
           Future<String> writeContent() {
             chrome.ArrayBuffer content = new chrome.ArrayBuffer.fromBytes(
                 Zlib.deflate(store).data);
-            // TODO (grv): Use fileEntry.createWriter() once implemented in ChromeGen.
+            // TODO(grv): Use fileEntry.createWriter() once implemented in ChromeGen.
             return fileEntry.writeBytes(content).then((_) {
               return digest;
             });
@@ -648,7 +647,7 @@ class ObjectStore {
   Future<Config> readConfig() {
     return FileOps.readFileText(_rootDir, GIT_CONFIG_PATH).then(
         (String configStr) => new Config(configStr),
-        // TODO: handle errors / build default GitConfig.
+        // TODO(grv): Handle errors / build default GitConfig.
         onError: (e) => this.config);
   }
 

@@ -2519,7 +2519,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       } else if (resource is ws.File) {
         ScmFileStatus status = gitOperations.getFileStatus(resource);
 
-        // TODO(grv) : Add deleted files to resource.
+        // TODO(grv): Add deleted files to resource.
         if (status == ScmFileStatus.DELETED) {
           deletedFileList.add(resource.path);
         } else if (status == ScmFileStatus.MODIFIED) {

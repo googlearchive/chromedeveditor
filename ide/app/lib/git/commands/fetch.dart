@@ -26,7 +26,7 @@ import 'status.dart';
 /**
  * A git fetch command implementation.
  *
- * TODO add unittests.
+ * TODO(grv): Add unittests.
 */
 
 class Fetch {
@@ -37,7 +37,7 @@ class Fetch {
   Function progress;
   String branchName;
 
-  Fetch(this.options){
+  Fetch(this.options) {
     root = options.root;
     store = options.store;
     progress = options.progressCallback;
@@ -51,7 +51,7 @@ class Fetch {
     String password = options.password;
 
     Function fetchProgress;
-    // TODO Add fetchProgress chunker.
+    // TODO(grv): Add fetchProgress chunker.
 
     return Status.isWorkingTreeClean(store).then((_) {
       String url = store.config.url;
@@ -68,6 +68,7 @@ class Fetch {
         if (branchRef == null) {
           throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
         }
+
         // See if we know about the branch's head commit. If so we're up to
         // date. If not, request from remote.
         return store.getRemoteHeadForRef(headRefName).then((sha) {

@@ -365,7 +365,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<List<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
-  Future<List<String>> getRemoteBranchNames() =>
+  Future<Iterable<String>> getRemoteBranchNames() =>
       objectStore.then((store) => store.getRemoteHeads());
 
   Future createBranch(String branchName, [String remoteBranchName]) {
@@ -391,7 +391,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   void markResolved(Resource resource) {
-    // TODO: implement
+    // TODO(grv): Implement
     _logger.info('Implement markResolved()');
 
     // When finished, fire an SCM changed event.

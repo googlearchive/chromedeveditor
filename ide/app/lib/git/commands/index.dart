@@ -21,7 +21,7 @@ import '../utils.dart';
  * meta data of the files in the repository. This data is used to find the
  * modified files in the working tree efficiently.
  *
- * TODO(grv) : Implement the interface.
+ * TODO(grv): Implement the interface.
  */
 class Index {
 
@@ -132,7 +132,7 @@ class Index {
     return readIndex();
   }
 
-  // TODO(grv) : remove this after index file implementation.
+  // TODO(grv): Remove this after index file implementation.
   void reset([bool isFirstRun]) {
       _statusIdx.forEach((String key, FileStatus status) {
         if (status.type != FileStatusType.UNTRACKED || isFirstRun != null) {
@@ -309,7 +309,8 @@ class Index {
    Future _updateSha(chrome.FileEntry entry) {
      return entry.getMetadata().then((data) {
        FileStatus status = _statusIdx[entry.fullPath];
-       if (status != null && status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
+       if (status != null &&
+           status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
          return new Future.value();
        } else {
          return getShaForEntry(entry, 'blob').then((String sha) {
@@ -389,7 +390,7 @@ class FileStatus {
 
   static Future<FileStatus> createFromEntry(chrome.Entry entry) {
     return entry.getMetadata().then((chrome.Metadata data) {
-      // TODO(grv) : check the modification time when it is available.
+      // TODO(grv) : Check the modification time when it is available.
       return getShaForEntry(entry, 'blob').then((String sha) {
         FileStatus status = new FileStatus();
         status.path = entry.fullPath;

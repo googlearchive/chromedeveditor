@@ -31,9 +31,10 @@ class Branch {
   static const BRANCH_PATTERN
       = r"^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+$";
 
+  static final branchRegex = new RegExp(BRANCH_PATTERN);
+
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    var branchRegex = new RegExp(BRANCH_PATTERN);
     return name.isNotEmpty && branchRegex.matchAsPrefix(name) != null;
   }
 
@@ -46,7 +47,6 @@ class Branch {
     String branchName = options.branchName;
 
     if (!_verifyBranchName(branchName)) {
-      print('wafadsas');
       throw new GitException(GitErrorConstants.GIT_INVALID_BRANCH_NAME);
      }
 

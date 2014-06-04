@@ -37,7 +37,7 @@ class PackObjectHeader {
 
 /**
  * This class encapsulates logic to parse, create and build git pack objects.
- * TODO(grv) : add unittests.
+ * TODO(grv): Add unittests.
  */
 class Pack {
   static final SHA_LENGTH = 20;
@@ -69,7 +69,7 @@ class Pack {
     if (UTF8.decode(_peek(4)) == 'PACK') {
       _advance(4);
     } else {
-      // TODO(grv) : throw custom error.
+      // TODO(grv): Throw custom error.
       throw "Couldn't match PACK";
     }
   }
@@ -130,7 +130,7 @@ class Pack {
     int version = _peek(4)[3];
     _advance(4);
     if (version != expectedVersion) {
-      // TODO(grv) : throw custom exception.
+      // TODO(grv): Throw custom exception.
       String msg =
           "expected packfile version ${expectedVersion} but got ${version}";
           throw msg;
@@ -184,7 +184,7 @@ class Pack {
           completer.complete(doExpand(baseObj, object));
       }
     } else {
-      // TODO(grv) : desing object class.
+      // TODO(grv): Desing object class.
       completer.completeError('todo');
       /*_store.retrieveRawObject(object.baseSha, 'ArrayBuffer').then((baseObj) {
         completer.complete(doExpand(baseObj, object));
@@ -277,7 +277,7 @@ class Pack {
            default:
              object.shaBytes = getObjectHash(object.type, object.data);
              object.data = null;
-             // TODO(grv) : add progress.
+             // TODO(grv): Add progress.
              break;
          }
 
@@ -289,7 +289,7 @@ class Pack {
          _checkCancel();
          return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
            deltifiedObj.data = null;
-           // TODO(grv) : add progress.
+           // TODO(grv): Add progress.
          });
        }
 
@@ -332,7 +332,7 @@ class Pack {
 
     int baseLength = matchLength(stream);
     if (baseLength != baseData.length) {
-      // TODO throw better exception.
+      // TODO(grv): Thhrow better exception.
       throw "Delta Error: base length not equal to length of given base data";
     }
 
@@ -380,7 +380,7 @@ class Pack {
           copyLength = (1<<16);
         }
 
-        // TODO(grv) : check if this is a version 2 packfile and apply
+        // TODO(grv): Check if this is a version 2 packfile and apply
         // copyFromResult if so.
         copyFromResult = (opcode & 0x01);
         Uint8List sublist = baseData.sublist(copyOffset,
