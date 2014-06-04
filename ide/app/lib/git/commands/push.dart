@@ -7,6 +7,7 @@ library git.commands.push;
 import 'dart:async';
 
 import '../config.dart';
+import '../constants.dart';
 import '../exception.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
@@ -66,7 +67,7 @@ class Push {
     Config config = store.config;
     // TODO(dvh): we need to be able to get pending commits from other local
     // branches to push to other branches than master.
-    GitRef ref = new GitRef(ObjectStore.HEAD_MASTER_SHA, null);
+    GitRef ref = new GitRef(HEAD_MASTER_SHA, null);
     return store.getCommitsForPush([ref], config.remoteHeads).
         then((CommitPushEntry commits) {
       if (commits == null) {
