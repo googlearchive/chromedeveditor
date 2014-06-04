@@ -29,48 +29,50 @@ class Branch {
    * 6) cannot end with '.lock'.
   */
   static const BRANCH_PATTERN
-      = r"^(?!/|\.|.* ([/.]\.|//|@\{|\\\\))[^\\x00-\\x20 ~^:?*\[]+(?<!\.lock|[/.])$";
+      = r"^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+$";
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    //var branchRegex = new RegExp(BRANCH_PATTERN);
-    return name.isNotEmpty /*&& name.matchAsPrefix(name) != null*/;
+    var branchRegex = new RegExp(BRANCH_PATTERN);
+    return name.isNotEmpty && branchRegex.matchAsPrefix(name) != null;
   }
 
   /**
    * Creates a new branch. Throws error if the branch already exist.
    */
-  static Future<chrome.FileEntry> branch(GitOptions options,
-      [String remoteBranchName]) {
+  static Future<chrome.FileEntry> branch(
+      GitOptions options, [String remoteBranchName]) {
     ObjectStore store = options.store;
     String branchName = options.branchName;
 
-    // TODO(grv) : fix bug with branchname regex.
-   if (!_verifyBranchName(branchName)) {
-     throw new GitException(GitErrorConstants.GIT_INVALID_BRANCH_NAME);
-    }
+    if (!_verifyBranchName(branchName)) {
+      print('wafadsas');
+      throw new GitException(GitErrorConstants.GIT_INVALID_BRANCH_NAME);
+     }
 
     return store.getHeadForRef('refs/heads/' + branchName).then((_) {
       throw new GitException(GitErrorConstants.GIT_BRANCH_EXISTS);
     }, onError: (e) {
-      return _getHeadRef(store, branchName, remoteBranchName).then(
-          (String sha) {
-        options.depth = 1;
-        Fetch fetch = new Fetch(options);
-        return fetch.fetch().then((_) {
-          return store.createNewRef('refs/heads/' + branchName, sha);
-        });
-      });
+      return _fetchAndCreateBranch(options, branchName, remoteBranchName);
     });
   }
 
-  static Future<String> _getHeadRef(ObjectStore store, String branchName,
-      String remoteBranchName) {
-    if (remoteBranchName != null && remoteBranchName != "") {
-      return store.getRemoteHeadForRef(remoteBranchName);
+  static Future<String> _fetchAndCreateBranch(
+      GitOptions options, String branchName, String remoteBranchName) {
+    ObjectStore store = options.store;
+    if (remoteBranchName != null && remoteBranchName.isNotEmpty) {
+      return options.store.getRemoteHeadForRef(remoteBranchName).then((sha) {
+        options.depth = 1;
+        Fetch fetch = new Fetch(options);
+          return fetch.fetch().then((_) {
+            return store.createNewRef('refs/heads/' + branchName, sha);
+        });
+      });
     } else {
       return store.getHeadRef().then((String headRefName) {
-        return store.getHeadForRef(headRefName);
+        return store.getHeadForRef(headRefName).then((sha) {
+          return store.createNewRef('refs/heads/' + branchName, sha);
+        });
       });
     }
   }
