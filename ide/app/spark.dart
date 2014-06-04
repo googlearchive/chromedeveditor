@@ -348,7 +348,6 @@ abstract class Spark
         editorArea.selectFile(file, forceOpen: true, switchesTab: false,
             replaceCurrent: false);
       });
-
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
         if (fileUuid == null) {
