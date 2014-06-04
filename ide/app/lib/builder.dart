@@ -120,9 +120,8 @@ abstract class Builder {
 class _BuildJob extends Job {
   final ResourceChangeEvent event;
   final List<Builder> builders;
-  final Completer completer;
 
-  _BuildJob(this.event, this.builders, this.completer) : super('Building…');
+  _BuildJob(this.event, this.builders, completer) : super('Building…', completer);
 
   Future run(ProgressMonitor monitor) {
     return Future.forEach(builders, (Builder builder) {
@@ -133,7 +132,7 @@ class _BuildJob extends Job {
     }).catchError((e, st) {
       _logger.severe('Exception from build manager', e, st);
     }).whenComplete(() {
-      completer.complete();
+      done();
     });
   }
 }
