@@ -7,6 +7,7 @@ library git.commands.push;
 import 'dart:async';
 
 import '../config.dart';
+import '../constants.dart';
 import '../exception.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
@@ -29,7 +30,7 @@ class Push {
     Function pushProgress;
 
     if (options.progressCallback != null) {
-      // TODO add progress chunker.
+      // TODO(grv): Add progress chunker.
     } else {
       pushProgress = nopFunction;
     }
@@ -76,8 +77,8 @@ class Push {
 
    HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username, password);
    return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
-     return store.getCommitsForPush(refs, config.remoteHeads).then((CommitPushEntry pushEntry)
-         => pushEntry.commits);
+     return store.getCommitsForPush(refs, config.remoteHeads).then(
+         (CommitPushEntry pushEntry) => pushEntry.commits);
    });
  }
 }

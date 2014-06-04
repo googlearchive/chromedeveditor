@@ -57,7 +57,9 @@ spark-dialog {
 
 #fileFilter:focus.active ~ #runButton,
 #fileFilter:focus.active ~ #mainMenu {
-  display: none;
+  opacity: 0;
+  width: 0;
+  transition: opacity 0.5s, width 0.5s ease-out 0.2s;
 }
 
 #fileNotFoundPlaceholder {

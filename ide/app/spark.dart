@@ -596,7 +596,8 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
-    _errorDialog.dialog.title = title;
+    // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
+    _errorDialog.dialog.setAttr('title', true, title);
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
@@ -670,7 +671,8 @@ abstract class Spark
       });
     }
 
-    _okCancelDialog.dialog.title = title;
+    // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
+    _okCancelDialog.dialog.setAttr('title', true, title);
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
@@ -1540,7 +1542,7 @@ class FileExitAction extends SparkAction {
 
 class ApplicationRunAction extends SparkAction implements ContextAction {
   ApplicationRunAction(Spark spark) : super(
-      spark, "application-run", "Run Application") {
+      spark, "application-run", "Run") {
     addBinding("ctrl-r");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
@@ -1589,12 +1591,21 @@ abstract class PackageManagementAction
     if (context == null) {
       resource = spark.focusManager.currentResource;
     } else {
-      // TODO(ussuri): This seems like a stop-gap solution. Should we run for
-      // all elements that match?
+      // NOTE: [appliesTo] should ensure that this is the right choice.
       resource = context.first;
     }
 
-    spark.jobManager.schedule(_createJob(resource.parent));
+    // [appliesTo] delegates to [PackageServiceProperties.isPackageResource],
+    // which is expected to return true if:
+    // - the resourse is a folder that contains a package spec file: this is our
+    //   target, a "package dir" by definition.
+    // - the resource is a package spec file itself: our target is its parent,
+    //   which would fall into the case above if the user clicked on it instead.
+    if (resource is ws.File) {
+      resource = resource.parent;
+    }
+
+    spark.jobManager.schedule(_createJob(resource as ws.Folder));
   }
 
   String get category => 'application';
@@ -1616,13 +1627,13 @@ abstract class PubAction extends PackageManagementAction {
 class PubGetAction extends PubAction {
   PubGetAction(Spark spark) : super(spark, "pub-get", "Pub Get");
 
-  Job _createJob(ws.Container container) => new PubGetJob(spark, container);
+  Job _createJob(ws.Folder container) => new PubGetJob(spark, container);
 }
 
 class PubUpgradeAction extends PubAction {
   PubUpgradeAction(Spark spark) : super(spark, "pub-upgrade", "Pub Upgrade");
 
-  Job _createJob(ws.Container container) => new PubUpgradeJob(spark, container);
+  Job _createJob(ws.Folder container) => new PubUpgradeJob(spark, container);
 }
 
 abstract class BowerAction extends PackageManagementAction {
@@ -1635,13 +1646,13 @@ abstract class BowerAction extends PackageManagementAction {
 class BowerGetAction extends BowerAction {
   BowerGetAction(Spark spark) : super(spark, "bower-install", "Bower Install");
 
-  Job _createJob(ws.Project project) => new BowerGetJob(spark, project);
+  Job _createJob(ws.Folder container) => new BowerGetJob(spark, container);
 }
 
 class BowerUpgradeAction extends BowerAction {
   BowerUpgradeAction(Spark spark) : super(spark, "bower-upgrade", "Bower Update");
 
-  Job _createJob(ws.Project project) => new BowerUpgradeJob(spark, project);
+  Job _createJob(ws.Folder container) => new BowerUpgradeJob(spark, container);
 }
 
 /**
@@ -1963,12 +1974,12 @@ class NewProjectAction extends SparkActionWithDialog {
             spark._openFile(ProjectBuilder.getMainResourceFor(project));
 
             // Run Pub if the new project has a pubspec file.
-            if (spark.pubManager.properties.isProjectWithPackages(project)) {
+            if (spark.pubManager.properties.isFolderWithPackages(project)) {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             }
 
             // Run Bower if the new project has a bower.json file.
-            if (spark.bowerManager.properties.isProjectWithPackages(project)) {
+            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });
@@ -1982,7 +1993,7 @@ class NewProjectAction extends SparkActionWithDialog {
 }
 
 class FolderOpenAction extends SparkAction {
-  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Open Folder…");
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Add Folder to Workspace…");
 
   void _invoke([Object context]) {
     spark.openFolder();
@@ -2361,23 +2372,58 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
   ws.Project project;
   GitScmProjectOperations gitOperations;
   InputElement _branchNameElement;
+  SelectElement _selectElement;
 
   GitBranchAction(Spark spark, Element dialog)
       : super(spark, "git-branch", "Create Branch…", dialog) {
     _branchNameElement = _triggerOnReturn("#gitBranchName");
+    _selectElement = getElement("#gitRemoteBranches");
   }
 
   void _invoke([context]) {
     project = context.first;
     gitOperations = spark.scmManager.getScmOperationsFor(project);
-    _show();
+
+    // Clear out the old select options.
+    // TODO (ussuri) : Polymerize.
+    _selectElement.length = 0;
+    _branchNameElement.value = '';
+
+    _selectElement.onChange.listen((e) {
+       int index = _selectElement.selectedIndex;
+       if (index != 0) {
+         _branchNameElement.value = (_selectElement.children[index]
+             as OptionElement).value;
+       } else {
+         _branchNameElement.value = '';
+       }
+    });
+
+    gitOperations.getRemoteBranchNames().then((Iterable<String> branchNames) {
+      branchNames.toList().sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      _selectElement.append(
+          new OptionElement(data: "(none)", value: ""));
+      for (String branchName in branchNames) {
+        _selectElement.append(
+            new OptionElement(data: branchName, value: branchName));
+      }
+      _selectElement.selectedIndex = 0;
+    }).then((_) {
+      _show();
+    });
   }
 
   void _commit() {
     // TODO(grv): Add verify checks.
-    _GitBranchJob job =
-        new _GitBranchJob(gitOperations, _branchNameElement.value, spark);
+    String remoteBranchName = "";
+    int selectIndex = _selectElement.selectedIndex;
+    remoteBranchName = (_selectElement.children[selectIndex]
+        as OptionElement).value;
+
+    _GitBranchJob job = new _GitBranchJob(gitOperations,
+        _branchNameElement.value, remoteBranchName, spark);
     spark.jobManager.schedule(job);
+    _branchNameElement.disabled = false;
   }
 
   String get category => 'git';
@@ -2484,7 +2530,7 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
       } else if (resource is ws.File) {
         ScmFileStatus status = gitOperations.getFileStatus(resource);
 
-        // TODO(grv) : Add deleted files to resource.
+        // TODO(grv): Add deleted files to resource.
         if (status == ScmFileStatus.DELETED) {
           deletedFileList.add(resource.path);
         } else if (status == ScmFileStatus.MODIFIED) {
@@ -2540,7 +2586,7 @@ class GitCheckoutAction extends SparkActionWithDialog implements ContextAction {
     // Clear out the old select options.
     _selectElement.length = 0;
 
-    gitOperations.getAllBranchNames().then((List<String> branchNames) {
+    gitOperations.getLocalBranchNames().then((List<String> branchNames) {
       branchNames.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       for (String branchName in branchNames) {
         _selectElement.append(
@@ -2813,12 +2859,12 @@ class _GitCloneTask {
           });
 
           // Run Pub if the new project has a pubspec file.
-          if (spark.pubManager.properties.isProjectWithPackages(project)) {
+          if (spark.pubManager.properties.isFolderWithPackages(project)) {
             spark.jobManager.schedule(new PubGetJob(spark, project));
           }
 
           // Run Bower if the new project has a bower.json file.
-          if (spark.bowerManager.properties.isProjectWithPackages(project)) {
+          if (spark.bowerManager.properties.isFolderWithPackages(project)) {
             spark.jobManager.schedule(new BowerGetJob(spark, project));
           }
 
@@ -2867,18 +2913,19 @@ class _GitAddJob extends Job {
 class _GitBranchJob extends Job {
   GitScmProjectOperations gitOperations;
   String _branchName;
+  String _remoteBranchName;
   String url;
   Spark spark;
 
-  _GitBranchJob(this.gitOperations, String branchName, this.spark)
-      : super("Creating ${branchName}…") {
+  _GitBranchJob(this.gitOperations, String branchName, this._remoteBranchName,
+      this.spark) : super("Creating ${branchName}…") {
     _branchName = branchName;
   }
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return gitOperations.createBranch(_branchName).then((_) {
+    return gitOperations.createBranch(_branchName, _remoteBranchName).then((_) {
       return gitOperations.checkoutBranch(_branchName).then((_) {
         spark.showSuccessMessage('Created ${_branchName}');
       });
@@ -2952,12 +2999,12 @@ class _OpenFolderJob extends Job {
       });
 
       // Run Pub if the folder has a pubspec file.
-      if (spark.pubManager.properties.isProjectWithPackages(resource)) {
+      if (spark.pubManager.properties.isFolderWithPackages(resource)) {
         spark.jobManager.schedule(new PubGetJob(spark, resource));
       }
 
       // Run Bower if the folder has a bower.json file.
-      if (spark.bowerManager.properties.isProjectWithPackages(resource)) {
+      if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
         spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
 
@@ -3006,29 +3053,29 @@ abstract class PackageManagementJob extends Job {
 }
 
 class PubGetJob extends PackageManagementJob {
-  PubGetJob(Spark spark, ws.Container container) :
+  PubGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub get');
 
   Future _run() => _spark.pubManager.installPackages(_container);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
-  PubUpgradeJob(Spark spark, ws.Container container) :
+  PubUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub upgrade');
 
   Future _run() => _spark.pubManager.upgradePackages(_container);
 }
 
 class BowerGetJob extends PackageManagementJob {
-  BowerGetJob(Spark spark, ws.Container project) :
-      super(spark, project, 'bower install');
+  BowerGetJob(Spark spark, ws.Folder container) :
+      super(spark, container, 'bower install');
 
   Future _run() => _spark.bowerManager.installPackages(_container);
 }
 
 class BowerUpgradeJob extends PackageManagementJob {
-  BowerUpgradeJob(Spark spark, ws.Container project) :
-      super(spark, project, 'bower upgrade');
+  BowerUpgradeJob(Spark spark, ws.Folder container) :
+      super(spark, container, 'bower upgrade');
 
   Future _run() => _spark.bowerManager.upgradePackages(_container);
 }
@@ -3368,7 +3415,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
 }
 
 class ImportFolderAction extends SparkAction implements ContextAction {
-  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Import Folder…");
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Add Folder to Workspace…");
 
   void _invoke([List<ws.Resource> resources]) {
     spark.importFolder(resources);

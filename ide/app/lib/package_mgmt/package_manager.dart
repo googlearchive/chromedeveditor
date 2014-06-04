@@ -12,12 +12,12 @@ import '../workspace.dart';
 // TODO(ussuri): Add comments.
 
 abstract class PackageServiceProperties {
-  bool isProjectWithPackages(Container project) =>
+  bool isFolderWithPackages(Folder project) =>
       project.getChild(packageSpecFileName) != null;
 
   bool isPackageResource(Resource resource) {
     return (resource is File && resource.name == packageSpecFileName) ||
-           (resource is Container && isProjectWithPackages(resource));
+           (resource is Folder && isFolderWithPackages(resource));
   }
 
   bool isInPackagesFolder(Resource resource) {
@@ -68,8 +68,8 @@ abstract class PackageManager {
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
 
-  Future installPackages(Container container);
-  Future upgradePackages(Container container);
+  Future installPackages(Folder container);
+  Future upgradePackages(Folder container);
 }
 
 abstract class PackageResolver {

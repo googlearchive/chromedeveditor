@@ -22,7 +22,7 @@ import 'merge.dart';
 /**
  * A git pull command implmentation.
  *
- * TODO add unittests.
+ * TODO(grv): Add unittests.
  */
 class Pull {
   final GitOptions options;
@@ -43,7 +43,7 @@ class Pull {
     String password = options.password;
 
     Function fetchProgress;
-    // TODO add fetchProgress chunker.
+    // TODO(grv): Add fetchProgress chunker.
 
     Fetch fetch = new Fetch(options);
 
