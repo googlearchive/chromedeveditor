@@ -455,9 +455,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future<List<CommitInfo>> getPendingCommits() {
+  Future<List<CommitInfo>> getPendingCommits(String username, String password) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(root: entry, store: store);
+      GitOptions options = new GitOptions(root: entry, store: store,
+          username: username, password: password);
       return Push.getPendingCommits(options).then((List commits) {
         return commits.map((CommitObject item) {
           CommitInfo result = new CommitInfo();
