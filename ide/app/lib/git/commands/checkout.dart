@@ -89,7 +89,7 @@ class Checkout {
    * Switches the workspace to a given git branch.
    * Throws a BRANCH_NOT_FOUND exception if the branch does not exist.
    *
-   * TODO(grv) : Support checkout of single file, commit heads etc.
+   * TODO(grv): Support checkout of single file, commit heads etc.
    */
   static Future checkout(GitOptions options, [bool force=false]) {
     chrome.DirectoryEntry root = options.root;

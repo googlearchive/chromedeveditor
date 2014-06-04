@@ -46,9 +46,9 @@ class BowerFetcher {
 
   Map<String, _Package> _allDeps = {};
 
-  List<String> _alteredDepsComments = [];
-  List<String> _unresolvedDepsComments = [];
-  List<String> _ignoredDepsComments = [];
+  final _alteredDepsComments = new Set<String>();
+  final _unresolvedDepsComments = new Set<String>();
+  final _ignoredDepsComments = new Set<String>();
 
   BowerFetcher(this._packagesDir, this._packageSpecFileName);
 
@@ -291,9 +291,9 @@ class _Resolved extends _Resolution {
   static const STAR_PATH_MAPPED = const _Resolved._(
       '"*" path resolved using mappings from config files');
   static const NORMAL_PATH_OVERRIDDEN = const _Resolved._(
-      'regular path overridden using mappings from config files');
+      'original path overridden using mappings from config files');
   static const COMPLEX_VERSION_DEFAULTED = const _Resolved._(
-      'unsupported complex version defaulted to latest stable');
+      'unsupported version spec defaulted to latest "master"');
 }
 
 class _Unresolved extends _Resolution {
@@ -399,13 +399,13 @@ class _Package {
     // Resolve the branch.
     if (branch == null) {
       // Default to the latest stable.
-      branch = null;
+      branch = 'master';
     } else {
       if (_PACKAGE_BRANCH_SIMPLE_REGEXP.matchAsPrefix(branch) == null) {
         // This is an extended semver version or version range.
         if (SparkFlags.bowerMapComplexVerToLatestStable) {
           resolution = _Resolved.COMPLEX_VERSION_DEFAULTED;
-          branch = null;
+          branch = 'master';
         } else {
           // TODO(ussuri): Add full support for semver versions and ranges.
           resolution = _Unresolved.COMPLEX_VERSION;

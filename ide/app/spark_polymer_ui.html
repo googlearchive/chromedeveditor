@@ -346,6 +346,10 @@
       <input id="gitBranchName" type="text" class="form-control"
           pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
       <span class="help-block">Create a new git branch.</span>
+      <div class="form-group">
+        <label for="gitRemoteBranches">Choose a remote branch</label>
+        <select id="gitRemoteBranches" class="form-control"></select>
+      </div>
       <spark-progress id="gitBranchProgress"
           indeterminate showProgressMessage showCancel visible="false">
       </spark-progress>
