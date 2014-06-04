@@ -11,7 +11,6 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'fetch.dart';
 import '../exception.dart';
 import '../objectstore.dart';
-import '../exception.dart';
 import '../options.dart';
 
 /**
@@ -29,7 +28,7 @@ class Branch {
    * 6) cannot end with '.lock'.
   */
   static const BRANCH_PATTERN
-    = r"^(?!build-|/|.*([/.][.]|//|@\\{|\\\\))[^\\040\\177 ~^:?*\\[]+$";
+      = r"^(?!build-|/|.*([/.][.]|//|@\\{|\\\\))[^\\040\\177 ~^:?*\\[]+$";
 
   static final branchRegex = new RegExp(BRANCH_PATTERN);
 
