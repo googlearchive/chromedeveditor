@@ -2388,14 +2388,17 @@ class GitBranchAction extends SparkActionWithDialog implements ContextAction {
     // TODO (ussuri) : Polymerize.
     _selectElement.length = 0;
     _branchNameElement.value = '';
+    _branchNameElement.disabled = false;
 
     _selectElement.onChange.listen((e) {
        int index = _selectElement.selectedIndex;
        if (index != 0) {
          _branchNameElement.value = (_selectElement.children[index]
              as OptionElement).value;
+         _branchNameElement.disabled = true;
        } else {
          _branchNameElement.value = '';
+         _branchNameElement.disabled = false;
        }
     });
 
