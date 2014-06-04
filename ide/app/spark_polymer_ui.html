@@ -360,14 +360,13 @@
         <input id="currentBranchName" type="text" class="form-control"
             spellcheck="false" disabled>
       </div>
+      <div class="form-group">
+        <label for="gitCheckoutBranch">Switch to branch</label>
+        <select id="gitCheckoutBranch" class="form-control"></select>
+      </div>
       <spark-progress id="gitCheckoutProgress"
           indeterminate showProgressMessage showCancel visible="false">
       </spark-progress>
-      <div class="form-group">
-        <label for="gitCheckout">Switch to branch</label>
-        <select id="gitCheckout" class="form-control"></select>
-      </div>
-
       <spark-dialog-button id = "gitCheckoutCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id = "gitCheckout" submit>Checkout</spark-dialog-button>
     </spark-dialog>

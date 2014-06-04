@@ -2569,7 +2569,7 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
 
   GitCheckoutAction(Spark spark, Element dialog, String progressId)
       : super(spark, "git-checkout", "Switch Branch…", dialog, progressId) {
-    _selectElement = getElement("#gitCheckout");
+    _selectElement = getElement("#gitCheckoutBranch");
   }
 
   void _invoke([List context]) {
@@ -2597,8 +2597,31 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
     // TODO(grv): Add verify checks.
     String branchName = _selectElement.options[
         _selectElement.selectedIndex].value;
+    _progress.progressMessage = "Checking out ${branchName}...";
+    _toggleProgressVisible(true);
+
+    SparkDialogButton closeButton = getElement('#gitCheckoutCancel');
+    closeButton.disabled = true;
+    closeButton.deliverChanges();
+
+    SparkDialogButton checkoutButton = getElement('#gitCheckout');
+    checkoutButton.disabled = true;
+    checkoutButton.deliverChanges();
+
     _GitCheckoutJob job = new _GitCheckoutJob(gitOperations, branchName, spark);
-    spark.jobManager.schedule(job);
+    spark.jobManager.schedule(job).then((_) {
+      _restoreDialog();
+      _hide();
+    });
+  }
+
+  void _restoreDialog() {
+    SparkDialogButton commitButton = getElement('#gitCheckout');
+    commitButton.disabled = false;
+
+    SparkDialogButton closeButton = getElement('#gitCheckoutCancel');
+    closeButton.disabled = false;
+    _toggleProgressVisible(false);
   }
 
   String get category => 'git';
