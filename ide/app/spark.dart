@@ -2422,16 +2422,39 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
   }
 
   void _commit() {
-    // TODO(grv): Add verify checks.
     String remoteBranchName = "";
     int selectIndex = _selectElement.selectedIndex;
     remoteBranchName = (_selectElement.children[selectIndex]
         as OptionElement).value;
 
+    _progress.progressMessage = "Creating branch ${_branchNameElement.value}...";
+    _toggleProgressVisible(true);
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = true;
+    closeButton.deliverChanges();
+
+    SparkDialogButton branchButton = getElement('#gitBranch');
+    branchButton.disabled = true;
+    branchButton.deliverChanges();
+
+
     _GitBranchJob job = new _GitBranchJob(gitOperations,
         _branchNameElement.value, remoteBranchName, spark);
-    spark.jobManager.schedule(job);
+    spark.jobManager.schedule(job).then((_) {
+      _restoreDialog();
+      _hide();
+    });
     _branchNameElement.disabled = false;
+  }
+
+  void _restoreDialog() {
+    SparkDialogButton commitButton = getElement('#gitBranch');
+    commitButton.disabled = false;
+
+    SparkDialogButton closeButton = getElement('#gitBranchCancel');
+    closeButton.disabled = false;
+    _toggleProgressVisible(false);
   }
 
   String get category => 'git';
