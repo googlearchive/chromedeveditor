@@ -18,7 +18,6 @@ import '../spark_overlay/spark_overlay.dart';
  * and an [onSelected] callback. [onSelected] is called when the user chooses
  * `this` suggestion.
  */
-@reflectable
 class Suggestion {
   final String label;
   final String details;

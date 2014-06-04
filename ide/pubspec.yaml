@@ -24,7 +24,7 @@ dependencies:
   markdown: ">=0.7.0 <0.8.0"
   mime: any
   path: any
-  polymer: 0.10.0-pre.11
+  polymer: 0.10.0
   spark_widgets:
     path: ../widgets
   tavern:
