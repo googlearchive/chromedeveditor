@@ -266,8 +266,8 @@ class ObjectStore {
         return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType).then(
             (PackedObject packed) {
           if (dataType == 'Text') {
-            return FileOps.readBlob(new Blob([packed.data]), 'Text').then(
-                (String data) {
+            return FileOps.readBlob(new Blob([new Uint8List.fromList(packed.data)]),
+                'Text').then((String data) {
               packed.data = data;
               return packed;
             });

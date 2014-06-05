@@ -46,7 +46,7 @@ class UploadPackParser {
    * Parses a git http smart protcol request result.
    */
   Future parse(ByteBuffer buffer, ObjectStore store, progress) {
-    data = new Uint8List.view(buffer).toList();
+    data = new Uint8List.view(buffer);
 
     DateTime startTime = new DateTime.now();
     PktLine pktLine = _nextPktLine();
@@ -79,7 +79,7 @@ class UploadPackParser {
       throw "got neither ACk nor NAK in upload pack response.";
     }
 
-    List<List<int>> packDataLines = [];
+    List<Uint8List> packDataLines = [];
     while (pktLine != null) {
       int pktLineType = data[pktLine.offset];
       // sideband format. "2" indicates progress messages, "1" pack data
