@@ -34,7 +34,8 @@ class Branch {
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    return name.isNotEmpty && branchRegex.matchAsPrefix(name) != null;
+    return (name.isNotEmpty && branchRegex.matchAsPrefix(name) != null &&
+        !name.endsWith('.') && !name.endsWith('.lock') && !name.endsWith('/'));
   }
 
   /**
