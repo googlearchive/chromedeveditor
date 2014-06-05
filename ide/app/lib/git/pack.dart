@@ -440,7 +440,7 @@ class PackBuilder {
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
       data = buf.getBytes();
-    } else if (buf is Uint8List) {
+    } else if (buf is Uint8List || buf is List<int>) {
       data = buf;
     } else {
       // assume it's a string.
