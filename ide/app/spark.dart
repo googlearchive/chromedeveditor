@@ -737,7 +737,9 @@ abstract class Spark
   }
 
   Future _openFile(ws.Resource resource) {
-    if (currentEditedFile == resource) return new Future.value();
+    if (editorArea.selectedTab != null) {
+      if (currentEditedFile == resource) return new Future.value();
+    }
 
     if (resource is ws.File) {
       navigationManager.gotoLocation(new NavigationLocation(resource));
