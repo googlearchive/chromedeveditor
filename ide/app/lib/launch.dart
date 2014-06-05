@@ -101,7 +101,8 @@ class LaunchManager {
     if (handler == null) return new Future.value();
 
     List futures = [];
-    List<LaunchParticipant> participants = _locateLaunchParticipants(application, target);
+    List<LaunchParticipant> participants = 
+                              _locateLaunchParticipants(application, target);
     participants.forEach((participant) {
       futures.add(participant.run(application, target));
     });
@@ -109,7 +110,9 @@ class LaunchManager {
     return Future.wait(futures).then((_) => handler.launch(application, target));
   }
 
-  List<LaunchParticipant> _locateLaunchParticipants(Application application, LaunchTarget target) {
+  List<LaunchParticipant> _locateLaunchParticipants(
+                                Application application, LaunchTarget target) {
+    
     List<LaunchParticipant> participants = [];
     launchParticipants.forEach((launchParticipant) {
       if (launchParticipant.canParticipate(application, target)) {
@@ -213,14 +216,9 @@ abstract class ApplicationLocator {
   ApplicationResult locateAssociatedApplication(Resource resource);
   
   bool _isDartApp(Resource resource) {
-    Container container;
-    if (resource is! Container) {
-      container = resource.parent;
-    } else {
-      container = resource;
-    }
+    Container container = resource is Container ? resource : resource.parent;
     while (container != null) {
-      if (container.getChild(pubProperties.packageSpecFileName) != null){
+      if (container.getChild(pubProperties.packageSpecFileName) != null) {
         return true;
       }
       container = container.parent;
@@ -277,7 +275,6 @@ abstract class LaunchTargetHandler {
  * Called before the [LaunchTargetHandler]. 
  */
 abstract class LaunchParticipant {
-
   String get name;
 
   bool canParticipate(Application application, LaunchTarget launchTarget);
@@ -286,8 +283,6 @@ abstract class LaunchParticipant {
 
   String toString() => name;
 }
-
-
 
 class ChromeAppLocator extends ApplicationLocator {
 
@@ -520,7 +515,6 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
  * packages are installed, if not either run pub get or continue launch. 
  */
 class PubLaunchParticipant extends LaunchParticipant {
-  
   final PackageManager pubManager;
   final Notifier notifier;
   
@@ -533,13 +527,12 @@ class PubLaunchParticipant extends LaunchParticipant {
   Future run(Application application, LaunchTarget launchTarget) {
     return pubManager.isPackagesInstalled(application.primaryResource.parent).then((installed) {
       if (!installed) {
-        return notifier.showMessageAndWait('Run', 
-          "Package/packages cannot be found. Run 'pub get' to install packages.");
+        return notifier.showMessageAndWait(
+            'Run',"Package/packages cannot be found. Run 'pub get' to install packages.");
       }
-        return new Future.value();
+      return new Future.value();
     });    
-  }
- 
+  } 
 }
 
 /**
@@ -757,7 +750,7 @@ class Dart2JsServlet extends PicoServlet {
     Completer completer = new Completer();
 
     file.workspace.builderManager.jobManager.schedule(
-        new ProgressJob('Compiling ${file.name}���', completer));
+        new ProgressJob('Compiling ${file.name}…', completer));
 
     return compiler.compileFile(file).then((CompileResult result) {
       if (!result.hasOutput) {

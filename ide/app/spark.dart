@@ -572,7 +572,7 @@ abstract class Spark
   Future showMessageAndWait(String title, String message) {
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
-      _errorDialog.getElement("[dismiss]").onClick.listen((_) {
+      _errorDialog.getElement("#errorClose").onClick.listen((_) {
         _dialogWaitComplete();
       });
       _errorDialog.getShadowDomElement("#closingX").onClick.listen((_) {
@@ -628,8 +628,7 @@ abstract class Spark
     _errorDialog.show();
   }
 
-  void _setErrorDialogText(String title, String message) {
-    
+  void _setErrorDialogText(String title, String message) {    
     // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
     _errorDialog.dialog.setAttr('title', true, title);
     

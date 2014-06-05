@@ -39,7 +39,7 @@ class PubManager extends PackageManager {
   Future upgradePackages(Folder container) =>
       _installUpgradePackages(container, 'upgrade', true);
   
-  Future<bool> isPackagesInstalled(Container container) {
+  Future<bool> isPackagesInstalled(Folder container) {
     File pubspecFile = _findPubspec(container);
     if (pubspecFile is File) {
       return pubspecFile.getContents().then((String str) {
@@ -53,7 +53,7 @@ class PubManager extends PackageManager {
             }
           }
         } on Exception catch (e) {
-          
+          _logger.info('Error parsing pubspec file', e);
         }
       });
     }
