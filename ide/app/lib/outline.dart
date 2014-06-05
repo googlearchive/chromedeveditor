@@ -21,9 +21,10 @@ class Outline {
 
   html.Element _container;
   html.DivElement _outlineDiv;
+  html.DivElement _rootListDiv;
   html.UListElement _rootList;
 
-  html.ButtonElement _outlineButton;
+  html.Element _outlineButton;
   html.SpanElement _scrollTarget;
   int _initialScrollPosition = 0;
 
@@ -35,41 +36,31 @@ class Outline {
   StreamController<OutlineItem> _childSelectedController = new StreamController();
 
   Outline(this._analyzer, this._container, this._prefs) {
-    // Use template to create the UI of outline.
-    html.DocumentFragment template =
-        (html.querySelector('#outline-template') as
-        html.TemplateElement).content;
-    html.DocumentFragment templateClone = template.clone(true);
-    _outlineDiv = templateClone.querySelector('#outline');
+    _outlineDiv = html.querySelector('#outlineContainer');
     _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
         event.stopPropagation());
-    _rootList = templateClone.querySelector('#outline ul');
-    template =
-        (html.querySelector('#outline-button-template') as
-        html.TemplateElement).content;
-    templateClone = template.clone(true);
-    _outlineButton = templateClone.querySelector('#toggleOutlineButton');
+    _rootListDiv = _outlineDiv.querySelector('#outline');
+    _rootList = _rootListDiv.querySelector('ul');
+    _outlineButton = html.querySelector('#toggleOutlineButton');
     _outlineButton.onClick.listen((e) => toggle());
 
-    _container.children.add(_outlineButton);
     _prefs.getValue('OutlineCollapsed').then((String data) {
       if (data == 'true') {
         _outlineDiv.classes.add('collapsed');
       }
-      _container.children.add(_outlineDiv);
     });
   }
 
   Stream<OutlineItem> get onChildSelected => _childSelectedController.stream;
 
-  Stream get onScroll => _outlineDiv.onScroll;
+  Stream get onScroll => _rootListDiv.onScroll;
 
-  int get scrollPosition => _rootList.parent.scrollTop.toInt();
+  int get scrollPosition => _rootListDiv.scrollTop.toInt();
   void set scrollPosition(int position) {
     // If the outline has not been built yet, just save the position
     _initialScrollPosition = position;
     if (_scrollTarget != null) {
-      _scrollIntoView(_outlineDiv.clientHeight, position);
+      _scrollIntoView(_rootListDiv.clientHeight, position);
     }
   }
 

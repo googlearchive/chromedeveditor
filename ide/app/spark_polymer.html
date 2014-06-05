@@ -16,6 +16,9 @@
   <link rel="import" href="packages/polymer/polymer.html">
   <link rel="import" href="spark_polymer_ui.html">
 
+  <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
+  <link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
+
   <!-- Ace includes -->
   <script src="packages/ace/src/js/ace.js"></script>
   <script src="packages/ace/src/js/ext-language_tools.js"></script>
@@ -62,18 +65,6 @@
     </div>
   </template>
 
-  <!-- Template for Outline -->
-  <template id="outline-template" >
-    <div id="outline">
-      <ul></ul>
-    </div>
-  </template>
-  <template id="outline-button-template">
-    <button id="toggleOutlineButton">
-      <span class="glyphicon glyphicon-list"></span>
-    </button>
-  </template>
-  
   <!-- Markdown template -->
   <template id="markdown-template" >
     <div id="markdownContent">
@@ -92,7 +83,28 @@
   <!-- Top-level UI element. -->
   <spark-polymer-ui id="topUi">
     <div id="fileViewArea" tabindex="0" beforeSplit></div>
-    <div id="editorArea" tabIndex="-1" afterSplit></div>
+
+    <div id="editorArea" tabIndex="-1" afterSplit>
+      <div id="aceContainer"></div>
+      <div id="outlineContainer">
+        <spark-splitter id="outlineResizer"
+            direction="right"
+            size="0"
+            targetSize="200"
+            minTargetSize="100"
+            maxTargetSize="500">
+        </spark-splitter>
+        <div id="outline">
+          <ul>
+          </ul>
+        </div>
+      </div>
+      <spark-button id="toggleOutlineButton" flat round padding="large">
+        <svg viewBox="0 0 24 24">
+          <path d="M4,14h4v-4H4V14z M4,19h4v-4H4V19z M4,9h4V5H4V9z M9,14h12v-4H9V14z M9,19h12v-4H9V19z M9,5v4h12V5H9z"></path>
+        </svg>
+      </spark-button>
+    </div>
   </spark-polymer-ui>
 
   <!-- A backdrop veil used to make app appear modal when displaying dialogs. -->

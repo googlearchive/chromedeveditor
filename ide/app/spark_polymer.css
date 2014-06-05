@@ -464,44 +464,32 @@ li.outlineItem.topLevel.class {
 }
 
 #toggleOutlineButton {
-  background-color: rgba(255, 255, 255, 0.5);
-  border: none;
-  border-radius: 5px;
-  bottom: 10px;
-  height: 30px;
   position: absolute;
-  right: 30px;
-  width: 30px;
-  z-index: 100;
+  width: 36px;
+  height: 36px;
+  bottom: 20px;
+  right: 20px;
+  z-index: 150;
+  fill: #666;
+  background-color: #000;
+  border: 1px solid #ddd;
 }
 
-#toggleOutlineButton:hover {
-  background-color: rgba(255, 255, 255, 0.7);;
-}
-
-#toggleOutlineButton:active {
-  background-color: rgba(255, 255, 255, 1);;
-}
-
-#toggleOutlineButton:focus {
-  outline: none;
-}
-
-#outline {
+#outlineContainer {
+  display: flex;
+  flex-flow: row;
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  bottom: 40px;
-  overflow-y: auto;
-  padding: 10px;
+  border-right: none;
+  bottom: 25px;
   position: absolute;
   right: 30px;
-  top: 10px;
+  top: 55px;
   transition: opacity 250ms;
-  width: 200px;
   z-index: 100;
 }
 
-#outline.collapsed {
+#outlineContainer.collapsed {
   opacity: 0;
   pointer-events: none;
 }
@@ -516,8 +504,17 @@ li.outlineItem.topLevel.class {
   margin-left: 0;
 }
 
+#outline {
+  margin-left: 15px;
+  padding: 10px 0;
+  overflow-y: auto;
+}
+
 li.outlineItem a {
   white-space: nowrap;
+}
+
+#outlineResizer {
 }
 
 .tabview-tabbar {
