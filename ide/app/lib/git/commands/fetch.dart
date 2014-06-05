@@ -63,7 +63,7 @@ class Fetch {
       String headRefName = 'refs/heads/' + branchName;
       return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
         GitRef branchRef = refs.firstWhere(
-            (GitRef ref) => ref.name == headRefName);
+            (GitRef ref) => ref.name == headRefName, orElse: () => null);
 
         if (branchRef == null) {
           throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
