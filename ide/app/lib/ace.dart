@@ -332,6 +332,7 @@ class AceManager {
    */
   final html.Element parentElement;
   final AceManagerDelegate delegate;
+  final PreferenceStore _prefs;
 
   Outline outline;
 
@@ -355,7 +356,7 @@ class AceManager {
   AceManager(this.parentElement,
              this.delegate,
              svc.Services services,
-             PreferenceStore prefs) {
+             this._prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -404,7 +405,6 @@ class AceManager {
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    _setupOutline(prefs);
     _setupGotoLine();
 
     var node = parentElement.getElementsByClassName("ace_content")[0];
@@ -414,8 +414,8 @@ class AceManager {
     });
   }
 
-  void _setupOutline(PreferenceStore prefs) {
-    outline = new Outline(_analysisService, parentElement, prefs);
+  void setupOutline(html.DivElement element) {
+    outline = new Outline(_analysisService, element, _prefs);
 
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
