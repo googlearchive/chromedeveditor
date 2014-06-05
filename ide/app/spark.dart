@@ -1168,7 +1168,10 @@ abstract class SparkActionWithDialog extends SparkAction {
     _dialog = spark.createDialog(dialogElement);
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
-      submitBtn.onClick.listen((_) => _commit());
+      submitBtn.onClick.listen((Event e) {
+        e..stopPropagation()..preventDefault();
+        _commit();
+      });
     }
   }
 
