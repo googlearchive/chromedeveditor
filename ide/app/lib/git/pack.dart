@@ -51,7 +51,6 @@ class Pack {
 
   List<int> _peek(int length) => data.sublist(_offset, _offset + length);
 
-  Uint8List _rest() => data.sublist(_offset);
 
   void _advance(int length) {
     _offset += length;
@@ -108,7 +107,7 @@ class Pack {
   /**
    * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(String type, Uint8List data) {
+  List<int> getObjectHash(String type, List<int> data) {
     FastSha sha1 = new FastSha();
 
     List<int> header = encodeUtf8("${type} ${data.length}\u0000");
@@ -227,7 +226,7 @@ class Pack {
     }
 
     ZlibResult objData = _uncompressObject(_offset, header.size);
-    object.data = new Uint8List.fromList(objData.data);
+    object.data = objData.data;
 
     _advance(objData.readLength);
     return object;
@@ -306,9 +305,9 @@ class Pack {
     }
   }
 
-  Uint8List applyDelta(Uint8List baseData, Uint8List deltaData) {
+  List<int> applyDelta(List<int> baseData, List<int> deltaData) {
     int matchLength(DeltaDataStream stream) {
-      Uint8List data = stream.data;
+      List<int> data = stream.data;
       int offset = stream.offset;
       int result = 0;
       int currentShift = 0;
@@ -337,7 +336,7 @@ class Pack {
     }
 
     int resultLength = matchLength(stream);
-    Uint8List resultData = new Uint8List(resultLength);
+    List<int> resultData = new List(resultLength);
     int resultOffset = 0;
 
     int copyOffset;
@@ -383,12 +382,12 @@ class Pack {
         // TODO(grv): Check if this is a version 2 packfile and apply
         // copyFromResult if so.
         copyFromResult = (opcode & 0x01);
-        Uint8List sublist = baseData.sublist(copyOffset,
+        List<int> sublist = baseData.sublist(copyOffset,
             copyOffset + copyLength);
         resultData.setAll(resultOffset, sublist);
         resultOffset += sublist.length;
       } else if ((opcode & 0x80) == 0) {
-        Uint8List sublist = stream.data.sublist(stream.offset,
+        List<int> sublist = stream.data.sublist(stream.offset,
             stream.offset + opcode);
         resultData.setAll(resultOffset, sublist);
         resultOffset += sublist.length;
@@ -441,7 +440,7 @@ class PackBuilder {
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
       data = buf.getBytes();
-    } else if (buf is Uint8List) {
+    } else if (buf is Uint8List || buf is List<int>) {
       data = buf;
     } else {
       // assume it's a string.
@@ -525,7 +524,7 @@ class PackBuilder {
  * Defines a delta data object.
  */
 class DeltaDataStream {
-  final Uint8List data;
+  final List<int> data;
   int offset;
 
   DeltaDataStream(this.data, this.offset);

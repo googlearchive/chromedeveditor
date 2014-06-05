@@ -65,6 +65,7 @@ class MockAceManager implements AceManager {
   void buildOutline() { }
   Stream get onGotoDeclaration => null;
   NavigationLocation get navigationLocation => null;
+  void setupOutline(SparkPreferences prefs) { }
 }
 
 class MockAceEditor implements TextEditor {

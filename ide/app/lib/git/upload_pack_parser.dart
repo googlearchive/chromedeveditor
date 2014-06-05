@@ -17,18 +17,17 @@ import 'pack.dart';
 import 'utils.dart';
 
 class PktLine {
-  int offset;
-  int length;
-  Uint8List data;
+  final int offset;
+  final int length;
 
   PktLine(this.offset, this.length);
 }
 
 class PackParseResult {
-  List<PackedObject> objects;
-  String shallow;
-  List<String> common;
-  Uint8List data;
+  final List<PackedObject> objects;
+  final String shallow;
+  final List<String> common;
+  final List<int> data;
 
   PackParseResult(this.objects,  this.data, this.shallow, this.common);
 }
@@ -38,7 +37,7 @@ class UploadPackParser {
   int _offset = 0;
   var objects = null;
   var remoteLines = null;
-  Uint8List data;
+  List<int> data;
   Cancel _cancel;
 
   UploadPackParser([this._cancel]);
@@ -51,7 +50,6 @@ class UploadPackParser {
 
     DateTime startTime = new DateTime.now();
     PktLine pktLine = _nextPktLine();
-    var packFileParser;
     String remoteLine = "";
     bool gotAckorNak = false;
     List<String> common = [];
@@ -133,7 +131,7 @@ class UploadPackParser {
     return pktString;
   }
 
-  _peek(length) => data.sublist(_offset, _offset + length);
+  List<int> _peek(int length) => data.sublist(_offset, _offset + length);
 
-  _advance(length) => _offset += length;
+  int _advance(int length) => _offset += length;
 }

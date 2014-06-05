@@ -28,6 +28,7 @@
   background-color: rgb(66, 128, 244);
   color: white;
   fill: white;
+  fill-opacity: 1;
 }
 
 #footer {
@@ -47,6 +48,10 @@
 #closingX {
   width: 28px;
   height: 28px;
+}
+
+#closingXGlyph {
+  fill-opacity: 1;
 }
 
 /* TODO(ussuri): Replace all these with dedicated Spark widgets. */
