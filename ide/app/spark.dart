@@ -2468,6 +2468,8 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
     modifiedFileList.clear();
     addedFileList.clear();
     deletedFileList.clear();
+    SparkDialogButton commitButton = getElement('#gitCommit');
+    commitButton.disabled = false;
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -2514,6 +2516,8 @@ class GitCommitAction extends SparkActionWithDialog implements ContextAction {
 
     if (modifiedCnt + addedCnt + deletedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
+      SparkDialogButton commitButton = getElement('#gitCommit');
+      commitButton.disabled = true;
     } else {
       _gitStatusElement.text =
           '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
