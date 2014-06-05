@@ -125,16 +125,16 @@ class TestDriver {
 
 class _TestJob extends Job {
   final TestDriver testDriver;
-  final Completer<bool> testCompleter;
 
-  _TestJob(this.testDriver, this.testCompleter) : super("Running tests…");
+  _TestJob(this.testDriver, Completer completer)
+      : super("Running tests…", completer);
 
   Future<Job> run(ProgressMonitor monitor) {
     monitor.start(name);
 
     unittest.runTests();
 
-    return testCompleter.future.then((_) => this);
+    return completer.future.then((_) => this);
   }
 }
 

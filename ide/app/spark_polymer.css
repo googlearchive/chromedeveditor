@@ -410,6 +410,9 @@ button.ace_searchbtn_close:active {
 }
 
 .outlineItem {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas',
+      'source-code-pro', monospace;
+  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
