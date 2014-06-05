@@ -92,6 +92,7 @@ abstract class ObjectUtils {
           status.sha = blobSha;
           status.headSha = blobSha;
           status.size = data.size;
+          status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
           store.index.createIndexForEntry(status);
         });
       });

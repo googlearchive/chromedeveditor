@@ -260,7 +260,7 @@ class Workspace extends Container {
         }).whenComplete(() {
           _logger.info('Workspace restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
-          return _restoreSyncFs();
+          _restoreSyncFs();
         }).then((_) => _whenAvailable.complete(this));
       } catch (e) {
         _logger.warning('Exception in workspace restore', e);
@@ -312,7 +312,8 @@ class Workspace extends Container {
     }
 
     // Add new roots from syncFS.
-    futures.add(_syncFileSystem.root.createReader().readEntries().then((List<chrome.Entry> entries) {
+    futures.add(_syncFileSystem.root.createReader().readEntries().then(
+        (List<chrome.Entry> entries) {
       List<Future> newAdditions = [];
       Set<String> newPaths = new Set();
       for(chrome.Entry entry in entries) {
@@ -365,7 +366,7 @@ class Workspace extends Container {
     }
 
     // Wait for 10 seconds before performing the refresh.
-    _timerSyncFSRefresh = new Timer(new Duration(seconds:10), () {
+    _timerSyncFSRefresh = new Timer(new Duration(seconds: 10), () {
       _refreshSyncFSAfterDelay();
       _timerSyncFSRefresh = null;
     });
@@ -395,7 +396,9 @@ class Workspace extends Container {
       chrome.syncFileSystem.onFileStatusChanged.listen((chrome.FileInfo info) {
         // Trigger refresh when changes are coming from the server.
         if (info.direction == chrome.SyncDirection.REMOTE_TO_LOCAL) {
-          _scheduleRefreshSyncFSForEntry(info.fileEntry);
+          chrome.Entry entry = info.fileEntry;
+          _logger.info('syncfs change for ${entry}');
+          _scheduleRefreshSyncFSForEntry(entry);
         }
       });
 
@@ -870,9 +873,9 @@ class Folder extends Container {
     return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
   }
 
-  //TODO(keertip): remove check for 'cache' 
+  //TODO(keertip): remove check for 'cache'
   bool isScmPrivate() => name == '.git' || name == '.svn'
-      || (name =='cache' && pubProperties.isProjectWithPackages(parent));
+      || (name =='cache' && pubProperties.isFolderWithPackages(parent));
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.

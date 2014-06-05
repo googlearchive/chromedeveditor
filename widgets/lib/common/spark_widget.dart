@@ -30,6 +30,14 @@ class SparkWidget extends PolymerElement {
   Element getShadowDomElement(String selectors) =>
       shadowRoot.querySelector(selectors);
 
+  void setAttr(String attr, bool add, [String value = '']) {
+    if (add) {
+      attributes[attr] = value;
+    } else {
+      attributes.remove(attr);
+    }
+  }
+
   Element _findFocusableChild() {
     ElementList elts = this.querySelectorAll('[focused]');
     if (elts.isEmpty) {
@@ -116,6 +124,36 @@ class SparkWidget extends PolymerElement {
     } else {
       unveil();
     }
+  }
+
+  /**
+   * Returns true if the point is within the widget's boundary.
+   */
+  bool isPointInWidget(Point xyGlobal) {
+    return super.getBoundingClientRect().containsPoint(xyGlobal);
+  }
+
+  /**
+   * Returns true if the event is within the widget's boundary or targets the
+   * widget or one of its light DOM or shadow DOM children.
+   */
+  bool isEventInWidget(Event e) {
+    return
+        (e is MouseEvent && isPointInWidget(e.client)) ||
+        this == e.target ||
+        this.contains(e.target) ||
+        shadowRoot.contains(e.target);
+  }
+
+  static void addRemoveEventHandlers(
+      dynamic node,
+      Iterable<String> eventTypes,
+      Function handler,
+      {bool enable: true,
+       bool capture: false}) {
+    final Function addRemoveFunc =
+        enable ? node.addEventListener : node.removeEventListener;
+    eventTypes.forEach((event) => addRemoveFunc(event, handler, capture));
   }
 
   /**

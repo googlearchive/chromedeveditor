@@ -158,7 +158,6 @@ class Clone {
     });
   }
 
-  // TODO: error handling.
   Future _checkDirectory(chrome.DirectoryEntry dir, ObjectStore store,
                          [bool uninitializedOk = false]) {
     return FileOps.listFiles(dir).then((List entries) {
@@ -178,8 +177,7 @@ class Clone {
               return store.objectDir.getDirectory('pack').then((packDir) {
                 return FileOps.listFiles(packDir).then((entries) {
                   if (entries.length > 0) {
-                    throw new GitException(
-                        GitErrorConstants.GIT_CLONE_DIR_IN_USE);
+                    throw new GitException(GitErrorConstants.GIT_CLONE_DIR_IN_USE);
                   } else {
                     return null;
                   }
@@ -250,7 +248,7 @@ class Clone {
               PackIndex packIdx = new PackIndex(packIdxData);
               Pack pack = new Pack(packData, _options.store);
               _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
-              // TODO: add progress
+              // TODO(grv): Add progress
               return _createCurrentTreeFromPack(_options.root, _options.store,
                   localHeadRef.sha).then((_) {
                 logger.info(_stopwatch.finishCurrentTask(

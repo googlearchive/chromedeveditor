@@ -199,7 +199,7 @@ class Merge {
     }
 
     if (conflicts.length > 0) {
-      // TODO deal with conflicts.
+      // TODO(grv): Deal with conflicts.
       throw "unable to merge. Conflicts.";
     }
 

@@ -3,8 +3,6 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("packages/spark_widgets/common/spark_widget.css");
-@import url("packages/bootjack/css/bootstrap.min.css");
-@import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
 /* Order is important */
@@ -19,37 +17,11 @@
   top: 0;
 }
 
-.dialog {
+spark-dialog {
   top: 72px;
   left: 50%;
   width: 512px;
   margin-left: -256px;
-  border-radius: 5px;
-}
-
-.dialog input[type="text"] {
-  width: 100%;
-}
-
-.dialog input:invalid {
-  color: red;
-}
-
-.dialog {
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  overflow: hidden;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.dialog a.close {
-  width: 21px;
-  height: 21px;
-  text-align: center;
 }
 
 .toolbar {
@@ -85,7 +57,9 @@
 
 #fileFilter:focus.active ~ #runButton,
 #fileFilter:focus.active ~ #mainMenu {
-  display: none;
+  opacity: 0;
+  width: 0;
+  transition: opacity 0.5s, width 0.5s ease-out 0.2s;
 }
 
 #fileNotFoundPlaceholder {
@@ -120,65 +94,46 @@
 }
 
 #settingsDialog .settings-label {
-  display: inline-block;
-  width: 130px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: #EEE;
+  width: 150px;
+}
+
+#settingsDialog .settings-value {
+  flex: 1;
+  height: 100%;
   border: 1px solid #DDD;
-  padding: 2px 5px;
+  border-radius: 3px;
+  padding: 5px;
+  color: #666;
+  text-align: center;
+  text-overflow: ellipsis;
 }
 
-#settingsDialog #directory-label {
-  height: 24px;
-  width: 250px;
-}
-
-#settingsDialog .plus-minus-container {
-  margin-left: 15px;
+#settingsDialog .settings-block {
+  width: 100%;
+  height: 30px;
+  background-color: white;
 }
 
 #settingsDialog .plus-minus-button {
-  background-color: #3a84c3;
-  border-radius: 5px;
-  color: #fff;
-  display: inline;
-  overflow: hidden;
-  padding: 5px 8px;
-  margin-right: 6px;
+  width: 30px;
+  height: 30px;
 }
 
-#settingsDialog .plus-minus-button:hover {
-  color: #fff;
-  text-decoration: none;
+.settings-value + .plus-minus-button {
+  margin-left: 5px;
 }
 
-#settingsDialog .plus-minus-button:active {
-  background-color: #19197A;
-  color: #fff;
-  text-decoration: none;
+#settingsDialog .reset-setting-button {
+  flex: 1;
+  height: 100%;
 }
 
-#gitResetSettingsDone {
-  margin-left: 15px;
-}
-
+#gitResetSettingsDone,
 #preferenceResetResult {
+  display: none;
   color: #F00;
   font-weight: bold;
-}
-
-#gitPushDialog .modal-body {
-  margin: 0;
-  padding: 0;
-}
-
-#gitPushDialog .form-group {
-  margin: 0;
-}
-
-#gitPushDialog .modal-footer {
-  margin: 0;
+  margin: 4px 0 0 4px;
 }
 
 #gitCommitList {

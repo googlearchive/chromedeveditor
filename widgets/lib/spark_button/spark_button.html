@@ -9,11 +9,11 @@
  * spark-button is a clickable element that can have arbitrary content provided
  * in the inner HTML. A button can be:
  *
- * * [raised] (default) or [flat], 
+ * * [raised] (default) or [flat],
  * * rectangular (default) or [round]
  * * [primary] (changes the background and/or text colors)
  * * enabled (default) or [disabled]
- * * padded (default), minimally padded ([minPadding]) or not padded ([noPadding])
+ * * padded to various degrees: [padding] = "none", "small", "medium", "large"
  *
  * Example:
  *
@@ -32,10 +32,10 @@
                 flat
                 round
                 primary
-                minPadding
-                noPadding
+                padding
                 disabled
-                active">
+                active"
+    padding="large">
   <template>
     <link rel="stylesheet" href="spark_button.css">
 

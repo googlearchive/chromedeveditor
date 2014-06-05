@@ -8,6 +8,8 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
+import 'fetch.dart';
+import '../exception.dart';
 import '../objectstore.dart';
 import '../options.dart';
 
@@ -26,40 +28,64 @@ class Branch {
    * 6) cannot end with '.lock'.
   */
   static const BRANCH_PATTERN
-      = r"^(?!/|\.|.* ([/.]\.|//|@\{|\\\\))[^\\x00-\\x20 ~^:?*\[]+(?<!\.lock|[/.])$";
+      = r"^(?!build-|/|.*([/.][.]|//|@\\{|\\\\))[^\040\177 ~^:?*\\[]+$";
+
+  static final branchRegex = new RegExp(BRANCH_PATTERN);
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    var branchRegex = new RegExp(BRANCH_PATTERN);
-    return name.isNotEmpty && name.matchAsPrefix(name) != null;
+    return name.isNotEmpty && branchRegex.matchAsPrefix(name) != null;
   }
 
   /**
    * Creates a new branch. Throws error if the branch already exist.
    */
-  static Future<chrome.FileEntry> branch(GitOptions options) {
+  static Future<chrome.FileEntry> branch(
+      GitOptions options, [String remoteBranchName]) {
     ObjectStore store = options.store;
     String branchName = options.branchName;
 
-    // TODO(grv) : fix bug with branchname regex.
-   /* if (!_verifyBranchName(branchName)) {
-      // TODO(grv) throw error.
-      throw "invalid branch name.";
-    }*/
+    if (!_verifyBranchName(branchName)) {
+      throw new GitException(GitErrorConstants.GIT_INVALID_BRANCH_NAME);
+     }
 
     return store.getHeadForRef('refs/heads/' + branchName).then((_) {
-      // TODO(Grv) : throw branch already exists.
-      throw "branch already exists.";
+      throw new GitException(GitErrorConstants.GIT_BRANCH_EXISTS);
     }, onError: (e) {
-      //if (e.code == FileError.NOT_FOUND_ERR) {
-        return store.getHeadRef().then((String refName) {
-          return store.getHeadForRef(refName).then((String sha) {
-            return store.createNewRef('refs/heads/' + branchName, sha);
-          });
-        });
-     // } else {
-       // throw e;
-     // }
+      return _fetchAndCreateBranch(options, branchName, remoteBranchName);
     });
+  }
+
+  static Future<String> _fetchAndCreateBranch(
+      GitOptions options, String branchName, String remoteBranchName) {
+    ObjectStore store = options.store;
+    if (remoteBranchName != null && remoteBranchName.isNotEmpty) {
+      return options.store.getRemoteHeadForRef(remoteBranchName).then((sha) {
+        options.depth = 1;
+        options.branchName = remoteBranchName;
+        Fetch fetch = new Fetch(options);
+
+        Function createBranch = () {
+          options.branchName = branchName;
+          return store.createNewRef('refs/heads/' + branchName, sha);
+        };
+
+        return fetch.fetch().then((_) {
+          return createBranch();
+        }, onError: (GitException e) {
+          if (e is! GitException ||
+              e.errorCode != GitErrorConstants.GIT_FETCH_UP_TO_DATE) {
+            throw e;
+          }
+          return createBranch();
+        });
+      });
+    } else {
+      return store.getHeadRef().then((String headRefName) {
+        return store.getHeadForRef(headRefName).then((sha) {
+          return store.createNewRef('refs/heads/' + branchName, sha);
+        });
+      });
+    }
   }
 }

@@ -44,17 +44,19 @@ class Commit {
         }
 
         if (entry.isDirectory) {
-          return walkFiles(entry as chrome.DirectoryEntry, store).then((String sha) {
+          return walkFiles(entry, store).then((String sha) {
             if (sha != null) {
-              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), false));
+              treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
+                  false));
             }
           });
         } else {
           chrome.ChromeFileEntry fileEntry = entry;
 
-          return Status.getFileStatus(store, entry).then((FileStatus status) {
+          return Status.updateAndGetStatus(store, entry).then(
+              (FileStatus status) {
             if (status.type != FileStatusType.UNTRACKED) {
-              store.index.updateIndexForEntry(status);
+              store.index.updateIndexForFile(status);
               status = store.index.getStatusForEntry(entry);
 
               if (status.type == FileStatusType.STAGED ||
@@ -63,7 +65,8 @@ class Commit {
                   return store.writeRawObject(
                       'blob', new Uint8List.fromList(buf.getBytes()));
                 }).then((String sha) {
-                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha), true));
+                  treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
+                      true));
                 });
               } else if (status.type == FileStatusType.COMMITTED){
                 treeEntries.add(
@@ -73,6 +76,12 @@ class Commit {
           });
         }
       }).then((_) {
+
+        // Either the folder is empty, or untracked.
+        if (treeEntries.isEmpty) {
+          return null;
+        }
+
         treeEntries.sort((TreeEntry a, TreeEntry b) {
           String aName = a.isBlob ? a.name : (a.name + '/');
           String bName = b.isBlob ? b.name : (b.name + '/');
@@ -83,25 +92,6 @@ class Commit {
     });
   }
 
-  static Future checkTreeChanged(ObjectStore store, String parent,
-      String sha) {
-    if (parent != null && parent.isEmpty) {
-      return null;
-    } else {
-      return store.retrieveObject(parent, ObjectTypes.COMMIT_STR).then(
-          (CommitObject parentCommit) {
-        String oldTree = parentCommit.treeSha;
-        if (oldTree == sha) {
-          throw new GitException(GitErrorConstants.GIT_COMMIT_NO_CHANGES);
-        } else {
-          return null;
-        }
-      }, onError: (e) {
-        throw new GitException(GitErrorConstants.GIT_OBJECT_STORE_CORRUPTED);
-      });
-    }
-  }
-
   /**
    * Creates a commit of all the changed files int the working tree with
    * [options.commitMessage] as commit message.
@@ -110,11 +100,15 @@ class Commit {
     chrome.DirectoryEntry dir = options.root;
     ObjectStore store = options.store;
 
-    return store.getHeadRef().then((String headRefName) {
-      return store.getHeadForRef(headRefName).then((String parent) {
-        return _createCommitFromWorkingTree(options, parent, headRefName);
-      }, onError: (e) {
-        return _createCommitFromWorkingTree(options, null, headRefName);
+    return Status.isWorkingTreeClean(store).then((_) {
+      throw new GitException(GitErrorConstants.GIT_COMMIT_NO_CHANGES);
+    }, onError: (GitException e) {
+      return store.getHeadRef().then((String headRefName) {
+        return store.getHeadForRef(headRefName).then((String parent) {
+          return _createCommitFromWorkingTree(options, parent, headRefName);
+        }, onError: (e) {
+          return _createCommitFromWorkingTree(options, null, headRefName);
+        });
       });
     });
   }
@@ -122,32 +116,29 @@ class Commit {
   static Future createCommit(GitOptions options, String parent, String treeSha,
       String refName) {
     ObjectStore store = options.store;
-
-    return checkTreeChanged(store, parent, treeSha).then((_) {
-      String dateString = getCurrentTimeAsString();
-      StringBuffer commitContent = new StringBuffer();
-      commitContent.write('tree ${treeSha}\n');
-      if (parent != null && parent.length > 0) {
-        commitContent.write('parent ${parent}');
-        if (parent[parent.length -1] != '\n') {
-          commitContent.write('\n');
-        }
+    String dateString = getCurrentTimeAsString();
+    StringBuffer commitContent = new StringBuffer();
+    commitContent.write('tree ${treeSha}\n');
+    if (parent != null && parent.length > 0) {
+      commitContent.write('parent ${parent}');
+      if (parent[parent.length -1] != '\n') {
+        commitContent.write('\n');
       }
+    }
 
-      String name = options.name == null ? "" : options.name;
-      String email = options.email == null ? "" : options.email;
-      String commitMsg = options.commitMessage == null ? ""
-          : options.commitMessage;
-      commitContent.write('author ${name} <${email}> ${dateString}\n');
-      commitContent.write('committer ${name} <${email}> ${dateString}');
-      commitContent.write('\n\n${commitMsg}\n');
+    String name = options.name == null ? "" : options.name;
+    String email = options.email == null ? "" : options.email;
+    String commitMsg = options.commitMessage == null ? ""
+        : options.commitMessage;
+    commitContent.write('author ${name} <${email}> ${dateString}\n');
+    commitContent.write('committer ${name} <${email}> ${dateString}');
+    commitContent.write('\n\n${commitMsg}\n');
 
-      return store.writeRawObject(ObjectTypes.COMMIT_STR,
-          commitContent.toString()).then((String commitSha) {
-        return FileOps.createFileWithContent(options.root, '.git/${refName}',
-            commitSha + '\n', 'Text').then((_) {
-          return store.writeConfig().then((_) => commitSha);
-        });
+    return store.writeRawObject(ObjectTypes.COMMIT_STR,
+        commitContent.toString()).then((String commitSha) {
+      return FileOps.createFileWithContent(options.root, '.git/${refName}',
+          commitSha + '\n', 'Text').then((_) {
+        return store.writeConfig().then((_) => commitSha);
       });
     });
   }
@@ -155,7 +146,6 @@ class Commit {
   static Future _createCommitFromWorkingTree(GitOptions options, String parent,
       String refName) {
     ObjectStore store = options.store;
-
     return walkFiles(options.root, store).then((String sha) {
       // update the index.
       return store.index.onCommit().then((_) {

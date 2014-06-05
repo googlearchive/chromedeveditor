@@ -12,7 +12,6 @@ import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 
 import 'spark_flags.dart';
 import 'spark_model.dart';
-
 import 'lib/event_bus.dart';
 import 'lib/platform_info.dart';
 
@@ -24,13 +23,14 @@ class SparkPolymerUI extends SparkWidget {
   // startup.
   @published int splitViewPosition = 100;
 
-  // NOTE: The initial values for these have to be true, because the app
-  // uses querySelector to find the affected elements that would be not
-  // rendered if these were false.
+  // NOTE: The initial values for these have to be such that dependent
+  // <template if> blocks in the .html are turned on, because the app
+  // uses [querySelector] upon startup to find elements in those blocks.
+  // The values are later set to their actual values in [refreshFromModel].
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
   @observable bool showWipProjectTemplates = true;
-  @observable bool chromeOS = true;
+  @observable bool chromeOS = false;
 
   @observable bool showNoFileFilterMatches = false;
 
@@ -119,15 +119,17 @@ class SparkPolymerUI extends SparkWidget {
     _model.setGitSettingsResetDoneVisible(true);
   }
 
+  // TODO(ussuri): Find a better way to achieve this.
   void onResetPreference() {
-    Element resultElement = getShadowDomElement('#preferenceResetResult');
+    Element resultElement = $['preferenceResetResult'];
+    resultElement.style.display = 'block';
     resultElement.text = '';
     _model.syncPrefs.clear().then((_) {
       _model.localPrefs.clear();
     }).catchError((e) {
-      resultElement.text = '<error reset preferences>';
+      resultElement.text = 'Error resetting preferences';
     }).then((_) {
-      resultElement.text = 'Preferences are reset. Restart Spark.';
+      resultElement.text = 'Preferences have been reset - restart Spark';
     });
   }
 

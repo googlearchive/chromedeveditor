@@ -6,6 +6,12 @@ export "common/spark_widget.dart";
 import "spark_button/spark_button.dart";
 export "spark_button/spark_button.dart";
 
+import "spark_dialog/spark_dialog.dart";
+export "spark_dialog/spark_dialog.dart";
+
+import "spark_dialog_button/spark_dialog_button.dart";
+export "spark_dialog_button/spark_dialog_button.dart";
+
 import "spark_icon/spark_icon.dart";
 export "spark_icon/spark_icon.dart";
 
