@@ -21,6 +21,7 @@ import 'developer_private.dart';
 import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
+import 'package_mgmt/pub_properties.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
@@ -59,6 +60,7 @@ class LaunchManager {
 
   List<ApplicationLocator> applicationLocators = [];
   List<LaunchTargetHandler> launchTargetHandlers = [];
+  List<LaunchParticipant> launchParticipants = [];
 
   LaunchManager(this.workspace, this._services, this._pubManager,
       this._bowerManager, this._notifier) {
@@ -71,6 +73,7 @@ class LaunchManager {
     launchTargetHandlers.add(new WebAppLocalLaunchHandler(
         workspace, _services, _pubManager, _bowerManager, _notifier));
     // TODO: add WebAppRemoteLaunchHandler
+    launchParticipants.add(new PubLaunchParticipant(_pubManager, _notifier));
   }
 
   /**
@@ -97,9 +100,25 @@ class LaunchManager {
     LaunchTargetHandler handler = _locateLaunchHandler(application, target);
     if (handler == null) return new Future.value();
 
-    return handler.launch(application, target);
+    List futures = [];
+    List<LaunchParticipant> participants = _locateLaunchParticipants(application, target);
+    participants.forEach((participant) {
+      futures.add(participant.doChecks(application, target));
+    });
+    
+    return Future.wait(futures).then((_) => handler.launch(application, target));
   }
 
+  List<LaunchParticipant> _locateLaunchParticipants(Application application, LaunchTarget target) {
+    List<LaunchParticipant> participants = [];
+    launchParticipants.forEach((launchParticipant) {
+      if (launchParticipant.canParticipate(application, target)) {
+        participants.add(launchParticipant);
+      }
+    });
+    return participants;
+  }
+  
   // This statefulness is for use by Bower, and will go away at some point.
   Project get lastLaunchedProject => _lastLaunchedProject;
 
@@ -192,6 +211,22 @@ class Application {
  */
 abstract class ApplicationLocator {
   ApplicationResult locateAssociatedApplication(Resource resource);
+  
+  bool _isDartApp(Resource resource) {
+    Container container;
+    if (resource is! Container) {
+      container = resource.parent;
+    } else {
+      container = resource;
+    }
+    while (container != null) {
+      if (container.getChild(pubProperties.packageSpecFileName) != null){
+       return true;
+      }
+      container = container.parent;
+    }
+    return false;
+  }
 }
 
 /**
@@ -237,15 +272,36 @@ abstract class LaunchTargetHandler {
   String toString() => name;
 }
 
+/**
+ * Performs prelaunch checks, based on a type of [Application] and [LaunchTarget].
+ * It is called before the [LaunchTargetHandler]. 
+ */
+abstract class LaunchParticipant {
+
+  String get name;
+
+  bool canParticipate(Application application, LaunchTarget launchTarget);
+
+  Future doChecks(Application application, LaunchTarget launchTarget);
+
+  String toString() => name;
+}
+
+
+
 class ChromeAppLocator extends ApplicationLocator {
 
   @override
   ApplicationResult locateAssociatedApplication(Resource resource) {
     Container container = getAppContainerFor(resource);
     if (container == null) return null;
-
-    return new ApplicationResult(
-        new Application(container, ApplicationType.CHROME_APP), 0.8);
+    
+    Application application = new Application(container, ApplicationType.CHROME_APP);
+    if (_isDartApp(container)) {
+      application.setProperty('dart', 'true');
+    }
+    
+    return new ApplicationResult(application, 0.8);
   }
 }
 
@@ -258,7 +314,7 @@ class WebAppLocator extends ApplicationLocator {
     if (resource is File) {
       if (resource.name.endsWith('.html') || resource.name.endsWith('.htm')) {
         return new ApplicationResult(
-            new Application(resource, ApplicationType.WEB_APP), 0.7);
+            _createApplication(resource), 0.7);
       }
     }
 
@@ -273,7 +329,7 @@ class WebAppLocator extends ApplicationLocator {
     if (_getLaunchResourceIn(parent) != null) {
       Resource r = _getLaunchResourceIn(parent);
       return new ApplicationResult(
-          new Application(r, ApplicationType.WEB_APP), 0.6);
+          _createApplication(r), 0.6);
     }
 
     // Check for a launchable file in web/.
@@ -281,13 +337,21 @@ class WebAppLocator extends ApplicationLocator {
       Resource r = _getLaunchResourceIn(resource.project.getChild('web'));
       if (r != null) {
         return new ApplicationResult(
-            new Application(r, ApplicationType.WEB_APP), 0.6);
+            _createApplication(r), 0.6);
       }
     }
 
     return null;
   }
 
+  Application _createApplication(Resource resource) {
+    Application application = new Application(resource, ApplicationType.WEB_APP);
+    if (_isDartApp(resource)) {
+      application.setProperty('dart', 'true');
+    }
+    return application;
+  }
+  
   Resource _getLaunchResourceIn(Container container) {
     if (container.getChild('index.html') is File) {
       return container.getChild('index.html');
@@ -449,6 +513,33 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
       _server.dispose();
     }
   }
+}
+
+/**
+ * A launch pariticipant that works on dart apps, checks to see if all the specified
+ * packages are installed, if not either run pub get or continue launch. 
+ */
+class PubLaunchParticipant extends LaunchParticipant {
+  
+  final PackageManager pubManager;
+  final Notifier notifier;
+  
+  PubLaunchParticipant(this.pubManager, this.notifier);
+ 
+  String get name => 'Pub';
+  
+  bool canParticipate(Application application, LaunchTarget launchTarget) => application.isDart;
+ 
+  Future doChecks(Application application, LaunchTarget launchTarget) {
+     return pubManager.isPackagesInstalled(application.primaryResource.parent).then((installed) {
+       if (!installed) {
+         return notifier.showMessageAndWait('Package not installed', 
+             'Detected missing package/packages. Run Pub Get to install packages.');
+       }
+       return new Future.value();
+     });    
+  }
+ 
 }
 
 /**
@@ -666,7 +757,7 @@ class Dart2JsServlet extends PicoServlet {
     Completer completer = new Completer();
 
     file.workspace.builderManager.jobManager.schedule(
-        new ProgressJob('Compiling ${file.name}…', completer));
+        new ProgressJob('Compiling ${file.name}���', completer));
 
     return compiler.compileFile(file).then((CompileResult result) {
       if (!result.hasOutput) {

@@ -70,6 +70,8 @@ abstract class PackageManager {
 
   Future installPackages(Folder container);
   Future upgradePackages(Folder container);
+  
+  Future<bool> isPackagesInstalled(Folder container);
 }
 
 abstract class PackageResolver {

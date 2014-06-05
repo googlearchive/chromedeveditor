@@ -38,10 +38,41 @@ class PubManager extends PackageManager {
 
   Future upgradePackages(Folder container) =>
       _installUpgradePackages(container, 'upgrade', true);
+  
+  Future<bool> isPackagesInstalled(Container container) {
+    File pubspecFile = _findPubspec(container);
+    if (pubspecFile is File) {
+      return pubspecFile.getContents().then((String str) {
+        try {
+          _PubSpecInfo info = new _PubSpecInfo.parse(str);
+          for (String dep in info.getDependencies()) {
+            Resource dependency =
+                 container.getChildPath('${properties.packagesDirName}/${dep}');
+            if (dependency is! Folder) {
+              return false;
+            }
+          }
+        } on Exception catch (e) {
+          
+        }
+      });
+    }
+    return new Future.value(true);
+  }
 
   //
   // - end PackageManager abstract interface.
   //
+  
+  File _findPubspec(Container container) {    
+     while (container.parent != null) {
+       if (container.getChild(properties.packageSpecFileName) != null) {
+         return container.getChild(properties.packageSpecFileName);
+       }
+       container = container.parent;
+     }
+     return null;
+   }
 
   Future _installUpgradePackages(
       Folder container, String commandName, bool isUpgrade) {

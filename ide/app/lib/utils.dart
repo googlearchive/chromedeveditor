@@ -200,6 +200,8 @@ Future<html.DirectoryEntry> getLocalDataDir(String name) {
  */
 abstract class Notifier {
   void showMessage(String title, String message);
+  
+  Future showMessageAndWait(String title, String message);
 }
 
 /**
@@ -209,6 +211,8 @@ class NullNotifier implements Notifier {
   void showMessage(String title, String message) {
     Logger.root.info('${title}:${message}');
   }
+  
+  Future showMessageAndWait(String title, String message) => new Future.value("Not implemented");
 }
 
 /**
