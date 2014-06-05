@@ -24,6 +24,7 @@ class SparkFlags {
   static bool get showGitPull => _flags['show-git-pull'] == true;
   static bool get showGitBranch => _flags['show-git-branch'] == true;
   static bool get performJavaScriptAnalysis => _flags['analyze-javascript'] == true;
+  static bool get enableMultiSelect => _flags['enable-multiselect'] == true;
 
   static void setFlags(Map<String, dynamic> newFlags) {
     if (newFlags != null) _flags.addAll(newFlags);

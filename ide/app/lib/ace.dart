@@ -349,7 +349,6 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
-  StreamSubscription _declarationClickSubscription = null;
 
   AceManager(this.parentElement,
              this.delegate,
@@ -400,27 +399,16 @@ class AceManager {
     _setupOutline(prefs);
     _setupGotoLine();
 
-    prefs.onPreferencesReady.then((_) {
-      declarationClickEnabled = prefs.accelKeyLinking;
-    });
-  }
-
-  void set declarationClickEnabled(bool enable) {
-    // Don't change if already set to the right value
-    if ((_declarationClickSubscription != null) == enable) return;
-
-    html.DivElement node = parentElement.getElementsByClassName("ace_content")[0];
-
-    if (enable) {
-      _declarationClickSubscription = node.onClick.listen((e) {
+    if (SparkFlags.enableMultiSelect) {
+      _aceEditor.setOption('enableMultiselect', !enable);
+    } else {
+      // Setup ACCEL + clicking on declaration
+      var node = parentElement.getElementsByClassName("ace_content")[0];
+      node.onClick.listen((e) {
         bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
         if (accelKey) _onGotoDeclarationController.add(null);
       });
-    } else {
-      _declarationClickSubscription.cancel();
     }
-
-    _aceEditor.setOption('enableMultiselect', !enable);
   }
 
   void _setupOutline(SparkPreferences prefs) {
