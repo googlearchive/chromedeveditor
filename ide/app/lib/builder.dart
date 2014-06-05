@@ -121,7 +121,8 @@ class _BuildJob extends Job {
   final ResourceChangeEvent event;
   final List<Builder> builders;
 
-  _BuildJob(this.event, this.builders, completer) : super('Building…', completer);
+  _BuildJob(this.event, this.builders, Completer completer)
+      : super('Building…', completer);
 
   Future run(ProgressMonitor monitor) {
     return Future.forEach(builders, (Builder builder) {

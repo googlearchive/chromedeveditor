@@ -387,7 +387,8 @@ class Workspace extends Container {
     Stopwatch stopwatch = new Stopwatch()..start();
     Completer progressCompleter = new Completer();
 
-    ProgressJob progressJob = new ProgressJob('Opening sync filesystem…', progressCompleter);
+    ProgressJob progressJob = new ProgressJob(
+        'Opening sync filesystem…', progressCompleter);
 
     _builderManager.jobManager.schedule(progressJob);
 

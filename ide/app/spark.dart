@@ -1199,6 +1199,7 @@ abstract class SparkActionWithDialog extends SparkAction {
 
 abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
   SparkProgress _progress;
+
   SparkActionWithProgressDialog(Spark spark,
                                 String id,
                                 String name,
@@ -2438,7 +2439,6 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     branchButton.disabled = true;
     branchButton.deliverChanges();
 
-
     _GitBranchJob job = new _GitBranchJob(gitOperations,
         _branchNameElement.value, remoteBranchName, spark);
     spark.jobManager.schedule(job).then((_) {
@@ -2590,7 +2590,7 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     SparkDialogButton closeButton = getElement('#gitCommitCancel');
     closeButton.disabled = true;
 
-    _progress.progressMessage = "Committing...";
+    _progress.progressMessage = "Committing…";
     _toggleProgressVisible(true);
 
     if (_needsFillNameEmail) {
@@ -2609,7 +2609,7 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     // TODO(grv): Add verify checks.
     _GitCommitJob commitJob = new _GitCommitJob(gitOperations, _gitName, _gitEmail,
         _commitMessageElement.value, spark);
-    spark.jobManager.schedule(commitJob).then((_) {
+    return spark.jobManager.schedule(commitJob).then((_) {
       _restoreDialog();
       _hide();
     });
@@ -2655,7 +2655,7 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
     // TODO(grv): Add verify checks.
     String branchName = _selectElement.options[
         _selectElement.selectedIndex].value;
-    _progress.progressMessage = "Checking out ${branchName}...";
+    _progress.progressMessage = "Checking out ${branchName}…";
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitCheckoutCancel');
