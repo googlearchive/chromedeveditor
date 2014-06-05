@@ -29,7 +29,7 @@ class SparkPolymerUI extends SparkWidget {
   // The values are later set to their actual values in [refreshFromModel].
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
-  @observable bool showWipProjectTemplates = true;
+  @observable bool showWipProjectTemplates = false;
   @observable bool chromeOS = false;
 
   @observable bool showNoFileFilterMatches = false;
