@@ -103,7 +103,7 @@ class LaunchManager {
     List futures = [];
     List<LaunchParticipant> participants = _locateLaunchParticipants(application, target);
     participants.forEach((participant) {
-      futures.add(participant.doChecks(application, target));
+      futures.add(participant.run(application, target));
     });
     
     return Future.wait(futures).then((_) => handler.launch(application, target));
@@ -221,7 +221,7 @@ abstract class ApplicationLocator {
     }
     while (container != null) {
       if (container.getChild(pubProperties.packageSpecFileName) != null){
-       return true;
+        return true;
       }
       container = container.parent;
     }
@@ -274,7 +274,7 @@ abstract class LaunchTargetHandler {
 
 /**
  * Performs prelaunch checks, based on a type of [Application] and [LaunchTarget].
- * It is called before the [LaunchTargetHandler]. 
+ * Called before the [LaunchTargetHandler]. 
  */
 abstract class LaunchParticipant {
 
@@ -282,7 +282,7 @@ abstract class LaunchParticipant {
 
   bool canParticipate(Application application, LaunchTarget launchTarget);
 
-  Future doChecks(Application application, LaunchTarget launchTarget);
+  Future run(Application application, LaunchTarget launchTarget);
 
   String toString() => name;
 }
@@ -314,7 +314,7 @@ class WebAppLocator extends ApplicationLocator {
     if (resource is File) {
       if (resource.name.endsWith('.html') || resource.name.endsWith('.htm')) {
         return new ApplicationResult(
-            _createApplication(resource), 0.7);
+           _createApplication(resource), 0.7);
       }
     }
 
@@ -329,7 +329,7 @@ class WebAppLocator extends ApplicationLocator {
     if (_getLaunchResourceIn(parent) != null) {
       Resource r = _getLaunchResourceIn(parent);
       return new ApplicationResult(
-          _createApplication(r), 0.6);
+           _createApplication(r), 0.6);
     }
 
     // Check for a launchable file in web/.
@@ -337,7 +337,7 @@ class WebAppLocator extends ApplicationLocator {
       Resource r = _getLaunchResourceIn(resource.project.getChild('web'));
       if (r != null) {
         return new ApplicationResult(
-            _createApplication(r), 0.6);
+           _createApplication(r), 0.6);
       }
     }
 
@@ -530,14 +530,14 @@ class PubLaunchParticipant extends LaunchParticipant {
   
   bool canParticipate(Application application, LaunchTarget launchTarget) => application.isDart;
  
-  Future doChecks(Application application, LaunchTarget launchTarget) {
-     return pubManager.isPackagesInstalled(application.primaryResource.parent).then((installed) {
-       if (!installed) {
-         return notifier.showMessageAndWait('Package not installed', 
-             'Detected missing package/packages. Run Pub Get to install packages.');
-       }
-       return new Future.value();
-     });    
+  Future run(Application application, LaunchTarget launchTarget) {
+    return pubManager.isPackagesInstalled(application.primaryResource.parent).then((installed) {
+      if (!installed) {
+        return notifier.showMessageAndWait('Run', 
+          "Package/packages cannot be found. Run 'pub get' to install packages.");
+      }
+        return new Future.value();
+    });    
   }
  
 }

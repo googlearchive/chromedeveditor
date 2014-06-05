@@ -65,14 +65,14 @@ class PubManager extends PackageManager {
   //
   
   File _findPubspec(Container container) {    
-     while (container.parent != null) {
-       if (container.getChild(properties.packageSpecFileName) != null) {
-         return container.getChild(properties.packageSpecFileName);
-       }
-       container = container.parent;
-     }
-     return null;
-   }
+    while (container.parent != null) {
+      if (container.getChild(properties.packageSpecFileName) != null) {
+        return container.getChild(properties.packageSpecFileName);
+      }
+      container = container.parent;
+    }
+    return null;
+  }
 
   Future _installUpgradePackages(
       Folder container, String commandName, bool isUpgrade) {

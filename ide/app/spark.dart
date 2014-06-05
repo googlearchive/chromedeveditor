@@ -571,30 +571,28 @@ abstract class Spark
   
   Future showMessageAndWait(String title, String message) {
     if (_errorDialog == null) {
-         _errorDialog = createDialog(getDialogElement('#errorDialog'));
-         _errorDialog.getElement("[dismiss]").onClick.listen((_) {
-           _dialogWaitComplete();
-         });
-         _errorDialog.getShadowDomElement("#closingX").onClick.listen((_) {
-           _dialogWaitComplete();
-         });
-       }
-   
-       _setErrorDialogText(title, message);
-       _okCompleter = new Completer();
-       _errorDialog.show();
-       return _okCompleter.future;    
+      _errorDialog = createDialog(getDialogElement('#errorDialog'));
+      _errorDialog.getElement("[dismiss]").onClick.listen((_) {
+        _dialogWaitComplete();
+      });
+      _errorDialog.getShadowDomElement("#closingX").onClick.listen((_) {
+        _dialogWaitComplete();
+      });
+    }
+    _setErrorDialogText(title, message);
+       
+    _okCompleter = new Completer();
+    _errorDialog.show();
+    return _okCompleter.future;    
   }
 
   void _dialogWaitComplete() {
-     _hideBackdropOnClick;
+    _hideBackdropOnClick;
     if (_okCompleter != null) {
       _okCompleter.complete();
       _okCompleter = null;
     }
   }
-  
- 
   
   void unveil() {
     if (SparkFlags.developerMode) {
