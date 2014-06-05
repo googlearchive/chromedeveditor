@@ -421,19 +421,19 @@ abstract class Spark
     actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new BowerUpgradeAction(this));
     actionManager.registerAction(new ApplicationRunAction(this));
-    actionManager.registerAction(new DeployToMobileAction(this, getDialogElement('#mobileDeployDialog'), '#deployProgress'));
+    actionManager.registerAction(new DeployToMobileAction(this, getDialogElement('#mobileDeployDialog')));
     actionManager.registerAction(new CompileDartAction(this));
-    actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog"), '#gitCloneProgress'));
+    actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     if (SparkFlags.showGitPull) {
       actionManager.registerAction(new GitPullAction(this));
     }
-    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog"), '#gitBranchProgress'));
-    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog"), '#gitCheckoutProgress'));
+    actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
+    actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
     actionManager.registerAction(new GitAddAction(this));
     actionManager.registerAction(new GitResolveConflictsAction(this));
-    actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog"), '#gitCommitProgress'));
+    actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitRevertChangesAction(this));
-    actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog"), '#gitPushProgress'));
+    actionManager.registerAction(new GitPushAction(this, getDialogElement("#gitPushDialog")));
     actionManager.registerAction(new RunTestsAction(this));
     actionManager.registerAction(new SettingsAction(this, getDialogElement('#settingsDialog')));
     actionManager.registerAction(new AboutSparkAction(this, getDialogElement('#aboutDialog')));
@@ -1203,10 +1203,9 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
   SparkActionWithProgressDialog(Spark spark,
                                 String id,
                                 String name,
-                                Element dialogElement,
-                                String progressElementId)
+                                Element dialogElement)
       : super(spark, id, name, dialogElement) {
-    this._progress = getElement(progressElementId);
+    this._progress = getElement('#dialogProgress');
   }
 
   void _toggleProgressVisible(bool visible) {
@@ -2022,8 +2021,8 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
   InputElement _pushUrlElement;
   ws.Container deployContainer;
 
-  DeployToMobileAction(Spark spark, Element dialog, String progressId)
-      : super(spark, "application-push", "Deploy to Mobile", dialog, progressId) {
+  DeployToMobileAction(Spark spark, Element dialog)
+      : super(spark, "application-push", "Deploy to Mobile", dialog) {
     _pushUrlElement = _triggerOnReturn("#pushUrl");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
@@ -2243,8 +2242,8 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlElement;
 
-  GitCloneAction(Spark spark, Element dialog, String progressId)
-      : super(spark, "git-clone", "Git Clone…", dialog, progressId) {
+  GitCloneAction(Spark spark, Element dialog)
+      : super(spark, "git-clone", "Git Clone…", dialog) {
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
   }
 
@@ -2383,8 +2382,8 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
   InputElement _branchNameElement;
   SelectElement _selectElement;
 
-  GitBranchAction(Spark spark, Element dialog, String progressId)
-      : super(spark, "git-branch", "Create Branch…", dialog, progressId) {
+  GitBranchAction(Spark spark, Element dialog)
+      : super(spark, "git-branch", "Create Branch…", dialog) {
     _branchNameElement = _triggerOnReturn("#gitBranchName");
     _selectElement = getElement("#gitRemoteBranches");
   }
@@ -2478,8 +2477,8 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
   List<ws.File> addedFileList = [];
   List<String> deletedFileList = [];
 
-  GitCommitAction(Spark spark, Element dialog, String progressId)
-      : super(spark, "git-commit", "Commit Changes…", dialog, progressId) {
+  GitCommitAction(Spark spark, Element dialog)
+      : super(spark, "git-commit", "Commit Changes…", dialog) {
     _commitMessageElement = getElement("#commitMessage");
     _userNameElement = getElement('#gitName');
     _userEmailElement = getElement('#gitEmail');
@@ -2625,8 +2624,8 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
   GitScmProjectOperations gitOperations;
   SelectElement _selectElement;
 
-  GitCheckoutAction(Spark spark, Element dialog, String progressId)
-      : super(spark, "git-checkout", "Switch Branch…", dialog, progressId) {
+  GitCheckoutAction(Spark spark, Element dialog)
+      : super(spark, "git-checkout", "Switch Branch…", dialog) {
     _selectElement = getElement("#gitCheckoutBranch");
   }
 
@@ -2695,8 +2694,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   String _gitPassword;
   bool _needsUsernamePassword;
 
-  GitPushAction(Spark spark, Element dialog, String progressId)
-      : super(spark, "git-push", "Push to Origin…", dialog, progressId) {
+  GitPushAction(Spark spark, Element dialog)
+      : super(spark, "git-push", "Push to Origin…", dialog) {
     _commitsList = getElement('#gitCommitList');
   }
 
