@@ -3017,7 +3017,7 @@ class _GitCommitJob extends Job {
   Spark spark;
 
   _GitCommitJob(this.gitOperations, this._userName, this._userEmail,
-      this._commitMessage, this.spark) : super("Committing...");
+      this._commitMessage, this.spark) : super("Committing…");
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
