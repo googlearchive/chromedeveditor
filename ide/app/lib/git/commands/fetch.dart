@@ -145,7 +145,7 @@ class Fetch {
 
           String packName = 'pack-${packNameSha}';
 
-          return _createPackFiles(packName, result.data,packIdxData).then(
+          return _createPackFiles(packName, result.data, packIdxData).then(
               (objectsDir) {
             store.objectDir = objectsDir;
             PackIndex packIdx = new PackIndex(packIdxData);
