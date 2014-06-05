@@ -174,7 +174,7 @@ abstract class ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange;
 
-  Future<List<String>> getAllBranchNames();
+  Future<List<String>> getLocalBranchNames();
 
   Future createBranch(String branchName);
 
@@ -362,14 +362,17 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
-  Future<List<String>> getAllBranchNames() =>
+  Future<List<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
-  Future createBranch(String branchName) {
+  Future<Iterable<String>> getRemoteBranchNames() =>
+      objectStore.then((store) => store.getRemoteHeads());
+
+  Future createBranch(String branchName, [String remoteBranchName]) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
-      return Branch.branch(options);
+      return Branch.branch(options, remoteBranchName);
     });
   }
 
@@ -388,7 +391,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   void markResolved(Resource resource) {
-    // TODO: implement
+    // TODO(grv): Implement
     _logger.info('Implement markResolved()');
 
     // When finished, fire an SCM changed event.
@@ -452,9 +455,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future<List<CommitInfo>> getPendingCommits() {
+  Future<List<CommitInfo>> getPendingCommits(String username, String password) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(root: entry, store: store);
+      GitOptions options = new GitOptions(root: entry, store: store,
+          username: username, password: password);
       return Push.getPendingCommits(options).then((List commits) {
         return commits.map((CommitObject item) {
           CommitInfo result = new CommitInfo();

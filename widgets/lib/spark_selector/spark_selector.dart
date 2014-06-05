@@ -91,11 +91,7 @@ class SparkSelector extends SparkWidget {
 
     // TODO(terry): Should be onTap when PointerEvents are supported.
     onMouseOver.listen(mouseOverHandler);
-    // TODO(ussuri): BUG #1991. We really want onClick or onMouseUp here, but
-    // both have stopped working ca. 2014-05-20 -- Chrome & Dartium updates may
-    // have played a role, perhaps in combination with Polymer 0.10.0-pre.11.
-    // Investigate later. Baffling, but onMouseDown works.
-    onMouseDown.listen(clickHandler);
+    onClick.listen(clickHandler);
     onKeyDown.listen(keyDownHandler);
 
     // Observe external changes to the lightDOM items inserted in our <content>.
@@ -168,8 +164,8 @@ class SparkSelector extends SparkWidget {
 
   /// Extract the value for an item if [valueAttr] is set, or else its index.
   String _itemToValue(Element item) {
-      return valueAttr != null ?
-          item.attributes[valueAttr] : _items.indexOf(item).toString();
+    return valueAttr != null ?
+        item.attributes[valueAttr] : _items.indexOf(item).toString();
   }
 
   /// Events fired from <polymer-selection> object.

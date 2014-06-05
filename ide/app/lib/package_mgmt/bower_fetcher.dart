@@ -46,9 +46,9 @@ class BowerFetcher {
 
   Map<String, _Package> _allDeps = {};
 
-  List<String> _alteredDepsComments = [];
-  List<String> _unresolvedDepsComments = [];
-  List<String> _ignoredDepsComments = [];
+  final _alteredDepsComments = new Set<String>();
+  final _unresolvedDepsComments = new Set<String>();
+  final _ignoredDepsComments = new Set<String>();
 
   BowerFetcher(this._packagesDir, this._packageSpecFileName);
 
@@ -289,9 +289,11 @@ class _Resolved extends _Resolution {
 
   static const USED_AS_IS = const _Resolved._('');
   static const STAR_PATH_MAPPED = const _Resolved._(
-      'path was "*"; resolved using mappings from config files');
+      '"*" path resolved using mappings from config files');
+  static const NORMAL_PATH_OVERRIDDEN = const _Resolved._(
+      'original path overridden using mappings from config files');
   static const COMPLEX_VERSION_DEFAULTED = const _Resolved._(
-      'complex versions are not yet supported; defaulted to latest stable');
+      'unsupported version spec defaulted to latest "master"');
 }
 
 class _Unresolved extends _Resolution {
@@ -299,9 +301,9 @@ class _Unresolved extends _Resolution {
   String get enumName => '_Unresolved';
 
   static const MALFORMED_SPEC = const _Unresolved._(
-      'malformed dependency specification');
+      'unrecognized dependency specification; replace with a supported one');
   static const STAR_PATH = const _Unresolved._(
-      'replace "*" path with an explicit one in Bower format');
+      'replace "*" path with an explicit one');
   static const COMPLEX_VERSION = const _Unresolved._(
       'replace complex version with a simple one');
 }
@@ -329,7 +331,7 @@ class _Package {
   /// See http://semver.org.
   // TODO(ussuri): More precise regexp; some preliminary input from semver.org:
   // r'(\d+)\.(\d+)\.(\d+)(?:-([\dA-Za-z-]+(?:\.[\dA-Za-z-]+)*))?(?:\+[\dA-Za-z-]+)?';
-  static const _PACKAGE_BRANCH_FULL = r"'?[-\w.^=><~*]+'?";
+  static const _PACKAGE_BRANCH_FULL = r"'?[-\w.^=><~* ]+'?";
   /// Accept the full branch spec in the input, e.g.: "Polymer/polymer#master",
   /// "Polymer/polymer#^1.2.3", "Polymer/polymer#'>=1.2.3 <1.4.5'".
   /// The actually supported branch specs are determined by the code below.
@@ -359,9 +361,9 @@ class _Package {
       return;
     }
 
-    // Handle "*" in the dependency path (means "retrieve from Bower registry").
-    // TODO(ussuri): At a minumum, implement extracting package info from Bower.
     if (fullPath == '*') {
+      // Handle "*" in the dependency path (== "retrieve from Bower registry").
+      // TODO(ussuri): At a minumum, implement extracting package info from Bower.
       if (SparkFlags.bowerOverriddenDeps == null) {
         resolution = _Unresolved.STAR_PATH;
         return;
@@ -373,6 +375,15 @@ class _Package {
       }
       resolution = _Resolved.STAR_PATH_MAPPED;
       fullPath = mappedPath;
+    } else {
+      // If the path is not "*", still look if the dependency is overridden.
+      if (SparkFlags.bowerOverriddenDeps != null) {
+        final String mappedPath = SparkFlags.bowerOverriddenDeps[name];
+        if (mappedPath != null) {
+          fullPath = mappedPath;
+          resolution = _Resolved.NORMAL_PATH_OVERRIDDEN;
+        }
+      }
     }
 
     // Extract path and branch/version from fullPath.
@@ -388,13 +399,13 @@ class _Package {
     // Resolve the branch.
     if (branch == null) {
       // Default to the latest stable.
-      branch = null;
+      branch = 'master';
     } else {
       if (_PACKAGE_BRANCH_SIMPLE_REGEXP.matchAsPrefix(branch) == null) {
         // This is an extended semver version or version range.
         if (SparkFlags.bowerMapComplexVerToLatestStable) {
           resolution = _Resolved.COMPLEX_VERSION_DEFAULTED;
-          branch = null;
+          branch = 'master';
         } else {
           // TODO(ussuri): Add full support for semver versions and ranges.
           resolution = _Unresolved.COMPLEX_VERSION;
