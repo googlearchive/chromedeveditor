@@ -273,7 +273,7 @@
           </div>
         </form>
       </div>
-      <spark-progress id="deployProgress"
+      <spark-progress id="dialogProgress"
           indeterminate showProgressMessage showCancel visible="false">
       </spark-progress>
       <div id='deployCheckDeviceMessage'>
@@ -292,7 +292,7 @@
             placeholder="https://github.com/dart-lang/spark.git"
             spellcheck="false" autosave focused>
       </div>
-      <spark-progress id="cloneProgress"
+      <spark-progress id="dialogProgress"
           indeterminate showProgressMessage showCancel visible="false">
       </spark-progress>
 
@@ -332,9 +332,12 @@
           Enter a brief description of the changes.
         </span>
       </div>
+      <spark-progress id="dialogProgress"
+          indeterminate showProgressMessage showCancel visible="false">
+      </spark-progress>
 
-      <spark-dialog-button cancel>Cancel</spark-dialog-button>
-      <spark-dialog-button submit>Commit</spark-dialog-button>
+      <spark-dialog-button id="gitCommitCancel" cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="gitCommit" submit>Commit</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Branch dialog -->
@@ -347,8 +350,11 @@
         <label for="gitRemoteBranches">Choose a remote branch</label>
         <select id="gitRemoteBranches" class="form-control"></select>
       </div>
-      <spark-dialog-button cancel>Cancel</spark-dialog-button>
-      <spark-dialog-button submit>Create Branch</spark-dialog-button>
+      <spark-progress id="dialogProgress"
+          indeterminate showProgressMessage showCancel visible="false">
+      </spark-progress>
+      <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="gitBranch" submit>Create Branch</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Checkout dialog -->
@@ -359,12 +365,14 @@
             spellcheck="false" disabled>
       </div>
       <div class="form-group">
-        <label for="gitCheckout">Switch to branch</label>
-        <select id="gitCheckout" class="form-control"></select>
+        <label for="gitCheckoutBranch">Switch to branch</label>
+        <select id="gitCheckoutBranch" class="form-control"></select>
       </div>
-
-      <spark-dialog-button cancel>Cancel</spark-dialog-button>
-      <spark-dialog-button submit>Checkout</spark-dialog-button>
+      <spark-progress id="dialogProgress"
+          indeterminate showProgressMessage showCancel visible="false">
+      </spark-progress>
+      <spark-dialog-button id="gitCheckoutCancel" cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button id="gitCheckout" submit>Checkout</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Push dialog -->
@@ -372,7 +380,7 @@
       <div class="form-group">
         <div id="gitCommitList"></div>
       </div>
-      <spark-progress id="gitPushProgress"
+      <spark-progress id="dialogProgress"
           indeterminate showProgressMessage showCancel visible="false">
       </spark-progress>
 

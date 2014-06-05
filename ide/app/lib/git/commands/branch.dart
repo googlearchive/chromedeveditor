@@ -11,7 +11,6 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'fetch.dart';
 import '../exception.dart';
 import '../objectstore.dart';
-import '../exception.dart';
 import '../options.dart';
 
 /**
@@ -29,13 +28,14 @@ class Branch {
    * 6) cannot end with '.lock'.
   */
   static const BRANCH_PATTERN
-      = r"^(?!/|.*([/.]\\.|//|@\\{|\\\\))[^\\x00-\\x20 ~^:?*\\[]+$";
+      = r"^(?!build-|/|.*([/.][.]|//|@\\{|\\\\))[^\040\177 ~^:?*\\[]+$";
 
   static final branchRegex = new RegExp(BRANCH_PATTERN);
 
   static bool _verifyBranchName(String name) {
     var length = name.length;
-    return name.isNotEmpty && branchRegex.matchAsPrefix(name) != null;
+    return (name.isNotEmpty && branchRegex.matchAsPrefix(name) != null &&
+        !name.endsWith('.') && !name.endsWith('.lock') && !name.endsWith('/'));
   }
 
   /**
@@ -63,9 +63,22 @@ class Branch {
     if (remoteBranchName != null && remoteBranchName.isNotEmpty) {
       return options.store.getRemoteHeadForRef(remoteBranchName).then((sha) {
         options.depth = 1;
+        options.branchName = remoteBranchName;
         Fetch fetch = new Fetch(options);
-          return fetch.fetch().then((_) {
-            return store.createNewRef('refs/heads/' + branchName, sha);
+
+        Function createBranch = () {
+          options.branchName = branchName;
+          return store.createNewRef('refs/heads/' + branchName, sha);
+        };
+
+        return fetch.fetch().then((_) {
+          return createBranch();
+        }, onError: (GitException e) {
+          if (e is! GitException ||
+              e.errorCode != GitErrorConstants.GIT_FETCH_UP_TO_DATE) {
+            throw e;
+          }
+          return createBranch();
         });
       });
     } else {
