@@ -406,9 +406,8 @@ class AceManager {
     _setupOutline(prefs);
     _setupGotoLine();
 
-    if (SparkFlags.enableMultiSelect) {
-      _aceEditor.setOption('enableMultiselect', !enable);
-    } else {
+    _aceEditor.setOption('enableMultiselect', SparkFlags.enableMultiSelect);
+    if (!SparkFlags.enableMultiSelect) {
       // Setup ACCEL + clicking on declaration
       var node = parentElement.getElementsByClassName("ace_content")[0];
       node.onClick.listen((e) {

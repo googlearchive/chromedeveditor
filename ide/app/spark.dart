@@ -320,7 +320,7 @@ abstract class Spark
   }
 
   void initAceManager() {
-    _aceManager = new AceManager(new DivElement(), this, services, localPrefs);
+    _aceManager = new AceManager(new DivElement(), this, services, prefs);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
