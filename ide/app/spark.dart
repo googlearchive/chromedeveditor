@@ -3334,9 +3334,10 @@ class RunTestsAction extends SparkAction {
 }
 
 class WebStorePublishAction extends SparkActionWithDialog {
-  bool _initialized = false;
   static final int NEWAPP = 1;
   static final int EXISTING = 2;
+
+  bool _initialized = false;
   int _type = NEWAPP;
   InputElement _newInput;
   InputElement _existingInput;

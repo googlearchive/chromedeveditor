@@ -6,7 +6,6 @@ library git.utils;
 
 import 'dart:async';
 import 'dart:core';
-import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
