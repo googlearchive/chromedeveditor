@@ -63,9 +63,22 @@ class Branch {
     if (remoteBranchName != null && remoteBranchName.isNotEmpty) {
       return options.store.getRemoteHeadForRef(remoteBranchName).then((sha) {
         options.depth = 1;
+        options.branchName = remoteBranchName;
         Fetch fetch = new Fetch(options);
-          return fetch.fetch().then((_) {
-            return store.createNewRef('refs/heads/' + branchName, sha);
+
+        Function createBranch = () {
+          options.branchName = branchName;
+          return store.createNewRef('refs/heads/' + branchName, sha);
+        };
+
+        return fetch.fetch().then((_) {
+          return createBranch();
+        }, onError: (GitException e) {
+          if (e is! GitException ||
+              e.errorCode != GitErrorConstants.GIT_FETCH_UP_TO_DATE) {
+            throw e;
+          }
+          return createBranch();
         });
       });
     } else {

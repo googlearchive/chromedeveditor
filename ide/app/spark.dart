@@ -651,7 +651,7 @@ abstract class Spark
   Completer<bool> _okCancelCompleter;
 
   Future<bool> askUserOkCancel(String message,
-      {String okButtonLabel: 'OK', String title}) {
+      {String okButtonLabel: 'OK', String title: ""}) {
     // TODO(ussuri): Polymerize.
     if (_okCancelDialog == null) {
       _okCancelDialog = createDialog(getDialogElement('#okCancelDialog'));
@@ -737,7 +737,9 @@ abstract class Spark
   }
 
   Future _openFile(ws.Resource resource) {
-    if (currentEditedFile == resource) return new Future.value();
+    if (editorArea.selectedTab != null) {
+      if (currentEditedFile == resource) return new Future.value();
+    }
 
     if (resource is ws.File) {
       navigationManager.gotoLocation(new NavigationLocation(resource));
@@ -2706,42 +2708,46 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
 
   void _invoke([context]) {
     getElement("#gitPushClose").onClick.listen((_) => _onClose());
-    _triggerOnReturn("#gitPush", false);
     project = context.first;
 
-    gitOperations = spark.scmManager.getScmOperationsFor(project);
-    gitOperations.getPendingCommits().then((List<CommitInfo> commits) {
-      if (commits.isEmpty) {
-        spark.showErrorMessage('Push failed', 'No commits to push');
-      }
-      // Fill commits.
-      _commitsList.innerHtml = '';
-      String summaryString = commits.length == 1 ? "1 commit" : "${commits.length} commits";
-      Element title = document.createElement("h1");
-      title.appendText(summaryString);
-      _commitsList.append(title);
-      commits.forEach((CommitInfo info) {
-        CommitMessageView commitView = new CommitMessageView();
-        commitView.commitInfo = info;
-        _commitsList.children.add(commitView);
-      });
+    spark.syncPrefs.getValue("git-auth-info").then((String value) {
 
-      spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      if (value != null) {
+        Map<String,String> info = JSON.decode(value);
+        _needsUsernamePassword = false;
+        _gitUsername = info['username'];
+        _gitPassword = info['password'];
+      } else  {
         _gitUsername = null;
         _gitPassword = null;
-        if (value != null) {
-          Map<String,String> info = JSON.decode(value);
-          _needsUsernamePassword = false;
-          _gitUsername = info['username'];
-          _gitPassword = info['password'];
+        _showAuthDialog(context);
+        return;
+      }
+      gitOperations = spark.scmManager.getScmOperationsFor(project);
+      gitOperations.getPendingCommits(_gitUsername, _gitPassword).then(
+          (List<CommitInfo> commits) {
+        if (commits.isEmpty) {
+          spark.showErrorMessage('Push failed', 'No commits to push');
+          return;
         }
-        else {
-          _needsUsernamePassword = true;
-        }
-        _show();
+        // Fill commits.
+        _commitsList.innerHtml = '';
+        String summaryString =
+            commits.length == 1 ? '1 commit' : '${commits.length} commits';
+        Element title = document.createElement("h1");
+        title.appendText(summaryString);
+        _commitsList.append(title);
+        commits.forEach((CommitInfo info) {
+          CommitMessageView commitView = new CommitMessageView();
+          commitView.commitInfo = info;
+          _commitsList.children.add(commitView);
+        });
+        Timer.run(() {
+          _show();
+        });
+      }).catchError((e) {
+        spark.showErrorMessage('Push failed', 'Something went wrong.');
       });
-    }).catchError((e) {
-      spark.showErrorMessage('Push failed', 'Something went wrong.');
     });
   }
 
@@ -2780,20 +2786,21 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   }
 
   void _commit() {
-    if (_needsUsernamePassword) {
-      Timer.run(() {
-        // In a timer to let the previous dialog dismiss properly.
-        GitAuthenticationDialog.request(spark).then((info) {
-          _gitUsername = info['username'];
-          _gitPassword = info['password'];
-          _push();
-        }).catchError((_) {
-          // Cancelled authentication: do nothing.
-        });
+    _push();
+  }
+
+  /// Shows an authentification dialog. Returns false if cancelled.
+  void _showAuthDialog(context) {
+    Timer.run(() {
+      // In a timer to let the previous dialog dismiss properly.
+      GitAuthenticationDialog.request(spark).then((info) {
+        _gitUsername = info['username'];
+        _gitPassword = info['password'];
+        _invoke(context);
+      }).catchError((e) {
+        // Cancelled authentication: do nothing.
       });
-    } else {
-      _push();
-    }
+    });
   }
 
   String get category => 'git';
