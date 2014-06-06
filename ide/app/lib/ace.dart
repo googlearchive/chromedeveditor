@@ -64,6 +64,9 @@ class TextEditor extends Editor {
     if (MarkdownEditor.isMarkdownFile(file)) {
       return new MarkdownEditor._create(aceManager, file, prefs);
     }
+    if (HtmlEditor.isHtmlFile(file)) {
+      return new HtmlEditor._create(aceManager, file, prefs);
+    }
     return new TextEditor._create(aceManager, file, prefs);
   }
 
@@ -136,7 +139,8 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  Future navigateToDeclaration([Duration timeLimit]) => new Future.value();
+  Future navigateToDeclaration([Duration timeLimit]) =>
+      new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -174,6 +178,9 @@ class TextEditor extends Editor {
       return new Future.value();
     }
   }
+
+  int getCursorOffset() => _session.document.positionToIndex(
+      aceManager._aceEditor.cursorPosition);
 
   /**
    * Replace the editor's contents with the given text. Make sure that we don't
@@ -244,15 +251,15 @@ class DartEditor extends TextEditor {
   Outline get _outline => aceManager.outline;
 
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
-    int offset = _session.document.positionToIndex(
-        aceManager._aceEditor.cursorPosition);
+    int offset = getCursorOffset();
 
     Future declarationFuture = aceManager._analysisService.getDeclarationFor(
         file, offset);
 
     if (timeLimit != null) {
-      declarationFuture = declarationFuture.timeout(timeLimit, onTimeout: () =>
-          throw new TimeoutException("navigateToDeclaration timed out"));
+      declarationFuture = declarationFuture.timeout(timeLimit, onTimeout: () {
+        throw new TimeoutException("navigateToDeclaration timed out");
+      });
     }
 
     return declarationFuture.then((svc.Declaration declaration) {
@@ -290,6 +297,30 @@ class CssEditor extends TextEditor {
       dirty = true;
     }
   }
+
+  /**
+   * Handle navigating to file references in strings. So, things like the href
+   * in:
+   *
+   *     @import url("packages/bootjack/css/bootstrap.min.css");
+   */
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
+    if (file.parent == null) {
+      return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+    }
+
+    String path = _getQuotedString(_session.value, getCursorOffset());
+    if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+
+    workspace.File targetFile = _resolvePath(file, path);
+
+    if (targetFile != null) {
+      aceManager.delegate.openEditor(targetFile);
+      return new Future.value(new svc.FileDeclaration(targetFile));
+    } else {
+      return new Future.value();
+    }
+  }
 }
 
 class MarkdownEditor extends TextEditor {
@@ -318,6 +349,38 @@ class MarkdownEditor extends TextEditor {
   @override
   void reconcile() {
     _markdown.renderHtml();
+  }
+}
+
+class HtmlEditor extends TextEditor {
+  static bool isHtmlFile(workspace.File file) =>
+      file.name.endsWith('.htm') || file.name.endsWith('.html');
+
+  HtmlEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs);
+
+  /**
+   * Handle navigating to file references in strings. So, things like the href
+   * in:
+   *
+   *     <link rel="import" href="spark_polymer_ui.html">
+   */
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
+    if (file.parent == null) {
+      return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+    }
+
+    String path = _getQuotedString(_session.value, getCursorOffset());
+    if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+
+    workspace.File targetFile = _resolvePath(file, path);
+
+    if (targetFile != null) {
+      aceManager.delegate.openEditor(targetFile);
+      return new Future.value(new svc.FileDeclaration(targetFile));
+    } else {
+      return new Future.value();
+    }
   }
 }
 
@@ -925,4 +988,44 @@ String _calcMD5(String text) {
   crypto.MD5 md5 = new crypto.MD5();
   md5.add(text.codeUnits);
   return crypto.CryptoUtils.bytesToHex(md5.close());
+}
+
+/**
+ * Given some arbitrary text and an offset into it, attempt to return the
+ * parts of the offset surrounded by quotes.
+ */
+String _getQuotedString(String text, int offset) {
+  int leftSide = offset;
+
+  while (leftSide > 0) {
+    String c = text[leftSide];
+    if (c == "'" || c == '"') break;
+    if (c == '\n') return null;
+    leftSide--;
+    if (leftSide < 0) return null;
+  }
+
+  leftSide++;
+  int rightSide = offset;
+
+  while ((rightSide + 1) < text.length) {
+    String c = text[rightSide];
+    if (c == "'" || c == '"') {
+      rightSide--;
+      break;
+    }
+    if (c == '\n') break;
+    rightSide++;
+  }
+
+  return text.substring(leftSide, rightSide + 1);
+}
+
+/**
+ * Given a file and a relative path from it, resolve the target file. Can
+ * return `null`.
+ */
+workspace.File _resolvePath(workspace.File file, String path) {
+  // TODO(devoncarew): Handle `..`.
+  return file.parent.getChildPath(path);
 }
