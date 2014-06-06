@@ -34,4 +34,10 @@ class SparkDialogButton extends SparkWidget {
     // element has [overlayToggle] attribute.
     setAttr('overlayToggle', submit || dismiss || cancel);
   }
+
+  @override
+  void deliverChanges() {
+    super.deliverChanges();
+    getShadowDomElement('spark-button').setAttr('disabled', disabled);
+  }
 }
