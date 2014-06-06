@@ -5,21 +5,18 @@
 library git.commands.clone;
 
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../config.dart';
 import '../constants.dart';
 import '../exception.dart';
-import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
 import '../objectstore.dart';
 import '../object_utils.dart';
 import '../options.dart';
 import '../pack.dart';
-import '../pack_index.dart';
 import '../upload_pack_parser.dart';
 import '../utils.dart';
 import '../../utils.dart';
@@ -211,35 +208,37 @@ class Clone {
 
   Future _processClone(chrome.DirectoryEntry gitDir, GitRef localHeadRef,
       HttpFetcher fetcher) {
-    return FileOps.createFileWithContent(
-        gitDir, "HEAD", "ref: ${localHeadRef.name}\n", "Text").then((_) {
-      return FileOps.createFileWithContent(gitDir, localHeadRef.name,
-          localHeadRef.sha, "Text").then((_) {
-        return _callMethod(
-            fetcher.fetchRef,
-            [[localHeadRef.sha],
-             null,
-             null,
-             _options.depth,
-             null,
-             nopFunction,
-             nopFunction,
-             _cancel]).then((PackParseResult result) {
+    return _createHeadAndRef(gitDir, localHeadRef).then((_) {
+      return _callMethod(
+          fetcher.fetchRef,
+          [[localHeadRef.sha],
+           null,
+           null,
+           _options.depth,
+           null,
+           nopFunction,
+           nopFunction,
+           _cancel], 'create HEAD').then((PackParseResult result) {
 
-          logger.info(_stopwatch.finishCurrentTask('create HEAD'));
-          return _callMethod(Pack.createPackFiles, [store, result]).then((_) {
-            logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
+        return _callMethod(Pack.createPackFiles, [store, result],
+            'createPackFiles').then((_) {
 
-            return _createCurrentTreeFromPack(root, store, localHeadRef.sha).then((_) {
-              logger.info(_stopwatch.finishCurrentTask('createCurrentTreeFromPack'));
-
-              return _createInitialConfig(result.shallow, localHeadRef).then((_) {
-                logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
-              });
+          return _callMethod(_createCurrentTreeFromPack,
+                             [root, store, localHeadRef.sha]
+                           , 'createCurrentTreeFromPack').then((_) {
+            return _createInitialConfig(result.shallow, localHeadRef).then((_) {
             });
           });
         });
       });
+    });
+  }
+
+  Future _createHeadAndRef(chrome.DirectoryEntry gitDir, GitRef localHeadRef) {
+    return FileOps.createFileWithContent(gitDir, "HEAD",
+        "ref: ${localHeadRef.name}\n", "Text").then((_) {
+      return FileOps.createFileWithContent(gitDir, localHeadRef.name,
+          localHeadRef.sha, "Text");
     });
   }
 
@@ -248,10 +247,12 @@ class Clone {
    * On completion checks the cancel object and calls performCancel if the operation
    * is cancelled.
    */
-  Future _callMethod(Function func, List args,
-      [Map<Symbol, dynamic> namedArgs]) {
-    return Function.apply(func, args, namedArgs).then((result) {
+  Future _callMethod(Function func, List args, [String message]) {
+    return Function.apply(func, args).then((result) {
       _cancel.check();
+      if (message != null) {
+        logger.info(_stopwatch.finishCurrentTask(message));
+      }
       return result;
     });
   }
