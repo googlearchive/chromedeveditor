@@ -20,6 +20,8 @@ import 'file_operations.dart';
 import 'object.dart';
 import 'object_utils.dart';
 import 'objectstore.dart';
+import 'pack_index.dart';
+import 'upload_pack_parser.dart';
 import 'utils.dart';
 import 'zlib.dart';
 import '../utils.dart';
@@ -399,6 +401,39 @@ class Pack {
     }
 
     return resultData;
+  }
+
+  /**
+   * Create pack and packIndex file. Adds the created pack to the [store].
+   */
+  static Future<chrome.DirectoryEntry> createPackFiles(
+      ObjectStore store, PackParseResult result) {
+    List<int> packSha = result.data.sublist(result.data.length - 20);
+    Uint8List packIdxData = PackIndex.writePackIndex(result.objects, packSha);
+
+    // Get a veiw of the sorted shas.
+    int offset = 4 + 4 + (256 * 4);
+    Uint8List sortedShas = packIdxData.sublist(offset,
+        offset + result.objects.length * 20);
+
+    FastSha sha1 = new FastSha();
+    sha1.add(sortedShas);
+    String packNameSha = shaBytesToString(sha1.close());
+
+    String packName = 'pack-${packNameSha}';
+    return FileOps.createDirectoryRecursive(store.root, '.git/objects').then(
+        (chrome.DirectoryEntry objectsDir) {
+      return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
+          result.data, 'blob').then((_) {
+        return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.idx',
+            packIdxData, 'blob').then((_) {
+          store.objectDir = objectsDir;
+          PackIndex packIdx = new PackIndex(packIdxData);
+          store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));
+          return new Future.value(objectsDir);
+        });
+      });
+    });
   }
 }
 
