@@ -2,8 +2,10 @@
 
 <polymer-element name="example-ui">
   <template>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
     <style>
-      #kind {
+      :host {
         display: flex;
         flex-flow: row;
       }
@@ -27,7 +29,7 @@
         font-size: 12px;
       }
     </style>
-    <div id="kind">
+
     <template repeat="{{round in [false, true]}}">
       <span>
         <template repeat="{{active in [false, true]}}">
@@ -66,7 +68,6 @@
         </template>
       </span>
     </template>
-    </div>
   </template>
 
   <script type="application/dart;component=1" src="example_ui.dart"></script>
