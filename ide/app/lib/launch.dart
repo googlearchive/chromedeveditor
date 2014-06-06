@@ -537,7 +537,7 @@ class PubLaunchParticipant extends LaunchParticipant {
   final Notifier notifier;
 
   String _message =
-   "Make sure you downloaded pub packages. Right-click on the pubspec and use 'Pub get'";
+   "Make sure you downloaded Pub packages. Right-click on the pubspec and use 'Pub get'";
 
   PubLaunchParticipant(this.pubManager, this.notifier);
 
