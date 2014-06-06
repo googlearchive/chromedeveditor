@@ -1177,9 +1177,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     }
   }
 
-  void _onSubmit(Event e) {
-    _commit();
-  }
+  void _onSubmit(Event e) => _commit();
 
   void _commit() => _hide();
   void _cancel() => _hide();
