@@ -6,7 +6,9 @@
 
 :host {
   display: block;
-  border: 1px solid #ccc;
-  border-bottom: none;
   -webkit-user-select: none;
+}
+
+::content > * {
+  cursor: pointer;
 }

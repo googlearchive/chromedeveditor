@@ -1,0 +1,32 @@
+<link rel="import" href="packages/spark_widgets/spark_button/spark_toggle_button.html">
+<link rel="import" href="packages/spark_widgets/spark_dialog/spark_dialog.html">
+<link rel="import" href="packages/spark_widgets/spark_dialog_button/spark_dialog_button.html">
+
+<polymer-element name="example-ui">
+  <template>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
+    <style>
+      #dialog {
+        width: 400px;
+        left: 50%;
+        margin-left: -200px;
+        margin-top: 20px;
+      }
+    </style>
+
+    <spark-button id="button" primary raised on-click="{{showDialog}}">
+      Show dialog
+    </spark-button>
+
+    <spark-dialog id="dialog" title="Some Dialog" opened>
+      <label for="renameFileName">New name</label>
+      <input id="renameFileName" type="text" class="form-control">
+
+      <spark-dialog-button cancel>Cancel</spark-dialog-button>
+      <spark-dialog-button submit>Rename</spark-dialog-button>
+    </spark-dialog>
+  </template>
+
+  <script type="application/dart;component=1" src="example_ui.dart"></script>
+</polymer-element>

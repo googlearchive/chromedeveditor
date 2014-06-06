@@ -1,0 +1,24 @@
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: auto;
+}
+
+/*
+ * Globabally or selectively apply these to aid debuging.
+ */
+.debug, [debug] {
+  outline: blue solid 1px !important;
+}
+
+/*
+ * Uncomment to debug focus changes and tabIndex ordering.
+ */
+/*
+*:focus {
+  box-shadow: 0 0 10px 10px pink !important;
+}
+*/
