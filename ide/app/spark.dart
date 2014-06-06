@@ -1203,11 +1203,12 @@ abstract class SparkActionWithDialog extends SparkAction {
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
       submitBtn.onClick.listen((Event e) {
-        e..stopPropagation()..preventDefault();
-        _commit();
+        _onSubmit(e);
       });
     }
   }
+
+  void _onSubmit(Event e) => _commit();
 
   void _commit() => _hide();
   void _cancel() => _hide();
@@ -1248,6 +1249,11 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
   void _toggleProgressVisible(bool visible) {
     _progress.visible = visible;
     _progress.deliverChanges();
+  }
+
+  void _onSubmit(Event e) {
+    e..stopPropagation()..preventDefault();
+    _commit();
   }
 }
 
