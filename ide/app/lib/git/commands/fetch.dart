@@ -5,20 +5,17 @@
 library git.commands.fetch;
 
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../constants.dart';
 import '../exception.dart';
-import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
 import '../objectstore.dart';
 import '../options.dart';
 import '../pack.dart';
-import '../pack_index.dart';
 import '../upload_pack_parser.dart';
 import '../utils.dart';
 import 'status.dart';
@@ -87,23 +84,6 @@ class Fetch {
     });
   }
 
-  /**
-   * Create pack and packIndex file. Returns objects directory.
-   */
-  Future<chrome.DirectoryEntry> _createPackFiles(String packName,
-      Uint8List packData, Uint8List packIdxData) {
-    return FileOps.createDirectoryRecursive(root, '.git/objects').then(
-        (chrome.DirectoryEntry objectsDir) {
-      return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
-          packData, 'blob').then((_) {
-        return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.idx',
-            packIdxData, 'blob').then((_) {
-          return new Future.value(objectsDir);
-        });
-      });
-    });
-  }
-
   Future _createAndUpdateRef(GitRef branchRef, GitRef wantRef) {
     String path = '.git/' + REFS_REMOTE_HEADS + branchRef.name.split('/').last;
     return FileOps.createFileWithContent(root, path, branchRef.sha, "Text");
@@ -130,26 +110,7 @@ class Fetch {
             null,
             progress);
         return fetcherFuture.then((result) {
-          List<int> packSha = result.data.sublist(result.data.length - 20);
-          Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
-              packSha);
-
-          // Get a veiw of the sorted shas.
-          int offset = 4 + 4 + (256 * 4);
-          Uint8List sortedShas = packIdxData.sublist(offset,
-              offset + result.objects.length * 20);
-
-          FastSha sha1 = new FastSha();
-          sha1.add(sortedShas);
-          String packNameSha = shaBytesToString(sha1.close());
-
-          String packName = 'pack-${packNameSha}';
-
-          return _createPackFiles(packName, result.data, packIdxData).then(
-              (objectsDir) {
-            store.objectDir = objectsDir;
-            PackIndex packIdx = new PackIndex(packIdxData);
-            store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));
+          return Pack.createPackFiles(store, result).then((_) {
             return _createAndUpdateRef(branchRef, wantRef);
           });
         });
