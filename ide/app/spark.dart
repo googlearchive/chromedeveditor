@@ -1155,6 +1155,7 @@ abstract class Dialog {
   void show();
   void hide();
   SparkDialog get dialog;
+  bool activityVisible;
   Element getElement(String selectors);
   List<Element> getElements(String selectors);
   Element getShadowDomElement(String selectors);
@@ -1174,6 +1175,20 @@ abstract class SparkActionWithDialog extends SparkAction {
       submitBtn.onClick.listen((Event e) {
         e..stopPropagation()..preventDefault();
         _commit();
+      });
+    }
+    final Element cancelBtn = _dialog.getElement("[cancel]");
+    if (cancelBtn != null) {
+      cancelBtn.onClick.listen((Event e) {
+        e..stopPropagation()..preventDefault();
+        _cancel();
+      });
+    }
+    final Element closingXBtn = _dialog.getShadowDomElement("#closingX");
+    if (closingXBtn != null) {
+      closingXBtn.onClick.listen((Event e) {
+        e..stopPropagation()..preventDefault();
+        _cancel();
       });
     }
   }
@@ -1205,6 +1220,7 @@ abstract class SparkActionWithDialog extends SparkAction {
 
 abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
   SparkProgress _progress;
+  Element _progressDescriptionElement;
 
   SparkActionWithProgressDialog(Spark spark,
                                 String id,
@@ -1212,11 +1228,24 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
                                 Element dialogElement)
       : super(spark, id, name, dialogElement) {
     this._progress = getElement('#dialogProgress');
+    this._progressDescriptionElement = getElement('#progressDescription');
   }
 
   void _toggleProgressVisible(bool visible) {
-    _progress.visible = visible;
-    _progress.deliverChanges();
+    if (_progress != null) {
+      _progress.visible = visible;
+      _progress.deliverChanges();
+    } else {
+      _dialog.activityVisible = visible;
+    }
+  }
+
+  void _setProgressMessage(String description) {
+    if (_progress != null) {
+      _progress.progressMessage = description;
+    } else if (_progressDescriptionElement != null) {
+      _progressDescriptionElement.text = description;
+    }
   }
 }
 
@@ -2080,7 +2109,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
   }
 
   void _commit() {
-    _progress.progressMessage = "Deploying...";
+    _setProgressMessage("Deploying...");
     _toggleProgressVisible(true);
 
     ProgressMonitor monitor = new ProgressMonitorImpl(_progress);
@@ -2247,6 +2276,8 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
 class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlElement;
+  bool _cloning = false;
+  _GitCloneTask _cloneTask;
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
@@ -2268,27 +2299,19 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     SparkDialogButton closeButton = getElement('#cloneClose');
     closeButton.disabled = false;
     _toggleProgressVisible(false);
+    _setProgressMessage("");
   }
 
   void _commit() {
-    _progress.progressMessage = "Cloning...";
+    _setProgressMessage("Cloning...");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#cloneClose');
-    closeButton.disabled = true;
-    closeButton.deliverChanges();
 
     SparkDialogButton cloneButton = getElement('#clone');
     cloneButton.disabled = true;
     cloneButton.text = "Cloning...";
     cloneButton.deliverChanges();
-
-    _progress.onCancelled.listen((_) {
-      SparkDialogButton cloneButton = getElement('#clone');
-      cloneButton.text = "Cancelling...";
-    });
-
-    ProgressMonitor monitor = new ProgressMonitorImpl(_progress);
 
     String url = _repoUrlElement.value;
     String projectName;
@@ -2313,9 +2336,10 @@ class GitCloneAction extends SparkActionWithProgressDialog {
       projectName = projectName.substring(0, projectName.length - 4);
     }
 
-    _GitCloneTask cloneTask = new _GitCloneTask(url, projectName, spark, monitor);
+    _cloneTask = new _GitCloneTask(url, projectName, spark, null);
 
-    cloneTask.run().then((_) {
+    _cloning = true;
+    _cloneTask.run().then((_) {
       spark.showSuccessMessage('Cloned $projectName');
     }).catchError((e) {
       if (e is SparkException && e.errorCode
@@ -2335,9 +2359,17 @@ class GitCloneAction extends SparkActionWithProgressDialog {
             'Error while cloning "${projectName}":\n${e}');
       }
     }).whenComplete(() {
+      _cloning = false;
       _restoreDialog();
       _hide();
     });
+  }
+
+  void _cancel() {
+    if (_cloning) {
+      _cloneTask.cancel();
+    }
+    _hide();
   }
 }
 
@@ -2910,6 +2942,10 @@ class _GitCloneTask {
 
   _GitCloneTask(this.url, this._projectName, this.spark, this._monitor) {
     _cancel = new CloneTaskCancel(_monitor);
+  }
+
+  void cancel() {
+    _cancel.performCancel();
   }
 
   Future run() {
