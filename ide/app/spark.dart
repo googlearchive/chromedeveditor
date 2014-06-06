@@ -930,12 +930,13 @@ class ProjectLocationManager {
     }
 
     // On Chrome OS, use the sync filesystem.
-    if (PlatformInfo.isCros && _spark.workspace.syncFsIsAvailable) {
+    // TODO(grv): Enable syncfs once the api is more stable.
+    /*if (PlatformInfo.isCros && _spark.workspace.syncFsIsAvailable) {
       return chrome.syncFileSystem.requestFileSystem().then((fs) {
         var entry = fs.root;
         return new LocationResult(entry, entry, true);
       });
-    }
+    }*/
 
     // Show a dialog with explaination about what this folder is for.
     return _showRequestFileSystemDialog().then((bool accepted) {
