@@ -63,7 +63,7 @@ class Fetch {
       String headRefName = 'refs/heads/' + branchName;
       return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
         GitRef branchRef = refs.firstWhere(
-            (GitRef ref) => ref.name == headRefName);
+            (GitRef ref) => ref.name == headRefName, orElse: () => null);
 
         if (branchRef == null) {
           throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
@@ -91,13 +91,13 @@ class Fetch {
    * Create pack and packIndex file. Returns objects directory.
    */
   Future<chrome.DirectoryEntry> _createPackFiles(String packName,
-      ByteBuffer packBuffer, ByteBuffer packIdxBuffer) {
+      Uint8List packData, Uint8List packIdxData) {
     return FileOps.createDirectoryRecursive(root, '.git/objects').then(
         (chrome.DirectoryEntry objectsDir) {
       return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
-          packBuffer, 'blob').then((_) {
+          packData, 'blob').then((_) {
         return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.idx',
-            packIdxBuffer, 'blob').then((_) {
+            packIdxData, 'blob').then((_) {
           return new Future.value(objectsDir);
         });
       });
@@ -145,8 +145,8 @@ class Fetch {
 
           String packName = 'pack-${packNameSha}';
 
-          return _createPackFiles(packName, result.data.buffer,
-              packIdxData.buffer).then((objectsDir) {
+          return _createPackFiles(packName, result.data, packIdxData).then(
+              (objectsDir) {
             store.objectDir = objectsDir;
             PackIndex packIdx = new PackIndex(packIdxData);
             store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));

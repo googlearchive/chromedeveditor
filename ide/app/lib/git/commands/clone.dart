@@ -79,7 +79,10 @@ class Clone {
 
     return fetcher.isValidRepoUrl().then((isValid) {
       if (isValid) {
-        return startClone(fetcher);
+        return startClone(fetcher).catchError((e) {
+          _cleanup();
+          throw e;
+        });
       } else if (!_options.repoUrl.endsWith('.git')) {
         _options.repoUrl += '.git';
         return _clone();
@@ -130,23 +133,23 @@ class Clone {
 
             logger.info(_stopwatch.finishCurrentTask('_writeRefs'));
 
-            return _callMethod(_processClone, [gitDir, localHeadRef, fetcher])
-                .catchError((e) {
-              // Clean-up git directory and then re-throw error.
-              _options.root.getDirectory(".git").then(
-                  (chrome.DirectoryEntry gitDir) => gitDir.removeRecursively())
-                  .catchError((_));
-              throw e;
-            });
+            return _callMethod(_processClone, [gitDir, localHeadRef, fetcher]);
           });
-        }, onError: (e) {
-          // Clean-up git directory and then re-throw error.
-          _options.root.getDirectory(".git").then((chrome.DirectoryEntry gitDir)
-              => gitDir.removeRecursively()).catchError((_));
-          throw e;
         }).whenComplete(() {
           logger.info(_stopwatch.finishProfiler());
         });
+      });
+    });
+  }
+
+  Future _cleanup() {
+    return FileOps.listFiles(_options.root).then((entries) {
+      return Future.forEach(entries, (chrome.Entry entry) {
+        if (entry.isDirectory) {
+          return (entry as chrome.DirectoryEntry).removeRecursively();
+        } else {
+          return entry.remove();
+        }
       });
     });
   }

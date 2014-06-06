@@ -5,14 +5,15 @@
 @import url("../common/spark_widget.css");
 
 :host {
-  display: inline-block;
+  display: flex;
+  align-items: center;
   border: none;
   background: transparent;
-  text-align: center;
   text-transform: uppercase;
   border-radius: 2px;
   -webkit-user-select: none;
   cursor: pointer;
+  fill-opacity: 0.7;
 }
 
 :host([round]) {
@@ -23,6 +24,8 @@
       :active,
       [active]) {
   background: #e4e4e4;
+  fill: #000;
+  fill-opacity: 1;
 }
 
 :host([raised]) {
@@ -42,13 +45,13 @@
 
 :host([primary][raised]) {
   color: #fff;
+  fill: #fff;
   background: rgb(66, 128, 244);
 }
 
 :host([primary][raised]:hover,
       [primary][raised]:active,
       [primary][raised][active]) {
-  color: #fff;
   background: rgb(51, 103, 214);
 }
 
