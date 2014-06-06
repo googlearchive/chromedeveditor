@@ -417,7 +417,7 @@ class AceManager {
     }
   }
 
-  void setupOutline(SparkPreferences prefs) {
+  void setupOutline(html.Element parentElement) {
     outline = new Outline(_analysisService, parentElement, _prefs.prefStore);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
