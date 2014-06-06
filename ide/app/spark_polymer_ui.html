@@ -342,12 +342,11 @@
 
     <!-- Git Branch dialog -->
     <spark-dialog id="gitBranchDialog" title="Create Branch">
-      <label for="gitBranchName">New branch name</label>
+      <label for="gitBranchName">Create a new branch</label>
       <input id="gitBranchName" type="text" class="form-control"
           pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
-      <span class="help-block">Create a new git branch.</span>
       <div class="form-group">
-        <label for="gitRemoteBranches">Choose a remote branch</label>
+        <label for="gitRemoteBranches">Checkout a remote branch</label>
         <select id="gitRemoteBranches" class="form-control"></select>
       </div>
       <spark-progress id="dialogProgress"
