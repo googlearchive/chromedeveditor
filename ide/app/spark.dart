@@ -567,8 +567,8 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
-  Completer _okCompleter;
-  
+  Completer<bool> _okCompleter;
+
   Future showMessageAndWait(String title, String message) {
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -580,20 +580,20 @@ abstract class Spark
       });
     }
     _setErrorDialogText(title, message);
-       
+
     _okCompleter = new Completer();
     _errorDialog.show();
-    return _okCompleter.future;    
+    return _okCompleter.future;
   }
 
   void _dialogWaitComplete() {
-    _hideBackdropOnClick;
+    _hideBackdropOnClick();
     if (_okCompleter != null) {
-      _okCompleter.complete();
+      _okCompleter.complete(true);
       _okCompleter = null;
     }
   }
-  
+
   void unveil() {
     if (SparkFlags.developerMode) {
       RunTestsAction action = actionManager.getAction('run-tests');
@@ -628,10 +628,10 @@ abstract class Spark
     _errorDialog.show();
   }
 
-  void _setErrorDialogText(String title, String message) {    
+  void _setErrorDialogText(String title, String message) {
     // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
     _errorDialog.dialog.setAttr('title', true, title);
-    
+
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     var lines = message.split('\n');
@@ -642,7 +642,7 @@ abstract class Spark
     }
   }
 
-  void _hideBackdropOnClick(MouseEvent event) {
+  void _hideBackdropOnClick([MouseEvent event]) {
     querySelector("#modalBackdrop").style.display = "none";
   }
 

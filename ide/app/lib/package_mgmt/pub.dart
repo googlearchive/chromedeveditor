@@ -20,6 +20,16 @@ import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
 
+File findPubspec(Folder container) {
+  while (container.parent != null) {
+    if (container.getChild(pubProperties.packageSpecFileName) != null) {
+      return container.getChild(pubProperties.packageSpecFileName);
+    }
+    container = container.parent;
+  }
+  return null;
+}
+
 class PubManager extends PackageManager {
   PubManager(Workspace workspace) : super(workspace);
 
@@ -38,10 +48,11 @@ class PubManager extends PackageManager {
 
   Future upgradePackages(Folder container) =>
       _installUpgradePackages(container, 'upgrade', true);
-  
-  Future<bool> isPackagesInstalled(Folder container) {
-    File pubspecFile = _findPubspec(container);
+
+  Future isPackagesInstalled(Folder container) {
+    File pubspecFile = findPubspec(container);
     if (pubspecFile is File) {
+      container = pubspecFile.parent;
       return pubspecFile.getContents().then((String str) {
         try {
           _PubSpecInfo info = new _PubSpecInfo.parse(str);
@@ -49,7 +60,7 @@ class PubManager extends PackageManager {
             Resource dependency =
                  container.getChildPath('${properties.packagesDirName}/${dep}');
             if (dependency is! Folder) {
-              return false;
+              return dep;
             }
           }
         } on Exception catch (e) {
@@ -57,22 +68,14 @@ class PubManager extends PackageManager {
         }
       });
     }
-    return new Future.value(true);
+    return new Future.value();
   }
 
   //
   // - end PackageManager abstract interface.
   //
-  
-  File _findPubspec(Container container) {    
-    while (container.parent != null) {
-      if (container.getChild(properties.packageSpecFileName) != null) {
-        return container.getChild(properties.packageSpecFileName);
-      }
-      container = container.parent;
-    }
-    return null;
-  }
+
+
 
   Future _installUpgradePackages(
       Folder container, String commandName, bool isUpgrade) {
