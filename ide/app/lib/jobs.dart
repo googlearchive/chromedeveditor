@@ -309,10 +309,12 @@ class _ProgressMonitorImpl extends ProgressMonitor {
   ProgressMonitor _monitor;
 
   TaskCancel(this._monitor) {
-    _monitor.onCancel.listen((_) {
-      _cancelled = true;
-      performCancel();
-    });
+    if (_monitor != null) {
+      _monitor.onCancel.listen((_) {
+        _cancelled = true;
+        performCancel();
+      });
+    }
   }
 
   void performCancel();

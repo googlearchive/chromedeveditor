@@ -54,6 +54,18 @@
   fill-opacity: 1;
 }
 
+#progress {
+  background-image: url("progress.gif");
+  background-position: center;
+  background-repeat: no-repeat;
+  width: 32px;
+  height: 32px;
+}
+
+#progress.hidden {
+  display: none;
+}
+
 /* TODO(ussuri): Replace all these with dedicated Spark widgets. */
 
 ::content .form-control {
