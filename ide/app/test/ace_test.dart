@@ -14,7 +14,7 @@ import '../lib/ace.dart';
 import '../lib/navigation.dart';
 import '../lib/outline.dart';
 import '../lib/workspace.dart' as workspace;
-import '../lib/ui/polymer/goto_line_view/goto_line_view.dart';
+import '../lib/ui/goto_line_view/goto_line_view.dart';
 import '../lib/preferences.dart';
 
 defineTests() {

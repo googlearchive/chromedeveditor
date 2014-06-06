@@ -15,7 +15,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:crypto/crypto.dart' show CryptoUtils;
 import 'package:mime/mime.dart' as mime;
 
-import '../utils/html_utils.dart';
+import '../html_utils.dart';
 import '../../editors.dart';
 import '../../workspace.dart';
 

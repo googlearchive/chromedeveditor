@@ -30,7 +30,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
-import 'ui/polymer/goto_line_view/goto_line_view.dart';
+import 'ui/goto_line_view/goto_line_view.dart';
 import 'utils.dart';
 
 export 'package:ace/ace.dart' show EditSession;

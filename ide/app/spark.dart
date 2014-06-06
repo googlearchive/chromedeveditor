@@ -43,7 +43,7 @@ import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
 import 'lib/ui/files_controller.dart';
-import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
+import 'lib/ui/commit_message_view/commit_message_view.dart';
 import 'lib/utils.dart' as utils;
 import 'lib/webstore_client.dart';
 import 'lib/workspace.dart' as ws;
