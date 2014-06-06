@@ -104,6 +104,7 @@ class MockAceEditor implements TextEditor {
   void select(Span span) { }
   void format() { }
   Future navigateToDeclaration([Duration timeLimit]) => null;
+  int getCursorOffset() => 0;
 }
 
 class MockEditSession implements EditSession {

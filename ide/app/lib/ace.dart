@@ -299,8 +299,7 @@ class CssEditor extends TextEditor {
   }
 
   /**
-   * Handle navigating to file references in strings. So, things like the href
-   * in:
+   * Handle navigating to file references in strings. So, things like:
    *
    *     @import url("packages/bootjack/css/bootstrap.min.css");
    */
