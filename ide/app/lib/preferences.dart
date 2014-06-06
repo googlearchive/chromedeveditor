@@ -34,7 +34,8 @@ PreferenceStore syncStore = new _ChromePreferenceStore(
  * Preferences specific to Spark.
  */
 class SparkPreferences {
-  PreferenceStore prefStore;
+  final PreferenceStore prefStore;
+
   Future onPreferencesReady;
 
   // [CachedPreference] subclass instance for each preference:
