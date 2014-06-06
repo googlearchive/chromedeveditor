@@ -96,7 +96,7 @@ class Clone {
    * Public for testing purpose.
    */
   Future startClone(HttpFetcher fetcher) {
-    return _checkDirectory(_options.root, _options.store, true).then((_) {
+    return _checkDirectory(root, store, true).then((_) {
       return _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
         return _callMethod(fetcher.fetchUploadRefs,[]).then((List<GitRef> refs) {
@@ -209,58 +209,32 @@ class Clone {
     return _options.store.writeConfig();
   }
 
-  Future _createPackFiles(chrome.DirectoryEntry objectsDir, String packName,
-      Uint8List packData, Uint8List packIdxData) {
-    return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
-        packData, "blob").then((_) {
-          return FileOps.createFileWithContent(objectsDir,
-              'pack/${packName}.idx', packIdxData, "blob");
-        });
-  }
-
   Future _processClone(chrome.DirectoryEntry gitDir, GitRef localHeadRef,
       HttpFetcher fetcher) {
-    return FileOps.createFileWithContent(gitDir, "HEAD",
-        "ref: ${localHeadRef.name}\n", "Text").then((_) {
+    return FileOps.createFileWithContent(
+        gitDir, "HEAD", "ref: ${localHeadRef.name}\n", "Text").then((_) {
       return FileOps.createFileWithContent(gitDir, localHeadRef.name,
           localHeadRef.sha, "Text").then((_) {
-        return _callMethod(fetcher.fetchRef, [[localHeadRef.sha], null, null,
-            _options.depth, null, nopFunction, nopFunction, _cancel]).then(
-            (PackParseResult result) {
-          Uint8List packData = result.data;
-          List<int> packSha = packData.sublist(packData.length - 20);
-          Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
-              packSha);
-          // get a view of the sorted shas.
-          int offset = 4 + 4 + (256 * 4);
-          Uint8List sortedShas = packIdxData.sublist(offset,
-              offset + result.objects.length * 20);
-          FastSha sha1 = new FastSha();
-          sha1.add(sortedShas);
-          String packNameSha = shaBytesToString(sha1.close());
-
-          String packName = 'pack-${packNameSha}';
+        return _callMethod(
+            fetcher.fetchRef,
+            [[localHeadRef.sha],
+             null,
+             null,
+             _options.depth,
+             null,
+             nopFunction,
+             nopFunction,
+             _cancel]).then((PackParseResult result) {
 
           logger.info(_stopwatch.finishCurrentTask('create HEAD'));
+          return _callMethod(Pack.createPackFiles, [store, result]).then((_) {
+            logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
 
-          return gitDir.createDirectory('objects').then(
-              (chrome.DirectoryEntry objectsDir) {
-            return _callMethod(_createPackFiles, [objectsDir, packName, packData,
-                packIdxData]).then((_) {
-              logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
-              PackIndex packIdx = new PackIndex(packIdxData);
-              Pack pack = new Pack(packData, _options.store);
-              _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
-              // TODO(grv): Add progress
-              return _createCurrentTreeFromPack(_options.root, _options.store,
-                  localHeadRef.sha).then((_) {
-                logger.info(_stopwatch.finishCurrentTask(
-                    'createCurrentTreeFromPack'));
-                return _createInitialConfig(result.shallow, localHeadRef)
-                    .then((_) {
-                  logger.info(_stopwatch.finishCurrentTask(
-                      'createInitialConfig'));
-                });
+            return _createCurrentTreeFromPack(root, store, localHeadRef.sha).then((_) {
+              logger.info(_stopwatch.finishCurrentTask('createCurrentTreeFromPack'));
+
+              return _createInitialConfig(result.shallow, localHeadRef).then((_) {
+                logger.info(_stopwatch.finishCurrentTask('createInitialConfig'));
               });
             });
           });
