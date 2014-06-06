@@ -199,7 +199,10 @@ class Pack {
     // This has a very significant impact on performance.
     int end =  uncompressedLength + objOffset + 1000;
     if (end > data.length) end = data.length;
-    return Zlib.inflate(data.sublist(objOffset, end), expectedLength: uncompressedLength);
+    return Zlib.inflate(
+        data,
+        offset: objOffset,
+        expectedLength: uncompressedLength);
   }
 
 
