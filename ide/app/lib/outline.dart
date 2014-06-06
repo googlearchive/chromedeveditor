@@ -198,7 +198,7 @@ class Outline {
   void _scrollIntoViewIfNeeded(
       html.Element element, html.ScrollAlignment alignment) {
     html.Rectangle rootListRect = _rootListDiv.getBoundingClientRect();
-    if (!_rootListRect.containsRectangle(element.getBoundingClientRect())) {
+    if (!rootListRect.containsRectangle(element.getBoundingClientRect())) {
       element.scrollIntoView(alignment);
     }
   }
