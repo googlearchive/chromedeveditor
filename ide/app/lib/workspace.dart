@@ -260,7 +260,7 @@ class Workspace extends Container {
         }).whenComplete(() {
           _logger.info('Workspace restore took ${stopwatch.elapsedMilliseconds}ms.');
           resumeResourceEvents();
-          // Disable syncfs projects on non-chromeos.
+          // Disable syncfs projects.
           // TODO(grv): Re-anable it once the syncfs api is more stable.
           //_restoreSyncFs();
         }).then((_) => _whenAvailable.complete(this));
