@@ -30,7 +30,7 @@ class Zlib {
     return new ZlibResult(bytes, stream.position);
   }
 
-  /**
+ /**
   * Deflates a byte stream.
   */
   static ZlibResult deflate(List<int> data) {
