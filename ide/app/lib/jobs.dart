@@ -27,12 +27,14 @@ class JobManager {
    * Will schedule a [job] after all other queued jobs. If no [Job] is currently
    * waiting, [job] will run.
    */
-  void schedule(Job job) {
+  Future schedule(Job job) {
+    Completer completer = job.completer;
     _waitingJobs.add(job);
 
     if (!isJobRunning) {
       _scheduleNextJob();
     }
+    return completer.future;
   }
 
   /**
@@ -63,6 +65,7 @@ class JobManager {
         _logger.severe("${_runningJob} errored", e, st);
       }).whenComplete(() {
         _jobFinished(_runningJob);
+        _runningJob.done();
         _runningJob = null;
         _scheduleNextJob();
       });
@@ -121,7 +124,25 @@ class JobManagerEvent {
 abstract class Job {
   final String name;
 
-  Job(this.name);
+  Completer _completer;
+
+  Completer get completer => _completer;
+
+  Future get future => _completer.future;
+
+  Job(this.name, [Completer completer]) {
+    if (completer != null) {
+      _completer = completer;
+    } else {
+      _completer = new Completer();
+    }
+  }
+
+  void done() {
+    if (_completer != null && !_completer.isCompleted) {
+      _completer.complete();
+    }
+  }
 
   /**
    * Run this job. The job can optionally provide progress through the given
@@ -137,9 +158,8 @@ abstract class Job {
  * A simple [Job]. It finishes when the given [Completer] completes.
  */
 class ProgressJob extends Job {
-  Completer _completer;
 
-  ProgressJob(String name, this._completer) : super(name);
+  ProgressJob(String name, Completer completer) : super(name, completer);
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name);

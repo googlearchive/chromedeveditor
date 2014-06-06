@@ -332,6 +332,7 @@ class AceManager {
    */
   final html.Element parentElement;
   final AceManagerDelegate delegate;
+  final SparkPreferences _prefs;
 
   Outline outline;
 
@@ -355,7 +356,7 @@ class AceManager {
   AceManager(this.parentElement,
              this.delegate,
              svc.Services services,
-             PreferenceStore prefs) {
+             this._prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
@@ -370,7 +371,6 @@ class AceManager {
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
     _aceEditor.setOption('enableSnippets', true);
-    _aceEditor.setOption('enableMultiselect', false);
 
     // Override Ace's `gotoline` command.
     var command = new ace.Command(
@@ -404,19 +404,21 @@ class AceManager {
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
 
-    _setupOutline(prefs);
     _setupGotoLine();
 
-    var node = parentElement.getElementsByClassName("ace_content")[0];
-    node.onClick.listen((e) {
-      bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
-      if (accelKey) _onGotoDeclarationController.add(null);
-    });
+    _aceEditor.setOption('enableMultiselect', SparkFlags.enableMultiSelect);
+    if (!SparkFlags.enableMultiSelect) {
+      // Setup ACCEL + clicking on declaration
+      var node = parentElement.getElementsByClassName("ace_content")[0];
+      node.onClick.listen((e) {
+        bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
+        if (accelKey) _onGotoDeclarationController.add(null);
+      });
+    }
   }
 
-  void _setupOutline(PreferenceStore prefs) {
-    outline = new Outline(_analysisService, parentElement, prefs);
-
+  void setupOutline(html.Element parentElement) {
+    outline = new Outline(_analysisService, parentElement, _prefs.prefStore);
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);

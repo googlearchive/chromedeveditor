@@ -92,6 +92,7 @@ class NavigationManager {
         _locations.add(previousLocation);
       }
     }
+
     _position++;
     _locations.add(newLocation);
 
