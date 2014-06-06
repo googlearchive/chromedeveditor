@@ -42,6 +42,10 @@ class BowerManager extends PackageManager {
 
   Future upgradePackages(Folder container) =>
       _installOrUpgradePackages(container.project, FetchMode.UPGRADE);
+  
+  // TODO(keertip): implement for bower
+  Future isPackagesInstalled(Folder container) => new Future.value(true);
+  
 
   //
   // - end PackageManager abstract interface.

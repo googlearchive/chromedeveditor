@@ -568,6 +568,33 @@ abstract class Spark
     showErrorMessage(title, message);
   }
 
+  Completer<bool> _okCompleter;
+
+  Future showMessageAndWait(String title, String message) {
+    if (_errorDialog == null) {
+      _errorDialog = createDialog(getDialogElement('#errorDialog'));
+      _errorDialog.getElement("#errorClose").onClick.listen((_) {
+        _dialogWaitComplete();
+      });
+      _errorDialog.getShadowDomElement("#closingX").onClick.listen((_) {
+        _dialogWaitComplete();
+      });
+    }
+    _setErrorDialogText(title, message);
+
+    _okCompleter = new Completer();
+    _errorDialog.show();
+    return _okCompleter.future;
+  }
+
+  void _dialogWaitComplete() {
+    _hideBackdropOnClick();
+    if (_okCompleter != null) {
+      _okCompleter.complete(true);
+      _okCompleter = null;
+    }
+  }
+
   void unveil() {
     if (SparkFlags.developerMode) {
       RunTestsAction action = actionManager.getAction('run-tests');
@@ -597,6 +624,12 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
+    _setErrorDialogText(title, message);
+
+    _errorDialog.show();
+  }
+
+  void _setErrorDialogText(String title, String message) {
     // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
     _errorDialog.dialog.setAttr('title', true, title);
 
@@ -608,11 +641,9 @@ abstract class Spark
       lineElement.text = line;
       container.children.add(lineElement);
     }
-
-    _errorDialog.show();
   }
 
-  void _hideBackdropOnClick(MouseEvent event) {
+  void _hideBackdropOnClick([MouseEvent event]) {
     querySelector("#modalBackdrop").style.display = "none";
   }
 
@@ -1173,8 +1204,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
       submitBtn.onClick.listen((Event e) {
-        e..stopPropagation()..preventDefault();
-        _commit();
+        _onSubmit(e);
       });
     }
     final Element cancelBtn = _dialog.getElement("[cancel]");
@@ -1192,6 +1222,8 @@ abstract class SparkActionWithDialog extends SparkAction {
       });
     }
   }
+
+  void _onSubmit(Event e) => _commit();
 
   void _commit() => _hide();
   void _cancel() => _hide();
@@ -1246,6 +1278,11 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
     } else if (_progressDescriptionElement != null) {
       _progressDescriptionElement.text = description;
     }
+  }
+
+  void _onSubmit(Event e) {
+    e..stopPropagation()..preventDefault();
+    _commit();
   }
 }
 

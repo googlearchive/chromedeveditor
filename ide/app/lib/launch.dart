@@ -21,6 +21,7 @@ import 'developer_private.dart';
 import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
+import 'package_mgmt/pub.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
@@ -59,6 +60,7 @@ class LaunchManager {
 
   List<ApplicationLocator> applicationLocators = [];
   List<LaunchTargetHandler> launchTargetHandlers = [];
+  List<LaunchParticipant> launchParticipants = [];
 
   LaunchManager(this.workspace, this._services, this._pubManager,
       this._bowerManager, this._notifier) {
@@ -71,6 +73,7 @@ class LaunchManager {
     launchTargetHandlers.add(new WebAppLocalLaunchHandler(
         workspace, _services, _pubManager, _bowerManager, _notifier));
     // TODO: add WebAppRemoteLaunchHandler
+    launchParticipants.add(new PubLaunchParticipant(_pubManager, _notifier));
   }
 
   /**
@@ -97,7 +100,32 @@ class LaunchManager {
     LaunchTargetHandler handler = _locateLaunchHandler(application, target);
     if (handler == null) return new Future.value();
 
-    return handler.launch(application, target);
+    List futures = [];
+    List<LaunchParticipant> participants =
+                              _locateLaunchParticipants(application, target);
+    participants.forEach((participant) {
+      futures.add(participant.run(application, target));
+    });
+
+    return Future.wait(futures).then((List<bool> results) {
+      if (results.any((result) => result == false)) {
+        return new Future.value();
+      }
+      // all checks passed, continue launch
+      return handler.launch(application, target);
+    });
+  }
+
+  List<LaunchParticipant> _locateLaunchParticipants(
+                                Application application, LaunchTarget target) {
+
+    List<LaunchParticipant> participants = [];
+    launchParticipants.forEach((launchParticipant) {
+      if (launchParticipant.canParticipate(application, target)) {
+        participants.add(launchParticipant);
+      }
+    });
+    return participants;
   }
 
   // This statefulness is for use by Bower, and will go away at some point.
@@ -164,6 +192,30 @@ class ApplicationType extends Enum<String> {
 }
 
 /**
+  * How certain we are that the application found is the correct one to launch.
+  * `0.0` means not at all certain. `1.0` means absolutely certain. As an
+  * example of affinities, a resource that is contained inside a chrome app
+  * will return an affinity of `0.7` for launching that chrome app. An html
+  * resource in the same app will return an affinity of `0.5` for launching a
+  * web app. This ensures that the chrome app is choosen by the framework as
+  * the app to launch.
+  */
+class Affinity extends Enum<num> {
+  static const VERY_CERTAIN = const Affinity._(1.0);
+  static const NOT_AT_ALL_CERTAIN = const Affinity._(0);
+  static const ALMOST_CERTAIN = const Affinity._(0.8);
+  static const KIND_OF_CERTAIN = const Affinity._(0.7);
+  static const MAYBE = const Affinity._(0.6);
+  static const ON_THE_FENCE = const Affinity._(0.5);
+
+  const Affinity._(num val) : super(val);
+
+  int compareTo(Affinity other) => value.compareTo(other.value);
+
+  String get enumName => 'Affinity';
+}
+
+/**
  * An instance of an ApplicationType.
  */
 class Application {
@@ -192,6 +244,12 @@ class Application {
  */
 abstract class ApplicationLocator {
   ApplicationResult locateAssociatedApplication(Resource resource);
+
+  bool _isDartApp(Resource resource) {
+    Container container = resource is Container ? resource : resource.parent;
+    bool result = findPubspec(container) != null ? true : false;
+    return result;
+  }
 }
 
 /**
@@ -202,17 +260,7 @@ class ApplicationResult implements Comparable {
    * The application that was located.
    */
   final Application application;
-
-  /**
-   * How certain we are that the application found is the correct one to launch.
-   * `0.0` means not at all certain. `1.0` means absolutely certain. As an
-   * example of affinities, a resource that is contained inside a chrome app
-   * will return an affinity of `0.7` for launching that chrome app. An html
-   * resource in the same app will return an affinity of `0.5` for launching a
-   * web app. This ensures that the chrome app is choosen by the framework as
-   * the app to launch.
-   */
-  final num affinity;
+  final Affinity affinity;
 
   ApplicationResult(this.application, this.affinity);
 
@@ -237,6 +285,23 @@ abstract class LaunchTargetHandler {
   String toString() => name;
 }
 
+/**
+ * Performs prelaunch checks, based on a type of [Application] and [LaunchTarget].
+ * Called before the [LaunchTargetHandler].
+ */
+abstract class LaunchParticipant {
+  String get name;
+
+  bool canParticipate(Application application, LaunchTarget launchTarget);
+
+  /**
+   * Participants can cancel launch by returning false
+   */
+  Future<bool> run(Application application, LaunchTarget launchTarget);
+
+  String toString() => name;
+}
+
 class ChromeAppLocator extends ApplicationLocator {
 
   @override
@@ -244,8 +309,12 @@ class ChromeAppLocator extends ApplicationLocator {
     Container container = getAppContainerFor(resource);
     if (container == null) return null;
 
-    return new ApplicationResult(
-        new Application(container, ApplicationType.CHROME_APP), 0.8);
+    Application application = new Application(container, ApplicationType.CHROME_APP);
+    if (_isDartApp(container)) {
+      application.setProperty('dart', 'true');
+    }
+
+    return new ApplicationResult(application, Affinity.ALMOST_CERTAIN);
   }
 }
 
@@ -258,7 +327,7 @@ class WebAppLocator extends ApplicationLocator {
     if (resource is File) {
       if (resource.name.endsWith('.html') || resource.name.endsWith('.htm')) {
         return new ApplicationResult(
-            new Application(resource, ApplicationType.WEB_APP), 0.7);
+           _createApplication(resource), Affinity.KIND_OF_CERTAIN);
       }
     }
 
@@ -273,7 +342,7 @@ class WebAppLocator extends ApplicationLocator {
     if (_getLaunchResourceIn(parent) != null) {
       Resource r = _getLaunchResourceIn(parent);
       return new ApplicationResult(
-          new Application(r, ApplicationType.WEB_APP), 0.6);
+           _createApplication(r), Affinity.MAYBE);
     }
 
     // Check for a launchable file in web/.
@@ -281,11 +350,19 @@ class WebAppLocator extends ApplicationLocator {
       Resource r = _getLaunchResourceIn(resource.project.getChild('web'));
       if (r != null) {
         return new ApplicationResult(
-            new Application(r, ApplicationType.WEB_APP), 0.6);
+           _createApplication(r), Affinity.MAYBE);
       }
     }
 
     return null;
+  }
+
+  Application _createApplication(Resource resource) {
+    Application application = new Application(resource, ApplicationType.WEB_APP);
+    if (_isDartApp(resource)) {
+      application.setProperty('dart', 'true');
+    }
+    return application;
   }
 
   Resource _getLaunchResourceIn(Container container) {
@@ -448,6 +525,36 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
     if (_server != null) {
       _server.dispose();
     }
+  }
+}
+
+/**
+ * A launch pariticipant that works on dart apps, checks to see if all the specified
+ * packages are installed, if not either run pub get or continue launch.
+ */
+class PubLaunchParticipant extends LaunchParticipant {
+  final PackageManager pubManager;
+  final Notifier notifier;
+
+  String _message =
+   "Make sure you downloaded Pub packages. Right-click on the pubspec and use 'Pub get'";
+
+  PubLaunchParticipant(this.pubManager, this.notifier);
+
+  String get name => 'Pub';
+
+  bool canParticipate(Application application, LaunchTarget launchTarget)
+       => application.isDart;
+
+  Future<bool> run(Application application, LaunchTarget launchTarget) {
+    return pubManager.isPackagesInstalled(application.primaryResource.parent)
+      .then((installed) {
+        if (installed is String) {
+          return notifier.showMessageAndWait(
+            'Run',"'${installed}' package is missing in the project. ${_message}");
+        }
+        return new Future.value(true);
+      });
   }
 }
 

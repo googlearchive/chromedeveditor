@@ -1,13 +1,12 @@
-<!doctype html>
-
 <link rel="import" href="packages/spark_widgets/spark_icon/spark_icon.html">
+
 <polymer-element name="example-ui">
   <template>
-    <!-- TODO: not able to use relative location -->
-    <spark-icon src="../assets/add.png" size="32"></spark-icon>
-    <spark-icon src="../assets/add.png" size="24"></spark-icon>
-    <spark-icon src="../assets/add.png" size="14"></spark-icon>
-    <spark-icon src="../assets/add.png" size="4"></spark-icon>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
+    <template repeat="{{size in ['4', '14', '24', '32', '34']}}">
+      <spark-icon src="../resources/add.png" size="{{size}}"></spark-icon>
+    </template>
   </template>
 
   <script type="application/dart;component=1" src="example_ui.dart"></script>

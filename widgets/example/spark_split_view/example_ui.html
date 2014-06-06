@@ -1,30 +1,55 @@
-<!doctype html>
-
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 
 <polymer-element name="example-ui">
   <template>
-    <spark-split-view direction="left" style="width:400px; height:200px">
-      <div style="background-color:lightblue; width:200px">left (resize)</div>
-      <div style="background-color:lightgreen">right (flex)</div>
-    </spark-split-view>
+    <link rel="stylesheet" href="../common/example_ui.css">
 
-    <spark-split-view direction="right" style="width:400px; height:200px">
-      <div style="background-color:lightblue">left (flex)</div>
-      <div style="background-color:lightgreen; width:200px">right (resize)</div>
-    </spark-split-view>
+    <style>
+      spark-split-view {
+        margin: 20px;
+        border: 1px solid black;
+      }
 
-    <br><br>
+      [beforeSplit] {
+        background-color: lightblue;
+      }
 
-    <div style="display:flex; flex-flow:row">
-      <spark-split-view direction="up" style="width:200px; height:400px">
-        <div style="background-color:orange; height:200px">top (resize)</div>
-        <div style="background-color:yellow">bottom (flex)</div>
+      [afterSplit] {
+        background-color: lightgreen;
+      }
+
+      [direction=left], [direction=right] {
+        width: 400px;
+        height:200px;
+      }
+
+      [direction=up], [direction=down] {
+        width: 200px;
+        height:400px;
+      }
+    </style>
+
+    <div class="col-flex">
+      <spark-split-view direction="left">
+        <div beforeSplit>left (resize)</div>
+        <div afterSplit>right (flex)</div>
       </spark-split-view>
 
-      <spark-split-view direction="down" style="width:200px; height:400px">
-        <div style="background-color:orange">top (flex)</div>
-        <div style="background-color:yellow; height:200px">bottom (resize)</div>
+      <spark-split-view direction="right">
+        <div beforeSplit>left (flex)</div>
+        <div afterSplit>right (resize)</div>
+      </spark-split-view>
+    </div>
+
+    <div class="row-flex">
+      <spark-split-view direction="up">
+        <div beforeSplit>top (resize)</div>
+        <div afterSplit>bottom (flex)</div>
+      </spark-split-view>
+
+      <spark-split-view direction="down">
+        <div beforeSplit>top (flex)</div>
+        <div afterSplit>bottom (resize)</div>
       </spark-split-view>
     </div>
   </template>

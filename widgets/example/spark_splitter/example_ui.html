@@ -1,33 +1,64 @@
-<!doctype html>
-
 <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
+
 <polymer-element name="example-ui">
   <template>
-    <div style="display:flex; width:400px; height:200px">
-      <div style="width:200px; background-color:lightblue">left (resize target)</div>
-      <spark-splitter direction="left"></spark-splitter>
-      <div style="background-color:lightgreen; flex:1">right</div>
-    </div>
+    <link rel="stylesheet" href="../common/example_ui.css">
 
-    <div style="display:flex; width:400px; height:200px">
-      <div style="background-color:lightblue; flex:1">left</div>
-      <spark-splitter direction="right"></spark-splitter>
-      <div style="width:200px; background-color:lightgreen">right (resize target)</div>
-    </div>
+    <style>
+      .cont {
+        margin: 20px;
+        border: 1px solid black;
+      }
 
-    <br><br>
+      .row-flex.cont {
+        width: 400px;
+        height: 200px;
+      }
 
-    <div style="display:flex; flex-flow:row">
-      <div style="display:flex; flex-flow:column; width:200px; height:400px">
-        <div style="height:200px; background-color:orange">top (resize target)</div>
-        <spark-splitter direction="up"></spark-splitter>
-        <div style="background-color:yellow; flex:1">bottom</div>
+      .col-flex.cont {
+        width: 200px;
+        height: 400px;
+      }
+
+      .resize.box {
+        width: 200px;
+        height: 200px;
+        background-color: lightgreen;
+      }
+
+      .flex.box {
+        flex: 1;
+        width: 100%;
+        height: 100%;
+        background-color: lightblue;
+      }
+    </style>
+
+    <div class="col-flex">
+      <div class="row-flex cont">
+        <div class="resize box">left (resize)</div>
+        <spark-splitter handle direction="left"></spark-splitter>
+        <div class="flex box">right (flex)</div>
       </div>
 
-      <div style="display:flex; flex-flow:column; width:200px; height:400px">
-        <div style="background-color:orange; flex:1">top</div>
-        <spark-splitter direction="down"></spark-splitter>
-        <div style="height:200px; background-color:yellow">bottom (resize target)</div>
+      <div class="row-flex cont">
+        <div class="flex box">left (flex)</div>
+        <spark-splitter handle direction="right"></spark-splitter>
+        <div class="resize box">right (resize)</div>
+      </div>
+    </div>
+
+    <div class="row-flex">
+      <div class="col-flex cont">
+        <div class="resize box">top (resize)</div>
+        <spark-splitter handle direction="up"></spark-splitter>
+        <div class="flex box">bottom (flex)</div>
+      </div>
+
+      <div class="col-flex cont">
+        <div class="flex box">top (flex)</div>
+        <spark-splitter handle direction="down"></spark-splitter>
+        <div class="resize box">bottom (resize)</div>
       </div>
     </div>
   </template>
