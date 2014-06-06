@@ -5,21 +5,18 @@
 library git.commands.clone;
 
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../config.dart';
 import '../constants.dart';
 import '../exception.dart';
-import '../fast_sha.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
 import '../objectstore.dart';
 import '../object_utils.dart';
 import '../options.dart';
 import '../pack.dart';
-import '../pack_index.dart';
 import '../upload_pack_parser.dart';
 import '../utils.dart';
 import '../../utils.dart';
@@ -96,7 +93,7 @@ class Clone {
    * Public for testing purpose.
    */
   Future startClone(HttpFetcher fetcher) {
-    return _checkDirectory(_options.root, _options.store, true).then((_) {
+    return _checkDirectory(root, store, true).then((_) {
       return _options.root.createDirectory(".git").then(
           (chrome.DirectoryEntry gitDir) {
         return _callMethod(fetcher.fetchUploadRefs,[]).then((List<GitRef> refs) {
@@ -209,63 +206,39 @@ class Clone {
     return _options.store.writeConfig();
   }
 
-  Future _createPackFiles(chrome.DirectoryEntry objectsDir, String packName,
-      Uint8List packData, Uint8List packIdxData) {
-    return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
-        packData, "blob").then((_) {
-          return FileOps.createFileWithContent(objectsDir,
-              'pack/${packName}.idx', packIdxData, "blob");
-        });
-  }
-
   Future _processClone(chrome.DirectoryEntry gitDir, GitRef localHeadRef,
       HttpFetcher fetcher) {
-    return FileOps.createFileWithContent(gitDir, "HEAD",
-        "ref: ${localHeadRef.name}\n", "Text").then((_) {
-      return FileOps.createFileWithContent(gitDir, localHeadRef.name,
-          localHeadRef.sha, "Text").then((_) {
-        return _callMethod(fetcher.fetchRef, [[localHeadRef.sha], null, null,
-            _options.depth, null, nopFunction, nopFunction, _cancel]).then(
-            (PackParseResult result) {
-          Uint8List packData = result.data;
-          List<int> packSha = packData.sublist(packData.length - 20);
-          Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
-              packSha);
-          // get a view of the sorted shas.
-          int offset = 4 + 4 + (256 * 4);
-          Uint8List sortedShas = packIdxData.sublist(offset,
-              offset + result.objects.length * 20);
-          FastSha sha1 = new FastSha();
-          sha1.add(sortedShas);
-          String packNameSha = shaBytesToString(sha1.close());
+    return _createHeadAndRef(gitDir, localHeadRef).then((_) {
+      return _callMethod(
+          fetcher.fetchRef,
+          [[localHeadRef.sha],
+           null,
+           null,
+           _options.depth,
+           null,
+           nopFunction,
+           nopFunction,
+           _cancel], 'create HEAD').then((PackParseResult result) {
 
-          String packName = 'pack-${packNameSha}';
+        return _callMethod(Pack.createPackFiles, [store, result],
+            'createPackFiles').then((_) {
 
-          logger.info(_stopwatch.finishCurrentTask('create HEAD'));
-
-          return gitDir.createDirectory('objects').then(
-              (chrome.DirectoryEntry objectsDir) {
-            return _callMethod(_createPackFiles, [objectsDir, packName, packData,
-                packIdxData]).then((_) {
-              logger.info(_stopwatch.finishCurrentTask('createPackFiles'));
-              PackIndex packIdx = new PackIndex(packIdxData);
-              Pack pack = new Pack(packData, _options.store);
-              _options.store.loadWith(objectsDir, [new PackEntry(pack, packIdx)]);
-              // TODO(grv): Add progress
-              return _createCurrentTreeFromPack(_options.root, _options.store,
-                  localHeadRef.sha).then((_) {
-                logger.info(_stopwatch.finishCurrentTask(
-                    'createCurrentTreeFromPack'));
-                return _createInitialConfig(result.shallow, localHeadRef)
-                    .then((_) {
-                  logger.info(_stopwatch.finishCurrentTask(
-                      'createInitialConfig'));
-                });
-              });
+          return _callMethod(_createCurrentTreeFromPack,
+                             [root, store, localHeadRef.sha]
+                           , 'createCurrentTreeFromPack').then((_) {
+            return _createInitialConfig(result.shallow, localHeadRef).then((_) {
             });
           });
         });
       });
+    });
+  }
+
+  Future _createHeadAndRef(chrome.DirectoryEntry gitDir, GitRef localHeadRef) {
+    return FileOps.createFileWithContent(gitDir, "HEAD",
+        "ref: ${localHeadRef.name}\n", "Text").then((_) {
+      return FileOps.createFileWithContent(gitDir, localHeadRef.name,
+          localHeadRef.sha, "Text");
     });
   }
 
@@ -274,10 +247,12 @@ class Clone {
    * On completion checks the cancel object and calls performCancel if the operation
    * is cancelled.
    */
-  Future _callMethod(Function func, List args,
-      [Map<Symbol, dynamic> namedArgs]) {
-    return Function.apply(func, args, namedArgs).then((result) {
+  Future _callMethod(Function func, List args, [String message]) {
+    return Function.apply(func, args).then((result) {
       _cancel.check();
+      if (message != null) {
+        logger.info(_stopwatch.finishCurrentTask(message));
+      }
       return result;
     });
   }
