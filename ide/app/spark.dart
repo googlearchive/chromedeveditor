@@ -1204,7 +1204,8 @@ abstract class SparkActionWithDialog extends SparkAction {
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
       submitBtn.onClick.listen((Event e) {
-        _onSubmit(e);
+        e..stopPropagation()..preventDefault();
+        _commit(e);
       });
     }
     final Element cancelBtn = _dialog.getElement("[cancel]");
@@ -1222,8 +1223,6 @@ abstract class SparkActionWithDialog extends SparkAction {
       });
     }
   }
-
-  void _onSubmit(Event e) => _commit();
 
   void _commit() => _hide();
   void _cancel() => _hide();
@@ -1279,11 +1278,6 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
       _progressDescriptionElement.text = description;
     }
   }
-
-  void _onSubmit(Event e) {
-    e..stopPropagation()..preventDefault();
-    _commit();
-  }
 }
 
 class FileOpenAction extends SparkAction {
@@ -1315,6 +1309,8 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
+    super._commit();
+
     var name = _nameElement.value;
     if (name.isNotEmpty) {
       if (folder != null) {
@@ -1497,6 +1493,8 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
+    super._commit();
+
     if (_nameElement.value.isNotEmpty) {
       resource.rename(_nameElement.value).then((value) {
         spark._renameOpenEditor(resource);
@@ -1851,6 +1849,8 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
   }
 
   void _commit() {
+    super._commit();
+
     final String name = _nameElement.value;
     if (name.isNotEmpty) {
       folder.createNewFolder(name).then((folder) {
@@ -1999,6 +1999,8 @@ class NewProjectAction extends SparkActionWithDialog {
   }
 
   void _commit() {
+    super._commit();
+
     final name = _nameElt.value.trim();
 
     if (name.isEmpty) return;
@@ -2246,8 +2248,6 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
-
-  void _commit() => _hide();
 
   Future _buildProperties() {
     _addProperty(_propertiesElement, 'Name', _selectedResource.name);
@@ -3324,8 +3324,6 @@ class AboutSparkAction extends SparkActionWithDialog {
 
     _show();
   }
-
-  void _commit() => _hide();
 }
 
 // TODO(ussuri): Polymerize.
@@ -3362,8 +3360,6 @@ class SettingsAction extends SparkActionWithDialog {
       });
     });
   }
-
-  void _commit() => _hide();
 
   Future _showRootDirectory() {
     return spark.localPrefs.getValue('projectFolder').then((folderToken) {
@@ -3454,6 +3450,8 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _commit() {
+    super._commit();
+
     String appID = null;
     if (_existingInput.checked) {
       appID = _appIdInput.value;
@@ -3531,6 +3529,8 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   }
 
   void _commit() {
+    super._commit();
+
     final String username = (getElement('#gitUsername') as InputElement).value;
     final String password = (getElement('#gitPassword') as InputElement).value;
     final String encoded =
