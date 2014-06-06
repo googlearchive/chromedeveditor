@@ -35,6 +35,8 @@ class Outline {
 
   StreamController<OutlineItem> _childSelectedController = new StreamController();
 
+  int _lastScrolledCenterIndex = -1;
+
   Outline(this._analyzer, this._container, this._prefs) {
     _outlineDiv = html.querySelector('#outlineContainer');
     _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
@@ -170,24 +172,34 @@ class Outline {
 
   void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
     List<html.Node> outlineElements =
-        _outlineDiv.getElementsByClassName("outlineItem");
+        _rootList.getElementsByClassName("outlineItem");
+    if (outlineElements.isEmpty) return;
 
-    if (outlineElements.length > 0) {
-      int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
-      int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+    int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
+    int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
+    int centerItemIndex = (firstItemIndex + lastItemIndex) ~/ 2;
 
-      html.Element firstElement = outlineElements[firstItemIndex];
+    if (centerItemIndex > _lastScrolledCenterIndex) {
+      // Scrolling down: give priority to the last item.
+      _scrollIntoViewIfNeeded(
+          outlineElements[lastItemIndex], html.ScrollAlignment.BOTTOM);
+    } else if (centerItemIndex < _lastScrolledCenterIndex) {
+      // Scrolling up: give priority to the first item.
+      _scrollIntoViewIfNeeded(
+          outlineElements[firstItemIndex], html.ScrollAlignment.TOP);
+    } else {
+      // Scrolled too little so far: do nothing.
+      return;
+    }
 
-      num bottomOffset;
-      if (outlineElements.length > lastItemIndex + 1) {
-        html.Element element = outlineElements[lastItemIndex + 1];
-        bottomOffset = element.offsetTop;
-      } else {
-        html.Element lastElement = outlineElements[lastItemIndex];
-        bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;
-      }
+    _lastScrolledCenterIndex = centerItemIndex;
+  }
 
-      _scrollIntoView(firstElement.offsetTop, bottomOffset);
+  void _scrollIntoViewIfNeeded(
+      html.Element element, html.ScrollAlignment alignment) {
+    html.Rectangle rootListRect = _rootListDiv.getBoundingClientRect();
+    if (!_rootListRect.containsRectangle(element.getBoundingClientRect())) {
+      element.scrollIntoView(alignment);
     }
   }
 
@@ -197,7 +209,7 @@ class Outline {
       List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
       int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;
 
-      // Finds the last outline item that *doesn't* satisfies this:
+      // Finds the last outline item that *doesn't* satisfy this:
       for (int outlineOffset in outlineOffsets) {
         if (outlineOffset > codeOffset) break;
         containerOffset = returnCodeOffset ? outlineOffset : count;
@@ -210,9 +222,10 @@ class Outline {
   }
 
   OutlineItem _itemAtCodeOffset(int codeOffset) {
-    int itemIndex = _itemIndexAtCodeOffset(codeOffset, returnCodeOffset: true);
-    if (itemIndex != null) {
-      return _outlineItemsByOffset[itemIndex];
+    int itemCodeOffset =
+        _itemIndexAtCodeOffset(codeOffset, returnCodeOffset: true);
+    if (itemCodeOffset != null) {
+      return _outlineItemsByOffset[itemCodeOffset];
     }
     return null;
   }
