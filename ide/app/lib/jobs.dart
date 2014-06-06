@@ -65,7 +65,7 @@ class JobManager {
         _logger.severe("${_runningJob} errored", e, st);
       }).whenComplete(() {
         _jobFinished(_runningJob);
-        _runningJob.done();
+        if (_runningJob != null) _runningJob.done();
         _runningJob = null;
         _scheduleNextJob();
       });
