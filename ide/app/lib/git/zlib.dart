@@ -4,12 +4,10 @@
 
 library git.zlib;
 
-import 'dart:js' as js;
-
-import 'package:chrome/src/common_exp.dart' as chrome;
+import 'package:archive/archive.dart' as archive;
 
 /**
- * Encapsulates the result returned by js zlib library.
+ * The zlib result.
  */
 class ZlibResult {
   final List<int> data;
@@ -19,40 +17,25 @@ class ZlibResult {
 }
 
 /**
- * Dart port of the javascript zlib library.
+ * Zlib inflate and deflate.
  */
 class Zlib {
-  static js.JsObject _zlib = js.context['Zlib'];
-
   /**
    * Inflates a zlib deflated byte stream.
    */
-  static ZlibResult inflate(List<int> data, {int expectedLength}) {
-    Map<String, int> options = {};
-    if (expectedLength != null) {
-      options['bufferSize'] = expectedLength;
-    }
-    js.JsObject inflater = new js.JsObject(_zlib['Inflate'], [_listToJs(data), options]);
-    inflater['verify'] = true;
-    var buffer = inflater.callMethod('decompress');
-    return new ZlibResult(new chrome.ArrayBuffer.fromProxy(buffer).getBytes(),
-        inflater['ip']);
-
-//    archive.InputStream stream = new archive.InputStream(data);
-//    archive.Inflate inflater = new archive.Inflate.buffer(stream); //, expectedLength);
-//
-//    return new ZlibResult(inflater.getBytes(), stream.position);
+  static ZlibResult inflate(List<int> data, {int offset: 0, int expectedLength}) {
+    archive.InputStream stream = new archive.InputStream(data, start: offset);
+    archive.ZLibDecoder decoder = new archive.ZLibDecoder();
+    List<int> bytes = decoder.decodeBuffer(stream, verify: false);
+    return new ZlibResult(bytes, stream.position);
   }
 
-  /**
-   * Deflates a byte stream.
-   */
+ /**
+  * Deflates a byte stream.
+  */
   static ZlibResult deflate(List<int> data) {
-    js.JsObject deflater = new js.JsObject(_zlib['Deflate'], [_listToJs(data)]);
-    // TODO: This should be a JsObject, but Dartium returns an Uint8List.
-    var buffer = deflater.callMethod('compress');
-    return new ZlibResult(chrome.ArrayBuffer.create(buffer).getBytes());
+    archive.ZLibEncoder zlibEncoder = new archive.ZLibEncoder();
+    List<int> resultBytes = zlibEncoder.encode(data);
+    return new ZlibResult(resultBytes, resultBytes.length);
   }
-
-  static dynamic _listToJs(List<int> data) => new js.JsArray.from(data);
 }

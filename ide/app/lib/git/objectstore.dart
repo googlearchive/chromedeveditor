@@ -238,14 +238,13 @@ class ObjectStore {
   }
 
   Future<GitObject> retrieveRawObject(dynamic sha, String dataType) {
-    Uint8List shaBytes;
-    if (sha is Uint8List) {
+    List<int> shaBytes;
+    if (sha is String) {
+      shaBytes = shaToBytes(sha);
+    } else {
       shaBytes = sha;
       sha = shaBytesToString(shaBytes);
-    } else {
-      shaBytes = shaToBytes(sha);
     }
-
     return this._findLooseObject(sha).then((chrome.ChromeFileEntry entry) {
       return entry.readBytes().then((chrome.ArrayBuffer buffer) {
         chrome.ArrayBuffer inflated = new chrome.ArrayBuffer.fromBytes(
@@ -267,8 +266,8 @@ class ObjectStore {
         return obj.pack.matchAndExpandObjectAtOffset(obj.offset, dataType).then(
             (PackedObject packed) {
           if (dataType == 'Text') {
-            return FileOps.readBlob(new Blob([packed.data]), 'Text').then(
-                (String data) {
+            return FileOps.readBlob(new Blob([new Uint8List.fromList(packed.data)]),
+                'Text').then((String data) {
               packed.data = data;
               return packed;
             });
@@ -638,7 +637,7 @@ class ObjectStore {
     treeEntries.forEach((TreeEntry tree) {
       blobParts.add((tree.isBlob ? '100644 ' : '40000 ') + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
-      blobParts.add(tree.shaBytes);
+      blobParts.add(new Uint8List.fromList(tree.shaBytes));
     });
 
     return writeRawObject(ObjectTypes.TREE_STR, new Blob(blobParts));
