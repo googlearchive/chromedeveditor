@@ -35,6 +35,7 @@ class SparkDialogButton extends SparkWidget {
     setAttr('overlayToggle', submit || dismiss || cancel);
   }
 
+  // TODO(ussuri): BUG #2252
   @override
   void deliverChanges() {
     super.deliverChanges();
