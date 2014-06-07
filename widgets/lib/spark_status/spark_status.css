@@ -13,6 +13,7 @@
 #status-container {
   background-color: rgba(66, 129, 244, 0.9);
   border-radius: 22px;
+  opacity: 0;
   padding: 10px 20px;
   pointer-events: none;
 }
@@ -44,8 +45,8 @@
   padding-left: 0;
 }
 
-#status-container.hidden {
-  opacity: 0;
+#status-container.showing {
+  opacity: 1;
 }
 
 #spinner {
