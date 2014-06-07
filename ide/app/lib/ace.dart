@@ -209,7 +209,7 @@ class TextEditor extends Editor {
 class DartEditor extends TextEditor {
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
-  int outlineScrollPosition = 0;
+  OffsetRange outlineScrollPosition = new OffsetRange();
 
   DartEditor._create(AceManager aceManager, workspace.File file,
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
@@ -235,7 +235,7 @@ class DartEditor extends TextEditor {
   }
 
   void reconcile() {
-    int pos = _outline.scrollPosition;
+    OffsetRange pos = _outline.scrollPosition;
     _outline.build(file.name, _session.value).then((_) {
       _outline.scrollPosition = pos;
     });
@@ -715,7 +715,8 @@ class AceManager {
           int lastCursorOffset = currentSession.document.positionToIndex(
               new ace.Point(_aceEditor.lastVisibleRow, 0));
 
-          outline.scrollToOffsets(firstCursorOffset, lastCursorOffset);
+          outline.scrollOffsetRangeIntoView(
+              new OffsetRange(firstCursorOffset, lastCursorOffset));
         }
       }));
     }
