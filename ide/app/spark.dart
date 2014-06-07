@@ -1206,7 +1206,7 @@ abstract class SparkActionWithDialog extends SparkAction {
     if (submitBtn != null) {
       submitBtn.onClick.listen((Event e) {
         e..stopPropagation()..preventDefault();
-        _commit(e);
+        _commit();
       });
     }
     final Element cancelBtn = _dialog.getElement("[cancel]");
