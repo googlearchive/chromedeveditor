@@ -20,7 +20,7 @@ import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
 
-File findPubspec(Folder container) {
+File findPubspec(Container container) {
   while (container.parent != null) {
     if (container.getChild(pubProperties.packageSpecFileName) != null) {
       return container.getChild(pubProperties.packageSpecFileName);
