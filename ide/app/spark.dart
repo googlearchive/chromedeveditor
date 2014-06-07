@@ -630,8 +630,7 @@ abstract class Spark
   }
 
   void _setErrorDialogText(String title, String message) {
-    // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
-    _errorDialog.dialog.setAttr('title', true, title);
+    _errorDialog.dialog.title = title;
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
@@ -703,8 +702,7 @@ abstract class Spark
       });
     }
 
-    // TODO(ussuri): Replace with ...title = title once BUG #2252 is resolved.
-    _okCancelDialog.dialog.setAttr('title', true, title);
+    _okCancelDialog.dialog.title = title;
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
