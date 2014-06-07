@@ -140,10 +140,10 @@ class Outline {
   }
 
   OutlineTopLevelVariable _addVariable(services.OutlineTopLevelVariable data) =>
-      _addItem(new OutlineTopLevelVariable(data));
+      _addItem(new OutlineTopLevelVariable(data, _outlineItems));
 
   OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
-      _addItem(new OutlineTopLevelFunction(data));
+      _addItem(new OutlineTopLevelFunction(data, _outlineItems));
 
   OutlineClass _addClass(services.OutlineClass data) {
     OutlineClass classItem = new OutlineClass(data, _outlineItems);
@@ -226,7 +226,7 @@ abstract class OutlineItem {
   html.SpanElement _typeSpan;
   OffsetRange _offsetRange;
 
-  OutlineItem(this._data, String cssClassName) {
+  OutlineItem(this._data, String cssClassName, List<OutlineItem> outlineItems) {
     _offsetRange = new OffsetRange(_data.bodyStartOffset, _data.bodyEndOffset);
 
     _element = new html.LIElement();
@@ -243,6 +243,8 @@ abstract class OutlineItem {
     }
 
     _element.classes.add("outlineItem ${cssClassName}");
+
+    outlineItems.add(this);
   }
 
   String get displayName => _data.name;
@@ -266,21 +268,25 @@ abstract class OutlineItem {
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
-  OutlineTopLevelItem(services.OutlineTopLevelEntry data, String cssClassName)
-      : super(data, "topLevel $cssClassName");
+  OutlineTopLevelItem(services.OutlineTopLevelEntry data,
+                      String cssClassName,
+                      List<OutlineItem> outlineItems)
+      : super(data, "topLevel $cssClassName", outlineItems);
 }
 
 class OutlineTopLevelVariable extends OutlineTopLevelItem {
-  OutlineTopLevelVariable(services.OutlineTopLevelVariable data)
-      : super(data, "variable");
+  OutlineTopLevelVariable(services.OutlineTopLevelVariable data,
+                          List<OutlineItem> outlineItems)
+      : super(data, "variable", outlineItems);
 
   services.OutlineTopLevelVariable get _variableData => _data;
   String get returnType => _variableData.returnType;
 }
 
 class OutlineTopLevelFunction extends OutlineTopLevelItem {
-  OutlineTopLevelFunction(services.OutlineTopLevelFunction data)
-      : super(data, "function");
+  OutlineTopLevelFunction(services.OutlineTopLevelFunction data,
+                          List<OutlineItem> outlineItems)
+      : super(data, "function", outlineItems);
 
   services.OutlineTopLevelFunction get _functionData => _data;
   String get returnType => _functionData.returnType;
@@ -292,12 +298,11 @@ class OutlineClass extends OutlineTopLevelItem {
   List<OutlineClassMember> members = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
-  List<OutlineItem> _outlineItems;
 
-  OutlineClass(services.OutlineClass data, this._outlineItems)
-      : super(data, "class") {
+  OutlineClass(services.OutlineClass data, List<OutlineItem> outlineItems)
+      : super(data, "class", outlineItems) {
     _element.append(_childrenRootElement);
-    _populate(data);
+    _populate(data, outlineItems);
   }
 
   OutlineClassMember _addItem(OutlineClassMember item) {
@@ -307,57 +312,67 @@ class OutlineClass extends OutlineTopLevelItem {
     return item;
   }
 
-  void _populate(services.OutlineClass classData) {
+  void _populate(services.OutlineClass classData,
+                 List<OutlineItem> outlineItems) {
     for (services.OutlineEntry data in classData.members) {
-      OutlineItem item = _createMember(data);
-      _outlineItems.add(item);
+      _createMember(data, outlineItems);
     }
   }
 
-  OutlineItem _createMember(services.OutlineEntry data) {
+  OutlineItem _createMember(services.OutlineEntry data,
+                            List<OutlineItem> outlineItems) {
     if (data is services.OutlineMethod) {
-      return addMethod(data);
+      return addMethod(data, outlineItems);
     } else if (data is services.OutlineProperty) {
-      return addProperty(data);
+      return addProperty(data, outlineItems);
     } else if (data is services.OutlineAccessor) {
-      return addAccessor(data);
+      return addAccessor(data, outlineItems);
     } else {
       throw new UnimplementedError("Unknown type");
     }
   }
 
-  OutlineMethod addMethod(services.OutlineMethod data) =>
-      _addItem(new OutlineMethod(data));
+  OutlineMethod addMethod(services.OutlineMethod data,
+                          List<OutlineItem> outlineItems) =>
+      _addItem(new OutlineMethod(data, outlineItems));
 
-  OutlineProperty addProperty(services.OutlineProperty data) =>
-      _addItem(new OutlineProperty(data));
+  OutlineProperty addProperty(services.OutlineProperty data,
+                              List<OutlineItem> outlineItems) =>
+      _addItem(new OutlineProperty(data, outlineItems));
 
-  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
-      _addItem(new OutlineAccessor(data));
+  OutlineAccessor addAccessor(services.OutlineAccessor data,
+                              List<OutlineItem> outlineItems) =>
+      _addItem(new OutlineAccessor(data, outlineItems));
 }
 
 abstract class OutlineClassMember extends OutlineItem {
-  OutlineClassMember(services.OutlineMember data, String cssClassName)
-      : super(data, cssClassName);
+  OutlineClassMember(services.OutlineMember data,
+                     String cssClassName,
+                     List<OutlineItem> outlineItems)
+      : super(data, cssClassName, outlineItems);
 }
 
 class OutlineMethod extends OutlineClassMember {
-  OutlineMethod(services.OutlineMethod data) : super(data, "method");
+  OutlineMethod(services.OutlineMethod data, List<OutlineItem> outlineItems)
+      : super(data, "method", outlineItems);
 
   services.OutlineMethod get _methodData => _data;
   String get returnType => _methodData.returnType;
 }
 
 class OutlineProperty extends OutlineClassMember {
-  OutlineProperty(services.OutlineProperty data) : super(data, "property");
+  OutlineProperty(services.OutlineProperty data, List<OutlineItem> outlineItems)
+      : super(data, "property", outlineItems);
 
   services.OutlineProperty get _propertyData => _data;
   String get returnType => _propertyData.returnType;
 }
 
 class OutlineAccessor extends OutlineClassMember {
-  OutlineAccessor(services.OutlineAccessor data)
-      : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
+  OutlineAccessor(services.OutlineAccessor data, List<OutlineItem> outlineItems)
+      : super(data,
+              "accessor ${data.setter ? 'setter' : 'getter'}",
+              outlineItems);
 
   services.OutlineAccessor get _accessorData => _data;
 
