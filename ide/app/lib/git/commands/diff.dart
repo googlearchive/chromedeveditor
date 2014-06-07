@@ -13,13 +13,14 @@ class DiffEntryType {
 }
 
 class DiffEntry {
-  TreeEntry oldEntry;
-  TreeEntry newEntry;
+  final TreeEntry oldEntry;
+  final TreeEntry newEntry;
+  final String type;
   String path;
 
   // String representation of the diff between the two versions of file.
   String diff;
-  String type;
+
   DiffEntry(this.oldEntry, this.newEntry, this.type,  [String path, this.diff]) {
     if (path == null) {
       path = oldEntry == null ? newEntry.name : oldEntry.name;
@@ -37,7 +38,8 @@ class TreeDiffResult {
   List<DiffEntry> getModifiedEntries() => _getEntriesForType(DiffEntryType.MODIFIED);
 
   List<DiffEntry> _getEntriesForType(String type)
-   => diffEntries.where((diffEntry) => diffEntry.type == type).toList();
+      => diffEntries.where((diffEntry) => diffEntry.type == type).toList();
+
   TreeDiffResult addEntry(DiffEntry diffEntry) {
     diffEntries.add(diffEntry);
     return this;
