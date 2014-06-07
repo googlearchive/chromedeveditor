@@ -96,7 +96,7 @@ class TextEditor extends Editor {
   html.Element get element => aceManager.parentElement;
 
   void activate() {
-    aceManager.outline.visible = supportsOutline;
+    _outline.visible = supportsOutline;
     aceManager._aceEditor.readOnly = readOnly;
   }
 
@@ -105,7 +105,9 @@ class TextEditor extends Editor {
    */
   void reconcile() { }
 
-  void deactivate() { }
+  void deactivate() {
+    if (supportsOutline && _outline.visible) _outline.visible = false;
+  }
 
   void resize() => aceManager.resize();
 
@@ -204,6 +206,8 @@ class TextEditor extends Editor {
   void _invokeReconcile() {
     reconcile();
   }
+
+  Outline get _outline => aceManager.outline;
 }
 
 class DartEditor extends TextEditor {
@@ -240,8 +244,6 @@ class DartEditor extends TextEditor {
       _outline.scrollPosition = pos;
     });
   }
-
-  Outline get _outline => aceManager.outline;
 
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
     int offset = _session.document.positionToIndex(
@@ -419,6 +421,7 @@ class AceManager {
 
   void setupOutline(html.Element parentElement) {
     outline = new Outline(_analysisService, parentElement, _prefs.prefStore);
+    outline.visible = false;
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);
