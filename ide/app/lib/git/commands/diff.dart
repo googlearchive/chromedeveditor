@@ -4,24 +4,7 @@
 
 library git.commands.diff;
 
-import 'dart:async';
-import 'dart:typed_data';
-
-import '../diff3.dart';
 import '../object.dart';
-import '../object_utils.dart';
-import '../objectstore.dart';
-import '../utils.dart';
-
-class MergeItem {
-  TreeEntry ours;
-  TreeEntry base;
-  TreeEntry theirs;
-  String conflictText;
-  bool isConflict;
-
-  MergeItem(this.ours, this.base, this.theirs, [this.isConflict = false]);
-}
 
 class DiffEntryType {
   static const String ADDED = "ADDED";
@@ -37,7 +20,13 @@ class DiffEntry {
   // String representation of the diff between the two versions of file.
   String diff;
   String type;
-  DiffEntry(this.oldEntry, this.newEntry, this.type,  [this.path, this.diff]);
+  DiffEntry(this.oldEntry, this.newEntry, this.type,  [String path, this.diff]) {
+    if (path == null) {
+      path = oldEntry == null ? newEntry.name : oldEntry.name;
+    } else {
+      this.path = path;
+    }
+  }
 }
 
 class TreeDiffResult {
@@ -57,19 +46,10 @@ class TreeDiffResult {
 
 /**
  * Implements tree diffs.
+ *
+ * TODO(grv): add unittests.
  */
 class Diff {
-
-  static bool shasEqual(List<int> sha1, List<int> sha2) {
-    for (var i = 0; i < sha1.length; ++i) {
-      if (sha1[i] != sha2[i]) return false;
-    }
-    return true;
-  }
-
-  static dynamic _diff3(blob1, blob2, blob3) {
-    return new Uint8List(0);
-  }
 
   static TreeDiffResult diffTree(TreeObject oldTree, TreeObject newTree) {
     oldTree.sortEntries();
