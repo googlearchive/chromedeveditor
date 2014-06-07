@@ -2506,7 +2506,7 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     remoteBranchName = (_selectElement.children[selectIndex]
         as OptionElement).value;
 
-    _progress.progressMessage = "Creating branch ${_branchNameElement.value}...";
+    _setProgressMessage("Creating branch ${_branchNameElement.value}...");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitBranchCancel');
@@ -2674,7 +2674,7 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     SparkDialogButton closeButton = getElement('#gitCommitCancel');
     closeButton.disabled = true;
 
-    _progress.progressMessage = "Committing…";
+    _setProgressMessage("Committing…");
     _toggleProgressVisible(true);
 
     if (_needsFillNameEmail) {
@@ -2739,7 +2739,7 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
     // TODO(grv): Add verify checks.
     String branchName = _selectElement.options[
         _selectElement.selectedIndex].value;
-    _progress.progressMessage = "Checking out ${branchName}…";
+    _setProgressMessage("Checking out ${branchName}…");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitCheckoutCancel');
@@ -2832,7 +2832,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   }
 
   void _push() {
-    _progress.progressMessage = "Pushing...";
+    _setProgressMessage("Pushing...");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitPushClose');
@@ -2843,9 +2843,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
     pushButton.disabled = true;
     pushButton.deliverChanges();
 
-    ProgressMonitor monitor = new ProgressMonitorImpl(_progress);
     _GitPushTask task = new _GitPushTask(gitOperations, _gitUsername, _gitPassword,
-        spark, monitor);
+        spark, null);
     task.run().then((_) {
       spark.showSuccessMessage('Changes pushed successfully');
     }).catchError((e) {
