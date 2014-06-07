@@ -37,8 +37,10 @@ class SparkDialogButton extends SparkWidget {
 
   // TODO(ussuri): BUG #2252
   @override
-  void deliverChanges() {
-    super.deliverChanges();
-    getShadowDomElement('spark-button').setAttr('disabled', disabled);
+  bool deliverChanges() {
+    bool result = super.deliverChanges();
+    SparkWidget widget = getShadowDomElement('spark-button');
+    widget.setAttr('disabled', disabled);
+    return result;
   }
 }
