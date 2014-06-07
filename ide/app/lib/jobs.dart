@@ -65,7 +65,7 @@ class JobManager {
         _logger.severe("${_runningJob} errored", e, st);
       }).whenComplete(() {
         _jobFinished(_runningJob);
-        _runningJob.done();
+        if (_runningJob != null) _runningJob.done();
         _runningJob = null;
         _scheduleNextJob();
       });
@@ -309,10 +309,12 @@ class _ProgressMonitorImpl extends ProgressMonitor {
   ProgressMonitor _monitor;
 
   TaskCancel(this._monitor) {
-    _monitor.onCancel.listen((_) {
-      _cancelled = true;
-      performCancel();
-    });
+    if (_monitor != null) {
+      _monitor.onCancel.listen((_) {
+        _cancelled = true;
+        performCancel();
+      });
+    }
   }
 
   void performCancel();

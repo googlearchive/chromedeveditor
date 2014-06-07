@@ -21,6 +21,8 @@ class SparkDialog extends SparkWidget {
    */
   @published String animation = 'scale-slideup';
 
+  bool _activityVisible = false;
+
   SparkModal _modal;
 
   SparkDialog.created() : super.created();
@@ -30,6 +32,7 @@ class SparkDialog extends SparkWidget {
     super.enteredView();
 
     _modal = $['modal'];
+    $['progress'].classes.toggle('hidden', !_activityVisible);
     SparkWidget.enableKeyboardEvents(_modal);
   }
 
@@ -43,5 +46,12 @@ class SparkDialog extends SparkWidget {
     if (_modal.opened) {
       _modal.toggle();
     }
+  }
+
+  bool get activityVisible => _activityVisible;
+
+  void set activityVisible(bool visible) {
+    _activityVisible = visible;
+    $['progress'].classes.toggle('hidden', !_activityVisible);
   }
 }

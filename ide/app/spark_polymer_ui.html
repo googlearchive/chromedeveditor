@@ -292,9 +292,7 @@
             placeholder="https://github.com/dart-lang/spark.git"
             spellcheck="false" autosave focused>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
+      <div id="progressDescription"></div>
 
       <spark-dialog-button id="cloneClose" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="clone" submit>Clone</spark-dialog-button>
@@ -332,10 +330,6 @@
           Enter a brief description of the changes.
         </span>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
-
       <spark-dialog-button id="gitCommitCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="gitCommit" submit>Commit</spark-dialog-button>
     </spark-dialog>
@@ -349,9 +343,6 @@
         <label for="gitRemoteBranches">Checkout a remote branch</label>
         <select id="gitRemoteBranches" class="form-control"></select>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
       <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="gitBranch" submit>Create Branch</spark-dialog-button>
     </spark-dialog>
@@ -367,9 +358,6 @@
         <label for="gitCheckoutBranch">Switch to branch</label>
         <select id="gitCheckoutBranch" class="form-control"></select>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
       <spark-dialog-button id="gitCheckoutCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="gitCheckout" submit>Checkout</spark-dialog-button>
     </spark-dialog>
@@ -379,10 +367,6 @@
       <div class="form-group">
         <div id="gitCommitList"></div>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
-
       <spark-dialog-button id="gitPushClose">Cancel</spark-dialog-button>
       <spark-dialog-button id="gitPush" submit>Push</spark-dialog-button>
     </spark-dialog>

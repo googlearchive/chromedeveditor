@@ -6,3 +6,7 @@
 
 :host {
 }
+
+:host([disabled]) {
+  pointer-events: none !important;
+}
