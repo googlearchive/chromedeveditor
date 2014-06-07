@@ -211,7 +211,6 @@ class Outline {
 
     for (OutlineItem item in _outlineItems) {
       if (item.overlapsOffset(codeOffset)) {
-        print("  found ${item._offsetRange} -> ${item._data.runtimeType} ${item._data.name}");
         return item;
       }
     }
@@ -303,6 +302,7 @@ class OutlineClass extends OutlineTopLevelItem {
       : super(data, "class", outlineItems) {
     _element.append(_childrenRootElement);
     _populate(data, outlineItems);
+    _postProcess();
   }
 
   OutlineClassMember _addItem(OutlineClassMember item) {
@@ -316,6 +316,31 @@ class OutlineClass extends OutlineTopLevelItem {
                  List<OutlineItem> outlineItems) {
     for (services.OutlineEntry data in classData.members) {
       _createMember(data, outlineItems);
+    }
+  }
+
+  /**
+   * Clip the class's and constructor's offsetRanges to the actual ones.
+   * As provided by Ace (?), they both span the entire class's definition
+   * (for constructors, it's likely a bug), which is not what we want when
+   * highlighting or scrolling them into view.
+   */
+  void _postProcess() {
+    // Class's offsetRange.
+    if (members.length > 0) {
+      _offsetRange.bottom = members[0]._offsetRange.top - 1;
+    }
+    // Constructor's offsetRange.
+    for (int i = 0; i < members.length; ++i) {
+      OutlineItem member = members[i];
+      if (member._data.name == _data.name) {
+        if (i > 0) {
+          member._offsetRange.top = members[i - 1]._offsetRange.bottom + 1;
+        }
+        if (i < members.length - 1) {
+          member._offsetRange.bottom = members[i + 1]._offsetRange.top - 1;
+        }
+      }
     }
   }
 
