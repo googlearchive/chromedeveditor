@@ -106,9 +106,7 @@ class TextEditor extends Editor {
   void reconcile() { }
 
   void deactivate() {
-    if (supportsOutline && _outline.visible) {
-      _outline.visible = false;
-    }
+    if (supportsOutline && _outline.visible) _outline.visible = false;
   }
 
   void resize() => aceManager.resize();
