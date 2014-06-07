@@ -111,7 +111,10 @@ class Tab {
 
   void focus() => _pageContainer.focus();
 
-  bool close() => tabView.remove(this);
+  bool close() {
+    deactivate();
+    return tabView.remove(this);
+  }
 
   void validatePage() {
     if (_page != null && _page.parent != _pageContainer)
