@@ -16,13 +16,13 @@ class DiffEntryType {
 }
 
 class DiffEntry {
-  TreeEntry oldEntry;
-  TreeEntry newEntry;
+  final TreeEntry oldEntry;
+  final TreeEntry newEntry;
+  final String type;
   String path;
 
   // String representation of the diff between the two versions of file.
   String diff;
-  String type;
   DiffEntry(this.oldEntry, this.newEntry, this.type,  [String path]) {
     if (path == null) {
       path = oldEntry == null ? newEntry.name : oldEntry.name;
@@ -33,7 +33,7 @@ class DiffEntry {
 }
 
 class TreeDiffResult {
-  Map<String, DiffEntry> entries = {};
+  final Map<String, DiffEntry> entries = {};
 
   List<DiffEntry> getAddedEntries() => _getEntriesForType(DiffEntryType.ADDED);
   List<DiffEntry> getRemovedEntries() => _getEntriesForType(DiffEntryType.REMOVED);
@@ -126,12 +126,11 @@ class Diff {
     return treeDiff;
   }
 
-
   /**
    * Diffs given tree objects [oldTree], [newTree] recursively and returns
    * the diff files as [TreeDiffResult].
    */
-  Future<TreeDiffResult> diffTreeRecursive(
+  static Future<TreeDiffResult> diffTreeRecursive(
       ObjectStore store, TreeObject oldTree, TreeObject newTree) {
 
     TreeDiffResult diff = diffTree(oldTree, newTree);
@@ -175,7 +174,7 @@ class Diff {
   /**
    * Expands a directory [treeSha] recursively.
    */
-  Future<List<DiffEntry>> _expandDiffEntry(
+  static Future<List<DiffEntry>> _expandDiffEntry(
       ObjectStore store, String treeSha, String type) {
 
     List<DiffEntry> diffEntries = [];
@@ -205,7 +204,7 @@ class Diff {
   /**
    * Expands given [treeEntries] into files.
    */
-  Future<List<DiffEntry>> _expandDiffEntries(
+  static Future<List<DiffEntry>> _expandDiffEntries(
       ObjectStore store, List<TreeEntry> diffEntries, String type) {
     List<DiffEntry> diffEntries = [];
     return Future.forEach(diffEntries, (DiffEntry diffEntry) {
