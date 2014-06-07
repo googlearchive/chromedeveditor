@@ -8,8 +8,6 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:typed_data';
 
-import 'package:chrome/src/common_exp.dart' as chrome;
-
 import 'exception.dart';
 import 'object_utils.dart';
 import 'utils.dart';
