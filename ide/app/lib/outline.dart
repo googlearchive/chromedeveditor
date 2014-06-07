@@ -104,10 +104,6 @@ class Outline {
       _create(data);
     }
 
-    for (var item in _outlineItems) {
-      print("${item._offsetRange} -> ${item._data.runtimeType} ${item._data.name}");
-    }
-
     if (_lastScrolledOffsetRange != null) scrollPosition = _lastScrolledOffsetRange;
   }
 
