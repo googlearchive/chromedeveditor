@@ -38,6 +38,8 @@ class AceEditorTab extends EditorTab {
   final Editor editor;
   final EditorProvider provider;
 
+  bool _active = false;
+
   AceEditorTab(EditorArea parent, this.provider, this.editor, Resource file)
     : super(parent, file) {
     page = editor.element;
@@ -45,13 +47,15 @@ class AceEditorTab extends EditorTab {
   }
 
   void activate() {
+    _active = true;
     editor.activate();
     provider.activate(editor);
     super.activate();
   }
 
   void deactivate() {
-    editor.deactivate();
+    if (_active) editor.deactivate();
+    _active = false;
     super.deactivate();
   }
 
