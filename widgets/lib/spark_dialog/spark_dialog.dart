@@ -4,8 +4,6 @@
 
 library spark_widgets.dialog;
 
-import 'dart:html';
-
 import 'package:polymer/polymer.dart';
 
 import '../spark_modal/spark_modal.dart';
