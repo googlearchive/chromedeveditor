@@ -226,6 +226,8 @@ abstract class UuidResolver {
  * Defines an object containing information about a declaration.
  */
 abstract class Declaration {
+  static final Declaration EMPTY_DECLARATION = new _EmptyDeclaration();
+
   final String name;
 
   Declaration(this.name);
@@ -247,6 +249,16 @@ abstract class Declaration {
       "name": name,
     };
   }
+}
+
+class _EmptyDeclaration extends Declaration {
+  _EmptyDeclaration() : super('');
+}
+
+class FileDeclaration extends Declaration {
+  final File file;
+
+  FileDeclaration(File file) : this.file = file, super(file.name);
 }
 
 /**
