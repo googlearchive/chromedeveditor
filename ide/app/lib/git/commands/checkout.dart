@@ -8,7 +8,7 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import 'merge.dart';
+import 'diff.dart';
 import '../constants.dart';
 import '../exception.dart';
 import '../file_operations.dart';
@@ -53,8 +53,9 @@ class Checkout {
 
   static Future smartCheckout(chrome.DirectoryEntry dir, ObjectStore store,
       TreeObject oldTree, TreeObject newTree) {
-    TreeDiffResult diff = Merge.diffTree(oldTree, newTree);
-    return Future.forEach(diff.adds, (TreeEntry entry) {
+    TreeDiffResult diff = Diff.diffTree(oldTree, newTree);
+    return Future.forEach(diff.getAddedEntries(), (DiffEntry diffEntry) {
+      TreeEntry entry = diffEntry.newEntry;
       if (entry.isBlob) {
         return ObjectUtils.expandBlob(dir, store, entry.name, entry.sha);
       } else {
@@ -63,12 +64,12 @@ class Checkout {
         });
       }
     }).then((_) {
-      return Future.forEach(diff.removes, (TreeEntry entry) {
-        return _removeEntryRecursively(store, dir, entry);
+      return Future.forEach(diff.getRemovedEntries(), (DiffEntry diffEntry) {
+        return _removeEntryRecursively(store, dir, diffEntry.oldEntry);
       }).then((_) {
-        return Future.forEach(diff.merges, (mergeEntry) {
-          TreeEntry oldEntry = mergeEntry['old'];
-          TreeEntry newEntry = mergeEntry['new'];
+        return Future.forEach(diff.getModifiedEntries(), (DiffEntry diffEntry) {
+          TreeEntry oldEntry = diffEntry.oldEntry;
+          TreeEntry newEntry = diffEntry.newEntry;
           if (newEntry.isBlob) {
             return ObjectUtils.expandBlob(dir, store, newEntry.name,
                 newEntry.sha);
