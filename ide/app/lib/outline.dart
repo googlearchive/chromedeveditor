@@ -199,7 +199,10 @@ class Outline {
     html.Rectangle elementRect = item.element.getBoundingClientRect();
     // Perhaps the item is already in view.
     if (!rootListRect.containsRectangle(elementRect)) {
-      item.element.scrollIntoView(alignment);
+      // Use [item.anchor], not [item.element] to pull the minimal amount of
+      // [item] into view. For example, [item.element] for OutlineClass
+      // is the whole class, which may not even fit into the outline viewport.
+      item.anchor.scrollIntoView(alignment);
     }
   }
 
@@ -232,10 +235,10 @@ abstract class OutlineItem {
     _element.append(_anchor);
 
     if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
-     _typeSpan = new html.SpanElement();
-     _typeSpan.text = returnType;
-     _typeSpan.classes.add("returnType");
-     _element.append(_typeSpan);
+      _typeSpan = new html.SpanElement();
+      _typeSpan.text = returnType;
+      _typeSpan.classes.add("returnType");
+      _element.append(_typeSpan);
     }
 
     _element.classes.add("outlineItem ${cssClassName}");
@@ -255,6 +258,7 @@ abstract class OutlineItem {
   bool overlapsOffsetRange(OffsetRange range) => _offsetRange.overlaps(range);
 
   html.LIElement get element => _element;
+  html.AnchorElement get anchor => _anchor;
 
   void setSelected(bool selected) {
     _element.classes.toggle("selected", selected);
