@@ -2426,6 +2426,8 @@ class GitPullAction extends SparkActionWithProgressDialog implements ContextActi
     // Show dialog for at lest 2 seconds.
     Timer timer = new Timer(new Duration(milliseconds: 2000), () {
       f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
         _hide();
       });
     });
@@ -2459,6 +2461,8 @@ class GitAddAction extends SparkActionWithProgressDialog implements ContextActio
     // Show dialog for at lest 2 seconds.
     Timer timer = new Timer(new Duration(milliseconds: 2000), () {
       f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
         _hide();
       });
     });
