@@ -125,11 +125,24 @@ class ObjectStore {
     });
   }
 
-  Future<chrome.FileEntry> createNewRef(String refName, String sha) {
-    String path = GIT_FOLDER_PATH + refName;
-    String content = sha + '\n';
-    return FileOps.createFileWithContent(_rootDir, path, content, "Text");
+  Future writeRefs(chrome.DirectoryEntry dir, List<GitRef> refs) {
+    return Future.forEach(refs, (GitRef ref) {
+      String refName = ref.name.split('/').last;
+      if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
+        return new Future.value();
+      }
+      return createRemoteRef(refName, ref.sha);
+    });
   }
+
+  Future<chrome.FileEntry> createRemoteRef(String refName, String sha)
+      => _createNewRef(GIT_REFS_REMOTES_ORIGIN_PATH + refName, sha);
+
+  Future<chrome.FileEntry> createLocalRef(String refName, String sha)
+      => _createNewRef(GIT_REFS_HEADS_PATH + refName, sha);
+
+  Future<chrome.FileEntry> _createNewRef(String path, String sha)
+      => FileOps.createFileWithContent(_rootDir, path, sha + '\n', "Text");
 
   Future<chrome.FileEntry> setHeadRef(String refName, String sha) {
     String content = 'ref: ${refName}\n';

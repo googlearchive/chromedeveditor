@@ -85,7 +85,7 @@ class Fetch {
   }
 
   Future _createAndUpdateRef(GitRef branchRef, GitRef wantRef) {
-    String path = '.git/' + REFS_REMOTE_HEADS + branchRef.name.split('/').last;
+    String path = GIT_REFS_REMOTES_ORIGIN_PATH + branchRef.name.split('/').last;
     return FileOps.createFileWithContent(root, path, branchRef.sha, "Text");
   }
 
