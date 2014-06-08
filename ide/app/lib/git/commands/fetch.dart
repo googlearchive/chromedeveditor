@@ -88,13 +88,11 @@ class Fetch {
     ObjectStore store = options.store;
     HttpFetcher fetcher = new HttpFetcher(options.store, 'origin',
         store.config.url, options.username, options.password);
-
-     return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-       return store.writeRefs(refs).then((_) => refs);
-     });
+    return _updateAndGetRemoteRefs(store, fetcher);
   }
 
-  Future<List<GitRef>> _updateAndGetRemoteRefs(HttpFetcher fetcher) {
+  static Future<List<GitRef>> _updateAndGetRemoteRefs(
+      ObjectStore store, HttpFetcher fetcher) {
     return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
       return store.writeRefs(refs).then((_) => refs);
     });
