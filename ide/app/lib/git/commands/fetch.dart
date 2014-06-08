@@ -58,7 +58,7 @@ class Fetch {
 
       // get current branch.
       String headRefName = 'refs/heads/' + branchName;
-      return _updateAndGetRemoteRefs(fetcher).then((List<GitRef> refs) {
+      return _updateAndGetRemoteRefs(store, fetcher).then((List<GitRef> refs) {
         GitRef branchRef = refs.firstWhere(
             (GitRef ref) => ref.name == headRefName, orElse: () => null);
 
