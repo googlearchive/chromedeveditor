@@ -2316,7 +2316,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   _GitCloneTask _cloneTask;
 
   GitCloneAction(Spark spark, Element dialog)
-      : super(spark, "git-clone", "Git Clone…", dialog) {
+      : super(spark, "git-clone", "Add Git Project…", dialog) {
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
   }
 
