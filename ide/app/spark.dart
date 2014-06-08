@@ -60,10 +60,11 @@ final NumberFormat _nf = new NumberFormat.decimalPattern();
  * Create a [Zone] that logs uncaught exceptions.
  */
 Zone createSparkZone() {
-  var errorHandler = (self, parent, zone, error, stackTrace) {
+  Function errorHandler = (self, parent, zone, error, stackTrace) {
     _handleUncaughtException(error, stackTrace);
   };
-  var specification = new ZoneSpecification(handleUncaughtError: errorHandler);
+  ZoneSpecification specification =
+      new ZoneSpecification(handleUncaughtError: errorHandler);
   return Zone.current.fork(specification: specification);
 }
 
@@ -634,7 +635,7 @@ abstract class Spark
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
-    var lines = message.split('\n');
+    List<String> lines = message.split('\n');
     for(String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
@@ -706,7 +707,7 @@ abstract class Spark
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
-    var lines = message.split('\n');
+    List<String> lines = message.split('\n');
     for (String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
@@ -1113,7 +1114,7 @@ abstract class SparkAction extends Action {
     if (!isUnderScm(project)) return false;
 
     for (var resource in context) {
-      var resProject = resource.project;
+      ws.Project resProject = resource.project;
       if (resProject == null || resProject != project) {
         return false;
       }
@@ -1232,7 +1233,7 @@ abstract class SparkActionWithDialog extends SparkAction {
       _dialog.getElements(selectors);
 
   Element _triggerOnReturn(String selectors, [bool hideDialog = true]) {
-    var element = _dialog.getElement(selectors);
+    Element element = _dialog.getElement(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
@@ -1310,7 +1311,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     super._commit();
 
-    var name = _nameElement.value;
+    String name = _nameElement.value;
     if (name.isNotEmpty) {
       if (folder != null) {
         folder.createNewFile(name).then((file) {
@@ -1349,7 +1350,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
-      var sel = spark._filesController.getSelection();
+      List<ws.Resource> sel = spark._filesController.getSelection();
       if (sel.isEmpty) return;
       resources = sel;
     }
@@ -2414,7 +2415,7 @@ class GitPullAction extends SparkAction implements ContextAction {
 
   void _invoke([context]) {
     ws.Project project = context.first.project;
-    var operations = spark.scmManager.getScmOperationsFor(project);
+    ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(project);
 
     spark.jobManager.schedule(new _GitPullJob(operations, spark));
   }
@@ -3314,7 +3315,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-      var checkbox = getElement('#analyticsCheck');
+      InputElement checkbox = getElement('#analyticsCheck');
       checkbox.checked = _isTrackingPermitted;
       checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
 
@@ -3339,7 +3340,7 @@ class SettingsAction extends SparkActionWithDialog {
   void _invoke([Object context]) {
     spark.setGitSettingsResetDoneVisible(false);
 
-    var whitespaceCheckbox = getElement('#stripWhitespace');
+    InputElement whitespaceCheckbox = getElement('#stripWhitespace');
 
     // Wait for each of the following to (simultaneously) complete before
     // showing the dialog:
