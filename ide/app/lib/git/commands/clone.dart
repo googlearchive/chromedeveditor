@@ -95,7 +95,7 @@ class Clone {
           GitRef remoteHeadRef, localHeadRef;
           String remoteHead;
 
-          return _callMethod(store.writeRefs, [refs]).then((_) {
+          return _callMethod(store.writeRemoteRefs, [refs]).then((_) {
             refs.forEach((GitRef ref) {
               if (ref.name == "HEAD") {
                 remoteHead = ref.sha;

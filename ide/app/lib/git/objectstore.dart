@@ -125,13 +125,20 @@ class ObjectStore {
     });
   }
 
-  Future writeRefs(List<GitRef> refs) {
-    return Future.forEach(refs, (GitRef ref) {
-      String refName = ref.name.split('/').last;
-      if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
-        return new Future.value();
-      }
-      return createRemoteRef(refName, ref.sha);
+  Future clearRemoteRefs() {
+    return root.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then(
+        (dir) => dir.removeRecursively()).catchError((e){});
+  }
+
+  Future writeRemoteRefs(List<GitRef> refs) {
+    return clearRemoteRefs().then((_) {
+      return Future.forEach(refs, (GitRef ref) {
+        String refName = ref.name.split('/').last;
+        if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
+          return new Future.value();
+        }
+        return createRemoteRef(refName, ref.sha);
+      });
     });
   }
 

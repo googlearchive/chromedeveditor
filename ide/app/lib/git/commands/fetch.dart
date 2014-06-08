@@ -94,7 +94,7 @@ class Fetch {
   static Future<List<GitRef>> _updateAndGetRemoteRefs(
       ObjectStore store, HttpFetcher fetcher) {
     return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-      return store.writeRefs(refs).then((_) => refs);
+      return store.writeRemoteRefs(refs).then((_) => refs);
     });
   }
 
