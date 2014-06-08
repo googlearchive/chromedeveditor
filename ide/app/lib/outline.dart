@@ -7,7 +7,8 @@ library spark.outline;
 import 'dart:async';
 import 'dart:html' as html;
 
-import '../lib/services.dart' as services;
+import 'enum.dart';
+import 'services.dart' as services;
 import 'preferences.dart';
 
 final bool _INCLUDE_TYPES = true;
@@ -28,6 +29,15 @@ class OffsetRange {
       !(bottom < another.top || top > another.bottom);
 
   String toString() => "($top, $bottom)";
+}
+
+class _ScrollDirection extends Enum<html.ScrollAlignment> {
+  const _ScrollDirection._(html.ScrollAlignment val) : super(val);
+
+  String get enumName => 'FetchMode';
+
+  static const UP = const _ScrollDirection._(html.ScrollAlignment.TOP);
+  static const DOWN = const _ScrollDirection._(html.ScrollAlignment.BOTTOM);
 }
 
 /**
@@ -173,36 +183,34 @@ class Outline {
   }
 
   void scrollOffsetRangeIntoView(OffsetRange offsetRange) {
-    OutlineItem item;
-    html.ScrollAlignment alignment;
+    _ScrollDirection scrollDirection;
 
     if (offsetRange.centeredLower(_lastScrolledOffsetRange)) {
-      // Scrolling down: give priority to the last item.
-      item = _itemAtCodeOffset(offsetRange.bottom);
-      alignment = html.ScrollAlignment.BOTTOM;
+      scrollDirection = _ScrollDirection.DOWN;
     } else if (offsetRange.centeredHigher(_lastScrolledOffsetRange)) {
-      // Scrolling up: give priority to the first item.
-      item = _itemAtCodeOffset(offsetRange.top);
-      alignment = html.ScrollAlignment.TOP;
-    } else {
-      // Haven't scrolled enough. Do nothing.
+      scrollDirection = _ScrollDirection.UP;
     }
 
-    if (item != null) {
-      _scrollItemIntoView(item, alignment);
+    if (scrollDirection != null) {
+      OutlineItem item = _edgeItemInCodeOffsetRange(
+          offsetRange, atBottom: scrollDirection == _ScrollDirection.DOWN);
+      _scrollItemIntoView(item, scrollDirection);
       _lastScrolledOffsetRange = offsetRange;
     }
   }
 
-  void _scrollItemIntoView(OutlineItem item, html.ScrollAlignment alignment) {
+  void _scrollItemIntoView(OutlineItem item, _ScrollDirection direction) {
+    if (item == null) return;
+
+    // This may change dynamically: do not cache.
     html.Rectangle rootListRect = _rootListDiv.getBoundingClientRect();
     html.Rectangle elementRect = item.element.getBoundingClientRect();
     // Perhaps the item is already in view.
     if (!rootListRect.containsRectangle(elementRect)) {
       // Use [item.anchor], not [item.element] to pull the minimal amount of
       // [item] into view. For example, [item.element] for OutlineClass
-      // is the whole class, which may not even fit into the outline viewport.
-      item.anchor.scrollIntoView(alignment);
+      // spans the whole class, which may not even fit into the viewport.
+      item.anchor.scrollIntoView(direction.value);
     }
   }
 
@@ -211,6 +219,20 @@ class Outline {
 
     for (OutlineItem item in _outlineItems) {
       if (item.overlapsOffset(codeOffset)) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  OutlineItem _edgeItemInCodeOffsetRange(
+      OffsetRange codeOffsetRange, {bool atBottom}) {
+    if (_outlineItems == null) return null;
+
+    Iterable<OutlineItem> searchSequence =
+        atBottom ? _outlineItems.reversed : _outlineItems;
+    for (OutlineItem item in searchSequence) {
+      if (item.overlapsOffsetRange(codeOffsetRange)) {
         return item;
       }
     }
@@ -265,6 +287,10 @@ abstract class OutlineItem {
   }
 
   void scrollIntoView() => _element.scrollIntoView();
+
+  @override
+  String toString() =>
+      "$runtimeType $displayName ($_offsetRange)";
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
