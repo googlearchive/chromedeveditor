@@ -125,7 +125,7 @@ class ObjectStore {
     });
   }
 
-  Future writeRefs(chrome.DirectoryEntry dir, List<GitRef> refs) {
+  Future writeRefs(List<GitRef> refs) {
     return Future.forEach(refs, (GitRef ref) {
       String refName = ref.name.split('/').last;
       if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
