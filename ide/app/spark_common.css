@@ -11,6 +11,20 @@ body {
   -webkit-font-smoothing: auto;
 }
 
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #666;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+}
+
+
 /* Uncomment these 2 rules, or selectively apply the .debug class or debug
  * attribute, to facilitate debuging of elements.
  */
