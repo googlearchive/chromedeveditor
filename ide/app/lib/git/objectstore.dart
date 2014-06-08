@@ -439,7 +439,7 @@ class ObjectStore {
 
   Future<CommitPushEntry> _getCommits(GitRef remoteRef,
       Map<String, bool> remoteShas, String sha) {
-    var commits = [];
+    List commits = [];
     Future<CommitPushEntry> getNextCommit(String sha) {
 
       return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((
@@ -478,7 +478,7 @@ class ObjectStore {
 
   Future retrieveObjectList(List<String> shas, String objType) {
     List objects = [];
-    return Future.forEach(shas, (sha) {
+    return Future.forEach(shas, (String sha) {
       return retrieveObject(sha, objType).then((object) => objects.add(object));
     }).then((e) => objects);
   }
@@ -533,7 +533,7 @@ class ObjectStore {
     }).then((_) => trees);
   }
 
-  Future<String> writeRawObject(String type, content) {
+  Future<String> writeRawObject(String type, dynamic content) {
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
 
@@ -557,7 +557,7 @@ class ObjectStore {
     var reader = new JsObject(context['FileReader']);
 
     reader['onloadend'] = (var event) {
-      var result = reader['result'];
+      dynamic result = reader['result'];
       FastSha sha1 = new FastSha();
       Uint8List resultList;
 

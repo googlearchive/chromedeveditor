@@ -248,7 +248,7 @@ class Clone {
    * is cancelled.
    */
   Future _callMethod(Function func, List args, [String message]) {
-    return Function.apply(func, args).then((result) {
+    return Function.apply(func, args).then((dynamic result) {
       _cancel.check();
       if (message != null) {
         logger.info(_stopwatch.finishCurrentTask(message));

@@ -257,7 +257,7 @@ class Pack {
 
   /// This function parses all the git objects. All the deltified objects
   /// are expanded.
-  Future parseAll([var progress]) {
+  Future parseAll([Function progress]) {
     try {
       int numObjects;
       List<PackedObject> deferredObjects = [];
@@ -474,7 +474,7 @@ class PackBuilder {
   }
 
   void _packIt(LooseObject object) {
-    var buf = object.data;
+    dynamic buf = object.data;
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
       data = buf.getBytes();
