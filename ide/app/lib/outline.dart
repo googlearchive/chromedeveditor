@@ -115,7 +115,7 @@ class Outline {
     }
 
     if (_lastScrolledOffsetRange != null) {
-      scrollPosition = _lastScrolledOffsetRange;
+      scrollOffsetRangeIntoView(_lastScrolledOffsetRange, _ScrollDirection.DOWN);
     }
   }
 
@@ -182,19 +182,23 @@ class Outline {
     }
   }
 
-  void scrollOffsetRangeIntoView(OffsetRange offsetRange) {
-    _ScrollDirection scrollDirection;
-
-    if (offsetRange.centeredLower(_lastScrolledOffsetRange)) {
-      scrollDirection = _ScrollDirection.DOWN;
+  void scrollOffsetRangeIntoView(
+      OffsetRange offsetRange, [_ScrollDirection direction]) {
+    if (direction != null) {
+      // Direction overridden by the caller.
+    } else if (offsetRange.centeredLower(_lastScrolledOffsetRange)) {
+      direction = _ScrollDirection.DOWN;
     } else if (offsetRange.centeredHigher(_lastScrolledOffsetRange)) {
-      scrollDirection = _ScrollDirection.UP;
+      direction = _ScrollDirection.UP;
+    } else {
+      // Direction not specified by the client and we haven't scrolled
+      // far enough from previous position.
     }
 
-    if (scrollDirection != null) {
+    if (direction != null) {
       OutlineItem item = _edgeItemInCodeOffsetRange(
-          offsetRange, atBottom: scrollDirection == _ScrollDirection.DOWN);
-      _scrollItemIntoView(item, scrollDirection);
+          offsetRange, atBottom: direction == _ScrollDirection.DOWN);
+      _scrollItemIntoView(item, direction);
       _lastScrolledOffsetRange = offsetRange;
     }
   }
