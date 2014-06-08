@@ -1101,7 +1101,7 @@ abstract class SparkAction extends Action {
       _isProject(context) && isUnderScm(context.first);
 
   /**
-   * Returns true if `context` is a list with of items, all in the same project,
+   * Returns true if `context` is a list of items, all in the same project,
    * and that project is under SCM.
    */
   bool _isUnderScmProject(context) {
@@ -1655,7 +1655,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
     return spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
@@ -1696,7 +1696,7 @@ abstract class PackageManagementAction
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource);
 
@@ -1763,7 +1763,7 @@ class CompileDartAction extends SparkAction implements ContextAction {
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
     bool isDartFile = resource is ws.File && resource.project != null
@@ -2136,7 +2136,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
     return getAppContainerFor(resource) != null;
@@ -2147,7 +2147,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
   }
 
   void _commit() {
-    _setProgressMessage("Deploying...");
+    _setProgressMessage("Deploying…");
     _toggleProgressVisible(true);
 
     ProgressMonitor monitor = new ProgressMonitorImpl(_progress);
@@ -2339,14 +2339,14 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 
   void _commit() {
-    _setProgressMessage("Cloning...");
+    _setProgressMessage("Cloning…");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#cloneClose');
 
     SparkDialogButton cloneButton = getElement('#clone');
     cloneButton.disabled = true;
-    cloneButton.text = "Cloning...";
+    cloneButton.text = "Cloning…";
     cloneButton.deliverChanges();
 
     String url = _repoUrlElement.value;
@@ -2413,7 +2413,7 @@ class GitPullAction extends SparkAction implements ContextAction {
   GitPullAction(Spark spark) : super(spark, "git-pull", "Pull from Origin");
 
   void _invoke([context]) {
-    var project = context.first.project;
+    ws.Project project = context.first.project;
     var operations = spark.scmManager.getScmOperationsFor(project);
 
     spark.jobManager.schedule(new _GitPullJob(operations, spark));
@@ -2504,7 +2504,7 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     remoteBranchName = (_selectElement.children[selectIndex]
         as OptionElement).value;
 
-    _setProgressMessage("Creating branch ${_branchNameElement.value}...");
+    _setProgressMessage("Creating branch ${_branchNameElement.value}…");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitBranchCancel');
@@ -2830,7 +2830,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   }
 
   void _push() {
-    _setProgressMessage("Pushing...");
+    _setProgressMessage("Pushing…");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitPushClose');
@@ -3283,8 +3283,8 @@ class ResourceRefreshJob extends Job {
 
     Completer completer = new Completer();
 
-    var consumeProject;
-    consumeProject = () {
+    Function consumeProject;
+     consumeProject = () {
       ws.Project project = projects.removeAt(0);
 
       project.refresh().whenComplete(() {
@@ -3516,7 +3516,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   static GitAuthenticationDialog _instance;
   bool _initialized = false;
 
-  GitAuthenticationDialog(spark, dialogElement)
+  GitAuthenticationDialog(Spark spark, Element dialogElement)
       : super(spark, "git-authentication", "Authenticate", dialogElement);
 
   void _invoke([Object context]) {
