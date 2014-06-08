@@ -2476,7 +2476,7 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
        int index = _selectElement.selectedIndex;
        if (index != 0) {
          _branchNameElement.value = (_selectElement.children[index]
-             as OptionElement).value;
+             as OptionElement).value.split('/').last;
          _branchNameElement.disabled = true;
        } else {
          _branchNameElement.value = '';
@@ -2487,8 +2487,9 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     gitOperations.getRemoteBranchNames().then((Iterable<String> branchNames) {
       branchNames.toList().sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
       _selectElement.append(
-          new OptionElement(data: "(none)", value: ""));
+          new OptionElement(data: "master", value: "master"));
       for (String branchName in branchNames) {
+        branchName = 'origin/${branchName}';
         _selectElement.append(
             new OptionElement(data: branchName, value: branchName));
       }
@@ -2499,9 +2500,9 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
   }
 
   void _commit() {
-    String remoteBranchName = "";
+    String branchName = "";
     int selectIndex = _selectElement.selectedIndex;
-    remoteBranchName = (_selectElement.children[selectIndex]
+    branchName = (_selectElement.children[selectIndex]
         as OptionElement).value;
 
     _setProgressMessage("Creating branch ${_branchNameElement.value}...");
@@ -2515,8 +2516,8 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     branchButton.disabled = true;
     branchButton.deliverChanges();
 
-    _GitBranchJob job = new _GitBranchJob(gitOperations,
-        _branchNameElement.value, remoteBranchName, spark);
+    _GitBranchJob job = new _GitBranchJob(
+        gitOperations, _branchNameElement.value, branchName, spark);
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
       _hide();
@@ -3070,11 +3071,11 @@ class _GitAddJob extends Job {
 class _GitBranchJob extends Job {
   GitScmProjectOperations gitOperations;
   String _branchName;
-  String _remoteBranchName;
+  String _sourceBranchName;
   String url;
   Spark spark;
 
-  _GitBranchJob(this.gitOperations, String branchName, this._remoteBranchName,
+  _GitBranchJob(this.gitOperations, String branchName, this._sourceBranchName,
       this.spark) : super("Creating ${branchName}…") {
     _branchName = branchName;
   }
@@ -3082,7 +3083,7 @@ class _GitBranchJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return gitOperations.createBranch(_branchName, _remoteBranchName).then((_) {
+    return gitOperations.createBranch(_branchName, _sourceBranchName).then((_) {
       return gitOperations.checkoutBranch(_branchName).then((_) {
         spark.showSuccessMessage('Created ${_branchName}');
       });
