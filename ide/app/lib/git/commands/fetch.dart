@@ -59,25 +59,27 @@ class Fetch {
       // get current branch.
       String headRefName = 'refs/heads/' + branchName;
       return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-        GitRef branchRef = refs.firstWhere(
-            (GitRef ref) => ref.name == headRefName, orElse: () => null);
+        return store.writeRefs(refs).then((_) {
+          GitRef branchRef = refs.firstWhere(
+              (GitRef ref) => ref.name == headRefName, orElse: () => null);
 
-        if (branchRef == null) {
-          throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
-        }
-
-        // See if we know about the branch's head commit. If so we're up to
-        // date. If not, request from remote.
-        return store.getRemoteHeadForRef(headRefName).then((sha) {
-          if (sha != branchRef.sha) {
-            return _handleFetch(branchRef, branchRef, fetcher);
+          if (branchRef == null) {
+            throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
           }
-          return store.getCommitGraph([sha]).then((CommitGraph graph) {
-            if (graph.commits.isNotEmpty) {
-              throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
-            } else {
+
+          // See if we know about the branch's head commit. If so we're up to
+          // date. If not, request from remote.
+          return store.getRemoteHeadForRef(headRefName).then((sha) {
+            if (sha != branchRef.sha) {
               return _handleFetch(branchRef, branchRef, fetcher);
             }
+            return store.getCommitGraph([sha]).then((CommitGraph graph) {
+              if (graph.commits.isNotEmpty) {
+                throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
+              } else {
+                return _handleFetch(branchRef, branchRef, fetcher);
+              }
+            });
           });
         });
       });
