@@ -63,9 +63,7 @@ class TreeDiffResult {
     });
   }
 
-  void clear() {
-    entries.clear();
-  }
+  void clear() => entries.clear();
 }
 
 /**
