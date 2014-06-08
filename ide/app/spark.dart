@@ -426,11 +426,11 @@ abstract class Spark
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     if (SparkFlags.showGitPull) {
-      actionManager.registerAction(new GitPullAction(this));
+      actionManager.registerAction(new GitPullAction(this, getDialogElement('#statusDialog')));
     }
     actionManager.registerAction(new GitBranchAction(this, getDialogElement("#gitBranchDialog")));
     actionManager.registerAction(new GitCheckoutAction(this, getDialogElement("#gitCheckoutDialog")));
-    actionManager.registerAction(new GitAddAction(this));
+    actionManager.registerAction(new GitAddAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new GitResolveConflictsAction(this));
     actionManager.registerAction(new GitCommitAction(this, getDialogElement("#gitCommitDialog")));
     actionManager.registerAction(new GitRevertChangesAction(this));
@@ -2409,14 +2409,29 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 }
 
-class GitPullAction extends SparkAction implements ContextAction {
-  GitPullAction(Spark spark) : super(spark, "git-pull", "Pull from Origin");
+class GitPullAction extends SparkActionWithProgressDialog implements ContextAction {
+  GitPullAction(Spark spark, SparkDialog dialog)
+      : super(spark, "git-pull", "Pull from Origin", dialog);
 
   void _invoke([context]) {
     var project = context.first.project;
     var operations = spark.scmManager.getScmOperationsFor(project);
 
-    spark.jobManager.schedule(new _GitPullJob(operations, spark));
+    _dialog.dialog.title = 'Git Pull';
+    String branchName = operations.getBranchName();
+    _setProgressMessage('Updating ${branchName}...');
+    _toggleProgressVisible(true);
+
+    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
+    // Show dialog for at lest 2 seconds.
+    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
+      f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
+        _hide();
+      });
+    });
+    _show();
   }
 
   String get category => 'git';
@@ -2424,8 +2439,9 @@ class GitPullAction extends SparkAction implements ContextAction {
   bool appliesTo(context) => _isScmProject(context);
 }
 
-class GitAddAction extends SparkAction implements ContextAction {
-  GitAddAction(Spark spark) : super(spark, "git-add", "Git Add");
+class GitAddAction extends SparkActionWithProgressDialog implements ContextAction {
+  GitAddAction(Spark spark, SparkDialog dialog)
+      : super(spark, "git-add", "Git Add", dialog);
   chrome.Entry entry;
 
   void _invoke([List<ws.Resource> resources]) {
@@ -2435,7 +2451,23 @@ class GitAddAction extends SparkAction implements ContextAction {
     resources.forEach((resource) {
       files.add(resource.entry);
     });
-    spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
+
+    _dialog.dialog.title = 'Git Add';
+    String branchName = operations.getBranchName();
+    _setProgressMessage('Adding files to git...');
+    _toggleProgressVisible(true);
+
+    Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
+    // Show dialog for at lest 2 seconds.
+    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
+      f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
+        _hide();
+      });
+    });
+
+    _show();
   }
 
   String get category => 'git';
