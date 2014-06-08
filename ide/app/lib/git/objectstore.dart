@@ -131,7 +131,7 @@ class ObjectStore {
     return FileOps.createFileWithContent(_rootDir, path, content, "Text");
   }
 
-  Future<chrome.FileEntry> setHeadRef(String refName, String sha) {
+  Future<chrome.FileEntry> setHeadRef(String refName) {
     String content = 'ref: ${refName}\n';
     return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
         content, "Text");

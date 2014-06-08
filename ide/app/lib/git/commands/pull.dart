@@ -65,7 +65,7 @@ class Pull {
                     '.git/${headRefName}', remoteSha, 'Text').then((_) {
                   return store.getCurrentBranch().then((branch) {
                     options.branchName = branch;
-                    return Checkout.checkout(options, true);
+                    return Checkout.checkout(options, remoteSha);
                   });
                 });
               } else {
@@ -80,7 +80,7 @@ class Pull {
                       // Create a merge commit by default.
                       return Commit.createCommit(options, localSha, finalTreeSha,
                            headRefName).then((_) {
-                        return Checkout.checkout(options, true);
+                        return Checkout.checkout(options, finalTreeSha);
                       });
                     });
                   }).catchError((e) {
