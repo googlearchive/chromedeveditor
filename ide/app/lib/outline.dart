@@ -104,7 +104,9 @@ class Outline {
       _create(data);
     }
 
-    if (_lastScrolledOffsetRange != null) scrollPosition = _lastScrolledOffsetRange;
+    if (_lastScrolledOffsetRange != null) {
+      scrollPosition = _lastScrolledOffsetRange;
+    }
   }
 
   OutlineTopLevelItem _create(services.OutlineTopLevelEntry data) {
@@ -130,7 +132,6 @@ class Outline {
 
   OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
     _rootList.append(item.element);
-    _outlineItems.add(item);
     item.onClick.listen((event) => _childSelectedController.add(item));
     return item;
   }
@@ -326,10 +327,11 @@ class OutlineClass extends OutlineTopLevelItem {
     if (members.length > 0) {
       _offsetRange.bottom = members[0]._offsetRange.top - 1;
     }
-    // Constructor's offsetRange.
+    // Constructors' offsetRanges.
     for (int i = 0; i < members.length; ++i) {
       OutlineItem member = members[i];
-      if (member._data.name == _data.name) {
+      if (member._data.name == _data.name ||
+          member._data.name.startsWith("${_data.name}.")) {
         if (i > 0) {
           member._offsetRange.top = members[i - 1]._offsetRange.bottom + 1;
         }
