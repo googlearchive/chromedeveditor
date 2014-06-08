@@ -3521,6 +3521,8 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
       : super(spark, "git-authentication", "Authenticate", dialogElement);
 
   void _invoke([Object context]) {
+    (getElement('#gitUsername') as InputElement).value = '';
+    (getElement('#gitPassword') as InputElement).value = '';
     spark.setGitSettingsResetDoneVisible(false);
     _show();
   }
