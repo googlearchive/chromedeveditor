@@ -102,7 +102,7 @@ class SparkStatus extends SparkWidget {
     _throbber.classes.toggle('spinning',
         _spinning && (_temporaryMessage == null));
     final String text = _calculateMessage();
-    _container.classes.toggle('hidden', text.isEmpty);
+    _container.classes.toggle('showing', text.isNotEmpty);
     _label.text = text;
   }
 
