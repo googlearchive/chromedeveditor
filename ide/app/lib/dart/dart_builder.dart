@@ -52,6 +52,9 @@ class DartBuilder extends Builder {
     } else {
       Project project = changes.first.resource.project;
 
+      // Guard against a `null` project.
+      if (project == null) return new Future.value();
+
       ProjectAnalyzer context = analyzer.getProjectAnalyzer(project);
 
       if (context == null) {
