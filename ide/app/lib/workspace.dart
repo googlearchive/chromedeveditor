@@ -167,11 +167,11 @@ class Workspace extends Container {
       resource.parent._removeChild(resource, fireEvent: false);
 
       if (newEntry.isFile) {
-        var file = new File(container, newEntry);
+        File file = new File(container, newEntry);
         container.getChildren().add(file);
         return ChangeDelta.containerAdd(file);
       } else {
-        var folder = new Folder(container, newEntry);
+        Folder folder = new Folder(container, newEntry);
         container.getChildren().add(folder);
         return _gatherChildren(folder).then((_) {
           return ChangeDelta.containerAdd(folder);
@@ -466,10 +466,10 @@ class Workspace extends Container {
     return dir.createReader().readEntries().then((entries) {
       for (chrome.Entry ent in entries) {
         if (ent.isFile) {
-          var file = new File(container, ent);
+          File file = new File(container, ent);
           container.getChildren().add(file);
         } else {
-          var folder = new Folder(container, ent);
+          Folder folder = new Folder(container, ent);
           container.getChildren().add(folder);
           futures.add(_gatherChildren(folder));
         }
@@ -621,12 +621,12 @@ abstract class Resource {
   Future<Map> _rename(String name) {
     return entry.moveTo(_parent._entry, name: name).then((chrome.Entry e) {
       if (e.isFile) {
-        var file = new File(_parent, e);
+        File file = new File(_parent, e);
         _parent.getChildren().add(file);
         _parent.getChildren().remove(this);
         return {'resource': file, 'uuids': _resourceUuids(file)};
       } else {
-        var folder = new Folder(_parent, e);
+        Folder folder = new Folder(_parent, e);
         _parent.getChildren().add(folder);
         _parent.getChildren().remove(this);
         return workspace._gatherChildren(folder).then((_) {
@@ -1343,7 +1343,7 @@ class ResourceChangeEvent {
   Iterable<Project> get modifiedProjects => changes
       .map((delta) => delta.resource.project)
       .toSet()
-      .where((project) => project != null);
+      .where((Project project) => project != null);
 
   List<ChangeDelta> getChangesFor(Project project) {
     return changes.where((c) => c.resource.project == project).toList();

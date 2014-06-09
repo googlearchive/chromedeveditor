@@ -536,9 +536,6 @@ class PubLaunchParticipant extends LaunchParticipant {
   final PackageManager pubManager;
   final Notifier notifier;
 
-  String _message =
-   "Make sure you downloaded Pub packages. Right-click on the pubspec and use 'Pub get'";
-
   PubLaunchParticipant(this.pubManager, this.notifier);
 
   String get name => 'Pub';
@@ -547,14 +544,17 @@ class PubLaunchParticipant extends LaunchParticipant {
        => application.isDart;
 
   Future<bool> run(Application application, LaunchTarget launchTarget) {
-    return pubManager.isPackagesInstalled(application.primaryResource.parent)
-      .then((installed) {
-        if (installed is String) {
-          return notifier.showMessageAndWait(
-            'Run',"'${installed}' package is missing in the project. ${_message}");
-        }
-        return new Future.value(true);
-      });
+    return pubManager.arePackagesInstalled(application.primaryResource.parent)
+        .then((installed) {
+      if (installed is String) {
+        return notifier.showMessageAndWait(
+          'Run',
+          "The '${installed}' package is missing from the packages directory. "
+          "The application may not run correctly. To provision the packages, "
+          "right-click on the pubspec.yaml file and select 'Pub Get'.");
+      }
+      return new Future.value(true);
+    });
   }
 }
 

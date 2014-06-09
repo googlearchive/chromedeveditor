@@ -98,7 +98,7 @@ class PackIndex {
 
   int _compareShas(List<int> sha1, List<int> sha2) {
     // assume first byte has been matched in the fan out table.
-    for (var i =1; i < 20; ++i) {
+    for (var i = 1; i < 20; ++i) {
       if (sha1[i] != sha2[i]) {
         return sha1[i] - sha2[i];
       }
