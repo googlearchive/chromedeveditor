@@ -50,7 +50,7 @@ class PubManager extends PackageManager {
   Future upgradePackages(Folder container) =>
       _installUpgradePackages(container, 'upgrade', true);
 
-  Future isPackagesInstalled(Folder container) {
+  Future<dynamic> arePackagesInstalled(Folder container) {
     File pubspecFile = findPubspec(container);
     if (pubspecFile is File) {
       container = pubspecFile.parent;
@@ -75,8 +75,6 @@ class PubManager extends PackageManager {
   //
   // - end PackageManager abstract interface.
   //
-
-
 
   Future _installUpgradePackages(
       Folder container, String commandName, bool isUpgrade) {
