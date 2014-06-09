@@ -17,6 +17,14 @@
   top: 0;
 }
 
+[beforeSplit] {
+  box-shadow: rgba(0, 0, 0, 0.2) 1px 0px 2px;
+}
+
+[afterSplit] {
+  z-index: -1;
+}
+
 spark-dialog {
   top: 72px;
   left: 50%;
