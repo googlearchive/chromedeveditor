@@ -470,12 +470,17 @@ li.outlineItem.topLevel.class {
   position: absolute;
   width: 36px;
   height: 36px;
-  bottom: 20px;
-  right: 20px;
+  bottom: 10px;
+  right: 15px;
   z-index: 150;
-  fill: #666;
+  fill: #ddd;
   background-color: #000;
+  opacity: 0.7;
   border: 1px solid #ddd;
+}
+
+#toggleOutlineButton:hover {
+  opacity: 1;
 }
 
 #outlineContainer {
@@ -484,7 +489,7 @@ li.outlineItem.topLevel.class {
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-right: none;
-  bottom: 25px;
+  bottom: 15px;
   position: absolute;
   right: 22px;
   top: 55px;
