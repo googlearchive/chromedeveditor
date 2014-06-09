@@ -82,16 +82,17 @@
   box-shadow: none;
 }
 
+::content .form-control:invalid {
+  color: red;
+  border-color: red;
+}
+
 ::content .form-control:focus {
   outline: none;
   -webkit-box-shadow: none;
   box-shadow: none;
   border-color: rgb(66, 128, 244);
   transition: border-color ease-in-out 0.4s;
-}
-
-::content .form-control:invalid {
-  color: red;
 }
 
 ::content input[type=radio] {

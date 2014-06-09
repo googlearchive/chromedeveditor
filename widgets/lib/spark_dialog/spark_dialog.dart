@@ -8,8 +8,9 @@ import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
-import '../spark_modal/spark_modal.dart';
 import '../common/spark_widget.dart';
+import '../spark_dialog_button/spark_dialog_button.dart';
+import '../spark_modal/spark_modal.dart';
 
 @CustomTag('spark-dialog')
 class SparkDialog extends SparkWidget {
@@ -33,6 +34,9 @@ class SparkDialog extends SparkWidget {
   SparkModal _modal;
   String _title = '';
   Element _titleElement;
+  FormElement _body;
+  Iterable<SparkDialogButton> _buttons;
+  List<InputElement> _validatedFields = [];
 
   SparkDialog.created() : super.created();
 
@@ -40,17 +44,24 @@ class SparkDialog extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
-    _modal = $['modal'];
-
-    _titleElement = $['title'];
-    title = _title;
-
-    $['progress'].classes.toggle('hidden', !_activityVisible);
     SparkWidget.enableKeyboardEvents(_modal);
+
+    _modal = $['modal'];
+    _titleElement = $['title'];
+    _body = $['body'];
+    _buttons = SparkWidget.inlineNestedContentNodes($['buttonsContent']);
+
+    title = _title;
+    $['progress'].classes.toggle('hidden', !_activityVisible);
+
+    // TODO(ussuri): Use MutationObserver here to detect added/removed fields.
+    _addValidatableFields(SparkWidget.inlineNestedContentNodes($['bodyContent']));
+    _body.onChange.listen(_updateFormValidity);
   }
 
   void show() {
     if (!_modal.opened) {
+      _updateFormValidity();
       _modal.toggle();
     }
   }
@@ -66,5 +77,29 @@ class SparkDialog extends SparkWidget {
   void set activityVisible(bool visible) {
     _activityVisible = visible;
     $['progress'].classes.toggle('hidden', !_activityVisible);
+  }
+
+  void _addValidatableFields(Iterable<Node> candidates) {
+    candidates.forEach((Element element) {
+      if (element is InputElement) {
+        if (element.willValidate) {
+          _validatedFields.add(element);
+          if (element is TextInputElement) {
+            // Just listening to the [_body.onChange] is not enough to update
+            // the validity in real-time as the user types.
+            element.onInput.listen(_updateFormValidity);
+          }
+        }
+      } else {
+        _addValidatableFields(element.children);
+      }
+    });
+  }
+
+  void _updateFormValidity([_]) {
+    // NOTE: [_body.checkValidity] didn't work.
+    final bool formIsValid =
+        _validatedFields.every((f) => f.disabled || f.checkValidity());
+    _buttons.forEach((b) => b.updateParentFormValidity(formIsValid));
   }
 }
