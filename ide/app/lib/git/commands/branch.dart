@@ -33,7 +33,7 @@ class Branch {
   static final branchRegex = new RegExp(BRANCH_PATTERN);
 
   static bool _verifyBranchName(String name) {
-    var length = name.length;
+    int length = name.length;
     return (name.isNotEmpty && branchRegex.matchAsPrefix(name) != null &&
         !name.endsWith('.') && !name.endsWith('.lock') && !name.endsWith('/'));
   }
@@ -60,7 +60,7 @@ class Branch {
   static Future<String> _fetchAndCreateBranch(
       GitOptions options, String branchName, String sourceBranchName) {
     ObjectStore store = options.store;
-    if (sourceBranchName != null && sourceBranchName.startsWith('origin/')) {
+    if (sourceBranchName.startsWith('origin/')) {
       sourceBranchName = sourceBranchName.split('/').last;
       return options.store.getRemoteHeadForRef(sourceBranchName).then((sha) {
         options.depth = 1;
@@ -69,7 +69,7 @@ class Branch {
 
         Function createBranch = () {
           options.branchName = branchName;
-          return store.createNewRef('refs/heads/' + branchName, sha);
+          return store.createLocalRef(branchName, sha);
         };
 
         return fetch.fetch().then((_) {
@@ -85,7 +85,7 @@ class Branch {
     } else {
       String refName = 'refs/heads/${sourceBranchName}';
       return store.getHeadForRef(refName).then((String sha) {
-        return store.createNewRef('refs/heads/' + branchName, sha);
+        return store.createLocalRef(branchName, sha);
       });
     }
   }

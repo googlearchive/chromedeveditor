@@ -142,7 +142,9 @@ class _BuildJob extends Job {
 
 ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
   List<ChangeDelta> deltas = [];
-  events.forEach((e) => deltas.addAll(
-      e.changes.where((change) => !change.resource.isDerived())));
+  events.forEach((e) => deltas.addAll(e.changes.where((ChangeDelta change) {
+    Resource resource = change.resource;
+    return resource.project != null && !resource.isDerived();
+  })));
   return new ResourceChangeEvent.fromList(deltas, filterRename: true);
 }

@@ -4,7 +4,10 @@
 
 library git.commands.diff;
 
+import 'dart:async';
+
 import '../object.dart';
+import '../objectstore.dart';
 
 class DiffEntryType {
   static const String ADDED = "ADDED";
@@ -20,8 +23,8 @@ class DiffEntry {
 
   // String representation of the diff between the two versions of file.
   String diff;
+  DiffEntry(this.oldEntry, this.newEntry, this.type,  [String path]) {
 
-  DiffEntry(this.oldEntry, this.newEntry, this.type,  [String path, this.diff]) {
     if (path == null) {
       path = oldEntry == null ? newEntry.name : oldEntry.name;
     } else {
@@ -31,19 +34,36 @@ class DiffEntry {
 }
 
 class TreeDiffResult {
-  List<DiffEntry> diffEntries = [];
+  final Map<String, DiffEntry> entries = {};
 
   List<DiffEntry> getAddedEntries() => _getEntriesForType(DiffEntryType.ADDED);
   List<DiffEntry> getRemovedEntries() => _getEntriesForType(DiffEntryType.REMOVED);
   List<DiffEntry> getModifiedEntries() => _getEntriesForType(DiffEntryType.MODIFIED);
 
   List<DiffEntry> _getEntriesForType(String type)
-      => diffEntries.where((diffEntry) => diffEntry.type == type).toList();
+      => entries.values.where((entry) => entry.type == type).toList();
 
-  TreeDiffResult addEntry(DiffEntry diffEntry) {
-    diffEntries.add(diffEntry);
-    return this;
+  void addEntry(DiffEntry diffEntry) {
+    entries[diffEntry.path] = diffEntry;
   }
+
+  void removeEntry(DiffEntry diffEntry) {
+     entries.remove(diffEntry.path);
+  }
+
+  void addAll(List<DiffEntry> diffEntries) {
+    diffEntries.forEach((diffEntry) {
+      entries[diffEntry.path] = diffEntry;
+    });
+  }
+
+  void removeAll(List<DiffEntry> diffEntries) {
+    diffEntries.forEach((diffEntry) {
+      entries.remove(diffEntry.path);
+    });
+  }
+
+  void clear() => entries.clear();
 }
 
 /**
@@ -103,5 +123,100 @@ class Diff {
       }
     }
     return treeDiff;
+  }
+
+  /**
+   * Diffs given tree objects [oldTree], [newTree] recursively and returns
+   * the diff files as [TreeDiffResult].
+   */
+  static Future<TreeDiffResult> diffTreeRecursive(
+      ObjectStore store, TreeObject oldTree, TreeObject newTree) {
+
+    TreeDiffResult diff = diffTree(oldTree, newTree);
+    List<TreeEntry> treeEntries =
+        diff.getAddedEntries().map((entry) => entry.newEntry).toList();
+
+    return _expandDiffEntries(store, treeEntries, DiffEntryType.ADDED).then(
+        (diffEntries) {
+      diff.removeAll(diff.getAddedEntries());
+      diff.addAll(diffEntries);
+    }).then((_) {
+      List<TreeEntry> treeEntries =
+          diff.getRemovedEntries().map((entry) => entry.oldEntry).toList();
+
+      return _expandDiffEntries(store, treeEntries, DiffEntryType.REMOVED).then(
+          (diffEntries) {
+        diff.removeAll(diff.getRemovedEntries());
+        diff.addAll(diffEntries);
+      }).then((_) {
+        List<DiffEntry> diffEntries = diff.getModifiedEntries();
+        return Future.forEach(diffEntries, ((DiffEntry diffEntry) {
+
+          if (!diffEntry.newEntry.isBlob) {
+            return store.retrieveObjectList([diffEntry.oldEntry.sha,
+                diffEntry.newEntry.sha], "Tree").then((List<TreeObject> trees) {
+              diff.removeEntry(diffEntry);
+
+              return diffTreeRecursive(store, trees[0], trees[1]).then((childDiffs) {
+                childDiffs.entries.forEach((path, childEntry) {
+                  childEntry.path = diffEntry.path + '/' + childEntry.path;
+                  diff.addEntry(childEntry);;
+                });
+              });
+            });
+          }
+        })).then((_) => diff);
+      });
+    });
+  }
+
+  /**
+   * Expands a directory [treeSha] recursively.
+   */
+  static Future<List<DiffEntry>> _expandDiffEntry(
+      ObjectStore store, String treeSha, String type) {
+
+    List<DiffEntry> diffEntries = [];
+    return store.retrieveObjectList([treeSha], "Tree").then(
+        (List<TreeObject> trees) {
+      return Future.forEach(trees[0].entries, (TreeEntry entry) {
+        if (entry.isBlob) {
+          if (type == DiffEntryType.ADDED) {
+            diffEntries.add(new DiffEntry(null, entry, type));
+          } else {
+            diffEntries.add(new DiffEntry(entry, null, type));
+          }
+        } else {
+          return _expandDiffEntry(store, entry.sha, type).then((childEntries) {
+            childEntries.forEach((childDiffEntry) {
+              childDiffEntry.path = entry.name + '/' + childDiffEntry.path;
+              diffEntries.add(childDiffEntry);
+            });
+          });
+        }
+      }).then((_) {
+        return diffEntries;
+      });
+    });
+  }
+
+  /**
+   * Expands given [treeEntries] into files.
+   */
+  static Future<List<DiffEntry>> _expandDiffEntries(
+      ObjectStore store, List<TreeEntry> diffEntries, String type) {
+    List<DiffEntry> diffEntries = [];
+    return Future.forEach(diffEntries, (DiffEntry diffEntry) {
+      if (diffEntry.newEntry.isBlob) {
+        diffEntries.add(diffEntry);
+        return new Future.value();
+      }
+      return _expandDiffEntry(store, diffEntry.newEntry.sha, type).then((entries) {
+        entries.forEach((entry) {
+          entry.path = diffEntry.newEntry.name + '/' + entry.path;
+          diffEntries.add(entry);
+        });
+      });
+    }).then((_) => diffEntries);
   }
 }

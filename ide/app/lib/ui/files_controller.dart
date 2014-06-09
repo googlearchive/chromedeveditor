@@ -13,7 +13,7 @@ import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 
-import 'utils/html_utils.dart';
+import 'html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';

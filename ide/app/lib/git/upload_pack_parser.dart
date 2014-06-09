@@ -35,8 +35,7 @@ class PackParseResult {
 class UploadPackParser {
 
   int _offset = 0;
-  var objects = null;
-  var remoteLines = null;
+  List<PackedObject> objects = null;
   List<int> data;
   Cancel _cancel;
 
