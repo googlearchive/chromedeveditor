@@ -11,10 +11,10 @@ import 'package:archive/archive.dart' as archive;
 
 import 'workspace.dart';
 
-Future archiveContainer(Container container, [bool addManifest = false]) {
+Future archiveContainer(Container container, [bool addZipManifest = false]) {
   archive.Archive arch = new archive.Archive();
-  return _recursiveArchive(arch, container, 'www/').then((_) {
-    if (addManifest) {
+  return _recursiveArchive(arch, container, addZipManifest ? 'www/' : '').then((_) {
+    if (addZipManifest) {
       String zipAssetManifestString = _buildZipAssetManifest(container);
       arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
           zipAssetManifestString.codeUnits.length,
@@ -27,19 +27,19 @@ Future archiveContainer(Container container, [bool addManifest = false]) {
 String _buildZipAssetManifest(Container container) {
   Iterable<Resource> children = container.traverse().skip(1);
   int rootIndex = container.path.length + 1;
-  Map<String, Map<String, String>> zipassetManifest = {};
+  Map<String, Map<String, String>> zipAssetManifest = {};
   for (Resource element in children) {
     if (element.isFile) {
       String path = element.path.substring(rootIndex);
-      zipassetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
+      zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
     }
   }
 
-  return JSON.encode(zipassetManifest);
+  return JSON.encode(zipAssetManifest);
 }
 
 Future _recursiveArchive(archive.Archive arch, Container parent,
-      [String prefix = '']) {
+    [String prefix = '']) {
   List<Future> futures = [];
 
   for (Resource child in parent.getChildren()) {

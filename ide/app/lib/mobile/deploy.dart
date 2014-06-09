@@ -85,13 +85,10 @@ class MobileDeploy {
 
     _logger.info('deploying application to ip host');
 
-    return _sendDeleteApprequest(target, monitor)
-        .then((_) {
-          monitor.worked(3);
-          return _sendHttpPush(target, monitor);
-        }).then((_) {
-          monitor.worked(10);
-        });
+    return _sendDeleteApprequest(target, monitor).then((_) {
+      monitor.worked(3);
+      return _sendHttpPush(target, monitor);
+    });
   }
 
   /**
@@ -177,9 +174,9 @@ class MobileDeploy {
     List<int> httpRequest;
     TcpClient client;
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
-      monitor.worked(3);
-      httpRequest = _buildHttpRequest(target, archivedData);
       monitor.worked(5);
+      httpRequest = _buildHttpRequest(target, archivedData);
+      monitor.worked(7);
       return TcpClient.createClient(target, 2424);
     }).then((TcpClient _client) {
       client = _client;
