@@ -2098,6 +2098,7 @@ class FolderOpenAction extends SparkAction {
 class DeployToMobileAction extends SparkActionWithProgressDialog implements ContextAction {
   InputElement _pushUrlElement;
   ws.Container deployContainer;
+  ProgressMonitor _monitor;
 
   DeployToMobileAction(Spark spark, Element dialog)
       : super(spark, "application-push", "Deploy to Mobile", dialog) {
@@ -2134,7 +2135,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     } else if (!MobileDeploy.isAvailable()) {
       spark.showErrorMessage('Unable to Deploy', 'No USB devices available.');
     } else {
-      _toggleProgressVisible(false);
+      _restoreDialog();
       _show();
     }
   }
@@ -2151,11 +2152,18 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     enabled = _appliesTo(resource);
   }
 
+  void _toggleProgressVisible(bool visible) {
+    super._toggleProgressVisible(visible);
+    _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
+  }
+
   void _commit() {
     _setProgressMessage("Deploying…");
     _toggleProgressVisible(true);
+    _deployButton.disabled = true;
+    _deployButton.deliverChanges();
 
-    ProgressMonitor monitor = new ProgressMonitorImpl(_progress);
+    _monitor = new ProgressMonitorImpl(this);
 
     String type = getElement('input[name="type"]:checked').id;
     bool useAdb = type == 'adb';
@@ -2166,10 +2174,10 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     // Invoke the deployer methods in Futures in order to capture exceptions.
     Future f = new Future(() {
       return useAdb ?
-          deployer.pushAdb(monitor) : deployer.pushToHost(url, monitor);
+          deployer.pushAdb(_monitor) : deployer.pushToHost(url, _monitor);
     });
 
-    monitor.runCancellableFuture(f).then((_) {
+    _monitor.runCancellableFuture(f).then((_) {
       _hide();
       spark.showSuccessMessage('Successfully pushed');
     }).catchError((e) {
@@ -2177,58 +2185,34 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
         spark.showMessage('Push Failure', e.toString());
       }
     }).whenComplete(() {
-      _toggleProgressVisible(false);
+      _restoreDialog();
+      _monitor = null;
     });
   }
 
-  void _toggleProgressVisible(bool visible) {
-    _progress.visible = visible;
-    _progress.deliverChanges();
-
-    _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
-
-    _deployButton.disabled = visible;
+  void _restoreDialog() {
+    _setProgressMessage('');
+    _toggleProgressVisible(false);
+    _deployButton.disabled = false;
     _deployButton.deliverChanges();
+  }
+
+  void _cancel() {
+    if (_monitor != null) {
+      _monitor.cancelled = true;
+    }
+    _hide();
   }
 }
 
 class ProgressMonitorImpl extends ProgressMonitor {
-  final SparkProgress _sparkProgress;
+  final SparkActionWithProgressDialog _dialog;
 
-  ProgressMonitorImpl(this._sparkProgress) {
-    _sparkProgress.onCancelled.listen((_) {
-      cancelled = true;
-    });
-  }
+  ProgressMonitorImpl(this._dialog);
 
   void start(String title, [num maxWork = 0]) {
     super.start(title, maxWork);
-
-    _sparkProgress.progressMessage = title == null ? '' : title;
-
-    if (maxWork == 0) {
-      _sparkProgress.indeterminate = true;
-    } else {
-      _sparkProgress.value = 0;
-    }
-  }
-
-  void worked(num amount) {
-    super.worked(amount);
-
-    _sparkProgress.value = progress * 100;
-  }
-
-  void done() {
-    super.done();
-
-    _sparkProgress.value = progress * 100;
-  }
-
-  set cancelled(bool val) {
-    super.cancelled = val;
-
-    _sparkProgress.indeterminate = true;
+    _dialog._setProgressMessage(title == null ? '' : title);
   }
 }
 
