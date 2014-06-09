@@ -2132,8 +2132,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     } else if (!MobileDeploy.isAvailable()) {
       spark.showErrorMessage('Unable to Deploy', 'No USB devices available.');
     } else {
-      _setProgressMessage('');
-      _toggleProgressVisible(false);
+      _restoreDialog();
       _show();
     }
   }
@@ -2148,6 +2147,11 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
 
   void _updateEnablement(ws.Resource resource) {
     enabled = _appliesTo(resource);
+  }
+
+  void _toggleProgressVisible(bool visible) {
+    super._toggleProgressVisible(visible);
+    _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
   }
 
   void _commit() {
@@ -2178,12 +2182,16 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
         spark.showMessage('Push Failure', e.toString());
       }
     }).whenComplete(() {
-      _setProgressMessage('');
-      _toggleProgressVisible(false);
-      _deployButton.disabled = false;
-      _deployButton.deliverChanges();
+      _restoreDialog();
       _monitor = null;
     });
+  }
+
+  void _restoreDialog() {
+    _setProgressMessage('');
+    _toggleProgressVisible(false);
+    _deployButton.disabled = false;
+    _deployButton.deliverChanges();
   }
 
   void _cancel() {
