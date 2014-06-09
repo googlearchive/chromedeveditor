@@ -131,6 +131,8 @@ class ObjectStore {
   }
 
   Future writeRemoteRefs(List<GitRef> refs) {
+    // Clear old refs. This will ensure, the branches deleted on remote,
+    // are deleted locally.
     return clearRemoteRefs().then((_) {
       return Future.forEach(refs, (GitRef ref) {
         String refName = ref.name.split('/').last;

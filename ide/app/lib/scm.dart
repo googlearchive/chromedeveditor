@@ -176,6 +176,10 @@ abstract class ScmProjectOperations {
 
   Future<List<String>> getLocalBranchNames();
 
+  Future<Iterable<String>> getRemoteBranchNames();
+
+  Future<Iterable<String>> getUpdatedRemoteBranchNames();
+
   Future createBranch(String branchName);
 
   Future checkoutBranch(String branchName);
@@ -373,6 +377,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
         Fetch.updateAndGetRemoteRefs(options);
         return result;
       });
+    });
+  }
+
+  Future<Iterable<String>> getUpdatedRemoteBranchNames()  {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Fetch.updateAndGetRemoteRefs(options);
     });
   }
 
