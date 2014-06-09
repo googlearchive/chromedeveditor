@@ -9,6 +9,7 @@ import 'dart:async';
 import 'constants.dart';
 import 'index.dart';
 import 'status.dart';
+import '../file_operations.dart';
 import '../object.dart';
 import '../objectstore.dart';
 
@@ -21,39 +22,71 @@ class Diff {
 
   static Future<List<DiffResult>> diff(ObjectStore store) {
     return store.index.updateIndex().then((_) {
-      List<DiffResult> diffs;
+
+      List<DiffResult> diffs = [];
       Map<String, FileStatus> statuses = Status.getUnstagedChanges(store);
       return Future.forEach(statuses.keys, (String path) {
+
         FileStatus status = statuses[path];
-        List<String> shas = [];
-        if (status.headSha != null) shas.add(status.headSha);
-        if (status.sha != null) shas.add(status.sha);
-        if (shas.isEmpty) {
-          // Ignore directoreis.
+        String currentSha = status.sha;
+        String headSha = status.headSha;
+
+        if (currentSha == null && headSha == null) {
+          // Ignore directories.
           return new Future.value();
         }
-        return store.retrieveObjectBlobsAsString(shas).then(
-            (List<LooseObject> files) {
+
+        return _retrieveShas(store, status.path, status.headSha, status.sha).then(
+            (contentMap){
           DiffResult diff;
-          if (status.headSha == null) {
+          if (headSha == null) {
             // This file is added.
-            diff = new DiffResult(status.path, status.headSha, status.sha, null,
-                files.first.data, FileStatusType.ADDED);
-          } else if (status.sha == null) {
+            diff = new DiffResult(status.path, null, currentSha, null,
+                contentMap[currentSha], FileStatusType.ADDED);
+          } else if (currentSha == null) {
             // This file is deleted.
-            diff = new DiffResult(status.path, status.headSha, null,
-                files.first.data,  null, FileStatusType.DELETED);
+            diff = new DiffResult(status.path, headSha, null, contentMap[headSha],
+                null, FileStatusType.DELETED);
           } else {
             // This file is modified.
-            diff = new DiffResult(status.path, status.headSha, status.sha,
-                files.first.data,  files[1].data, FileStatusType.MODIFIED);
+            diff = new DiffResult(status.path, headSha, currentSha, contentMap[headSha],
+                contentMap[currentSha], FileStatusType.MODIFIED);
           }
+          diffs.add(diff);
         });
       }).then((_) => diffs);
     });
   }
+
+  static Future<Map<String, String>> _retrieveShas(
+      ObjectStore store, String path, String headSha, String currentSha) {
+    Map<String, String> contentMap = {};
+    if (headSha == null && currentSha == null) {
+      return new Future.value(contentMap);
+    }
+    return new Future(() {
+      if (headSha != null) {
+        return store.retrieveObjectBlobsAsString([headSha]).then(
+            (List<LooseObject> looseObj) {
+          contentMap[headSha] = looseObj.first.data;
+        });
+      }
+    }).then((_) {
+      if (currentSha != null) {
+        return FileOps.readFileText(store.root, path).then((String content) {
+          print(content);
+          contentMap[currentSha] = content;
+        });
+      } else {
+        return new Future.value();
+      }
+    }).then((_) => contentMap);
+  }
 }
 
+/**
+ * A dataType to hold diff information of a file.
+ */
 class DiffResult {
   final String path;
   final String oldSha;
