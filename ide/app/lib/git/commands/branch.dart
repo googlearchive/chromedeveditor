@@ -68,7 +68,7 @@ class Branch {
 
         Function createBranch = () {
           options.branchName = branchName;
-          return store.createNewRef('refs/heads/' + branchName, sha);
+          return store.createLocalRef(branchName, sha);
         };
 
         return fetch.fetch().then((_) {
@@ -84,7 +84,7 @@ class Branch {
     } else {
       return store.getHeadRef().then((String headRefName) {
         return store.getHeadForRef(headRefName).then((sha) {
-          return store.createNewRef('refs/heads/' + branchName, sha);
+          return store.createLocalRef(branchName, sha);
         });
       });
     }

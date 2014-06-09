@@ -46,17 +46,6 @@ class Clone {
 
   ObjectStore get store => _options.store;
 
-  Future _writeRefs(chrome.DirectoryEntry dir, List<GitRef> refs) {
-    return Future.forEach(refs, (GitRef ref) {
-      String refName = ref.name.split('/').last;
-      if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
-        return new Future.value();
-      }
-      String path = REFS_REMOTE_HEADS + ref.name.split('/').last;
-      return FileOps.createFileWithContent(dir, path, ref.sha, "Text");
-    });
-  }
-
   /**
    * This function is exposed for mocking purpose.
    */
@@ -106,7 +95,7 @@ class Clone {
           GitRef remoteHeadRef, localHeadRef;
           String remoteHead;
 
-          return _callMethod(_writeRefs, [gitDir, refs]).then((_) {
+          return _callMethod(store.writeRemoteRefs, [refs]).then((_) {
             refs.forEach((GitRef ref) {
               if (ref.name == "HEAD") {
                 remoteHead = ref.sha;

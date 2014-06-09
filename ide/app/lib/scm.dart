@@ -176,6 +176,10 @@ abstract class ScmProjectOperations {
 
   Future<List<String>> getLocalBranchNames();
 
+  Future<Iterable<String>> getRemoteBranchNames();
+
+  Future<Iterable<String>> getUpdatedRemoteBranchNames();
+
   Future createBranch(String branchName);
 
   Future checkoutBranch(String branchName);
@@ -365,8 +369,23 @@ class GitScmProjectOperations extends ScmProjectOperations {
   Future<List<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
-  Future<Iterable<String>> getRemoteBranchNames() =>
-      objectStore.then((store) => store.getRemoteHeads());
+  Future<Iterable<String>> getRemoteBranchNames()  {
+    return objectStore.then((store) {
+      return store.getRemoteHeads().then((result) {
+        GitOptions options = new GitOptions(root: entry, store: store);
+        // Return immediately but requet async update.
+        Fetch.updateAndGetRemoteRefs(options);
+        return result;
+      });
+    });
+  }
+
+  Future<Iterable<String>> getUpdatedRemoteBranchNames()  {
+    return objectStore.then((store) {
+      GitOptions options = new GitOptions(root: entry, store: store);
+      return Fetch.updateAndGetRemoteRefs(options);
+    });
+  }
 
   Future createBranch(String branchName, [String remoteBranchName]) {
     return objectStore.then((store) {
