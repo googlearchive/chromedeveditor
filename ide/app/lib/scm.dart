@@ -180,7 +180,7 @@ abstract class ScmProjectOperations {
 
   Future<Iterable<String>> getUpdatedRemoteBranchNames();
 
-  Future createBranch(String branchName);
+  Future createBranch(String branchName, String sourceBranchName);
 
   Future checkoutBranch(String branchName);
 
@@ -374,6 +374,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
       return store.getRemoteHeads().then((result) {
         GitOptions options = new GitOptions(root: entry, store: store);
         // Return immediately but requet async update.
+        // TODO(grv): wait for it when, the UI support refreshing remote branches.
         Fetch.updateAndGetRemoteRefs(options);
         return result;
       });
@@ -387,11 +388,11 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future createBranch(String branchName, [String remoteBranchName]) {
+  Future createBranch(String branchName, String sourceBranchName) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
-      return Branch.branch(options, remoteBranchName);
+      return Branch.branch(options, sourceBranchName);
     });
   }
 
