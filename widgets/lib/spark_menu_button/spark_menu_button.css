@@ -14,8 +14,7 @@
 }
 
 #overlay {
-  background-color: #fafafa;
-  border: 1px solid #cfcfcf;
+  background-color: white;
   border-radius: 3px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   margin-top: 7px;
