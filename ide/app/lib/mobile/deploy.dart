@@ -120,7 +120,6 @@ class MobileDeploy {
     String boundary = '--------------------------------a921a8f557cf';
     String header =
         'POST /zippush?appId=${appContainer.name}&appType=chrome& HTTP/1.1\r\n'
-//        'PUT /zippush?manifestEtag=0&appType=chrome HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
         'Host: ${target}:2424\r\n'
         'Content-Type: multipart/form-data; boundary=$boundary\r\n';

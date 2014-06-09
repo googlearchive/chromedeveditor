@@ -16,7 +16,6 @@ Future archiveContainer(Container container, [bool addManifest = false]) {
   return _recursiveArchive(arch, container, 'www/').then((_) {
     if (addManifest) {
       String zipAssetManifestString = _buildZipAssetManifest(container);
-      /*%TRACE3*/ print("""(4> 6/8/14): zipAssetManifestString: ${zipAssetManifestString}"""); // TRACE%
       arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
           zipAssetManifestString.codeUnits.length,
           zipAssetManifestString.codeUnits));
@@ -30,9 +29,10 @@ String _buildZipAssetManifest(Container container) {
   int rootIndex = container.path.length + 1;
   Map<String, Map<String, String>> zipassetManifest = {};
   for (Resource element in children) {
-    /*%TRACE3*/ print("""(4> 6/8/14): element.path: ${element.path}"""); // TRACE%
-    String path = element.path.substring(rootIndex);
-    zipassetManifest["www/$path"] = {"path": "www/$path", "etag": 0};
+    if (element.isFile) {
+      String path = element.path.substring(rootIndex);
+      zipassetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
+    }
   }
 
   return JSON.encode(zipassetManifest);
@@ -46,7 +46,6 @@ Future _recursiveArchive(archive.Archive arch, Container parent,
     if (child is File) {
       futures.add(child.getBytes().then((buf) {
         List<int> data = buf.getBytes();
-        /*%TRACE3*/ print("""(4> 6/9/14): '${prefix}${child.name}': ${'${prefix}${child.name}'}"""); // TRACE%
         arch.addFile(new archive.ArchiveFile('${prefix}${child.name}',
             data.length, data));
       }));
