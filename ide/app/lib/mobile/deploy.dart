@@ -85,7 +85,13 @@ class MobileDeploy {
 
     _logger.info('deploying application to ip host');
 
-    return _sendHttpPush(target, monitor);
+    return _sendDeleteApprequest(target, monitor)
+        .then((_) {
+          monitor.worked(3);
+          return _sendHttpPush(target, monitor);
+        }).then((_) {
+          monitor.worked(10);
+        });
   }
 
   /**
@@ -124,6 +130,23 @@ class MobileDeploy {
     httpRequest.addAll(body);
 
     return httpRequest;
+  }
+
+  Future _sendDeleteApprequest(String target, ProgressMonitor monitor) {
+    return TcpClient.createClient(target, 2424).then((TcpClient client) {
+      List<int> httpRequest = [];
+      // Build the HTTP request headers.
+      String header =
+          'POST /deleteapp HTTP/1.1\r\n'
+          'User-Agent: Spark IDE\r\n';
+      String body = "all=true";
+
+      httpRequest.addAll(header.codeUnits);
+      httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+      httpRequest.addAll(body.codeUnits);
+
+      client.write(httpRequest);
+    });
   }
 
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
