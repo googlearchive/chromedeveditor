@@ -43,7 +43,6 @@ class Merge {
       TreeObject baseTree, TreeObject theirTree) {
     List<TreeEntry> finalTree = [];
     List merges = [];
-    var next = null;
     List indices = [0,0,0];
     List<MergeItem> conflicts = [];
 

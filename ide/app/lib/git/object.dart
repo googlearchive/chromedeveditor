@@ -23,7 +23,7 @@ abstract class GitObject {
    * Constructs a GitObject of the given type. [content] can be of type [String]
    * or [Uint8List].
    */
-  static GitObject make(String sha, String type, var content,
+  static GitObject make(String sha, String type, dynamic content,
                         [LooseObject rawObj]) {
     switch (type) {
       case ObjectTypes.BLOB_STR:
@@ -139,7 +139,7 @@ class TreeObject extends GitObject {
  */
 class BlobObject extends GitObject {
 
-  BlobObject(String sha, var data) : super(sha, data) {
+  BlobObject(String sha, dynamic data) : super(sha, data) {
     this.type = ObjectTypes.BLOB_STR;
   }
 }
@@ -170,7 +170,7 @@ class CommitObject extends GitObject {
   // raw commit object. This is needed in building pack files.
   LooseObject rawObj;
 
-  CommitObject(String sha, var data, [rawObj]) {
+  CommitObject(String sha, dynamic data, [LooseObject rawObj]) {
     this.type = ObjectTypes.COMMIT_STR;
     this.sha = sha;
     this.rawObj = rawObj;

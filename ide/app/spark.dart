@@ -60,10 +60,11 @@ final NumberFormat _nf = new NumberFormat.decimalPattern();
  * Create a [Zone] that logs uncaught exceptions.
  */
 Zone createSparkZone() {
-  var errorHandler = (self, parent, zone, error, stackTrace) {
+  Function errorHandler = (self, parent, zone, error, stackTrace) {
     _handleUncaughtException(error, stackTrace);
   };
-  var specification = new ZoneSpecification(handleUncaughtError: errorHandler);
+  ZoneSpecification specification =
+      new ZoneSpecification(handleUncaughtError: errorHandler);
   return Zone.current.fork(specification: specification);
 }
 
@@ -634,7 +635,7 @@ abstract class Spark
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
-    var lines = message.split('\n');
+    List<String> lines = message.split('\n');
     for(String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
@@ -706,7 +707,7 @@ abstract class Spark
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
-    var lines = message.split('\n');
+    List<String> lines = message.split('\n');
     for (String line in lines) {
       Element lineElement = new Element.p();
       lineElement.text = line;
@@ -1101,7 +1102,7 @@ abstract class SparkAction extends Action {
       _isProject(context) && isUnderScm(context.first);
 
   /**
-   * Returns true if `context` is a list with of items, all in the same project,
+   * Returns true if `context` is a list of items, all in the same project,
    * and that project is under SCM.
    */
   bool _isUnderScmProject(context) {
@@ -1113,7 +1114,7 @@ abstract class SparkAction extends Action {
     if (!isUnderScm(project)) return false;
 
     for (var resource in context) {
-      var resProject = resource.project;
+      ws.Project resProject = resource.project;
       if (resProject == null || resProject != project) {
         return false;
       }
@@ -1232,7 +1233,7 @@ abstract class SparkActionWithDialog extends SparkAction {
       _dialog.getElements(selectors);
 
   Element _triggerOnReturn(String selectors, [bool hideDialog = true]) {
-    var element = _dialog.getElement(selectors);
+    Element element = _dialog.getElement(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
         _commit();
@@ -1310,7 +1311,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
   void _commit() {
     super._commit();
 
-    var name = _nameElement.value;
+    String name = _nameElement.value;
     if (name.isNotEmpty) {
       if (folder != null) {
         folder.createNewFile(name).then((file) {
@@ -1349,7 +1350,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
-      var sel = spark._filesController.getSelection();
+      List<ws.Resource> sel = spark._filesController.getSelection();
       if (sel.isEmpty) return;
       resources = sel;
     }
@@ -1655,7 +1656,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
     return spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
@@ -1696,7 +1697,7 @@ abstract class PackageManagementAction
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource);
 
@@ -1763,7 +1764,7 @@ class CompileDartAction extends SparkAction implements ContextAction {
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
     bool isDartFile = resource is ws.File && resource.project != null
@@ -2136,7 +2137,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
 
   String get category => 'application';
 
-  bool appliesTo(list) => list.length == 1 && _appliesTo(list.first);
+  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
     return getAppContainerFor(resource) != null;
@@ -2147,7 +2148,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
   }
 
   void _commit() {
-    _setProgressMessage("Deploying...");
+    _setProgressMessage("Deploying…");
     _toggleProgressVisible(true);
 
     ProgressMonitor monitor = new ProgressMonitorImpl(_progress);
@@ -2339,14 +2340,14 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 
   void _commit() {
-    _setProgressMessage("Cloning...");
+    _setProgressMessage("Cloning…");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#cloneClose');
 
     SparkDialogButton cloneButton = getElement('#clone');
     cloneButton.disabled = true;
-    cloneButton.text = "Cloning...";
+    cloneButton.text = "Cloning…";
     cloneButton.deliverChanges();
 
     String url = _repoUrlElement.value;
@@ -2414,8 +2415,8 @@ class GitPullAction extends SparkActionWithProgressDialog implements ContextActi
       : super(spark, "git-pull", "Pull from Origin", dialog);
 
   void _invoke([context]) {
-    var project = context.first.project;
-    var operations = spark.scmManager.getScmOperationsFor(project);
+    ws.Project project = context.first.project;
+    ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(project);
 
     _dialog.dialog.title = 'Git Pull';
     String branchName = operations.getBranchName();
@@ -2536,7 +2537,7 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     remoteBranchName = (_selectElement.children[selectIndex]
         as OptionElement).value;
 
-    _setProgressMessage("Creating branch ${_branchNameElement.value}...");
+    _setProgressMessage("Creating branch ${_branchNameElement.value}…");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitBranchCancel');
@@ -2862,7 +2863,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   }
 
   void _push() {
-    _setProgressMessage("Pushing...");
+    _setProgressMessage("Pushing…");
     _toggleProgressVisible(true);
 
     SparkDialogButton closeButton = getElement('#gitPushClose');
@@ -3315,8 +3316,8 @@ class ResourceRefreshJob extends Job {
 
     Completer completer = new Completer();
 
-    var consumeProject;
-    consumeProject = () {
+    Function consumeProject;
+     consumeProject = () {
       ws.Project project = projects.removeAt(0);
 
       project.refresh().whenComplete(() {
@@ -3346,7 +3347,7 @@ class AboutSparkAction extends SparkActionWithDialog {
 
   void _invoke([Object context]) {
     if (!_initialized) {
-      var checkbox = getElement('#analyticsCheck');
+      InputElement checkbox = getElement('#analyticsCheck');
       checkbox.checked = _isTrackingPermitted;
       checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
 
@@ -3371,7 +3372,7 @@ class SettingsAction extends SparkActionWithDialog {
   void _invoke([Object context]) {
     spark.setGitSettingsResetDoneVisible(false);
 
-    var whitespaceCheckbox = getElement('#stripWhitespace');
+    InputElement whitespaceCheckbox = getElement('#stripWhitespace');
 
     // Wait for each of the following to (simultaneously) complete before
     // showing the dialog:
@@ -3547,7 +3548,7 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   Completer completer;
   static GitAuthenticationDialog _instance;
 
-  GitAuthenticationDialog(spark, dialogElement)
+  GitAuthenticationDialog(Spark spark, Element dialogElement)
       : super(spark, "git-authentication", "Authenticate", dialogElement);
 
   void _invoke([Object context]) {

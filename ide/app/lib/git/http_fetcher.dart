@@ -46,7 +46,7 @@ class HttpFetcher {
 
   Future<List<GitRef>> fetchUploadRefs() => _fetchRefs('git-upload-pack');
 
-  Future pushRefs(List<GitRef> refPaths, List<int> packData, progress) {
+  Future pushRefs(List<GitRef> refPaths, List<int> packData, Function progress) {
     Completer completer = new Completer();
     String url = _makeUri('/git-receive-pack', {});
     Blob body = _pushRequest(refPaths, packData);
