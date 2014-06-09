@@ -1,20 +1,42 @@
-<!doctype html>
-
 <link rel="import" href="packages/spark_widgets/spark_selector/spark_selector.html">
 
 <polymer-element name="example-ui">
   <template>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
     <style>
+      .selector {
+        width: 200px;
+        border: 1px solid black;
+      }
+      .item {
+        padding: 5px 10px;
+        margin: 15px 0;
+      }
+      .item.active {
+        color: white;
+        background: black;
+      }
       .item.selected {
-        background: #eee;
+        background: #aaa;
       }
     </style>
 
-    <spark-selector>
-      <div class="item">Item 1</div>
-      <div class="item">Item 2</div>
-      <div class="item">Item 3</div>
-    </spark-selector>
+    <template repeat="{{multi in [false, true]}}">
+      <h1 id="title">
+        <template if="{{multi}}">Multi-value selector:</template>
+        <template if="{{!multi}}">Single-value selector:</template>
+      </h1>
+      <spark-selector class="selector"
+          multi?="{{multi}}"
+          itemFilter="div"
+          activeClass="active"
+          selectedClass="selected">
+        <template repeat="{{n in [1, 2, 3, 4, 5, 6, 7, 8, 9 ]}}">
+          <div class="item">ITEM NUMBER {{n}}</div>
+        </template>
+      </spark-selector>
+    </template>
   </template>
 
   <script type="application/dart;component=1" src="example_ui.dart"></script>

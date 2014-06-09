@@ -172,7 +172,7 @@ button.ace_searchbtn_close:active {
 }
 
 .minimap {
-  right: 15px;
+  right: 10px;
   width: 10px;
   bottom: 0;
   top: 0;
@@ -486,7 +486,7 @@ li.outlineItem.topLevel.class {
   border-right: none;
   bottom: 25px;
   position: absolute;
-  right: 30px;
+  right: 22px;
   top: 55px;
   transition: opacity 250ms;
   z-index: 100;

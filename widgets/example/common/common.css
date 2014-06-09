@@ -1,0 +1,41 @@
+.row-flex {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.col-flex {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/*
+ * Debuging.
+ */
+/*
+* {
+  outline: blue dashed 1px !important;
+}
+:host > * {
+  outline: red dashed 1px !important;
+}
+::content > * {
+  outline: green dotted 1px !important;
+}
+*/
+.debug, [debug] {
+  outline: blue solid 1px !important;
+}
+/*
+*:focus {
+  box-shadow: 0 0 10px 10px pink !important;
+}
+:host(:focus),
+*:focus,
+::content > *:focus {
+  box-shadow: 0 0 10px 10px pink !important;
+}
+*/

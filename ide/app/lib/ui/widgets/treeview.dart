@@ -20,7 +20,7 @@ import 'listview.dart';
 import 'listview_cell.dart';
 import 'listview_delegate.dart';
 import 'treeview_delegate.dart';
-import '../utils/html_utils.dart';
+import '../html_utils.dart';
 
 class TreeViewDragImage {
   ImageElement image;

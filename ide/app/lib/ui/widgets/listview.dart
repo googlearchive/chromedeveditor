@@ -15,7 +15,7 @@ import 'dart:html';
 import 'listview_cell.dart';
 import 'listview_row.dart';
 import 'listview_delegate.dart';
-import '../utils/html_utils.dart';
+import '../html_utils.dart';
 
 class ListView {
   // The HTML element containing the list of items.

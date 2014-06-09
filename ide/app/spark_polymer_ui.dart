@@ -29,8 +29,12 @@ class SparkPolymerUI extends SparkWidget {
   // The values are later set to their actual values in [refreshFromModel].
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
-  @observable bool showWipProjectTemplates = true;
   @observable bool chromeOS = false;
+  // This flag is different from the rest: the comment immediately above doesn't
+  // apply to it, because nothing in the app code depends on the chunks of HTML
+  // that it controls, so it doesn't have to be on at start-up time in order to
+  // not break the app.
+  @observable bool showWipProjectTemplates = false;
 
   @observable bool showNoFileFilterMatches = false;
 

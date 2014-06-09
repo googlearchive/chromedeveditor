@@ -16,8 +16,8 @@
 <link rel="import" href="packages/spark_widgets/spark_split_view/spark_split_view.html">
 <link rel="import" href="packages/spark_widgets/spark_status/spark_status.html">
 <link rel="import" href="packages/spark_widgets/spark_toolbar/spark_toolbar.html">
-<link rel="import" href="lib/ui/polymer/commit_message_view/commit_message_view.html">
-<link rel="import" href="lib/ui/polymer/goto_line_view/goto_line_view.html">
+<link rel="import" href="lib/ui/commit_message_view/commit_message_view.html">
+<link rel="import" href="lib/ui/goto_line_view/goto_line_view.html">
 
 <polymer-element name="spark-polymer-ui" attributes="splitViewPosition">
   <template>
@@ -70,7 +70,7 @@
             </spark-menu-item>
             <spark-menu-item action-id="folder-open" label="Add Folder to Workspace...">
             </spark-menu-item>
-            <spark-menu-item action-id="git-clone" label="Git Clone...">
+            <spark-menu-item action-id="git-clone" label="Add Git Project...">
             </spark-menu-item>
 
             <spark-menu-separator></spark-menu-separator>
@@ -292,9 +292,7 @@
             placeholder="https://github.com/dart-lang/spark.git"
             spellcheck="false" autosave focused>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
+      <div id="progressDescription"></div>
 
       <spark-dialog-button id="cloneClose" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="clone" submit>Clone</spark-dialog-button>
@@ -332,27 +330,19 @@
           Enter a brief description of the changes.
         </span>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
-
       <spark-dialog-button id="gitCommitCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="gitCommit" submit>Commit</spark-dialog-button>
     </spark-dialog>
 
     <!-- Git Branch dialog -->
     <spark-dialog id="gitBranchDialog" title="Create Branch">
-      <label for="gitBranchName">New branch name</label>
+      <label for="gitBranchName">Create a new branch</label>
       <input id="gitBranchName" type="text" class="form-control"
           pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
-      <span class="help-block">Create a new git branch.</span>
       <div class="form-group">
-        <label for="gitRemoteBranches">Choose a remote branch</label>
+        <label for="gitRemoteBranches">Checkout a remote branch</label>
         <select id="gitRemoteBranches" class="form-control"></select>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
       <spark-dialog-button id="gitBranchCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="gitBranch" submit>Create Branch</spark-dialog-button>
     </spark-dialog>
@@ -368,9 +358,6 @@
         <label for="gitCheckoutBranch">Switch to branch</label>
         <select id="gitCheckoutBranch" class="form-control"></select>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
       <spark-dialog-button id="gitCheckoutCancel" cancel>Cancel</spark-dialog-button>
       <spark-dialog-button id="gitCheckout" submit>Checkout</spark-dialog-button>
     </spark-dialog>
@@ -380,10 +367,6 @@
       <div class="form-group">
         <div id="gitCommitList"></div>
       </div>
-      <spark-progress id="dialogProgress"
-          indeterminate showProgressMessage showCancel visible="false">
-      </spark-progress>
-
       <spark-dialog-button id="gitPushClose">Cancel</spark-dialog-button>
       <spark-dialog-button id="gitPush" submit>Push</spark-dialog-button>
     </spark-dialog>
@@ -544,6 +527,11 @@
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Login</spark-dialog-button>
+    </spark-dialog>
+
+    <!-- Spark Status dialog -->
+    <spark-dialog id="statusDialog" title="">
+      <div id="progressDescription"></div>
     </spark-dialog>
 
     <!-- Publish on webstore -->
