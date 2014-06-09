@@ -118,15 +118,24 @@ class MobileDeploy {
     List<int> httpRequest = [];
     // Build the HTTP request headers.
     String header =
-        'POST /deleteapp HTTP/1.1\r\n'
-        'User-Agent: Spark IDE\r\n';
+        'PUT /zippush?appId=${appContainer.name}&appType=chrome& HTTP/1.1\r\n'
+//        'PUT /zippush?manifestEtag=0&appType=chrome HTTP/1.1\r\n'
+        'User-Agent: Spark IDE\r\n'
+        'Host: ${target}:2424\r\n';
     List<int> body = [];
-    String bodyTop =
-        'Content-Type: application/x-www-form-urlencoded\r\n\r\n';
-    body.addAll(bodyTop.codeUnits);
 
+    // Add the CRX headers before the zip content.
+    // This is the string "Cr24" then three little-endian 32-bit numbers:
+    // - The version (2).
+    // - The public key length (0).
+    // - The signature length (0).
+    // Since the App Harness/Chrome ADT on the other end doesn't check
+    // the signature or key, we don't bother sending them.
+
+    // Now follows the actual zip data.
+    body.addAll(payload);
     httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll('Content-length: 1\r\n\r\n'.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
 
     return httpRequest;
@@ -152,7 +161,7 @@ class MobileDeploy {
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
     List<int> httpRequest;
     TcpClient client;
-    return archiveContainer(appContainer).then((List<int> archivedData) {
+    return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       httpRequest = _buildHttpRequest(target, archivedData);
       monitor.worked(5);
@@ -173,8 +182,6 @@ class MobileDeploy {
       } else {
         return new Future.error(lines.first);
       }
-    }).catchError((e) {
-      /*%TRACE3*/ print("""(4> 6/6/14): e: ${e}"""); // TRACE%
     }).whenComplete(() {
       if (client != null) {
         client.dispose();
