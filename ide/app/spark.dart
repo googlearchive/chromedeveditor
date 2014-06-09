@@ -2514,6 +2514,8 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     _selectElement.onChange.listen((e) {
        int index = _selectElement.selectedIndex;
        if (index != 0) {
+         // A remote branch is prefixed with 'origin/'. Strip it to get the
+         // actual branchname.
          _branchNameElement.value = (_selectElement.children[index]
              as OptionElement).value.split('/').last;
          _branchNameElement.disabled = true;
@@ -2525,6 +2527,7 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
 
     gitOperations.getRemoteBranchNames().then((Iterable<String> branchNames) {
       branchNames.toList().sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      // TODO(grv): Support branching from local branches other than master.
       _selectElement.append(
           new OptionElement(data: "master", value: "master"));
       for (String branchName in branchNames) {

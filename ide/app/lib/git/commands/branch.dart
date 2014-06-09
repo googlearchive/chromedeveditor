@@ -60,6 +60,7 @@ class Branch {
   static Future<String> _fetchAndCreateBranch(
       GitOptions options, String branchName, String sourceBranchName) {
     ObjectStore store = options.store;
+    // A remote branch is prefixed with 'origin/'.
     if (sourceBranchName.startsWith('origin/')) {
       sourceBranchName = sourceBranchName.split('/').last;
       return options.store.getRemoteHeadForRef(sourceBranchName).then((sha) {

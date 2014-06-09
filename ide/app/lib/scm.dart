@@ -374,6 +374,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
       return store.getRemoteHeads().then((result) {
         GitOptions options = new GitOptions(root: entry, store: store);
         // Return immediately but requet async update.
+        // TODO(grv): wait for it when, the UI support refreshing remote branches.
         Fetch.updateAndGetRemoteRefs(options);
         return result;
       });
