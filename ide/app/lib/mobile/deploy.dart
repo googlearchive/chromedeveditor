@@ -85,10 +85,7 @@ class MobileDeploy {
 
     _logger.info('deploying application to ip host');
 
-    return _sendDeleteApprequest(target, monitor).then((_) {
-      monitor.worked(3);
-      return _sendHttpPush(target, monitor);
-    });
+    return _sendHttpPush(target, monitor);
   }
 
   /**
@@ -137,30 +134,13 @@ class MobileDeploy {
     return httpRequest;
   }
 
-  Future _sendDeleteApprequest(String target, ProgressMonitor monitor) {
-    return TcpClient.createClient(target, 2424).then((TcpClient client) {
-      List<int> httpRequest = [];
-      // Build the HTTP request headers.
-      String header =
-          'POST /deleteapp HTTP/1.1\r\n'
-          'User-Agent: Spark IDE\r\n';
-      String body = "all=true";
-
-      httpRequest.addAll(header.codeUnits);
-      httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
-      httpRequest.addAll(body.codeUnits);
-
-      client.write(httpRequest);
-    });
-  }
-
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
     List<int> httpRequest;
     TcpClient client;
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
-      monitor.worked(5);
+      monitor.worked(3);
       httpRequest = _buildHttpRequest(target, archivedData);
-      monitor.worked(7);
+      monitor.worked(5);
       return TcpClient.createClient(target, 2424);
     }).then((TcpClient _client) {
       client = _client;
