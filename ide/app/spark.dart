@@ -412,7 +412,8 @@ abstract class Spark
 
     actionManager.registerAction(new NextMarkerAction(this));
     actionManager.registerAction(new PrevMarkerAction(this));
-    actionManager.registerAction(new FileOpenAction(this));
+    // TODO(devoncarew): TODO(devoncarew): Removed as per #2348.
+    //actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
     actionManager.registerAction(new FolderOpenAction(this));
@@ -2317,7 +2318,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   _GitCloneTask _cloneTask;
 
   GitCloneAction(Spark spark, Element dialog)
-      : super(spark, "git-clone", "Add Git Project…", dialog) {
+      : super(spark, "git-clone", "Git Clone…", dialog) {
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
   }
 
