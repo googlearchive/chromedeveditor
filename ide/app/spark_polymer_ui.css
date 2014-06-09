@@ -51,15 +51,21 @@ spark-dialog {
 }
 
 #fileFilter:focus {
-  border: 1px solid #9DBEFF;
+  border: 1px solid #4285f4;
+  box-shadow: 0 0 0 1px #4285f4;
   outline: none;
+}
+
+#fileFilter ~ #runButton,
+#fileFilter ~ #mainMenu {
+  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);
 }
 
 #fileFilter:focus.active ~ #runButton,
 #fileFilter:focus.active ~ #mainMenu {
   opacity: 0;
+  margin: 0;
   width: 0;
-  transition: opacity 0.25s, width 0.25s;
 }
 
 #fileNotFoundPlaceholder {
