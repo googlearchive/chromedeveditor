@@ -74,7 +74,6 @@ class Diff {
     }).then((_) {
       if (currentSha != null) {
         return FileOps.readFileText(store.root, path).then((String content) {
-          print(content);
           contentMap[currentSha] = content;
         });
       } else {
