@@ -112,7 +112,7 @@ class MobileDeploy {
     List<int> httpRequest = [];
     // Build the HTTP request headers.
     String header =
-        'POST /zippush?appId=${appContainer.project.name}&appType=chrome& HTTP/1.1\r\n'
+        'POST /zippush?appId=${appContainer.project.name}&appType=chrome HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
         'Host: ${target}:2424\r\n';
     List<int> body = [];
