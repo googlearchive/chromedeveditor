@@ -114,19 +114,11 @@ class MobileDeploy {
   List<int> _buildHttpRequest(String target, List<int> payload) {
     List<int> httpRequest = [];
     // Build the HTTP request headers.
-    String boundary = '--------------------------------a921a8f557cf';
     String header =
         'POST /zippush?appId=${appContainer.name}&appType=chrome& HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
-        'Host: ${target}:2424\r\n'
-        'Content-Type: multipart/form-data; boundary=$boundary\r\n';
+        'Host: ${target}:2424\r\n';
     List<int> body = [];
-    String bodyTop =
-        '$boundary\r\n'
-        'Content-Disposition: form-data; name="file"; '
-        'filename="SparkPush.crx"\r\n'
-        'Content-Type: application/octet-stream\r\n\r\n';
-    body.addAll(bodyTop.codeUnits);
 
     // Add the CRX headers before the zip content.
     // This is the string "Cr24" then three little-endian 32-bit numbers:
@@ -135,17 +127,9 @@ class MobileDeploy {
     // - The signature length (0).
     // Since the App Harness/Chrome ADT on the other end doesn't check
     // the signature or key, we don't bother sending them.
-    body.addAll([67, 114, 50, 52, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
     // Now follows the actual zip data.
     body.addAll(payload);
-
-    // Add the trailing boundary.
-    body.addAll([13, 10]); // \r\n
-    body.addAll(boundary.codeUnits);
-    // Two trailing hyphens to indicate the final boundary.
-    body.addAll([45, 45, 13, 10]); // --\r\n
-
     httpRequest.addAll(header.codeUnits);
     httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
