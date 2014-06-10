@@ -77,14 +77,8 @@
   line-height: 1.428571429;
   color: #666;
   background-color: #fff;
-  margin: 2px 0;
   -webkit-box-shadow: none;
   box-shadow: none;
-}
-
-::content .form-control:invalid {
-  color: red;
-  border-color: red;
 }
 
 ::content .form-control:focus {
@@ -92,7 +86,13 @@
   -webkit-box-shadow: none;
   box-shadow: none;
   border-color: rgb(66, 128, 244);
-  transition: border-color ease-in-out 0.4s;
+}
+
+/*
+ * Don't use :invalid because we need finer control.
+ */
+::content .form-control:not(:focus).invalid {
+  border-color: red;
 }
 
 ::content input[type=radio] {
