@@ -439,14 +439,14 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
       return Push.push(options)
-          .catchError((e) => SparkException.fromException(e));
+          .catchError((e) => throw SparkException.fromException(e));
     });
   }
 
   Future<List<String>> getDeletedFiles() {
     return objectStore.then((store) {
       return Status.getDeletedFiles(store)
-          .catchError((e) => SparkException.fromException(e));
+          .catchError((e) => throw SparkException.fromException(e));
     });
   }
 
@@ -455,7 +455,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(root: entry, store: store);
       Fetch fetch = new Fetch(new GitOptions(root: entry, store: store));
       return fetch.fetch()
-          .catchError((e) => SparkException.fromException(e));
+          .catchError((e) => throw SparkException.fromException(e));
     });
   }
 
@@ -463,7 +463,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Pull pull = new Pull(options);
-      return pull.pull().catchError((e) => SparkException.fromException(e));
+      return pull.pull().catchError((e) => throw SparkException.fromException(e));
     });
   }
 
