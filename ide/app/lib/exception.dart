@@ -71,7 +71,8 @@ class SparkErrorConstants {
 class SparkErrorMessages {
   static final String GIT_BRANCH_NOT_FOUND_MSG = "Branch not found.";
   static final String GIT_CLONE_DIR_IN_USE_MSG = "Clone dirorctory in use.";
-  static final String GIT_AUTH_REQUIRED_MSG = "Authorization required.";
+  static final String GIT_AUTH_REQUIRED_MSG
+      = "Authorization required - private git repositories are not yet supported.";
   static final String GIT_CLONE_CANCEL_MSG = "Clone cancelled.";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
       = "Repositories with submodules not supported.";
