@@ -226,7 +226,7 @@ button.ace_searchbtn_close:active {
 	border-radius: 2px;
 
   position: absolute;
-  top: 2px;
+  top: 4px;
   right: 7px;
   height: 16px;
 
@@ -261,7 +261,7 @@ button.ace_searchbtn_close:active {
   border-radius: 2px;
   background: #999;
   position: absolute;
-  top: 2px;
+  top: 4px;
   right: 1px;
   height: 16px;
   width: 0;
@@ -295,7 +295,7 @@ button.ace_searchbtn_close:active {
 .fileview-filename-container .filename {
   overflow: hidden;
   position: absolute;
-  top: 1px;
+  top: 3px;
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
@@ -570,4 +570,35 @@ li.outlineItem a {
 */
 .tabview-tabbar {
   margin-right: 95px;
+}
+
+/*
+  Override Bootstrap's default styles so the context menu matches the main menu.
+*/
+.dropdown-menu {
+  padding: 3px 0;
+  border: none;
+  border-radius: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu > li {
+  height: 35px;
+  margin: 0;
+}
+
+.dropdown-menu > li.divider {
+  margin: 2px 0;
+}
+
+.dropdown-menu > li > a {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-size: 13px;
+}
+
+.dropdown-menu > li > a:hover {
+  background-color: #e4e4e4;
+  background-image: none;
 }
