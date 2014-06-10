@@ -846,9 +846,7 @@ class Folder extends Container {
 
     if (entry.fullPath == _dirEntry.fullPath) {
       // TODO(grv): Wrap into a spark exception.
-      Completer completer = new Completer();
-      completer.completeError('Import and root folder are same.');
-      return completer.future;
+      return new Future.error('Import and root folder are same.');
     }
 
     return createNewFolder(entry.name).then((Folder folder) {
