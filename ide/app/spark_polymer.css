@@ -577,6 +577,8 @@ li.outlineItem a {
 */
 .dropdown-menu {
   padding: 3px 0;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
 .dropdown-menu > li {
