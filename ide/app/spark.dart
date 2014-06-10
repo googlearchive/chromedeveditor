@@ -2428,13 +2428,12 @@ class GitPullAction extends SparkActionWithProgressDialog implements ContextActi
     _setProgressMessage('Updating ${branchName}...');
     _toggleProgressVisible(true);
 
-    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark))
-        .catchError((e) {
-      spark.showErrorMessage('Git Pull Status', exception: e);
-    });
+    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
     // Show dialog for at lest 2 seconds.
     Timer timer = new Timer(new Duration(milliseconds: 2000), () {
-      f.whenComplete(() {
+      f.catchError((e) {
+        spark.showErrorMessage('Git Pull Status', exception: e);
+      }).whenComplete(() {
         _setProgressMessage('');
         _toggleProgressVisible(true);
         _hide();
@@ -2466,13 +2465,12 @@ class GitAddAction extends SparkActionWithProgressDialog implements ContextActio
     _setProgressMessage('Adding files to git...');
     _toggleProgressVisible(true);
 
-    Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark))
-        .catchError((e) {
-      spark.showErrorMessage('Error adding file to git', exception: e);
-    });
+    Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
     // Show dialog for at lest 2 seconds.
     Timer timer = new Timer(new Duration(milliseconds: 2000), () {
-      f.whenComplete(() {
+      f.catchError((e) {
+        spark.showErrorMessage('Error adding file to git', exception: e);
+      }).whenComplete(() {
         _setProgressMessage('');
         _toggleProgressVisible(true);
         _hide();

@@ -52,7 +52,7 @@ class SparkException implements Exception {
           SparkErrorMessages.GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG,
           errorCode: SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
     } else {
-      throw new SparkException(e.toString(), exception: e);
+      return new SparkException(e.toString(), exception: e);
     }
   }
 
