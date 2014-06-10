@@ -34,7 +34,7 @@ class OffsetRange {
 class _ScrollDirection extends Enum<html.ScrollAlignment> {
   const _ScrollDirection._(html.ScrollAlignment val) : super(val);
 
-  String get enumName => 'FetchMode';
+  String get enumName => '_ScrollDirection';
 
   static const UP = const _ScrollDirection._(html.ScrollAlignment.TOP);
   static const DOWN = const _ScrollDirection._(html.ScrollAlignment.BOTTOM);
