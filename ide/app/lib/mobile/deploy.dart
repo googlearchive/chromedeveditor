@@ -77,8 +77,9 @@ class MobileDeploy {
    * Important Note: The CRX file that gets created and pushed is not correctly
    * signed and does not include the application's key. Since the target of a
    * push is intended to be a tool like the
-   * [Chrome ADT](https://github.com/MobileChromeApps/harness) on Android,
-   * and that tool doesn't care about the CRX metadata, this is not a problem.
+   * [Chrome App Harness](https://github.com/MobileChromeApps/chrome-app-harness)
+   * on Android, and that tool doesn't care about the CRX metadata, this is not
+   * a problem.
    */
   Future pushToHost(String target, ProgressMonitor monitor) {
     monitor.start('Deploying…', 10);
@@ -122,7 +123,7 @@ class MobileDeploy {
     // - The version (2).
     // - The public key length (0).
     // - The signature length (0).
-    // Since the App Harness/Chrome ADT on the other end doesn't check
+    // Since the Chrome App Harness on the other end doesn't check
     // the signature or key, we don't bother sending them.
 
     // Now follows the actual zip data.
@@ -207,8 +208,8 @@ class MobileDeploy {
 
     // Setup port forwarding to 2424 on the device.
     return client.forwardTcp(2424, 2424).then((_) {
-      // TODO: a SocketException, code == -100 here often means that Chrome ADT
-      // is not running on the device.
+      // TODO: a SocketException, code == -100 here often means that the Chrome
+      // App Harness is not running on the device.
       // Push the app binary to port 2424.
       return _sendHttpPush('127.0.0.1', monitor);
     });
