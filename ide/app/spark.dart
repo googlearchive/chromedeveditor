@@ -520,12 +520,12 @@ abstract class Spark
     });
   }
 
-  Future openFolder(SparkActionWithStatusDialog action) {
+  Future openFolder(FolderOpenAction action) {
     return _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
         _OpenFolderJob job = new _OpenFolderJob(entry, this);
         Future f = jobManager.schedule(job);
-        action._waitForJob('Open Folder', 'Opening Folder…', f);
+        action._waitForJob(action.name, 'Adding Folder to workspace…', f);
       }
     });
   }
@@ -546,8 +546,7 @@ abstract class Spark
     });
   }
 
-  Future importFolder([List<ws.Resource> resources,
-                       SparkActionWithStatusDialog action]) {
+  Future importFolder([List<ws.Resource> resources, ImportFolderAction action]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
         type: chrome.ChooseEntryType.OPEN_DIRECTORY);
     return chrome.fileSystem.chooseEntry(options).then(
@@ -558,7 +557,7 @@ abstract class Spark
         Future f = folder.importDirectoryEntry(entry).catchError((e) {
           showErrorMessage('Error while importing folder', e);
         });
-        action._waitForJob('Open Folder', 'Opening Folder…', f);
+        action._waitForJob(action.name, 'Adding Folder to workspace…', f);
       }
     });
   }
@@ -2119,9 +2118,8 @@ class NewProjectAction extends SparkActionWithDialog {
 }
 
 class FolderOpenAction extends SparkActionWithStatusDialog {
-  static const String DIALOG_TITLE = 'Add Folder to Workspace…';
   FolderOpenAction(Spark spark, SparkDialog dialog)
-      : super(spark, "folder-open", DIALOG_TITLE, dialog);
+      : super(spark, "folder-open", 'Add Folder to Workspace…', dialog);
 
   void _invoke([Object context]) {
     spark.openFolder(this);
