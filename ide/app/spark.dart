@@ -618,7 +618,7 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(String title, String message) {
+  void showErrorMessage(String title, String message, [bool isKnownError = true]) {
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -626,6 +626,11 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
+    if (!isKnownError && !SparkFlags.developerMode) {
+      // Hide unexpected errors from users. Log them in console instead.
+      window.console.log('[ERROR} ${title} : ${message}');
+      message = "Unexpected Error.";
+    }
     _setErrorDialogText(title, message);
 
     _errorDialog.show();
