@@ -35,10 +35,9 @@ body {
 
 #splashScreen {
   background: #fff;
-  background-image: url("images/spark_512.png");
+  background-image: url("images/icon_256.png");
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 256px 256px;
   opacity: 1;
   transition: opacity 300ms;
   position: fixed;
