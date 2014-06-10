@@ -17,8 +17,10 @@ class SparkException implements Exception {
   final String errorCode;
   /// Indicates if the error is not necessary to be handled and can be ignored.
   bool canIgnore = false;
+  /// Indicates whether the exception is a status or error.
+  bool isError = true;
 
-  SparkException(this.message, [this.errorCode, this.canIgnore]);
+  SparkException(this.message, [this.errorCode, this.isError, this.canIgnore]);
 
   static SparkException fromException(Exception e) {
     if (e is GitException) {
@@ -26,23 +28,23 @@ class SparkException implements Exception {
     } else if (e != null) {
       throw new SparkException(e.toString());
     } else {
-      throw new SparkException("Unknown error.");
+      throw new SparkException(e.toString());
     }
   }
 
   static SparkException _fromGitException(GitException e) {
     if (e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
-      return new SparkException(e.toString(),
+      return new SparkException(SparkErrorMessages.GIT_AUTH_REQUIRED_MSG,
             SparkErrorConstants.GIT_AUTH_REQUIRED);
     } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
-      return new SparkException(e.toString(),
-        SparkErrorConstants.GIT_CLONE_CANCEL, true);
-    } else if (e.errorCode
-        == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
-      return new SparkException(e.toString(),
-        SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
+      return new SparkException(SparkErrorMessages.GIT_CLONE_CANCEL_MSG,
+        SparkErrorConstants.GIT_CLONE_CANCEL, false);
+    } else if (e.errorCode == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
+      return new SparkException(
+          SparkErrorMessages.GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG,
+          SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
     } else {
-      throw new SparkException(e.toString());
+      throw new SparkException(e.toString(), null, false);
     }
   }
 
@@ -61,4 +63,16 @@ class SparkErrorConstants {
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
+}
+
+/**
+ * Defines the spark exception error strings.
+ */
+class SparkErrorMessages {
+  static final String GIT_BRANCH_NOT_FOUND_MSG = "Branch not found.";
+  static final String GIT_CLONE_DIR_IN_USE_MSG = "Clone dirorctory in use.";
+  static final String GIT_AUTH_REQUIRED_MSG = "Authorization required.";
+  static final String GIT_CLONE_CANCEL_MSG = "Clone cancelled.";
+  static final String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
+      = "Repositories with submodules not supported.";
 }
