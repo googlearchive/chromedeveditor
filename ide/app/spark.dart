@@ -524,7 +524,7 @@ abstract class Spark
     return _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
         _OpenFolderJob job = new _OpenFolderJob(entry, this);
-        jobManager.schedule(job);
+        return jobManager.schedule(job);
       }
     });
   }
@@ -538,9 +538,7 @@ abstract class Spark
 
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFileEntry(entry).catchError((e) {
-          showErrorMessage('Error while importing file', exception: e);
-        });
+        folder.importFileEntry(entry);
       }
     });
   }
@@ -553,9 +551,7 @@ abstract class Spark
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importDirectoryEntry(entry).catchError((e) {
-          showErrorMessage('Error while importing folder', exception: e);
-        });
+        folder.importDirectoryEntry(entry);
       }
     });
   }
@@ -628,20 +624,12 @@ abstract class Spark
     }
 
     if (exception is SparkException) {
-      if (exception.errorCode != null) {
         message = exception.message;
-
-      } else {
-        message = UNKNOWN_ERROR_STRING;
-        if (SparkFlags.developerMode) {
-          // Log the actual exception on console if running in developer mode.
-          window.console.log(exception.exception);
-        }
-
-      }
     } else if (exception != null) {
       if (message == null) message = '';
-      message = message + ' : ${UNKNOWN_ERROR_STRING}';
+      // TODO(grv): wrap all exceptions as spark exception,
+      // and show 'Unexpected error.' to the user for unknown exceptions.
+      message = message + ' : ' + exception.toString();
       // Log the actual exception on console if running in developer mode.
       if (SparkFlags.developerMode) {
         window.console.log(exception);
@@ -1782,7 +1770,9 @@ class CompileDartAction extends SparkAction implements ContextAction {
     }
 
     spark.jobManager.schedule(
-        new CompileDartJob(spark, resource, resource.name));
+        new CompileDartJob(spark, resource, resource.name)).catchError((e) {
+      spark.showErrorMessage('Error Compiling ${resource.name}', exception: e);
+    });
   }
 
   String get category => 'application';
@@ -2113,7 +2103,13 @@ class FolderOpenAction extends SparkAction {
   FolderOpenAction(Spark spark) : super(spark, "folder-open", "Add Folder to Workspace…");
 
   void _invoke([Object context]) {
-    spark.openFolder();
+    spark.openFolder().catchError((e) {
+      if (e is SparkException && !e.isError) {
+        spark.showSuccessMessage(e.message);
+      } else {
+        spark.showErrorMessage('Error in Adding Folder.', exception:e);
+      }
+    });
   }
 }
 
@@ -2367,8 +2363,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
 
     if (url.isEmpty) {
       _restoreDialog();
-      spark.showErrorMessage(
-          'Error in Cloning', message: 'Repository url required.');
+      spark.showErrorMessage('Error in Cloning', message: 'Repository url required.');
       return;
     }
 
@@ -2433,7 +2428,10 @@ class GitPullAction extends SparkActionWithProgressDialog implements ContextActi
     _setProgressMessage('Updating ${branchName}...');
     _toggleProgressVisible(true);
 
-    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
+    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark))
+        .catchError((e) {
+      spark.showErrorMessage('Git Pull Status', exception: e);
+    });
     // Show dialog for at lest 2 seconds.
     Timer timer = new Timer(new Duration(milliseconds: 2000), () {
       f.whenComplete(() {
@@ -2468,7 +2466,10 @@ class GitAddAction extends SparkActionWithProgressDialog implements ContextActio
     _setProgressMessage('Adding files to git...');
     _toggleProgressVisible(true);
 
-    Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
+    Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark))
+        .catchError((e) {
+      spark.showErrorMessage('Error adding file to git', exception: e);
+    });
     // Show dialog for at lest 2 seconds.
     Timer timer = new Timer(new Duration(milliseconds: 2000), () {
       f.whenComplete(() {
@@ -2567,6 +2568,9 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
       _hide();
+    }).catchError((e) {
+      spark.showErrorMessage(
+          'Error creating branch ${_branchNameElement.value}', exception: e);
     });
     _branchNameElement.disabled = false;
   }
@@ -2741,6 +2745,9 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     return spark.jobManager.schedule(commitJob).then((_) {
       _restoreDialog();
       _hide();
+      spark.showSuccessMessage('Committed changes');
+    }).catchError((e) {
+      spark.showErrorMessage('Error committing changes', exception: e);
     });
   }
 
@@ -2799,6 +2806,9 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
       _hide();
+      spark.showSuccessMessage('Switched to branch ${branchName}');
+    }).catchError((e) {
+      spark.showErrorMessage('Error switching to ${branchName}', exception: e);
     });
   }
 
@@ -2871,7 +2881,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
           _show();
         });
       }).catchError((e) {
-        spark.showErrorMessage('Push failed');
+        spark.showErrorMessage('Push failed', exception: e);
       });
     });
   }
@@ -3092,8 +3102,6 @@ class _GitPullJob extends Job {
     // there were any merge problems.
     return gitOperations.pull().then((_) {
       spark.showSuccessMessage('Pull successful');
-    }).catchError((e) {
-      spark.showErrorMessage('Git Pull Status', exception: e);
     });
   }
 }
@@ -3108,8 +3116,6 @@ class _GitAddJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
     return gitOperations.addFiles(files).then((_) {
-    }).catchError((e) {
-      spark.showErrorMessage('Error adding file to git', exception: e);
     });
   }
 }
@@ -3133,9 +3139,6 @@ class _GitBranchJob extends Job {
       return gitOperations.checkoutBranch(_branchName).then((_) {
         spark.showSuccessMessage('Created ${_branchName}');
       });
-    }).catchError((e) {
-      spark.showErrorMessage(
-          'Error creating branch ${_branchName}', exception: e);
     });
   }
 }
@@ -3152,12 +3155,7 @@ class _GitCommitJob extends Job {
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-    return gitOperations.commit(_userName, _userEmail, _commitMessage).
-        then((_) {
-      spark.showSuccessMessage('Committed changes');
-    }).catchError((e) {
-      spark.showErrorMessage('Error committing changes', exception: e);
-    });
+    return gitOperations.commit(_userName, _userEmail, _commitMessage);
   }
 }
 
@@ -3173,12 +3171,7 @@ class _GitCheckoutJob extends Job {
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-
-    return gitOperations.checkoutBranch(_branchName).then((_) {
-      spark.showSuccessMessage('Switched to branch ${_branchName}');
-    }).catchError((e) {
-      spark.showErrorMessage('Error switching to ${_branchName}', exception: e);
-    });
+    return gitOperations.checkoutBranch(_branchName);
   }
 }
 
@@ -3213,10 +3206,7 @@ class _OpenFolderJob extends Job {
 
       return spark.workspace.save();
     }).then((_) {
-      spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
-    }).catchError((e) {
-      spark.showErrorMessage('Error opening folder ${_entry.fullPath}',
-          exception: e);
+      throw new SparkException('Opened folder ${_entry.fullPath}', isError: false);
     });
   }
 }
@@ -3303,8 +3293,6 @@ class CompileDartJob extends Job {
       return getCreateFile(file.parent, '${file.name}.js').then((ws.File file) {
         return file.setContents(result.output);
       });
-    }).catchError((e) {
-      spark.showErrorMessage('Error Compiling ${file.name}', exception: e);
     });
   }
 
@@ -3506,7 +3494,9 @@ class WebStorePublishAction extends SparkActionWithDialog {
     }
     _WebStorePublishJob job =
         new _WebStorePublishJob(spark, getAppContainerFor(_resource), appID);
-    spark.jobManager.schedule(job);
+    spark.jobManager.schedule(job).catchError((e) {
+      spark.showErrorMessage('Error while publishing the application', exception: e);
+    });
   }
 
   void _updateEnablement(ws.Resource resource) {
@@ -3526,9 +3516,7 @@ class _WebStorePublishJob extends Job {
     monitor.start(name, _appID == null ? 5 : 6);
 
     if (_container == null) {
-      spark.showErrorMessage('Error while publishing the application',
-          message: 'The manifest.json file of the application has not been found.');
-      return null;
+      throw new SparkException('The manifest.json file of the application has not been found.');
     }
 
     return ws_utils.archiveContainer(_container).then((List<int> archivedData) {
@@ -3551,8 +3539,6 @@ class _WebStorePublishJob extends Job {
           }
         });
       });
-    }).catchError((e) {
-      spark.showErrorMessage('Error while publishing the application', exception: e);
     });
   }
 }
@@ -3607,7 +3593,9 @@ class ImportFileAction extends SparkAction implements ContextAction {
   ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…");
 
   void _invoke([List<ws.Resource> resources]) {
-    spark.importFile(resources);
+    spark.importFile(resources).catchError((e) {
+      spark.showErrorMessage('Error while importing file', exception: e);
+    });
   }
 
   String get category => 'folder';
@@ -3619,7 +3607,9 @@ class ImportFolderAction extends SparkAction implements ContextAction {
   ImportFolderAction(Spark spark) : super(spark, "folder-import", "Add Folder to Workspace…");
 
   void _invoke([List<ws.Resource> resources]) {
-    spark.importFolder(resources);
+    spark.importFolder(resources).catchError((e) {
+      spark.showErrorMessage('Error while importing folder', exception: e);
+    });
   }
 
   String get category => 'folder';
