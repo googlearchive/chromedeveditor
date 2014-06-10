@@ -38,7 +38,7 @@ class AdbApplication {
 
   /// Chrome Apps Developer Tool (ADT).
   static AdbApplication CHROME_ADT = new AdbApplication(
-      'org.chromium.ChromeADT', 'org.chromium.ChromeADT.ChromeADT');
+      'org.chromium.appharness', 'org.chromium.appharness.ChromeAppHarness');
 
   final String packageName;
   final String mainActivity;
