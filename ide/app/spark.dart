@@ -619,6 +619,7 @@ abstract class Spark
    * Show a model error dialog.
    */
   void showErrorMessage(String title, {String message, Exception exception}) {
+    const String UNKNOWN_ERROR_STRING = 'Unknown error.';
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -627,18 +628,27 @@ abstract class Spark
     }
 
     if (exception is SparkException) {
-      message = exception.message;
+      if (exception.errorCode != null) {
+        message = exception.message;
+
+      } else {
+        message = UNKNOWN_ERROR_STRING;
+        if (SparkFlags.developerMode) {
+          // Log the actual exception on console if running in developer mode.
+          window.console.log(exception.exception);
+        }
+
+      }
     } else if (exception != null) {
       if (message == null) message = '';
-      message = message + ' : Unknown error.';
+      message = message + ' : ${UNKNOWN_ERROR_STRING}';
       // Log the actual exception on console if running in developer mode.
       if (SparkFlags.developerMode) {
         window.console.log(exception);
       }
     } else if (message == null) {
-      message = 'Unknown error.';
+      message = UNKNOWN_ERROR_STRING;
     }
-
     _setErrorDialogText(title, message);
     _errorDialog.show();
   }

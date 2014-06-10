@@ -14,13 +14,18 @@ class SparkException implements Exception {
   /// The error message.
   final String message;
   /// Represents the unique string for each error type.
-  final String errorCode;
+  String errorCode;
   /// Indicates if the error is not necessary to be handled and can be ignored.
   bool canIgnore = false;
-  /// Indicates whether the exception is a status or error.
-  bool isError = true;
+  /// Original exception.
+  dynamic exception;
 
-  SparkException(this.message, [this.errorCode, this.isError, this.canIgnore]);
+
+  SparkException(this.message, {String errorCode, dynamic exception, bool canIgnore}) {
+    this.errorCode = errorCode;
+    this.exception = exception;
+    this.canIgnore = canIgnore;
+  }
 
   static SparkException fromException(Exception e) {
     if (e is GitException) {
@@ -35,16 +40,16 @@ class SparkException implements Exception {
   static SparkException _fromGitException(GitException e) {
     if (e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
       return new SparkException(SparkErrorMessages.GIT_AUTH_REQUIRED_MSG,
-            SparkErrorConstants.GIT_AUTH_REQUIRED);
+            errorCode: SparkErrorConstants.GIT_AUTH_REQUIRED);
     } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
       return new SparkException(SparkErrorMessages.GIT_CLONE_CANCEL_MSG,
-        SparkErrorConstants.GIT_CLONE_CANCEL, false);
+        errorCode: SparkErrorConstants.GIT_CLONE_CANCEL);
     } else if (e.errorCode == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
       return new SparkException(
           SparkErrorMessages.GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG,
-          SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
+          errorCode: SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
     } else {
-      throw new SparkException(e.toString(), null, false);
+      throw new SparkException(e.toString(), exception: e);
     }
   }
 
