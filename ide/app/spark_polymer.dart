@@ -121,9 +121,9 @@ class SparkPolymerDialog implements Dialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future openFolder() {
+  Future openFolder(SparkActionWithStatusDialog action) {
     return _beforeSystemModal()
-        .then((_) => super.openFolder())
+        .then((_) => super.openFolder(action))
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
   }
@@ -135,9 +135,10 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
 
-  Future importFolder([List<ws.Resource> resources]) {
+  Future importFolder(
+      [List<ws.Resource> resources, SparkActionWithStatusDialog action]) {
     return _beforeSystemModal()
-        .then((_) => super.importFolder(resources))
+        .then((_) => super.importFolder(resources, action))
         .whenComplete(() => _systemModalComplete());
   }
 
