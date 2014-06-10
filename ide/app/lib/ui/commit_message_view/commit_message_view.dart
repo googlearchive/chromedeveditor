@@ -9,7 +9,7 @@ import 'dart:html';
 import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 
-import '../../../scm.dart';
+import '../../scm.dart';
 
 @CustomTag('commit-message-view')
 class CommitMessageView extends SparkWidget {

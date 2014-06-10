@@ -125,11 +125,33 @@ class ObjectStore {
     });
   }
 
-  Future<chrome.FileEntry> createNewRef(String refName, String sha) {
-    String path = GIT_FOLDER_PATH + refName;
-    String content = sha + '\n';
-    return FileOps.createFileWithContent(_rootDir, path, content, "Text");
+  Future clearRemoteRefs() {
+    return root.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then(
+        (dir) => dir.removeRecursively()).catchError((e){});
   }
+
+  Future writeRemoteRefs(List<GitRef> refs) {
+    // Clear old refs. This will ensure, the branches deleted on remote,
+    // are deleted locally.
+    return clearRemoteRefs().then((_) {
+      return Future.forEach(refs, (GitRef ref) {
+        String refName = ref.name.split('/').last;
+        if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
+          return new Future.value();
+        }
+        return createRemoteRef(refName, ref.sha);
+      });
+    });
+  }
+
+  Future<chrome.FileEntry> createRemoteRef(String refName, String sha)
+      => _createNewRef(GIT_REFS_REMOTES_ORIGIN_PATH + refName, sha);
+
+  Future<chrome.FileEntry> createLocalRef(String refName, String sha)
+      => _createNewRef(GIT_REFS_HEADS_PATH + refName, sha);
+
+  Future<chrome.FileEntry> _createNewRef(String path, String sha)
+      => FileOps.createFileWithContent(_rootDir, path, sha + '\n', "Text");
 
   Future<chrome.FileEntry> setHeadRef(String refName) {
     String content = 'ref: ${refName}\n';
@@ -439,7 +461,7 @@ class ObjectStore {
 
   Future<CommitPushEntry> _getCommits(GitRef remoteRef,
       Map<String, bool> remoteShas, String sha) {
-    var commits = [];
+    List commits = [];
     Future<CommitPushEntry> getNextCommit(String sha) {
 
       return retrieveObject(sha, ObjectTypes.COMMIT_STR).then((
@@ -478,7 +500,7 @@ class ObjectStore {
 
   Future retrieveObjectList(List<String> shas, String objType) {
     List objects = [];
-    return Future.forEach(shas, (sha) {
+    return Future.forEach(shas, (String sha) {
       return retrieveObject(sha, objType).then((object) => objects.add(object));
     }).then((e) => objects);
   }
@@ -533,7 +555,7 @@ class ObjectStore {
     }).then((_) => trees);
   }
 
-  Future<String> writeRawObject(String type, content) {
+  Future<String> writeRawObject(String type, dynamic content) {
     Completer completer = new Completer();
     List<dynamic> blobParts = [];
 
@@ -557,7 +579,7 @@ class ObjectStore {
     var reader = new JsObject(context['FileReader']);
 
     reader['onloadend'] = (var event) {
-      var result = reader['result'];
+      dynamic result = reader['result'];
       FastSha sha1 = new FastSha();
       Uint8List resultList;
 

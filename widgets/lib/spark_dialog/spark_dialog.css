@@ -10,9 +10,8 @@
 
 #modal {
   position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 3px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 15px 0 rgba(0, 0, 0, 0.24);
   background: white;
 }
 
@@ -22,27 +21,18 @@
 
 #header {
   height: 50px;
-  /* Compensate for the dialog border */
-  margin: -1px -1px 0px -1px;
   padding: 0 10px 0 20px;
-  background-color: rgb(66, 128, 244);
-  color: white;
-  fill: white;
   fill-opacity: 1;
 }
 
 #footer {
   height: 60px;
-  /* Compensate for the dialog border */
-  margin: 0 -1px -1px -1px;
   padding: 0 10px;
-  background-color: white;
 }
 
 #title {
+  color: #757575;
   font-size: 20px;
-  font-weight: 200;
-  text-transform: uppercase;
 }
 
 #closingX {
@@ -51,6 +41,7 @@
 }
 
 #closingXGlyph {
+  fill: #757575;
   fill-opacity: 1;
 }
 
@@ -77,7 +68,6 @@
   line-height: 1.428571429;
   color: #666;
   background-color: #fff;
-  margin: 2px 0;
   -webkit-box-shadow: none;
   box-shadow: none;
 }
@@ -87,11 +77,13 @@
   -webkit-box-shadow: none;
   box-shadow: none;
   border-color: rgb(66, 128, 244);
-  transition: border-color ease-in-out 0.4s;
 }
 
-::content .form-control:invalid {
-  color: red;
+/*
+ * Don't use :invalid because we need finer control.
+ */
+::content .form-control:not(:focus).invalid {
+  border-color: red;
 }
 
 ::content input[type=radio] {

@@ -5,16 +5,37 @@
 library spark.workspace_utils;
 
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:archive/archive.dart' as archive;
 
 import 'workspace.dart';
 
-Future archiveContainer(Container container) {
+Future archiveContainer(Container container, [bool addZipManifest = false]) {
   archive.Archive arch = new archive.Archive();
-  return _recursiveArchive(arch, container).then((_) {
+  return _recursiveArchive(arch, container, addZipManifest ? 'www/' : '').then((_) {
+    if (addZipManifest) {
+      String zipAssetManifestString = _buildZipAssetManifest(container);
+      arch.addFile(new archive.ArchiveFile('zipassetmanifest.json',
+          zipAssetManifestString.codeUnits.length,
+          zipAssetManifestString.codeUnits));
+    }
     return new archive.ZipEncoder().encode(arch);
   });
+}
+
+String _buildZipAssetManifest(Container container) {
+  Iterable<Resource> children = container.traverse().skip(1);
+  int rootIndex = container.path.length + 1;
+  Map<String, Map<String, String>> zipAssetManifest = {};
+  for (Resource element in children) {
+    if (element.isFile) {
+      String path = element.path.substring(rootIndex);
+      zipAssetManifest["www/$path"] = {"path": "www/$path", "etag": "0"};
+    }
+  }
+
+  return JSON.encode(zipAssetManifest);
 }
 
 Future _recursiveArchive(archive.Archive arch, Container parent,
