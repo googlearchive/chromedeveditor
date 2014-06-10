@@ -39,6 +39,7 @@
           <input type="fileFilter"
               id="fileFilter"
               placeholder="Filter"
+              spellcheck="false"
               on-keydown="{{fileFilterKeydownHandler}}"
               on-input="{{fileFilterInputHandler}}"
               tabindex="0"/>
@@ -155,7 +156,8 @@
     <spark-dialog id="renameDialog" title="Rename">
       <label for="renameFileName">New name</label>
       <input id="renameFileName" type="text" class="form-control"
-          spellcheck="false" focused>
+          required pattern="[\w\.-]+"
+          spellcheck="false" autosave focused>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Rename</spark-dialog-button>
@@ -165,6 +167,7 @@
     <spark-dialog id="fileNewDialog" title="New File">
       <label for="fileName">New file name</label>
       <input id="fileName" type="text" class="form-control"
+          required pattern="[\w\.]+"
           spellcheck="false" focused>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
@@ -175,6 +178,7 @@
     <spark-dialog id="folderNewDialog" title="New Folder">
       <label for="folderName">New folder name</label>
       <input id="folderName" type="text" class="form-control"
+          required pattern="[\w\.]+"
           spellcheck="false" focused>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
@@ -186,8 +190,8 @@
       <div class="form-group">
         <label for="name">Project name</label>
         <input id="name" type="text" class="form-control"
-            pattern="[^\/ ]+" placeholder="HelloWorld" spellcheck="false"
-            autosave focused />
+            placeholder="HelloWorld" required pattern="[\w\.-]+"
+            spellcheck="false" autosave focused />
       </div>
       <div class="form-group">
         <label for="type">Project type</label>
@@ -298,9 +302,10 @@
       <div class="form-group">
         <div id="gitUserInfo">
           <div class="input-label">
-            <label for="gitName">Your Name</label>
+            <label for="gitName">Your name</label>
             <input id="gitName" type="text" class="form-control"
-                placeholder="John Doe" spellcheck="false" autosave focused>
+                placeholder="John Doe" required pattern=".+"
+                spellcheck="false" autosave focused>
           </div>
           <div class="input-label">
             <label for="gitEmail">Email</label>
@@ -318,7 +323,7 @@
       </div>
       <div id="gitChangeList"></div>
       <div class="form-group">
-        <label for="commitMessage">Commit Message</label>
+        <label for="commitMessage">Commit message</label>
         <textarea id="commitMessage" type="text" class="form-control"
             rows="3" wrap="soft" spellcheck autosave></textarea>
         <span class="help-block">
@@ -510,13 +515,13 @@
         <div class="input-label">
           <label for="gitUsername">User name</label>
           <input id="gitUsername" type="text" class="form-control"
-              placeholder="johndoe" pattern="\S+" spellcheck="false"
-              autosave focused>
+              placeholder="johndoe" required pattern="\S+"
+              spellcheck="false" autosave focused>
         </div>
         <div class="input-label">
           <label for="gitPassword">Password</label>
           <input id="gitPassword" type="password" class="form-control"
-              placeholder="Required">
+              placeholder="Required" required>
         </div>
       </div>
 
