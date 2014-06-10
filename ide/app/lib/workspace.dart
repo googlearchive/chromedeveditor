@@ -843,6 +843,12 @@ class Folder extends Container {
    * filesystem to the current folder.
    */
   Future importDirectoryEntry(chrome.DirectoryEntry entry) {
+
+    if (entry.fullPath == _dirEntry.fullPath) {
+      throw 'Import and root folder are same.';
+      return new Future.value();
+    }
+
     return createNewFolder(entry.name).then((Folder folder) {
       return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
         List<Future> futures = [];
