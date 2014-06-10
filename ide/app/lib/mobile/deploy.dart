@@ -219,7 +219,7 @@ class MobileDeploy {
     AndroidDevice _device;
 
     // Build the archive.
-    return archiveContainer(appContainer).then((List<int> archivedData) {
+    return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       httpRequest = _buildHttpRequest('localhost', archivedData);
       monitor.worked(4);
