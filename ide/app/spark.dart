@@ -2370,7 +2370,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
       spark.showSuccessMessage('Cloned $projectName');
     }).catchError((e) {
       if (e is SparkException && e.errorCode
-          == SparkErrorConstants.AUTH_REQUIRED) {
+          == SparkErrorConstants.GIT_AUTH_REQUIRED) {
         spark.showErrorMessage('Authorization Required',
           'Authorization required - private git repositories are not yet supported.');
       } else if (e is SparkException &&

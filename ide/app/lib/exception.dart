@@ -33,7 +33,7 @@ class SparkException implements Exception {
   static SparkException _fromGitException(GitException e) {
     if (e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
       return new SparkException(e.toString(),
-            SparkErrorConstants.AUTH_REQUIRED);
+            SparkErrorConstants.GIT_AUTH_REQUIRED);
     } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
       return new SparkException(e.toString(),
         SparkErrorConstants.GIT_CLONE_CANCEL, true);
@@ -55,9 +55,9 @@ class SparkException implements Exception {
  * unique [SparkException].
  */
 class SparkErrorConstants {
-  static final String BRANCH_NOT_FOUND = "branch_not_found";
+  static final String GIT_BRANCH_NOT_FOUND = "branch_not_found";
   static final String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
-  static final String AUTH_REQUIRED = "auth.required";
+  static final String GIT_AUTH_REQUIRED = "auth.required";
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
