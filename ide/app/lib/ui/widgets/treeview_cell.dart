@@ -48,7 +48,7 @@ class TreeViewCell implements ListViewCell {
     _element = templateClone.querySelector('.treeviewcell');
 
     _embeddedCellContainer = _element.querySelector('.treeviewcell-content');
-    int margin = _row.level == 0 ? 0 : (_row.level - 1) * 15 + 1;
+    int margin = _row.level == 0 ? 0 : _row.level * 25;
     _embeddedCellContainer.classes.add('treeviewcell-content');
     _embeddedCellContainer.style.left = '${margin + 20}px';
     int offsetX = margin + 20;

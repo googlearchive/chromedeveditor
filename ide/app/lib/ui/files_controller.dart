@@ -208,7 +208,7 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 40 : 20;
+    return resource is Project ? 40 : 25;
   }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
