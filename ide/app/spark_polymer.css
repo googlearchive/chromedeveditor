@@ -594,6 +594,7 @@ li.outlineItem a {
   display: flex;
   align-items: center;
   height: 100%;
+  font-size: 13px;
 }
 
 .dropdown-menu > li > a:hover {
