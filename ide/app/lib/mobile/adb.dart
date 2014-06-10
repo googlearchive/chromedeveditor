@@ -608,7 +608,7 @@ class AndroidDevice {
             responseChunks.add(msg.dataBuffer);
             return sendMessage(new AdbMessage(AdbUtil.A_OKAY, localID,
                 remoteID)).then((_) { return readChunk(); });
-          } else {
+          } else if (msg.command != AdbUtil.A_CLSE) {
             return new Future.error('Unexpected message from device.');
           }
         }).catchError((e) {
