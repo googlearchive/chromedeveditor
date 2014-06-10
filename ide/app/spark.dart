@@ -1347,7 +1347,7 @@ class FileSaveAction extends SparkAction {
 }
 
 class FileDeleteAction extends SparkAction implements ContextAction {
-  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
+  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete…");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -1385,7 +1385,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
 // TODO(ussuri): Convert to SparkActionWithDialog.
 class ProjectRemoveAction extends SparkAction implements ContextAction {
-  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Remove");
+  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Remove…");
 
   void _invoke([List<ws.Resource> resources]) {
     ws.Project project = resources.first;
