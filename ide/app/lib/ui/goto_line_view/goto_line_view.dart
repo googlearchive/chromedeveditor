@@ -32,6 +32,8 @@ class GotoLineView extends SparkWidget {
    */
   bool get open => _container.classes.contains('showing');
 
+  bool get preventDispose => true;
+
   /**
    * Make the view visible.
    */
