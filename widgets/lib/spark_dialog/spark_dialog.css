@@ -20,11 +20,13 @@
 }
 
 #header {
+  background: none;
   padding: 24px 24px 8px;
   fill-opacity: 1;
 }
 
 #footer {
+  background: none;
   padding: 8px 24px 24px;
 }
 
