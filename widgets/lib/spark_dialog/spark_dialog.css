@@ -16,18 +16,16 @@
 }
 
 #body {
-  padding: 20px;
+  padding: 24px;
 }
 
 #header {
-  height: 50px;
-  padding: 0 10px 0 20px;
+  padding: 24px 24px 8px;
   fill-opacity: 1;
 }
 
 #footer {
-  height: 60px;
-  padding: 0 10px;
+  padding: 8px 24px 24px;
 }
 
 #title {
