@@ -564,3 +564,11 @@ li.outlineItem a {
   transition: opacity 250ms;
   z-index: 100;
 }
+
+/*
+  We tweak the default behavior of tab bar to avoids an overlap with the
+  navigation buttons.
+*/
+.tabview-tabbar {
+  margin-right: 95px;
+}
