@@ -226,7 +226,7 @@ button.ace_searchbtn_close:active {
 	border-radius: 2px;
 
   position: absolute;
-  top: 2px;
+  top: 4px;
   right: 7px;
   height: 16px;
 
@@ -261,7 +261,7 @@ button.ace_searchbtn_close:active {
   border-radius: 2px;
   background: #999;
   position: absolute;
-  top: 2px;
+  top: 4px;
   right: 1px;
   height: 16px;
   width: 0;
@@ -295,7 +295,7 @@ button.ace_searchbtn_close:active {
 .fileview-filename-container .filename {
   overflow: hidden;
   position: absolute;
-  top: 1px;
+  top: 3px;
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
