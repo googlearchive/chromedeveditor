@@ -43,4 +43,12 @@ class SparkDialogButton extends SparkWidget {
     widget.setAttr('disabled', disabled);
     return result;
   }
+
+  void updateParentFormValidity(bool formIsValid) {
+    if (submit) {
+      disabled = !formIsValid;
+      // TODO(ussuri): BUG #2252
+      deliverChanges();
+    }
+  }
 }
