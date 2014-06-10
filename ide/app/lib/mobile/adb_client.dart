@@ -36,9 +36,9 @@ class AdbApplication {
   static AdbApplication CONTENT_SHELL = new AdbApplication(
       'org.chromium.content_shell_apk', '.ContentShellActivity');
 
-  /// Chrome Apps Developer Tool (ADT).
+  /// Chrome App Developer Tool for Mobile (App Dev Tool).
   static AdbApplication CHROME_ADT = new AdbApplication(
-      'org.chromium.appharness', 'org.chromium.appharness.ChromeAppHarness');
+      'org.chromium.appdevtool', 'org.chromium.appdevtool.ChromeAppHarness');
 
   final String packageName;
   final String mainActivity;
