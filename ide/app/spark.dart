@@ -416,7 +416,7 @@ abstract class Spark
     //actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
-    actionManager.registerAction(new FolderOpenAction(this));
+    actionManager.registerAction(new FolderOpenAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
@@ -455,7 +455,7 @@ abstract class Spark
     actionManager.registerAction(new FormatAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
-    actionManager.registerAction(new ImportFolderAction(this));
+    actionManager.registerAction(new ImportFolderAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new ProjectRemoveAction(this));
     actionManager.registerAction(new TopLevelFileRemoveAction(this));
@@ -1281,6 +1281,41 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
   }
 }
 
+abstract class SparkActionWithStatusDialog extends SparkActionWithProgressDialog {
+  SparkActionWithStatusDialog(Spark spark,
+                              String id,
+                              String name,
+                              Element dialogElement)
+      : super(spark, id, name, dialogElement);
+
+  /**
+   * Shows a
+   */
+
+  void _showStatusDialog(String title, String progressMessage) {
+    _dialog.dialog.title = title;
+    _setProgressMessage(progressMessage);
+    _toggleProgressVisible(true);
+    _show();
+  }
+
+  /**
+   * Show the status dialog at least for 3 seconds. The dialog is closed when
+   * the given future [f] is completed.
+   */
+  void _waitForJob(Future f) {
+    // Show dialog for at least 3 seconds.
+    Timer timer = new Timer(new Duration(milliseconds: 3000), () {
+      f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
+        _hide();
+      });
+    });
+    _show();
+  }
+}
+
 class FileOpenAction extends SparkAction {
   FileOpenAction(Spark spark) : super(spark, "file-open", "Open File…") {
     addBinding("ctrl-o");
@@ -2087,11 +2122,15 @@ class NewProjectAction extends SparkActionWithDialog {
   }
 }
 
-class FolderOpenAction extends SparkAction {
-  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Add Folder to Workspace…");
+class FolderOpenAction extends SparkActionWithStatusDialog {
+  static const String DIALOG_TITLE = 'Add Folder to Workspace…';
+  FolderOpenAction(Spark spark, SparkDialog dialog)
+      : super(spark, "folder-open", DIALOG_TITLE, dialog);
 
   void _invoke([Object context]) {
-    spark.openFolder();
+    Future f = spark.openFolder();
+    _waitForJob(f);
+    _showStatusDialog(DIALOG_TITLE, 'Adding Folder to WorkSpace…');
   }
 }
 
@@ -2416,29 +2455,18 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 }
 
-class GitPullAction extends SparkActionWithProgressDialog implements ContextAction {
+class GitPullAction extends SparkActionWithStatusDialog implements ContextAction {
   GitPullAction(Spark spark, SparkDialog dialog)
       : super(spark, "git-pull", "Pull from Origin", dialog);
 
   void _invoke([context]) {
     ws.Project project = context.first.project;
     ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(project);
-
-    _dialog.dialog.title = 'Git Pull';
-    String branchName = operations.getBranchName();
-    _setProgressMessage('Updating ${branchName}...');
-    _toggleProgressVisible(true);
-
     Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
-    // Show dialog for at lest 2 seconds.
-    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
-      f.whenComplete(() {
-        _setProgressMessage('');
-        _toggleProgressVisible(true);
-        _hide();
-      });
-    });
-    _show();
+    _waitForJob(f);
+    String branchName = operations.getBranchName();
+    _showStatusDialog('Git Pull', 'Updating ${branchName}…');
+
   }
 
   String get category => 'git';
@@ -2446,7 +2474,7 @@ class GitPullAction extends SparkActionWithProgressDialog implements ContextActi
   bool appliesTo(context) => _isScmProject(context);
 }
 
-class GitAddAction extends SparkActionWithProgressDialog implements ContextAction {
+class GitAddAction extends SparkActionWithStatusDialog implements ContextAction {
   GitAddAction(Spark spark, SparkDialog dialog)
       : super(spark, "git-add", "Git Add", dialog);
   chrome.Entry entry;
@@ -2459,22 +2487,9 @@ class GitAddAction extends SparkActionWithProgressDialog implements ContextActio
       files.add(resource.entry);
     });
 
-    _dialog.dialog.title = 'Git Add';
-    String branchName = operations.getBranchName();
-    _setProgressMessage('Adding files to git...');
-    _toggleProgressVisible(true);
-
     Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
-    // Show dialog for at lest 2 seconds.
-    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
-      f.whenComplete(() {
-        _setProgressMessage('');
-        _toggleProgressVisible(true);
-        _hide();
-      });
-    });
-
-    _show();
+    _waitForJob(f);
+    _showStatusDialog('Git Add', 'Adding files to git…');
   }
 
   String get category => 'git';
@@ -3611,11 +3626,14 @@ class ImportFileAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
-class ImportFolderAction extends SparkAction implements ContextAction {
-  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Add Folder to Workspace…");
+class ImportFolderAction extends SparkActionWithStatusDialog implements ContextAction {
+  ImportFolderAction(Spark spark, SparkDialog dialog)
+      : super(spark, "folder-import", "Add Folder to Workspace…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
-    spark.importFolder(resources);
+    Future f = spark.importFolder(resources);
+    _waitForJob(f);
+    _showStatusDialog('Open Folder', 'Opening Folder…');
   }
 
   String get category => 'folder';
