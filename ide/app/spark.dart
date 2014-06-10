@@ -2654,9 +2654,9 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
       commitButton.deliverChanges();
     } else {
       _gitStatusElement.text =
-          '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
-          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added, ' +
-          '$deletedCnt ${(deletedCnt > 1) ? 'files' : 'file'} deleted.';
+          '$modifiedCnt ${(modifiedCnt != 1) ? 'files' : 'file'} modified, ' +
+          '$addedCnt ${(addedCnt != 1) ? 'files' : 'file'} added, ' +
+          '$deletedCnt ${(deletedCnt != 1) ? 'files' : 'file'} deleted.';
     }
   }
 
