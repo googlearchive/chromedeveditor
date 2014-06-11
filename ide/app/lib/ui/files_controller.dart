@@ -211,6 +211,11 @@ class FilesController implements TreeViewDelegate {
     return resource is Project ? 40 : 24;
   }
 
+  int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    return resource is Project ? 15 : -1;
+  }
+
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
       Resource resource = _filesMap[nodeUids.first];
