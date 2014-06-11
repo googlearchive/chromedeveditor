@@ -63,13 +63,14 @@ class Status {
       }
 
       return getShaForEntry(entry, 'blob').then((String sha) {
-        status = new FileStatus();
-        status.path = entry.fullPath;
-        status.sha = sha;
-        status.size = data.size;
-        status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
-        store.index.updateIndexForFile(status);
-        return status;
+        FileStatus newStatus = new FileStatus()
+            ..path = entry.fullPath
+            ..sha = sha
+            ..size = data.size
+            ..permission = status.permission
+            ..modificationTime = data.modificationTime.millisecondsSinceEpoch;
+        store.index.updateIndexForFile(newStatus);
+        return newStatus;
       });
     }).then((_) {
       if (status.type != FileStatusType.UNTRACKED) {
