@@ -2855,8 +2855,16 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
           _show();
         });
       }).catchError((e) {
-          spark.showErrorMessage('Push failed',
-              SparkException.fromException(e).message);
+        e = SparkException.fromException(e);
+        if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
+          gitOperations.objectStore.then((store) {
+            String message = 'Push to ${store.config.url} failed due to authorization error. '
+               'Please verify your username pasword, and access rights to the repository.';
+            spark.showErrorMessage('Push failed', message);
+          });
+        } else {
+          spark.showErrorMessage('Push failed', e.message);
+        }
       });
     });
   }

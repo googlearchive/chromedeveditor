@@ -353,7 +353,7 @@ class HttpGitException extends GitException {
     String errorCode;
 
     if (request.status == 401) {
-      errorCode = GitErrorConstants.GIT_AUTH_ERROR;
+      errorCode = GitErrorConstants.GIT_AUTH_REQUIRED;
     } else if (request.status == 404) {
         errorCode = GitErrorConstants.GIT_HTTP_404_ERROR;
     } else {

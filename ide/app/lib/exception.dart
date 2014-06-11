@@ -42,7 +42,7 @@ class SparkException implements Exception {
       return new SparkException(e.toString(),
         SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
     } else {
-      throw new SparkException(e.toString());
+      return new SparkException(e.toString());
     }
   }
 
