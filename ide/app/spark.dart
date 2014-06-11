@@ -1997,8 +1997,10 @@ class NewProjectAction extends SparkActionWithDialog {
   void _invoke([context]) {
     _nameElt.value = '';
     // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((_) {
-      _show();
+    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+      if (r != null) {
+        _show();
+      }
     });
   }
 
@@ -2313,8 +2315,10 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((_) {
-      _show();
+    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+      if (r != null) {
+        _show();
+      }
     });
   }
 
