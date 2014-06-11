@@ -68,6 +68,11 @@ body {
   overflow: hidden;
 }
 
+/*
+ * Ace overrides.
+ * TODO(ussuri): Move to a separate file.
+ */
+ 
 .ace_gutter-cell {
   color: #aaa;
 }
@@ -162,6 +167,15 @@ button.ace_searchbtn_close:hover {
 button.ace_searchbtn_close:active {
   outline: none;
 }
+
+.ace_fade-fold-widgets .ace_fold-widget {
+  -webkit-transition: none;
+  transition: none;
+} 
+
+/*
+ * - end Ace overrides.
+ */
 
 .always-view-as-text-button {
   position: absolute;
