@@ -520,14 +520,9 @@ abstract class Spark
     });
   }
 
-  Future openFolder(FolderOpenAction action) {
-    return _selectFolder().then((chrome.DirectoryEntry entry) {
-      if (entry != null) {
-        _OpenFolderJob job = new _OpenFolderJob(entry, this);
-        Future f = jobManager.schedule(job);
-        action._waitForJob(action.name, 'Adding Folder to workspace…', f);
-      }
-    });
+  Future openFolder(chrome.DirectoryEntry entry) {
+    _OpenFolderJob job = new _OpenFolderJob(entry, this);
+    return jobManager.schedule(job);
   }
 
   Future importFile([List<ws.Resource> resources]) {
@@ -546,19 +541,10 @@ abstract class Spark
     });
   }
 
-  Future importFolder([List<ws.Resource> resources, ImportFolderAction action]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    return chrome.fileSystem.chooseEntry(options).then(
-        (chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        ws.Folder folder = resources.first;
-        Future f = folder.importDirectoryEntry(entry).catchError((e) {
-          showErrorMessage('Error while importing folder', e);
-        });
-        action._waitForJob(action.name, 'Adding Folder to workspace…', f);
-      }
+  Future importFolder([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
+    ws.Folder folder = resources.first;
+    return folder.importDirectoryEntry(entry).catchError((e) {
+      showErrorMessage('Error while importing folder', e);
     });
   }
 
@@ -2122,7 +2108,12 @@ class FolderOpenAction extends SparkActionWithStatusDialog {
       : super(spark, "folder-open", 'Add Folder to Workspace…', dialog);
 
   void _invoke([Object context]) {
-    spark.openFolder(this);
+    _selectFolder().then((chrome.DirectoryEntry entry) {
+      if (entry != null) {
+        Future f = spark.openFolder(entry);
+        _waitForJob(name, 'Adding Folder to workspace…', f);
+      }
+    });
   }
 }
 
@@ -3621,7 +3612,15 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
       : super(spark, "folder-import", "Add Folder to Workspace…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
-    spark.importFolder(resources, this);
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        Future f = spark.importFolder(resources, entry);
+        _waitForJob(name, 'Adding Folder to workspace…', f);
+      }
+    });
   }
 
   String get category => 'folder';
