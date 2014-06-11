@@ -619,32 +619,12 @@ abstract class Spark
    * Show a model error dialog.
    */
   void showErrorMessage(
-      String title, String message, [Function errorAction, String label]) {
+      String title, String message) {
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
       _errorDialog.getElement("[dismiss]").onClick.listen(_hideBackdropOnClick);
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
-    }
-
-    if (errorAction != null) {
-      SparkDialogButton errorActionButton = _errorDialog.getElement("#errorAction");
-      errorActionButton.text = label;
-      errorActionButton.hidden = false;
-      errorActionButton.deliverChanges();
-
-      errorActionButton.onClick.listen((_) {
-        errorActionButton.hidden = true;
-        errorActionButton.text = 'Ok';
-        errorActionButton.deliverChanges();
-
-        _hideBackdropOnClick();
-
-        // Ensures that errorDialog closes before the action.
-        Timer.run(() {
-          errorAction();
-        });
-      });
     }
 
     _setErrorDialogText(title, message);
@@ -2897,7 +2877,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
     Function errorAction = () {
       _showAuthDialog(context);
     };
-    spark.showErrorMessage('Push failed', message, errorAction, 'Login Again');
+    spark.askUserOkCancel(message,
+        okButtonLabel: 'Login Again', title: 'Push failed');
   }
 
   void _push() {
