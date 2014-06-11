@@ -315,8 +315,8 @@ class Index {
        } else {
          return getShaForEntry(entry, 'blob').then((String sha) {
            FileStatus newStatus = new FileStatus()
+               ..path = entry.fullPath
                ..sha = sha
-               ..path = status.path
                ..size = data.size
                ..modificationTime = data.modificationTime.millisecondsSinceEpoch
                ..permission = status.permission;

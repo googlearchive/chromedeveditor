@@ -5,7 +5,7 @@
 library git.permissions;
 
 /**
- * Reverts a given list of file entries to the git head state.
+ * Defines Git Permissions.
  */
 class Permissions {
   static String DIRECTORY = "40000";
