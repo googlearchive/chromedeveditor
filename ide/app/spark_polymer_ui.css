@@ -152,7 +152,7 @@ spark-dialog {
 
 #gitCommitList {
   max-height: 250px;
-  overflow: scroll;
+  overflow: auto;
   padding: 0 20px;
 }
 
@@ -163,7 +163,7 @@ spark-dialog {
 }
 
 #gitChangeList {
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid #cccccc;
   display: none;
   margin-bottom: 15px;

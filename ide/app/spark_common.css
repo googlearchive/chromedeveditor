@@ -16,14 +16,29 @@ body {
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
-  background-color: #666;
+::-webkit-scrollbar-thumb {
+  min-height: 48px;
 }
 
-::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-track,
+.scrollbar-light::-webkit-scrollbar-track {
+  background-color: #eee;
+}
+
+::-webkit-scrollbar-thumb,
+.scrollbar-light::-webkit-scrollbar-thumb {
   background-color: #aaa;
 }
 
+.scrollbar-dark::-webkit-scrollbar-track,
+.ace_scrollbar::-webkit-scrollbar-track {
+  background-color: #666;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb,
+.ace_scrollbar::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+}
 
 /* Uncomment these 2 rules, or selectively apply the .debug class or debug
  * attribute, to facilitate debuging of elements.
