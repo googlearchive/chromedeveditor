@@ -54,9 +54,6 @@ class SparkDialog extends SparkWidget {
     title = _title;
     $['progress'].classes.toggle('hidden', !_activityVisible);
 
-    // TODO(ussuri): Use MutationObserver here to detect added/removed fields.
-    _addValidatableFields(
-        SparkWidget.inlineNestedContentNodes($['bodyContent']));
     // Listen to the form's global validity changes. Additional listeners are
     // added below to text input fields.
     _body.onChange.listen(_updateFormValidity);
@@ -64,6 +61,8 @@ class SparkDialog extends SparkWidget {
 
   void show() {
     if (!_modal.opened) {
+      _addValidatableFields(
+          SparkWidget.inlineNestedContentNodes($['bodyContent']));
       _updateFormValidity();
       _modal.toggle();
     }
@@ -83,6 +82,11 @@ class SparkDialog extends SparkWidget {
   }
 
   void _addValidatableFields(Iterable<Node> candidates) {
+    _validatedFields.clear();
+    _addValidatableFieldsImpl(candidates);
+  }
+
+  void _addValidatableFieldsImpl(Iterable<Node> candidates) {
     candidates.forEach((Element element) {
       if (element is InputElement) {
         if (element.willValidate) {
@@ -90,7 +94,7 @@ class SparkDialog extends SparkWidget {
               new _ValidatedField(element, _updateFormValidity));
         }
       } else {
-        _addValidatableFields(element.children);
+        _addValidatableFieldsImpl(element.children);
       }
     });
   }
@@ -104,28 +108,36 @@ class SparkDialog extends SparkWidget {
 
 @reflectable
 class _ValidatedField {
+  static const INVALID_CLASS = 'invalid';
+  
   final InputElement _element;
   final Function _onValidityChange;
+  bool _wasVisited = false;
   bool _isValid;
 
   bool get isValid => _isValid;
 
   _ValidatedField(this._element, this._onValidityChange) {
-    if (_element is TextInputElement) {
-      // Just listening to the [_body.onChange] is not enough to update
-      // the validity in real-time as the user types.
-      _element.onInput.listen(_updateValidity);
-      _updateValidity();
-    }
+    // Just listening to the [_body.onChange] is not enough to update
+    // the validity in real-time as the user types.
+    _element
+        ..onFocus.listen(_setVisited)
+        ..onClick.listen(_setVisited)
+        ..onInput.listen(_updateValidity)
+        ..onPaste.listen(_updateValidity)
+        ..onReset.listen(_updateValidity);
+    _element.classes.remove('invalid');
   }
 
+  void _setVisited([_]) {
+    _wasVisited = true;
+    _updateValidity();
+  }
+  
   void _updateValidity([_]) {
-    final bool newIsValid = _element.disabled || _element.checkValidity();
-    if (newIsValid != _isValid) {
-      _isValid = newIsValid;
-      // Don't rely on the automatic ':invalid' pseudo-class for finer control.
-      _element.classes.toggle('invalid', !_isValid && _element.value.isNotEmpty);
-      _onValidityChange();
-    }
+    _isValid = _element.disabled || _element.checkValidity();
+    // Don't rely on the automatic ':invalid' pseudo-class for finer control.
+    _element.classes.toggle('invalid', _wasVisited && !_isValid);
+    _onValidityChange();
   }
 }
