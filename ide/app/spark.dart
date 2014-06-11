@@ -2879,24 +2879,26 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
       }).catchError((e) {
         e = SparkException.fromException(e);
         if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
-          _handleAuthError();
+          _handleAuthError(context);
+        } else if (e.errorCode == SparkErrorConstants.GIT_HTTP_403_ERROR) {
+          gitOperations.objectStore.then((store) {
+            String message = 'Push to ${store.config.url} denied. '
+               'Verify that you have push access to the repository.';
+            spark.showErrorMessage('Push failed', message);
+          });
         } else {
-          spark.showErrorMessage('Push failed', e.message);
+          spark.showErrorMessage('Push failed', e.toString());
         }
       });
     });
   }
 
-  void _handleAuthError() {
-    gitOperations.objectStore.then((store) {
-      String message = 'Push to ${store.config.url} failed due to authorization error. '
-          'Please verify your username pasword, and access rights to the repository.';
-          print('ladoo');
-      Function errorAction = () {
-        GitAuthenticationDialog.request(spark);
-      };
-      spark.showErrorMessage('Push failed', message, errorAction, 'Login Again');
-    });
+  void _handleAuthError(context) {
+    String message = 'Authorization error. Bad username or password.';
+    Function errorAction = () {
+      _showAuthDialog(context);
+    };
+    spark.showErrorMessage('Push failed', message, errorAction, 'Login Again');
   }
 
   void _push() {

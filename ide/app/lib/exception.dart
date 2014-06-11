@@ -34,6 +34,9 @@ class SparkException implements Exception {
     if (e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
       return new SparkException(e.toString(),
             SparkErrorConstants.AUTH_REQUIRED);
+    } else if (e.errorCode == GitErrorConstants.GIT_HTTP_403_ERROR) {
+      return new SparkException(e.toString(),
+             SparkErrorConstants.GIT_HTTP_403_ERROR);
     } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
       return new SparkException(e.toString(),
         SparkErrorConstants.GIT_CLONE_CANCEL, true);
@@ -61,4 +64,5 @@ class SparkErrorConstants {
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
+  static final String GIT_HTTP_403_ERROR = "git.http_403_error";
 }
