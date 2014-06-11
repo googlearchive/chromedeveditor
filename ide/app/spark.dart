@@ -2855,7 +2855,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
           _show();
         });
       }).catchError((e) {
-        spark.showErrorMessage('Push failed', 'Something went wrong.');
+        spark.showErrorMessage('Push failed', SparkException.fromException(e).message);
       });
     });
   }
@@ -2877,7 +2877,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
     task.run().then((_) {
       spark.showSuccessMessage('Changes pushed successfully');
     }).catchError((e) {
-      spark.showErrorMessage('Error while pushing changes', e.toString());
+      spark.showErrorMessage(
+          'Error while pushing changes', SparkException.fromException(e).message);
     }).whenComplete(() {
       _restoreDialog();
       _hide();
