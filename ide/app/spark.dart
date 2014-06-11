@@ -416,7 +416,7 @@ abstract class Spark
     //actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
-    actionManager.registerAction(new FolderOpenAction(this, getDialogElement('#statusDialog')));
+    actionManager.registerAction(new FolderOpenAction(this));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
@@ -455,7 +455,7 @@ abstract class Spark
     actionManager.registerAction(new FormatAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
-    actionManager.registerAction(new ImportFolderAction(this, getDialogElement('#statusDialog')));
+    actionManager.registerAction(new ImportFolderAction(this));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new ProjectRemoveAction(this));
     actionManager.registerAction(new TopLevelFileRemoveAction(this));
@@ -520,9 +520,13 @@ abstract class Spark
     });
   }
 
-  Future openFolder(chrome.DirectoryEntry entry) {
-    _OpenFolderJob job = new _OpenFolderJob(entry, this);
-    return jobManager.schedule(job);
+  Future openFolder() {
+    return _selectFolder().then((chrome.DirectoryEntry entry) {
+      if (entry != null) {
+        _OpenFolderJob job = new _OpenFolderJob(entry, this);
+        jobManager.schedule(job);
+      }
+    });
   }
 
   Future importFile([List<ws.Resource> resources]) {
@@ -541,10 +545,18 @@ abstract class Spark
     });
   }
 
-  Future importFolder([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
-    ws.Folder folder = resources.first;
-    return folder.importDirectoryEntry(entry).catchError((e) {
-      showErrorMessage('Error while importing folder', e);
+  Future importFolder([List<ws.Resource> resources]) {
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    return chrome.fileSystem.chooseEntry(options).then(
+        (chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        ws.Folder folder = resources.first;
+        folder.importDirectoryEntry(entry).catchError((e) {
+          showErrorMessage('Error while importing folder', e);
+        });
+      }
     });
   }
 
@@ -1266,34 +1278,6 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
     } else if (_progressDescriptionElement != null) {
       _progressDescriptionElement.text = description;
     }
-  }
-}
-
-abstract class SparkActionWithStatusDialog extends SparkActionWithProgressDialog {
-  SparkActionWithStatusDialog(Spark spark,
-                              String id,
-                              String name,
-                              Element dialogElement)
-      : super(spark, id, name, dialogElement);
-
-  /**
-   * Show the status dialog at least for 3 seconds. The dialog is closed when
-   * the given future [f] is completed.
-   */
-  void _waitForJob(String title, String progressMessage, Future f) {
-    _dialog.dialog.title = title;
-    _setProgressMessage(progressMessage);
-    _toggleProgressVisible(true);
-    _show();
-    // Show dialog for at least 3 seconds.
-    Timer timer = new Timer(new Duration(milliseconds: 3000), () {
-      f.whenComplete(() {
-        _setProgressMessage('');
-        _toggleProgressVisible(true);
-        _hide();
-      });
-    });
-    _show();
   }
 }
 
@@ -2105,17 +2089,11 @@ class NewProjectAction extends SparkActionWithDialog {
   }
 }
 
-class FolderOpenAction extends SparkActionWithStatusDialog {
-  FolderOpenAction(Spark spark, SparkDialog dialog)
-      : super(spark, "folder-open", 'Add Folder to Workspace…', dialog);
+class FolderOpenAction extends SparkAction {
+  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Add Folder to Workspace…");
 
   void _invoke([Object context]) {
-    _selectFolder().then((chrome.DirectoryEntry entry) {
-      if (entry != null) {
-        Future f = spark.openFolder(entry);
-        _waitForJob(name, 'Adding Folder to workspace…', f);
-      }
-    });
+    spark.openFolder();
   }
 }
 
@@ -2426,17 +2404,29 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 }
 
-class GitPullAction extends SparkActionWithStatusDialog implements ContextAction {
+class GitPullAction extends SparkActionWithProgressDialog implements ContextAction {
   GitPullAction(Spark spark, SparkDialog dialog)
       : super(spark, "git-pull", "Pull from Origin", dialog);
 
   void _invoke([context]) {
     ws.Project project = context.first.project;
     ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(project);
-    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
-    String branchName = operations.getBranchName();
-    _waitForJob('Git Pull', 'Updating ${branchName}…', f);
 
+    _dialog.dialog.title = 'Git Pull';
+    String branchName = operations.getBranchName();
+    _setProgressMessage('Updating ${branchName}...');
+    _toggleProgressVisible(true);
+
+    Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
+    // Show dialog for at lest 2 seconds.
+    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
+      f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
+        _hide();
+      });
+    });
+    _show();
   }
 
   String get category => 'git';
@@ -2444,7 +2434,7 @@ class GitPullAction extends SparkActionWithStatusDialog implements ContextAction
   bool appliesTo(context) => _isScmProject(context);
 }
 
-class GitAddAction extends SparkActionWithStatusDialog implements ContextAction {
+class GitAddAction extends SparkActionWithProgressDialog implements ContextAction {
   GitAddAction(Spark spark, SparkDialog dialog)
       : super(spark, "git-add", "Git Add", dialog);
   chrome.Entry entry;
@@ -2457,8 +2447,22 @@ class GitAddAction extends SparkActionWithStatusDialog implements ContextAction 
       files.add(resource.entry);
     });
 
+    _dialog.dialog.title = 'Git Add';
+    String branchName = operations.getBranchName();
+    _setProgressMessage('Adding files to git...');
+    _toggleProgressVisible(true);
+
     Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
-    _waitForJob('Git Add', 'Adding files to git…', f);
+    // Show dialog for at lest 2 seconds.
+    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
+      f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
+        _hide();
+      });
+    });
+
+    _show();
   }
 
   String get category => 'git';
@@ -3599,20 +3603,11 @@ class ImportFileAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
-class ImportFolderAction extends SparkActionWithStatusDialog implements ContextAction {
-  ImportFolderAction(Spark spark, SparkDialog dialog)
-      : super(spark, "folder-import", "Add Folder to Workspace…", dialog);
+class ImportFolderAction extends SparkAction implements ContextAction {
+  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Add Folder to Workspace…");
 
   void _invoke([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        Future f = spark.importFolder(resources, entry);
-        _waitForJob(name, 'Adding Folder to workspace…', f);
-      }
-    });
+    spark.importFolder(resources);
   }
 
   String get category => 'folder';

@@ -121,9 +121,9 @@ class SparkPolymerDialog implements Dialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future openFolder(chrome.DirectoryEntry entry) {
+  Future openFolder() {
     return _beforeSystemModal()
-        .then((_) => super.openFolder(entry))
+        .then((_) => super.openFolder())
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
   }
@@ -135,10 +135,9 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
 
-  Future importFolder([List<ws.Resource> resources,
-                       chrome.DirectoryEntry entry]) {
+  Future importFolder([List<ws.Resource> resources]) {
     return _beforeSystemModal()
-        .then((_) => super.importFolder(resources, entry))
+        .then((_) => super.importFolder(resources))
         .whenComplete(() => _systemModalComplete());
   }
 
