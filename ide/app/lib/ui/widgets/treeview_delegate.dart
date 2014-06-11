@@ -149,4 +149,10 @@ abstract class TreeViewDelegate {
    * given node.
    */
   int treeViewSeparatorHeightForNode(TreeView view, String nodeUID) => 1;
+
+  /**
+   * This method should return the position of the disclosure arrow relatively
+   * to the top of the node.
+   */
+  int treeViewDisclosurePositionForNode(TreeView view, String nodeUID) => -1;
 }

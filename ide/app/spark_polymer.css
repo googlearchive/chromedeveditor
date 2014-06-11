@@ -68,6 +68,11 @@ body {
   overflow: hidden;
 }
 
+/*
+ * Ace overrides.
+ * TODO(ussuri): Move to a separate file.
+ */
+ 
 .ace_gutter-cell {
   color: #aaa;
 }
@@ -171,6 +176,17 @@ button.ace_searchbtn_close:hover {
 
 button.ace_searchbtn_close:active {
   outline: none;
+}
+
+/*
+ * - end Ace overrides.
+ */
+
+.always-view-as-text-button {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  color: #ccc;
 }
 
 .minimap {
@@ -313,7 +329,7 @@ button.ace_searchbtn_close:active {
 }
 
 #fileViewArea {
-  bottom: 0;
+  bottom: 48px;
   position: absolute;
   top: 48px;
   width: 100%;
