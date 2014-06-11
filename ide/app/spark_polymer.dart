@@ -135,8 +135,8 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
 
-  Future importFolder(
-      [List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
+  Future importFolder([List<ws.Resource> resources,
+                       chrome.DirectoryEntry entry]) {
     return _beforeSystemModal()
         .then((_) => super.importFolder(resources, entry))
         .whenComplete(() => _systemModalComplete());
