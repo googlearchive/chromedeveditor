@@ -63,6 +63,10 @@ class TreeEntry {
   String get sha => shaBytesToString(shaBytes);
 
   TreeEntry(this.name, this.shaBytes, this.isBlob, this.permission);
+
+  static TreeEntry dummyEntry(bool isBlob) {
+    return new TreeEntry(null, null, isBlob, null);
+  }
 }
 
 /**
