@@ -44,6 +44,9 @@ class SparkException implements Exception {
         == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
       return new SparkException(e.toString(),
         SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
+    } else if (e.errorCode == SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD) {
+      return new SparkException(SparkErrorMessages.GIT_PUSH_NON_FAST_FORWARD_MSG,
+        SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
     } else {
       return new SparkException(e.toString());
     }
@@ -65,4 +68,11 @@ class SparkErrorConstants {
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
   static final String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
+  static final String GIT_PUSH_NON_FAST_FORWARD
+      = "git.push_non_fast_forward";
+}
+
+class SparkErrorMessages {
+  static final String GIT_PUSH_NON_FAST_FORWARD_MSG
+      = 'Non fast-forward push is not yet supported.';
 }
