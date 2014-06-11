@@ -2827,8 +2827,6 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
         _gitUsername = info['username'];
         _gitPassword = info['password'];
       } else  {
-        _gitUsername = null;
-        _gitPassword = null;
         _showAuthDialog(context);
         return;
       }
@@ -2904,7 +2902,6 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
       GitAuthenticationDialog.request(spark).then((info) {
         _gitUsername = info['username'];
         _gitPassword = info['password'];
-        _invoke(context);
       }).catchError((e) {
         // Cancelled authentication: do nothing.
       });
@@ -3561,11 +3558,20 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 
     final String username = (getElement('#gitUsername') as InputElement).value;
     final String password = (getElement('#gitPassword') as InputElement).value;
-    final String encoded =
-        JSON.encode({'username': username, 'password': password});
-    spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
-      completer.complete({'username': username, 'password': password});
-      completer = null;
+    ScmProvider scmProvider = getProviderType('git');
+    _hide();
+    scmProvider.verifyCredentials(username, password).then((bool valid) {
+      if (valid) {
+        final String encoded =
+            JSON.encode({'username': username, 'password': password});
+        spark.syncPrefs.setValue("git-auth-info", encoded).then((_) {
+          completer.complete({'username': username, 'password': password});
+          completer = null;
+        });
+      } else {
+        spark.showErrorMessage(
+            "Authentification error", "Invalid username or password");
+      }
     });
   }
 

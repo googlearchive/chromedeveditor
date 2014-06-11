@@ -63,4 +63,6 @@ class GitErrorConstants {
   static final String GIT_FILE_STATUS_TYPE_UNKNOWN = "git.file_status_type_unknown";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
+  static final String GIT_INVALID_USERNAME_OR_PASSWORD
+      = "git.invalid_username_or_password";
 }

@@ -19,6 +19,7 @@ import 'builder.dart';
 import 'exception.dart';
 import 'jobs.dart';
 import 'workspace.dart';
+import 'git/authentification.dart';
 import 'git/config.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
@@ -147,6 +148,11 @@ abstract class ScmProvider {
    */
   Future clone(String url, chrome.DirectoryEntry dir,
                {String username, String password, String branchName});
+
+  /**
+   *  Verify scm credentials.
+   */
+  Future<bool> verifyCredentials(String username, String password);
 
   /**
    * Cancels the active clone in progress.
@@ -300,6 +306,11 @@ class GitScmProvider extends ScmProvider {
     if (activeClone != null) {
       activeClone.cancel();
     }
+  }
+
+  Future<bool> verifyCredentials(String username, String password) {
+    return GitAuthentification.verifyGithubCredentials(username, password)
+        .catchError((e) => false);
   }
 }
 
