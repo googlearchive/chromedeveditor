@@ -2879,7 +2879,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
         e = SparkException.fromException(e);
         if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
           _handleAuthError(context);
-        } else if (e.errorCode == SparkErrorConstants.GIT_HTTP_403_ERROR) {
+        } else if (e.errorCode == SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR) {
           gitOperations.objectStore.then((store) {
             String message = 'Push to ${store.config.url} denied. '
                'Verify that you have push access to the repository.';
