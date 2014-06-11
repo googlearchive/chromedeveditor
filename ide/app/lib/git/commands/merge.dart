@@ -83,7 +83,7 @@ class Merge {
           if (theirEntry.name == next.name) {
             if (!shasEqual(theirEntry.shaBytes, next.shaBytes)) {
               if (baseEntry.name != next.name) {
-                baseEntry = new TreeEntry(null, null, false);
+                baseEntry = new TreeEntry(null, null, false, null);
                 if (next.isBlob) {
                   conflicts.add( new MergeItem(next, null, theirEntry, true));
                   break;
