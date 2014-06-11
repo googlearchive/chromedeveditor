@@ -243,9 +243,15 @@ class MobileDeploy {
       String body = lines.skip(header.length + 1).join('<br>\n');
 
       if (header.first.indexOf('200') < 0) {
-        // Error! Fail with the error line.
-        return new Future.error(
-            '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
+        if (header.first.indexOf('404') >= 0) {
+          return new Future.error("There is a new version of the Chrome <b>ADT<b> " +
+              "app that you'll need, available here: " +
+              "https://github.com/MobileChromeApps/chrome-app-harness/releases.");
+        } else {
+          // Error! Fail with the error line.
+          return new Future.error(
+              '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
+        }
       } else {
         return body;
       }

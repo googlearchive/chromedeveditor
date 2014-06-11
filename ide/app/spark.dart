@@ -5,7 +5,7 @@
 library spark;
 
 import 'dart:async';
-import 'dart:convert' show JSON;
+import 'dart:convert' show JSON, HtmlEscape;
 import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -631,15 +631,21 @@ abstract class Spark
     _errorDialog.show();
   }
 
-  void _setErrorDialogText(String title, String message) {
+  void _setErrorDialogText(String title, String message, [bool asHtml = false]) {
     _errorDialog.dialog.title = title;
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     List<String> lines = message.split('\n');
+    var sanitizer = const HtmlEscape();
     for(String line in lines) {
       Element lineElement = new Element.p();
-      lineElement.text = line;
+      String escapedLine = sanitizer.convert(line);
+      line.split(new UrlPattern("http[s]://");
+      /*%TRACE3*/ print("""(4> 6/10/14): escapedLine: ${escapedLine}"""); // TRACE%
+      
+      
+      lineElement.innerHtml = escapedLine;
       container.children.add(lineElement);
     }
   }
