@@ -685,7 +685,7 @@ abstract class Spark
   Completer<bool> _okCancelCompleter;
 
   Future<bool> askUserOkCancel(String message,
-      {String okButtonLabel: 'OK', String title: ""}) {
+      {String okButtonLabel: 'OK', String title: "", Function okAction}) {
     // TODO(ussuri): Polymerize.
     if (_okCancelDialog == null) {
       _okCancelDialog = createDialog(getDialogElement('#okCancelDialog'));
@@ -716,7 +716,17 @@ abstract class Spark
       container.children.add(lineElement);
     }
 
+    SparkDialogButton okButton = _okCancelDialog.getElement('#okText');
     _okCancelDialog.getElement('#okText').text = okButtonLabel;
+
+    if (okAction != null) {
+      okButton.onClick.listen((_) {
+        // Ensures that errorDialog closes before the action.
+        Timer.run(() {
+          okAction();
+        });
+      });
+    }
 
     _okCancelCompleter = new Completer();
     _okCancelDialog.show();
@@ -2874,11 +2884,11 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
 
   void _handleAuthError(context) {
     String message = 'Authorization error. Bad username or password.';
-    Function errorAction = () {
+    Function okAction = () {
       _showAuthDialog(context);
     };
     spark.askUserOkCancel(message,
-        okButtonLabel: 'Login Again', title: 'Push failed');
+        okButtonLabel: 'Login Again', title: 'Push failed', okAction: okAction);
   }
 
   void _push() {
