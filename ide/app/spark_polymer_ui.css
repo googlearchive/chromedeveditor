@@ -218,3 +218,10 @@ spark-dialog {
 [selectableTxt] {
   -webkit-user-select: text;
 }
+
+#bottom-toolbar {
+  border-top: 1px solid #ddd;
+  bottom: 0;
+  position: absolute;
+  width: 100%;
+}

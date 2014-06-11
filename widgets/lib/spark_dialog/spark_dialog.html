@@ -31,20 +31,22 @@
         </spark-button>
       </spark-toolbar>
 
-      <div id="body">
-        <content select="div,span,label,input,p,h4,spark-progress,template"></content>
+      <form id="body">
+        <content id="bodyContent"
+           select="div,span,label,input,p,h4,spark-progress,template">
+        </content>
         <!-- TODO(ussuri): remove the line above and uncomment the line below
              once the fix for :not() makes it to Chrome 36 stable
              (it's in canary as of 05/29/2014). BUG #2183. -->
         <!--content select=":not(spark-dialog-button)"></content-->
-      </div>
+      </form>
 
       <spark-toolbar id="footer"
           horizontal
           justify="right"
           spacing="medium">
         <div id="progress"></div>
-        <content select="spark-dialog-button"></content>
+        <content id="buttonsContent" select="spark-dialog-button"></content>
       </spark-toolbar>
     </spark-modal>
   </template>

@@ -653,7 +653,7 @@ class ObjectStore {
   Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((TreeEntry tree) {
-      blobParts.add((tree.isBlob ? '100644 ' : '40000 ') + tree.name);
+      blobParts.add(tree.permission + ' ' + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
       blobParts.add(new Uint8List.fromList(tree.shaBytes));
     });

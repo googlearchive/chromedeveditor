@@ -57,7 +57,8 @@ class Checkout {
     return Future.forEach(diff.getAddedEntries(), (DiffEntry diffEntry) {
       TreeEntry entry = diffEntry.newEntry;
       if (entry.isBlob) {
-        return ObjectUtils.expandBlob(dir, store, entry.name, entry.sha);
+        return ObjectUtils.expandBlob(
+            dir, store, entry.name, entry.sha, entry.permission);
       } else {
         return dir.createDirectory(entry.name).then((newDir) {
           return ObjectUtils.expandTree(newDir, store, entry.sha);
@@ -72,7 +73,7 @@ class Checkout {
           TreeEntry newEntry = diffEntry.newEntry;
           if (newEntry.isBlob) {
             return ObjectUtils.expandBlob(dir, store, newEntry.name,
-                newEntry.sha);
+                newEntry.sha, newEntry.permission);
           } else {
             return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
                 "Tree").then((trees) {

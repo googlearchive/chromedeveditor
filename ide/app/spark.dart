@@ -1348,7 +1348,7 @@ class FileSaveAction extends SparkAction {
 }
 
 class FileDeleteAction extends SparkAction implements ContextAction {
-  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete");
+  FileDeleteAction(Spark spark) : super(spark, "file-delete", "Delete…");
 
   void _invoke([List<ws.Resource> resources]) {
     if (resources == null) {
@@ -1386,7 +1386,7 @@ class FileDeleteAction extends SparkAction implements ContextAction {
 
 // TODO(ussuri): Convert to SparkActionWithDialog.
 class ProjectRemoveAction extends SparkAction implements ContextAction {
-  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Remove");
+  ProjectRemoveAction(Spark spark) : super(spark, "project-remove", "Remove…");
 
   void _invoke([List<ws.Resource> resources]) {
     ws.Project project = resources.first;
@@ -1998,8 +1998,10 @@ class NewProjectAction extends SparkActionWithDialog {
   void _invoke([context]) {
     _nameElt.value = '';
     // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((_) {
-      _show();
+    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+      if (r != null) {
+        _show();
+      }
     });
   }
 
@@ -2314,8 +2316,10 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
-    spark.projectLocationManager.getProjectLocation().then((_) {
-      _show();
+    spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
+      if (r != null) {
+        _show();
+      }
     });
   }
 
@@ -2602,8 +2606,6 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     addedFileList.clear();
     deletedFileList.clear();
     SparkDialogButton commitButton = getElement('#gitCommit');
-    commitButton.disabled = false;
-    commitButton.deliverChanges();
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -2648,16 +2650,18 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     final int addedCnt = addedFileList.length;
     final int deletedCnt = deletedFileList.length;
 
+    SparkDialogButton commitButton = getElement('#gitCommit');
     if (modifiedCnt + addedCnt + deletedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
-      SparkDialogButton commitButton = getElement('#gitCommit');
       commitButton.disabled = true;
       commitButton.deliverChanges();
     } else {
+      commitButton.disabled = false;
+      commitButton.deliverChanges();
       _gitStatusElement.text =
-          '$modifiedCnt ${(modifiedCnt > 1) ? 'files' : 'file'} modified, ' +
-          '$addedCnt ${(addedCnt > 1) ? 'files' : 'file'} added.' +
-          '$deletedCnt ${(deletedCnt > 1) ? 'files' : 'file'} deleted.';
+          '$modifiedCnt ${(modifiedCnt != 1) ? 'files' : 'file'} modified, ' +
+          '$addedCnt ${(addedCnt != 1) ? 'files' : 'file'} added, ' +
+          '$deletedCnt ${(deletedCnt != 1) ? 'files' : 'file'} deleted.';
     }
   }
 
@@ -2686,9 +2690,11 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
   void _restoreDialog() {
     SparkDialogButton commitButton = getElement('#gitCommit');
     commitButton.disabled = false;
+    commitButton.deliverChanges();
 
     SparkDialogButton closeButton = getElement('#gitCommitCancel');
     closeButton.disabled = false;
+    closeButton.deliverChanges();
     _toggleProgressVisible(false);
   }
 
@@ -2696,9 +2702,11 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
 
     SparkDialogButton commitButton = getElement('#gitCommit');
     commitButton.disabled = true;
+    commitButton.deliverChanges();
 
     SparkDialogButton closeButton = getElement('#gitCommitCancel');
     closeButton.disabled = true;
+    closeButton.deliverChanges();
 
     _setProgressMessage("Committing…");
     _toggleProgressVisible(true);
@@ -2719,7 +2727,7 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     // TODO(grv): Add verify checks.
     _GitCommitJob commitJob = new _GitCommitJob(gitOperations, _gitName, _gitEmail,
         _commitMessageElement.value, spark);
-    return spark.jobManager.schedule(commitJob).then((_) {
+    return spark.jobManager.schedule(commitJob).whenComplete(() {
       _restoreDialog();
       _hide();
     });

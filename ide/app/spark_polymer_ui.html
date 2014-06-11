@@ -73,8 +73,6 @@
 
             <spark-menu-separator></spark-menu-separator>
 
-            <spark-menu-item action-id="application-run" label="Run">
-            </spark-menu-item>
             <spark-menu-item action-id="application-push" label="Deploy to Mobile...">
             </spark-menu-item>
             <spark-menu-item action-id="webstore-publish" label="Publish to Chrome Web Store...">
@@ -88,8 +86,6 @@
 
             <spark-menu-separator></spark-menu-separator>
 
-            <spark-menu-item action-id="settings" label="Settings...">
-            </spark-menu-item>
             <spark-menu-item action-id="send-feedback" label="Send Feedback...">
             </spark-menu-item>
             <spark-menu-item action-id="help-about" label="About Spark">
@@ -105,6 +101,18 @@
             No matching files
           </div>
         </template>
+
+        <spark-toolbar id="bottom-toolbar"
+            class="toolbar"
+            horizontal
+            justify="right"
+            spacing="small">
+          <spark-button id="settingsButton" flat round padding="medium">
+            <svg viewBox="0 0 24 24">
+              <path d="M19.4,13c0-0.3,0.1-0.6,0.1-1s0-0.7-0.1-1l2.1-1.7c0.2-0.2,0.2-0.4,0.1-0.6l-2-3.5C19.5,5.1,19.3,5,19,5.1l-2.5,1c-0.5-0.4-1.1-0.7-1.7-1l-0.4-2.6C14.5,2.2,14.2,2,14,2h-4C9.8,2,9.5,2.2,9.5,2.4L9.1,5.1C8.5,5.3,8,5.7,7.4,6.1L5,5.1C4.7,5,4.5,5.1,4.3,5.3l-2,3.5C2.2,8.9,2.3,9.2,2.5,9.4L4.6,11c0,0.3-0.1,0.6-0.1,1s0,0.7,0.1,1l-2.1,1.7c-0.2,0.2-0.2,0.4-0.1,0.6l2,3.5C4.5,18.9,4.7,19,5,18.9l2.5-1c0.5,0.4,1.1,0.7,1.7,1l0.4,2.6c0,0.2,0.2,0.4,0.5,0.4h4c0.2,0,0.5-0.2,0.5-0.4l0.4-2.6c0.6-0.3,1.2-0.6,1.7-1l2.5,1c0.2,0.1,0.5,0,0.6-0.2l2-3.5c0.1-0.2,0.1-0.5-0.1-0.6L19.4,13z M12,15.5c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S13.9,15.5,12,15.5z"></path>
+            </svg>
+          </spark-button>
+        </spark-toolbar>
       </div>
 
       <div afterSplit>
@@ -186,8 +194,8 @@
       <div class="form-group">
         <label for="name">Project name</label>
         <input id="name" type="text" class="form-control"
-            pattern="[^\/ ]+" placeholder="HelloWorld" spellcheck="false"
-            autosave focused />
+            placeholder="HelloWorld" required pattern="[^\/ ]+"
+            spellcheck="false" autosave focused />
       </div>
       <div class="form-group">
         <label for="type">Project type</label>
@@ -247,13 +255,15 @@
       <spark-dialog-button submit>Create</spark-dialog-button>
     </spark-dialog>
 
-    <!-- Harness Push dialog -->
+    <!-- Deploy to Mobile dialog -->
     <spark-dialog id="mobileDeployDialog" title="Deploy to Mobile">
       <h4>Deploy a Chrome App to an Android Device</h4>
       <p>
         Please start the
-        <a href="https://github.com/MobileChromeApps/harness/releases/"
-            on-click="{{handleAnchorClick}}">Chrome ADT</a>
+        <a href="https://github.com/MobileChromeApps/chrome-app-harness/releases"
+            on-click="{{handleAnchorClick}}">
+                Chrome App Developer Tool for Mobile (App Dev Tool)
+        </a>
         application on your Android device.
       </p>
       <div class="form-group">
@@ -265,9 +275,11 @@
           <div>
             <input id="ip" type="radio" name="type" value="push-ip" autosave />
             <label for="ip">Deploy to a network host</label>
+            <!-- TODO(devoncarew): Also, support IPv6 name patterns. -->
             <input id="pushUrl" type="text" class="form-control"
                 placeholder="e.g. 192.168.1.101"
-                pattern="(\d{1,3}\.){3}\d{1,3}" spellcheck="false" autosave/>
+                pattern="(\d{1,3}\.){3}\d{1,3}"
+                spellcheck="false" autosave/>
           </div>
         </form>
       </div>
@@ -510,7 +522,7 @@
         <div class="input-label">
           <label for="gitUsername">User name</label>
           <input id="gitUsername" type="text" class="form-control"
-              placeholder="johndoe" pattern="\S+" spellcheck="false"
+              placeholder="johndoe" required pattern="\S+" spellcheck="false"
               autosave focused>
         </div>
         <div class="input-label">
@@ -546,7 +558,8 @@
       <div class="form-group">
         <label for="appID">Enter the ID of the existing application</label>
         <input id="appID" type="text" class="form-control"
-            placeholder="abcdefghijklmnopqrstuvwxyzabcdef" pattern="[a-z]{32}"
+            placeholder="abcdefghijklmnopqrstuvwxyzabcdef"
+            required pattern="[a-z]{32}"
             spellcheck="false" autosave>
       </div>
 

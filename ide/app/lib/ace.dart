@@ -434,7 +434,8 @@ class AceManager {
     // Enable code completion.
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
-    _aceEditor.setOption('enableSnippets', true);
+    // TODO(devoncarew): Disabled to workaround #2442.
+    //_aceEditor.setOption('enableSnippets', true);
 
     // Override Ace's `gotoline` command.
     var command = new ace.Command(
