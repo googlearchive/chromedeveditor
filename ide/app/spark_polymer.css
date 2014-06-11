@@ -310,7 +310,7 @@ button.ace_searchbtn_close:active {
 }
 
 #fileViewArea {
-  bottom: 0;
+  bottom: 48px;
   position: absolute;
   top: 48px;
   width: 100%;
