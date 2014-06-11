@@ -618,12 +618,34 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(String title, String message) {
+  void showErrorMessage(String title, String message, [Function errorAction, String label]) {
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
       _errorDialog.getElement("[dismiss]").onClick.listen(_hideBackdropOnClick);
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
+    }
+
+    if (errorAction != null) {
+      SparkDialogButton errorActionButton = _errorDialog.getElement("#errorAction");
+
+      errorActionButton.text = label;
+      errorActionButton.hidden = false;
+      errorActionButton.deliverChanges();
+
+      errorActionButton.onClick.listen((_) {
+
+        errorActionButton.hidden = true;
+        errorActionButton.text = 'Ok';
+        errorActionButton.deliverChanges();
+
+        _hideBackdropOnClick();
+
+        // Ensures that errorDialog closes before the action.
+        Timer.run(() {
+          errorAction();
+        });
+      });
     }
 
     _setErrorDialogText(title, message);
@@ -2857,15 +2879,23 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
       }).catchError((e) {
         e = SparkException.fromException(e);
         if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
-          gitOperations.objectStore.then((store) {
-            String message = 'Push to ${store.config.url} failed due to authorization error. '
-               'Please verify your username pasword, and access rights to the repository.';
-            spark.showErrorMessage('Push failed', message);
-          });
+          _handleAuthError();
         } else {
           spark.showErrorMessage('Push failed', e.message);
         }
       });
+    });
+  }
+
+  void _handleAuthError() {
+    gitOperations.objectStore.then((store) {
+      String message = 'Push to ${store.config.url} failed due to authorization error. '
+          'Please verify your username pasword, and access rights to the repository.';
+          print('ladoo');
+      Function errorAction = () {
+        GitAuthenticationDialog.request(spark);
+      };
+      spark.showErrorMessage('Push failed', message, errorAction, 'Login Again');
     });
   }
 
