@@ -618,7 +618,8 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(String title, String message, [Function errorAction, String label]) {
+  void showErrorMessage(
+      String title, String message, [Function errorAction, String label]) {
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -628,13 +629,11 @@ abstract class Spark
 
     if (errorAction != null) {
       SparkDialogButton errorActionButton = _errorDialog.getElement("#errorAction");
-
       errorActionButton.text = label;
       errorActionButton.hidden = false;
       errorActionButton.deliverChanges();
 
       errorActionButton.onClick.listen((_) {
-
         errorActionButton.hidden = true;
         errorActionButton.text = 'Ok';
         errorActionButton.deliverChanges();
