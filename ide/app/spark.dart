@@ -715,6 +715,7 @@ abstract class Spark
       container.children.add(lineElement);
     }
 
+    SparkDialogButton okButton = _okCancelDialog.getElement('#okText');
     _okCancelDialog.getElement('#okText').text = okButtonLabel;
 
     _okCancelCompleter = new Completer();
@@ -2859,8 +2860,31 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
           _show();
         });
       }).catchError((e) {
-        spark.showErrorMessage('Push failed', SparkException.fromException(e).message);
+        e = SparkException.fromException(e);
+        if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
+          _handleAuthError(context);
+        } else if (e.errorCode == SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR) {
+          gitOperations.objectStore.then((store) {
+            String message = 'Push to ${store.config.url} denied. '
+               'Verify that you have push access to the repository.';
+            spark.showErrorMessage('Push failed', message);
+          });
+        } else {
+          spark.showErrorMessage('Push failed',
+              SparkException.fromException(e).message);
+        }
       });
+    });
+  }
+
+  void _handleAuthError(context) {
+    String message = 'Authorization error. Bad username or password.';
+
+    spark.askUserOkCancel(message, okButtonLabel: 'Login Again', title: 'Push failed')
+        .then((bool value) {
+      if (value) {
+        _showAuthDialog(context);
+      }
     });
   }
 

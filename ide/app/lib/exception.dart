@@ -34,6 +34,9 @@ class SparkException implements Exception {
     if (e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
       return new SparkException(e.toString(),
             SparkErrorConstants.AUTH_REQUIRED);
+    } else if (e.errorCode == GitErrorConstants.GIT_HTTP_FORBIDDEN_ERROR) {
+      return new SparkException(e.toString(),
+             SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR);
     } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
       return new SparkException(e.toString(),
         SparkErrorConstants.GIT_CLONE_CANCEL, true);
@@ -45,7 +48,7 @@ class SparkException implements Exception {
       return new SparkException(SparkErrorMessages.GIT_PUSH_NON_FAST_FORWARD_MSG,
         SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
     } else {
-      throw new SparkException(e.toString());
+      return new SparkException(e.toString());
     }
   }
 
@@ -64,6 +67,7 @@ class SparkErrorConstants {
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
+  static final String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
   static final String GIT_PUSH_NON_FAST_FORWARD
       = "git.push_non_fast_forward";
 }

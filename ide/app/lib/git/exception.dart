@@ -28,7 +28,8 @@ class GitException implements Exception {
  */
 class GitErrorConstants {
 
-  static final String GIT_HTTP_404_ERROR = "git.http_404_error";
+  static final String GIT_HTTP_NOT_FOUND_ERROR = "git.http_not_found_error";
+  static final String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
   static final String GIT_HTTP_ERROR = "git.http_error";
   static final String GIT_AUTH_REQUIRED = "git.auth_required";
   static final String GIT_AUTH_ERROR = "git.auth_error";
