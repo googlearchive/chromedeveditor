@@ -2859,8 +2859,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
         Timer.run(() {
           _show();
         });
-      }).catchError((e) {
-        e = SparkException.fromException(e);
+      }).catchError((exception) {
+        SparkException e = SparkException.fromException(exception);
         if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
           _handleAuthError(context);
         } else if (e.errorCode == SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR) {
@@ -2870,8 +2870,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
             spark.showErrorMessage('Push failed', message);
           });
         } else {
-          spark.showErrorMessage('Push failed',
-              SparkException.fromException(e).message);
+          spark.showErrorMessage('Push failed', e.message);
         }
       });
     });

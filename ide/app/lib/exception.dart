@@ -21,12 +21,14 @@ class SparkException implements Exception {
   SparkException(this.message, [this.errorCode, this.canIgnore]);
 
   static SparkException fromException(Exception e) {
-    if (e is GitException) {
+    if (e is SparkException) {
+      return e;
+    } else if (e is GitException) {
       return _fromGitException(e);
     } else if (e != null) {
-      throw new SparkException(e.toString());
+      return new SparkException(e.toString());
     } else {
-      throw new SparkException("Unknown error.");
+      return new SparkException("Unknown error.");
     }
   }
 
