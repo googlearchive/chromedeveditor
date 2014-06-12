@@ -384,22 +384,20 @@
     </spark-dialog>
 
     <!-- About dialog -->
-    <spark-dialog id="aboutDialog" title="Spark">
+    <spark-dialog id="aboutDialog" title="About Spark">
       <div class="form-group">
-        <span class="help-block">
-          A Chrome Apps based development environment (v<span id="aboutVersion"></span>)
-        </span>
+        <img src="images/icon_48.png">
+        <label>A Chrome Apps based development environment (v{{appVersion}})</label>
       </div>
       <div class="form-group">
         <div class="checkbox">
           <input id="analyticsCheck" type="checkbox">
           <label for="analyticsCheck">
-            Allow Spark to collect anonymous usage statistics
+            Help make Spark better by automatically sending usage statistics and
+            crash reports to Google
           </label>
         </div>
       </div>
-
-      <spark-dialog-button dismiss focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- Settings dialog -->
