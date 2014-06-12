@@ -118,7 +118,7 @@ abstract class Builder {
   Future build(ResourceChangeEvent event, ProgressMonitor monitor);
 
   /**
-   * Return only those changes that did not occure in a packages directory.
+   * Return only those changes that did not occur in a packages directory.
    */
   Iterable<ChangeDelta> filterPackageChanges(Iterable<ChangeDelta> changes) {
     return changes.where(
