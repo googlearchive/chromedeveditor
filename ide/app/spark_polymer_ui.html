@@ -261,26 +261,30 @@
 
     <!-- Deploy to Mobile dialog -->
     <spark-dialog id="mobileDeployDialog" title="Deploy to Mobile">
-      <div class="help-block">
-        Please start the
-        <a href="https://github.com/MobileChromeApps/chrome-app-harness/releases"
-            on-click="{{handleAnchorClick}}">
-                Chrome App Developer Tool for Mobile (App Dev Tool)
-        </a>
-        application on your Android device.
+      <div class="form-group">
+        <div class="help-block">
+          Please start the
+          <a href="https://github.com/MobileChromeApps/chrome-app-harness/releases"
+              on-click="{{handleAnchorClick}}">
+                  Chrome App Developer Tool for Mobile (App Dev Tool)
+          </a>
+          application on your Android device.
+        </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="adb" type="radio" name="type" value="push-adb" checked />
+          <input id="adb" type="radio" name="type" value="push-adb" checked>
           <label for="adb">Deploy via USB</label>
         </div>
-        <div>
-          <div class="vert-align-box">
-            <input id="ip" type="radio" name="type" value="push-ip" autosave />
-            <label for="ip">Deploy to a network host</label>
-          </div>
+      </div>
+      <div class="form-group">
+        <div class="vert-align-box">
+          <input id="ip" type="radio" name="type" value="push-ip" autosave>
+          <label for="ip">Deploy to a network host with this IP:</label>
+        </div>
+        <div class="radio-button-dependency">
           <!-- TODO(devoncarew): Also, support IPv6 name patterns. -->
-          <input id="pushUrl" type="text" class="form-control"
+          <input id="pushUrl" type="text" class="form-control "
               placeholder="e.g. 192.168.1.101"
               pattern="(\d{1,3}\.){3}\d{1,3}"
               spellcheck="false" autosave/>
@@ -546,23 +550,22 @@
     <!-- Publish on webstore -->
     <spark-dialog id="webStorePublishDialog" title="Publish to Chrome Web Store">
       <div class="form-group">
-        <form>
-          <div>
-            <input type="radio" name="type" value="new" id="new-app-radio" checked>
-            <label for="new-app-radio">Create a new application</label>
-          </div>
-          <div>
-            <input type="radio" name="type" value="existing" id="existing-app-radio">
-            <label for="existing-app-radio">Upload to an existing application</label>
-          </div>
-        </form>
+        <div class="vert-align-box">
+          <input type="radio" name="type" value="new" id="new-app-radio" checked>
+          <label for="new-app-radio">Create a new application</label>
+        </div>
       </div>
       <div class="form-group">
-        <label for="appID">Enter the ID of the existing application</label>
-        <input id="appID" type="text" class="form-control"
-            placeholder="abcdefghijklmnopqrstuvwxyzabcdef"
-            required pattern="[a-z]{32}"
-            spellcheck="false" autosave>
+        <div class="vert-align-box">
+          <input type="radio" name="type" value="existing" id="existing-app-radio">
+          <label for="existing-app-radio">Upload to an existing application with this ID:</label>
+        </div>
+        <div class="radio-button-dependency">
+          <input id="appID" type="text" class="form-control"
+              placeholder="abcdefghijklmnopqrstuvwxyzabcdef"
+              required pattern="[a-z]{32}"
+              spellcheck="false" autosave>
+        </div>
       </div>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
