@@ -2108,13 +2108,13 @@ class NewProjectAction extends SparkActionWithDialog {
 
 class FolderOpenAction extends SparkActionWithStatusDialog {
   FolderOpenAction(Spark spark, SparkDialog dialog)
-      : super(spark, "folder-open", 'Add Folder to Workspace…', dialog);
+      : super(spark, "folder-open", 'Open Folder…', dialog);
 
   void _invoke([Object context]) {
     _selectFolder().then((chrome.DirectoryEntry entry) {
       if (entry != null) {
         Future f = spark.openFolder(entry);
-        _waitForJob(name, 'Adding Folder to workspace…', f);
+        _waitForJob(name, 'Adding folder to workspace…', f);
       }
     });
   }
@@ -2459,7 +2459,7 @@ class GitAddAction extends SparkActionWithStatusDialog implements ContextAction 
     });
 
     Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
-    _waitForJob('Git Add', 'Adding files to git…', f);
+    _waitForJob('Git Add', 'Adding files to Git repository…', f);
   }
 
   String get category => 'git';
@@ -3625,7 +3625,7 @@ class ImportFileAction extends SparkAction implements ContextAction {
 
 class ImportFolderAction extends SparkActionWithStatusDialog implements ContextAction {
   ImportFolderAction(Spark spark, SparkDialog dialog)
-      : super(spark, "folder-import", "Add Folder to Workspace…", dialog);
+      : super(spark, "folder-import", "Import Folder…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
     chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
@@ -3634,7 +3634,7 @@ class ImportFolderAction extends SparkActionWithStatusDialog implements ContextA
       chrome.DirectoryEntry entry = res.entry;
       if (entry != null) {
         Future f = spark.importFolder(resources, entry);
-        _waitForJob(name, 'Adding Folder to workspace…', f);
+        _waitForJob(name, 'Importing folder…', f);
       }
     });
   }
