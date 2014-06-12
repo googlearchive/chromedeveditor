@@ -242,14 +242,10 @@ class MobileDeploy {
       Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
       String body = lines.skip(header.length + 1).join('<br>\n');
 
-      Match statusMatch = new RegExp("([^ ]+) ([^ ]+) (.+)")
-          .allMatches(header.first).single;
-      
-      String statusCode = statusMatch.group(2);
-      if (statusCode != "200") {
-        String statusMessage = statusMatch.group(3);
-          return new Future.error(
-              "Expected an OKAY, but got $statusCode: $statusMessage");
+      if (header.first.indexOf('200') < 0) {
+        // Error! Fail with the error line.
+        return new Future.error(
+            '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
       } else {
         return body;
       }

@@ -5,7 +5,7 @@
 library spark;
 
 import 'dart:async';
-import 'dart:convert' show JSON, HtmlEscape;
+import 'dart:convert' show JSON;
 import 'dart:html' hide File;
 
 import 'package:chrome/chrome_app.dart' as chrome;
@@ -631,25 +631,15 @@ abstract class Spark
     _errorDialog.show();
   }
 
-  void _setErrorDialogText(String title, String message, [bool asHtml = false]) {
+  void _setErrorDialogText(String title, String message) {
     _errorDialog.dialog.title = title;
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
     List<String> lines = message.split('\n');
-    var sanitizer = const HtmlEscape();
     for(String line in lines) {
       Element lineElement = new Element.p();
-      
-      // Convert all urls to links and sanitize everything else.
-      RegExp urlRegExp = new RegExp("(https?://[^\\s]*[^\\s.,!])");
-      line = line.splitMapJoin(urlRegExp, onMatch: (Match match) {
-        String url = match.group(0);
-        return "<a href='$url' on-click='{{handleAnchorClick}}' " + 
-            "target='_blank'>$url</a>";
-      }, onNonMatch: (String nonMatch) => sanitizer.convert(nonMatch));
-      
-      lineElement.appendHtml(line);
+      lineElement.text = line;
       container.children.add(lineElement);
     }
   }
