@@ -119,7 +119,7 @@ class _BowerBuilder extends PackageBuilder {
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     List futures = [];
 
-    for (ChangeDelta delta in event.changes) {
+    for (ChangeDelta delta in filterPackageChanges(event.changes)) {
       Resource r = delta.resource;
 
       if (r.isDerived()) continue;
