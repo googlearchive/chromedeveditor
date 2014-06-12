@@ -2904,11 +2904,10 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
         spark, null);
     task.run().then((_) {
       gitOperations.objectStore.then((store) {
-        Function okAction = () {
-          window.open(store.config.url, 'Github project url');
-        };
         spark.askUserOkCancel('Changes pushed successfully.',
-            okButtonLabel: 'View on Github', title: 'Push Successful', okAction: okAction);
+            okButtonLabel: 'View on Github', title: 'Push Successful').then((bool value) {
+          window.open(store.config.url, 'Github project url');
+        });
       });
     }).catchError((e) {
       spark.showErrorMessage(
