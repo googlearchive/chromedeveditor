@@ -581,6 +581,9 @@ abstract class Resource {
 
   chrome.Entry get entry => _entry;
 
+  /// Indicates if the resource is deleted.
+  bool deleted = false;
+
   /**
    * Return the path to this element from the workspace. Paths are not
    * guaranteed to be unique. For uniqueness, see [uuid].
