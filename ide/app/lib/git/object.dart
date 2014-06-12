@@ -55,13 +55,18 @@ abstract class GitObject {
  */
 class TreeEntry {
 
-  String name;
+  final String name;
   List<int> shaBytes;
-  bool isBlob;
+  final bool isBlob;
+  final String permission;
 
   String get sha => shaBytesToString(shaBytes);
 
-  TreeEntry(this.name, this.shaBytes, this.isBlob);
+  TreeEntry(this.name, this.shaBytes, this.isBlob, this.permission);
+
+  static TreeEntry dummyEntry(bool isBlob) {
+    return new TreeEntry(null, null, isBlob, null);
+  }
 }
 
 /**
@@ -120,11 +125,13 @@ class TreeObject extends GitObject {
         throw new GitException(
             GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
       }
+      String permission = UTF8.decode(buffer.sublist(
+          entryStart, entryStart + (isBlob? 6 : 5)));
       String nameStr = UTF8.decode(buffer.sublist(
           entryStart + (isBlob ? 7: 6), idx++));
       nameStr = Uri.decodeComponent(HTML_ESCAPE.convert(nameStr));
       TreeEntry entry = new TreeEntry(nameStr, buffer.sublist(idx, idx + 20),
-          isBlob);
+          isBlob, permission);
       treeEntries.add(entry);
       idx += 20;
     }

@@ -83,7 +83,8 @@ class Merge {
           if (theirEntry.name == next.name) {
             if (!shasEqual(theirEntry.shaBytes, next.shaBytes)) {
               if (baseEntry.name != next.name) {
-                baseEntry = new TreeEntry(null, null, false);
+                // The file does not exist in the  baseEntry. Create a dummy entry.
+                baseEntry = TreeEntry.dummyEntry(false);
                 if (next.isBlob) {
                   conflicts.add( new MergeItem(next, null, theirEntry, true));
                   break;

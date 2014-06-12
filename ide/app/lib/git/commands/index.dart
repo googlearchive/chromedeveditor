@@ -14,6 +14,7 @@ import '../constants.dart';
 import '../exception.dart';
 import '../file_operations.dart';
 import '../objectstore.dart';
+import '../permissions.dart';
 import '../utils.dart';
 
 /**
@@ -307,19 +308,19 @@ class Index {
    }
 
    Future _updateSha(chrome.FileEntry entry) {
+     FileStatus status = _statusIdx[entry.fullPath];
      return entry.getMetadata().then((data) {
-       FileStatus status = _statusIdx[entry.fullPath];
-       if (status != null &&
-           status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
+       if (status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
          return new Future.value();
        } else {
          return getShaForEntry(entry, 'blob').then((String sha) {
-           FileStatus status = new FileStatus()
+           FileStatus newStatus = new FileStatus()
                ..path = entry.fullPath
                ..sha = sha
                ..size = data.size
-               ..modificationTime = data.modificationTime.millisecondsSinceEpoch;
-           updateIndexForFile(status);
+               ..modificationTime = data.modificationTime.millisecondsSinceEpoch
+               ..permission = status.permission;
+           updateIndexForFile(newStatus);
          });
        }
      });
@@ -346,6 +347,7 @@ class Index {
       status.headSha = statusMap['headSha'];
       status.sha = statusMap['sha'];
       status.modificationTime = statusMap['modificationTime'];
+      status.permission = statusMap['permission'];
       status.path = statusMap['path'];
       status.size = statusMap['size'];
       status.type = statusMap['type'];
@@ -370,6 +372,7 @@ class Index {
 class FileStatus {
   String path;
   String headSha;
+  String permission;
   String sha;
   int size;
   bool deleted = false;
@@ -386,6 +389,7 @@ class FileStatus {
 
   FileStatus() {
     this.type = FileStatusType.UNTRACKED;
+    this.permission = Permissions.FILE_NON_EXECUTABLE;
   }
 
   static Future<FileStatus> createFromEntry(chrome.Entry entry) {
@@ -397,6 +401,8 @@ class FileStatus {
         status.sha = sha;
         status.size = data.size;
         status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
+        // TODO(grv): Read real file permissions from metadata when available.
+        status.permission = Permissions.FILE_NON_EXECUTABLE;
         return status;
       });
     });
@@ -405,6 +411,7 @@ class FileStatus {
   static FileStatus createForDirectory(chrome.Entry entry) {
     FileStatus status = new FileStatus();
     status.path = entry.fullPath;
+    status.permission = Permissions.DIRECTORY;
     return status;
   }
 
@@ -414,6 +421,7 @@ class FileStatus {
     sha = m['sha'];
     size = m['size'];
     modificationTime = m['modificationTime'];
+    permission = m['permission'];
     type = m['type'];
     deleted = m['deleted'];
   }
@@ -431,6 +439,7 @@ class FileStatus {
       'sha' : sha,
       'size' : size,
       'modificationTime' : modificationTime,
+      'permission': permission,
       'type' : type,
       'deleted' : deleted
     };

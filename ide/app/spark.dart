@@ -618,8 +618,7 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(
-      String title, String message) {
+  void showErrorMessage(String title, String message) {
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -685,7 +684,7 @@ abstract class Spark
   Completer<bool> _okCancelCompleter;
 
   Future<bool> askUserOkCancel(String message,
-      {String okButtonLabel: 'OK', String title: "", Function okAction}) {
+      {String okButtonLabel: 'OK', String title: ""}) {
     // TODO(ussuri): Polymerize.
     if (_okCancelDialog == null) {
       _okCancelDialog = createDialog(getDialogElement('#okCancelDialog'));
@@ -718,15 +717,6 @@ abstract class Spark
 
     SparkDialogButton okButton = _okCancelDialog.getElement('#okText');
     _okCancelDialog.getElement('#okText').text = okButtonLabel;
-
-    if (okAction != null) {
-      okButton.onClick.listen((_) {
-        // Ensures that errorDialog closes before the action.
-        Timer.run(() {
-          okAction();
-        });
-      });
-    }
 
     _okCancelCompleter = new Completer();
     _okCancelDialog.show();
@@ -2616,8 +2606,6 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     addedFileList.clear();
     deletedFileList.clear();
     SparkDialogButton commitButton = getElement('#gitCommit');
-    commitButton.disabled = false;
-    commitButton.deliverChanges();
     spark.syncPrefs.getValue("git-user-info").then((String value) {
       _gitName = null;
       _gitEmail = null;
@@ -2662,12 +2650,14 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     final int addedCnt = addedFileList.length;
     final int deletedCnt = deletedFileList.length;
 
+    SparkDialogButton commitButton = getElement('#gitCommit');
     if (modifiedCnt + addedCnt + deletedCnt == 0) {
       _gitStatusElement.text = "Nothing to commit.";
-      SparkDialogButton commitButton = getElement('#gitCommit');
       commitButton.disabled = true;
       commitButton.deliverChanges();
     } else {
+      commitButton.disabled = false;
+      commitButton.deliverChanges();
       _gitStatusElement.text =
           '$modifiedCnt ${(modifiedCnt != 1) ? 'files' : 'file'} modified, ' +
           '$addedCnt ${(addedCnt != 1) ? 'files' : 'file'} added, ' +
@@ -2700,9 +2690,11 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
   void _restoreDialog() {
     SparkDialogButton commitButton = getElement('#gitCommit');
     commitButton.disabled = false;
+    commitButton.deliverChanges();
 
     SparkDialogButton closeButton = getElement('#gitCommitCancel');
     closeButton.disabled = false;
+    closeButton.deliverChanges();
     _toggleProgressVisible(false);
   }
 
@@ -2710,9 +2702,11 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
 
     SparkDialogButton commitButton = getElement('#gitCommit');
     commitButton.disabled = true;
+    commitButton.deliverChanges();
 
     SparkDialogButton closeButton = getElement('#gitCommitCancel');
     closeButton.disabled = true;
+    closeButton.deliverChanges();
 
     _setProgressMessage("Committing…");
     _toggleProgressVisible(true);
@@ -2733,7 +2727,7 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     // TODO(grv): Add verify checks.
     _GitCommitJob commitJob = new _GitCommitJob(gitOperations, _gitName, _gitEmail,
         _commitMessageElement.value, spark);
-    return spark.jobManager.schedule(commitJob).then((_) {
+    return spark.jobManager.schedule(commitJob).whenComplete(() {
       _restoreDialog();
       _hide();
     });
@@ -2876,7 +2870,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
             spark.showErrorMessage('Push failed', message);
           });
         } else {
-          spark.showErrorMessage('Push failed', e.toString());
+          spark.showErrorMessage('Push failed',
+              SparkException.fromException(e).message);
         }
       });
     });
@@ -2884,11 +2879,13 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
 
   void _handleAuthError(context) {
     String message = 'Authorization error. Bad username or password.';
-    Function okAction = () {
-      _showAuthDialog(context);
-    };
-    spark.askUserOkCancel(message,
-        okButtonLabel: 'Login Again', title: 'Push failed', okAction: okAction);
+
+    spark.askUserOkCancel(message, okButtonLabel: 'Login Again', title: 'Push failed')
+        .then((bool value) {
+      if (value) {
+        _showAuthDialog(context);
+      }
+    });
   }
 
   void _push() {
@@ -2914,7 +2911,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
             okButtonLabel: 'View on Github', title: 'Push Successful', okAction: okAction);
       });
     }).catchError((e) {
-      spark.showErrorMessage('Error while pushing changes', e.toString());
+      spark.showErrorMessage(
+          'Error while pushing changes', SparkException.fromException(e).message);
     }).whenComplete(() {
       _restoreDialog();
       _hide();
