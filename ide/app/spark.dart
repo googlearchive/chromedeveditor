@@ -3364,27 +3364,19 @@ class ResourceRefreshJob extends Job {
   }
 }
 
-// TODO(terry):  When only polymer overlays are used remove _initialized and
-//               isPolymer's defintion and usage.
 class AboutSparkAction extends SparkActionWithDialog {
-  bool _initialized = false;
-
   AboutSparkAction(Spark spark, Element dialog)
-      : super(spark, "help-about", "About Spark", dialog);
+      : super(spark, "help-about", "About Spark", dialog) {
+    _checkbox.checked = _isTrackingPermitted;
+    _checkbox.onChange.listen((e) => _isTrackingPermitted = _checkbox.checked);
+  }
 
   void _invoke([Object context]) {
-    if (!_initialized) {
-      InputElement checkbox = getElement('#analyticsCheck');
-      checkbox.checked = _isTrackingPermitted;
-      checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
-
-      getElement('#aboutVersion').text = spark.appVersion;
-
-      _initialized = true;
-    }
-
+    _checkbox.checked = _isTrackingPermitted;
     _show();
   }
+
+  InputElement get _checkbox => getElement('#analyticsCheck');
 }
 
 // TODO(ussuri): Polymerize.
