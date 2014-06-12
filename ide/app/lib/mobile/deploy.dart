@@ -242,16 +242,14 @@ class MobileDeploy {
       Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
       String body = lines.skip(header.length + 1).join('<br>\n');
 
-      if (header.first.indexOf('200') < 0) {
-        if (header.first.indexOf('404') >= 0) {
-          return new Future.error("There is a new version of the Chrome ADT " +
-              "app that you'll need, available here: " +
-              "https://github.com/MobileChromeApps/chrome-app-harness/releases.");
-        } else {
-          // Error! Fail with the error line.
+      Match statusMatch = new RegExp("([^ ]+) ([^ ]+) (.+)")
+          .allMatches(header.first).single;
+      
+      String statusCode = statusMatch.group(2);
+      if (statusCode != "200") {
+        String statusMessage = statusMatch.group(3);
           return new Future.error(
-              '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
-        }
+              "Expected an OKAY, but got $statusCode: $statusMessage");
       } else {
         return body;
       }
