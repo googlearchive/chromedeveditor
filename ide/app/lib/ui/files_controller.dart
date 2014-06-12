@@ -790,9 +790,8 @@ class FilesController implements TreeViewDelegate {
     if (scmOperations != null) {
       if (resource is Project) {
         String branchName = scmOperations.getBranchName();
-        final String repoIcon = '<span class="glyphicon glyphicon-random small"></span>';
         if (branchName == null) branchName = '';
-        fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
+        fileItemCell.setFileInfo('[${branchName}]');
       }
 
       ScmFileStatus status = scmOperations.getFileStatus(resource);
