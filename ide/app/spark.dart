@@ -645,7 +645,8 @@ abstract class Spark
       RegExp urlRegExp = new RegExp("(https?://[^\\s]*[^\\s.,!])");
       line = line.splitMapJoin(urlRegExp, onMatch: (Match match) {
         String url = match.group(0);
-        return "<a href='$url'>$url</a>";
+        return "<a href='$url' on-click='{{handleAnchorClick}}' " + 
+            "target='_blank'>$url</a>";
       }, onNonMatch: (String nonMatch) => sanitizer.convert(nonMatch));
       
       lineElement.appendHtml(line);
