@@ -22,6 +22,7 @@
 /* TODO(ussuri): Add ::content here? Could be too agressive/limiting. */
 :host * {
   font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 400;
   font-size: 13px;
   -webkit-font-smoothing: auto;
 }

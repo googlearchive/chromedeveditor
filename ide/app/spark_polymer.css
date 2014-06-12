@@ -111,6 +111,7 @@ div.ace_search {
   background: #fafafa;
   padding-right: 4px;
   width: 305px;
+  /* Can't use 'inherit' here: Ace overrides that. */
   font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 500;
   font-size: 12px;
@@ -137,12 +138,12 @@ div.ace_replace_form {
 }
 
 .ace_replace_form .ace_search_field {
-  width: 184px;
+  width: 194px;
 }
 
 button.ace_replacebtn {
   color: #484848;
-  font-weight: bold;
+  font-weight: 500;
   padding-left: 5px;
   padding-right: 5px;
 }

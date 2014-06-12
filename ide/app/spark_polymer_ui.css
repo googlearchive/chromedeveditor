@@ -147,7 +147,7 @@ spark-dialog {
 #preferenceResetResult {
   display: none;
   color: #F00;
-  font-weight: bold;
+  font-weight: 500;
   margin: 4px 0 0 4px;
 }
 
@@ -225,4 +225,9 @@ spark-dialog {
   bottom: 0;
   position: absolute;
   width: 100%;
+}
+
+/* Override Bootstrap's 'font-weight: bold' style for labels */
+label {
+  font-weight: 500;
 }
