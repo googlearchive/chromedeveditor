@@ -3476,6 +3476,16 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    _resource = spark.focusManager.currentResource;
+
+    if (getAppContainerFor(_resource) == null) {
+      spark.showErrorMessage(
+          'Unable to Publish',
+          'Unable to publish the current selection; please select a Chrome App '
+          'or Extension to publish.');
+      return;
+    }
+
     if (!_initialized) {
       _newInput = getElement('input[value=new]');
       _existingInput = getElement('input[value=existing]');
@@ -3487,7 +3497,6 @@ class WebStorePublishAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    _resource = spark.focusManager.currentResource;
     _show();
   }
 
