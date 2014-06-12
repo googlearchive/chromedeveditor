@@ -185,7 +185,7 @@ button.ace_searchbtn_close:active {
 }
 
 .ace-monokai .ace_marker-layer .ace_selected-word {
-  border: 1px dotted orange !important;
+  border: 1px solid orange !important;
 }
 
 /*
