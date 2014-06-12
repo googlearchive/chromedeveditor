@@ -231,3 +231,12 @@ spark-dialog {
 label {
   font-weight: 500;
 }
+
+#mobileDeployDialog #adb, #mobileDeployDialog #ip {
+  position: relative;
+  top: 2px;
+}
+
+:host(.mac) #mobileDeployDialog #adb, :host(.mac) #mobileDeployDialog #ip {
+  top: -1px;
+}

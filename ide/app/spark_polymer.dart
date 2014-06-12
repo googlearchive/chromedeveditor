@@ -165,6 +165,9 @@ class SparkPolymer extends Spark {
   void uiReady() {
     assert(_ui == null);
     _ui = document.querySelector('#topUi');
+    if (PlatformInfo.isMac) {
+      _ui.classes.add('mac');
+    }
   }
 
   @override
