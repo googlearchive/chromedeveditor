@@ -244,7 +244,7 @@ class MobileDeploy {
 
       if (header.first.indexOf('200') < 0) {
         if (header.first.indexOf('404') >= 0) {
-          return new Future.error("There is a new version of the Chrome <b>ADT<b> " +
+          return new Future.error("There is a new version of the Chrome ADT " +
               "app that you'll need, available here: " +
               "https://github.com/MobileChromeApps/chrome-app-harness/releases.");
         } else {

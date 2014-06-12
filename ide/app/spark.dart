@@ -640,12 +640,15 @@ abstract class Spark
     var sanitizer = const HtmlEscape();
     for(String line in lines) {
       Element lineElement = new Element.p();
-      String escapedLine = sanitizer.convert(line);
-      line.split(new UrlPattern("http[s]://");
-      /*%TRACE3*/ print("""(4> 6/10/14): escapedLine: ${escapedLine}"""); // TRACE%
       
+      // Convert all urls to links and sanitize everything else.
+      RegExp urlRegExp = new RegExp("(https?://[^\\s]*[^\\s.,!])");
+      line = line.splitMapJoin(urlRegExp, onMatch: (Match match) {
+        String url = match.group(0);
+        return "<a href='$url'>$url</a>";
+      }, onNonMatch: (String nonMatch) => sanitizer.convert(nonMatch));
       
-      lineElement.innerHtml = escapedLine;
+      lineElement.appendHtml(line);
       container.children.add(lineElement);
     }
   }
