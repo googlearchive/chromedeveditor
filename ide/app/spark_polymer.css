@@ -180,6 +180,14 @@ button.ace_searchbtn_close:active {
   outline: none;
 }
 
+.ace-monokai .ace_marker-layer .ace_selection {
+  background: darkorange !important;
+}
+
+.ace-monokai .ace_marker-layer .ace_selected-word {
+  border: 1px dotted orange !important;
+}
+
 /*
  * - end Ace overrides.
  */
