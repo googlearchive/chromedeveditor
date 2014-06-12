@@ -87,7 +87,7 @@
 }
 
 ::content input[type=radio] {
-  margin-left: 2px;
+  margin: 0 5px 0 0;
 }
 
 ::content input[type=text] {
