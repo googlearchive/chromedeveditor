@@ -11,6 +11,7 @@ import 'package:logging/logging.dart';
 import 'jshint.dart';
 import '../builder.dart';
 import '../jobs.dart';
+import '../package_mgmt/package_utils.dart';
 import '../workspace.dart';
 
 Logger _logger = new Logger('spark.js_builder');
@@ -49,7 +50,11 @@ class JavaScriptBuilder extends Builder {
     }
   }
 
-  bool _includeFile(File file) => file.name.endsWith('.js') && !file.isDerived();
+  bool _includeFile(File file) {
+    return file.name.endsWith('.js') &&
+        !file.isDerived() &&
+        !isInPackagesFolder(file);
+  }
 
   Future _processFile(File file) {
     return file.getContents().then((String source) {
