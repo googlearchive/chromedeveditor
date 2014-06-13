@@ -11,7 +11,6 @@ library spark.ui.widgets.fileitem_cell;
 import 'dart:html' hide File;
 
 import 'listview_cell.dart';
-import '../../utils.dart';
 import '../../workspace.dart';
 
 class FileItemCell implements ListViewCell {
