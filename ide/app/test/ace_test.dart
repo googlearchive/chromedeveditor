@@ -45,7 +45,7 @@ class MockAceManager implements AceManager {
   void setSelectionAnchor(int row, int column) {}
   void selectTo(int row, int column) {}
 
-  ace.EditSession get currentSession => null;
+  EditSession get currentSession => null;
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }
