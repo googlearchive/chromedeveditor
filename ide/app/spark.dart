@@ -389,7 +389,7 @@ abstract class Spark
     eventBus.onEvent(BusEventType.FILES_CONTROLLER__SELECTION_CHANGED)
         .listen((FilesControllerSelectionChangedEvent event) {
       focusManager.setCurrentResource(event.resource);
-      if (event.resource is ws.File) {
+      if (event.resource is ws.File && !event.resource.deleted) {
         _openFile(event.resource);
       }
     });
@@ -1677,7 +1677,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
-    return spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
+    return !resource.deleted && spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
   }
 
   void _updateEnablement(ws.Resource resource) {
@@ -2170,7 +2170,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
   bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
   bool _appliesTo(ws.Resource resource) {
-    return getAppContainerFor(resource) != null;
+    return !resource.deleted && getAppContainerFor(resource) != null;
   }
 
   void _updateEnablement(ws.Resource resource) {
@@ -3519,7 +3519,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = getAppContainerFor(resource) != null;
+    enabled = !resource.deleted && getAppContainerFor(resource) != null;
   }
 }
 

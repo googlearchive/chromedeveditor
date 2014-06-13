@@ -225,6 +225,10 @@ class TreeView implements ListViewDelegate {
     }
   }
 
+  void delete(dynamic resource) {
+    _delegate.treeViewDeleted(this, resource);
+  }
+
   void toggleNodeExpanded(String nodeUid, {bool animated: false}) {
     setNodeExpanded(nodeUid, !isNodeExpanded(nodeUid), animated: animated);
   }

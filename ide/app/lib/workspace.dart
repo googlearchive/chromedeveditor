@@ -580,6 +580,9 @@ abstract class Resource {
 
   chrome.Entry get entry => _entry;
 
+  /// Indicates if the resource is deleted.
+  bool deleted = false;
+
   /**
    * Return the path to this element from the workspace. Paths are not
    * guaranteed to be unique. For uniqueness, see [uuid].
@@ -879,7 +882,8 @@ class Folder extends Container {
   }
 
   Future delete() {
-    return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
+    return _dirEntry.removeRecursively().then((_)
+        => _parent._removeChild(this, fireEvent: true));
   }
 
   //TODO(keertip): remove check for 'cache'
@@ -985,7 +989,8 @@ class File extends Resource {
   }
 
   Future delete() {
-    return _fileEntry.remove().then((_) => _parent._removeChild(this));
+    return _fileEntry.remove().then((_)
+        => _parent._removeChild(this, fireEvent: true));
   }
 
   Future setBytes(List<int> data) {

@@ -49,6 +49,12 @@ abstract class TreeViewDelegate {
                                List<String> nodeUids);
 
   /**
+   * The implementation of this method will be run when the treeView
+   * is deleted.
+   */
+  void treeViewDeleted(TreeView view, dynamic resource);
+
+  /**
    * The implementation of this method will be triggered when a node is
    * clicked.  Returning false will cancel further selection operations.
    */

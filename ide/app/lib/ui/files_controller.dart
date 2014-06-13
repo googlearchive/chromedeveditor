@@ -223,6 +223,12 @@ class FilesController implements TreeViewDelegate {
     }
   }
 
+  void treeViewDeleted(TreeView view, dynamic resource) {
+   //Resource resource = _filesMap[view.uuid];
+   resource.deleted = true;
+    _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
+  }
+
   bool treeViewRowClicked(html.MouseEvent event, String uid) => true;
 
   void treeViewDoubleClicked(TreeView view,
@@ -706,6 +712,7 @@ class FilesController implements TreeViewDelegate {
         var resource = change.resource;
         if (resource.isTopLevel) {
           _files.remove(resource);
+          _treeView.delete(resource);
           needsSortTopLevel = true;
         }
         _filesMap.remove(resource.uuid);
