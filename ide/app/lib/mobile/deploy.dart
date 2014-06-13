@@ -41,7 +41,7 @@ class MobileDeploy {
   final Container appContainer;
   final PreferenceStore _prefs;
 
-  TcpClient _client;
+  AndroidDevice _device;
   List<DeviceInfo> _knownDevices = [];
 
   MobileDeploy(this.appContainer, this._prefs) {
@@ -180,7 +180,9 @@ class MobileDeploy {
 
   // Safe to call multiple times. It will open the device if it has not been opened yet.
   Future<AndroidDevice> _fetchAndroidDevice() {
-    AndroidDevice device = new AndroidDevice(_prefs);
+    if (_device != null) return new Future.value(_device);
+
+    _device = new AndroidDevice(_prefs);
 
     Future doOpen(int index) {
       if (_knownDevices.length == 0) {
@@ -192,7 +194,7 @@ class MobileDeploy {
       }
 
       DeviceInfo di = _knownDevices[index];
-      return device.open(di.vendorId, di.productId).catchError((e) {
+      return _device.open(di.vendorId, di.productId).catchError((e) {
         if ((e == 'no-device') || (e == 'no-connection')) {
           // No matching device found, try again.
           return doOpen(index + 1);
@@ -207,11 +209,11 @@ class MobileDeploy {
     }
 
     return doOpen(0).then((_) {
-      return device.connect(new SystemIdentity()).catchError((e) {
-        device.dispose();
+      return _device.connect(new SystemIdentity()).catchError((e) {
+        _device.dispose();
         throw e;
       });
-    }).then((_) => device);
+    }).then((_) => _device);
   }
 
   Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
@@ -229,24 +231,22 @@ class MobileDeploy {
 
   Future _sendRequest(List<int> httpRequest, [String target]) {
     if (target == null) {
-      AndroidDevice _device;
       return _fetchAndroidDevice().then((deviceResult) {
-        _device = deviceResult;
-        return _device.sendHttpRequest(httpRequest, 2424).timeout(
+        return deviceResult.sendHttpRequest(httpRequest, 2424).timeout(
             new Duration(minutes: 5), onTimeout: () {
               return new Future.error(
                   'Push timed out: Total time exceeds 5 minutes');
             });
-      }).whenComplete(() {
-        if (_device != null) _device.dispose();
       });
     } else {
+      TcpClient _client;
       return TcpClient.createClient(target, 2424).then((TcpClient client) {
-        client.write(httpRequest);
-        return client.stream.timeout(new Duration(minutes: 1)).first;
+        _client = client;
+        _client.write(httpRequest);
+        return _client.stream.timeout(new Duration(minutes: 1)).first;
       }).whenComplete(() {
-        if (client != null) {
-          client.dispose();
+        if (_client != null) {
+          _client.dispose();
         }
       });
     }
