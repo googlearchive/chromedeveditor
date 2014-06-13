@@ -56,6 +56,12 @@ class Status {
         return status;
       }
 
+      // TODO(grv): Ignore status updates for patterns in .gitignore.
+      // Ignore status updates for files ending with '.lock'.
+      if (entry.name.endsWith('.lock')) {
+        return status;
+      }
+
       if (status.modificationTime
           == data.modificationTime.millisecondsSinceEpoch) {
         // Unchanged file since last update.
