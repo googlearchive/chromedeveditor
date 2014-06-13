@@ -35,6 +35,7 @@ class SparkDialog extends SparkWidget {
   String _title = '';
   Element _titleElement;
   FormElement _body;
+  Element _progress;
   Iterable<SparkDialogButton> _buttons;
   List<_ValidatedField> _validatedFields = [];
 
@@ -50,9 +51,10 @@ class SparkDialog extends SparkWidget {
     _titleElement = $['title'];
     _body = $['body'];
     _buttons = SparkWidget.inlineNestedContentNodes($['buttonsContent']);
+    _progress = $['progress'];
 
     title = _title;
-    $['progress'].classes.toggle('hidden', !_activityVisible);
+    _progress.classes.toggle('hidden', !_activityVisible);
 
     // TODO(ussuri): Use MutationObserver here to detect added/removed fields.
     _addValidatableFields(
@@ -79,7 +81,7 @@ class SparkDialog extends SparkWidget {
 
   void set activityVisible(bool visible) {
     _activityVisible = visible;
-    $['progress'].classes.toggle('hidden', !_activityVisible);
+    _progress.classes.toggle('hidden', !_activityVisible);
   }
 
   void _addValidatableFields(Iterable<Node> candidates) {
