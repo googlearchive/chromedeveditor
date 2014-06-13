@@ -41,6 +41,7 @@ class MobileDeploy {
   final Container appContainer;
   final PreferenceStore _prefs;
 
+  TcpClient _client;
   List<DeviceInfo> _knownDevices = [];
 
   MobileDeploy(this.appContainer, this._prefs) {
@@ -137,16 +138,11 @@ class MobileDeploy {
 
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
     List<int> httpRequest;
-    TcpClient client;
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       httpRequest = _buildHttpRequest(target, archivedData);
       monitor.worked(5);
-      return TcpClient.createClient(target, 2424);
-    }).then((TcpClient _client) {
-      client = _client;
-      client.write(httpRequest);
-      return client.stream.timeout(new Duration(minutes: 1)).first;
+      return _sendRequest(httpRequest, target);
     }).then((List<int> responseBytes) {
       String response = new String.fromCharCodes(responseBytes);
       List<String> lines = response.split('\n');
@@ -156,14 +152,30 @@ class MobileDeploy {
 
       if (lines.first.contains('200')) {
         monitor.worked(2);
+        return _sendLaunch(target, appContainer.project.name);
       } else {
         return new Future.error(lines.first);
       }
-    }).whenComplete(() {
-      if (client != null) {
-        client.dispose();
-      }
     });
+  }
+
+  /**
+   * Launch an app with appId on given target address.  If target is
+   * null, will be sent to USB device.
+   */
+  Future _sendLaunch(String appId, [String target = null]) {
+    List<int> httpRequest = [];
+    // Build the HTTP request headers.
+    String header =
+        'POST /launch HTTP/1.1\r\n'
+        'User-Agent: Spark IDE\r\n';
+    String body = "appId=$appId";
+
+    httpRequest.addAll(header.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+    httpRequest.addAll(body.codeUnits);
+
+    return _sendRequest(httpRequest, target);
   }
 
   // Safe to call multiple times. It will open the device if it has not been opened yet.
@@ -215,9 +227,33 @@ class MobileDeploy {
     });
   }
 
+  Future _sendRequest(List<int> httpRequest, [String target]) {
+    if (target == null) {
+      AndroidDevice _device;
+      return _fetchAndroidDevice().then((deviceResult) {
+        _device = deviceResult;
+        return _device.sendHttpRequest(httpRequest, 2424).timeout(
+            new Duration(minutes: 5), onTimeout: () {
+              return new Future.error(
+                  'Push timed out: Total time exceeds 5 minutes');
+            });
+      }).whenComplete(() {
+        if (_device != null) _device.dispose();
+      });
+    } else {
+      return TcpClient.createClient(target, 2424).then((TcpClient client) {
+        client.write(httpRequest);
+        return client.stream.timeout(new Duration(minutes: 1)).first;
+      }).whenComplete(() {
+        if (client != null) {
+          client.dispose();
+        }
+      });
+    }
+  }
+
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;
-    AndroidDevice _device;
 
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
@@ -226,15 +262,7 @@ class MobileDeploy {
       monitor.worked(4);
 
       // Send this payload to the USB code.
-      return _fetchAndroidDevice();
-    }).then((deviceResult) {
-      _device = deviceResult;
-
-      return _device.sendHttpRequest(httpRequest, 2424).timeout(
-          new Duration(minutes: 5), onTimeout: () {
-            return new Future.error(
-                'Push timed out: Total time exceeds 5 minutes');
-          });
+      return _sendRequest(httpRequest);
     }).then((msg) {
       monitor.worked(3);
       String resp = new String.fromCharCodes(msg);
@@ -247,10 +275,8 @@ class MobileDeploy {
         return new Future.error(
             '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
       } else {
-        return body;
+        return _sendLaunch(appContainer.project.name).then((_) => body);
       }
-    }).whenComplete(() {
-      if (_device != null) _device.dispose();
     });
   }
 }
