@@ -2121,20 +2121,24 @@ class FolderOpenAction extends SparkActionWithStatusDialog {
 }
 
 class DeployToMobileAction extends SparkActionWithProgressDialog implements ContextAction {
+  CheckboxInputElement _ipElement;
+  CheckboxInputElement _adbElement;
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
 
   DeployToMobileAction(Spark spark, Element dialog)
       : super(spark, "application-push", "Deploy to Mobile", dialog) {
+    _ipElement = getElement("#ip");
+    _adbElement = getElement("#adb");
     _pushUrlElement = _triggerOnReturn("#pushUrl");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
     // When the IP address field is selected, check the `IP` checkbox.
-    getElement('#pushUrl').onFocus.listen((e) {
-      (getElement('#ip') as InputElement).checked = true;
-    });
+    _ipElement.onChange.listen(_enableInputs);
+    _adbElement.onChange.listen(_enableInputs);
+    _enableInputs();
   }
 
   Element get _deployDeviceMessage => getElement('#deployCheckDeviceMessage');
@@ -2177,6 +2181,10 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     enabled = _appliesTo(resource);
   }
 
+  void _enableInputs([_]) {
+    _pushUrlElement.disabled = !_ipElement.checked;
+  }
+
   void _toggleProgressVisible(bool visible) {
     super._toggleProgressVisible(visible);
     _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
@@ -2186,6 +2194,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     _setProgressMessage("Deploying…");
     _toggleProgressVisible(true);
     _deployButton.disabled = true;
+    // TODO(ussuri): BUG #2252.
     _deployButton.deliverChanges();
 
     _monitor = new ProgressMonitorImpl(this);
