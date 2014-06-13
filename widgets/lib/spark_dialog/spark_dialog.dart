@@ -108,9 +108,9 @@ class SparkDialog extends SparkWidget {
 class _ValidatedField {
   final InputElement _element;
   final Function _onValidityChange;
-  bool _isValid;
 
-  bool get isValid => _isValid;
+  // NOTE: [willValidate] takes disablement into account.
+  bool get isValid => !_element.willValidate || _element.checkValidity();
 
   _ValidatedField(this._element, this._onValidityChange) {
     _removeVisited();
@@ -119,17 +119,15 @@ class _ValidatedField {
     _element
         ..onFocus.listen(_addVisited)
         ..onClick.listen(_addVisited)
+        ..onChange.listen(_updateValidity)
         ..onInput.listen(_updateValidity)
         ..onPaste.listen(_updateValidity)
         ..onReset.listen(_updateValidity);
   }
 
-  void _addVisited([_]) => _element.classes.add('visited');
+  bool _addVisited([_]) => _element.classes.add('visited');
 
-  void _removeVisited([_]) => _element.classes.remove('visited');
-  
-  void _updateValidity([_]) {
-    _isValid = _element.disabled || _element.checkValidity();
-    _onValidityChange();
-  }
+  bool _removeVisited([_]) => _element.classes.remove('visited');
+
+  void _updateValidity([_]) => _onValidityChange();
 }
