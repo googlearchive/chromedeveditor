@@ -392,7 +392,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
-      return Branch.branch(options, sourceBranchName);
+      return Branch.branch(options, sourceBranchName)
+          .catchError((e) => SparkException.fromException(e));
     });
   }
 
@@ -406,7 +407,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // We changed files on disk - let the workspace know to re-scan the
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
-      });
+      }).catchError((e) => SparkException.fromException(e));
     });
   }
 
@@ -438,7 +439,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
-      return Push.push(options);
+      return Push.push(options).catchError(
+          (e) => SparkException.fromException(e));
     });
   }
 
@@ -452,7 +454,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Fetch fetch = new Fetch(new GitOptions(root: entry, store: store));
-      return fetch.fetch();
+      return fetch.fetch().catchError((e) => SparkException.fromException(e));
     });
   }
 
@@ -466,7 +468,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // We changed files on disk - let the workspace know to re-scan the
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
-      });
+      }).catchError((e) => SparkException.fromException(e));
     });
   }
 
@@ -477,7 +479,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
           name: userName, email: userEmail);
       return Commit.commit(options).then((_) {
         _refreshStatus(project: project);
-      });
+      }).catchError((e) => SparkException.fromException(e));
     });
   }
 
@@ -495,7 +497,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
           result.message = item.message;
           return result;
         }).toList();
-      });
+      }).catchError((e) => SparkException.fromException(e));
     });
   }
 
