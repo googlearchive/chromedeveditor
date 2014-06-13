@@ -89,10 +89,8 @@ class SparkDialog extends SparkWidget {
   void _addValidatableFieldsImpl(Iterable<Node> candidates) {
     candidates.forEach((Element element) {
       if (element is InputElement) {
-        if (element.willValidate) {
-          _validatedFields.add(
-              new _ValidatedField(element, _updateFormValidity));
-        }
+        _validatedFields.add(
+            new _ValidatedField(element, _updateFormValidity));
       } else {
         _addValidatableFieldsImpl(element.children);
       }
