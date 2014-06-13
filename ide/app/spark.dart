@@ -3363,6 +3363,7 @@ class AboutSparkAction extends SparkActionWithDialog {
   AboutSparkAction(Spark spark, Element dialog)
       : super(spark, "help-about", "About Spark", dialog) {
     _checkbox.checked = _isTrackingPermitted;
+    _checkbox.onChange.listen((e) => _isTrackingPermitted = _checkbox.checked);
   }
 
   void _invoke([Object context]) {
@@ -3371,7 +3372,6 @@ class AboutSparkAction extends SparkActionWithDialog {
   }
 
   void _commit() {
-    _isTrackingPermitted = _checkbox.checked;
     _hide();
   }
 
