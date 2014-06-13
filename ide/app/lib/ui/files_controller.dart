@@ -114,6 +114,11 @@ class FilesController implements TreeViewDelegate {
   }
 
   void selectFile(Resource file) {
+    if (file == null) {
+      _treeView.listViewSelectedChanged(null, []);
+      return;
+    }
+
     if (_currentFiles().isEmpty) {
       return;
     }
@@ -712,7 +717,7 @@ class FilesController implements TreeViewDelegate {
         }
         _filesMap.remove(resource.uuid);
         // The current selection was deleted. No selected resource.
-        _treeView.setNodeExpanded(null, false);
+        selectFile(null);
         needsReloadData = true;
       } else if (change.type == EventType.RENAME) {
         // Update expanded state of the tree view.
