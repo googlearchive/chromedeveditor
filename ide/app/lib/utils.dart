@@ -196,11 +196,29 @@ Future<html.DirectoryEntry> getLocalDataDir(String name) {
 }
 
 /**
+ * Return the most likely IP address for this machine.
+ */
+Future<String> getHostIP() {
+  return chrome.system.network.getNetworkInterfaces().then(
+      (List interfaces) {
+    if (interfaces.isEmpty) throw "Local IP address not available";
+
+    // Use an IPv4 address if one is available.
+    for (chrome.NetworkInterface net in interfaces) {
+      if (net.prefixLength == 24) return net.address;
+    }
+
+    // Else return the first address.
+    return interfaces.first.address;
+  });
+}
+
+/**
  * A [Notifier] is used to present the user with a message.
  */
 abstract class Notifier {
   void showMessage(String title, String message);
-  
+
   Future showMessageAndWait(String title, String message);
 }
 
@@ -211,7 +229,7 @@ class NullNotifier implements Notifier {
   void showMessage(String title, String message) {
     Logger.root.info('${title}:${message}');
   }
-  
+
   Future showMessageAndWait(String title, String message) => new Future.value("Not implemented");
 }
 

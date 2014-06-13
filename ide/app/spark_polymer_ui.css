@@ -232,6 +232,10 @@ label {
   font-weight: 500;
 }
 
+.help-block {
+  -webkit-user-select: text;
+}
+
 #mobileDeployDialog #adb, #mobileDeployDialog #ip {
   position: relative;
   top: 2px;

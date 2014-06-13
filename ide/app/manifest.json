@@ -41,6 +41,7 @@
     },
     "management",
     "syncFileSystem",
+    "system.network",
     "storage",
     "unlimitedStorage",
     "contextMenus",

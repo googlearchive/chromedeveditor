@@ -423,8 +423,8 @@ abstract class Spark
     actionManager.registerAction(new PubUpgradeAction(this));
     actionManager.registerAction(new BowerGetAction(this));
     actionManager.registerAction(new BowerUpgradeAction(this));
-    actionManager.registerAction(new ApplicationRunAction(this));
-    actionManager.registerAction(new DeployToMobileAction(this, getDialogElement('#mobileDeployDialog')));
+    actionManager.registerAction(new ApplicationRunAction.run(this));
+    actionManager.registerAction(new ApplicationRunAction.deploy(this));
     actionManager.registerAction(new CompileDartAction(this));
     actionManager.registerAction(new GitCloneAction(this, getDialogElement("#gitCloneDialog")));
     if (SparkFlags.showGitPull) {
@@ -467,6 +467,8 @@ abstract class Spark
     actionManager.registerAction(new SendFeedbackAction(this));
 
     actionManager.registerKeyListener();
+
+    DeployToMobileAction._init(this);
   }
 
   void initToolbar() {
@@ -1646,9 +1648,21 @@ class FileExitAction extends SparkAction {
 }
 
 class ApplicationRunAction extends SparkAction implements ContextAction {
-  ApplicationRunAction(Spark spark) : super(
-      spark, "application-run", "Run") {
+  LaunchTarget _launchTarget;
+  String _launchText;
+
+  ApplicationRunAction.run(Spark spark) : super(spark, "application-run", "Run") {
+    _launchTarget = LaunchTarget.LOCAL;
+    _launchText = 'Running';
     addBinding("ctrl-r");
+    enabled = false;
+    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
+  }
+
+  ApplicationRunAction.deploy(Spark spark) :
+      super(spark, "application-push", "Deploy to Mobile…") {
+    _launchTarget = LaunchTarget.REMOTE;
+    _launchText = 'Deploying';
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
   }
@@ -1663,12 +1677,12 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
     }
 
     Completer completer = new Completer();
-    ProgressJob job = new ProgressJob("Running application…", completer);
-    spark.launchManager.performLaunch(resource, LaunchTarget.LOCAL).then((_) {
+    ProgressJob job = new ProgressJob("${_launchText} application…", completer);
+    spark.launchManager.performLaunch(resource, _launchTarget).then((_) {
       completer.complete();
     }).catchError((e) {
       completer.complete();
-      spark.showErrorMessage('Error Running Application', '${e}');
+      spark.showErrorMessage('Error ${_launchText} Application', '${e}');
     });
   }
 
@@ -1676,9 +1690,8 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
 
   bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
 
-  bool _appliesTo(ws.Resource resource) {
-    return spark.launchManager.canLaunch(resource, LaunchTarget.LOCAL);
-  }
+  bool _appliesTo(ws.Resource resource) =>
+    spark.launchManager.canLaunch(resource, _launchTarget);
 
   void _updateEnablement(ws.Resource resource) {
     enabled = _appliesTo(resource);
@@ -2120,16 +2133,30 @@ class FolderOpenAction extends SparkActionWithStatusDialog {
   }
 }
 
-class DeployToMobileAction extends SparkActionWithProgressDialog implements ContextAction {
+/**
+ * TODO(devoncarew): This needs to be refactored to not inherit from SparkAction.
+ */
+class DeployToMobileAction extends SparkActionWithProgressDialog {
+  static DeployToMobileAction _instance;
+
+  static void _init(Spark spark) {
+    _instance = new DeployToMobileAction(
+      spark, spark.getDialogElement('#mobileDeployDialog'));
+  }
+  /**
+   * Open a deploy to mobile dialog with the given resource.
+   */
+  static void deploy(ws.Resource resource) {
+    _instance._invoke([resource]);
+  }
+
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
 
   DeployToMobileAction(Spark spark, Element dialog)
-      : super(spark, "application-push", "Deploy to Mobile", dialog) {
+      : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
     _pushUrlElement = _triggerOnReturn("#pushUrl");
-    enabled = false;
-    spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
     // When the IP address field is selected, check the `IP` checkbox.
     getElement('#pushUrl').onFocus.listen((e) {
@@ -2163,18 +2190,6 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
       _restoreDialog();
       _show();
     }
-  }
-
-  String get category => 'application';
-
-  bool appliesTo(List list) => list.length == 1 && _appliesTo(list.first);
-
-  bool _appliesTo(ws.Resource resource) {
-    return getAppContainerFor(resource) != null;
-  }
-
-  void _updateEnablement(ws.Resource resource) {
-    enabled = _appliesTo(resource);
   }
 
   void _toggleProgressVisible(bool visible) {
@@ -3308,7 +3323,8 @@ class CompileDartJob extends Job {
         throw result;
       }
 
-      return getCreateFile(file.parent, '${file.name}.js').then((ws.File file) {
+      return getCreateFile(file.parent, '${file.name}.precompiled.js').then(
+          (ws.File file) {
         return file.setContents(result.output);
       });
     }).catchError((e) {
