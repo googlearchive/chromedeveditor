@@ -879,7 +879,8 @@ class Folder extends Container {
   }
 
   Future delete() {
-    return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
+    return _dirEntry.removeRecursively().then((_)
+        => _parent._removeChild(this, fireEvent: true));
   }
 
   //TODO(keertip): remove check for 'cache'
