@@ -186,14 +186,14 @@ class FocusManager {
    * automatically fire project events if necessary.
    */
   void setCurrentResource(Resource resource) {
-    if (_currentResource == resource) return;
+    if (!resource.deleted && _currentResource == resource) return;
 
     Project oldProject = currentProject;
 
     _currentResource = resource;
     _resourceController.add(resource);
 
-    if (oldProject != currentProject) {
+    if (!resource.deleted && oldProject != currentProject) {
       _projectController.add(currentProject);
     }
   }
