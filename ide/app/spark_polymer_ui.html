@@ -202,7 +202,7 @@
             spellcheck="false" autosave focused />
       </div>
       <div class="form-group">
-        <label for="projectType">Project type</label>
+        <label for="type">Project type</label>
 
         <!-- TODO(ussuri): This duplication is pretty ugly, but none of the
           advertised ways worked: <template if...> around individual options
@@ -210,7 +210,8 @@
           <option template if...> doesn't work at least in Dartium.
         -->
         <template if="{{showWipProjectTemplates}}">
-          <select name="projectType" class="form-control" autosave>
+          <!-- TODO(ussuri): Rename "type" - too generic => dangerous. -->
+          <select name="type" class="form-control" autosave>
             <optgroup label="Default">
               <option value="empty">
                 Blank project
@@ -259,7 +260,7 @@
         </template>
 
         <template if="{{!showWipProjectTemplates}}">
-          <select name="projectType" class="form-control" autosave>
+          <select name="type" class="form-control" autosave>
             <optgroup label="Default">
               <option value="empty">
                 Blank project
