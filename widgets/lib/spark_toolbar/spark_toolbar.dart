@@ -30,7 +30,7 @@ class SparkToolbar extends SparkWidget {
     assert(['small', 'medium', 'large', 'none'].contains(spacing));
 
     if (collapseEmpty) {
-      final List<Element> content =
+      final Iterable<Element> content =
           SparkWidget.inlineNestedContentNodes($['content']);
       final bool somethingToShow =
           content.any((e) => e.getComputedStyle().display != 'none');
