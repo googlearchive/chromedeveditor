@@ -86,8 +86,9 @@
   border-color: red;
 }
 
-::content input[type=radio] {
-  margin-left: 2px;
+::content input[type=radio],
+::content input[type=checkbox] {
+  margin: 0 7px 0 0;
 }
 
 ::content input[type=text] {
