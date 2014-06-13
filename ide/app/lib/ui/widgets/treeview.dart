@@ -267,8 +267,10 @@ class TreeView implements ListViewDelegate {
         _delegate.treeViewCellForNode(this, _rows[rowIndex].nodeUid);
     bool hasChildren =
         _delegate.treeViewHasChildren(this, _rows[rowIndex].nodeUid);
+    int disclosurePosition =_delegate.treeViewDisclosurePositionForNode(this,
+        _rows[rowIndex].nodeUid);
     TreeViewCell treeCell = new TreeViewCell(this, cell, _rows[rowIndex],
-        hasChildren, draggingEnabled);
+        hasChildren, draggingEnabled, disclosurePosition);
     return treeCell;
   }
 

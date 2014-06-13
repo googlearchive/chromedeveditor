@@ -24,6 +24,6 @@ class SparkToolbar extends SparkWidget {
     assert(horizontal || vertical);
     assert(horizontal != vertical);
     assert(['left', 'right', 'center', 'spaced', 'edges'].contains(justify));
-    assert(['small', 'medium', 'large'].contains(spacing));
+    assert(['small', 'medium', 'large', 'none'].contains(spacing));
   }
 }

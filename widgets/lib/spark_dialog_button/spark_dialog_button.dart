@@ -19,6 +19,7 @@ class SparkDialogButton extends SparkWidget {
   @published bool cancel = false;
   @published bool dismiss = false;
   @published bool secondary = false;
+  @published bool raised = false;
   @published bool disabled = false;
 
   SparkDialogButton.created() : super.created();

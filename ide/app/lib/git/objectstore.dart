@@ -153,7 +153,7 @@ class ObjectStore {
   Future<chrome.FileEntry> _createNewRef(String path, String sha)
       => FileOps.createFileWithContent(_rootDir, path, sha + '\n', "Text");
 
-  Future<chrome.FileEntry> setHeadRef(String refName, String sha) {
+  Future<chrome.FileEntry> setHeadRef(String refName) {
     String content = 'ref: ${refName}\n';
     return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
         content, "Text");
@@ -653,7 +653,7 @@ class ObjectStore {
   Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((TreeEntry tree) {
-      blobParts.add((tree.isBlob ? '100644 ' : '40000 ') + tree.name);
+      blobParts.add(tree.permission + ' ' + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
       blobParts.add(new Uint8List.fromList(tree.shaBytes));
     });

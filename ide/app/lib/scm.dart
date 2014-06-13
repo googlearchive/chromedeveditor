@@ -460,7 +460,13 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Pull pull = new Pull(options);
-      return pull.pull();
+      return pull.pull().then((_) {
+        _statusController.add(this);
+
+        // We changed files on disk - let the workspace know to re-scan the
+        // project and fire any necessary resource change events.
+        Timer.run(() => project.refresh());
+      });
     });
   }
 

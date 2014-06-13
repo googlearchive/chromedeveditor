@@ -211,6 +211,11 @@ class FilesController implements TreeViewDelegate {
     return resource is Project ? 40 : 24;
   }
 
+  int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    return resource is Project ? 15 : -1;
+  }
+
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
       Resource resource = _filesMap[nodeUids.first];
@@ -790,9 +795,8 @@ class FilesController implements TreeViewDelegate {
     if (scmOperations != null) {
       if (resource is Project) {
         String branchName = scmOperations.getBranchName();
-        final String repoIcon = '<span class="glyphicon glyphicon-random small"></span>';
         if (branchName == null) branchName = '';
-        fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
+        fileItemCell.setFileInfo('[${branchName}]');
       }
 
       ScmFileStatus status = scmOperations.getFileStatus(resource);

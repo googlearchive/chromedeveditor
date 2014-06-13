@@ -20,12 +20,14 @@
                 cancel
                 dismiss
                 secondary
+                raised
                 disabled">
   <template>
     <link rel="stylesheet" href="spark_dialog_button.css">
 
     <spark-button
         primary?="{{(submit || dismiss) && !secondary}}"
+        raised?="{{raised}}"
         disabled?="{{disabled}}"
         padding="huge"
         overlayToggle?="{{submit || dismiss || cancel}}"
