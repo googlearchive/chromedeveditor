@@ -70,6 +70,7 @@ class SparkDialog extends SparkWidget {
 
   void hide() {
     if (_modal.opened) {
+      _validatedFields.clear();
       _modal.toggle();
     }
   }
@@ -108,21 +109,33 @@ class SparkDialog extends SparkWidget {
 class _ValidatedField {
   final InputElement _element;
   final Function _onValidityChange;
+  MutationObserver _observer;
 
   // NOTE: [willValidate] takes disablement into account.
   bool get isValid => !_element.willValidate || _element.checkValidity();
 
   _ValidatedField(this._element, this._onValidityChange) {
+    // After a first visit to [_element], start showing its validity state
+    // (red border) when it's not focused. Don't show red border while editing
+    // to avoid distraction.
     _removeVisited();
-    // Just listening to the [_body.onChange] is not enough to update
-    // the validity in real-time as the user types.
-    _element
-        ..onFocus.listen(_addVisited)
-        ..onClick.listen(_addVisited)
-        ..onChange.listen(_updateValidity)
-        ..onInput.listen(_updateValidity)
-        ..onPaste.listen(_updateValidity)
-        ..onReset.listen(_updateValidity);
+    SparkWidget.addRemoveEventHandlers(
+        _element, ['focus', 'click'], _addVisited);
+    // Listen to editing-related events to update the validity. Just listening
+    // to the parent form's [onChange] isn't enough to react to real-time edits.
+    SparkWidget.addRemoveEventHandlers(
+        _element, ['change', 'input', 'paste', 'reset'], _updateValidity);
+    // Detect programmatic changes to some attributes. Sadly, that doesn't
+    // include [value], because [value] is special (not a pure attribute).
+    _observer = new MutationObserver((records, _) => _updateValidity(records));
+    _observer.observe(
+            _element,
+            childList: false,
+            attributes: true,
+            characterData: true,
+            subtree: false,
+            attributeOldValue: false,
+            characterDataOldValue: false);
   }
 
   bool _addVisited([_]) => _element.classes.add('visited');
