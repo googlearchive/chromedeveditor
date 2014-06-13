@@ -79,10 +79,15 @@
   border-color: rgb(66, 128, 244);
 }
 
+::content .form-control[disabled] {
+  background-color: #eee;
+  cursor: default;
+}
+
 /*
  * Don't use :invalid because we need finer control.
  */
-::content .form-control:not(:focus).invalid {
+::content .form-control.visited:not([disabled]):not(:focus):invalid {
   border-color: red;
 }
 
