@@ -224,3 +224,9 @@ spark-dialog {
 label {
   font-weight: 500;
 }
+
+/* These two are special (secondary) */
+label[for="analyticsCheck"],
+label[for="stripWhitespace"] {
+  font-weight: 400;
+}
