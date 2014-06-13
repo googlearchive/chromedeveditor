@@ -843,9 +843,9 @@ class Folder extends Container {
    */
   Future importDirectoryEntry(chrome.DirectoryEntry entry) {
 
-    if (entry.fullPath == _dirEntry.fullPath) {
+    if (_dirEntry.fullPath.startsWith(entry.fullPath)) {
       // TODO(grv): Wrap into a spark exception.
-      return new Future.error('Import and root folder are same.');
+      return new Future.error('Cannot import a parent folder.');
     }
 
     return createNewFolder(entry.name).then((Folder folder) {
