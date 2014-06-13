@@ -189,6 +189,11 @@ class TreeView implements ListViewDelegate {
    * Sets expanded state of a node.
    */
   void setNodeExpanded(String nodeUid, bool expanded, {bool animated: false}) {
+    // Current resource was deleted. No selected resource.
+    if (nodeUid == null) {
+      _delegate.treeViewSelectedChanged(this, []);
+    }
+
     if (isNodeExpanded(nodeUid) != expanded) {
       if (animated) {
         int rowIndex = _rowsMap[nodeUid].rowIndex;

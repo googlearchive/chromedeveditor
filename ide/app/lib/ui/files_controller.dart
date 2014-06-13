@@ -220,6 +220,8 @@ class FilesController implements TreeViewDelegate {
     if (nodeUids.isNotEmpty) {
       Resource resource = _filesMap[nodeUids.first];
       _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
+    } else {
+      _eventBus.addEvent(new FilesControllerSelectionChangedEvent(null));
     }
   }
 
@@ -709,6 +711,8 @@ class FilesController implements TreeViewDelegate {
           needsSortTopLevel = true;
         }
         _filesMap.remove(resource.uuid);
+        // The current selection was deleted. No selected resource.
+        _treeView.setNodeExpanded(null, false);
         needsReloadData = true;
       } else if (change.type == EventType.RENAME) {
         // Update expanded state of the tree view.
