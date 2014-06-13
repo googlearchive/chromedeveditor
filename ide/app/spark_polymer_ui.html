@@ -273,13 +273,13 @@
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="adb" type="radio" name="type" value="push-adb" checked>
+          <input id="adb" type="radio" name="mobileDeployType" value="push-adb" checked>
           <label for="adb">Deploy via USB</label>
         </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input id="ip" type="radio" name="type" value="push-ip" autosave>
+          <input id="ip" type="radio" name="mobileDeployType" value="push-ip">
           <label for="ip">Deploy to a network host with this IP:</label>
         </div>
         <div class="radio-button-dependency">
@@ -287,7 +287,7 @@
           <input id="pushUrl" type="text" class="form-control "
               placeholder="e.g. 192.168.1.101"
               pattern="(\d{1,3}\.){3}\d{1,3}"
-              spellcheck="false" autosave/>
+              spellcheck="false" autosave>
         </div>
       </div>
       <div id="progressDescription"></div>
@@ -553,13 +553,13 @@
     <spark-dialog id="webStorePublishDialog" title="Publish to Chrome Web Store">
       <div class="form-group">
         <div class="vert-align-box">
-          <input type="radio" name="type" value="new" id="new-app-radio" checked>
+          <input type="radio" name="webStorePublishType" value="new" id="new-app-radio" checked>
           <label for="new-app-radio">Create a new application</label>
         </div>
       </div>
       <div class="form-group">
         <div class="vert-align-box">
-          <input type="radio" name="type" value="existing" id="existing-app-radio">
+          <input type="radio" name="webStorePublishType" value="existing" id="existing-app-radio">
           <label for="existing-app-radio">Upload to an existing application with this ID:</label>
         </div>
         <div class="radio-button-dependency">
@@ -569,7 +569,6 @@
               spellcheck="false" autosave>
         </div>
       </div>
-
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit focused>Publish</spark-dialog-button>
     </spark-dialog>
