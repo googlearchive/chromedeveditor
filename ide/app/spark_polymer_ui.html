@@ -203,28 +203,35 @@
       </div>
       <div class="form-group">
         <label for="type">Project type</label>
-        <select name="type" class="form-control" autosave>
-          <optgroup label="Default">
-            <option value="empty">
-              Blank project
-            </option>
-          </optgroup>
-          <optgroup label="Web apps">
-            <option value="web/web_app_dart">
-              Dart web app
-            </option>
-            <option value="web/web_app_js">
-              JavaScript web app
-            </option>
-            <option value="web/web_app_polymer_js;polymer,core-elements">
-              JavaScript web app using Polymer
-            </option>
-          </optgroup>
-          <optgroup label="Chrome apps">
-            <option value="chrome/chrome_app_js">
-              JavaScript Chrome app
-            </option>
-            <template if="{{showWipProjectTemplates}}">
+
+        <!-- TODO(ussuri): This duplication is pretty ugly, but none of the
+          advertised ways worked: <template if...> around individual options
+          breaks dart2js ("'template if' within 'select'...");
+          <option template if...> doesn't work at least in Dartium.
+        -->
+        <template if="{{showWipProjectTemplates}}">
+          <!-- TODO(ussuri): Rename "type" - too generic => dangerous. -->
+          <select name="type" class="form-control" autosave>
+            <optgroup label="Default">
+              <option value="empty">
+                Blank project
+              </option>
+            </optgroup>
+            <optgroup label="Web apps">
+              <option value="web/web_app_dart">
+                Dart web app
+              </option>
+              <option value="web/web_app_js">
+                JavaScript web app
+              </option>
+              <option value="web/web_app_polymer_js;polymer,core-elements">
+                JavaScript web app using Polymer
+              </option>
+            </optgroup>
+            <optgroup label="Chrome apps">
+              <option value="chrome/chrome_app_js">
+                JavaScript Chrome app
+              </option>
               <!-- This one currently can't possibly work due to Polymer
                    JS breaking the CSP. BUG #1933. -->
               <option value="chrome/chrome_app_polymer_js;polymer,core-elements">
@@ -235,13 +242,11 @@
               <option value="chrome/chrome_extension_js">
                 JavaScript Chrome extension
               </option>
-            </template>
-          </optgroup>
-          <optgroup label="Polymer elements">
-            <option value="polymer/polymer_element_js">
-              JavaScript Polymer custom element
-            </option>
-            <template if="{{showWipProjectTemplates}}">
+            </optgroup>
+            <optgroup label="Polymer elements">
+              <option value="polymer/polymer_element_js">
+                JavaScript Polymer custom element
+              </option>
               <!-- This one just needs some additional work. -->
               <option value="polymer/polymer_element_dart">
                 Dart Polymer custom element
@@ -250,9 +255,40 @@
               <option value="polymer/spark_widget">
                 Spark widget
               </option>
-            </template>
-          </optgroup>
-        </select>
+            </optgroup>
+          </select>
+        </template>
+
+        <template if="{{!showWipProjectTemplates}}">
+          <select name="type" class="form-control" autosave>
+            <optgroup label="Default">
+              <option value="empty">
+                Blank project
+              </option>
+            </optgroup>
+            <optgroup label="Web apps">
+              <option value="web/web_app_dart">
+                Dart web app
+              </option>
+              <option value="web/web_app_js">
+                JavaScript web app
+              </option>
+              <option value="web/web_app_polymer_js;polymer,core-elements">
+                JavaScript web app using Polymer
+              </option>
+            </optgroup>
+            <optgroup label="Chrome apps">
+              <option value="chrome/chrome_app_js">
+                JavaScript Chrome app
+              </option>
+            </optgroup>
+            <optgroup label="Polymer elements">
+              <option value="polymer/polymer_element_js">
+                JavaScript Polymer custom element
+              </option>
+            </optgroup>
+          </select>
+        </template>
       </div>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
