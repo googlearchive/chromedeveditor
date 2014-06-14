@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
+import 'ignore.dart';
 import 'index.dart';
 import '../exception.dart';
 import '../file_operations.dart';
@@ -33,10 +34,7 @@ class Status {
     if (status == null) {
       status = new FileStatus();
 
-      // Ignore status of .lock files.
-
-      // TODO (grv) : Implement gitignore support.
-      if (entry.name.endsWith('.lock')) {
+      if (GitIgnore.ignore(entry.fullPath)) {
         status.type = FileStatusType.COMMITTED;
       }
     }
@@ -53,6 +51,11 @@ class Status {
       status = getStatusForEntry(store, entry);
 
       if (status.type == FileStatusType.UNTRACKED || entry.isDirectory) {
+        return status;
+      }
+
+      // Don't update status for files ignored by git.
+      if (GitIgnore.ignore(entry.fullPath)) {
         return status;
       }
 

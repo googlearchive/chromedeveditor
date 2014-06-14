@@ -1380,7 +1380,8 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       message = "Do you really want to delete ${resources.length} files?\nThis will permanently delete the files from disk and cannot be undone.";
     }
 
-    spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
+    spark.askUserOkCancel(message, okButtonLabel: 'Delete', title: 'Delete')
+        .then((bool val) {
       if (val) {
         spark.workspace.pauseResourceEvents();
         Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
@@ -2996,7 +2997,8 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
     text = 'Revert changes for ${text}?';
 
     // Show a yes/no dialog.
-    spark.askUserOkCancel(text, okButtonLabel: 'Revert').then((bool val) {
+    spark.askUserOkCancel(text, okButtonLabel: 'Revert', title: 'Revert Changes')
+        .then((bool val) {
       if (val) {
         operations.revertChanges(resources).then((_) {
           resources.first.project.refresh();
