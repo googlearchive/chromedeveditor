@@ -531,7 +531,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // For each file, request the SCM status asynchronously.
         return Future.forEach(resources, (Resource resource) {
           return Status.updateAndGetStatus(store, resource.entry).then((status) {
-            _updateStatusForAncestors(store, resource.parent);
+            _updateStatusForAncestors(store, resource);
             return new Future.value();
           });
         });
@@ -542,9 +542,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   void _updateStatusForAncestors(ObjectStore store, Resource resource) {
-    if (resource == null || resource.entry == null) {
-      return;
-    }
     _setStatus(resource, Status.getStatusForEntry(store, resource.entry));
     if (resource.entry.fullPath != store.root.fullPath) {
       _updateStatusForAncestors(store, resource.parent);
