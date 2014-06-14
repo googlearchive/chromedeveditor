@@ -605,7 +605,7 @@ class FilesController implements TreeViewDelegate {
     return templateClone.querySelector('.fileview-separator');
   }
 
-  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 25;
+  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 17;
 
   // Cache management for sorted list of resources.
 
