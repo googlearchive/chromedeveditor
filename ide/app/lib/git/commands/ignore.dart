@@ -6,7 +6,8 @@ library git.commands.ignore;
 
 /**
  * Implements pattern checking on files specified in .gitignore files.
- * // TODO(grv): Add parsing of .gitignore files and pattern checking.
+ * TODO(grv): Add parsing of .gitignore files and pattern checking. The
+ * objectstore may instantiate it with the paterns in the implementation.
  */
 class GitIgnore {
 
