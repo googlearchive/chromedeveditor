@@ -30,6 +30,7 @@ import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
 import 'git/commands/fetch.dart';
+import 'git/commands/ignore.dart';
 import 'git/commands/index.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
@@ -526,7 +527,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
       if (project != null) {
         return Status.getFileStatuses(store).then((statuses) {
           resources.forEach((resource) {
-            _setStatus(resource, statuses[resource.entry.fullPath]);
+            // TODO(grv): This should be handled by git status.
+            if (!GitIgnore.ignore(resource.entry.fullPath)) {
+              _setStatus(resource, statuses[resource.entry.fullPath]);
+            }
           });
           return new Future.value();
         });
@@ -534,7 +538,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // For each file, request the SCM status asynchronously.
         return Future.forEach(resources, (Resource resource) {
           return Status.updateAndGetStatus(store, resource.entry).then((status) {
-            _updateStatusForAncestors(store, resource.parent);
+            _updateStatusForAncestors(store, resource);
             return new Future.value();
           });
         });
@@ -545,9 +549,6 @@ class GitScmProjectOperations extends ScmProjectOperations {
   }
 
   void _updateStatusForAncestors(ObjectStore store, Resource resource) {
-    if (resource == null || resource.entry == null) {
-      return;
-    }
     _setStatus(resource, Status.getStatusForEntry(store, resource.entry));
     if (resource.entry.fullPath != store.root.fullPath) {
       _updateStatusForAncestors(store, resource.parent);
