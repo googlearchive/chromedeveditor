@@ -41,7 +41,6 @@ class MobileDeploy {
   final Container appContainer;
   final PreferenceStore _prefs;
 
-  AndroidDevice _device;
   List<DeviceInfo> _knownDevices = [];
 
   MobileDeploy(this.appContainer, this._prefs) {
@@ -152,80 +151,10 @@ class MobileDeploy {
 
       if (lines.first.contains('200')) {
         monitor.worked(2);
-        return _sendLaunch(target, appContainer.project.name);
+        return _getLaunchRequest(target, appContainer.project.name);
       } else {
         return new Future.error(lines.first);
       }
-    });
-  }
-
-  /**
-   * Launch an app with appId on given target address.  If target is
-   * null, will be sent to USB device.
-   */
-  Future _sendLaunch(String appId, [String target = null]) {
-    List<int> httpRequest = [];
-    // Build the HTTP request headers.
-    String header =
-        'POST /launch HTTP/1.1\r\n'
-        'User-Agent: Spark IDE\r\n';
-    String body = "appId=$appId";
-
-    httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
-    httpRequest.addAll(body.codeUnits);
-
-    return _sendRequest(httpRequest, target);
-  }
-
-  // Safe to call multiple times. It will open the device if it has not been opened yet.
-  Future<AndroidDevice> _fetchAndroidDevice() {
-    if (_device != null) return new Future.value(_device);
-
-    _device = new AndroidDevice(_prefs);
-
-    Future doOpen(int index) {
-      if (_knownDevices.length == 0) {
-        return new Future.error('No known mobile devices.');
-      }
-      if (index >= _knownDevices.length) {
-        return new Future.error('No known mobile device connected.\n'
-            'Please ensure that you have a mobile device connected.');
-      }
-
-      DeviceInfo di = _knownDevices[index];
-      return _device.open(di.vendorId, di.productId).catchError((e) {
-        if ((e == 'no-device') || (e == 'no-connection')) {
-          // No matching device found, try again.
-          return doOpen(index + 1);
-        } else {
-          return new Future.error('Connection to the Android device failed.\n'
-              'Please check whether "Developer Options" and "USB debugging" is enabled on your device.\n'
-              'Enable Developer Options by going in Settings > System > About phone and press 7 times on Build number.\n'
-              '"Developer options" should now appear in Settings > System > Developer options. '
-              'You can now enable "USB debugging" in that menu.');
-        }
-      });
-    }
-
-    return doOpen(0).then((_) {
-      return _device.connect(new SystemIdentity()).catchError((e) {
-        _device.dispose();
-        throw e;
-      });
-    }).then((_) => _device);
-  }
-
-  Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
-    // Start ADT on the device.
-    //return client.startActivity(AdbApplication.CHROME_ADT);
-
-    // Setup port forwarding to 2424 on the device.
-    return client.forwardTcp(2424, 2424).then((_) {
-      // TODO: a SocketException, code == -100 here often means that the App Dev
-      // Tool is not running on the device.
-      // Push the app binary to port 2424.
-      return _sendHttpPush('127.0.0.1', monitor);
     });
   }
 
@@ -252,18 +181,100 @@ class MobileDeploy {
     }
   }
 
+  /**
+   * Launch an app with appId on given target address.  If target is
+   * null, will be sent to USB device.
+   */
+  List<int> _getLaunchRequest(String appId, [String target = null]) {
+    List<int> httpRequest = [];
+    // Build the HTTP request headers.
+    String header =
+        'POST /launch HTTP/1.1\r\n'
+        'User-Agent: Spark IDE\r\n';
+    String body = "appId=$appId";
+
+    httpRequest.addAll(header.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+    httpRequest.addAll(body.codeUnits);
+
+    return httpRequest;
+  }
+
+  // Safe to call multiple times. It will open the device if it has not been opened yet.
+  Future<AndroidDevice> _fetchAndroidDevice() {
+    AndroidDevice device = new AndroidDevice(_prefs);
+
+    Future doOpen(int index) {
+      if (_knownDevices.length == 0) {
+        return new Future.error('No known mobile devices.');
+      }
+      if (index >= _knownDevices.length) {
+        return new Future.error('No known mobile device connected.\n'
+            'Please ensure that you have a mobile device connected.');
+      }
+
+      DeviceInfo di = _knownDevices[index];
+      return device.open(di.vendorId, di.productId).catchError((e) {
+        if ((e == 'no-device') || (e == 'no-connection')) {
+          // No matching device found, try again.
+          return doOpen(index + 1);
+        } else {
+          return new Future.error('Connection to the Android device failed.\n'
+              'Please check whether "Developer Options" and "USB debugging" is enabled on your device.\n'
+              'Enable Developer Options by going in Settings > System > About phone and press 7 times on Build number.\n'
+              '"Developer options" should now appear in Settings > System > Developer options. '
+              'You can now enable "USB debugging" in that menu.');
+        }
+      });
+    }
+
+    return doOpen(0).then((_) {
+      return device.connect(new SystemIdentity()).catchError((e) {
+        device.dispose();
+        throw e;
+      });
+    }).then((_) => device);
+  }
+
+  Future _pushToAdbServer(AdbClientTcp client, ProgressMonitor monitor) {
+    // Start ADT on the device.
+    //return client.startActivity(AdbApplication.CHROME_ADT);
+
+    // Setup port forwarding to 2424 on the device.
+    return client.forwardTcp(2424, 2424).then((_) {
+      // TODO: a SocketException, code == -100 here often means that the App Dev
+      // Tool is not running on the device.
+      // Push the app binary to port 2424.
+      return _sendHttpPush('127.0.0.1', monitor);
+    });
+  }
+
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;
+    AndroidDevice device;
+    bool canceled = false;
 
-    // Build the archive.
-    return archiveContainer(appContainer, true).then((List<int> archivedData) {
+    // Get the device
+    return _fetchAndroidDevice().then((deviceResult) {
+      device = deviceResult;
+    }).then((_) {
+      // Build the archive.
+      return archiveContainer(appContainer, true);
+    }).then((List<int> archivedData) {
+      // Send the request for pushing the archive
       monitor.worked(3);
       httpRequest = _buildHttpRequest('localhost', archivedData);
       monitor.worked(4);
 
       // Send this payload to the USB code.
-      return _sendRequest(httpRequest);
+      if (canceled) return null;
+      return device.sendHttpRequest(httpRequest, 2424).timeout(
+          new Duration(minutes: 5), onTimeout: () {
+            return new Future.error(
+                'Push timed out: Total time exceeds 5 minutes');
+          });
     }).then((msg) {
+      if (canceled) return null;
       monitor.worked(3);
       String resp = new String.fromCharCodes(msg);
       List<String> lines = resp.split('\r\n');
@@ -275,8 +286,43 @@ class MobileDeploy {
         return new Future.error(
             '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
       } else {
-        return _sendLaunch(appContainer.project.name).then((_) => body);
+        httpRequest = _getLaunchRequest(appContainer.project.name);
+        return device.sendHttpRequest(httpRequest, 2424).timeout(
+            new Duration(minutes: 5), onTimeout: () {
+              canceled = true;
+              return new Future.error(
+                  'Push timed out: Total time exceeds 5 minutes');
+            });
+
       }
+    }).then((_) {
+      return device.sendHttpRequest(httpRequest, 2424).timeout(
+          new Duration(minutes: 5), onTimeout: () {
+            return new Future.error(
+                'Push timed out: Total time exceeds 5 minutes');
+          });
+    }).catchError((_) {
+      canceled = true;
+    }).whenComplete(() {
+      device.dispose();
     });
+  }
+}
+
+class _DeployTarget {
+  AndroidDevice device;
+  TcpClient client;
+
+  Future sendRequest(List<int> httpRequest, [String target]) {
+    if (device != null) {
+      return device.sendHttpRequest(httpRequest, 2424).timeout(
+          new Duration(minutes: 5), onTimeout: () {
+            return new Future.error(
+                'Push timed out: Total time exceeds 5 minutes');
+          });
+    } else {
+        client.write(httpRequest);
+        return client.stream.timeout(new Duration(minutes: 1)).first;
+    }
   }
 }
