@@ -204,6 +204,7 @@ class Outline {
     if (_outlineItemsByOffset != null) {
       int count = 0;
       List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
+      if (outlineOffsets.isEmpty) return null;
       int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;
 
       // Finds the last outline item that *doesn't* satisfies this:
