@@ -392,8 +392,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
-      return Branch.branch(options, sourceBranchName)
-          .catchError((e) => throw SparkException.fromException(e));
+      return Branch.branch(options, sourceBranchName).catchError(
+          (e) => throw SparkException.fromException(e));
     });
   }
 
