@@ -68,7 +68,6 @@ class Index {
   }
 
   void updateIndexForFile(FileStatus status) {
-
     FileStatus oldStatus = _statusIdx[status.path];
 
     if (oldStatus != null) {
@@ -94,6 +93,8 @@ class Index {
             }
             break;
           case FileStatusType.UNTRACKED:
+            status.type = FileStatusType.UNTRACKED;
+            break;
           default:
             throw new GitException(GitErrorConstants.GIT_FILE_STATUS_TYPE_UNKNOWN,
                 "Unknown file status type: ${oldStatus.type}");
@@ -102,6 +103,7 @@ class Index {
         status.type = oldStatus.type;
       }
     }
+
     _statusIdx[status.path] = status;
     _scheduleWriteIndex();
   }
