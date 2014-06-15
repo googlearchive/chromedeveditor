@@ -838,22 +838,46 @@ class Folder extends Container {
   }
 
   /**
+   * Lists the files contained in [entry] recursively into a
+   * path => chrome.Entry [fileMap].
+   */
+  Future _listFilesRecursive(chrome.DirectoryEntry entry,
+                             Map<String, chrome.Entry> fileMap) {
+    return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
+      return Future.forEach(entries, (chrome.Entry entry) {
+        fileMap[entry.fullPath] = entry;
+        if (entry.isDirectory) {
+          return _listFilesRecursive(entry, fileMap);
+        }
+      });
+    });
+  }
+
+  /**
    * This method will copy a directory entry that might be from an other
    * filesystem to the current folder.
    */
   Future importDirectoryEntry(chrome.DirectoryEntry entry) {
+    Map<String, chrome.Entry> importFileMap = {};
+    return _listFilesRecursive(entry, importFileMap).then((_)
+        => _importDirectoryEntry(entry, importFileMap));
+  }
 
-    if (_dirEntry.fullPath.startsWith(entry.fullPath)) {
-      // TODO(grv): Wrap into a spark exception.
-      return new Future.error('Cannot import a parent folder.');
-    }
-
+  Future _importDirectoryEntry(chrome.DirectoryEntry entry,
+                               final Map<String, chrome.Entry> importFileMap) {
     return createNewFolder(entry.name).then((Folder folder) {
       return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
         List<Future> futures = [];
         for(chrome.Entry child in entries) {
+          if (!importFileMap.containsKey(child.fullPath)) {
+            // We enumerated all the files of the import folder into the
+            // importFileMap. A file path not existing in the map measn it is
+            // an attempt of recursive copy of a folder. This will happen only
+            // when the folder to be imported is a parent of the project folder.
+            continue;
+          }
           if (child is chrome.DirectoryEntry) {
-            futures.add(folder.importDirectoryEntry(child));
+            futures.add(folder._importDirectoryEntry(child, importFileMap));
           } else if (child is chrome.ChromeFileEntry) {
             futures.add(folder.importFileEntry(child));
           }
