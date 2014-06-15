@@ -4,6 +4,8 @@
 
 library spark_widgets.toolbar;
 
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -16,6 +18,7 @@ class SparkToolbar extends SparkWidget {
   // TODO(ussuri): Default values don't work on the CSS: force client to specify.
   @published String justify;
   @published String spacing;
+  @published bool collapseEmpty = false;
 
   SparkToolbar.created(): super.created();
 
@@ -24,6 +27,16 @@ class SparkToolbar extends SparkWidget {
     assert(horizontal || vertical);
     assert(horizontal != vertical);
     assert(['left', 'right', 'center', 'spaced', 'edges'].contains(justify));
-    assert(['small', 'medium', 'large'].contains(spacing));
+    assert(['small', 'medium', 'large', 'none'].contains(spacing));
+
+    if (collapseEmpty) {
+      final Iterable<Element> content =
+          SparkWidget.inlineNestedContentNodes($['content']);
+      final bool somethingToShow =
+          content.any((e) => e.getComputedStyle().display != 'none');
+      if (!somethingToShow) {
+        style.display = 'none';
+      }
+    }
   }
 }

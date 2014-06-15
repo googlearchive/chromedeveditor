@@ -26,6 +26,7 @@ import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
 import 'workspace.dart';
+import 'workspace_utils.dart';
 // TODO(devoncarew): We don't want a dependency from here to spark.dart...
 import '../spark.dart';
 
@@ -79,7 +80,7 @@ class LaunchManager {
         new WebAppRemoteLaunchHandler(localWebHandler, _notifier));
 
     launchParticipants.add(new PubLaunchParticipant(_pubManager, _notifier));
-    launchParticipants.add(new DartChromeAppParticipant(_services));
+    launchParticipants.add(new DartChromeAppParticipant(_services, _notifier));
   }
 
   /**
@@ -657,9 +658,15 @@ class PubLaunchParticipant extends LaunchParticipant {
  * code to JavaScript on launch.
  */
 class DartChromeAppParticipant extends LaunchParticipant {
-  final Services _services;
+  static final RegExp _regex1 = new RegExp(
+      r'''<script\s+src=["'](\w+\.dart)["']\s+type=["']application/dart["']\s*>\s*</script>''');
+  static final RegExp _regex2 = new RegExp(
+      r'''<script\s+type=["']application/dart["']\s+src=["'](\w+\.dart)["']\s*>\s*</script>''');
 
-  DartChromeAppParticipant(this._services);
+  final Services _services;
+  final Notifier _notifier;
+
+  DartChromeAppParticipant(this._services, this._notifier);
 
   String get name => null;
 
@@ -686,16 +693,67 @@ class DartChromeAppParticipant extends LaunchParticipant {
 
     // Or, find all html files in the current directory. Look through them for
     // likely dart scripts to compile.
+    Container container = application.primaryResource;
 
-    print('compiling... ${application.primaryResource}');
+    Iterable<File> htmlFiles = container.getChildren().where(
+        (child) => child.isFile && isHtmlFilename(child.name));
 
-    return new Future.value(true);
+    Set<File> dartFiles = new Set();
+    File file;
+    CompileResult result;
+
+    return Future.forEach(htmlFiles, (file) {
+      return _locateDartEntryPoints(file, dartFiles);
+    }).then((_) {
+      if (dartFiles.isEmpty) return true;
+
+      // TODO: If there is more then 1, what do we do?
+      CompilerService compiler = _services.getService("compiler");
+      file = dartFiles.first;
+
+      // TODO: We'll want feedback when compiling.
+      print('Compiling ${file.path}...');
+
+      return compiler.compileFile(file, csp: true);
+    }).then((CompileResult r) {
+      result = r;
+      if (!result.getSuccess()) {
+        // Show an error message.
+        _notifier.showMessage('Error Compiling ${file.name}', '${result}');
+
+        // And cancel the deploy.
+        return false;
+      }
+
+      String newFileName = '${file.name}.precompiled.js';
+      return getCreateFile(file.parent, newFileName);
+    }).then((File newFile) {
+      return newFile.setContents(result.output);
+    }).then((_) {
+      return true;
+    });
+  }
+
+  Future _locateDartEntryPoints(File htmlFile, Set<File> dartFiles) {
+    return htmlFile.getContents().then((contents) {
+      Iterable<String> paths = _getDartAppNames(contents);
+      Iterable<File> files = paths
+          .map((path) => resolvePath(htmlFile, path))
+          .where((f) => f != null);
+      dartFiles.addAll(files);
+    });
   }
 
   Iterable<String> _getDartAppNames(String htmlContent) {
-    // TODO: implement
+    List<String> results = [];
 
-    return [];
+    Iterable<Match> matches = _regex1.allMatches(htmlContent);
+    results.addAll(matches.map((match) => match.group(1)));
+
+    matches = _regex2.allMatches(htmlContent);
+    results.addAll(matches.map((match) => match.group(1)));
+
+    return results;
   }
 }
 

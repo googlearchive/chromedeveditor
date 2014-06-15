@@ -7,7 +7,6 @@ library spark.ace_test;
 import 'dart:async';
 import 'dart:html';
 
-import 'package:ace/ace.dart' as ace;
 import 'package:unittest/unittest.dart';
 
 import '../lib/ace.dart';
@@ -45,7 +44,7 @@ class MockAceManager implements AceManager {
   void setSelectionAnchor(int row, int column) {}
   void selectTo(int row, int column) {}
 
-  ace.EditSession get currentSession => null;
+  EditSession get currentSession => null;
   void focus() { }
   void resize() { }
   void setTheme(String theme) { }
@@ -93,7 +92,7 @@ class MockAceEditor implements TextEditor {
 
   Future save() => new Future.value();
 
-  void setSession(ace.EditSession value) { }
+  void setSession(EditSession value) { }
 
   void fileContentsChanged() { }
 

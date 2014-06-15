@@ -1382,7 +1382,8 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       message = "Do you really want to delete ${resources.length} files?\nThis will permanently delete the files from disk and cannot be undone.";
     }
 
-    spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
+    spark.askUserOkCancel(message, okButtonLabel: 'Delete', title: 'Delete')
+        .then((bool val) {
       if (val) {
         spark.workspace.pauseResourceEvents();
         Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
@@ -1668,6 +1669,14 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 
   void _invoke([context]) {
+    if (!enabled) {
+      spark.showErrorMessage(
+          'Unable to Deploy',
+          'Unable to deploy the current selection; please select an '
+          'application to deploy.');
+      return;
+    }
+
     ws.Resource resource;
 
     if (context == null) {
@@ -2133,15 +2142,12 @@ class FolderOpenAction extends SparkActionWithStatusDialog {
   }
 }
 
-/**
- * TODO(devoncarew): This needs to be refactored to not inherit from SparkAction.
- */
 class DeployToMobileAction extends SparkActionWithProgressDialog {
   static DeployToMobileAction _instance;
 
   static void _init(Spark spark) {
     _instance = new DeployToMobileAction(
-      spark, spark.getDialogElement('#mobileDeployDialog'));
+        spark, spark.getDialogElement('#mobileDeployDialog'));
   }
   /**
    * Open a deploy to mobile dialog with the given resource.
@@ -2150,18 +2156,21 @@ class DeployToMobileAction extends SparkActionWithProgressDialog {
     _instance._invoke([resource]);
   }
 
+  CheckboxInputElement _ipElement;
+  CheckboxInputElement _adbElement;
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
 
   DeployToMobileAction(Spark spark, Element dialog)
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
+    _ipElement = getElement("#ip");
+    _adbElement = getElement("#adb");
     _pushUrlElement = _triggerOnReturn("#pushUrl");
 
-    // When the IP address field is selected, check the `IP` checkbox.
-    getElement('#pushUrl').onFocus.listen((e) {
-      (getElement('#ip') as InputElement).checked = true;
-    });
+    _ipElement.onChange.listen(_enableInputs);
+    _adbElement.onChange.listen(_enableInputs);
+    _enableInputs();
   }
 
   Element get _deployDeviceMessage => getElement('#deployCheckDeviceMessage');
@@ -2192,6 +2201,10 @@ class DeployToMobileAction extends SparkActionWithProgressDialog {
     }
   }
 
+  void _enableInputs([_]) {
+    _pushUrlElement.disabled = !_ipElement.checked;
+  }
+
   void _toggleProgressVisible(bool visible) {
     super._toggleProgressVisible(visible);
     _deployDeviceMessage.style.visibility = visible ? 'visible' : 'hidden';
@@ -2201,6 +2214,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog {
     _setProgressMessage("Deploying…");
     _toggleProgressVisible(true);
     _deployButton.disabled = true;
+    // TODO(ussuri): BUG #2252.
     _deployButton.deliverChanges();
 
     _monitor = new ProgressMonitorImpl(this);
@@ -3002,7 +3016,8 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
     text = 'Revert changes for ${text}?';
 
     // Show a yes/no dialog.
-    spark.askUserOkCancel(text, okButtonLabel: 'Revert').then((bool val) {
+    spark.askUserOkCancel(text, okButtonLabel: 'Revert', title: 'Revert Changes')
+        .then((bool val) {
       if (val) {
         operations.revertChanges(resources).then((_) {
           resources.first.project.refresh();
@@ -3323,22 +3338,13 @@ class CompileDartJob extends Job {
         throw result;
       }
 
-      return getCreateFile(file.parent, '${file.name}.precompiled.js').then(
-          (ws.File file) {
+      String newFileName = '${file.name}.precompiled.js';
+      return ws_utils.getCreateFile(file.parent, newFileName).then((ws.File file) {
         return file.setContents(result.output);
       });
     }).catchError((e) {
       spark.showErrorMessage('Error Compiling ${file.name}', '${e}');
     });
-  }
-
-  Future<ws.File> getCreateFile(ws.Folder parent, String name) {
-    ws.File file = parent.getChild(name);
-    if (file == null) {
-      return parent.createNewFile(name);
-    } else {
-      return new Future.value(file);
-    }
   }
 }
 
@@ -3385,6 +3391,10 @@ class AboutSparkAction extends SparkActionWithDialog {
   void _invoke([Object context]) {
     _checkbox.checked = _isTrackingPermitted;
     _show();
+  }
+
+  void _commit() {
+    _hide();
   }
 
   InputElement get _checkbox => getElement('#analyticsCheck');

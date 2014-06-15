@@ -185,15 +185,12 @@ spark-dialog {
   display: none;
 }
 
-/* Deploy to mobile dialog */
-#mobileDeployDialog .modal-body {
-  padding-top: 10px;
-  padding-bottom: 0;
+#pushUrl {
+  width: 20em;
 }
 
-#pushUrl {
-  margin-left: 17px;
-  width: 20em;
+.radio-button-dependency {
+  margin: 10px 0 0 20px;
 }
 
 .input-label {
@@ -210,10 +207,6 @@ spark-dialog {
 
 .input-label input {
   flex: 1 1 auto;
-}
-
-#webStorePublishDialog label {
-  margin-left: 5px;
 }
 
 [selectableTxt] {
@@ -243,4 +236,9 @@ label {
 
 :host(.mac) #mobileDeployDialog #adb, :host(.mac) #mobileDeployDialog #ip {
   top: -1px;
+
+/* These two are special (secondary) */
+label[for="analyticsCheck"],
+label[for="stripWhitespace"] {
+  font-weight: 400;
 }

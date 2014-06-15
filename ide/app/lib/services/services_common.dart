@@ -177,6 +177,16 @@ class CompileResult {
 
   /// This is true if none of the reported problems were errors.
   bool getSuccess() => !_problems.any((p) => p.isError);
+
+  String toString() {
+    if (getSuccess()) {
+      return 'compile successful';
+    } else if (problems.length == 1) {
+      return problems.first.toString();
+    } else {
+      return '${problems}';
+    }
+  }
 }
 
 /**

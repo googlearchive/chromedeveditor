@@ -13,6 +13,8 @@ body {
   -webkit-font-smoothing: auto;
 }
 
+/* TODO(ussuri): Replace scrollbar and *-align-box rules with new Spark widgets. */
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -42,10 +44,45 @@ body {
   background-color: #aaa;
 }
 
+.top-align-box,
+.vert-align-box,
+.horiz-align-box {
+  display:flex;
+}
+
+.vert-align-box {
+  flex-flow: row;
+  align-items: center;
+}
+
+.horiz-align-box {
+  flex-flow: column;
+  align-items: center;
+}
+
+.top-align-box {
+  flex-flow: row;
+  align-items: flex-start;
+}
+
+.vert-align-box > *,
+.top-align-box > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.horiz-align-box > * {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 /* Uncomment these 2 rules, or selectively apply the .debug class or debug
  * attribute, to facilitate debuging of elements.
  */
 /*
+* {
+  outline: blue solid 1px !important;
+}
 :host > * {
   outline: red dashed 1px !important;
 }

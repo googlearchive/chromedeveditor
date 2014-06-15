@@ -830,10 +830,9 @@ class Folder extends Container {
    */
   Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
     return createNewFile(sourceEntry.name).then((File file) {
-      sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
-        return file.setBytes(buffer.getBytes());
+      return sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
+        return file.setBytes(buffer.getBytes()).then((_) => file);
       });
-      return file;
     });
   }
 

@@ -145,6 +145,9 @@ Future<String> getAppContents(String path) {
  */
 bool isImageFilename(String filename) => _imageFileTypes.hasMatch(filename);
 
+bool isHtmlFilename(String filename) =>
+    filename.endsWith('.htm') || filename.endsWith('.html');
+
 /**
  * Returns true if the given [filename] matches html/css/xml file types.
  */
