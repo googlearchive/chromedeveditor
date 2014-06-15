@@ -24,6 +24,10 @@ body {
   min-height: 48px;
 }
 
+::-webkit-scrollbar-thumb {
+  min-height: 48px;
+}
+
 ::-webkit-scrollbar-track,
 .scrollbar-light::-webkit-scrollbar-track {
   background-color: #eee;
@@ -34,6 +38,11 @@ body {
   background-color: #aaa;
 }
 
+::-webkit-scrollbar-thumb:hover,
+.scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background-color: #666;
+}
+
 .scrollbar-dark::-webkit-scrollbar-track,
 .ace_scrollbar::-webkit-scrollbar-track {
   background-color: #666;
@@ -42,6 +51,11 @@ body {
 .scrollbar-dark::-webkit-scrollbar-thumb,
 .ace_scrollbar::-webkit-scrollbar-thumb {
   background-color: #aaa;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover,
+.ace_scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #ddd;
 }
 
 .top-align-box,
