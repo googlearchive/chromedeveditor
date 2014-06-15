@@ -501,7 +501,7 @@ class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
   }
 
   Future launch(Application application, LaunchTarget launchTarget) {
-    DeployToMobileAction.deploy(application.primaryResource);
+    DeployToMobileDialog.deploy(application.primaryResource);
 
     return new Future.value();
   }

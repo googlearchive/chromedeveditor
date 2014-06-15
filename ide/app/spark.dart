@@ -468,7 +468,7 @@ abstract class Spark
 
     actionManager.registerKeyListener();
 
-    DeployToMobileAction._init(this);
+    DeployToMobileDialog._init(this);
   }
 
   void initToolbar() {
@@ -2142,11 +2142,11 @@ class FolderOpenAction extends SparkActionWithStatusDialog {
   }
 }
 
-class DeployToMobileAction extends SparkActionWithProgressDialog {
-  static DeployToMobileAction _instance;
+class DeployToMobileDialog extends SparkActionWithProgressDialog {
+  static DeployToMobileDialog _instance;
 
   static void _init(Spark spark) {
-    _instance = new DeployToMobileAction(
+    _instance = new DeployToMobileDialog(
         spark, spark.getDialogElement('#mobileDeployDialog'));
   }
   /**
@@ -2162,7 +2162,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog {
   ws.Container deployContainer;
   ProgressMonitor _monitor;
 
-  DeployToMobileAction(Spark spark, Element dialog)
+  DeployToMobileDialog(Spark spark, Element dialog)
       : super(spark, "deploy-app-old", "Deploy to Mobile", dialog) {
     _ipElement = getElement("#ip");
     _adbElement = getElement("#adb");

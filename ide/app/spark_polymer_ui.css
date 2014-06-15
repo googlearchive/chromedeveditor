@@ -229,14 +229,6 @@ label {
   -webkit-user-select: text;
 }
 
-#mobileDeployDialog #adb, #mobileDeployDialog #ip {
-  position: relative;
-  top: 2px;
-}
-
-:host(.mac) #mobileDeployDialog #adb, :host(.mac) #mobileDeployDialog #ip {
-  top: -1px;
-
 /* These two are special (secondary) */
 label[for="analyticsCheck"],
 label[for="stripWhitespace"] {
