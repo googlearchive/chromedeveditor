@@ -67,6 +67,8 @@ class SparkDialog extends SparkWidget {
           SparkWidget.inlineNestedContentNodes($['bodyContent']));
       _updateFormValidity();
       _modal.toggle();
+
+      focus();
     }
   }
 
