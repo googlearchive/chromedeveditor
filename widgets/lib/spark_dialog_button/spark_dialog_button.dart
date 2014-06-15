@@ -69,7 +69,5 @@ class SparkDialogButton extends SparkWidget {
    * Listen for click events on this button. This is overridden to ensure that
    * the button does not send click events when disabled.
    */
-  Stream<MouseEvent> get onClick {
-    return super.onClick.where((event) => !disabled);
-  }
+  Stream<MouseEvent> get onClick => super.onClick.where((_) => !disabled);
 }
