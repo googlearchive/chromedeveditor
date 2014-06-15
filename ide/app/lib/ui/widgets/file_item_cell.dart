@@ -30,6 +30,10 @@ class FileItemCell implements ListViewCell {
     fileNameElement.innerHtml = resource.name;
     acceptDrop = false;
     updateFileStatus();
+
+    // Update the node when we're inserted into the tree. Some of the state we
+    // modify is contained in parent nodes (the file status).
+    element.on['DOMNodeInserted'].listen((e) => updateFileStatus());
   }
 
   Element get element => _element;
@@ -44,7 +48,10 @@ class FileItemCell implements ListViewCell {
 
   Element get fileInfoElement => _element.querySelector('.infoField');
 
-  Element get fileStatusElement => _element.querySelector('.fileStatus');
+  Element get fileStatusElement {
+    if (_element.parent == null) return null;
+    return _element.parent.parent.querySelector('.treeviewcell-status');
+  }
 
   Element get gitStatusElement => _element.querySelector('.gitStatus');
 
@@ -54,6 +61,8 @@ class FileItemCell implements ListViewCell {
 
   void updateFileStatus() {
     Element element = fileStatusElement;
+    if (element == null) return;
+
     element.classes.removeAll(['warning', 'error']);
 
     int severity = resource.findMaxProblemSeverity();
@@ -62,6 +71,10 @@ class FileItemCell implements ListViewCell {
       element.classes.add('error');
     } else if (severity == Marker.SEVERITY_WARNING) {
       element.classes.add('warning');
+    }
+
+    if (resource is Project) {
+      element.classes.toggle('project', true);
     }
   }
 
