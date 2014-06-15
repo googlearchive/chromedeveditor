@@ -2847,7 +2847,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
       gitOperations.getPendingCommits(_gitUsername, _gitPassword).then(
           (List<CommitInfo> commits) {
         if (commits.isEmpty) {
-          spark.showErrorMessage('Push failed', 'No commits to push');
+          spark.showErrorMessage('Push failed', 'No commits to push.');
           return;
         }
         // Fill commits.
@@ -3153,8 +3153,9 @@ class _GitBranchJob extends Job {
         spark.showSuccessMessage('Created ${_branchName}');
       });
     }).catchError((e) {
+      e = SparkException.fromException(e);
       spark.showErrorMessage(
-          'Error creating branch ${_branchName}', e.toString());
+          'Error creating branch ${_branchName}', e.message);
     });
   }
 }
