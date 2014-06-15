@@ -84,6 +84,8 @@ class SparkDialog extends SparkWidget {
     _progress.classes.toggle('hidden', !_activityVisible);
   }
 
+  bool isDialogValid() => _validatedFields.every((f) => f.isValid);
+
   void _addValidatableFields(Iterable<Node> candidates) {
     _validatedFields.clear();
     _addValidatableFieldsImpl(candidates);

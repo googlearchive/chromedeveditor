@@ -4,6 +4,9 @@
 
 library spark_widgets.spark_dialog_button;
 
+import 'dart:async';
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -51,5 +54,14 @@ class SparkDialogButton extends SparkWidget {
       // TODO(ussuri): BUG #2252
       deliverChanges();
     }
+  }
+
+  // Overridden to ensure the button does not send click events when disabled.
+  Stream<MouseEvent> get onClick {
+    return super.onClick.where((MouseEvent e) {
+      e..stopPropagation()..preventDefault();
+
+      return !disabled;
+    });
   }
 }

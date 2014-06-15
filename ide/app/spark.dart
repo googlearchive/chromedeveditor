@@ -1191,20 +1191,17 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
+
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
-      submitBtn.onClick.listen((Event e) {
-        e..stopPropagation()..preventDefault();
-        _commit();
-      });
+      submitBtn.onClick.listen((_) => _commit());
     }
+
     final Element cancelBtn = _dialog.getElement("[cancel]");
     if (cancelBtn != null) {
-      cancelBtn.onClick.listen((Event e) {
-        e..stopPropagation()..preventDefault();
-        _cancel();
-      });
+      cancelBtn.onClick.listen((_) => _cancel());
     }
+
     final Element closingXBtn = _dialog.getShadowDomElement("#closingX");
     if (closingXBtn != null) {
       closingXBtn.onClick.listen((Event e) {
@@ -1219,21 +1216,24 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   Element getElement(String selectors) => _dialog.getElement(selectors);
 
-  List<Element> getElements(String selectors) =>
-      _dialog.getElements(selectors);
+  List<Element> getElements(String selectors) => _dialog.getElements(selectors);
 
   Element _triggerOnReturn(String selectors, [bool hideDialog = true]) {
     Element element = _dialog.getElement(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
+        // We do not submit if the dialog is invalid.
+        if (!_canSubmit()) return;
+
         _commit();
-        if (hideDialog) {
-          _dialog.hide();
-        }
+
+        if (hideDialog) _dialog.hide();
       }
     });
     return element;
   }
+
+  bool _canSubmit() => _dialog.dialog.isDialogValid();
 
   void _show() => _dialog.show();
   void _hide() => _dialog.hide();
