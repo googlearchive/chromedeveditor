@@ -18,7 +18,6 @@ import 'package:logging/logging.dart';
 import 'builder.dart';
 import 'enum.dart';
 import 'jobs.dart';
-import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub_properties.dart';
 import 'preferences.dart';
 import 'utils.dart';
@@ -831,10 +830,9 @@ class Folder extends Container {
    */
   Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
     return createNewFile(sourceEntry.name).then((File file) {
-      sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
-        return file.setBytes(buffer.getBytes());
+      return sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
+        return file.setBytes(buffer.getBytes()).then((_) => file);
       });
-      return file;
     });
   }
 
@@ -889,7 +887,7 @@ class Folder extends Container {
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
-    if ((name == 'build' || name == 'cache' || name == bowerProperties.packagesDirName) &&
+    if ((name == 'build' || name == 'cache') &&
         parent is Project) {
       return true;
     } else {

@@ -21,29 +21,40 @@ class SparkException implements Exception {
   SparkException(this.message, [this.errorCode, this.canIgnore]);
 
   static SparkException fromException(Exception e) {
-    if (e is GitException) {
+    if (e is SparkException) {
+      return e;
+    } else if (e is GitException) {
       return _fromGitException(e);
     } else if (e != null) {
-      throw new SparkException(e.toString());
+      return new SparkException(e.toString());
     } else {
-      throw new SparkException("Unknown error.");
+      return new SparkException("Unknown error.");
     }
   }
 
   static SparkException _fromGitException(GitException e) {
-    if (e.errorCode == GitErrorConstants.GIT_AUTH_REQUIRED) {
-      return new SparkException(e.toString(),
-            SparkErrorConstants.AUTH_REQUIRED);
-    } else if (e.errorCode == GitErrorConstants.GIT_CLONE_CANCEL) {
-      return new SparkException(e.toString(),
-        SparkErrorConstants.GIT_CLONE_CANCEL, true);
-    } else if (e.errorCode
-        == GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED)  {
-      return new SparkException(e.toString(),
-        SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
-    } else {
-      throw new SparkException(e.toString());
+    switch (e.errorCode) {
+      case GitErrorConstants.GIT_AUTH_REQUIRED:
+        return new SparkException(e.toString(), SparkErrorConstants.AUTH_REQUIRED);
+
+      case GitErrorConstants.GIT_HTTP_FORBIDDEN_ERROR:
+        return new SparkException(
+            e.toString(), SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR);
+
+      case GitErrorConstants.GIT_CLONE_CANCEL:
+        return new SparkException(
+            e.toString(), SparkErrorConstants.GIT_CLONE_CANCEL, true);
+
+      case GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED:
+        return new SparkException(
+            SparkErrorMessages.GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG,
+            SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
+
+      case GitErrorConstants.GIT_PUSH_NON_FAST_FORWARD:
+        return new SparkException(SparkErrorMessages.GIT_PUSH_NON_FAST_FORWARD_MSG,
+            SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
     }
+    return new SparkException(e.toString());
   }
 
   String toString() => errorCode == null ?
@@ -61,4 +72,14 @@ class SparkErrorConstants {
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
+  static final String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
+  static final String GIT_PUSH_NON_FAST_FORWARD
+      = "git.push_non_fast_forward";
+}
+
+class SparkErrorMessages {
+  static final String GIT_PUSH_NON_FAST_FORWARD_MSG
+      = 'Non fast-forward push is not yet supported.';
+  static final String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
+      = 'Repositories with sub modules are not yet supported.';
 }

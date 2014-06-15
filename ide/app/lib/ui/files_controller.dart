@@ -208,12 +208,12 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 40 : 24;
+    return resource is Project ? 40 : 25;
   }
 
   int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 15 : -1;
+    return resource is Project ? 13 : -1;
   }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
@@ -605,7 +605,7 @@ class FilesController implements TreeViewDelegate {
     return templateClone.querySelector('.fileview-separator');
   }
 
-  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 25;
+  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 17;
 
   // Cache management for sorted list of resources.
 
@@ -795,9 +795,8 @@ class FilesController implements TreeViewDelegate {
     if (scmOperations != null) {
       if (resource is Project) {
         String branchName = scmOperations.getBranchName();
-        final String repoIcon = '<span class="glyphicon glyphicon-random small"></span>';
         if (branchName == null) branchName = '';
-        fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
+        fileItemCell.setFileInfo('[${branchName}]');
       }
 
       ScmFileStatus status = scmOperations.getFileStatus(resource);

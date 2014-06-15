@@ -21,7 +21,7 @@
 
 #header {
   background: none;
-  padding: 24px 24px 8px;
+  padding: 24px 18px 8px 20px;
   fill-opacity: 1;
 }
 
@@ -79,15 +79,21 @@
   border-color: rgb(66, 128, 244);
 }
 
+::content .form-control[disabled] {
+  background-color: #eee;
+  cursor: default;
+}
+
 /*
  * Don't use :invalid because we need finer control.
  */
-::content .form-control:not(:focus).invalid {
+::content .form-control.visited:not([disabled]):not(:focus):invalid {
   border-color: red;
 }
 
-::content input[type=radio] {
-  margin-left: 2px;
+::content input[type=radio],
+::content input[type=checkbox] {
+  margin: 0 7px 0 0;
 }
 
 ::content input[type=text] {

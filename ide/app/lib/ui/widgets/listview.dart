@@ -161,10 +161,12 @@ class ListView {
       ListViewRow row = new ListViewRow();
       row.cell = _delegate.listViewCellForRow(this, i);
       row.container = new DivElement();
+      row.container.classes.add('listview-row');
       row.container.children.add(row.cell.element);
       row.container.style
-        ..width = '100%'
-        ..height = '${cellHeight}px'
+        ..left = '0'
+        ..right = '0'
+        ..height = '${cellHeight - 2}px'
         ..position = 'absolute'
         ..top = '${y}px';
       // Set events callback.

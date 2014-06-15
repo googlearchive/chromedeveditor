@@ -35,6 +35,7 @@ class SparkDialog extends SparkWidget {
   String _title = '';
   Element _titleElement;
   FormElement _body;
+  Element _progress;
   Iterable<SparkDialogButton> _buttons;
   List<_ValidatedField> _validatedFields = [];
 
@@ -50,27 +51,30 @@ class SparkDialog extends SparkWidget {
     _titleElement = $['title'];
     _body = $['body'];
     _buttons = SparkWidget.inlineNestedContentNodes($['buttonsContent']);
+    _progress = $['progress'];
 
     title = _title;
-    $['progress'].classes.toggle('hidden', !_activityVisible);
+    _progress.classes.toggle('hidden', !_activityVisible);
 
-    // TODO(ussuri): Use MutationObserver here to detect added/removed fields.
-    _addValidatableFields(
-        SparkWidget.inlineNestedContentNodes($['bodyContent']));
     // Listen to the form's global validity changes. Additional listeners are
-    // added below to text input fields.
+    // added below to input fields.
     _body.onChange.listen(_updateFormValidity);
   }
 
   void show() {
     if (!_modal.opened) {
+      _addValidatableFields(
+          SparkWidget.inlineNestedContentNodes($['bodyContent']));
       _updateFormValidity();
       _modal.toggle();
+
+      focus();
     }
   }
 
   void hide() {
     if (_modal.opened) {
+      _validatedFields.clear();
       _modal.toggle();
     }
   }
@@ -79,18 +83,21 @@ class SparkDialog extends SparkWidget {
 
   void set activityVisible(bool visible) {
     _activityVisible = visible;
-    $['progress'].classes.toggle('hidden', !_activityVisible);
+    _progress.classes.toggle('hidden', !_activityVisible);
   }
 
   void _addValidatableFields(Iterable<Node> candidates) {
+    _validatedFields.clear();
+    _addValidatableFieldsImpl(candidates);
+  }
+
+  void _addValidatableFieldsImpl(Iterable<Node> candidates) {
     candidates.forEach((Element element) {
       if (element is InputElement) {
-        if (element.willValidate) {
-          _validatedFields.add(
-              new _ValidatedField(element, _updateFormValidity));
-        }
+        _validatedFields.add(
+            new _ValidatedField(element, _updateFormValidity));
       } else {
-        _addValidatableFields(element.children);
+        _addValidatableFieldsImpl(element.children);
       }
     });
   }
@@ -106,26 +113,38 @@ class SparkDialog extends SparkWidget {
 class _ValidatedField {
   final InputElement _element;
   final Function _onValidityChange;
-  bool _isValid;
+  MutationObserver _observer;
 
-  bool get isValid => _isValid;
+  // NOTE: [willValidate] takes disablement into account.
+  bool get isValid => !_element.willValidate || _element.checkValidity();
 
   _ValidatedField(this._element, this._onValidityChange) {
-    if (_element is TextInputElement) {
-      // Just listening to the [_body.onChange] is not enough to update
-      // the validity in real-time as the user types.
-      _element.onInput.listen(_updateValidity);
-      _updateValidity();
-    }
+    // After a first visit to [_element], start showing its validity state
+    // (red border) when it's not focused. Don't show red border while editing
+    // to avoid distraction.
+    _removeVisited();
+    SparkWidget.addRemoveEventHandlers(
+        _element, ['focus', 'click'], _addVisited);
+    // Listen to editing-related events to update the validity. Just listening
+    // to the parent form's [onChange] isn't enough to react to real-time edits.
+    SparkWidget.addRemoveEventHandlers(
+        _element, ['change', 'input', 'paste', 'reset'], _updateValidity);
+    // Detect programmatic changes to some attributes. Sadly, that doesn't
+    // include [value], because [value] is special (not a pure attribute).
+    _observer = new MutationObserver((records, _) => _updateValidity(records));
+    _observer.observe(
+            _element,
+            childList: false,
+            attributes: true,
+            characterData: true,
+            subtree: false,
+            attributeOldValue: false,
+            characterDataOldValue: false);
   }
 
-  void _updateValidity([_]) {
-    final bool newIsValid = _element.disabled || _element.checkValidity();
-    if (newIsValid != _isValid) {
-      _isValid = newIsValid;
-      // Don't rely on the automatic ':invalid' pseudo-class for finer control.
-      _element.classes.toggle('invalid', !_isValid && _element.value.isNotEmpty);
-      _onValidityChange();
-    }
-  }
+  bool _addVisited([_]) => _element.classes.add('visited');
+
+  bool _removeVisited([_]) => _element.classes.remove('visited');
+
+  void _updateValidity([_]) => _onValidityChange();
 }

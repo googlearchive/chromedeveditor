@@ -15,6 +15,7 @@ import 'package:logging/logging.dart';
 
 import 'workspace.dart';
 import 'jobs.dart';
+import 'package_mgmt/package_utils.dart';
 
 final Logger _logger = new Logger('spark.builder');
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -115,6 +116,14 @@ abstract class Builder {
    * Process a set of resource changes and complete the [Future] when finished.
    */
   Future build(ResourceChangeEvent event, ProgressMonitor monitor);
+
+  /**
+   * Return only those changes that did not occur in a packages directory.
+   */
+  Iterable<ChangeDelta> filterPackageChanges(Iterable<ChangeDelta> changes) {
+    return changes.where(
+        (ChangeDelta delta) => !isInPackagesFolder(delta.resource));
+  }
 }
 
 class _BuildJob extends Job {

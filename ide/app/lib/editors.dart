@@ -418,7 +418,7 @@ class _EditorState {
   File file;
   ace.EditSession session;
 
-  int scrollTop = 0;
+  num scrollTop = 0;
   html.Point cursorPosition = new html.Point(0, 0);
 
   _EditorState.fromFile(this.manager, this.file);
