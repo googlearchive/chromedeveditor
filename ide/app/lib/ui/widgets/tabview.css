@@ -88,14 +88,13 @@
 .tabview-tablabel-closebutton {
   cursor: default;
   display: none;
-  font-size: 12px;
-  height: 16px;
-  width: 16px;
-  opacity: 0.2;
+  height: 18px;
+  width: 18px;
+  fill: #7d7d7d;
   outline: none;
   position: absolute;
-  right: 12px;
-  top: 16px;
+  right: 5px;
+  top: 15px;
 }
 
 .hide-close-button:not(.tabview-tablabel-active) .tabview-tablabel-closebutton {
@@ -104,23 +103,11 @@
 
 .tabview-tablabel-closable .tabview-tablabel-closebutton {
   display: block;
-  background: url(tabview_close.png);
+  background: url(../../../images/close.svg);
 }
 
-.tabview-tablabel-active .tabview-tablabel-closebutton {
-  opacity: 0.5;
-}
-
-.tabview-tablabel:hover .tabview-tablabel-closebutton {
-  opacity: 0.5;
-}
-
-.tabview-tablabel-closebutton:hover {
-  opacity: 0.8;
-}
-
-.tabview-tablabel:hover .tabview-tablabel-closebutton:hover {
-  opacity: 0.8;
+.tabview-tablabel-closebutton:hover
+  fill: #ddd;
 }
 
 .tabview-workspace {
