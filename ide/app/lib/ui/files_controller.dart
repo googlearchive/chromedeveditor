@@ -114,7 +114,6 @@ class FilesController implements TreeViewDelegate {
   }
 
   void selectFile(Resource file) {
-
     if (_currentFiles().isEmpty) {
       return;
     }
