@@ -223,8 +223,7 @@ button.ace_searchbtn_close:active {
 }
 
 .listview-row {
-  margin-left: 16px;
-  margin-right: 16px;
+  margin: 0 16px;
 }
 
 .fileview-filename-container {
@@ -236,7 +235,7 @@ button.ace_searchbtn_close:active {
 
 .fileview-filename-container.project .filename {
   font-size: 16px;
-  top: 10px;
+  top: 9px;
 }
 
 .listview-cell-highlighted .fileview-filename-container .filename {
@@ -262,7 +261,7 @@ button.ace_searchbtn_close:active {
 }
 
 .treeviewcell-status.project {
-  height: 39px;
+  height: 38px;
 }
 
 .treeviewcell-status.error {
@@ -295,7 +294,7 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-filename-container.project > .gitStatus {
-  height: 39px;
+  height: 38px;
 }
 
 .gitStatus.dirty {

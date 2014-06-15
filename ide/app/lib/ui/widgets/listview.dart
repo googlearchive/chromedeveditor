@@ -166,7 +166,7 @@ class ListView {
       row.container.style
         ..left = '0'
         ..right = '0'
-        ..height = '${cellHeight - 1}px'
+        ..height = '${cellHeight - 2}px'
         ..position = 'absolute'
         ..top = '${y}px';
       // Set events callback.
