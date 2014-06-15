@@ -870,10 +870,10 @@ class Folder extends Container {
         List<Future> futures = [];
         for(chrome.Entry child in entries) {
           if (!importFileMap.containsKey(child.fullPath)) {
-            // We enumerated all the files of the import folder into the
-            // importFileMap. A file path not existing in the map measn it is
-            // an attempt of recursive copy of a folder. This will happen only
-            // when the folder to be imported is a parent of the project folder.
+            // We enumerated recursively all the files and folders of the import
+            // folder into the importFileMap. A file path not existing in the map
+            // means it is an attempt of recursive copy of a folder. This will happen
+            // only when the folder to be imported is a parent of the project folder.
             continue;
           }
           if (child is chrome.DirectoryEntry) {
