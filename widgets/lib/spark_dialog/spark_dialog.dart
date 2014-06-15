@@ -94,8 +94,7 @@ class SparkDialog extends SparkWidget {
   void _addValidatableFieldsImpl(Iterable<Node> candidates) {
     candidates.forEach((Element element) {
       if (element is InputElement) {
-        _validatedFields.add(
-            new _ValidatedField(element, _updateFormValidity));
+        _validatedFields.add(new _ValidatedField(element, _updateFormValidity));
       } else {
         _addValidatableFieldsImpl(element.children);
       }
@@ -104,7 +103,7 @@ class SparkDialog extends SparkWidget {
 
   void _updateFormValidity([_]) {
     // NOTE: _body.checkValidity() didn't work.
-    final bool formIsValid = _validatedFields.every((f) => f.isValid);
+    final bool formIsValid = isDialogValid();
     _buttons.forEach((b) => b.updateParentFormValidity(formIsValid));
   }
 }
