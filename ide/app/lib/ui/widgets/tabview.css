@@ -44,7 +44,7 @@
   display: inline-flex;
   border-right: 1px solid #dadada;
   line-height: 48px;
-  padding: 0 32px 0 16px;
+  padding: 0 20px 0 8px;
 }
 
 .tabview-tablabel.hide-close-button:not(.tabview-tablabel-active) {
@@ -93,7 +93,7 @@
   fill: #7d7d7d;
   outline: none;
   position: absolute;
-  right: 5px;
+  right: 2px;
   top: 15px;
 }
 
