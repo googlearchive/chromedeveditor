@@ -66,14 +66,14 @@ class SparkDialog extends SparkWidget {
       _addValidatableFields(
           SparkWidget.inlineNestedContentNodes($['bodyContent']));
       _updateFormValidity();
-      _modal.toggle();
+      _modal.show();
     }
   }
 
   void hide() {
     if (_modal.opened) {
       _validatedFields.clear();
-      _modal.toggle();
+      _modal.hide();
     }
   }
 

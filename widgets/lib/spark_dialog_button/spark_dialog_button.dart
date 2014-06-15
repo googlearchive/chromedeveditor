@@ -37,6 +37,15 @@ class SparkDialogButton extends SparkWidget {
     // spark-overlay analyzes all clicks and auto-closes if the clicked
     // element has [overlayToggle] attribute.
     setAttr('overlayToggle', submit || dismiss || cancel);
+
+    // Consume all mouse click events if this component is disabled. If we
+    // don't, the overlay handler will process the mouse event and close the
+    // dialog, even if the user clicked on a disabled button.
+    super.onClick.listen((e) {
+      if (disabled) {
+        e..stopPropagation()..preventDefault();
+      }
+    });
   }
 
   // TODO(ussuri): BUG #2252
@@ -56,12 +65,11 @@ class SparkDialogButton extends SparkWidget {
     }
   }
 
-  // Overridden to ensure the button does not send click events when disabled.
+  /**
+   * Listen for click events on this button. This is overridden to ensure that
+   * the button does not send click events when disabled.
+   */
   Stream<MouseEvent> get onClick {
-    return super.onClick.where((MouseEvent e) {
-      e..stopPropagation()..preventDefault();
-
-      return !disabled;
-    });
+    return super.onClick.where((event) => !disabled);
   }
 }

@@ -199,6 +199,14 @@ class SparkOverlay extends SparkWidget {
     addEventListener('keydown', _keyDownHandler);
   }
 
+  void show() {
+    if (!opened) opened = true;
+  }
+
+  void hide() {
+    if (opened) opened = false;
+  }
+
   /// Toggle the opened state of the overlay.
   void toggle() {
     opened = !opened;
@@ -285,7 +293,7 @@ class SparkOverlay extends SparkWidget {
   void _tapHandler(MouseEvent e) {
     Element target = e.target;
     if (target != null && target.attributes.containsKey('overlayToggle')) {
-      toggle();
+      hide();
     } else if (_autoCloseTask != null) {
       _autoCloseTask.cancel();
       _autoCloseTask = null;

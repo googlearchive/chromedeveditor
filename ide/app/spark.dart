@@ -1222,6 +1222,8 @@ abstract class SparkActionWithDialog extends SparkAction {
     Element element = _dialog.getElement(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
+        event..stopPropagation()..preventDefault();
+
         // We do not submit if the dialog is invalid.
         if (!_canSubmit()) return;
 
