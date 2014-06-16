@@ -117,8 +117,9 @@ class MobileDeploy {
     List<int> httpRequest = [];
 
     // Build the HTTP request headers.
+    String method = payload == null ? 'POST' : 'POST';
     String header =
-        'POST /$path HTTP/1.1\r\n'
+        '${method} /$path HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
         'Host: ${target}:2424\r\n';
     List<int> body = [];
@@ -140,8 +141,7 @@ class MobileDeploy {
   }
 
   List<int> _buildLaunchRequest(String target) {
-    return _buildHttpRequest(target,
-        "launch", payload: "appId=${appContainer.project.name}".codeUnits);
+    return _buildHttpRequest(target, "launch?appId=${appContainer.project.name}");
   }
 
   Future _sendTcpRequest(String target, List<int> httpRequest) {
@@ -173,14 +173,19 @@ class MobileDeploy {
     }).then((_) {
       monitor.worked(6);
       return _sendTcpRequest(target, _buildLaunchRequest(target));
-    }).then((msg) {
-      monitor.worked(8);
-      if (msg != "") {
-        return new Future.error("Unexpected response from App Dev Tool");
+    }).then((response) {
+      // Ignore this response. It is a List of char codes, that represent the
+      // HTTP response (HTTP/1.1 200 OK\nConnection: close\n...).
+
+    }).catchError((exception) {
+      // SocketException -100 is normal here. Report everything else.
+      if (exception is SocketException) {
+        if (exception.code != -100) {
+          return new Future.error(exception);
+        }
+      } else {
+        return new Future.error(exception);
       }
-    }).catchError((SocketException exception, SocketException) {
-      // SocketException -100 is normal here.  Report everything else.
-      if (exception.code != -100) return new Future.error(exception);
     });
   }
 
@@ -264,8 +269,7 @@ class MobileDeploy {
       } else {
         return new Future.value(body);
       }
-    })
-    .then((String response) {
+    }).then((String response) {
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
       return _device.sendHttpRequest(httpRequest, 2424).timeout(
