@@ -2527,19 +2527,18 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
         _selectElement.append(new OptionElement(data: branch, value: branch));
       }
 
-    gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
-      remoteBranches.toList().sort(
-          (a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
+        remoteBranches.toList().sort(
+            (a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
-      for (String branch in remoteBranches) {
-        branch = 'origin/${branch}';
-        _selectElement.append(new OptionElement(data: branch, value: branch));
-      }
-
-      _selectElement.selectedIndex = 0;
-    }).then((_) {
-      _show();
-    });
+        for (String branch in remoteBranches) {
+          branch = 'origin/${branch}';
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+        _selectElement.selectedIndex = 0;
+      }).then((_) {
+        _show();
+      });
     });
   }
 
