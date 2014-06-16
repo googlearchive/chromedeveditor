@@ -25,7 +25,7 @@ class OffsetRange {
   bool centeredLower(OffsetRange another) => bottom > another.bottom;
 
   bool includes(int offset) => offset >= top && offset <= bottom;
-  bool overlaps(OffsetRange another) =>
+  bool intersects(OffsetRange another) =>
       !(bottom < another.top || top > another.bottom);
 
   String toString() => "($top, $bottom)";
@@ -222,7 +222,13 @@ class Outline {
     if (_outlineItems == null) return null;
 
     for (OutlineItem item in _outlineItems) {
-      if (item.overlapsOffset(codeOffset)) {
+      // The first condition will work when the cursor is within an item.
+      // The second one will work when the cursor is between items:
+      // it will find the first element lower then the offset. It is only
+      // needed here because this function is called when the user clicks
+      // in the file somewhere: contrast this with [_edgeItemInCodeOffsetRange].
+      if (item.offsetRange.includes(codeOffset) ||
+          item.offsetRange.top > codeOffset) {
         return item;
       }
     }
@@ -236,9 +242,12 @@ class Outline {
     Iterable<OutlineItem> searchSequence =
         atBottom ? _outlineItems.reversed : _outlineItems;
     for (OutlineItem item in searchSequence) {
-      if (item.overlapsOffsetRange(codeOffsetRange)) {
-        return item;
-      }
+      // Unlike [_itemAtCodeOffset], this function is called when the user
+      // scrolls the cursor with the mouse or moves it with the arrow keys.
+      // In that case, there is always a prior position with a prior item
+      // already selected in the outline. So not finding anything and doing
+      // nothing is fine.
+      if (item.offsetRange.intersects(codeOffsetRange)) return item;
     }
     return null;
   }
@@ -280,8 +289,7 @@ abstract class OutlineItem {
   int get nameStartOffset => _data.nameStartOffset;
   int get nameEndOffset => _data.nameEndOffset;
 
-  bool overlapsOffset(int offset) => _offsetRange.includes(offset);
-  bool overlapsOffsetRange(OffsetRange range) => _offsetRange.overlaps(range);
+  OffsetRange get offsetRange => _offsetRange;
 
   html.LIElement get element => _element;
   html.AnchorElement get anchor => _anchor;
