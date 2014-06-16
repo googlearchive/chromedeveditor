@@ -220,6 +220,9 @@ class MobileDeploy {
     String response = new String.fromCharCodes(msg);
     List<String> lines = response.split('\r\n');
     Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
+
+    if (header.isEmpty) return new Future.error('Unexpected error during deploy.');
+
     String body = lines.skip(header.length + 1).join('<br>\n');
 
     if (!header.first.contains('200')) {
