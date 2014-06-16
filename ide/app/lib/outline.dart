@@ -140,7 +140,7 @@ class Outline {
     _prefs.setValue('OutlineCollapsed', value);
   }
 
-  OutlineTopLevelItem _addItem(OutlineItem item) {
+  OutlineItem _addItem(OutlineItem item) {
     _outlineItems.add(item);
     _rootList.append(item.element);
     item.onClick.listen((event) => _childSelectedController.add(item));
