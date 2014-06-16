@@ -201,7 +201,7 @@ class Outline {
   }
 
   int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
-    if (_outlineItemsByOffset != null) {
+    if (_outlineItemsByOffset != null && _outlineItemsByOffset.isNotEmpty) {
       int count = 0;
       List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
       int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;

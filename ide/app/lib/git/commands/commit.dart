@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
+import 'ignore.dart';
 import 'index.dart';
 import 'status.dart';
 import '../file_operations.dart';
@@ -17,6 +18,7 @@ import '../object.dart';
 import '../object_utils.dart';
 import '../objectstore.dart';
 import '../options.dart';
+import '../permissions.dart';
 import '../utils.dart';
 
 /**
@@ -47,11 +49,15 @@ class Commit {
           return walkFiles(entry, store).then((String sha) {
             if (sha != null) {
               treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
-                  false));
+                  false, Permissions.DIRECTORY));
             }
           });
         } else {
           chrome.ChromeFileEntry fileEntry = entry;
+
+          if (GitIgnore.ignore(entry.fullPath)) {
+            return new Future.value();
+          }
 
           return Status.updateAndGetStatus(store, entry).then(
               (FileStatus status) {
@@ -66,11 +72,11 @@ class Commit {
                       'blob', new Uint8List.fromList(buf.getBytes()));
                 }).then((String sha) {
                   treeEntries.add(new TreeEntry(entry.name, shaToBytes(sha),
-                      true));
+                      true, status.permission));
                 });
-              } else if (status.type == FileStatusType.COMMITTED){
-                treeEntries.add(
-                    new TreeEntry(entry.name, shaToBytes(status.sha), true));
+              } else if (status.type == FileStatusType.COMMITTED) {
+                treeEntries.add(new TreeEntry(entry.name, shaToBytes(status.sha),
+                    true, status.permission));
               }
             }
           });

@@ -427,7 +427,8 @@ class AceManager {
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
     _aceEditor.readOnly = true;
-    _aceEditor.fadeFoldWidgets = true;
+    // TODO(devoncarew): Commented out - see #2475.
+    //_aceEditor.fadeFoldWidgets = true;
 
     _analysisService =  services.getService("analyzer");
 

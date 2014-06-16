@@ -542,8 +542,10 @@ class AndroidDevice {
       if (msg.command == AdbUtil.A_OKAY) {
         return msg.arg0;
       } else {
-        return new Future.error('Expected an OKAY but got: ${msg.toString()}.\n'
-            'Please check that you are running the App Dev Tool on your mobile device.');
+        return new Future.error(
+            'Expected an OKAY but got an unexpected response.\n'
+            'Please check that you are running the App Dev Tool '
+            'on your mobile device.');
       }
     });
   }

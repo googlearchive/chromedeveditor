@@ -14,6 +14,7 @@
   padding: 4px;
   border: 1px solid #dadada;
   border-radius: 0;
+  border-bottom-left-radius: 2px;
   border-top: 0;
   border-right: none;
 }
@@ -29,6 +30,10 @@
   padding: 0 7px;
   margin: 0;
   height: 22px;
+  /* Override Ace's inherited font */
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  font-size: 12px;
 }
 
 #queryText:focus {
@@ -37,24 +42,24 @@
 
 #closeButton {
   position: relative;
-  top: 4px;
-  right: 3px;
+  top: 1px;
+  right: 2px;
   margin: 0;
-  padding: 0;
+  padding: 3px;
   cursor: default;
   display: inline;
-  font-size: 12px;
-  height: 15px;
-  width: 13px;
+  height: 18px;
+  width: 18px;
   opacity: 0.5;
-  background: url(search_close.png);
+  background: url(../../../images/close.svg);
   border: 0 none;
 }
 
 #closeButton:hover {
   opacity: 1.0;
+  cursor: pointer;
 }
 
-#closeButton:active {
+#closeButton:focus {
   outline: none;
 }
