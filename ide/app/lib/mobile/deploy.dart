@@ -109,19 +109,25 @@ class MobileDeploy {
     });
   }
 
-  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
+  List<int> _buildHttpRequest(String target, List<int> payload) {
     List<int> httpRequest = [];
-
     // Build the HTTP request headers.
     String header =
-        'POST /$path HTTP/1.1\r\n'
+        'POST /zippush?appId=${appContainer.project.name}&appType=chrome HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
         'Host: ${target}:2424\r\n';
     List<int> body = [];
 
-    if (payload != null) {
-      body.addAll(payload);
-    }
+    // Add the CRX headers before the zip content.
+    // This is the string "Cr24" then three little-endian 32-bit numbers:
+    // - The version (2).
+    // - The public key length (0).
+    // - The signature length (0).
+    // Since the App Dev Tool on the other end doesn't check
+    // the signature or key, we don't bother sending them.
+
+    // Now follows the actual zip data.
+    body.addAll(payload);
     httpRequest.addAll(header.codeUnits);
     httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
@@ -129,58 +135,16 @@ class MobileDeploy {
     return httpRequest;
   }
 
-  List<int> _buildPushRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest(target,
-        "zippush?appId=${appContainer.project.name}&appType=chrome",
-        payload: archivedData);
-  }
-
-  List<int> _buildLaunchRequest(String target) {
-    return _buildHttpRequest(target,
-        "launch?appId=${appContainer.project.name}");
-  }
-
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
     List<int> httpRequest;
+    TcpClient client;
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
-      // TODO(ericarnold): Turn the request into a class
-      _sendRequestTcp(target, _buildPushRequest(target, archivedData),
-          monitor, keepOpen: true).then((TcpClient client) {
-        /*%TRACE3*/ print("(4> 6/16/14): laycnh!"); // TRACE%
-            return _sendRequestTcp(target,
-                _buildPushRequest(target, archivedData), monitor,
-                client:client);
-          });
-    });
-  }
-
-  Future<TcpClient> _sendRequestTcp(String target, List<int> httpRequest,
-                         ProgressMonitor monitor,
-                         {TcpClient client: null, keepOpen: false}) {
-    Future _createClient() {
-      if (client == null) {
-        return TcpClient.createClient(target, 2424).then((TcpClient _client) {
-          client = _client;
-        });
-      } else {
-        return new Future.value();
-      }
-    }
-
-    Future _closeClient() {
-      if (client != null && !keepOpen) client.dispose();
-      return new Future.value(client);
-    }
-
-    // Temporary solution for testing reusing client
-    if (client != null) {
-      client.write(httpRequest);
-      return null;
-    }
-
-    return _createClient().then((_) {
-      /*%TRACE3*/ print("(4> 6/16/14): _createClient!"); // TRACE%
+      httpRequest = _buildHttpRequest(target, archivedData);
+      monitor.worked(5);
+      return TcpClient.createClient(target, 2424);
+    }).then((TcpClient _client) {
+      client = _client;
       client.write(httpRequest);
       return client.stream.timeout(new Duration(minutes: 1)).first;
     }).then((List<int> responseBytes) {
@@ -192,12 +156,14 @@ class MobileDeploy {
 
       if (lines.first.contains('200')) {
         monitor.worked(2);
-        return true;
       } else {
         return new Future.error(lines.first);
       }
-    }).then((_) => _closeClient())
-    .catchError((error) => _closeClient().then((_) => throw error));
+    }).whenComplete(() {
+      if (client != null) {
+        client.dispose();
+      }
+    });
   }
 
   // Safe to call multiple times. It will open the device if it has not been opened yet.
