@@ -109,25 +109,19 @@ class MobileDeploy {
     });
   }
 
-  List<int> _buildHttpRequest(String target, List<int> payload) {
+  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
     List<int> httpRequest = [];
+
     // Build the HTTP request headers.
     String header =
-        'POST /zippush?appId=${appContainer.project.name}&appType=chrome HTTP/1.1\r\n'
+        'POST /$path HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
         'Host: ${target}:2424\r\n';
     List<int> body = [];
 
-    // Add the CRX headers before the zip content.
-    // This is the string "Cr24" then three little-endian 32-bit numbers:
-    // - The version (2).
-    // - The public key length (0).
-    // - The signature length (0).
-    // Since the App Dev Tool on the other end doesn't check
-    // the signature or key, we don't bother sending them.
-
-    // Now follows the actual zip data.
-    body.addAll(payload);
+    if (payload != null) {
+      body.addAll(payload);
+    }
     httpRequest.addAll(header.codeUnits);
     httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
@@ -135,13 +129,60 @@ class MobileDeploy {
     return httpRequest;
   }
 
+  List<int> _buildPushRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest(target,
+        "zippush?appId=${appContainer.project.name}&appType=chrome",
+        payload: archivedData);
+  }
+
+  List<int> _buildLaunchRequest(String target) {
+    return _buildHttpRequest(target,
+        "launch?appId=${appContainer.project.name}");
+  }
+
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
     List<int> httpRequest;
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
-      httpRequest = _buildHttpRequest(target, archivedData);
-      monitor.worked(5);
-      return _sendRequest(httpRequest, target);
+      // TODO(ericarnold): Turn the request into a class
+      _sendRequestTcp(target, _buildPushRequest(target, archivedData),
+          monitor, keepOpen: true).then((TcpClient client) {
+        /*%TRACE3*/ print("(4> 6/16/14): laycnh!"); // TRACE%
+            return _sendRequestTcp(target,
+                _buildPushRequest(target, archivedData), monitor,
+                client:client);
+          });
+    });
+  }
+
+  Future<TcpClient> _sendRequestTcp(String target, List<int> httpRequest,
+                         ProgressMonitor monitor,
+                         {TcpClient client: null, keepOpen: false}) {
+    Future _createClient() {
+      if (client == null) {
+        return TcpClient.createClient(target, 2424).then((TcpClient _client) {
+          client = _client;
+        });
+      } else {
+        return new Future.value();
+      }
+    }
+
+    Future _closeClient() {
+      if (client != null && !keepOpen) client.dispose();
+      return new Future.value(client);
+    }
+
+    // Temporary solution for testing reusing client
+    if (client != null) {
+      client.write(httpRequest);
+      return null;
+    }
+
+    return _createClient().then((_) {
+      /*%TRACE3*/ print("(4> 6/16/14): _createClient!"); // TRACE%
+      client.write(httpRequest);
+      return client.stream.timeout(new Duration(minutes: 1)).first;
     }).then((List<int> responseBytes) {
       String response = new String.fromCharCodes(responseBytes);
       List<String> lines = response.split('\n');
@@ -151,53 +192,12 @@ class MobileDeploy {
 
       if (lines.first.contains('200')) {
         monitor.worked(2);
-        return _getLaunchRequest(target, appContainer.project.name);
+        return true;
       } else {
         return new Future.error(lines.first);
       }
-    });
-  }
-
-  Future _sendRequest(List<int> httpRequest, [String target]) {
-    if (target == null) {
-      return _fetchAndroidDevice().then((deviceResult) {
-        return deviceResult.sendHttpRequest(httpRequest, 2424).timeout(
-            new Duration(minutes: 5), onTimeout: () {
-              return new Future.error(
-                  'Push timed out: Total time exceeds 5 minutes');
-            });
-      });
-    } else {
-      TcpClient _client;
-      return TcpClient.createClient(target, 2424).then((TcpClient client) {
-        _client = client;
-        _client.write(httpRequest);
-        return _client.stream.timeout(new Duration(minutes: 1)).first;
-      }).whenComplete(() {
-        if (_client != null) {
-          _client.dispose();
-        }
-      });
-    }
-  }
-
-  /**
-   * Launch an app with appId on given target address.  If target is
-   * null, will be sent to USB device.
-   */
-  List<int> _getLaunchRequest(String appId, [String target = null]) {
-    List<int> httpRequest = [];
-    // Build the HTTP request headers.
-    String header =
-        'POST /launch HTTP/1.1\r\n'
-        'User-Agent: Spark IDE\r\n';
-    String body = "appId=$appId";
-
-    httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
-    httpRequest.addAll(body.codeUnits);
-
-    return httpRequest;
+    }).then((_) => _closeClient())
+    .catchError((error) => _closeClient().then((_) => throw error));
   }
 
   // Safe to call multiple times. It will open the device if it has not been opened yet.
@@ -251,30 +251,25 @@ class MobileDeploy {
 
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;
-    AndroidDevice device;
-    bool canceled = false;
+    AndroidDevice _device;
 
-    // Get the device
-    return _fetchAndroidDevice().then((deviceResult) {
-      device = deviceResult;
-    }).then((_) {
-      // Build the archive.
-      return archiveContainer(appContainer, true);
-    }).then((List<int> archivedData) {
-      // Send the request for pushing the archive
+    // Build the archive.
+    return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       httpRequest = _buildHttpRequest('localhost', archivedData);
       monitor.worked(4);
 
       // Send this payload to the USB code.
-      if (canceled) return null;
-      return device.sendHttpRequest(httpRequest, 2424).timeout(
+      return _fetchAndroidDevice();
+    }).then((deviceResult) {
+      _device = deviceResult;
+
+      return _device.sendHttpRequest(httpRequest, 2424).timeout(
           new Duration(minutes: 5), onTimeout: () {
             return new Future.error(
                 'Push timed out: Total time exceeds 5 minutes');
           });
     }).then((msg) {
-      if (canceled) return null;
       monitor.worked(3);
       String resp = new String.fromCharCodes(msg);
       List<String> lines = resp.split('\r\n');
@@ -286,43 +281,10 @@ class MobileDeploy {
         return new Future.error(
             '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
       } else {
-        httpRequest = _getLaunchRequest(appContainer.project.name);
-        return device.sendHttpRequest(httpRequest, 2424).timeout(
-            new Duration(minutes: 5), onTimeout: () {
-              canceled = true;
-              return new Future.error(
-                  'Push timed out: Total time exceeds 5 minutes');
-            });
-
+        return body;
       }
-    }).then((_) {
-      return device.sendHttpRequest(httpRequest, 2424).timeout(
-          new Duration(minutes: 5), onTimeout: () {
-            return new Future.error(
-                'Push timed out: Total time exceeds 5 minutes');
-          });
-    }).catchError((_) {
-      canceled = true;
     }).whenComplete(() {
-      device.dispose();
+      if (_device != null) _device.dispose();
     });
-  }
-}
-
-class _DeployTarget {
-  AndroidDevice device;
-  TcpClient client;
-
-  Future sendRequest(List<int> httpRequest, [String target]) {
-    if (device != null) {
-      return device.sendHttpRequest(httpRequest, 2424).timeout(
-          new Duration(minutes: 5), onTimeout: () {
-            return new Future.error(
-                'Push timed out: Total time exceeds 5 minutes');
-          });
-    } else {
-        client.write(httpRequest);
-        return client.stream.timeout(new Duration(minutes: 1)).first;
-    }
   }
 }
