@@ -1515,8 +1515,20 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     super._commit();
+    String newName = _nameElement.value;
 
-    if (_nameElement.value.isNotEmpty) {
+    if (newName.isNotEmpty) {
+      // Check if a file or folder already exist with the new name.
+      Iterable<ws.Resource> children = [];
+      if (resource.parent != null) {
+        children = resource.parent.getChildren();
+      }
+
+      if (children.any((ws.Resource r) => r.name == newName)) {
+        spark.showErrorMessage(
+            'Error During Rename', 'File or folder already exists.');
+        return;
+      }
       resource.rename(_nameElement.value).then((value) {
         spark._renameOpenEditor(resource);
       }).catchError((e) {
