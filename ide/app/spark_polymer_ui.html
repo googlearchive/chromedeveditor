@@ -147,14 +147,14 @@
 
 
     <!-- Error dialog -->
-    <spark-dialog id="errorDialog" title="">
+    <spark-dialog id="errorDialog" headerTitle="">
       <div id="errorMessage" class="help-block"></div>
 
       <spark-dialog-button id="errorClose" dismiss focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- OK / Cancel dialog -->
-    <spark-dialog id="okCancelDialog" title="">
+    <spark-dialog id="okCancelDialog" headerTitle="">
       <p id="okCancelMessage"></p>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
@@ -162,7 +162,7 @@
     </spark-dialog>
 
     <!-- Rename File dialog -->
-    <spark-dialog id="renameDialog" title="Rename">
+    <spark-dialog id="renameDialog" headerTitle="Rename">
       <label for="renameFileName">New name</label>
       <input id="renameFileName" type="text" class="form-control"
           required pattern="[\w\.-]+"
@@ -173,7 +173,7 @@
     </spark-dialog>
 
     <!-- New File dialog -->
-    <spark-dialog id="fileNewDialog" title="New File">
+    <spark-dialog id="fileNewDialog" headerTitle="New File">
       <label for="fileName">New file name</label>
       <input id="fileName" type="text" class="form-control"
           required pattern="[\w\.-]+"
@@ -184,7 +184,7 @@
     </spark-dialog>
 
     <!-- New Folder dialog -->
-    <spark-dialog id="folderNewDialog" title="New Folder">
+    <spark-dialog id="folderNewDialog" headerTitle="New Folder">
       <label for="folderName">New folder name</label>
       <input id="folderName" type="text" class="form-control"
           required pattern="[\w\.-]+"
@@ -195,7 +195,7 @@
     </spark-dialog>
 
     <!-- New Project dialog -->
-    <spark-dialog id="newProjectDialog" title="New Project">
+    <spark-dialog id="newProjectDialog" headerTitle="New Project">
       <div class="form-group">
         <label for="name">Project name</label>
         <input id="name" type="text" class="form-control"
@@ -297,7 +297,7 @@
     </spark-dialog>
 
     <!-- Deploy to Mobile dialog -->
-    <spark-dialog id="mobileDeployDialog" title="Deploy to Mobile">
+    <spark-dialog id="mobileDeployDialog" headerTitle="Deploy to Mobile">
       <div class="form-group">
         <div class="help-block">
           Please start the
@@ -337,7 +337,7 @@
     </spark-dialog>
 
     <!-- Git Clone dialog -->
-    <spark-dialog id="gitCloneDialog" title="Clone Git Project">
+    <spark-dialog id="gitCloneDialog" headerTitle="Clone Git Project">
       <div class="form-group">
         <label for="gitRepoUrl">Repository URL</label>
         <input id="gitRepoUrl" type="url" class="form-control"
@@ -350,7 +350,7 @@
     </spark-dialog>
 
     <!-- Git Commit dialog -->
-    <spark-dialog id="gitCommitDialog" title="Git Commit">
+    <spark-dialog id="gitCommitDialog" headerTitle="Git Commit">
       <div class="form-group">
         <div id="gitUserInfo">
           <div class="input-label">
@@ -387,7 +387,7 @@
     </spark-dialog>
 
     <!-- Git Branch dialog -->
-    <spark-dialog id="gitBranchDialog" title="Create Branch">
+    <spark-dialog id="gitBranchDialog" headerTitle="Create Branch">
       <label for="gitBranchName">Create a new branch</label>
       <input id="gitBranchName" type="text" class="form-control"
           required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
@@ -400,7 +400,7 @@
     </spark-dialog>
 
     <!-- Git Checkout dialog -->
-    <spark-dialog id="gitCheckoutDialog" title="Git Checkout">
+    <spark-dialog id="gitCheckoutDialog" headerTitle="Git Checkout">
       <div class="form-group">
         <label for="currentBranchName">Current branch</label>
         <input id="currentBranchName" type="text" class="form-control"
@@ -415,7 +415,7 @@
     </spark-dialog>
 
     <!-- Git Push dialog -->
-    <spark-dialog id="gitPushDialog" title="Git Push">
+    <spark-dialog id="gitPushDialog" headerTitle="Git Push">
       <div class="form-group">
         <div id="gitCommitList"></div>
       </div>
@@ -424,7 +424,7 @@
     </spark-dialog>
 
     <!-- About dialog -->
-    <spark-dialog id="aboutDialog" title="About Spark">
+    <spark-dialog id="aboutDialog" headerTitle="About Spark">
       <div class="form-group">
         <img src="images/icon_48.png">
         <label>A Chrome Apps based development environment (v{{appVersion}})</label>
@@ -444,7 +444,7 @@
     </spark-dialog>
 
     <!-- Settings dialog -->
-    <spark-dialog id="settingsDialog" title="Settings">
+    <spark-dialog id="settingsDialog" headerTitle="Settings">
       <div class="form-group">
         <spark-toolbar class="settings-block"
             horizontal justify="left" spacing="small">
@@ -563,7 +563,7 @@
     </spark-dialog>
 
     <!-- Git authentication dialog -->
-    <spark-dialog id="gitAuthenticationDialog" title="Git Authentication">
+    <spark-dialog id="gitAuthenticationDialog" headerTitle="Git Authentication">
       <div id="gitUserInfo">
         <div class="input-label">
           <label for="gitUsername">User name</label>
@@ -583,12 +583,12 @@
     </spark-dialog>
 
     <!-- Spark Status dialog -->
-    <spark-dialog id="statusDialog" title="">
+    <spark-dialog id="statusDialog" headerTitle="">
       <div id="progressDescription"></div>
     </spark-dialog>
 
     <!-- Publish on webstore -->
-    <spark-dialog id="webStorePublishDialog" title="Publish to Chrome Web Store">
+    <spark-dialog id="webStorePublishDialog" headerTitle="Publish to Chrome Web Store">
       <div class="form-group">
         <div class="vert-align-box">
           <input type="radio" name="webStorePublishType" value="new" id="new-app-radio" checked>
@@ -612,7 +612,7 @@
     </spark-dialog>
 
     <!-- Properties dialog -->
-    <spark-dialog id="propertiesDialog" title="Properties">
+    <spark-dialog id="propertiesDialog" headerTitle="Properties">
       <div id="body">
       </div>
 
@@ -620,7 +620,7 @@
     </spark-dialog>
 
     <!-- Chrome WebStore published dialog -->
-    <spark-dialog id="webStorePublishedDialog" title="Application published">
+    <spark-dialog id="webStorePublishedDialog" headerTitle="Application published">
       <div class="help-block">
         An updated version of your application has been uploaded and
         published. You can now see it on the Chrome Web Store.
@@ -635,7 +635,7 @@
     </spark-dialog>
 
     <!-- Chrome WebStore first upload dialog -->
-    <spark-dialog id="webStoreUploadedDialog" title="Application uploaded">
+    <spark-dialog id="webStoreUploadedDialog" headerTitle="Application uploaded">
       <div class="help-block">
         Your application has been uploaded to the Chrome Web Store.
         You still need to fill out some additional information in the
@@ -651,7 +651,7 @@
     </spark-dialog>
 
     <!-- Project remove dialog -->
-    <spark-dialog id="projectRemoveDialog" title="Remove Project">
+    <spark-dialog id="projectRemoveDialog" headerTitle="Remove Project">
       <div class="help-block">
         "DELETE" will permanently delete
         &quot;<span id="projectRemoveProjectName"></span>&quot; from disk.<br>
@@ -671,7 +671,7 @@
     </spark-dialog>
 
     <!-- File remove dialog -->
-    <spark-dialog id="fileRemoveDialog" title="Remove File">
+    <spark-dialog id="fileRemoveDialog" headerTitle="Remove File">
       <div class="help-block">
         "DELETE" will permanently delete
          &quot;<span id="fileRemoveFileName"></span>&quot;
