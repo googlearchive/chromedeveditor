@@ -2510,15 +2510,12 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
 
     _selectElement.onChange.listen((e) {
        int index = _selectElement.selectedIndex;
-       if (index != 0) {
+       String sourceBranchName = (_selectElement.children[index] as OptionElement).value;
+       if (sourceBranchName.startsWith('origin/')) {
          // A remote branch is prefixed with 'origin/'. Strip it to get the
          // actual branchname.
          _branchNameElement.value = (_selectElement.children[index]
              as OptionElement).value.split('/').last;
-         _branchNameElement.disabled = true;
-       } else {
-         _branchNameElement.value = '';
-         _branchNameElement.disabled = false;
        }
     });
 
