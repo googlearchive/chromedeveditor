@@ -1194,12 +1194,20 @@ abstract class SparkActionWithDialog extends SparkAction {
 
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
-      submitBtn.onClick.listen((_) => _commit());
+      submitBtn.onClick.listen((e) {
+        // Consume the event so that the overlayToggle doesn't close the dialog.
+        e..stopPropagation()..preventDefault();
+        _commit();
+      });
     }
 
     final Element cancelBtn = _dialog.getElement("[cancel]");
     if (cancelBtn != null) {
-      cancelBtn.onClick.listen((_) => _cancel());
+      cancelBtn.onClick.listen((e) {
+        // Consume the event so that the overlayToggle doesn't close the dialog.
+        e..stopPropagation()..preventDefault();
+        _cancel();}
+      );
     }
 
     final Element closingXBtn = _dialog.getShadowDomElement("#closingX");
@@ -2716,7 +2724,6 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
   }
 
   void _commit() {
-
     SparkDialogButton commitButton = getElement('#gitCommit');
     commitButton.disabled = true;
     commitButton.deliverChanges();
