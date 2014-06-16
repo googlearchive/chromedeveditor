@@ -141,7 +141,7 @@ class MobileDeploy {
 
   List<int> _buildLaunchRequest(String target) {
     return _buildHttpRequest(target,
-        "launch", payload: "appId=${appContainer.project.name}".codeUnits);
+        "launch?appId=${appContainer.project.name}");
   }
 
   Future _sendTcpRequest(String target, List<int> httpRequest) {
@@ -149,6 +149,9 @@ class MobileDeploy {
     return TcpClient.createClient(target, 2424).then((TcpClient client) {
       client.write(httpRequest);
       return client.stream.timeout(new Duration(minutes: 1)).first;
+    }).catchError((e) {
+      print(e);
+      print(e);
     }).whenComplete(() {
       if (client != null) {
         client.dispose();
@@ -160,28 +163,11 @@ class MobileDeploy {
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       return _sendTcpRequest(target, _buildPushRequest(target, archivedData));
-    }).then((List<int> responseBytes) {
-      String response = new String.fromCharCodes(responseBytes);
-      List<String> lines = response.split('\n');
-      if (lines == null || lines.isEmpty) {
-        return new Future.error('Bad response from push server');
-      }
-
-      if (!lines.first.contains('200')) {
-        return new Future.error(lines.first);
-      }
-    }).then((_) {
+    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes))
+    .then((_) {
       monitor.worked(6);
       return _sendTcpRequest(target, _buildLaunchRequest(target));
-    }).then((msg) {
-      monitor.worked(8);
-      if (msg != "") {
-        return new Future.error("Unexpected response from App Dev Tool");
-      }
-    }).catchError((SocketException exception, SocketException) {
-      // SocketException -100 is normal here.  Report everything else.
-      if (exception.code != -100) return new Future.error(exception);
-    });
+    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes));
   }
 
   // Safe to call multiple times. It will open the device if it has not been opened yet.
@@ -224,6 +210,10 @@ class MobileDeploy {
     // Start ADT on the device.
     //return client.startActivity(AdbApplication.CHROME_ADT);
 
+
+
+    // TODO: a SocketException, code == -100 here often means that the App Dev
+    // Tool is not running on the device.
     // Setup port forwarding to 2424 on the device.
     return client.forwardTcp(2424, 2424).then((_) {
       // Push the app binary to port 2424.
@@ -231,9 +221,25 @@ class MobileDeploy {
     });
   }
 
+  Future _expectHttpOkResponse(List<int> msg) {
+    String response = new String.fromCharCodes(msg);
+    List<String> lines = response.split('\r\n');
+    Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
+    String body = lines.skip(header.length + 1).join('<br>\n');
+
+    if (!header.first.contains('200')) {
+      // Error! Fail with the error line.
+      return new Future.error(
+          '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
+    } else {
+      return new Future.value(body);
+    }
+  }
+
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;
     AndroidDevice _device;
+
 
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
@@ -252,20 +258,8 @@ class MobileDeploy {
           });
     }).then((msg) {
       monitor.worked(6);
-      String resp = new String.fromCharCodes(msg);
-      List<String> lines = resp.split('\r\n');
-      Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
-      String body = lines.skip(header.length + 1).join('<br>\n');
-
-      if (header.first.indexOf('200') < 0) {
-        // Error! Fail with the error line.
-        return new Future.error(
-            '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
-      } else {
-        return new Future.value(body);
-      }
-    })
-    .then((String response) {
+      return _expectHttpOkResponse(msg);
+    }).then((String response) {
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
       return _device.sendHttpRequest(httpRequest, 2424).timeout(
@@ -274,9 +268,7 @@ class MobileDeploy {
                 'Push timed out: Total time exceeds 5 minutes');
           });
     }).then((List<int> msg) {
-      if (msg.length != 0) {
-        return new Future.error("Unexpected response from App Dev Tool");
-      }
+      return _expectHttpOkResponse(msg);
     }).whenComplete(() {
       if (_device != null) _device.dispose();
     });
