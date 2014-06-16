@@ -620,7 +620,7 @@ abstract class Spark
   }
 
   void _setErrorDialogText(String title, String message) {
-    _errorDialog.dialog.title = title;
+    _errorDialog.dialog.headerTitle = title;
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
@@ -692,7 +692,7 @@ abstract class Spark
       });
     }
 
-    _okCancelDialog.dialog.title = title;
+    _okCancelDialog.dialog.headerTitle = title;
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
@@ -1284,7 +1284,7 @@ abstract class SparkActionWithStatusDialog extends SparkActionWithProgressDialog
    * the given future [f] is completed.
    */
   void _waitForJob(String title, String progressMessage, Future f) {
-    _dialog.dialog.title = title;
+    _dialog.dialog.headerTitle = title;
     _setProgressMessage(progressMessage);
     _toggleProgressVisible(true);
     _show();
@@ -2267,13 +2267,10 @@ class ProgressMonitorImpl extends ProgressMonitor {
 
 class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Resource _selectedResource;
-  Element _titleElement;
   HtmlElement _propertiesElement;
 
   PropertiesAction(Spark spark, Element dialog)
       : super(spark, 'properties', 'Properties…', dialog) {
-    // TODO(ussuri): This is a hack. Polymerize.
-    _titleElement = dialog.shadowRoot.querySelector('#title');
     _propertiesElement = dialog.querySelector('#body');
   }
 
@@ -2281,7 +2278,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     _selectedResource = context.first;
     final String type = _selectedResource is ws.Project ? 'Project' :
       _selectedResource is ws.Container ? 'Folder' : 'File';
-    _titleElement.text = '${type} Properties';
+    _dialog.dialog.headerTitle = '${type} Properties';
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
