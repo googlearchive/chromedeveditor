@@ -123,7 +123,7 @@ div.ace_search.right {
   border-bottom-left-radius: 2px;
   border-right: none;
   border-left: 1px solid #dadada;
-  width: 301px;
+  width: 305px;
   max-width: none;
   z-index: 101;
 }
@@ -164,10 +164,13 @@ div.ace_search_options {
 
 button.ace_searchbtn_close {
   position: absolute;
-  top: 4px;
-  right: 5px;
+  top: 2px;
+  right: 3px;
+  height: 18px;
+  width: 18px;
+  padding: 3px;
   opacity: 0.5;
-  background: url(images/search_close.png);
+  background: url(images/close.svg);
 }
 
 button.ace_searchbtn_close:hover {
@@ -178,6 +181,19 @@ button.ace_searchbtn_close:hover {
 
 button.ace_searchbtn_close:active {
   outline: none;
+}
+
+button.ace_searchbtn.next {
+  background: #fff url(images/find-next.svg);
+}
+
+button.ace_searchbtn.prev {
+  background: #fff url(images/find-prev.svg);
+}
+
+button.ace_searchbtn.next:hover,
+button.ace_searchbtn.prev:hover {
+  background-color: #eee;
 }
 
 /*
