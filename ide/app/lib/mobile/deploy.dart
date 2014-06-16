@@ -36,6 +36,7 @@ class DeviceInfo {
  * A class to encapsulate deploying an application to a mobile device.
  */
 class MobileDeploy {
+  static const int DEPLOY_PORT = 2424;
   static bool isAvailable() => chrome.usb.available;
 
   final Container appContainer;
@@ -120,7 +121,7 @@ class MobileDeploy {
     String header =
         'POST /$path HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
-        'Host: ${target}:2424\r\n';
+        'Host: ${target}:$DEPLOY_PORT\r\n';
     List<int> body = [];
 
     if (payload != null) {
@@ -140,13 +141,12 @@ class MobileDeploy {
   }
 
   List<int> _buildLaunchRequest(String target) {
-    return _buildHttpRequest(target,
-        "launch?appId=${appContainer.project.name}");
+    return _buildHttpRequest(target, "launch?appId=${appContainer.project.name}");
   }
 
   Future _sendTcpRequest(String target, List<int> httpRequest) {
     TcpClient client;
-    return TcpClient.createClient(target, 2424).then((TcpClient client) {
+    return TcpClient.createClient(target, DEPLOY_PORT).then((TcpClient client) {
       client.write(httpRequest);
       return client.stream.timeout(new Duration(minutes: 1)).first;
     }).whenComplete(() {
@@ -160,8 +160,8 @@ class MobileDeploy {
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
       return _sendTcpRequest(target, _buildPushRequest(target, archivedData));
-    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes))
-    .then((_) {
+    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes)
+    ).then((_) {
       monitor.worked(6);
       return _sendTcpRequest(target, _buildLaunchRequest(target));
     }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes));
@@ -209,9 +209,9 @@ class MobileDeploy {
 
     // TODO: a SocketException, code == -100 here often means that the App Dev
     // Tool is not running on the device.
-    // Setup port forwarding to 2424 on the device.
-    return client.forwardTcp(2424, 2424).then((_) {
-      // Push the app binary to port 2424.
+    // Setup port forwarding to DEPLOY_PORT on the device.
+    return client.forwardTcp(DEPLOY_PORT, DEPLOY_PORT).then((_) {
+      // Push the app binary on DEPLOY_PORT.
       return _sendHttpPush('127.0.0.1', monitor);
     });
   }
@@ -245,7 +245,7 @@ class MobileDeploy {
     }).then((deviceResult) {
       _device = deviceResult;
 
-      return _device.sendHttpRequest(httpRequest, 2424).timeout(
+      return _device.sendHttpRequest(httpRequest, DEPLOY_PORT).timeout(
           new Duration(minutes: 5), onTimeout: () {
             return new Future.error(
                 'Push timed out: Total time exceeds 5 minutes');
@@ -256,13 +256,12 @@ class MobileDeploy {
     }).then((String response) {
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
-      return _device.sendHttpRequest(httpRequest, 2424).timeout(
+      return _device.sendHttpRequest(httpRequest, DEPLOY_PORT).timeout(
           new Duration(minutes: 5), onTimeout: () {
             return new Future.error(
                 'Push timed out: Total time exceeds 5 minutes');
           });
-    }).then((List<int> msg) => _expectHttpOkResponse(msg))
-    .whenComplete(() {
+    }).then((List<int> msg) => _expectHttpOkResponse(msg)).whenComplete(() {
       if (_device != null) _device.dispose();
     });
   }
