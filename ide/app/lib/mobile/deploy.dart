@@ -117,9 +117,8 @@ class MobileDeploy {
     List<int> httpRequest = [];
 
     // Build the HTTP request headers.
-    String method = payload == null ? 'POST' : 'POST';
     String header =
-        '${method} /$path HTTP/1.1\r\n'
+        'POST /$path HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
         'Host: ${target}:2424\r\n';
     List<int> body = [];
