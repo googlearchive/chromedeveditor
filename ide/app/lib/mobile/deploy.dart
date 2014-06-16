@@ -149,9 +149,6 @@ class MobileDeploy {
     return TcpClient.createClient(target, 2424).then((TcpClient client) {
       client.write(httpRequest);
       return client.stream.timeout(new Duration(minutes: 1)).first;
-    }).catchError((e) {
-      print(e);
-      print(e);
     }).whenComplete(() {
       if (client != null) {
         client.dispose();
@@ -210,8 +207,6 @@ class MobileDeploy {
     // Start ADT on the device.
     //return client.startActivity(AdbApplication.CHROME_ADT);
 
-
-
     // TODO: a SocketException, code == -100 here often means that the App Dev
     // Tool is not running on the device.
     // Setup port forwarding to 2424 on the device.
@@ -240,7 +235,6 @@ class MobileDeploy {
     List<int> httpRequest;
     AndroidDevice _device;
 
-
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
@@ -267,9 +261,8 @@ class MobileDeploy {
             return new Future.error(
                 'Push timed out: Total time exceeds 5 minutes');
           });
-    }).then((List<int> msg) {
-      return _expectHttpOkResponse(msg);
-    }).whenComplete(() {
+    }).then((List<int> msg) => _expectHttpOkResponse(msg))
+    .whenComplete(() {
       if (_device != null) _device.dispose();
     });
   }
