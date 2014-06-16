@@ -37,17 +37,16 @@
 
 #closeButton {
   position: relative;
-  top: 4px;
-  right: 3px;
+  top: 1px;
+  right: 2px;
   margin: 0;
-  padding: 0;
+  padding: 3px;
   cursor: default;
   display: inline;
-  font-size: 12px;
-  height: 15px;
-  width: 13px;
+  height: 18px;
+  width: 18px;
   opacity: 0.5;
-  background: url(search_close.png);
+  background: url(../../../images/close.svg);
   border: 0 none;
 }
 
