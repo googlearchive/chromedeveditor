@@ -90,7 +90,6 @@
   display: none;
   height: 18px;
   width: 18px;
-  fill: #7d7d7d;
   outline: none;
   position: absolute;
   right: 2px;
@@ -108,10 +107,6 @@
 .tabview-tablabel-closable .tabview-tablabel-closebutton {
   display: block;
   background: url(../../../images/close.svg);
-}
-
-.tabview-tablabel-closebutton:hover
-  fill: #666;
 }
 
 /* NOTE: These 4 rules also create stacking contexts, which affects the entire
