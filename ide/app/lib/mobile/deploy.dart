@@ -110,48 +110,38 @@ class MobileDeploy {
   }
 
   /**
-   * Launch an app with appId on given target address.  If target is
-   * null, will be sent to USB device.
+   * Builds a request to given `target` at given `path` and with given `payload`
+   * (body content).
    */
-  List<int> _buildLaunchRequest(String appId, [String target = null]) {
+  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
     List<int> httpRequest = [];
+
     // Build the HTTP request headers.
     String header =
-        'POST /launch HTTP/1.1\r\n'
-        'User-Agent: Spark IDE\r\n';
-    String body = "appId=$appId";
-
-    httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
-    httpRequest.addAll(body.codeUnits);
-
-    return httpRequest;
-  }
-
-  List<int> _buildHttpRequest(String target, List<int> payload) {
-    List<int> httpRequest = [];
-    // Build the HTTP request headers.
-    String header =
-        'POST /zippush?appId=${appContainer.project.name}&appType=chrome HTTP/1.1\r\n'
+        'POST /$path HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
         'Host: ${target}:2424\r\n';
     List<int> body = [];
 
-    // Add the CRX headers before the zip content.
-    // This is the string "Cr24" then three little-endian 32-bit numbers:
-    // - The version (2).
-    // - The public key length (0).
-    // - The signature length (0).
-    // Since the App Dev Tool on the other end doesn't check
-    // the signature or key, we don't bother sending them.
-
-    // Now follows the actual zip data.
-    body.addAll(payload);
+    if (payload != null) {
+      body.addAll(payload);
+    }
     httpRequest.addAll(header.codeUnits);
     httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
 
     return httpRequest;
+  }
+
+  List<int> _buildPushRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest(target,
+        "zippush?appId=${appContainer.project.name}&appType=chrome",
+        payload: archivedData);
+  }
+
+  List<int> _buildLaunchRequest(String target) {
+    return _buildHttpRequest(target,
+        "launch", payload: "appId=${appContainer.project.name}".codeUnits);
   }
 
   Future _sendTcpRequest(String target, List<int> httpRequest) {
@@ -169,7 +159,7 @@ class MobileDeploy {
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
-      return _sendTcpRequest(target, _buildHttpRequest(target, archivedData));
+      return _sendTcpRequest(target, _buildPushRequest(target, archivedData));
     }).then((List<int> responseBytes) {
       String response = new String.fromCharCodes(responseBytes);
       List<String> lines = response.split('\n');
@@ -248,7 +238,7 @@ class MobileDeploy {
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
-      httpRequest = _buildHttpRequest('localhost', archivedData);
+      httpRequest = _buildPushRequest('localhost', archivedData);
 
       // Send this payload to the USB code.
       return _fetchAndroidDevice();
