@@ -4,6 +4,9 @@
 
 library spark_widgets.spark_dialog_button;
 
+import 'dart:async';
+import 'dart:html';
+
 import 'package:polymer/polymer.dart';
 
 import '../common/spark_widget.dart';
@@ -34,6 +37,15 @@ class SparkDialogButton extends SparkWidget {
     // spark-overlay analyzes all clicks and auto-closes if the clicked
     // element has [overlayToggle] attribute.
     setAttr('overlayToggle', submit || dismiss || cancel);
+
+    // Consume all mouse click events if this component is disabled. If we
+    // don't, the overlay handler will process the mouse event and close the
+    // dialog, even if the user clicked on a disabled button.
+    super.onClick.listen((e) {
+      if (disabled) {
+        e..stopPropagation()..preventDefault();
+      }
+    });
   }
 
   // TODO(ussuri): BUG #2252
@@ -52,4 +64,10 @@ class SparkDialogButton extends SparkWidget {
       deliverChanges();
     }
   }
+
+  /**
+   * Listen for click events on this button. This is overridden to ensure that
+   * the button does not send click events when disabled.
+   */
+  Stream<MouseEvent> get onClick => super.onClick.where((_) => !disabled);
 }
