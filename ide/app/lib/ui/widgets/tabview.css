@@ -95,6 +95,7 @@
   position: absolute;
   right: 2px;
   top: 15px;
+  padding: 3px;
   /* TODO(ussuri): This is very fragile: its only purpose is to create an
      independent stacking context, otherwise the layout breaks. */
   opacity: 0.99;
@@ -110,7 +111,7 @@
 }
 
 .tabview-tablabel-closebutton:hover
-  fill: #ddd;
+  fill: #666;
 }
 
 /* TODO(ussuri): This is very fragile: its only purpose is to create an
