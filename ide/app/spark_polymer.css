@@ -183,6 +183,19 @@ button.ace_searchbtn_close:active {
   outline: none;
 }
 
+button.ace_searchbtn.next {
+  background: #fff url(images/find-next.svg);
+}
+
+button.ace_searchbtn.prev {
+  background: #fff url(images/find-prev.svg);
+}
+
+button.ace_searchbtn.next:hover,
+button.ace_searchbtn.prev:hover {
+  background-color: #eee;
+}
+
 /*
  * - end Ace overrides.
  */
