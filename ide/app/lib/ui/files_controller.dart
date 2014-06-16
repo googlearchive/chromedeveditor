@@ -761,7 +761,7 @@ class FilesController implements TreeViewDelegate {
     }
     if (needsUpdateSelection) {
       _treeView.selection = updatedSelection;
-      _treeView.listViewSelectedChanged(null, []);
+      treeViewSelectedChanged(_treeView, updatedSelection);
     }
   }
 
