@@ -235,6 +235,12 @@ class MobileDeploy {
     List<int> httpRequest;
     AndroidDevice _device;
 
+    Future _setTimeout(Future httpPushFuture) {
+      return httpPushFuture.timeout(new Duration(seconds: 30), onTimeout: () {
+        return new Future.error('Push timed out: Total time exceeds 30 seconds');
+      });
+    }
+
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
@@ -244,23 +250,14 @@ class MobileDeploy {
       return _fetchAndroidDevice();
     }).then((deviceResult) {
       _device = deviceResult;
-
-      return _device.sendHttpRequest(httpRequest, DEPLOY_PORT).timeout(
-          new Duration(minutes: 5), onTimeout: () {
-            return new Future.error(
-                'Push timed out: Total time exceeds 5 minutes');
-          });
+      return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
     }).then((msg) {
       monitor.worked(6);
       return _expectHttpOkResponse(msg);
     }).then((String response) {
       monitor.worked(8);
       httpRequest = _buildLaunchRequest('localhost');
-      return _device.sendHttpRequest(httpRequest, DEPLOY_PORT).timeout(
-          new Duration(minutes: 5), onTimeout: () {
-            return new Future.error(
-                'Push timed out: Total time exceeds 5 minutes');
-          });
+      return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
     }).then((List<int> msg) => _expectHttpOkResponse(msg)).whenComplete(() {
       if (_device != null) _device.dispose();
     });
