@@ -486,28 +486,16 @@
             horizontal justify="spaced" spacing="small">
           <label class="settings-label">Editor font:</label>
           <span class="settings-value"></span>
-          <spark-button id="fontSmaller" class="plus-minus-button"
+          <spark-button id="fontMinus" class="plus-minus-button"
               flat round padding="small" on-click="{{onFontSmaller}}">
             <svg viewBox="0 0 24 24">
               <path d="M19,13H5v-2h14V13z"></path>
             </svg>
           </spark-button>
-          <spark-button id="fontLarger" class="plus-minus-button"
+          <spark-button id="fontPlus" class="plus-minus-button"
               flat round padding="small" on-click="{{onFontLarger}}">
             <svg viewBox="0 0 24 24">
               <path d="M19,13h-6v6h-2v-6H5v-2h6V5h2v6h6V13z"></path>
-            </svg>
-          </spark-button>
-          <spark-button id="fontPrev" class="plus-minus-button"
-              flat round padding="small" on-click="{{onFontPrev}}">
-            <svg viewBox="0 0 24 24">
-              <polygon points="15.4,7.4 14,6 8,12 14,18 15.4,16.6 10.8,12 "></polygon>
-            </svg>
-          </spark-button>
-          <spark-button id="fontNext" class="plus-minus-button"
-              flat round padding="small" on-click="{{onFontNext}}">
-            <svg viewBox="0 0 24 24">
-              <polygon points="10,6 8.6,7.4 13.2,12 8.6,16.6 10,18 16,12 "></polygon>
             </svg>
           </spark-button>
         </spark-toolbar>
