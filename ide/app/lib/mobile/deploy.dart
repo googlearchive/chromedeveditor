@@ -109,7 +109,7 @@ class MobileDeploy {
     });
   }
 
-  List<int> _buildHttpRequest(String target, List<int> payload) {
+  List<int> _buildUploadRequest(String target, List<int> payload) {
     List<int> httpRequest = [];
     // Build the HTTP request headers.
     String header =
@@ -135,19 +135,46 @@ class MobileDeploy {
     return httpRequest;
   }
 
+
+  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
+    List<int> httpRequest = [];
+
+    // Build the HTTP request headers.
+    String header =
+        'POST /$path HTTP/1.1\r\n'
+        'User-Agent: Spark IDE\r\n'
+        'Host: ${target}:2424\r\n';
+    List<int> body = [];
+
+    if (payload != null) {
+      body.addAll(payload);
+    }
+    httpRequest.addAll(header.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+    httpRequest.addAll(body);
+
+    return httpRequest;
+  }
+
+  List<int> _buildPushRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest(target,
+        "zippush?appId=${appContainer.project.name}&appType=chrome",
+        payload: archivedData);
+  }
+
+  List<int> _buildLaunchRequest(String target) {
+    return _buildHttpRequest(target,
+        "launch", payload: "appId=${appContainer.project.name}".codeUnits);
+  }
+
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
     List<int> httpRequest;
     TcpClient client;
-    return archiveContainer(appContainer, true).then((List<int> archivedData) {
-      monitor.worked(3);
-      httpRequest = _buildHttpRequest(target, archivedData);
-      monitor.worked(5);
-      return TcpClient.createClient(target, 2424);
-    }).then((TcpClient _client) {
-      client = _client;
-      client.write(httpRequest);
-      return client.stream.timeout(new Duration(minutes: 1)).first;
-    }).then((List<int> responseBytes) {
+
+    Future _readRespondToPush(List<int> responseBytes) {
+      if (responseBytes == null) {
+        return null;
+      }
       String response = new String.fromCharCodes(responseBytes);
       List<String> lines = response.split('\n');
       if (lines == null || lines.isEmpty) {
@@ -156,10 +183,30 @@ class MobileDeploy {
 
       if (lines.first.contains('200')) {
         monitor.worked(2);
+        return null;
       } else {
         return new Future.error(lines.first);
       }
-    }).whenComplete(() {
+    }
+
+    return archiveContainer(appContainer, true).then((List<int> archivedData) {
+      monitor.worked(3);
+      httpRequest = _buildUploadRequest(target, archivedData);
+      monitor.worked(5);
+      return TcpClient.createClient(target, 2424);
+    }).then((TcpClient _client) {
+      client = _client;
+      client.write(httpRequest);
+      return client.stream.timeout(new Duration(minutes: 1)).first;
+    }).then(_readRespondToPush)
+    .then((_) {
+      httpRequest = _buildLaunchRequest(target);
+      client.write(httpRequest);
+    }).then(_readRespondToPush)
+    .catchError((e) {
+      print(e);
+    })
+    .whenComplete(() {
       if (client != null) {
         client.dispose();
       }
@@ -222,7 +269,7 @@ class MobileDeploy {
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
-      httpRequest = _buildHttpRequest('localhost', archivedData);
+      httpRequest = _buildUploadRequest('localhost', archivedData);
       monitor.worked(4);
 
       // Send this payload to the USB code.
