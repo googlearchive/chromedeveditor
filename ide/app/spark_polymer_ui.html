@@ -166,7 +166,7 @@
       <label for="renameFileName">New name</label>
       <input id="renameFileName" type="text" class="form-control"
           required pattern="[\w\.-]+"
-          spellcheck="false" autosave focused>
+          spellcheck="false" autosave>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Rename</spark-dialog-button>
@@ -177,7 +177,7 @@
       <label for="fileName">New file name</label>
       <input id="fileName" type="text" class="form-control"
           required pattern="[\w\.-]+"
-          spellcheck="false" focused>
+          spellcheck="false">
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Create</spark-dialog-button>
@@ -188,7 +188,7 @@
       <label for="folderName">New folder name</label>
       <input id="folderName" type="text" class="form-control"
           required pattern="[\w\.-]+"
-          spellcheck="false" focused>
+          spellcheck="false">
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
       <spark-dialog-button submit>Create</spark-dialog-button>
@@ -363,7 +363,7 @@
             <label for="gitName">Your name</label>
             <input id="gitName" type="text" class="form-control"
                 placeholder="John Doe" pattern=".+"
-                spellcheck="false" autosave focused>
+                spellcheck="false" autosave>
           </div>
           <div class="input-label">
             <label for="gitEmail">Email</label>
@@ -383,7 +383,7 @@
       <div class="form-group">
         <label for="commitMessage">Commit message</label>
         <textarea id="commitMessage" type="text" class="form-control"
-            rows="3" wrap="soft" spellcheck autosave></textarea>
+            rows="3" wrap="soft" spellcheck autosave focused></textarea>
         <span class="help-block">
           Enter a brief description of the changes.
         </span>
