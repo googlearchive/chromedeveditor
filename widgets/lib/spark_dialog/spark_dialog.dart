@@ -18,10 +18,10 @@ class SparkDialog extends SparkWidget {
   /**
    * The title of the dialog.
    */
-  @published String get title => _title;
-  @published set title(String value) {
-    _title = value;
-    if (_titleElement != null) _titleElement.text = value;
+  @published String get headerTitle => _headerTitle;
+  @published set headerTitle(String value) {
+    _headerTitle = value;
+    if (_headerTitleElement != null) _headerTitleElement.text = value;
   }
 
   /**
@@ -32,8 +32,8 @@ class SparkDialog extends SparkWidget {
   bool _activityVisible = false;
 
   SparkModal _modal;
-  String _title = '';
-  Element _titleElement;
+  String _headerTitle = '';
+  Element _headerTitleElement;
   FormElement _body;
   Element _progress;
   Iterable<SparkDialogButton> _buttons;
@@ -48,12 +48,12 @@ class SparkDialog extends SparkWidget {
     SparkWidget.enableKeyboardEvents(_modal);
 
     _modal = $['modal'];
-    _titleElement = $['title'];
+    _headerTitleElement = $['headerTitle'];
     _body = $['body'];
     _buttons = SparkWidget.inlineNestedContentNodes($['buttonsContent']);
     _progress = $['progress'];
 
-    title = _title;
+    headerTitle = _headerTitle;
     _progress.classes.toggle('hidden', !_activityVisible);
 
     // Listen to the form's global validity changes. Additional listeners are

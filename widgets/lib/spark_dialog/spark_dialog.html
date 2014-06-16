@@ -10,7 +10,7 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <polymer-element name="spark-dialog" extends="spark-widget"
-    attributes="title animation">
+    attributes="headerTitle animation">
   <template>
     <link rel="stylesheet" href="spark_dialog.css">
 
@@ -19,14 +19,14 @@
           horizontal
           justify="edges"
           spacing="small">
-        <span id="title">{{title}}</span>
+        <span id="headerTitle">{{headerTitle}}</span>
         <spark-button id="closingX"
             flat
             round
             padding="small"
             overlayToggle>
           <svg id="closingXGlyph" viewBox="0 0 24 24">
-            <polygon points="19,6.4 17.6,5 12,10.6 6.4,5 5,6.4 10.6,12 5,17.6 6.4,19 12,13.4 17.6,19 19,17.6 13.4,12 "></polygon>
+            <path d="M17.369 8.037l-1.037-1.037-4.148 4.148-4.148-4.148-1.037 1.037 4.148 4.148-4.148 4.148 1.037 1.037 4.148-4.148 4.148 4.148 1.037-1.037-4.148-4.148 4.148-4.148z"/>
           </svg>
         </spark-button>
       </spark-toolbar>

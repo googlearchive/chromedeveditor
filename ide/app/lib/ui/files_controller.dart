@@ -213,13 +213,15 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 13 : -1;
+    return resource is Project ? 7 : -1;
   }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
       Resource resource = _filesMap[nodeUids.first];
       _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
+    } else {
+      _eventBus.addEvent(new FilesControllerSelectionChangedEvent(null));
     }
   }
 
@@ -709,6 +711,9 @@ class FilesController implements TreeViewDelegate {
           needsSortTopLevel = true;
         }
         _filesMap.remove(resource.uuid);
+        // The current selection was deleted. No selected resource.
+        updatedSelection = [];
+        needsUpdateSelection = true;
         needsReloadData = true;
       } else if (change.type == EventType.RENAME) {
         // Update expanded state of the tree view.
@@ -756,6 +761,7 @@ class FilesController implements TreeViewDelegate {
     }
     if (needsUpdateSelection) {
       _treeView.selection = updatedSelection;
+      treeViewSelectedChanged(_treeView, updatedSelection);
     }
   }
 

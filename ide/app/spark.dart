@@ -621,7 +621,7 @@ abstract class Spark
   }
 
   void _setErrorDialogText(String title, String message) {
-    _errorDialog.dialog.title = title;
+    _errorDialog.dialog.headerTitle = title;
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
@@ -693,7 +693,7 @@ abstract class Spark
       });
     }
 
-    _okCancelDialog.dialog.title = title;
+    _okCancelDialog.dialog.headerTitle = title;
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
@@ -1285,7 +1285,7 @@ abstract class SparkActionWithStatusDialog extends SparkActionWithProgressDialog
    * the given future [f] is completed.
    */
   void _waitForJob(String title, String progressMessage, Future f) {
-    _dialog.dialog.title = title;
+    _dialog.dialog.headerTitle = title;
     _setProgressMessage(progressMessage);
     _toggleProgressVisible(true);
     _show();
@@ -1516,8 +1516,20 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     super._commit();
+    String newName = _nameElement.value;
 
-    if (_nameElement.value.isNotEmpty) {
+    if (newName.isNotEmpty) {
+      // Check if a file or folder already exist with the new name.
+      Iterable<ws.Resource> children = [];
+      if (resource.parent != null) {
+        children = resource.parent.getChildren();
+      }
+
+      if (children.any((ws.Resource r) => r.name == newName)) {
+        spark.showErrorMessage(
+            'Error During Rename', 'File or folder already exists.');
+        return;
+      }
       resource.rename(_nameElement.value).then((value) {
         spark._renameOpenEditor(resource);
       }).catchError((e) {
@@ -1685,7 +1697,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = _appliesTo(resource);
+    enabled = (resource != null && _appliesTo(resource));
   }
 }
 
@@ -2182,7 +2194,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = _appliesTo(resource);
+    enabled = resource != null && _appliesTo(resource);
   }
 
   void _enableInputs([_]) {
@@ -2203,7 +2215,7 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
 
     _monitor = new ProgressMonitorImpl(this);
 
-    String type = getElement('input[name="type"]:checked').id;
+    String type = getElement('input[name="mobileDeployType"]:checked').id;
     bool useAdb = type == 'adb';
     String url = _pushUrlElement.value;
 
@@ -2256,13 +2268,10 @@ class ProgressMonitorImpl extends ProgressMonitor {
 
 class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Resource _selectedResource;
-  Element _titleElement;
   HtmlElement _propertiesElement;
 
   PropertiesAction(Spark spark, Element dialog)
       : super(spark, 'properties', 'Properties…', dialog) {
-    // TODO(ussuri): This is a hack. Polymerize.
-    _titleElement = dialog.shadowRoot.querySelector('#title');
     _propertiesElement = dialog.querySelector('#body');
   }
 
@@ -2270,7 +2279,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     _selectedResource = context.first;
     final String type = _selectedResource is ws.Project ? 'Project' :
       _selectedResource is ws.Container ? 'Folder' : 'File';
-    _titleElement.text = '${type} Properties';
+    _dialog.dialog.headerTitle = '${type} Properties';
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
@@ -3537,7 +3546,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = getAppContainerFor(resource) != null;
+    enabled = resource != null && getAppContainerFor(resource) != null;
   }
 }
 
