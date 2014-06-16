@@ -22,7 +22,6 @@ body {
 
 ::-webkit-scrollbar-thumb {
   min-height: 48px;
-  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-track,
