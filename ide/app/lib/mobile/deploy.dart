@@ -109,7 +109,26 @@ class MobileDeploy {
     });
   }
 
-  List<int> _buildUploadRequest(String target, List<int> payload) {
+  /**
+   * Launch an app with appId on given target address.  If target is
+   * null, will be sent to USB device.
+   */
+  List<int> _buildLaunchRequest(String appId, [String target = null]) {
+    List<int> httpRequest = [];
+    // Build the HTTP request headers.
+    String header =
+        'POST /launch HTTP/1.1\r\n'
+        'User-Agent: Spark IDE\r\n';
+    String body = "appId=$appId";
+
+    httpRequest.addAll(header.codeUnits);
+    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
+    httpRequest.addAll(body.codeUnits);
+
+    return httpRequest;
+  }
+
+  List<int> _buildHttpRequest(String target, List<int> payload) {
     List<int> httpRequest = [];
     // Build the HTTP request headers.
     String header =
@@ -135,81 +154,43 @@ class MobileDeploy {
     return httpRequest;
   }
 
-
-  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
-    List<int> httpRequest = [];
-
-    // Build the HTTP request headers.
-    String header =
-        'POST /$path HTTP/1.1\r\n'
-        'User-Agent: Spark IDE\r\n'
-        'Host: ${target}:2424\r\n';
-    List<int> body = [];
-
-    if (payload != null) {
-      body.addAll(payload);
-    }
-    httpRequest.addAll(header.codeUnits);
-    httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
-    httpRequest.addAll(body);
-
-    return httpRequest;
-  }
-
-  List<int> _buildPushRequest(String target, List<int> archivedData) {
-    return _buildHttpRequest(target,
-        "zippush?appId=${appContainer.project.name}&appType=chrome",
-        payload: archivedData);
-  }
-
-  List<int> _buildLaunchRequest(String target) {
-    return _buildHttpRequest(target,
-        "launch", payload: "appId=${appContainer.project.name}".codeUnits);
+  Future _sendTcpRequest(String target, List<int> httpRequest) {
+    TcpClient client;
+    return TcpClient.createClient(target, 2424).then((TcpClient client) {
+      client.write(httpRequest);
+      return client.stream.timeout(new Duration(minutes: 1)).first;
+    }).whenComplete(() {
+      if (client != null) {
+        client.dispose();
+      }
+    });
   }
 
   Future _sendHttpPush(String target, ProgressMonitor monitor) {
-    List<int> httpRequest;
-    TcpClient client;
-
-    Future _readRespondToPush(List<int> responseBytes) {
-      if (responseBytes == null) {
-        return null;
-      }
+    return archiveContainer(appContainer, true).then((List<int> archivedData) {
+      monitor.worked(3);
+      return _sendTcpRequest(target, _buildHttpRequest(target, archivedData));
+    }).then((List<int> responseBytes) {
       String response = new String.fromCharCodes(responseBytes);
       List<String> lines = response.split('\n');
       if (lines == null || lines.isEmpty) {
         return new Future.error('Bad response from push server');
       }
 
-      if (lines.first.contains('200')) {
-        monitor.worked(2);
-        return null;
-      } else {
+      if (!lines.first.contains('200')) {
         return new Future.error(lines.first);
       }
-    }
-
-    return archiveContainer(appContainer, true).then((List<int> archivedData) {
-      monitor.worked(3);
-      httpRequest = _buildUploadRequest(target, archivedData);
-      monitor.worked(5);
-      return TcpClient.createClient(target, 2424);
-    }).then((TcpClient _client) {
-      client = _client;
-      client.write(httpRequest);
-      return client.stream.timeout(new Duration(minutes: 1)).first;
-    }).then(_readRespondToPush)
-    .then((_) {
-      httpRequest = _buildLaunchRequest(target);
-      client.write(httpRequest);
-    }).then(_readRespondToPush)
-    .catchError((e) {
-      print(e);
-    })
-    .whenComplete(() {
-      if (client != null) {
-        client.dispose();
+    }).then((_) {
+      monitor.worked(6);
+      return _sendTcpRequest(target, _buildLaunchRequest(target));
+    }).then((msg) {
+      monitor.worked(8);
+      if (msg != "") {
+        return new Future.error("Unexpected response from App Dev Tool");
       }
+    }).catchError((SocketException exception, SocketException) {
+      // SocketException -100 is normal here.  Report everything else.
+      if (exception.code != -100) return new Future.error(exception);
     });
   }
 
@@ -255,8 +236,6 @@ class MobileDeploy {
 
     // Setup port forwarding to 2424 on the device.
     return client.forwardTcp(2424, 2424).then((_) {
-      // TODO: a SocketException, code == -100 here often means that the App Dev
-      // Tool is not running on the device.
       // Push the app binary to port 2424.
       return _sendHttpPush('127.0.0.1', monitor);
     });
@@ -269,8 +248,7 @@ class MobileDeploy {
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
-      httpRequest = _buildUploadRequest('localhost', archivedData);
-      monitor.worked(4);
+      httpRequest = _buildHttpRequest('localhost', archivedData);
 
       // Send this payload to the USB code.
       return _fetchAndroidDevice();
@@ -283,7 +261,7 @@ class MobileDeploy {
                 'Push timed out: Total time exceeds 5 minutes');
           });
     }).then((msg) {
-      monitor.worked(3);
+      monitor.worked(6);
       String resp = new String.fromCharCodes(msg);
       List<String> lines = resp.split('\r\n');
       Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
@@ -294,7 +272,20 @@ class MobileDeploy {
         return new Future.error(
             '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
       } else {
-        return body;
+        return new Future.value(body);
+      }
+    })
+    .then((String response) {
+      monitor.worked(8);
+      httpRequest = _buildLaunchRequest('localhost');
+      return _device.sendHttpRequest(httpRequest, 2424).timeout(
+          new Duration(minutes: 5), onTimeout: () {
+            return new Future.error(
+                'Push timed out: Total time exceeds 5 minutes');
+          });
+    }).then((List<int> msg) {
+      if (msg.length != 0) {
+        return new Future.error("Unexpected response from App Dev Tool");
       }
     }).whenComplete(() {
       if (_device != null) _device.dispose();
