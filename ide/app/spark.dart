@@ -1245,7 +1245,13 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   bool _canSubmit() => _dialog.dialog.isDialogValid();
 
-  void _show() => _dialog.show();
+  void _show() {
+    // TODO(grv) : There is a delay in delivering polymer changes. Remove this
+    // once this is fixed.
+    Timer.run(() {
+      _dialog.show();
+    });
+  }
   void _hide() => _dialog.hide();
 }
 
@@ -2840,6 +2846,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   GitPushAction(Spark spark, Element dialog)
       : super(spark, "git-push", "Push to Origin…", dialog) {
     _commitsList = getElement('#gitCommitList');
+    _triggerOnReturn('#gitPush', false);
   }
 
   void _onClose() => _hide();
@@ -3605,7 +3612,9 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   static GitAuthenticationDialog _instance;
 
   GitAuthenticationDialog(Spark spark, Element dialogElement)
-      : super(spark, "git-authentication", "Authenticate", dialogElement);
+      : super(spark, "git-authentication", "Authenticate", dialogElement) {
+    _triggerOnReturn('#gitPassword');
+  }
 
   void _invoke([Object context]) {
     (getElement('#gitUsername') as InputElement).value = '';
