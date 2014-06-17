@@ -168,7 +168,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
 
   bool isFileOpened(File file) => _getStateFor(file) != null;
 
-  void saveAll() => _saveAll();
+  void saveAll() => _saveAll(userAction: true);
 
   void close(File file) {
     _EditorState state = _getStateFor(file);
@@ -316,10 +316,11 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     _eventBus.addEvent(new FileModifiedBusEvent(currentFile));
 
     if (_timer != null) _timer.cancel();
-    _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () => _saveAll());
+    _timer = new Timer(new Duration(milliseconds: _DELAY_MS), () =>
+        _saveAll(userAction: false));
   }
 
-  void _saveAll() {
+  void _saveAll({bool userAction: false}) {
     if (_timer != null) {
       _timer.cancel();
       _timer = null;
@@ -339,9 +340,14 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
     }
 
     if (wasDirty) {
-      _eventBus.addEvent(
-          new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
-    } else {
+      if (userAction) {
+        _eventBus.addEvent(
+            new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED));
+      } else {
+        _eventBus.addEvent(
+            new SimpleBusEvent(BusEventType.EDITOR_MANAGER__FILES_SAVED_AUTOMATICALLY));
+      }
+    } else if (userAction) {
       _eventBus.addEvent(
           new SimpleBusEvent(BusEventType.EDITOR_MANAGER__NO_MODIFICATIONS));
     }
