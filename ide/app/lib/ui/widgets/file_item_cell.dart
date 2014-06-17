@@ -69,8 +69,25 @@ class FileItemCell implements ListViewCell {
 
     if (severity == Marker.SEVERITY_ERROR) {
       element.classes.add('error');
+      if (resource is Project) {
+        element.title = 'This project has errors';
+      } else if (resource is Folder) {
+        element.title = 'Some files in this folder have errors';
+      } else {
+        element.title = 'This file has some errors';
+      }
     } else if (severity == Marker.SEVERITY_WARNING) {
       element.classes.add('warning');
+      if (resource is Project) {
+        element.title = 'This project has warnings';
+      } else if (resource is Folder) {
+        element.title = 'Some files in this folder have warnings';
+      } else {
+        element.title = 'This file has some warnings';
+      }
+    }
+    else {
+      element.title = '';
     }
 
     if (resource is Project) {
@@ -78,8 +95,23 @@ class FileItemCell implements ListViewCell {
     }
   }
 
-  void setGitStatus({bool dirty: false}) {
+  void setGitStatus({bool dirty: false, bool added: false}) {
     Element element = gitStatusElement;
     element.classes.toggle('dirty', dirty);
+    if (dirty) {
+      if (resource is Project) {
+        element.title = 'Some files in this project have been added or modified';
+      } else if (resource is Folder) {
+        element.title = 'Some files in this folder have been added or modified';
+      } else {
+        if (added) {
+          element.title = 'This file has been added';
+        } else {
+          element.title = 'This file has been modified';
+        }
+      }
+    } else {
+      element.title = '';
+    }
   }
 }
