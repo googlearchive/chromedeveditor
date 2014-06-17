@@ -10,7 +10,7 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <polymer-element name="spark-dialog" extends="spark-widget"
-    attributes="title animation">
+    attributes="headerTitle animation">
   <template>
     <link rel="stylesheet" href="spark_dialog.css">
 
@@ -19,7 +19,7 @@
           horizontal
           justify="edges"
           spacing="small">
-        <span id="title">{{title}}</span>
+        <span id="headerTitle">{{headerTitle}}</span>
         <spark-button id="closingX"
             flat
             round

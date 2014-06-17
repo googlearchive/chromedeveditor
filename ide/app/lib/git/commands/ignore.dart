@@ -14,6 +14,6 @@ class GitIgnore {
   /// Returns true if the file with given [path] should be ignored by git.
   static bool ignore(String path) {
     // ignore .lock files for now.
-    return path.endsWith(('.lock'));
+    return path.endsWith(('pubspec.lock')) || path.endsWith(('.DS_Store'));
   }
 }
