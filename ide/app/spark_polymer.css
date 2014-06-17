@@ -526,6 +526,11 @@ li.outlineItem.topLevel.class {
   outline: none;
 }
 
+#toggleOutlineIcon {
+  margin-left: -3px;
+  margin-top: 1px;
+}
+
 #outline {
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
