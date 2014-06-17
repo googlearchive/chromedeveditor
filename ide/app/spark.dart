@@ -321,7 +321,8 @@ abstract class Spark
   }
 
   void initAceManager() {
-    _aceManager = new AceManager(new DivElement(), this, services, prefs);
+    _aceManager = new AceManager(
+        querySelector('#aceContainer'), this, services, prefs);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
