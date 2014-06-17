@@ -806,7 +806,8 @@ class FilesController implements TreeViewDelegate {
       }
 
       ScmFileStatus status = scmOperations.getFileStatus(resource);
-      fileItemCell.setGitStatus(dirty: (status != ScmFileStatus.COMMITTED));
+      fileItemCell.setGitStatus(dirty: (status != ScmFileStatus.COMMITTED),
+          added: (status == ScmFileStatus.ADDED));
     }
   }
 
