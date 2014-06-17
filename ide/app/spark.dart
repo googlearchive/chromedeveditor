@@ -1245,7 +1245,13 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   bool _canSubmit() => _dialog.dialog.isDialogValid();
 
-  void _show() => _dialog.show();
+  void _show() {
+    // TODO(grv) : There is a delay in delivering polymer changes. Remove this
+    // once this is fixed.
+    Timer.run(() {
+      _dialog.show();
+    });
+  }
   void _hide() => _dialog.hide();
 }
 
