@@ -3613,7 +3613,6 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
 
   GitAuthenticationDialog(Spark spark, Element dialogElement)
       : super(spark, "git-authentication", "Authenticate", dialogElement) {
-    _triggerOnReturn('#gitUsername');
     _triggerOnReturn('#gitPassword');
   }
 
