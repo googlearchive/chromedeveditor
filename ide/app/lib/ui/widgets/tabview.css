@@ -1,7 +1,3 @@
-/* Copyright (c) 2013, Google Inc. Please see the AUTHORS file for details. */
-/* All rights reserved.  Use of this source code is governed by a BSD-style */
-/* license that can be found in the LICENSE file. */
-
 .tabview-container {
   background: #EEE;
   bottom: 0;
@@ -31,10 +27,9 @@
 
 .tabview-tabbar-scroller {
   flex: 1;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px;
   overflow: hidden;
   position: relative;
-  z-index: 102;
+  z-index: 100;
 }
 
 .tabview-tabbar-scrollable {
