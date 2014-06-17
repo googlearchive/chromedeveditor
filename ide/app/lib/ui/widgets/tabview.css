@@ -88,8 +88,8 @@
 .tabview-tablabel-closebutton {
   cursor: default;
   display: none;
-  height: 18px;
-  width: 18px;
+  height: 24px;
+  width: 24px;
   outline: none;
   position: absolute;
   right: 2px;

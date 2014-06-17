@@ -164,11 +164,11 @@ div.ace_search_options {
 
 button.ace_searchbtn_close {
   position: absolute;
-  top: 2px;
-  right: 3px;
-  height: 18px;
-  width: 18px;
-  padding: 3px;
+  top: -1px;
+  right: 0;
+  height: 24px;
+  width: 24px;
+  padding: 0;
   opacity: 0.5;
   background: url(images/close.svg);
 }
