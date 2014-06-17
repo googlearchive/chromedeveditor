@@ -320,7 +320,7 @@ class EditorManager implements EditorProvider, NavigationLocationProvider {
         _saveAll(userAction: false));
   }
 
-  void _saveAll({bool userAction}) {
+  void _saveAll({bool userAction: false}) {
     if (_timer != null) {
       _timer.cancel();
       _timer = null;
