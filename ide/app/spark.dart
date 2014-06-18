@@ -3098,7 +3098,9 @@ class _GitCloneTask {
 
           // Run Pub if the new project has a pubspec file.
           if (spark.pubManager.properties.isFolderWithPackages(project)) {
-            spark.jobManager.schedule(new PubGetJob(spark, project));
+            Timer.run(() {
+              spark.jobManager.schedule(new PubGetJob(spark, project));
+            });
           }
 
           // Run Bower if the new project has a bower.json file.
