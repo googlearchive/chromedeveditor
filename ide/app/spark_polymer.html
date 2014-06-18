@@ -84,6 +84,9 @@
     <div id="fileViewArea" tabindex="0" beforeSplit></div>
 
     <div id="editorArea" tabIndex="-1" afterSplit>
+      <!-- TODO(ussuri): Find a way to move at least part of this to 
+           spark_polymer_ui.html 
+      -->
       <div id="aceContainer"></div>
       <div id="outlineContainer">
         <spark-splitter id="outlineResizer"
@@ -98,8 +101,8 @@
           </ul>
         </div>
       </div>
-      <spark-button id="toggleOutlineButton" flat round padding="large">
-        <svg viewBox="0 0 24 24">
+      <spark-button id="toggleOutlineButton" flat round>
+        <svg width="24px" height="24px" viewBox="0 0 24 24">
           <path d="M9.067 15h11.933v-2h-11.933v2zm0 4h11.933v-2h-11.933v2zm0-8h11.933v-2h-11.933v2zm-5.067-6v2h17v-2h-17z"/>
         </svg>
       </spark-button>
