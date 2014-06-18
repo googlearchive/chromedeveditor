@@ -2,12 +2,12 @@
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: url('Roboto-Regular.woff') format('woff');
+  src: url('Roboto-Regular-webfont.svg#robotoregular') format('svg');
 }
 
 @font-face {
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 500;
-  src: url('Roboto-Medium.woff') format('woff');
+  url('Roboto-Medium-webfont.svg#robotomedium') format('svg');
 }

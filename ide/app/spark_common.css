@@ -4,7 +4,8 @@
 
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
-@import url("third_party/roboto/roboto.css");
+
+@import url("third_party/fonts/roboto/roboto-fontface.css");
 
 body {
   font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
