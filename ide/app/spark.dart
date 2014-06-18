@@ -3098,6 +3098,8 @@ class _GitCloneTask {
 
           // Run Pub if the new project has a pubspec file.
           if (spark.pubManager.properties.isFolderWithPackages(project)) {
+            // There is issue with workspace sending duplicate events.
+            // TODO(grv): revisit workspace events.
             Timer.run(() {
               spark.jobManager.schedule(new PubGetJob(spark, project));
             });
