@@ -415,8 +415,10 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
    * Launches a chrome app with given [id].
    */
   Future _launchId(String id) {
-    if (id == null) throw 'Unable to locate an application id.';
-
+    if (id == null) {
+      throw 'Something went wrong: unable to find the application in Chrome '
+            'after an installation attempt. Check Chrome error messages.';
+    }
     return management.launchApp(id);
   }
 
