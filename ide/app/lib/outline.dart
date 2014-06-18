@@ -119,15 +119,15 @@ class Outline {
     }
   }
 
-  void _create(services.OutlineTopLevelEntry data) {
+  OutlineTopLevelItem _create(services.OutlineTopLevelEntry data) {
     if (data is services.OutlineClass) {
-      _addClass(data);
+      return _addClass(data);
     } else if (data is services.OutlineTopLevelVariable) {
-      _addVariable(data);
+      return _addVariable(data);
     } else if (data is services.OutlineTopLevelFunction) {
-      _addFunction(data);
+      return _addFunction(data);
     } else if (data is services.OutlineTypeDef) {
-      _addTypeDef(data);
+      return _addTypeDef(data);
     } else {
       throw new UnimplementedError("Unknown type");
     }
@@ -142,7 +142,7 @@ class Outline {
     _prefs.setValue('OutlineCollapsed', value);
   }
 
-  void _addItem(OutlineItem item) {
+  OutlineItem _addItem(OutlineItem item) {
     // Add leaf items to be used to find a position in the outline to scroll to
     // when the file in the editor is scrolled.
     _outlineItems.add(item);
@@ -157,19 +157,21 @@ class Outline {
     _rootList.append(item.element);
     // Listen to 'select' custom events on the element or one of its children.
     item.element.on['selected'].listen((event) =>
-      _childSelectedController.add(event.detail));
+        _childSelectedController.add(event.detail));
+
+    return item;
   }
 
-  void _addVariable(services.OutlineTopLevelVariable data) =>
+  OutlineTopLevelVariable _addVariable(services.OutlineTopLevelVariable data) =>
       _addItem(new OutlineTopLevelVariable(data));
 
-  void _addFunction(services.OutlineTopLevelFunction data) =>
+  OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
       _addItem(new OutlineTopLevelFunction(data));
-  
-  void _addTypeDef(services.OutlineTypeDef data) =>
+
+  OutlineTypeDef _addTypeDef(services.OutlineTypeDef data) =>
       _addItem(new OutlineTypeDef(data));
 
-  void _addClass(services.OutlineClass data) =>
+  OutlineClass _addClass(services.OutlineClass data) =>
       _addItem(new OutlineClass(data));
 
   OutlineItem get selectedItem => _selectedItem;
@@ -353,9 +355,10 @@ class OutlineClass extends OutlineTopLevelItem {
     _postProcess();
   }
 
-  void _addItem(OutlineClassMember item) {
+  OutlineClassMember _addItem(OutlineClassMember item) {
     _childrenRootElement.append(item.element);
     members.add(item);
+    return item;
   }
 
   void _populate(services.OutlineClass classData) {
@@ -390,7 +393,7 @@ class OutlineClass extends OutlineTopLevelItem {
     }
   }
 
-  void _createMember(services.OutlineEntry data) {
+  OutlineItem _createMember(services.OutlineEntry data) {
     if (data is services.OutlineMethod) {
       return addMethod(data);
     } else if (data is services.OutlineProperty) {
@@ -402,13 +405,13 @@ class OutlineClass extends OutlineTopLevelItem {
     }
   }
 
-  void addMethod(services.OutlineMethod data) =>
+  OutlineMethod addMethod(services.OutlineMethod data) =>
       _addItem(new OutlineMethod(data));
 
-  void addProperty(services.OutlineProperty data) =>
+  OutlineProperty addProperty(services.OutlineProperty data) =>
       _addItem(new OutlineProperty(data));
 
-  void addAccessor(services.OutlineAccessor data) =>
+  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
       _addItem(new OutlineAccessor(data));
 }
 
