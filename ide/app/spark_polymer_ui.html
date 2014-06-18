@@ -45,9 +45,9 @@
               on-input="{{fileFilterInputHandler}}"
               tabindex="0"/>
 
-          <spark-button id="runButton" flat round padding="medium">
-            <svg viewBox="0 0 24 24">
-              <polygon points="8,5 8,19 19,12 "></polygon>
+          <spark-button id="runButton" flat round>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
             </svg>
           </spark-button>
 
@@ -57,9 +57,9 @@
               arrow="none"
               on-activate="{{onMenuSelected}}">
 
-            <spark-button menuButton flat round padding="medium">
-              <svg viewBox="0 0 24 24">
-                <path d="M12,8c1.1,0,2-0.9,2-2s-0.9-2-2-2c-1.1,0-2,0.9-2,2S10.9,8,12,8z M12,10c-1.1,0-2,0.9-2,2s0.9,2,2,2c1.1,0,2-0.9,2-2S13.1,10,12,10z M12,16c-1.1,0-2,0.9-2,2s0.9,2,2,2c1.1,0,2-0.9,2-2S13.1,16,12,16z"></path>
+            <spark-button menuButton flat round>
+              <svg width="24px" height="24px" viewBox="0 0 24 24">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
               </svg>
             </spark-button>
 
@@ -109,9 +109,9 @@
             horizontal
             justify="right"
             spacing="small">
-          <spark-button id="settingsButton" flat round padding="medium">
-            <svg viewBox="0 0 24 24">
-              <path d="M19.4,13c0-0.3,0.1-0.6,0.1-1s0-0.7-0.1-1l2.1-1.7c0.2-0.2,0.2-0.4,0.1-0.6l-2-3.5C19.5,5.1,19.3,5,19,5.1l-2.5,1c-0.5-0.4-1.1-0.7-1.7-1l-0.4-2.6C14.5,2.2,14.2,2,14,2h-4C9.8,2,9.5,2.2,9.5,2.4L9.1,5.1C8.5,5.3,8,5.7,7.4,6.1L5,5.1C4.7,5,4.5,5.1,4.3,5.3l-2,3.5C2.2,8.9,2.3,9.2,2.5,9.4L4.6,11c0,0.3-0.1,0.6-0.1,1s0,0.7,0.1,1l-2.1,1.7c-0.2,0.2-0.2,0.4-0.1,0.6l2,3.5C4.5,18.9,4.7,19,5,18.9l2.5-1c0.5,0.4,1.1,0.7,1.7,1l0.4,2.6c0,0.2,0.2,0.4,0.5,0.4h4c0.2,0,0.5-0.2,0.5-0.4l0.4-2.6c0.6-0.3,1.2-0.6,1.7-1l2.5,1c0.2,0.1,0.5,0,0.6-0.2l2-3.5c0.1-0.2,0.1-0.5-0.1-0.6L19.4,13z M12,15.5c-1.9,0-3.5-1.6-3.5-3.5s1.6-3.5,3.5-3.5s3.5,1.6,3.5,3.5S13.9,15.5,12,15.5z"></path>
+          <spark-button id="settingsButton" flat round>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M19.4 13c0-.3.1-.6.1-1s0-.7-.1-1l2.1-1.7c.2-.2.2-.4.1-.6l-2-3.5c-.1-.1-.3-.2-.6-.1l-2.5 1c-.5-.4-1.1-.7-1.7-1l-.4-2.6c.1-.3-.2-.5-.4-.5h-4c-.2 0-.5.2-.5.4l-.4 2.7c-.6.2-1.1.6-1.7 1l-2.4-1c-.3-.1-.5 0-.7.2l-2 3.5c-.1.1 0 .4.2.6l2.1 1.6c0 .3-.1.6-.1 1s0 .7.1 1l-2.1 1.7c-.2.2-.2.4-.1.6l2 3.5c.1.1.3.2.6.1l2.5-1c.5.4 1.1.7 1.7 1l.4 2.6c0 .2.2.4.5.4h4c.2 0 .5-.2.5-.4l.4-2.6c.6-.3 1.2-.6 1.7-1l2.5 1c.2.1.5 0 .6-.2l2-3.5c.1-.2.1-.5-.1-.6l-2.3-1.6zm-7.4 2.5c-1.9 0-3.5-1.6-3.5-3.5s1.6-3.5 3.5-3.5 3.5 1.6 3.5 3.5-1.6 3.5-3.5 3.5z"/>
             </svg>
           </spark-button>
         </spark-toolbar>
@@ -124,14 +124,14 @@
             horizontal
             justify="right"
             spacing="small">
-          <spark-button id="leftNav" flat round padding="medium">
-            <svg viewBox="0 0 24 24">
-              <path d="M20,11H7.8l5.6-5.6L12,4l-8,8l8,8l1.4-1.4L7.8,13H20V11z"></path>
+          <spark-button id="leftNav" flat round>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M20 11h-12.2l5.6-5.6-1.4-1.4-8 8 8 8 1.4-1.4-5.6-5.6h12.2v-2z"/>
             </svg>
           </spark-button>
-          <spark-button id="rightNav" flat round padding="medium">
-            <svg viewBox="0 0 24 24">
-              <polygon points="12,4 10.6,5.4 16.2,11 4,11 4,13 16.2,13 10.6,18.6 12,20 20,12 "></polygon>
+          <spark-button id="rightNav" flat round>
+            <svg width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M12 4l-1.4 1.4 5.6 5.6h-12.2v2h12.2l-5.6 5.6 1.4 1.4 8-8z"/>
             </svg>
           </spark-button>
         </spark-toolbar>
@@ -147,14 +147,14 @@
 
 
     <!-- Error dialog -->
-    <spark-dialog id="errorDialog" title="">
+    <spark-dialog id="errorDialog" headerTitle="">
       <div id="errorMessage" class="help-block"></div>
 
       <spark-dialog-button id="errorClose" dismiss focused>Close</spark-dialog-button>
     </spark-dialog>
 
     <!-- OK / Cancel dialog -->
-    <spark-dialog id="okCancelDialog" title="">
+    <spark-dialog id="okCancelDialog" headerTitle="">
       <p id="okCancelMessage"></p>
 
       <spark-dialog-button cancel>Cancel</spark-dialog-button>
@@ -162,7 +162,7 @@
     </spark-dialog>
 
     <!-- Rename File dialog -->
-    <spark-dialog id="renameDialog" title="Rename">
+    <spark-dialog id="renameDialog" headerTitle="Rename">
       <label for="renameFileName">New name</label>
       <input id="renameFileName" type="text" class="form-control"
           required pattern="[\w\.-]+"
@@ -173,7 +173,7 @@
     </spark-dialog>
 
     <!-- New File dialog -->
-    <spark-dialog id="fileNewDialog" title="New File">
+    <spark-dialog id="fileNewDialog" headerTitle="New File">
       <label for="fileName">New file name</label>
       <input id="fileName" type="text" class="form-control"
           required pattern="[\w\.-]+"
@@ -184,7 +184,7 @@
     </spark-dialog>
 
     <!-- New Folder dialog -->
-    <spark-dialog id="folderNewDialog" title="New Folder">
+    <spark-dialog id="folderNewDialog" headerTitle="New Folder">
       <label for="folderName">New folder name</label>
       <input id="folderName" type="text" class="form-control"
           required pattern="[\w\.-]+"
@@ -195,7 +195,7 @@
     </spark-dialog>
 
     <!-- New Project dialog -->
-    <spark-dialog id="newProjectDialog" title="New Project">
+    <spark-dialog id="newProjectDialog" headerTitle="New Project">
       <div class="form-group">
         <label for="name">Project name</label>
         <input id="name" type="text" class="form-control"
@@ -227,6 +227,9 @@
               </option>
               <option value="web/web_app_polymer_js;polymer,core-elements">
                 JavaScript web app using Polymer
+              </option>
+              <option value="web/web_starter_kit">
+                Web Starter Kit
               </option>
             </optgroup>
             <optgroup label="Chrome apps">
@@ -277,6 +280,9 @@
               <option value="web/web_app_polymer_js;polymer,core-elements">
                 JavaScript web app using Polymer
               </option>
+              <option value="web/web_starter_kit">
+                Web Starter Kit
+              </option>
             </optgroup>
             <optgroup label="Chrome apps">
               <option value="chrome/chrome_app_js">
@@ -297,11 +303,11 @@
     </spark-dialog>
 
     <!-- Deploy to Mobile dialog -->
-    <spark-dialog id="mobileDeployDialog" title="Deploy to Mobile">
+    <spark-dialog id="mobileDeployDialog" headerTitle="Deploy to Mobile">
       <div class="form-group">
         <div class="help-block">
           Please start the
-          <a href="https://github.com/MobileChromeApps/chrome-app-harness/releases"
+          <a href="https://github.com/MobileChromeApps/chrome-app-developer-tool/releases"
               on-click="{{handleAnchorClick}}">
             Chrome App Developer Tool for Mobile (App Dev Tool)
           </a>
@@ -337,7 +343,7 @@
     </spark-dialog>
 
     <!-- Git Clone dialog -->
-    <spark-dialog id="gitCloneDialog" title="Clone Git Project">
+    <spark-dialog id="gitCloneDialog" headerTitle="Clone Git Project">
       <div class="form-group">
         <label for="gitRepoUrl">Repository URL</label>
         <input id="gitRepoUrl" type="url" class="form-control"
@@ -350,14 +356,14 @@
     </spark-dialog>
 
     <!-- Git Commit dialog -->
-    <spark-dialog id="gitCommitDialog" title="Git Commit">
+    <spark-dialog id="gitCommitDialog" headerTitle="Git Commit">
       <div class="form-group">
         <div id="gitUserInfo">
           <div class="input-label">
             <label for="gitName">Your name</label>
             <input id="gitName" type="text" class="form-control"
                 placeholder="John Doe" pattern=".+"
-                spellcheck="false" autosave focused>
+                spellcheck="false" autosave>
           </div>
           <div class="input-label">
             <label for="gitEmail">Email</label>
@@ -377,7 +383,7 @@
       <div class="form-group">
         <label for="commitMessage">Commit message</label>
         <textarea id="commitMessage" type="text" class="form-control"
-            rows="3" wrap="soft" spellcheck autosave></textarea>
+            rows="3" wrap="soft" spellcheck autosave focused></textarea>
         <span class="help-block">
           Enter a brief description of the changes.
         </span>
@@ -387,7 +393,7 @@
     </spark-dialog>
 
     <!-- Git Branch dialog -->
-    <spark-dialog id="gitBranchDialog" title="Create Branch">
+    <spark-dialog id="gitBranchDialog" headerTitle="Create Branch">
       <label for="gitBranchName">Create a new branch</label>
       <input id="gitBranchName" type="text" class="form-control"
           required pattern="[^~:?*\^\[\s]+" spellcheck="false" autosave focused>
@@ -400,11 +406,11 @@
     </spark-dialog>
 
     <!-- Git Checkout dialog -->
-    <spark-dialog id="gitCheckoutDialog" title="Git Checkout">
+    <spark-dialog id="gitCheckoutDialog" headerTitle="Git Checkout">
       <div class="form-group">
         <label for="currentBranchName">Current branch</label>
         <input id="currentBranchName" type="text" class="form-control"
-            spellcheck="false" disabled>
+            spellcheck="false" disabled focused>
       </div>
       <div class="form-group">
         <label for="gitCheckoutBranch">Switch to branch</label>
@@ -415,16 +421,16 @@
     </spark-dialog>
 
     <!-- Git Push dialog -->
-    <spark-dialog id="gitPushDialog" title="Git Push">
+    <spark-dialog id="gitPushDialog" headerTitle="Git Push">
       <div class="form-group">
         <div id="gitCommitList"></div>
       </div>
       <spark-dialog-button id="gitPushClose">Cancel</spark-dialog-button>
-      <spark-dialog-button id="gitPush" submit>Push</spark-dialog-button>
+      <spark-dialog-button id="gitPush" submit focused>Push</spark-dialog-button>
     </spark-dialog>
 
     <!-- About dialog -->
-    <spark-dialog id="aboutDialog" title="About Spark">
+    <spark-dialog id="aboutDialog" headerTitle="About Spark">
       <div class="form-group">
         <img src="images/icon_48.png">
         <label>A Chrome Apps based development environment (v{{appVersion}})</label>
@@ -440,11 +446,11 @@
           </label>
         </div>
       </div>
-      <spark-dialog-button submit>Done</spark-dialog-button>
+      <spark-dialog-button submit focused>Done</spark-dialog-button>
     </spark-dialog>
 
     <!-- Settings dialog -->
-    <spark-dialog id="settingsDialog" title="Settings">
+    <spark-dialog id="settingsDialog" headerTitle="Settings">
       <div class="form-group">
         <spark-toolbar class="settings-block"
             horizontal justify="left" spacing="small">
@@ -536,7 +542,7 @@
             horizontal justify="edges" spacing="small">
           <label class="settings-label">Git credentials:</label>
           <spark-button class="reset-setting-button"
-              flat primary on-click="{{onResetGit}}">
+              flat on-click="{{onResetGit}}">
             Clear Git Credentials
           </spark-button>
         </spark-toolbar>
@@ -551,7 +557,7 @@
               horizontal justify="edges" spacing="small">
             <label class="settings-label">Preferences:</label>
             <spark-button class="reset-setting-button"
-                flat primary on-click="{{onResetPreference}}">
+                flat on-click="{{onResetPreference}}">
               Reset Preferences
             </spark-button>
           </spark-toolbar>
@@ -563,7 +569,7 @@
     </spark-dialog>
 
     <!-- Git authentication dialog -->
-    <spark-dialog id="gitAuthenticationDialog" title="Git Authentication">
+    <spark-dialog id="gitAuthenticationDialog" headerTitle="Git Authentication">
       <div id="gitUserInfo">
         <div class="input-label">
           <label for="gitUsername">User name</label>
@@ -583,12 +589,12 @@
     </spark-dialog>
 
     <!-- Spark Status dialog -->
-    <spark-dialog id="statusDialog" title="">
+    <spark-dialog id="statusDialog" headerTitle="">
       <div id="progressDescription"></div>
     </spark-dialog>
 
     <!-- Publish on webstore -->
-    <spark-dialog id="webStorePublishDialog" title="Publish to Chrome Web Store">
+    <spark-dialog id="webStorePublishDialog" headerTitle="Publish to Chrome Web Store">
       <div class="form-group">
         <div class="vert-align-box">
           <input type="radio" name="webStorePublishType" value="new" id="new-app-radio" checked>
@@ -612,7 +618,7 @@
     </spark-dialog>
 
     <!-- Properties dialog -->
-    <spark-dialog id="propertiesDialog" title="Properties">
+    <spark-dialog id="propertiesDialog" headerTitle="Properties">
       <div id="body">
       </div>
 
@@ -620,7 +626,7 @@
     </spark-dialog>
 
     <!-- Chrome WebStore published dialog -->
-    <spark-dialog id="webStorePublishedDialog" title="Application published">
+    <spark-dialog id="webStorePublishedDialog" headerTitle="Application published">
       <div class="help-block">
         An updated version of your application has been uploaded and
         published. You can now see it on the Chrome Web Store.
@@ -635,7 +641,7 @@
     </spark-dialog>
 
     <!-- Chrome WebStore first upload dialog -->
-    <spark-dialog id="webStoreUploadedDialog" title="Application uploaded">
+    <spark-dialog id="webStoreUploadedDialog" headerTitle="Application uploaded">
       <div class="help-block">
         Your application has been uploaded to the Chrome Web Store.
         You still need to fill out some additional information in the
@@ -651,7 +657,7 @@
     </spark-dialog>
 
     <!-- Project remove dialog -->
-    <spark-dialog id="projectRemoveDialog" title="Remove Project">
+    <spark-dialog id="projectRemoveDialog" headerTitle="Remove Project">
       <div class="help-block">
         "DELETE" will permanently delete
         &quot;<span id="projectRemoveProjectName"></span>&quot; from disk.<br>
@@ -671,7 +677,7 @@
     </spark-dialog>
 
     <!-- File remove dialog -->
-    <spark-dialog id="fileRemoveDialog" title="Remove File">
+    <spark-dialog id="fileRemoveDialog" headerTitle="Remove File">
       <div class="help-block">
         "DELETE" will permanently delete
          &quot;<span id="fileRemoveFileName"></span>&quot;

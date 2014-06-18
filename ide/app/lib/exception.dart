@@ -90,6 +90,10 @@ class SparkException implements Exception {
         return new SparkException(SparkErrorMessages.GIT_WORKING_TREE_NOT_CLEAN_MSG,
             SparkErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
 
+      case GitErrorConstants.GIT_HTTP_CONN_RESET:
+        return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_REST_MSG,
+            SparkErrorConstants.GIT_HTTP_CONN_RESET);
+
     }
     return new SparkException(e.toString());
   }
@@ -103,11 +107,13 @@ class SparkException implements Exception {
  * unique [SparkException].
  */
 class SparkErrorConstants {
+
   static const String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
   static const String GIT_CLONE_CANCEL = "git.clone_cancel";
 
   static const String AUTH_REQUIRED = "auth.required";
   static const String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
+  static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
 
   static const String GIT_PUSH_NON_FAST_FORWARD
       = "git.push_non_fast_forward";
@@ -142,4 +148,6 @@ class SparkErrorMessages {
   static const String GIT_WORKING_TREE_NOT_CLEAN_MSG = "Working tree is not clean.";
   static const String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
       = 'Repositories with sub modules are not yet supported.';
+  static const String GIT_HTTP_CONN_REST_MSG  = 'The connection was reset by '
+      'the server. This may happen when pushing commits with large changes.';
 }

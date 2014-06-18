@@ -30,6 +30,10 @@ class FileItemCell implements ListViewCell {
     fileNameElement.innerHtml = resource.name;
     acceptDrop = false;
     updateFileStatus();
+
+    // Update the node when we're inserted into the tree. Some of the state we
+    // modify is contained in parent nodes (the file status).
+    element.on['DOMNodeInserted'].listen((e) => updateFileStatus());
   }
 
   Element get element => _element;
@@ -44,7 +48,10 @@ class FileItemCell implements ListViewCell {
 
   Element get fileInfoElement => _element.querySelector('.infoField');
 
-  Element get fileStatusElement => _element.querySelector('.fileStatus');
+  Element get fileStatusElement {
+    if (_element.parent == null) return null;
+    return _element.parent.parent.querySelector('.treeviewcell-status');
+  }
 
   Element get gitStatusElement => _element.querySelector('.gitStatus');
 
@@ -54,19 +61,57 @@ class FileItemCell implements ListViewCell {
 
   void updateFileStatus() {
     Element element = fileStatusElement;
+    if (element == null) return;
+
     element.classes.removeAll(['warning', 'error']);
 
     int severity = resource.findMaxProblemSeverity();
 
     if (severity == Marker.SEVERITY_ERROR) {
       element.classes.add('error');
+      if (resource is Project) {
+        element.title = 'This project has errors';
+      } else if (resource is Folder) {
+        element.title = 'Some files in this folder have errors';
+      } else {
+        element.title = 'This file has some errors';
+      }
     } else if (severity == Marker.SEVERITY_WARNING) {
       element.classes.add('warning');
+      if (resource is Project) {
+        element.title = 'This project has warnings';
+      } else if (resource is Folder) {
+        element.title = 'Some files in this folder have warnings';
+      } else {
+        element.title = 'This file has some warnings';
+      }
+    }
+    else {
+      element.title = '';
+    }
+
+    if (resource is Project) {
+      element.classes.toggle('project', true);
     }
   }
 
-  void setGitStatus({bool dirty: false}) {
+  void setGitStatus({bool dirty: false, bool added: false}) {
     Element element = gitStatusElement;
     element.classes.toggle('dirty', dirty);
+    if (dirty) {
+      if (resource is Project) {
+        element.title = 'Some files in this project have been added or modified';
+      } else if (resource is Folder) {
+        element.title = 'Some files in this folder have been added or modified';
+      } else {
+        if (added) {
+          element.title = 'This file has been added';
+        } else {
+          element.title = 'This file has been modified';
+        }
+      }
+    } else {
+      element.title = '';
+    }
   }
 }

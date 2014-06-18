@@ -32,6 +32,7 @@ class GitErrorConstants {
   static const String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
   static const String GIT_HTTP_ERROR = "git.http_error";
   static const String GIT_AUTH_REQUIRED = "git.auth_required";
+  static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
   static const String GIT_AUTH_ERROR = "git.auth_error";
 
   static const String GIT_CLONE_DIR_NOT_EMPTY = "git.clone_dir_not_empty";

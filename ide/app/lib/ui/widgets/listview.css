@@ -1,5 +1,6 @@
 .listview-cell-highlighted {
   background-color: #9DBEFF;
+  border-radius: 2px;
 }
 
 .listview-container:focus .listview-cell-highlighted {

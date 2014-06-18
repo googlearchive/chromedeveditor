@@ -208,18 +208,20 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 40 : 24;
+    return resource is Project ? 40 : 25;
   }
 
   int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 15 : -1;
+    return resource is Project ? 6 : -2;
   }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
       Resource resource = _filesMap[nodeUids.first];
       _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
+    } else {
+      _eventBus.addEvent(new FilesControllerSelectionChangedEvent(null));
     }
   }
 
@@ -605,7 +607,7 @@ class FilesController implements TreeViewDelegate {
     return templateClone.querySelector('.fileview-separator');
   }
 
-  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 25;
+  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 17;
 
   // Cache management for sorted list of resources.
 
@@ -709,6 +711,9 @@ class FilesController implements TreeViewDelegate {
           needsSortTopLevel = true;
         }
         _filesMap.remove(resource.uuid);
+        // The current selection was deleted. No selected resource.
+        updatedSelection = [];
+        needsUpdateSelection = true;
         needsReloadData = true;
       } else if (change.type == EventType.RENAME) {
         // Update expanded state of the tree view.
@@ -756,6 +761,7 @@ class FilesController implements TreeViewDelegate {
     }
     if (needsUpdateSelection) {
       _treeView.selection = updatedSelection;
+      treeViewSelectedChanged(_treeView, updatedSelection);
     }
   }
 
@@ -800,7 +806,8 @@ class FilesController implements TreeViewDelegate {
       }
 
       ScmFileStatus status = scmOperations.getFileStatus(resource);
-      fileItemCell.setGitStatus(dirty: (status != ScmFileStatus.COMMITTED));
+      fileItemCell.setGitStatus(dirty: (status != ScmFileStatus.COMMITTED),
+          added: (status == ScmFileStatus.ADDED));
     }
   }
 

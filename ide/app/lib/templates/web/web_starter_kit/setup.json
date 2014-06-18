@@ -1,0 +1,131 @@
+{
+  "files": [
+    { "source": "LICENSE_", "dest": "LICENSE" },
+    { "source": "README.md_", "dest": "README.md" },
+    { "source": "gulpfile.js_", "dest": "gulpfile.js" },
+    { "source": "package.json_", "dest": "package.json" }
+  ],
+  "directories": {
+    "app": {
+      "files": [
+        { "source": "404.html_", "dest": "404.html" },
+        { "source": "alt-layout.html_", "dest": "alt-layout.html" },
+        { "source": "basic.html_", "dest": "basic.html" },
+        { "source": "favicon.ico_", "dest": "favicon.ico" },
+        { "source": "humans.txt_", "dest": "humans.txt" },
+        { "source": "index.html_", "dest": "index.html" },
+        { "source": "manifest.webapp_", "dest": "manifest.webapp" },
+        { "source": "robots.txt_", "dest": "robots.txt" }
+      ],
+      "directories": {
+        "images": {
+          "files": [
+            { "source": "hamburger.svg_", "dest": "hamburger.svg" },
+            { "source": "search.svg_", "dest": "search.svg" }
+          ],
+          "directories": {
+            "icons": {
+              "files": [
+                { "source": "icons-hinted.ttf_", "dest": "icons-hinted.ttf" },
+                { "source": "icons.eot_", "dest": "icons.eot" },
+                { "source": "icons.svg_", "dest": "icons.svg" },
+                { "source": "icons.ttf_", "dest": "icons.ttf" },
+                { "source": "icons.woff_", "dest": "icons.woff" },
+                { "source": "placeholder--medium.png_", "dest": "placeholder--medium.png" },
+                { "source": "placeholder--small.png_", "dest": "placeholder--small.png" },
+                { "source": "placeholder--wide.png_", "dest": "placeholder--wide.png" }
+              ]
+            },
+            "touch": {
+              "files": [
+                { "source": "apple-touch-icon-114x114-precomposed.png_", "dest": "apple-touch-icon-114x114-precomposed.png" },
+                { "source": "apple-touch-icon-144x144-precomposed.png_", "dest": "apple-touch-icon-144x144-precomposed.png" },
+                { "source": "apple-touch-icon-57x57-precomposed.png_", "dest": "apple-touch-icon-57x57-precomposed.png" },
+                { "source": "apple-touch-icon-72x72-precomposed.png_", "dest": "apple-touch-icon-72x72-precomposed.png" },
+                { "source": "ms-touch-icon-144x144-precomposed.png_", "dest": "ms-touch-icon-144x144-precomposed.png" },
+                { "source": "touch-icon-196x196.png_", "dest": "touch-icon-196x196.png" },
+                { "source": "touch-icon-57x57.png_", "dest": "touch-icon-57x57.png" }
+              ]
+            }
+          }
+        },
+        "scripts": {
+          "files": [
+            { "source": "main.js_", "dest": "main.js" }
+          ]
+        },
+        "styleguide": {
+          "files": [
+            { "source": "code-sample.js_", "dest": "code-sample.js" },
+            { "source": "index.html_", "dest": "index.html" }
+          ]
+        },
+        "styles": {
+          "files": [
+            { "source": "h5bp.css_", "dest": "h5bp.css" },
+            { "source": "main.css_", "dest": "main.css" },
+            { "source": "styles.css_", "dest": "styles.css" }
+          ],
+          "directories": {
+            "sass": {
+              "files": [
+                { "source": "_global.scss_", "dest": "_global.scss" },
+                { "source": "_helper.scss_", "dest": "_helper.scss" },
+                { "source": "_normalize.scss_", "dest": "_normalize.scss" },
+                { "source": "_themed.scss_", "dest": "_themed.scss" },
+                { "source": "_utils.scss_", "dest": "_utils.scss" },
+                { "source": "styles.scss_", "dest": "styles.scss" }
+              ],
+              "directories": {
+                "_components": {
+                  "files": [
+                    { "source": "_articles-list.scss_", "dest": "_articles-list.scss" },
+                    { "source": "_breadcrumb.scss_", "dest": "_breadcrumb.scss" },
+                    { "source": "_button.scss_", "dest": "_button.scss" },
+                    { "source": "_column-list.scss_", "dest": "_column-list.scss" },
+                    { "source": "_grid.scss_", "dest": "_grid.scss" },
+                    { "source": "_guides-list.scss_", "dest": "_guides-list.scss" },
+                    { "source": "_icon-circle.scss_", "dest": "_icon-circle.scss" },
+                    { "source": "_icons.scss_", "dest": "_icons.scss" },
+                    { "source": "_link.scss_", "dest": "_link.scss" },
+                    { "source": "_list.scss_", "dest": "_list.scss" },
+                    { "source": "_media.scss_", "dest": "_media.scss" },
+                    { "source": "_subsection-title.scss_", "dest": "_subsection-title.scss" },
+                    { "source": "_table.scss_", "dest": "_table.scss" },
+                    { "source": "_typography.scss_", "dest": "_typography.scss" }
+                  ]
+                },
+                "_modules": {
+                  "files": [
+                    { "source": "_article-nav.scss_", "dest": "_article-nav.scss" },
+                    { "source": "_articles-section.scss_", "dest": "_articles-section.scss" },
+                    { "source": "_did-you-know.scss_", "dest": "_did-you-know.scss" },
+                    { "source": "_editorial-header.scss_", "dest": "_editorial-header.scss" },
+                    { "source": "_featured-section.scss_", "dest": "_featured-section.scss" },
+                    { "source": "_featured-spotlight.scss_", "dest": "_featured-spotlight.scss" },
+                    { "source": "_guides-section.scss_", "dest": "_guides-section.scss" },
+                    { "source": "_highlight.scss_", "dest": "_highlight.scss" },
+                    { "source": "_in-this-guide.scss_", "dest": "_in-this-guide.scss" },
+                    { "source": "_next-lessons.scss_", "dest": "_next-lessons.scss" },
+                    { "source": "_page-header.scss_", "dest": "_page-header.scss" },
+                    { "source": "_quote.scss_", "dest": "_quote.scss" },
+                    { "source": "_related-guides.scss_", "dest": "_related-guides.scss" },
+                    { "source": "_related-items.scss_", "dest": "_related-items.scss" },
+                    { "source": "_summary-header.scss_", "dest": "_summary-header.scss" },
+                    { "source": "_toc.scss_", "dest": "_toc.scss" }
+                  ]
+                },
+                "_pages": {
+                  "files": [
+                    { "source": "_page-resources.scss_", "dest": "_page-resources.scss" },
+                    { "source": "_styleguide.scss_", "dest": "_styleguide.scss" }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

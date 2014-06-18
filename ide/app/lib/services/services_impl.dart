@@ -416,6 +416,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
         _addFunctionToOutline(outline, declaration);
       } else if (declaration is analyzer.ClassDeclaration) {
         _addClassToOutline(outline, declaration);
+      } else if (declaration is analyzer.TypeAlias) {
+        _addAliasToOutline(outline, declaration);
       } else {
         print("${declaration.runtimeType} is unknown");
       }
@@ -463,6 +465,23 @@ class AnalyzerServiceImpl extends ServiceImpl {
         _addConstructorToOutlineClass(outlineClass, member, declaration);
       }
     }
+  }
+  
+  void _addAliasToOutline(Outline outline, analyzer.TypeAlias declaration) {
+    analyzer.SimpleIdentifier nameNode;
+    
+    if (declaration is analyzer.ClassTypeAlias) {
+      nameNode = declaration.name;
+    } else if (declaration is analyzer.FunctionTypeAlias) {
+      nameNode = declaration.name;
+    } else {
+      throw "TypeAlias subclass ${declaration.runtimeType} is unknown";
+    }        
+    
+    String name = nameNode.name;
+    
+    outline.entries.add(_populateOutlineEntry(new OutlineTypeDef(name),
+        new _Range.fromAstNode(nameNode), new _Range.fromAstNode(declaration)));
   }
 
   void _addMethodToOutlineClass(OutlineClass outlineClass,

@@ -18,10 +18,10 @@ class SparkDialog extends SparkWidget {
   /**
    * The title of the dialog.
    */
-  @published String get title => _title;
-  @published set title(String value) {
-    _title = value;
-    if (_titleElement != null) _titleElement.text = value;
+  @published String get headerTitle => _headerTitle;
+  @published set headerTitle(String value) {
+    _headerTitle = value;
+    if (_headerTitleElement != null) _headerTitleElement.text = value;
   }
 
   /**
@@ -32,8 +32,8 @@ class SparkDialog extends SparkWidget {
   bool _activityVisible = false;
 
   SparkModal _modal;
-  String _title = '';
-  Element _titleElement;
+  String _headerTitle = '';
+  Element _headerTitleElement;
   FormElement _body;
   Element _progress;
   Iterable<SparkDialogButton> _buttons;
@@ -48,12 +48,12 @@ class SparkDialog extends SparkWidget {
     SparkWidget.enableKeyboardEvents(_modal);
 
     _modal = $['modal'];
-    _titleElement = $['title'];
+    _headerTitleElement = $['headerTitle'];
     _body = $['body'];
     _buttons = SparkWidget.inlineNestedContentNodes($['buttonsContent']);
     _progress = $['progress'];
 
-    title = _title;
+    headerTitle = _headerTitle;
     _progress.classes.toggle('hidden', !_activityVisible);
 
     // Listen to the form's global validity changes. Additional listeners are
@@ -66,14 +66,15 @@ class SparkDialog extends SparkWidget {
       _addValidatableFields(
           SparkWidget.inlineNestedContentNodes($['bodyContent']));
       _updateFormValidity();
-      _modal.toggle();
+      _modal.show();
+      focus();
     }
   }
 
   void hide() {
     if (_modal.opened) {
       _validatedFields.clear();
-      _modal.toggle();
+      _modal.hide();
     }
   }
 
@@ -84,6 +85,8 @@ class SparkDialog extends SparkWidget {
     _progress.classes.toggle('hidden', !_activityVisible);
   }
 
+  bool isDialogValid() => _validatedFields.every((f) => f.isValid);
+
   void _addValidatableFields(Iterable<Node> candidates) {
     _validatedFields.clear();
     _addValidatableFieldsImpl(candidates);
@@ -92,8 +95,7 @@ class SparkDialog extends SparkWidget {
   void _addValidatableFieldsImpl(Iterable<Node> candidates) {
     candidates.forEach((Element element) {
       if (element is InputElement) {
-        _validatedFields.add(
-            new _ValidatedField(element, _updateFormValidity));
+        _validatedFields.add(new _ValidatedField(element, _updateFormValidity));
       } else {
         _addValidatableFieldsImpl(element.children);
       }
@@ -102,7 +104,7 @@ class SparkDialog extends SparkWidget {
 
   void _updateFormValidity([_]) {
     // NOTE: _body.checkValidity() didn't work.
-    final bool formIsValid = _validatedFields.every((f) => f.isValid);
+    final bool formIsValid = isDialogValid();
     _buttons.forEach((b) => b.updateParentFormValidity(formIsValid));
   }
 }
