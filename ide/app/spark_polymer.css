@@ -442,7 +442,7 @@ button.ace_searchbtn.prev:hover {
 
 .outlineItem.topLevel.class:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
+  border-radius: 3px;
 }
 
 .outlineItem {
@@ -457,21 +457,25 @@ button.ace_searchbtn.prev:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-li.outlineItem.topLevel.class {
+.outlineItem.topLevel.class {
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
-.outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
+.outlineItem.topLevel.class, 
+.outlineItem.topLevel.class > a {
   color: #ddd;
 }
 
-.outlineItem.topLevel.function, .outlineItem.method,
-.outlineItem.topLevel.function > a, .outlineItem.method > a {
+.outlineItem.topLevel.function, 
+.outlineItem.method,
+.outlineItem.topLevel.function > a, 
+.outlineItem.method > a {
   color: #888;
 }
 
-.outlineItem.topLevel.function > a:after, .outlineItem.method > a:after {
+.outlineItem.topLevel.function > a:after, 
+.outlineItem.method > a:after {
   content: '()';
 }
 
@@ -492,14 +496,20 @@ li.outlineItem.topLevel.class {
   color: #888;
 }
 
-.outlineItem.topLevel.variable, .outlineItem.property,
-.outlineItem.topLevel.variable > a, .outlineItem.property > a {
+.outlineItem.topLevel.variable, 
+.outlineItem.property,
+.outlineItem.topLevel.variable > a, 
+.outlineItem.property > a {
   color: #77c;
 }
 
 .outlineItem .returnType {
   color: #666;
   margin-left: 0.5em;
+}
+
+.outlineItem a {
+  white-space: nowrap;
 }
 
 #toggleOutlineButton {
@@ -548,13 +558,8 @@ li.outlineItem.topLevel.class {
 }
 
 #outline {
-  margin-left: 15px;
-  padding: 10px 0;
+  padding: 7px;
   overflow-y: auto;
-}
-
-li.outlineItem a {
-  white-space: nowrap;
 }
 
 #outlineResizer {
