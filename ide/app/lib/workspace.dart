@@ -348,7 +348,7 @@ class Workspace extends Container {
     }));
 
     return Future.wait(futures).then((_) {
-      _save();
+      return _save();
     });
   }
 
