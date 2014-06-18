@@ -1842,7 +1842,11 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
     List<ws.Resource> resources;
 
     if (context == null) {
-      resources = [spark.focusManager.currentResource];
+      if (spark.focusManager.currentResource == null) {
+        resources = [];
+      } else {
+        resources = [spark.focusManager.currentResource];
+      }
     } else {
       resources = context;
     }
@@ -3376,21 +3380,26 @@ class ResourceRefreshJob extends Job {
     Completer completer = new Completer();
 
     Function consumeProject;
-     consumeProject = () {
+    Function runAgain;
+
+    consumeProject = () {
       ws.Project project = projects.removeAt(0);
 
       project.refresh().whenComplete(() {
         monitor.worked(1);
-
-        if (projects.isEmpty) {
-          completer.complete();
-        } else {
-          Timer.run(consumeProject);
-        }
+        runAgain();
       });
     };
 
-    Timer.run(consumeProject);
+    runAgain = () {
+      if (projects.isEmpty) {
+        completer.complete();
+      } else {
+        Timer.run(consumeProject);
+      }
+    };
+
+    runAgain();
 
     return completer.future;
   }
