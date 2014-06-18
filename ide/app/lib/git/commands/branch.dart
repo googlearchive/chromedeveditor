@@ -47,11 +47,13 @@ class Branch {
     String branchName = options.branchName;
 
     if (!_verifyBranchName(branchName)) {
-      throw new GitException(GitErrorConstants.GIT_INVALID_BRANCH_NAME);
+      return new Future.error(
+          new GitException(GitErrorConstants.GIT_INVALID_BRANCH_NAME));
      }
 
     return store.getHeadForRef('refs/heads/' + branchName).then((_) {
-      throw new GitException(GitErrorConstants.GIT_BRANCH_EXISTS);
+      return new Future.error(
+          new GitException(GitErrorConstants.GIT_BRANCH_EXISTS));
     }, onError: (e) {
       return _fetchAndCreateBranch(options, branchName, sourceBranchName);
     });
@@ -78,7 +80,7 @@ class Branch {
         }, onError: (GitException e) {
           if (e is! GitException ||
               e.errorCode != GitErrorConstants.GIT_FETCH_UP_TO_DATE) {
-            throw e;
+            return new Future.error(e);
           }
           return createBranch();
         });
