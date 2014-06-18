@@ -3380,18 +3380,18 @@ class ResourceRefreshJob extends Job {
     Completer completer = new Completer();
 
     Function consumeProject;
-    Function runAgain;
+    Function refreshNextProject;
 
     consumeProject = () {
       ws.Project project = projects.removeAt(0);
 
       project.refresh().whenComplete(() {
         monitor.worked(1);
-        runAgain();
+        refreshNextProject();
       });
     };
 
-    runAgain = () {
+    refreshNextProject = () {
       if (projects.isEmpty) {
         completer.complete();
       } else {
@@ -3399,7 +3399,7 @@ class ResourceRefreshJob extends Job {
       }
     };
 
-    runAgain();
+    refreshNextProject();
 
     return completer.future;
   }
