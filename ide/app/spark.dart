@@ -1842,7 +1842,11 @@ class ResourceRefreshAction extends SparkAction implements ContextAction {
     List<ws.Resource> resources;
 
     if (context == null) {
-      resources = [spark.focusManager.currentResource];
+      if (spark.focusManager.currentResource == null) {
+        resources = [];
+      } else {
+        resources = [spark.focusManager.currentResource];
+      }
     } else {
       resources = context;
     }
@@ -3106,7 +3110,11 @@ class _GitCloneTask {
 
           // Run Pub if the new project has a pubspec file.
           if (spark.pubManager.properties.isFolderWithPackages(project)) {
-            spark.jobManager.schedule(new PubGetJob(spark, project));
+            // There is issue with workspace sending duplicate events.
+            // TODO(grv): revisit workspace events.
+            Timer.run(() {
+              spark.jobManager.schedule(new PubGetJob(spark, project));
+            });
           }
 
           // Run Bower if the new project has a bower.json file.
@@ -3376,21 +3384,26 @@ class ResourceRefreshJob extends Job {
     Completer completer = new Completer();
 
     Function consumeProject;
-     consumeProject = () {
+    Function refreshNextProject;
+
+    consumeProject = () {
       ws.Project project = projects.removeAt(0);
 
       project.refresh().whenComplete(() {
         monitor.worked(1);
-
-        if (projects.isEmpty) {
-          completer.complete();
-        } else {
-          Timer.run(consumeProject);
-        }
+        refreshNextProject();
       });
     };
 
-    Timer.run(consumeProject);
+    refreshNextProject = () {
+      if (projects.isEmpty) {
+        completer.complete();
+      } else {
+        Timer.run(consumeProject);
+      }
+    };
+
+    refreshNextProject();
 
     return completer.future;
   }
