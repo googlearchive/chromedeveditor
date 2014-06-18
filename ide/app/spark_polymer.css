@@ -462,8 +462,14 @@ li.outlineItem.topLevel.class {
   margin-bottom: 10px;
 }
 
-.outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
+.outlineItem.topLevel.class, .outlineItem.topLevel.class > a,
+.outlineItem.topLevel.typedef, .outlineItem.topLevel.typedef > a {
   color: #ddd;
+}
+
+.outlineItem.topLevel.typedef > a:before{
+  content: 'typedef ';
+  color: #888;
 }
 
 .outlineItem.topLevel.function, .outlineItem.method,
