@@ -143,9 +143,22 @@ class Outline {
   }
 
   OutlineItem _addItem(OutlineItem item) {
+    // Add leaf items to be used to find a position in the outline to scroll to
+    // when the file in the editor is scrolled.
     _outlineItems.add(item);
+    if (item is OutlineClass) {
+      for (OutlineClassMember member in item.members) {
+        _outlineItems.add(member);
+      }
+    }
+
+    // Add [Element]s to the root [Element]. These are different from the above:
+    // they are top-level elements that may contain children matching the above.
     _rootList.append(item.element);
-    item.onClick.listen((event) => _childSelectedController.add(item));
+    // Listen to 'select' custom events on the element or one of its children.
+    item.element.on['selected'].listen((event) =>
+        _childSelectedController.add(event.detail));
+
     return item;
   }
 
@@ -154,20 +167,12 @@ class Outline {
 
   OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
       _addItem(new OutlineTopLevelFunction(data));
-  
+
   OutlineTypeDef _addTypeDef(services.OutlineTypeDef data) =>
       _addItem(new OutlineTypeDef(data));
 
-  OutlineClass _addClass(services.OutlineClass data) {
-    OutlineClass classItem = new OutlineClass(data);
-    classItem.onChildSelected.listen((event) =>
-        _childSelectedController.add(event));
-    _addItem(classItem);
-    for (OutlineClassMember member in classItem.members) {
-      _addItem(member);
-    }
-    return classItem;
-  }
+  OutlineClass _addClass(services.OutlineClass data) =>
+      _addItem(new OutlineClass(data));
 
   OutlineItem get selectedItem => _selectedItem;
 
@@ -276,6 +281,8 @@ abstract class OutlineItem {
 
     _anchor = new html.AnchorElement(href: "#");
     _anchor.text = displayName;
+    _anchor.onClick.listen((_) =>
+        _element.dispatchEvent(new html.CustomEvent('selected', detail: this)));
     _element.append(_anchor);
 
     if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
@@ -339,10 +346,7 @@ class OutlineTypeDef extends OutlineTopLevelItem {
 
 class OutlineClass extends OutlineTopLevelItem {
   html.UListElement _childrenRootElement = new html.UListElement();
-
   List<OutlineClassMember> members = [];
-  StreamController childSelectedController = new StreamController();
-  Stream get onChildSelected => childSelectedController.stream;
 
   OutlineClass(services.OutlineClass data)
       : super(data, "class") {
@@ -353,7 +357,6 @@ class OutlineClass extends OutlineTopLevelItem {
 
   OutlineClassMember _addItem(OutlineClassMember item) {
     _childrenRootElement.append(item.element);
-    item.onClick.listen((event) => childSelectedController.add(item));
     members.add(item);
     return item;
   }
@@ -413,8 +416,7 @@ class OutlineClass extends OutlineTopLevelItem {
 }
 
 abstract class OutlineClassMember extends OutlineItem {
-  OutlineClassMember(services.OutlineMember data,
-                     String cssClassName)
+  OutlineClassMember(services.OutlineMember data, String cssClassName)
       : super(data, cssClassName);
 }
 
