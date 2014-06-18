@@ -60,12 +60,12 @@ class Pull {
               if (commonSha == remoteSha) {
                 throw new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE);
               } else if (commonSha == localSha) {
-                // Move the localHead to remoteHead, and checkout.
-                return FileOps.createFileWithContent(root,
-                    '.git/${headRefName}', remoteSha, 'Text').then((_) {
-                  return store.getCurrentBranch().then((branch) {
-                    options.branchName = branch;
-                    return Checkout.checkout(options, true);
+                return store.getCurrentBranch().then((branch) {
+                  options.branchName = branch;
+                  return Checkout.checkout(options, remoteSha).then((_) {
+                    // Move the localHead to remoteHead.
+                    return FileOps.createFileWithContent(
+                        root, '.git/${headRefName}', remoteSha, 'Text');
                   });
                 });
               } else {
@@ -80,7 +80,7 @@ class Pull {
                       // Create a merge commit by default.
                       return Commit.createCommit(options, localSha, finalTreeSha,
                            headRefName).then((_) {
-                        return Checkout.checkout(options, true);
+                        return Checkout.checkout(options, finalTreeSha);
                       });
                     });
                   }).catchError((e) {

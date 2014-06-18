@@ -321,7 +321,8 @@ abstract class Spark
   }
 
   void initAceManager() {
-    _aceManager = new AceManager(new DivElement(), this, services, prefs);
+    _aceManager = new AceManager(
+        querySelector('#aceContainer'), this, services, prefs);
 
     syncPrefs.getValue('textFileExtensions').then((String value) {
       if (value != null) {
@@ -416,7 +417,7 @@ abstract class Spark
     //actionManager.registerAction(new FileOpenAction(this));
     actionManager.registerAction(new FileNewAction(this, getDialogElement('#fileNewDialog')));
     actionManager.registerAction(new FolderNewAction(this, getDialogElement('#folderNewDialog')));
-    actionManager.registerAction(new FolderOpenAction(this));
+    actionManager.registerAction(new FolderOpenAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new NewProjectAction(this, getDialogElement('#newProjectDialog')));
     actionManager.registerAction(new FileSaveAction(this));
     actionManager.registerAction(new PubGetAction(this));
@@ -455,7 +456,7 @@ abstract class Spark
     actionManager.registerAction(new FormatAction(this));
     actionManager.registerAction(new FocusMainMenuAction(this));
     actionManager.registerAction(new ImportFileAction(this));
-    actionManager.registerAction(new ImportFolderAction(this));
+    actionManager.registerAction(new ImportFolderAction(this, getDialogElement('#statusDialog')));
     actionManager.registerAction(new FileDeleteAction(this));
     actionManager.registerAction(new ProjectRemoveAction(this));
     actionManager.registerAction(new TopLevelFileRemoveAction(this));
@@ -520,13 +521,9 @@ abstract class Spark
     });
   }
 
-  Future openFolder() {
-    return _selectFolder().then((chrome.DirectoryEntry entry) {
-      if (entry != null) {
-        _OpenFolderJob job = new _OpenFolderJob(entry, this);
-        jobManager.schedule(job);
-      }
-    });
+  Future openFolder(chrome.DirectoryEntry entry) {
+    _OpenFolderJob job = new _OpenFolderJob(entry, this);
+    return jobManager.schedule(job);
   }
 
   Future importFile([List<ws.Resource> resources]) {
@@ -545,18 +542,10 @@ abstract class Spark
     });
   }
 
-  Future importFolder([List<ws.Resource> resources]) {
-    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
-        type: chrome.ChooseEntryType.OPEN_DIRECTORY);
-    return chrome.fileSystem.chooseEntry(options).then(
-        (chrome.ChooseEntryResult res) {
-      chrome.DirectoryEntry entry = res.entry;
-      if (entry != null) {
-        ws.Folder folder = resources.first;
-        folder.importDirectoryEntry(entry).catchError((e) {
-          showErrorMessage('Error while importing folder', e);
-        });
-      }
+  Future importFolder([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
+    ws.Folder folder = resources.first;
+    return folder.importDirectoryEntry(entry).catchError((e) {
+      showErrorMessage('Error while importing folder', e);
     });
   }
 
@@ -632,7 +621,7 @@ abstract class Spark
   }
 
   void _setErrorDialogText(String title, String message) {
-    _errorDialog.dialog.title = title;
+    _errorDialog.dialog.headerTitle = title;
 
     Element container = _errorDialog.getElement('#errorMessage');
     container.children.clear();
@@ -704,7 +693,7 @@ abstract class Spark
       });
     }
 
-    _okCancelDialog.dialog.title = title;
+    _okCancelDialog.dialog.headerTitle = title;
 
     Element container = _okCancelDialog.getElement('#okCancelMessage');
     container.children.clear();
@@ -1203,20 +1192,25 @@ abstract class SparkActionWithDialog extends SparkAction {
                         Element dialogElement)
       : super(spark, id, name) {
     _dialog = spark.createDialog(dialogElement);
+
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
-      submitBtn.onClick.listen((Event e) {
+      submitBtn.onClick.listen((e) {
+        // Consume the event so that the overlayToggle doesn't close the dialog.
         e..stopPropagation()..preventDefault();
         _commit();
       });
     }
+
     final Element cancelBtn = _dialog.getElement("[cancel]");
     if (cancelBtn != null) {
-      cancelBtn.onClick.listen((Event e) {
+      cancelBtn.onClick.listen((e) {
+        // Consume the event so that the overlayToggle doesn't close the dialog.
         e..stopPropagation()..preventDefault();
-        _cancel();
-      });
+        _cancel();}
+      );
     }
+
     final Element closingXBtn = _dialog.getShadowDomElement("#closingX");
     if (closingXBtn != null) {
       closingXBtn.onClick.listen((Event e) {
@@ -1231,23 +1225,34 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   Element getElement(String selectors) => _dialog.getElement(selectors);
 
-  List<Element> getElements(String selectors) =>
-      _dialog.getElements(selectors);
+  List<Element> getElements(String selectors) => _dialog.getElements(selectors);
 
   Element _triggerOnReturn(String selectors, [bool hideDialog = true]) {
     Element element = _dialog.getElement(selectors);
     element.onKeyDown.listen((event) {
       if (event.keyCode == KeyCode.ENTER) {
+        event..stopPropagation()..preventDefault();
+
+        // We do not submit if the dialog is invalid.
+        if (!_canSubmit()) return;
+
         _commit();
-        if (hideDialog) {
-          _dialog.hide();
-        }
+
+        if (hideDialog) _dialog.hide();
       }
     });
     return element;
   }
 
-  void _show() => _dialog.show();
+  bool _canSubmit() => _dialog.dialog.isDialogValid();
+
+  void _show() {
+    // TODO(grv) : There is a delay in delivering polymer changes. Remove this
+    // once this is fixed.
+    Timer.run(() {
+      _dialog.show();
+    });
+  }
   void _hide() => _dialog.hide();
 }
 
@@ -1279,6 +1284,34 @@ abstract class SparkActionWithProgressDialog extends SparkActionWithDialog {
     } else if (_progressDescriptionElement != null) {
       _progressDescriptionElement.text = description;
     }
+  }
+}
+
+abstract class SparkActionWithStatusDialog extends SparkActionWithProgressDialog {
+  SparkActionWithStatusDialog(Spark spark,
+                              String id,
+                              String name,
+                              Element dialogElement)
+      : super(spark, id, name, dialogElement);
+
+  /**
+   * Show the status dialog at least for 3 seconds. The dialog is closed when
+   * the given future [f] is completed.
+   */
+  void _waitForJob(String title, String progressMessage, Future f) {
+    _dialog.dialog.headerTitle = title;
+    _setProgressMessage(progressMessage);
+    _toggleProgressVisible(true);
+    _show();
+    // Show dialog for at least 3 seconds.
+    Timer timer = new Timer(new Duration(milliseconds: 3000), () {
+      f.whenComplete(() {
+        _setProgressMessage('');
+        _toggleProgressVisible(true);
+        _hide();
+      });
+    });
+    _show();
   }
 }
 
@@ -1364,7 +1397,8 @@ class FileDeleteAction extends SparkAction implements ContextAction {
       message = "Do you really want to delete ${resources.length} files?\nThis will permanently delete the files from disk and cannot be undone.";
     }
 
-    spark.askUserOkCancel(message, okButtonLabel: 'Delete').then((bool val) {
+    spark.askUserOkCancel(message, okButtonLabel: 'Delete', title: 'Delete')
+        .then((bool val) {
       if (val) {
         spark.workspace.pauseResourceEvents();
         Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
@@ -1496,8 +1530,20 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
   void _commit() {
     super._commit();
+    String newName = _nameElement.value;
 
-    if (_nameElement.value.isNotEmpty) {
+    if (newName.isNotEmpty) {
+      // Check if a file or folder already exist with the new name.
+      Iterable<ws.Resource> children = [];
+      if (resource.parent != null) {
+        children = resource.parent.getChildren();
+      }
+
+      if (children.any((ws.Resource r) => r.name == newName)) {
+        spark.showErrorMessage(
+            'Error During Rename', 'File or folder already exists.');
+        return;
+      }
       resource.rename(_nameElement.value).then((value) {
         spark._renameOpenEditor(resource);
       }).catchError((e) {
@@ -1665,7 +1711,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = _appliesTo(resource);
+    enabled = (resource != null && _appliesTo(resource));
   }
 }
 
@@ -2090,29 +2136,39 @@ class NewProjectAction extends SparkActionWithDialog {
   }
 }
 
-class FolderOpenAction extends SparkAction {
-  FolderOpenAction(Spark spark) : super(spark, "folder-open", "Add Folder to Workspace…");
+class FolderOpenAction extends SparkActionWithStatusDialog {
+  FolderOpenAction(Spark spark, SparkDialog dialog)
+      : super(spark, "folder-open", 'Open Folder…', dialog);
 
   void _invoke([Object context]) {
-    spark.openFolder();
+    _selectFolder().then((chrome.DirectoryEntry entry) {
+      if (entry != null) {
+        Future f = spark.openFolder(entry);
+        _waitForJob(name, 'Adding folder to workspace…', f);
+      }
+    });
   }
 }
 
 class DeployToMobileAction extends SparkActionWithProgressDialog implements ContextAction {
+  CheckboxInputElement _ipElement;
+  CheckboxInputElement _adbElement;
   InputElement _pushUrlElement;
   ws.Container deployContainer;
   ProgressMonitor _monitor;
 
   DeployToMobileAction(Spark spark, Element dialog)
       : super(spark, "application-push", "Deploy to Mobile", dialog) {
+    _ipElement = getElement("#ip");
+    _adbElement = getElement("#adb");
     _pushUrlElement = _triggerOnReturn("#pushUrl");
     enabled = false;
     spark.focusManager.onResourceChange.listen((r) => _updateEnablement(r));
 
     // When the IP address field is selected, check the `IP` checkbox.
-    getElement('#pushUrl').onFocus.listen((e) {
-      (getElement('#ip') as InputElement).checked = true;
-    });
+    _ipElement.onChange.listen(_enableInputs);
+    _adbElement.onChange.listen(_enableInputs);
+    _enableInputs();
   }
 
   Element get _deployDeviceMessage => getElement('#deployCheckDeviceMessage');
@@ -2152,7 +2208,11 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = _appliesTo(resource);
+    enabled = resource != null && _appliesTo(resource);
+  }
+
+  void _enableInputs([_]) {
+    _pushUrlElement.disabled = !_ipElement.checked;
   }
 
   void _toggleProgressVisible(bool visible) {
@@ -2164,11 +2224,12 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     _setProgressMessage("Deploying…");
     _toggleProgressVisible(true);
     _deployButton.disabled = true;
+    // TODO(ussuri): BUG #2252.
     _deployButton.deliverChanges();
 
     _monitor = new ProgressMonitorImpl(this);
 
-    String type = getElement('input[name="type"]:checked').id;
+    String type = getElement('input[name="mobileDeployType"]:checked').id;
     bool useAdb = type == 'adb';
     String url = _pushUrlElement.value;
 
@@ -2221,13 +2282,10 @@ class ProgressMonitorImpl extends ProgressMonitor {
 
 class PropertiesAction extends SparkActionWithDialog implements ContextAction {
   ws.Resource _selectedResource;
-  Element _titleElement;
   HtmlElement _propertiesElement;
 
   PropertiesAction(Spark spark, Element dialog)
       : super(spark, 'properties', 'Properties…', dialog) {
-    // TODO(ussuri): This is a hack. Polymerize.
-    _titleElement = dialog.shadowRoot.querySelector('#title');
     _propertiesElement = dialog.querySelector('#body');
   }
 
@@ -2235,7 +2293,7 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
     _selectedResource = context.first;
     final String type = _selectedResource is ws.Project ? 'Project' :
       _selectedResource is ws.Container ? 'Folder' : 'File';
-    _titleElement.text = '${type} Properties';
+    _dialog.dialog.headerTitle = '${type} Properties';
     _propertiesElement.innerHtml = '';
     _buildProperties().then((_) => _show());
   }
@@ -2405,29 +2463,17 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 }
 
-class GitPullAction extends SparkActionWithProgressDialog implements ContextAction {
+class GitPullAction extends SparkActionWithStatusDialog implements ContextAction {
   GitPullAction(Spark spark, SparkDialog dialog)
       : super(spark, "git-pull", "Pull from Origin", dialog);
 
   void _invoke([context]) {
     ws.Project project = context.first.project;
     ScmProjectOperations operations = spark.scmManager.getScmOperationsFor(project);
-
-    _dialog.dialog.title = 'Git Pull';
-    String branchName = operations.getBranchName();
-    _setProgressMessage('Updating ${branchName}...');
-    _toggleProgressVisible(true);
-
     Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
-    // Show dialog for at lest 2 seconds.
-    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
-      f.whenComplete(() {
-        _setProgressMessage('');
-        _toggleProgressVisible(true);
-        _hide();
-      });
-    });
-    _show();
+    String branchName = operations.getBranchName();
+    _waitForJob('Git Pull', 'Updating ${branchName}…', f);
+
   }
 
   String get category => 'git';
@@ -2435,7 +2481,7 @@ class GitPullAction extends SparkActionWithProgressDialog implements ContextActi
   bool appliesTo(context) => _isScmProject(context);
 }
 
-class GitAddAction extends SparkActionWithProgressDialog implements ContextAction {
+class GitAddAction extends SparkActionWithStatusDialog implements ContextAction {
   GitAddAction(Spark spark, SparkDialog dialog)
       : super(spark, "git-add", "Git Add", dialog);
   chrome.Entry entry;
@@ -2448,22 +2494,8 @@ class GitAddAction extends SparkActionWithProgressDialog implements ContextActio
       files.add(resource.entry);
     });
 
-    _dialog.dialog.title = 'Git Add';
-    String branchName = operations.getBranchName();
-    _setProgressMessage('Adding files to git...');
-    _toggleProgressVisible(true);
-
     Future f = spark.jobManager.schedule(new _GitAddJob(operations, files, spark));
-    // Show dialog for at lest 2 seconds.
-    Timer timer = new Timer(new Duration(milliseconds: 2000), () {
-      f.whenComplete(() {
-        _setProgressMessage('');
-        _toggleProgressVisible(true);
-        _hide();
-      });
-    });
-
-    _show();
+    _waitForJob('Git Add', 'Adding files to Git repository…', f);
   }
 
   String get category => 'git';
@@ -2699,7 +2731,6 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
   }
 
   void _commit() {
-
     SparkDialogButton commitButton = getElement('#gitCommit');
     commitButton.disabled = true;
     commitButton.deliverChanges();
@@ -2816,6 +2847,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   GitPushAction(Spark spark, Element dialog)
       : super(spark, "git-push", "Push to Origin…", dialog) {
     _commitsList = getElement('#gitCommitList');
+    _triggerOnReturn('#gitPush', false);
   }
 
   void _onClose() => _hide();
@@ -2859,8 +2891,8 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
         Timer.run(() {
           _show();
         });
-      }).catchError((e) {
-        e = SparkException.fromException(e);
+      }).catchError((exception) {
+        SparkException e = SparkException.fromException(exception);
         if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
           _handleAuthError(context);
         } else if (e.errorCode == SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR) {
@@ -2870,8 +2902,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
             spark.showErrorMessage('Push failed', message);
           });
         } else {
-          spark.showErrorMessage('Push failed',
-              SparkException.fromException(e).message);
+          spark.showErrorMessage('Push failed', e.message);
         }
       });
     });
@@ -2992,7 +3023,8 @@ class GitRevertChangesAction extends SparkAction implements ContextAction {
     text = 'Revert changes for ${text}?';
 
     // Show a yes/no dialog.
-    spark.askUserOkCancel(text, okButtonLabel: 'Revert').then((bool val) {
+    spark.askUserOkCancel(text, okButtonLabel: 'Revert', title: 'Revert Changes')
+        .then((bool val) {
       if (val) {
         operations.revertChanges(resources).then((_) {
           resources.first.project.refresh();
@@ -3364,27 +3396,23 @@ class ResourceRefreshJob extends Job {
   }
 }
 
-// TODO(terry):  When only polymer overlays are used remove _initialized and
-//               isPolymer's defintion and usage.
 class AboutSparkAction extends SparkActionWithDialog {
-  bool _initialized = false;
-
   AboutSparkAction(Spark spark, Element dialog)
-      : super(spark, "help-about", "About Spark", dialog);
+      : super(spark, "help-about", "About Spark", dialog) {
+    _checkbox.checked = _isTrackingPermitted;
+    _checkbox.onChange.listen((e) => _isTrackingPermitted = _checkbox.checked);
+  }
 
   void _invoke([Object context]) {
-    if (!_initialized) {
-      InputElement checkbox = getElement('#analyticsCheck');
-      checkbox.checked = _isTrackingPermitted;
-      checkbox.onChange.listen((e) => _isTrackingPermitted = checkbox.checked);
-
-      getElement('#aboutVersion').text = spark.appVersion;
-
-      _initialized = true;
-    }
-
+    _checkbox.checked = _isTrackingPermitted;
     _show();
   }
+
+  void _commit() {
+    _hide();
+  }
+
+  InputElement get _checkbox => getElement('#analyticsCheck');
 }
 
 // TODO(ussuri): Polymerize.
@@ -3481,6 +3509,16 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _invoke([Object context]) {
+    _resource = spark.focusManager.currentResource;
+
+    if (getAppContainerFor(_resource) == null) {
+      spark.showErrorMessage(
+          'Unable to Publish',
+          'Unable to publish the current selection; please select a Chrome App '
+          'or Extension to publish.');
+      return;
+    }
+
     if (!_initialized) {
       _newInput = getElement('input[value=new]');
       _existingInput = getElement('input[value=existing]');
@@ -3492,7 +3530,6 @@ class WebStorePublishAction extends SparkActionWithDialog {
       _initialized = true;
     }
 
-    _resource = spark.focusManager.currentResource;
     _show();
   }
 
@@ -3523,7 +3560,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
   }
 
   void _updateEnablement(ws.Resource resource) {
-    enabled = getAppContainerFor(resource) != null;
+    enabled = resource != null && getAppContainerFor(resource) != null;
   }
 }
 
@@ -3576,7 +3613,9 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   static GitAuthenticationDialog _instance;
 
   GitAuthenticationDialog(Spark spark, Element dialogElement)
-      : super(spark, "git-authentication", "Authenticate", dialogElement);
+      : super(spark, "git-authentication", "Authenticate", dialogElement) {
+    _triggerOnReturn('#gitPassword');
+  }
 
   void _invoke([Object context]) {
     (getElement('#gitUsername') as InputElement).value = '';
@@ -3628,11 +3667,20 @@ class ImportFileAction extends SparkAction implements ContextAction {
   bool appliesTo(Object object) => _isSingleFolder(object);
 }
 
-class ImportFolderAction extends SparkAction implements ContextAction {
-  ImportFolderAction(Spark spark) : super(spark, "folder-import", "Add Folder to Workspace…");
+class ImportFolderAction extends SparkActionWithStatusDialog implements ContextAction {
+  ImportFolderAction(Spark spark, SparkDialog dialog)
+      : super(spark, "folder-import", "Import Folder…", dialog);
 
   void _invoke([List<ws.Resource> resources]) {
-    spark.importFolder(resources);
+    chrome.ChooseEntryOptions options = new chrome.ChooseEntryOptions(
+           type: chrome.ChooseEntryType.OPEN_DIRECTORY);
+    chrome.fileSystem.chooseEntry(options).then((chrome.ChooseEntryResult res) {
+      chrome.DirectoryEntry entry = res.entry;
+      if (entry != null) {
+        Future f = spark.importFolder(resources, entry);
+        _waitForJob(name, 'Importing folder…', f);
+      }
+    });
   }
 
   String get category => 'folder';

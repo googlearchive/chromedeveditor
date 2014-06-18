@@ -27,14 +27,11 @@ class Add {
     return Status.updateAndGetStatus(options.store, entry).then(
         (FileStatus status) {
       if (status.type == FileStatusType.UNTRACKED) {
-        return FileStatus.createFromEntry(entry).then((FileStatus status) {
-          status.type = FileStatusType.MODIFIED;
-          options.store.index.updateIndexForEntry(entry, status);
-          return status;
-        });
-      } else {
-        return status;
+        status = FileStatus.createFromEntry(entry);
+        status.type = FileStatusType.MODIFIED;
+        options.store.index.updateIndexForEntry(entry, status);
       }
+      return status;
     });
   }
 

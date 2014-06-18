@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
+import 'ignore.dart';
 import 'index.dart';
 import 'status.dart';
 import '../file_operations.dart';
@@ -53,6 +54,10 @@ class Commit {
           });
         } else {
           chrome.ChromeFileEntry fileEntry = entry;
+
+          if (GitIgnore.ignore(entry.fullPath)) {
+            return new Future.value();
+          }
 
           return Status.updateAndGetStatus(store, entry).then(
               (FileStatus status) {

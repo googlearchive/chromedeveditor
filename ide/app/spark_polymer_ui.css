@@ -48,7 +48,7 @@ spark-dialog {
 }
 
 #fileFilter {
-  background: #fff url(images/search.png) 10px center no-repeat;
+  background: #fff url(images/search.svg) 10px center no-repeat;
   border: 1px solid #ddd;
   border-radius: 3px;
   height: 36px;
@@ -185,15 +185,12 @@ spark-dialog {
   display: none;
 }
 
-/* Deploy to mobile dialog */
-#mobileDeployDialog .modal-body {
-  padding-top: 10px;
-  padding-bottom: 0;
+#pushUrl {
+  width: 20em;
 }
 
-#pushUrl {
-  margin-left: 17px;
-  width: 20em;
+.radio-button-dependency {
+  margin: 10px 0 0 20px;
 }
 
 .input-label {
@@ -212,10 +209,6 @@ spark-dialog {
   flex: 1 1 auto;
 }
 
-#webStorePublishDialog label {
-  margin-left: 5px;
-}
-
 [selectableTxt] {
   -webkit-user-select: text;
 }
@@ -230,4 +223,10 @@ spark-dialog {
 /* Override Bootstrap's 'font-weight: bold' style for labels */
 label {
   font-weight: 500;
+}
+
+/* These two are special (secondary) */
+label[for="analyticsCheck"],
+label[for="stripWhitespace"] {
+  font-weight: 400;
 }

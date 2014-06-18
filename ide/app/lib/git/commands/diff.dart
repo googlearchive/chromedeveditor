@@ -19,6 +19,9 @@ class DiffEntry {
   final TreeEntry oldEntry;
   final TreeEntry newEntry;
   final String type;
+
+  // Represents the path relative to the given gitTreeObject. This may be
+  // different from the git root directory.
   String path;
 
   // String representation of the diff between the two versions of file.
@@ -26,7 +29,8 @@ class DiffEntry {
   DiffEntry(this.oldEntry, this.newEntry, this.type,  [String path]) {
 
     if (path == null) {
-      path = oldEntry == null ? newEntry.name : oldEntry.name;
+      // Populated back by treeDiffRecursive.
+      this.path = oldEntry == null ? newEntry.name : oldEntry.name;
     } else {
       this.path = path;
     }

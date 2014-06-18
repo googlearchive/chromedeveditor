@@ -7,25 +7,52 @@ library spark.outline;
 import 'dart:async';
 import 'dart:html' as html;
 
-import '../lib/services.dart' as services;
+import 'enum.dart';
+import 'services.dart' as services;
 import 'preferences.dart';
 
 final bool _INCLUDE_TYPES = true;
+
+class OffsetRange {
+  int top;
+  int bottom;
+  int get center => (top + bottom) ~/ 2;
+
+  OffsetRange([this.top = 0, this.bottom = 0]);
+
+  bool centeredSame(OffsetRange another) => center == another.center;
+  bool centeredHigher(OffsetRange another) => top < another.top;
+  bool centeredLower(OffsetRange another) => bottom > another.bottom;
+
+  bool includes(int offset) => offset >= top && offset <= bottom;
+  bool intersects(OffsetRange another) =>
+      !(bottom < another.top || top > another.bottom);
+
+  String toString() => "($top, $bottom)";
+}
+
+class _ScrollDirection extends Enum<html.ScrollAlignment> {
+  const _ScrollDirection._(html.ScrollAlignment val) : super(val);
+
+  String get enumName => '_ScrollDirection';
+
+  static const UP = const _ScrollDirection._(html.ScrollAlignment.TOP);
+  static const DOWN = const _ScrollDirection._(html.ScrollAlignment.BOTTOM);
+}
 
 /**
  * Defines a class to build an outline UI for a given block of code.
  */
 class Outline {
-  Map<int, OutlineItem> _outlineItemsByOffset;
+  List<OutlineItem> _outlineItems;
   OutlineItem _selectedItem;
+  OffsetRange _lastScrolledOffsetRange;
 
   html.Element _container;
   html.DivElement _outlineDiv;
+  html.DivElement _rootListDiv;
   html.UListElement _rootList;
-
-  html.ButtonElement _outlineButton;
-  html.SpanElement _scrollTarget;
-  int _initialScrollPosition = 0;
+  html.Element _outlineButton;
 
   final PreferenceStore _prefs;
   bool _visible = true;
@@ -35,53 +62,32 @@ class Outline {
   StreamController<OutlineItem> _childSelectedController = new StreamController();
 
   Outline(this._analyzer, this._container, this._prefs) {
-    // Use template to create the UI of outline.
-    html.DocumentFragment template =
-        (html.querySelector('#outline-template') as
-        html.TemplateElement).content;
-    html.DocumentFragment templateClone = template.clone(true);
-    _outlineDiv = templateClone.querySelector('#outline');
+    _outlineDiv = html.querySelector('#outlineContainer');
     _outlineDiv.onMouseWheel.listen((html.MouseEvent event) =>
         event.stopPropagation());
-    _rootList = templateClone.querySelector('#outline ul');
-    template =
-        (html.querySelector('#outline-button-template') as
-        html.TemplateElement).content;
-    templateClone = template.clone(true);
-    _outlineButton = templateClone.querySelector('#toggleOutlineButton');
+    _rootListDiv = _outlineDiv.querySelector('#outline');
+    _rootList = _rootListDiv.querySelector('ul');
+    _outlineButton = html.querySelector('#toggleOutlineButton');
     _outlineButton.onClick.listen((e) => toggle());
 
-    _container.children.add(_outlineButton);
     _prefs.getValue('OutlineCollapsed').then((String data) {
       if (data == 'true') {
         _outlineDiv.classes.add('collapsed');
       }
-      _container.children.add(_outlineDiv);
     });
   }
 
   Stream<OutlineItem> get onChildSelected => _childSelectedController.stream;
 
-  Stream get onScroll => _outlineDiv.onScroll;
+  Stream get onScroll => _rootListDiv.onScroll;
 
-  int get scrollPosition => _rootList.parent.scrollTop.toInt();
-  void set scrollPosition(int position) {
-    // If the outline has not been built yet, just save the position
-    _initialScrollPosition = position;
-    if (_scrollTarget != null) {
-      _scrollIntoView(_outlineDiv.clientHeight, position);
+  OffsetRange get scrollPosition => _lastScrolledOffsetRange;
+  void set scrollPosition(OffsetRange offsetRange) {
+    if (_outlineItems == null) {
+      // If the outline has not been built yet, just save the position
+      _lastScrolledOffsetRange = offsetRange;
     }
-  }
-
-  void _scrollIntoView(num top, num bottom) {
-    // Hack for scrollTop not working
-    _scrollTarget.hidden = false;
-    _scrollTarget.style
-        ..position = "absolute"
-        ..height = "${bottom - top}px"
-        ..top = "${top}px";
-    _scrollTarget.scrollIntoView();
-    _scrollTarget.hidden = true;
+    scrollOffsetRangeIntoView(offsetRange);
   }
 
   bool get visible => !_outlineDiv.classes.contains('collapsed');
@@ -101,17 +107,16 @@ class Outline {
   }
 
   void _populate(services.Outline outline) {
-    _outlineItemsByOffset = {};
+    _outlineItems = [];
     _rootList.children.clear();
-    _scrollTarget = new html.SpanElement();
-    _rootList.append(_scrollTarget);
 
     for (services.OutlineTopLevelEntry data in outline.entries) {
-      OutlineItem item = _create(data);
-      _outlineItemsByOffset[item.bodyStartOffset] = item;
+      _create(data);
     }
 
-    if (_initialScrollPosition != null) scrollPosition = _initialScrollPosition;
+    if (_lastScrolledOffsetRange != null) {
+      scrollOffsetRangeIntoView(_lastScrolledOffsetRange, _ScrollDirection.DOWN);
+    }
   }
 
   OutlineTopLevelItem _create(services.OutlineTopLevelEntry data) {
@@ -121,6 +126,8 @@ class Outline {
       return _addVariable(data);
     } else if (data is services.OutlineTopLevelFunction) {
       return _addFunction(data);
+    } else if (data is services.OutlineTypeDef) {
+      return _addTypeDef(data);
     } else {
       throw new UnimplementedError("Unknown type");
     }
@@ -135,7 +142,8 @@ class Outline {
     _prefs.setValue('OutlineCollapsed', value);
   }
 
-  OutlineTopLevelItem _addItem(OutlineTopLevelItem item) {
+  OutlineItem _addItem(OutlineItem item) {
+    _outlineItems.add(item);
     _rootList.append(item.element);
     item.onClick.listen((event) => _childSelectedController.add(item));
     return item;
@@ -146,12 +154,18 @@ class Outline {
 
   OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
       _addItem(new OutlineTopLevelFunction(data));
+  
+  OutlineTypeDef _addTypeDef(services.OutlineTypeDef data) =>
+      _addItem(new OutlineTypeDef(data));
 
   OutlineClass _addClass(services.OutlineClass data) {
-    OutlineClass classItem = new OutlineClass(data, _outlineItemsByOffset);
+    OutlineClass classItem = new OutlineClass(data);
     classItem.onChildSelected.listen((event) =>
         _childSelectedController.add(event));
     _addItem(classItem);
+    for (OutlineClassMember member in classItem.members) {
+      _addItem(member);
+    }
     return classItem;
   }
 
@@ -177,51 +191,72 @@ class Outline {
     }
   }
 
-  void scrollToOffsets(int firstCursorOffset, int lastCursorOffset) {
-    List<html.Node> outlineElements =
-        _outlineDiv.getElementsByClassName("outlineItem");
+  void scrollOffsetRangeIntoView(
+      OffsetRange offsetRange, [_ScrollDirection direction]) {
+    if (direction != null) {
+      // Direction overridden by the caller.
+    } else if (offsetRange.centeredLower(_lastScrolledOffsetRange)) {
+      direction = _ScrollDirection.DOWN;
+    } else if (offsetRange.centeredHigher(_lastScrolledOffsetRange)) {
+      direction = _ScrollDirection.UP;
+    } else {
+      // Direction not specified by the client and we haven't scrolled
+      // far enough from previous position.
+    }
 
-    if (outlineElements.length > 0) {
-      int firstItemIndex = _itemIndexAtCodeOffset(firstCursorOffset);
-      int lastItemIndex = _itemIndexAtCodeOffset(lastCursorOffset);
-
-      html.Element firstElement = outlineElements[firstItemIndex];
-
-      num bottomOffset;
-      if (outlineElements.length > lastItemIndex + 1) {
-        html.Element element = outlineElements[lastItemIndex + 1];
-        bottomOffset = element.offsetTop;
-      } else {
-        html.Element lastElement = outlineElements[lastItemIndex];
-        bottomOffset = lastElement.offsetTop + lastElement.offsetHeight;
-      }
-
-      _scrollIntoView(firstElement.offsetTop, bottomOffset);
+    if (direction != null) {
+      OutlineItem item = _edgeItemInCodeOffsetRange(
+          offsetRange, atBottom: direction == _ScrollDirection.DOWN);
+      _scrollItemIntoView(item, direction);
+      _lastScrolledOffsetRange = offsetRange;
     }
   }
 
-  int _itemIndexAtCodeOffset(int codeOffset, {bool returnCodeOffset: false}) {
-    if (_outlineItemsByOffset != null) {
-      int count = 0;
-      List<int> outlineOffsets = _outlineItemsByOffset.keys.toList()..sort();
-      int containerOffset = returnCodeOffset ? outlineOffsets[0] : 0;
+  void _scrollItemIntoView(OutlineItem item, _ScrollDirection direction) {
+    if (item == null) return;
 
-      // Finds the last outline item that *doesn't* satisfies this:
-      for (int outlineOffset in outlineOffsets) {
-        if (outlineOffset > codeOffset) break;
-        containerOffset = returnCodeOffset ? outlineOffset : count;
-        count++;
-      }
-      return containerOffset;
-    } else {
-      return null;
+    // This may change dynamically: do not cache.
+    html.Rectangle rootListRect = _rootListDiv.getBoundingClientRect();
+    html.Rectangle elementRect = item.element.getBoundingClientRect();
+    // Perhaps the item is already in view.
+    if (!rootListRect.containsRectangle(elementRect)) {
+      // Use [item.anchor], not [item.element] to pull the minimal amount of
+      // [item] into view. For example, [item.element] for OutlineClass
+      // spans the whole class, which may not even fit into the viewport.
+      item.anchor.scrollIntoView(direction.value);
     }
   }
 
   OutlineItem _itemAtCodeOffset(int codeOffset) {
-    int itemIndex = _itemIndexAtCodeOffset(codeOffset, returnCodeOffset: true);
-    if (itemIndex != null) {
-      return _outlineItemsByOffset[itemIndex];
+    if (_outlineItems == null) return null;
+
+    for (OutlineItem item in _outlineItems) {
+      // The first condition will work when the cursor is within an item.
+      // The second one will work when the cursor is between items:
+      // it will find the first element lower then the offset. It is only
+      // needed here because this function is called when the user clicks
+      // in the file somewhere: contrast this with [_edgeItemInCodeOffsetRange].
+      if (item.offsetRange.includes(codeOffset) ||
+          item.offsetRange.top > codeOffset) {
+        return item;
+      }
+    }
+    return null;
+  }
+
+  OutlineItem _edgeItemInCodeOffsetRange(
+      OffsetRange codeOffsetRange, {bool atBottom}) {
+    if (_outlineItems == null) return null;
+
+    Iterable<OutlineItem> searchSequence =
+        atBottom ? _outlineItems.reversed : _outlineItems;
+    for (OutlineItem item in searchSequence) {
+      // Unlike [_itemAtCodeOffset], this function is called when the user
+      // scrolls the cursor with the mouse or moves it with the arrow keys.
+      // In that case, there is always a prior position with a prior item
+      // already selected in the outline. So not finding anything and doing
+      // nothing is fine.
+      if (item.offsetRange.intersects(codeOffsetRange)) return item;
     }
     return null;
   }
@@ -232,8 +267,11 @@ abstract class OutlineItem {
   html.LIElement _element;
   html.AnchorElement _anchor;
   html.SpanElement _typeSpan;
+  OffsetRange _offsetRange;
 
   OutlineItem(this._data, String cssClassName) {
+    _offsetRange = new OffsetRange(_data.bodyStartOffset, _data.bodyEndOffset);
+
     _element = new html.LIElement();
 
     _anchor = new html.AnchorElement(href: "#");
@@ -241,10 +279,10 @@ abstract class OutlineItem {
     _element.append(_anchor);
 
     if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
-     _typeSpan = new html.SpanElement();
-     _typeSpan.text = returnType;
-     _typeSpan.classes.add("returnType");
-     _element.append(_typeSpan);
+      _typeSpan = new html.SpanElement();
+      _typeSpan.text = returnType;
+      _typeSpan.classes.add("returnType");
+      _element.append(_typeSpan);
     }
 
     _element.classes.add("outlineItem ${cssClassName}");
@@ -254,17 +292,24 @@ abstract class OutlineItem {
   String get returnType => null;
 
   Stream get onClick => _anchor.onClick;
+
   int get nameStartOffset => _data.nameStartOffset;
   int get nameEndOffset => _data.nameEndOffset;
-  int get bodyStartOffset => _data.bodyStartOffset;
-  int get bodyEndOffset => _data.bodyEndOffset;
+
+  OffsetRange get offsetRange => _offsetRange;
+
   html.LIElement get element => _element;
+  html.AnchorElement get anchor => _anchor;
 
   void setSelected(bool selected) {
     _element.classes.toggle("selected", selected);
   }
 
   void scrollIntoView() => _element.scrollIntoView();
+
+  @override
+  String toString() =>
+      "$runtimeType $displayName ($_offsetRange)";
 }
 
 abstract class OutlineTopLevelItem extends OutlineItem {
@@ -288,18 +333,22 @@ class OutlineTopLevelFunction extends OutlineTopLevelItem {
   String get returnType => _functionData.returnType;
 }
 
+class OutlineTypeDef extends OutlineTopLevelItem {
+  OutlineTypeDef(services.OutlineTypeDef data) : super(data, "typedef");
+}
+
 class OutlineClass extends OutlineTopLevelItem {
   html.UListElement _childrenRootElement = new html.UListElement();
 
   List<OutlineClassMember> members = [];
   StreamController childSelectedController = new StreamController();
   Stream get onChildSelected => childSelectedController.stream;
-  Map<int, OutlineItem> _outlineItemsByOffset;
 
-  OutlineClass(services.OutlineClass data, this._outlineItemsByOffset)
+  OutlineClass(services.OutlineClass data)
       : super(data, "class") {
     _element.append(_childrenRootElement);
     _populate(data);
+    _postProcess();
   }
 
   OutlineClassMember _addItem(OutlineClassMember item) {
@@ -311,12 +360,37 @@ class OutlineClass extends OutlineTopLevelItem {
 
   void _populate(services.OutlineClass classData) {
     for (services.OutlineEntry data in classData.members) {
-      OutlineItem item = _create(data);
-      _outlineItemsByOffset[item.bodyStartOffset] = item;
+      _createMember(data);
     }
   }
 
-  OutlineItem _create(services.OutlineEntry data) {
+  /**
+   * Clip the class's and constructor's offsetRanges to the actual ones.
+   * As provided by Ace (?), they both span the entire class's definition
+   * (for constructors, it's likely a bug), which is not what we want when
+   * highlighting or scrolling them into view.
+   */
+  void _postProcess() {
+    // Class's offsetRange.
+    if (members.length > 0) {
+      _offsetRange.bottom = members[0]._offsetRange.top - 1;
+    }
+    // Constructors' offsetRanges.
+    for (int i = 0; i < members.length; ++i) {
+      OutlineItem member = members[i];
+      if (member._data.name == _data.name ||
+          member._data.name.startsWith("${_data.name}.")) {
+        if (i > 0) {
+          member._offsetRange.top = members[i - 1]._offsetRange.bottom + 1;
+        }
+        if (i < members.length - 1) {
+          member._offsetRange.bottom = members[i + 1]._offsetRange.top - 1;
+        }
+      }
+    }
+  }
+
+  OutlineItem _createMember(services.OutlineEntry data) {
     if (data is services.OutlineMethod) {
       return addMethod(data);
     } else if (data is services.OutlineProperty) {
@@ -339,19 +413,22 @@ class OutlineClass extends OutlineTopLevelItem {
 }
 
 abstract class OutlineClassMember extends OutlineItem {
-  OutlineClassMember(services.OutlineMember data, String cssClassName)
+  OutlineClassMember(services.OutlineMember data,
+                     String cssClassName)
       : super(data, cssClassName);
 }
 
 class OutlineMethod extends OutlineClassMember {
-  OutlineMethod(services.OutlineMethod data) : super(data, "method");
+  OutlineMethod(services.OutlineMethod data)
+      : super(data, "method");
 
   services.OutlineMethod get _methodData => _data;
   String get returnType => _methodData.returnType;
 }
 
 class OutlineProperty extends OutlineClassMember {
-  OutlineProperty(services.OutlineProperty data) : super(data, "property");
+  OutlineProperty(services.OutlineProperty data)
+      : super(data, "property");
 
   services.OutlineProperty get _propertyData => _data;
   String get returnType => _propertyData.returnType;

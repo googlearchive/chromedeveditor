@@ -85,7 +85,7 @@ class NavigationManager {
     }
 
     if (previousLocation != null) {
-      if (_position < _locations.length) {
+      if (_position < _locations.length && _position != -1) {
         _locations[_position] = previousLocation;
       } else {
         _position++;

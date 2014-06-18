@@ -6,11 +6,12 @@
 
 <!--
 /**
- * spark-toolbar is a horizontal bar containing elements that can perform actions.
+ * spark-toolbar is a horizontal or vertical bar containing any kind of elements,
+ * including ones that perform actions.
  *
  * Example:
  *
- *     <spark-toolbar>
+ *     <spark-toolbar horizontal justify="spaced" spacing="small">
  *       <spark-button on-click="{{menuAction}}">Menu</spark-button>
  *       <div style="flex: 1">Title</div>
  *       <spark-button on-click="{{moreAction}}">More</spark-icon-button>
@@ -24,11 +25,12 @@
     attributes="horizontal
                 vertical
                 justify
-                spacing">
+                spacing
+                collapseEmpty">
   <template class="debug">
     <link rel="stylesheet" href="spark_toolbar.css">
 
-    <content></content>
+    <content id="content"></content>
   </template>
 
   <script type="application/dart;component=1" src="spark_toolbar.dart"></script>

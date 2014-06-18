@@ -44,7 +44,7 @@
   display: inline-flex;
   border-right: 1px solid #dadada;
   line-height: 48px;
-  padding: 0 32px 0 16px;
+  padding: 0 20px 0 8px;
 }
 
 .tabview-tablabel.hide-close-button:not(.tabview-tablabel-active) {
@@ -88,14 +88,16 @@
 .tabview-tablabel-closebutton {
   cursor: default;
   display: none;
-  font-size: 12px;
-  height: 16px;
-  width: 16px;
-  opacity: 0.2;
+  height: 18px;
+  width: 18px;
   outline: none;
   position: absolute;
-  right: 12px;
-  top: 16px;
+  right: 2px;
+  top: 15px;
+  padding: 3px;
+  /* NOTE: This also creates a stacking context, which affects the entire
+     tabview layout. */
+  opacity: 0.2;
 }
 
 .hide-close-button:not(.tabview-tablabel-active) .tabview-tablabel-closebutton {
@@ -104,9 +106,11 @@
 
 .tabview-tablabel-closable .tabview-tablabel-closebutton {
   display: block;
-  background: url(tabview_close.png);
+  background: url(../../../images/close.svg);
 }
 
+/* NOTE: These 4 rules also create stacking contexts, which affects the entire
+   tabview layout. */
 .tabview-tablabel-active .tabview-tablabel-closebutton {
   opacity: 0.5;
 }
