@@ -469,7 +469,7 @@ li.outlineItem.topLevel.class {
 
 .outlineItem.topLevel.typedef > a:before{
   content: 'typedef ';
-  color: #ddd;
+  color: #888;
 }
 
 .outlineItem.topLevel.function, .outlineItem.method,

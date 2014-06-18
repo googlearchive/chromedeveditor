@@ -413,13 +413,6 @@ class OutlineTypeDef extends OutlineTopLevelEntry {
 
   OutlineTypeDef([String name]) : super(name);
 
-  /**
-   * Populates values and children from a map
-   */
-  void populateFromMap(Map mapData) {
-    super.populateFromMap(mapData);
-  }
-
   Map toMap() => super.toMap()..addAll({"type": _type});
 }
 
