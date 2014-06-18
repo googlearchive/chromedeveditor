@@ -462,14 +462,21 @@ button.ace_searchbtn.prev:hover {
   margin-bottom: 10px;
 }
 
-.outlineItem.topLevel.class, 
-.outlineItem.topLevel.class > a {
+.outlineItem.topLevel.class,
+.outlineItem.topLevel.class > a,
+.outlineItem.topLevel.typedef,
+.outlineItem.topLevel.typedef > a {
   color: #ddd;
 }
 
-.outlineItem.topLevel.function, 
+.outlineItem.topLevel.typedef > a:before{
+  content: 'typedef ';
+  color: #888;
+}
+
+.outlineItem.topLevel.function,
 .outlineItem.method,
-.outlineItem.topLevel.function > a, 
+.outlineItem.topLevel.function > a,
 .outlineItem.method > a {
   color: #888;
 }

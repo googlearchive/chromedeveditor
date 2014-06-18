@@ -126,6 +126,8 @@ class Outline {
       _addVariable(data);
     } else if (data is services.OutlineTopLevelFunction) {
       _addFunction(data);
+    } else if (data is services.OutlineTypeDef) {
+      _addTypeDef(data);
     } else {
       throw new UnimplementedError("Unknown type");
     }
@@ -163,6 +165,9 @@ class Outline {
 
   void _addFunction(services.OutlineTopLevelFunction data) =>
       _addItem(new OutlineTopLevelFunction(data));
+  
+  void _addTypeDef(services.OutlineTypeDef data) =>
+      _addItem(new OutlineTypeDef(data));
 
   void _addClass(services.OutlineClass data) =>
       _addItem(new OutlineClass(data));
@@ -331,6 +336,10 @@ class OutlineTopLevelFunction extends OutlineTopLevelItem {
 
   services.OutlineTopLevelFunction get _functionData => _data;
   String get returnType => _functionData.returnType;
+}
+
+class OutlineTypeDef extends OutlineTopLevelItem {
+  OutlineTypeDef(services.OutlineTypeDef data) : super(data, "typedef");
 }
 
 class OutlineClass extends OutlineTopLevelItem {

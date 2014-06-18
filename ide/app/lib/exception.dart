@@ -53,6 +53,11 @@ class SparkException implements Exception {
       case GitErrorConstants.GIT_PUSH_NON_FAST_FORWARD:
         return new SparkException(SparkErrorMessages.GIT_PUSH_NON_FAST_FORWARD_MSG,
             SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
+
+      case GitErrorConstants.GIT_HTTP_CONN_RESET:
+        return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_REST_MSG,
+            SparkErrorConstants.GIT_HTTP_CONN_RESET);
+
     }
     return new SparkException(e.toString());
   }
@@ -69,6 +74,7 @@ class SparkErrorConstants {
   static final String BRANCH_NOT_FOUND = "branch_not_found";
   static final String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
   static final String AUTH_REQUIRED = "auth.required";
+  static final String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
   static final String GIT_CLONE_CANCEL = "git.clone_cancel";
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
       = "git.submodules_not_yet_supported";
@@ -82,4 +88,6 @@ class SparkErrorMessages {
       = 'Non fast-forward push is not yet supported.';
   static final String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
       = 'Repositories with sub modules are not yet supported.';
+  static final String GIT_HTTP_CONN_REST_MSG  = 'The connection was reset by '
+      'the server. This may happen when pushing commits with large changes.';
 }

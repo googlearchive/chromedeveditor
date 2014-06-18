@@ -1195,12 +1195,20 @@ abstract class SparkActionWithDialog extends SparkAction {
 
     final Element submitBtn = _dialog.getElement("[submit]");
     if (submitBtn != null) {
-      submitBtn.onClick.listen((_) => _commit());
+      submitBtn.onClick.listen((e) {
+        // Consume the event so that the overlayToggle doesn't close the dialog.
+        e..stopPropagation()..preventDefault();
+        _commit();
+      });
     }
 
     final Element cancelBtn = _dialog.getElement("[cancel]");
     if (cancelBtn != null) {
-      cancelBtn.onClick.listen((_) => _cancel());
+      cancelBtn.onClick.listen((e) {
+        // Consume the event so that the overlayToggle doesn't close the dialog.
+        e..stopPropagation()..preventDefault();
+        _cancel();}
+      );
     }
 
     final Element closingXBtn = _dialog.getShadowDomElement("#closingX");
@@ -1238,7 +1246,13 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   bool _canSubmit() => _dialog.dialog.isDialogValid();
 
-  void _show() => _dialog.show();
+  void _show() {
+    // TODO(grv) : There is a delay in delivering polymer changes. Remove this
+    // once this is fixed.
+    Timer.run(() {
+      _dialog.show();
+    });
+  }
   void _hide() => _dialog.hide();
 }
 
@@ -2717,7 +2731,6 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
   }
 
   void _commit() {
-
     SparkDialogButton commitButton = getElement('#gitCommit');
     commitButton.disabled = true;
     commitButton.deliverChanges();
@@ -2834,6 +2847,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
   GitPushAction(Spark spark, Element dialog)
       : super(spark, "git-push", "Push to Origin…", dialog) {
     _commitsList = getElement('#gitCommitList');
+    _triggerOnReturn('#gitPush', false);
   }
 
   void _onClose() => _hide();
@@ -3599,7 +3613,9 @@ class GitAuthenticationDialog extends SparkActionWithDialog {
   static GitAuthenticationDialog _instance;
 
   GitAuthenticationDialog(Spark spark, Element dialogElement)
-      : super(spark, "git-authentication", "Authenticate", dialogElement);
+      : super(spark, "git-authentication", "Authenticate", dialogElement) {
+    _triggerOnReturn('#gitPassword');
+  }
 
   void _invoke([Object context]) {
     (getElement('#gitUsername') as InputElement).value = '';

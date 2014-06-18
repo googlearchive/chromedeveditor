@@ -36,6 +36,7 @@ class DeviceInfo {
  * A class to encapsulate deploying an application to a mobile device.
  */
 class MobileDeploy {
+  static const int DEPLOY_PORT = 2424;
   static bool isAvailable() => chrome.usb.available;
 
   final Container appContainer;
@@ -109,25 +110,23 @@ class MobileDeploy {
     });
   }
 
-  List<int> _buildHttpRequest(String target, List<int> payload) {
+  /**
+   * Builds a request to given `target` at given `path` and with given `payload`
+   * (body content).
+   */
+  List<int> _buildHttpRequest(String target, String path, {List<int> payload}) {
     List<int> httpRequest = [];
+
     // Build the HTTP request headers.
     String header =
-        'POST /zippush?appId=${appContainer.project.name}&appType=chrome HTTP/1.1\r\n'
+        'POST /$path HTTP/1.1\r\n'
         'User-Agent: Spark IDE\r\n'
-        'Host: ${target}:2424\r\n';
+        'Host: ${target}:$DEPLOY_PORT\r\n';
     List<int> body = [];
 
-    // Add the CRX headers before the zip content.
-    // This is the string "Cr24" then three little-endian 32-bit numbers:
-    // - The version (2).
-    // - The public key length (0).
-    // - The signature length (0).
-    // Since the App Dev Tool on the other end doesn't check
-    // the signature or key, we don't bother sending them.
-
-    // Now follows the actual zip data.
-    body.addAll(payload);
+    if (payload != null) {
+      body.addAll(payload);
+    }
     httpRequest.addAll(header.codeUnits);
     httpRequest.addAll('Content-length: ${body.length}\r\n\r\n'.codeUnits);
     httpRequest.addAll(body);
@@ -135,35 +134,37 @@ class MobileDeploy {
     return httpRequest;
   }
 
-  Future _sendHttpPush(String target, ProgressMonitor monitor) {
-    List<int> httpRequest;
+  List<int> _buildPushRequest(String target, List<int> archivedData) {
+    return _buildHttpRequest(target,
+        "zippush?appId=${appContainer.project.name}&appType=chrome",
+        payload: archivedData);
+  }
+
+  List<int> _buildLaunchRequest(String target) {
+    return _buildHttpRequest(target, "launch?appId=${appContainer.project.name}");
+  }
+
+  Future _sendTcpRequest(String target, List<int> httpRequest) {
     TcpClient client;
-    return archiveContainer(appContainer, true).then((List<int> archivedData) {
-      monitor.worked(3);
-      httpRequest = _buildHttpRequest(target, archivedData);
-      monitor.worked(5);
-      return TcpClient.createClient(target, 2424);
-    }).then((TcpClient _client) {
-      client = _client;
+    return TcpClient.createClient(target, DEPLOY_PORT).then((TcpClient client) {
       client.write(httpRequest);
       return client.stream.timeout(new Duration(minutes: 1)).first;
-    }).then((List<int> responseBytes) {
-      String response = new String.fromCharCodes(responseBytes);
-      List<String> lines = response.split('\n');
-      if (lines == null || lines.isEmpty) {
-        return new Future.error('Bad response from push server');
-      }
-
-      if (lines.first.contains('200')) {
-        monitor.worked(2);
-      } else {
-        return new Future.error(lines.first);
-      }
     }).whenComplete(() {
       if (client != null) {
         client.dispose();
       }
     });
+  }
+
+  Future _sendHttpPush(String target, ProgressMonitor monitor) {
+    return archiveContainer(appContainer, true).then((List<int> archivedData) {
+      monitor.worked(3);
+      return _sendTcpRequest(target, _buildPushRequest(target, archivedData));
+    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes)
+    ).then((_) {
+      monitor.worked(6);
+      return _sendTcpRequest(target, _buildLaunchRequest(target));
+    }).then((List<int> responseBytes) => _expectHttpOkResponse(responseBytes));
   }
 
   // Safe to call multiple times. It will open the device if it has not been opened yet.
@@ -206,50 +207,61 @@ class MobileDeploy {
     // Start ADT on the device.
     //return client.startActivity(AdbApplication.CHROME_ADT);
 
-    // Setup port forwarding to 2424 on the device.
-    return client.forwardTcp(2424, 2424).then((_) {
-      // TODO: a SocketException, code == -100 here often means that the App Dev
-      // Tool is not running on the device.
-      // Push the app binary to port 2424.
+    // TODO: a SocketException, code == -100 here often means that the App Dev
+    // Tool is not running on the device.
+    // Setup port forwarding to DEPLOY_PORT on the device.
+    return client.forwardTcp(DEPLOY_PORT, DEPLOY_PORT).then((_) {
+      // Push the app binary on DEPLOY_PORT.
       return _sendHttpPush('127.0.0.1', monitor);
     });
+  }
+
+  Future _expectHttpOkResponse(List<int> msg) {
+    String response = new String.fromCharCodes(msg);
+    List<String> lines = response.split('\r\n');
+    Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
+
+    if (header.isEmpty) return new Future.error('Unexpected error during deploy.');
+
+    String body = lines.skip(header.length + 1).join('<br>\n');
+
+    if (!header.first.contains('200')) {
+      // Error! Fail with the error line.
+      return new Future.error(
+          '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
+    } else {
+      return new Future.value(body);
+    }
   }
 
   Future _pushViaUSB(ProgressMonitor monitor) {
     List<int> httpRequest;
     AndroidDevice _device;
 
+    Future _setTimeout(Future httpPushFuture) {
+      return httpPushFuture.timeout(new Duration(seconds: 30), onTimeout: () {
+        return new Future.error('Push timed out: Total time exceeds 30 seconds');
+      });
+    }
+
     // Build the archive.
     return archiveContainer(appContainer, true).then((List<int> archivedData) {
       monitor.worked(3);
-      httpRequest = _buildHttpRequest('localhost', archivedData);
-      monitor.worked(4);
+      httpRequest = _buildPushRequest('localhost', archivedData);
 
       // Send this payload to the USB code.
       return _fetchAndroidDevice();
     }).then((deviceResult) {
       _device = deviceResult;
-
-      return _device.sendHttpRequest(httpRequest, 2424).timeout(
-          new Duration(minutes: 5), onTimeout: () {
-            return new Future.error(
-                'Push timed out: Total time exceeds 5 minutes');
-          });
+      return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
     }).then((msg) {
-      monitor.worked(3);
-      String resp = new String.fromCharCodes(msg);
-      List<String> lines = resp.split('\r\n');
-      Iterable<String> header = lines.takeWhile((l) => l.isNotEmpty);
-      String body = lines.skip(header.length + 1).join('<br>\n');
-
-      if (header.first.indexOf('200') < 0) {
-        // Error! Fail with the error line.
-        return new Future.error(
-            '${header.first.substring(header.first.indexOf(' ') + 1)}: $body');
-      } else {
-        return body;
-      }
-    }).whenComplete(() {
+      monitor.worked(6);
+      return _expectHttpOkResponse(msg);
+    }).then((String response) {
+      monitor.worked(8);
+      httpRequest = _buildLaunchRequest('localhost');
+      return _setTimeout(_device.sendHttpRequest(httpRequest, DEPLOY_PORT));
+    }).then((List<int> msg) => _expectHttpOkResponse(msg)).whenComplete(() {
       if (_device != null) _device.dispose();
     });
   }
