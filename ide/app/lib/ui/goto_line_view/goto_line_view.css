@@ -6,12 +6,13 @@
   position: absolute;
   right: 0;
   top: 0;
+  height: 32px;
 }
 
 #container {
   display: none;
+  height: 100%;
   background: #eee;
-  padding: 4px;
   border: 1px solid #dadada;
   border-radius: 0;
   border-bottom-left-radius: 2px;
@@ -20,15 +21,16 @@
 }
 
 #container.showing {
-  display: block;
+  display: flex;
+  align-items: center;
 }
 
 #queryText {
   display: inline;
   border: 1px solid #cbcbcb;
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0 7px;
-  margin: 0;
+  margin: 0 0 0 4px;
   height: 22px;
   /* Override Ace's inherited font */
   font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -42,14 +44,14 @@
 
 #closeButton {
   position: relative;
-  top: 1px;
-  right: 2px;
+  top: 0;
+  right: 0;
   margin: 0;
-  padding: 3px;
+  padding: 0;
   cursor: default;
   display: inline;
-  height: 18px;
-  width: 18px;
+  height: 24px;
+  width: 24px;
   opacity: 0.5;
   background: url(../../../images/close.svg);
   border: 0 none;
