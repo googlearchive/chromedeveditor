@@ -440,14 +440,15 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
-      return Push.push(options).catchError(
-          (e) => throw SparkException.fromException(e));
+      return Push.push(options)
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
   Future<List<String>> getDeletedFiles() {
     return objectStore.then((store) {
-      return Status.getDeletedFiles(store);
+      return Status.getDeletedFiles(store)
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
@@ -455,8 +456,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Fetch fetch = new Fetch(new GitOptions(root: entry, store: store));
-      return fetch.fetch().catchError(
-          (e) => throw SparkException.fromException(e));
+      return fetch.fetch()
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
@@ -466,11 +467,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
       Pull pull = new Pull(options);
       return pull.pull().then((_) {
         _statusController.add(this);
-
         // We changed files on disk - let the workspace know to re-scan the
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
-      }).catchError((e) => throw SparkException.fromException(e));
+      }).catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 

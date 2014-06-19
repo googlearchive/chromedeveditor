@@ -62,7 +62,7 @@ class JobManager {
 
     try {
       _runningJob.run(monitor).catchError((e, st) {
-        _logger.severe("${_runningJob} errored", e, st);
+        _runningJob.completer.completeError(e);
       }).whenComplete(() {
         _jobFinished(_runningJob);
         if (_runningJob != null) _runningJob.done();
