@@ -7,7 +7,8 @@
 @import url("third_party/roboto/roboto.css");
 
 body {
-  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* BUG #2629 */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-size: 13px;
   -webkit-font-smoothing: auto;
@@ -34,6 +35,11 @@ body {
   background-color: #aaa;
 }
 
+::-webkit-scrollbar-thumb:hover,
+.scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background-color: #7d7d7d;
+}
+
 .scrollbar-dark::-webkit-scrollbar-track,
 .ace_scrollbar::-webkit-scrollbar-track {
   background-color: #666;
@@ -42,6 +48,11 @@ body {
 .scrollbar-dark::-webkit-scrollbar-thumb,
 .ace_scrollbar::-webkit-scrollbar-thumb {
   background-color: #aaa;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover,
+.ace_scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #ccc;
 }
 
 .top-align-box,

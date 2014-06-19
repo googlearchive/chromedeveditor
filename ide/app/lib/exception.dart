@@ -53,6 +53,47 @@ class SparkException implements Exception {
       case GitErrorConstants.GIT_PUSH_NON_FAST_FORWARD:
         return new SparkException(SparkErrorMessages.GIT_PUSH_NON_FAST_FORWARD_MSG,
             SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
+
+      case GitErrorConstants.GIT_PUSH_NO_REMOTE:
+        return new SparkException(SparkErrorMessages.GIT_PUSH_NO_REMOTE_MSG,
+            SparkErrorConstants.GIT_PUSH_NO_REMOTE);
+
+      case GitErrorConstants.GIT_PUSH_NO_COMMITS:
+        return new SparkException(SparkErrorMessages.GIT_PUSH_NO_COMMITS_MSG,
+            SparkErrorConstants.GIT_PUSH_NO_COMMITS);
+
+      case GitErrorConstants.GIT_BRANCH_EXISTS:
+        return new SparkException(SparkErrorMessages.GIT_BRANCH_EXISTS_MSG,
+            SparkErrorConstants.GIT_BRANCH_EXISTS);
+
+      case GitErrorConstants.GIT_BRANCH_NOT_FOUND:
+        return new SparkException(SparkErrorMessages.GIT_BRANCH_NOT_FOUND_MSG,
+            SparkErrorConstants.GIT_BRANCH_NOT_FOUND);
+
+      case GitErrorConstants.GIT_BRANCH_UP_TO_DATE:
+        return new SparkException(SparkErrorMessages.GIT_BRANCH_UP_TO_DATE_MSG,
+            SparkErrorConstants.GIT_BRANCH_UP_TO_DATE);
+
+      case GitErrorConstants.GIT_INVALID_BRANCH_NAME:
+        return new SparkException(SparkErrorMessages.GIT_INVALID_BRANCH_NAME_MSG,
+            SparkErrorConstants.GIT_INVALID_BRANCH_NAME);
+
+      case GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND:
+        return new SparkException(SparkErrorMessages.GIT_REMOTE_BRANCH_NOT_FOUND_MSG,
+            SparkErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
+
+      case GitErrorConstants.GIT_BRANCH_UP_TO_DATE:
+        return new SparkException(SparkErrorMessages.GIT_BRANCH_UP_TO_DATE_MSG,
+            SparkErrorConstants.GIT_BRANCH_UP_TO_DATE);
+
+      case GitErrorConstants.GIT_WORKING_TREE_NOT_CLEAN:
+        return new SparkException(SparkErrorMessages.GIT_WORKING_TREE_NOT_CLEAN_MSG,
+            SparkErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
+
+      case GitErrorConstants.GIT_HTTP_CONN_RESET:
+        return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_REST_MSG,
+            SparkErrorConstants.GIT_HTTP_CONN_RESET);
+
     }
     return new SparkException(e.toString());
   }
@@ -66,20 +107,47 @@ class SparkException implements Exception {
  * unique [SparkException].
  */
 class SparkErrorConstants {
-  static final String BRANCH_NOT_FOUND = "branch_not_found";
-  static final String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
-  static final String AUTH_REQUIRED = "auth.required";
-  static final String GIT_CLONE_CANCEL = "git.clone_cancel";
-  static final String GIT_SUBMODULES_NOT_YET_SUPPORTED
-      = "git.submodules_not_yet_supported";
-  static final String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
-  static final String GIT_PUSH_NON_FAST_FORWARD
+
+  static const String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
+  static const String GIT_CLONE_CANCEL = "git.clone_cancel";
+
+  static const String AUTH_REQUIRED = "auth.required";
+  static const String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
+  static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
+
+  static const String GIT_PUSH_NON_FAST_FORWARD
       = "git.push_non_fast_forward";
+  static const String GIT_PUSH_NO_REMOTE = "git.push_no_remote";
+  static const String GIT_PUSH_NO_COMMITS = "git.push_no_commits";
+
+  static const String GIT_BRANCH_EXISTS = 'git.branch_exists';
+  static const String GIT_BRANCH_UP_TO_DATE = "git.branch_up_to_date";
+  static const String GIT_BRANCH_NOT_FOUND = "git.branch_not_found";
+  static const String GIT_REMOTE_BRANCH_NOT_FOUND
+      = "git.remote_branch_not_found";
+  static const String GIT_INVALID_BRANCH_NAME = "git.invalid_branch_name";
+
+  static const String GIT_WORKING_TREE_NOT_CLEAN = "git.working_tree_not_clean";
+  static const String GIT_SUBMODULES_NOT_YET_SUPPORTED
+      = "git.submodules_not_yet_supported";
 }
 
 class SparkErrorMessages {
-  static final String GIT_PUSH_NON_FAST_FORWARD_MSG
+  static const String GIT_PUSH_NON_FAST_FORWARD_MSG
       = 'Non fast-forward push is not yet supported.';
-  static final String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
+  static const String GIT_PUSH_NO_REMOTE_MSG = "No remote to push.";
+  static const String GIT_PUSH_NO_COMMITS_MSG = "No commits to push.";
+
+  static const String GIT_BRANCH_EXISTS_MSG = 'Branch already exists.';
+  static const String GIT_BRANCH_UP_TO_DATE_MSG = "Branch up to date.";
+  static const String GIT_BRANCH_NOT_FOUND_MSG = "Branch not found.";
+  static const String GIT_REMOTE_BRANCH_NOT_FOUND_MSG
+      = "remote branch not found.";
+  static const String GIT_INVALID_BRANCH_NAME_MSG = "Invalid branch name.";
+
+  static const String GIT_WORKING_TREE_NOT_CLEAN_MSG = "Working tree is not clean.";
+  static const String GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG
       = 'Repositories with sub modules are not yet supported.';
+  static const String GIT_HTTP_CONN_REST_MSG  = 'The connection was reset by '
+      'the server. This may happen when pushing commits with large changes.';
 }

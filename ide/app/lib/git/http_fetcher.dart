@@ -358,6 +358,8 @@ class HttpGitException extends GitException {
         errorCode = GitErrorConstants.GIT_HTTP_NOT_FOUND_ERROR;
     } else if (request.status == 403) {
       errorCode = GitErrorConstants.GIT_HTTP_FORBIDDEN_ERROR;
+    } else if (request.status == 0) {
+      errorCode = GitErrorConstants.GIT_HTTP_CONN_RESET;
     } else {
       errorCode = GitErrorConstants.GIT_HTTP_ERROR;
     }

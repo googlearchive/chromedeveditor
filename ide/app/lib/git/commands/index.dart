@@ -392,20 +392,13 @@ class FileStatus {
     this.permission = Permissions.FILE_NON_EXECUTABLE;
   }
 
-  static Future<FileStatus> createFromEntry(chrome.Entry entry) {
-    return entry.getMetadata().then((chrome.Metadata data) {
-      // TODO(grv) : Check the modification time when it is available.
-      return getShaForEntry(entry, 'blob').then((String sha) {
-        FileStatus status = new FileStatus();
-        status.path = entry.fullPath;
-        status.sha = sha;
-        status.size = data.size;
-        status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
-        // TODO(grv): Read real file permissions from metadata when available.
-        status.permission = Permissions.FILE_NON_EXECUTABLE;
-        return status;
-      });
-    });
+  static FileStatus createFromEntry(chrome.Entry entry) {
+    FileStatus status = new FileStatus();
+    status.path = entry.fullPath;
+    status.sha = '';
+    // TODO(grv): Read real file permissions from metadata when available.
+    status.permission = Permissions.FILE_NON_EXECUTABLE;
+    return status;
   }
 
   static FileStatus createForDirectory(chrome.Entry entry) {

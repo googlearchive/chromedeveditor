@@ -404,6 +404,8 @@ abstract class OutlineTopLevelEntry extends OutlineEntry {
       entry = new OutlineTopLevelFunction()..populateFromMap(mapData);
     } else if (type == OutlineTopLevelVariable._type) {
       entry = new OutlineTopLevelVariable()..populateFromMap(mapData);
+    } else if (type == OutlineTypeDef._type) {
+      entry = new OutlineTypeDef()..populateFromMap(mapData);
     }
 
     entry.populateFromMap(mapData);
@@ -411,6 +413,17 @@ abstract class OutlineTopLevelEntry extends OutlineEntry {
   }
 
   Map toMap() => super.toMap();
+}
+
+/**
+ * Defines a TypeDef entry in the [Outline].
+ */
+class OutlineTypeDef extends OutlineTopLevelEntry {
+  static String _type = "typedef";
+
+  OutlineTypeDef([String name]) : super(name);
+
+  Map toMap() => super.toMap()..addAll({"type": _type});
 }
 
 /**

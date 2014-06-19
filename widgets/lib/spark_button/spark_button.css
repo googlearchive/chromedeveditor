@@ -13,7 +13,7 @@
   border-radius: 2px;
   -webkit-user-select: none;
   cursor: pointer;
-  fill-opacity: 0.7;
+  fill: #7d7d7d;
 }
 
 :host([round]) {
@@ -21,9 +21,7 @@
 }
 
 :host(:hover) {
-  background: #f4f4f4;
-  fill: #000;
-  fill-opacity: 1;
+  background: #eee;
 }
 
 :host(:active,
@@ -66,8 +64,8 @@
 
 :host([disabled]) {
   background: #eaeaea !important;
-  color: #a8a8a8 !important;
-  opacity: 0.4 !important;
+  color: #c9c9c9 !important;
+  fill: #c9c9c9 !important;
   box-shadow: none !important;
   cursor: auto !important;
   pointer-events: none !important;

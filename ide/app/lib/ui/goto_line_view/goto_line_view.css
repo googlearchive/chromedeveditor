@@ -6,29 +6,37 @@
   position: absolute;
   right: 0;
   top: 0;
+  height: 32px;
 }
 
 #container {
   display: none;
+  height: 100%;
   background: #eee;
-  padding: 4px;
   border: 1px solid #dadada;
   border-radius: 0;
+  border-bottom-left-radius: 2px;
   border-top: 0;
   border-right: none;
 }
 
 #container.showing {
-  display: block;
+  display: flex;
+  align-items: center;
 }
 
 #queryText {
   display: inline;
   border: 1px solid #cbcbcb;
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0 7px;
-  margin: 0;
+  margin: 0 0 0 4px;
   height: 22px;
+  /* Override Ace's inherited font */
+  /* BUG #2629 */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 500;
+  font-size: 12px;
 }
 
 #queryText:focus {
@@ -37,24 +45,24 @@
 
 #closeButton {
   position: relative;
-  top: 4px;
-  right: 3px;
+  top: 0;
+  right: 0;
   margin: 0;
   padding: 0;
   cursor: default;
   display: inline;
-  font-size: 12px;
-  height: 15px;
-  width: 13px;
+  height: 24px;
+  width: 24px;
   opacity: 0.5;
-  background: url(search_close.png);
+  background: url(../../../images/close.svg);
   border: 0 none;
 }
 
 #closeButton:hover {
   opacity: 1.0;
+  cursor: pointer;
 }
 
-#closeButton:active {
+#closeButton:focus {
   outline: none;
 }
