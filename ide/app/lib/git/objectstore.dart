@@ -125,13 +125,35 @@ class ObjectStore {
     });
   }
 
-  Future<chrome.FileEntry> createNewRef(String refName, String sha) {
-    String path = GIT_FOLDER_PATH + refName;
-    String content = sha + '\n';
-    return FileOps.createFileWithContent(_rootDir, path, content, "Text");
+  Future clearRemoteRefs() {
+    return root.getDirectory(GIT_REFS_REMOTES_ORIGIN_PATH).then(
+        (dir) => dir.removeRecursively()).catchError((e){});
   }
 
-  Future<chrome.FileEntry> setHeadRef(String refName, String sha) {
+  Future writeRemoteRefs(List<GitRef> refs) {
+    // Clear old refs. This will ensure, the branches deleted on remote,
+    // are deleted locally.
+    return clearRemoteRefs().then((_) {
+      return Future.forEach(refs, (GitRef ref) {
+        String refName = ref.name.split('/').last;
+        if (ref.name == "HEAD" || refName == "head" || refName == "merge")  {
+          return new Future.value();
+        }
+        return createRemoteRef(refName, ref.sha);
+      });
+    });
+  }
+
+  Future<chrome.FileEntry> createRemoteRef(String refName, String sha)
+      => _createNewRef(GIT_REFS_REMOTES_ORIGIN_PATH + refName, sha);
+
+  Future<chrome.FileEntry> createLocalRef(String refName, String sha)
+      => _createNewRef(GIT_REFS_HEADS_PATH + refName, sha);
+
+  Future<chrome.FileEntry> _createNewRef(String path, String sha)
+      => FileOps.createFileWithContent(_rootDir, path, sha + '\n', "Text");
+
+  Future<chrome.FileEntry> setHeadRef(String refName) {
     String content = 'ref: ${refName}\n';
     return FileOps.createFileWithContent(_rootDir, gitPath + HEAD_PATH,
         content, "Text");
@@ -631,7 +653,7 @@ class ObjectStore {
   Future<String> writeTree(List treeEntries) {
     List blobParts = [];
     treeEntries.forEach((TreeEntry tree) {
-      blobParts.add((tree.isBlob ? '100644 ' : '40000 ') + tree.name);
+      blobParts.add(tree.permission + ' ' + tree.name);
       blobParts.add(new Uint8List.fromList([0]));
       blobParts.add(new Uint8List.fromList(tree.shaBytes));
     });

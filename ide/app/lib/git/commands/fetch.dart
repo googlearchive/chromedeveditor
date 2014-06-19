@@ -58,7 +58,7 @@ class Fetch {
 
       // get current branch.
       String headRefName = 'refs/heads/' + branchName;
-      return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
+      return _updateAndGetRemoteRefs(store, fetcher).then((List<GitRef> refs) {
         GitRef branchRef = refs.firstWhere(
             (GitRef ref) => ref.name == headRefName, orElse: () => null);
 
@@ -84,8 +84,22 @@ class Fetch {
     });
   }
 
+  static Future<List<GitRef>> updateAndGetRemoteRefs(GitOptions options) {
+    ObjectStore store = options.store;
+    HttpFetcher fetcher = new HttpFetcher(options.store, 'origin',
+        store.config.url, options.username, options.password);
+    return _updateAndGetRemoteRefs(store, fetcher);
+  }
+
+  static Future<List<GitRef>> _updateAndGetRemoteRefs(
+      ObjectStore store, HttpFetcher fetcher) {
+    return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
+      return store.writeRemoteRefs(refs).then((_) => refs);
+    });
+  }
+
   Future _createAndUpdateRef(GitRef branchRef, GitRef wantRef) {
-    String path = '.git/' + REFS_REMOTE_HEADS + branchRef.name.split('/').last;
+    String path = GIT_REFS_REMOTES_ORIGIN_PATH + branchRef.name.split('/').last;
     return FileOps.createFileWithContent(root, path, branchRef.sha, "Text");
   }
 

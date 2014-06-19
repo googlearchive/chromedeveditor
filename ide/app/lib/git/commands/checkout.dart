@@ -57,7 +57,8 @@ class Checkout {
     return Future.forEach(diff.getAddedEntries(), (DiffEntry diffEntry) {
       TreeEntry entry = diffEntry.newEntry;
       if (entry.isBlob) {
-        return ObjectUtils.expandBlob(dir, store, entry.name, entry.sha);
+        return ObjectUtils.expandBlob(
+            dir, store, entry.name, entry.sha, entry.permission);
       } else {
         return dir.createDirectory(entry.name).then((newDir) {
           return ObjectUtils.expandTree(newDir, store, entry.sha);
@@ -72,7 +73,7 @@ class Checkout {
           TreeEntry newEntry = diffEntry.newEntry;
           if (newEntry.isBlob) {
             return ObjectUtils.expandBlob(dir, store, newEntry.name,
-                newEntry.sha);
+                newEntry.sha, newEntry.permission);
           } else {
             return store.retrieveObjectList([oldEntry.sha, newEntry.sha],
                 "Tree").then((trees) {
@@ -87,34 +88,44 @@ class Checkout {
   }
 
   /**
-   * Switches the workspace to a given git branch.
+   * Switches the workspace to a given git branch or a given [treeSha].
    * Throws a BRANCH_NOT_FOUND exception if the branch does not exist.
    *
    * TODO(grv): Support checkout of single file, commit heads etc.
    */
-  static Future checkout(GitOptions options, [bool force=false]) {
+  static Future checkout(GitOptions options, [String treeSha]) {
+    ObjectStore store = options.store;
+    String branch = options.branchName;
+
+    return store.getHeadSha().then((String currentSha) {
+      if (treeSha != null) {
+        return _checkout(options, currentSha, treeSha);
+      } else {
+        return store.getHeadForRef(REFS_HEADS + branch).then((String branchSha) {
+          return _checkout(options, currentSha, branchSha);
+        }, onError: (e) {
+          throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
+        });
+      }
+    });
+  }
+
+  static Future _checkout(GitOptions options, String currentSha, String newSha) {
     chrome.DirectoryEntry root = options.root;
     ObjectStore store = options.store;
     String branch = options.branchName;
 
-    return store.getHeadForRef(REFS_HEADS + branch).then(
-        (String branchSha) {
-      return store.getHeadSha().then((String currentSha) {
-        if (currentSha != branchSha || force) {
-          return Status.isWorkingTreeClean(store).then((_) {
-            return store.getTreesFromCommits([currentSha, branchSha]).then(
-                (List<TreeObject> trees) {
-              return smartCheckout(root, store, trees[0], trees[1]).then((_) {
-                return store.setHeadRef(REFS_HEADS + branch, '');
-              });
-            });
+    if (currentSha != newSha) {
+      return Status.isWorkingTreeClean(store).then((_) {
+        return store.getTreesFromCommits([currentSha, newSha]).then(
+            (List<TreeObject> trees) {
+          return smartCheckout(root, store, trees[0], trees[1]).then((_) {
+            return store.setHeadRef(REFS_HEADS + branch);
           });
-        } else {
-          return store.setHeadRef(REFS_HEADS + branch, '');
-        }
+        });
       });
-    }, onError: (e) {
-      throw new GitException(GitErrorConstants.GIT_BRANCH_NOT_FOUND);
-    });
+    } else {
+      return store.setHeadRef(REFS_HEADS + branch);
+    }
   }
 }

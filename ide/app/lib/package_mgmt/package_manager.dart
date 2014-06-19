@@ -70,8 +70,12 @@ abstract class PackageManager {
 
   Future installPackages(Folder container);
   Future upgradePackages(Folder container);
-  
-  Future isPackagesInstalled(Folder container);
+
+  /**
+   * Return `true` or `null` if all packages are installed. Otherwise, return a
+   * `String` with the name of an uninstalled package.
+   */
+  Future<dynamic> arePackagesInstalled(Folder container);
 }
 
 abstract class PackageResolver {

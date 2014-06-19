@@ -35,10 +35,9 @@ body {
 
 #splashScreen {
   background: #fff;
-  background-image: url("images/spark_512.png");
+  background-image: url("images/icon_256.png");
   background-position: center;
   background-repeat: no-repeat;
-  background-size: 256px 256px;
   opacity: 1;
   transition: opacity 300ms;
   position: fixed;
@@ -69,6 +68,11 @@ body {
   overflow: hidden;
 }
 
+/*
+ * Ace overrides.
+ * TODO(ussuri): Move to a separate file.
+ */
+
 .ace_gutter-cell {
   color: #aaa;
 }
@@ -85,7 +89,8 @@ div.ace_gutter-cell.ace_warning {
   background-image: url("images/warning_icon.png");
 }
 
-div.ace_gutter-cell.ace_info, .ace_dark div.ace_gutter-cell.ace_info {
+div.ace_gutter-cell.ace_info,
+.ace_dark div.ace_gutter-cell.ace_info {
   background-image: url("images/info_icon.png");
 }
 
@@ -105,40 +110,51 @@ img.ace-tooltip {
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  width: 305px;
+  /* Can't use 'inherit' here: Ace overrides that. */
+  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 500;
   font-size: 12px;
 }
 
 div.ace_search.right {
   background-color: #eee;
   border-radius: 0px;
+  border-bottom-left-radius: 2px;
   border-right: none;
   border-left: 1px solid #dadada;
-  width: 299px;
+  width: 305px;
   max-width: none;
   z-index: 101;
 }
 
-div.ace_search_form, div.ace_replace_form {
-  width: 270px;
+div.ace_search_form,
+div.ace_replace_form {
+  width: 275px;
+}
+
+.ace_search_form .ace_search_field {
+  width: 219px;
 }
 
 .ace_replace_form .ace_search_field {
-  width: 184px;
+  width: 194px;
 }
 
 button.ace_replacebtn {
   color: #484848;
-  font-weight: bold;
+  font-weight: 500;
   padding-left: 5px;
   padding-right: 5px;
 }
 
-button.ace_searchbtn:hover, button.ace_replacebtn:hover {
+button.ace_searchbtn:hover,
+button.ace_replacebtn:hover {
   background-color: #eee;
 }
 
-button.ace_replacebtn:active, button.ace_searchbtn:active {
+button.ace_replacebtn:active,
+button.ace_searchbtn:active {
   outline: none;
 }
 
@@ -148,10 +164,13 @@ div.ace_search_options {
 
 button.ace_searchbtn_close {
   position: absolute;
-  top: 4px;
-  right: 5px;
+  top: -1px;
+  right: 0;
+  height: 24px;
+  width: 24px;
+  padding: 0;
   opacity: 0.5;
-  background: url(images/search_close.png);
+  background: url(images/close.svg);
 }
 
 button.ace_searchbtn_close:hover {
@@ -163,6 +182,23 @@ button.ace_searchbtn_close:hover {
 button.ace_searchbtn_close:active {
   outline: none;
 }
+
+button.ace_searchbtn.next {
+  background: #fff url(images/find-next.svg);
+}
+
+button.ace_searchbtn.prev {
+  background: #fff url(images/find-prev.svg);
+}
+
+button.ace_searchbtn.next:hover,
+button.ace_searchbtn.prev:hover {
+  background-color: #eee;
+}
+
+/*
+ * - end Ace overrides.
+ */
 
 .always-view-as-text-button {
   position: absolute;
@@ -191,7 +227,7 @@ button.ace_searchbtn_close:active {
 }
 
 .minimap-marker.error {
-  background: #F55;
+  background: #d0021b;
 }
 
 .minimap-marker.warning {
@@ -200,6 +236,10 @@ button.ace_searchbtn_close:active {
 
 .minimap-marker.info {
   background: #9CC;
+}
+
+.listview-row {
+  margin: 0 16px;
 }
 
 .fileview-filename-container {
@@ -211,7 +251,7 @@ button.ace_searchbtn_close:active {
 
 .fileview-filename-container.project .filename {
   font-size: 16px;
-  top: 10px;
+  top: 9px;
 }
 
 .listview-cell-highlighted .fileview-filename-container .filename {
@@ -222,64 +262,60 @@ button.ace_searchbtn_close:active {
   color: #fff;
 }
 
-.fileview-filename-container .fileStatus {
+.treeviewcell-status {
   background: #999;
-	border-radius: 2px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
 
   position: absolute;
-  top: 2px;
-  right: 7px;
-  height: 16px;
+  left: -16px;
+  width: 0;
+  top: 0;
+  height: 23px;
 
   transition: width 0.4s;
-  width: 0;
 }
 
-.fileview-filename-container.project .fileStatus {
-  top: 12px;
+.treeviewcell-status.project {
+  height: 38px;
 }
 
-.fileview-filename-container .fileStatus.error {
-  width: 5px;
-  background: #F55;
+.treeviewcell-status.error {
+  width: 8px;
+  background: #d0021b;
 }
 
-.fileview-filename-container .fileStatus.warning {
-  width: 5px;
+.treeviewcell-status.warning {
+  width: 8px;
   background: #DD3;
 }
 
-.fileview-filename-container .fileStatus.info {
-  width: 5px;
+.treeviewcell-status.info {
+  width: 8px;
   background: #9CC;
 }
 
-.listview-cell-highlighted .fileview-filename-container .fileStatus {
-  background: #fff;
-}
-
 .fileview-filename-container .gitStatus {
-  border-radius: 2px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
   background: #999;
+
   position: absolute;
-  top: 2px;
-  right: 1px;
-  height: 16px;
+  top: 0;
+  height: 23px;
+  right: -16px;
   width: 0;
+
   transition: width 0.4s;
 }
 
-.fileview-filename-container.project .gitStatus {
-  top: 12px;
+.fileview-filename-container.project > .gitStatus {
+  height: 38px;
 }
 
-.fileview-filename-container .gitStatus.dirty {
-  width: 5px;
-  background: #008ab8;
-}
-
-.listview-cell-highlighted .fileview-filename-container .gitStatus {
-  background: #fff;
+.gitStatus.dirty {
+  width: 8px;
+  background: #4285f4;
 }
 
 .fileview-filename-container .menu {
@@ -296,7 +332,7 @@ button.ace_searchbtn_close:active {
 .fileview-filename-container .filename {
   overflow: hidden;
   position: absolute;
-  top: 1px;
+  top: 2px;
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
@@ -306,12 +342,12 @@ button.ace_searchbtn_close:active {
 }
 
 .fileview-separator .line {
-  margin-top: 15px;
+  margin-top: 8px;
   border-top: 1px solid #ddd;
 }
 
 #fileViewArea {
-  bottom: 0;
+  bottom: 48px;
   position: absolute;
   top: 48px;
   width: 100%;
@@ -406,7 +442,7 @@ button.ace_searchbtn_close:active {
 
 .outlineItem.topLevel.class:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 5px;
+  border-radius: 3px;
 }
 
 .outlineItem {
@@ -421,21 +457,32 @@ button.ace_searchbtn_close:active {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-li.outlineItem.topLevel.class {
+.outlineItem.topLevel.class {
   margin-top: 10px;
   margin-bottom: 10px;
 }
 
-.outlineItem.topLevel.class, .outlineItem.topLevel.class > a {
+.outlineItem.topLevel.class,
+.outlineItem.topLevel.class > a,
+.outlineItem.topLevel.typedef,
+.outlineItem.topLevel.typedef > a {
   color: #ddd;
 }
 
-.outlineItem.topLevel.function, .outlineItem.method,
-.outlineItem.topLevel.function > a, .outlineItem.method > a {
+.outlineItem.topLevel.typedef > a:before{
+  content: 'typedef ';
   color: #888;
 }
 
-.outlineItem.topLevel.function > a:after, .outlineItem.method > a:after {
+.outlineItem.topLevel.function,
+.outlineItem.method,
+.outlineItem.topLevel.function > a,
+.outlineItem.method > a {
+  color: #888;
+}
+
+.outlineItem.topLevel.function > a:after, 
+.outlineItem.method > a:after {
   content: '()';
 }
 
@@ -456,8 +503,10 @@ li.outlineItem.topLevel.class {
   color: #888;
 }
 
-.outlineItem.topLevel.variable, .outlineItem.property,
-.outlineItem.topLevel.variable > a, .outlineItem.property > a {
+.outlineItem.topLevel.variable, 
+.outlineItem.property,
+.outlineItem.topLevel.variable > a, 
+.outlineItem.property > a {
   color: #77c;
 }
 
@@ -466,45 +515,41 @@ li.outlineItem.topLevel.class {
   margin-left: 0.5em;
 }
 
+.outlineItem a {
+  white-space: nowrap;
+}
+
 #toggleOutlineButton {
-  background-color: rgba(255, 255, 255, 0.5);
-  border: none;
-  border-radius: 5px;
-  bottom: 10px;
-  height: 30px;
   position: absolute;
-  right: 22px;
-  width: 30px;
-  z-index: 100;
+  width: 36px;
+  height: 36px;
+  bottom: 10px;
+  right: 15px;
+  z-index: 150;
+  fill: #7d7d7d;
+  background-color: #fafafa;
+  opacity: 0.7;
 }
 
 #toggleOutlineButton:hover {
-  background-color: rgba(255, 255, 255, 0.7);;
+  opacity: 1;
 }
 
-#toggleOutlineButton:active {
-  background-color: rgba(255, 255, 255, 1);;
-}
-
-#toggleOutlineButton:focus {
-  outline: none;
-}
-
-#outline {
+#outlineContainer {
+  display: flex;
+  flex-flow: row;
   background: rgba(0, 0, 0, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  bottom: 40px;
-  overflow-y: auto;
-  padding: 10px;
+  border-right: none;
+  bottom: 15px;
   position: absolute;
   right: 22px;
-  top: 2px;
+  top: 55px;
   transition: opacity 250ms;
-  width: 200px;
   z-index: 100;
 }
 
-#outline.collapsed {
+#outlineContainer.collapsed {
   opacity: 0;
   pointer-events: none;
 }
@@ -519,12 +564,12 @@ li.outlineItem.topLevel.class {
   margin-left: 0;
 }
 
-li.outlineItem a {
-  white-space: nowrap;
+#outline {
+  padding: 7px;
+  overflow-y: auto;
 }
 
-.tabview-tabbar {
-  margin-right: 95px;
+#outlineResizer {
 }
 
 #togglePreviewButton {
@@ -534,7 +579,6 @@ li.outlineItem a {
   border-bottom: 1px solid #444;
   border-left: 1px solid #444;
   border-radius: 0px;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   position: absolute;
   padding: 8px;
   right: 0px;
@@ -558,7 +602,7 @@ li.outlineItem a {
   -webkit-font-smoothing: antialiased;
   background-color: rgba(39, 40, 34, 1.0);
   bottom: 0px;
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: inherit;
   font-size: 14px;
   overflow-y: auto;
   width: 100%;
@@ -567,4 +611,43 @@ li.outlineItem a {
   top: 0px;
   transition: opacity 250ms;
   z-index: 100;
+}
+
+/*
+  We tweak the default behavior of tab bar to avoids an overlap with the
+  navigation buttons.
+*/
+.tabview-tabbar {
+  margin-right: 95px;
+}
+
+/*
+  Override Bootstrap's default styles so the context menu matches the main menu.
+*/
+.dropdown-menu {
+  padding: 3px 0;
+  border: none;
+  border-radius: 3px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu > li {
+  height: 35px;
+  margin: 0;
+}
+
+.dropdown-menu > li.divider {
+  margin: 2px 0;
+}
+
+.dropdown-menu > li > a {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-size: 13px;
+}
+
+.dropdown-menu > li > a:hover {
+  background-color: #e4e4e4;
+  background-image: none;
 }

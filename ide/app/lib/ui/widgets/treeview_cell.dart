@@ -41,14 +41,14 @@ class TreeViewCell implements ListViewCell {
   }
 
   TreeViewCell(this._treeView, this._embeddedCell, this._row,
-               bool hasChildren, bool draggable) {
+               bool hasChildren, bool draggable, int disclosurePosition) {
     DocumentFragment template =
         (querySelector('#treeview-cell-template') as TemplateElement).content;
     DocumentFragment templateClone = template.clone(true);
     _element = templateClone.querySelector('.treeviewcell');
 
     _embeddedCellContainer = _element.querySelector('.treeviewcell-content');
-    int margin = _row.level == 0 ? 0 : (_row.level - 1) * 15 + 1;
+    int margin = _row.level == 0 ? 0 : _row.level * 25;
     _embeddedCellContainer.classes.add('treeviewcell-content');
     _embeddedCellContainer.style.left = '${margin + 20}px';
     int offsetX = margin + 20;
@@ -65,6 +65,9 @@ class TreeViewCell implements ListViewCell {
 
     // Adds an arrow in front the cell.
     _arrow = _element.querySelector('.treeviewcell-disclosure');
+    if (disclosurePosition != -1) {
+      _arrow.style.top = '${disclosurePosition}px';
+    }
     _arrow.style.left = '${margin + 5}px';
     _applyExpanded(_row.expanded);
     if (!hasChildren) {

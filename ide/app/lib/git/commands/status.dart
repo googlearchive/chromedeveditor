@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
+import 'ignore.dart';
 import 'index.dart';
 import '../exception.dart';
 import '../file_operations.dart';
@@ -33,10 +34,7 @@ class Status {
     if (status == null) {
       status = new FileStatus();
 
-      // Ignore status of .lock files.
-
-      // TODO (grv) : Implement gitignore support.
-      if (entry.name.endsWith('.lock')) {
+      if (GitIgnore.ignore(entry.fullPath)) {
         status.type = FileStatusType.COMMITTED;
       }
     }
@@ -56,6 +54,11 @@ class Status {
         return status;
       }
 
+      // Don't update status for files ignored by git.
+      if (GitIgnore.ignore(entry.fullPath)) {
+        return status;
+      }
+
       if (status.modificationTime
           == data.modificationTime.millisecondsSinceEpoch) {
         // Unchanged file since last update.
@@ -63,13 +66,14 @@ class Status {
       }
 
       return getShaForEntry(entry, 'blob').then((String sha) {
-        status = new FileStatus();
-        status.path = entry.fullPath;
-        status.sha = sha;
-        status.size = data.size;
-        status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
-        store.index.updateIndexForFile(status);
-        return status;
+        FileStatus newStatus = new FileStatus()
+            ..path = entry.fullPath
+            ..sha = sha
+            ..size = data.size
+            ..permission = status.permission
+            ..modificationTime = data.modificationTime.millisecondsSinceEpoch;
+        store.index.updateIndexForFile(newStatus);
+        return newStatus;
       });
     }).then((_) {
       if (status.type != FileStatusType.UNTRACKED) {

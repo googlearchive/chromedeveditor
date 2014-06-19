@@ -58,10 +58,10 @@ class MockHttpRequestClone extends MockHttpRequest {
         break;
       case VALID_REPO_IF_DOT_GIT_APPENDED:
         if (!_url.contains('.git'))
-          throw new GitException(GitErrorConstants.GIT_HTTP_404_ERROR);
+          throw new GitException(GitErrorConstants.GIT_HTTP_NOT_FOUND_ERROR);
         break;
       case INVALID_REPO_404_ERROR:
-        throw new GitException(GitErrorConstants.GIT_HTTP_404_ERROR);
+        throw new GitException(GitErrorConstants.GIT_HTTP_NOT_FOUND_ERROR);
         break;
       case PRIVATE_REPO_AUTHORIZATION_ERROR:
         if (!verifyCredentials(_username, _password))

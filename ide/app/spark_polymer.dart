@@ -20,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/preferences.dart';
 import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
@@ -121,9 +122,9 @@ class SparkPolymerDialog implements Dialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future openFolder() {
+  Future openFolder(chrome.DirectoryEntry entry) {
     return _beforeSystemModal()
-        .then((_) => super.openFolder())
+        .then((_) => super.openFolder(entry))
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
   }
@@ -135,9 +136,10 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
 
-  Future importFolder([List<ws.Resource> resources]) {
+  Future importFolder([List<ws.Resource> resources,
+                       chrome.DirectoryEntry entry]) {
     return _beforeSystemModal()
-        .then((_) => super.importFolder(resources))
+        .then((_) => super.importFolder(resources, entry))
         .whenComplete(() => _systemModalComplete());
   }
 
@@ -249,6 +251,7 @@ class SparkPolymer extends Spark {
     _bindButtonToAction('runButton', 'application-run');
     _bindButtonToAction('leftNav', 'navigate-back');
     _bindButtonToAction('rightNav', 'navigate-forward');
+    _bindButtonToAction('settingsButton', 'settings');
   }
 
   @override
@@ -323,6 +326,8 @@ class SparkPolymer extends Spark {
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
+  static final String FIRST_RUN_PREF = 'firstRun';
+
   Future applicationStarting(Application app) {
     final SparkPolymer spark = app;
     return PlatformInfo.init().then((_) {
@@ -335,10 +340,24 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
   Future applicationStarted(Application app) {
     final SparkPolymer spark = app;
+    final PreferenceStore prefs = spark.localPrefs;
+
     spark._ui.modelReady(spark);
     spark.unveil();
+
     _logger.logStep('Spark started');
     _logger.logElapsed('Total startup time');
+
+    prefs.getValue(FIRST_RUN_PREF).then((String value) {
+      if (value != 'false') {
+        new Future.delayed(new Duration(milliseconds: 500), () {
+          spark.actionManager.getAction('help-about').invoke();
+        });
+      }
+
+      prefs.setValue(FIRST_RUN_PREF, false.toString());
+    });
+
     return new Future.value();
   }
 

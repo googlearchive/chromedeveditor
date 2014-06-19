@@ -42,7 +42,7 @@ class Branch {
    * Creates a new branch. Throws error if the branch already exist.
    */
   static Future<chrome.FileEntry> branch(
-      GitOptions options, [String remoteBranchName]) {
+      GitOptions options, String sourceBranchName) {
     ObjectStore store = options.store;
     String branchName = options.branchName;
 
@@ -53,22 +53,24 @@ class Branch {
     return store.getHeadForRef('refs/heads/' + branchName).then((_) {
       throw new GitException(GitErrorConstants.GIT_BRANCH_EXISTS);
     }, onError: (e) {
-      return _fetchAndCreateBranch(options, branchName, remoteBranchName);
+      return _fetchAndCreateBranch(options, branchName, sourceBranchName);
     });
   }
 
   static Future<String> _fetchAndCreateBranch(
-      GitOptions options, String branchName, String remoteBranchName) {
+      GitOptions options, String branchName, String sourceBranchName) {
     ObjectStore store = options.store;
-    if (remoteBranchName != null && remoteBranchName.isNotEmpty) {
-      return options.store.getRemoteHeadForRef(remoteBranchName).then((sha) {
+    // A remote branch is prefixed with 'origin/'.
+    if (sourceBranchName.startsWith('origin/')) {
+      sourceBranchName = sourceBranchName.split('/').last;
+      return options.store.getRemoteHeadForRef(sourceBranchName).then((sha) {
         options.depth = 1;
-        options.branchName = remoteBranchName;
+        options.branchName = sourceBranchName;
         Fetch fetch = new Fetch(options);
 
         Function createBranch = () {
           options.branchName = branchName;
-          return store.createNewRef('refs/heads/' + branchName, sha);
+          return store.createLocalRef(branchName, sha);
         };
 
         return fetch.fetch().then((_) {
@@ -82,10 +84,9 @@ class Branch {
         });
       });
     } else {
-      return store.getHeadRef().then((String headRefName) {
-        return store.getHeadForRef(headRefName).then((sha) {
-          return store.createNewRef('refs/heads/' + branchName, sha);
-        });
+      String refName = 'refs/heads/${sourceBranchName}';
+      return store.getHeadForRef(refName).then((String sha) {
+        return store.createLocalRef(branchName, sha);
       });
     }
   }
