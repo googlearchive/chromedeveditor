@@ -11,8 +11,6 @@ import 'enum.dart';
 import 'services.dart' as services;
 import 'preferences.dart';
 
-final bool _INCLUDE_TYPES = true;
-
 class OffsetRange {
   int top;
   int bottom;
@@ -20,9 +18,12 @@ class OffsetRange {
 
   OffsetRange([this.top = 0, this.bottom = 0]);
 
-  bool centeredSame(OffsetRange another) => center == another.center;
-  bool centeredHigher(OffsetRange another) => top < another.top;
-  bool centeredLower(OffsetRange another) => bottom > another.bottom;
+  bool centeredSame(OffsetRange another) =>
+      another != null && center == another.center;
+  bool centeredHigher(OffsetRange another) =>
+      another != null && top < another.top;
+  bool centeredLower(OffsetRange another) =>
+      another != null && bottom > another.bottom;
 
   bool includes(int offset) => offset >= top && offset <= bottom;
   bool intersects(OffsetRange another) =>
@@ -200,8 +201,6 @@ class Outline {
 
   void scrollOffsetRangeIntoView(
       OffsetRange offsetRange, [_ScrollDirection direction]) {
-    if (offsetRange == null) return;
-
     if (direction != null) {
       // Direction overridden by the caller.
     } else if (offsetRange.centeredLower(_lastScrolledOffsetRange)) {
@@ -289,7 +288,7 @@ abstract class OutlineItem {
         _element.dispatchEvent(new html.CustomEvent('selected', detail: this)));
     _element.append(_anchor);
 
-    if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
+    if (returnType != null && returnType.isNotEmpty) {
       _typeSpan = new html.SpanElement();
       _typeSpan.text = returnType;
       _typeSpan.classes.add("returnType");
