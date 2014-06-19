@@ -109,7 +109,9 @@ class TextEditor extends Editor {
   void reconcile() { }
 
   void deactivate() {
-    if (supportsOutline && _outline.visible) _outline.visible = false;
+    if (supportsOutline && _outline.visible) {
+      _outline.visible = false;
+    }
   }
 
   void resize() => aceManager.resize();
@@ -469,6 +471,7 @@ class AceManager {
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
     ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
+    ace.Mode.extensionMap['webapp'] = ace.Mode.JSON;
 
     _setupGotoLine();
 
@@ -776,7 +779,7 @@ class AceManager {
 
       setMarkers(file.getMarkers());
       session.onChangeScrollTop.listen((_) => Timer.run(() {
-        if (outline.visible) {
+        if (outline.showing) {
           int firstCursorOffset = currentSession.document.positionToIndex(
               new ace.Point(_aceEditor.firstVisibleRow, 0));
           int lastCursorOffset = currentSession.document.positionToIndex(

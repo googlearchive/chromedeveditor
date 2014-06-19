@@ -11,8 +11,6 @@ import 'enum.dart';
 import 'services.dart' as services;
 import 'preferences.dart';
 
-final bool _INCLUDE_TYPES = true;
-
 class OffsetRange {
   int top;
   int bottom;
@@ -90,12 +88,14 @@ class Outline {
     scrollOffsetRangeIntoView(offsetRange);
   }
 
-  bool get visible => !_outlineDiv.classes.contains('collapsed');
+  bool get visible => _visible;
   set visible(bool value) {
     _visible = value;
     _outlineDiv.classes.toggle('hidden', !_visible);
     _outlineButton.classes.toggle('hidden', !_visible);
   }
+
+  bool get showing => _visible && !_outlineDiv.classes.contains('collapsed');
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
@@ -288,7 +288,7 @@ abstract class OutlineItem {
         _element.dispatchEvent(new html.CustomEvent('selected', detail: this)));
     _element.append(_anchor);
 
-    if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
+    if (returnType != null && returnType.isNotEmpty) {
       _typeSpan = new html.SpanElement();
       _typeSpan.text = returnType;
       _typeSpan.classes.add("returnType");
