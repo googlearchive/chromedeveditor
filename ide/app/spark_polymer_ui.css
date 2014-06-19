@@ -134,13 +134,25 @@ spark-dialog {
   height: 30px;
 }
 
-.settings-value + .plus-minus-button {
+#settingsDialog .settings-value + .plus-minus-button {
   margin-left: 5px;
 }
 
 #settingsDialog .reset-setting-button {
   flex: 1;
   height: 100%;
+}
+
+#aboutDialog #logo {
+  margin-right: 40px;
+}
+
+#aboutDialog #analyticsOptIn {
+  margin-top: 40px;
+}
+
+#aboutDialog #analyticsCheck {
+  margin: 0 20px;
 }
 
 #gitResetSettingsDone,
