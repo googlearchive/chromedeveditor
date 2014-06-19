@@ -1245,11 +1245,14 @@ abstract class SparkActionWithDialog extends SparkAction {
 
   bool _canSubmit() => _dialog.dialog.isDialogValid();
 
+  void _dialogDidShow() {}
+
   void _show() {
     // TODO(grv) : There is a delay in delivering polymer changes. Remove this
     // once this is fixed.
     Timer.run(() {
       _dialog.show();
+      _dialogDidShow();
     });
   }
   void _hide() => _dialog.hide();
@@ -2357,12 +2360,35 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
 class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlElement;
+  InputElement _repoUrlCopyInElement;
   bool _cloning = false;
   _GitCloneTask _cloneTask;
+  RegExp gitUrlRegExp = new RegExp(r"((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)"
+      r"([\w\.@\:/\-~]+)(\.git)(/)?");
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
+    _repoUrlCopyInElement = dialog.querySelector("#gitRepoUrlCopyInBuffer");
+  }
+
+  bool _parseClipboard(String data) {
+    if (gitUrlRegExp.hasMatch(data)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void _copyClipboard() {
+    _repoUrlCopyInElement.hidden = false;
+    _repoUrlCopyInElement.focus();
+    document.execCommand('paste', true, null);
+    String tempValue = _repoUrlCopyInElement.value;
+    _repoUrlCopyInElement.value = '';
+    _repoUrlCopyInElement.hidden = true;
+    _repoUrlElement.value = _parseClipboard(tempValue) ? tempValue : _repoUrlElement.value;
+    _repoUrlElement.focus();
   }
 
   void _invoke([Object context]) {
@@ -2374,6 +2400,11 @@ class GitCloneAction extends SparkActionWithProgressDialog {
         _show();
       }
     });
+  }
+
+  @override
+  void _dialogDidShow() {
+    _copyClipboard();
   }
 
   void _restoreDialog() {
