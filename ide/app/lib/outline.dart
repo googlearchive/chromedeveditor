@@ -90,12 +90,14 @@ class Outline {
     scrollOffsetRangeIntoView(offsetRange);
   }
 
-  bool get visible => !_outlineDiv.classes.contains('collapsed');
+  bool get visible => _visible;
   set visible(bool value) {
     _visible = value;
     _outlineDiv.classes.toggle('hidden', !_visible);
     _outlineButton.classes.toggle('hidden', !_visible);
   }
+
+  bool get showing => _visible && !_outlineDiv.classes.contains('collapsed');
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
@@ -198,6 +200,8 @@ class Outline {
 
   void scrollOffsetRangeIntoView(
       OffsetRange offsetRange, [_ScrollDirection direction]) {
+    if (offsetRange == null) return;
+
     if (direction != null) {
       // Direction overridden by the caller.
     } else if (offsetRange.centeredLower(_lastScrolledOffsetRange)) {
