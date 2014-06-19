@@ -563,7 +563,7 @@ abstract class Spark
   Dialog _errorDialog;
 
   void showMessage(String title, String message) {
-    showErrorMessage(title, message:message);
+    showErrorMessage(title, message: message);
   }
 
   Completer<bool> _okCompleter;
