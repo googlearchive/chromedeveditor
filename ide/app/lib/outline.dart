@@ -126,6 +126,8 @@ class Outline {
       return _addVariable(data);
     } else if (data is services.OutlineTopLevelFunction) {
       return _addFunction(data);
+    } else if (data is services.OutlineTopLevelAccessor) {
+      return _addAccessor(data);
     } else if (data is services.OutlineTypeDef) {
       return _addTypeDef(data);
     } else {
@@ -167,6 +169,9 @@ class Outline {
 
   OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
       _addItem(new OutlineTopLevelFunction(data));
+
+  OutlineTopLevelAccessor _addAccessor(services.OutlineTopLevelAccessor data) =>
+      _addItem(new OutlineTopLevelAccessor(data));
 
   OutlineTypeDef _addTypeDef(services.OutlineTypeDef data) =>
       _addItem(new OutlineTypeDef(data));
@@ -340,6 +345,16 @@ class OutlineTopLevelFunction extends OutlineTopLevelItem {
   String get returnType => _functionData.returnType;
 }
 
+class OutlineTopLevelAccessor extends OutlineTopLevelItem {
+  OutlineTopLevelAccessor(services.OutlineTopLevelAccessor data)
+      : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
+
+  services.OutlineTopLevelAccessor get _accessorData => _data;
+
+  String get displayName => _data.name;
+  String get returnType => _accessorData.returnType;
+}
+
 class OutlineTypeDef extends OutlineTopLevelItem {
   OutlineTypeDef(services.OutlineTypeDef data) : super(data, "typedef");
 }
@@ -398,7 +413,7 @@ class OutlineClass extends OutlineTopLevelItem {
       return addMethod(data);
     } else if (data is services.OutlineProperty) {
       return addProperty(data);
-    } else if (data is services.OutlineAccessor) {
+    } else if (data is services.OutlineClassAccessor) {
       return addAccessor(data);
     } else {
       throw new UnimplementedError("Unknown type");
@@ -411,8 +426,8 @@ class OutlineClass extends OutlineTopLevelItem {
   OutlineProperty addProperty(services.OutlineProperty data) =>
       _addItem(new OutlineProperty(data));
 
-  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
-      _addItem(new OutlineAccessor(data));
+  OutlineClassAccessor addAccessor(services.OutlineClassAccessor data) =>
+      _addItem(new OutlineClassAccessor(data));
 }
 
 abstract class OutlineClassMember extends OutlineItem {
@@ -436,11 +451,11 @@ class OutlineProperty extends OutlineClassMember {
   String get returnType => _propertyData.returnType;
 }
 
-class OutlineAccessor extends OutlineClassMember {
-  OutlineAccessor(services.OutlineAccessor data)
+class OutlineClassAccessor extends OutlineClassMember {
+  OutlineClassAccessor(services.OutlineClassAccessor data)
       : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
 
-  services.OutlineAccessor get _accessorData => _data;
+  services.OutlineClassAccessor get _accessorData => _data;
 
   String get displayName => _data.name;
   String get returnType => _accessorData.returnType;
