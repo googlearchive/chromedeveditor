@@ -31,7 +31,8 @@
   margin: 0;
   height: 22px;
   /* Override Ace's inherited font */
-  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* BUG #2629 */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 500;
   font-size: 12px;
 }
