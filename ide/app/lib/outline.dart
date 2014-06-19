@@ -46,7 +46,7 @@ class _ScrollDirection extends Enum<html.ScrollAlignment> {
 class Outline {
   List<OutlineItem> _outlineItems;
   OutlineItem _selectedItem;
-  OffsetRange _lastScrolledOffsetRange;
+  OffsetRange _lastScrolledOffsetRange = new OffsetRange();
 
   html.Element _container;
   html.DivElement _outlineDiv;
@@ -114,9 +114,7 @@ class Outline {
       _create(data);
     }
 
-    if (_lastScrolledOffsetRange != null) {
-      scrollOffsetRangeIntoView(_lastScrolledOffsetRange, _ScrollDirection.DOWN);
-    }
+    scrollOffsetRangeIntoView(_lastScrolledOffsetRange, _ScrollDirection.DOWN);
   }
 
   OutlineTopLevelItem _create(services.OutlineTopLevelEntry data) {
