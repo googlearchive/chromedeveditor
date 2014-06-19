@@ -2529,31 +2529,35 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
 
     _selectElement.onChange.listen((e) {
        int index = _selectElement.selectedIndex;
-       if (index != 0) {
+       String sourceBranchName = (_selectElement.children[index] as OptionElement).value;
+       if (sourceBranchName.startsWith('origin/')) {
          // A remote branch is prefixed with 'origin/'. Strip it to get the
          // actual branchname.
          _branchNameElement.value = (_selectElement.children[index]
              as OptionElement).value.split('/').last;
-         _branchNameElement.disabled = true;
-       } else {
-         _branchNameElement.value = '';
-         _branchNameElement.disabled = false;
        }
     });
 
-    gitOperations.getRemoteBranchNames().then((Iterable<String> branchNames) {
-      branchNames.toList().sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-      // TODO(grv): Support branching from local branches other than master.
-      _selectElement.append(
-          new OptionElement(data: "master", value: "master"));
-      for (String branchName in branchNames) {
-        branchName = 'origin/${branchName}';
-        _selectElement.append(
-            new OptionElement(data: branchName, value: branchName));
+    gitOperations.getLocalBranchNames().then((Iterable<String> localBranches) {
+      List branches = localBranches.toList();
+      branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+      for (String branch in branches) {
+        _selectElement.append(new OptionElement(data: branch, value: branch));
       }
-      _selectElement.selectedIndex = 0;
-    }).then((_) {
-      _show();
+
+      gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
+        List branches = remoteBranches.toList();
+        branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+        for (String branch in branches) {
+          branch = 'origin/${branch}';
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+        _selectElement.selectedIndex = 0;
+      }).then((_) {
+        _show();
+      });
     });
   }
 

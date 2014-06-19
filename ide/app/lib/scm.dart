@@ -367,7 +367,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
-  Future<List<String>> getLocalBranchNames() =>
+  Future<Iterable<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
   Future<Iterable<String>> getRemoteBranchNames()  {
