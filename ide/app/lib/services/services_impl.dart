@@ -499,6 +499,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
   void _addMethodToOutlineClass(OutlineClass outlineClass,
       analyzer.MethodDeclaration member) {
+
     if (member.isGetter) {
       outlineClass.members.add(_populateOutlineEntry(
           new OutlineClassAccessor(member.name.name,
@@ -506,8 +507,18 @@ class AnalyzerServiceImpl extends ServiceImpl {
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     } else if (member.isSetter) {
+      String type = null;
+
+      // Only show setter type if [analyzer.SimpleFormalParameter] and single
+      if (member.parameters.parameters.length == 1) {
+        analyzer.FormalParameter param = member.parameters.parameters.single;
+        if (param is analyzer.SimpleFormalParameter) {
+          type = _getTypeNameString(param.type);
+        }
+      }
+
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineClassAccessor(member.name.name, null, true),
+          new OutlineClassAccessor(member.name.name, type, true),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     } else {
