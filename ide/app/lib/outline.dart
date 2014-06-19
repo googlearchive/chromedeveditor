@@ -18,12 +18,9 @@ class OffsetRange {
 
   OffsetRange([this.top = 0, this.bottom = 0]);
 
-  bool centeredSame(OffsetRange another) =>
-      another != null && center == another.center;
-  bool centeredHigher(OffsetRange another) =>
-      another != null && top < another.top;
-  bool centeredLower(OffsetRange another) =>
-      another != null && bottom > another.bottom;
+  bool centeredSame(OffsetRange another) => center == another.center;
+  bool centeredHigher(OffsetRange another) => top < another.top;
+  bool centeredLower(OffsetRange another) => bottom > another.bottom;
 
   bool includes(int offset) => offset >= top && offset <= bottom;
   bool intersects(OffsetRange another) =>
