@@ -2368,6 +2368,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlElement;
   bool _cloning = false;
   _GitCloneTask _cloneTask;
+  Object _context;
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
@@ -2375,6 +2376,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 
   void _invoke([Object context]) {
+    _context = context;
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
@@ -2438,6 +2440,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     }).catchError((e) {
       if (e is SparkException && e.errorCode
           == SparkErrorConstants.AUTH_REQUIRED) {
+        _showAuthDialog(_context);
         spark.showErrorMessage('Authorization Required',
           'Authorization required - private git repositories are not yet supported.');
       } else if (e is SparkException &&
@@ -2456,6 +2459,18 @@ class GitCloneAction extends SparkActionWithProgressDialog {
       _cloning = false;
       _restoreDialog();
       _hide();
+    });
+  }
+
+  /// Shows an authentification dialog. Returns false if cancelled.
+  void _showAuthDialog(context) {
+    Timer.run(() {
+      // In a timer to let the previous dialog dismiss properly.
+      GitAuthenticationDialog.request(spark).then((info) {
+        _invoke(context);
+      }).catchError((e) {
+        // Cancelled authentication: do nothing.
+      });
     });
   }
 
@@ -3092,41 +3107,52 @@ class _GitCloneTask {
 
       ScmProvider scmProvider = getProviderType('git');
 
-      return scmProvider.clone(url, location.entry).then((_) {
-        ws.WorkspaceRoot root;
-
-        if (location.isSync) {
-          root = new ws.SyncFolderRoot(location.entry);
-        } else {
-          root = new ws.FolderChildRoot(location.parent, location.entry);
+      return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+        String username;
+        String password;
+        if (value != null) {
+          Map<String, String> info = JSON.decode(value);
+          username = info['username'];
+          password = info['password'];
         }
-        return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Cloned into ${project.name}');
 
-          Timer.run(() {
-            spark._filesController.selectFile(project);
-            spark._filesController.setFolderExpanded(project);
-          });
+        return scmProvider.clone(url, location.entry,
+            username: username, password: password).then((_) {
+          ws.WorkspaceRoot root;
 
-          // Run Pub if the new project has a pubspec file.
-          if (spark.pubManager.properties.isFolderWithPackages(project)) {
-            // There is issue with workspace sending duplicate events.
-            // TODO(grv): revisit workspace events.
+          if (location.isSync) {
+            root = new ws.SyncFolderRoot(location.entry);
+          } else {
+            root = new ws.FolderChildRoot(location.parent, location.entry);
+          }
+          return spark.workspace.link(root).then((ws.Project project) {
+            spark.showSuccessMessage('Cloned into ${project.name}');
+
             Timer.run(() {
-              spark.jobManager.schedule(new PubGetJob(spark, project));
+              spark._filesController.selectFile(project);
+              spark._filesController.setFolderExpanded(project);
             });
-          }
 
-          // Run Bower if the new project has a bower.json file.
-          if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-            spark.jobManager.schedule(new BowerGetJob(spark, project));
-          }
+            // Run Pub if the new project has a pubspec file.
+            if (spark.pubManager.properties.isFolderWithPackages(project)) {
+              // There is issue with workspace sending duplicate events.
+              // TODO(grv): revisit workspace events.
+              Timer.run(() {
+                spark.jobManager.schedule(new PubGetJob(spark, project));
+              });
+            }
 
-          spark.workspace.save();
+            // Run Bower if the new project has a bower.json file.
+            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
+              spark.jobManager.schedule(new BowerGetJob(spark, project));
+            }
+
+            spark.workspace.save();
+          });
+        }).catchError((e) {
+          // Remove the created project folder.
+          return location.entry.removeRecursively().then((_) => throw e);
         });
-      }).catchError((e) {
-        // Remove the created project folder.
-        return location.entry.removeRecursively().then((_) => throw e);
       });
     });
   }

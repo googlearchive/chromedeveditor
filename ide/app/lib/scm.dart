@@ -389,10 +389,15 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future createBranch(String branchName, String sourceBranchName) {
+  Future createBranch(String branchName, String sourceBranchName,
+                      {String username, String password}) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(
-          root: entry, branchName: branchName, store: store);
+      GitOptions options = new GitOptions(root: entry,
+                                          branchName: branchName,
+                                          store: store,
+                                          username: username,
+                                          password: password);
+
       return Branch.branch(options, sourceBranchName).catchError(
           (e) => throw SparkException.fromException(e));
     });
@@ -460,9 +465,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future pull() {
+  Future pull(String username, String password) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(root: entry, store: store);
+      GitOptions options = new GitOptions(
+          root: entry, store: store, username: username, password: password);
       Pull pull = new Pull(options);
       return pull.pull().then((_) {
         _statusController.add(this);
