@@ -50,8 +50,8 @@ class TreeViewCell implements ListViewCell {
     _embeddedCellContainer = _element.querySelector('.treeviewcell-content');
     int margin = _row.level == 0 ? 0 : _row.level * 25;
     _embeddedCellContainer.classes.add('treeviewcell-content');
-    _embeddedCellContainer.style.left = '${margin + 20}px';
-    int offsetX = margin + 20;
+    int offsetX = margin + 15;
+    _embeddedCellContainer.style.left = '${offsetX}px';
     _embeddedCellContainer.style.width = 'calc(100% - ${offsetX}px)';
     if (draggable) {
       _embeddedCellContainer.setAttribute('draggable', 'true');
@@ -60,7 +60,6 @@ class TreeViewCell implements ListViewCell {
 
     _dragOverlay = _element.querySelector('.treeviewcell-dragoverlay');
     _dragOverlay.style.left = '${margin + 15}px';
-    offsetX = margin + 20;
     _dragOverlay.style.width = 'calc(100% - ${offsetX}px)';
 
     // Adds an arrow in front the cell.
