@@ -20,7 +20,7 @@ defineTests() {
   group('workspace', () {
 
     test('create file and check contents', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       FileEntry fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
       var fileResource = new ws.File(workspace, fileEntry);
@@ -32,7 +32,7 @@ defineTests() {
     });
 
     test('restore entry', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       FileEntry fileEntry = fs.createFile('test.txt', contents: _FILETEXT);
       return workspace.link(createWsRoot(fileEntry)).then((ws.Resource resource) {
@@ -65,7 +65,7 @@ defineTests() {
     });
 
     test('resource is hashable', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       FileEntry file1 = fs.createFile('test1.txt', contents: _FILETEXT);
       FileEntry file2 = fs.createFile('test2.txt', contents: _FILETEXT);
@@ -85,7 +85,7 @@ defineTests() {
     });
 
     test('add file, check for resource add event', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.Entry fileEntry = fs.createFile('test.txt');
 
@@ -105,7 +105,7 @@ defineTests() {
     });
 
     test('delete file, check for resource delete event', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       var fileEntry = fs.createFile('test.txt');
       var resource;
@@ -126,7 +126,7 @@ defineTests() {
     });
 
     test('rename file, check for resource rename event', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       fs.createFile('/myProject/test.txt');
       chrome.DirectoryEntry dirEntry = fs.getEntry('myProject');
@@ -146,7 +146,7 @@ defineTests() {
     });
 
     test('rename folder, check for resource rename event', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       fs.createFile('/myProject/myfolder/subfolder/test.js');
       fs.createFile('/myProject/myfolder/subfolder/test.jpg');
@@ -173,7 +173,7 @@ defineTests() {
     });
 
     test('add directory, check for resource add event', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       fs.createFile('/myProject/test.txt');
       fs.createFile('/myProject/test.html');
@@ -198,7 +198,7 @@ defineTests() {
     });
 
     test('add directory with folders, check for resource add event', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.DirectoryEntry projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -231,7 +231,7 @@ defineTests() {
     });
 
     test('refresh from filesystem', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.DirectoryEntry projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -258,7 +258,7 @@ defineTests() {
     });
 
     test('project refresh, add file', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       var projectDir = _createSampleProject();
       return workspace.link(createWsRoot(projectDir)).then((ws.Project project) {
         projectDir.filesystem.createFile('/${project.name}/foo.txt');
@@ -279,7 +279,7 @@ defineTests() {
     });
 
     test('project refresh, delete file', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       var projectDir = _createSampleProject();
       return workspace.link(createWsRoot(projectDir)).then((ws.Project project) {
         projectDir.filesystem.removeFile('/${project.name}/bar.txt');
@@ -300,7 +300,7 @@ defineTests() {
     });
 
     test('project refresh, changed file', () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       var projectDir = _createSampleProject();
       return workspace.link(createWsRoot(projectDir)).then((ws.Project project) {
         projectDir.filesystem.touchFile('${project.name}/bar.txt');
@@ -322,7 +322,7 @@ defineTests() {
 
     test("walk children performs a pre-order traversal", () {
       MockFileSystem fs = new MockFileSystem();
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       chrome.DirectoryEntry rootDir = fs.createDirectory('/root');
       fs.createDirectory('/root/folder1');
       fs.createDirectory('/root/folder2');
@@ -345,7 +345,7 @@ defineTests() {
     });
 
     test("create marker on resource, check for marker add event", () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.DirectoryEntry projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -368,7 +368,7 @@ defineTests() {
     });
 
     test("create different types of markers and clear markers", () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.DirectoryEntry projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -401,7 +401,7 @@ defineTests() {
     });
 
     test("create and clear marker, check for delete event", () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.DirectoryEntry projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -425,7 +425,7 @@ defineTests() {
     });
 
     test("get max severity marker", () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.DirectoryEntry projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/index.html');
@@ -451,7 +451,7 @@ defineTests() {
     });
 
     test("pause and resume posting marker events", () {
-      ws.Workspace workspace = new ws.Workspace();
+      ws.Workspace workspace = _createWorkspace();
       MockFileSystem fs = new MockFileSystem();
       chrome.DirectoryEntry projectDir = fs.createDirectory('myProject');
       fs.createFile('/myProject/myApp.dart');
@@ -485,3 +485,5 @@ DirectoryEntry _createSampleProject([String projectName = 'sample_project']) {
   fs.createFile('${projectName}/web/sample.css');
   return project;
 }
+
+ws.Workspace _createWorkspace() => new ws.Workspace(new MapPreferencesStore());

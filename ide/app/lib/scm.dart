@@ -30,6 +30,7 @@ import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
 import 'git/commands/fetch.dart';
+import 'git/commands/ignore.dart';
 import 'git/commands/index.dart';
 import 'git/commands/pull.dart';
 import 'git/commands/push.dart';
@@ -366,7 +367,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
-  Future<List<String>> getLocalBranchNames() =>
+  Future<Iterable<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
   Future<Iterable<String>> getRemoteBranchNames()  {
@@ -392,7 +393,8 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, branchName: branchName, store: store);
-      return Branch.branch(options, sourceBranchName);
+      return Branch.branch(options, sourceBranchName).catchError(
+          (e) => throw SparkException.fromException(e));
     });
   }
 
@@ -406,7 +408,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // We changed files on disk - let the workspace know to re-scan the
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
-      });
+      }).catchError((e) => throw SparkException.fromException(e));
     });
   }
 
@@ -439,14 +441,14 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
       return Push.push(options)
-          .catchError((e) => throw SparkException.fromException(e));
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
   Future<List<String>> getDeletedFiles() {
     return objectStore.then((store) {
       return Status.getDeletedFiles(store)
-          .catchError((e) => throw SparkException.fromException(e));
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
@@ -455,7 +457,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
       GitOptions options = new GitOptions(root: entry, store: store);
       Fetch fetch = new Fetch(new GitOptions(root: entry, store: store));
       return fetch.fetch()
-          .catchError((e) => throw SparkException.fromException(e));
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
@@ -463,7 +465,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Pull pull = new Pull(options);
-      return pull.pull().catchError((e) => throw SparkException.fromException(e));
+      return pull.pull().then((_) {
+        _statusController.add(this);
+        // We changed files on disk - let the workspace know to re-scan the
+        // project and fire any necessary resource change events.
+        Timer.run(() => project.refresh());
+      }).catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
@@ -474,7 +481,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
           name: userName, email: userEmail);
       return Commit.commit(options).then((_) {
         _refreshStatus(project: project);
-      });
+      }).catchError((e) => throw SparkException.fromException(e));
     });
   }
 
@@ -492,7 +499,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
           result.message = item.message;
           return result;
         }).toList();
-      });
+      }).catchError((e) => throw SparkException.fromException(e));
     });
   }
 
@@ -520,7 +527,10 @@ class GitScmProjectOperations extends ScmProjectOperations {
       if (project != null) {
         return Status.getFileStatuses(store).then((statuses) {
           resources.forEach((resource) {
-            _setStatus(resource, statuses[resource.entry.fullPath]);
+            // TODO(grv): This should be handled by git status.
+            if (!GitIgnore.ignore(resource.entry.fullPath)) {
+              _setStatus(resource, statuses[resource.entry.fullPath]);
+            }
           });
           return new Future.value();
         });

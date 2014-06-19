@@ -18,7 +18,6 @@ import 'package:logging/logging.dart';
 import 'builder.dart';
 import 'enum.dart';
 import 'jobs.dart';
-import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub_properties.dart';
 import 'preferences.dart';
 import 'utils.dart';
@@ -123,6 +122,12 @@ class Workspace extends Container {
   Future<Resource> link(WorkspaceRoot root, {bool fireEvent: true}) {
     root.resource = root.createResource(this);
     _roots.add(root);
+
+    // When restoring the workspace, we do not want to presist incomplete
+    // versions of it.
+    if (fireEvent) {
+      _save();
+    }
 
     if (root.resource is Container) {
       return _gatherChildren(root.resource).then((Container container) {
@@ -276,7 +281,12 @@ class Workspace extends Container {
   /**
    * Store info for workspace children.
    */
-  Future save() {
+  Future save() => _save();
+
+  /**
+   * Persist any changes to disk.
+   */
+  Future _save() {
     List<Map> data = [];
 
     for (WorkspaceRoot root in _roots) {
@@ -337,7 +347,9 @@ class Workspace extends Container {
       return Future.wait(newAdditions);
     }));
 
-    return Future.wait(futures);
+    return Future.wait(futures).then((_) {
+      return _save();
+    });
   }
 
   /**
@@ -498,6 +510,7 @@ class Workspace extends Container {
 
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     _roots.removeWhere((root) => root.resource == resource);
+    _save();
     if (fireEvent) {
       _fireResourceChanges(ChangeDelta.containerDelete(resource));
     }
@@ -831,10 +844,25 @@ class Folder extends Container {
    */
   Future<File> importFileEntry(chrome.ChromeFileEntry sourceEntry) {
     return createNewFile(sourceEntry.name).then((File file) {
-      sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
-        return file.setBytes(buffer.getBytes());
+      return sourceEntry.readBytes().then((chrome.ArrayBuffer buffer) {
+        return file.setBytes(buffer.getBytes()).then((_) => file);
       });
-      return file;
+    });
+  }
+
+  /**
+   * Lists the files contained in [entry] recursively into a
+   * path => chrome.Entry [fileMap].
+   */
+  Future _listFilesRecursive(chrome.DirectoryEntry entry,
+                             Map<String, chrome.Entry> fileMap) {
+    return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
+      return Future.forEach(entries, (chrome.Entry entry) {
+        fileMap[entry.fullPath] = entry;
+        if (entry.isDirectory) {
+          return _listFilesRecursive(entry, fileMap);
+        }
+      });
     });
   }
 
@@ -843,12 +871,26 @@ class Folder extends Container {
    * filesystem to the current folder.
    */
   Future importDirectoryEntry(chrome.DirectoryEntry entry) {
+    Map<String, chrome.Entry> importFileMap = {};
+    return _listFilesRecursive(entry, importFileMap).then((_)
+        => _importDirectoryEntry(entry, importFileMap));
+  }
+
+  Future _importDirectoryEntry(chrome.DirectoryEntry entry,
+                               final Map<String, chrome.Entry> importFileMap) {
     return createNewFolder(entry.name).then((Folder folder) {
       return entry.createReader().readEntries().then((List<chrome.Entry> entries) {
         List<Future> futures = [];
         for(chrome.Entry child in entries) {
+          if (!importFileMap.containsKey(child.fullPath)) {
+            // We enumerated recursively all the files and folders of the import
+            // folder into the importFileMap. A file path not existing in the map
+            // means it is an attempt of recursive copy of a folder. This will happen
+            // only when the folder to be imported is a parent of the project folder.
+            continue;
+          }
           if (child is chrome.DirectoryEntry) {
-            futures.add(folder.importDirectoryEntry(child));
+            futures.add(folder._importDirectoryEntry(child, importFileMap));
           } else if (child is chrome.ChromeFileEntry) {
             futures.add(folder.importFileEntry(child));
           }
@@ -874,7 +916,8 @@ class Folder extends Container {
   }
 
   Future delete() {
-    return _dirEntry.removeRecursively().then((_) => _parent._removeChild(this));
+    return _dirEntry.removeRecursively().then((_)
+        => _parent._removeChild(this, fireEvent: true));
   }
 
   //TODO(keertip): remove check for 'cache'
@@ -883,7 +926,7 @@ class Folder extends Container {
 
   bool isDerived() {
     // TODO(devoncarew): 'cache' is a temporay folder - it will be removed.
-    if ((name == 'build' || name == 'cache' || name == bowerProperties.packagesDirName) &&
+    if ((name == 'build' || name == 'cache') &&
         parent is Project) {
       return true;
     } else {

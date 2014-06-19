@@ -8,6 +8,7 @@ import 'package:unittest/unittest.dart';
 import 'package:spark_widgets/spark_suggest_box/spark_suggest_box.dart';
 
 import '../lib/search.dart';
+import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 import 'files_mock.dart';
 
@@ -20,7 +21,7 @@ defineTests() {
 
     setUp(() {
       fs = new MockFileSystem();
-      ws = new Workspace();
+      ws = new Workspace(new MapPreferencesStore());
       rootDir = fs.createDirectory('/root');
       [
        '/root/Spark.DART',  // mixed-case on purpose

@@ -30,6 +30,7 @@ class SparkPolymerUI extends SparkWidget {
   @observable bool developerMode = true;
   @observable bool useAceThemes = true;
   @observable bool chromeOS = false;
+  @observable String appVersion = '';
   // This flag is different from the rest: the comment immediately above doesn't
   // apply to it, because nothing in the app code depends on the chunks of HTML
   // that it controls, so it doesn't have to be on at start-up time in order to
@@ -66,6 +67,7 @@ class SparkPolymerUI extends SparkWidget {
     useAceThemes = SparkFlags.useAceThemes;
     showWipProjectTemplates = SparkFlags.showWipProjectTemplates;
     chromeOS = PlatformInfo.isCros;
+    appVersion = _model.appVersion;
 
     // This propagates external changes down to the enclosed widgets.
     Observable.dirtyCheck();

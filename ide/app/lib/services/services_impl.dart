@@ -416,12 +416,26 @@ class AnalyzerServiceImpl extends ServiceImpl {
         _addFunctionToOutline(outline, declaration);
       } else if (declaration is analyzer.ClassDeclaration) {
         _addClassToOutline(outline, declaration);
+      } else if (declaration is analyzer.TypeAlias) {
+        _addAliasToOutline(outline, declaration);
       } else {
         print("${declaration.runtimeType} is unknown");
       }
     }
 
     return outline;
+  }
+
+  String _getSetterTypeFromParams(analyzer.FormalParameterList parameters) {
+    // Only show type of first [analyzer.SimpleFormalParameter] of setter.
+    if (parameters.parameters.length > 0) {
+      analyzer.FormalParameter param = parameters.parameters.first;
+      if (param is analyzer.SimpleFormalParameter) {
+        return _getTypeNameString(param.type);
+      }
+    }
+
+    return null;
   }
 
   void _addVariableToOutline(Outline outline,
@@ -439,11 +453,28 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
   void _addFunctionToOutline(Outline outline,
       analyzer.FunctionDeclaration declaration) {
-    outline.entries.add(_populateOutlineEntry(
-        new OutlineTopLevelFunction(
-            declaration.name.name, _getTypeNameString(declaration.returnType)),
-        new _Range.fromAstNode(declaration.name),
-        new _Range.fromAstNode(declaration)));
+    analyzer.SimpleIdentifier nameNode = declaration.name;
+    _Range nameRange = new _Range.fromAstNode(nameNode);
+    _Range bodyRange = new _Range.fromAstNode(declaration);
+    String name = nameNode.name;
+
+    if (declaration.isGetter) {
+      outline.entries.add(_populateOutlineEntry(
+          new OutlineTopLevelAccessor(name, _getTypeNameString(declaration.returnType)),
+          nameRange, bodyRange));
+    } else if (declaration.isSetter) {
+      analyzer.FormalParameterList params =
+          declaration.functionExpression.parameters;
+      outline.entries.add(_populateOutlineEntry(
+          new OutlineTopLevelAccessor(name,
+              _getSetterTypeFromParams(params), true),
+          nameRange, bodyRange));
+    } else {
+      outline.entries.add(_populateOutlineEntry(
+          new OutlineTopLevelFunction(name,
+              _getTypeNameString(declaration.returnType)),
+              nameRange, bodyRange));
+    }
   }
 
   void _addClassToOutline(Outline outline,
@@ -465,17 +496,36 @@ class AnalyzerServiceImpl extends ServiceImpl {
     }
   }
 
+  void _addAliasToOutline(Outline outline, analyzer.TypeAlias declaration) {
+    analyzer.SimpleIdentifier nameNode;
+
+    if (declaration is analyzer.ClassTypeAlias) {
+      nameNode = declaration.name;
+    } else if (declaration is analyzer.FunctionTypeAlias) {
+      nameNode = declaration.name;
+    } else {
+      throw "TypeAlias subclass ${declaration.runtimeType} is unknown";
+    }
+
+    String name = nameNode.name;
+
+    outline.entries.add(_populateOutlineEntry(new OutlineTypeDef(name),
+        new _Range.fromAstNode(nameNode), new _Range.fromAstNode(declaration)));
+  }
+
   void _addMethodToOutlineClass(OutlineClass outlineClass,
       analyzer.MethodDeclaration member) {
+
     if (member.isGetter) {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineAccessor(member.name.name,
+          new OutlineClassAccessor(member.name.name,
               _getTypeNameString(member.returnType)),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     } else if (member.isSetter) {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineAccessor(member.name.name, null, true),
+          new OutlineClassAccessor(member.name.name,
+              _getSetterTypeFromParams(member.parameters), true),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     } else {

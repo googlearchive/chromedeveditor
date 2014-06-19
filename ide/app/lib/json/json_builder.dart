@@ -20,7 +20,8 @@ class JsonBuilder extends Builder {
 
   @override
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
-    Iterable<ChangeDelta> changes = event.changes.where(
+    Iterable<ChangeDelta> changes = filterPackageChanges(event.changes);
+    changes = changes.where(
         (c) => c.resource is File && _shouldProcessFile(c.resource));
 
     return Future.wait(changes.map((c) => _handleFileChange(c.resource)));

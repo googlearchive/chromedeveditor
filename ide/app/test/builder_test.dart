@@ -11,12 +11,13 @@ import 'package:unittest/unittest.dart';
 import 'files_mock.dart';
 import '../lib/builder.dart';
 import '../lib/jobs.dart';
+import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
 defineTests() {
   group('builder', () {
     test('change event triggers builder', () {
-      Workspace workspace = new Workspace();
+      Workspace workspace = new Workspace(new MapPreferencesStore());
       var jobManager = new JobManager();
       var buildManager = new BuilderManager(workspace, jobManager);
 
@@ -33,7 +34,7 @@ defineTests() {
     });
 
     test('events coalesced', () {
-      Workspace workspace = new Workspace();
+      Workspace workspace = new Workspace(new MapPreferencesStore());
       var jobManager = new JobManager();
       var buildManager = new BuilderManager(workspace, jobManager);
 
@@ -52,7 +53,7 @@ defineTests() {
     });
 
     test('multiple builders', () {
-      Workspace workspace = new Workspace();
+      Workspace workspace = new Workspace(new MapPreferencesStore());
       var jobManager = new JobManager();
       var buildManager = new BuilderManager(workspace, jobManager);
 

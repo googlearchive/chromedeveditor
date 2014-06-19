@@ -48,7 +48,7 @@ spark-dialog {
 }
 
 #fileFilter {
-  background: #fff url(images/search.png) 10px center no-repeat;
+  background: #fff url(images/search.svg) 10px center no-repeat;
   border: 1px solid #ddd;
   border-radius: 3px;
   height: 36px;
@@ -85,6 +85,7 @@ spark-dialog {
 }
 
 #navigationButtons {
+  border: none;
   position: absolute;
   right: 0;
   width: 95px;
@@ -146,13 +147,13 @@ spark-dialog {
 #preferenceResetResult {
   display: none;
   color: #F00;
-  font-weight: bold;
+  font-weight: 500;
   margin: 4px 0 0 4px;
 }
 
 #gitCommitList {
   max-height: 250px;
-  overflow: scroll;
+  overflow: auto;
   padding: 0 20px;
 }
 
@@ -163,7 +164,7 @@ spark-dialog {
 }
 
 #gitChangeList {
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid #cccccc;
   display: none;
   margin-bottom: 15px;
@@ -184,15 +185,12 @@ spark-dialog {
   display: none;
 }
 
-/* Deploy to mobile dialog */
-#mobileDeployDialog .modal-body {
-  padding-top: 10px;
-  padding-bottom: 0;
+#pushUrl {
+  width: 20em;
 }
 
-#pushUrl {
-  margin-left: 17px;
-  width: 20em;
+.radio-button-dependency {
+  margin: 10px 0 0 20px;
 }
 
 .input-label {
@@ -211,10 +209,24 @@ spark-dialog {
   flex: 1 1 auto;
 }
 
-#webStorePublishDialog label {
-  margin-left: 5px;
-}
-
 [selectableTxt] {
   -webkit-user-select: text;
+}
+
+#bottom-toolbar {
+  border-top: 1px solid #ddd;
+  bottom: 0;
+  position: absolute;
+  width: 100%;
+}
+
+/* Override Bootstrap's 'font-weight: bold' style for labels */
+label {
+  font-weight: 500;
+}
+
+/* These two are special (secondary) */
+label[for="analyticsCheck"],
+label[for="stripWhitespace"] {
+  font-weight: 400;
 }

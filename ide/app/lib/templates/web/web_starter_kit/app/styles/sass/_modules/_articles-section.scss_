@@ -1,0 +1,25 @@
+/**
+*
+* Articles section
+*
+**/
+
+.articles-section {
+  background: $colorGrayBackground;
+  text-align: center;
+}
+
+.articles-count {
+  color: $colorBlue;
+  font-family: $fontHighlight;
+  margin-top: -($lineHeight*2);
+  font-weight: 400;
+}
+
+.article-section__icon {
+  top: -($lineHeight);
+
+  @include medium {
+    top: -($lineHeight + $lineHeight/2);
+  }
+}
