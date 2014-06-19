@@ -428,8 +428,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
   String _getSetterTypeFromParams(analyzer.FormalParameterList parameters) {
     // Only show setter type if [analyzer.SimpleFormalParameter] and single
-    if (parameters.parameters.length == 1) {
-      analyzer.FormalParameter param = parameters.parameters.single;
+    if (parameters.parameters.length > 0) {
+      analyzer.FormalParameter param = parameters.parameters.first;
       if (param is analyzer.SimpleFormalParameter) {
         return _getTypeNameString(param.type);
       }
