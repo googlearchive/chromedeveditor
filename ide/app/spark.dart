@@ -3167,12 +3167,21 @@ class _GitPullJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    // TODO: We'll want a way to indicate to the user what files changed and if
-    // there were any merge problems.
-    return gitOperations.pull().then((_) {
-      spark.showSuccessMessage('Pull successful');
-    }).catchError((e) {
-      spark.showErrorMessage('Git Pull Status', e.toString());
+    return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      String username;
+      String password;
+      if (value != null) {
+        Map<String, String> info = JSON.decode(value);
+        username = info['username'];
+        password = info['password'];
+      }
+      // TODO(grv): We'll want a way to indicate to the user what files changed and if
+      // there were any merge problems.
+      return gitOperations.pull(username, password).then((_) {
+        spark.showSuccessMessage('Pull successful');
+      }).catchError((e) {
+        spark.showErrorMessage('Git Pull Status', e.toString());
+      });
     });
   }
 }
@@ -3208,14 +3217,24 @@ class _GitBranchJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return gitOperations.createBranch(_branchName, _sourceBranchName).then((_) {
-      return gitOperations.checkoutBranch(_branchName).then((_) {
-        spark.showSuccessMessage('Created ${_branchName}');
+    return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      String username;
+      String password;
+      if (value != null) {
+        Map<String, String> info = JSON.decode(value);
+        username = info['username'];
+        password = info['password'];
+      }
+      return gitOperations.createBranch(_branchName, _sourceBranchName,
+          username: username, password: password).then((_) {
+        return gitOperations.checkoutBranch(_branchName).then((_) {
+          spark.showSuccessMessage('Created ${_branchName}');
+        });
+      }).catchError((e) {
+        e = SparkException.fromException(e);
+        spark.showErrorMessage(
+            'Error creating branch ${_branchName}', e.message);
       });
-    }).catchError((e) {
-      e = SparkException.fromException(e);
-      spark.showErrorMessage(
-          'Error creating branch ${_branchName}', e.message);
     });
   }
 }
