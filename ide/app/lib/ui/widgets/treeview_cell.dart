@@ -50,7 +50,7 @@ class TreeViewCell implements ListViewCell {
     _embeddedCellContainer = _element.querySelector('.treeviewcell-content');
     int margin = _row.level == 0 ? 0 : _row.level * 25;
     _embeddedCellContainer.classes.add('treeviewcell-content');
-    int offsetX = margin + 14;
+    int offsetX = margin + 15;
     _embeddedCellContainer.style.left = '${offsetX}px';
     _embeddedCellContainer.style.width = 'calc(100% - ${offsetX}px)';
     if (draggable) {
