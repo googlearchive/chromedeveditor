@@ -90,7 +90,7 @@ class Pull {
 
   Future _nonFastForwardPull(String localSha, String commonSha, String remoteSha) {
     var shas = [localSha, commonSha, remoteSha];
-      return store.getHeadRef().then((String headRefName) {
+    return store.getHeadRef().then((String headRefName) {
       return store.getTreesFromCommits(shas).then((trees) {
         return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
             .then((String finalTreeSha) {
