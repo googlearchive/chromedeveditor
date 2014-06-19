@@ -426,6 +426,18 @@ class AnalyzerServiceImpl extends ServiceImpl {
     return outline;
   }
 
+  String _getSetterTypeFromParams(analyzer.FormalParameterList parameters) {
+    // Only show setter type if [analyzer.SimpleFormalParameter] and single
+    if (parameters.parameters.length > 0) {
+      analyzer.FormalParameter param = parameters.parameters.first;
+      if (param is analyzer.SimpleFormalParameter) {
+        return _getTypeNameString(param.type);
+      }
+    }
+
+    return null;
+  }
+
   void _addVariableToOutline(Outline outline,
       analyzer.TopLevelVariableDeclaration declaration) {
     analyzer.VariableDeclarationList variables = declaration.variables;
@@ -451,8 +463,12 @@ class AnalyzerServiceImpl extends ServiceImpl {
           new OutlineTopLevelAccessor(name, _getTypeNameString(declaration.returnType)),
           nameRange, bodyRange));
     } else if (declaration.isSetter) {
+      analyzer.FormalParameterList params =
+          declaration.functionExpression.parameters;
       outline.entries.add(_populateOutlineEntry(
-          new OutlineTopLevelAccessor(name, null, true), nameRange, bodyRange));
+          new OutlineTopLevelAccessor(name,
+              _getSetterTypeFromParams(params), true),
+          nameRange, bodyRange));
     } else {
       outline.entries.add(_populateOutlineEntry(
           new OutlineTopLevelFunction(name,
@@ -499,6 +515,7 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
   void _addMethodToOutlineClass(OutlineClass outlineClass,
       analyzer.MethodDeclaration member) {
+
     if (member.isGetter) {
       outlineClass.members.add(_populateOutlineEntry(
           new OutlineClassAccessor(member.name.name,
@@ -507,7 +524,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
           new _Range.fromAstNode(member)));
     } else if (member.isSetter) {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineClassAccessor(member.name.name, null, true),
+          new OutlineClassAccessor(member.name.name,
+              _getSetterTypeFromParams(member.parameters), true),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     } else {
