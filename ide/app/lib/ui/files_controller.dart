@@ -213,7 +213,7 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 6 : -2;
+    return resource is Project ? 12 : 2 ;
   }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {

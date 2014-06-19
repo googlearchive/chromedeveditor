@@ -515,7 +515,6 @@ abstract class Spark
         workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
           _openFile(file);
           _aceManager.focus();
-          workspace.save();
         });
       }
     });
@@ -1406,7 +1405,6 @@ class FileDeleteAction extends SparkAction implements ContextAction {
           spark.showErrorMessage("Error while deleting ${ordinality}", e.toString());
         }).whenComplete(() {
           spark.workspace.resumeResourceEvents();
-          spark.workspace.save();
         });
       }
     });
@@ -1448,19 +1446,17 @@ Do you really want to delete "${project.name}"?
 This will permanently delete the project contents from disk and cannot be undone.
 ''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
       if (val) {
-        // TODO(grv) : scmManger should listen to the delete project event.
+        // TODO(grv): scmManger should listen to the delete project event.
         spark.scmManager.removeProject(project);
         project.delete().catchError((e) {
           spark.showErrorMessage("Error while deleting project", e.toString());
         });
-        spark.workspace.save();
       }
     });
   }
 
   void _removeProjectReference(ws.Project project) {
     spark.workspace.unlink(project);
-    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -1496,14 +1492,12 @@ This will permanently delete the file from disk and cannot be undone.
         file.delete().catchError((e) {
           spark.showErrorMessage("Error while deleting file", e.toString());
         });
-        spark.workspace.save();
       }
     });
   }
 
   void _removeFileReference(ws.File file) {
     spark.workspace.unlink(file);
-    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -1573,8 +1567,6 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
         resource.traverse().forEach(spark._closeOpenEditor);
       }
     }
-
-    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -2131,7 +2123,6 @@ class NewProjectAction extends SparkActionWithDialog {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });
-          spark.workspace.save();
         });
       });
     }).catchError((e) {
@@ -3121,8 +3112,6 @@ class _GitCloneTask {
           if (spark.bowerManager.properties.isFolderWithPackages(project)) {
             spark.jobManager.schedule(new BowerGetJob(spark, project));
           }
-
-          spark.workspace.save();
         });
       }).catchError((e) {
         // Remove the created project folder.
@@ -3264,13 +3253,10 @@ class _OpenFolderJob extends Job {
       if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
         spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
-
-      return spark.workspace.save();
     }).then((_) {
       spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
     }).catchError((e) {
-      spark.showErrorMessage('Error opening folder ${_entry.fullPath}',
-          e.toString());
+      spark.showErrorMessage('Error opening folder ${_entry.fullPath}', '${e}');
     });
   }
 }
