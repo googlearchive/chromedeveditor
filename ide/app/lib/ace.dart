@@ -346,6 +346,10 @@ class AceManager {
         _aceEditor.renderer.containerElement.querySelector(".ace_content");
 
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
+      if (!DartEditor.isDartFile(currentFile)) {
+        return;
+      }
+
       ace.Token token = event.token;
 
       if (_linkingMarkerId != null) {
