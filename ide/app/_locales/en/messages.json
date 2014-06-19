@@ -1,6 +1,6 @@
 {
   "app_name": { "message": "Spark" },
-  "app_description": { "message": "A Chrome app based development environment" },
+  "app_description": { "message": "Develop apps on the Chrome platform" },
 
   "ace_modes": { "message":
     "css,dart,html,javascript,json,less,markdown,text,xml,yaml"
