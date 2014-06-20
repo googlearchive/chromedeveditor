@@ -137,7 +137,7 @@ abstract class ScmProvider {
    * contract for this method is that it should return quickly.
    */
   bool isUnderScm(Project project);
-  
+
   /**
    * Returns whether [uri] represents an endpoint of this SCM provider.
    */
@@ -275,7 +275,7 @@ class GitScmProvider extends ScmProvider {
     if (gitFolder.getChild('index') is File) return false;
     return true;
   }
-  
+
   bool isScmEndpoint(String uri) => isGitUri(uri);
 
   ScmProjectOperations createOperationsFor(Project project) {
@@ -474,7 +474,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future pull(String username, String password) {
+  Future pull([String username, String password]) {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(
           root: entry, store: store, username: username, password: password);

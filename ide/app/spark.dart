@@ -2374,7 +2374,6 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlCopyInElement;
   bool _cloning = false;
   _GitCloneTask _cloneTask;
-  Object _context;
   ScmProvider _gitProvider = getProviderType('git');
 
   GitCloneAction(Spark spark, Element dialog)
@@ -2397,7 +2396,6 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 
   void _invoke([Object context]) {
-    _context = context;
     // Select any previous text in the URL field.
     Timer.run(_repoUrlElement.select);
     // Show folder picker, if top-level folder is not set.
@@ -2461,7 +2459,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     }).catchError((e) {
       if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_AUTH_REQUIRED) {
-        _showAuthDialog(_context);
+        _showAuthDialog();
       } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
         spark.showSuccessMessage('Clone cancelled');
@@ -2481,7 +2479,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   }
 
   /// Shows an authentification dialog. Returns false if cancelled.
-  void _showAuthDialog(context) {
+  void _showAuthDialog([context]) {
     Timer.run(() {
       // In a timer to let the previous dialog dismiss properly.
       GitAuthenticationDialog.request(spark).then((info) {
@@ -3137,6 +3135,7 @@ class _GitCloneTask {
 
       ScmProvider scmProvider = getProviderType('git');
 
+      // TODO(grv): Create a helper function returning git auth information.
       return spark.syncPrefs.getValue("git-auth-info").then((String value) {
         String username;
         String password;
