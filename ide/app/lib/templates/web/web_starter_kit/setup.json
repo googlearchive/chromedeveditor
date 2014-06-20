@@ -67,7 +67,7 @@
             { "source": "styles.css_", "dest": "styles.css" }
           ],
           "directories": {
-            "sass": {
+            "components": {
               "files": [
                 { "source": "_global.scss_", "dest": "_global.scss" },
                 { "source": "_helper.scss_", "dest": "_helper.scss" },
