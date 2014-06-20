@@ -30,6 +30,7 @@ import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
+import 'git/commands/diff.dart';
 import 'git/commands/fetch.dart';
 import 'git/commands/ignore.dart';
 import 'git/commands/index.dart';
@@ -190,6 +191,8 @@ abstract class ScmProjectOperations {
   Future createBranch(String branchName, String sourceBranchName);
 
   Future checkoutBranch(String branchName);
+
+  Future diff();
 
   void markResolved(Resource resource);
 
@@ -417,6 +420,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
       }).catchError((e) => throw SparkException.fromException(e));
+    });
+  }
+
+  Future<List<DiffResult>> diff() {
+    return objectStore.then((store) {
+      return Diff.diff(store);
     });
   }
 
