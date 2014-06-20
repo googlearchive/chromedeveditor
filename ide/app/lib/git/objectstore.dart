@@ -174,10 +174,10 @@ class ObjectStore {
         => getHeadForRef(headRefName));
   }
 
-  Future<List<String>> getLocalHeads() {
+  Future<Iterable<String>> getLocalHeads() {
     return _rootDir.getDirectory(GIT_REFS_HEADS_PATH).then((dir) {
       return FileOps.listFiles(dir).then((List<chrome.Entry> entries) {
-        return entries.map((entry) => entry.name).toList();
+        return entries.map((entry) => entry.name);
       });
     });
   }
@@ -203,9 +203,9 @@ class ObjectStore {
     });
   }
 
-  Future<List<String>> getLocalBranches() => getLocalHeads();
+  Future<Iterable<String>> getLocalBranches() => getLocalHeads();
 
-  Future<List<String>> getRemoteBranches() => getRemoteHeads();
+  Future<Iterable<String>> getRemoteBranches() => getRemoteHeads();
 
   /**
    * Returns the name of the current branches.

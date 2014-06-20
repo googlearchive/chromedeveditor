@@ -27,76 +27,87 @@ import 'merge.dart';
 class Pull {
   final GitOptions options;
   chrome.DirectoryEntry root;
+  String username;
+  String password;
   ObjectStore store;
   Function progress;
 
   Pull(this.options) {
     root = options.root;
     store = options.store;
+    username = options.username;
+    password = options.password;
     progress = options.progressCallback;
 
     if (progress == null) progress = nopFunction;
   }
 
+
   Future pull() {
-    String username = options.username;
-    String password = options.password;
+    return new Fetch(options).fetch().then((_) => _merge())
+        .catchError((GitException e) {
+      // The branch head may be out of date. Update it.
+      if (e.errorCode == GitErrorConstants.GIT_FETCH_UP_TO_DATE) {
+        return _merge();
+      }
+      return new Future.error(e);
+    });
+  }
 
-    Function fetchProgress;
-    // TODO(grv): Add fetchProgress chunker.
-
-    Fetch fetch = new Fetch(options);
-
-    Future merge() {
-      return store.getHeadRef().then((String headRefName) {
-        return store.getHeadForRef(headRefName).then((String localSha) {
-          return store.getRemoteHeadForRef(headRefName).then(
-              (String remoteSha) {
-            if (remoteSha == localSha) {
-              throw new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE);
+  Future _merge() {
+    return store.getHeadRef().then((String headRefName) {
+      return store.getHeadForRef(headRefName).then((String localSha) {
+        return store.getRemoteHeadForRef(headRefName).then((String remoteSha) {
+          if (remoteSha == localSha) {
+            return new Future.error(
+                new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE));
+          }
+          return store.getCommonAncestor([remoteSha, localSha]).then((commonSha) {
+            if (commonSha == remoteSha) {
+              return new Future.error(
+                  new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE));
+            } else if (commonSha == localSha) {
+              return _fastForwardPull(headRefName, remoteSha);
+            } else {
+              return _nonFastForwardPull(localSha, commonSha, remoteSha);
             }
-            return store.getCommonAncestor([remoteSha, localSha]).then(
-                (commonSha) {
-              if (commonSha == remoteSha) {
-                throw new GitException(GitErrorConstants.GIT_BRANCH_UP_TO_DATE);
-              } else if (commonSha == localSha) {
-                return store.getCurrentBranch().then((branch) {
-                  options.branchName = branch;
-                  return Checkout.checkout(options, remoteSha).then((_) {
-                    // Move the localHead to remoteHead.
-                    return FileOps.createFileWithContent(
-                        root, '.git/${headRefName}', remoteSha, 'Text');
-                  });
-                });
-              } else {
-                var shas = [localSha, commonSha, remoteSha];
-                return store.getTreesFromCommits(shas).then((trees) {
-                  return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
-                      .then((String finalTreeSha) {
-                    return store.getCurrentBranch().then((branch) {
-                      options.branchName = branch;
-                      options.commitMessage = MERGE_BRANCH_COMMIT_MSG
-                        + options.branchName;
-                      // Create a merge commit by default.
-                      return Commit.createCommit(options, localSha, finalTreeSha,
-                           headRefName).then((_) {
-                        return Checkout.checkout(options, finalTreeSha);
-                      });
-                    });
-                  }).catchError((e) {
-                    return throw new GitException(GitErrorConstants.GIT_MERGE_ERROR);
-                  });
-                });
-              }
-            });
           });
         });
       });
-    }
-    return fetch.fetch().then((_) {
-      return merge();
-    }).catchError((e) {
-      return merge();
+    });
+  }
+
+  Future _fastForwardPull(String headRefName, String remoteSha) {
+    return store.getCurrentBranch().then((branch) {
+      options.branchName = branch;
+      return Checkout.checkout(options, remoteSha).then((_) {
+        // Move the localHead to remoteHead.
+        return FileOps.createFileWithContent(
+            root, '.git/${headRefName}', remoteSha, 'Text');
+      });
+    });
+  }
+
+  Future _nonFastForwardPull(String localSha, String commonSha, String remoteSha) {
+    var shas = [localSha, commonSha, remoteSha];
+    return store.getHeadRef().then((String headRefName) {
+      return store.getTreesFromCommits(shas).then((trees) {
+        return Merge.mergeTrees(store, trees[0], trees[1], trees[2])
+            .then((String finalTreeSha) {
+          return store.getCurrentBranch().then((branch) {
+            options.branchName = branch;
+            options.commitMessage = MERGE_BRANCH_COMMIT_MSG + options.branchName;
+            // Create a merge commit by default.
+            return Commit.createCommit(options, localSha, finalTreeSha,
+                headRefName).then((_) {
+              return Checkout.checkout(options, finalTreeSha);
+            });
+          });
+        }).catchError((e) {
+          return new Future.error(
+              new GitException(GitErrorConstants.GIT_MERGE_ERROR));
+        });
+      });
     });
   }
 }

@@ -40,7 +40,7 @@ abstract class SparkModel extends Application {
   preferences.PreferenceStore get syncPrefs;
 
   void showSuccessMessage(String message);
-  void showErrorMessage(String title, String message);
+  void showErrorMessage(String title, {String message, Exception exception});
 
   void onSplitViewUpdate(int position);
   void setGitSettingsResetDoneVisible(bool visible);

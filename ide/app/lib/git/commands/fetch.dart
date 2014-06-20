@@ -63,7 +63,8 @@ class Fetch {
             (GitRef ref) => ref.name == headRefName, orElse: () => null);
 
         if (branchRef == null) {
-          throw new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
+          return new Future.error(
+              new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND));
         }
 
         // See if we know about the branch's head commit. If so we're up to
@@ -74,7 +75,8 @@ class Fetch {
           }
           return store.getCommitGraph([sha]).then((CommitGraph graph) {
             if (graph.commits.isNotEmpty) {
-              throw new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE);
+              return new Future.error(
+                  new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE));
             } else {
               return _handleFetch(branchRef, branchRef, fetcher);
             }

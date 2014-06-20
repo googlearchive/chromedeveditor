@@ -38,7 +38,8 @@ class Push {
     String url = config.url != null ? config.url : options.repoUrl;
 
     if (url == null) {
-      throw new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE);
+      return new Future.error(
+        new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE));
     }
 
     // Currently only pushing to 'origin' is supported.
@@ -48,7 +49,8 @@ class Push {
       return store.getCommitsForPush(refs, config.remoteHeads).then(
           (CommitPushEntry pushEntry) {
         if (pushEntry == null) {
-          throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
+          return new Future.error(
+            new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS));
         }
         PackBuilder builder = new PackBuilder(pushEntry.commits, store);
         return builder.build().then((List<int> packData) {
@@ -71,7 +73,8 @@ class Push {
     String url = config.url != null ? config.url : options.repoUrl;
 
     if (url == null) {
-       throw new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE);
+      return new Future.error(
+       new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE));
     }
 
    HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username, password);
