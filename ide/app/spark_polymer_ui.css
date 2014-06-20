@@ -3,8 +3,6 @@
 /* license that can be found in the LICENSE file. */
 
 @import url("packages/spark_widgets/common/spark_widget.css");
-@import url("packages/bootjack/css/bootstrap.min.css");
-@import url("packages/bootjack/css/bootstrap-theme.css");
 @import url("third_party/font_awesome/css/font-awesome.min.css");
 
 /* Order is important */
@@ -19,37 +17,19 @@
   top: 0;
 }
 
-.dialog {
+[beforeSplit] {
+  box-shadow: rgba(0, 0, 0, 0.2) 1px 0px 2px;
+}
+
+[afterSplit] {
+  z-index: -1;
+}
+
+spark-dialog {
   top: 72px;
   left: 50%;
   width: 512px;
   margin-left: -256px;
-  border-radius: 5px;
-}
-
-.dialog input[type="text"] {
-  width: 100%;
-}
-
-.dialog input:invalid {
-  color: red;
-}
-
-.dialog {
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  overflow: hidden;
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.dialog a.close {
-  width: 21px;
-  height: 21px;
-  text-align: center;
 }
 
 .toolbar {
@@ -68,7 +48,7 @@
 }
 
 #fileFilter {
-  background: #fff url(images/search.png) 10px center no-repeat;
+  background: #fff url(images/search.svg) 10px center no-repeat;
   border: 1px solid #ddd;
   border-radius: 3px;
   height: 36px;
@@ -79,13 +59,21 @@
 }
 
 #fileFilter:focus {
-  border: 1px solid #9DBEFF;
+  border: 1px solid #4285f4;
+  box-shadow: 0 0 0 1px #4285f4;
   outline: none;
+}
+
+#fileFilter ~ #runButton,
+#fileFilter ~ #mainMenu {
+  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);
 }
 
 #fileFilter:focus.active ~ #runButton,
 #fileFilter:focus.active ~ #mainMenu {
-  display: none;
+  opacity: 0;
+  margin: 0;
+  width: 0;
 }
 
 #fileNotFoundPlaceholder {
@@ -97,6 +85,7 @@
 }
 
 #navigationButtons {
+  border: none;
   position: absolute;
   right: 0;
   width: 95px;
@@ -120,70 +109,60 @@
 }
 
 #settingsDialog .settings-label {
-  display: inline-block;
-  width: 130px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: #EEE;
+  width: 150px;
+}
+
+#settingsDialog .settings-value {
+  flex: 1;
+  height: 100%;
   border: 1px solid #DDD;
-  padding: 2px 5px;
+  border-radius: 3px;
+  padding: 5px;
+  color: #666;
+  text-align: center;
+  text-overflow: ellipsis;
 }
 
-#settingsDialog #directory-label {
-  height: 24px;
-  width: 250px;
-}
-
-#settingsDialog .plus-minus-container {
-  margin-left: 15px;
+#settingsDialog .settings-block {
+  width: 100%;
+  height: 30px;
+  background-color: white;
 }
 
 #settingsDialog .plus-minus-button {
-  background-color: #3a84c3;
-  border-radius: 5px;
-  color: #fff;
-  display: inline;
-  overflow: hidden;
-  padding: 5px 8px;
-  margin-right: 6px;
+  width: 30px;
+  height: 30px;
 }
 
-#settingsDialog .plus-minus-button:hover {
-  color: #fff;
-  text-decoration: none;
+.settings-value + .plus-minus-button {
+  margin-left: 5px;
 }
 
-#settingsDialog .plus-minus-button:active {
-  background-color: #19197A;
-  color: #fff;
-  text-decoration: none;
+#settingsDialog .reset-setting-button {
+  flex: 1;
+  height: 100%;
 }
 
-#gitResetSettingsDone {
-  margin-left: 15px;
+#gitRepoUrlCopyInBuffer {
+  width: 0px;
+  height: 1px;
+  background: transparent;
+  box-shadow: 0px 0px 0px;
+  padding: 0px;
+  border: 0px solid;
 }
 
+#gitResetSettingsDone,
 #preferenceResetResult {
+  display: none;
   color: #F00;
-  font-weight: bold;
-}
-
-#gitPushDialog .modal-body {
-  margin: 0;
-  padding: 0;
-}
-
-#gitPushDialog .form-group {
-  margin: 0;
-}
-
-#gitPushDialog .modal-footer {
-  margin: 0;
+  font-weight: 500;
+  margin: 4px 0 0 4px;
 }
 
 #gitCommitList {
   max-height: 250px;
-  overflow: scroll;
+  overflow: auto;
   padding: 0 20px;
 }
 
@@ -194,7 +173,7 @@
 }
 
 #gitChangeList {
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid #cccccc;
   display: none;
   margin-bottom: 15px;
@@ -215,15 +194,12 @@
   display: none;
 }
 
-/* Deploy to mobile dialog */
-#mobileDeployDialog .modal-body {
-  padding-top: 10px;
-  padding-bottom: 0;
+#pushUrl {
+  width: 20em;
 }
 
-#pushUrl {
-  margin-left: 17px;
-  width: 20em;
+.radio-button-dependency {
+  margin: 10px 0 0 20px;
 }
 
 .input-label {
@@ -242,10 +218,24 @@
   flex: 1 1 auto;
 }
 
-#webStorePublishDialog label {
-  margin-left: 5px;
-}
-
 [selectableTxt] {
   -webkit-user-select: text;
+}
+
+#bottom-toolbar {
+  border-top: 1px solid #ddd;
+  bottom: 0;
+  position: absolute;
+  width: 100%;
+}
+
+/* Override Bootstrap's 'font-weight: bold' style for labels */
+label {
+  font-weight: 500;
+}
+
+/* These two are special (secondary) */
+label[for="analyticsCheck"],
+label[for="stripWhitespace"] {
+  font-weight: 400;
 }

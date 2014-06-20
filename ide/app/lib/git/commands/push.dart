@@ -29,7 +29,7 @@ class Push {
     Function pushProgress;
 
     if (options.progressCallback != null) {
-      // TODO add progress chunker.
+      // TODO(grv): Add progress chunker.
     } else {
       pushProgress = nopFunction;
     }
@@ -38,21 +38,24 @@ class Push {
     String url = config.url != null ? config.url : options.repoUrl;
 
     if (url == null) {
-      throw new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE);
+      return new Future.error(
+        new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE));
     }
 
+    // Currently only pushing to 'origin' is supported.
     HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
         password);
     return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
       return store.getCommitsForPush(refs, config.remoteHeads).then(
-          (commits) {
-        if (commits == null) {
-          throw new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS);
+          (CommitPushEntry pushEntry) {
+        if (pushEntry == null) {
+          return new Future.error(
+            new GitException(GitErrorConstants.GIT_PUSH_NO_COMMITS));
         }
-        PackBuilder builder = new PackBuilder(commits.commits, store);
+        PackBuilder builder = new PackBuilder(pushEntry.commits, store);
         return builder.build().then((List<int> packData) {
-          return fetcher.pushRefs([commits.ref], packData, pushProgress).then((_) {
-            config.remoteHeads[commits.ref.name] = commits.ref.head;
+          return fetcher.pushRefs([pushEntry.ref], packData, pushProgress).then((_) {
+            config.remoteHeads[pushEntry.ref.name] = pushEntry.ref.head;
             config.url = url;
             return store.writeConfig();
           });
@@ -64,15 +67,20 @@ class Push {
   static Future<List<CommitObject>> getPendingCommits(GitOptions options) {
     ObjectStore store = options.store;
     Config config = store.config;
-    // TODO(dvh): we need to be able to get pending commits from other local
-    // branches to push to other branches than master.
-    GitRef ref = new GitRef(ObjectStore.HEAD_MASTER_SHA, null);
-    return store.getCommitsForPush([ref], config.remoteHeads).
-        then((CommitPushEntry commits) {
-      if (commits == null) {
-        return [];
-      }
-      return commits.commits;
-    });
-  }
+    String username = options.username;
+    String password = options.password;
+
+    String url = config.url != null ? config.url : options.repoUrl;
+
+    if (url == null) {
+      return new Future.error(
+       new GitException(GitErrorConstants.GIT_PUSH_NO_REMOTE));
+    }
+
+   HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username, password);
+   return fetcher.fetchReceiveRefs().then((List<GitRef> refs) {
+     return store.getCommitsForPush(refs, config.remoteHeads).then(
+         (CommitPushEntry pushEntry) => pushEntry.commits);
+   });
+ }
 }

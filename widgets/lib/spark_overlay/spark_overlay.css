@@ -26,10 +26,10 @@
   outline: none;
   display: none;
   opacity: 0;
-  /* The no-op scaleZ(1) creates an independent stacking context for :host.
+  /* The no-op transform creates an independent stacking context for :host.
      See: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Understanding_z_index/The_stacking_context
   */
-  -webkit-transform: scaleZ(1);
+  -webkit-transform: translateX(0);
 }
 
 /*
@@ -174,4 +174,42 @@
     -webkit-transform: translateX(-100%);
     opacity: 0;
   }
+}
+
+/* TODO(ussuri): Inconsistency here: overlay's bg & border colors are specified
+   by the client, yet arrow's are hardcoded here. Could specify in the clien
+   (e.g. spark-menu-button) using ::shadow -- easy for `fill`, but trickier for
+   border-bottom-color. 
+*/
+.arrow {
+  position: relative;
+  height: 1px;
+  width: 0;
+  margin-top: -17px;
+  margin-bottom: 0;
+  fill: #fafafa;
+  border-color: transparent transparent #cfcfcf transparent;
+  border-style: solid;
+  border-width: 8px;
+  cursor: pointer;
+}
+
+#arrowInner {
+  fill: #fafafa;
+  border-bottom-color: #fafafa;
+  margin-top: -15px;
+  top: 1px;
+}
+
+:host([arrow="top-center"]) .arrow {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+:host([arrow="top-left"]) .arrow {
+  left: 15px;
+}
+
+:host([arrow="top-right"]) .arrow {
+  right: calc(-100% + 30px);
 }

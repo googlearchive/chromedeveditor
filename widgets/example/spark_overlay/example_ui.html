@@ -1,13 +1,27 @@
-<!doctype html>
-
 <link rel="import" href="packages/spark_widgets/spark_overlay/spark_overlay.html">
+<link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
+
 <polymer-element name="example-ui">
   <template>
-    <spark-overlay animation="scale-slideup" opened>
-      <h2>Dialog</h2>
-      <input placeholder="say something..." focused>
-      <div>I agree with this wholeheartedly.</div>
-      <button overlay-toggle>OK</button>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
+    <style>
+      #overlay {
+        background-color: #eee;
+
+      }
+      * {
+        margin: 20px;
+      }
+    </style>
+
+    <spark-overlay id="overlay" animation="scale-slideup" autoClose opened>
+      <div class="col-flex">
+        <h2>OVERLAY</h2>
+        <input placeholder="say something..." focused />
+        <div>I agree with this wholeheartedly.</div>
+        <button overlayToggle>OK</button>
+      </div>
     </spark-overlay>
   </template>
 

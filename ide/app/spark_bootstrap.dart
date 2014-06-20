@@ -11,6 +11,8 @@ import 'package:polymer/polymer.dart';
 import 'package:spark_widgets/common/spark_widget.dart';
 import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_overlay/spark_overlay.dart';
+import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
+import 'package:spark_widgets/spark_dialog_button/spark_dialog_button.dart';
 import 'package:spark_widgets/spark_selection/spark_selection.dart';
 import 'package:spark_widgets/spark_selector/spark_selector.dart';
 import 'package:spark_widgets/spark_menu/spark_menu.dart';
@@ -25,8 +27,8 @@ import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'package:spark_widgets/spark_toolbar/spark_toolbar.dart';
 
 import 'lib/utils.dart';
-import 'lib/ui/polymer/commit_message_view/commit_message_view.dart';
-import 'lib/ui/polymer/goto_line_view/goto_line_view.dart';
+import 'lib/ui/commit_message_view/commit_message_view.dart';
+import 'lib/ui/goto_line_view/goto_line_view.dart';
 import 'spark_polymer_ui.dart';
 import 'spark_polymer.dart' as spark_polymer;
 
@@ -41,6 +43,8 @@ void main() {
   Polymer.register('spark-widget', SparkWidget);
   Polymer.register('spark-button', SparkButton);
   Polymer.register('spark-overlay', SparkOverlay);
+  Polymer.register('spark-dialog', SparkDialog);
+  Polymer.register('spark-dialog-button', SparkDialogButton);
   Polymer.register('spark-selection', SparkSelection);
   Polymer.register('spark-selector', SparkSelector);
   Polymer.register('spark-menu', SparkMenu);

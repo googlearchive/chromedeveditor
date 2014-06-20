@@ -7,9 +7,5 @@ import 'package:polymer/polymer.dart';
 class ExampleUi extends PolymerElement {
   factory ExampleUi() => new Element.tag('ExampleUi');
 
-  ExampleUi.created(): super.created();
-
-  menuAction(Event e, var detail, Node target) {
-    print("menuAction clicked");
-  }
+  ExampleUi.created() : super.created();
 }

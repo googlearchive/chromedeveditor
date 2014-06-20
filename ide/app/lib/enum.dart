@@ -2,12 +2,11 @@
 // All rights reserved. Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// NOTE: Dart doesn't like 'spark.enum': 'enum' must be reserved for future use.
-library spark.enum_;
+library spark.enumerations;
 
 abstract class Enum<T> {
-  final T _value;
-  const Enum(this._value);
+  final T value;
+  const Enum(this.value);
   String get enumName;
-  String toString() => '$enumName.$_value';
+  String toString() => '$enumName.$value';
 }

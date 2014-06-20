@@ -1,4 +1,4 @@
-<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="../polymer/polymer.html">
 
 <!--
 ##### Example
@@ -8,7 +8,7 @@
 @element ``tagName``
 @blurb Element providing solution to [...].
 @status [...]
-@url https://.../``tagName``
+@homepage https://.../``tagName``
 -->
 
 <polymer-element name="``tagName``" attributes="title">

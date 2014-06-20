@@ -5,19 +5,17 @@
 library git.commands.fetch;
 
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import '../constants.dart';
-import '../fast_sha.dart';
+import '../exception.dart';
 import '../file_operations.dart';
 import '../http_fetcher.dart';
 import '../object.dart';
 import '../objectstore.dart';
 import '../options.dart';
 import '../pack.dart';
-import '../pack_index.dart';
 import '../upload_pack_parser.dart';
 import '../utils.dart';
 import 'status.dart';
@@ -25,7 +23,7 @@ import 'status.dart';
 /**
  * A git fetch command implementation.
  *
- * TODO add unittests.
+ * TODO(grv): Add unittests.
 */
 
 class Fetch {
@@ -34,11 +32,13 @@ class Fetch {
   chrome.DirectoryEntry root;
   ObjectStore store;
   Function progress;
+  String branchName;
 
-  Fetch(this.options){
+  Fetch(this.options) {
     root = options.root;
     store = options.store;
     progress = options.progressCallback;
+    branchName = options.branchName == null ? 'master' : options.branchName;
 
     if (progress == null) progress = nopFunction;
   }
@@ -48,62 +48,60 @@ class Fetch {
     String password = options.password;
 
     Function fetchProgress;
-    // TODO add fetchProgress chunker.
+    // TODO(grv): Add fetchProgress chunker.
 
     return Status.isWorkingTreeClean(store).then((_) {
       String url = store.config.url;
 
-      HttpFetcher fetcher = new HttpFetcher(store, 'origin', url, username,
-          password);
+      HttpFetcher fetcher = new HttpFetcher(
+          store, 'origin', url, username, password);
 
       // get current branch.
-      return store.getHeadRef().then((String headRefName) {
-        return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
-          GitRef branchRef = refs.firstWhere((GitRef ref) =>
-              ref.name == headRefName);
+      String headRefName = 'refs/heads/' + branchName;
+      return _updateAndGetRemoteRefs(store, fetcher).then((List<GitRef> refs) {
+        GitRef branchRef = refs.firstWhere(
+            (GitRef ref) => ref.name == headRefName, orElse: () => null);
 
-          if (branchRef != null) {
-            // see if we know about the branch's head commit. If so we're up to
-            // date. If not, request from remote.
-            return store.getRemoteHeadForRef(headRefName).then((sha) {
-              if (sha == branchRef.sha) {
-                // Branch is uptodate
-                throw "fetch up to date.";
-              } else {
-                return _handleFetch(branchRef, branchRef, fetcher);
-              }
-            });
-          } else {
-            //TODO better error handling.
-            throw "Remote branch not found";
+        if (branchRef == null) {
+          return new Future.error(
+              new GitException(GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND));
+        }
+
+        // See if we know about the branch's head commit. If so we're up to
+        // date. If not, request from remote.
+        return store.getRemoteHeadForRef(headRefName).then((sha) {
+          if (sha != branchRef.sha) {
+            return _handleFetch(branchRef, branchRef, fetcher);
           }
+          return store.getCommitGraph([sha]).then((CommitGraph graph) {
+            if (graph.commits.isNotEmpty) {
+              return new Future.error(
+                  new GitException(GitErrorConstants.GIT_FETCH_UP_TO_DATE));
+            } else {
+              return _handleFetch(branchRef, branchRef, fetcher);
+            }
+          });
         });
-      }, onError: (e) {
-        // TODO throw branch not found error.
-        throw "branch not found.";
       });
     });
   }
 
-  /**
-   * Create pack and packIndex file. Returns objects directory.
-   */
-  Future<chrome.DirectoryEntry> _createPackFiles(String packName,
-      ByteBuffer packBuffer, ByteBuffer packIdxBuffer) {
-    return FileOps.createDirectoryRecursive(root, '.git/objects').then(
-        (chrome.DirectoryEntry objectsDir) {
-      return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
-          packBuffer, 'blob').then((_) {
-        return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.idx',
-            packIdxBuffer, 'blob').then((_) {
-          return new Future.value(objectsDir);
-        });
-      });
+  static Future<List<GitRef>> updateAndGetRemoteRefs(GitOptions options) {
+    ObjectStore store = options.store;
+    HttpFetcher fetcher = new HttpFetcher(options.store, 'origin',
+        store.config.url, options.username, options.password);
+    return _updateAndGetRemoteRefs(store, fetcher);
+  }
+
+  static Future<List<GitRef>> _updateAndGetRemoteRefs(
+      ObjectStore store, HttpFetcher fetcher) {
+    return fetcher.fetchUploadRefs().then((List<GitRef> refs) {
+      return store.writeRemoteRefs(refs).then((_) => refs);
     });
   }
 
   Future _createAndUpdateRef(GitRef branchRef, GitRef wantRef) {
-    String path = '.git/' + REFS_REMOTE_HEADS + branchRef.name.split('/').last;
+    String path = GIT_REFS_REMOTES_ORIGIN_PATH + branchRef.name.split('/').last;
     return FileOps.createFileWithContent(root, path, branchRef.sha, "Text");
   }
 
@@ -115,28 +113,20 @@ class Fetch {
       return store.getCommitGraph([sha], 32).then((CommitGraph graph) {
         List<String> haveRefs = graph.commits.map((CommitObject commit)
             => commit.treeSha).toList();
-        return fetcher.fetchRef([wantRef.sha], haveRefs, store.config.shallow,
-            null, graph.nextLevel, null, progress).then((PackParseResult result) {
-          List<int> packSha = result.data.sublist(result.data.length - 20);
-          Uint8List packIdxData = PackIndex.writePackIndex(result.objects,
-              packSha);
+        if (haveRefs.isEmpty) {
+          haveRefs = null;
+        }
 
-          // Get a veiw of the sorted shas.
-          int offset = 4 + 4 + (256 * 4);
-          Uint8List sortedShas = packIdxData.sublist(offset,
-              offset + result.objects.length * 20);
-
-          FastSha sha1 = new FastSha();
-          sha1.add(sortedShas);
-          String packNameSha = shaBytesToString(sha1.close());
-
-          String packName = 'pack-${packNameSha}';
-
-          return _createPackFiles(packName, result.data.buffer,
-              packIdxData.buffer).then((objectsDir) {
-            store.objectDir = objectsDir;
-            PackIndex packIdx = new PackIndex(packIdxData);
-            store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));
+        Future<PackParseResult> fetcherFuture = fetcher.fetchRef(
+            [wantRef.sha],
+            haveRefs,
+            store.config.shallow,
+            options.depth,
+            graph.nextLevel,
+            null,
+            progress);
+        return fetcherFuture.then((result) {
+          return Pack.createPackFiles(store, result).then((_) {
             return _createAndUpdateRef(branchRef, wantRef);
           });
         });

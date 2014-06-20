@@ -8,8 +8,6 @@ import 'dart:convert';
 import 'dart:core';
 import 'dart:typed_data';
 
-import 'package:chrome/src/common_exp.dart' as chrome;
-
 import 'exception.dart';
 import 'object_utils.dart';
 import 'utils.dart';
@@ -25,7 +23,7 @@ abstract class GitObject {
    * Constructs a GitObject of the given type. [content] can be of type [String]
    * or [Uint8List].
    */
-  static GitObject make(String sha, String type, var content,
+  static GitObject make(String sha, String type, dynamic content,
                         [LooseObject rawObj]) {
     switch (type) {
       case ObjectTypes.BLOB_STR:
@@ -57,13 +55,18 @@ abstract class GitObject {
  */
 class TreeEntry {
 
-  String name;
-  Uint8List shaBytes;
-  bool isBlob;
+  final String name;
+  List<int> shaBytes;
+  final bool isBlob;
+  final String permission;
 
   String get sha => shaBytesToString(shaBytes);
 
-  TreeEntry(this.name, this.shaBytes, this.isBlob);
+  TreeEntry(this.name, this.shaBytes, this.isBlob, this.permission);
+
+  static TreeEntry dummyEntry(bool isBlob) {
+    return new TreeEntry(null, null, isBlob, null);
+  }
 }
 
 /**
@@ -99,7 +102,7 @@ class TreeObject extends GitObject {
   }
 
   sortEntries() {
-    //TODO implement.
+    // TODO(grv): Implement.
   }
 
   // Parses the byte stream and constructs the tree object.
@@ -111,7 +114,7 @@ class TreeObject extends GitObject {
       int entryStart = idx;
       while (buffer[idx] != 0) {
         if (idx >= buffer.length) {
-          //TODO(grv) : better exception handling.
+          //TODO(grv): Better exception handling.
           throw new ParseError("Unable to parse git tree object");
         }
         idx++;
@@ -122,11 +125,13 @@ class TreeObject extends GitObject {
         throw new GitException(
             GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
       }
+      String permission = UTF8.decode(buffer.sublist(
+          entryStart, entryStart + (isBlob? 6 : 5)));
       String nameStr = UTF8.decode(buffer.sublist(
           entryStart + (isBlob ? 7: 6), idx++));
       nameStr = Uri.decodeComponent(HTML_ESCAPE.convert(nameStr));
       TreeEntry entry = new TreeEntry(nameStr, buffer.sublist(idx, idx + 20),
-          isBlob);
+          isBlob, permission);
       treeEntries.add(entry);
       idx += 20;
     }
@@ -141,7 +146,7 @@ class TreeObject extends GitObject {
  */
 class BlobObject extends GitObject {
 
-  BlobObject(String sha, var data) : super(sha, data) {
+  BlobObject(String sha, dynamic data) : super(sha, data) {
     this.type = ObjectTypes.BLOB_STR;
   }
 }
@@ -172,7 +177,7 @@ class CommitObject extends GitObject {
   // raw commit object. This is needed in building pack files.
   LooseObject rawObj;
 
-  CommitObject(String sha, var data, [rawObj]) {
+  CommitObject(String sha, dynamic data, [LooseObject rawObj]) {
     this.type = ObjectTypes.COMMIT_STR;
     this.sha = sha;
     this.rawObj = rawObj;
@@ -182,7 +187,7 @@ class CommitObject extends GitObject {
     } else if (data is String) {
       this.data = data;
     } else {
-      // TODO: Clarify this exception.
+      // TODO(grv): Clarify this exception.
       throw "Data is in incompatible format.";
     }
     _parseData();
@@ -268,26 +273,25 @@ class TagObject extends GitObject {
 class LooseObject extends GitObject {
   int size;
 
-  LooseObject(buf) {
+  LooseObject(dynamic buf) {
     _parse(buf);
   }
 
   // Parses and constructs a loose git object.
-  void _parse(buf) {
+  void _parse(dynamic buf) {
     String header;
     int i;
-    if (buf is chrome.ArrayBuffer) {
-      Uint8List data = new Uint8List.fromList(buf.getBytes());
+    if (buf is List<int>) {
       List<String> headChars = [];
-      for (i = 0; i < data.length; ++i) {
-        if (data[i] != 0)
-          headChars.add(UTF8.decode([data[i]]));
+      for (i = 0; i < buf.length; ++i) {
+        if (buf[i] != 0)
+          headChars.add(UTF8.decode([buf[i]]));
         else
           break;
       }
       header = headChars.join();
 
-      this.data = data.sublist(i + 1, data.length);
+      this.data = buf.sublist(i + 1, buf.length);
     } else {
       i = buf.indexOf(new String.fromCharCode(0));
       header = buf.substring(0, i);

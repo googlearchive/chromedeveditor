@@ -9,7 +9,10 @@ import 'dart:async';
 import 'package:chrome/chrome_app.dart' as chrome;
 
 import 'constants.dart';
+import 'ignore.dart';
 import 'index.dart';
+import '../exception.dart';
+import '../file_operations.dart';
 import '../objectstore.dart';
 import '../utils.dart';
 
@@ -19,47 +22,92 @@ class Status {
    * Returns a map from the file path to the file status.
    */
   static Future<Map<String, FileStatus>> getFileStatuses(ObjectStore store) {
-    return store.index.updateIndex().then((_) {
+    return store.index.updateIndex(true).then((_) {
       return store.index.statusMap;
     });
   }
 
+  static FileStatus getStatusForEntry(ObjectStore store, chrome.Entry entry) {
+    FileStatus status = store.index.getStatusForEntry(entry);
+
+    // untracked file.
+    if (status == null) {
+      status = new FileStatus();
+
+      if (GitIgnore.ignore(entry.fullPath)) {
+        status.type = FileStatusType.COMMITTED;
+      }
+    }
+    return status;
+  }
+
   /**
-   * Return the status for an individual file entry.
+   * Update and return the status for an individual file entry.
    */
-  static Future<FileStatus> getFileStatus(ObjectStore store,
-      chrome.ChromeFileEntry entry) {
+  static Future<FileStatus> updateAndGetStatus(ObjectStore store,
+      chrome.Entry entry) {
+    FileStatus status;
     return entry.getMetadata().then((chrome.Metadata data) {
-      FileStatus status = store.index.getStatusForEntry(entry);
-      if (status != null &&
-          status.modificationTime == data.modificationTime.millisecondsSinceEpoch) {
+      status = getStatusForEntry(store, entry);
+
+      if (status.type == FileStatusType.UNTRACKED || entry.isDirectory) {
+        return status;
+      }
+
+      // Don't update status for files ignored by git.
+      if (GitIgnore.ignore(entry.fullPath)) {
+        return status;
+      }
+
+      if (status.modificationTime
+          == data.modificationTime.millisecondsSinceEpoch) {
         // Unchanged file since last update.
         return status;
       }
 
-      // Dont't track status for new and untracked files unless explicitly
-      // added.
-      if (status == null) {
-
-        status = new FileStatus();
-
-        // Ignore status of .lock files.
-        // TODO (grv) : Implement gitignore support.
-        if (entry.name.endsWith('.lock')) {
-          status.type = FileStatusType.COMMITTED;
-        }
+      return getShaForEntry(entry, 'blob').then((String sha) {
+        FileStatus newStatus = new FileStatus()
+            ..path = entry.fullPath
+            ..sha = sha
+            ..size = data.size
+            ..permission = status.permission
+            ..modificationTime = data.modificationTime.millisecondsSinceEpoch;
+        store.index.updateIndexForFile(newStatus);
+        return newStatus;
+      });
+    }).then((_) {
+      if (status.type != FileStatusType.UNTRACKED) {
+        return _updateParent(store, entry).then((_) => status);
+      } else {
         return status;
       }
+    });
+  }
 
-      // TODO(grv) : check the modification time when it is available.
-      return getShaForEntry(entry, 'blob').then((String sha) {
-        status = new FileStatus();
-        status.path = entry.fullPath;
-        status.sha = sha;
-        status.size = data.size;
-        status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
-        store.index.updateIndexForEntry(status);
-        return store.index.getStatusForEntry(entry);
+  static Future _updateParent(ObjectStore store, chrome.Entry entry) {
+    if (entry.fullPath == store.root.fullPath) {
+      return new Future.value();
+    }
+
+    // Don't update status for .git folder and sub-folders.
+    if (entry.fullPath.startsWith(store.root.fullPath + '/.git')) {
+      return new Future.value();
+    }
+
+    return entry.getParent().then((chrome.DirectoryEntry root) {
+      return FileOps.listFiles(root).then((entries) {
+        bool isChanged = entries.any((entry) => getStatusForEntry(store,
+            entry).type == FileStatusType.MODIFIED);
+        FileStatus status = FileStatus.createForDirectory(root);
+        if (isChanged) {
+          status.type = FileStatusType.MODIFIED;
+        } else {
+          status.type = FileStatusType.COMMITTED;
+        }
+        store.index.updateIndexForEntry(root, status);
+        if (root.fullPath != store.root.fullPath) {
+          return _updateParent(store, root);
+        }
       });
     });
   }
@@ -71,48 +119,45 @@ class Status {
    * usage in the future.
    */
   static Future isWorkingTreeClean(ObjectStore store) {
-    return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED,
-        FileStatusType.STAGED]).then((r) {
-      if (!r.isEmpty) {
-        //TODO(grv) : throw custom exception.
-        throw "Uncommitted changes in the working tree.";
+
+    return store.index.updateIndex(true).then((_) {
+      Map<String, FileStatus> statuses = _getFileStatusesForTypes(store,
+          [FileStatusType.MODIFIED, FileStatusType.STAGED]);
+      if (statuses.isNotEmpty) {
+        throw new GitException(GitErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
       }
     });
   }
 
-  static Future<Map<String, FileStatus>> getUnstagedChanges(ObjectStore store)
+  static Map<String, FileStatus> getUnstagedChanges(ObjectStore store)
       => _getFileStatusesForTypes(store, [FileStatusType.MODIFIED]);
 
-  static Future<Map<String, FileStatus>> getStagedChanges(ObjectStore store)
+  static Map<String, FileStatus> getStagedChanges(ObjectStore store)
       => _getFileStatusesForTypes(store, [FileStatusType.STAGED]);
 
-  static Future<Map<String, FileStatus>> getUntrackedChanges(ObjectStore store)
+  static Map<String, FileStatus> getUntrackedChanges(ObjectStore store)
       => _getFileStatusesForTypes(store, [FileStatusType.UNTRACKED]);
 
   static Future<List<String>> getDeletedFiles(ObjectStore store) {
-    return _getFileStatusesForTypes(store, [FileStatusType.MODIFIED], false)
-        .then(
-        (Map<String, FileStatus> statuses) {
+    return store.index.updateIndex(false).then((_) {
       List<String> deletedFilesStatus = [];
-      statuses.forEach((String filePath, FileStatus status) {
-        if (status.deleted) {
-          deletedFilesStatus.add(filePath);
+      store.index.statusMap.forEach((path, status) {
+        if (status.type == FileStatusType.MODIFIED && status.deleted) {
+          deletedFilesStatus.add(path);
         }
       });
       return deletedFilesStatus;
     });
   }
 
-  static Future<Map<String, FileStatus>> _getFileStatusesForTypes(
+  static Map<String, FileStatus> _getFileStatusesForTypes(
       ObjectStore store, List<String> types, [bool updateSha=true]) {
-    return store.index.updateIndex(updateSha).then((_) {
-      Map result = {};
-      store.index.statusMap.forEach((k, v) {
-        if (types.any((type) => v.type == type)) {
-          result[k] = v;
-        }
-      });
-      return result;
+    Map result = {};
+    store.index.statusMap.forEach((k, v) {
+      if (types.any((type) => v.type == type)) {
+        result[k] = v;
+      }
     });
+    return result;
   }
 }

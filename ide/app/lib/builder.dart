@@ -15,6 +15,7 @@ import 'package:logging/logging.dart';
 
 import 'workspace.dart';
 import 'jobs.dart';
+import 'package_mgmt/package_utils.dart';
 
 final Logger _logger = new Logger('spark.builder');
 final NumberFormat _nf = new NumberFormat.decimalPattern();
@@ -115,14 +116,22 @@ abstract class Builder {
    * Process a set of resource changes and complete the [Future] when finished.
    */
   Future build(ResourceChangeEvent event, ProgressMonitor monitor);
+
+  /**
+   * Return only those changes that did not occur in a packages directory.
+   */
+  Iterable<ChangeDelta> filterPackageChanges(Iterable<ChangeDelta> changes) {
+    return changes.where(
+        (ChangeDelta delta) => !isInPackagesFolder(delta.resource));
+  }
 }
 
 class _BuildJob extends Job {
   final ResourceChangeEvent event;
   final List<Builder> builders;
-  final Completer completer;
 
-  _BuildJob(this.event, this.builders, this.completer) : super('Building…');
+  _BuildJob(this.event, this.builders, Completer completer)
+      : super('Building…', completer);
 
   Future run(ProgressMonitor monitor) {
     return Future.forEach(builders, (Builder builder) {
@@ -133,7 +142,7 @@ class _BuildJob extends Job {
     }).catchError((e, st) {
       _logger.severe('Exception from build manager', e, st);
     }).whenComplete(() {
-      completer.complete();
+      done();
     });
   }
 }
@@ -142,7 +151,9 @@ class _BuildJob extends Job {
 
 ResourceChangeEvent _combineEvents(List<ResourceChangeEvent> events) {
   List<ChangeDelta> deltas = [];
-  events.forEach((e) => deltas.addAll(
-      e.changes.where((change) => !change.resource.isDerived())));
+  events.forEach((e) => deltas.addAll(e.changes.where((ChangeDelta change) {
+    Resource resource = change.resource;
+    return resource.project != null && !resource.isDerived();
+  })));
   return new ResourceChangeEvent.fromList(deltas, filterRename: true);
 }

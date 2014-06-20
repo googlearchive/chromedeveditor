@@ -18,10 +18,13 @@ import '../spark_overlay/spark_overlay.dart';
 @CustomTag("spark-menu-button")
 class SparkMenuButton extends SparkWidget {
   @published dynamic selected;
-  @published String valueAttr = "";
+  @published String valueAttr = '';
   @published bool opened = false;
   @published bool responsive = false;
-  @published String valign = "center";
+  @published String arrow = 'none';
+  static final List<String> _SUPPORTED_ARROWS = [
+    'none', 'top-center', 'top-left', 'top-right'
+  ];
 
   SparkButton _button;
   SparkOverlay _overlay;
@@ -36,7 +39,13 @@ class SparkMenuButton extends SparkWidget {
   void enteredView() {
     super.enteredView();
 
+    assert(_SUPPORTED_ARROWS.contains(arrow));
+
     _overlay = $['overlay'];
+    // TODO(ussuri): This lets _overlay handle ESC but breaks _button's
+    // active state when menu is open.
+    //SparkWidget.enableKeyboardEvents(_overlay);
+
     _menu = $['menu'];
 
     final ContentElement buttonCont = $['button'];
@@ -68,17 +77,18 @@ class SparkMenuButton extends SparkWidget {
    * Complete the toggling process, see [_toggle].
    */
   void _completeToggle() {
-    // Most likely, all aggregated events for a single gesture will have the 
+    // Most likely, all aggregated events for a single gesture will have the
     // same value (either 'close' or 'open'), but we don't count on that and
     // formally && all the values just in case.
     final bool newOpened = _toggleQueue.reduce((a, b) => a && b);
     if (newOpened != opened) {
       opened = newOpened;
-      // TODO(ussuri): A temporary plug to make #overlay and #button see
-      // changes in 'opened'. Data binding via {{opened}} in the HTML isn't
-      // detected. deliverChanges() fixes #overlay, but not #button.
+      // TODO(ussuri): A hack to make #overlay and #button see
+      // changes in 'opened'. Data binding via {{opened}} in the HTML wasn't
+      // detected. deliverChanges() here fix #overlay, but not #button.
+      // setAttr() fixes #button, but break #overlay. See BUG #2252.
       _overlay..opened = newOpened..deliverChanges();
-      _button..active = newOpened..deliverChanges();
+      _button.setAttr('active', newOpened);
       if (newOpened) {
         // Enforce focused state so the button can accept keyboard events.
         focus();
@@ -116,20 +126,25 @@ class SparkMenuButton extends SparkWidget {
   void keyDownHandler(KeyboardEvent e) {
     bool stopPropagation = true;
 
-    if (_menu.maybeHandleKeyStroke(e.keyCode)) {
+    // If the menu is opened, give it a chance to handle the keystroke,
+    // e.g. select the current item on ENTER or SPACE.
+    if (opened && _menu.maybeHandleKeyStroke(e.keyCode)) {
       e.preventDefault();
     }
 
+    // Continue handling the keystroke regardless of whether the menu has
+    // handled it: we might still to take an action (e.g. close the menu on
+    // ENTER).
     switch (e.keyCode) {
       case KeyCode.UP:
       case KeyCode.DOWN:
       case KeyCode.PAGE_UP:
       case KeyCode.PAGE_DOWN:
       case KeyCode.ENTER:
-        if (!opened) opened = true;
+        _toggle(true);
         break;
       case KeyCode.ESC:
-        this.blur();
+        _toggle(false);
         break;
       default:
         stopPropagation = false;

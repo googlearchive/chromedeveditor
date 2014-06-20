@@ -46,7 +46,7 @@ class HttpFetcher {
 
   Future<List<GitRef>> fetchUploadRefs() => _fetchRefs('git-upload-pack');
 
-  Future pushRefs(List<GitRef> refPaths, List<int> packData, progress) {
+  Future pushRefs(List<GitRef> refPaths, List<int> packData, Function progress) {
     Completer completer = new Completer();
     String url = _makeUri('/git-receive-pack', {});
     Blob body = _pushRequest(refPaths, packData);
@@ -116,7 +116,6 @@ class HttpFetcher {
           packProgress({'pct': 0, 'msg': "Parsing pack data"});
         }
 
-        // TODO add UploadPackParser class.
         UploadPackParser parser = getUploadPackParser(cancel);
         return parser.parse(buffer, store, packProgress).then(
             (PackParseResult obj) {
@@ -354,9 +353,13 @@ class HttpGitException extends GitException {
     String errorCode;
 
     if (request.status == 401) {
-      errorCode = GitErrorConstants.GIT_AUTH_ERROR;
+      errorCode = GitErrorConstants.GIT_AUTH_REQUIRED;
     } else if (request.status == 404) {
-        errorCode = GitErrorConstants.GIT_HTTP_404_ERROR;
+        errorCode = GitErrorConstants.GIT_HTTP_NOT_FOUND_ERROR;
+    } else if (request.status == 403) {
+      errorCode = GitErrorConstants.GIT_HTTP_FORBIDDEN_ERROR;
+    } else if (request.status == 0) {
+      errorCode = GitErrorConstants.GIT_HTTP_CONN_RESET;
     } else {
       errorCode = GitErrorConstants.GIT_HTTP_ERROR;
     }

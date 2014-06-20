@@ -20,6 +20,7 @@ import 'package:path/path.dart' as path;
 import '../spark_flags.dart';
 import 'css/cssbeautify.dart';
 import 'editors.dart';
+import 'markdown.dart';
 import 'navigation.dart';
 import 'package_mgmt/bower_properties.dart';
 import 'package_mgmt/pub_properties.dart';
@@ -29,7 +30,7 @@ import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
 import 'services.dart' as svc;
 import 'outline.dart';
-import 'ui/polymer/goto_line_view/goto_line_view.dart';
+import 'ui/goto_line_view/goto_line_view.dart';
 import 'utils.dart';
 
 export 'package:ace/ace.dart' show EditSession;
@@ -59,6 +60,12 @@ class TextEditor extends Editor {
     }
     if (CssEditor.isCssFile(file)) {
       return new CssEditor._create(aceManager, file, prefs);
+    }
+    if (MarkdownEditor.isMarkdownFile(file)) {
+      return new MarkdownEditor._create(aceManager, file, prefs);
+    }
+    if (HtmlEditor.isHtmlFile(file)) {
+      return new HtmlEditor._create(aceManager, file, prefs);
     }
     return new TextEditor._create(aceManager, file, prefs);
   }
@@ -92,7 +99,7 @@ class TextEditor extends Editor {
   html.Element get element => aceManager.parentElement;
 
   void activate() {
-    aceManager.outline.visible = supportsOutline;
+    _outline.visible = supportsOutline;
     aceManager._aceEditor.readOnly = readOnly;
   }
 
@@ -101,7 +108,11 @@ class TextEditor extends Editor {
    */
   void reconcile() { }
 
-  void deactivate() { }
+  void deactivate() {
+    if (supportsOutline && _outline.visible) {
+      _outline.visible = false;
+    }
+  }
 
   void resize() => aceManager.resize();
 
@@ -132,7 +143,8 @@ class TextEditor extends Editor {
 
   void format() { }
 
-  Future navigateToDeclaration([Duration timeLimit]) => new Future.value();
+  Future navigateToDeclaration([Duration timeLimit]) =>
+      new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
   void fileContentsChanged() {
     if (_session != null) {
@@ -171,6 +183,9 @@ class TextEditor extends Editor {
     }
   }
 
+  int getCursorOffset() => _session.document.positionToIndex(
+      aceManager._aceEditor.cursorPosition);
+
   /**
    * Replace the editor's contents with the given text. Make sure that we don't
    * fire a change event.
@@ -200,12 +215,14 @@ class TextEditor extends Editor {
   void _invokeReconcile() {
     reconcile();
   }
+
+  Outline get _outline => aceManager.outline;
 }
 
 class DartEditor extends TextEditor {
   static bool isDartFile(workspace.File file) => file.name.endsWith('.dart');
 
-  int outlineScrollPosition = 0;
+  OffsetRange outlineScrollPosition = new OffsetRange();
 
   DartEditor._create(AceManager aceManager, workspace.File file,
       SparkPreferences prefs) : super._create(aceManager, file, prefs);
@@ -231,24 +248,22 @@ class DartEditor extends TextEditor {
   }
 
   void reconcile() {
-    int pos = _outline.scrollPosition;
+    OffsetRange pos = _outline.scrollPosition;
     _outline.build(file.name, _session.value).then((_) {
       _outline.scrollPosition = pos;
     });
   }
 
-  Outline get _outline => aceManager.outline;
-
   Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
-    int offset = _session.document.positionToIndex(
-        aceManager._aceEditor.cursorPosition);
+    int offset = getCursorOffset();
 
     Future declarationFuture = aceManager._analysisService.getDeclarationFor(
         file, offset);
 
     if (timeLimit != null) {
-      declarationFuture = declarationFuture.timeout(timeLimit, onTimeout: () =>
-          throw new TimeoutException("navigateToDeclaration timed out"));
+      declarationFuture = declarationFuture.timeout(timeLimit, onTimeout: () {
+        throw new TimeoutException("navigateToDeclaration timed out");
+      });
     }
 
     return declarationFuture.then((svc.Declaration declaration) {
@@ -286,6 +301,90 @@ class CssEditor extends TextEditor {
       dirty = true;
     }
   }
+
+  /**
+   * Handle navigating to file references in strings. So, things like:
+   *
+   *     @import url("packages/bootjack/css/bootstrap.min.css");
+   */
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
+    if (file.parent == null) {
+      return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+    }
+
+    String path = _getQuotedString(_session.value, getCursorOffset());
+    if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+
+    workspace.File targetFile = _resolvePath(file, path);
+
+    if (targetFile != null) {
+      aceManager.delegate.openEditor(targetFile);
+      return new Future.value(new svc.FileDeclaration(targetFile));
+    } else {
+      return new Future.value();
+    }
+  }
+}
+
+class MarkdownEditor extends TextEditor {
+  static bool isMarkdownFile(workspace.File file) =>
+      file.name.toLowerCase().endsWith('.md');
+
+  Markdown _markdown;
+
+  MarkdownEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs) {
+       _markdown = new Markdown(element, file);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _markdown.activate();
+  }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _markdown.deactivate();
+  }
+
+  @override
+  void reconcile() {
+    _markdown.renderHtml();
+  }
+}
+
+class HtmlEditor extends TextEditor {
+  static bool isHtmlFile(workspace.File file) =>
+      file.name.endsWith('.htm') || file.name.endsWith('.html');
+
+  HtmlEditor._create(AceManager aceManager, workspace.File file,
+    SparkPreferences prefs) : super._create(aceManager, file, prefs);
+
+  /**
+   * Handle navigating to file references in strings. So, things like the href
+   * in:
+   *
+   *     <link rel="import" href="spark_polymer_ui.html">
+   */
+  Future<svc.Declaration> navigateToDeclaration([Duration timeLimit]) {
+    if (file.parent == null) {
+      return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+    }
+
+    String path = _getQuotedString(_session.value, getCursorOffset());
+    if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
+
+    workspace.File targetFile = _resolvePath(file, path);
+
+    if (targetFile != null) {
+      aceManager.delegate.openEditor(targetFile);
+      return new Future.value(new svc.FileDeclaration(targetFile));
+    } else {
+      return new Future.value();
+    }
+  }
 }
 
 /**
@@ -293,11 +392,13 @@ class CssEditor extends TextEditor {
  */
 class AceManager {
   static final KEY_BINDINGS = ace.KeyboardHandler.BINDINGS;
+
   /**
    * The container for the Ace editor.
    */
   final html.Element parentElement;
   final AceManagerDelegate delegate;
+  final SparkPreferences _prefs;
 
   Outline outline;
 
@@ -306,6 +407,7 @@ class AceManager {
   GotoLineView gotoLineView;
 
   ace.Editor _aceEditor;
+  ace.EditSession _currentSession;
 
   workspace.Marker _currentMarker;
 
@@ -321,22 +423,23 @@ class AceManager {
   AceManager(this.parentElement,
              this.delegate,
              svc.Services services,
-             PreferenceStore prefs) {
+             this._prefs) {
     ace.implementation = ACE_PROXY_IMPLEMENTATION;
     _aceEditor = ace.edit(parentElement);
     _aceEditor.renderer.fixedWidthGutter = true;
     _aceEditor.highlightActiveLine = false;
     _aceEditor.printMarginColumn = 80;
     _aceEditor.readOnly = true;
-    _aceEditor.fadeFoldWidgets = true;
+    // TODO(devoncarew): Commented out - see #2475.
+    //_aceEditor.fadeFoldWidgets = true;
 
     _analysisService =  services.getService("analyzer");
 
     // Enable code completion.
     ace.require('ace/ext/language_tools');
     _aceEditor.setOption('enableBasicAutocompletion', true);
-    _aceEditor.setOption('enableSnippets', true);
-    _aceEditor.setOption('enableMultiselect', false);
+    // TODO(devoncarew): Disabled to workaround #2442.
+    //_aceEditor.setOption('enableSnippets', true);
 
     ace.require('ace/ext/linking');
     _aceEditor.setOptions({'enableMultiselect' : false,
@@ -389,6 +492,7 @@ class AceManager {
         const ace.BindKey(mac: 'Command-L', win: 'Ctrl-L'),
         _showGotoLineView);
     _aceEditor.commands.addCommand(command);
+
     if (PlatformInfo.isMac) {
       command = new ace.Command(
           'scrolltobeginningofdocument',
@@ -403,26 +507,34 @@ class AceManager {
       _aceEditor.commands.addCommand(command);
     }
 
+    // Remove the `ctrl-,` binding.
+    _aceEditor.commands.removeCommand('showSettingsMenu');
+
     // Add some additional file extension editors.
     ace.Mode.extensionMap['classpath'] = ace.Mode.XML;
     ace.Mode.extensionMap['cmd'] = ace.Mode.BATCHFILE;
     ace.Mode.extensionMap['diff'] = ace.Mode.DIFF;
     ace.Mode.extensionMap['lock'] = ace.Mode.YAML;
+    ace.Mode.extensionMap['nmf'] = ace.Mode.JSON;
     ace.Mode.extensionMap['project'] = ace.Mode.XML;
+    ace.Mode.extensionMap['webapp'] = ace.Mode.JSON;
 
-    _setupOutline(prefs);
     _setupGotoLine();
 
-    var node = parentElement.getElementsByClassName("ace_content")[0];
-    node.onClick.listen((e) {
-      bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
-      if (accelKey) _onGotoDeclarationController.add(null);
-    });
+    _aceEditor.setOption('enableMultiselect', SparkFlags.enableMultiSelect);
+    if (!SparkFlags.enableMultiSelect) {
+      // Setup ACCEL + clicking on declaration
+      var node = parentElement.getElementsByClassName("ace_content")[0];
+      node.onClick.listen((e) {
+        bool accelKey = PlatformInfo.isMac ? e.metaKey : e.ctrlKey;
+        if (accelKey) _onGotoDeclarationController.add(null);
+      });
+    }
   }
 
-  void _setupOutline(PreferenceStore prefs) {
-    outline = new Outline(_analysisService, parentElement, prefs);
-
+  void setupOutline(html.Element parentElement) {
+    outline = new Outline(_analysisService, parentElement, _prefs.prefStore);
+    outline.visible = false;
     outline.onChildSelected.listen((OutlineItem item) {
       ace.Point startPoint =
           currentSession.document.indexToPosition(item.nameStartOffset);
@@ -438,19 +550,18 @@ class AceManager {
 
     ace.Point lastCursorPosition =  new ace.Point(-1, -1);
     _aceEditor.onChangeSelection.listen((_) {
-      ace.Point newCursorPosition = _aceEditor.cursorPosition;
-      // Cancel the last outline selection update
-      if (lastCursorPosition != newCursorPosition) {
-        int cursorOffset = currentSession.document.positionToIndex(
-            newCursorPosition);
-        outline.selectItemAtOffset(cursorOffset);
+      ace.Point currentPosition = _aceEditor.cursorPosition;
+      // Cancel the last outline selection update.
+      if (lastCursorPosition != currentPosition) {
+        outline.selectItemAtOffset(
+            currentSession.document.positionToIndex(currentPosition));
+        lastCursorPosition = currentPosition;
       }
-      lastCursorPosition = newCursorPosition;
     });
   }
 
+  // Set up the goto line dialog.
   void _setupGotoLine() {
-    // Set up the goto line dialog.
     gotoLineView = new GotoLineView();
     if (gotoLineView is! GotoLineView) {
       html.querySelector('#splashScreen').style.backgroundColor = 'red';
@@ -499,7 +610,7 @@ class AceManager {
     var isScrolling = (_aceEditor.lastVisibleRow -
         _aceEditor.firstVisibleRow + 1) < currentSession.document.length;
 
-    int documentHeight;
+    num documentHeight;
     if (!isScrolling) {
       var lineElements = parentElement.getElementsByClassName("ace_line");
       documentHeight = (lineElements.last.offsetTo(parentElement).y -
@@ -679,7 +790,7 @@ class AceManager {
     session.useWorker = false;
   }
 
-  ace.EditSession get currentSession => _aceEditor.session;
+  ace.EditSession get currentSession => _currentSession;
 
   void switchTo(ace.EditSession session, [workspace.File file]) {
     if (_foldListenerSubscription != null) {
@@ -688,9 +799,11 @@ class AceManager {
     }
 
     if (session == null) {
-      _aceEditor.session = ace.createEditSession('', new ace.Mode('ace/mode/text'));
+      _currentSession = ace.createEditSession('', new ace.Mode('ace/mode/text'));
+      _aceEditor.session = _currentSession;
     } else {
-      _aceEditor.session = session;
+      _currentSession = session;
+      _aceEditor.session = _currentSession;
 
       _foldListenerSubscription = currentSession.onChangeFold.listen((_) {
         setMarkers(file.getMarkers());
@@ -712,13 +825,14 @@ class AceManager {
 
       setMarkers(file.getMarkers());
       session.onChangeScrollTop.listen((_) => Timer.run(() {
-        if (outline.visible) {
+        if (outline.showing) {
           int firstCursorOffset = currentSession.document.positionToIndex(
               new ace.Point(_aceEditor.firstVisibleRow, 0));
           int lastCursorOffset = currentSession.document.positionToIndex(
               new ace.Point(_aceEditor.lastVisibleRow, 0));
 
-          outline.scrollToOffsets(firstCursorOffset, lastCursorOffset);
+          outline.scrollOffsetRangeIntoView(
+              new OffsetRange(firstCursorOffset, lastCursorOffset));
         }
       }));
     }
@@ -755,19 +869,19 @@ class AceManager {
   void _handleGotoLineViewClosed(_) => focus();
 
   void _scrollToBeginningOfDocument(_) {
-    _aceEditor.session.scrollTop = 0;
+    _currentSession.scrollTop = 0;
   }
 
   void _scrollToEndOfDocument(_) {
     int lineHeight = html.querySelector('.ace_gutter-cell').clientHeight;
-    _aceEditor.session.scrollTop = _aceEditor.session.document.length * lineHeight;
+    _currentSession.scrollTop = _currentSession.document.length * lineHeight;
   }
 
   NavigationLocation get navigationLocation {
     if (currentFile == null) return null;
     ace.Range range = _aceEditor.selection.range;
-    int offsetStart = _aceEditor.session.document.positionToIndex(range.start);
-    int offsetEnd = _aceEditor.session.document.positionToIndex(range.end);
+    int offsetStart = _currentSession.document.positionToIndex(range.start);
+    int offsetEnd = _currentSession.document.positionToIndex(range.end);
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
   }
@@ -928,4 +1042,59 @@ String _calcMD5(String text) {
   crypto.MD5 md5 = new crypto.MD5();
   md5.add(text.codeUnits);
   return crypto.CryptoUtils.bytesToHex(md5.close());
+}
+
+/**
+ * Given some arbitrary text and an offset into it, attempt to return the
+ * parts of the offset surrounded by quotes.
+ */
+String _getQuotedString(String text, int offset) {
+  int leftSide = offset;
+
+  while (leftSide >= 0) {
+    String c = text[leftSide];
+    if (c == '\n' || leftSide == 0) return null;
+    if (c == "'" || c == '"') break;
+    leftSide--;
+  }
+
+  leftSide++;
+  int rightSide = offset;
+
+  while ((rightSide + 1) < text.length) {
+    String c = text[rightSide];
+    if (c == "'" || c == '"') {
+      rightSide--;
+      break;
+    }
+    if (c == '\n') break;
+    rightSide++;
+  }
+
+  return text.substring(leftSide, rightSide + 1);
+}
+
+/**
+ * Given a file and a relative path from it, resolve the target file. Can
+ * return `null`.
+ */
+workspace.File _resolvePath(workspace.File file, String path) {
+  return _resolvePaths(file.parent, path.split('/'));
+}
+
+workspace.File _resolvePaths(workspace.Container container,
+                             Iterable<String> pathElements) {
+  if (pathElements.isEmpty || container == null) return null;
+
+  String element = pathElements.first;
+
+  if (pathElements.length == 1) {
+    return container.getChild(element);
+  }
+
+  if (element == '..') {
+    return _resolvePaths(container.parent, pathElements.skip(1));
+  } else {
+    return _resolvePaths(container.getChild(element), pathElements.skip(1));
+  }
 }

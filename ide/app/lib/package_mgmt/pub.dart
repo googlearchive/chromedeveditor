@@ -20,6 +20,17 @@ import '../workspace.dart';
 
 Logger _logger = new Logger('spark.pub');
 
+File findPubspec(Container container) {
+  while (container.parent != null && container is! Workspace) {
+    Resource child = container.getChild(pubProperties.packageSpecFileName);
+    if (child != null) {
+      return child;
+    }
+    container = container.parent;
+  }
+  return null;
+}
+
 class PubManager extends PackageManager {
   PubManager(Workspace workspace) : super(workspace);
 
@@ -33,18 +44,40 @@ class PubManager extends PackageManager {
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
-  Future installPackages(Container container) =>
+  Future installPackages(Folder container) =>
       _installUpgradePackages(container, 'get', false);
 
-  Future upgradePackages(Container container) =>
+  Future upgradePackages(Folder container) =>
       _installUpgradePackages(container, 'upgrade', true);
+
+  Future<dynamic> arePackagesInstalled(Folder container) {
+    File pubspecFile = findPubspec(container);
+    if (pubspecFile is File) {
+      container = pubspecFile.parent;
+      return pubspecFile.getContents().then((String str) {
+        try {
+          _PubSpecInfo info = new _PubSpecInfo.parse(str);
+          for (String dep in info.getDependencies()) {
+            Resource dependency =
+                 container.getChildPath('${properties.packagesDirName}/${dep}');
+            if (dependency is! Folder) {
+              return dep;
+            }
+          }
+        } on Exception catch (e) {
+          _logger.info('Error parsing pubspec file', e);
+        }
+      });
+    }
+    return new Future.value();
+  }
 
   //
   // - end PackageManager abstract interface.
   //
 
   Future _installUpgradePackages(
-      Container container, String commandName, bool isUpgrade) {
+      Folder container, String commandName, bool isUpgrade) {
     return tavern.getDependencies(container.entry, _handleLog, isUpgrade).
         whenComplete(() {
       return container.project.refresh();

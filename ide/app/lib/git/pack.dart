@@ -20,6 +20,8 @@ import 'file_operations.dart';
 import 'object.dart';
 import 'object_utils.dart';
 import 'objectstore.dart';
+import 'pack_index.dart';
+import 'upload_pack_parser.dart';
 import 'utils.dart';
 import 'zlib.dart';
 import '../utils.dart';
@@ -37,9 +39,10 @@ class PackObjectHeader {
 
 /**
  * This class encapsulates logic to parse, create and build git pack objects.
- * TODO(grv) : add unittests.
+ * TODO(grv): Add unittests.
  */
 class Pack {
+  static final SHA_LENGTH = 20;
   final List<int> data;
   int _offset = 0;
   ObjectStore _store;
@@ -48,9 +51,8 @@ class Pack {
 
   Pack(this.data, [this._store, this._cancel]);
 
-  Uint8List _peek(int length) => data.sublist(_offset, _offset + length);
+  List<int> _peek(int length) => data.sublist(_offset, _offset + length);
 
-  Uint8List _rest() => data.sublist(_offset);
 
   void _advance(int length) {
     _offset += length;
@@ -68,7 +70,7 @@ class Pack {
     if (UTF8.decode(_peek(4)) == 'PACK') {
       _advance(4);
     } else {
-      // TODO(grv) : throw custom error.
+      // TODO(grv): Throw custom error.
       throw "Couldn't match PACK";
     }
   }
@@ -107,7 +109,7 @@ class Pack {
   /**
    * Returns a SHA1 hash of given data.
    */
-  List<int> getObjectHash(String type, Uint8List data) {
+  List<int> getObjectHash(String type, List<int> data) {
     FastSha sha1 = new FastSha();
 
     List<int> header = encodeUtf8("${type} ${data.length}\u0000");
@@ -129,7 +131,7 @@ class Pack {
     int version = _peek(4)[3];
     _advance(4);
     if (version != expectedVersion) {
-      // TODO(grv) : throw custom exception.
+      // TODO(grv): Throw custom exception.
       String msg =
           "expected packfile version ${expectedVersion} but got ${version}";
           throw msg;
@@ -183,7 +185,7 @@ class Pack {
           completer.complete(doExpand(baseObj, object));
       }
     } else {
-      // TODO(grv) : desing object class.
+      // TODO(grv): Desing object class.
       completer.completeError('todo');
       /*_store.retrieveRawObject(object.baseSha, 'ArrayBuffer').then((baseObj) {
         completer.complete(doExpand(baseObj, object));
@@ -194,12 +196,10 @@ class Pack {
   }
 
   ZlibResult _uncompressObject(int objOffset, int uncompressedLength) {
-    // We assume that the compressed string will not be greater by 1000 in
-    // length to the uncompressed string.
-    // This has a very significant impact on performance.
-    int end =  uncompressedLength + objOffset + 1000;
-    if (end > data.length) end = data.length;
-    return Zlib.inflate(data.sublist(objOffset, end), expectedLength: uncompressedLength);
+    return Zlib.inflate(
+        data,
+        offset: objOffset,
+        expectedLength: uncompressedLength);
   }
 
 
@@ -215,8 +215,8 @@ class Pack {
         object.desiredOffset = findDeltaBaseOffset(header);
         break;
       case ObjectTypes.REF_DELTA:
-        Uint8List shaBytes = _peek(20);
-        _advance(20);
+        List<int> shaBytes = _peek(SHA_LENGTH);
+        _advance(SHA_LENGTH);
         object.baseSha = shaBytes.map((int byte) {
           _padString(byte.toRadixString(16), 2, '0');
         }).join('');
@@ -226,7 +226,7 @@ class Pack {
     }
 
     ZlibResult objData = _uncompressObject(_offset, header.size);
-    object.data = new Uint8List.fromList(objData.data);
+    object.data = objData.data;
 
     _advance(objData.readLength);
     return object;
@@ -252,7 +252,7 @@ class Pack {
 
   /// This function parses all the git objects. All the deltified objects
   /// are expanded.
-  Future parseAll([var progress]) {
+  Future parseAll([Function progress]) {
     try {
       int numObjects;
       List<PackedObject> deferredObjects = [];
@@ -276,7 +276,7 @@ class Pack {
            default:
              object.shaBytes = getObjectHash(object.type, object.data);
              object.data = null;
-             // TODO(grv) : add progress.
+             // TODO(grv): Add progress.
              break;
          }
 
@@ -288,7 +288,7 @@ class Pack {
          _checkCancel();
          return expandDeltifiedObject(obj).then((PackedObject deltifiedObj) {
            deltifiedObj.data = null;
-           // TODO(grv) : add progress.
+           // TODO(grv): Add progress.
          });
        }
 
@@ -305,9 +305,9 @@ class Pack {
     }
   }
 
-  Uint8List applyDelta(Uint8List baseData, Uint8List deltaData) {
+  List<int> applyDelta(List<int> baseData, List<int> deltaData) {
     int matchLength(DeltaDataStream stream) {
-      Uint8List data = stream.data;
+      List<int> data = stream.data;
       int offset = stream.offset;
       int result = 0;
       int currentShift = 0;
@@ -331,12 +331,12 @@ class Pack {
 
     int baseLength = matchLength(stream);
     if (baseLength != baseData.length) {
-      // TODO throw better exception.
+      // TODO(grv): Thhrow better exception.
       throw "Delta Error: base length not equal to length of given base data";
     }
 
     int resultLength = matchLength(stream);
-    Uint8List resultData = new Uint8List(resultLength);
+    List<int> resultData = new List(resultLength);
     int resultOffset = 0;
 
     int copyOffset;
@@ -379,15 +379,15 @@ class Pack {
           copyLength = (1<<16);
         }
 
-        // TODO(grv) : check if this is a version 2 packfile and apply
+        // TODO(grv): Check if this is a version 2 packfile and apply
         // copyFromResult if so.
         copyFromResult = (opcode & 0x01);
-        Uint8List sublist = baseData.sublist(copyOffset,
+        List<int> sublist = baseData.sublist(copyOffset,
             copyOffset + copyLength);
         resultData.setAll(resultOffset, sublist);
         resultOffset += sublist.length;
       } else if ((opcode & 0x80) == 0) {
-        Uint8List sublist = stream.data.sublist(stream.offset,
+        List<int> sublist = stream.data.sublist(stream.offset,
             stream.offset + opcode);
         resultData.setAll(resultOffset, sublist);
         resultOffset += sublist.length;
@@ -396,6 +396,39 @@ class Pack {
     }
 
     return resultData;
+  }
+
+  /**
+   * Create pack and packIndex file. Adds the created pack to the [store].
+   */
+  static Future<chrome.DirectoryEntry> createPackFiles(
+      ObjectStore store, PackParseResult result) {
+    List<int> packSha = result.data.sublist(result.data.length - 20);
+    Uint8List packIdxData = PackIndex.writePackIndex(result.objects, packSha);
+
+    // Get a veiw of the sorted shas.
+    int offset = 4 + 4 + (256 * 4);
+    Uint8List sortedShas = packIdxData.sublist(offset,
+        offset + result.objects.length * 20);
+
+    FastSha sha1 = new FastSha();
+    sha1.add(sortedShas);
+    String packNameSha = shaBytesToString(sha1.close());
+
+    String packName = 'pack-${packNameSha}';
+    return FileOps.createDirectoryRecursive(store.root, '.git/objects').then(
+        (chrome.DirectoryEntry objectsDir) {
+      return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.pack',
+          result.data, 'blob').then((_) {
+        return FileOps.createFileWithContent(objectsDir, 'pack/${packName}.idx',
+            packIdxData, 'blob').then((_) {
+          store.objectDir = objectsDir;
+          PackIndex packIdx = new PackIndex(packIdxData);
+          store.packs.add(new PackEntry(new Pack(result.data, store), packIdx));
+          return new Future.value(objectsDir);
+        });
+      });
+    });
   }
 }
 
@@ -436,11 +469,11 @@ class PackBuilder {
   }
 
   void _packIt(LooseObject object) {
-    var buf = object.data;
+    dynamic buf = object.data;
     List<int> data;
     if  (buf is chrome.ArrayBuffer) {
       data = buf.getBytes();
-    } else if (buf is Uint8List) {
+    } else if (buf is Uint8List || buf is List<int>) {
       data = buf;
     } else {
       // assume it's a string.
@@ -524,7 +557,7 @@ class PackBuilder {
  * Defines a delta data object.
  */
 class DeltaDataStream {
-  final Uint8List data;
+  final List<int> data;
   int offset;
 
   DeltaDataStream(this.data, this.offset);

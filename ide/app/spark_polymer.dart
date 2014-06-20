@@ -10,7 +10,7 @@ import 'dart:html';
 import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:polymer/polymer.dart' as polymer;
 import 'package:spark_widgets/spark_button/spark_button.dart';
-import 'package:spark_widgets/spark_modal/spark_modal.dart';
+import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 
 import 'spark.dart';
 import 'spark_flags.dart';
@@ -20,6 +20,7 @@ import 'lib/app.dart';
 import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
+import 'lib/preferences.dart';
 import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
@@ -53,8 +54,11 @@ void main() {
   // process (`grind deploy`).
   // user.json can be manually added to override some of the flags from app.json
   // or add new flags that will survive the build process.
+  // bower_config.json is used to define mappings for certain external Bower
+  // packages transitively imported by Polymer JS project templates.
   final List<Future<String>> flagsReaders = [
       HttpRequest.getString(chrome.runtime.getURL('app.json')),
+      HttpRequest.getString(chrome.runtime.getURL('bower_config.json')),
       HttpRequest.getString(chrome.runtime.getURL('user.json'))
   ];
   SparkFlags.initFromFiles(flagsReaders).then((_) {
@@ -74,8 +78,8 @@ void main() {
 // TODO(devoncarew): We need to de-couple a request to close the dialog
 // from actually closing it. So, cancel() => close(), and
 // performOk() => close(), but subclasses can override.
-class SparkPolymerDialog implements SparkDialog {
-  SparkModal _dialogElement;
+class SparkPolymerDialog implements Dialog {
+  SparkDialog _dialogElement;
 
   SparkPolymerDialog(Element dialogElement)
       : _dialogElement = dialogElement {
@@ -86,29 +90,41 @@ class SparkPolymerDialog implements SparkDialog {
   }
 
   @override
-  void show() {
-    if (!_dialogElement.opened) {
-      _dialogElement.toggle();
-    }
-  }
-
-  // TODO(ussuri): Currently, this never gets called (the dialog closes in
-  // another way). Make symmetrical when merging Polymer and non-Polymer.
-  @override
-  void hide() {
-    if (_dialogElement.opened) _dialogElement.toggle();
-  }
+  void show() => _dialogElement.show();
 
   @override
-  Element get element => _dialogElement;
+  void hide() => _dialogElement.hide();
+
+  @override
+  SparkDialog get dialog => _dialogElement;
+
+  @override
+  Element getElement(String selectors) =>
+      _dialogElement.querySelector(selectors);
+
+  @override
+  List<Element> getElements(String selectors) =>
+      _dialogElement.querySelectorAll(selectors);
+
+  @override
+  Element getShadowDomElement(String selectors) =>
+      _dialogElement.shadowRoot.querySelector(selectors);
+
+  @override
+  bool get activityVisible => _dialogElement.activityVisible;
+
+  @override
+  void set activityVisible(bool visible) {
+    _dialogElement.activityVisible = visible;
+  }
 }
 
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future openFolder() {
+  Future openFolder(chrome.DirectoryEntry entry) {
     return _beforeSystemModal()
-        .then((_) => super.openFolder())
+        .then((_) => super.openFolder(entry))
         .then((_) => _systemModalComplete())
         .catchError((e) => _systemModalComplete());
   }
@@ -120,9 +136,10 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
 
-  Future importFolder([List<ws.Resource> resources]) {
+  Future importFolder([List<ws.Resource> resources,
+                       chrome.DirectoryEntry entry]) {
     return _beforeSystemModal()
-        .then((_) => super.importFolder(resources))
+        .then((_) => super.importFolder(resources, entry))
         .whenComplete(() => _systemModalComplete());
   }
 
@@ -160,7 +177,7 @@ class SparkPolymer extends Spark {
       _ui.getShadowDomElement(selectors);
 
   @override
-  SparkDialog createDialog(Element dialogElement) =>
+  Dialog createDialog(Element dialogElement) =>
       new SparkPolymerDialog(dialogElement);
 
   //
@@ -234,6 +251,7 @@ class SparkPolymer extends Spark {
     _bindButtonToAction('runButton', 'application-run');
     _bindButtonToAction('leftNav', 'navigate-back');
     _bindButtonToAction('rightNav', 'navigate-forward');
+    _bindButtonToAction('settingsButton', 'settings');
   }
 
   @override
@@ -263,13 +281,16 @@ class SparkPolymer extends Spark {
     SparkButton button = getUIElement('#${buttonId}');
     Action action = actionManager.getAction(actionId);
     action.onChange.listen((_) {
-      button.disabled = !action.enabled;
-      button.deliverChanges();
+      // TODO(ussuri): This and similar line below should be
+      // `button.disabled = ...`, however in dart2js version
+      // Polymer refused to see and apply such changes; HTML attr here works.
+      // See original version under git tag 'before-button-hack-to-fix-states'.
+      button.setAttr('disabled', !action.enabled);
     });
     button.onClick.listen((_) {
       if (action.enabled) action.invoke();
     });
-    button.disabled = !action.enabled;
+    button.setAttr('disabled', !action.enabled);
   }
 
   @override
@@ -305,6 +326,8 @@ class SparkPolymer extends Spark {
 }
 
 class _SparkSetupParticipant extends LifecycleParticipant {
+  static final String FIRST_RUN_PREF = 'firstRun';
+
   Future applicationStarting(Application app) {
     final SparkPolymer spark = app;
     return PlatformInfo.init().then((_) {
@@ -317,10 +340,24 @@ class _SparkSetupParticipant extends LifecycleParticipant {
 
   Future applicationStarted(Application app) {
     final SparkPolymer spark = app;
+    final PreferenceStore prefs = spark.localPrefs;
+
     spark._ui.modelReady(spark);
     spark.unveil();
+
     _logger.logStep('Spark started');
     _logger.logElapsed('Total startup time');
+
+    prefs.getValue(FIRST_RUN_PREF).then((String value) {
+      if (value != 'false') {
+        new Future.delayed(new Duration(milliseconds: 500), () {
+          spark.actionManager.getAction('help-about').invoke();
+        });
+      }
+
+      prefs.setValue(FIRST_RUN_PREF, false.toString());
+    });
+
     return new Future.value();
   }
 

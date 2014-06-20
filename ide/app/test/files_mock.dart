@@ -153,6 +153,16 @@ DirectoryEntry createSampleDirectory3(String name) {
   return directory;
 }
 
+/**
+ * Create a directory with a dart file with given name and contents.
+ */
+DirectoryEntry createDirectoryWithDartFile(String name, String contents) {
+  MockFileSystem fs = new MockFileSystem();
+  DirectoryEntry directory = fs.createDirectory(name);
+  fs.createFile('${name}/web/sample.dart', contents: contents);
+  return directory;
+}
+
 Future<workspace.Project> linkSampleProject(
     DirectoryEntry dir, [workspace.Workspace ws]) {
   if (ws == null) ws = new workspace.Workspace();

@@ -9,6 +9,7 @@ import 'package:unittest/unittest.dart';
 import 'files_mock.dart';
 import '../lib/package_mgmt/package_manager.dart';
 import '../lib/package_mgmt/pub.dart';
+import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
 defineTests() {
@@ -17,7 +18,7 @@ defineTests() {
     PubManager pubManager;
 
     setUp(() {
-      Workspace workspace = new Workspace();
+      Workspace workspace = new Workspace(new MapPreferencesStore());
       DirectoryEntry dir = _createSampleDirectory();
       return workspace.link(createWsRoot(dir)).then((Project _project) {
         project = _project;
@@ -38,9 +39,9 @@ defineTests() {
     });
 
     test('PubManager isPubProject', () {
-      expect(pubManager.properties.isProjectWithPackages(project), true);
+      expect(pubManager.properties.isFolderWithPackages(project), true);
       return project.getChild('pubspec.yaml').delete().then((_) {
-        expect(pubManager.properties.isProjectWithPackages(project), false);
+        expect(pubManager.properties.isFolderWithPackages(project), false);
       });
     });
 

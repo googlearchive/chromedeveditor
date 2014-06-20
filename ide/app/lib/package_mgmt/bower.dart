@@ -37,34 +37,38 @@ class BowerManager extends PackageManager {
   PackageResolver getResolverFor(Project project) =>
       new _BowerResolver._(project);
 
-  Future installPackages(Container container) =>
+  Future installPackages(Folder container) =>
       _installOrUpgradePackages(container.project, FetchMode.INSTALL);
 
-  Future upgradePackages(Container container) =>
+  Future upgradePackages(Folder container) =>
       _installOrUpgradePackages(container.project, FetchMode.UPGRADE);
+
+  // TODO(keertip): implement for bower
+  Future<dynamic> arePackagesInstalled(Folder container) => new Future.value(true);
 
   //
   // - end PackageManager abstract interface.
   //
 
-  Future _installOrUpgradePackages(Project project, FetchMode mode) {
-    final File specFile = project.getChild(properties.packageSpecFileName);
+  Future _installOrUpgradePackages(Folder container, FetchMode mode) {
+    final File specFile = container.getChild(properties.packageSpecFileName);
 
     // The client is expected to call us only when the project has bower.json.
     if (specFile == null) {
-      throw new StateError('installPackages() called, but there is no bower.json');
+      throw new StateError(
+          '${properties.packageSpecFileName} not found under ${container.name}');
     }
 
-    return project.getOrCreateFolder(properties.packagesDirName, true)
+    return container.getOrCreateFolder(properties.packagesDirName, true)
         .then((Folder packagesDir) {
       final fetcher = new BowerFetcher(
           packagesDir.entry, properties.packageSpecFileName);
 
-      return fetcher.fetchDependencies(specFile.entry, mode).whenComplete(() {
-        return project.refresh();
-      }).catchError((e) {
+      return fetcher.fetchDependencies(specFile.entry, mode).catchError((e) {
         _logger.severe('Error getting Bower packages', e);
         return new Future.error(e);
+      }).then((_) {
+        return container.refresh();
       });
     });
   }
@@ -115,7 +119,7 @@ class _BowerBuilder extends PackageBuilder {
   Future build(ResourceChangeEvent event, ProgressMonitor monitor) {
     List futures = [];
 
-    for (ChangeDelta delta in event.changes) {
+    for (ChangeDelta delta in filterPackageChanges(event.changes)) {
       Resource r = delta.resource;
 
       if (r.isDerived()) continue;

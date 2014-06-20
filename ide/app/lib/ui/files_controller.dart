@@ -13,7 +13,7 @@ import 'dart:html' as html;
 
 import 'package:bootjack/bootjack.dart' as bootjack;
 
-import 'utils/html_utils.dart';
+import 'html_utils.dart';
 import 'widgets/file_item_cell.dart';
 import 'widgets/listview_cell.dart';
 import 'widgets/treeview.dart';
@@ -208,13 +208,20 @@ class FilesController implements TreeViewDelegate {
 
   int treeViewHeightForNode(TreeView view, String nodeUid) {
     Resource resource = _filesMap[nodeUid];
-    return resource is Project ? 40 : 20;
+    return resource is Project ? 40 : 25;
+  }
+
+  int treeViewDisclosurePositionForNode(TreeView view, String nodeUid) {
+    Resource resource = _filesMap[nodeUid];
+    return resource is Project ? 12 : 2 ;
   }
 
   void treeViewSelectedChanged(TreeView view, List<String> nodeUids) {
     if (nodeUids.isNotEmpty) {
       Resource resource = _filesMap[nodeUids.first];
       _eventBus.addEvent(new FilesControllerSelectionChangedEvent(resource));
+    } else {
+      _eventBus.addEvent(new FilesControllerSelectionChangedEvent(null));
     }
   }
 
@@ -600,7 +607,7 @@ class FilesController implements TreeViewDelegate {
     return templateClone.querySelector('.fileview-separator');
   }
 
-  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 25;
+  int treeViewSeparatorHeightForNode(TreeView view, String nodeUid) => 17;
 
   // Cache management for sorted list of resources.
 
@@ -704,6 +711,9 @@ class FilesController implements TreeViewDelegate {
           needsSortTopLevel = true;
         }
         _filesMap.remove(resource.uuid);
+        // The current selection was deleted. No selected resource.
+        updatedSelection = [];
+        needsUpdateSelection = true;
         needsReloadData = true;
       } else if (change.type == EventType.RENAME) {
         // Update expanded state of the tree view.
@@ -751,6 +761,7 @@ class FilesController implements TreeViewDelegate {
     }
     if (needsUpdateSelection) {
       _treeView.selection = updatedSelection;
+      treeViewSelectedChanged(_treeView, updatedSelection);
     }
   }
 
@@ -790,17 +801,13 @@ class FilesController implements TreeViewDelegate {
     if (scmOperations != null) {
       if (resource is Project) {
         String branchName = scmOperations.getBranchName();
-        final String repoIcon = '<span class="glyphicon glyphicon-random small"></span>';
         if (branchName == null) branchName = '';
-        fileItemCell.setFileInfo('${repoIcon} [${branchName}]');
+        fileItemCell.setFileInfo('[${branchName}]');
       }
 
-      // TODO(devoncarew): for now, just show git status for files. We need to
-      // also implement this for folders.
-      if (resource is File) {
-        FileStatus status = scmOperations.getFileStatus(resource);
-        fileItemCell.setGitStatus(dirty: (status != FileStatus.COMMITTED));
-      }
+      ScmFileStatus status = scmOperations.getFileStatus(resource);
+      fileItemCell.setGitStatus(dirty: (status != ScmFileStatus.COMMITTED),
+          added: (status == ScmFileStatus.ADDED));
     }
   }
 

@@ -4,3 +4,7 @@ body {
   font-size: 14px;
   margin: 15px;
 }
+
+h1, p {
+ color: #777;
+}

@@ -10,6 +10,7 @@ import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/app.dart';
+import '../lib/preferences.dart';
 import '../lib/workspace.dart';
 
 // TODO: test that adding a participant after start() has been called, calls
@@ -58,7 +59,7 @@ defineTests() {
   });
 
   group('app focus', () {
-    Workspace workspace = new Workspace();
+    Workspace workspace = new Workspace(new MapPreferencesStore());
     Project project;
     File file;
 

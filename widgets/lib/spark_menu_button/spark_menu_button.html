@@ -6,7 +6,7 @@
 
 <!--
 /**
- * A menu triggerred by a button. 
+ * A menu triggerred by a button.
  *
  * For flexibility, the button should be supplied by the client in the
  * tag's content: it must be a [spark-button] (all [spark-buttons] in the
@@ -14,7 +14,7 @@
  *
  * The menu itself is formed from the rest of the nodes supplied in the tag's
  * content. However, only [spark-menu-item]s will be treated as selectable
- * menu items that will fire an event when clicked. The rest of the nodes, 
+ * menu items that will fire an event when clicked. The rest of the nodes,
  * in particular [spark-menu-separator]s, will become inactive menu content.
  *
  * When a selectable menu item is clicked, an 'activate' event will be fired.
@@ -31,8 +31,7 @@
     attributes="selected
                 valueAttr
                 opened
-                responsive
-                valign"
+                arrow"
     on-keydown="{{keyDownHandler}}">
 
   <template>
@@ -40,23 +39,18 @@
 
     <content id="button" select="spark-button"></content>
 
-    <div responsive="{{responsive}}" valign="{{valign}}">
-      <spark-overlay id="overlay"
-          autoClose
-          animation="fade"
-          on-opened="{{overlayOpenedHandler}}">
-
-        <div class="arrow"></div>
-        <div id="arrowInner" class="arrow" on-click="{{clickHandler}}"></div>
-
-        <spark-menu id="menu"
-            selected="{{selected}}"
-            valueAttr="{{valueAttr}}"
-            on-activate="{{menuActivateHandler}}">
-          <content></content>
-        </spark-menu>
-      </spark-overlay>
-    </div>
+    <spark-overlay id="overlay"
+        arrow="{{arrow}}"
+        autoClose
+        animation="fade"
+        on-opened="{{overlayOpenedHandler}}">
+      <spark-menu id="menu"
+          selected="{{selected}}"
+          valueAttr="{{valueAttr}}"
+          on-activate="{{menuActivateHandler}}">
+        <content></content>
+      </spark-menu>
+    </spark-overlay>
   </template>
 
   <script type="application/dart;component=1" src="spark_menu_button.dart"></script>

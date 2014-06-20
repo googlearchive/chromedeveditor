@@ -1,15 +1,35 @@
-<!doctype html>
-
+<link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_button/spark_menu_button.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_item/spark_menu_item.html">
 <link rel="import" href="packages/spark_widgets/spark_menu_separator/spark_menu_separator.html">
+
 <polymer-element name="example-ui">
   <template>
+    <link rel="stylesheet" href="../common/example_ui.css">
+
+    <style>
+      #button {
+        width: 36px;
+        height: 36px;
+      }
+
+      #buttonIcon {
+        width: 24px;
+        height: 24px;
+      }
+    </style>
+
     <spark-menu-button id="menuButton"
-        icon="../assets/open.png"
         valign="left"
         valueAttr="action"
         selected="email">
+
+      <spark-button id="button" menuButton flat round padding="medium">
+        <svg id="buttonIcon" viewBox="0 0 24 24">
+          <path d="M12,8c1.1,0,2-0.9,2-2s-0.9-2-2-2c-1.1,0-2,0.9-2,2S10.9,8,12,8z M12,10c-1.1,0-2,0.9-2,2s0.9,2,2,2c1.1,0,2-0.9,2-2S13.1,10,12,10z M12,16c-1.1,0-2,0.9-2,2s0.9,2,2,2c1.1,0,2-0.9,2-2S13.1,16,12,16z"></path>
+        </svg>
+      </spark-button>
+
       <spark-menu-item name="post" label="Post a Comment" description="Ctrl-P">
       </spark-menu-item>
       <spark-menu-separator></spark-menu-separator>
@@ -18,10 +38,10 @@
       <spark-menu-item name="email" label="Email Link">
         <span>to johndoe@somewhere.com</span>
       </spark-menu-item>
-      <spark-menu-item name="favorite" icon="../assets/add.png" label="Add to Favorites">
+      <spark-menu-item name="favorite" icon="../resources/add.png" label="Add to Favorites">
       </spark-menu-item>
       <spark-menu-separator></spark-menu-separator>
-      <spark-menu-item name="bookmark" icon="../assets/add.png" label="Add Bookmark" description="Ctrl-B">
+      <spark-menu-item name="bookmark" icon="../resources/add.png" label="Add Bookmark" description="Ctrl-B">
       </spark-menu-item>
     </spark-menu-button>
   </template>

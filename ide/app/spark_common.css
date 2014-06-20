@@ -4,19 +4,96 @@
 
 @import url("../../../packages/bootjack/css/bootstrap.min.css");
 @import url("../../../packages/bootjack/css/bootstrap-theme.css");
+@import url("third_party/roboto/roboto.css");
 
 body {
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* BUG #2629 */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-weight: 400;
   font-size: 13px;
-  /* Improve font rendering, especially on OSX, and especially for light fonts
-     on a dark background. */
-  -webkit-font-smoothing: antialiased !important;
+  -webkit-font-smoothing: auto;
+}
+
+/* TODO(ussuri): Replace scrollbar and *-align-box rules with new Spark widgets. */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  min-height: 48px;
+}
+
+::-webkit-scrollbar-track,
+.scrollbar-light::-webkit-scrollbar-track {
+  background-color: #eee;
+}
+
+::-webkit-scrollbar-thumb,
+.scrollbar-light::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+}
+
+::-webkit-scrollbar-thumb:hover,
+.scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background-color: #7d7d7d;
+}
+
+.scrollbar-dark::-webkit-scrollbar-track,
+.ace_scrollbar::-webkit-scrollbar-track {
+  background-color: #666;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb,
+.ace_scrollbar::-webkit-scrollbar-thumb {
+  background-color: #aaa;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover,
+.ace_scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #ccc;
+}
+
+.top-align-box,
+.vert-align-box,
+.horiz-align-box {
+  display:flex;
+}
+
+.vert-align-box {
+  flex-flow: row;
+  align-items: center;
+}
+
+.horiz-align-box {
+  flex-flow: column;
+  align-items: center;
+}
+
+.top-align-box {
+  flex-flow: row;
+  align-items: flex-start;
+}
+
+.vert-align-box > *,
+.top-align-box > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.horiz-align-box > * {
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* Uncomment these 2 rules, or selectively apply the .debug class or debug
  * attribute, to facilitate debuging of elements.
  */
 /*
+* {
+  outline: blue solid 1px !important;
+}
 :host > * {
   outline: red dashed 1px !important;
 }
@@ -33,6 +110,6 @@ body {
  */
 /*
 *:focus {
-  box-shadow: 0 0 10px 10px pink !important;  
+  box-shadow: 0 0 10px 10px pink !important;
 }
 */

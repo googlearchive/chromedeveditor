@@ -183,7 +183,7 @@ class CompilerServiceImpl extends ServiceImpl {
 
   Future<ServiceActionEvent> compileString(ServiceActionEvent request) {
     String string = request.data['string'];
-    return compiler.compileString(string).then((CompilerResult result) {
+    return compiler.compileString(string).then((CompilerResultHolder result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
@@ -193,7 +193,7 @@ class CompilerServiceImpl extends ServiceImpl {
     String project = request.data['project'];
     bool csp = request.data['csp'];
 
-    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResult result) {
+    return compiler.compileFile(fileUuid, csp: csp).then((CompilerResultHolder result) {
       return new Future.value(request.createReponse(result.toMap()));
     });
   }
@@ -335,13 +335,32 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     analyzer.AstNode node =
         new analyzer.NodeLocator.con1(offset).searchWithin(ast);
+
+    if (node is analyzer.SimpleStringLiteral &&
+        node.parent is analyzer.ImportDirective) {
+      analyzer.SimpleStringLiteral importString = node;
+      analyzer.ImportDirective importNode = node.parent;
+      if (importNode.source is analyzer.FileSource) {
+        analyzer.FileSource fileSource = importNode.source;
+        return new SourceDeclaration(importString.value, fileSource.uuid, 0, 0);
+      } else {
+        // TODO(ericarnold): Handle SDK import
+        return null;
+      }
+    }
+
     if (node is! analyzer.SimpleIdentifier) return null;
 
     analyzer.Element element = analyzer.ElementLocator.locate(node);
     if (element == null) return null;
 
-    if (element.nameOffset == -1 || element.source == null) {
-      return null;
+    if (element.nameOffset == -1) {
+      if (element is analyzer.ConstructorElement) {
+        analyzer.ConstructorElement constructorElement = element;
+        element = constructorElement.enclosingElement;
+      } else if (element.source == null) {
+        return null;
+      }
     }
 
     if (element.source is analyzer.FileSource) {
@@ -397,6 +416,8 @@ class AnalyzerServiceImpl extends ServiceImpl {
         _addFunctionToOutline(outline, declaration);
       } else if (declaration is analyzer.ClassDeclaration) {
         _addClassToOutline(outline, declaration);
+      } else if (declaration is analyzer.TypeAlias) {
+        _addAliasToOutline(outline, declaration);
       } else {
         print("${declaration.runtimeType} is unknown");
       }
@@ -404,7 +425,19 @@ class AnalyzerServiceImpl extends ServiceImpl {
 
     return outline;
   }
-  
+
+  String _getSetterTypeFromParams(analyzer.FormalParameterList parameters) {
+    // Only show type of first [analyzer.SimpleFormalParameter] of setter.
+    if (parameters.parameters.length > 0) {
+      analyzer.FormalParameter param = parameters.parameters.first;
+      if (param is analyzer.SimpleFormalParameter) {
+        return _getTypeNameString(param.type);
+      }
+    }
+
+    return null;
+  }
+
   void _addVariableToOutline(Outline outline,
       analyzer.TopLevelVariableDeclaration declaration) {
     analyzer.VariableDeclarationList variables = declaration.variables;
@@ -412,18 +445,36 @@ class AnalyzerServiceImpl extends ServiceImpl {
     for (analyzer.VariableDeclaration variable in variables.variables) {
       outline.entries.add(_populateOutlineEntry(
           new OutlineTopLevelVariable(variable.name.name,
-              getTypeNameFor(variables.type)),
+              _getTypeNameString(variables.type)),
           new _Range.fromAstNode(declaration),
           new _Range.fromAstNode(declaration)));
     }
   }
-  
+
   void _addFunctionToOutline(Outline outline,
       analyzer.FunctionDeclaration declaration) {
-    outline.entries.add(_populateOutlineEntry(
-        new OutlineTopLevelFunction(declaration.name.name),
-        new _Range.fromAstNode(declaration.name),
-        new _Range.fromAstNode(declaration)));
+    analyzer.SimpleIdentifier nameNode = declaration.name;
+    _Range nameRange = new _Range.fromAstNode(nameNode);
+    _Range bodyRange = new _Range.fromAstNode(declaration);
+    String name = nameNode.name;
+
+    if (declaration.isGetter) {
+      outline.entries.add(_populateOutlineEntry(
+          new OutlineTopLevelAccessor(name, _getTypeNameString(declaration.returnType)),
+          nameRange, bodyRange));
+    } else if (declaration.isSetter) {
+      analyzer.FormalParameterList params =
+          declaration.functionExpression.parameters;
+      outline.entries.add(_populateOutlineEntry(
+          new OutlineTopLevelAccessor(name,
+              _getSetterTypeFromParams(params), true),
+          nameRange, bodyRange));
+    } else {
+      outline.entries.add(_populateOutlineEntry(
+          new OutlineTopLevelFunction(name,
+              _getTypeNameString(declaration.returnType)),
+              nameRange, bodyRange));
+    }
   }
 
   void _addClassToOutline(Outline outline,
@@ -444,34 +495,58 @@ class AnalyzerServiceImpl extends ServiceImpl {
       }
     }
   }
-  
+
+  void _addAliasToOutline(Outline outline, analyzer.TypeAlias declaration) {
+    analyzer.SimpleIdentifier nameNode;
+
+    if (declaration is analyzer.ClassTypeAlias) {
+      nameNode = declaration.name;
+    } else if (declaration is analyzer.FunctionTypeAlias) {
+      nameNode = declaration.name;
+    } else {
+      throw "TypeAlias subclass ${declaration.runtimeType} is unknown";
+    }
+
+    String name = nameNode.name;
+
+    outline.entries.add(_populateOutlineEntry(new OutlineTypeDef(name),
+        new _Range.fromAstNode(nameNode), new _Range.fromAstNode(declaration)));
+  }
+
   void _addMethodToOutlineClass(OutlineClass outlineClass,
       analyzer.MethodDeclaration member) {
-    if (member.isGetter || member.isSetter) {
+
+    if (member.isGetter) {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineAccessor(member.name.name, member.isSetter),
+          new OutlineClassAccessor(member.name.name,
+              _getTypeNameString(member.returnType)),
+          new _Range.fromAstNode(member.name),
+          new _Range.fromAstNode(member)));
+    } else if (member.isSetter) {
+      outlineClass.members.add(_populateOutlineEntry(
+          new OutlineClassAccessor(member.name.name,
+              _getSetterTypeFromParams(member.parameters), true),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     } else {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineMethod(member.name.name),
+          new OutlineMethod(member.name.name, _getTypeNameString(member.returnType)),
           new _Range.fromAstNode(member.name),
           new _Range.fromAstNode(member)));
     }
   }
-  
+
   void _addFieldToOutlineClass(OutlineClass outlineClass,
       analyzer.FieldDeclaration member) {
     analyzer.VariableDeclarationList fields = member.fields;
     for (analyzer.VariableDeclaration field in fields.variables) {
       outlineClass.members.add(_populateOutlineEntry(
-          new OutlineProperty(field.name.name,
-              getTypeNameFor(fields.type)),
+          new OutlineProperty(field.name.name, _getTypeNameString(fields.type)),
           new _Range.fromAstNode(field),
           new _Range.fromAstNode(field.parent)));
     }
   }
-  
+
   void _addConstructorToOutlineClass(OutlineClass outlineClass,
       analyzer.ConstructorDeclaration member,
       analyzer.ClassDeclaration classDeclaration) {
@@ -489,9 +564,6 @@ class AnalyzerServiceImpl extends ServiceImpl {
         nameRange,
         new _Range.fromAstNode(classDeclaration)));
   }
-  
-  String getTypeNameFor(analyzer.TypeName typeName) =>
-      (typeName == null) ? "" : typeName.name.name;
 
   OutlineEntry _populateOutlineEntry(OutlineEntry outlineEntry, _Range name,
       _Range body) {
@@ -621,4 +693,17 @@ abstract class ServiceImpl {
       }
     }
   }
+}
+
+String _getTypeNameString(analyzer.TypeName typeName) {
+  if (typeName == null) return null;
+
+  analyzer.Identifier identifier = typeName.name;
+  if (identifier == null) return null;
+
+  String name = identifier.name;
+  if (name == null) return null;
+
+  int index = name.lastIndexOf('.');
+  return index == -1 ? name : name.substring(index + 1);
 }

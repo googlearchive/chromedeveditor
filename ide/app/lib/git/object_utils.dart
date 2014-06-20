@@ -81,7 +81,7 @@ abstract class ObjectUtils {
    * Expands a git blob object into a file and writes on disc.
    */
   static Future<chrome.Entry> expandBlob(chrome.DirectoryEntry dir,
-      ObjectStore store, String fileName, String blobSha) {
+      ObjectStore store, String fileName, String blobSha, String permission) {
     return store.retrieveObject(blobSha, ObjectTypes.BLOB_STR).then(
         (BlobObject blob) {
       return FileOps.createFileWithContent(dir, fileName, blob.data,
@@ -92,6 +92,8 @@ abstract class ObjectUtils {
           status.sha = blobSha;
           status.headSha = blobSha;
           status.size = data.size;
+          status.modificationTime = data.modificationTime.millisecondsSinceEpoch;
+          status.permission = permission;
           store.index.createIndexForEntry(status);
         });
       });
@@ -106,7 +108,7 @@ abstract class ObjectUtils {
     return store.retrieveObject(treeSha, "Tree").then((GitObject tree) {
       return Future.forEach((tree as TreeObject).entries, (TreeEntry entry) {
         if (entry.isBlob) {
-          return expandBlob(dir, store, entry.name, entry.sha);
+          return expandBlob(dir, store, entry.name, entry.sha, entry.permission);
         } else {
           return dir.createDirectory(entry.name).then(
               (chrome.DirectoryEntry newDir) {

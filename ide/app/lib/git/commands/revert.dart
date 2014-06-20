@@ -19,7 +19,8 @@ import 'status.dart';
 class Revert {
   static Future revert(GitOptions options, List<chrome.FileEntry> entries) {
     return Future.forEach(entries, (entry) {
-      return Status.getFileStatus(options.store, entry).then((FileStatus status) {
+      return Status.updateAndGetStatus(options.store, entry).then(
+          (FileStatus status) {
         return options.store.retrieveObjectBlobsAsString([status.headSha]).then(
             (List<LooseObject> objects) {
           return (entry as chrome.ChromeFileEntry).writeText(objects.first.data);

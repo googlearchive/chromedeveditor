@@ -111,7 +111,10 @@ class Tab {
 
   void focus() => _pageContainer.focus();
 
-  bool close() => tabView.remove(this);
+  bool close() {
+    deactivate();
+    return tabView.remove(this);
+  }
 
   void validatePage() {
     if (_page != null && _page.parent != _pageContainer)
@@ -146,7 +149,7 @@ class TabView {
   final List<Tab> tabs = new List<Tab>();
   Tab _selectedTab;
   bool _tabItemsLayoutListenerEnabled = false;
-  int _lastLayoutWidth = 0;
+  num _lastLayoutWidth = 0;
   StreamSubscription<MouseEvent> _tabBarMouseLeaveStream;
 
   TabView(this.parentElement) {
@@ -245,7 +248,7 @@ class TabView {
   }
 
   void _layoutTabItems() {
-    int remainingWidth = _tabBarScrollable.clientWidth;
+    num remainingWidth = _tabBarScrollable.clientWidth;
     int remainingTabs = tabs.length;
     if (remainingTabs == 0) {
       // There's no tab to layout.
@@ -287,10 +290,10 @@ class TabView {
     var scroller = _tabBarScroller;
       if (label.offsetWidth + label.offsetLeft > scroller.offsetWidth +
           scroller.scrollLeft - scroller.offsetLeft - SCROLL_MARGIN) {
-        scroller.scrollLeft = label.offsetWidth + label.offsetLeft -
-            scroller.offsetWidth + scroller.offsetLeft + SCROLL_MARGIN;
+        scroller.scrollLeft = (label.offsetWidth + label.offsetLeft -
+            scroller.offsetWidth + scroller.offsetLeft + SCROLL_MARGIN).toInt();
       } else if (label.offsetLeft < scroller.scrollLeft + SCROLL_MARGIN) {
-        scroller.scrollLeft = label.offsetLeft - SCROLL_MARGIN;
+        scroller.scrollLeft = label.offsetLeft.toInt() - SCROLL_MARGIN;
       }
   }
 

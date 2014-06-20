@@ -23,13 +23,6 @@ class MergeItem {
   MergeItem(this.ours, this.base, this.theirs, [this.isConflict = false]);
 }
 
-class TreeDiffResult {
-  List<TreeEntry> adds;
-  List<TreeEntry> removes;
-  List merges;
-  TreeDiffResult(this.adds, this.removes, this.merges);
-}
-
 /**
  * Implements tree diffs and merging of git trees.
  */
@@ -46,62 +39,10 @@ class Merge {
     return new Uint8List(0);
   }
 
-  static TreeDiffResult diffTree(TreeObject oldTree, TreeObject newTree) {
-    oldTree.sortEntries();
-    newTree.sortEntries();
-
-    List<TreeEntry> oldEntries = oldTree.entries;
-    List<TreeEntry> newEntries = newTree.entries;
-
-    int oldIdx = 0;
-    int newIdx = 0;
-
-    List removes = [];
-    List adds = [];
-    List merges = [];
-
-    while (true) {
-      TreeEntry newEntry = newIdx < newEntries.length ? newEntries[newIdx]
-          : null;
-      TreeEntry oldEntry = oldIdx < oldEntries.length ? oldEntries[oldIdx]
-          : null;
-
-      if (newEntry == null) {
-        if (oldEntry == null ) {
-          break;
-        }
-        removes.add(oldEntry);
-        oldIdx++;
-      } else if (oldEntry == null) {
-        adds.add(newEntry);
-        newIdx++;
-      } else if (newEntry.name.compareTo(oldEntry.name) < 0) {
-        adds.add(newEntry);
-        newIdx++;
-      } else if (newEntry.name.compareTo(oldEntry.name) > 0) {
-        removes.add(oldEntry);
-        oldIdx++;
-      } else {
-        if (newEntry.sha != oldEntry.sha) {
-          if (newEntry.isBlob != oldEntry.isBlob) {
-            removes.add(oldEntry);
-            adds.add(newEntry);
-          } else {
-            merges.add({'new': newEntry, 'old':oldEntry});
-          }
-        }
-        oldIdx++;
-        newIdx++;
-      }
-    }
-    return new TreeDiffResult(adds, removes, merges);
-  }
-
   static Future<String> mergeTrees(ObjectStore store, TreeObject ourTree,
       TreeObject baseTree, TreeObject theirTree) {
     List<TreeEntry> finalTree = [];
     List merges = [];
-    var next = null;
     List indices = [0,0,0];
     List<MergeItem> conflicts = [];
 
@@ -142,7 +83,8 @@ class Merge {
           if (theirEntry.name == next.name) {
             if (!shasEqual(theirEntry.shaBytes, next.shaBytes)) {
               if (baseEntry.name != next.name) {
-                baseEntry = new TreeEntry(null, null, false);
+                // The file does not exist in the  baseEntry. Create a dummy entry.
+                baseEntry = TreeEntry.dummyEntry(false);
                 if (next.isBlob) {
                   conflicts.add( new MergeItem(next, null, theirEntry, true));
                   break;
@@ -199,7 +141,7 @@ class Merge {
     }
 
     if (conflicts.length > 0) {
-      // TODO deal with conflicts.
+      // TODO(grv): Deal with conflicts.
       throw "unable to merge. Conflicts.";
     }
 
