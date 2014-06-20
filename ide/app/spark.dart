@@ -27,7 +27,6 @@ import 'lib/editors.dart';
 import 'lib/editor_area.dart';
 import 'lib/event_bus.dart';
 import 'lib/exception.dart';
-import 'lib/git/utils.dart' as git;
 import 'lib/javascript/js_builder.dart';
 import 'lib/json/json_builder.dart';
 import 'lib/jobs.dart';
@@ -2389,7 +2388,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     String tempValue = _repoUrlCopyInElement.value;
     _repoUrlCopyInElement.value = '';
     _repoUrlCopyInElement.hidden = true;
-    if (git.isGitUrl(tempValue)) {
+    if (getProviderType('git').isScmEndpoint(tempValue)) {
       _repoUrlElement.value = tempValue;
     }
     _repoUrlElement.focus();

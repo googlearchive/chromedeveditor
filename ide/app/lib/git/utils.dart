@@ -20,7 +20,7 @@ final RegExp _gitUrlRegExp = new RegExp(GIT_URL_PATTERN);
 /**
  * Returns true if [url] is a git URL.
  */
-bool isGitUrl(String url) => _gitUrlRegExp.hasMatch(url);
+bool isGitUri(String uri) => _gitUrlRegExp.hasMatch(uri);
 
 /**
  * Convertes [sha] string to sha bytes.

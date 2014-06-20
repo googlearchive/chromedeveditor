@@ -23,6 +23,7 @@ import 'git/config.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
 import 'git/options.dart';
+import 'git/utils.dart';
 import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
@@ -136,6 +137,11 @@ abstract class ScmProvider {
    * contract for this method is that it should return quickly.
    */
   bool isUnderScm(Project project);
+  
+  /**
+   * Returns whether [uri] represents an endpoint of this SCM provider.
+   */
+  bool isScmEndpoint(String uri);
 
   /**
    * Create an [ScmProjectOperations] instance for the given [Project].
@@ -269,6 +275,8 @@ class GitScmProvider extends ScmProvider {
     if (gitFolder.getChild('index') is File) return false;
     return true;
   }
+  
+  bool isScmEndpoint(String uri) => isGitUri(uri);
 
   ScmProjectOperations createOperationsFor(Project project) {
     if (isUnderScm(project)) {
@@ -282,7 +290,7 @@ class GitScmProvider extends ScmProvider {
                {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
         root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir),
-        branchName : branchName, username: username, password: password);
+        branchName: branchName, username: username, password: password);
 
     return options.store.init().then((_) {
       activeClone = new Clone(options);
