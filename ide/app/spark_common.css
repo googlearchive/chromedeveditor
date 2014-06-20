@@ -7,7 +7,8 @@
 @import url("third_party/roboto/roboto.css");
 
 body {
-  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* BUG #2629 */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400;
   font-size: 13px;
   -webkit-font-smoothing: auto;
