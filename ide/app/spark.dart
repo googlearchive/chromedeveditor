@@ -256,7 +256,7 @@ abstract class Spark
     _eventBus = new EventBus();
     _eventBus.onEvent(BusEventType.ERROR_MESSAGE).listen(
         (ErrorMessageBusEvent event) {
-      showErrorMessage(event.title, event.error.toString());
+      showErrorMessage(event.title, message: event.error.toString());
     });
   }
 
@@ -515,7 +515,6 @@ abstract class Spark
         workspace.link(new ws.FileRoot(entry)).then((ws.Resource file) {
           _openFile(file);
           _aceManager.focus();
-          workspace.save();
         });
       }
     });
@@ -535,9 +534,7 @@ abstract class Spark
 
       if (entry != null) {
         ws.Folder folder = resources.first;
-        folder.importFileEntry(entry).catchError((e) {
-          showErrorMessage('Error while importing file', e);
-        });
+        folder.importFileEntry(entry);
       }
     });
   }
@@ -545,7 +542,7 @@ abstract class Spark
   Future importFolder([List<ws.Resource> resources, chrome.DirectoryEntry entry]) {
     ws.Folder folder = resources.first;
     return folder.importDirectoryEntry(entry).catchError((e) {
-      showErrorMessage('Error while importing folder', e);
+      showErrorMessage('Error while importing folder', exception: e);
     });
   }
 
@@ -556,7 +553,7 @@ abstract class Spark
   Dialog _errorDialog;
 
   void showMessage(String title, String message) {
-    showErrorMessage(title, message);
+    showErrorMessage(title, message: message);
   }
 
   Completer<bool> _okCompleter;
@@ -607,7 +604,8 @@ abstract class Spark
   /**
    * Show a model error dialog.
    */
-  void showErrorMessage(String title, String message) {
+  void showErrorMessage(String title, {String message, Exception exception}) {
+    const String UNKNOWN_ERROR_STRING = 'Unknown error.';
     // TODO(ussuri): Polymerize.
     if (_errorDialog == null) {
       _errorDialog = createDialog(getDialogElement('#errorDialog'));
@@ -615,8 +613,21 @@ abstract class Spark
       _errorDialog.getShadowDomElement("#closingX").onClick.listen(_hideBackdropOnClick);
     }
 
+    if (exception is SparkException) {
+        message = exception.message;
+    } else if (exception != null) {
+      if (message == null) message = '';
+      // TODO(grv): wrap all exceptions as spark exception,
+      // and show 'Unexpected error.' to the user for unknown exceptions.
+      message = message + ' : ' + exception.toString();
+      // Log the actual exception on console if running in developer mode.
+      if (SparkFlags.developerMode) {
+        window.console.log(exception);
+      }
+    } else if (message == null) {
+      message = UNKNOWN_ERROR_STRING;
+    }
     _setErrorDialogText(title, message);
-
     _errorDialog.show();
   }
 
@@ -1045,7 +1056,7 @@ abstract class SparkAction extends Action {
     try {
       _invoke(context);
     } catch (e) {
-      spark.showErrorMessage('Error Invoking ${name}', '${e}');
+      spark.showErrorMessage('Error Invoking ${name}', exception: e);
     }
   }
 
@@ -1361,7 +1372,7 @@ class FileNewAction extends SparkActionWithDialog implements ContextAction {
             spark._aceManager.focus();
           });
         }).catchError((e) {
-          spark.showErrorMessage("Error Creating File", e.toString());
+          spark.showErrorMessage("Error Creating File", exception: e);
         });
       }
     }
@@ -1403,10 +1414,9 @@ class FileDeleteAction extends SparkAction implements ContextAction {
         spark.workspace.pauseResourceEvents();
         Future.forEach(resources, (ws.Resource r) => r.delete()).catchError((e) {
           String ordinality = resources.length == 1 ? "File" : "Files";
-          spark.showErrorMessage("Error while deleting ${ordinality}", e.toString());
+          spark.showErrorMessage("Error while deleting ${ordinality}", exception: e);
         }).whenComplete(() {
           spark.workspace.resumeResourceEvents();
-          spark.workspace.save();
         });
       }
     });
@@ -1448,19 +1458,17 @@ Do you really want to delete "${project.name}"?
 This will permanently delete the project contents from disk and cannot be undone.
 ''', okButtonLabel: 'Delete', title: 'Delete Project from Disk').then((bool val) {
       if (val) {
-        // TODO(grv) : scmManger should listen to the delete project event.
+        // TODO(grv): scmManger should listen to the delete project event.
         spark.scmManager.removeProject(project);
         project.delete().catchError((e) {
-          spark.showErrorMessage("Error while deleting project", e.toString());
+          spark.showErrorMessage("Error while deleting project", exception: e);
         });
-        spark.workspace.save();
       }
     });
   }
 
   void _removeProjectReference(ws.Project project) {
     spark.workspace.unlink(project);
-    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -1494,16 +1502,14 @@ This will permanently delete the file from disk and cannot be undone.
 ''', okButtonLabel: 'Delete', title: 'Delete File from Disk').then((bool val) {
       if (val) {
         file.delete().catchError((e) {
-          spark.showErrorMessage("Error while deleting file", e.toString());
+          spark.showErrorMessage("Error while deleting file", exception: e);
         });
-        spark.workspace.save();
       }
     });
   }
 
   void _removeFileReference(ws.File file) {
     spark.workspace.unlink(file);
-    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -1541,13 +1547,13 @@ class FileRenameAction extends SparkActionWithDialog implements ContextAction {
 
       if (children.any((ws.Resource r) => r.name == newName)) {
         spark.showErrorMessage(
-            'Error During Rename', 'File or folder already exists.');
+            'Error During Rename', message: 'File or folder already exists.');
         return;
       }
       resource.rename(_nameElement.value).then((value) {
         spark._renameOpenEditor(resource);
       }).catchError((e) {
-        spark.showErrorMessage("Error During Rename", e.toString());
+        spark.showErrorMessage("Error During Rename", exception: e);
       });
     }
   }
@@ -1573,8 +1579,6 @@ class ResourceCloseAction extends SparkAction implements ContextAction {
         resource.traverse().forEach(spark._closeOpenEditor);
       }
     }
-
-    spark.workspace.save();
   }
 
   String get category => 'resource';
@@ -1698,7 +1702,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
       completer.complete();
     }).catchError((e) {
       completer.complete();
-      spark.showErrorMessage('Error Running Application', '${e}');
+      spark.showErrorMessage('Error Running Application', exception: e);
     });
   }
 
@@ -1807,7 +1811,9 @@ class CompileDartAction extends SparkAction implements ContextAction {
     }
 
     spark.jobManager.schedule(
-        new CompileDartJob(spark, resource, resource.name));
+        new CompileDartJob(spark, resource, resource.name)).catchError((e) {
+      spark.showErrorMessage('Error Compiling ${resource.name}', exception: e);
+    });
   }
 
   String get category => 'application';
@@ -1911,7 +1917,7 @@ class FolderNewAction extends SparkActionWithDialog implements ContextAction {
           spark._filesController.selectFile(folder);
         });
       }).catchError((e) {
-        spark.showErrorMessage("Error Creating Folder", e.toString());
+        spark.showErrorMessage("Error Creating Folder", exception: e);
       });
     }
   }
@@ -2131,11 +2137,10 @@ class NewProjectAction extends SparkActionWithDialog {
               spark.jobManager.schedule(new BowerGetJob(spark, project));
             }
           });
-          spark.workspace.save();
         });
       });
     }).catchError((e) {
-      spark.showErrorMessage('Error Creating Project', '${e}');
+      spark.showErrorMessage('Error Creating Project', exception: e);
     });
   }
 }
@@ -2193,10 +2198,10 @@ class DeployToMobileAction extends SparkActionWithProgressDialog implements Cont
     if (deployContainer == null) {
       spark.showErrorMessage(
           'Unable to Deploy',
-          'Unable to deploy the current selection; please select a Chrome App '
+          message: 'Unable to deploy the current selection; please select a Chrome App '
           'to deploy.');
     } else if (!MobileDeploy.isAvailable()) {
-      spark.showErrorMessage('Unable to Deploy', 'No USB devices available.');
+      spark.showErrorMessage('Unable to Deploy', message: 'No USB devices available.');
     } else {
       _restoreDialog();
       _show();
@@ -2366,12 +2371,28 @@ class PropertiesAction extends SparkActionWithDialog implements ContextAction {
 
 class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlElement;
+  InputElement _repoUrlCopyInElement;
   bool _cloning = false;
   _GitCloneTask _cloneTask;
+  ScmProvider _gitProvider = getProviderType('git');
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
+    _repoUrlCopyInElement = dialog.querySelector("#gitRepoUrlCopyInBuffer");
+  }
+
+  void _copyClipboard() {
+    _repoUrlCopyInElement.hidden = false;
+    _repoUrlCopyInElement.focus();
+    document.execCommand('paste', true, null);
+    String tempValue = _repoUrlCopyInElement.value;
+    _repoUrlCopyInElement.value = '';
+    _repoUrlCopyInElement.hidden = true;
+    if (_gitProvider.isScmEndpoint(tempValue)) {
+      _repoUrlElement.value = tempValue;
+    }
+    _repoUrlElement.focus();
   }
 
   void _invoke([Object context]) {
@@ -2381,6 +2402,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     spark.projectLocationManager.getProjectLocation().then((LocationResult r) {
       if (r != null) {
         _show();
+        Timer.run(_copyClipboard);
       }
     });
   }
@@ -2412,8 +2434,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
 
     if (url.isEmpty) {
       _restoreDialog();
-      spark.showErrorMessage('Error in Cloning',
-          'Repository url required.');
+      spark.showErrorMessage('Error in Cloning', message: 'Repository url required.');
       return;
     }
 
@@ -2437,20 +2458,18 @@ class GitCloneAction extends SparkActionWithProgressDialog {
       spark.showSuccessMessage('Cloned $projectName');
     }).catchError((e) {
       if (e is SparkException && e.errorCode
-          == SparkErrorConstants.AUTH_REQUIRED) {
-        spark.showErrorMessage('Authorization Required',
-          'Authorization required - private git repositories are not yet supported.');
+          == SparkErrorConstants.GIT_AUTH_REQUIRED) {
+        spark.showErrorMessage('Authorization Required', exception: e);
       } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
         spark.showSuccessMessage('Clone cancelled');
       } else if (e is SparkException && e.errorCode
           == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
         spark.showErrorMessage('Error cloning Git project',
-            'Could not clone "${projectName}": '
-            'repositories with sub-modules are currently unsupported.');
+            message: 'Could not clone "${projectName}": ' + e.message);
       } else {
         spark.showErrorMessage('Error cloning Git project',
-            'Error while cloning "${projectName}":\n${e}');
+            message: 'Error while cloning "${projectName}"', exception: e);
       }
     }).whenComplete(() {
       _cloning = false;
@@ -2477,7 +2496,6 @@ class GitPullAction extends SparkActionWithStatusDialog implements ContextAction
     Future f = spark.jobManager.schedule(new _GitPullJob(operations, spark));
     String branchName = operations.getBranchName();
     _waitForJob('Git Pull', 'Updating ${branchName}…', f);
-
   }
 
   String get category => 'git';
@@ -2538,31 +2556,35 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
 
     _selectElement.onChange.listen((e) {
        int index = _selectElement.selectedIndex;
-       if (index != 0) {
+       String sourceBranchName = (_selectElement.children[index] as OptionElement).value;
+       if (sourceBranchName.startsWith('origin/')) {
          // A remote branch is prefixed with 'origin/'. Strip it to get the
          // actual branchname.
          _branchNameElement.value = (_selectElement.children[index]
              as OptionElement).value.split('/').last;
-         _branchNameElement.disabled = true;
-       } else {
-         _branchNameElement.value = '';
-         _branchNameElement.disabled = false;
        }
     });
 
-    gitOperations.getRemoteBranchNames().then((Iterable<String> branchNames) {
-      branchNames.toList().sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-      // TODO(grv): Support branching from local branches other than master.
-      _selectElement.append(
-          new OptionElement(data: "master", value: "master"));
-      for (String branchName in branchNames) {
-        branchName = 'origin/${branchName}';
-        _selectElement.append(
-            new OptionElement(data: branchName, value: branchName));
+    gitOperations.getLocalBranchNames().then((Iterable<String> localBranches) {
+      List branches = localBranches.toList();
+      branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+      for (String branch in branches) {
+        _selectElement.append(new OptionElement(data: branch, value: branch));
       }
-      _selectElement.selectedIndex = 0;
-    }).then((_) {
-      _show();
+
+      gitOperations.getRemoteBranchNames().then((Iterable<String> remoteBranches) {
+        List branches = remoteBranches.toList();
+        branches.sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+        for (String branch in branches) {
+          branch = 'origin/${branch}';
+          _selectElement.append(new OptionElement(data: branch, value: branch));
+        }
+        _selectElement.selectedIndex = 0;
+      }).then((_) {
+        _show();
+      });
     });
   }
 
@@ -2588,6 +2610,9 @@ class GitBranchAction extends SparkActionWithProgressDialog implements ContextAc
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
       _hide();
+    }).catchError((e) {
+      spark.showErrorMessage(
+          'Error creating branch ${_branchNameElement.value}', exception: e);
     });
     _branchNameElement.disabled = false;
   }
@@ -2765,6 +2790,9 @@ class GitCommitAction extends SparkActionWithProgressDialog implements ContextAc
     return spark.jobManager.schedule(commitJob).whenComplete(() {
       _restoreDialog();
       _hide();
+      spark.showSuccessMessage('Committed changes');
+    }).catchError((e) {
+      spark.showErrorMessage('Error committing changes', exception: e);
     });
   }
 
@@ -2823,6 +2851,9 @@ class GitCheckoutAction extends SparkActionWithProgressDialog implements Context
     spark.jobManager.schedule(job).then((_) {
       _restoreDialog();
       _hide();
+      spark.showSuccessMessage('Switched to branch ${branchName}');
+    }).catchError((e) {
+      spark.showErrorMessage('Error switching to ${branchName}', exception: e);
     });
   }
 
@@ -2877,7 +2908,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
       gitOperations.getPendingCommits(_gitUsername, _gitPassword).then(
           (List<CommitInfo> commits) {
         if (commits.isEmpty) {
-          spark.showErrorMessage('Push failed', 'No commits to push');
+          spark.showErrorMessage('Push failed', message: 'No commits to push.');
           return;
         }
         // Fill commits.
@@ -2897,16 +2928,16 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
         });
       }).catchError((exception) {
         SparkException e = SparkException.fromException(exception);
-        if (e.errorCode == SparkErrorConstants.AUTH_REQUIRED) {
+        if (e.errorCode == SparkErrorConstants.GIT_AUTH_REQUIRED) {
           _handleAuthError(context);
         } else if (e.errorCode == SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR) {
           gitOperations.objectStore.then((store) {
             String message = 'Push to ${store.config.url} denied. '
                'Verify that you have push access to the repository.';
-            spark.showErrorMessage('Push failed', message);
+            spark.showErrorMessage('Push failed', message: message);
           });
         } else {
-          spark.showErrorMessage('Push failed', e.message);
+          spark.showErrorMessage('Push failed', exception: e);
         }
       });
     });
@@ -2941,7 +2972,7 @@ class GitPushAction extends SparkActionWithProgressDialog implements ContextActi
       spark.showSuccessMessage('Changes pushed successfully');
     }).catchError((e) {
       spark.showErrorMessage(
-          'Error while pushing changes', SparkException.fromException(e).message);
+          'Error while pushing changes', exception: SparkException.fromException(e));
     }).whenComplete(() {
       _restoreDialog();
       _hide();
@@ -3121,8 +3152,6 @@ class _GitCloneTask {
           if (spark.bowerManager.properties.isFolderWithPackages(project)) {
             spark.jobManager.schedule(new BowerGetJob(spark, project));
           }
-
-          spark.workspace.save();
         });
       }).catchError((e) {
         // Remove the created project folder.
@@ -3145,8 +3174,6 @@ class _GitPullJob extends Job {
     // there were any merge problems.
     return gitOperations.pull().then((_) {
       spark.showSuccessMessage('Pull successful');
-    }).catchError((e) {
-      spark.showErrorMessage('Git Pull Status', e.toString());
     });
   }
 }
@@ -3161,8 +3188,6 @@ class _GitAddJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
     return gitOperations.addFiles(files).then((_) {
-    }).catchError((e) {
-      spark.showErrorMessage('Error adding file to git', e.toString());
     });
   }
 }
@@ -3187,8 +3212,8 @@ class _GitBranchJob extends Job {
         spark.showSuccessMessage('Created ${_branchName}');
       });
     }).catchError((e) {
-      spark.showErrorMessage(
-          'Error creating branch ${_branchName}', e.toString());
+      e = SparkException.fromException(e);
+      spark.showErrorMessage('Error creating branch ${_branchName}', exception: e);
     });
   }
 }
@@ -3205,12 +3230,7 @@ class _GitCommitJob extends Job {
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-    return gitOperations.commit(_userName, _userEmail, _commitMessage).
-        then((_) {
-      spark.showSuccessMessage('Committed changes');
-    }).catchError((e) {
-      spark.showErrorMessage('Error committing changes', e.toString());
-    });
+    return gitOperations.commit(_userName, _userEmail, _commitMessage);
   }
 }
 
@@ -3226,12 +3246,7 @@ class _GitCheckoutJob extends Job {
 
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
-
-    return gitOperations.checkoutBranch(_branchName).then((_) {
-      spark.showSuccessMessage('Switched to branch ${_branchName}');
-    }).catchError((e) {
-      spark.showErrorMessage('Error switching to ${_branchName}', e.toString());
-    });
+    return gitOperations.checkoutBranch(_branchName);
   }
 }
 
@@ -3263,13 +3278,10 @@ class _OpenFolderJob extends Job {
       if (spark.bowerManager.properties.isFolderWithPackages(resource)) {
         spark.jobManager.schedule(new BowerGetJob(spark, resource));
       }
-
-      return spark.workspace.save();
     }).then((_) {
       spark.showSuccessMessage('Opened folder ${_entry.fullPath}');
     }).catchError((e) {
-      spark.showErrorMessage('Error opening folder ${_entry.fullPath}',
-          e.toString());
+      spark.showErrorMessage('Error opening folder ${_entry.fullPath}', exception: e);
     });
   }
 }
@@ -3301,7 +3313,7 @@ abstract class PackageManagementJob extends Job {
     return _run().then((_) {
       _spark.showSuccessMessage("Successfully ran $_commandName");
     }).catchError((e) {
-      _spark.showErrorMessage("Error while running $_commandName", e.toString());
+      _spark.showErrorMessage("Error while running $_commandName", exception: e);
     });
   }
 
@@ -3356,8 +3368,6 @@ class CompileDartJob extends Job {
       return getCreateFile(file.parent, '${file.name}.js').then((ws.File file) {
         return file.setContents(result.output);
       });
-    }).catchError((e) {
-      spark.showErrorMessage('Error Compiling ${file.name}', '${e}');
     });
   }
 
@@ -3527,7 +3537,7 @@ class WebStorePublishAction extends SparkActionWithDialog {
     if (getAppContainerFor(_resource) == null) {
       spark.showErrorMessage(
           'Unable to Publish',
-          'Unable to publish the current selection; please select a Chrome App '
+          message: 'Unable to publish the current selection; please select a Chrome App '
           'or Extension to publish.');
       return;
     }
@@ -3569,7 +3579,9 @@ class WebStorePublishAction extends SparkActionWithDialog {
     }
     _WebStorePublishJob job =
         new _WebStorePublishJob(spark, getAppContainerFor(_resource), appID);
-    spark.jobManager.schedule(job);
+    spark.jobManager.schedule(job).catchError((e) {
+      spark.showErrorMessage('Error while publishing the application', exception: e);
+    });
   }
 
   void _updateEnablement(ws.Resource resource) {
@@ -3589,9 +3601,7 @@ class _WebStorePublishJob extends Job {
     monitor.start(name, _appID == null ? 5 : 6);
 
     if (_container == null) {
-      spark.showErrorMessage('Error while publishing the application',
-          'The manifest.json file of the application has not been found.');
-      return null;
+      throw new SparkException('The manifest.json file of the application has not been found.');
     }
 
     return ws_utils.archiveContainer(_container).then((List<int> archivedData) {
@@ -3614,8 +3624,6 @@ class _WebStorePublishJob extends Job {
           }
         });
       });
-    }).catchError((e) {
-      spark.showErrorMessage('Error while publishing the application', e.toString());
     });
   }
 }
@@ -3672,7 +3680,9 @@ class ImportFileAction extends SparkAction implements ContextAction {
   ImportFileAction(Spark spark) : super(spark, "file-import", "Import File…");
 
   void _invoke([List<ws.Resource> resources]) {
-    spark.importFile(resources);
+    spark.importFile(resources).catchError((e) {
+      spark.showErrorMessage('Error while importing file', exception: e);
+    });
   }
 
   String get category => 'folder';

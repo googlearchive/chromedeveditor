@@ -68,6 +68,10 @@ body {
   overflow: hidden;
 }
 
+#aceContainer {
+  height: 100%;
+}
+
 /*
  * Ace overrides.
  * TODO(ussuri): Move to a separate file.
@@ -107,12 +111,18 @@ img.ace-tooltip {
   margin-bottom: 3px;
 }
 
+.ace_link_marker {
+  position: absolute;
+  border-bottom: 1px solid white;
+}
+
 div.ace_search {
   background: #fafafa;
   padding-right: 4px;
   width: 305px;
   /* Can't use 'inherit' here: Ace overrides that. */
-  font-family: Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* BUG #2629 */
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 500;
   font-size: 12px;
 }

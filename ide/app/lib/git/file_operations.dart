@@ -230,4 +230,3 @@ abstract class FileOps {
     return completer.future;
   }
 }
-
