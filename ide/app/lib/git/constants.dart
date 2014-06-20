@@ -17,4 +17,4 @@ const String GIT_CONFIG_PATH = '.git/config.json';
 const String GIT_HEAD_FILE_DEFAULT_CONTENT = 'ref: refs/heads/master\n';
 const String GIT_REFS_HEADS_PATH = '.git/refs/heads/';
 const String GIT_URL_PATTERN = 
-    r"^((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?$";
+    r"^((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)?(/)?$";
