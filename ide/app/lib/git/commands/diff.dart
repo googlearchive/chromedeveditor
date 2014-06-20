@@ -37,7 +37,7 @@ class Diff {
         }
 
         return _retrieveShas(store, status.path, status.headSha, status.sha).then(
-            (contentMap){
+            (Map<String, String> contentMap){
           DiffResult diff;
           if (headSha == null) {
             // This file is added.

@@ -21,8 +21,9 @@ class DiffEntry {
   final String type;
   String path;
 
-  // String representation of the diff between the two versions of file.
+  /// String representation of the diff between the two versions of file.
   String diff;
+
   DiffEntry(this.oldEntry, this.newEntry, this.type,  [String path]) {
 
     if (path == null) {
