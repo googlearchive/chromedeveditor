@@ -340,7 +340,7 @@ class AceManager {
 
     ace.require('ace/ext/linking');
     _aceEditor.setOptions({'enableMultiselect' : false,
-        'enableLinking' : true});
+                           'enableLinking' : true});
 
     html.DivElement contentElement =
         _aceEditor.renderer.containerElement.querySelector(".ace_content");
