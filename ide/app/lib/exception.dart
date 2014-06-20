@@ -14,11 +14,20 @@ class SparkException implements Exception {
   /// The error message.
   final String message;
   /// Represents the unique string for each error type.
-  final String errorCode;
+  String errorCode;
   /// Indicates if the error is not necessary to be handled and can be ignored.
   bool canIgnore = false;
+  /// Indicates whether the exception is an error or a status.
+  bool isError = true;
+  /// Original exception.
+  dynamic exception;
 
-  SparkException(this.message, [this.errorCode, this.canIgnore]);
+
+  SparkException(this.message,
+      {this.errorCode, this.exception, bool canIgnore, bool isError}) {
+    this.canIgnore = canIgnore;
+    this.isError = isError;
+  }
 
   static SparkException fromException(Exception e) {
     if (e is SparkException) {
@@ -35,60 +44,63 @@ class SparkException implements Exception {
   static SparkException _fromGitException(GitException e) {
     switch (e.errorCode) {
       case GitErrorConstants.GIT_AUTH_REQUIRED:
-        return new SparkException(e.toString(), SparkErrorConstants.AUTH_REQUIRED);
+        return new SparkException(
+            e.toString(), errorCode: SparkErrorConstants.GIT_AUTH_REQUIRED);
 
       case GitErrorConstants.GIT_HTTP_FORBIDDEN_ERROR:
         return new SparkException(
-            e.toString(), SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR);
+            e.toString(), errorCode: SparkErrorConstants.GIT_HTTP_FORBIDDEN_ERROR);
 
       case GitErrorConstants.GIT_CLONE_CANCEL:
         return new SparkException(
-            e.toString(), SparkErrorConstants.GIT_CLONE_CANCEL, true);
+            e.toString(),
+            errorCode: SparkErrorConstants.GIT_CLONE_CANCEL,
+            canIgnore: true);
 
       case GitErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED:
         return new SparkException(
             SparkErrorMessages.GIT_SUBMODULES_NOT_YET_SUPPORTED_MSG,
-            SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
+            errorCode: SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED);
 
       case GitErrorConstants.GIT_PUSH_NON_FAST_FORWARD:
         return new SparkException(SparkErrorMessages.GIT_PUSH_NON_FAST_FORWARD_MSG,
-            SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
+            errorCode: SparkErrorConstants.GIT_PUSH_NON_FAST_FORWARD);
 
       case GitErrorConstants.GIT_PUSH_NO_REMOTE:
         return new SparkException(SparkErrorMessages.GIT_PUSH_NO_REMOTE_MSG,
-            SparkErrorConstants.GIT_PUSH_NO_REMOTE);
+            errorCode: SparkErrorConstants.GIT_PUSH_NO_REMOTE);
 
       case GitErrorConstants.GIT_PUSH_NO_COMMITS:
         return new SparkException(SparkErrorMessages.GIT_PUSH_NO_COMMITS_MSG,
-            SparkErrorConstants.GIT_PUSH_NO_COMMITS);
+            errorCode: SparkErrorConstants.GIT_PUSH_NO_COMMITS);
 
       case GitErrorConstants.GIT_BRANCH_EXISTS:
         return new SparkException(SparkErrorMessages.GIT_BRANCH_EXISTS_MSG,
-            SparkErrorConstants.GIT_BRANCH_EXISTS);
+            errorCode: SparkErrorConstants.GIT_BRANCH_EXISTS);
 
       case GitErrorConstants.GIT_BRANCH_NOT_FOUND:
         return new SparkException(SparkErrorMessages.GIT_BRANCH_NOT_FOUND_MSG,
-            SparkErrorConstants.GIT_BRANCH_NOT_FOUND);
+            errorCode: SparkErrorConstants.GIT_BRANCH_NOT_FOUND);
 
       case GitErrorConstants.GIT_BRANCH_UP_TO_DATE:
         return new SparkException(SparkErrorMessages.GIT_BRANCH_UP_TO_DATE_MSG,
-            SparkErrorConstants.GIT_BRANCH_UP_TO_DATE);
+            errorCode: SparkErrorConstants.GIT_BRANCH_UP_TO_DATE);
 
       case GitErrorConstants.GIT_INVALID_BRANCH_NAME:
         return new SparkException(SparkErrorMessages.GIT_INVALID_BRANCH_NAME_MSG,
-            SparkErrorConstants.GIT_INVALID_BRANCH_NAME);
+            errorCode: SparkErrorConstants.GIT_INVALID_BRANCH_NAME);
 
       case GitErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND:
         return new SparkException(SparkErrorMessages.GIT_REMOTE_BRANCH_NOT_FOUND_MSG,
-            SparkErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
+            errorCode: SparkErrorConstants.GIT_REMOTE_BRANCH_NOT_FOUND);
 
       case GitErrorConstants.GIT_BRANCH_UP_TO_DATE:
         return new SparkException(SparkErrorMessages.GIT_BRANCH_UP_TO_DATE_MSG,
-            SparkErrorConstants.GIT_BRANCH_UP_TO_DATE);
+            errorCode: SparkErrorConstants.GIT_BRANCH_UP_TO_DATE);
 
       case GitErrorConstants.GIT_WORKING_TREE_NOT_CLEAN:
         return new SparkException(SparkErrorMessages.GIT_WORKING_TREE_NOT_CLEAN_MSG,
-            SparkErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
+            errorCode: SparkErrorConstants.GIT_WORKING_TREE_NOT_CLEAN);
 
       case GitErrorConstants.GIT_HTTP_CONN_RESET:
         return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_RESET_MSG,
@@ -110,7 +122,7 @@ class SparkErrorConstants {
   static const String GIT_CLONE_DIR_IN_USE = "git.clone_dir_in_use";
   static const String GIT_CLONE_CANCEL = "git.clone_cancel";
 
-  static const String AUTH_REQUIRED = "auth.required";
+  static const String GIT_AUTH_REQUIRED = "git.auth_required";
   static const String GIT_HTTP_FORBIDDEN_ERROR = "git.http_forbidden_error";
   static const String GIT_HTTP_CONN_RESET = "git.http_conn_reset";
 

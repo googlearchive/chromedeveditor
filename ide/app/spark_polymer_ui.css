@@ -143,6 +143,15 @@ spark-dialog {
   height: 100%;
 }
 
+#gitRepoUrlCopyInBuffer {
+  width: 0px;
+  height: 1px;
+  background: transparent;
+  box-shadow: 0px 0px 0px;
+  padding: 0px;
+  border: 0px solid;
+}
+
 #aboutDialog #logo {
   margin-right: 40px;
 }

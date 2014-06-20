@@ -11,8 +11,6 @@ import 'enum.dart';
 import 'services.dart' as services;
 import 'preferences.dart';
 
-final bool _INCLUDE_TYPES = true;
-
 class OffsetRange {
   int top;
   int bottom;
@@ -90,12 +88,14 @@ class Outline {
     scrollOffsetRangeIntoView(offsetRange);
   }
 
-  bool get visible => !_outlineDiv.classes.contains('collapsed');
+  bool get visible => _visible;
   set visible(bool value) {
     _visible = value;
     _outlineDiv.classes.toggle('hidden', !_visible);
     _outlineButton.classes.toggle('hidden', !_visible);
   }
+
+  bool get showing => _visible && !_outlineDiv.classes.contains('collapsed');
 
   /**
    * Builds or rebuilds the outline UI based on the given String of code.
@@ -124,6 +124,8 @@ class Outline {
       return _addVariable(data);
     } else if (data is services.OutlineTopLevelFunction) {
       return _addFunction(data);
+    } else if (data is services.OutlineTopLevelAccessor) {
+      return _addAccessor(data);
     } else if (data is services.OutlineTypeDef) {
       return _addTypeDef(data);
     } else {
@@ -165,6 +167,9 @@ class Outline {
 
   OutlineTopLevelFunction _addFunction(services.OutlineTopLevelFunction data) =>
       _addItem(new OutlineTopLevelFunction(data));
+
+  OutlineTopLevelAccessor _addAccessor(services.OutlineTopLevelAccessor data) =>
+      _addItem(new OutlineTopLevelAccessor(data));
 
   OutlineTypeDef _addTypeDef(services.OutlineTypeDef data) =>
       _addItem(new OutlineTypeDef(data));
@@ -283,7 +288,7 @@ abstract class OutlineItem {
         _element.dispatchEvent(new html.CustomEvent('selected', detail: this)));
     _element.append(_anchor);
 
-    if (_INCLUDE_TYPES && returnType != null && returnType.isNotEmpty) {
+    if (returnType != null && returnType.isNotEmpty) {
       _typeSpan = new html.SpanElement();
       _typeSpan.text = returnType;
       _typeSpan.classes.add("returnType");
@@ -336,6 +341,16 @@ class OutlineTopLevelFunction extends OutlineTopLevelItem {
 
   services.OutlineTopLevelFunction get _functionData => _data;
   String get returnType => _functionData.returnType;
+}
+
+class OutlineTopLevelAccessor extends OutlineTopLevelItem {
+  OutlineTopLevelAccessor(services.OutlineTopLevelAccessor data)
+      : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
+
+  services.OutlineTopLevelAccessor get _accessorData => _data;
+
+  String get displayName => _data.name;
+  String get returnType => _accessorData.returnType;
 }
 
 class OutlineTypeDef extends OutlineTopLevelItem {
@@ -396,7 +411,7 @@ class OutlineClass extends OutlineTopLevelItem {
       return addMethod(data);
     } else if (data is services.OutlineProperty) {
       return addProperty(data);
-    } else if (data is services.OutlineAccessor) {
+    } else if (data is services.OutlineClassAccessor) {
       return addAccessor(data);
     } else {
       throw new UnimplementedError("Unknown type");
@@ -409,8 +424,8 @@ class OutlineClass extends OutlineTopLevelItem {
   OutlineProperty addProperty(services.OutlineProperty data) =>
       _addItem(new OutlineProperty(data));
 
-  OutlineAccessor addAccessor(services.OutlineAccessor data) =>
-      _addItem(new OutlineAccessor(data));
+  OutlineClassAccessor addAccessor(services.OutlineClassAccessor data) =>
+      _addItem(new OutlineClassAccessor(data));
 }
 
 abstract class OutlineClassMember extends OutlineItem {
@@ -434,11 +449,11 @@ class OutlineProperty extends OutlineClassMember {
   String get returnType => _propertyData.returnType;
 }
 
-class OutlineAccessor extends OutlineClassMember {
-  OutlineAccessor(services.OutlineAccessor data)
+class OutlineClassAccessor extends OutlineClassMember {
+  OutlineClassAccessor(services.OutlineClassAccessor data)
       : super(data, "accessor ${data.setter ? 'setter' : 'getter'}");
 
-  services.OutlineAccessor get _accessorData => _data;
+  services.OutlineClassAccessor get _accessorData => _data;
 
   String get displayName => _data.name;
   String get returnType => _accessorData.returnType;

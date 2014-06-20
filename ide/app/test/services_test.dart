@@ -10,11 +10,12 @@ import 'package:unittest/unittest.dart';
 
 import 'files_mock.dart';
 import '../lib/package_mgmt/pub.dart';
+import '../lib/preferences.dart';
 import '../lib/services.dart';
 import '../lib/utils.dart';
 
 defineTests() {
-  Workspace workspace = new Workspace();
+  Workspace workspace = _createWorkspace();
   Services services = new Services(workspace, new PubManager(workspace));
 
   group('services', () {
@@ -72,7 +73,7 @@ defineTests() {
   });
 
   group('services compiler', () {
-    Workspace workspace = new Workspace();
+    Workspace workspace = _createWorkspace();
     Services services = new Services(workspace, new PubManager(workspace));;
     CompilerService compiler = services.getService("compiler");
 
@@ -147,7 +148,7 @@ defineTests() {
   });
 
   group('services analyzer', () {
-    Workspace workspace = new Workspace();
+    Workspace workspace = _createWorkspace();
     Services services = new Services(workspace, new PubManager(workspace));;
     AnalyzerService analyzer = services.getService("analyzer");
 
@@ -191,7 +192,7 @@ defineTests() {
   });
 
   group('services analyzer getDeclaration', () {
-    Workspace workspace = new Workspace();
+    Workspace workspace = _createWorkspace();
     Services services = new Services(workspace, new PubManager(workspace));;
     AnalyzerService analyzer = services.getService("analyzer");
 
@@ -234,3 +235,5 @@ defineTests() {
     });
   });
 }
+
+Workspace _createWorkspace() => new Workspace(new MapPreferencesStore());
