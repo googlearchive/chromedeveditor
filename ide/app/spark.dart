@@ -2374,6 +2374,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlCopyInElement;
   bool _cloning = false;
   _GitCloneTask _cloneTask;
+  ScmProvider _gitProvider = getProviderType('git');
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
@@ -2388,7 +2389,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     String tempValue = _repoUrlCopyInElement.value;
     _repoUrlCopyInElement.value = '';
     _repoUrlCopyInElement.hidden = true;
-    if (getProviderType('git').isScmEndpoint(tempValue)) {
+    if (_gitProvider.isScmEndpoint(tempValue)) {
       _repoUrlElement.value = tempValue;
     }
     _repoUrlElement.focus();
