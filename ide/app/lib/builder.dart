@@ -81,7 +81,9 @@ class BuilderManager {
 
     if (event.isEmpty) return;
 
-    _logger.info('starting build for ${event.changes}');
+    _logger.info('starting build' +
+      SparkFlags.developerMode ? ' for ${event.changes}' : '');
+
     Stopwatch timer = new Stopwatch()..start();
 
     _buildRunning = true;
