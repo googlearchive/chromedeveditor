@@ -53,8 +53,6 @@ import 'test/all.dart' as all_tests;
 import 'spark_flags.dart';
 import 'spark_model.dart';
 
-const GIT_URL_PATTERN = r"^((git|ssh|http(s)?)|(git@[\w\.]+))(:(//)?)([\w\.@\:/\-~]+)(\.git)(/)?$";
-
 analytics.Tracker _analyticsTracker = new analytics.NullTracker();
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
@@ -2376,15 +2374,13 @@ class GitCloneAction extends SparkActionWithProgressDialog {
   InputElement _repoUrlCopyInElement;
   bool _cloning = false;
   _GitCloneTask _cloneTask;
-  static final RegExp gitUrlRegExp = new RegExp(GIT_URL_PATTERN);
+  ScmProvider _gitProvider = getProviderType('git');
 
   GitCloneAction(Spark spark, Element dialog)
       : super(spark, "git-clone", "Git Clone…", dialog) {
     _repoUrlElement = _triggerOnReturn("#gitRepoUrl", false);
     _repoUrlCopyInElement = dialog.querySelector("#gitRepoUrlCopyInBuffer");
   }
-
-  bool _parseClipboard(String data) => gitUrlRegExp.hasMatch(data);
 
   void _copyClipboard() {
     _repoUrlCopyInElement.hidden = false;
@@ -2393,7 +2389,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     String tempValue = _repoUrlCopyInElement.value;
     _repoUrlCopyInElement.value = '';
     _repoUrlCopyInElement.hidden = true;
-    if (_parseClipboard(tempValue)) {
+    if (_gitProvider.isScmEndpoint(tempValue)) {
       _repoUrlElement.value = tempValue;
     }
     _repoUrlElement.focus();
