@@ -487,7 +487,7 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
 
   WebAppLocalLaunchHandler(this.workspace, this.services, this.pubManager,
       this.bowerManager, Notifier notifier) {
-    PicoServer.createServer().then((server) {
+    _createServer(51792).then((server) {
       _server = server;
       _server.addServlet(new StaticResourcesServlet());
       _server.addServlet(new Dart2JsServlet(workspace,
@@ -499,6 +499,17 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
       _logger.info('embedded web server listening on port ${_server.port}');
     }).catchError((error) {
       _logger.severe('Error starting up embedded server', error);
+    });
+  }
+
+  Future<PicoServer> _createServer(int port) {
+    return PicoServer.createServer(port).then((server) {
+      return server;
+    }).catchError((error) {
+      _logger.info('could not open a port on ${port}');
+      return PicoServer.createServer().then((server) {
+        return server;
+      });
     });
   }
 

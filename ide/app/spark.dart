@@ -2479,9 +2479,9 @@ class GitCloneAction extends SparkActionWithProgressDialog {
     _cloneTask.run().then((_) {
       _showSuccessStatus('Cloned $projectName');
     }).catchError((e) {
-      if (e is SparkException && e.errorCode
-          == SparkErrorConstants.GIT_AUTH_REQUIRED) {
-        spark.showErrorMessage('Authorization Required', exception: e);
+      if (e is SparkException &&
+          e.errorCode == SparkErrorConstants.GIT_AUTH_REQUIRED) {
+        _showAuthDialog();
       } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
         spark.showSuccessMessage('Clone cancelled');
@@ -2497,6 +2497,18 @@ class GitCloneAction extends SparkActionWithProgressDialog {
       _cloning = false;
       _restoreDialog();
       _hide();
+    });
+  }
+
+  /// Shows an authentification dialog. Returns false if cancelled.
+  void _showAuthDialog([context]) {
+    Timer.run(() {
+      // In a timer to let the previous dialog dismiss properly.
+      GitAuthenticationDialog.request(spark).then((info) {
+        _invoke(context);
+      }).catchError((e) {
+        // Cancelled authentication: do nothing.
+      });
     });
   }
 
@@ -3149,39 +3161,53 @@ class _GitCloneTask {
 
       ScmProvider scmProvider = getProviderType('git');
 
-      return scmProvider.clone(url, location.entry).then((_) {
-        ws.WorkspaceRoot root;
-
-        if (location.isSync) {
-          root = new ws.SyncFolderRoot(location.entry);
-        } else {
-          root = new ws.FolderChildRoot(location.parent, location.entry);
+      // TODO(grv): Create a helper function returning git auth information.
+      return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+        String username;
+        String password;
+        if (value != null) {
+          Map<String, String> info = JSON.decode(value);
+          username = info['username'];
+          password = info['password'];
         }
-        return spark.workspace.link(root).then((ws.Project project) {
-          spark.showSuccessMessage('Cloned into ${project.name}');
 
-          Timer.run(() {
-            spark._filesController.selectFile(project);
-            spark._filesController.setFolderExpanded(project);
-          });
+        return scmProvider.clone(url, location.entry,
+            username: username, password: password).then((_) {
+          ws.WorkspaceRoot root;
 
-          // Run Pub if the new project has a pubspec file.
-          if (spark.pubManager.properties.isFolderWithPackages(project)) {
-            // There is issue with workspace sending duplicate events.
-            // TODO(grv): revisit workspace events.
+          if (location.isSync) {
+            root = new ws.SyncFolderRoot(location.entry);
+          } else {
+            root = new ws.FolderChildRoot(location.parent, location.entry);
+          }
+          return spark.workspace.link(root).then((ws.Project project) {
+            spark.showSuccessMessage('Cloned into ${project.name}');
+
             Timer.run(() {
-              spark.jobManager.schedule(new PubGetJob(spark, project));
+              spark._filesController.selectFile(project);
+              spark._filesController.setFolderExpanded(project);
             });
-          }
 
-          // Run Bower if the new project has a bower.json file.
-          if (spark.bowerManager.properties.isFolderWithPackages(project)) {
-            spark.jobManager.schedule(new BowerGetJob(spark, project));
-          }
+            // Run Pub if the new project has a pubspec file.
+            if (spark.pubManager.properties.isFolderWithPackages(project)) {
+              // There is issue with workspace sending duplicate events.
+              // TODO(grv): revisit workspace events.
+              Timer.run(() {
+                spark.jobManager.schedule(new PubGetJob(spark, project));
+              });
+            }
+
+            // Run Bower if the new project has a bower.json file.
+            if (spark.bowerManager.properties.isFolderWithPackages(project)) {
+              spark.jobManager.schedule(new BowerGetJob(spark, project));
+            }
+
+            spark.workspace.save();
+          });
+        }).catchError((e) {
+          // Remove the created project folder.
+          return location.entry.removeRecursively().then((_) => throw e);
         });
-      }).catchError((e) {
-        // Remove the created project folder.
-        return location.entry.removeRecursively().then((_) => throw e);
       });
     });
   }
@@ -3196,11 +3222,23 @@ class _GitPullJob extends Job {
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    // TODO: We'll want a way to indicate to the user what files changed and if
-    // there were any merge problems.
-    return gitOperations.pull().then((_) {
-      return new SparkJobStatus(
-          statusCode: SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS);
+    return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      String username;
+      String password;
+      if (value != null) {
+        Map<String, String> info = JSON.decode(value);
+        username = info['username'];
+        password = info['password'];
+      }
+      // TODO(grv): We'll want a way to indicate to the user what files changed and if
+      // there were any merge problems.
+      return gitOperations.pull(username, password).then((_) {
+        return new SparkJobStatus(
+            statusCode: SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS);
+      }).catchError((e) {
+        e = SparkException.fromException(e);
+        spark.showErrorMessage('Git Pull Status', exception: e);
+      });
     });
   }
 }
@@ -3236,13 +3274,23 @@ class _GitBranchJob extends Job {
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return gitOperations.createBranch(_branchName, _sourceBranchName).then((_) {
-      return gitOperations.checkoutBranch(_branchName).then((_) {
-        spark.showSuccessMessage('Created ${_branchName}');
+    return spark.syncPrefs.getValue("git-auth-info").then((String value) {
+      String username;
+      String password;
+      if (value != null) {
+        Map<String, String> info = JSON.decode(value);
+        username = info['username'];
+        password = info['password'];
+      }
+      return gitOperations.createBranch(_branchName, _sourceBranchName,
+          username: username, password: password).then((_) {
+        return gitOperations.checkoutBranch(_branchName).then((_) {
+          spark.showSuccessMessage('Created ${_branchName}');
+        });
+      }).catchError((e) {
+        e = SparkException.fromException(e);
+        spark.showErrorMessage('Error creating branch ${_branchName}', exception : e);
       });
-    }).catchError((e) {
-      e = SparkException.fromException(e);
-      spark.showErrorMessage('Error creating branch ${_branchName}', exception: e);
     });
   }
 }
