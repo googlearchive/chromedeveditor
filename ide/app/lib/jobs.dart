@@ -9,6 +9,8 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'status.dart';
+
 final Logger _logger = new Logger('spark.jobs');
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
@@ -27,7 +29,7 @@ class JobManager {
    * Will schedule a [job] after all other queued jobs. If no [Job] is currently
    * waiting, [job] will run.
    */
-  Future schedule(Job job) {
+  Future<SparkJobStatus> schedule(Job job) {
     Completer completer = job.completer;
     _waitingJobs.add(job);
 
@@ -128,13 +130,13 @@ abstract class Job {
 
   Completer get completer => _completer;
 
-  Future get future => _completer.future;
+  Future<SparkJobStatus> get future => _completer.future;
 
   Job(this.name, [Completer completer]) {
     if (completer != null) {
       _completer = completer;
     } else {
-      _completer = new Completer();
+      _completer = new Completer<SparkJobStatus>();
     }
   }
 
@@ -149,7 +151,7 @@ abstract class Job {
    * progress monitor. When it finishes, it should complete the [Future] that
    * is returned.
    */
-  Future run(ProgressMonitor monitor);
+  Future<SparkJobStatus> run(ProgressMonitor monitor);
 
   String toString() => name;
 }
@@ -161,7 +163,7 @@ class ProgressJob extends Job {
 
   ProgressJob(String name, Completer completer) : super(name, completer);
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name);
     return _completer.future;
   }
