@@ -627,9 +627,9 @@ class  WebAppRemoteLaunchHandler extends LaunchTargetHandler {
 }
 
 /**
- * A launch pariticipant that works on dart apps, checks to see if all the
- * specified packages are installed, if not either run pub get or continue
- * launch.
+ * A launch pariticipant that works on dart apps. It checks to see if all the
+ * specified packages are installed. If not it displays a message and terminates
+ * the launch.
  */
 class PubLaunchParticipant extends LaunchParticipant {
   final PackageManager pubManager;
@@ -646,6 +646,7 @@ class PubLaunchParticipant extends LaunchParticipant {
     return pubManager.arePackagesInstalled(application.primaryResource.parent)
         .then((installed) {
       if (installed is String) {
+        // TODO: This should give the user the option of continuing the launch.
         return notifier.showMessageAndWait(
           'Run',
           "The '${installed}' package is missing from the packages directory. "
