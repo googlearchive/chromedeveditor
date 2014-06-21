@@ -21,13 +21,15 @@ class SparkJobStatus {
 
   set message(String msg) => _message = msg;
 
-  SparkJobStatus([this.statusCode, this.header, this._message]) {
-    if (_message == null) {
+  SparkJobStatus({this.statusCode, this.header, String message}) {
+    if (message == null) {
       try {
         _message = getStatusMessageFromCode(this.statusCode);
       } catch (e) {
         // Do Nothing.
       }
+    } else {
+      _message = message;
     }
   }
 
@@ -35,6 +37,16 @@ class SparkJobStatus {
     switch (code) {
       case SparkStatusCodes.SPARK_JOB_BUILD_SUCCESS:
         return SparkStatusMessages.SPARK_JOB_BUILD_SUCCESS_MSG;
+
+      case SparkStatusCodes.SPARK_JOB_IMPORT_FOLDER_SUCCESS:
+        return SparkStatusMessages.SPARK_JOB_IMPORT_FOLDER_SUCCESS_MSG;
+
+      case SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS:
+        return SparkStatusMessages.SPARK_JOB_GIT_PULL_SUCCESS_MSG;
+      case SparkStatusCodes.SPARK_JOB_GIT_COMMIT_SUCCESS:
+        return SparkStatusMessages.SPARK_JOB_GIT_COMMIT_SUCCESS_MSG;
+      case SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS:
+        return SparkStatusMessages.SPARK_JOB_GIT_ADD_SUCCESS_MSG;
     }
     throw "Message for code : ${code} not found.";
   }
@@ -42,9 +54,22 @@ class SparkJobStatus {
 
 class SparkStatusCodes {
   static const String SPARK_JOB_STATUS_UNKNOWN = "spark.job.status_unknown";
+
+  static const String SPARK_JOB_IMPORT_FOLDER_SUCCESS = "spark.job.import.folder_success";
+
   static const String SPARK_JOB_BUILD_SUCCESS = 'spark.job.build_success';
+
+  static const String SPARK_JOB_GIT_PULL_SUCCESS = "spark.job.git.pull_success";
+  static const String SPARK_JOB_GIT_COMMIT_SUCCESS = "spark.job.git.commit_success";
+  static const String SPARK_JOB_GIT_ADD_SUCCESS = "spark.job.git.add_success";
 }
 
 class SparkStatusMessages {
-  static const String SPARK_JOB_BUILD_SUCCESS_MSG = 'Build Successful!!';
+  static const String SPARK_JOB_BUILD_SUCCESS_MSG = 'Build successful.';
+
+  static const String SPARK_JOB_IMPORT_FOLDER_SUCCESS_MSG = "Import successful.";
+
+  static const String SPARK_JOB_GIT_PULL_SUCCESS_MSG = "Pull successful.";
+  static const String SPARK_JOB_GIT_COMMIT_SUCCESS_MSG = "Changes committed.";
+  static const String SPARK_JOB_GIT_ADD_SUCCESS_MSG = "Added successfully.";
 }
