@@ -430,7 +430,7 @@ class Workspace extends Container {
     }, onError: (e) {
         _logger.warning('Exception in workspace restore sync file system', e);
     }).timeout(new Duration(seconds: 20)).whenComplete(() {
-      progressJob.done();
+      progressJob.done(null);
       _whenAvailableSyncFs.complete(this);
     });
   }

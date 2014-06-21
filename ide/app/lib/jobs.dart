@@ -61,13 +61,16 @@ class JobManager {
 
     _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
     _jobStarted(_runningJob);
+    SparkJobStatus jobStatus;
 
     try {
-      _runningJob.run(monitor).catchError((e, st) {
+      _runningJob.run(monitor).then((status) {
+        jobStatus = status;
+      }).catchError((e, st) {
         _runningJob.completer.completeError(e);
       }).whenComplete(() {
         _jobFinished(_runningJob);
-        if (_runningJob != null) _runningJob.done();
+        if (_runningJob != null) _runningJob.done(jobStatus);
         _runningJob = null;
         _scheduleNextJob();
       });
@@ -140,9 +143,9 @@ abstract class Job {
     }
   }
 
-  void done() {
+  void done(SparkJobStatus status) {
     if (_completer != null && !_completer.isCompleted) {
-      _completer.complete();
+      _completer.complete(status);
     }
   }
 
