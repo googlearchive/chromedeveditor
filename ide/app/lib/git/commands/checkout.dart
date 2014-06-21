@@ -8,7 +8,7 @@ import 'dart:async';
 
 import 'package:chrome/chrome_app.dart' as chrome;
 
-import 'diff.dart';
+import 'treediff.dart';
 import '../constants.dart';
 import '../exception.dart';
 import '../file_operations.dart';
@@ -53,7 +53,7 @@ class Checkout {
 
   static Future smartCheckout(chrome.DirectoryEntry dir, ObjectStore store,
       TreeObject oldTree, TreeObject newTree) {
-    TreeDiffResult diff = Diff.diffTree(oldTree, newTree);
+    TreeDiffResult diff = TreeDiff.diffTree(oldTree, newTree);
     return Future.forEach(diff.getAddedEntries(), (DiffEntry diffEntry) {
       TreeEntry entry = diffEntry.newEntry;
       if (entry.isBlob) {

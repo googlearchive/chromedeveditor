@@ -267,7 +267,7 @@ class Index {
        }
 
        return Future.forEach(entries, (chrome.Entry entry) {
-         if (entry.name == '.git') {
+         if ((_store.root.fullPath + '.git') == entry.fullPath) {
            return fileStatuses;
          }
 
@@ -285,9 +285,7 @@ class Index {
            }
          }
        }).then((_) {
-         if (root.fullPath == ".git") {
-           // ignore `.git` folder.
-         } else if (fileStatuses.isEmpty) {
+         if (fileStatuses.isEmpty) {
            deleteIndexForEntry(root.fullPath);
          } else if (fileStatuses.any((status) => status.type
              != FileStatusType.COMMITTED)) {
@@ -335,6 +333,7 @@ class Index {
     _statusIdx.forEach((String filePath, FileStatus status) {
       if (!filePaths.contains(filePath)) {
         status.deleted = true;
+        status.sha = null;
         status.type = FileStatusType.MODIFIED;
       }
     });

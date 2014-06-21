@@ -90,15 +90,14 @@ class Status {
     }
 
     // Don't update status for .git folder and sub-folders.
-    if (entry.fullPath.contains('/.git/') || entry.name == '.git') {
+    if (entry.fullPath.startsWith(store.root.fullPath + '/.git')) {
       return new Future.value();
     }
 
     return entry.getParent().then((chrome.DirectoryEntry root) {
       return FileOps.listFiles(root).then((entries) {
-        entries.removeWhere((e) => e.name == ".git");
         bool isChanged = entries.any((entry) => getStatusForEntry(store,
-            entry).type != FileStatusType.COMMITTED);
+            entry).type == FileStatusType.MODIFIED);
         FileStatus status = FileStatus.createForDirectory(root);
         if (isChanged) {
           status.type = FileStatusType.MODIFIED;

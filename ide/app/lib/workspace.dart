@@ -59,6 +59,8 @@ class Workspace extends Container {
     _builderManager = new BuilderManager(this, _jobManager);
   }
 
+  JobManager get jobManager => _jobManager;
+
   Future<Workspace> whenAvailable() => _whenAvailable.future;
   Future<Workspace> whenAvailableSyncFs() => _whenAvailableSyncFs.future;
 
@@ -122,6 +124,12 @@ class Workspace extends Container {
   Future<Resource> link(WorkspaceRoot root, {bool fireEvent: true}) {
     root.resource = root.createResource(this);
     _roots.add(root);
+
+    // When restoring the workspace, we do not want to presist incomplete
+    // versions of it.
+    if (fireEvent) {
+      _save();
+    }
 
     if (root.resource is Container) {
       return _gatherChildren(root.resource).then((Container container) {
@@ -275,7 +283,12 @@ class Workspace extends Container {
   /**
    * Store info for workspace children.
    */
-  Future save() {
+  Future save() => _save();
+
+  /**
+   * Persist any changes to disk.
+   */
+  Future _save() {
     List<Map> data = [];
 
     for (WorkspaceRoot root in _roots) {
@@ -336,7 +349,9 @@ class Workspace extends Container {
       return Future.wait(newAdditions);
     }));
 
-    return Future.wait(futures);
+    return Future.wait(futures).then((_) {
+      return _save();
+    });
   }
 
   /**
@@ -497,6 +512,7 @@ class Workspace extends Container {
 
   void _removeChild(Resource resource, {bool fireEvent: true}) {
     _roots.removeWhere((root) => root.resource == resource);
+    _save();
     if (fireEvent) {
       _fireResourceChanges(ChangeDelta.containerDelete(resource));
     }
@@ -995,6 +1011,8 @@ class File extends Resource {
     });
   }
 
+  int get timestamp => _timestamp;
+
   Future<String> getContents() => _fileEntry.readText();
 
   Future<chrome.ArrayBuffer> getBytes() => _fileEntry.readBytes();
@@ -1013,8 +1031,14 @@ class File extends Resource {
   }
 
   Future setBytes(List<int> data) {
-    chrome.ArrayBuffer bytes = new chrome.ArrayBuffer.fromBytes(data);
+    return setBytesArrayBuffer(new chrome.ArrayBuffer.fromBytes(data));
+  }
+
+  Future setBytesArrayBuffer(chrome.ArrayBuffer bytes) {
     return _fileEntry.writeBytes(bytes).then((_) {
+      return entry.getMetadata();
+    }).then((/*Metadata*/ metaData) {
+      _timestamp = metaData.modificationTime.millisecondsSinceEpoch;
       workspace._fireResourceChange(new ChangeDelta(this, EventType.CHANGE));
     });
   }

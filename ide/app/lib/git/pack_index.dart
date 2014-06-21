@@ -116,11 +116,7 @@ class PackIndex {
 
     int sliceStart = fanIndex > 0 ? (_byteData.getUint32(8 +
         (fanIndex - 1) * 4)) : 0;
-    int sliceEnd = _byteData.getUint32(8 + (fanIndex * 4));
-
-    if (sliceEnd - sliceStart == 0) {
-      return -1;
-    }
+    int sliceEnd = _byteData.getUint32(8 + (fanIndex * 4)) - 1;
 
     int index;
     while (sliceEnd >= sliceStart) {

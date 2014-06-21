@@ -68,6 +68,10 @@ body {
   overflow: hidden;
 }
 
+#aceContainer {
+  height: 100%;
+}
+
 /*
  * Ace overrides.
  * TODO(ussuri): Move to a separate file.
@@ -105,6 +109,11 @@ img.ace-tooltip {
   display: inline;
   margin-left: 3px;
   margin-bottom: 3px;
+}
+
+.ace_link_marker {
+  position: absolute;
+  border-bottom: 1px solid white;
 }
 
 div.ace_search {

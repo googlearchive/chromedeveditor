@@ -23,12 +23,14 @@ import 'git/config.dart';
 import 'git/objectstore.dart';
 import 'git/object.dart';
 import 'git/options.dart';
+import 'git/utils.dart';
 import 'git/commands/add.dart';
 import 'git/commands/branch.dart';
 import 'git/commands/checkout.dart';
 import 'git/commands/clone.dart';
 import 'git/commands/commit.dart';
 import 'git/commands/constants.dart';
+import 'git/commands/diff.dart';
 import 'git/commands/fetch.dart';
 import 'git/commands/ignore.dart';
 import 'git/commands/index.dart';
@@ -138,6 +140,11 @@ abstract class ScmProvider {
   bool isUnderScm(Project project);
 
   /**
+   * Returns whether [uri] represents an endpoint of this SCM provider.
+   */
+  bool isScmEndpoint(String uri);
+
+  /**
    * Create an [ScmProjectOperations] instance for the given [Project].
    */
   ScmProjectOperations createOperationsFor(Project project);
@@ -184,6 +191,8 @@ abstract class ScmProjectOperations {
   Future createBranch(String branchName, String sourceBranchName);
 
   Future checkoutBranch(String branchName);
+
+  Future diff();
 
   void markResolved(Resource resource);
 
@@ -270,6 +279,8 @@ class GitScmProvider extends ScmProvider {
     return true;
   }
 
+  bool isScmEndpoint(String uri) => isGitUri(uri);
+
   ScmProjectOperations createOperationsFor(Project project) {
     if (isUnderScm(project)) {
       return new GitScmProjectOperations(this, project);
@@ -282,7 +293,7 @@ class GitScmProvider extends ScmProvider {
                {String username, String password, String branchName}) {
     GitOptions options = new GitOptions(
         root: dir, repoUrl: url, depth: 1, store: new ObjectStore(dir),
-        branchName : branchName, username: username, password: password);
+        branchName: branchName, username: username, password: password);
 
     return options.store.init().then((_) {
       activeClone = new Clone(options);
@@ -367,7 +378,7 @@ class GitScmProjectOperations extends ScmProjectOperations {
 
   Stream<ScmProjectOperations> get onStatusChange => _statusController.stream;
 
-  Future<List<String>> getLocalBranchNames() =>
+  Future<Iterable<String>> getLocalBranchNames() =>
       objectStore.then((store) => store.getLocalBranches());
 
   Future<Iterable<String>> getRemoteBranchNames()  {
@@ -389,10 +400,15 @@ class GitScmProjectOperations extends ScmProjectOperations {
     });
   }
 
-  Future createBranch(String branchName, String sourceBranchName) {
+  Future createBranch(String branchName, String sourceBranchName,
+                      {String username, String password}) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(
-          root: entry, branchName: branchName, store: store);
+      GitOptions options = new GitOptions(root: entry,
+                                          branchName: branchName,
+                                          store: store,
+                                          username: username,
+                                          password: password);
+
       return Branch.branch(options, sourceBranchName).catchError(
           (e) => throw SparkException.fromException(e));
     });
@@ -409,6 +425,12 @@ class GitScmProjectOperations extends ScmProjectOperations {
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
       }).catchError((e) => throw SparkException.fromException(e));
+    });
+  }
+
+  Future<List<DiffResult>> diff() {
+    return objectStore.then((store) {
+      return Diff.diff(store);
     });
   }
 
@@ -440,14 +462,15 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store,
           username: username, password: password);
-      return Push.push(options).catchError(
-          (e) => throw SparkException.fromException(e));
+      return Push.push(options)
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
   Future<List<String>> getDeletedFiles() {
     return objectStore.then((store) {
-      return Status.getDeletedFiles(store);
+      return Status.getDeletedFiles(store)
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
@@ -455,22 +478,22 @@ class GitScmProjectOperations extends ScmProjectOperations {
     return objectStore.then((store) {
       GitOptions options = new GitOptions(root: entry, store: store);
       Fetch fetch = new Fetch(new GitOptions(root: entry, store: store));
-      return fetch.fetch().catchError(
-          (e) => throw SparkException.fromException(e));
+      return fetch.fetch()
+          .catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 
-  Future pull() {
+  Future pull([String username, String password]) {
     return objectStore.then((store) {
-      GitOptions options = new GitOptions(root: entry, store: store);
+      GitOptions options = new GitOptions(
+          root: entry, store: store, username: username, password: password);
       Pull pull = new Pull(options);
       return pull.pull().then((_) {
         _statusController.add(this);
-
         // We changed files on disk - let the workspace know to re-scan the
         // project and fire any necessary resource change events.
         Timer.run(() => project.refresh());
-      }).catchError((e) => throw SparkException.fromException(e));
+      }).catchError((e) => new Future.error(SparkException.fromException(e)));
     });
   }
 

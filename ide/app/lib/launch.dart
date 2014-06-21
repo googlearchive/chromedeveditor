@@ -22,6 +22,7 @@ import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
+import 'package_mgmt/pub_properties.dart';
 import 'server.dart';
 import 'services.dart';
 import 'utils.dart';
@@ -127,8 +128,7 @@ class LaunchManager {
   }
 
   List<LaunchParticipant> _locateLaunchParticipants(
-                                Application application, LaunchTarget target) {
-
+      Application application, LaunchTarget target) {
     List<LaunchParticipant> participants = [];
     launchParticipants.forEach((launchParticipant) {
       if (launchParticipant.canParticipate(application, target)) {
@@ -236,7 +236,8 @@ class Application {
 
   Application(this.primaryResource, this.appType);
 
-  String get name => primaryResource.name;
+  String get name => appType == ApplicationType.CHROME_APP ?
+      primaryResource.project.name : primaryResource.name;
 
   String getProperty(String key) => _properties[key];
 
@@ -514,7 +515,7 @@ class ChromeAppRemoteLaunchHandler extends LaunchTargetHandler {
  * machine.
  */
 class WebAppLocalLaunchHandler extends LaunchTargetHandler {
-  //final int preferredPort = 8000;
+  final int preferredPort = 51792;
 
   final LaunchManager launchManager;
   final Workspace workspace;
@@ -528,7 +529,7 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
 
   WebAppLocalLaunchHandler(this.launchManager, this.workspace, this.services,
       this.pubManager, this.bowerManager, Notifier notifier) {
-    _createServer().then((s) {
+    _createServer(preferredPort).then((s) {
       server = s;
 
       CompilerService compiler = services.getService("compiler");
@@ -545,12 +546,15 @@ class WebAppLocalLaunchHandler extends LaunchTargetHandler {
     });
   }
 
-  Future<PicoServer> _createServer() {
-//    // Try a preferred port.
-//    return PicoServer.createServer(preferredPort).catchError((e) {
-      // Fall back to any port.
-      return PicoServer.createServer();
-//    });
+  Future<PicoServer> _createServer(int port) {
+    return PicoServer.createServer(port).then((server) {
+      return server;
+    }).catchError((error) {
+      _logger.info('could not open a port on ${port}');
+      return PicoServer.createServer().then((server) {
+        return server;
+      });
+    });
   }
 
   String get name => 'Web app';
@@ -604,7 +608,7 @@ class  WebAppRemoteLaunchHandler extends LaunchTargetHandler {
             '${_getUrlFor(hostIP, server, application.primaryResource)}. You '
             'may need to set up port forwarding from your mobile device to port '
             '${server.port}.\nThe Dart Content Shell application can be found '
-            'in the the Dart SDK (www.dartlang.org).');
+            'in the Dart SDK, available at www.dartlang.org.');
       } else {
         _notifier.showMessage('Mobile Web Deploy',
             'Please start Chrome on your connected mobile device and point it to '
@@ -672,29 +676,51 @@ class DartChromeAppParticipant extends LaunchParticipant {
 
   bool canParticipate(Application application, LaunchTarget launchTarget) {
     if (application.appType == ApplicationType.CHROME_APP && application.isDart) {
-      // If deploying the app, we always compile to JavaScript. If running it
-      // locally, we only compile if the current runtime is not Dartium.
-      if (launchTarget == LaunchTarget.REMOTE) {
-        return true;
-      } else if (launchTarget == LaunchTarget.LOCAL) {
-        return isDart2js();
-      }
+      return true;
+    } else {
+      return false;
     }
-
-    return false;
   }
 
   Future<bool> run(Application application, LaunchTarget launchTarget) {
-    // TODO: implement
+    bool compileToJs = false;
+
+    // If deploying the app, we always compile to JavaScript. If running it
+    // locally, we only compile if the current runtime is not Dartium.
+    if (launchTarget == LaunchTarget.REMOTE) {
+      compileToJs = true;
+    } else if (launchTarget == LaunchTarget.LOCAL) {
+      compileToJs = isDart2js();
+    }
+
+    // Copy the /packages directory to /container/packages. Then optionally
+    // compile the Dart code.
+
+    return _copyPackages(application.primaryResource).then((_) {
+      if (compileToJs) {
+        return _compileToJs(application, launchTarget);
+      }
+    }).then((_) {
+      // Continue the deploy.
+      return true;
+    }).catchError((e) {
+        // Show an error message.
+        _notifier.showMessage('Error Compiling File', '${e}');
+
+      // Cancel the deploy.
+      return false;
+    });
+  }
+
+  Future _compileToJs(Application application, LaunchTarget target) {
+    Container container = application.primaryResource;
 
     // We need to parse the manifest, locate the entry point js script, parse
-    // that to find the starting html file, parse that to find the dart file to
+    // that to find the starting html file, parse that to find the Dart file to
     // compile.
 
     // Or, find all html files in the current directory. Look through them for
-    // likely dart scripts to compile.
-    Container container = application.primaryResource;
-
+    // likely Dart scripts to compile.
     Iterable<File> htmlFiles = container.getChildren().where(
         (child) => child.isFile && isHtmlFilename(child.name));
 
@@ -707,28 +733,27 @@ class DartChromeAppParticipant extends LaunchParticipant {
     }).then((_) {
       if (dartFiles.isEmpty) return true;
 
-      // TODO: If there is more then 1, what do we do?
+      // TODO(devoncarew): If there is more then 1, what do we do?
       CompilerService compiler = _services.getService("compiler");
       file = dartFiles.first;
 
-      // TODO: We'll want feedback when compiling.
-      print('Compiling ${file.path}...');
+      if (!_dartFileUpToDate(file, csp: true)) {
+        // Show progress for the compile.
+        Completer completer = new Completer();
+        ProgressJob job = new ProgressJob('Compiling ${file.name}…', completer);
+        container.workspace.jobManager.schedule(job);
 
-      return compiler.compileFile(file, csp: true);
-    }).then((CompileResult r) {
-      result = r;
-      if (!result.getSuccess()) {
-        // Show an error message.
-        _notifier.showMessage('Error Compiling ${file.name}', '${result}');
+        return compiler.compileFile(file, csp: true).then((CompileResult r) {
+          result = r;
 
-        // And cancel the deploy.
-        return false;
+          if (!result.getSuccess()) throw result;
+
+          String newFileName = '${file.name}.precompiled.js';
+          return getCreateFile(file.parent, newFileName);
+        }).then((File newFile) {
+          return newFile.setContents(result.output);
+        }).whenComplete(() => completer.complete());
       }
-
-      String newFileName = '${file.name}.precompiled.js';
-      return getCreateFile(file.parent, newFileName);
-    }).then((File newFile) {
-      return newFile.setContents(result.output);
     }).then((_) {
       return true;
     });
@@ -754,6 +779,20 @@ class DartChromeAppParticipant extends LaunchParticipant {
     results.addAll(matches.map((match) => match.group(1)));
 
     return results;
+  }
+
+  /**
+   * Copy any packages/ directory from the root of the project to the given
+   * `container` directory.
+   */
+  Future _copyPackages(Container container) {
+    Resource r = container.project.getChild(pubProperties.packagesDirName);
+
+    if (r is Container) {
+      return copyResource(r, container);
+    } else {
+      return new Future.value();
+    }
   }
 }
 
@@ -969,9 +1008,11 @@ class Dart2JsServlet extends PicoServlet {
     Stopwatch stopwatch = new Stopwatch()..start();
     Completer completer = new Completer();
 
-    file.workspace.builderManager.jobManager.schedule(
+    file.workspace.jobManager.schedule(
         new ProgressJob('Compiling ${file.name}…', completer));
 
+    // TODO(devoncarew): Cache the compiled results. Re-use if this file is
+    // requested again and the dependencies haven't changed.
     return compiler.compileFile(file).then((CompileResult result) {
       if (!result.hasOutput) {
         // Display a message to the user. In the future, we may want to write
@@ -1035,4 +1076,20 @@ String _convertToJavaScript(String text) {
     div.innerHTML = '${text}';
     document.body.appendChild(div);
 """;
+}
+
+/**
+ * A course check to see if the compiled Javascript for the given Dart file is
+ * up to date wrt its source. This currently just checks the timestamp of all
+ * the Dart source in the project. We could narrow this down in the future if
+ * we wanted to use the analysis engine. This would have performance / cost
+ * issues however.
+ */
+bool _dartFileUpToDate(File file, {bool csp: false}) {
+  String fileName = '${file.name}${csp ? ".precompiled" : ""}.js';
+  File jsFile = file.parent.getChild(fileName);
+
+  // TODO(devoncarew): Do we need to skip secondary package files?
+  return isUpToDate(jsFile, file.project,
+      (File file) => file.name.endsWith('.dart'));
 }
