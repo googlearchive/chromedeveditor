@@ -21,6 +21,7 @@ import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
 import 'lib/preferences.dart';
+import 'lib/status.dart';
 import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {
@@ -122,11 +123,13 @@ class SparkPolymerDialog implements Dialog {
 class SparkPolymer extends Spark {
   SparkPolymerUI _ui;
 
-  Future openFolder(chrome.DirectoryEntry entry) {
+  Future<SparkJobStatus> openFolder(chrome.DirectoryEntry entry) {
     return _beforeSystemModal()
         .then((_) => super.openFolder(entry))
-        .then((_) => _systemModalComplete())
-        .catchError((e) => _systemModalComplete());
+        .then((status) {
+          _systemModalComplete();
+          return status;
+        }).catchError((e) => _systemModalComplete());
   }
 
   Future openFile() {
@@ -136,8 +139,8 @@ class SparkPolymer extends Spark {
         .catchError((e) => _systemModalComplete());
   }
 
-  Future importFolder([List<ws.Resource> resources,
-                       chrome.DirectoryEntry entry]) {
+  Future<SparkJobStatus> importFolder([List<ws.Resource> resources,
+                                      chrome.DirectoryEntry entry]) {
     return _beforeSystemModal()
         .then((_) => super.importFolder(resources, entry))
         .whenComplete(() => _systemModalComplete());
