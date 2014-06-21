@@ -13,6 +13,7 @@ import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
 import 'jobs.dart';
+import 'status.dart';
 import 'tcp.dart' as tcp;
 
 const int _DEFAULT_TESTPORT = 5120;
@@ -129,7 +130,7 @@ class _TestJob extends Job {
   _TestJob(this.testDriver, Completer completer)
       : super("Running tests…", completer);
 
-  Future<Job> run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name);
 
     unittest.runTests();

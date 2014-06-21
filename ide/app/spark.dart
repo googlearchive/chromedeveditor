@@ -39,6 +39,7 @@ import 'lib/platform_info.dart';
 import 'lib/preferences.dart' as preferences;
 import 'lib/services.dart';
 import 'lib/scm.dart';
+import 'lib/status.dart';
 import 'lib/templates/templates.dart';
 import 'lib/tests.dart';
 import 'lib/utils.dart';
@@ -520,7 +521,7 @@ abstract class Spark
     });
   }
 
-  Future openFolder(chrome.DirectoryEntry entry) {
+  Future<SparkJobStatus> openFolder(chrome.DirectoryEntry entry) {
     _OpenFolderJob job = new _OpenFolderJob(entry, this);
     return jobManager.schedule(job);
   }
@@ -1696,7 +1697,7 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
       resource = context.first;
     }
 
-    Completer completer = new Completer();
+    Completer<SparkJobStatus> completer = new Completer<SparkJobStatus>();
     ProgressJob job = new ProgressJob("Running application…", completer);
     spark.launchManager.performLaunch(resource, LaunchTarget.LOCAL).then((_) {
       completer.complete();
@@ -1744,7 +1745,9 @@ abstract class PackageManagementAction
       resource = resource.parent;
     }
 
-    spark.jobManager.schedule(_createJob(resource as ws.Folder));
+    spark.jobManager.schedule(_createJob(resource as ws.Folder)).then((status) {
+      // TODO(grv): Take action on the returned status.
+    });
   }
 
   String get category => 'application';
@@ -3167,7 +3170,7 @@ class _GitPullJob extends Job {
 
   _GitPullJob(this.gitOperations, this.spark) : super("Pulling…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     // TODO: We'll want a way to indicate to the user what files changed and if
@@ -3185,7 +3188,7 @@ class _GitAddJob extends Job {
 
   _GitAddJob(this.gitOperations, this.files, this.spark) : super("Adding…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
     return gitOperations.addFiles(files).then((_) {
     });
@@ -3204,7 +3207,7 @@ class _GitBranchJob extends Job {
     _branchName = branchName;
   }
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     return gitOperations.createBranch(_branchName, _sourceBranchName).then((_) {
@@ -3228,7 +3231,7 @@ class _GitCommitJob extends Job {
   _GitCommitJob(this.gitOperations, this._userName, this._userEmail,
       this._commitMessage, this.spark) : super("Committing…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
     return gitOperations.commit(_userName, _userEmail, _commitMessage);
   }
@@ -3244,7 +3247,7 @@ class _GitCheckoutJob extends Job {
     _branchName = branchName;
   }
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
     return gitOperations.checkoutBranch(_branchName);
   }
@@ -3259,7 +3262,7 @@ class _OpenFolderJob extends Job {
     _entry = entry;
   }
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     return spark.workspace.link(
@@ -3296,7 +3299,7 @@ class _GitPushTask {
   _GitPushTask(this.gitOperations, this.username, this.password, this.spark,
       this.monitor);
 
-  Future run() => gitOperations.push(username, password);
+  Future<SparkJobStatus> run() => gitOperations.push(username, password);
 }
 
 abstract class PackageManagementJob extends Job {
@@ -3307,7 +3310,7 @@ abstract class PackageManagementJob extends Job {
   PackageManagementJob(this._spark, this._container, this._commandName) :
       super('Getting packages…');
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     return _run().then((_) {
@@ -3355,7 +3358,7 @@ class CompileDartJob extends Job {
   CompileDartJob(this.spark, this.file, String fileName) :
       super('Compiling ${fileName}…');
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
     CompilerService compiler = spark.services.getService("compiler");
@@ -3386,7 +3389,7 @@ class ResourceRefreshJob extends Job {
 
   ResourceRefreshJob(this.resources) : super('Refreshing…');
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     List<ws.Project> projects = resources.map((r) => r.project).toSet().toList();
 
     monitor.start('', projects.length);
@@ -3597,7 +3600,7 @@ class _WebStorePublishJob extends Job {
   _WebStorePublishJob(this.spark, this._container, this._appID)
       : super("Publishing to Chrome Web Store…");
 
-  Future run(ProgressMonitor monitor) {
+  Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, _appID == null ? 5 : 6);
 
     if (_container == null) {
