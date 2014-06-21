@@ -1319,7 +1319,8 @@ abstract class SparkActionWithStatusDialog extends SparkActionWithProgressDialog
    * Show the status dialog at least for 3 seconds. The dialog is closed when
    * the given future [f] is completed.
    */
-  void _waitForJob(String title, String progressMessage, Future<SparkJobStatus> f) {
+  void _waitForJob(
+      String title, String progressMessage, Future<SparkJobStatus> f) {
     _dialog.dialog.headerTitle = title;
     _setProgressMessage(progressMessage);
     _toggleProgressVisible(true);
@@ -3214,7 +3215,8 @@ class _GitAddJob extends Job {
   Future<SparkJobStatus> run(ProgressMonitor monitor) {
     monitor.start(name, 1);
     return gitOperations.addFiles(files).then((_) {
-      return new SparkJobStatus(statusCode: SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS);
+      return new SparkJobStatus(
+          statusCode: SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS);
     });
   }
 }
