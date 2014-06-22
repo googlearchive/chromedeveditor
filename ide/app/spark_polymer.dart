@@ -21,7 +21,6 @@ import 'lib/event_bus.dart';
 import 'lib/jobs.dart';
 import 'lib/platform_info.dart';
 import 'lib/preferences.dart';
-import 'lib/status.dart';
 import 'lib/workspace.dart' as ws;
 
 class _TimeLogger {

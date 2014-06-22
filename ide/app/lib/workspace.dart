@@ -20,7 +20,6 @@ import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/pub_properties.dart';
 import 'preferences.dart';
-import 'status.dart';
 import 'utils.dart';
 
 final Logger _logger = new Logger('spark.workspace');
