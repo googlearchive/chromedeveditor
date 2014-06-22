@@ -144,7 +144,7 @@ class _BuildJob extends Job {
       _logger.severe('Exception from build manager', e, st);
     }).whenComplete(() {
       done(new SparkJobStatus(
-          statusCode: SparkStatusCodes.SPARK_JOB_BUILD_SUCCESS));
+          code: SparkStatusCodes.SPARK_JOB_BUILD_SUCCESS));
     });
   }
 }

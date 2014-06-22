@@ -545,7 +545,7 @@ abstract class Spark
     ws.Folder folder = resources.first;
     return folder.importDirectoryEntry(entry).then((_) {
       return new SparkJobStatus(
-          statusCode: SparkStatusCodes.SPARK_JOB_IMPORT_FOLDER_SUCCESS);
+          code: SparkStatusCodes.SPARK_JOB_IMPORT_FOLDER_SUCCESS);
     }).catchError((e) {
       showErrorMessage('Error while importing folder', exception: e);
     });
@@ -3234,7 +3234,7 @@ class _GitPullJob extends Job {
       // there were any merge problems.
       return gitOperations.pull(username, password).then((_) {
         return new SparkJobStatus(
-            statusCode: SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS);
+            code: SparkStatusCodes.SPARK_JOB_GIT_PULL_SUCCESS);
       }).catchError((e) {
         e = SparkException.fromException(e);
         spark.showErrorMessage('Git Pull Status', exception: e);
@@ -3254,7 +3254,7 @@ class _GitAddJob extends Job {
     monitor.start(name, 1);
     return gitOperations.addFiles(files).then((_) {
       return new SparkJobStatus(
-          statusCode: SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS);
+          code: SparkStatusCodes.SPARK_JOB_GIT_ADD_SUCCESS);
     });
   }
 }
@@ -3309,7 +3309,7 @@ class _GitCommitJob extends Job {
     monitor.start(name, 1);
     return gitOperations.commit(_userName, _userEmail, _commitMessage).then((_) {
       return new SparkJobStatus(
-          statusCode: SparkStatusCodes.SPARK_JOB_GIT_COMMIT_SUCCESS);
+          code: SparkStatusCodes.SPARK_JOB_GIT_COMMIT_SUCCESS);
     });
   }
 }

@@ -20,6 +20,7 @@ import 'enum.dart';
 import 'jobs.dart';
 import 'package_mgmt/pub_properties.dart';
 import 'preferences.dart';
+import 'status.dart';
 import 'utils.dart';
 
 final Logger _logger = new Logger('spark.workspace');
@@ -430,7 +431,7 @@ class Workspace extends Container {
     }, onError: (e) {
         _logger.warning('Exception in workspace restore sync file system', e);
     }).timeout(new Duration(seconds: 20)).whenComplete(() {
-      progressJob.done(null);
+      progressJob.done(new SparkJobStatus(code: SparkStatusCodes.SPARK_JOB_STATUS_OK));
       _whenAvailableSyncFs.complete(this);
     });
   }

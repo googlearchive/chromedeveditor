@@ -8,8 +8,7 @@ import 'exception.dart';
 
 class SparkJobStatus {
   String _message;
-  String header;
-  String statusCode = SparkStatusCodes.SPARK_JOB_STATUS_UNKNOWN;
+  String code = SparkStatusCodes.SPARK_JOB_STATUS_UNKNOWN;
 
   /// Indicates whether the job was successful or failed.
   bool success = true;
@@ -17,14 +16,14 @@ class SparkJobStatus {
   /// The underlining exception object in case the job failed.
   SparkException exception;
 
-  get message => _message;
+  get String message => _message;
 
   set message(String msg) => _message = msg;
 
-  SparkJobStatus({this.statusCode, this.header, String message}) {
+  SparkJobStatus({this.code, String message}) {
     if (message == null) {
       try {
-        _message = getStatusMessageFromCode(this.statusCode);
+        _message = getStatusMessageFromCode(this.code);
       } catch (e) {
         // Do Nothing.
       }
@@ -53,6 +52,8 @@ class SparkJobStatus {
 }
 
 class SparkStatusCodes {
+
+  static const String SPARK_JOB_STATUS_OK = "spark.job.status_ok";
   static const String SPARK_JOB_STATUS_UNKNOWN = "spark.job.status_unknown";
 
   static const String SPARK_JOB_IMPORT_FOLDER_SUCCESS = "spark.job.import.folder_success";

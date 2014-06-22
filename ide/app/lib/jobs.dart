@@ -129,7 +129,7 @@ class JobManagerEvent {
 abstract class Job {
   final String name;
 
-  Completer _completer;
+  Completer<SparkJobStatus> _completer;
 
   Completer get completer => _completer;
 
