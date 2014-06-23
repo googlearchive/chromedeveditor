@@ -468,9 +468,7 @@ class AceManager {
       }
     });
 
-    /*%TRACE3*/ print("(4> 6/23/14): parentElement.onKeyUp.listen!" + parentElement.id); // TRACE%
     parentElement.onKeyUp.listen((event) {
-      /*%TRACE3*/ print("(4> 6/23/14): onKeyUp!"); // TRACE%
       if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
           (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
         _setLinkingMarker(null);
@@ -579,7 +577,7 @@ class AceManager {
 
     if (markerRange != null) {
       _markerSession = currentSession;
-      _linkingMarkerId = currentSession.addMarker(markerRange,
+      _linkingMarkerId = _markerSession.addMarker(markerRange,
           "ace_link_marker", type: ace.Marker.TEXT);
 
       // If we are hovering, we can assume that the mouse is over the identifier.
