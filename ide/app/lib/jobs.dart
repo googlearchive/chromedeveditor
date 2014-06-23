@@ -32,7 +32,7 @@ class JobManager {
     _waitingJobs.add(job);
 
     if (!isJobRunning) {
-      _scheduleNextJob();
+      _runNextJob();
     }
     return completer.future;
   }
@@ -47,33 +47,30 @@ class JobManager {
    */
   Stream<JobManagerEvent> get onChange => _controller.stream;
 
-  void _scheduleNextJob() {
-    if (!_waitingJobs.isEmpty) {
-      Job job = _waitingJobs.removeAt(0);
-      Timer.run(() => _runNextJob(job));
-    }
-  }
+  void _runNextJob() {
+    if (_waitingJobs.isEmpty) return;
 
-  void _runNextJob(Job job) {
-    _runningJob = job;
+    _runningJob = _waitingJobs.removeAt(0);
 
-    _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
-    _jobStarted(_runningJob);
+    Timer.run(() {
+      _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
+      _jobStarted(_runningJob);
 
-    try {
-      _runningJob.run(monitor).catchError((e, st) {
-        _runningJob.completer.completeError(e);
-      }).whenComplete(() {
-        _jobFinished(_runningJob);
-        if (_runningJob != null) _runningJob.done();
+      try {
+        _runningJob.run(monitor).catchError((e, st) {
+          _runningJob.completer.completeError(e);
+        }).whenComplete(() {
+          _jobFinished(_runningJob);
+          if (_runningJob != null) _runningJob.done();
+          _runningJob = null;
+          _runNextJob();
+        });
+      } catch (e, st) {
+        _logger.severe('Error running job ${_runningJob}', e, st);
         _runningJob = null;
-        _scheduleNextJob();
-      });
-    } catch (e, st) {
-      _logger.severe('Error running job ${_runningJob}', e, st);
-      _runningJob = null;
-      _scheduleNextJob();
-    }
+        _runNextJob();
+      }
+    });
   }
 
   void _jobStarted(Job job) {
