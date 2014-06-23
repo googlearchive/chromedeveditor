@@ -418,7 +418,10 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
+
+  ace.EditSession _markerSession = null;
   int _linkingMarkerId;
+
 
   AceManager(this.parentElement,
              this.delegate,
@@ -457,7 +460,7 @@ class AceManager {
       ace.Token token = event.token;
 
       if (_linkingMarkerId != null) {
-        currentSession.removeMarker(_linkingMarkerId);
+        _markerSession.removeMarker(_linkingMarkerId);
       }
 
       if (token != null && token.type == "identifier") {
@@ -469,6 +472,7 @@ class AceManager {
         ace.Point endPosition = new ace.Point(event.position.row, endColumn);
         ace.Range markerRange =
             new ace.Range.fromPoints(startPosition, endPosition);
+        _markerSession = currentSession;
         _linkingMarkerId = currentSession.addMarker(markerRange,
             "ace_link_marker", type: ace.Marker.TEXT);
       } else {
@@ -482,7 +486,7 @@ class AceManager {
       if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
           (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
         if (_linkingMarkerId != null) {
-          currentSession.removeMarker(_linkingMarkerId);
+          _markerSession.removeMarker(_linkingMarkerId);
         }
         contentElement.style.cursor = null;
       }
