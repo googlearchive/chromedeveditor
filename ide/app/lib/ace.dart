@@ -449,6 +449,7 @@ class AceManager {
         _aceEditor.renderer.containerElement.querySelector(".ace_content");
 
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
+      /*%TRACE3*/ print("(4> 6/23/14): onLinkHover!"); // TRACE%
       if (!DartEditor.isDartFile(currentFile)) {
         return;
       }
@@ -475,7 +476,9 @@ class AceManager {
       }
     });
 
+    /*%TRACE3*/ print("(4> 6/23/14): parentElement.onKeyUp.listen!" + parentElement.id); // TRACE%
     parentElement.onKeyUp.listen((event) {
+      /*%TRACE3*/ print("(4> 6/23/14): onKeyUp!"); // TRACE%
       if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
           (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
         if (_linkingMarkerId != null) {
