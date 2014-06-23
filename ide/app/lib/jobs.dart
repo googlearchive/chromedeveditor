@@ -50,30 +50,32 @@ class JobManager {
   void _scheduleNextJob() {
     if (!_waitingJobs.isEmpty) {
       Job job = _waitingJobs.removeAt(0);
-      Timer.run(() => _runNextJob(job));
+      _runNextJob(job);
     }
   }
 
   void _runNextJob(Job job) {
     _runningJob = job;
 
-    _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
-    _jobStarted(_runningJob);
+    Timer.run(() {
+      _ProgressMonitorImpl monitor = new _ProgressMonitorImpl(this, _runningJob);
+      _jobStarted(_runningJob);
 
-    try {
-      _runningJob.run(monitor).catchError((e, st) {
-        _runningJob.completer.completeError(e);
-      }).whenComplete(() {
-        _jobFinished(_runningJob);
-        if (_runningJob != null) _runningJob.done();
+      try {
+        _runningJob.run(monitor).catchError((e, st) {
+          _runningJob.completer.completeError(e);
+        }).whenComplete(() {
+          _jobFinished(_runningJob);
+          if (_runningJob != null) _runningJob.done();
+          _runningJob = null;
+          _scheduleNextJob();
+        });
+      } catch (e, st) {
+        _logger.severe('Error running job ${_runningJob}', e, st);
         _runningJob = null;
         _scheduleNextJob();
-      });
-    } catch (e, st) {
-      _logger.severe('Error running job ${_runningJob}', e, st);
-      _runningJob = null;
-      _scheduleNextJob();
-    }
+      }
+    });
   }
 
   void _jobStarted(Job job) {
