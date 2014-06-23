@@ -6,6 +6,7 @@ library spark.package_mgmt;
 
 import 'dart:async';
 
+import '../jobs.dart';
 import '../builder.dart';
 import '../workspace.dart';
 
@@ -68,8 +69,8 @@ abstract class PackageManager {
   PackageBuilder getBuilder();
   PackageResolver getResolverFor(Project project);
 
-  Future installPackages(Folder container);
-  Future upgradePackages(Folder container);
+  Future installPackages(Folder container, ProgressMonitor monitor);
+  Future upgradePackages(Folder container, ProgressMonitor monitor);
 
   /**
    * Return `true` or `null` if all packages are installed. Otherwise, return a

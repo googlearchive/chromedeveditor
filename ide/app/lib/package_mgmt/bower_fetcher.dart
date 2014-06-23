@@ -18,6 +18,7 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 
 import '../enum.dart';
+import '../jobs.dart';
 import '../scm.dart';
 import '../../spark_flags.dart';
 
@@ -43,6 +44,7 @@ class BowerFetcher {
 
   final chrome.DirectoryEntry _packagesDir;
   final String _packageSpecFileName;
+  final ProgressMonitor _monitor;
 
   Map<String, _Package> _allDeps = {};
 
@@ -50,7 +52,7 @@ class BowerFetcher {
   final _unresolvedDepsComments = new Set<String>();
   final _ignoredDepsComments = new Set<String>();
 
-  BowerFetcher(this._packagesDir, this._packageSpecFileName);
+  BowerFetcher(this._packagesDir, this._packageSpecFileName, this._monitor);
 
   Future fetchDependencies(chrome.ChromeFileEntry specFile, FetchMode mode) {
     return _gatherAllDeps(
@@ -64,6 +66,8 @@ class BowerFetcher {
   }
 
   Future _gatherAllDeps(Future<String> specGetter, String specDesc) {
+    _monitor.start("Getting Bower packages…");
+
     return specGetter.then((String spec) {
       List<_Package> deps;
       try {
@@ -94,10 +98,14 @@ class BowerFetcher {
   }
 
   Future _fetchAllDeps(FetchMode mode) {
+    _monitor.start("Getting Bower packages…", _allDeps.length);
+
     List<Future> futures = [];
     _allDeps.values.forEach((_Package package) {
-      futures.add(
-          _fetchPackage(package, mode).catchError((e) => _logger.warning(e)));
+      final Future f = _fetchPackage(package, mode)
+          .catchError((e) => _logger.warning(e))
+          .then((_) => _monitor.worked(1));
+      futures.add(f);
     });
     return Future.wait(futures);
   }

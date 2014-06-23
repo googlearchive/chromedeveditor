@@ -3358,42 +3358,46 @@ abstract class PackageManagementJob extends Job {
   Future run(ProgressMonitor monitor) {
     monitor.start(name, 1);
 
-    return _run().then((_) {
+    return _run(monitor).then((_) {
       _spark.showSuccessMessage("Successfully ran $_commandName");
     }).catchError((e) {
       _spark.showErrorMessage("Error while running $_commandName", exception: e);
     });
   }
 
-  Future _run();
+  Future _run(ProgressMonitor monitor);
 }
 
 class PubGetJob extends PackageManagementJob {
   PubGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub get');
 
-  Future _run() => _spark.pubManager.installPackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.pubManager.installPackages(_container, monitor);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
   PubUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub upgrade');
 
-  Future _run() => _spark.pubManager.upgradePackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.pubManager.upgradePackages(_container, monitor);
 }
 
 class BowerGetJob extends PackageManagementJob {
   BowerGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'bower install');
 
-  Future _run() => _spark.bowerManager.installPackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.bowerManager.installPackages(_container, monitor);
 }
 
 class BowerUpgradeJob extends PackageManagementJob {
   BowerUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'bower upgrade');
 
-  Future _run() => _spark.bowerManager.upgradePackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.bowerManager.upgradePackages(_container, monitor);
 }
 
 class CompileDartJob extends Job {
