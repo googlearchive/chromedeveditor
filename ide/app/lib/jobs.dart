@@ -9,6 +9,8 @@ import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'enum.dart';
+
 final Logger _logger = new Logger('spark.jobs');
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
@@ -81,13 +83,11 @@ class JobManager {
   }
 
   void _monitorWorked(_ProgressMonitorImpl monitor, Job job) {
-    _controller.add(new JobManagerEvent(this, job,
-        indeterminate: monitor.indeterminate, progress: monitor.progress));
+    _controller.add(new JobManagerEvent(this, job, monitor: monitor));
   }
 
   void _monitorDone(_ProgressMonitorImpl monitor, Job job) {
-    _controller.add(new JobManagerEvent(this, job,
-        indeterminate: monitor.indeterminate, progress: monitor.progress));
+    _controller.add(new JobManagerEvent(this, job, monitor: monitor));
   }
 
   void _jobFinished(Job job) {
@@ -101,11 +101,14 @@ class JobManagerEvent {
 
   final bool started;
   final bool finished;
-  final bool indeterminate;
-  final double progress;
+  final ProgressMonitor monitor;
+
+  bool get indeterminate => monitor.indeterminate;
+
+  double get progress => monitor.progress;
 
   JobManagerEvent(this.manager, this.job,
-      {this.started: false, this.finished: false, this.indeterminate: false, this.progress: 1.0});
+      {this.started: false, this.finished: false, this.monitor});
 
   String toString() {
     if (started) {
@@ -113,7 +116,7 @@ class JobManagerEvent {
     } else if (finished) {
       return '${job.name} finished';
     } else {
-      return '${job.name} ${(progress * 100).toStringAsFixed(1)}%';
+      return '${monitor.title} ${monitor.progressAsString}';
     }
   }
 }
@@ -167,6 +170,16 @@ class ProgressJob extends Job {
   }
 }
 
+class ProgressFormat extends Enum<String> {
+  const ProgressFormat._(String value) : super(value);
+  String get enumName => 'ProgressKind';
+
+  static const NONE = const ProgressFormat._('NONE');
+  static const DOUBLE = const ProgressFormat._('DOUBLE');
+  static const PERCENTAGE = const ProgressFormat._('PERCENTAGE');
+  static const N_OUT_OF_M = const ProgressFormat._('N_OUT_OF_M');
+}
+
 /**
  * Outlines a progress monitor with given [title] (the title of the progress
  * monitor), and [maxWork] (the [work] value determining when progress is
@@ -179,6 +192,7 @@ abstract class ProgressMonitor {
   bool _cancelled = false;
   Completer _cancelledCompleter;
   StreamController _cancelController = new StreamController.broadcast();
+  ProgressFormat _kind;
 
   // The job itself can listen to the cancel event, and do the appropriate
   // action.
@@ -188,10 +202,13 @@ abstract class ProgressMonitor {
    * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
    * when work is completed)
    */
-  void start(String title, [num maxWork = 0]) {
-    this._title = title;
-    this._maxWork = maxWork;
+  void start(String title, [num maxWork, ProgressFormat kind]) {
+    _title = title;
+    _maxWork = maxWork;
+    _kind = kind;
   }
+
+  String get title => _title;
 
   /**
    * The current value of work complete.
@@ -212,6 +229,16 @@ abstract class ProgressMonitor {
    * The total progress of work complete (a double from 0 to 1).
    */
   double get progress => _work / _maxWork;
+
+  String get progressAsString {
+    switch (_kind) {
+      case ProgressFormat.NONE: return '';
+      case ProgressFormat.DOUBLE: return progress.toString();
+      case ProgressFormat.PERCENTAGE: return '${(progress * 100).toStringAsFixed(0)}%';
+      case ProgressFormat.N_OUT_OF_M: return '$_work of $_maxWork';
+    }
+    return '';
+  }
 
   /**
    * Adds [amount] to [work] completed (but no greater than maxWork).
@@ -278,8 +305,10 @@ class _ProgressMonitorImpl extends ProgressMonitor {
 
   _ProgressMonitorImpl(this.manager, this.job);
 
-  void start(String title, [num workAmount = 0]) {
-    super.start(title, workAmount);
+  void start(String title,
+             [num workAmount = 0,
+              ProgressFormat kind = ProgressFormat.PERCENTAGE]) {
+    super.start(title, workAmount, kind);
 
     manager._monitorWorked(this, job);
   }
