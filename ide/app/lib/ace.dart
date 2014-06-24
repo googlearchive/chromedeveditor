@@ -191,7 +191,6 @@ class TextEditor extends Editor {
    * fire a change event.
    */
   void _replaceContents(String newContents) {
-    /*%TRACE3*/ print("(4> 6/23/14): _replaceContents!"); // TRACE%
     _aceSubscription.cancel();
 
     try {
