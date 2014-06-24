@@ -97,17 +97,22 @@ class EditorArea extends TabView {
   final EditorProvider editorProvider;
   final Map<Resource, EditorTab> _tabOfFile = {};
 
+  final StreamController<ace.EditSession> _editorSelectedController =
+      new StreamController.broadcast();
+  final StreamController<String> _nameController = new StreamController.broadcast();
+
+
   final Workspace _workspace;
 
   bool _allowsLabelBar = true;
 
-  StreamController<String> _nameController = new StreamController.broadcast();
 
   EditorArea(Element parentElement,
              this.editorProvider, this._workspace,
              {bool allowsLabelBar: true})
       : super(parentElement) {
     onClose.listen((EditorTab tab) => closeFile(tab.file));
+
     this.allowsLabelBar = allowsLabelBar;
     showLabelBar = true;
 
@@ -126,6 +131,7 @@ class EditorArea extends TabView {
   }
 
   Stream<String> get onNameChange => _nameController.stream;
+  Stream<ace.EditSession> get onEditorSelected => _editorSelectedController.stream;
 
   bool get allowsLabelBar => _allowsLabelBar;
   set allowsLabelBar(bool value) {
