@@ -14,6 +14,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'exception.dart';
+
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 final RegExp _imageFileTypes = new RegExp(r'\.(jpe?g|png|gif|ico)$',
@@ -204,7 +206,9 @@ Future<html.DirectoryEntry> getLocalDataDir(String name) {
 Future<String> getHostIP() {
   return chrome.system.network.getNetworkInterfaces().then(
       (List interfaces) {
-    if (interfaces.isEmpty) throw "Local IP address not available";
+    if (interfaces.isEmpty) {
+      throw new SparkException("Local IP address not available");
+    }
 
     // Use an IPv4 address if one is available.
     for (chrome.NetworkInterface net in interfaces) {

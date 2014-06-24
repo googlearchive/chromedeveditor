@@ -1718,7 +1718,6 @@ class ApplicationRunAction extends SparkAction implements ContextAction {
     }
 
     Completer completer = new Completer();
-    ProgressJob job = new ProgressJob("${_launchText} application…", completer);
     spark.launchManager.performLaunch(resource, _launchTarget).then((_) {
       completer.complete();
     }).catchError((e) {

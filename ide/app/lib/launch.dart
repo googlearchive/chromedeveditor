@@ -19,6 +19,7 @@ import 'package:logging/logging.dart';
 import 'apps/app_utils.dart';
 import 'developer_private.dart';
 import 'enum.dart';
+import 'exception.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
@@ -646,7 +647,8 @@ class PubLaunchParticipant extends LaunchParticipant {
     return pubManager.arePackagesInstalled(application.primaryResource.parent)
         .then((installed) {
       if (installed is String) {
-        // TODO: This should give the user the option of continuing the launch.
+        // TODO(devoncarew): This should give the user the option of continuing
+        // the launch.
         return notifier.showMessageAndWait(
           'Run',
           "The '${installed}' package is missing from the packages directory. "
@@ -705,8 +707,9 @@ class DartChromeAppParticipant extends LaunchParticipant {
       // Continue the deploy.
       return true;
     }).catchError((e) {
-        // Show an error message.
-        _notifier.showMessage('Error Compiling File', '${e}');
+      // Show an error message.
+      String message = e is SparkException ? e.message : '${e}';
+      _notifier.showMessage('Error Compiling File', message);
 
       // Cancel the deploy.
       return false;
@@ -734,7 +737,7 @@ class DartChromeAppParticipant extends LaunchParticipant {
     }).then((_) {
       if (dartFiles.isEmpty) return true;
 
-      // TODO(devoncarew): If there is more then 1, what do we do?
+      // TODO(devoncarew): If there is more then 1 file, what do we do?
       CompilerService compiler = _services.getService("compiler");
       file = dartFiles.first;
 
@@ -747,7 +750,7 @@ class DartChromeAppParticipant extends LaunchParticipant {
         return compiler.compileFile(file, csp: true).then((CompileResult r) {
           result = r;
 
-          if (!result.getSuccess()) throw result;
+          if (!result.getSuccess()) throw new SparkException('${result}');
 
           String newFileName = '${file.name}.precompiled.js';
           return getCreateFile(file.parent, newFileName);
@@ -1080,7 +1083,7 @@ String _convertToJavaScript(String text) {
 }
 
 /**
- * A course check to see if the compiled Javascript for the given Dart file is
+ * A coarse check to see if the compiled Javascript for the given Dart file is
  * up to date wrt its source. This currently just checks the timestamp of all
  * the Dart source in the project. We could narrow this down in the future if
  * we wanted to use the analysis engine. This would have performance / cost
