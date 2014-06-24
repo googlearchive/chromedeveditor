@@ -104,7 +104,9 @@ class BowerFetcher {
 
   Future _fetchAllDeps(FetchMode mode) {
     _monitor.start(
-        "Getting Bower packages…", _allDeps.length, ProgressFormat.N_OUT_OF_M);
+        "Getting Bower packages…",
+        maxWork: _allDeps.length,
+        format: ProgressFormat.N_OUT_OF_M);
 
     List<Future> futures = [];
     _allDeps.values.forEach((_Package package) {
