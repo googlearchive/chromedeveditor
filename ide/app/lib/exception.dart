@@ -104,7 +104,7 @@ class SparkException implements Exception {
 
       case GitErrorConstants.GIT_HTTP_CONN_RESET:
         return new SparkException(SparkErrorMessages.GIT_HTTP_CONN_RESET_MSG,
-            SparkErrorConstants.GIT_HTTP_CONN_RESET);
+            errorCode: SparkErrorConstants.GIT_HTTP_CONN_RESET);
 
     }
     return new SparkException(e.toString());
@@ -141,8 +141,8 @@ class SparkErrorConstants {
   static const String GIT_WORKING_TREE_NOT_CLEAN = "git.working_tree_not_clean";
   static const String GIT_SUBMODULES_NOT_YET_SUPPORTED =
       "git.submodules_not_yet_supported";
-      
-  static const String RUN_APP_NOT_FOUND_IN_CHROME = 
+
+  static const String RUN_APP_NOT_FOUND_IN_CHROME =
       "run.app_not_found_in_chrome";
 }
 
@@ -164,8 +164,8 @@ class SparkErrorMessages {
       "Repositories with sub modules are not yet supported.";
   static const String GIT_HTTP_CONN_RESET_MSG  = "The connection was reset by "
       "the server. This may happen when pushing commits with large changes.";
-      
+
   static const String RUN_APP_NOT_FOUND_IN_CHROME_MSG =
-      "It looks like the application failed to install in Chrome. "
-      "Were there any errors displayed by Chrome?";
+      "It looks like the application failed to get installed in Chrome. "
+      "Has Chrome displayed any errors?";
 }
