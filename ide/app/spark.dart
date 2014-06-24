@@ -2283,8 +2283,10 @@ class ProgressMonitorImpl extends ProgressMonitor {
 
   ProgressMonitorImpl(this._dialog);
 
-  void start(String title, [num maxWork = 0]) {
-    super.start(title, maxWork);
+  void start(String title,
+             {num maxWork: 0,
+              ProgressFormat format: ProgressFormat.PERCENTAGE}) {
+    super.start(title, maxWork: maxWork, format: format);
     _dialog._setProgressMessage(title == null ? '' : title);
   }
 }
@@ -3194,7 +3196,7 @@ class _GitPullJob extends Job {
   _GitPullJob(this.gitOperations, this.spark) : super("Pulling…");
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     return spark.syncPrefs.getValue("git-auth-info").then((String value) {
       String username;
@@ -3224,7 +3226,7 @@ class _GitAddJob extends Job {
   _GitAddJob(this.gitOperations, this.files, this.spark) : super("Adding…");
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
     return gitOperations.addFiles(files).then((_) {
     });
   }
@@ -3243,7 +3245,7 @@ class _GitBranchJob extends Job {
   }
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     return spark.syncPrefs.getValue("git-auth-info").then((String value) {
       String username;
@@ -3277,7 +3279,7 @@ class _GitCommitJob extends Job {
       this._commitMessage, this.spark) : super("Committing…");
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
     return gitOperations.commit(_userName, _userEmail, _commitMessage);
   }
 }
@@ -3293,7 +3295,7 @@ class _GitCheckoutJob extends Job {
   }
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
     return gitOperations.checkoutBranch(_branchName);
   }
 }
@@ -3308,7 +3310,7 @@ class _OpenFolderJob extends Job {
   }
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     return spark.workspace.link(
         new ws.FolderRoot(_entry)).then((ws.Resource resource) {
@@ -3356,44 +3358,48 @@ abstract class PackageManagementJob extends Job {
       super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
-    return _run().then((_) {
+    return _run(monitor).then((_) {
       _spark.showSuccessMessage("Successfully ran $_commandName");
     }).catchError((e) {
       _spark.showErrorMessage("Error while running $_commandName", exception: e);
     });
   }
 
-  Future _run();
+  Future _run(ProgressMonitor monitor);
 }
 
 class PubGetJob extends PackageManagementJob {
   PubGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub get');
 
-  Future _run() => _spark.pubManager.installPackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.pubManager.installPackages(_container, monitor);
 }
 
 class PubUpgradeJob extends PackageManagementJob {
   PubUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'pub upgrade');
 
-  Future _run() => _spark.pubManager.upgradePackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.pubManager.upgradePackages(_container, monitor);
 }
 
 class BowerGetJob extends PackageManagementJob {
   BowerGetJob(Spark spark, ws.Folder container) :
       super(spark, container, 'bower install');
 
-  Future _run() => _spark.bowerManager.installPackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.bowerManager.installPackages(_container, monitor);
 }
 
 class BowerUpgradeJob extends PackageManagementJob {
   BowerUpgradeJob(Spark spark, ws.Folder container) :
       super(spark, container, 'bower upgrade');
 
-  Future _run() => _spark.bowerManager.upgradePackages(_container);
+  Future _run(ProgressMonitor monitor) =>
+      _spark.bowerManager.upgradePackages(_container, monitor);
 }
 
 class CompileDartJob extends Job {
@@ -3404,7 +3410,7 @@ class CompileDartJob extends Job {
       super('Compiling ${fileName}…');
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, 1);
+    monitor.start(name, maxWork: 1);
 
     CompilerService compiler = spark.services.getService("compiler");
 
@@ -3437,7 +3443,7 @@ class ResourceRefreshJob extends Job {
   Future run(ProgressMonitor monitor) {
     List<ws.Project> projects = resources.map((r) => r.project).toSet().toList();
 
-    monitor.start('', projects.length);
+    monitor.start('', maxWork: projects.length);
 
     Completer completer = new Completer();
 
@@ -3646,7 +3652,7 @@ class _WebStorePublishJob extends Job {
       : super("Publishing to Chrome Web Store…");
 
   Future run(ProgressMonitor monitor) {
-    monitor.start(name, _appID == null ? 5 : 6);
+    monitor.start(name, maxWork: _appID == null ? 5 : 6);
 
     if (_container == null) {
       throw new SparkException('The manifest.json file of the application has not been found.');

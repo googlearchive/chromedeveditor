@@ -228,12 +228,12 @@ class SparkPolymer extends Spark {
 
     // Listen for job manager events.
     jobManager.onChange.listen((JobManagerEvent event) {
-      if (event.started) {
-        statusComponent.spinning = true;
-        statusComponent.progressMessage = event.job.name;
-      } else if (event.finished) {
+      if (event.finished) {
         statusComponent.spinning = false;
         statusComponent.progressMessage = null;
+      } else {
+        statusComponent.spinning = true;
+        statusComponent.progressMessage = event.toString();
       }
     });
   }
