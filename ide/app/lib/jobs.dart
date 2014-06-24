@@ -202,7 +202,10 @@ abstract class ProgressMonitor {
    * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
    * when work is completed)
    */
-  void start(String title, [num maxWork, ProgressFormat format]) {
+  void start(
+      String title,
+      {num maxWork: 0,
+       ProgressFormat format: ProgressFormat.PERCENTAGE}) {
     _title = title;
     _maxWork = maxWork;
     _format = format;
@@ -310,10 +313,11 @@ class _ProgressMonitorImpl extends ProgressMonitor {
 
   _ProgressMonitorImpl(this.manager, this.job);
 
-  void start(String title,
-             [num workAmount = 0,
-              ProgressFormat format = ProgressFormat.PERCENTAGE]) {
-    super.start(title, workAmount, format);
+  void start(
+      String title,
+      {num maxWork: 0,
+       ProgressFormat format: ProgressFormat.PERCENTAGE}) {
+    super.start(title, maxWork: maxWork, format: format);
 
     manager._monitorWorked(this, job);
   }

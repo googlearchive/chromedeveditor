@@ -83,7 +83,8 @@ class PubManager extends PackageManager {
       ProgressMonitor monitor) {
     // Fake the total amount of work, since we don't know it. When an update
     // comes from Tavern, just refresh the generic message w/o showing progress.
-    monitor.start("Getting Pub packages…", 0, ProgressFormat.NONE);
+    monitor.start(
+        "Getting Pub packages…", maxWork: 0, format: ProgressFormat.NONE);
 
     void handleLog(String line, String level) {
       _logger.info(line.trim());

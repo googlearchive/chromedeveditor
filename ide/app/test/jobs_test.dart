@@ -45,7 +45,7 @@ class MockJob extends Job {
   MockJob() : super("Mock job");
 
   Future run(ProgressMonitor monitor) {
-    monitor.start("Mock job...", 10);
+    monitor.start("Mock job...", maxWork: 10);
 
     return new Future(() {
       monitor.worked(1);
