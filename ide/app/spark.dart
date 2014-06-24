@@ -348,10 +348,11 @@ abstract class Spark
 
     editorManager.loaded.then((_) {
       List<ws.Resource> files = editorManager.files.toList();
-      editorManager.files.forEach((file) {
-        editorArea.selectFile(file, forceOpen: true, switchesTab: false,
+      Future editorsReady = Future.forEach(editorManager.files, (file) {
+        return editorArea.selectFile(file, forceOpen: true, switchesTab: false,
             replaceCurrent: false);
       });
+
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
         if (fileUuid == null) {
@@ -365,6 +366,10 @@ abstract class Spark
         }
         _openFile(resource);
       });
+
+      return editorsReady;
+    }).then((_) {
+      /*%TRACE3*/ print("(4> 6/23/14): Everything is loaded!"); // TRACE%
     });
   }
 
