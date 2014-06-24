@@ -886,8 +886,8 @@ class AceManager {
     return new NavigationLocation(currentFile, span);
   }
 
-  Future prepareForLinking(workspace.File file) {
-    return _analysisService.prepareForLinking(file.project);
+  Future prepareForLinking(workspace.Project project) {
+    return _analysisService.prepareForLinking(project);
   }
 }
 

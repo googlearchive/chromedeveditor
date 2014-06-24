@@ -356,8 +356,9 @@ abstract class Spark
       localPrefs.getValue('lastFileSelection').then((String fileUuid) {
         if (editorArea.tabs.isEmpty) return;
         editorArea.onSelected.listen((Tab tab) {
-          if (tab is AceEditorTab) {
-            Future declarationFuture = aceManager.prepareForLinking(tab.file);
+          if (tab is AceEditorTab && tab.file != null) {
+            Future declarationFuture =
+                aceManager.prepareForLinking(tab.file.project);
           }
         });
         if (fileUuid == null) {
