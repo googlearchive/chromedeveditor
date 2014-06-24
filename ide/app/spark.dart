@@ -784,7 +784,7 @@ abstract class Spark
 
   Future _selectFile(ws.Resource resource) {
     if (resource.isFile) {
-      return editorArea.selectFile(resource);
+      return editorArea.selectFile(resource, forceFocus: true);
     } else {
       _filesController.selectFile(resource);
       _filesController.setFolderExpanded(resource);

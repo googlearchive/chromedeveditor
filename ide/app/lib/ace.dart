@@ -418,6 +418,8 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
+
+  ace.EditSession _markerSession = null;
   int _linkingMarkerId;
 
   AceManager(this.parentElement,
@@ -445,9 +447,6 @@ class AceManager {
     _aceEditor.setOptions({'enableMultiselect' : false,
                            'enableLinking' : true});
 
-    html.DivElement contentElement =
-        _aceEditor.renderer.containerElement.querySelector(".ace_content");
-
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
       if (!DartEditor.isDartFile(currentFile)) {
         return;
@@ -455,12 +454,7 @@ class AceManager {
 
       ace.Token token = event.token;
 
-      if (_linkingMarkerId != null) {
-        currentSession.removeMarker(_linkingMarkerId);
-      }
-
       if (token != null && token.type == "identifier") {
-        contentElement.style.cursor = "pointer";
         int startColumn = event.token.start;
         ace.Point startPosition =
             new ace.Point(event.position.row, startColumn);
@@ -468,20 +462,16 @@ class AceManager {
         ace.Point endPosition = new ace.Point(event.position.row, endColumn);
         ace.Range markerRange =
             new ace.Range.fromPoints(startPosition, endPosition);
-        _linkingMarkerId = currentSession.addMarker(markerRange,
-            "ace_link_marker", type: ace.Marker.TEXT);
+        _setLinkingMarker(markerRange);
       } else {
-        contentElement.style.cursor = null;
+        _setLinkingMarker(null);
       }
     });
 
     parentElement.onKeyUp.listen((event) {
       if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
           (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
-        if (_linkingMarkerId != null) {
-          currentSession.removeMarker(_linkingMarkerId);
-        }
-        contentElement.style.cursor = null;
+        _setLinkingMarker(null);
       }
     });
 
@@ -573,6 +563,28 @@ class AceManager {
     parentElement.onKeyDown
         .where((e) => e.keyCode == html.KeyCode.ESC)
         .listen((_) => gotoLineView.hide());
+  }
+
+  void _setLinkingMarker(ace.Range markerRange) {
+    // Always remove a previous hover
+    if (_linkingMarkerId != null) {
+      _markerSession.removeMarker(_linkingMarkerId);
+      _linkingMarkerId = null;
+    }
+
+    html.DivElement contentElement =
+        _aceEditor.renderer.containerElement.querySelector(".ace_content");
+
+    if (markerRange != null) {
+      _markerSession = currentSession;
+      _linkingMarkerId = _markerSession.addMarker(markerRange,
+          "ace_link_marker", type: ace.Marker.TEXT);
+
+      // If we are hovering, we can assume that the mouse is over the identifier.
+      contentElement.style.cursor = "pointer";
+    } else {
+      contentElement.style.cursor = null;
+    }
   }
 
   bool isFileExtensionEditable(String extension) {
