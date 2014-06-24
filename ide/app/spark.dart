@@ -784,7 +784,7 @@ abstract class Spark
 
   Future _selectFile(ws.Resource resource) {
     if (resource.isFile) {
-      return editorArea.selectFile(resource);
+      return editorArea.selectFile(resource, forceFocus: true);
     } else {
       _filesController.selectFile(resource);
       _filesController.setFolderExpanded(resource);
@@ -1978,7 +1978,6 @@ class GotoDeclarationAction extends SparkAction {
       editor.navigateToDeclaration(new Duration(milliseconds: 500)).then(
           (Declaration declaration) {
         if (declaration == null) spark.showSuccessMessage(NOT_FOUND_ERROR);
-        editor.focus();
       }).catchError((TimeoutException e) {
         spark.showSuccessMessage(TIMEOUT_ERROR);
       });
