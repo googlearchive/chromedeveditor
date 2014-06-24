@@ -897,6 +897,10 @@ class AceManager {
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
   }
+
+  Future prepareForLinking(workspace.Project project) {
+    return _analysisService.prepareForLinking(project);
+  }
 }
 
 class ThemeManager {
