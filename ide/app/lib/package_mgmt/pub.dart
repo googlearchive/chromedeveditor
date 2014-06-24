@@ -44,11 +44,11 @@ class PubManager extends PackageManager {
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
-  Future installPackages(Folder container) =>
-      _installUpgradePackages(container, 'get', false);
+  Future installPackages(Folder container, ProgressMonitor monitor) =>
+      _installUpgradePackages(container, 'get', false, monitor);
 
-  Future upgradePackages(Folder container) =>
-      _installUpgradePackages(container, 'upgrade', true);
+  Future upgradePackages(Folder container, ProgressMonitor monitor) =>
+      _installUpgradePackages(container, 'upgrade', true, monitor);
 
   Future<dynamic> arePackagesInstalled(Folder container) {
     File pubspecFile = findPubspec(container);

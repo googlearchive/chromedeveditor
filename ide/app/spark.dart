@@ -3358,6 +3358,8 @@ abstract class PackageManagementJob extends Job {
       super('Getting packages…');
 
   Future run(ProgressMonitor monitor) {
+    monitor.start(name, 1);
+
     return _run(monitor).then((_) {
       _spark.showSuccessMessage("Successfully ran $_commandName");
     }).catchError((e) {

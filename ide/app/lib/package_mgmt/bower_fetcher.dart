@@ -70,17 +70,8 @@ class BowerFetcher {
     });
   }
 
-  void _showProgress([int newDoneDeps]) {
-    if (newDoneDeps != null) {
-      _monitor.worked(newDoneDeps);
-    } else {
-      _monitor.start(
-          "Getting Bower packages…", _allDeps.length, ProgressFormat.N_OUT_OF_M);
-    }
-  }
-
   Future _gatherAllDeps(Future<String> specGetter, String specDesc) {
-    _showProgress();
+    _monitor.start("Getting Bower packages…");
 
     return specGetter.then((String spec) {
       List<_Package> deps;
@@ -112,11 +103,14 @@ class BowerFetcher {
   }
 
   Future _fetchAllDeps(FetchMode mode) {
+    _monitor.start(
+        "Getting Bower packages…", _allDeps.length, ProgressFormat.N_OUT_OF_M);
+
     List<Future> futures = [];
     _allDeps.values.forEach((_Package package) {
       final Future f = _fetchPackage(package, mode)
           .catchError((e) => _logger.warning(e))
-          .then((_) => _showProgress(1));
+          .then((_) => _monitor.worked(1));
       futures.add(f);
     });
     return Future.wait(futures);

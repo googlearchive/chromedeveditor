@@ -192,7 +192,7 @@ abstract class ProgressMonitor {
   bool _cancelled = false;
   Completer _cancelledCompleter;
   StreamController _cancelController = new StreamController.broadcast();
-  ProgressFormat _kind;
+  ProgressFormat _format;
 
   // The job itself can listen to the cancel event, and do the appropriate
   // action.
@@ -202,10 +202,10 @@ abstract class ProgressMonitor {
    * Starts the [ProgressMonitor] with a [title] and a [maxWork] (determining
    * when work is completed)
    */
-  void start(String title, [num maxWork, ProgressFormat kind]) {
+  void start(String title, [num maxWork, ProgressFormat format]) {
     _title = title;
     _maxWork = maxWork;
-    _kind = kind;
+    _format = format;
   }
 
   String get title => _title;
@@ -228,14 +228,19 @@ abstract class ProgressMonitor {
   /**
    * The total progress of work complete (a double from 0 to 1).
    */
-  double get progress => _work / _maxWork;
+  double get progress =>
+      (_maxWork != null && _maxWork != 0) ? (_work / _maxWork) : 0;
 
   String get progressAsString {
-    switch (_kind) {
-      case ProgressFormat.NONE: return '';
-      case ProgressFormat.DOUBLE: return progress.toString();
-      case ProgressFormat.PERCENTAGE: return '${(progress * 100).toStringAsFixed(0)}%';
-      case ProgressFormat.N_OUT_OF_M: return '$_work of $_maxWork';
+    switch (_format) {
+      case ProgressFormat.NONE:
+        return '';
+      case ProgressFormat.DOUBLE:
+        return progress.toString();
+      case ProgressFormat.PERCENTAGE:
+        return '${(progress * 100).toStringAsFixed(0)}%';
+      case ProgressFormat.N_OUT_OF_M:
+        return '$_work of $_maxWork';
     }
     return '';
   }
@@ -307,8 +312,8 @@ class _ProgressMonitorImpl extends ProgressMonitor {
 
   void start(String title,
              [num workAmount = 0,
-              ProgressFormat kind = ProgressFormat.PERCENTAGE]) {
-    super.start(title, workAmount, kind);
+              ProgressFormat format = ProgressFormat.PERCENTAGE]) {
+    super.start(title, workAmount, format);
 
     manager._monitorWorked(this, job);
   }
