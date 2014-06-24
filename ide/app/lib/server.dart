@@ -283,7 +283,7 @@ class HttpResponse {
   HttpHeaders headers = new _HttpHeaders("1.1");
 
   HttpResponse({this.statusCode, this.reasonPhrase}) {
-    headers.add(HttpHeaders.SERVER, 'Spark');
+    headers.add(HttpHeaders.SERVER, 'Chrome Dev Editor');
   }
 
   HttpResponse.ok(): this(statusCode: HttpStatus.OK);

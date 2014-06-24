@@ -947,7 +947,7 @@ class ProjectLocationManager {
   }
 
   Future<bool> _showRequestFileSystemDialog() {
-    return _spark.askUserOkCancel('Please choose a folder to store your Spark projects.',
+    return _spark.askUserOkCancel('Please choose a folder to store your Chrome Dev Editor projects.',
         okButtonLabel: 'Choose Folder', title: 'Choose top-level workspace folder');
   }
 
@@ -3394,7 +3394,7 @@ class ResourceRefreshJob extends Job {
 
 class AboutSparkAction extends SparkActionWithDialog {
   AboutSparkAction(Spark spark, Element dialog)
-      : super(spark, "help-about", "About Spark", dialog) {
+      : super(spark, "help-about", "About Chrome Dev Editor", dialog) {
     _checkbox.checked = _isTrackingPermitted;
     _checkbox.onChange.listen((e) => _isTrackingPermitted = _checkbox.checked);
   }
