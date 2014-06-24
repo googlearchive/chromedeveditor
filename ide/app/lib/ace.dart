@@ -888,7 +888,7 @@ class AceManager {
   }
 
   Future prepareForLinking(workspace.File file) {
-    return _analysisService.getDeclarationFor(file, null);
+    return _analysisService.prepareForLinking(file.project);
   }
 }
 

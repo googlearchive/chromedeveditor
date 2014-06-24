@@ -225,20 +225,20 @@ class AnalyzerService extends Service {
     });
   }
 
-  Future<Declaration> getDeclarationFor(File file, int offset) {
-    ProjectAnalyzer context = getProjectAnalyzer(file.project);
+  Future<ProjectAnalyzer> prepareForLinking(Project project) {
+    ProjectAnalyzer context = getProjectAnalyzer(project);
 
     if (context == null) {
-      return createProjectAnalyzer(file.project).then((context) {
-        if (offset == null) {
-          return null;
-        }
-
-        return context.getDeclarationFor(file, offset);
-      });
+      return createProjectAnalyzer(project);
     } else {
-      return new Future.value(context.getDeclarationFor(file, offset));
+      return new Future.value(context);
     }
+  }
+
+  Future<Declaration> getDeclarationFor(File file, int offset) {
+    return prepareForLinking(file.project).then((ProjectAnalyzer context){
+      return context.getDeclarationFor(file, offset);
+    });
   }
 
   Future<ProjectAnalyzer> createProjectAnalyzer(Project project) {
