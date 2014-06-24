@@ -104,7 +104,6 @@ class Tab {
   }
 
   void select({bool forceFocus: false}) {
-    /*%TRACE3*/ print("(4> 6/23/14): select!"); // TRACE%
     tabView.selectedTab = this;
 
     if (forceFocus) focus();
