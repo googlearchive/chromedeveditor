@@ -191,6 +191,7 @@ class TextEditor extends Editor {
    * fire a change event.
    */
   void _replaceContents(String newContents) {
+    /*%TRACE3*/ print("(4> 6/23/14): _replaceContents!"); // TRACE%
     _aceSubscription.cancel();
 
     try {
@@ -884,6 +885,10 @@ class AceManager {
     int offsetEnd = _currentSession.document.positionToIndex(range.end);
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
+  }
+
+  Future prepareForLinking(workspace.File file) {
+    return _analysisService.getDeclarationFor(file, null);
   }
 }
 

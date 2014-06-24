@@ -230,6 +230,10 @@ class AnalyzerService extends Service {
 
     if (context == null) {
       return createProjectAnalyzer(file.project).then((context) {
+        if (offset == null) {
+          return null;
+        }
+
         return context.getDeclarationFor(file, offset);
       });
     } else {
