@@ -418,8 +418,8 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
   Future _launchId(String id) {
     if (id == null) {
       throw new SparkException(
-          SparkErrorConstants.RUN_APP_NOT_FOUND_IN_CHROME,
-          SparkErrorMessages.RUN_APP_NOT_FOUND_IN_CHROME_MSG);
+          SparkErrorMessages.RUN_APP_NOT_FOUND_IN_CHROME_MSG,
+          errorCode: SparkErrorConstants.RUN_APP_NOT_FOUND_IN_CHROME);
     }
     return management.launchApp(id);
   }
