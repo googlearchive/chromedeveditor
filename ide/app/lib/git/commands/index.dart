@@ -333,6 +333,7 @@ class Index {
     _statusIdx.forEach((String filePath, FileStatus status) {
       if (!filePaths.contains(filePath)) {
         status.deleted = true;
+        status.sha = null;
         status.type = FileStatusType.MODIFIED;
       }
     });

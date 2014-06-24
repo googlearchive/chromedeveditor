@@ -48,9 +48,24 @@
     {
       "usbDevices": [
         {
+          "vendorId": 8888,
+          "productId": 11875,
+          "description": "0x22b8/0x2e63 Moto X"
+        },
+        {
+          "vendorId": 6353,
+          "productId": 19986,
+          "description": "0x18d1/0x4e12 Nexus 1"
+        },
+        {
           "vendorId": 6353,
           "productId": 20193,
           "description": "0x18d1/0x4ee1 Nexus 4 (and 5?)"
+        },
+        {
+          "vendorId": 6353,
+          "productId": 20002,
+          "description": "0x18d1/0x4e22 Nexus S"
         },
         {
           "vendorId": 6353,
@@ -96,6 +111,51 @@
           "vendorId": 2996,
           "productId": 3939,
           "description": "0x0bb4/0x0f63 HTC One"
+        },
+        {
+          "vendorId": 2996,
+          "productId": 3207,
+          "description": "0x0bb4/0x0c87 HTC Desire"
+        },
+        {
+          "vendorId": 1282,
+          "productId": 12803,
+          "description": "0x0502/0x3203 Acer Liquid"
+        },
+        {
+          "vendorId": 4046,
+          "productId": 20855,
+          "description": "0x0fce/0x5177 Xperia Ion"
+        },
+        {
+          "vendorId": 4046,
+          "productId": 8503,
+          "description": "0x0fce/0x2137 Xperia X10 mini"
+        },
+        {
+          "vendorId": 4046,
+          "productId": 8529,
+          "description": "0x0fce/0x2149 Xperia X8"
+        },
+        {
+          "vendorId": 4046,
+          "productId": 24911,
+          "description": "0x0fce/0x614f Xperia X12"
+        },
+        {
+          "vendorId": 4046,
+          "productId": 20841,
+          "description": "0x0fce/0x5169 Xperia S"
+        },
+        {
+          "vendorId": 4046,
+          "productId": 20815,
+          "description": "0x0fce/0x514f Xperia arc S"
+        },
+        {
+          "vendorId": 4100,
+          "productId": 24974,
+          "description": "0x1004/0x618e LG Ally/Optimus One/Vortex "
         }
       ]
     }
