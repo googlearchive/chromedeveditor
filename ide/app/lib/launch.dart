@@ -19,6 +19,7 @@ import 'package:logging/logging.dart';
 import 'apps/app_utils.dart';
 import 'developer_private.dart';
 import 'enum.dart';
+import 'exception.dart';
 import 'jobs.dart';
 import 'package_mgmt/package_manager.dart';
 import 'package_mgmt/pub.dart';
@@ -415,8 +416,11 @@ class ChromeAppLocalLaunchHandler extends LaunchTargetHandler {
    * Launches a chrome app with given [id].
    */
   Future _launchId(String id) {
-    if (id == null) throw 'Unable to locate an application id.';
-
+    if (id == null) {
+      throw new SparkException(
+          SparkErrorMessages.RUN_APP_NOT_FOUND_IN_CHROME_MSG,
+          errorCode: SparkErrorConstants.RUN_APP_NOT_FOUND_IN_CHROME);
+    }
     return management.launchApp(id);
   }
 

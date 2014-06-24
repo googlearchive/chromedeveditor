@@ -25,6 +25,11 @@ class SparkDialog extends SparkWidget {
   }
 
   /**
+   * Do not show the closing X button at top-right corner
+   */
+  @published bool noClosingX = false;
+
+  /**
    * The kind of animation that the overlay should perform on open/close.
    */
   @published String animation = 'scale-slideup';
