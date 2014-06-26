@@ -239,3 +239,14 @@ label[for="analyticsCheck"],
 label[for="stripWhitespace"] {
   font-weight: 400;
 }
+
+#aboutDialog-icon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+#aboutDialog-text {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: middle;
+}
