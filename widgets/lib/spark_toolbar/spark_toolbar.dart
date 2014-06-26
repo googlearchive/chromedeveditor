@@ -23,7 +23,9 @@ class SparkToolbar extends SparkWidget {
   SparkToolbar.created(): super.created();
 
   @override
-  void enteredView() {
+  void attached() {
+    super.attached();
+
     assert(horizontal || vertical);
     assert(horizontal != vertical);
     assert(['left', 'right', 'center', 'spaced', 'edges'].contains(justify));

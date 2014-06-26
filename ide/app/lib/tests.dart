@@ -26,6 +26,8 @@ class TestDriver {
   final Notifier _notifier;
 
   StreamSubscription _logListener;
+  StreamController<unittest.TestCase> _onTestFinished =
+      new StreamController.broadcast();
 
   Function _defineTestsFn;
   Element _testDiv;
@@ -65,6 +67,12 @@ class TestDriver {
     unittest.runTests();
 
     return _testCompleter.future;
+  }
+
+  Stream<unittest.TestCase> get onTestFinished => _onTestFinished.stream;
+
+  void testFinished(unittest.TestCase test) {
+    _onTestFinished.add(test);
   }
 
   void _connectToListener() {
@@ -190,6 +198,8 @@ class _SparkTestConfiguration extends unittest.Configuration {
     } else {
       _logger.info("${test.result} ${test.description}\n");
     }
+
+    testDriver.testFinished(test);
   }
 
   void onSummary(int passed, int failed, int errors,

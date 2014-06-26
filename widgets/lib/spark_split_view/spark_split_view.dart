@@ -29,8 +29,8 @@ class SparkSplitView extends SparkWidget {
   SparkSplitView.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
     // Make sure there are exactly 2 children inserted in the instantiation
     // site. When we're enclosed in another element and passed down its
     // <content>, we need to dive into that <content> to look at its distributed
