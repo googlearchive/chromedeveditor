@@ -101,6 +101,7 @@ class JobManagerEvent {
 
   bool _indeterminate = false;
   double _progress = 1.0;
+  String _progressAsString = '';
 
   bool get indeterminate => _indeterminate;
 
@@ -108,21 +109,23 @@ class JobManagerEvent {
 
   JobManagerEvent(this.manager, this.job,
       {this.started: false, this.finished: false, ProgressMonitor monitor}) {
+    // One and only one of [started], [finished], [monitor] should be truthy.
+    assert([started, finished, monitor != null].where((e) => e).length == 1);
+
+    // NOTE: We need a snapshot of the current [monitor]'s values here, as
+    // [monitor] itself will keep changing while the event waits to be handled.
     if (monitor != null) {
       _indeterminate = monitor.indeterminate;
       _progress = monitor.progress;
+      _progressAsString = '${monitor.title} ${monitor.progressAsString}';
+    } else if (started) {
+      _progressAsString = '${job.name} started';
+    } else if (finished) {
+      _progressAsString = '${job.name} finished';
     }
   }
 
-  String toString() {
-    if (started) {
-      return '${job.name} started';
-    } else if (finished) {
-      return '${job.name} finished';
-    } else {
-      return '${job.name} ${(progress * 100).toStringAsFixed(1)}';
-    }
-  }
+  String toString() => _progressAsString;
 }
 
 /**
@@ -236,7 +239,7 @@ abstract class ProgressMonitor {
    * The total progress of work complete (a double from 0 to 1).
    */
   double get progress =>
-      (_maxWork != null && _maxWork != 0) ? (_work / _maxWork) : 0;
+      (_maxWork != null && _maxWork != 0) ? (_work / _maxWork) : 0.0;
 
   String get progressAsString {
     switch (_format) {
