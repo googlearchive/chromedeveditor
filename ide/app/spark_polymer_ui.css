@@ -246,6 +246,10 @@ label {
   font-weight: 500;
 }
 
+.help-block {
+  -webkit-user-select: text;
+}
+
 /* These two are special (secondary) */
 label[for="analyticsCheck"],
 label[for="stripWhitespace"] {

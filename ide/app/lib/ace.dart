@@ -28,6 +28,7 @@ import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
+import 'workspace_utils.dart';
 import 'services.dart' as svc;
 import 'outline.dart';
 import 'ui/goto_line_view/goto_line_view.dart';
@@ -315,7 +316,7 @@ class CssEditor extends TextEditor {
     String path = _getQuotedString(_session.value, getCursorOffset());
     if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
-    workspace.File targetFile = _resolvePath(file, path);
+    workspace.File targetFile = resolvePath(file, path);
 
     if (targetFile != null) {
       aceManager.delegate.openEditor(targetFile);
@@ -356,8 +357,7 @@ class MarkdownEditor extends TextEditor {
 }
 
 class HtmlEditor extends TextEditor {
-  static bool isHtmlFile(workspace.File file) =>
-      file.name.endsWith('.htm') || file.name.endsWith('.html');
+  static bool isHtmlFile(workspace.File file) => isHtmlFilename(file.name);
 
   HtmlEditor._create(AceManager aceManager, workspace.File file,
     SparkPreferences prefs) : super._create(aceManager, file, prefs);
@@ -376,7 +376,7 @@ class HtmlEditor extends TextEditor {
     String path = _getQuotedString(_session.value, getCursorOffset());
     if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
-    workspace.File targetFile = _resolvePath(file, path);
+    workspace.File targetFile = resolvePath(file, path);
 
     if (targetFile != null) {
       aceManager.delegate.openEditor(targetFile);
@@ -1088,29 +1088,4 @@ String _getQuotedString(String text, int offset) {
   }
 
   return text.substring(leftSide, rightSide + 1);
-}
-
-/**
- * Given a file and a relative path from it, resolve the target file. Can
- * return `null`.
- */
-workspace.File _resolvePath(workspace.File file, String path) {
-  return _resolvePaths(file.parent, path.split('/'));
-}
-
-workspace.File _resolvePaths(workspace.Container container,
-                             Iterable<String> pathElements) {
-  if (pathElements.isEmpty || container == null) return null;
-
-  String element = pathElements.first;
-
-  if (pathElements.length == 1) {
-    return container.getChild(element);
-  }
-
-  if (element == '..') {
-    return _resolvePaths(container.parent, pathElements.skip(1));
-  } else {
-    return _resolvePaths(container.getChild(element), pathElements.skip(1));
-  }
 }

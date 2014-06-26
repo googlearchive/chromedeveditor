@@ -28,9 +28,15 @@ Container getAppContainerFor(Resource resource) {
     return resource.project;
   }
 
-  // Look in app/
+  // Look in app/.
   if (resource.project.getChild('app') is Container) {
     Container app = resource.project.getChild('app');
+    if (_hasManifest(app)) return app;
+  }
+
+  // Look in web/.
+  if (resource.project.getChild('web') is Container) {
+    Container app = resource.project.getChild('web');
     if (_hasManifest(app)) return app;
   }
 
