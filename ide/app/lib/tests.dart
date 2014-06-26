@@ -14,6 +14,7 @@ import 'package:unittest/unittest.dart' as unittest;
 
 import 'jobs.dart';
 import 'tcp.dart' as tcp;
+import 'utils.dart';
 
 const int _DEFAULT_TESTPORT = 5120;
 
@@ -24,6 +25,8 @@ Logger _logger = new Logger('spark.tests');
  */
 class TestDriver {
   final JobManager _jobManager;
+  final Notifier _notifier;
+
   StreamSubscription _logListener;
 
   Function _defineTestsFn;
@@ -32,7 +35,8 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this._jobManager, {bool connectToTestListener: false}) {
+  TestDriver(this._defineTestsFn, this._jobManager, this._notifier,
+      {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 
     if (connectToTestListener) {
@@ -59,8 +63,8 @@ class TestDriver {
       _defineTestsFn = null;
     }
 
-    _TestJob job = new _TestJob(this, _testCompleter);
-    _jobManager.schedule(job);
+    _notifier.showSuccessMessage('Running tests...');
+    unittest.runTests();
 
     return _testCompleter.future;
   }
@@ -120,21 +124,6 @@ class TestDriver {
 
   void _testsFinished(bool sucess) {
     _testCompleter.complete(sucess);
-  }
-}
-
-class _TestJob extends Job {
-  final TestDriver testDriver;
-
-  _TestJob(this.testDriver, Completer completer)
-      : super("Running tests…", completer);
-
-  Future<Job> run(ProgressMonitor monitor) {
-    monitor.start(name);
-
-    unittest.runTests();
-
-    return completer.future.then((_) => this);
   }
 }
 
