@@ -176,8 +176,8 @@ class SparkOverlay extends SparkWidget {
   }
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     assert(_SUPPORTED_ARROWS.contains(arrow));
     assert(_SUPPORTED_ANIMATIONS.contains(animation));

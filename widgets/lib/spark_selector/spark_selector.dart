@@ -84,8 +84,8 @@ class SparkSelector extends SparkWidget {
   SparkSelector.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     selection = $['selection'];
 

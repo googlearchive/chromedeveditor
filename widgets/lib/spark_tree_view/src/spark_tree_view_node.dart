@@ -24,8 +24,8 @@ class SparkTreeViewNode extends SparkWidget {
   SparkTreeViewNode.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     redraw();
   }

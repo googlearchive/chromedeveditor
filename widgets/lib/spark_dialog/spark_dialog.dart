@@ -47,8 +47,8 @@ class SparkDialog extends SparkWidget {
   SparkDialog.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     SparkWidget.enableKeyboardEvents(_modal);
 

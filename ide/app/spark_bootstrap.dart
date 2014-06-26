@@ -26,16 +26,11 @@ import 'package:spark_widgets/spark_split_view/spark_split_view.dart';
 import 'package:spark_widgets/spark_status/spark_status.dart';
 import 'package:spark_widgets/spark_toolbar/spark_toolbar.dart';
 
-import 'lib/utils.dart';
 import 'lib/ui/commit_message_view/commit_message_view.dart';
 import 'lib/ui/goto_line_view/goto_line_view.dart';
 import 'spark_polymer_ui.dart';
-import 'spark_polymer.dart' as spark_polymer;
 
-void main() {
-  // Only execute this script if we are not running in a deployed context.
-  if (isDart2js()) return;
-
+void registerWidgetsWithPolymer() {
   // Init Polymer.
   startPolymer([], false);
 
@@ -60,7 +55,4 @@ void main() {
   Polymer.register('commit-message-view', CommitMessageView);
   Polymer.register('goto-line-view', GotoLineView);
   Polymer.register('spark-polymer-ui', SparkPolymerUI);
-
-  // Invoke Spark's main method.
-  spark_polymer.main();
 }
