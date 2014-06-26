@@ -25,6 +25,8 @@ Logger _logger = new Logger('spark.tests');
 class TestDriver {
   final JobManager _jobManager;
   StreamSubscription _logListener;
+  StreamController<unittest.TestCase> _onTestFinished =
+      new StreamController.broadcast();
 
   Function _defineTestsFn;
   Element _testDiv;
@@ -63,6 +65,12 @@ class TestDriver {
     _jobManager.schedule(job);
 
     return _testCompleter.future;
+  }
+
+  Stream<unittest.TestCase> get onTestFinished => _onTestFinished.stream;
+
+  void testFinished(unittest.TestCase test) {
+    _onTestFinished.add(test);
   }
 
   void _connectToListener() {
@@ -130,7 +138,11 @@ class _TestJob extends Job {
       : super("Running tests…", completer);
 
   Future<Job> run(ProgressMonitor monitor) {
-    monitor.start(name);
+    monitor.start(
+        name,
+        maxWork: unittest.testCases.length,
+        format: ProgressFormat.N_OUT_OF_M);
+    testDriver.onTestFinished.listen((_) => monitor.worked(1));
 
     unittest.runTests();
 
@@ -203,6 +215,8 @@ class _SparkTestConfiguration extends unittest.Configuration {
     } else {
       _logger.info("${test.result} ${test.description}\n");
     }
+
+    testDriver.testFinished(test);
   }
 
   void onSummary(int passed, int failed, int errors,
