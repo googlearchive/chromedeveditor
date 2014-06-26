@@ -11,11 +11,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="spark_polymer.css">
-  <link rel="stylesheet" href="third_party/font_awesome/css/font-awesome.min.css">
 
-  <link rel="import" href="packages/polymer/polymer.html">
+  <!-- Load Polymer -->
+  <script src="packages/web_components/platform.js"></script>
+  <script src="packages/web_components/dart_support.js"></script>
+
+  <!-- Start Spark in a non-deployed build (running directly from Dartium). -->
+  <script type="application/dart" src="spark_bootstrap.dart"></script>
+
   <link rel="import" href="spark_polymer_ui.html">
-
   <link rel="import" href="packages/spark_widgets/spark_splitter/spark_splitter.html">
   <link rel="import" href="packages/spark_widgets/spark_button/spark_button.html">
 
@@ -85,8 +89,8 @@
     <div id="fileViewArea" tabindex="0" beforeSplit></div>
 
     <div id="editorArea" tabIndex="-1" afterSplit>
-      <!-- TODO(ussuri): Find a way to move at least part of this to 
-           spark_polymer_ui.html 
+      <!-- TODO(ussuri): Find a way to move at least part of this to
+           spark_polymer_ui.html
       -->
       <div id="aceContainer"></div>
       <div id="outlineContainer">

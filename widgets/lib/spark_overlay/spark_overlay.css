@@ -179,7 +179,7 @@
 /* TODO(ussuri): Inconsistency here: overlay's bg & border colors are specified
    by the client, yet arrow's are hardcoded here. Could specify in the clien
    (e.g. spark-menu-button) using ::shadow -- easy for `fill`, but trickier for
-   border-bottom-color. 
+   border-bottom-color.
 */
 .arrow {
   position: relative;
