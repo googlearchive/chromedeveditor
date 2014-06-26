@@ -101,12 +101,11 @@ class JobManagerEvent {
 
   bool _indeterminate = false;
   double _progress = 1.0;
+  String _progressAsString = '';
 
   bool get indeterminate => _indeterminate;
 
   double get progress => _progress;
-
-  String _asString = '';
 
   JobManagerEvent(this.manager, this.job,
       {this.started: false, this.finished: false, ProgressMonitor monitor}) {
@@ -118,15 +117,15 @@ class JobManagerEvent {
     if (monitor != null) {
       _indeterminate = monitor.indeterminate;
       _progress = monitor.progress;
-      _asString = '${monitor.title} ${monitor.progressAsString}';
+      _progressAsString = '${monitor.title} ${monitor.progressAsString}';
     } else if (started) {
-      _asString = '${job.name} started';
+      _progressAsString = '${job.name} started';
     } else if (finished) {
-      _asString = '${job.name} finished';
+      _progressAsString = '${job.name} finished';
     }
   }
 
-  String toString() => _asString;
+  String toString() => _progressAsString;
 }
 
 /**
