@@ -14,10 +14,7 @@
   <template>
     <link rel="stylesheet" href="spark_dialog.css">
 
-    <!-- TODO(ussuri): should be `animation="{{animation}}", but since
-     Polymer 0.11.0 programmatically set `animation` isn't correctly seen by
-     spark-overlay's CSS; statically set `animation` is. BUG #2690 -->
-    <spark-modal id="modal" focused animation="scale-slideup">
+    <spark-modal id="modal" focused animation="{{animation}}">
       <spark-toolbar id="header"
           horizontal
           justify="edges"
