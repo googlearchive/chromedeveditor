@@ -13,7 +13,7 @@ import '../lib/utils.dart';
 defineTests() {
   group('utils', () {
     test('i18n found', () {
-      expect(i18n('app_name'), 'Spark');
+      expect(i18n('app_name'), 'Chrome Dev Editor');
     });
 
     test('i18n not found', () {

@@ -348,7 +348,7 @@ class _SparkSetupParticipant extends LifecycleParticipant {
     spark._ui.modelReady(spark);
     spark.unveil();
 
-    _logger.logStep('Spark started');
+    _logger.logStep('Chrome Dev Editor started');
     _logger.logElapsed('Total startup time');
 
     prefs.getValue(FIRST_RUN_PREF).then((String value) {
