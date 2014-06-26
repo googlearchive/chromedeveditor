@@ -98,14 +98,21 @@ class JobManagerEvent {
 
   final bool started;
   final bool finished;
-  final ProgressMonitor monitor;
 
-  bool get indeterminate => monitor.indeterminate;
+  bool _indeterminate = false;
+  double _progress = 1.0;
 
-  double get progress => monitor.progress;
+  bool get indeterminate => _indeterminate;
+
+  double get progress => _progress;
 
   JobManagerEvent(this.manager, this.job,
-      {this.started: false, this.finished: false, this.monitor});
+      {this.started: false, this.finished: false, ProgressMonitor monitor}) {
+    if (monitor != null) {
+      _indeterminate = monitor.indeterminate;
+      _progress = monitor.progress;
+    }
+  }
 
   String toString() {
     if (started) {
@@ -113,7 +120,7 @@ class JobManagerEvent {
     } else if (finished) {
       return '${job.name} finished';
     } else {
-      return '${monitor.title} ${monitor.progressAsString}';
+      return '${job.name} ${(progress * 100).toStringAsFixed(1)}';
     }
   }
 }
