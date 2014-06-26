@@ -240,7 +240,7 @@ abstract class ProgressMonitor {
    * The total progress of work complete (a double from 0 to 1).
    */
   double get progress =>
-      (_maxWork != null && _maxWork != 0) ? (_work / _maxWork) : 0;
+      (_maxWork != null && _maxWork != 0) ? (_work / _maxWork) : 0.0;
 
   String get progressAsString {
     switch (_format) {
