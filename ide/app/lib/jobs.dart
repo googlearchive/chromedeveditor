@@ -106,23 +106,27 @@ class JobManagerEvent {
 
   double get progress => _progress;
 
+  String _asString = '';
+
   JobManagerEvent(this.manager, this.job,
       {this.started: false, this.finished: false, ProgressMonitor monitor}) {
+    // One and only one of [started], [finished], [monitor] should be truthy.
+    assert([started, finished, monitor != null].where((e) => e).length == 1);
+
+    // NOTE: We need a snapshot of the current [monitor]'s values here, as
+    // [monitor] itself will keep changing while the event waits to be handled.
     if (monitor != null) {
       _indeterminate = monitor.indeterminate;
       _progress = monitor.progress;
+      _asString = '${monitor.title} ${monitor.progressAsString}';
+    } else if (started) {
+      _asString = '${job.name} started';
+    } else if (finished) {
+      _asString = '${job.name} finished';
     }
   }
 
-  String toString() {
-    if (started) {
-      return '${job.name} started';
-    } else if (finished) {
-      return '${job.name} finished';
-    } else {
-      return '${job.name} ${(progress * 100).toStringAsFixed(1)}';
-    }
-  }
+  String toString() => _asString;
 }
 
 /**
