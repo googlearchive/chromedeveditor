@@ -2472,7 +2472,7 @@ class GitCloneAction extends SparkActionWithProgressDialog {
       } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_CLONE_CANCEL) {
         spark.showSuccessMessage('Clone cancelled');
-      } else if (e is SparkException && 
+      } else if (e is SparkException &&
           e.errorCode == SparkErrorConstants.GIT_SUBMODULES_NOT_YET_SUPPORTED) {
         spark.showErrorMessage('Error cloning Git project',
             message: 'Could not clone "${projectName}": ' + e.message);
@@ -3569,7 +3569,7 @@ class RunTestsAction extends SparkAction {
 
   void _initTestDriver() {
     if (testDriver == null) {
-      testDriver = new TestDriver(all_tests.defineTests, spark.jobManager,
+      testDriver = new TestDriver(all_tests.defineTests, spark,
           connectToTestListener: true);
     }
   }

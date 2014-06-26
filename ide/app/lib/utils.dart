@@ -202,6 +202,8 @@ abstract class Notifier {
   void showMessage(String title, String message);
 
   Future showMessageAndWait(String title, String message);
+
+  void showSuccessMessage(String message);
 }
 
 /**
@@ -213,6 +215,8 @@ class NullNotifier implements Notifier {
   }
 
   Future showMessageAndWait(String title, String message) => new Future.value("Not implemented");
+
+  void showSuccessMessage(String message) { }
 }
 
 /**
