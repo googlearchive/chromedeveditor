@@ -28,8 +28,8 @@ class SparkDialogButton extends SparkWidget {
   SparkDialogButton.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     // At most one of [submit] and [cancel] can be true.
     assert([submit, cancel, dismiss].where((e) => e == true).length <= 1);

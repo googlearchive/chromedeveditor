@@ -23,7 +23,7 @@ class ``className`` extends SparkWidget {
   }
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
   }
 }

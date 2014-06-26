@@ -45,8 +45,8 @@ class SparkPolymerUI extends SparkWidget {
   SparkPolymerUI.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     _splitView = $['splitView'];
     _fileFilter = $['fileFilter'];
