@@ -12,7 +12,6 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:logging/logging.dart';
 import 'package:unittest/unittest.dart' as unittest;
 
-import 'jobs.dart';
 import 'tcp.dart' as tcp;
 import 'utils.dart';
 
@@ -24,7 +23,6 @@ Logger _logger = new Logger('spark.tests');
  * A class used to drive unit tests and report results in a Chrome App setting.
  */
 class TestDriver {
-  final JobManager _jobManager;
   final Notifier _notifier;
 
   StreamSubscription _logListener;
@@ -35,7 +33,7 @@ class TestDriver {
 
   Completer<bool> _testCompleter;
 
-  TestDriver(this._defineTestsFn, this._jobManager, this._notifier,
+  TestDriver(this._defineTestsFn, this._notifier,
       {bool connectToTestListener: false}) {
     unittest.unittestConfiguration = new _SparkTestConfiguration(this);
 

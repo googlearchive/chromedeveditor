@@ -3569,8 +3569,8 @@ class RunTestsAction extends SparkAction {
 
   void _initTestDriver() {
     if (testDriver == null) {
-      testDriver = new TestDriver(all_tests.defineTests, spark.jobManager,
-          spark, connectToTestListener: true);
+      testDriver = new TestDriver(all_tests.defineTests, spark,
+          connectToTestListener: true);
     }
   }
 }
