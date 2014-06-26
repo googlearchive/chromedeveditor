@@ -28,6 +28,7 @@ import 'platform_info.dart';
 import 'preferences.dart';
 import 'utils.dart' as utils;
 import 'workspace.dart' as workspace;
+import 'workspace_utils.dart';
 import 'services.dart' as svc;
 import 'outline.dart';
 import 'ui/goto_line_view/goto_line_view.dart';
@@ -315,7 +316,7 @@ class CssEditor extends TextEditor {
     String path = _getQuotedString(_session.value, getCursorOffset());
     if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
-    workspace.File targetFile = _resolvePath(file, path);
+    workspace.File targetFile = resolvePath(file, path);
 
     if (targetFile != null) {
       aceManager.delegate.openEditor(targetFile);
@@ -356,8 +357,7 @@ class MarkdownEditor extends TextEditor {
 }
 
 class HtmlEditor extends TextEditor {
-  static bool isHtmlFile(workspace.File file) =>
-      file.name.endsWith('.htm') || file.name.endsWith('.html');
+  static bool isHtmlFile(workspace.File file) => isHtmlFilename(file.name);
 
   HtmlEditor._create(AceManager aceManager, workspace.File file,
     SparkPreferences prefs) : super._create(aceManager, file, prefs);
@@ -376,7 +376,7 @@ class HtmlEditor extends TextEditor {
     String path = _getQuotedString(_session.value, getCursorOffset());
     if (path == null) return new Future.value(svc.Declaration.EMPTY_DECLARATION);
 
-    workspace.File targetFile = _resolvePath(file, path);
+    workspace.File targetFile = resolvePath(file, path);
 
     if (targetFile != null) {
       aceManager.delegate.openEditor(targetFile);
@@ -418,6 +418,8 @@ class AceManager {
   StreamSubscription _markerSubscription;
   workspace.File currentFile;
   svc.AnalyzerService _analysisService;
+
+  ace.EditSession _markerSession = null;
   int _linkingMarkerId;
 
   AceManager(this.parentElement,
@@ -445,9 +447,6 @@ class AceManager {
     _aceEditor.setOptions({'enableMultiselect' : false,
                            'enableLinking' : true});
 
-    html.DivElement contentElement =
-        _aceEditor.renderer.containerElement.querySelector(".ace_content");
-
     _aceEditor.onLinkHover.listen((ace.LinkEvent event) {
       if (!DartEditor.isDartFile(currentFile)) {
         return;
@@ -455,12 +454,7 @@ class AceManager {
 
       ace.Token token = event.token;
 
-      if (_linkingMarkerId != null) {
-        currentSession.removeMarker(_linkingMarkerId);
-      }
-
       if (token != null && token.type == "identifier") {
-        contentElement.style.cursor = "pointer";
         int startColumn = event.token.start;
         ace.Point startPosition =
             new ace.Point(event.position.row, startColumn);
@@ -468,20 +462,16 @@ class AceManager {
         ace.Point endPosition = new ace.Point(event.position.row, endColumn);
         ace.Range markerRange =
             new ace.Range.fromPoints(startPosition, endPosition);
-        _linkingMarkerId = currentSession.addMarker(markerRange,
-            "ace_link_marker", type: ace.Marker.TEXT);
+        _setLinkingMarker(markerRange);
       } else {
-        contentElement.style.cursor = null;
+        _setLinkingMarker(null);
       }
     });
 
     parentElement.onKeyUp.listen((event) {
       if ((PlatformInfo.isMac && event.keyCode == html.KeyCode.META) ||
           (!PlatformInfo.isMac && event.keyCode == html.KeyCode.CTRL)) {
-        if (_linkingMarkerId != null) {
-          currentSession.removeMarker(_linkingMarkerId);
-        }
-        contentElement.style.cursor = null;
+        _setLinkingMarker(null);
       }
     });
 
@@ -573,6 +563,28 @@ class AceManager {
     parentElement.onKeyDown
         .where((e) => e.keyCode == html.KeyCode.ESC)
         .listen((_) => gotoLineView.hide());
+  }
+
+  void _setLinkingMarker(ace.Range markerRange) {
+    // Always remove a previous hover
+    if (_linkingMarkerId != null) {
+      _markerSession.removeMarker(_linkingMarkerId);
+      _linkingMarkerId = null;
+    }
+
+    html.DivElement contentElement =
+        _aceEditor.renderer.containerElement.querySelector(".ace_content");
+
+    if (markerRange != null) {
+      _markerSession = currentSession;
+      _linkingMarkerId = _markerSession.addMarker(markerRange,
+          "ace_link_marker", type: ace.Marker.TEXT);
+
+      // If we are hovering, we can assume that the mouse is over the identifier.
+      contentElement.style.cursor = "pointer";
+    } else {
+      contentElement.style.cursor = null;
+    }
   }
 
   bool isFileExtensionEditable(String extension) {
@@ -885,6 +897,10 @@ class AceManager {
     Span span = new Span(offsetStart, offsetEnd - offsetStart);
     return new NavigationLocation(currentFile, span);
   }
+
+  Future prepareForLinking(workspace.Project project) {
+    return _analysisService.prepareForLinking(project);
+  }
 }
 
 class ThemeManager {
@@ -1072,29 +1088,4 @@ String _getQuotedString(String text, int offset) {
   }
 
   return text.substring(leftSide, rightSide + 1);
-}
-
-/**
- * Given a file and a relative path from it, resolve the target file. Can
- * return `null`.
- */
-workspace.File _resolvePath(workspace.File file, String path) {
-  return _resolvePaths(file.parent, path.split('/'));
-}
-
-workspace.File _resolvePaths(workspace.Container container,
-                             Iterable<String> pathElements) {
-  if (pathElements.isEmpty || container == null) return null;
-
-  String element = pathElements.first;
-
-  if (pathElements.length == 1) {
-    return container.getChild(element);
-  }
-
-  if (element == '..') {
-    return _resolvePaths(container.parent, pathElements.skip(1));
-  } else {
-    return _resolvePaths(container.getChild(element), pathElements.skip(1));
-  }
 }

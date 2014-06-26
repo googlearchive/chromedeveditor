@@ -13,6 +13,7 @@ import 'package:spark_widgets/spark_button/spark_button.dart';
 import 'package:spark_widgets/spark_dialog/spark_dialog.dart';
 
 import 'spark.dart';
+import 'spark_bootstrap.dart';
 import 'spark_flags.dart';
 import 'spark_polymer_ui.dart';
 import 'lib/actions.dart';
@@ -50,6 +51,8 @@ final _logger = new _TimeLogger();
 
 @polymer.initMethod
 void main() {
+  registerWidgetsWithPolymer();
+
   // app.json stores global per-app flags and is overwritten by the build
   // process (`grind deploy`).
   // user.json can be manually added to override some of the flags from app.json
@@ -228,12 +231,12 @@ class SparkPolymer extends Spark {
 
     // Listen for job manager events.
     jobManager.onChange.listen((JobManagerEvent event) {
-      if (event.started) {
-        statusComponent.spinning = true;
-        statusComponent.progressMessage = event.job.name;
-      } else if (event.finished) {
+      if (event.finished) {
         statusComponent.spinning = false;
         statusComponent.progressMessage = null;
+      } else {
+        statusComponent.spinning = true;
+        statusComponent.progressMessage = event.toString();
       }
     });
   }

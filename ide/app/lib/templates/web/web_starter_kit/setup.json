@@ -9,7 +9,6 @@
     "app": {
       "files": [
         { "source": "404.html_", "dest": "404.html" },
-        { "source": "alt-layout.html_", "dest": "alt-layout.html" },
         { "source": "basic.html_", "dest": "basic.html" },
         { "source": "favicon.ico_", "dest": "favicon.ico" },
         { "source": "humans.txt_", "dest": "humans.txt" },
@@ -31,6 +30,7 @@
                 { "source": "icons.svg_", "dest": "icons.svg" },
                 { "source": "icons.ttf_", "dest": "icons.ttf" },
                 { "source": "icons.woff_", "dest": "icons.woff" },
+                { "source": "icons.woff2_", "dest": "icons.woff2" },
                 { "source": "placeholder--medium.png_", "dest": "placeholder--medium.png" },
                 { "source": "placeholder--small.png_", "dest": "placeholder--small.png" },
                 { "source": "placeholder--wide.png_", "dest": "placeholder--wide.png" }
@@ -56,25 +56,24 @@
         },
         "styleguide": {
           "files": [
-            { "source": "code-sample.js_", "dest": "code-sample.js" },
             { "source": "index.html_", "dest": "index.html" }
           ]
         },
         "styles": {
           "files": [
             { "source": "h5bp.css_", "dest": "h5bp.css" },
-            { "source": "main.css_", "dest": "main.css" },
-            { "source": "styles.css_", "dest": "styles.css" }
+            { "source": "main.css_", "dest": "main.css" }
           ],
           "directories": {
-            "sass": {
+            "components": {
               "files": [
+                { "source": "components.css_", "dest": "components.css" },
+                { "source": "components.scss_", "dest": "components.scss" },
                 { "source": "_global.scss_", "dest": "_global.scss" },
                 { "source": "_helper.scss_", "dest": "_helper.scss" },
                 { "source": "_normalize.scss_", "dest": "_normalize.scss" },
                 { "source": "_themed.scss_", "dest": "_themed.scss" },
-                { "source": "_utils.scss_", "dest": "_utils.scss" },
-                { "source": "styles.scss_", "dest": "styles.scss" }
+                { "source": "_utils.scss_", "dest": "_utils.scss" }
               ],
               "directories": {
                 "_components": {

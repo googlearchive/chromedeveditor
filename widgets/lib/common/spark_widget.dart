@@ -18,8 +18,8 @@ class SparkWidget extends PolymerElement {
   SparkWidget.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     _focusableChild = _findFocusableChild();
     if (_focusableChild != null) {

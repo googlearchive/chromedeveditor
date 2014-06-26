@@ -44,11 +44,11 @@ class PubManager extends PackageManager {
 
   PackageResolver getResolverFor(Project project) => new _PubResolver._(project);
 
-  Future installPackages(Folder container) =>
-      _installUpgradePackages(container, 'get', false);
+  Future installPackages(Folder container, ProgressMonitor monitor) =>
+      _installUpgradePackages(container, 'get', false, monitor);
 
-  Future upgradePackages(Folder container) =>
-      _installUpgradePackages(container, 'upgrade', true);
+  Future upgradePackages(Folder container, ProgressMonitor monitor) =>
+      _installUpgradePackages(container, 'upgrade', true, monitor);
 
   Future<dynamic> arePackagesInstalled(Folder container) {
     File pubspecFile = findPubspec(container);
@@ -77,18 +77,28 @@ class PubManager extends PackageManager {
   //
 
   Future _installUpgradePackages(
-      Folder container, String commandName, bool isUpgrade) {
-    return tavern.getDependencies(container.entry, _handleLog, isUpgrade).
+      Folder container,
+      String commandName,
+      bool isUpgrade,
+      ProgressMonitor monitor) {
+    // Fake the total amount of work, since we don't know it. When an update
+    // comes from Tavern, just refresh the generic message w/o showing progress.
+    monitor.start(
+        "Getting Pub packages…", maxWork: 0, format: ProgressFormat.NONE);
+
+    void handleLog(String line, String level) {
+      _logger.info(line.trim());
+      // Also fake the amount of work done for the same reason.
+      monitor.worked(1);
+    }
+
+    return tavern.getDependencies(container.entry, handleLog, isUpgrade).
         whenComplete(() {
       return container.project.refresh();
     }).catchError((e, st) {
-      _logger.severe('Error running pub $commandName', e, st);
+      _logger.severe('Error running Pub $commandName', e, st);
       return new Future.error(e, st);
     });
-  }
-
-  void _handleLog(String line, String level) {
-    _logger.info(line.trim());
   }
 }
 

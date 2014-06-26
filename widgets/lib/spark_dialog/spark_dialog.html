@@ -10,25 +10,30 @@
 <link rel="import" href="../../../packages/spark_widgets/spark_toolbar/spark_toolbar.html">
 
 <polymer-element name="spark-dialog" extends="spark-widget"
-    attributes="headerTitle animation">
+    attributes="headerTitle noClosingX animation">
   <template>
     <link rel="stylesheet" href="spark_dialog.css">
 
-    <spark-modal id="modal" focused animation="{{animation}}">
+    <!-- TODO(ussuri): should be `animation="{{animation}}", but since
+     Polymer 0.11.0 programmatically set `animation` isn't correctly seen by
+     spark-overlay's CSS; statically set `animation` is. BUG #2690 -->
+    <spark-modal id="modal" focused animation="scale-slideup">
       <spark-toolbar id="header"
           horizontal
           justify="edges"
           spacing="small">
         <span id="headerTitle">{{headerTitle}}</span>
-        <spark-button id="closingX"
-            flat
-            round
-            padding="small"
-            overlayToggle>
-          <svg id="closingXGlyph" width="24px" height="24px" viewBox="0 0 24 24">
-            <path d="M17.369 8.037l-1.037-1.037-4.148 4.148-4.148-4.148-1.037 1.037 4.148 4.148-4.148 4.148 1.037 1.037 4.148-4.148 4.148 4.148 1.037-1.037-4.148-4.148 4.148-4.148z"/>
-          </svg>
-        </spark-button>
+        <template if="{{!noClosingX}}">
+          <spark-button id="closingX"
+              flat
+              round
+              padding="small"
+              overlayToggle>
+            <svg id="closingXGlyph" width="24px" height="24px" viewBox="0 0 24 24">
+              <path d="M17.369 8.037l-1.037-1.037-4.148 4.148-4.148-4.148-1.037 1.037 4.148 4.148-4.148 4.148 1.037 1.037 4.148-4.148 4.148 4.148 1.037-1.037-4.148-4.148 4.148-4.148z"/>
+            </svg>
+          </spark-button>
+        </template>
       </spark-toolbar>
 
       <form id="body">
@@ -52,5 +57,5 @@
     </spark-modal>
   </template>
 
-  <script type="application/dart;component=1" src="spark_dialog.dart"></script>
+  <script type="application/dart" src="spark_dialog.dart"></script>
 </polymer-element>

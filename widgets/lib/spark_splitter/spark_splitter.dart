@@ -64,8 +64,8 @@ class SparkSplitter extends SparkWidget {
 
   /// Triggered when the control is first displayed.
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     _draggable = $['draggable'];
     // TODO(ussuri): Perhaps switch to using onDrag* instead of onMouse* once

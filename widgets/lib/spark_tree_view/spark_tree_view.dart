@@ -17,7 +17,7 @@ class SparkTreeView extends SparkTreeViewNode {
   SparkTreeView.created() : super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
   }
 }

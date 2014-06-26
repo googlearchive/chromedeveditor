@@ -36,8 +36,8 @@ class SparkMenuButton extends SparkWidget {
   SparkMenuButton.created(): super.created();
 
   @override
-  void enteredView() {
-    super.enteredView();
+  void attached() {
+    super.attached();
 
     assert(_SUPPORTED_ARROWS.contains(arrow));
 

@@ -14,6 +14,8 @@ import 'package:chrome/chrome_app.dart' as chrome;
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
+import 'exception.dart';
+
 final NumberFormat _nf = new NumberFormat.decimalPattern();
 
 final RegExp _imageFileTypes = new RegExp(r'\.(jpe?g|png|gif|ico)$',
@@ -145,6 +147,9 @@ Future<String> getAppContents(String path) {
  */
 bool isImageFilename(String filename) => _imageFileTypes.hasMatch(filename);
 
+bool isHtmlFilename(String filename) =>
+    filename.endsWith('.htm') || filename.endsWith('.html');
+
 /**
  * Returns true if the given [filename] matches html/css/xml file types.
  */
@@ -196,12 +201,34 @@ Future<html.DirectoryEntry> getLocalDataDir(String name) {
 }
 
 /**
+ * Return the most likely IP address for this machine.
+ */
+Future<String> getHostIP() {
+  return chrome.system.network.getNetworkInterfaces().then(
+      (List interfaces) {
+    if (interfaces.isEmpty) {
+      throw new SparkException("Local IP address not available");
+    }
+
+    // Use an IPv4 address if one is available.
+    for (chrome.NetworkInterface net in interfaces) {
+      if (net.prefixLength == 24) return net.address;
+    }
+
+    // Else return the first address.
+    return interfaces.first.address;
+  });
+}
+
+/**
  * A [Notifier] is used to present the user with a message.
  */
 abstract class Notifier {
   void showMessage(String title, String message);
 
   Future showMessageAndWait(String title, String message);
+
+  void showSuccessMessage(String message);
 }
 
 /**
@@ -213,6 +240,8 @@ class NullNotifier implements Notifier {
   }
 
   Future showMessageAndWait(String title, String message) => new Future.value("Not implemented");
+
+  void showSuccessMessage(String message) { }
 }
 
 /**
