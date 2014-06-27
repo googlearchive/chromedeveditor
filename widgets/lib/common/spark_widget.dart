@@ -4,6 +4,7 @@
 
 library spark_widgets;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -168,15 +169,22 @@ class SparkWidget extends PolymerElement {
         shadowRoot.contains(e.target);
   }
 
-  static void addRemoveEventHandlers(
-      dynamic node,
-      Iterable<String> eventTypes,
+  static void addEventHandlers(
+      List<StreamSubscription> eventSubs,
+      Iterable<Stream<Event>> eventStreams,
       Function handler,
-      {bool enable: true,
-       bool capture: false}) {
-    final Function addRemoveFunc =
-        enable ? node.addEventListener : node.removeEventListener;
-    eventTypes.forEach((event) => addRemoveFunc(event, handler, capture));
+      {bool capture: false}) {
+    eventStreams.forEach((stream) {
+      if (capture) {
+        eventSubs.add(stream.capture(handler));
+      } else {
+        eventSubs.add(stream.listen(handler));
+      }
+    });
+  }
+
+  static void removeEventHandlers(List<StreamSubscription> eventSubs) {
+    eventSubs..forEach((sub) => sub.cancel())..clear();
   }
 
   /**
