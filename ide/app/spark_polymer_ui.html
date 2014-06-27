@@ -92,7 +92,7 @@
 
             <spark-menu-item action-id="send-feedback" label="Send Feedback...">
             </spark-menu-item>
-            <spark-menu-item action-id="help-about" label="About Spark">
+            <spark-menu-item action-id="help-about" label="About Chrome Dev Editor">
             </spark-menu-item>
 
           </spark-menu-button>
@@ -259,7 +259,7 @@
               </option>
               <!-- This one is internal for now. -->
               <option value="polymer/spark_widget">
-                Spark widget
+                Chrome Dev Editor widget
               </option>
             </optgroup>
           </select>
@@ -433,13 +433,16 @@
     </spark-dialog>
 
     <!-- About dialog -->
-    <spark-dialog id="aboutDialog" headerTitle="About Spark" noClosingX>
+    <spark-dialog id="aboutDialog" headerTitle="About Chrome Dev Editor">
       <div class="form-group">
         <div class="vert-align-box">
-          <img id="logo" src="images/icon_48.png">
-          <label>
-            A Chrome Apps based development environment (v{{appVersion}})
-          </label>
+          <div id="aboutDialog-icon">
+            <img src="images/icon_48.png">
+          </div>
+          <div id="aboutDialog-text">
+            <div><label>Develop apps on the Chrome platform</label></div>
+            <div><label>Version {{appVersion}}</label></div>
+          </div>
         </div>
       </div>
       <div id="analyticsOptIn" class="form-group">
@@ -448,7 +451,7 @@
             <input id="analyticsCheck" type="checkbox">
           </span>
           <label for="analyticsCheck">
-            Help make Spark better by automatically sending usage statistics and
+            Help make Chrome Dev Editor better by automatically sending usage statistics and
             crash reports to Google
           </label>
         </div>
@@ -669,7 +672,7 @@
         "DELETE" will permanently delete
         &quot;<span id="projectRemoveProjectName"></span>&quot; from disk.<br>
         "REMOVE REFERENCE" will remove the reference to it from
-        the list of projects in Spark, but keep its files on disk.
+        the list of projects in Chrome Dev Editor, but keep its files on disk.
       </div>
 
       <spark-dialog-button cancel>
@@ -690,7 +693,7 @@
          &quot;<span id="fileRemoveFileName"></span>&quot;
         from disk.<br>
         "REMOVE REFERENCE" will remove the reference to it from
-        Spark, but keep it on disk.
+        Chrome Dev Editor, but keep it on disk.
       </div>
 
       <spark-dialog-button cancel>

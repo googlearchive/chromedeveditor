@@ -120,7 +120,7 @@ class MobileDeploy {
     // Build the HTTP request headers.
     String header =
         'POST /$path HTTP/1.1\r\n'
-        'User-Agent: Spark IDE\r\n'
+        'User-Agent: Chrome Dev Editor\r\n'
         'Host: ${target}:$DEPLOY_PORT\r\n';
     List<int> body = [];
 

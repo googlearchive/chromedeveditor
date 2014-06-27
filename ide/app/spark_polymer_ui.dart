@@ -135,7 +135,7 @@ class SparkPolymerUI extends SparkWidget {
     }).catchError((e) {
       resultElement.text = 'Error resetting preferences';
     }).then((_) {
-      resultElement.text = 'Preferences have been reset - restart Spark';
+      resultElement.text = 'Preferences have been reset - restart Chrome Dev Editor';
     });
   }
 
