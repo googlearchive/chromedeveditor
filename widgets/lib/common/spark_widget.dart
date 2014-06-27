@@ -4,13 +4,37 @@
 
 library spark_widgets;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
 
 const bool IS_DART2JS = identical(1, 1.0);
 
-// NOTE: This SparkWidget element is not intended to use directly.
+/**
+ * An annotation to be used on published properties instead of @published when:
+ * * The property's matching attribute is used in the element's CSS,
+ *   e.g. for conditional rules such as `:host([attr="something"]) {}`;
+ * * The property will be set/changed via anything else but a direct attribute
+ *   assignment on the client-side HTML without any use of data-binding:
+ *     <x-element attr="something">
+ *   "Anything else" include, but might not be limited to one of:
+ *   - Direct assignment inside the element's own Dart:
+ *       void foo() { attr = "something"; }
+ *   - Direct assignment on the client-side Dart:
+ *       XElement elt = querySelector(...); elt.attr = "something";
+ *   - Data-binding inside another, outer element:
+ *       <polymer-element name="outer-element" attributes="attr2">
+ *         ...
+ *           <x-element attr="{{attr2}}">
+ */
+const published_reflected = const PublishedProperty(reflect: true);
+
+/**
+ * A common base for all the widgets, internal and external.
+ * Provides some common boilerplate and useful utility methods.
+ * Not intended to be used directly.
+ */
 @CustomTag('spark-widget')
 class SparkWidget extends PolymerElement {
   Element _focusableChild;
@@ -145,15 +169,23 @@ class SparkWidget extends PolymerElement {
         shadowRoot.contains(e.target);
   }
 
-  static void addRemoveEventHandlers(
-      dynamic node,
-      Iterable<String> eventTypes,
+  static List<StreamSubscription> addEventHandlers(
+      Iterable<Stream<Event>> eventStreams,
       Function handler,
-      {bool enable: true,
-       bool capture: false}) {
-    final Function addRemoveFunc =
-        enable ? node.addEventListener : node.removeEventListener;
-    eventTypes.forEach((event) => addRemoveFunc(event, handler, capture));
+      {bool capture: false}) {
+    final List<StreamSubscription> eventSubs = [];
+    eventStreams.forEach((stream) {
+      if (capture) {
+        eventSubs.add(stream.capture(handler));
+      } else {
+        eventSubs.add(stream.listen(handler));
+      }
+    });
+    return eventSubs;
+  }
+
+  static void removeEventHandlers(List<StreamSubscription> eventSubs) {
+    eventSubs..forEach((sub) => sub.cancel())..clear();
   }
 
   /**

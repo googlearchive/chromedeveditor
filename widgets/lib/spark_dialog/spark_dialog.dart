@@ -4,6 +4,7 @@
 
 library spark_widgets.dialog;
 
+import 'dart:async';
 import 'dart:html';
 
 import 'package:polymer/polymer.dart';
@@ -78,7 +79,7 @@ class SparkDialog extends SparkWidget {
 
   void hide() {
     if (_modal.opened) {
-      _validatedFields.clear();
+      _validatedFields..forEach((f) => f.cleanup())..clear();
       _modal.hide();
     }
   }
@@ -119,6 +120,7 @@ class _ValidatedField {
   final InputElement _element;
   final Function _onValidityChange;
   MutationObserver _observer;
+  List<StreamSubscription> _eventSubs = [];
 
   // NOTE: [willValidate] takes disablement into account.
   bool get isValid => !_element.willValidate || _element.checkValidity();
@@ -128,12 +130,20 @@ class _ValidatedField {
     // (red border) when it's not focused. Don't show red border while editing
     // to avoid distraction.
     _removeVisited();
-    SparkWidget.addRemoveEventHandlers(
-        _element, ['focus', 'click'], _addVisited);
+    _eventSubs.addAll(
+        SparkWidget.addEventHandlers(
+            [_element.onFocus, _element.onClick], _addVisited));
+
     // Listen to editing-related events to update the validity. Just listening
     // to the parent form's [onChange] isn't enough to react to real-time edits.
-    SparkWidget.addRemoveEventHandlers(
-        _element, ['change', 'input', 'paste', 'reset'], _updateValidity);
+    _eventSubs.addAll(
+        SparkWidget.addEventHandlers(
+            [_element.onChange,
+             _element.onInput,
+             _element.onPaste,
+             _element.onReset],
+            _updateValidity));
+
     // Detect programmatic changes to some attributes. Sadly, that doesn't
     // include [value], because [value] is special (not a pure attribute).
     _observer = new MutationObserver((records, _) => _updateValidity(records));
@@ -145,6 +155,10 @@ class _ValidatedField {
             subtree: false,
             attributeOldValue: false,
             characterDataOldValue: false);
+  }
+
+  void cleanup() {
+    SparkWidget.removeEventHandlers(_eventSubs);
   }
 
   bool _addVisited([_]) => _element.classes.add('visited');
