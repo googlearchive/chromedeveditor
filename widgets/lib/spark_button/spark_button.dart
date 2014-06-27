@@ -20,6 +20,7 @@ class SparkButton extends SparkWidget {
   @published String padding;
   @published bool disabled;
   @published bool active;
+  @published String tooltip;
 
   SparkButton.created() : super.created();
 

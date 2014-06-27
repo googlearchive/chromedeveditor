@@ -34,12 +34,13 @@
                 primary
                 padding
                 disabled
-                active"
+                active
+                tooltip"
     padding="large">
   <template>
     <link rel="stylesheet" href="spark_button.css">
 
-    <div id="button" focused tabindex="0">
+    <div id="button" focused tabindex="0" title="{{tooltip}}">
       <div id="focusBg"></div>
       <div id="content">
         <content></content>
